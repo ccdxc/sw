@@ -53,4 +53,7 @@ struct crypto_desc *crypto_get_desc(struct service_info *svc_info,
 void crypto_put_desc(const struct service_info *svc_info,
 		bool per_block, struct crypto_desc *desc);
 
+void crypto_report_suspect_desc(const struct crypto_desc *desc);
+void crypto_report_suspect_desc_ex(const struct crypto_desc *desc);
+
 #endif /* __PNSO_CRYPTO_CMN_H__ */

@@ -245,6 +245,14 @@ sonic_get_crypto_key_idx(uint32_t user_key_idx)
 	return ident->lif.base.crypto_key_idx_base + user_key_idx;
 }
 
+uint32_t
+sonic_get_crypto_suspect_key_idx(uint32_t user_key_idx)
+{
+	identity_t *ident = sonic_get_identity();
+
+	return user_key_idx - ident->lif.base.crypto_key_idx_base;
+}
+
 uint64_t
 sonic_get_intr_assert_addr(uint32_t intr_idx)
 {

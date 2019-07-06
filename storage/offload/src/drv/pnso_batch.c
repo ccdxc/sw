@@ -329,7 +329,8 @@ poll_all_chains(struct batch_info *batch_info)
 }
 
 static void
-pprint_all_chains(struct batch_info *batch_info, bool suspects_only)
+report_suspect_chains(struct batch_info *batch_info,
+		pprint_suspect_chain_fn_t pprint_fn)
 {
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
@@ -339,10 +340,7 @@ pprint_all_chains(struct batch_info *batch_info, bool suspects_only)
 		batch_page = GET_PAGE(batch_info, idx);
 		page_entry = GET_PAGE_ENTRY(batch_page, idx);
 
-		if (!suspects_only ||
-		    chn_is_suspect(page_entry->bpe_chain)) {
-			chn_pprint_chain(page_entry->bpe_chain, true);
-		}
+		chn_report_suspect_chain(page_entry->bpe_chain, pprint_fn);
 	}
 }
 
@@ -562,8 +560,13 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 
 	if (is_timeout) {
 		if (pnso_lif_reset_ctl_pending()) {
-			pprint_all_chains(batch_info, true);
+			report_suspect_chains(batch_info,
+					chn_pprint_suspect_chain);
+
+			report_suspect_chains(batch_info,
+					chn_pprint_suspect_chain_ex);
 		}
+
 		err = ETIMEDOUT;
 	} else {
 		err = poll_all_chains(batch_info);

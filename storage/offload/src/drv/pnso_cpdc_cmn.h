@@ -43,8 +43,6 @@ struct pnso_compression_header {
 #endif
 
 /* CPDC common/utility functions */
-pnso_error_t cpdc_common_chain(struct chain_entry *centry);
-
 pnso_error_t cpdc_poll_all(struct service_info *svc_info);
 
 pnso_error_t cpdc_poll(const struct service_info *svc_info,
@@ -53,6 +51,9 @@ pnso_error_t cpdc_poll(const struct service_info *svc_info,
 void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
+
+void cpdc_report_suspect_desc(const struct cpdc_desc *desc);
+void cpdc_report_suspect_desc_ex(const struct cpdc_desc *desc);
 
 pnso_error_t cpdc_update_service_info_src_sgl(struct service_info *svc_info);
 pnso_error_t cpdc_update_service_info_dst_sgl(struct service_info *svc_info);

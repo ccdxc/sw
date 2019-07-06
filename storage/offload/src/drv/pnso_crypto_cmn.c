@@ -17,8 +17,8 @@
 #include "pnso_cpdc.h"
 #include "pnso_seq.h"
 
-void
-crypto_pprint_aol(uint64_t aol_pa)
+static void
+pprint_aol(uint64_t aol_pa)
 {
 	const struct crypto_aol *aol;
 
@@ -94,10 +94,10 @@ crypto_pprint_desc(const struct crypto_desc *desc)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_db_data", desc->cd_db_data);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== cd_in_aol", desc->cd_in_aol);
-	crypto_pprint_aol(desc->cd_in_aol);
+	pprint_aol(desc->cd_in_aol);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== cd_out_aol", desc->cd_out_aol);
-	crypto_pprint_aol(desc->cd_out_aol);
+	pprint_aol(desc->cd_out_aol);
 }
 
 pnso_error_t
@@ -455,3 +455,141 @@ crypto_put_batch_bulk_desc(struct mem_pool *mpool, struct crypto_desc *desc)
 	mpool_put_object(mpool, desc);
 }
 
+static void
+pprint_suspect_aol(uint64_t aol_pa)
+{
+	const struct crypto_aol *aol;
+
+	if(!aol_pa)
+		return;
+
+	aol = (const struct crypto_aol *) sonic_phy_to_virt(aol_pa);
+	while (aol) {
+		OSAL_LOG_NOTICE("%30s: 0x" PRIx64 " ==> 0x" PRIx64,
+				"",
+				(uint64_t) aol, aol_pa);
+
+		OSAL_LOG_NOTICE("%30s: 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d",
+				"",
+				aol->ca_addr_0, aol->ca_off_0, aol->ca_len_0,
+				aol->ca_addr_1, aol->ca_off_1, aol->ca_len_1,
+				aol->ca_addr_2, aol->ca_off_2, aol->ca_len_2);
+		OSAL_LOG_NOTICE("%30s: 0x" PRIx64 "/0x" PRIx64,
+				"",
+				aol->ca_next, aol->ca_rsvd_swlink);
+
+		aol_pa = aol->ca_next;
+
+		CRYPTO_AOL_SWLINK_GET(aol, aol);
+		if (aol)
+			aol_pa = sonic_virt_to_phy((void *) aol);
+	}
+}
+
+static void
+pprint_suspect_aol_ex(uint64_t aol_pa)
+{
+	const struct crypto_aol *aol;
+	uint64_t hostpa;
+
+	if(!aol_pa)
+		return;
+
+	aol = (const struct crypto_aol *) sonic_phy_to_virt(aol_pa);
+	while (aol) {
+		hostpa = sonic_devpa_to_hostpa(aol->ca_addr_0);
+		OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+				"",
+				"buffer", hostpa,
+				"length", aol->ca_len_0);
+
+		hostpa = sonic_devpa_to_hostpa(aol->ca_addr_1);
+		if (hostpa)
+			OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+					"",
+					"buffer", hostpa,
+					"length", aol->ca_len_1);
+
+		hostpa = sonic_devpa_to_hostpa(aol->ca_addr_2);
+		if (hostpa)
+			OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+					"",
+					"buffer", hostpa,
+					"length", aol->ca_len_2);
+
+		aol = (const struct crypto_aol *) aol->ca_next;
+		if (aol)
+			aol = (const struct crypto_aol *)
+				sonic_phy_to_virt((uint64_t) aol);
+	}
+}
+
+void
+crypto_report_suspect_desc(const struct crypto_desc *desc)
+{
+	struct crypto_cmd *cmd;
+
+	if (!desc)
+		return;
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "crypto descriptor",
+			(uint64_t) desc);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_in_aol", desc->cd_in_aol);
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_out_aol", desc->cd_out_aol);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cd_key_desc_idx", desc->cd_key_desc_idx);
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_iv_addr", desc->cd_iv_addr);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_auth_tag", desc->cd_auth_tag);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cd_hdr_size", desc->cd_hdr_size);
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_status_addr",
+			desc->cd_status_addr);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cd_otag", desc->cd_otag);
+	OSAL_LOG_NOTICE("%30s: %d", "cd_otag_on", desc->cd_otag_on);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cd_sector_size", desc->cd_sector_size);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cd_app_tag", desc->cd_app_tag);
+	OSAL_LOG_NOTICE("%30s: %d", "cd_sector_num", desc->cd_sector_num);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_db_addr", desc->cd_db_addr);
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_db_data", desc->cd_db_data);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "=== crypto_cmd",
+			(uint64_t)&desc->cd_cmd);
+	cmd = (struct crypto_cmd *) &desc->cd_cmd;
+	OSAL_LOG_NOTICE("%30s: %d", "cc_enable_crc", cmd->cc_enable_crc);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_bypass_aes", cmd->cc_bypass_aes);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_is_decrypt", cmd->cc_is_decrypt);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_token_3", cmd->cc_token_3);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_token_4", cmd->cc_token_4);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "=== src buffer list",
+			desc->cd_in_aol);
+	pprint_suspect_aol(desc->cd_in_aol);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "=== dst buffer list",
+			desc->cd_out_aol);
+	pprint_suspect_aol(desc->cd_out_aol);
+}
+	
+void
+crypto_report_suspect_desc_ex(const struct crypto_desc *desc)
+{
+	if (!desc)
+		return;
+
+	OSAL_LOG_SUSPECT("%30s: %d", "key index",
+		sonic_get_crypto_suspect_key_idx(desc->cd_key_desc_idx));
+	OSAL_LOG_SUSPECT("%30s: 0x" PRIx64, "iv address",
+		sonic_devpa_to_hostpa(desc->cd_iv_addr));
+
+	OSAL_LOG_SUSPECT("%30s: ", "=== source buffer list");
+	pprint_suspect_aol_ex(desc->cd_in_aol);
+
+	OSAL_LOG_SUSPECT("%30s: ", "=== destination buffer list");
+	pprint_suspect_aol_ex(desc->cd_out_aol);
+}

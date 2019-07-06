@@ -86,17 +86,6 @@ extern "C" {
 #define CHAIN_CFLAG_RANG_DB		(1 << 6)
 #define CHAIN_CFLAG_TYPE_READ		(1 << 7)	/* for DC/Decrypt */
 
-#ifdef NDEBUG
-#define PPRINT_CHAIN(c)
-#else
-#define PPRINT_CHAIN(c)							\
-	if (OSAL_LOG_ON(OSAL_LOG_LEVEL_DEBUG)) {				\
-		OSAL_LOG("%.*s", 30, "=========================================");\
-		chn_pprint_chain(c, false);					\
-		OSAL_LOG("%.*s", 30, "=========================================");\
-	}
-#endif
-
 extern struct service_ops cp_ops;
 extern struct service_ops dc_ops;
 extern struct service_ops hash_ops;
@@ -356,8 +345,14 @@ pnso_error_t chn_poller(struct service_chain *chain, uint16_t gen_id,
 void chn_poll_timeout_all(struct per_core_resource *pcr);
 pnso_error_t pnso_chain_poller(void *poll_ctx);
 
-void chn_pprint_chain(const struct service_chain *chain, bool verbose);
-bool chn_is_suspect(const struct service_chain *chain);
+typedef void (*pprint_suspect_chain_fn_t) (const struct service_chain *chain);
+
+void chn_pprint_suspect_chain(const struct service_chain *chain);
+
+void chn_pprint_suspect_chain_ex(const struct service_chain *chain);
+
+void chn_report_suspect_chain(const struct service_chain *chain,
+		pprint_suspect_chain_fn_t pprint_fn);
 
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)

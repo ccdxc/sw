@@ -64,6 +64,10 @@ extern char g_osal_log_prefix[PREFIX_STR_LEN];
 #define OSAL_LOG_DEBUG(fmt, ...)					\
 	USPACE_LOG(stdout, OSAL_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #define OSAL_LOG printf
+
+/* for external logging macros */
+#define OSAL_LOG_SUSPECT(fmt, ...)					\
+	USPACE_LOG(stdout, OSAL_LOG_LEVEL_NOTICE, fmt, ##__VA_ARGS__)
 #else
 #define OSAL_LOG_ON(level) (unlikely((enum osal_log_level) level <= g_osal_log_level))
 #ifndef __FreeBSD__
@@ -102,7 +106,13 @@ extern char g_osal_log_prefix[PREFIX_STR_LEN];
 #define OSAL_LOG_DEBUG(fmt, ...)					\
 	KSPACE_LOG(OSAL_LOG_LEVEL_DEBUG, KERN_DEBUG "%s:%30s:%d:> " fmt, \
 			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
+
 #define OSAL_LOG printk
+
+/* for external logging macro */
+#define OSAL_LOG_SUSPECT(fmt, ...)					\
+	KSPACE_LOG(OSAL_LOG_LEVEL_NOTICE, KERN_NOTICE "%s: " fmt, 	\
+			g_osal_log_prefix, ##__VA_ARGS__)
 #endif
 
 /**

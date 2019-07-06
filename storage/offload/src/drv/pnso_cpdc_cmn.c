@@ -20,17 +20,6 @@
 #include "pnso_utils.h"
 #include "pnso_seq.h"
 
-/*
- * TODO:
- *	- add additional UTs for read/write status/result, as needed
- *
- */
-pnso_error_t
-cpdc_common_chain(struct chain_entry *centry)
-{
-	return PNSO_OK;	/* TODO-chain: EOPNOTSUPP */
-}
-
 pnso_error_t
 cpdc_poll(const struct service_info *svc_info,
 		volatile struct cpdc_status_desc *status_desc)
@@ -1223,4 +1212,172 @@ cpdc_poll_all(struct service_info *svc_info)
 			svc_info->si_num_tags);
 out:
 	return err;
+}
+
+static void
+pprint_suspect_sgl(uint64_t sgl_pa)
+{
+	const struct cpdc_sgl *sgl;
+
+	if (!sgl_pa)
+		return;
+
+	sgl = (const struct cpdc_sgl *) sonic_phy_to_virt(sgl_pa);
+	while (sgl) {
+		OSAL_LOG_NOTICE("%30s: 0x" PRIx64 " ==> 0x" PRIx64,
+			"",
+			(uint64_t) sgl, sgl_pa);
+
+		OSAL_LOG_NOTICE("%30s: 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d",
+				"",
+				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
+				sgl->cs_addr_1, sgl->cs_len_1, sgl->cs_rsvd_1,
+				sgl->cs_addr_2, sgl->cs_len_2, sgl->cs_rsvd_2);
+		OSAL_LOG_NOTICE("%30s: 0x" PRIx64 "/0x" PRIx64,
+				"",
+				sgl->cs_next, sgl->cs_rsvd_swlink);
+
+		sgl_pa = sgl->cs_next;
+
+		CPDC_SGL_SWLINK_GET(sgl, sgl);
+		if (sgl)
+			sgl_pa = sonic_virt_to_phy((void *) sgl);
+	}
+}
+
+static void
+pprint_suspect_sgl_ex(uint64_t sgl_pa)
+{
+	const struct cpdc_sgl *sgl;
+	uint64_t hostpa;
+
+	if (!sgl_pa)
+		return;
+
+	sgl = (const struct cpdc_sgl *) sonic_phy_to_virt(sgl_pa);
+	while (sgl) {
+		hostpa = sonic_devpa_to_hostpa(sgl->cs_addr_0);
+		OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+				"",
+				"buffer", hostpa,
+				"length", sgl->cs_len_0);
+
+		hostpa = sonic_devpa_to_hostpa(sgl->cs_addr_1);
+		if (hostpa)
+			OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+					"",
+					"buffer", hostpa,
+					"length", sgl->cs_len_1);
+
+		hostpa = sonic_devpa_to_hostpa(sgl->cs_addr_2);
+		if (hostpa)
+			OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+					"",
+					"buffer", hostpa,
+					"length", sgl->cs_len_2);
+
+		sgl = (const struct cpdc_sgl *) sgl->cs_next;
+		if (sgl)
+			sgl = (const struct cpdc_sgl *)
+				sonic_phy_to_virt((uint64_t) sgl);
+	}
+}
+
+void
+cpdc_report_suspect_desc(const struct cpdc_desc *desc)
+{
+	struct cpdc_cmd *cmd;
+
+	if (!desc)
+		return;
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cpdc descriptor", (uint64_t) desc);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_src", desc->cd_src);
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_dst", desc->cd_dst);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cd_datain_len", desc->cd_datain_len);
+	OSAL_LOG_NOTICE("%30s: %d", "cd_extended_len", desc->cd_extended_len);
+	OSAL_LOG_NOTICE("%30s: %d", "cd_threshold_len",
+			desc->cd_threshold_len);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_status_addr",
+			desc->cd_status_addr);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_db_addr", desc->cd_db_addr);
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_db_data", desc->cd_db_data);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "cd_otag_addr",
+			desc->cd_otag_addr);
+	OSAL_LOG_NOTICE("%30s: %d", "cd_otag_data", desc->cd_otag_data);
+	OSAL_LOG_NOTICE("%30s: %d", "cd_status_data", desc->cd_status_data);
+
+	OSAL_LOG_NOTICE("%30s:", "=== cpdc_cmd");
+	cmd = (struct cpdc_cmd *) &desc->u.cd_bits;
+	OSAL_LOG_NOTICE("%30s: %d", "cc_enabled", cmd->cc_enabled);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cc_header_present",
+			cmd->cc_header_present);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_insert_header", cmd->cc_insert_header);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cc_db_on", cmd->cc_db_on);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_otag_on", cmd->cc_otag_on);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cc_src_is_list", cmd->cc_src_is_list);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_dst_is_list", cmd->cc_dst_is_list);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cc_chksum_verify_enabled",
+			cmd->cc_chksum_verify_enabled);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_chksum_adler", cmd->cc_chksum_adler);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cc_hash_enabled", cmd->cc_hash_enabled);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_hash_type", cmd->cc_hash_type);
+
+	OSAL_LOG_NOTICE("%30s: %d", "cc_integrity_src", cmd->cc_integrity_src);
+	OSAL_LOG_NOTICE("%30s: %d", "cc_integrity_type",
+			cmd->cc_integrity_type);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "src buffer list",
+			desc->cd_src);
+	pprint_suspect_sgl(desc->cd_src);
+
+	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "dst buffer list",
+			desc->cd_dst);
+	pprint_suspect_sgl(desc->cd_dst);
+}
+
+void
+cpdc_report_suspect_desc_ex(const struct cpdc_desc *desc)
+{
+	uint64_t hostpa;
+
+	if (!desc)
+		return;
+
+	OSAL_LOG_SUSPECT("%30s: %d", "length", desc->cd_datain_len);
+	OSAL_LOG_SUSPECT("%30s: %d", "threshold length", desc->cd_threshold_len);
+
+	OSAL_LOG_SUSPECT("%30s: ", "source buffer list");
+	if (desc->u.cd_bits.cc_src_is_list)
+		pprint_suspect_sgl_ex(desc->cd_src);
+	else {
+		hostpa = sonic_devpa_to_hostpa(desc->cd_src);
+		if (hostpa)
+			OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+				"",
+				"source buffer", hostpa,
+				"length", desc->cd_datain_len);
+	}
+
+	OSAL_LOG_SUSPECT("%30s: ", "destination buffer list");
+	if (desc->u.cd_bits.cc_dst_is_list)
+		pprint_suspect_sgl_ex(desc->cd_dst);
+	else {
+		hostpa = sonic_devpa_to_hostpa(desc->cd_dst);
+		if (hostpa)
+			OSAL_LOG_SUSPECT("%30s: %s: 0x" PRIx64 " %s: %d",
+				"",
+				"destination buffer", hostpa,
+				"length", desc->cd_threshold_len);
+	}
 }
