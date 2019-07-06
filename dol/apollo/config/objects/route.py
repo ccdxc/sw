@@ -181,6 +181,8 @@ class RouteObjectClient:
     def GenerateObjects(self, parent, vpc_spec_obj, vpcpeerid):
         vpcid = parent.VPCId
         stack = parent.Stack
+        isV4Stack = True if ((stack == "dual") or (stack == 'ipv4')) else False
+        isV6Stack = True if ((stack == "dual") or (stack == 'ipv6')) else False
         self.__v4objs[vpcid] = dict()
         self.__v6objs[vpcid] = dict()
         self.__v4iter[vpcid] = None
@@ -210,16 +212,6 @@ class RouteObjectClient:
                 return (ip)
             return
 
-        def __is_v4stack():
-            if stack == "dual" or stack == 'ipv4':
-                return True
-            return False
-
-        def __is_v6stack():
-            if stack == "dual" or stack == 'ipv6':
-                return True
-            return False
-
         def __add_v4routetable(v4routes, routetype):
             obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj, vpcpeerid)
             self.__v4objs[vpcid].update({obj.RouteTblId: obj})
@@ -238,10 +230,10 @@ class RouteObjectClient:
             return routes
 
         def __add_user_specified_routetable(routetablespec, routetype):
-            if __is_v4stack():
+            if isV4Stack:
                 __add_v4routetable(__get_user_specified_routes(routetablespec.v4routes), routetype)
 
-            if __is_v6stack():
+            if isV6Stack:
                 __add_v6routetable(__get_user_specified_routes(routetablespec.v6routes), routetype)
 
         def __get_valid_route_count_per_route_table(count):
@@ -279,21 +271,21 @@ class RouteObjectClient:
                 v6routecount -= 1
             for i in range(routetablecount):
                 if 'adjacent' in routetype:
-                    if __is_v4stack():
+                    if isV4Stack:
                         routes = user_specified_v4routes + __get_adjacent_routes(v4base, v4routecount)
                         __add_v4routetable(routes, routetype)
                         v4base = utils.GetNextSubnet(routes[-1])
-                    if __is_v6stack():
+                    if isV6Stack:
                         routes = user_specified_v6routes + __get_adjacent_routes(v6base, v6routecount)
                         __add_v6routetable(routes, routetype)
                         v6base = utils.GetNextSubnet(routes[-1])
 
                 elif 'overlap' in routetype:
-                    if __is_v4stack():
+                    if isV4Stack:
                         routes = user_specified_v4routes + __get_overlap(routetbl_spec_obj.v4base, v4base, v4routecount)
                         __add_v4routetable(routes, routetype)
                         v4base = utils.GetNextSubnet(routes[-1])
-                    if __is_v6stack():
+                    if isV6Stack:
                         routes = user_specified_v6routes + __get_overlap(routetbl_spec_obj.v6base, v6base, v6routecount)
                         __add_v6routetable(routes, routetype)
                         v6base = utils.GetNextSubnet(routes[-1])

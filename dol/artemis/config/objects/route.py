@@ -33,7 +33,7 @@ class RouteTableObjectHelper:
             maxlimits = 0
         else:
             maxlimits = selectors.maxlimits
-        return utils.GetFilteredObjects(objs, maxlimits)
+        return utils.GetFilteredObjects(objs, maxlimits, False)
 
 
 RouteTableHelper = RouteTableObjectHelper()

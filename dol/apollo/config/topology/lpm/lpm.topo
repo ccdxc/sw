@@ -69,6 +69,19 @@ vpc:
               - type : specific
                 policytype : default
                 direction : bidir
+      meter:
+        - count: 1
+          auto_fill: False
+          rule:
+            - type: PDS_METER_TYPE_ACCOUNTING
+              priority: 1
+              num_prefixes: 0
+              v4base: '66.0.0.0\24'
+              v6base: '2002::\120'
+              v4prefixes:
+                - '0.0.0.0\0'
+              v6prefixes:
+                - '0::\0'
       nexthop:
              - type: base
                count : 25

@@ -1,0 +1,66 @@
+# Test Spec for positive LPM cases
+selectors:
+    root: ref://store/templates/id=ROUTE
+    maxlimits: 2
+    flow: filter://SourceGuard=False
+    route: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:00:00:00:00:02
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                hlim    : 64
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_CPU_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        # TODO: Add P4 header
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                dst     : ref://testcase/config/route/NEXTHOP/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/route/NEXTHOP/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/SvcIP
+            ipv6:
+                src     : ref://testcase/config/localmapping/SvcIP
+            tcp:
+                sport   : ref://testcase/config/localmapping/SvcPort
+            udp:
+                sport   : ref://testcase/config/localmapping/SvcPort
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            port    : ref://testcase/config/switchport
