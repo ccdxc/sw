@@ -7,17 +7,17 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { SecuritySGPolicyPropagationStatus, ISecuritySGPolicyPropagationStatus } from './security-sg-policy-propagation-status.model';
+import { SecurityPropagationStatus, ISecurityPropagationStatus } from './security-propagation-status.model';
 import { SecuritySGRuleStatus, ISecuritySGRuleStatus } from './security-sg-rule-status.model';
 
 export interface ISecuritySGPolicyStatus {
-    'propagation-status'?: ISecuritySGPolicyPropagationStatus;
+    'propagation-status'?: ISecurityPropagationStatus;
     'rule-status'?: Array<ISecuritySGRuleStatus>;
 }
 
 
 export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPolicyStatus {
-    'propagation-status': SecuritySGPolicyPropagationStatus = null;
+    'propagation-status': SecurityPropagationStatus = null;
     'rule-status': Array<SecuritySGRuleStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'propagation-status': {
@@ -52,7 +52,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['propagation-status'] = new SecuritySGPolicyPropagationStatus();
+        this['propagation-status'] = new SecurityPropagationStatus();
         this['rule-status'] = new Array<SecuritySGRuleStatus>();
         this.setValues(values, setDefaults);
     }

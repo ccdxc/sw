@@ -7,15 +7,15 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { SecurityFirewallProfilePropagationStatus, ISecurityFirewallProfilePropagationStatus } from './security-firewall-profile-propagation-status.model';
+import { SecurityPropagationStatus, ISecurityPropagationStatus } from './security-propagation-status.model';
 
 export interface ISecurityFirewallProfileStatus {
-    'propagation-status'?: ISecurityFirewallProfilePropagationStatus;
+    'propagation-status'?: ISecurityPropagationStatus;
 }
 
 
 export class SecurityFirewallProfileStatus extends BaseModel implements ISecurityFirewallProfileStatus {
-    'propagation-status': SecurityFirewallProfilePropagationStatus = null;
+    'propagation-status': SecurityPropagationStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'propagation-status': {
             required: false,
@@ -45,7 +45,7 @@ export class SecurityFirewallProfileStatus extends BaseModel implements ISecurit
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['propagation-status'] = new SecurityFirewallProfilePropagationStatus();
+        this['propagation-status'] = new SecurityPropagationStatus();
         this.setValues(values, setDefaults);
     }
 

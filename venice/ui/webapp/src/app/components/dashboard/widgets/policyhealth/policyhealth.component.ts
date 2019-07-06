@@ -53,7 +53,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
     gradientStart: 'rgba(97, 179, 160, 1)',
     gradientStop: 'rgba(97, 179, 160, 0)',
     graphId: 'dsbdpolicyhealth-activeFlows',
-    defaultValue: 10,
+    defaultValue: 0,
     defaultDescription: 'Avg',
     hoverDescription: 'Flows',
     isPercentage: false,
@@ -67,7 +67,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
     gradientStart: 'rgba(151, 184, 223, 1)',
     gradientStop: 'rgba(151, 184, 223, 0)',
     graphId: 'dsbdpolicyhealth-deniedFlows',
-    defaultValue: 10,
+    defaultValue: 0,
     defaultDescription: 'Avg',
     hoverDescription: 'CPS',
     isPercentage: false,
@@ -223,7 +223,8 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
             this.cardState = CardStates.READY;
             this.tryGenMetrics();
           } else {
-            this.cardState = CardStates.NO_DATA;
+            this.cardState = CardStates.READY;
+            this.tryGenMetrics();
           }
         }
       },

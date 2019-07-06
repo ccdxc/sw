@@ -2,7 +2,7 @@
  Angular imports
  ------------------*/
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks, flush } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
@@ -174,7 +174,7 @@ describe('fwlogsComponent', () => {
     securityService = TestBed.get(SecurityService);
   });
 
-  it('check if sgicon onhover details are displayed correctly', () => {
+  it('check if sgicon onhover details are displayed correctly', fakeAsync(() => {
     TestingUtility.setAllPermissions();
 
     sgPolicyObserver = new BehaviorSubject({
@@ -194,6 +194,8 @@ describe('fwlogsComponent', () => {
     );
 
     fixture.detectChanges();
+    tick(1000);
+    fixture.detectChanges();
     expect(component).toBeTruthy();
 
     const row = fixture.debugElement.query(By.css('tr'));
@@ -207,10 +209,12 @@ describe('fwlogsComponent', () => {
     const overlay = fixture.debugElement.query(By.css('.fwlogs-ruletext'));
     const rulehashdiv = overlay.children[1].childNodes[2];
     expect(rulehashdiv.nativeNode.textContent).toBe(fwlog.results[0].logs[0]['rule-id']);
+    fixture.destroy();
+    discardPeriodicTasks();
+    flush();
+  }));
 
-  });
-
- it('should map reporter from mac address to host name', () => {
+ it('should map reporter from mac address to host name', fakeAsync(() => {
     TestingUtility.setAllPermissions();
     const clusterService = TestBed.get(ClusterService);
     const telemetryService = TestBed.get(TelemetryqueryService);
@@ -233,6 +237,8 @@ describe('fwlogsComponent', () => {
     spyOn(securityService, 'WatchSGPolicy').and.returnValue(
       sgPolicyObserver
     );
+    fixture.detectChanges();
+    tick(1000);
     fixture.detectChanges();
     expect(component).toBeTruthy();
     // check table header
@@ -271,7 +277,10 @@ describe('fwlogsComponent', () => {
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
     expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
     expect(routerLinks[0].linkParams).toBe('/cluster/naples/00ae.cd00.1142');
-  });
+    fixture.destroy();
+    discardPeriodicTasks();
+    flush();
+  }));
 
   describe('RBAC', () => {
     let toolbarSpy: jasmine.Spy;

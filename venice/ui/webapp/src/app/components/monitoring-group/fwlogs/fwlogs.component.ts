@@ -21,6 +21,7 @@ import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { PolicyRuleTuple } from './';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { TimeRange } from '@app/components/shared/timerange/utility';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-fwlogs',
@@ -100,6 +101,8 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     { field: 'policy', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 8, roleGuard: 'securitysgpolicy_read' },
   ];
 
+  searchSubscription: Subscription;
+
   constructor(
     protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -158,7 +161,6 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     this.getNaples();
     this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
     this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
-    this.getFwlogs(this.startingSortOrder);
     this.getSGPolicies();
     this.setDefaultToolbar();
     this.actionOptions = this.addAllOption(this.actionOptions);
@@ -314,6 +316,10 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       return;
     }
 
+    if (this.searchSubscription != null) {
+      this.searchSubscription.unsubscribe();
+    }
+
     // Remove any invalid query toasters if there are any.
     this.controllerService.removeToaster('Fwlog Search');
 
@@ -388,7 +394,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     };
     // Get request
 
-    const subscription = this.telemetryService.PostFwlogs(queryList).subscribe(
+    this.searchSubscription = this.telemetryService.PostFwlogs(queryList).subscribe(
       (resp) => {
         this.controllerService.removeToaster('Fwlog Search Failed');
         this.lastUpdateTime = new Date().toISOString();
@@ -407,7 +413,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
         this.controllerService.invokeRESTErrorToaster('Fwlog Search Failed', error);
       }
     );
-    this.subscriptions.push(subscription);
+    this.subscriptions.push(this.searchSubscription);
   }
 
   keyUpInput(event) {
