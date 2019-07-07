@@ -220,8 +220,8 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 			}
 		}
 		snicState.status[s.Op] = s
-			message = s.Message
-			reason = s.OpStatus
+		message = s.Message
+		reason = s.OpStatus
 
 		break
 	}

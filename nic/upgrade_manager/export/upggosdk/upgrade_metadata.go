@@ -196,10 +196,7 @@ func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
 	if err := getUpgCtxFromImgMeta(upgCtx, true); err != nil {
 		return err
 	}
-	if err := getUpgCtxFromImgMeta(upgCtx, false); err != nil {
-		return err
-	}
-	return nil
+	return getUpgCtxFromImgMeta(upgCtx, false)
 }
 
 func isPrePostImageMetaSame(upgCtx *UpgCtx) bool {
