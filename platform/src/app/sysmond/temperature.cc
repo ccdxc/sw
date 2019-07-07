@@ -91,13 +91,13 @@ checktemperature(void)
             changefrequency(asictemp.hbm_temperature);
         }
         if (asictemp.hbm_temperature >= catalog->hbmtemperature_threshold()) {
-            TRACE_INFO(GetObflLogger(), "HBM temperature is : {:d}C *** and threshold is {:d} Throttling down",
+            TRACE_INFO(GetObflLogger(), "HBM temperature is : {:d}C *** and threshold is {:d}",
                        asictemp.hbm_temperature, catalog->hbmtemperature_threshold());
-            TRACE_INFO(GetLogger(), "HBM temperature is : {:d}C *** and threshold is {:d} Throttling down",
+            TRACE_INFO(GetLogger(), "HBM temperature is : {:d}C *** and threshold is {:d}",
                        asictemp.hbm_temperature, catalog->hbmtemperature_threshold());
             TRACE_FLUSH(GetObflLogger());
-            asic_pd_set_half_clock(chip_id, inst_id);
-            svc->ChangeAsicFrequency();
+//            asic_pd_set_half_clock(chip_id, inst_id);
+//            svc->ChangeAsicFrequency();
         }
         //Publish Delphi object
         delphi::objects::AsicTemperatureMetrics::Publish(key, &asictemp);

@@ -18,9 +18,9 @@ checkcattrip(void)
     asic_pd_unravel_hbm_intrs(&iscattrip);
     if (iscattrip == true &&
         logcattrip == false) {
-        TRACE_INFO(GetObflLogger(), "Cattrip::Reducing speed to half");
+        TRACE_INFO(GetObflLogger(), "Cattrip occurred");
         TRACE_FLUSH(GetObflLogger());
-        asic_pd_set_half_clock(chip_id, inst_id);
+//        asic_pd_set_half_clock(chip_id, inst_id);
         logcattrip = true;
     }
 }
