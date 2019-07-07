@@ -177,7 +177,8 @@
             "cq_count" : 16,
             "intr_count" : 16,
             "pcie" : {
-                "port" : 0
+                "port" : 0,
+                "total_vfs" : 0
             }
         }
     ],

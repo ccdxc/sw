@@ -210,6 +210,7 @@ NvmeDev::ParseConfig(boost::property_tree::ptree::value_type node)
     nvme_spec->intr_count = val.get<uint32_t>("intr_count");
 
     nvme_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+    nvme_spec->pcie_total_vfs = val.get<uint8_t>("pcie.total_vfs", 0);
 
     NIC_LOG_DEBUG("enable: {} name: {} lif_count: {} adminq_count: {} sq_count: {} cq count: {} intr_count: {}",
                   nvme_spec->enable, nvme_spec->name, nvme_spec->lif_count, nvme_spec->adminq_count,
@@ -234,7 +235,27 @@ NvmeDev::_CreateHostDevice(void)
     pres.pfres.intrdmask = 0;
     pres.pfres.cmbpa = cmb_mem_addr;
     pres.pfres.cmbsz = cmb_mem_size;
-    pres.pfres.nvme.nvmeregspa = devcmd_mem_addr;
+    pres.pfres.totalvfs = spec->pcie_total_vfs;
+    pres.pfres.nvme.regspa = devcmd_mem_addr;
+    pres.pfres.nvme.regssz = 0x1000;
+
+    if (pres.pfres.totalvfs > 0) {
+        pciehdev_res_t *vfres = &pres.vfres;
+        pciehdev_res_t *pfres = &pres.pfres;
+        vfres->is_vf = 1;
+        if (pfres->lifc) {
+            vfres->lifb = pfres->lifb + pfres->lifc;
+            vfres->lifc = pfres->lifc;
+        }
+        if (pfres->intrc) {
+            vfres->intrb = pfres->intrb + pfres->intrc;
+            vfres->intrc = pfres->intrc;
+            vfres->intrdmask = pfres->intrdmask;
+        }
+        vfres->nvme.regspa = pfres->nvme.regspa + 0x1000;
+        vfres->nvme.regssz = pfres->nvme.regssz;
+        vfres->nvme.regs_stride = vfres->nvme.regssz;
+    }
 
     // Add device to PCI topology
     if (pciemgr) {

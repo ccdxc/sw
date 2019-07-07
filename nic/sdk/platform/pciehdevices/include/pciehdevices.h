@@ -40,8 +40,10 @@ typedef struct pciehdev_ethres_s {
 } pciehdev_ethres_t;
 
 typedef struct pciehdev_nvmeres_s {
-    u_int64_t nvmeregspa;       /* nvme 4k register region */
-    u_int32_t nvmeqidc;         /* nvme qid count */
+    u_int64_t regspa;           /* nvme register region */
+    u_int32_t regssz;           /* nvme register region size */
+    u_int32_t regs_stride;      /* VF: nvme register region stride */
+    u_int32_t qidc;             /* nvme qid count */
 } pciehdev_nvmeres_t;
 
 typedef struct pciehdev_virtiores_s {

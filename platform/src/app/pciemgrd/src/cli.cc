@@ -274,17 +274,41 @@ add_nvme(int argc, char *argv[])
 {
     static int instance;
     pciehdevice_resources_t pres;
+    pciehdev_res_t *pfres = &pres.pfres;
     int opt;
 
     memset(&pres, 0, sizeof(pres));
     pres.type = PCIEHDEVICE_NVME;
-    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "nvme%d", instance++);
-    pres.pfres.intrc = 4;
-    pres.pfres.intrdmask = 0;
+    snprintf(pfres->name, sizeof(pfres->name), "nvme%d", instance++);
+    pfres->intrc = 4;
+    pfres->intrdmask = 0;
+    pfres->nvme.regspa = 0x13d000000; /* XXX */
+    pfres->nvme.qidc = 64;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "i:I:l:L:N:p:r:R:")) != -1) {
+    while ((opt = getopt(argc, argv, "i:I:l:L:N:p:r:R:v:")) != -1) {
         switch (opt) {
+        case 'v':
+            pfres->totalvfs = strtoull(optarg, NULL, 0);
+            if (pfres->totalvfs > 0) {
+                pciehdev_res_t *vfres = &pres.vfres;
+                vfres->is_vf = 1;
+                /* XXX just some sample values */
+                if (pfres->lifc) {
+                    vfres->lifb = pfres->lifb + pfres->lifc;
+                    vfres->lifc = pfres->lifc;
+                }
+                if (pfres->intrc) {
+                    vfres->intrb = pfres->intrb + pfres->intrc;
+                    vfres->intrc = pfres->intrc;
+                    vfres->intrdmask = pfres->intrdmask;
+                }
+                vfres->nvme.regspa = pfres->nvme.regspa + 0x1000;
+                vfres->nvme.regssz = pfres->nvme.regssz;
+                vfres->nvme.regs_stride = vfres->nvme.regssz;
+                vfres->nvme.qidc = pfres->nvme.qidc;
+            }
+            break;
         default:
             if (parse_common_pres_opt(opt, &pres) < 0) {
                 fprintf(stderr, "bad argument: %c\n", opt);

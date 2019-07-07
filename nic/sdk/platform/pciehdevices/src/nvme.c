@@ -59,7 +59,7 @@ nvme_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
                 0x1000,         /* pmtsize */
                 0x1000,         /* prtsize */
                 PMTF_RW);
-    prt_res_enc(&prt, res->nvme.nvmeregspa, 0x1000, PRT_RESF_NONE);
+    prt_res_enc(&prt, res->nvme.regspa, res->nvme.regssz, PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
@@ -79,7 +79,7 @@ nvme_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
      * So we can support up to 512 q's per 4k page.
      * (XXX For now, limit to 512 q's.  Grow bar for more doorbells.)
      */
-    nqids = MIN(res->nvme.nvmeqidc, 0x10000);
+    nqids = MIN(res->nvme.qidc, 0x10000);
     nqids = MIN(nqids, 512); /* XXX limit to 512 q's */
 
     pmt_bar_enc(&preg.pmt,
@@ -114,12 +114,26 @@ nvme_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
 }
 
 static int
-nvme_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
+nvme_pfbars(pciehdev_t *pdev, const pciehdev_res_t *res)
+{
+    return nvme_bars(pdev, res);
+}
+
+static int
+nvme_vfbars(pciehdev_t *pdev, const pciehdev_res_t *res)
+{
+    return nvme_bars(pdev, res);
+}
+
+static int
+nvme_cfg(pciehdev_t *pdev, const pciehdev_res_t *res, const u_int16_t devid)
 {
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
+    pciehbars_t *vfbars = NULL;
 
-    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_NVME);
+    pciehcfg_setconf_vf(pcfg, res->is_vf);
+    pciehcfg_setconf_deviceid(pcfg, devid);
     pciehcfg_setconf_classcode(pcfg, 0x010802);
     //pciehcfg_setconf_classcode(pcfg, 0x088000); // XXX
     pciehcfg_setconf_nintrs(pcfg, res->intrc);
@@ -128,20 +142,77 @@ nvme_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
     pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
     pciehcfg_setconf_dsn(pcfg, res->dsn);
+    if (pciehdev_is_pf(pdev)) {
+        pciehcfg_setconf_pf(pcfg, 1);
+        pciehcfg_setconf_totalvfs(pcfg, pciehdev_get_totalvfs(pdev));
+        pciehcfg_setconf_vfdeviceid(pcfg, PCI_DEVICE_ID_PENSANDO_NVMEVF);
+        vfbars = pciehdev_get_vfbars(pdev);
+    }
 
     pciehcfg_sethdr_type0(pcfg, pbars);
-    pciehcfg_add_standard_caps(pcfg);
+    pciehcfg_add_standard_pfcaps(pcfg, vfbars);
     pciehdev_set_cfg(pdev, pcfg);
     return 0;
 }
 
 static int
+nvme_pfcfg(pciehdev_t *pdev, const pciehdev_res_t *res)
+{
+    return nvme_cfg(pdev, res, PCI_DEVICE_ID_PENSANDO_NVME);
+}
+
+static int
+nvme_vfcfg(pciehdev_t *pdev, const pciehdev_res_t *res)
+{
+    return nvme_cfg(pdev, res, PCI_DEVICE_ID_PENSANDO_NVMEVF);
+}
+
+static int
 nvme_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
 {
-    if (nvme_bars(pfdev, pfres) < 0) {
+    if (nvme_pfbars(pfdev, pfres) < 0) {
         return -1;
     }
-    if (nvme_cfg(pfdev, pfres) < 0) {
+    if (nvme_pfcfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+static int
+nvme_initvf(pciehdev_t *vfdev, const pciehdev_res_t *vfres)
+{
+    const int vfidx = pciehdev_get_vfidx(vfdev);
+    pciehdev_res_t lvfresbuf, *lvfres = &lvfresbuf;
+    pciehdev_nvmeres_t *lnvmeres = &lvfres->nvme;
+
+    if (vfidx > 1) {
+        if (vfres->nvme.regssz != 0 && vfres->nvme.regs_stride == 0) {
+            pciesys_logerror("nvme_initvf: %s: regs_stride %d\n",
+                             vfres->name, vfres->nvme.regs_stride);
+            return -1;
+        }
+    }
+
+    /* vf adjust resources dependent on stride */
+    *lvfres = *vfres;
+    lvfres->lifb  = vfres->lifb  + vfidx * vfres->lifc;
+    lvfres->intrb = vfres->intrb + vfidx * vfres->intrc;
+    lvfres->dsn   = vfres->dsn   + vfidx * vfres->dsn_stride;
+
+    /* adjust local resources dependent on stride */
+    lnvmeres->regspa = lnvmeres->regspa + vfidx * lnvmeres->regs_stride;
+
+    pciehdev_set_lifb(vfdev, lvfres->lifb);
+    pciehdev_set_lifc(vfdev, lvfres->lifc);
+    pciehdev_set_intrb(vfdev, lvfres->intrb);
+    pciehdev_set_intrc(vfdev, lvfres->intrc);
+    pciehdev_set_intrm(vfdev, lvfres->intrdmask);
+
+    if (nvme_vfbars(vfdev, lvfres) < 0) {
+        return -1;
+    }
+    if (nvme_vfcfg(vfdev, lvfres) < 0) {
         return -1;
     }
     return 0;
@@ -150,5 +221,6 @@ nvme_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
 static pciehdevice_t nvme_device = {
     .type = PCIEHDEVICE_NVME,
     .initpf = nvme_initpf,
+    .initvf = nvme_initvf,
 };
 PCIEHDEVICE_REGISTER(nvme_device);

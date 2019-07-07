@@ -31,6 +31,7 @@ typedef struct nvme_devspec {
     uint32_t intr_count;
     // PCIe
     uint8_t  pcie_port;
+    uint32_t pcie_total_vfs;
 } nvme_devspec_t;
 
 /* forward declearation */

@@ -96,7 +96,7 @@ pciehdevice_new(const pciehdevice_resources_t *pres)
 
     /* unknown device type? */
     if (pdevice == NULL) {
-        pciesys_logdebug("pciehdevice_new: bad type %d\n", pres->type);
+        pciesys_logerror("pciehdevice_new: bad type %d\n", pres->type);
         goto error_out;
     }
 
@@ -107,9 +107,9 @@ pciehdevice_new(const pciehdevice_resources_t *pres)
 
     /* VFs requested for a device that doesn't provide VFs? */
     if (totalvfs && pdevice->initvf == NULL) {
-        pciesys_logdebug("pciehdevice_new: %s sriov requested (%d) "
-                         "but unsupported for device type %d\n",
-                         pres->pfres.name, totalvfs, pres->type);
+        pciesys_logwarn("pciehdevice_new: %s sriov requested (%d) "
+                        "but unsupported for device type %d\n",
+                        pres->pfres.name, totalvfs, pres->type);
         totalvfs = 0;
     }
 
