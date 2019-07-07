@@ -77,7 +77,7 @@ diff -uprN pciutils-3.5.6-orig/lib/internal.h pciutils-3.5.6/lib/internal.h
 diff -uprN pciutils-3.5.6-orig/lib/Makefile pciutils-3.5.6/lib/Makefile
 --- pciutils-3.5.6-orig/lib/Makefile	2014-11-01 10:04:20.000000000 -0700
 +++ pciutils-3.5.6/lib/Makefile	2018-02-10 23:05:23.232755294 -0800
-@@ -46,6 +46,17 @@ ifdef PCI_HAVE_PM_DARWIN_DEVICE
+@@ -46,6 +46,21 @@ ifdef PCI_HAVE_PM_DARWIN_DEVICE
  OBJS += darwin
  endif
  
@@ -86,10 +86,14 @@ diff -uprN pciutils-3.5.6-orig/lib/Makefile pciutils-3.5.6/lib/Makefile
 +# PEN_TOP is relative to parent dir, prepend ../ because we are
 +# building in lib/ subdir.
 +PEN_TOP ?= path-to-pensando-topdir
-+PEN_PCIE = ../$(PEN_TOP)/src/lib
++PEN_SDK = ../$(PEN_TOP)/../nic/sdk
 +OBJS += pen-libpciehost
-+pen-libpciehost.o: CFLAGS += -I$(PEN_PCIE)/pciemgrutils/include \
-+                             -I$(PEN_PCIE)/pciemgr/include
++pen-libpciehost.o: CFLAGS += \
++	-I$(PEN_SDK) \
++	-I$(PEN_SDK)/platform/pciemgrutils/include \
++	-I$(PEN_SDK)/platform/pciemgr/include \
++	-I$(PEN_SDK)/third-party/asic/capri/model/cap_top \
++	-I$(PEN_SDK)/third-party/asic/capri/model/cap_top/csr_defines
 +endif
 +
  all: $(PCILIB) $(PCILIBPC)

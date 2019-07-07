@@ -284,12 +284,13 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
     const u_int16_t bdf = pciehwdev_get_hostbdf(phwdev);
 
+    if (!phwbar->valid) return;
+
 #ifdef __aarch64__
     pciesys_loginfo("%s: bar %d pmt %d loaded\n",
                     pciehwdev_get_name(phwdev), spmt->cfgidx, pmti);
 #endif
 
-    assert(phwbar->valid);
     for ( ; spmt < spmte; spmt++, pmti++) {
         /*
          * Load PRT first, then load PMT so PMT tcam search hit
