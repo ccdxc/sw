@@ -99,7 +99,6 @@ error sendMsg(int sock, MessagePtr msg) {
         int nsent = send(sock, buffer, packetLength, 0);
         if (nsent == -1) {
             LogError("Error sending data {}", errno);
-            assert(nsent != -1);
             return error::New("Socket send failure");
         } else if (nsent == 0) {
             LogError("Remote side closed socket. errno {}", errno);

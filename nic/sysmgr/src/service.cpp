@@ -169,6 +169,7 @@ void Service::fault(std::string reason)
     }
     auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
     obj->set_state(::sysmgr::Fault);
+    obj->set_reason(reason);
     delphi_sdk->QueueUpdate(obj);
 
 }
