@@ -138,7 +138,7 @@ function delMenuEntryVersion() {
         echo Version ${VER} not found in file ${GRUBFILE}
         exit 10
     fi
-    sed -i "/${VER}/,/}/d" ${GRUBFILE}
+    sed -i "/ ${VER} /,/}/d" ${GRUBFILE}
 }
 
 function doDelImage() {
