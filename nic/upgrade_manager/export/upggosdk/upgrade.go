@@ -224,7 +224,7 @@ func (u *upgSdk) startUpgrade(upgType upgrade.UpgType, firmwarePkgName string) e
 		err = isUpgradeAllowed(firmwarePkgName)
 		if err != nil {
 			if err.Error() == "Upgrade image is same as running image" {
-				upgRespCtx.agentHdlrs.UpgSuccessful()
+				go upgRespCtx.agentHdlrs.UpgSuccessful()
 				return nil
 			}
 			return err
@@ -263,7 +263,7 @@ func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType, firmwarePkgName stri
 		err = isUpgradeAllowed(firmwarePkgName)
 		if err != nil {
 			if err.Error() == "Upgrade image is same as running image" {
-				upgRespCtx.agentHdlrs.UpgPossible(&upgCtx)
+				go upgRespCtx.agentHdlrs.UpgPossible(&upgCtx)
 				return nil
 			}
 			return err

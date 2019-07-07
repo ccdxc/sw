@@ -128,15 +128,26 @@ func NewNMD(delphiClient clientAPI.Client,
 		},
 	}
 
+	usePersisted := false
 	roObj, err := emdb.Read(&ro)
+	if roObj != nil && err == nil { // Rollout object found in DB
+		usePersisted = true
 
-	if roObj != nil && err == nil {
+		// Even if find the rollout object in DB, if upgrade manager does not think rollout is in progress
+		//	we will never get a response. In such a case clear our internal state
+		if _, err := os.Stat("/update/upgrade_halt_state_machine"); os.IsNotExist(err) {
+			log.Infof("Found Rollout object out of sync with upgrade manager. Clearing it.")
+			usePersisted = false
+		}
+	}
+
+	if usePersisted {
 		// Use the persisted config moving forward
 		ro = *roObj.(*nmd.NaplesRollout)
-		log.Infof("Rollout Object found in NMD DB. Using persisted values. %v", ro)
+		log.Infof("Using persisted Rollout values. %v", ro)
 	} else {
 		// persist the default rollout object
-		log.Info("Rollout Object not found in NMD DB. Persisting it in the DB.")
+		log.Info("Persisting Default Rollout Object.")
 		err = emdb.Write(&ro)
 		if err != nil {
 			log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)

@@ -6,11 +6,11 @@ import (
 	"io"
 	"os"
 
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -101,6 +101,7 @@ func downloadImage(ctx context.Context, resolver resolver.Interface, name string
 		log.Errorf("Could not get object (%s)", err)
 		return fmt.Errorf("Image doesnt exist in objectstore")
 	}
+	defer fr.Close()
 
 	of, err := os.Create(outFile)
 	if err != nil {

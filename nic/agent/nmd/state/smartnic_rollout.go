@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/venice/utils/imagestore"
 
@@ -149,17 +150,24 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
-		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.ro.Status.InProgressOp.Version)
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
 			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to get naples version from objectstore %+v", err)})
+			cancel()
+			return
 		}
-		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion, "/update/naples_fw.tar")
+		cancel()
+		ctx, cancel = context.WithTimeout(context.Background(), 2*time.Minute)
+		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
 			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to download naples image from objectstore %+v", err)})
-
+			cancel()
+			return
 		}
+		cancel()
 		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("StartPreCheckDisruptive returned %s", err)
@@ -167,16 +175,22 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICImageDownload:
-		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.ro.Status.InProgressOp.Version)
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
+			cancel()
 			return
 		}
-		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion, "/update/naples_fw.tar")
+		cancel()
+		ctx, cancel = context.WithTimeout(context.Background(), 2*time.Minute)
+		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
+			cancel()
 			return
 		}
+		cancel()
 		_, err = naplesPkgVerify("naples_fw.tar")
 		if err != nil {
 			log.Errorf("Firmware image verification failed %s", err)
