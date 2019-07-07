@@ -193,8 +193,12 @@ func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
 	if err := createMetaFiles(upgCtx.firmwarePkgName); err != nil {
 		return err
 	}
-	getUpgCtxFromImgMeta(upgCtx, true)
-	getUpgCtxFromImgMeta(upgCtx, false)
+	if err := getUpgCtxFromImgMeta(upgCtx, true); err != nil {
+		return err
+	}
+	if err := getUpgCtxFromImgMeta(upgCtx, false); err != nil {
+		return err
+	}
 	return nil
 }
 

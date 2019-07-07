@@ -152,6 +152,8 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 	var phase roproto.RolloutPhase_Phases
 	var reason, message string
 	var updateStatus = false
+	evt := fsmEvInvalid
+
 	snicState.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
 		log.Infof("Updating OpStatus %+v", s)
@@ -173,7 +175,6 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 		if existingStatus.OpStatus == s.OpStatus {
 			continue
 		}
-		evt := fsmEvInvalid
 		updateStatus = true
 		if s.OpStatus == "success" {
 			switch s.Op {
@@ -191,6 +192,9 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 				evt = fsmEvOneSmartNICUpgSuccess
 				phase = roproto.RolloutPhase_COMPLETE
 				snicState.ros.Status.CompletionPercentage += uint32(snicState.ros.completionDelta)
+			default:
+				log.Errorf("Success for unknown Op %d from %s ", s.Op, snicState.SmartNICRollout.Name)
+				return
 			}
 		} else {
 			switch s.Op {
@@ -210,21 +214,25 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
 				phase = roproto.RolloutPhase_FAIL
+			default:
+				log.Errorf("Failure for unknown Op %d from %s ", s.Op, snicState.SmartNICRollout.Name)
+				return
 			}
 		}
 		snicState.status[s.Op] = s
-		if evt != fsmEvInvalid {
-			snicState.ros.eventChan <- evt
 			message = s.Message
 			reason = s.OpStatus
-		}
+
+		break
 	}
-	snicState.Statemgr.memDB.UpdateObject(snicState)
+	if updateStatus {
+		snicState.Statemgr.memDB.UpdateObject(snicState)
+	}
 	snicState.Mutex.Unlock()
 	if updateStatus {
 		snicState.ros.setSmartNICPhase(snicState.Name, reason, message, phase)
+		snicState.ros.eventChan <- evt
 	}
-
 }
 
 func (snicState *SmartNICRolloutState) anyPendingOp() bool {

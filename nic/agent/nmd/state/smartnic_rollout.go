@@ -152,10 +152,13 @@ func (n *NMD) issueNextPendingOp() {
 		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to get naples version from objectstore %+v", err)})
 		}
 		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to download naples image from objectstore %+v", err)})
+
 		}
 		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.Status.InProgressOp.Version)
 		if err != nil {

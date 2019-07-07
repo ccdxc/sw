@@ -133,8 +133,8 @@ func (n *SmartNICRolloutRPCServer) UpdateSmartNICRolloutStatus(ctx context.Conte
 		status.ObjectMeta.Tenant,
 		status.ObjectMeta.Name)
 	if err != nil {
-		log.Debugf("non-existent SmartNICRollout {%+v}. Err: %v", status.ObjectMeta.Name, err)
-		return &api.Empty{}, fmt.Errorf("non-existent SmartNICRollout {%+v}. Err: %v", status.ObjectMeta.Name, err)
+		log.Infof("non-existent SmartNICRollout {%+v}. Err: %v", status.ObjectMeta.Name, err)
+		return &api.Empty{}, nil
 	}
 
 	sros.UpdateSmartNICRolloutStatus(&status.Status)

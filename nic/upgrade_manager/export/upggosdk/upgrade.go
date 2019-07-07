@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
