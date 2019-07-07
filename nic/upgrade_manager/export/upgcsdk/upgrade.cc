@@ -105,7 +105,8 @@ delphi::error UpgSdk::CanPerformUpgrade(UpgType upgType, string firmwarePkgName)
     GetUpgCtxFromMeta(ctx);
     if (IsPrePostImageMetaSame(ctx)) {
             if (!exists("/update/upgrade_to_same_firmware_allowed"))
-                return delphi::error("Upgrade image is same as running image");
+                upgMgrAgentRespPtr_->GetUpgAgentHandlerPtr()->UpgPossible(ctx);
+                return delphi::error::OK();
     }
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
@@ -140,7 +141,8 @@ delphi::error UpgSdk::StartUpgrade(UpgType upgType, string firmwarePkgName) {
     GetUpgCtxFromMeta(ctx);
     if (IsPrePostImageMetaSame(ctx)) {
             if (!exists("/update/upgrade_to_same_firmware_allowed"))
-                return delphi::error("Upgrade image is same as running image");
+                upgMgrAgentRespPtr_->GetUpgAgentHandlerPtr()->UpgSuccessful();
+                return delphi::error::OK();
     }
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();

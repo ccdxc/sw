@@ -24,6 +24,10 @@ public:
         sdk_ = sk;
     }
 
+    UpgAgentHandlerPtr GetUpgAgentHandlerPtr() {
+        return upgAgentHandler_;
+    }
+
     // OnUpgRespCreate gets called when UpgResp object is created
     virtual delphi::error OnUpgRespCreate(delphi::objects::UpgRespPtr resp);
 
