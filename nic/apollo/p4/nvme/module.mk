@@ -10,7 +10,9 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/nvme_req_tx.p4 \
 				  ${MODULE_SRC_DIR}/nvme_sess_pre_dgst_rx.p4 \
 				  ${MODULE_SRC_DIR}/nvme_sess_post_dgst_rx.p4 \
 				  ${MODULE_SRC_DIR}/nvme_sess_pre_xts_rx.p4 \
-				  ${MODULE_SRC_DIR}/nvme_sess_post_xts_rx.p4
+				  ${MODULE_SRC_DIR}/nvme_sess_post_xts_rx.p4 \
+				  ${MODULE_SRC_DIR}/nvme_sess_rsrc_free_rx.p4
+
 MODULE_PIPELINE = apollo
 MODULE_NCC_OPTS = --pipeline=apollo --p4-plus --pd-gen --asm-out --no-ohi \
 				  --two-byte-profile --fe-flags="-I${MODULE_SRC_DIR}/../txdma -I${MODULE_SRC_DIR}/../rxdma -I${TOPDIR} -I${SDKDIR} -DNVME_APOLLO" \

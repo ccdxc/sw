@@ -73,7 +73,69 @@ nlb, rsvd12, prinfo, fua, lr, dsm, rsvd13, dw14, dw15
     modify_field(nvme_sqe_d.dw14, dw14);\
     modify_field(nvme_sqe_d.dw15, dw15);
 
-// NVME status definition
+// Completion Queue - cqcb 
+// 64B
+header_type cqcb_t {
+    fields {
+        pc                             : 8;
+        // 7 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        // 4 Bytes SQ ring
+        CAPRI_QSTATE_HEADER_RING(0)
+        /* 12 Bytes/96 bits Fixed header */
+
+        // 2B
+        proxy_pindex                    : 16;
+
+        // 10B
+        cq_base_addr                    : 64;
+        log_num_wqes                    : 5;
+        log_wqe_size                    : 5;
+        rsvd0                           : 6;
+
+        // 1B
+        phase_tag                       : 1;
+        rsvd1                           : 7; 
+    
+        // Bytes
+        pad                             : 312;
+    }
+}
+
+#define CQCB_PARAMS                                                      \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0,      \
+proxy_pindex, cq_base_addr, log_num_wqes, log_wqe_size, rsvd0,           \
+phase_tag, rsvd1, pad
+    
+
+#define GENERATE_CQCB_D                                           \
+    modify_field(cqcb_d.rsvd, rsvd);                              \
+    modify_field(cqcb_d.cosA, cosA);                              \
+    modify_field(cqcb_d.cosB, cosB);                              \
+    modify_field(cqcb_d.cos_sel, cos_sel);                        \
+    modify_field(cqcb_d.eval_last, eval_last);                    \
+    modify_field(cqcb_d.host, host);                              \
+    modify_field(cqcb_d.total, total);                            \
+    modify_field(cqcb_d.pid, pid);                                \
+    modify_field(cqcb_d.pi_0, pi_0);                              \
+    modify_field(cqcb_d.ci_0, ci_0);                              \
+    modify_field(cqcb_d.proxy_pindex, proxy_pindex);              \
+    modify_field(cqcb_d.cq_base_addr, cq_base_addr);              \
+    modify_field(cqcb_d.log_num_wqes, log_num_wqes);              \
+    modify_field(cqcb_d.log_wqe_size, log_wqe_size);              \
+    modify_field(cqcb_d.rsvd0, rsvd0);                            \
+    modify_field(cqcb_d.phase_tag, phase_tag);                    \
+    modify_field(cqcb_d.rsvd1, rsvd1);                            \
+    modify_field(cqcb_d.pad, pad);                                \
+
+#define CQCB_PARAMS_NON_STG0                                    \
+    pc, CQCB_PARAMS
+
+#define GENERATE_CQCB_D_NON_STG0                                \
+    modify_field(cqcb_d.pc, pc);                                \
+    GENERATE_CQCB_D
+
+// NVME CQE definition
 header_type nvme_cqe_t {
   fields {
     // NVME status Dword 0
@@ -1595,20 +1657,197 @@ page_ptr, session_id, pad
     modify_field(sessxtsrxcb_d.pc, pc);                                \
     GENERATE_SESSXTSRXCB_D
 
-// cqe that gets posted into sesscq queue
-header_type sess_cqe_t {
+// wqe that gets posted into sessrf queue
+header_type sess_rfwqe_t {
     fields {
-        sqid     : 16;
-        sq_head  : 16;
-        status   : 16;
-        cmdid    : 16;
+        cmd_id      : 16; // command identifier
+        pdu_id      : 16; // PDU identifier
+        num_pages   : 8;  // num-of-pages to free
     }
 }
-#define SESS_CQE_PARAMS  \
-sqid, sq_head, status, cid
 
-#define GENERATE_SESS_CQE_D \
-    modify_field(sess_cqe_d.sqid, sqid); \
-    modify_field(sess_cqe_d.sq_head, sq_head); \
-    modify_field(sess_cqe_d.status, status); \
-    modify_field(sess_cqe_d.cmdid, cmdid);
+#define SESS_RFWQE_PARAMS  \
+cmd_id, pdu_id, num_pages
+
+#define GENERATE_SESS_RFWQE_D \
+    modify_field(sess_rfwqe_d.cmd_id, cmd_id); \
+    modify_field(sess_rfwqe_d.pdu_id, pdu_id); \
+    modify_field(sess_rfwqe_d.num_pages, num_pages); 
+
+// session resource-free cb
+// 64B  
+header_type rfcb_t {
+    fields {
+        //12B
+        pc                             : 8;
+        // 7 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        // 4 Bytes Ring 0
+        CAPRI_QSTATE_HEADER_RING(0)
+
+        //6B
+        base_addr                       : 34;
+        log_num_entries                 : 5;
+        ring_empty_sched_eval_done      : 1;
+        rsvd0                           : 8;
+    
+        //4B
+        sqid                           : 16; // Submission-Queue corresponding to this session.
+        cqid                           : 16; // Completion-Queue corresponding to this session.
+ 
+        // Status info/flags
+        // 7B
+        r0_busy                        : 1; // WO S0, RO S6
+        rsvd1                          : 7;
+
+        wb_r0_busy                     : 1; // WO S6, RO S0
+        rsvd2                          : 7;
+
+        in_progress                    : 1; // WO S6, RO S0
+        completion_done                : 1; // WO S6, RO S0
+        pduid_freed                    : 1; // WO S6, RO S0
+        cmdid_freed                    : 1; // WO S6, RO S0
+        rsvd3                          : 4; 
+
+        cur_page                       : 8; 
+        num_pages                      : 8; // Num pages referred by cur_pduid.
+        cur_pduid                      : 16; // pduid in processing.
+
+        pad                            : 280; 
+    }
+}
+
+#define RFCB_PARAMS                                                          \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0,          \
+base_addr, log_num_entries, ring_empty_sched_eval_done, rsvd0,           \
+sqid, cqid, r0_busy, rsvd1, wb_r0_busy, rsvd2, in_progress, completion_done, \
+pduid_freed, cmdid_freed, rsvd3, cur_page, num_pages, cur_pduid, pad 
+
+
+#define GENERATE_RFCB_D                                           \
+    modify_field(rfcb_d.rsvd, rsvd);                              \
+    modify_field(rfcb_d.cosA, cosA);                              \
+    modify_field(rfcb_d.cosB, cosB);                              \
+    modify_field(rfcb_d.cos_sel, cos_sel);                        \
+    modify_field(rfcb_d.eval_last, eval_last);                    \
+    modify_field(rfcb_d.host, host);                              \
+    modify_field(rfcb_d.total, total);                            \
+    modify_field(rfcb_d.pid, pid);                                \
+    modify_field(rfcb_d.pi_0, pi_0);                              \
+    modify_field(rfcb_d.ci_0, ci_0);                              \
+    modify_field(rfcb_d.base_addr, base_addr);                    \
+    modify_field(rfcb_d.log_num_entries, log_num_entries);        \
+    modify_field(rfcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done); \
+    modify_field(rfcb_d.rsvd0, rsvd0);                            \
+    modify_field(rfcb_d.sqid, sqid);                              \
+    modify_field(rfcb_d.cqid, cqid);                              \
+    modify_field(rfcb_d.r0_busy, r0_busy);                        \
+    modify_field(rfcb_d.rsvd1, rsvd1);                             \
+    modify_field(rfcb_d.wb_r0_busy, wb_r0_busy);                  \
+    modify_field(rfcb_d.rsvd2, rsvd2);                            \
+    modify_field(rfcb_d.in_progress, in_progress);                \
+    modify_field(rfcb_d.completion_done, completion_done);        \
+    modify_field(rfcb_d.pduid_freed, pduid_freed);                \
+    modify_field(rfcb_d.cmdid_freed, cmdid_freed);                \
+    modify_field(rfcb_d.rsvd3, rsvd3);                            \
+    modify_field(rfcb_d.cur_page, cur_page);                      \
+    modify_field(rfcb_d.num_pages, num_pages);                    \
+    modify_field(rfcb_d.cur_pduid, cur_pduid);                    \
+    modify_field(rfcb_d.pad, pad);                                \
+        
+#define RFCB_PARAMS_NON_STG0                                    \
+    pc, RFCB_PARAMS
+        
+#define GENERATE_RFCB_D_NON_STG0                                \
+    modify_field(rfcb_d.pc, pc);                                \
+    GENERATE_RFCB_D
+
+// RF stats cb
+header_type rf_statscb_t {
+    fields {
+        //64 Bytes
+        pad                             : 512;
+    }
+}
+
+#define RF_STATSCB_PARAMS                                                      \
+pad
+
+#define GENERATE_RF_STATSCB_D                                                  \
+    modify_field(rf_statscb_d.pad, pad);                                       \
+
+// Page metadata cb
+header_type page_metadata_cb_t {
+    fields {
+        refcnt                          : 16;
+        more_pdus                       :  1;
+
+        //62 Bytes
+        pad                             : 495;
+    }
+}
+
+#define PAGE_METADATA_PARAMS                                            \
+refcnt, more_pdus, pad
+
+#define GENERATE_PAGE_METADATA_D                          \
+    modify_field(page_metadata_cb_d.refcnt, refcnt);      \
+    modify_field(page_metadata_cb_d.more_pdus, more_pdus);      \
+    modify_field(page_metadata_cb_d.pad, pad);             \
+
+// PDU context page pointers
+header_type pdu_ctxt_page_ptrs_cb_t {
+    fields {
+        page_addr1                  : 64;
+        page_addr2                  : 64;
+        page_addr3                  : 64;
+        page_addr4                  : 64;
+        page_addr5                  : 64;
+        page_addr6                  : 64;
+        page_addr7                  : 64;
+        page_addr8                  : 64;
+    }
+}
+
+#define PDU_CTXT_PAGE_PTRS_PARAMS               \
+page_addr1, page_addr2, page_addr3, page_addr4, \
+page_addr5, page_addr6, page_addr7, page_addr8
+
+#define GENERATE_PDU_CTXT_PAGE_PTRS_D                                  \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr1, page_addr1);      \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr2, page_addr2);      \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr3, page_addr3);      \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr4, page_addr4);      \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr5, page_addr5);      \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr6, page_addr6);      \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr7, page_addr7);      \
+    modify_field(pdu_ctxt_page_ptrs_cb_d.page_addr8, page_addr8);      
+
+
+// nmdpr resource cb
+header_type nmdpr_resourcecb_t {
+    fields {
+        // ring of free pages rx.
+        rx_nmdpr_ring_pi                : 16;
+        rx_nmdpr_ring_proxy_pi          : 16;
+        rx_nmdpr_ring_proxy_ci          : 16;
+        rx_nmdpr_ring_ci                : 16;
+        rx_nmdpr_ring_choke_counter     : 16;
+
+        //54 Bytes
+        pad                             : 432;
+    }
+}
+
+#define NMDPR_RESOURCECB_PARAMS                                   \
+rx_nmdpr_ring_pi, rx_nmdpr_ring_proxy_pi, rx_nmdpr_ring_proxy_ci, \
+rx_nmdpr_ring_ci, rx_nmdpr_ring_choke_counter, pad
+
+#define GENERATE_NMDPR_RESOURCECB_D                                           \
+    modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_pi, rx_nmdpr_ring_pi);      \
+    modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_proxy_pi, rx_nmdpr_ring_proxy_pi);      \
+    modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_proxy_ci, rx_nmdpr_ring_proxy_ci);      \
+    modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_ci, rx_nmdpr_ring_ci);      \
+    modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_choke_counter, rx_nmdpr_ring_choke_counter);      \
+    modify_field(nmdpr_resourcecb_d.pad, pad);      
+

@@ -196,15 +196,15 @@ metadata nvme_sesspostxts_rx_sessprodrxcb_to_writeback_t t0_s2s_sessprodrxcb_to_
 
 /**** PHV Layout ****/
 @pragma dont_trim
-metadata sess_cqe_t sess_cqe;
+metadata sess_rfwqe_t sess_rfwqe;
 @pragma dont_trim
-metadata data64_t sess_cq_db;
+metadata data64_t sess_rfwqe_db;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t sess_cqe_dma;         //dma cmd 0
+metadata dma_cmd_phv2mem_t sess_rfwqe_dma;         //dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t sess_cq_db_dma;          //dma cmd 1
+metadata dma_cmd_phv2mem_t sess_rf_db_dma;          //dma cmd 1
 
 /*
  * Stage 0 table 0 action
