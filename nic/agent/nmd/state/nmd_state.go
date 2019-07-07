@@ -1252,7 +1252,7 @@ func (n *NMD) writeDeviceFiles() (err error) {
 	}
 
 	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN.String(), device.FeatureProfile_FEATURE_PROFILE_NONE, device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(), mgmtIfMAC)
-	return
+	return err
 }
 
 //// UpdateMgmtIP updates the management IP
@@ -1337,7 +1337,7 @@ func (n *NMD) PersistDeviceSpec(fwdMode string, featureProfile device.FeaturePro
 	if err != nil {
 		log.Errorf("Failed to backup device config")
 	}
-	return
+	return err
 }
 
 // BackupDeviceConfig backs up the device.conf from config0 to config1

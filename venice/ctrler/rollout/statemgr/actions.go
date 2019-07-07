@@ -178,7 +178,7 @@ func (ros *RolloutState) startNextVeniceRollout() (int, error) {
 		if v.Name != selectedVenice {
 			continue
 		}
-		v.Spec.Ops = append(v.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: version})
+		v.Spec.Ops = append(v.Spec.Ops, protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: version})
 
 		log.Debugf("setting VeniceRollout for %v with version %v", v.Name, version)
 		err = sm.memDB.UpdateObject(v)
@@ -275,7 +275,7 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 		}
 
 		if !found {
-			v.Spec.Ops = append(v.Spec.Ops, &protos.ServiceOpSpec{Op: protos.ServiceOp_ServiceRunVersion, Version: version})
+			v.Spec.Ops = append(v.Spec.Ops, protos.ServiceOpSpec{Op: protos.ServiceOp_ServiceRunVersion, Version: version})
 			log.Infof("setting serviceRollout with version %v", version)
 			err = sm.memDB.UpdateObject(v)
 			return true, err // return pending servicerollout with err
@@ -284,7 +284,7 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 			log.Infof("Spec and Status found. no pending serviceRollout")
 			return false, nil // spec and status found. no pending servicerollout
 		}
-		log.Infof("Spec found but no Status. no pending serviceRollout")
+		log.Infof("Spec found but no Status. pending serviceRollout")
 		return true, nil // spec found but status not found. return pending servicerollout
 	}
 
@@ -297,7 +297,7 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 			Name: "serviceRollout",
 		},
 		Spec: protos.ServiceRolloutSpec{
-			Ops: []*protos.ServiceOpSpec{
+			Ops: []protos.ServiceOpSpec{
 				{
 					Op:      protos.ServiceOp_ServiceRunVersion,
 					Version: version,
@@ -362,7 +362,7 @@ Loop:
 							Tenant: snicState.Tenant,
 						},
 						Spec: protos.SmartNICRolloutSpec{
-							Ops: []*protos.SmartNICOpSpec{
+							Ops: []protos.SmartNICOpSpec{
 								{
 									Op:      op,
 									Version: version,
@@ -662,7 +662,7 @@ func (ros *RolloutState) preCheckNextVeniceNode() (lenPendingStatus int, errored
 			Name: n,
 		},
 		Spec: protos.VeniceRolloutSpec{
-			Ops: []*protos.VeniceOpSpec{
+			Ops: []protos.VeniceOpSpec{
 				{
 					Op:      protos.VeniceOp_VenicePreCheck,
 					Version: version,

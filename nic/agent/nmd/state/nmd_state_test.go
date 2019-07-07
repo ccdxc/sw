@@ -1037,7 +1037,7 @@ func TestNaplesRollout(t *testing.T) {
 			Name: nm.GetPrimaryMAC(),
 		},
 		Spec: roprotos.SmartNICRolloutSpec{
-			Ops: []*roprotos.SmartNICOpSpec{
+			Ops: []roprotos.SmartNICOpSpec{
 				{
 					Op:      roprotos.SmartNICOp_SmartNICPreCheckForDisruptive,
 					Version: "ver1",
@@ -1064,7 +1064,7 @@ func TestNaplesRollout(t *testing.T) {
 	// we expect that status should reflect the second Op to be successful
 	// and the status should contain both the Ops as success
 	t.Log("ver1 DoDisruptive")
-	sro.Spec.Ops = append(sro.Spec.Ops, &roprotos.SmartNICOpSpec{
+	sro.Spec.Ops = append(sro.Spec.Ops, roprotos.SmartNICOpSpec{
 		Op:      roprotos.SmartNICOp_SmartNICDisruptiveUpgrade,
 		Version: "ver1",
 	})

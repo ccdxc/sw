@@ -35,7 +35,7 @@ func (n *ServiceRolloutRPCServer) WatchServiceRollout(sel *api.ObjectMeta, strea
 	rs, err := n.stateMgr.ListServiceRollouts()
 	if err != nil {
 		log.Errorf("Error listing existing ServiceRollout %v", err)
-		return fmt.Errorf("Error %v listing exisitng ServiceRollout", err)
+		return fmt.Errorf("error %v listing existing ServiceRollout", err)
 	}
 	for _, svcRolloutState := range rs {
 		watchEvt := protos.ServiceRolloutEvent{
@@ -63,7 +63,7 @@ func (n *ServiceRolloutRPCServer) WatchServiceRollout(sel *api.ObjectMeta, strea
 		case evt, ok := <-watchChan:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
-				return errors.New("Error reading from channel")
+				return errors.New("error reading from channel")
 			}
 
 			// get event type from memdb event
@@ -90,7 +90,7 @@ func (n *ServiceRolloutRPCServer) WatchServiceRollout(sel *api.ObjectMeta, strea
 					TypeMeta:   snRolloutState.TypeMeta,
 					ObjectMeta: snRolloutState.ObjectMeta,
 					Spec: protos.ServiceRolloutSpec{
-						Ops: append([]*protos.ServiceOpSpec{}, snRolloutState.Spec.Ops...),
+						Ops: append([]protos.ServiceOpSpec{}, snRolloutState.Spec.Ops...),
 					},
 				},
 			}

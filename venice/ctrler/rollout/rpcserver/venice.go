@@ -36,7 +36,7 @@ func (n *VeniceRolloutRPCServer) WatchVeniceRollout(sel *api.ObjectMeta, stream 
 	rs, err := n.stateMgr.ListVeniceRollouts()
 	if err != nil {
 		log.Errorf("Error listing existing VeniceRollout %v", err)
-		return fmt.Errorf("Error %v listing exisitng VeniceRollout", err)
+		return fmt.Errorf("error %v listing existing VeniceRollout", err)
 	}
 	for _, vRolloutState := range rs {
 		if vRolloutState.ObjectMeta.Name != sel.Name {
@@ -68,7 +68,7 @@ func (n *VeniceRolloutRPCServer) WatchVeniceRollout(sel *api.ObjectMeta, stream 
 		case evt, ok := <-watchChan:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
-				return errors.New("Error reading from watch channel")
+				return errors.New("error reading from watch channel")
 			}
 
 			// get event type from memdb event
@@ -98,7 +98,7 @@ func (n *VeniceRolloutRPCServer) WatchVeniceRollout(sel *api.ObjectMeta, stream 
 					TypeMeta:   vRolloutState.TypeMeta,
 					ObjectMeta: vRolloutState.ObjectMeta,
 					Spec: protos.VeniceRolloutSpec{
-						Ops: append([]*protos.VeniceOpSpec{}, vRolloutState.Spec.Ops...),
+						Ops: append([]protos.VeniceOpSpec{}, vRolloutState.Spec.Ops...),
 					},
 				},
 			}

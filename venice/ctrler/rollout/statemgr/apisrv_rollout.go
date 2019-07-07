@@ -143,7 +143,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 					Name: n,
 				},
 				Spec: protos.VeniceRolloutSpec{
-					Ops: []*protos.VeniceOpSpec{
+					Ops: []protos.VeniceOpSpec{
 						{
 							Op:      protos.VeniceOp_VenicePreCheck,
 							Version: ro.Spec.Version,
@@ -196,7 +196,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 						Tenant: snicState.Tenant,
 					},
 					Spec: protos.SmartNICRolloutSpec{
-						Ops: []*protos.SmartNICOpSpec{
+						Ops: []protos.SmartNICOpSpec{
 							{
 								Op:      op,
 								Version: ros.Rollout.Spec.Version,
@@ -228,7 +228,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 				Name: "serviceRollout",
 			},
 			Spec: protos.ServiceRolloutSpec{
-				Ops: []*protos.ServiceOpSpec{
+				Ops: []protos.ServiceOpSpec{
 					{
 						Op:      protos.ServiceOp_ServiceRunVersion,
 						Version: ros.Rollout.Spec.Version,

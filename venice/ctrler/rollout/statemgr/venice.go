@@ -47,10 +47,10 @@ func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *Roll
 		vros.status[protos.VeniceOp_VenicePreCheck] = st
 
 		if nodeStatus.Phase == rollout.RolloutPhase_PROGRESSING.String() {
-			vros.Spec.Ops = append(vros.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: ros.Rollout.Spec.Version})
+			vros.Spec.Ops = append(vros.Spec.Ops, protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: ros.Rollout.Spec.Version})
 		}
 		if nodeStatus.Phase == rollout.RolloutPhase_COMPLETE.String() {
-			vros.Spec.Ops = append(vros.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: ros.Rollout.Spec.Version})
+			vros.Spec.Ops = append(vros.Spec.Ops, protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: ros.Rollout.Spec.Version})
 			stNext := protos.VeniceOpStatus{
 				Op:       protos.VeniceOp_VeniceRunVersion,
 				Version:  ros.Spec.Version,

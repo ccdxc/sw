@@ -31,7 +31,7 @@ message SmartNICOpSpec {
 }
 
 message SmartNICRolloutSpec {
-  repeated SmartNICOpSpec Ops = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = "ops,omitempty"];
+  repeated SmartNICOpSpec Ops = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag)  = "ops,omitempty"];
 }
 
 enum AllowedStatus {
@@ -86,7 +86,7 @@ message VeniceOpSpec {
 }
 
 message VeniceRolloutSpec {
-  repeated VeniceOpSpec Ops = 1;
+  repeated VeniceOpSpec Ops = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag)  = "ops,omitempty"];
 }
 
 message VeniceOpStatus {
@@ -136,7 +136,7 @@ message ServiceOpSpec {
 }
 
 message ServiceRolloutSpec {
-  repeated ServiceOpSpec Ops = 1;
+  repeated ServiceOpSpec Ops = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag)  = "ops,omitempty"];
 }
 
 message ServiceOpStatus {

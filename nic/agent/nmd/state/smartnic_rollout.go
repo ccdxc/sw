@@ -33,7 +33,7 @@ func (n *NMD) DeleteSmartNICRollout(sro *protos.SmartNICRollout) error {
 	defer n.Unlock()
 
 	n.updateRolloutStatus(protos.SmartNICOpSpec{Op: protos.SmartNICOp_SmartNICNoOp})
-	n.updateOps([]*protos.SmartNICOpSpec{})
+	n.updateOps([]protos.SmartNICOpSpec{})
 	return nil
 }
 
@@ -70,16 +70,16 @@ func (n *NMD) updateRolloutStatus(inProgressOp protos.SmartNICOpSpec) {
 	Else add the op to the pending list.
 	if an already complete op is not found in the new request, remove it from the completedOps and status
 */
-func (n *NMD) updateOps(ops []*protos.SmartNICOpSpec) error {
+func (n *NMD) updateOps(ops []protos.SmartNICOpSpec) error {
 	newOps := make(map[protos.SmartNICOpSpec]bool)
 	newPendingOps := []protos.SmartNICOpSpec{}
 	for _, o := range ops {
-		newOps[*o] = true
+		newOps[o] = true
 
-		if n.completedOps[*o] || (*n.ro.Status.InProgressOp == *o) {
+		if n.completedOps[o] || (*n.ro.Status.InProgressOp == o) {
 			continue
 		} else {
-			newPendingOps = append(newPendingOps, *o)
+			newPendingOps = append(newPendingOps, o)
 		}
 	}
 	n.pendingOps = newPendingOps

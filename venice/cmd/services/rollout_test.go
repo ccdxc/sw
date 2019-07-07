@@ -90,7 +90,7 @@ func TestRolloutMgr(t *testing.T) {
 
 	sro := rolloutproto.ServiceRollout{
 		Spec: rolloutproto.ServiceRolloutSpec{
-			Ops: []*rolloutproto.ServiceOpSpec{
+			Ops: []rolloutproto.ServiceOpSpec{
 				{
 					Op:      rolloutproto.ServiceOp_ServiceRunVersion,
 					Version: "image_version_2",
@@ -152,7 +152,7 @@ func TestRolloutMgr(t *testing.T) {
 
 	vro := rolloutproto.VeniceRollout{
 		Spec: rolloutproto.VeniceRolloutSpec{
-			Ops: []*rolloutproto.VeniceOpSpec{
+			Ops: []rolloutproto.VeniceOpSpec{
 				{
 					Op:      rolloutproto.VeniceOp_VenicePreCheck,
 					Version: "image_version_2",

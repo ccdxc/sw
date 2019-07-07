@@ -489,7 +489,7 @@ func (n *NMD) AdmitNaples() {
 								Tenant: n.config.Tenant,
 							},
 							Spec: protos.SmartNICRolloutSpec{
-								Ops: []*protos.SmartNICOpSpec{
+								Ops: []protos.SmartNICOpSpec{
 									{
 										Op:      protos.SmartNICOp_SmartNICImageDownload,
 										Version: resp.RolloutVersion,

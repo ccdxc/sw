@@ -64,10 +64,10 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 		sros.status[op] = st
 
 		if snicStatus.Phase == roproto.RolloutPhase_PROGRESSING.String() {
-			sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
+			sros.Spec.Ops = append(sros.Spec.Ops, protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
 		}
 		if snicStatus.Phase == roproto.RolloutPhase_COMPLETE.String() {
-			sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
+			sros.Spec.Ops = append(sros.Spec.Ops, protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
 			stNext := protos.SmartNICOpStatus{
 				Op:       nextOp,
 				Version:  ros.Rollout.Spec.Version,
@@ -226,7 +226,9 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 		break
 	}
 	if updateStatus {
-		snicState.Statemgr.memDB.UpdateObject(snicState)
+		if err := snicState.Statemgr.memDB.UpdateObject(snicState); err != nil {
+			log.Errorf("smartNICUpdate Object for %s returned %s", snicState.Name, err.Error())
+		}
 	}
 	snicState.Mutex.Unlock()
 	if updateStatus {
@@ -258,10 +260,11 @@ func (snicState *SmartNICRolloutState) addSpecOp(version string, op protos.Smart
 			return // version and op already exist
 		}
 	}
-	snicState.Spec.Ops = snicState.Spec.Ops[:0]
+	snicState.Spec.Ops = []protos.SmartNICOpSpec{{Op: op, Version: version}}
 	log.Infof("version %s and op %s update %+v", version, op, snicState.Spec.Ops)
-	snicState.Spec.Ops = append(snicState.Spec.Ops, &protos.SmartNICOpSpec{Op: op, Version: version})
 	snicState.Mutex.Unlock()
 
-	snicState.Statemgr.memDB.UpdateObject(snicState)
+	if err := snicState.Statemgr.memDB.UpdateObject(snicState); err != nil {
+		log.Errorf("smartNICUpdate Object for %s returned %s", snicState.Name, err.Error())
+	}
 }

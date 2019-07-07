@@ -36,7 +36,7 @@ func (n *SmartNICRolloutRPCServer) WatchSmartNICRollout(sel *api.ObjectMeta, str
 	rs, err := n.stateMgr.ListSmartNICRollouts()
 	if err != nil {
 		log.Errorf("Error listing existing SmartNICRollout %v", err)
-		return fmt.Errorf("Error %v listing exisitng SmartNICRollout", err)
+		return fmt.Errorf("error %v listing existing SmartNICRollout", err)
 	}
 	for _, snRolloutState := range rs {
 		if snRolloutState.ObjectMeta.Name != sel.Name {
@@ -69,7 +69,7 @@ func (n *SmartNICRolloutRPCServer) WatchSmartNICRollout(sel *api.ObjectMeta, str
 		case evt, ok := <-watchChan:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
-				return errors.New("Error reading from channel")
+				return errors.New("error reading from channel")
 			}
 
 			// get event type from memdb event
@@ -99,7 +99,7 @@ func (n *SmartNICRolloutRPCServer) WatchSmartNICRollout(sel *api.ObjectMeta, str
 					TypeMeta:   snRolloutState.TypeMeta,
 					ObjectMeta: snRolloutState.ObjectMeta,
 					Spec: protos.SmartNICRolloutSpec{
-						Ops: append([]*protos.SmartNICOpSpec{}, snRolloutState.Spec.Ops...),
+						Ops: append([]protos.SmartNICOpSpec{}, snRolloutState.Spec.Ops...),
 					},
 				},
 			}
@@ -108,10 +108,10 @@ func (n *SmartNICRolloutRPCServer) WatchSmartNICRollout(sel *api.ObjectMeta, str
 				// No spec update. suppressing watch
 				continue
 			}
-			if etype == api.EventType_DeleteEvent {
-				sentSpec = protos.SmartNICRolloutSpec{}
-			} else {
-				sentSpec = watchEvt.SmartNICRollout.Spec
+
+			sentSpec = protos.SmartNICRolloutSpec{}
+			if etype != api.EventType_DeleteEvent {
+				sentSpec.Ops = watchEvt.SmartNICRollout.Spec.Ops
 			}
 
 			err = stream.Send(&watchEvt)
@@ -119,7 +119,7 @@ func (n *SmartNICRolloutRPCServer) WatchSmartNICRollout(sel *api.ObjectMeta, str
 				log.Errorf("Error sending smartNICRollout Watch evt to %v Err: %v", sel.Name, err)
 				return err
 			}
-			log.Debugf("Sent smartNICRollout to %s ", watchEvt.SmartNICRollout.Name)
+			log.Debugf("Sent smartNICRollout Spec:%v to %s ", watchEvt.SmartNICRollout.Spec, watchEvt.SmartNICRollout.Name)
 
 		case <-ctx.Done():
 			return ctx.Err()
