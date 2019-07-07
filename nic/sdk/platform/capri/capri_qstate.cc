@@ -21,6 +21,13 @@ clear_qstate_entry(T *entry) {
     entry->write();
 }
 
+template <typename T>
+void
+reset_qstate_entry(T *entry) {
+    entry->vld(0);
+    entry->write();
+}
+
 void
 capri_clear_qstate_map (uint32_t lif_id)
 {
@@ -32,6 +39,19 @@ capri_clear_qstate_map (uint32_t lif_id)
     clear_qstate_entry(psp_entry);
     auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[lif_id];
     clear_qstate_entry(pr_entry);
+}
+
+void
+capri_reset_qstate_map (uint32_t lif_id)
+{
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
+
+    auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[lif_id];
+    reset_qstate_entry(wa_entry);
+    auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[lif_id];
+    reset_qstate_entry(psp_entry);
+    auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[lif_id];
+    reset_qstate_entry(pr_entry);
 }
 
 #define CAPRI_SET_QSTATE_MAP_ENTRY(QID)                                 \

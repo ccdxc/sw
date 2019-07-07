@@ -2,6 +2,7 @@
 
 #include "nic/include/pd_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
+#include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
 #include "nic/hal/pd/common_p4plus/common_p4plus.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
@@ -50,6 +51,13 @@ pd_asic_init (pd_func_args_t *pd_func_args)
     ret = capri_barco_crypto_init(args->cfg->platform);
     SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri barco crypto init failure, err : {}", ret);
+
+    ret = (hal_ret_t)sdk::platform::utils::lif_mgr::lifs_reset(
+                                                    HAL_LIF_ID_UPLINK_MIN - 1,
+                                                    HAL_LIF_ID_SVC_LIF_MAX);
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "LIF reset failure, err : {}", ret);
+
     return HAL_RET_OK;
 }
 

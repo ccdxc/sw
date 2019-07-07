@@ -3,6 +3,7 @@
 #include "platform/capri/capri_cfg.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_qstate.hpp"
 #include "platform/capri/capri_quiesce.hpp"
 #include "asic/rw/asicrw.hpp"
 #include "lib/p4/p4_api.hpp"

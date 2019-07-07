@@ -55,5 +55,5 @@ private:
 } // namespace platform
 } // namespace sdk
 
-#endif // _LIF_MANAGER_HPP_
+#endif    // _LIF_MANAGER_HPP_
 

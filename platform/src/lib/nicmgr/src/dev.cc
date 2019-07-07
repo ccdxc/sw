@@ -20,6 +20,7 @@
 
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/misc/include/maclib.h"
+#include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
 
 #include "logger.hpp"
 
@@ -103,6 +104,11 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN, (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
+    }
+    ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF,
+                                                    NICMGR_LIF_MAX);
+    if (ret != sdk::SDK_RET_OK) {
+        throw runtime_error("Failed to reset LIFs");
     }
 
     upg_state = UNKNOWN_STATE;

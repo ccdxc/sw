@@ -65,6 +65,7 @@ public:
     mpartition *get_mpartition() {
         return mp_;
     }
+    static sdk_ret_t lifs_reset(uint32_t start_lif, uint32_t end_lif);
 
 };
 
@@ -95,8 +96,6 @@ public:
 
 #define LIF_MGR_API_END_UNLOCK()                                        \
     SDK_SPINLOCK_UNLOCK(&slock_);
-
-
 
 } // namespace utils
 } // namespace platform

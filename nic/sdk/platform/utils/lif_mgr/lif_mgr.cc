@@ -1,8 +1,10 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
-#include "platform/utils/lif_mgr/lif_mgr.hpp"
 #include "include/sdk/mem.hpp"
+#include "platform/utils/lif_mgr/lif_mgr.hpp"
+#include "platform/capri/capri_qstate.hpp"
+
 namespace sdk {
 namespace platform {
 namespace utils {
@@ -531,6 +533,17 @@ lif_mgr::remove(uint32_t lif_id)
 end:
     LIF_MGR_API_END_UNLOCK();
     return ret;
+}
+
+// TODO : Handle HAL/nicmgr process restarts
+sdk_ret_t
+lif_mgr::lifs_reset(uint32_t start_lif, uint32_t end_lif)
+{
+    for (uint32_t lif_id = start_lif; lif_id <= end_lif; lif_id++) {
+        sdk::platform::capri::capri_reset_qstate_map(lif_id);
+    }
+
+    return SDK_RET_OK;
 }
 
 

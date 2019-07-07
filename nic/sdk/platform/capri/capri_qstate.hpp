@@ -18,6 +18,7 @@ void capri_reprogram_qstate_map(uint32_t lif_id, uint8_t enable);
 sdk_ret_t capri_read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size);
 sdk_ret_t capri_write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size);
 sdk_ret_t capri_clear_qstate(lif_qstate_t *qstate);
+void capri_reset_qstate_map(uint32_t lif_id);
 
 // ---- Deprecated ----
 void push_qstate_to_capri(utils::LIFQState *qstate, int cos);
