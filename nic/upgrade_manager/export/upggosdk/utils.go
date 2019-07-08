@@ -36,8 +36,7 @@ func createMetaFile(filename string, content string) error {
 
 	defer f.Close()
 
-	_, err = f.WriteString(content)
-	if err != nil {
+	if _, err = f.WriteString(content); err != nil {
 		return err
 	}
 
@@ -74,8 +73,7 @@ func createMetaFiles(pkgName string) error {
 	if err != nil {
 		return err
 	}
-	err = createMetaFile("/tmp/upg_meta.json", content)
-	return err
+	return createMetaFile("/tmp/upg_meta.json", content)
 }
 
 func pkgVerify(pkgName string) (string, error) {

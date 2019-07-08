@@ -124,7 +124,11 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 			return err
 		}
 		defer preUpgJSONFile.Close()
-		byteValue, _ := ioutil.ReadAll(preUpgJSONFile)
+		byteValue, err := ioutil.ReadAll(preUpgJSONFile)
+		if err != nil {
+			log.Infof("Error %s", err)
+			return err
+		}
 
 		var preImgMeta preUpgImgMeta
 		err = json.Unmarshal(byteValue, &preImgMeta)
@@ -171,7 +175,10 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 			return err
 		}
 		defer postUpgJSONFile.Close()
-		byteValue, _ := ioutil.ReadAll(postUpgJSONFile)
+		byteValue, err := ioutil.ReadAll(postUpgJSONFile)
+		if err != nil {
+			return err
+		}
 
 		var postImgMeta postUpgImgMeta
 		err = json.Unmarshal(byteValue, &postImgMeta)
