@@ -237,7 +237,7 @@ compress_chain(struct chain_entry *centry)
 			err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
 					status_desc);
 			if (err) {
-				OSAL_LOG_ERROR("failed to setup cp/pad params! err: %d",
+				OSAL_LOG_DEBUG("failed to setup cp/pad params! err: %d",
 						err);
 				goto out;
 			}
@@ -250,7 +250,7 @@ compress_chain(struct chain_entry *centry)
 
 	err = seq_setup_cp_chain_params(svc_info, cp_desc, status_desc);
 	if (err) {
-		OSAL_LOG_ERROR("failed to setup cp in chain! err: %d", err);
+		OSAL_LOG_DEBUG("failed to setup cp in chain! err: %d", err);
 		goto out;
 	}
 
@@ -283,7 +283,7 @@ done:
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 

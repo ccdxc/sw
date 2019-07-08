@@ -1056,6 +1056,6 @@ bat_flush_batch(struct request_params *req_params)
 
 out:
 	PAS_INC_NUM_BATCH_REQUEST_FAILURES(pcr, num_entries);
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }

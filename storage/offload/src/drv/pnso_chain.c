@@ -969,7 +969,7 @@ hw_ring_take(struct service_chain *chain)
 	return PNSO_OK;
 
 out:
-	OSAL_LOG_ERROR("HW ring %s potential overflow! err: %d",
+	OSAL_LOG_NOTICE("HW ring %s potential overflow! err: %d",
 			sonic_accel_ring_name_get(ring_id), err);
 	return err;
 }
@@ -1303,7 +1303,7 @@ chn_create_chain(struct request_params *req_params,
 out_chain:
 	chn_destroy_chain(chain);
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 

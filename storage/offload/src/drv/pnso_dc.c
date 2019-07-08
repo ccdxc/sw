@@ -199,7 +199,8 @@ decompress_chain(struct chain_entry *centry)
 	}
 out:
 	if (err)
-		OSAL_LOG_ERROR("failed seq_setup_cpdc_chain: err %d", err);
+		OSAL_LOG_SPECIAL_ERROR("failed seq_setup_cpdc_chain: err %d",
+				err);
 
 	return err;
 }

@@ -353,7 +353,8 @@ crypto_chain(struct chain_entry *centry)
 				    MPOOL_TYPE_CPDC_SGL_VECTOR,
 				    &svc_info->si_src_sgl, false);
 			if (err) {
-				OSAL_LOG_ERROR("failed to setup chain decrypt SGL");
+				OSAL_LOG_DEBUG("failed to setup chain decrypt SGL! err: %d",
+						err);
 				return err;
 			}
 
@@ -374,7 +375,8 @@ crypto_chain(struct chain_entry *centry)
 	}
 out:
 	if (err)
-		OSAL_LOG_ERROR("failed seq_setup_crypto_chain: err %d", err);
+		OSAL_LOG_SPECIAL_ERROR("failed seq_setup_crypto_chain: err %d",
+				err);
 
 	return err;
 }
@@ -470,7 +472,7 @@ crypto_enable_interrupt(struct service_info *svc_info,
 		 */
 		err = seq_setup_crypto_chain(svc_info, svc_info->si_desc);
 		if (err != PNSO_OK)
-			OSAL_LOG_ERROR("failed seq_setup_crypto_chain: err %d",
+			OSAL_LOG_SPECIAL_ERROR("failed seq_setup_crypto_chain: err %d",
 					err);
 	}
 out:

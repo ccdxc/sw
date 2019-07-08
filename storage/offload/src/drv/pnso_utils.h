@@ -46,6 +46,15 @@ struct buffer_addr_len {
 		_len  = _addr_len.len;			\
 	} while (0)
 
+#define OSAL_LOG_SPECIAL_ERROR(fmt, err)		\
+	do {						\
+		if (err == EAGAIN) {			\
+			OSAL_LOG_NOTICE(fmt, err);	\
+		} else {				\
+			OSAL_LOG_ERROR(fmt, err);	\
+		}					\
+	} while (0)
+
 pnso_error_t ring_spec_info_fill(struct sonic_accel_ring *ring,
 				 struct ring_spec *spec,
 				 void *desc,
