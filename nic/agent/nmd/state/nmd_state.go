@@ -249,6 +249,7 @@ func NewNMD(delphiClient clientAPI.Client,
 		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
 		ro:                 ro,
 		revProxy:           revProxy,
+		metrics:            nil,
 	}
 
 	err = nm.updateLocalTimeZone()
@@ -452,6 +453,10 @@ func (n *NMD) NaplesProfileHandler(r *http.Request) (interface{}, error) {
 
 // NaplesProfileGetHandler is the REST handler for Naples Profiles GET
 func (n *NMD) NaplesProfileGetHandler(r *http.Request) (interface{}, error) {
+	if n.metrics != nil && n.metrics.GetCalls != nil {
+		n.metrics.GetCalls.Inc()
+	}
+
 	profiles := n.profiles
 	log.Infof("Naples Profile Get Response: %+v", profiles)
 	return profiles, nil
@@ -503,6 +508,10 @@ func (n *NMD) NaplesRolloutHandler(r *http.Request) (interface{}, error) {
 
 // NaplesRolloutGetHandler is the REST handler for Naples Rollout Config GET operation
 func (n *NMD) NaplesRolloutGetHandler(r *http.Request) (interface{}, error) {
+	if n.metrics != nil && n.metrics.GetCalls != nil {
+		n.metrics.GetCalls.Inc()
+	}
+
 	st := n.GetSmartNICRolloutStatus()
 	log.Debugf("Naples Rollout Get Response: %+v", st)
 	return st, nil
@@ -568,6 +577,9 @@ func renderError(w http.ResponseWriter, message string, statusCode int) {
 
 // NaplesGetHandler is the REST handler for Naples Config GET operation
 func (n *NMD) NaplesGetHandler(r *http.Request) (interface{}, error) {
+	if n.metrics != nil && n.metrics.GetCalls != nil {
+		n.metrics.GetCalls.Inc()
+	}
 
 	cfg := &n.config
 	log.Infof("Naples Get Response: %+v", cfg)
@@ -621,7 +633,7 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileGetHandler))
 	t2.HandleFunc(NaplesInfoURL, httputils.MakeHTTPHandler(n.NaplesInfoGetHandler))
 	t2.HandleFunc(CmdEXECUrl, n.NaplesCmdExecHandler)
-	t2.HandleFunc(NaplesVersionURL, httputils.MakeHTTPHandler(NaplesVersionGetHandler))
+	t2.HandleFunc(NaplesVersionURL, httputils.MakeHTTPHandler(n.NaplesVersionGetHandler))
 	t2.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutGetHandler))
 
 	t2.HandleFunc("/api/{*}", unknownAction)
@@ -1049,6 +1061,9 @@ func (n *NMD) NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 
 // NaplesInfoGetHandler is the REST handler for Naples Profiles GET
 func (n *NMD) NaplesInfoGetHandler(r *http.Request) (interface{}, error) {
+	if n.metrics != nil && n.metrics.GetCalls != nil {
+		n.metrics.GetCalls.Inc()
+	}
 	n.UpdateNaplesInfoFromConfig()
 	info := n.nic
 	return info, nil
@@ -1084,7 +1099,10 @@ func (n *NMD) updateLocalTimeZone() error {
 }
 
 // NaplesVersionGetHandler is the REST handler for Naples Profiles GET
-func NaplesVersionGetHandler(r *http.Request) (interface{}, error) {
+func (n *NMD) NaplesVersionGetHandler(r *http.Request) (interface{}, error) {
+	if n.metrics != nil && n.metrics.GetCalls != nil {
+		n.metrics.GetCalls.Inc()
+	}
 	return GetNaplesSoftwareInfo()
 }
 

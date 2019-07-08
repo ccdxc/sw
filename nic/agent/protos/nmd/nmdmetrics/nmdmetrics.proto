@@ -1,0 +1,17 @@
+syntax = "proto3";
+package nmdmetrics;
+
+import "delphi.proto";
+import "metrics_annotations.proto";
+
+message NMDMetrics { 
+    // Internal
+    option (venice.metricInfo) = {
+        DisplayName: "NMD Metrics",
+        Description: "Statistics related to NMD",
+        Scope: PerNode,
+    };
+    fixed64        Key                        = 1;
+
+    delphi.Counter GetCalls                   = 2  [(venice.metricsField) = {DisplayName: "GET calls" Description: "Number of GET calls to NMD"}];
+}

@@ -26,6 +26,7 @@ import (
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const (
@@ -515,6 +516,17 @@ func (n *NMD) AdmitNaples() {
 					}
 
 				case cmd.SmartNICStatus_ADMITTED.String():
+					metrics := &NMDMetricsMeta{}
+					metrics.TypeMeta.Kind = "NMDMetrics"
+					metrics.ObjectMeta.Name = "nmd_" + n.GetAgentID()
+					metrics.ObjectMeta.Tenant = "default"
+
+					n.metrics = &NMDMetrics{}
+					_, err := tsdb.NewVeniceObj(metrics, n.metrics, &tsdb.ObjOpts{})
+					if err != nil {
+						log.Errorf("Unable to create venice metrics object. %v", err)
+					}
+
 					// Venice says all good, but we need to check the credentials we got back
 					// to make sure they are valid and come from the expected Venice.
 					// If not, we report the error and go back to REGISTERING

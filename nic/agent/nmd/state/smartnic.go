@@ -102,6 +102,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 			nic.Status.AdmissionPhase == cmd.SmartNICStatus_PENDING.String()
 
 		if decommission || deAdmission {
+			n.metrics = nil
 			// Spawn a goroutine that will wait for cleanup to finish and then restart managed or classic mode.
 			// This has to be done in a separate goroutine because this function is executing in the context of
 			// the watcher and the watcher has to terminate for the cleanup to be complete
@@ -176,6 +177,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 					ctx, cancel := context.WithCancel(context.Background())
 					tsdb.Init(ctx, opts)
 					n.tsdbCancel = cancel
+
 					cmdAPI, err := cmdif.NewCmdClient(n, registrationURL, n.resolverClient)
 					if err != nil {
 						log.Errorf("Failed to instantiate CMD Client. Err: %v", err)

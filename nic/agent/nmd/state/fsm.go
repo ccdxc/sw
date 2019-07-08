@@ -119,6 +119,7 @@ func NewNMDStateMachine() *NMDStateMachine {
 					ctx, cancel := context.WithCancel(context.Background())
 					tsdb.Init(ctx, opts)
 					nmd.tsdbCancel = cancel
+
 					cmdAPI, err := cmdif.NewCmdClient(nmd, registrationURL, nmd.resolverClient)
 					if err != nil {
 						log.Errorf("Failed to instantiate CMD Client. Err: %v", err)

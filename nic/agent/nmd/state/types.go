@@ -80,6 +80,7 @@ type NMD struct {
 	stateMachine *NMDStateMachine
 	tsdbCancel   context.CancelFunc
 	rebootNeeded bool
+	metrics      *NMDMetrics
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples
@@ -100,6 +101,18 @@ type ErrBadRequest struct {
 // ErrInternalServer is raised on internal server errors
 type ErrInternalServer struct {
 	Message string
+}
+
+// NMDMetricsMeta wraps the NMD Metrics object
+type NMDMetricsMeta struct {
+	api.TypeMeta
+	api.ObjectMeta
+	metrics NMDMetrics
+}
+
+// NMDMetrics has various nmd metrics
+type NMDMetrics struct {
+	GetCalls api.Counter
 }
 
 func (e ErrBadRequest) Error() string {

@@ -5,7 +5,8 @@ METRICS_PATHS =\
 	nicmgr:nic/proto/nicmgr \
 	dropstats:nic/proto/dropstats \
 	ftestats:nic/proto/ftestats \
-	rulestats:nic/proto/rulestats
+	rulestats:nic/proto/rulestats \
+	nmdmetrics:nic/agent/protos/nmd/nmdmetrics
 
 # all generated files are in the generated/<prefix> path
 

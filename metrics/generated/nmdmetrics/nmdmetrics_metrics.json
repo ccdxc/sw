@@ -1,0 +1,22 @@
+{
+  "FileName": "nmdmetrics.proto",
+  "Package": "nmdmetrics",
+  "Prefix": "nmdmetrics",
+  "Messages": [
+    {
+      "Name": "NMDMetrics",
+      "Description": "Statistics related to NMD",
+      "DisplayName": "NMD Metrics",
+      "Fields": [
+        {
+          "Name": "GetCalls",
+          "DisplayName": "GET calls",
+          "Description": "Number of GET calls to NMD",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Scope": "PerNode"
+    }
+  ]
+}

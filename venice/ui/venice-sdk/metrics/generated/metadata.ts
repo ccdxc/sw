@@ -1485,6 +1485,37 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "scope": "PerLIF",
   "objectKind": "SmartNIC"
 },
+  NMDMetrics: {
+  "name": "NMDMetrics",
+  "description": "Statistics related to NMD",
+  "displayName": "NMD Metrics",
+  "fields": [
+    {
+      "name": "GetCalls",
+      "displayName": "GET calls",
+      "description": "Number of GET calls to NMD",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "scope": "PerNode",
+  "objectKind": "SmartNIC"
+},
   RuleMetrics: {
   "name": "RuleMetrics",
   "description": "Key index - Rule ID",
