@@ -121,6 +121,10 @@ func ValidatePerm(permission auth.Permission) error {
 		}
 	}
 	var errs []error
+	if len(permission.Actions) == 0 {
+		// AllActions is the default action if not specified
+		permission.Actions = append(permission.Actions, auth.Permission_AllActions.String())
+	}
 	for _, action := range permission.Actions {
 		if err := ValidateAction(permission.ResourceGroup, permission.ResourceKind, action); err != nil {
 			errs = append(errs, err)

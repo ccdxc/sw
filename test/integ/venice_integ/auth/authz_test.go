@@ -960,6 +960,20 @@ func TestValidatePerms(t *testing.T) {
 			tenant: "",
 			errmsg: "role should contain at least one permission",
 		},
+		{
+			name:   "all actions for fw logs",
+			perms:  []auth.Permission{login.NewPermission(adminCred.Tenant, "", auth.Permission_FwlogsQuery.String(), "", "", auth.Permission_AllActions.String())},
+			valid:  false,
+			tenant: adminCred.Tenant,
+			errmsg: fmt.Sprintf("invalid resource kind [%q] and action [%q]", auth.Permission_FwlogsQuery.String(), auth.Permission_AllActions.String()),
+		},
+		{
+			name:   "read action for fw logs",
+			perms:  []auth.Permission{login.NewPermission(adminCred.Tenant, "", auth.Permission_FwlogsQuery.String(), "", "", auth.Permission_Read.String())},
+			valid:  true,
+			tenant: adminCred.Tenant,
+			errmsg: "",
+		},
 	}
 	for i, test := range tests {
 		role, err := tinfo.restcl.AuthV1().Role().Create(ctx, login.NewRole(fmt.Sprintf("testrole_%d", i), globals.DefaultTenant, test.perms...))

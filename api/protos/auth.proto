@@ -104,12 +104,12 @@ message LdapServer {
 
 message TLSOptions {
     // StartTLS determines if ldap connection uses TLS
-    bool StartTLS                   = 1 [(gogoproto.jsontag) = "start-tls,omitempty"];
+    bool StartTLS                   = 1 [(gogoproto.jsontag) = "start-tls"];
 
     // SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.
     // If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
     // In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.
-    bool SkipServerCertVerification = 2 [(gogoproto.jsontag) = "skip-server-cert-verification,omitempty"];
+    bool SkipServerCertVerification = 2 [(gogoproto.jsontag) = "skip-server-cert-verification"];
 
     // ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.
     string ServerName               = 3 [(gogoproto.jsontag) = "server-name,omitempty"];
@@ -270,7 +270,7 @@ message Permission {
     repeated string ResourceNames = 5 [(gogoproto.jsontag) = "resource-names,omitempty"];
 
     // Actions are actions on a resource that a permission allows
-    repeated string Actions       = 6 [(venice.check) = "StrEnum(Permission.ActionType)", (gogoproto.jsontag) = "actions,omitempty"];
+    repeated string Actions       = 6 [(venice.check) = "StrEnum(Permission.ActionType)", (gogoproto.jsontag) = "actions"];
 }
 
 // spec part of role object
