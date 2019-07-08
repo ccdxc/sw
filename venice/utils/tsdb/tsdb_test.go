@@ -86,6 +86,8 @@ func Setup(startLocalServer bool) error {
 		StartLocalServer: startLocalServer,
 	}
 
+	// override the collection interval for tests to be smaller
+	minCollectionInterval = testSendInterval / 2
 	Init(ts.context, options)
 	return nil
 }
@@ -946,7 +948,7 @@ func TestOptionObjPrecision(t *testing.T) {
 		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
 		keyTags := map[string]string{objID: tName}
-		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{Precision: time.Millisecond})
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
 		AssertOk(t, err, "unable to create obj")
 		defer obj.Delete()
 
@@ -973,6 +975,76 @@ func TestOptionObjPrecision(t *testing.T) {
 	if tid == maxTestCount {
 		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
+}
+
+func TestCollectionInterval(t *testing.T) {
+	ts.metricServer.ClearMetrics()
+	tName := t.Name()
+
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, &ObjOpts{CollectionInterval: minCollectionInterval})
+	AssertOk(t, err, "unable to create obj")
+
+	obj.Counter("rxpkts").Set(208)
+
+	// wait for collections to kick in
+	time.Sleep(3 * testSendInterval)
+
+	// expect at least 2 points because collection interval is
+	// half of the send interval
+	tags := []map[string]string{
+		keyTags,
+		keyTags,
+	}
+	fields := []map[string]interface{}{
+		{"rxpkts": int64(208)},
+		{"rxpkts": int64(208)},
+	}
+
+	if !ts.metricServer.Validate(tName, time.Time{}, tags, fields, true) {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
+	}
+
+	// delete object otherwise we collect them for next test loop
+	obj.Delete()
+}
+
+func TestCollectionIntervalBeyondSendInterval(t *testing.T) {
+	ts.metricServer.ClearMetrics()
+	tName := t.Name()
+
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, &ObjOpts{CollectionInterval: minCollectionInterval})
+	AssertOk(t, err, "unable to create obj")
+
+	obj.Counter("txpkts").Set(208)
+
+	// wait enough for collections to kick in
+	time.Sleep(3 * testSendInterval)
+
+	// clear all collected metrics (esp occuring due to first time)
+	ts.metricServer.ClearMetrics()
+
+	// sleep a few more send intervals
+	time.Sleep(3 * testSendInterval)
+
+	// expect at least 2 points because collection interval is
+	// half of the send interval
+	tags := []map[string]string{
+		keyTags,
+		keyTags,
+	}
+	fields := []map[string]interface{}{
+		{"txpkts": int64(208)},
+		{"txpkts": int64(208)},
+	}
+
+	if !ts.metricServer.Validate(tName, time.Time{}, tags, fields, true) {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
+	}
+
+	// delete object otherwise we collect them for next test loop
+	obj.Delete()
 }
 
 func TestVeniceObjPerf(t *testing.T) {
@@ -1061,7 +1133,7 @@ func httpGet(t *testing.T, url string, toIf interface{}) {
 func validateMetrics(t *testing.T, tName string, timeStamp time.Time, tags []map[string]string, fields []map[string]interface{}) bool {
 	retryID := 0
 	for ; retryID < maxRetriesPerTest; retryID++ {
-		if ts.metricServer.Validate(tName, timeStamp, tags, fields) {
+		if ts.metricServer.Validate(tName, timeStamp, tags, fields, false) {
 			break
 		}
 		time.Sleep(testSendInterval)
@@ -1085,6 +1157,7 @@ func TestMain(m *testing.M) {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	m.Run()
+	ret := m.Run()
 	TearDown()
+	os.Exit(ret)
 }

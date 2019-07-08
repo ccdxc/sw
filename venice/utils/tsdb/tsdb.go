@@ -25,8 +25,9 @@ const (
 )
 
 var (
-	maxMetricsPoints = defaultNumPoints
-	maxFwlogPoints   = uint64(defaultNumPoints)
+	maxMetricsPoints      = defaultNumPoints
+	maxFwlogPoints        = uint64(defaultNumPoints)
+	minCollectionInterval = 5 * time.Second
 )
 
 // global information is maintained per client during Init time
@@ -83,6 +84,8 @@ func Init(ctx context.Context, opts *Opts) {
 	global.wg.Add(1)
 	go periodicTransmit()
 	global.wg.Add(1)
+	go collectionTimer()
+	global.wg.Add(1)
 	go startLocalRESTServer(global)
 }
 
@@ -129,27 +132,36 @@ type Obj interface {
 
 // ObjOpts specifies options for a specific obj
 type ObjOpts struct {
-	Local     bool
-	Precision time.Duration
+	// local objects are not exported
+	Local bool
+
+	// minimum interval to collect the object metric
+	CollectionInterval time.Duration
+	// collectionTicks is the number of times metrics are collected for this object within on send interval
+	collectionTicks int
 }
 
 // implementation of Obj interface
 type iObj struct {
 	sync.Mutex
-	tableName    string
-	opts         ObjOpts
-	keys         map[string]string
-	fields       map[string]interface{}
-	ts           time.Time
-	metricPoints []*metric.MetricPoint
-	atomic       bool
-	dirty        bool
+	tableName       string
+	opts            ObjOpts
+	keys            map[string]string
+	fields          map[string]interface{}
+	ts              time.Time
+	metricPoints    []*metric.MetricPoint
+	atomic          bool
+	dirty           bool
+	collectionTicks int
 }
 
 // NewObj creates a metric object that can be used to record arbitrary keys/fields
 func NewObj(tableName string, keys map[string]string, metrics interface{}, opts *ObjOpts) (Obj, error) {
 	if strings.HasPrefix(tableName, "obj-") {
 		return nil, fmt.Errorf("Obj Name starting with 'obj-' is reserved for internal objs")
+	}
+	if opts != nil && opts.CollectionInterval > 0 && opts.CollectionInterval < minCollectionInterval {
+		return nil, fmt.Errorf("collection interval %d must be more than minimum %d", opts.CollectionInterval, minCollectionInterval)
 	}
 
 	global.Lock()
@@ -181,9 +193,8 @@ func NewObj(tableName string, keys map[string]string, metrics interface{}, opts 
 
 	if opts != nil {
 		obj.opts = *opts
-	}
-	if obj.opts.Precision == 0 {
-		obj.opts.Precision = time.Millisecond
+		obj.opts.collectionTicks = int(opts.CollectionInterval.Seconds() / minCollectionInterval.Seconds())
+		obj.collectionTicks = obj.opts.collectionTicks
 	}
 
 	// every object is added to global object's hash based on object's name

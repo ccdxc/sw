@@ -151,8 +151,8 @@ func sendAllObjs(ctx context.Context) error {
 // the provided metric bundle. It avoids creating points for atomic transactions
 // given that the timer can fire up in between updates of metrics
 func (obj *iObj) getMetricBundles(mb *metric.MetricBundle) {
-	// avoid reaping the latest snapshot if there was no atomic txn going
-	if !obj.atomic {
+	// latest snapshot is not collected if 1) object is atomic 2) it is set with its own collection interval
+	if !obj.atomic && obj.collectionTicks == 0 {
 		if obj.ts.IsZero() {
 			obj.ts = time.Now()
 		}
@@ -329,4 +329,53 @@ func Debug() interface{} {
 		"numPointsReported": atomic.LoadUint64(&global.numPoints),
 		"numSendErrors":     atomic.LoadUint64(&global.sendErrors),
 		"numIgnoredPoints":  atomic.LoadUint64(&global.ignoredPoints)}
+}
+
+// collectionTimer is responsible for generating points from objects that
+// haven't posted a point
+func collectionTimer() {
+	defer global.wg.Done()
+	for {
+		select {
+		case <-time.After(minCollectionInterval):
+			generateCollectionIntervalMetrics()
+		case <-global.context.Done():
+			log.Infof("aborting tsdb collection thread: parent context ended")
+			return
+		}
+	}
+}
+
+// generateCollectionIntervalMetrics generates the metrics points
+// within collection interval and save the metrics within the object itself
+func generateCollectionIntervalMetrics() {
+	objs := []*iObj{}
+
+	// collect objects that requie collection
+	global.Lock()
+	for _, obj := range global.objs {
+		if !obj.atomic && !obj.opts.Local && obj.opts.collectionTicks > 0 {
+			objs = append(objs, obj)
+		}
+	}
+	global.Unlock()
+
+	for _, obj := range objs {
+		obj.Lock()
+
+		// adjust the ticks, if zero add metrics point
+		obj.collectionTicks--
+		if obj.collectionTicks > 0 {
+			continue
+		}
+		obj.collectionTicks = obj.opts.collectionTicks
+
+		// create a point for the object
+		if obj.ts.IsZero() {
+			obj.ts = time.Now()
+		}
+		obj.dirty = true
+		createNewMetricPoint(obj, time.Time{})
+		obj.Unlock()
+	}
 }

@@ -72,7 +72,7 @@ func (f *Collector) ClearMetrics() {
 }
 
 // Validate ensures that fake collector has received the specified tags/fields over measurement time
-func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[string]string, fieldsRanges []map[string]interface{}) bool {
+func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[string]string, fieldsRanges []map[string]interface{}, atleast bool) bool {
 	if f.mb == nil {
 		log.Errorf("nil metric bundle in %v", measurementName)
 		return false
@@ -83,8 +83,15 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 		return false
 	}
 
-	if len(f.mb.Metrics) != len(fieldsRanges) || len(f.mb.Metrics) != len(tags) {
-		log.Errorf("mismatching metrics count, received %d expected %d tags, %d fields \n", len(f.mb.Metrics), len(fieldsRanges), len(tags))
+	countMatch := false
+	if atleast {
+		countMatch = len(f.mb.Metrics) >= len(fieldsRanges) && len(f.mb.Metrics) >= len(tags)
+	} else {
+		countMatch = len(f.mb.Metrics) == len(fieldsRanges) && len(f.mb.Metrics) == len(tags)
+	}
+
+	if !countMatch {
+		log.Errorf("mismatching metrics count, received %d expected %d tags, %d fields \n", len(f.mb.Metrics), len(tags), len(fieldsRanges))
 		log.Errorf("appends %d tags = %+v\n", f.appends, tags)
 		for ii := range f.mb.Metrics {
 			log.Errorf("Got Metric[%d] %+v\n", ii, f.mb.Metrics[ii])
@@ -92,7 +99,7 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 		return false
 	}
 
-	for _, mp := range f.mb.Metrics {
+	for mpIdx, mp := range f.mb.Metrics {
 		if mp.When == nil {
 			log.Errorf("received time in Metric is nil")
 			return false
@@ -114,6 +121,10 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 			log.Errorf("mismatching ts: secs %v (exp %v) nsecs %v (exp %v)", mp.When.Seconds, ts.Unix(), mp.When.Nanos, ts.Nanosecond())
 			return false
 		}
+		// if we must match a minimum #metrics, then we declare success after we reach the expected points
+		if mpIdx >= len(fieldsRanges) && atleast {
+			break
+		}
 		mp.When = nil
 		match := false
 		emps := make([]*metric.MetricPoint, 0)
@@ -134,7 +145,7 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 			emps = append(emps, emp)
 		}
 		if !match {
-			log.Error("Mismatching metrics")
+			log.Errorf("Mismatching metric idx %d", mpIdx)
 			printMp("Got:", mp)
 			for idx, m := range emps {
 				printMp(fmt.Sprintf("Expected idx %d", idx), m)
@@ -240,7 +251,7 @@ func (f *Collector) ValidateCount(measurementName string, tags map[string]string
 func printMp(title string, mp *metric.MetricPoint) {
 	log.Errorf("%s: name %+v tags %+v", title, mp.Name, mp.Tags)
 	for k, mf := range mp.Fields {
-		log.Errorf("key = %s, value %+v", k, mf.F)
+		log.Errorf("%s: key = %s, value %+v", title, k, mf.F)
 	}
 }
 

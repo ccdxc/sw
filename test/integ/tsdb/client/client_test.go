@@ -60,7 +60,7 @@ func TestPointsPrecision(t *testing.T) {
 	defer ts.TearDown()
 
 	// create tsdb table (change the precision between metrics)
-	table, err := tsdb.NewObj(measName, map[string]string{}, nil, &tsdb.ObjOpts{Precision: 3 * time.Millisecond})
+	table, err := tsdb.NewObj(measName, map[string]string{}, nil, &tsdb.ObjOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
