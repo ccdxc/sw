@@ -854,11 +854,19 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         
         /* MAC DA */
         mac = ep_get_mac_addr(rtep_ep);
+        if (!mac) {
+            HAL_TRACE_ERR("Unable to get rtep ep mac!");
+            return HAL_RET_ERR;
+        }
         memcpy(tnnl_rw_key->mac_da, mac, sizeof(mac_addr_t));
 
         /* MAC SA. Use mac from device.conf only if it is set. Else derive the smac via rtep ep */
 	if (g_mgmt_if_mac == 0) {
             mac = ep_get_rmac(rtep_ep, l2seg);
+            if (!mac) {
+                HAL_TRACE_ERR("Mgmt interface mac is not populated! Check device.conf");
+                return HAL_RET_ERR;
+            }
             memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
 	} else {
             MAC_UINT64_TO_ADDR(smac, g_mgmt_if_mac)
@@ -911,7 +919,10 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade)
     pd_tnnl_rw_entry_info_t     rw_info{};
 
     ret = pd_tunnelif_form_data(&key, pd_tif);
-    SDK_ASSERT(ret == HAL_RET_OK);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to form tunnelif data: ret {}", ret);
+        return ret;
+    }
 
     if (!is_upgrade) {
         ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
