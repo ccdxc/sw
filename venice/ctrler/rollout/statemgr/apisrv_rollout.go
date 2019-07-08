@@ -346,6 +346,8 @@ func (ros *RolloutState) raiseRolloutEvent(status roproto.RolloutStatus_RolloutO
 		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, fmt.Sprintf("Rollout(%s) to version(%s) started", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	}
 }
+
+// must be called with Lock held on ros object
 func (ros *RolloutState) saveStatus() {
 	if ros != nil && ros.writer != nil {
 		ros.writer.WriteRollout(ros.Rollout)
@@ -357,6 +359,9 @@ func (ros *RolloutState) updateRolloutAction() {
 	}
 }
 func (ros *RolloutState) setPreviousVersion(v string) {
+	ros.Mutex.Lock()
+	defer ros.Mutex.Unlock()
+
 	if ros.Status.PreviousVersion == "" {
 		ros.Status.PreviousVersion = v
 		ros.saveStatus()
@@ -391,6 +396,9 @@ func (ros *RolloutState) getRolloutTimeStamps(nodeName string) (startTime, endTi
 }
 
 func (ros *RolloutState) setStartTime() {
+	ros.Mutex.Lock()
+	defer ros.Mutex.Unlock()
+
 	if ros.Status.StartTime == nil {
 		t := api.Timestamp{}
 		t.SetTime(time.Now())
@@ -402,13 +410,18 @@ func (ros *RolloutState) setStartTime() {
 func (ros *RolloutState) setEndTime() {
 	if ros.Status.EndTime == nil {
 		t := api.Timestamp{}
+		ros.Mutex.Lock()
 		t.SetTime(time.Now())
 		ros.Status.EndTime = &t
 		ros.saveStatus()
+		ros.Mutex.Unlock()
 	}
 }
 
 func (ros *RolloutState) setVenicePhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
+	ros.Mutex.Lock()
+	defer ros.Mutex.Unlock()
+
 	index := -1
 	for i, curStatus := range ros.Status.ControllerNodesStatus {
 		if curStatus.Name == name {
@@ -453,6 +466,8 @@ func (ros *RolloutState) setVenicePhase(name, reason, message string, phase ropr
 }
 
 func (ros *RolloutState) setServicePhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
+	ros.Mutex.Lock()
+	defer ros.Mutex.Unlock()
 	index := -1
 	for i, curStatus := range ros.Status.ControllerServicesStatus {
 		if curStatus.Name == name {

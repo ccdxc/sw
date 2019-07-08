@@ -33,9 +33,9 @@ const clientName = "cmd"
 const numRetries = 5
 
 // NewVeniceRolloutClient returns a VeniceRolloutClient struct to upgrade the current venice node based on requests from rollout controller
-func NewVeniceRolloutClient(serverURL string, nodeName string, resolver resolver.Interface, handler types.VeniceRolloutHandler) types.VeniceRolloutClient {
+func NewVeniceRolloutClient(serverURL, nodeName string, rslvr resolver.Interface, handler types.VeniceRolloutHandler) types.VeniceRolloutClient {
 	return &veniceRolloutClient{
-		resolverClient:       resolver,
+		resolverClient:       rslvr,
 		serverURL:            serverURL,
 		nodeName:             nodeName,
 		veniceRolloutHandler: handler,
@@ -108,6 +108,7 @@ func (v *veniceRolloutClient) run() {
 
 func (v *veniceRolloutClient) WriteStatus(ctx context.Context, s *rolloutproto.VeniceRolloutStatusUpdate) {
 	var err error
+	retryInterval := time.Second
 	for i := numRetries; i > 0; i-- {
 		v.Lock()
 		if v.client != nil {
@@ -122,7 +123,11 @@ func (v *veniceRolloutClient) WriteStatus(ctx context.Context, s *rolloutproto.V
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(time.Second): // wait before next retry
+		case <-time.After(retryInterval): // wait before next retry
+			retryInterval = 2 * retryInterval
+			if retryInterval > 30*time.Second {
+				retryInterval = 30 * time.Second
+			}
 		}
 
 	}

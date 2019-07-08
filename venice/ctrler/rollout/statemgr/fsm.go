@@ -214,7 +214,6 @@ func fsmAcCreated(ros *RolloutState) {
 	ros.Status.OperationalState = rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String()
 	ros.setPreviousVersion(ros.writer.GetClusterVersion())
 	log.Infof("Completion Percentage %v", ros.Rollout.Status.CompletionPercentage)
-	ros.Status.CompletionPercentage = ros.Rollout.Status.CompletionPercentage
 	ros.computeProgressDelta()
 
 	if ros.Spec.GetSuspend() {
@@ -292,11 +291,15 @@ func fsmAcPreUpgSmartNIC(ros *RolloutState) {
 }
 
 func fsmAcWaitForSchedule(ros *RolloutState) {
+	ros.Mutex.Lock()
+
 	if ros.Spec.ScheduledStartTime == nil {
 		ros.eventChan <- fsmEvScheduleNow
 		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 		ros.saveStatus()
+		ros.Mutex.Unlock()
+
 		return
 	}
 	t, err := ros.Spec.ScheduledStartTime.Time()
@@ -306,10 +309,13 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 		ros.saveStatus()
+		ros.Mutex.Unlock()
+
 		return
 	}
 	ros.Status.OperationalState = rollout.RolloutStatus_SCHEDULED.String()
 	ros.saveStatus()
+	ros.Mutex.Unlock()
 
 	for d := t.Sub(now); d.Seconds() > 0; d = time.Until(t) {
 		if d.Seconds() > 30 {
@@ -322,8 +328,11 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 			return
 		}
 	}
+	ros.Mutex.Lock()
 	ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 	ros.saveStatus()
+	ros.Mutex.Unlock()
+
 	ros.eventChan <- fsmEvScheduleNow
 	ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 }
@@ -405,13 +414,15 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.stopRolloutTimer()
 	ros.setEndTime()
+	ros.Mutex.Lock()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUCCESS)]
 	ros.Status.CompletionPercentage = 100
 	ros.saveStatus()
+	ros.currentState = fsmstRolloutSuccess
+	ros.Mutex.Unlock()
 	ros.updateRolloutAction()
 	ros.raiseRolloutEvent(rollout.RolloutStatus_SUCCESS)
 	ros.Statemgr.deleteRollouts()
-	ros.currentState = fsmstRolloutSuccess
 	err := ros.writer.SetRolloutBuildVersion("")
 	if err != nil {
 		log.Errorf("Failed to set cluster.Version %s", err)
@@ -425,12 +436,16 @@ func fsmAcRolloutFail(ros *RolloutState) {
 	if ros.Status.StartTime != nil {
 		ros.setEndTime()
 	}
+
+	ros.Mutex.Lock()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_FAILURE)]
 	ros.saveStatus()
+	ros.currentState = fsmstRolloutFail
+	ros.Mutex.Unlock()
+
 	ros.updateRolloutAction()
 	ros.raiseRolloutEvent(rollout.RolloutStatus_FAILURE)
 	ros.Statemgr.deleteRollouts()
-	ros.currentState = fsmstRolloutFail
 	err := ros.writer.SetRolloutBuildVersion("")
 	if err != nil {
 		log.Errorf("Failed to set cluster.Version %s", err)
@@ -442,12 +457,14 @@ func fsmAcRolloutSuspend(ros *RolloutState) {
 	if ros.Status.StartTime != nil {
 		ros.setEndTime()
 	}
+	ros.Mutex.Lock()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
 	ros.saveStatus()
+	ros.currentState = fsmstRolloutSuspend
+	ros.Mutex.Unlock()
 	ros.updateRolloutAction()
 	ros.raiseRolloutEvent(rollout.RolloutStatus_SUSPENDED)
 	ros.Statemgr.deleteRollouts()
-	ros.currentState = fsmstRolloutSuspend
 	err := ros.writer.SetRolloutBuildVersion("")
 	if err != nil {
 		log.Errorf("Failed to set cluster.Version %s", err)

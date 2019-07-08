@@ -30,9 +30,9 @@ type serviceRolloutClient struct {
 }
 
 // NewServiceRolloutClient returns a ServiceRolloutClient struct to upgrade the current service node based on requests from rollout controller
-func NewServiceRolloutClient(serverURL string, nodeName string, resolver resolver.Interface, handler types.ServiceRolloutHandler) types.ServiceRolloutClient {
+func NewServiceRolloutClient(serverURL, nodeName string, rslvr resolver.Interface, handler types.ServiceRolloutHandler) types.ServiceRolloutClient {
 	return &serviceRolloutClient{
-		resolverClient:        resolver,
+		resolverClient:        rslvr,
 		serverURL:             serverURL,
 		nodeName:              nodeName,
 		serviceRolloutHandler: handler,
