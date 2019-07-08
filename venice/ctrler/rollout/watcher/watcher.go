@@ -18,9 +18,6 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-// length of watcher channel
-const watcherQueueLen = 1000
-
 // Watcher watches api server for changes
 type Watcher struct {
 	waitGrp     sync.WaitGroup     // wait group to wait on all go routines to exit
@@ -63,7 +60,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer cancel()
 
 	// node watcher
-	nodeWatcher, err := apicl.ClusterV1().Node().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}) // TODO: is Spec sufficient?
+	nodeWatcher, err := apicl.ClusterV1().Node().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec", "Status.Conditions[0].Status", "Status.Phase"}})
 	if err != nil {
 		log.Errorf("Failed to start node watcher (%s)\n", err)
 		return
