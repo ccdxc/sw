@@ -28,7 +28,7 @@ var _ = Describe("firewall tests", func() {
 
 	Context("Basic firewall tests", func() {
 		It("Should establish TCP session between all workload with default policy", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
 

@@ -33,7 +33,7 @@ var _ = Describe("rulestats tests", func() {
 
 	Context("Verify rulestats on traffic ", func() {
 		It("TCP Rule stats should increment for default allow all policy", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling rule stats test on naples sim")
 			}
 			spc := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
@@ -65,7 +65,7 @@ var _ = Describe("rulestats tests", func() {
 
 		})
 		It("UDP Rule stats should increment for default allow all policy", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling rule stats test on naples sim")
 			}
 			spc := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
@@ -97,7 +97,7 @@ var _ = Describe("rulestats tests", func() {
 
 		})
 		It("Rule stats should increment for default allow all policy", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling rule stats test on naples sim")
 			}
 			spc := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")

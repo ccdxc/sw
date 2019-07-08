@@ -29,7 +29,7 @@ var _ = Describe("firewall ALG tests", func() {
 	})
 	Context("ALG tests", func() {
 		It("Should be able to FTP get with FTP ALG policy", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling FTP ALG test on naples sim till traffic issue is debugged")
 			}
 
@@ -62,7 +62,7 @@ var _ = Describe("firewall ALG tests", func() {
 		})
 
 		It("Should be able to update FTP ALG policy", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling FTP ALG test on naples sim till traffic issue is debugged")
 			}
 

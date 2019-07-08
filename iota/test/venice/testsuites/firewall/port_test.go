@@ -20,7 +20,7 @@ var _ = Describe("Port tests", func() {
 
 	Context("Basic port flap tests", func() {
 		It("Link flap should not result in traffic failure", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("link flap cannot be run on NAPLES sim")
 			}
 			startTime := time.Now()

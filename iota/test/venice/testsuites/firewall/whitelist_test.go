@@ -39,7 +39,7 @@ var _ = Describe("firewall whitelist tests", func() {
 		})
 
 		It("Should allow TCP connections with specific permit rules", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
 
@@ -70,7 +70,7 @@ var _ = Describe("firewall whitelist tests", func() {
 		})
 
 		It("Should allow UDP connections with specific permit rules", func() {
-			if ts.tb.HasNaplesSim() {
+			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling UDP test on naples sim till traffic issue is debugged")
 			}
 			// add permit rules for workload pairs
