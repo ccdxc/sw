@@ -40,25 +40,6 @@ pds_meter_api_handle (api::api_op_t op, pds_meter_key_t *key,
     return SDK_RET_OOM;
 }
 
-static inline sdk_ret_t
-pds_meter_stats_fill (meter_entry *entry, pds_meter_stats_t *stats)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_meter_status_fill (meter_entry *entry, pds_meter_status_t *status)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_meter_spec_fill (meter_entry *entry, pds_meter_spec_t *spec)
-{
-    // nothing to fill for meter
-    return SDK_RET_OK;
-}
-
 static inline meter_entry *
 pds_meter_entry_find (pds_meter_key_t *key)
 {
@@ -89,19 +70,9 @@ pds_meter_read (pds_meter_key_t *key, pds_meter_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_meter_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_meter_status_fill(entry, &info->status)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_meter_stats_fill(entry, &info->stats)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    return SDK_RET_OK;
+    info->spec.key = *key;
+    rv = entry->read(key, info);
+    return rv;
 }
 
 sdk_ret_t

@@ -151,6 +151,14 @@ meter_entry::add_deps(obj_ctxt_t *obj_ctxt) {
     return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
 }
 
+sdk_ret_t
+meter_entry::read(pds_meter_key_t *key, pds_meter_info_t *info) {
+    if (impl_) {
+        return impl_->read_hw(this, (impl::obj_key_t *)key,
+                          (impl::obj_info_t *)info);
+    }
+}
+
 /// \@}    // end of PDS_METER_ENTRY
 
 }    // namespace api

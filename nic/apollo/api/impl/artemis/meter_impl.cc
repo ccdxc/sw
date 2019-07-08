@@ -16,6 +16,8 @@
 #include "nic/apollo/api/impl/artemis/meter_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/p4/include/artemis_table_sizes.h"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 
 namespace api {
 namespace impl {
@@ -202,6 +204,50 @@ meter_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
         break;
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+meter_impl::fill_stats_(pds_meter_info_t *info) {
+    sdk_ret_t ret;
+    pds_meter_stats_t stats = {0};
+    uint64_t tx_offset = 0, rx_offset = 0;
+    uint64_t start_addr = 0;
+
+    info->spec.num_rules = num_stats_entries_;
+    start_addr = api::g_pds_state.mempartition()->start_addr("meter_stats");
+    for (uint32_t idx = stats_base_hw_idx_; idx < stats_base_hw_idx_
+                                                + num_stats_entries_; idx++) {
+        tx_offset = idx * 8; // Each statistics is 8B
+        rx_offset = tx_offset + (METER_STATS_TABLE_SIZE >> 1); // ((SIZE/2) * 8)
+        stats.idx = idx;
+        ret = sdk::asic::asic_mem_read(start_addr + tx_offset,
+                                       (uint8_t *)&stats.tx_bytes, 8);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
+        ret = sdk::asic::asic_mem_read(start_addr + rx_offset,
+                                       (uint8_t *)&stats.rx_bytes, 8);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        info->stats.tx_bytes += stats.tx_bytes;
+        info->stats.rx_bytes += stats.rx_bytes;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+meter_impl::read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) {
+    sdk_ret_t ret;
+    pds_meter_info_t *meter_info = (pds_meter_info_t *)info;
+    pds_meter_key_t *meter_key = (pds_meter_key_t *)key;
+
+    meter_info->stats.idx = meter_key->id;
+    ret = fill_stats_(meter_info);
+
+    return ret;
 }
 
 }    // namespace impl

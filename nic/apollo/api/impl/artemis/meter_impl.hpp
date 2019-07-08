@@ -83,9 +83,22 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief      read spec, statistics and status from hw tables
+    /// \param[in]  api_obj  API object
+    /// \param[in]  key  pointer to meter key
+    /// \param[out] info pointer to meter info
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) override;
+
     /// \brief      return LPM base/root address in the memory
     /// \return     memory address of the meter LPM tree
     mem_addr_t lpm_root_addr(void) { return lpm_root_addr_; }
+
+    /// \brief      fill the Meter stats
+    /// \param[out] stats statistics
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_stats_(pds_meter_info_t *info);
 
 private:
     /// \brief  constructor

@@ -70,6 +70,9 @@ message MeterStatus {
 
 // stats of the meter, if any
 message MeterStats {
+    uint32 MeterId = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+    uint64 RxBytes = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+    uint64 TxBytes = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
 }
 
 // meter policy object

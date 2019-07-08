@@ -1767,6 +1767,9 @@ static inline void
 meter_api_stats_to_proto_stats (pds::MeterStats *proto_stats,
                                 const pds_meter_stats_t *api_stats)
 {
+    proto_stats->set_meterid(api_stats->idx);
+    proto_stats->set_rxbytes(api_stats->rx_bytes);
+    proto_stats->set_txbytes(api_stats->tx_bytes);
 }
 
 // Populate proto buf from meter API info
@@ -1775,11 +1778,11 @@ meter_api_info_to_proto (const pds_meter_info_t *api_info, void *ctxt)
 {
     pds::MeterGetResponse *proto_rsp = (pds::MeterGetResponse *)ctxt;
     auto meter = proto_rsp->add_response();
-    pds::MeterSpec *proto_spec = meter->mutable_spec();
+    //pds::MeterSpec *proto_spec = meter->mutable_spec();
     pds::MeterStatus *proto_status = meter->mutable_status();
     pds::MeterStats *proto_stats = meter->mutable_stats();
 
-    meter_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    //meter_api_spec_to_proto_spec(proto_spec, &api_info->spec);
     meter_api_status_to_proto_status(proto_status, &api_info->status);
     meter_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }

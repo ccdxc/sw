@@ -12,6 +12,51 @@ import meter_pb2 as meter_pb2
 
 from infra.common.logging import logger
 
+class MeterStats:
+    def __init__(self):
+        self.MeterId = 0
+        self.RxBytes = 0
+        self.TxBytes = 0
+        return
+
+class MeterStatsHelper:
+    def __init__(self):
+        self.PreStats = MeterStats()
+        self.PostStats = MeterStats()
+        return
+
+    def GetMeterStats(self):
+        grpcmsg = meter_pb2.MeterGetRequest()
+        resp = api.client.Get(api.ObjectTypes.METER, [ grpcmsg ])
+        if resp != None:
+            return resp[0]
+        return None
+
+    def __parse_meter_stats_get_response(self, resp, pre = False):
+        if resp is None:
+            return
+        stats = self.PreStats if pre else self.PostStats
+        for entry in resp.Response:
+            logger.info("Meter stats for MeterId: %s, tx_bytes: %ld,\
+                    rx_bytes: %ld" % (entry.Stats.MeterId,
+                    entry.Stats.TxBytes, entry.Stats.RxBytes))
+            stats.MeterId = entry.Stats.MeterId
+            stats.RxBytes = entry.Stats.RxBytes
+            stats.TxBytes = entry.Stats.TxBytes
+        return
+
+    def ReadMeterStats(self, pre = False):
+        resp = self.GetMeterStats()
+        self.__parse_meter_stats_get_response(resp, pre)
+        return
+
+    def VerifyMeterStats(self):
+        logger.info("Meter Id: %d" % self.PreStats.MeterId)
+        logger.info("Difference between tx bytes: %d" % \
+                (self.PostStats.TxBytes - self.PreStats.TxBytes))
+        logger.info("Difference between rx bytes: %d" % \
+                (self.PostStats.RxBytes - self.PreStats.RxBytes))
+
 class MeterRuleObject(base.ConfigObjectBase):
     def __init__(self, metertype, priority, prefixes,
             bursttype = None, persecburst = 0, numburst = 0):
@@ -179,28 +224,15 @@ class MeterObjectClient:
                 rules.append(obj)
             return rules
 
-        def __add_meter_v4rules_from_routetable(meterspec):
-            base_priority = meterspec.base_priority
-            rule_type = meterspec.rule_type
-            total_rt = route.client.GetRouteV4Tables(vpcid)
-            rules = []
-
-            if total_rt != None:
-                for rt_id, rt_obj in total_rt.items():
-                    if rt_obj.RouteType != 'overlap':
-                        # one rule for all routes in one route table
-                        prefixes = list(rt_obj.routes)
-                        ruleobj = MeterRuleObject(rule_type, base_priority, prefixes)
-                        base_priority += 1
-                        rules.append(ruleobj)
-            return rules
-
-        def __add_meter_v6rules_from_routetable(meterspec):
-            total_rt = route.client.GetRouteV6Tables(vpcid)
+        def __add_meter_rules_from_routetable(meterspec, af):
             base_priority = meterspec.base_priority
             rule_type = meterspec.rule_type
             rules = []
 
+            if af == utils.IP_VERSION_4:
+                total_rt = route.client.GetRouteV4Tables(vpcid)
+            else:
+                total_rt = route.client.GetRouteV6Tables(vpcid)
             if total_rt != None:
                 for rt_id, rt_obj in total_rt.items():
                     if rt_obj.RouteType != 'overlap':
@@ -217,13 +249,13 @@ class MeterObjectClient:
             v6_count = 0
             if meter.auto_fill:
                 if __is_v4stack():
-                    rules = __add_meter_v4rules_from_routetable(meter)
+                    rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_4)
                     obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                     self.__v4objs[vpcid].append(obj)
                     self.__objs.append(obj)
                     v4_count += 1
                 if __is_v6stack():
-                    rules = __add_meter_v6rules_from_routetable(meter)
+                    rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_6)
                     obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                     self.__v6objs[vpcid].append(obj)
                     self.__objs.append(obj)

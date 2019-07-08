@@ -18,8 +18,8 @@
 /// \defgroup PDS_METER Meter APIs
 /// @{
 
-#define PDS_MAX_METER                 64
-#define PDS_MAX_PREFIX_PER_METER      1023
+#define PDS_MAX_METER               64
+#define PDS_MAX_PREFIX_PER_METER    1023
 
 /// \brief meter type
 typedef enum pds_meter_type_e {
@@ -31,32 +31,32 @@ typedef enum pds_meter_type_e {
 
 /// \brief meter rule
 typedef struct pds_meter_rule_s {
-    pds_meter_type_t    type;    ///< meter type
+    pds_meter_type_t type;            ///< meter type
     union {
         // packets per second (pps) policer info
         struct {
-            uint32_t    pps;
-            uint32_t    pkt_burst;
+            uint32_t pps;
+            uint32_t pkt_burst;
         };
         // bytes per second (pps) policer info
         struct {
-            uint64_t    bps;
-            uint64_t    byte_burst;
+            uint64_t bps;
+            uint64_t byte_burst;
         };
     };
-    uint32_t            priority;        ///< priority of the rule (numerically
-                                         ///< lower values is higher priority)
-    uint32_t            num_prefixes;    ///< number of prefixes in the list
-    ip_prefix_t         *prefixes;       ///< prefixes using this meter
+    uint32_t         priority;        ///< priority of the rule (numerically
+                                      ///< lower values is higher priority)
+    uint32_t         num_prefixes;    ///< number of prefixes in the list
+    ip_prefix_t      *prefixes;       ///< prefixes using this meter
 } __PACK__ pds_meter_rule_t;
 
 /// \brief metering configuration
 typedef struct pds_meter_spec_s    pds_meter_spec_t;
 struct pds_meter_spec_s {
-    pds_meter_key_t     key;          ///< key
-    uint8_t             af;           ///< address family - v4 or v6
-    uint32_t            num_rules;    ///< number of metering rules in this policy
-    pds_meter_rule_t    *rules;       ///< metering rules
+    pds_meter_key_t  key;          ///< key
+    uint8_t          af;           ///< address family - v4 or v6
+    uint32_t         num_rules;    ///< number of metering rules in this policy
+    pds_meter_rule_t *rules;       ///< metering rules
 
     // constructor
     pds_meter_spec_s() { rules = NULL; }
@@ -116,34 +116,37 @@ typedef struct pds_meter_status_s {
 
 /// \brief meter stats
 typedef struct pds_meter_stats_s {
+    uint32_t idx;         ///< meter index
+    uint64_t rx_bytes;    ///< received bytes
+    uint64_t tx_bytes;    ///< transmitted bytes
 } pds_meter_stats_t;
 
 /// \brief meter information
 typedef struct pds_meter_info_s {
-    pds_meter_spec_t spec;        ///< Specification
-    pds_meter_status_t status;    ///< Status
-    pds_meter_stats_t stats;      ///< Statistics
+    pds_meter_spec_t spec;        ///< specification
+    pds_meter_status_t status;    ///< status
+    pds_meter_stats_t stats;      ///< statistics
 } __PACK__ pds_meter_info_t;
 
-/// \brief create meter
+/// \brief     create meter
 /// \param[in] spec meter configuration
-/// \return #SDK_RET_OK on success, failure status code on error
+/// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_create(pds_meter_spec_t *spec);
 
-/// \brief update meter
+/// \brief     update meter
 /// \param[in] spec meter configuration
-/// \return #SDK_RET_OK on success, failure status code on error
+/// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_update(pds_meter_spec_t *spec);
 
-/// \brief delete meter
+/// \brief     delete meter
 /// \param[in] key key
-/// \return #SDK_RET_OK on success, failure status code on error
+/// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_delete(pds_meter_key_t *key);
 
-/// \brief read meter
-/// \param[in] key key
+/// \brief      read meter
+/// \param[in]  key key
 /// \param[out] info meter information
-/// \return #SDK_RET_OK on success, failure status code on error
+/// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_read(pds_meter_key_t *key, pds_meter_info_t *info);
 
 /// \@}

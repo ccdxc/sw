@@ -102,7 +102,7 @@ meter_update (pds_meter_key_t *key, pds_meter_spec_t *spec)
     if (agent_state::state()->del_from_meter_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete meter {} from meter db", key->id);
     }
-    
+
     if ((ret = agent_state::state()->add_to_meter_db(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add meter {} to db, err {}",
                       spec->key.id, ret);
@@ -146,7 +146,7 @@ meter_get (pds_meter_key_t *key, pds_meter_info_t *info)
     if (spec == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    info->spec = *spec;
+    //info->spec = *spec;
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_meter_read(key, info);
     } else {
@@ -163,9 +163,12 @@ meter_get_all_cb (pds_meter_spec_t *spec, void *ctxt)
     pds_meter_info_t info;
     meter_db_cb_ctxt_t *cb_ctxt = (meter_db_cb_ctxt_t *)ctxt;
 
-    info.spec = *spec;
+    memset(&info, 0, sizeof(pds_meter_info_t));
+    //info.spec = *spec;
     if (!agent_state::state()->pds_mock_mode()) {
-        ret = pds_meter_read(&spec->key, &info);
+        if (spec != NULL) {
+            ret = pds_meter_read(&spec->key, &info);
+        }
     } else {
         memset(&info.stats, 0, sizeof(info.stats));
         memset(&info.status, 0, sizeof(info.status));
