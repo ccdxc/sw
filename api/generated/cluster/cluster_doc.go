@@ -10,6 +10,7 @@ The following Messages are defined.
   CPUInfo
   Cluster
   ClusterAuthBootstrapRequest
+  ClusterCondition
   ClusterSpec
   ClusterStatus
   DockerInfo

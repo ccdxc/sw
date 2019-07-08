@@ -246,7 +246,8 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
 		cmdsvc.WithCfgWatcherMasterOption(cw),
 		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
-		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
+		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()),
+		cmdsvc.WithClusterHealthMonitor(&mock.ClusterHealthMonitor{}))
 	cw.Start()
 
 	return regRPCServer, cmdAuthRPCServer, nil

@@ -28,7 +28,8 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 		WithK8sSvcMasterOption(&mock.K8sService{}),
 		WithResolverSvcMasterOption(mock.NewResolverService()),
 		WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
-		WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
+		WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()),
+		WithClusterHealthMonitor(&mock.ClusterHealthMonitor{}))
 
 	return l, s, &cw, m
 }

@@ -327,7 +327,8 @@ func (it *veniceIntegSuite) launchCMDServer() {
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
 		cmdsvc.WithCfgWatcherMasterOption(cw),
 		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
-		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
+		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()),
+		cmdsvc.WithClusterHealthMonitor(&mock.ClusterHealthMonitor{}))
 	cw.Start()
 
 	// start CMD auth server

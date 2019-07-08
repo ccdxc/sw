@@ -230,6 +230,9 @@ type K8sService interface {
 	// UpgradeServices upgrades all the deployments and daemonsets in the specified order
 	UpgradeServices(order []string) error
 
+	// GetClient returns the k8s client interface
+	GetClient() k8sclient.Interface
+
 	// Stop the k8s service.
 	Stop()
 }
@@ -446,5 +449,14 @@ type MetricsService interface {
 
 // HealthClient is responsible for relaying the status of the nodes to the leader
 type HealthClient interface {
+	Stop()
+}
+
+// ClusterHealthMonitor responsible for cluster health update functionalities
+type ClusterHealthMonitor interface {
+	// Starts starts the monitor and updates health
+	Start()
+
+	// Stop stops the cluster health monitor
 	Stop()
 }

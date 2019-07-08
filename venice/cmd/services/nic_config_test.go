@@ -136,6 +136,7 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
 	cmdenv.StateMgr = cache.NewStatemgr(tInfo)
+	cmdenv.K8sService = &mock.K8sService{}
 	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("nic_config_test")
 	if err != nil {
 		return nil, fmt.Errorf("Error instantiating CertMgr: %v", err)
@@ -151,7 +152,8 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 		WithConfigsMasterOption(&mock.Configs{}),
 		WithCfgWatcherMasterOption(cw),
 		WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
-		WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
+		WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()),
+		WithClusterHealthMonitor(&mock.ClusterHealthMonitor{}))
 	cw.Start()
 
 	// start the rpc server
@@ -429,6 +431,7 @@ func Setup(m *testing.M) {
 		os.Exit(-1)
 	}
 	tInfo.apiClient = apiCl
+	cmdenv.CfgWatcherService = &mock.CfgWatcherService{APIClientSvc: apiCl}
 
 	// create CMD
 	tInfo.rpcServer, err = createCMD(m)

@@ -4270,6 +4270,54 @@
       },
       "title": "ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster"
     },
+    "clusterClusterCondition": {
+      "type": "object",
+      "required": [
+        "type",
+        "status"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "HEALTHY"
+          ],
+          "default": "HEALTHY",
+          "x-ui-hints": {
+            "HEALTHY": "Healthy"
+          },
+          "title": "Type indicates a certain NIC condition"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "TRUE",
+            "FALSE"
+          ],
+          "default": "UNKNOWN",
+          "x-ui-hints": {
+            "FALSE": "False",
+            "TRUE": "True",
+            "UNKNOWN": "Unknown"
+          },
+          "title": "Condition Status"
+        },
+        "last-transition-time": {
+          "type": "string",
+          "title": "The last time the condition transitioned"
+        },
+        "reason": {
+          "type": "string",
+          "title": "The reason for the condition's last transition"
+        },
+        "message": {
+          "type": "string",
+          "description": "A detailed message indicating details about the transition."
+        }
+      },
+      "description": "ClusterCondition describes the state of a cluster at a certain point."
+    },
     "clusterClusterList": {
       "type": "object",
       "properties": {
@@ -4345,6 +4393,13 @@
           "type": "boolean",
           "format": "boolean",
           "title": "AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterClusterCondition"
+          },
+          "title": "List of current cluster conditions"
         }
       },
       "description": "ClusterStatus contains the current state of the Cluster."

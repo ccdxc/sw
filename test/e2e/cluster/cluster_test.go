@@ -14,11 +14,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	cmdprotos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
-
-	"github.com/pensando/sw/api/generated/apiclient"
 )
 
 var _ = Describe("cluster tests", func() {
@@ -149,7 +148,8 @@ func getServices(node string) cmdprotos.ServiceList {
 	var srvList cmdprotos.ServiceList
 	srvURL := "http://" + node + ":" + globals.CMDRESTPort + "/api/v1/services"
 	By(fmt.Sprintf("Getting services from %v", node))
-	resp, err := http.Get(srvURL)
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	resp, err := httpClient.Get(srvURL)
 	Expect(err).ShouldNot(HaveOccurred())
 	data, err := ioutil.ReadAll(resp.Body)
 	Expect(err).ShouldNot(HaveOccurred())
@@ -246,4 +246,18 @@ func validateCluster() {
 		return ""
 	}, 15, 3).Should(BeEmpty(), "Resolver data should be same on all quorum nodes")
 
+	// cluster should be in healthy state
+	Eventually(func() bool {
+		cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+		if err != nil {
+			return false
+		}
+		for _, cond := range cl.Status.Conditions {
+			if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
+				return cond.Status == cmd.ConditionStatus_TRUE.String()
+			}
+		}
+
+		return false
+	}, 60, 2).Should(BeTrue(), "cluster should be in healthy state")
 }

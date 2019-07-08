@@ -18,6 +18,16 @@ export enum ApiListWatchOptions_sort_order {
     'ByModTimeReverse' = "ByModTimeReverse",
 }
 
+export enum ClusterClusterCondition_type {
+    'HEALTHY' = "HEALTHY",
+}
+
+export enum ClusterClusterCondition_status {
+    'UNKNOWN' = "UNKNOWN",
+    'TRUE' = "TRUE",
+    'FALSE' = "FALSE",
+}
+
 export enum ClusterMemInfo_type {
     'UNKNOWN' = "UNKNOWN",
     'HBM' = "HBM",
@@ -83,6 +93,16 @@ export enum ApiListWatchOptions_sort_order_uihint {
     'ByVersion' = "By Version",
     'ByVersionReverse' = "By Version Reverse",
     'None' = "None",
+}
+
+export enum ClusterClusterCondition_type_uihint {
+    'HEALTHY' = "Healthy",
+}
+
+export enum ClusterClusterCondition_status_uihint {
+    'FALSE' = "False",
+    'TRUE' = "True",
+    'UNKNOWN' = "Unknown",
 }
 
 export enum ClusterNodeCondition_type_uihint {
@@ -165,6 +185,8 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
+    ClusterClusterCondition_type = ClusterClusterCondition_type;
+    ClusterClusterCondition_status = ClusterClusterCondition_status;
     ClusterMemInfo_type = ClusterMemInfo_type;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
@@ -176,6 +198,8 @@ export class AllEnums {
     ClusterSmartNICStatus_admission_phase = ClusterSmartNICStatus_admission_phase;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
+    ClusterClusterCondition_type_uihint = ClusterClusterCondition_type_uihint;
+    ClusterClusterCondition_status_uihint = ClusterClusterCondition_status_uihint;
     ClusterNodeCondition_type_uihint = ClusterNodeCondition_type_uihint;
     ClusterNodeCondition_status_uihint = ClusterNodeCondition_status_uihint;
     ClusterNodeStatus_phase_uihint = ClusterNodeStatus_phase_uihint;

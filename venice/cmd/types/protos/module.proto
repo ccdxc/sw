@@ -29,6 +29,9 @@ message ModuleSpec {
 
         // Deployment module type runs NumCopies number of instances.
         Deployment = 2;
+
+        // ReplicaSet are created for each deployment with the desired number of replicas requested.
+        ReplicaSet = 3;
     }
 
     // Type contains the type of the module.

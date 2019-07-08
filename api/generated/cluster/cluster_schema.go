@@ -64,24 +64,29 @@ var typesMapCluster = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"auth-bootstrapped": api.CLIInfo{Path: "Status.AuthBootstrapped", Skip: false, Insert: "", Help: ""},
-			"auto-admit-nics":   api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
-			"certs":             api.CLIInfo{Path: "Spec.Certs", Skip: false, Insert: "", Help: ""},
-			"generation-id":     api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"key":               api.CLIInfo{Path: "Spec.Key", Skip: false, Insert: "", Help: ""},
-			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":            api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"leader":            api.CLIInfo{Path: "Status.Leader", Skip: false, Insert: "", Help: ""},
-			"name":              api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"ntp-servers":       api.CLIInfo{Path: "Spec.NTPServers", Skip: false, Insert: "", Help: ""},
-			"quorum-nodes":      api.CLIInfo{Path: "Spec.QuorumNodes", Skip: false, Insert: "", Help: ""},
-			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"tenant":            api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"uuid":              api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
-			"virtual-ip":        api.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
+			"api-version":          api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"auth-bootstrapped":    api.CLIInfo{Path: "Status.AuthBootstrapped", Skip: false, Insert: "", Help: ""},
+			"auto-admit-nics":      api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
+			"certs":                api.CLIInfo{Path: "Spec.Certs", Skip: false, Insert: "", Help: ""},
+			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"key":                  api.CLIInfo{Path: "Spec.Key", Skip: false, Insert: "", Help: ""},
+			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":               api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"last-transition-time": api.CLIInfo{Path: "Status.Conditions[].LastTransitionTime", Skip: false, Insert: "", Help: ""},
+			"leader":               api.CLIInfo{Path: "Status.Leader", Skip: false, Insert: "", Help: ""},
+			"message":              api.CLIInfo{Path: "Status.Conditions[].Message", Skip: false, Insert: "", Help: ""},
+			"name":                 api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":            api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"ntp-servers":          api.CLIInfo{Path: "Spec.NTPServers", Skip: false, Insert: "", Help: ""},
+			"quorum-nodes":         api.CLIInfo{Path: "Spec.QuorumNodes", Skip: false, Insert: "", Help: ""},
+			"reason":               api.CLIInfo{Path: "Status.Conditions[].Reason", Skip: false, Insert: "", Help: ""},
+			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"status":               api.CLIInfo{Path: "Status.Conditions[].Status", Skip: false, Insert: "", Help: ""},
+			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"type":                 api.CLIInfo{Path: "Status.Conditions[].Type", Skip: false, Insert: "", Help: ""},
+			"uuid":                 api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"virtual-ip":           api.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.ClusterAuthBootstrapRequest": &api.Struct{
@@ -116,6 +121,20 @@ var typesMapCluster = map[string]*api.Struct{
 			"SelfLink": api.Field{Name: "SelfLink", CLITag: api.CLIInfo{ID: "self-link", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "self-link", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"cluster.ClusterCondition": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterCondition{}) },
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"LastTransitionTime": api.Field{Name: "LastTransitionTime", CLITag: api.CLIInfo{ID: "last-transition-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"cluster.ClusterSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterSpec{}) },
 		Fields: map[string]api.Field{
@@ -140,6 +159,8 @@ var typesMapCluster = map[string]*api.Struct{
 			"LastLeaderTransitionTime": api.Field{Name: "LastLeaderTransitionTime", CLITag: api.CLIInfo{ID: "last-leader-transition-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-leader-transition-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"AuthBootstrapped": api.Field{Name: "AuthBootstrapped", CLITag: api.CLIInfo{ID: "auth-bootstrapped", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-bootstrapped", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
+			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{ID: "conditions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.ClusterCondition"},
 		},
 	},
 	"cluster.DockerInfo": &api.Struct{

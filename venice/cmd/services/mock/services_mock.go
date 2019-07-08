@@ -9,10 +9,10 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 
-	"github.com/pensando/sw/api/interfaces"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -332,6 +332,11 @@ type K8sService struct {
 	observers []types.K8sPodEventObserver
 }
 
+// GetClient mock impl.
+func (m *K8sService) GetClient() k8sclient.Interface {
+	return nil
+}
+
 // UpgradeServices is a mock
 func (m *K8sService) UpgradeServices(order []string) error {
 	return nil
@@ -636,9 +641,91 @@ func (c *Cluster) UpdateTLSConfig(ctx context.Context, in *cmd.UpdateTLSConfigRe
 	return nil, errors.New("not implemented")
 }
 
+// Node mocks Dummy node
+type Node struct {
+	DummyNode   cmd.Node
+	nodeWatcher *mockNodeWathcer
+}
+
+// Create mocks nodes Create
+func (n *Node) Create(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
+	n.DummyNode = *in
+	if n.nodeWatcher == nil {
+		_, cancel := context.WithCancel(context.Background())
+		n.nodeWatcher = &mockNodeWathcer{ch: make(chan *kvstore.WatchEvent), cancel: cancel}
+	}
+	n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Created, Object: &n.DummyNode}
+	return &n.DummyNode, nil
+}
+
+// Update mocks nodes Update
+func (n *Node) Update(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
+	n.DummyNode = *in
+	n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Updated, Object: &n.DummyNode}
+	return &n.DummyNode, nil
+}
+
+// UpdateStatus mocks nodes UpdateStatus
+func (n *Node) UpdateStatus(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
+	n.DummyNode = *in
+	n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Updated, Object: &n.DummyNode}
+	return &n.DummyNode, nil
+}
+
+// Get mocks nodes Get
+func (n *Node) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Node, error) {
+	if objMeta.Name == n.DummyNode.Name && objMeta.Tenant == n.DummyNode.Tenant {
+		return &n.DummyNode, nil
+	}
+	return nil, nil
+}
+
+// Delete mocks nodes Delete
+func (n *Node) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Node, error) {
+	return nil, errors.New("not implemented")
+}
+
+// List mocks nodes List
+func (n *Node) List(ctx context.Context, options *api.ListWatchOptions) ([]*cmd.Node, error) {
+	rv := make([]*cmd.Node, 1)
+	rv[0] = &n.DummyNode
+	return rv, nil
+}
+
+// Watch mocks nodes Watch - not implemented till we need this
+func (n *Node) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if n.nodeWatcher == nil {
+		_, cancel := context.WithCancel(context.Background())
+		n.nodeWatcher = &mockNodeWathcer{ch: make(chan *kvstore.WatchEvent), cancel: cancel}
+	}
+	return n.nodeWatcher, nil
+}
+
+// mock node watcher
+type mockNodeWathcer struct {
+	ch     chan *kvstore.WatchEvent
+	cancel context.CancelFunc
+}
+
+// EventChan returns the event channel
+func (m *mockNodeWathcer) EventChan() <-chan *kvstore.WatchEvent {
+	return m.ch
+}
+
+// Stop stops the watcher
+func (m *mockNodeWathcer) Stop() {
+	m.cancel()
+}
+
+// Allowed mocks node Allowed
+func (n *Node) Allowed(oper apiintf.APIOperType) bool {
+	return false
+}
+
 // APIClient mocks APIClient interface
 type APIClient struct {
 	DummyCluster Cluster
+	DummyNode    Node
 }
 
 // Cluster returns mock ClusterInterface
@@ -648,7 +735,7 @@ func (ma *APIClient) Cluster() cmd.ClusterV1ClusterInterface {
 
 // Node return mock NodeInterface - nil till we need this functionality
 func (ma *APIClient) Node() cmd.ClusterV1NodeInterface {
-	return nil
+	return &ma.DummyNode
 }
 
 // Host return mock HostInterface - nil till we need this functionality
@@ -680,6 +767,7 @@ func (ma *APIClient) Watch(ctx context.Context, options *api.ListWatchOptions) (
 type CfgWatcherService struct {
 	DummyAPIClient APIClient
 	ClusterHandler types.ClusterEventHandler
+	APIClientSvc   apiclient.Services
 }
 
 // Start is a dummy Start
@@ -711,7 +799,13 @@ func (c *CfgWatcherService) SetClusterQuorumNodes([]string) {}
 
 // APIClient returns a valid interface once the APIServer is good and
 // accepting requests
-func (c *CfgWatcherService) APIClient() cmd.ClusterV1Interface { return &c.DummyAPIClient }
+func (c *CfgWatcherService) APIClient() cmd.ClusterV1Interface {
+	if c.APIClientSvc != nil {
+		return c.APIClientSvc.ClusterV1()
+	}
+
+	return &c.DummyAPIClient
+}
 
 // NodeService is the interface for starting/stopping/configuring services running on all controller nodes
 type NodeService struct {
@@ -765,3 +859,13 @@ func (n *NodeService) OnNotifySystemdEvent(e types.SystemdEvent) error {
 // InitConfigFiles is dummy
 func (n *NodeService) InitConfigFiles() {
 }
+
+// ClusterHealthMonitor mock cluster health monitor
+type ClusterHealthMonitor struct {
+}
+
+// Start mock impl
+func (c *ClusterHealthMonitor) Start() {}
+
+// Stop mock impl
+func (c *ClusterHealthMonitor) Stop() {}

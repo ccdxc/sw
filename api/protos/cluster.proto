@@ -124,7 +124,38 @@ message ClusterStatus {
     api.Timestamp LastLeaderTransitionTime  = 2 [(gogoproto.jsontag) = "last-leader-transition-time,omitempty"];
     // AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth
     bool AuthBootstrapped                   = 3 [(gogoproto.jsontag) = "auth-bootstrapped"];
+    // List of current cluster conditions
+    repeated ClusterCondition Conditions    = 7 [(gogoproto.nullable) = false,
+                                                 (gogoproto.jsontag) = "conditions,omitempty"];
 }
+
+// ClusterCondition describes the state of a cluster at a certain point.
+message ClusterCondition {
+
+    // These are valid conditions of a Cluster
+    enum ConditionType {
+        // ui-hint: Healthy
+        HEALTHY     = 0; // Cluster is healthy
+    }
+
+    // Type indicates a certain NIC condition
+    string Type                     = 1 [(venice.check) = "StrEnum(ClusterCondition.ConditionType)",
+                                        (gogoproto.jsontag) = "type,omitempty"];
+
+    // Condition Status
+    string Status                   = 2 [(venice.check) = "StrEnum(ConditionStatus)",
+                                        (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    string LastTransitionTime       = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
+
+    // The reason for the condition's last transition
+    string Reason                   = 4 [(gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message                  = 5 [(gogoproto.jsontag) = "message,omitempty"];
+}
+
 
 // Version is public accessible object that holds build information.
 message Version {

@@ -515,9 +515,10 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			return ret, nil
 		}),
 
-		"cluster.ClusterSpec":   apisrvpkg.NewMessage("cluster.ClusterSpec"),
-		"cluster.ClusterStatus": apisrvpkg.NewMessage("cluster.ClusterStatus"),
-		"cluster.DockerInfo":    apisrvpkg.NewMessage("cluster.DockerInfo"),
+		"cluster.ClusterCondition": apisrvpkg.NewMessage("cluster.ClusterCondition"),
+		"cluster.ClusterSpec":      apisrvpkg.NewMessage("cluster.ClusterSpec"),
+		"cluster.ClusterStatus":    apisrvpkg.NewMessage("cluster.ClusterStatus"),
+		"cluster.DockerInfo":       apisrvpkg.NewMessage("cluster.DockerInfo"),
 		"cluster.Host": apisrvpkg.NewMessage("cluster.Host").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := cluster.Host{}

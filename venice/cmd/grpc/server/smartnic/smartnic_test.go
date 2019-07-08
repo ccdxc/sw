@@ -130,7 +130,8 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
 		cmdsvc.WithCfgWatcherMasterOption(cw),
 		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
-		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
+		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()),
+		cmdsvc.WithClusterHealthMonitor(&mock.ClusterHealthMonitor{}))
 	cw.Start()
 
 	// create an RPC server.

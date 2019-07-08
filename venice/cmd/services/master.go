@@ -60,17 +60,18 @@ var (
 
 type masterService struct {
 	sync.Mutex
-	sysSvc              types.SystemdService
-	leaderSvc           types.LeaderService
-	k8sSvc              types.K8sService
-	resolverSvc         types.ResolverService
-	resolverSvcObserver *resolverServiceObserver
-	cfgWatcherSvc       types.CfgWatcherService
-	esCuratorSvc        curator.Interface
-	diagModuleSvc       module.Updater
-	isLeader            bool
-	enabled             bool
-	configs             configs.Interface
+	sysSvc               types.SystemdService
+	leaderSvc            types.LeaderService
+	k8sSvc               types.K8sService
+	resolverSvc          types.ResolverService
+	resolverSvcObserver  *resolverServiceObserver
+	cfgWatcherSvc        types.CfgWatcherService
+	esCuratorSvc         curator.Interface
+	diagModuleSvc        module.Updater
+	isLeader             bool
+	enabled              bool
+	configs              configs.Interface
+	clusterHealthMonitor types.ClusterHealthMonitor
 
 	// this channel will be updated to indicate any change in the cluster or leader.
 	// On leader/cluster event, the cluster status is updated to reflect the changes.
@@ -160,6 +161,13 @@ func WithElasticCuratorSvcrOption(curSvc curator.Interface) MasterOption {
 func WithDiagModuleUpdaterSvcOption(diagModuleSvc module.Updater) MasterOption {
 	return func(m *masterService) {
 		m.diagModuleSvc = diagModuleSvc
+	}
+}
+
+// WithClusterHealthMonitor to pass a custom cluster health monitor
+func WithClusterHealthMonitor(clusterHealthMonitor types.ClusterHealthMonitor) MasterOption {
+	return func(m *masterService) {
+		m.clusterHealthMonitor = clusterHealthMonitor
 	}
 }
 
@@ -363,8 +371,10 @@ func (m *masterService) startLeaderServices() error {
 		env.ServiceRolloutClient.Start()
 	}
 
-	m.leaderInstanceRPCStopChannel = make(chan bool)
-	go auth.RunLeaderInstanceServer(":"+env.Options.GRPCLeaderInstancePort, m.leaderInstanceRPCStopChannel)
+	if env.NICService != nil {
+		m.leaderInstanceRPCStopChannel = make(chan bool)
+		go auth.RunLeaderInstanceServer(":"+env.Options.GRPCLeaderInstancePort, m.leaderInstanceRPCStopChannel)
+	}
 
 	// Start elastic curator service
 	if m.esCuratorSvc != nil {
@@ -390,6 +400,11 @@ func (m *masterService) startLeaderServices() error {
 
 	go performQuorumDefrag(true)
 
+	if m.clusterHealthMonitor == nil {
+		m.clusterHealthMonitor = NewClusterHealthMonitor(m.cfgWatcherSvc, m.k8sSvc, env.Logger.WithContext("submodule", "cluster_health_monitor"))
+	}
+	m.clusterHealthMonitor.Start()
+
 	return nil
 }
 
@@ -413,6 +428,9 @@ func (m *masterService) Stop() {
 
 // caller holds the lock
 func (m *masterService) stopLeaderServices() {
+	if m.clusterHealthMonitor != nil {
+		m.clusterHealthMonitor.Stop()
+	}
 	go performQuorumDefrag(false)
 
 	if m.leaderInstanceRPCStopChannel != nil {

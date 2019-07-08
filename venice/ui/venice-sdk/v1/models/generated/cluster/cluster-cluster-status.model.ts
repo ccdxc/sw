@@ -7,11 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ClusterClusterCondition, IClusterClusterCondition } from './cluster-cluster-condition.model';
 
 export interface IClusterClusterStatus {
     'leader'?: string;
     'last-leader-transition-time'?: Date;
     'auth-bootstrapped'?: boolean;
+    'conditions'?: Array<IClusterClusterCondition>;
 }
 
 
@@ -20,6 +22,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     'leader': string = null;
     'last-leader-transition-time': Date = null;
     'auth-bootstrapped': boolean = null;
+    'conditions': Array<ClusterClusterCondition> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'leader': {
             description:  'Leader contains the node name of the cluster leader.',
@@ -33,6 +36,10 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         'auth-bootstrapped': {
             required: false,
             type: 'boolean'
+        },
+        'conditions': {
+            required: false,
+            type: 'object'
         },
     }
 
@@ -58,6 +65,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['conditions'] = new Array<ClusterClusterCondition>();
         this.setValues(values, setDefaults);
     }
 
@@ -87,6 +95,11 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         } else {
             this['auth-bootstrapped'] = null
         }
+        if (values) {
+            this.fillModelArray<ClusterClusterCondition>(this, 'conditions', values['conditions'], ClusterClusterCondition);
+        } else {
+            this['conditions'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -97,6 +110,14 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
                 'leader': CustomFormControl(new FormControl(this['leader']), ClusterClusterStatus.propInfo['leader']),
                 'last-leader-transition-time': CustomFormControl(new FormControl(this['last-leader-transition-time']), ClusterClusterStatus.propInfo['last-leader-transition-time']),
                 'auth-bootstrapped': CustomFormControl(new FormControl(this['auth-bootstrapped']), ClusterClusterStatus.propInfo['auth-bootstrapped']),
+                'conditions': new FormArray([]),
+            });
+            // generate FormArray control elements
+            this.fillFormArray<ClusterClusterCondition>('conditions', this['conditions'], ClusterClusterCondition);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('conditions') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('conditions').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -111,6 +132,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             this._formGroup.controls['leader'].setValue(this['leader']);
             this._formGroup.controls['last-leader-transition-time'].setValue(this['last-leader-transition-time']);
             this._formGroup.controls['auth-bootstrapped'].setValue(this['auth-bootstrapped']);
+            this.fillModelArray<ClusterClusterCondition>(this, 'conditions', this['conditions'], ClusterClusterCondition);
         }
     }
 }

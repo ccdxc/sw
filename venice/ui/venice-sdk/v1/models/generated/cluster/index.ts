@@ -31,6 +31,7 @@ export * from './cluster-bios-info.model';
 export * from './cluster-cpu-info.model';
 export * from './cluster-cluster.model';
 export * from './cluster-cluster-auth-bootstrap-request.model';
+export * from './cluster-cluster-condition.model';
 export * from './cluster-cluster-list.model';
 export * from './cluster-cluster-spec.model';
 export * from './cluster-cluster-status.model';

@@ -29,6 +29,12 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
+// ClusterCondition_ConditionType_normal is a map of normalized values for the enum
+var ClusterCondition_ConditionType_normal = map[string]string{
+	"HEALTHY": "HEALTHY",
+	"healthy": "HEALTHY",
+}
+
 // MemInfo_MemType_normal is a map of normalized values for the enum
 var MemInfo_MemType_normal = map[string]string{
 	"DDR":     "DDR",
@@ -181,6 +187,7 @@ func (m *Cluster) Defaults(ver string) bool {
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -203,6 +210,34 @@ func (m *ClusterAuthBootstrapRequest) Clone(into interface{}) (interface{}, erro
 // Default sets up the defaults for the object
 func (m *ClusterAuthBootstrapRequest) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *ClusterCondition) Clone(into interface{}) (interface{}, error) {
+	var out *ClusterCondition
+	var ok bool
+	if into == nil {
+		out = &ClusterCondition{}
+	} else {
+		out, ok = into.(*ClusterCondition)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*ClusterCondition))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ClusterCondition) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Status = "UNKNOWN"
+		m.Type = "HEALTHY"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -244,7 +279,12 @@ func (m *ClusterStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *ClusterStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	for k := range m.Conditions {
+		i := m.Conditions[k]
+		ret = i.Defaults(ver) || ret
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -852,12 +892,26 @@ func (m *Cluster) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool)
 			ret = append(ret, errs...)
 		}
 	}
+
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *Cluster) Normalize() {
 
 	m.ObjectMeta.Normalize()
+
+	m.Status.Normalize()
 
 }
 
@@ -874,6 +928,36 @@ func (m *ClusterAuthBootstrapRequest) Validate(ver, path string, ignoreStatus bo
 func (m *ClusterAuthBootstrapRequest) Normalize() {
 
 	m.ObjectMeta.Normalize()
+
+}
+
+func (m *ClusterCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *ClusterCondition) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapCluster["ClusterCondition"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapCluster["ClusterCondition"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *ClusterCondition) Normalize() {
+
+	m.Status = ConditionStatus_normal[strings.ToLower(m.Status)]
+
+	m.Type = ClusterCondition_ConditionType_normal[strings.ToLower(m.Type)]
 
 }
 
@@ -896,10 +980,25 @@ func (m *ClusterStatus) References(tenant string, path string, resp map[string]a
 
 func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	for k, v := range m.Conditions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *ClusterStatus) Normalize() {
+
+	for _, v := range m.Conditions {
+		v.Normalize()
+
+	}
 
 }
 
@@ -1559,6 +1658,33 @@ func init() {
 	)
 
 	validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapCluster["ClusterCondition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCluster["ClusterCondition"]["all"] = append(validatorMapCluster["ClusterCondition"]["all"], func(path string, i interface{}) error {
+		m := i.(*ClusterCondition)
+
+		if _, ok := ConditionStatus_value[m.Status]; !ok {
+			vals := []string{}
+			for k1, _ := range ConditionStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
+		}
+		return nil
+	})
+
+	validatorMapCluster["ClusterCondition"]["all"] = append(validatorMapCluster["ClusterCondition"]["all"], func(path string, i interface{}) error {
+		m := i.(*ClusterCondition)
+
+		if _, ok := ClusterCondition_ConditionType_value[m.Type]; !ok {
+			vals := []string{}
+			for k1, _ := range ClusterCondition_ConditionType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
 
 	validatorMapCluster["InterfaceInfo"] = make(map[string][]func(string, interface{}) error)
 

@@ -687,6 +687,10 @@ func (k *k8sService) UpgradeServices(services []string) error {
 	return nil
 }
 
+func (k *k8sService) GetClient() k8sclient.Interface {
+	return k.client
+}
+
 func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 	dsConfig := createDaemonSetObject(module)
 	var retval error
