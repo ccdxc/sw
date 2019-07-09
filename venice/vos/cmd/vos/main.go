@@ -28,6 +28,7 @@ func main() {
 		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Vos)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		debugFlag       = flag.Bool("debug", false, "enable debug mode")
+		traceAPI        = flag.Bool("trace", false, "enable trace of APIs to stdout")
 	)
 
 	flag.Parse()
@@ -74,7 +75,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// init obj store
-	err := vospkg.New(ctx, args)
+	err := vospkg.New(ctx, *traceAPI, args)
 	if err != nil {
 		// let the scheduler restart obj store
 		log.Fatalf("failed to init object store, %s", err)

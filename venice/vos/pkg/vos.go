@@ -157,10 +157,14 @@ func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiint
 //  This starts Minio server and starts a HTTP server handling multipart forms used or
 //  uploading files to the object store and a gRPC frontend that frontends all other operations
 //  for the objectstore.
-func New(ctx context.Context, args []string) error {
+func New(ctx context.Context, trace bool, args []string) error {
 	os.Setenv("MINIO_ACCESS_KEY", minioKey)
 	os.Setenv("MINIO_SECRET_KEY", minioSecret)
 	log.Infof("minio env: %+v", os.Environ())
+	if trace {
+		os.Setenv("MINIO_HTTP_TRACE", "/dev/stdout")
+		log.Infof("minio enabled API tracing")
+	}
 	log.Infof("minio args:  %+v", args)
 	go minio.Main(args)
 
