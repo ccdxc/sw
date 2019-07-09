@@ -82,6 +82,12 @@ def GetFilteredObjects(objs, maxlimits, random=True):
         return sample(objs, k=num)
     return objs[0:num]
 
+def GetIPProtoByName(protoname):
+    """
+        returns IP Protocol number for the given protocol name
+    """
+    return socket.getprotobyname(protoname)
+
 def GetIPProtoName(proto):
     """
         returns IP Protocol name for the given protocol number

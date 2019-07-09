@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import ipaddress
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
@@ -9,8 +10,6 @@ import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.nexthop as nexthop
 import route_pb2 as route_pb2
 import tunnel_pb2 as tunnel_pb2
-import types_pb2 as types_pb2
-import ipaddress
 
 from infra.common.logging import logger
 from apollo.config.store import Store
@@ -27,20 +26,16 @@ class RouteObject(base.ConfigObjectBase):
             self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
             self.AddrFamily = 'IPV4'
             self.NEXTHOP = nexthop.client.GetV4Nexthop(parent.VPCId)
-        self.GID('RouteTbl%d'%self.RouteTblId)
+        self.GID('RouteTable%d' %self.RouteTblId)
         self.routes = routes
-        if hasattr(self, "TUNNEL") and self.TUNNEL is not None:
-        #if self.TUNNEL:
+        self.TUNNEL = tunobj
+        if self.TUNNEL:
             self.TunnelId = self.TUNNEL.Id
+            self.TunIPAddr = tunobj.RemoteIPAddr
+            self.TunIP = str(self.TunIPAddr)
         else:
             self.TunnelId = 0
-        if self.NEXTHOP:
-            self.NexthopId = self.NEXTHOP.NexthopId
-        else:
-            self.NexthopId = 0
-        self.TUNNEL = tunobj
-        self.TunIPAddr = tunobj.RemoteIPAddr
-        self.TunIP = str(self.TunIPAddr)
+        self.NexthopId = self.NEXTHOP.NexthopId if self.NEXTHOP else 0
         self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
         self.RouteType = routetype # used for lpm route cases
@@ -57,34 +52,27 @@ class RouteObject(base.ConfigObjectBase):
         self.HasDefaultRoute = True if 'default' in routetype else False
         self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
         self.HasBlackHoleRoute = True if 'blackhole' in routetype else False
+        self.HasNexthop = True if self.NEXTHOP else False
         self.HasServiceTunnel = False
-        self.HasNexthop = False
-        if hasattr(self, "TUNNEL"):
-            if self.TUNNEL.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE and \
-                    utils.IsPipelineArtemis():
+        if utils.IsPipelineArtemis():
+            if self.TUNNEL and self.TUNNEL.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
                 self.HasServiceTunnel = True
-        if hasattr(self, "NEXTHOP") and self.NEXTHOP is not None:
-            self.HasNexthop = True
         if self.HasBlackHoleRoute:
             self.NextHopType = "blackhole"
         elif self.VPCPeeringEnabled:
             self.NextHopType = "vpcpeer"
         else:
-            if utils.IsPipelineArtemis() and self.TUNNEL.Type is not \
-                 tunnel_pb2.TUNNEL_TYPE_SERVICE:
+            if utils.IsPipelineArtemis() and\
+               self.HasServiceTunnel == False:
                 self.NextHopType = "nh"
             else:
                 self.NextHopType = "tep"
         return
 
     def __repr__(self):
-        return "RouteTblID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s|"\
-               "HasDefaultRoute:%s|HasBlackHoleRoute:%s|VPCPeering:%s ID:%d|"\
-               "NextHop: ID:%d Type:%s IP:%s|TEP: ID:%s"\
-               %(self.RouteTblId, self.VPCId, self.AddrFamily, len(self.routes),\
-                 self.RouteType, self.HasDefaultRoute, self.HasBlackHoleRoute,\
-                 self.VPCPeeringEnabled, self.PeerVPCId,\
-                 self.NexthopId, self.NextHopType, str(self.TunIPAddr), self.TunnelId)
+        return "RouteTableID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s"\
+               %(self.RouteTblId, self.VPCId, self.AddrFamily,\
+                 len(self.routes), self.RouteType)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = route_pb2.RouteTableRequest()
@@ -103,10 +91,15 @@ class RouteObject(base.ConfigObjectBase):
         return grpcmsg
 
     def Show(self):
-        logger.info("RouteTbl object:", self)
+        logger.info("RouteTable object:", self)
         logger.info("- %s" % repr(self))
+        logger.info("- HasDefaultRoute:%s|HasBlackHoleRoute:%s"\
+                    %(self.HasDefaultRoute, self.HasBlackHoleRoute))
+        logger.info("- VPCPeering:%s Peer Vpc%d" %(self.VPCPeeringEnabled, self.PeerVPCId))
+        logger.info("- NH : Nexthop%d|Type:%s" %(self.NexthopId, self.NextHopType))
+        logger.info("- TEP: Tunnel%d|IP:%s" %(self.TunnelId, self.TunIP))
         for route in self.routes:
-            logger.info("-- %s" % str(route))
+            logger.info(" -- %s" % str(route))
         return
 
     def IsFilterMatch(self, selectors):

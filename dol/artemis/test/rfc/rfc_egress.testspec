@@ -1,7 +1,7 @@
 # RFC Test Spec for egress case of scenario2-Internet out VPC VIP traffic
 selectors:
     root: ref://store/templates/id=POLICY
-    maxlimits: 1
+    maxlimits: 5
     policy: filter://Direction=egress
 
 packets:

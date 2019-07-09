@@ -387,7 +387,6 @@ def __get_matching_rule(policy, pkt, tc_rule):
     rules = sorted(policy.rules, key=lambda x: x.Priority)
     match_rule = None
     for rule in rules:
-        #TODO: if tc_rule is the first one, we can return here
         if __is_matching_rule(packet_tuples, rule):
             match_rule = rule
             break

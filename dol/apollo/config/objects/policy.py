@@ -1,10 +1,8 @@
 #! /usr/bin/python3
 import pdb
-import enum
 import copy
 import ipaddress
 import random
-import socket
 
 from infra.common.logging import logger
 import infra.config.base as base
@@ -67,8 +65,10 @@ class L3MatchObject:
             return tagObj.TagId if tagObj else None
 
         if self.valid:
-            logger.info("    Proto:%d SrcType:%d DstType:%d"\
-                        %(self.Proto, self.SrcType, self.DstType))
+            logger.info("    Proto:%s(%d)"\
+                        %(utils.GetIPProtoName(self.Proto), self.Proto))
+            logger.info("    SrcType:%s DstType:%s"\
+                        %(self.SrcType, self.DstType))
             logger.info("    SrcPrefix:%s DstPrefix:%s"\
                         %(self.SrcPrefix, self.DstPrefix))
             logger.info("    SrcIPLow:%s SrcIPHigh:%s"\
@@ -81,8 +81,7 @@ class L3MatchObject:
             logger.info("    No L3Match")
 
 class RuleObject:
-    def __init__(self, stateful, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW):
-        #TODO: introduce rule no
+    def __init__(self, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
         self.Stateful = stateful
         self.L3Match = l3match
         self.L4Match = l4match
@@ -90,7 +89,13 @@ class RuleObject:
         self.Action = action
 
     def Show(self):
-        logger.info(" -- Stateful:%s Priority:%d Action:%d" %(self.Stateful, self.Priority, self.Action))
+        def __get_action_str(action):
+            if action == policy_pb2.SECURITY_RULE_ACTION_ALLOW:
+                return "allow"
+            return "deny"
+
+        logger.info(" -- Stateful:%s Priority:%d Action:%s"\
+                    %(self.Stateful, self.Priority, __get_action_str(self.Action)))
         self.L3Match.Show()
         self.L4Match.Show()
 
@@ -163,6 +168,7 @@ class PolicyObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("Policy Object:", self)
         logger.info("- %s" % repr(self))
+        logger.info("- Vpc%d" % self.VPCId)
         logger.info("- Direction:%s" % self.Direction)
         logger.info("- PolicyType:%s" % self.PolicyType)
         logger.info("- OverlapType:%s" % self.OverlapType)
@@ -351,7 +357,7 @@ class PolicyObjectClient:
             if proto:
                 if proto == "icmp" and af == utils.IP_VERSION_6:
                     proto = "ipv6-" + proto
-                proto = socket.getprotobyname(proto)
+                proto = utils.GetIPProtoByName(proto)
             return proto
 
         def __get_l3_match_type(rulespec, attr):
@@ -541,7 +547,7 @@ class PolicyObjectClient:
                     for l3match in objs:
                         priority, prioritybase = __get_rule_priority(rulespec, prioritybase)
                         action = __get_rule_action(rulespec)
-                        rule = RuleObject(stateful, l3match, l4match, priority, action)
+                        rule = RuleObject(l3match, l4match, priority, action, stateful)
                         rules.append(rule)
                 else:
                     l3match = __get_l3_rule(af, rulespec)
@@ -550,7 +556,7 @@ class PolicyObjectClient:
                         return None
                     priority, prioritybase = __get_rule_priority(rulespec)
                     action = __get_rule_action(rulespec)
-                    rule = RuleObject(stateful, l3match, l4match, priority, action)
+                    rule = RuleObject(l3match, l4match, priority, action, stateful)
                     rules.append(rule)
             return rules
 

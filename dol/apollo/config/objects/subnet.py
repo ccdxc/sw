@@ -90,7 +90,7 @@ class SubnetObject(base.ConfigObjectBase):
         l4match = policy.L4MatchObject(True)
         for proto in protos:
             l3match = policy.L3MatchObject(True, proto, srcpfx=srcPfx, dstpfx=dstPfx)
-            rule = policy.RuleObject(False, l3match, l4match)
+            rule = policy.RuleObject(l3match, l4match)
             rules.append(rule)
         policyobj.rules = rules
         policyobj.Show()
