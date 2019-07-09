@@ -103,6 +103,29 @@ static void ionic_get_drvinfo(struct net_device *netdev,
 		sizeof(drvinfo->bus_info));
 }
 
+#define DEV_CMD_REG_VERSION 1
+#define DEV_INFO_REG_COUNT  32
+#define DEV_CMD_REG_COUNT   32
+static int ionic_get_regs_len(struct net_device *netdev)
+{
+	return (DEV_INFO_REG_COUNT + DEV_CMD_REG_COUNT) * sizeof(u32);
+}
+
+static void ionic_get_regs(struct net_device *netdev, struct ethtool_regs *regs,
+			   void *p)
+{
+	struct lif *lif = netdev_priv(netdev);
+	unsigned int size;
+
+	regs->version = DEV_CMD_REG_VERSION;
+
+	size = DEV_INFO_REG_COUNT * sizeof(u32);
+	memcpy_fromio(p, lif->ionic->idev.dev_info_regs->words, size);
+
+	size = DEV_CMD_REG_COUNT * sizeof(u32);
+	memcpy_fromio(p, lif->ionic->idev.dev_cmd_regs->words, size);
+}
+
 static int ionic_get_link_ksettings(struct net_device *netdev,
 				    struct ethtool_link_ksettings *ks)
 {
@@ -836,6 +859,8 @@ static int ionic_nway_reset(struct net_device *netdev)
 
 static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_drvinfo		= ionic_get_drvinfo,
+	.get_regs_len		= ionic_get_regs_len,
+	.get_regs		= ionic_get_regs,
 	.get_link		= ethtool_op_get_link,
 	.get_link_ksettings	= ionic_get_link_ksettings,
 	.get_coalesce		= ionic_get_coalesce,

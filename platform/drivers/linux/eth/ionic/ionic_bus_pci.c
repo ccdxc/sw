@@ -10,6 +10,7 @@
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
+#include "ionic_devlink.h"
 
 /* Supported devices */
 static const struct pci_device_id ionic_id_table[] = {
@@ -275,11 +276,14 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_deinit_lifs;
 	}
 
-	dev_info(ionic->dev, "attached\n");
+	err = ionic_devlink_register(ionic);
+	if (err)
+		dev_err(dev, "Cannot register devlink (ignored): %d\n", err);
 
 	return 0;
 
 err_out_deinit_lifs:
+	ionic_devlink_unregister(ionic);
 	ionic_lifs_deinit(ionic);
 err_out_free_lifs:
 	ionic_lifs_free(ionic);
@@ -312,8 +316,7 @@ static void ionic_remove(struct pci_dev *pdev)
 	struct ionic *ionic = pci_get_drvdata(pdev);
 
 	if (ionic) {
-		dev_info(ionic->dev, "removing\n");
-
+		ionic_devlink_unregister(ionic);
 		ionic_lifs_unregister(ionic);
 		ionic_lifs_deinit(ionic);
 		ionic_lifs_free(ionic);

@@ -62,6 +62,7 @@ struct ionic {
 #endif
 	struct work_struct nb_work;
 	struct notifier_block nb;
+	struct devlink *dl;
 };
 
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
