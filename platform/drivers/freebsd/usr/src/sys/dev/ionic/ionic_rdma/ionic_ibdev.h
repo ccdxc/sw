@@ -77,7 +77,7 @@ struct ionic_cq;
 struct ionic_eq;
 
 enum ionic_admin_state {
-	IONIC_ADMIN_ACTIVE, /* subbmitting admin commands to queue */
+	IONIC_ADMIN_ACTIVE, /* submitting admin commands to queue */
 	IONIC_ADMIN_PAUSED, /* not submitting, but may complete normally */
 	IONIC_ADMIN_KILLED, /* not submitting, locally completed */
 };
@@ -140,7 +140,7 @@ struct ionic_ibdev {
 	struct xarray		cq_tbl;
 
 	/* These lists are used in the slow path for device mgmt.
-	 * They are protected by the admin_lock.
+	 * They are protected by the dev_lock.
 	 */
 	struct list_head	qp_list;
 	struct list_head	cq_list;
@@ -161,14 +161,12 @@ struct ionic_ibdev {
 
 	struct work_struct	reset_work;
 
-	unsigned long		admin_stamp;
-
 	struct delayed_work	admin_dwork;
-	struct work_struct	admin_work;
-	spinlock_t		admin_lock;
-	struct ionic_aq		*adminq;
-	struct ionic_cq		*admincq;
-	bool			admin_armed;
+	spinlock_t		dev_lock;
+	struct ionic_aq		**aq_vec;
+	atomic_t		aq_index; /* load balancing */
+	int			aq_count;
+
 	enum ionic_admin_state	admin_state;
 
 	struct ionic_eq		**eq_vec;
@@ -215,11 +213,18 @@ struct ionic_admin_wr {
 	struct list_head	aq_ent;
 	struct ionic_v1_admin_wqe wqe;
 	struct ionic_v1_cqe	cqe;
+	struct ionic_aq		*aq;
 	int			status;
 };
 
 struct ionic_aq {
 	struct ionic_ibdev	*dev;
+	struct ionic_cq		*cq;
+
+	struct work_struct	work;
+
+	unsigned long		stamp;
+	bool			armed;
 
 	u32			aqid;
 	u32			cqid;
@@ -509,7 +514,8 @@ static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)
 }
 
 void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
-void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
+void ionic_admin_post_aq(struct ionic_aq *aq, struct ionic_admin_wr *wr);
+void ionic_admin_cancel(struct ionic_admin_wr *wr);
 
 int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count);
 void ionic_dcqcn_destroy(struct ionic_ibdev *dev);

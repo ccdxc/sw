@@ -299,6 +299,20 @@ Print information about the given QP.
 Usage: ionic_qp_print [qp]
 end
 
+# Args: dev
+define ionic_aq_list
+	set $ibd = (struct ionic_ibdev *)$arg0
+	set $i = 0
+	while ($i < $ibd->aq_count)
+		ionic_aq_print $ibd->aq_vec[$i]
+		set $i = $i + 1
+	end
+end
+document ionic_aq_list
+Print a list of the AQs (Admin Queues) on the given IONIC RDMA device.
+Usage: ionic_aq_list [device]
+end
+
 # Args: aq
 define ionic_aq_print
 	set $aq = (struct ionic_aq *)$arg0
@@ -504,7 +518,7 @@ define ionic_ibdev_list_all
 	_ionic_ibdev_first $ibd
 	while ($ibd != 0)
 		ionic_ibdev_print $ibd
-		ionic_aq_print $ibd->adminq
+		ionic_aq_list $ibd
 		ionic_mr_list $ibd
 		ionic_qp_list $ibd
 		ionic_cq_list $ibd

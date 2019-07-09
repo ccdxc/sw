@@ -119,6 +119,9 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "cq_base:\t%u\n", dev->cq_base);
 	seq_printf(s, "eq_base:\t%u\n", dev->eq_base);
 
+	seq_printf(s, "aq_count:\t%u\n", dev->aq_count);
+	seq_printf(s, "eq_count:\t%u\n", dev->eq_count);
+
 	seq_printf(s, "aq_qtype:\t%u\n", dev->aq_qtype);
 	seq_printf(s, "sq_qtype:\t%u\n", dev->sq_qtype);
 	seq_printf(s, "rq_qtype:\t%u\n", dev->rq_qtype);
@@ -131,9 +134,6 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "rrq_stride:\t%u\n", dev->rrq_stride);
 	seq_printf(s, "rsq_stride:\t%u\n", dev->rsq_stride);
 
-	seq_printf(s, "adminq:\t%u\n", dev->adminq->aqid);
-	seq_printf(s, "admincq:\t%u\n", dev->admincq->cqid);
-	seq_printf(s, "admin_armed:\t%u\n", dev->admin_armed);
 	seq_printf(s, "admin_state:\t%u\n", dev->admin_state);
 
 	seq_printf(s, "inuse_pdid:\t%u\n",
@@ -618,6 +618,7 @@ static int ionic_aq_info_show(struct seq_file *s, void *v)
 {
 	struct ionic_aq *aq = s->private;
 
+	seq_printf(s, "armed:\t%u\n", aq->armed);
 	seq_printf(s, "aqid:\t%u\n", aq->aqid);
 	seq_printf(s, "cqid:\t%u\n", aq->cqid);
 
@@ -786,9 +787,10 @@ static ssize_t ionic_aq_ctrl_write(struct file *fp, const char __user *ubuf,
 
 			reinit_completion(&wr->wr.work);
 
-			ionic_admin_post(aq->dev, &wr->wr);
+			ionic_admin_post_aq(aq, &wr->wr);
 
-			timeout = wait_for_completion_interruptible_timeout(&wr->wr.work, HZ);
+			timeout = wait_for_completion_interruptible_timeout(
+							     &wr->wr.work, HZ);
 			if (timeout > 0)
 				rc = 0;
 			else if (timeout == 0)
@@ -798,7 +800,7 @@ static ssize_t ionic_aq_ctrl_write(struct file *fp, const char __user *ubuf,
 
 			if (rc) {
 				dev_warn(&aq->dev->ibdev.dev, "wait %d\n", rc);
-				ionic_admin_cancel(aq->dev, &wr->wr);
+				ionic_admin_cancel(&wr->wr);
 				goto out;
 			} else if (wr->wr.status == IONIC_ADMIN_KILLED) {
 				dev_dbg(&aq->dev->ibdev.dev, "killed\n");

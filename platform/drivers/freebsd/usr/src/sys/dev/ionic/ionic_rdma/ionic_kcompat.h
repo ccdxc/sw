@@ -254,4 +254,7 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 
 #define HAVE_NETDEV_IF_MTU
 
+#define local_irq_save(f) do { (f) = 0; } while (0)
+#define local_irq_restore(f) (void)(f)
+
 #endif /* IONIC_KCOMPAT */

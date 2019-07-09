@@ -1424,8 +1424,8 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
         ident->rdma.rsq_stride = 5;
 
         ident->rdma.aq_qtype.qtype = ETH_HW_QTYPE_ADMIN;
-        ident->rdma.aq_qtype.qid_count = 1; //spec->rdma_aq_count;
-        ident->rdma.aq_qtype.qid_base = 1; //spec->adminq_count;
+        ident->rdma.aq_qtype.qid_count = spec->rdma_aq_count;
+        ident->rdma.aq_qtype.qid_base = spec->adminq_count;
 
         ident->rdma.sq_qtype.qtype = ETH_HW_QTYPE_SQ;
         ident->rdma.sq_qtype.qid_count = spec->rdma_sq_count;

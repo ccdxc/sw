@@ -395,6 +395,9 @@ void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 	ionic_u32(ctx, parent, &dev->cq_base, "cq_base", "Completion QID Base");
 	ionic_u32(ctx, parent, &dev->eq_base, "eq_base", "Event QID Base");
 
+	ionic_u32(ctx, parent, &dev->aq_count, "aq_count", "Admin Q Count");
+	ionic_u32(ctx, parent, &dev->eq_count, "eq_count", "Event Q Count");
+
 	ionic_u8(ctx, parent, &dev->aq_qtype, "aq_qtype", "Admin QType");
 	ionic_u8(ctx, parent, &dev->sq_qtype, "sq_qtype", "Send QType");
 	ionic_u8(ctx, parent, &dev->rq_qtype, "rq_qtype", "Recv QType");
@@ -407,9 +410,6 @@ void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 	ionic_u8(ctx, parent, &dev->rrq_stride, "rrq_stride", "RRQ Stride");
 	ionic_u8(ctx, parent, &dev->rsq_stride, "rsq_stride", "RSQ Stride");
 
-	ionic_u32(ctx, parent, &dev->adminq->aqid, "adminq", "AQ ID");
-	ionic_u32(ctx, parent, &dev->admincq->cqid, "admincq", "AQ CQ ID");
-	ionic_bool(ctx, parent, &dev->admin_armed, "admin_armed", "AQ Armed");
 	ionic_int(ctx, parent, (int *)&dev->admin_state, "admin_state", "AQ State");
 
 	ionic_hweight(ctx, parent,
@@ -675,9 +675,10 @@ static int ionic_aq_ctrl_write(void *context, const char *buf, size_t count)
 
 			reinit_completion(&wr->wr.work);
 
-			ionic_admin_post(aq->dev, &wr->wr);
+			ionic_admin_post_aq(aq, &wr->wr);
 
-			timeout = wait_for_completion_interruptible_timeout(&wr->wr.work, HZ);
+			timeout = wait_for_completion_interruptible_timeout(
+							     &wr->wr.work, HZ);
 			if (timeout > 0)
 				rc = 0;
 			else if (timeout == 0)
@@ -687,7 +688,7 @@ static int ionic_aq_ctrl_write(void *context, const char *buf, size_t count)
 
 			if (rc) {
 				dev_warn(&aq->dev->ibdev.dev, "wait %d\n", rc);
-				ionic_admin_cancel(aq->dev, &wr->wr);
+				ionic_admin_cancel(&wr->wr);
 				goto out;
 			} else if (wr->wr.status == IONIC_ADMIN_KILLED) {
 				dev_dbg(&aq->dev->ibdev.dev, "killed\n");
@@ -771,6 +772,7 @@ void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 
 	aq->debug = oidp;
 
+	ionic_bool(ctx, parent, &aq->armed, "armed", "AQ Armed");
 	ionic_u32(ctx, parent, &aq->aqid, "aqid", "AQ ID");
 	ionic_u32(ctx, parent, &aq->cqid, "cqid", "AQ CQ ID");
 

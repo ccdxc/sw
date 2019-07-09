@@ -189,7 +189,7 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait %d\n", rc);
-		ionic_admin_cancel(dev, &wr);
+		ionic_admin_cancel(&wr);
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
 		rc = -ENODEV;

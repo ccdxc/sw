@@ -38,6 +38,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 /* admin queue will be considered failed if a command takes longer */
 #define IONIC_ADMIN_TIMEOUT (HZ * 2)
+#define IONIC_ADMIN_WARN (HZ)
 
 /* will poll for admin cq to tolerate and report from missed event */
 #define IONIC_ADMIN_DELAY (HZ / 4)
@@ -100,6 +101,10 @@ MODULE_PARM_DESC(spec, "Max SGEs for speculation.");
 static u16 ionic_aq_depth = 0x3f;
 module_param_named(aq_depth, ionic_aq_depth, ushort, 0444);
 MODULE_PARM_DESC(aq_depth, "Min depth for admin queues.");
+
+static int ionic_aq_count = 0;
+module_param_named(ionic_rdma_aq_count, ionic_aq_count, int, 0644);
+MODULE_PARM_DESC(ionic_rdma_aq_count, "Limit number of admin queues created.");
 
 static u16 ionic_eq_depth = 0x1ff;
 module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
@@ -677,25 +682,26 @@ static void ionic_clean_cq(struct ionic_cq *cq, u32 qpid)
 	}
 }
 
-static void ionic_admin_timedout(struct ionic_ibdev *dev)
+static void ionic_admin_timedout(struct ionic_aq *aq)
 {
-	struct ionic_aq *aq = dev->adminq;
-	struct ionic_cq *cq = dev->admincq;
+	struct ionic_ibdev *dev = aq->dev;
+	struct ionic_cq *cq = aq->cq;
 	unsigned long irqflags;
 	u16 pos;
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&aq->lock, irqflags);
 	if (ionic_queue_empty(&aq->q))
 		goto out;
 
+	/* Reset ALL adminq if any one times out */
 	queue_work(ionic_evt_workq, &dev->reset_work);
 
-	dev_err(&dev->ibdev.dev, "admin command timed out\n");
+	dev_err(&dev->ibdev.dev, "admin command timed out, aq %d\n", aq->aqid);
 
 	dev_warn(&dev->ibdev.dev, "admin timeout was set for %ums\n",
 		 jiffies_to_msecs(IONIC_ADMIN_TIMEOUT));
 	dev_warn(&dev->ibdev.dev, "admin inactivity for %ums\n",
-		 jiffies_to_msecs(jiffies - dev->admin_stamp));
+		 jiffies_to_msecs(jiffies - aq->stamp));
 
 	dev_warn(&dev->ibdev.dev, "admin commands outstanding %u\n",
 		 ionic_queue_length(&aq->q));
@@ -733,26 +739,26 @@ static void ionic_admin_timedout(struct ionic_ibdev *dev)
 		       BIT(aq->q.stride_log2), true);
 
 out:
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_unlock_irqrestore(&aq->lock, irqflags);
 }
 
 static void ionic_admin_reset_dwork(struct ionic_ibdev *dev)
 {
 	if (dev->admin_state < IONIC_ADMIN_KILLED)
-		mod_delayed_work(ionic_evt_workq, &dev->admin_dwork,
-				 IONIC_ADMIN_DELAY);
+		queue_delayed_work(ionic_evt_workq, &dev->admin_dwork,
+				   IONIC_ADMIN_DELAY);
 }
 
-static void ionic_admin_reset_wdog(struct ionic_ibdev *dev)
+static void ionic_admin_reset_wdog(struct ionic_aq *aq)
 {
-	dev->admin_stamp = jiffies;
-	ionic_admin_reset_dwork(dev);
+	aq->stamp = jiffies;
+	ionic_admin_reset_dwork(aq->dev);
 }
 
-static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
+static void ionic_admin_poll_locked(struct ionic_aq *aq)
 {
-	struct ionic_aq *aq = dev->adminq;
-	struct ionic_cq *cq = dev->admincq;
+	struct ionic_ibdev *dev = aq->dev;
+	struct ionic_cq *cq = aq->cq;
 	struct ionic_admin_wr *wr, *wr_next;
 	struct ionic_v1_admin_wqe *wqe;
 	struct ionic_v1_cqe *cqe;
@@ -830,18 +836,18 @@ cq_next:
 	}
 
 	if (old_prod != cq->q.prod) {
-		ionic_admin_reset_wdog(dev);
+		ionic_admin_reset_wdog(aq);
 		cq->q.cons = cq->q.prod;
 		ionic_dbell_ring(dev->dbpage, dev->cq_qtype,
 				 ionic_queue_dbell_val(&cq->q));
-		queue_work(ionic_evt_workq, &dev->admin_work);
-	} else if (!dev->admin_armed) {
-		dev->admin_armed = true;
+		queue_work(ionic_evt_workq, &aq->work);
+	} else if (!aq->armed) {
+		aq->armed = true;
 		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
 		ionic_dbell_ring(dev->dbpage, dev->cq_qtype,
 				 cq->q.dbell | IONIC_CQ_RING_ARM |
 				 cq->arm_any_prod);
-		queue_work(ionic_evt_workq, &dev->admin_work);
+		queue_work(ionic_evt_workq, &aq->work);
 	}
 
 	if (dev->admin_state != IONIC_ADMIN_ACTIVE)
@@ -850,7 +856,7 @@ cq_next:
 	old_prod = aq->q.prod;
 
 	if (ionic_queue_empty(&aq->q) && !list_empty(&aq->wr_post))
-		ionic_admin_reset_wdog(dev);
+		ionic_admin_reset_wdog(aq);
 
 	while (!ionic_queue_full(&aq->q) && !list_empty(&aq->wr_post)) {
 		wqe = ionic_queue_at_prod(&aq->q);
@@ -882,72 +888,101 @@ static void ionic_admin_dwork(struct work_struct *ws)
 {
 	struct ionic_ibdev *dev =
 		container_of(ws, struct ionic_ibdev, admin_dwork.work);
-	struct ionic_aq *aq = dev->adminq;
+	struct ionic_aq *aq, *bad_aq = NULL;
 	unsigned long irqflags;
-	bool progress = false;
+	int i;
+	bool do_reset = false;
+	bool do_reschedule = false;
 	u16 pos;
 
-	/* see if polling the admin cq now makes some progress */
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
-	if (ionic_queue_empty(&aq->q)) {
-		progress = true;
-	} else {
+	for (i = 0; i < dev->aq_count; i++) {
+		aq = dev->aq_vec[i];
+
+		spin_lock_irqsave(&aq->lock, irqflags);
+
+		if (ionic_queue_empty(&aq->q))
+			goto next_aq;
+
+		/* Reschedule if any queue has outstanding work */
+		do_reschedule = true;
+
+		if (time_is_after_eq_jiffies(aq->stamp + IONIC_ADMIN_WARN))
+			/* Warning threshold not met, nothing to do */
+			goto next_aq;
+
+		/* See if polling now makes some progress */
 		pos = aq->q.cons;
-		ionic_admin_poll_locked(dev);
+		ionic_admin_poll_locked(aq);
 		if (pos != aq->q.cons) {
 			dev_dbg(&dev->ibdev.dev,
-				"missed event for admin cq\n");
-			progress = true;
+				"missed event for acq %d\n", aq->cqid);
+			goto next_aq;
 		}
+
+		if (time_is_after_eq_jiffies(aq->stamp +
+					     IONIC_ADMIN_TIMEOUT)) {
+			/* Timeout threshold not met */
+			dev_dbg(&dev->ibdev.dev, "no progress after %ums\n",
+				jiffies_to_msecs(jiffies - aq->stamp));
+			goto next_aq;
+		}
+
+		/* Queue timed out */
+		bad_aq = aq;
+		do_reset = true;
+next_aq:
+		spin_unlock_irqrestore(&aq->lock, irqflags);
 	}
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
 
-	if (progress)
-		return;
-
-	dev_dbg(&dev->ibdev.dev, "no progress after %ums\n",
-		jiffies_to_msecs(jiffies - dev->admin_stamp));
-
-	/* if no progress was made, try to poll again later, until timeout */
-	if (time_is_after_eq_jiffies(dev->admin_stamp + IONIC_ADMIN_TIMEOUT))
+	if (do_reset)
+		/* Reset device on a timeout */
+		ionic_admin_timedout(bad_aq);
+	else if (do_reschedule)
+		/* Try to poll again later */
 		ionic_admin_reset_dwork(dev);
-	else
-		ionic_admin_timedout(dev);
 }
 
 static void ionic_admin_work(struct work_struct *ws)
 {
-	struct ionic_ibdev *dev =
-		container_of(ws, struct ionic_ibdev, admin_work);
+	struct ionic_aq *aq = container_of(ws, struct ionic_aq, work);
 	unsigned long irqflags;
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
-	ionic_admin_poll_locked(dev);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&aq->lock, irqflags);
+	ionic_admin_poll_locked(aq);
+	spin_unlock_irqrestore(&aq->lock, irqflags);
 }
 
-void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
+void ionic_admin_post_aq(struct ionic_aq *aq, struct ionic_admin_wr *wr)
 {
-	struct ionic_aq *aq = dev->adminq;
 	unsigned long irqflags;
 	bool poll;
 
 	wr->status = IONIC_ADMIN_POSTED;
+	wr->aq = aq;
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&aq->lock, irqflags);
 	poll = list_empty(&aq->wr_post);
 	list_add(&wr->aq_ent, &aq->wr_post);
 	if (poll)
-		ionic_admin_poll_locked(dev);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+		ionic_admin_poll_locked(aq);
+	spin_unlock_irqrestore(&aq->lock, irqflags);
 }
 
-void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
+void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 {
-	struct ionic_aq *aq = dev->adminq;
+	int aq_idx;
+
+	/* TODO: Round-robin? Or per-core? */
+	aq_idx = atomic_inc_return(&dev->aq_index) % dev->aq_count;
+	ionic_admin_post_aq(dev->aq_vec[aq_idx], wr);
+}
+
+void ionic_admin_cancel(struct ionic_admin_wr *wr)
+{
+	struct ionic_aq *aq = wr->aq;
 	unsigned long irqflags;
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&aq->lock, irqflags);
 
 	if (!list_empty(&wr->aq_ent)) {
 		list_del(&wr->aq_ent);
@@ -955,18 +990,17 @@ void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 			aq->q_wr[wr->status] = NULL;
 	}
 
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_unlock_irqrestore(&aq->lock, irqflags);
 }
 
-static void ionic_admin_wait(struct ionic_ibdev *dev,
-			     struct ionic_admin_wr *wr)
+static void ionic_admin_wait(struct ionic_admin_wr *wr)
 {
 	wait_for_completion(&wr->work);
 }
 
-static int ionic_admin_busy_wait(struct ionic_ibdev *dev,
-				 struct ionic_admin_wr *wr)
+static int ionic_admin_busy_wait(struct ionic_admin_wr *wr)
 {
+	struct ionic_aq *aq = wr->aq;
 	unsigned long irqflags;
 	int try_i;
 
@@ -978,15 +1012,15 @@ static int ionic_admin_busy_wait(struct ionic_ibdev *dev,
 		 * but initiate rdma lif reset and indicate error to caller.
 		 */
 		if (try_i >= IONIC_ADMIN_BUSY_RETRY_COUNT) {
-			ionic_admin_timedout(dev);
+			ionic_admin_timedout(aq);
 			return -ETIMEDOUT;
 		}
 
 		mdelay(IONIC_ADMIN_BUSY_RETRY_MS);
 
-		spin_lock_irqsave(&dev->admin_lock, irqflags);
-		ionic_admin_poll_locked(dev);
-		spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+		spin_lock_irqsave(&aq->lock, irqflags);
+		ionic_admin_poll_locked(aq);
+		spin_unlock_irqrestore(&aq->lock, irqflags);
 	}
 
 	/* unreachable */
@@ -1063,7 +1097,7 @@ static int ionic_v1_stats_cmd(struct ionic_ibdev *dev,
 	rc = wait_for_completion_interruptible(&wr.work);
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
-		ionic_admin_cancel(dev, &wr);
+		ionic_admin_cancel(&wr);
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
 		rc = -ENODEV;
@@ -1944,15 +1978,15 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	ionic_admin_post(dev, &wr);
 
 	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
-		ionic_admin_wait(dev, &wr);
+		ionic_admin_wait(&wr);
 		rc = 0;
 	} else {
-		rc = ionic_admin_busy_wait(dev, &wr);
+		rc = ionic_admin_busy_wait(&wr);
 	}
 
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
-		ionic_admin_cancel(dev, &wr);
+		ionic_admin_cancel(&wr);
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
 		rc = -ENODEV;
@@ -2019,7 +2053,7 @@ static int ionic_v1_query_ah_cmd(struct ionic_ibdev *dev,
 	wr.wqe.query_ah.dma_addr = cpu_to_le64(hdr_dma);
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -2071,15 +2105,15 @@ static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid, u32 flags)
 	ionic_admin_post(dev, &wr);
 
 	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
-		ionic_admin_wait(dev, &wr);
+		ionic_admin_wait(&wr);
 		rc = 0;
 	} else {
-		rc = ionic_admin_busy_wait(dev, &wr);
+		rc = ionic_admin_busy_wait(&wr);
 	}
 
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
-		ionic_admin_cancel(dev, &wr);
+		ionic_admin_cancel(&wr);
 
 		/* No host-memory resource is associated with ah, so it is ok
 		 * to "succeed" and complete this destroy ah on the host.
@@ -2248,7 +2282,7 @@ static int ionic_v1_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 	int rc;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -2291,7 +2325,7 @@ static int ionic_v1_destroy_mr_cmd(struct ionic_ibdev *dev, u32 mrid)
 	int rc;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -2708,7 +2742,7 @@ static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev,
 	int rc;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -2736,7 +2770,7 @@ static int ionic_v1_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 	int rc;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -2877,9 +2911,9 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_xa;
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&dev->dev_lock, irqflags);
 	list_add_tail(&cq->cq_list_ent, &dev->cq_list);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
 	ionic_dbgfs_add_cq(dev, cq);
 
@@ -2905,9 +2939,9 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	unsigned long irqflags;
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&dev->dev_lock, irqflags);
 	list_del(&cq->cq_list_ent);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
 	xa_erase(&dev->cq_tbl, cq->cqid);
 
@@ -3480,7 +3514,7 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 			goto cq_next;
 		}
 
-		switch(type) {
+		switch (type) {
 		case IONIC_V1_CQE_TYPE_RECV:
 			spin_lock(&qp->rq_lock);
 			rc = ionic_poll_recv(dev, cq, qp, cqe, wc + npolled);
@@ -3702,7 +3736,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 	}
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -3829,7 +3863,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 	}
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -3867,7 +3901,7 @@ static int ionic_v1_destroy_qp_cmd(struct ionic_ibdev *dev, u32 qpid)
 	int rc;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -4519,9 +4553,9 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 						  qp->rq_spec);
 	}
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&dev->dev_lock, irqflags);
 	list_add_tail(&qp->qp_list_ent, &dev->qp_list);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
 	ionic_dbgfs_add_qp(dev, qp);
 
@@ -4791,7 +4825,7 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	wr.wqe.query_qp.ah_id = cpu_to_le32(qp->ahid);
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(dev, &wr);
+	ionic_admin_wait(&wr);
 
 	if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_dbg(&dev->ibdev.dev, "killed\n");
@@ -4935,9 +4969,9 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 
 	ionic_dbgfs_rm_qp(qp);
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	spin_lock_irqsave(&dev->dev_lock, irqflags);
 	list_del(&qp->qp_list_ent);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
 	xa_erase(&dev->qp_tbl, qp->qpid);
 
@@ -6016,7 +6050,7 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 	ibev.device = &dev->ibdev;
 	ibev.element.cq = &cq->ibcq;
 
-	switch(code) {
+	switch (code) {
 	case IONIC_V1_EQE_CQ_NOTIFY:
 		if (cq->ibcq.comp_handler)
 			cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
@@ -6058,7 +6092,7 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 	if (qp->is_srq) {
 		ibev.element.srq = &qp->ibsrq;
 
-		switch(code) {
+		switch (code) {
 		case IONIC_V1_EQE_SRQ_LEVEL:
 			ibev.event = IB_EVENT_SRQ_LIMIT_REACHED;
 			break;
@@ -6079,7 +6113,7 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 	} else {
 		ibev.element.qp = &qp->ibqp;
 
-		switch(code) {
+		switch (code) {
 		case IONIC_V1_EQE_SQ_DRAIN:
 			ibev.event = IB_EVENT_SQ_DRAINED;
 			break;
@@ -6380,19 +6414,21 @@ static void ionic_destroy_eq(struct ionic_eq *eq)
 
 static void ionic_rdma_admincq_comp(struct ib_cq *ibcq, void *cq_context)
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
+	struct ionic_aq *aq = cq_context;
+	struct ionic_ibdev *dev = aq->dev;
 	unsigned long irqflags;
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
-	dev->admin_armed = false;
+	spin_lock_irqsave(&aq->lock, irqflags);
+	aq->armed = false;
 	if (dev->admin_state < IONIC_ADMIN_KILLED)
-		queue_work(ionic_evt_workq, &dev->admin_work);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+		queue_work(ionic_evt_workq, &aq->work);
+	spin_unlock_irqrestore(&aq->lock, irqflags);
 }
 
 static void ionic_rdma_admincq_event(struct ib_event *event, void *cq_context)
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(event->device);
+	struct ionic_aq *aq = cq_context;
+	struct ionic_ibdev *dev = aq->dev;
 
 	dev_err(&dev->ibdev.dev, "admincq event %d\n", event->event);
 }
@@ -6436,7 +6472,7 @@ err_cq:
 }
 
 static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
-						   u32 cqid)
+						   u32 aqid, u32 cqid)
 {
 	struct ionic_aq *aq;
 	int rc;
@@ -6449,7 +6485,7 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 
 	aq->dev = dev;
 
-	aq->aqid = dev->aq_base;
+	aq->aqid = aqid;
 
 	aq->cqid = cqid;
 
@@ -6470,6 +6506,9 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 
 	INIT_LIST_HEAD(&aq->wr_prod);
 	INIT_LIST_HEAD(&aq->wr_post);
+
+	INIT_WORK(&aq->work, ionic_admin_work);
+	aq->armed = false;
 
 	ionic_dbgfs_add_aq(dev, aq);
 
@@ -6494,12 +6533,12 @@ static void __ionic_destroy_rdma_adminq(struct ionic_ibdev *dev,
 }
 
 static struct ionic_aq *ionic_create_rdma_adminq(struct ionic_ibdev *dev,
-						 u32 cqid)
+						 u32 aqid, u32 cqid)
 {
 	struct ionic_aq *aq;
 	int rc;
 
-	aq = __ionic_create_rdma_adminq(dev, cqid);
+	aq = __ionic_create_rdma_adminq(dev, aqid, cqid);
 	if (IS_ERR(aq)) {
 		rc = PTR_ERR(aq);
 		goto err_aq;
@@ -6522,35 +6561,48 @@ static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 {
 	struct ionic_qp *qp;
 	struct ionic_cq *cq;
-	bool send_fatal = fatal_path;
+	bool do_flush = false;
 	unsigned long irqflags;
+	int i;
 
-	/* Hold the admin spinlock to make sure no QPs or CQs can be destroyed */
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	local_irq_save(irqflags);
 
-	/* Flush at most once */
-	if (dev->admin_state == IONIC_ADMIN_KILLED) {
-		/* Send the fatal event at most once */
-		send_fatal = false;
-		goto skip_flush;
+	/* Mark the admin queue, flushing at most once */
+	for (i = 0; i < dev->aq_count; i++)
+		spin_lock(&dev->aq_vec[i]->lock);
+
+	if (dev->admin_state != IONIC_ADMIN_KILLED) {
+		dev->admin_state = IONIC_ADMIN_KILLED;
+		do_flush = true;
 	}
 
-	/* Mark the admin queue */
-	dev->admin_state = IONIC_ADMIN_KILLED;
-	ionic_admin_poll_locked(dev);
+	while (i-- > 0) {
+		if (do_flush)
+			ionic_admin_poll_locked(dev->aq_vec[i]);
+		spin_unlock(&dev->aq_vec[i]->lock);
+	}
+
+	if (!do_flush) {
+		local_irq_restore(irqflags);
+		return;
+	}
+
+	/* Hold the dev spinlock so no QPs or CQs can be destroyed */
+	spin_lock(&dev->dev_lock);
 
 	/* Mark each QP to flush all WR to unclog clients */
 	list_for_each_entry(qp, &dev->qp_list, qp_list_ent) {
 		if (qp->ibqp.send_cq) {
 			cq = to_ionic_cq(qp->ibqp.send_cq);
 
-			/* Hold the CQ lock and QP sq_lock while setting up flush */
+			/* Hold the CQ lock and QP sq_lock to set up flush */
 			spin_lock(&cq->lock);
 			spin_lock(&qp->sq_lock);
 			qp->sq_flush = true;
 			if (!ionic_queue_empty(&qp->sq)) {
 				cq->flush = true;
-				list_move_tail(&qp->cq_flush_sq, &cq->flush_sq);
+				list_move_tail(&qp->cq_flush_sq,
+					       &cq->flush_sq);
 			}
 			spin_unlock(&qp->sq_lock);
 			spin_unlock(&cq->lock);
@@ -6558,13 +6610,14 @@ static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 		if (qp->ibqp.recv_cq) {
 			cq = to_ionic_cq(qp->ibqp.recv_cq);
 
-			/* Hold the CQ lock and QP rq_lock while setting up flush */
+			/* Hold the CQ lock and QP rq_lock to set up flush */
 			spin_lock(&cq->lock);
 			spin_lock(&qp->rq_lock);
 			qp->rq_flush = true;
 			if (!ionic_queue_empty(&qp->rq)) {
 				cq->flush = true;
-				list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
+				list_move_tail(&qp->cq_flush_rq,
+					       &cq->flush_rq);
 			}
 			spin_unlock(&qp->rq_lock);
 			spin_unlock(&cq->lock);
@@ -6576,11 +6629,10 @@ static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 		if (cq->flush && cq->ibcq.comp_handler)
 			cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
 
-skip_flush:
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
 	/* Post a fatal event if requested */
-	if (send_fatal)
+	if (fatal_path)
 		ionic_port_event(dev, IB_EVENT_DEVICE_FATAL);
 }
 
@@ -6595,23 +6647,32 @@ static void ionic_kill_ibdev_cb(void *dev_ptr)
 
 static void ionic_kill_rdma_admin(struct ionic_ibdev *dev, bool fatal_path)
 {
-	unsigned long irqflags;
-	int rc;
+	unsigned long irqflags = 0;
+	bool do_reset = false;
+	int i, rc;
 
-	if (!dev->adminq)
+	if (!dev->aq_vec)
 		return;
 
-	/* pause rdma admin queue to reset device (only once: if active) */
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
-	if (dev->admin_state != IONIC_ADMIN_ACTIVE) {
-		spin_unlock_irqrestore(&dev->admin_lock, irqflags);
-		return;
+	local_irq_save(irqflags);
+	for (i = 0; i < dev->aq_count; i++)
+		spin_lock(&dev->aq_vec[i]->lock);
+
+	/* pause rdma admin queues to reset device */
+	if (dev->admin_state == IONIC_ADMIN_ACTIVE) {
+		dev->admin_state = IONIC_ADMIN_PAUSED;
+		do_reset = true;
 	}
-	dev->admin_state = IONIC_ADMIN_PAUSED;
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
+	while (i-- > 0)
+		spin_unlock(&dev->aq_vec[i]->lock);
+	local_irq_restore(irqflags);
+
+	if (!do_reset)
+		return;
 
 	/* After resetting the device, it will be safe to resume the rdma admin
-	 * queue in the killed state.  Commands will not be issued to the
+	 * queues in the killed state.  Commands will not be issued to the
 	 * device, but will complete locally with status IONIC_ADMIN_KILLED.
 	 * Handling completion will ensure that creating or modifying resources
 	 * fails, but destroying resources succeeds.
@@ -6645,37 +6706,44 @@ static void ionic_reset_work(struct work_struct *ws)
 
 static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 {
+	struct ionic_aq *aq;
+	struct ionic_cq *cq;
 	struct ionic_eq *eq;
-	int eq_i = 0;
+	int eq_i = 0, aq_i = 0;
 	int rc = 0;
 
 	dev->eq_vec = NULL;
+	dev->aq_vec = NULL;
 
 	INIT_WORK(&dev->reset_work, ionic_reset_work);
-	INIT_WORK(&dev->admin_work, ionic_admin_work);
 	INIT_DELAYED_WORK(&dev->admin_dwork, ionic_admin_dwork);
-	spin_lock_init(&dev->admin_lock);
-	dev->admincq = NULL;
-	dev->adminq = NULL;
-	dev->admin_armed = false;
+	spin_lock_init(&dev->dev_lock);
+	atomic_set(&dev->aq_index, 0);
 	dev->admin_state = IONIC_ADMIN_KILLED;
 
 	INIT_LIST_HEAD(&dev->qp_list);
 	INIT_LIST_HEAD(&dev->cq_list);
 
-	/* need at least one eq */
-	if (!dev->eq_count) {
+	if (ionic_aq_count > 0 && ionic_aq_count < dev->aq_count) {
+		dev_dbg(&dev->ibdev.dev, "limiting adminq count to %d\n",
+			ionic_aq_count);
+		dev->aq_count = ionic_aq_count;
+	}
+
+	/* need at least one eq and aq */
+	if (!dev->eq_count || !dev->aq_count) {
 		rc = -EINVAL;
 		goto out;
 	}
 
-	dev->eq_vec = kmalloc_array(dev->eq_count, sizeof(*dev->eq_vec), GFP_KERNEL);
+	dev->eq_vec = kmalloc_array(dev->eq_count, sizeof(*dev->eq_vec),
+				    GFP_KERNEL);
 	if (!dev->eq_vec) {
 		rc = -ENOMEM;
 		goto out;
 	}
 
-	for (eq_i = 0; eq_i < dev->eq_count; ++eq_i) {
+	for (; eq_i < dev->eq_count; ++eq_i) {
 		eq = ionic_create_eq(dev, eq_i + dev->eq_base);
 		if (IS_ERR(eq)) {
 			rc = PTR_ERR(eq);
@@ -6697,38 +6765,88 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		dev->eq_vec[eq_i] = eq;
 	}
 
-	dev->admincq = ionic_create_rdma_admincq(dev, 0);
-	if (IS_ERR(dev->admincq)) {
-		rc = PTR_ERR(dev->admincq);
+	dev->aq_vec = kmalloc_array(dev->aq_count, sizeof(*dev->aq_vec),
+				      GFP_KERNEL);
+	if (!dev->aq_vec) {
+		rc = -ENOMEM;
 		goto out;
 	}
 
-	dev->adminq = ionic_create_rdma_adminq(dev, dev->admincq->cqid);
-	if (IS_ERR(dev->adminq)) {
-		rc = PTR_ERR(dev->adminq);
-		goto out;
+	/* For now, create one CQ per AQ. TODO: Is it better to share? */
+	for (; aq_i < dev->aq_count; ++aq_i) {
+		cq = ionic_create_rdma_admincq(dev, aq_i % eq_i);
+		if (IS_ERR(cq)) {
+			rc = PTR_ERR(cq);
+
+			if (!aq_i) {
+				dev_err(dev->hwdev,
+					"fail create acq %d\n", rc);
+				goto out;
+			}
+
+			/* ok, just fewer adminq than device supports */
+			dev_dbg(dev->hwdev, "acq count %d want %d rc %d\n",
+				aq_i, dev->aq_count, rc);
+			break;
+		}
+
+		aq = ionic_create_rdma_adminq(dev, aq_i + dev->aq_base,
+					      cq->cqid);
+		if (IS_ERR(aq)) {
+			/* Clean up the dangling CQ */
+			__ionic_destroy_cq(dev, cq);
+
+			rc = PTR_ERR(aq);
+
+			if (!aq_i) {
+				dev_err(dev->hwdev,
+					"fail create aq %d\n", rc);
+				goto out;
+			}
+
+			/* ok, just fewer adminq than device supports */
+			dev_dbg(dev->hwdev, "aq count %d want %d rc %d\n",
+				aq_i, dev->aq_count, rc);
+			break;
+		}
+
+		cq->ibcq.cq_context = aq;
+		aq->cq = cq;
+
+		dev->aq_vec[aq_i] = aq;
 	}
 
 	dev->admin_state = IONIC_ADMIN_ACTIVE;
 out:
 	dev->eq_count = eq_i;
+	dev->aq_count = aq_i;
 
 	return rc;
 }
 
 static void ionic_destroy_rdma_admin(struct ionic_ibdev *dev)
 {
+	struct ionic_aq *aq;
+	struct ionic_cq *cq;
 	struct ionic_eq *eq;
 
-	cancel_work_sync(&dev->admin_work);
 	cancel_delayed_work_sync(&dev->admin_dwork);
 	cancel_work_sync(&dev->reset_work);
 
-	if (dev->adminq)
-		__ionic_destroy_rdma_adminq(dev, dev->adminq);
+	if (dev->aq_vec) {
+		while (dev->aq_count > 0) {
+			aq = dev->aq_vec[--dev->aq_count];
+			cq = aq->cq;
 
-	if (dev->admincq)
-		__ionic_destroy_cq(dev, dev->admincq);
+			cancel_work_sync(&aq->work);
+
+			__ionic_destroy_rdma_adminq(dev, aq);
+			if (cq)
+				__ionic_destroy_cq(dev, cq);
+		}
+
+		kfree(dev->aq_vec);
+	}
 
 	if (dev->eq_vec) {
 		while (dev->eq_count > 0) {
@@ -6986,7 +7104,12 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->cq_base = le32_to_cpu(ident->rdma.cq_qtype.qid_base);
 	dev->eq_base = le32_to_cpu(ident->rdma.eq_qtype.qid_base);
 
-	/* eq count may be reduced by ionic_create_rdma_admin */
+	/*
+	 * ionic_create_rdma_admin() may reduce aq_count or eq_count if
+	 * it is unable to allocate all that were requested.
+	 * aq_count is tunable; see ionic_rdma_aq_count
+	 */
+	dev->aq_count = le32_to_cpu(ident->rdma.aq_qtype.qid_count);
 	dev->eq_count = le32_to_cpu(ident->rdma.eq_qtype.qid_count);
 
 	dev->aq_qtype = ident->rdma.aq_qtype.qtype;
