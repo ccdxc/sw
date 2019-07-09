@@ -77,9 +77,12 @@ iflow_ipv4_key:
     phvwr           p.key_ipv4_vpc_id, d.iflow_rx2tx_d.vpc_id
     phvwri          p.key2_ipv4_flow_lkp_type, 4
 
-    // For TX_FROM_HOST, if NAT table is hit, then update rflow dip with
-    // NATed ip
+    // For TX_FROM_HOST: 
+    // if NAT table is hit, then update rflow dip with NATed ip
+    // In Tx, for mapping hit scenarios, no need to NAT, so rflow.dip is same as iflow.sip
+    // So rflow dip/dport is overriden only when no mapping hit
     seq             c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
+    seq.c1          c1, k.txdma_control_mapping_hit, r0 //BD Slot  // Not a hit
     phvwr.c1        p.key_ipv4_ipv4_dst, k.rx_to_tx_hdr_nat_ip[31:0]
     phvwr.c1        p.key_ipv4_dport, k.rx_to_tx_hdr_xlate_port
     phvwr.!c1       p.key_ipv4_ipv4_dst, d.iflow_rx2tx_d.flow_src[31:0]
@@ -131,9 +134,12 @@ iflow_ipv6_key:
     phvwri          p.key3_ktype, KEY_TYPE_IPV6
     phvwri          p.key3_flow_lkp_type, 6
 
-    // For TX_FROM_HOST, if NAT table is hit, then update rflow dip with
-    // NATed ip
+    // For TX_FROM_HOST: 
+    // if NAT table is hit, then update rflow dip with NATed ip
+    // In Tx, for mapping hit scenarios, no need to NAT, so rflow.dip is same as iflow.sip
+    // So rflow dip/dport is overriden only when no mapping hit
     seq             c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
+    seq.c1          c1, k.txdma_control_mapping_hit, r0 //BD Slot  // Not a hit
     phvwr.c1        p.key2_dst, k.rx_to_tx_hdr_nat_ip[127:48]
     phvwr.c1        p.key3_dst, k.rx_to_tx_hdr_nat_ip[47:0]
     phvwr.c1        p.key3_dport, k.rx_to_tx_hdr_xlate_port
