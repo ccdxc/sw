@@ -396,14 +396,14 @@ def GetExpectedPacket(testcase, args):
     tc_rule = testcase.config.tc_rule
     if tc_rule is None:
         # no rule in policy - so implicit deny
-        return None
+        return testcase.packets.Get(args.epkt_fail)
     policy = testcase.config.policy
-    pkt = testcase.packets.Get(args.ipktid).GetScapyPacket()
+    pkt = testcase.packets.Get(args.ipkt).GetScapyPacket()
     match_rule = __get_matching_rule(policy, pkt, tc_rule)
     final_result = __get_final_result(tc_rule, match_rule)
     if final_result == policy_pb2.SECURITY_RULE_ACTION_DENY:
-        return None
-    return testcase.packets.Get("TO_CPU_PKT")
+        return testcase.packets.Get(args.epkt_fail)
+    return testcase.packets.Get(args.epkt_pass)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(resmgr.InvalidMplsSlotIdAllocator)
