@@ -12,6 +12,8 @@ using sys::ApiCounter;
 using sys::ApiStatsResponse;
 using sys::ApiStatsEntry;
 using sys::SystemResponse;
+using sys::FeatureProfileResponse;
+using sys::ForwardingModeResponse;
 
 namespace hal {
 
@@ -22,6 +24,8 @@ hal_ret_t clear_pb_stats(void);
 hal_ret_t clear_ingress_drop_stats(void);
 hal_ret_t clear_egress_drop_stats(void);
 hal_ret_t upgrade_table_reset(void);
+hal_ret_t forwarding_mode_get(ForwardingModeResponse *rsp);
+hal_ret_t feature_profile_get(FeatureProfileResponse *rsp);
 
 }    // namespace hal
 

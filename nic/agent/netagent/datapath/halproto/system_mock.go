@@ -215,6 +215,42 @@ func (mr *MockSystemClientMockRecorder) ClearPbStats(ctx, in interface{}, opts .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPbStats", reflect.TypeOf((*MockSystemClient)(nil).ClearPbStats), varargs...)
 }
 
+// ForwardingModeGet mocks base method
+func (m *MockSystemClient) ForwardingModeGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ForwardingModeResponse, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ForwardingModeGet", varargs...)
+	ret0, _ := ret[0].(*ForwardingModeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ForwardingModeGet indicates an expected call of ForwardingModeGet
+func (mr *MockSystemClientMockRecorder) ForwardingModeGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardingModeGet", reflect.TypeOf((*MockSystemClient)(nil).ForwardingModeGet), varargs...)
+}
+
+// FeatureProfileGet mocks base method
+func (m *MockSystemClient) FeatureProfileGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FeatureProfileResponse, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FeatureProfileGet", varargs...)
+	ret0, _ := ret[0].(*FeatureProfileResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FeatureProfileGet indicates an expected call of FeatureProfileGet
+func (mr *MockSystemClientMockRecorder) FeatureProfileGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FeatureProfileGet", reflect.TypeOf((*MockSystemClient)(nil).FeatureProfileGet), varargs...)
+}
+
 // MockSystemServer is a mock of SystemServer interface
 type MockSystemServer struct {
 	ctrl     *gomock.Controller
@@ -366,4 +402,30 @@ func (m *MockSystemServer) ClearPbStats(arg0 context.Context, arg1 *Empty) (*Emp
 // ClearPbStats indicates an expected call of ClearPbStats
 func (mr *MockSystemServerMockRecorder) ClearPbStats(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPbStats", reflect.TypeOf((*MockSystemServer)(nil).ClearPbStats), arg0, arg1)
+}
+
+// ForwardingModeGet mocks base method
+func (m *MockSystemServer) ForwardingModeGet(arg0 context.Context, arg1 *Empty) (*ForwardingModeResponse, error) {
+	ret := m.ctrl.Call(m, "ForwardingModeGet", arg0, arg1)
+	ret0, _ := ret[0].(*ForwardingModeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ForwardingModeGet indicates an expected call of ForwardingModeGet
+func (mr *MockSystemServerMockRecorder) ForwardingModeGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardingModeGet", reflect.TypeOf((*MockSystemServer)(nil).ForwardingModeGet), arg0, arg1)
+}
+
+// FeatureProfileGet mocks base method
+func (m *MockSystemServer) FeatureProfileGet(arg0 context.Context, arg1 *Empty) (*FeatureProfileResponse, error) {
+	ret := m.ctrl.Call(m, "FeatureProfileGet", arg0, arg1)
+	ret0, _ := ret[0].(*FeatureProfileResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FeatureProfileGet indicates an expected call of FeatureProfileGet
+func (mr *MockSystemServerMockRecorder) FeatureProfileGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FeatureProfileGet", reflect.TypeOf((*MockSystemServer)(nil).FeatureProfileGet), arg0, arg1)
 }

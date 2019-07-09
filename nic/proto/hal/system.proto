@@ -30,6 +30,8 @@ service System {
   rpc ClearFteTxRxStats(types.Empty) returns (types.Empty) {}
   rpc ClearTableStats(types.Empty) returns (types.Empty) {}
   rpc ClearPbStats(types.Empty) returns (types.Empty) {}
+  rpc ForwardingModeGet(types.Empty) returns (ForwardingModeResponse) {}
+  rpc FeatureProfileGet(types.Empty) returns (FeatureProfileResponse) {}
 }
 
 enum ApiCounter {
@@ -380,4 +382,27 @@ message FTEInfo {
 
 message PMDStats {
   repeated FTEInfo  fte_info = 1;
+}
+
+enum ForwardingMode {
+  FORWARDING_MODE_NONE              = 0;
+  FORWARDING_MODE_CLASSIC           = 1;
+  FORWARDING_MODE_SMART_SWITCH      = 2;
+  FORWARDING_MODE_SMART_HOST_PINNED = 3;
+}
+
+enum FeatureProfile {
+  FEATURE_PROFILE_NONE                  = 0;
+  FEATURE_PROFILE_CLASSIC_DEFAULT       = 1;
+  FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE = 2;
+}
+
+message ForwardingModeResponse {
+  types.ApiStatus api_status = 1;
+  ForwardingMode  fwd_mode   = 2;
+}
+
+message FeatureProfileResponse {
+  types.ApiStatus api_status      = 1;
+  FeatureProfile  feature_profile = 2;
 }

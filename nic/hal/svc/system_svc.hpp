@@ -12,6 +12,8 @@ using grpc::Status;
 using sys::System;
 using sys::SystemResponse;
 using sys::ApiStatsResponse;
+using sys::FeatureProfileResponse;
+using sys::ForwardingModeResponse;
 using types::Empty;
 
 class SystemServiceImpl final : public System::Service {
@@ -46,6 +48,12 @@ public:
     Status ClearPbStats(ServerContext *context,
                         const Empty *request,
                         Empty *rsp) override;
+    Status ForwardingModeGet(ServerContext *context,
+                             const Empty *request,
+                             ForwardingModeResponse *rsp) override;
+    Status FeatureProfileGet(ServerContext *context,
+                             const Empty *request,
+                             FeatureProfileResponse *rsp) override;
 };
 #endif    // __SYSTEM_SVC_HPP__
 

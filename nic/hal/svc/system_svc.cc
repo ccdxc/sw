@@ -138,3 +138,31 @@ SystemServiceImpl::ClearPbStats(ServerContext *context,
 
     return Status::OK;
 }
+
+Status
+SystemServiceImpl::ForwardingModeGet(ServerContext *context,
+                                     const Empty *request,
+                                     ForwardingModeResponse *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Get Forwarding Mode");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::forwarding_mode_get(rsp);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+SystemServiceImpl::FeatureProfileGet(ServerContext *context,
+                                     const Empty *request,
+                                     FeatureProfileResponse *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Get Feature Profile");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::feature_profile_get(rsp);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}

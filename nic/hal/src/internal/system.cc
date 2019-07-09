@@ -633,4 +633,52 @@ end:
     return ret;
 }
 
+
+//------------------------------------------------------------------------------
+// process a forwarding mode get request
+//------------------------------------------------------------------------------
+hal_ret_t
+forwarding_mode_get (ForwardingModeResponse *rsp)
+{
+    switch (hal::g_hal_cfg.device_cfg.forwarding_mode) {
+    case HAL_FORWARDING_MODE_NONE:
+        rsp->set_fwd_mode(sys::FORWARDING_MODE_NONE);
+        break;
+    case HAL_FORWARDING_MODE_CLASSIC:
+        rsp->set_fwd_mode(sys::FORWARDING_MODE_CLASSIC);
+        break;
+    case HAL_FORWARDING_MODE_SMART_SWITCH:
+        rsp->set_fwd_mode(sys::FORWARDING_MODE_SMART_SWITCH);
+        break;
+    case HAL_FORWARDING_MODE_SMART_HOST_PINNED:
+        rsp->set_fwd_mode(sys::FORWARDING_MODE_SMART_HOST_PINNED);
+        break;
+    }
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// process a feature profile get request
+//------------------------------------------------------------------------------
+hal_ret_t
+feature_profile_get (FeatureProfileResponse *rsp)
+{
+    switch (hal::g_hal_cfg.device_cfg.feature_profile) {
+    case HAL_FEATURE_PROFILE_NONE:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_NONE);
+        break;
+    case HAL_FEATURE_PROFILE_CLASSIC_DEFAULT:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_CLASSIC_DEFAULT);
+        break;
+    case HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE);
+        break;
+    }
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return HAL_RET_OK;
+}
+
 }    // namespace hal
