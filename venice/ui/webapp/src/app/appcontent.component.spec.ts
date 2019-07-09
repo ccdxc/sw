@@ -62,6 +62,7 @@ import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 import {Router} from '@angular/router';
+import { Utility } from './common/Utility';
 
 describe('AppcontentComponent', () => {
   let component: AppcontentComponent;
@@ -276,6 +277,10 @@ describe('UIBlock during rollout progress', () => {
     debugElement = fixture.debugElement;
     clusterService = TestBed.get(ClusterService);
     rolloutService = TestBed.get(RolloutService);
+  });
+
+  afterEach(() => {
+    Utility.getInstance().setMaintenanceMode(false);
   });
 
   it('Rollout Progressing: Admin behaviour', () => {
