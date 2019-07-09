@@ -213,9 +213,10 @@ typedef struct cfg_params_s {
     uint32_t num_udp;
     uint32_t num_icmp;
     // session related
-    uint32_t num_nexthop_idx_per_vpc[DOL_MAX_VPC];
+    uint32_t num_nexthop_idx_per_vpc[DOL_MAX_VPC+1];
     uint32_t vpc_count;
-    uint32_t num_meter_idx_per_vpc[DOL_MAX_VPC];
+    uint32_t meter_start_index[DOL_MAX_VPC+1];
+    uint32_t meter_end_index[DOL_MAX_VPC+1];
 } cfg_params_t;
 
 #define MAX_REMOTE_GW_HOSTS         4
@@ -314,16 +315,44 @@ private:
                     cfg_params.dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
                     cfg_params.dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
                 } else if (kind == "session") {
-                    uint32_t count = 0;
+                    uint32_t vpc = 1;
+                    uint32_t v4_meter[DOL_MAX_VPC];
+                    uint32_t v6_meter[DOL_MAX_VPC];
 
                     BOOST_FOREACH (pt::ptree::value_type &v, obj.second.get_child("num_nh_per_vpc.")) {
-                        SDK_ASSERT(count < DOL_MAX_VPC);
+                        SDK_ASSERT(vpc < DOL_MAX_VPC);
                         remote_mapping_nexthop_idx += std::stol(v.second.data());
                         // Remote Mapping next hop starts immediately after the vpc reserved ones
-                        cfg_params.num_nexthop_idx_per_vpc[count] = std::stol(v.second.data());
-                        count++;
+                        cfg_params.num_nexthop_idx_per_vpc[vpc] = std::stol(v.second.data());
+                        vpc++;
+                    }
+                    vpc = 1;
+                    BOOST_FOREACH (pt::ptree::value_type &v, obj.second.get_child("num_v4_meter_per_vpc.")) {
+                        SDK_ASSERT(vpc < DOL_MAX_VPC);
+                        // Remote Mapping next hop starts immediately after the vpc reserved ones
+                        v4_meter[vpc] = std::stol(v.second.data());
+                        vpc++;
+                    }
+                    vpc = 1;
+                    BOOST_FOREACH (pt::ptree::value_type &v, obj.second.get_child("num_v6_meter_per_vpc.")) {
+                        SDK_ASSERT(vpc < DOL_MAX_VPC);
+                        // Remote Mapping next hop starts immediately after the vpc reserved ones
+                        v6_meter[vpc] = std::stol(v.second.data());
+                        vpc++;
                     }
                     cfg_params.vpc_count = std::stol(obj.second.get<std::string>("vpc_count"));
+                    for (uint32_t prev = 0, vpc = 1; vpc <=  cfg_params.vpc_count; vpc++) {
+                        // Currently dol allocates only one meter per vpc.
+                        // TODO if this is not the case
+                        cfg_params.meter_start_index[vpc] =  prev;
+                        if((v4_meter[vpc] + v6_meter[vpc]) == 0)
+                            cfg_params.meter_end_index[vpc] = prev;
+                        else
+                            cfg_params.meter_end_index[vpc] =  prev + v4_meter[vpc] + v6_meter[vpc] - 1;
+                        prev +=  v4_meter[vpc] + v6_meter[vpc];
+                        DBG_PRINT(stderr, "Meter vpc %d, start %u, end %u\n", vpc,
+                                cfg_params.meter_start_index[vpc],  cfg_params.meter_end_index[vpc]);
+                    }
                 }
             }
             cfg_params.valid = true;
@@ -680,14 +709,14 @@ public:
                             local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[1] = routes[rid].prefix.addr.addr.v6_addr.addr64[1];
                             local_gw_mapping[lid].remotes[rc].v6_host_count++;
                             if (routes[rid].prefix.len != 128) {
-                                if (routes[rid].prefix.len < 64) {
+                                if (routes[rid].prefix.len == 0) {
+                                    mask.addr64[0] = -1ULL;
+                                    mask.addr64[1] = -1ULL;
+                                } else if (routes[rid].prefix.len < 64) {
                                     mask.addr64[0] = (1ULL << (64 - routes[rid].prefix.len)) - 1;
                                     mask.addr64[1] = -1;
                                 } else if (routes[rid].prefix.len == 64) {
                                     mask.addr64[1] = -1;
-                                } else if (routes[rid].prefix.len == 0) {
-                                    mask.addr64[0] = -1ULL;
-                                    mask.addr64[1] = -1ULL;
                                 } else {
                                     mask.addr64[1] = (1ULL << (128 - routes[rid].prefix.len)) - 1;
                                 }
@@ -738,7 +767,7 @@ public:
         session_actiondata_t actiondata;
         p4pd_error_t p4pd_ret;
         uint32_t tableid = P4TBL_ID_SESSION;
-        uint32_t meter_idx = 0;  //TODO
+        uint32_t meter_idx = cfg_params.meter_start_index[vpc];  //TODO, increment till end_index
 
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;

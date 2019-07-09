@@ -218,7 +218,7 @@ meter_impl::fill_stats_(pds_meter_info_t *info) {
     for (uint32_t idx = stats_base_hw_idx_; idx < stats_base_hw_idx_
                                                 + num_stats_entries_; idx++) {
         tx_offset = idx * 8; // Each statistics is 8B
-        rx_offset = tx_offset + (METER_STATS_TABLE_SIZE >> 1); // ((SIZE/2) * 8)
+        rx_offset = tx_offset + (METER_STATS_TABLE_SIZE << 2); // (SIZE * 8/2)
         stats.idx = idx;
         ret = sdk::asic::asic_mem_read(start_addr + tx_offset,
                                        (uint8_t *)&stats.tx_bytes, 8);

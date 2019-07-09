@@ -13,6 +13,7 @@ modules:
         spec    : remote2local.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=VNET,TunFamily=IPV4,Label=NETWORKING
+              meter_stats : True
 
     - module:
         name    : IPV6_UDP_VXLAN_ENCAP

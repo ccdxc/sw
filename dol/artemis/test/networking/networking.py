@@ -2,7 +2,7 @@
 # Networking Module
 import pdb
 import artemis.test.callbacks.common.modcbs as modcbs
-import apollo.config.objects.meter as meterstats
+import apollo.config.objects.meter as meter
 
 def Setup(infra, module):
     modcbs.Setup(infra, module)
@@ -14,7 +14,7 @@ def TestCaseSetup(tc):
     tc.AddIgnorePacketField('IP', 'chksum') #Needed to pass NAT testcase
     iterelem = tc.module.iterator.Get()
     if iterelem:
-        tc.pvtdata.verify_meter_stats = getattr(iterelem, "meter_stats", True)
+        tc.pvtdata.verify_meter_stats = getattr(iterelem, "meter_stats", False)
     return True
 
 def TestCaseTeardown(tc):
@@ -22,7 +22,7 @@ def TestCaseTeardown(tc):
 
 def TestCasePreTrigger(tc):
     if tc.pvtdata.verify_meter_stats:
-        tc.pvtdata.meterstats = meterstats.MeterStatsHelper()
+        tc.pvtdata.meterstats = meter.MeterStatsHelper()
         tc.pvtdata.meterstats.ReadMeterStats(True)
     return True
 
@@ -33,6 +33,8 @@ def TestCaseStepTrigger(tc, step):
     return True
 
 def TestCaseStepVerify(tc, step):
+    if tc.pvtdata.verify_meter_stats:
+        tc.config.root.SetMeterStats(tc, step)
     return True
 
 def TestCaseStepTeardown(tc, step):
@@ -41,5 +43,5 @@ def TestCaseStepTeardown(tc, step):
 def TestCaseVerify(tc):
     if tc.pvtdata.verify_meter_stats:
         tc.pvtdata.meterstats.ReadMeterStats(False)
-        tc.pvtdata.meterstats.VerifyMeterStats()
+        return tc.pvtdata.meterstats.VerifyMeterStats()
     return True

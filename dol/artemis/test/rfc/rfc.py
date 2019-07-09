@@ -15,7 +15,7 @@ def TestCaseSetup(tc):
     tc.AddIgnorePacketField('IP', 'chksum') #Needed to pass NAT testcase
     iterelem = tc.module.iterator.Get()
     if iterelem:
-        tc.pvtdata.verify_meter_stats = getattr(iterelem, "meter_stats", True)
+        tc.pvtdata.verify_meter_stats = getattr(iterelem, "meter_stats", False)
     return True
 
 def TestCaseTeardown(tc):

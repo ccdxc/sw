@@ -41,6 +41,40 @@ class FlowMapObject(base.ConfigObjectBase):
     def __repr__(self):
         return "FlowMapId:%d" %(self.FlowMapId)
 
+    def SetMeterStats(self, tc,  step):
+        port = -1
+        rxbytes = 0
+        txbytes = 0
+        if step.trigger.packets == None:
+            return
+
+        # TODO, Need to add mirror case and other cases
+        for p in step.trigger.packets:
+            if p.packet == None: return
+            port = p.ports[0]
+            # Received on host port and send out on switch port
+            # So it is counted in transmit
+            if port == tc.config.hostport:
+                txbytes = len(p.packet.rawbytes)
+                break
+
+        for p in step.expect.packets:
+            if p.packet == None: return
+            port = p.ports[0]
+            # Received on switch port and send out on host port
+            # So it is counted in receive
+            if port == tc.config.hostport:
+                rxbytes = len(p.packet.rawbytes) - 4 # Remove VLAN header
+                break
+
+        if tc.config.localmapping.AddrFamily == 'IPV6':
+            tc.pvtdata.meterstats.IncrMeterStats(
+                tc.connfig.localmapping.VNIC.V6MeterId, rxbytes, txbytes)
+        else:
+            tc.pvtdata.meterstats.IncrMeterStats(
+                tc.config.localmapping.VNIC.V4MeterId, rxbytes, txbytes)
+
+
     def Show(self):
         def __show_flow_object(obj):
             if obj is not None:

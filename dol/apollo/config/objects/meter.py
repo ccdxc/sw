@@ -2,6 +2,7 @@
 import pdb
 import ipaddress
 
+from infra.common.glopts import GlobalOptions
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -14,48 +15,74 @@ from infra.common.logging import logger
 
 class MeterStats:
     def __init__(self):
-        self.MeterId = 0
         self.RxBytes = 0
         self.TxBytes = 0
         return
 
 class MeterStatsHelper:
-    def __init__(self):
-        self.PreStats = MeterStats()
-        self.PostStats = MeterStats()
+    def __init__(self, meterid = None):
+        self.MeterId = meterid
+        self.__sid = 1
+        self.__mid =  2 * resmgr.MAX_METER + 1
+        self.PreStats = {}
+        self.PostStats = {}
+
+        for c in range(self.__sid, self.__mid):
+            self.PreStats[c] = MeterStats()
+            self.PostStats[c] = MeterStats()
         return
 
     def GetMeterStats(self):
         grpcmsg = meter_pb2.MeterGetRequest()
+        if self.MeterId != None:
+            grpcmsg.Id = self.MeterId
         resp = api.client.Get(api.ObjectTypes.METER, [ grpcmsg ])
         if resp != None:
             return resp[0]
         return None
 
     def __parse_meter_stats_get_response(self, resp, pre = False):
+        def __show(entry):
+            logger.info("Meter stats for MeterId: %s, tx_bytes: %ld,\
+                    rx_bytes: %ld" % (entry.Stats.MeterId,
+                    entry.Stats.TxBytes, entry.Stats.RxBytes))
         if resp is None:
             return
         stats = self.PreStats if pre else self.PostStats
         for entry in resp.Response:
-            logger.info("Meter stats for MeterId: %s, tx_bytes: %ld,\
-                    rx_bytes: %ld" % (entry.Stats.MeterId,
-                    entry.Stats.TxBytes, entry.Stats.RxBytes))
-            stats.MeterId = entry.Stats.MeterId
-            stats.RxBytes = entry.Stats.RxBytes
-            stats.TxBytes = entry.Stats.TxBytes
+            assert entry.Stats.MeterId != 0
+            stats[entry.Stats.MeterId].RxBytes = entry.Stats.RxBytes
+            stats[entry.Stats.MeterId].TxBytes = entry.Stats.TxBytes
         return
+
+    def IncrMeterStats(self, meterid, rxbytes, txbytes):
+        self.PreStats[meterid].RxBytes += rxbytes
+        self.PreStats[meterid].TxBytes += txbytes
+        if GlobalOptions.dryrun:
+            self.PostStats[meterid].RxBytes += rxbytes
+            self.PostStats[meterid].TxBytes += txbytes
+
 
     def ReadMeterStats(self, pre = False):
         resp = self.GetMeterStats()
         self.__parse_meter_stats_get_response(resp, pre)
         return
 
+    def Show(self, id):
+        logger.info("Meter Stats in bytes ID: %u, Pre-tx: %u,  Post-tx:%u, Pre-rx: %u, Post-rx: %u" % \
+                    (id, self.PreStats[id].TxBytes, self.PostStats[id].TxBytes,
+                     self.PreStats[id].RxBytes, self.PostStats[id].RxBytes))
+
     def VerifyMeterStats(self):
-        logger.info("Meter Id: %d" % self.PreStats.MeterId)
-        logger.info("Difference between tx bytes: %d" % \
-                (self.PostStats.TxBytes - self.PreStats.TxBytes))
-        logger.info("Difference between rx bytes: %d" % \
-                (self.PostStats.RxBytes - self.PreStats.RxBytes))
+        rv = True
+        for c in range(self.__sid, self.__mid):
+            if self.PostStats[c].TxBytes != self.PreStats[c].TxBytes:
+                self.Show(c)
+                rv = False
+            if self.PostStats[c].RxBytes != self.PreStats[c].RxBytes:
+                self.Show(c)
+                rv = False
+        return rv
 
 class MeterRuleObject(base.ConfigObjectBase):
     def __init__(self, metertype, priority, prefixes,
@@ -253,13 +280,13 @@ class MeterObjectClient:
                     obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                     self.__v4objs[vpcid].append(obj)
                     self.__objs.append(obj)
-                    v4_count += 1
+                    v4_count += len(rules)
                 if __is_v6stack():
                     rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_6)
                     obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                     self.__v6objs[vpcid].append(obj)
                     self.__objs.append(obj)
-                    v6_count += 1
+                    v6_count += len(rules)
             else:
                 while c < meter.count:
                     if __is_v4stack():
@@ -267,13 +294,13 @@ class MeterObjectClient:
                         obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                         self.__v4objs[vpcid].append(obj)
                         self.__objs.append(obj)
-                        v4_count += 1
+                        v4_count += len(rules)
                     if __is_v6stack():
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_6, c)
                         obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                         self.__v6objs[vpcid].append(obj)
                         self.__objs.append(obj)
-                        v6_count += 1
+                        v6_count += len(rules)
                     c += 1
 
         if len(self.__v4objs[vpcid]):
