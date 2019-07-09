@@ -201,6 +201,15 @@ func TestBind(t *testing.T) {
 			groups: []string{networkAdminGroupDN},
 			err:    nil,
 		},
+		{
+			name:     BindTimeout,
+			url:      ldapURL,
+			username: testUser,
+			password: testPassword,
+			entry:    nil,
+			groups:   nil,
+			err:      ErrNoneOrMultipleUserEntries,
+		},
 	}
 
 	ldapConf := &auth.Ldap{

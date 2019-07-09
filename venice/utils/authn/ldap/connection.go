@@ -1,12 +1,15 @@
 package ldap
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"time"
 
 	"gopkg.in/ldap.v2"
 
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -52,7 +55,34 @@ func getConnection(addr string, tlsOptions *auth.TLSOptions) (connection, error)
 			return nil, err
 		}
 	}
-	return conn, nil
+	return &connectionWithTimeout{conn: conn}, nil
+}
+
+type connectionWithTimeout struct {
+	conn connection
+}
+
+func (c *connectionWithTimeout) Bind(username, password string) error {
+	bindFn := func(ctx context.Context) (interface{}, error) {
+		if err := c.conn.Bind(username, password); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := utils.ExecuteWithContext(ctx, bindFn)
+	return err
+}
+
+// Search searches ldap with the given search request
+func (c *connectionWithTimeout) Search(req *ldap.SearchRequest) (*ldap.SearchResult, error) {
+	return c.conn.Search(req)
+}
+
+// Close closes LDAP connection
+func (c *connectionWithTimeout) Close() {
+	c.conn.Close()
 }
 
 // ConnectionChecker abstracts out LDAP connection check

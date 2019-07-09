@@ -2,6 +2,7 @@ package ldap
 
 import (
 	"errors"
+	"time"
 
 	"gopkg.in/ldap.v2"
 
@@ -41,6 +42,8 @@ const (
 	UserReferral Testcase = "user referral"
 	// ADPrimaryGroup for simulating primary group search in AD for an user entry
 	ADPrimaryGroup Testcase = "AD Primary Group Search"
+	// BindTimeout for simulating when bind call hangs
+	BindTimeout Testcase = "bind timeout"
 )
 
 const (
@@ -64,6 +67,10 @@ func getMockConnectionGetter(tc Testcase) connectionGetter {
 		return func(string, *auth.TLSOptions) (connection, error) {
 			return nil, errors.New("ldap connection error")
 		}
+	case BindTimeout:
+		return func(addr string, options *auth.TLSOptions) (connection, error) {
+			return &connectionWithTimeout{conn: newMockConnection(tc, addr)}, nil
+		}
 	}
 	return func(addr string, options *auth.TLSOptions) (connection, error) {
 		return newMockConnection(tc, addr), nil
@@ -83,6 +90,9 @@ func (m *mockConnection) Bind(username, password string) error {
 		if username != testutils.BindDN {
 			return errors.New("incorrect user password")
 		}
+	case BindTimeout:
+		time.Sleep(6 * time.Second)
+		return nil
 	}
 	return nil
 }
