@@ -4,6 +4,7 @@ control read_qstate {}
 control mapping {}
 control vnic_info_txdma {}
 control remote_46_mapping {}
+control local_46_mapping_txdma {}
 control route_lookup {}
 control rfc {}
 control pkt_dma {}

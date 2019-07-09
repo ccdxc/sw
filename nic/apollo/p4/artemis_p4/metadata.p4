@@ -80,6 +80,7 @@ header_type nat_metadata_t {
         service_xlate_port  : 16;
         pa_or_ca_xlate_idx  : 16;
         public_xlate_idx    : 16;
+        ca6_xlate_idx       : 8;
         xlate_idx           : 16;
     }
 }

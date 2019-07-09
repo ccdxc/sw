@@ -32,7 +32,7 @@ pkt_enqueue:
     // dma pkt desc
     CAPRI_DMA_CMD_PHV2MEM_SETUP(pktdesc_phv2mem_dma_cmd, r3, \
                                 rx_to_tx_hdr_remote_ip, \
-                                rx_to_tx_hdr_xlate_valid)
+                                rx_to_tx_hdr_ca6_xlate_idx)
     phvwr       p.pktdesc_phv2mem_dma_cmd_round, 1
 
     // dma pkt desc2

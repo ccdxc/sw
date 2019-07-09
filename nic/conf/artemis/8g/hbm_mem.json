@@ -371,6 +371,18 @@
             "_comment": "This is alias for nat region, to refer fom rxdma; Dont configure cache; 64K * 16B"
         },
         {
+            "name": "local_46_mapping",
+            "size": "4K",
+            "cache": "p4eg",
+            "_comment": "256 * 16B"
+        },
+        {
+            "name": "local_46_mapping_txdma",
+            "base_region": "local_46_mapping",
+            "size": "4K",
+            "_comment": "256 * 16B"
+        },
+        {
             "name": "session_stats",
             "size": "256M",
             "_comment": "8M * 16B * 2"

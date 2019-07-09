@@ -305,5 +305,5 @@ control flow_lookup {
     //apply(txdma_flow_ohash_4);
     //apply(txdma_flow_ohash_5);
     apply(txdma_flow_ohash_6);
-    apply(txdma_flow_ohash_7);
+    //apply(txdma_flow_ohash_7);
 }

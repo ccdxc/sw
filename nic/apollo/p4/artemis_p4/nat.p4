@@ -155,7 +155,8 @@ action local_46_info(prefix) {
 }
 
 @pragma stage 2
-@pragma_index_table
+@pragma hbm_table
+@pragma index_table
 table local_46_mapping {
     reads {
         p4e_i2e.ca6_xlate_idx   : exact;

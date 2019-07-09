@@ -18,7 +18,7 @@ mapping_info:
     seq         c1, r1[31:21], d.mapping_info_d.hash1
     sne         c2, d.mapping_info_d.hint1, r0
     bcf         [c1&c2], mapping_hash_hit
-    add         r7, r7, r2
+    add         r7, r7, d.mapping_info_d.hint1
     //hint2
     seq         c1, r1[31:21], d.mapping_info_d.hash2
     sne         c2, d.mapping_info_d.hint2, r0
@@ -64,18 +64,19 @@ mapping_miss:
     nop
 
 mapping_hit:
+    phvwr       p.txdma_control_mapping_hit, 1
     phvwr       p.session_info_hint_nexthop_idx, \
                 d.mapping_info_d.nexthop_group_index
     // Tx: Set Encap to 1
     phvwr       p.session_info_hint_tx_rewrite_flags_encap, 1
     // rewrite flag to 00 (rewrite using service mapping table index)
-    phvwr       p.session_info_hint_tx_rewrite_flags_src_ip, 0
+    phvwr       p.session_info_hint_tx_rewrite_flags_src_ip, TX_REWRITE_SRC_IP_NONE
 
     // Set Rx:smac to 0
     phvwr       p.session_info_hint_rx_rewrite_flags_smac, 0
 
     // rewrite flag to 00 (rewrite using service mapping table index)
-    phvwr.e     p.session_info_hint_rx_rewrite_flags_dst_ip, 0
+    phvwr.e     p.session_info_hint_rx_rewrite_flags_dst_ip, RX_REWRITE_DST_IP_NONE
     nop
 
 mapping_hash_hit:

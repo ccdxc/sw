@@ -30,16 +30,21 @@ action iflow_rx2tx(flow_hash,
 
     modify_field(scratch_metadata.field8, vpc_id);
     modify_field(scratch_metadata.field16, pad1);
+    modify_field(scratch_metadata.field128, flow_dst);
     modify_field(scratch_metadata.field128, flow_src);
     modify_field(scratch_metadata.field16, flow_sport);
     modify_field(scratch_metadata.field16, flow_dport);
     modify_field(scratch_metadata.field8, flow_proto);
-    modify_field(scratch_metadata.field128, flow_dst);
     modify_field(scratch_metadata.field32, service_tag);
-    modify_field(scratch_metadata.field128, rx_to_tx_hdr.nat_ip);
+    modify_field(scratch_metadata.field1, txdma_control.mapping_hit);
     modify_field(scratch_metadata.field1, rx_to_tx_hdr.iptype);
     modify_field(scratch_metadata.field1, rx_to_tx_hdr.direction);
     modify_field(scratch_metadata.field16, rx_to_tx_hdr.xlate_port);
+    modify_field(scratch_metadata.field128, rx_to_tx_hdr.nat_ip);
+#ifdef MOVED_TO_IFLOW_DUE_TO_K_ISSUES
+    modify_field(scratch_metadata.field128, txdma_control.tx_local_46_ip);
+    modify_field(scratch_metadata.field128, session_info_hint.tx_dst_ip);
+#endif
 }
 
 @pragma stage 0
@@ -55,6 +60,9 @@ table iflow_rx2tx {
 
 action iflow_entry(flow) {
     modify_field(scratch_metadata.field512, flow);
+    modify_field(scratch_metadata.field1, rx_to_tx_hdr.direction);
+    modify_field(scratch_metadata.field128, txdma_control.tx_local_46_ip);
+    modify_field(scratch_metadata.field128, session_info_hint.tx_dst_ip);
 }
 
 @pragma stage 1

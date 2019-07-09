@@ -50,11 +50,12 @@
 /* route result type and bit position                                        */
 /*****************************************************************************/
 #define ROUTE_RESULT_TYPE_NEXTHOP                0
+#define ROUTE_RESULT_TYPE_REM_SVC_TUNNEL_BIT_POS 21
 #define ROUTE_RESULT_TYPE_SVC_TUNNEL_BIT_POS     22
 #define ROUTE_RESULT_TYPE_PEER_VPC_BIT_POS       23
+#define ROUTE_RESULT_TYPE_REM_SVC_TUNNEL_MASK    0x200000
 #define ROUTE_RESULT_TYPE_SVC_TUNNEL_MASK        0x400000
 #define ROUTE_RESULT_TYPE_PEER_VPC_MASK          0x800000
-#define ROUTE_RESULT_TYPE_REMOTE_SVC_TUNNEL_MASK 0xC00000
 
 /*****************************************************************************/
 /* number of hints in various HBM hash tables                                */

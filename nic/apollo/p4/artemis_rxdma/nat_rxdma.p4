@@ -2,6 +2,8 @@
 /* NAT To find Local IP for Rx Direction (Switch to Host Traffic)           */
 /*****************************************************************************/
 action find_local_ip(nat_ip) {
+        // pass ca6 xlate idx to txdma for 46 mapping for rflow keys
+        modify_field(rx_to_tx_hdr.ca6_xlate_idx, p4_to_rxdma2.ca6_xlate_idx);
         // Only do it if nat_ip is valid, otherwise it means no NAT and
         // dont need to update
         if (nat_ip != 0) {

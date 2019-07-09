@@ -54,9 +54,13 @@ action read_pktdesc(remote_ip,
                     direction,
                     nat_ip,
                     xlate_port,
-                    xlate_valid
+                    svc_xlate_valid,
+                    public_xlate_valid,
+                    ca6_xlate_idx,
+                    pad0
                    )
 {
+    modify_field(scratch_metadata.meter_result, meter_result);
     modify_field(scratch_metadata.field10, sip_classid);
     modify_field(scratch_metadata.field8, sport_classid);
 
@@ -77,13 +81,16 @@ action read_pktdesc(remote_ip,
     modify_field(rx_to_tx_hdr.direction, direction);
     modify_field(rx_to_tx_hdr.nat_ip, nat_ip);
     modify_field(rx_to_tx_hdr.xlate_port, xlate_port);
-    modify_field(rx_to_tx_hdr.xlate_valid, xlate_valid);
+    modify_field(rx_to_tx_hdr.svc_xlate_valid, svc_xlate_valid);
+    modify_field(rx_to_tx_hdr.public_xlate_valid, public_xlate_valid);
+    modify_field(rx_to_tx_hdr.ca6_xlate_idx, ca6_xlate_idx);
+    modify_field(rx_to_tx_hdr.pad0, pad0);
 
     //Fill entry_valid to TRUE in session always
     modify_field(session_info_hint.entry_valid, TRUE);
     
     // Fill meter_idx into session info
-    modify_field(session_info_hint.meter_idx, meter_result);
+    modify_field(session_info_hint.meter_idx, scratch_metadata.meter_result);
     // Tx: always rewrite dmac
     modify_field(session_info_hint.tx_rewrite_flags_dmac, 1);
 

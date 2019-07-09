@@ -38,7 +38,8 @@ header_type artemis_p4_to_rxdma_header2_t {
         service_xlate_port  : 16;
         pa_or_ca_xlate_idx  : 16;
         public_xlate_idx    : 16;
-        pad0                : 32;
+        ca6_xlate_idx       : 8;
+        pad0                : 24;
     }
 }
 
@@ -72,18 +73,22 @@ header_type artemis_rx_to_tx_header_t {
         sip_classid     : 10; // Bytes 27 and 28
         dip_classid     : 10; // Bytes 28 and 29
         stag_classid    : 10; // Bytes 29 and 30
-        dtag_classid    : 8;  // Byte 31
-        sport_classid   : 8;  // Byte 32
-        dport_classid   : 8;  // Byte 33
-        vpc_id          : 8;  // Byte 34
-        vnic_id         : 8;  // Byte 35
-        payload_len     : 14; // Byte 36 to 37-6b
-        iptype          : 1;  // Byte 37 - 1b
-        direction       : 1;  // Byte 37 - 1b
-        nat_ip          : 128;// Byte 38 to 53
-        xlate_port      : 16; // Byte 54 to 55
-        xlate_valid     : 1;  // Byte 56 1b
-        pad1            : 63; // Byte 56 7b to 63
+        dtag_classid    : 8;  // Bytes 31
+        sport_classid   : 8;  // Bytes 32
+        dport_classid   : 8;  // Bytes 33
+        vpc_id          : 8;  // Bytes 34
+        vnic_id         : 8;  // Bytes 35
+        payload_len     : 14; // Bytes 36 and 37
+        iptype          : 1;  // Bytes 37 7b
+        direction       : 1;  // Bytes 37 8b
+        nat_ip          : 128;// Bytes 38 to 53
+        xlate_port      : 16; // Bytes 54 to 55
+        svc_xlate_valid : 1;  // Bytes 56 1b
+        public_xlate_valid : 1; // Bytes 56 2b
+        ca6_xlate_idx   : 8;  // Bytes 56 3b - 57 2b
+        pad0            : 6;  // Bytes 57 3b - 57 8b
+        // Make sure last vraibale DMAed from Rx to Tx is Byte Aligned
+        pad1            : 48; // Bytes 58 to 63
         // Please check the above comment when adding new fields
     }
 }
@@ -154,7 +159,8 @@ header_type session_info_hint_t {
         nexthop_idx      : 20;
 
         //tx_rewrite_flags : 8;
-        tx_rewrite_flags_unused : 2;
+        tx_rewrite_flags_unused : 1;
+        tx_rewrite_flags_sipo   : 1;
         tx_rewrite_flags_encap  : 1;
         tx_rewrite_flags_dst_ip : 1;
         tx_rewrite_flags_dport  : 1; // Always set to zero

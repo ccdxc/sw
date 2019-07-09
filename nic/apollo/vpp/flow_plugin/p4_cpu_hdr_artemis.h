@@ -23,7 +23,8 @@ typedef CLIB_PACKED (struct session_info_hint_s {
     u32 tx_dst_l4port : 16;
     u32 nexthop_idx : 20;
 
-    u32 tx_rewrite_flags_unused : 2;
+    u32 tx_rewrite_flags_unused : 1;
+    u32 tx_rewrite_flags_sipo   : 1;
     u32 tx_rewrite_flags_encap  : 1;
     u32 tx_rewrite_flags_dst_ip : 1;
     u32 tx_rewrite_flags_dport  : 1;
@@ -39,11 +40,12 @@ typedef CLIB_PACKED (struct session_info_hint_s {
 
     u32 tx_policer_idx   : 12;
     u32 rx_policer_idx   : 12;
-    u32 meter_idx : 16;
+    u32 meter_idx        : 16;
     u64 timestamp        : 48;
 
     u8 drop              : 1;
-    u8 _pad : 3;
+    u8 entry_valid       : 1;
+    u8 _pad              : 2;
     u64 u__pad_to_512b;
 }) session_info_hint_t;
 

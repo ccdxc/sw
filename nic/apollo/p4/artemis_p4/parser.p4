@@ -15,6 +15,7 @@ header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 @pragma pa_field_union ingress p4i_i2e.service_xlate_port           nat_metadata.service_xlate_port
 @pragma pa_field_union ingress p4i_i2e.pa_or_ca_xlate_idx           nat_metadata.pa_or_ca_xlate_idx
 @pragma pa_field_union ingress p4i_i2e.public_xlate_idx             nat_metadata.public_xlate_idx
+@pragma pa_field_union ingress p4i_i2e.ca6_xlate_idx                nat_metadata.ca6_xlate_idx
 header artemis_i2e_metadata_t p4i_i2e;
 header artemis_i2e_metadata_t p4e_i2e;
 
@@ -42,6 +43,7 @@ header artemis_p4_to_rxdma_header_t p4_to_rxdma;
 @pragma pa_field_union ingress p4_to_rxdma2.service_xlate_port      nat_metadata.service_xlate_port
 @pragma pa_field_union ingress p4_to_rxdma2.pa_or_ca_xlate_idx      nat_metadata.pa_or_ca_xlate_idx
 @pragma pa_field_union ingress p4_to_rxdma2.public_xlate_idx        nat_metadata.public_xlate_idx
+@pragma pa_field_union ingress p4_to_rxdma2.ca6_xlate_idx           nat_metadata.ca6_xlate_idx
 header artemis_p4_to_rxdma_header2_t p4_to_rxdma2;
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_rxdma3.flow_hash               p4i_i2e.entropy_hash

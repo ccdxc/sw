@@ -11,6 +11,7 @@ header_type txdma_predicate_metadata_t {
 header_type txdma_control_metadata_t {
     fields {
         pktdesc_addr        : 40;
+        tx_local_46_ip      : 128;
         rxdma_cindex_addr   : 40;
         rfc_table_addr      : 40;
         lpm1_base_addr      : 40;
@@ -22,8 +23,9 @@ header_type txdma_control_metadata_t {
 
         mapping_ohash       : 32;
         mapping_ohash_lkp   : 1;
+        mapping_hit         : 1;
         st_enable           : 1;
-        pad0                : 3;
+        pad0                : 2;
         rule_priority       : 11;
         rfc_p1_classid      : 10;
         svc_id              : 10;
@@ -51,6 +53,7 @@ header_type scratch_metadata_t {
         field112        : 112;
         field128        : 128;
         field512        : 512;
+        meter_result    : 10;
         payload_addr    : 40;
         payload_len     : 14;
         qid             : 24;

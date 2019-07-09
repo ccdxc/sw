@@ -10,6 +10,7 @@
 #include "iflow.p4"
 #include "mapping.p4"
 #include "remote_46_mapping.p4"
+#include "local_46_mapping_txdma.p4"
 #include "vnic_info_txdma.p4"
 #include "flow.p4"
 

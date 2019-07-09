@@ -14,7 +14,7 @@ action local_ip_mapping_info(vnic_id, vpc_id, service_tag, pa_or_ca_xlate_idx,
     modify_field(p4_to_rxdma.service_tag, service_tag);
     modify_field(nat_metadata.pa_or_ca_xlate_idx, pa_or_ca_xlate_idx);
     modify_field(nat_metadata.public_xlate_idx, public_xlate_idx);
-    modify_field(p4i_i2e.ca6_xlate_idx, ca6_xlate_idx);
+    modify_field(nat_metadata.ca6_xlate_idx, ca6_xlate_idx);
 }
 
 @pragma stage 1

@@ -18,13 +18,14 @@ read_pktdesc:
     add        r1, r0, d.read_pktdesc_d.sacl_base_addr
     /* Add SACL_P1_1_TABLE_OFFSET to sacl base address. */
     addi       r1, r1, SACL_P1_1_TABLE_OFFSET
-    /* P1 table index = ((sip_classid << 7) | sport_classid). */
-    add        r2, d.read_pktdesc_d.sport_classid, d.read_pktdesc_d.sip_classid, 7
+    /* P1 table index = (sport_classid | (sip_classid << 7)). */
+    add        r2, d.read_pktdesc_d.sport_classid, d.read_pktdesc_d.sip_classid, \
+                                                   SACL_SPORT_CLASSID_WIDTH
     /* Write P1 table index to PHV */
     phvwr      p.txdma_control_rfc_index, r2
     /* Compute the byte offset for P1 table index */
-    div        r2, r2, 51
-    mul        r2, r2, 64
+    div        r2, r2, SACL_P1_ENTRIES_PER_CACHE_LINE
+    mul        r2, r2, SACL_CACHE_LINE_SIZE
     /* Add the byte offset to table base */
     add        r1, r1, r2
     /* Write the address back to phv for P1 lookup */
@@ -62,10 +63,13 @@ read_pktdesc:
                        rx_to_tx_hdr_direction, \
                        rx_to_tx_hdr_nat_ip, \
                        rx_to_tx_hdr_xlate_port, \
-                       rx_to_tx_hdr_xlate_valid }, \
+                       rx_to_tx_hdr_svc_xlate_valid, \
+                       rx_to_tx_hdr_public_xlate_valid, \
+                       rx_to_tx_hdr_ca6_xlate_idx, \
+                       rx_to_tx_hdr_pad0 }, \
                        d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \
                             sizeof(p.rx_to_tx_hdr_remote_ip) - \
-                            offsetof(p, rx_to_tx_hdr_xlate_valid)))]
+                            offsetof(p, rx_to_tx_hdr_pad0)))]
     nop
 
 /*****************************************************************************/

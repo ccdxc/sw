@@ -49,18 +49,28 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
         modify_field(rx_to_tx_hdr.xlate_port, p4_to_rxdma.flow_dport);
     }
 
-    // Pick the correct xlate_idx out of 3 idx's passed by P4
-    // If all 3 idx's are not valid, then xlate_idx is untouched as zero
-    if (p4_to_rxdma.direction == RX_FROM_SWITCH) {
+    // Pick the correct xlate_idx based on dir
+    // Rx: svc or pa_or_ca xlate idx
+    // Tx: svc or public xlate idx
+    // If no NAT, then xlate_idx would be zero and NAT table will still be launched
+    if (p4_to_rxdma.direction == RX_FROM_SWITCH) { // RX_TO_HOST
         if (p4_to_rxdma2.service_xlate_idx != 0) {
             modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.service_xlate_idx);
+            modify_field(rx_to_tx_hdr.svc_xlate_valid, 1);
         } else {
             if (p4_to_rxdma2.pa_or_ca_xlate_idx != 0) {
                 modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.pa_or_ca_xlate_idx);
-            } else {
-                if (p4_to_rxdma2.public_xlate_idx != 0) {
-                    modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.public_xlate_idx);
-                }
+                modify_field(rx_to_tx_hdr.public_xlate_valid, 1);
+            }
+        }
+    } else {  // TX_FROM_HOST
+        if (p4_to_rxdma2.service_xlate_idx != 0) {
+            modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.service_xlate_idx);
+            modify_field(rx_to_tx_hdr.svc_xlate_valid, 1);
+        } else {
+            if (p4_to_rxdma2.public_xlate_idx != 0) {
+                modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.public_xlate_idx);
+                modify_field(rx_to_tx_hdr.public_xlate_valid, 1);
             }
         }
     }

@@ -1066,6 +1066,7 @@ control ingress {
                 }
 
                 remote_46_mapping();
+                local_46_mapping_txdma();
             }
 
             if (txdma_predicate.lpm1_enable == TRUE) {
