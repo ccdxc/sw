@@ -101,8 +101,18 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 
 	// Bail out if the arp resolution fails.
 	if len(dMAC) == 0 {
-		log.Errorf("Failed to find resolve MAC for %s", destIP)
-		return fmt.Errorf("failed to find resolve MAC for %s", destIP)
+		log.Errorf("Failed to find resolve MAC for %s. Retrying...", destIP)
+		time.Sleep(time.Second * 3)
+
+		for i := 0; i < 10; i++ {
+			d, ok := na.ArpCache.Cache.Load(destIP)
+			if !ok {
+				continue
+			}
+			dMAC = d.(string)
+			time.Sleep(time.Second * 1)
+		}
+		log.Errorf("failed to find resolve MAC despite retries for %s", destIP)
 	}
 
 	nw := &netproto.Network{
