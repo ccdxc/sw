@@ -36,7 +36,7 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Cluster object */
-  public UpdateCluster(body: IClusterCluster, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
+  public UpdateCluster(body: IClusterCluster, stagingID: string = "", previousVal: IClusterCluster = null, trimObject: boolean = true):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster';
     const opts = {
       eventID: 'UpdateCluster',
@@ -48,7 +48,7 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ClusterCluster(body))
+      body = TrimDefaultsAndEmptyFields(body, new ClusterCluster(body), previousVal)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
@@ -153,7 +153,7 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Host object */
-  public UpdateHost(O_Name, body: IClusterHost, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
+  public UpdateHost(O_Name, body: IClusterHost, stagingID: string = "", previousVal: IClusterHost = null, trimObject: boolean = true):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/hosts/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -166,7 +166,7 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ClusterHost(body))
+      body = TrimDefaultsAndEmptyFields(body, new ClusterHost(body), previousVal)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
   }
@@ -237,7 +237,7 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Node object */
-  public UpdateNode(O_Name, body: IClusterNode, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
+  public UpdateNode(O_Name, body: IClusterNode, stagingID: string = "", previousVal: IClusterNode = null, trimObject: boolean = true):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/nodes/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -250,7 +250,7 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ClusterNode(body))
+      body = TrimDefaultsAndEmptyFields(body, new ClusterNode(body), previousVal)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
   }
@@ -303,7 +303,7 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update SmartNIC object */
-  public UpdateSmartNIC(O_Name, body: IClusterSmartNIC, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
+  public UpdateSmartNIC(O_Name, body: IClusterSmartNIC, stagingID: string = "", previousVal: IClusterSmartNIC = null, trimObject: boolean = true):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -316,7 +316,7 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ClusterSmartNIC(body))
+      body = TrimDefaultsAndEmptyFields(body, new ClusterSmartNIC(body), previousVal)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
   }
@@ -387,7 +387,7 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Tenant object */
-  public UpdateTenant(O_Name, body: IClusterTenant, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
+  public UpdateTenant(O_Name, body: IClusterTenant, stagingID: string = "", previousVal: IClusterTenant = null, trimObject: boolean = true):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/tenants/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -400,7 +400,7 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ClusterTenant(body))
+      body = TrimDefaultsAndEmptyFields(body, new ClusterTenant(body), previousVal)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
   }

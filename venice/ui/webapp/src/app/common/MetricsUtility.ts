@@ -173,6 +173,35 @@ export class MetricsUtility {
     return currData;
   }
 
+  public static currentFiveMinQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+    const query: ITelemetry_queryMetricsQuerySpec = {
+      'kind': kind,
+      'name': null,
+      'selector': selector,
+      function: Telemetry_queryMetricsQuerySpec_function.NONE,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      // We don't specify the fields we need, as specifying more than one field
+      // while using the average function isn't supported by the backend.
+      // Instead we leave blank and get all fields
+      fields: [],
+      'start-time': Utility.roundDownTime(5).toISOString() as any,
+      'end-time': 'now()' as any,
+    };
+    return new Telemetry_queryMetricsQuerySpec(query);
+  }
+
+  public static currentFiveMinPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.currentFiveMinQueryUpdate,
+    };
+    return { query: MetricsUtility.currentFiveMinQuery(kind, selector), pollingOptions: pollOptions };
+  }
+
+  public static currentFiveMinQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
+    queryBody['start-time'] = Utility.roundDownTime(5).toISOString() as any,
+    queryBody['end-time'] = 'now()' as any;
+  }
+
   public static pastFiveMinAverageQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
     const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,

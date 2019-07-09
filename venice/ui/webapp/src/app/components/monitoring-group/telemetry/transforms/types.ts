@@ -59,8 +59,9 @@ export abstract class MetricTransform<T> {
 
   // Fields that will be populated by MetricSource
   private reqMetrics: Observer<any>;
-  measurement;
-  fields;
+  measurement: string;
+  fields: string[];
+  debugMode: boolean;
   getTransform: (transformName: string) => MetricTransform<any>;
 
 
@@ -70,6 +71,7 @@ export abstract class MetricTransform<T> {
   // Hooks to be overridden
   onMeasurementChange() {}
   onFieldChange() {}
+  onDebugModeChange() {}
   // Hook called before query goes to Venice
   transformQuery(opts: TransformQuery) {}
   // Hook called before data is converted to chart js datasets
@@ -128,6 +130,7 @@ export abstract class GraphTransform<T> {
 export class DataSource {
   private _measurement: string;
   private _fields: string[] = [];
+  private _debugMode: boolean = false;
 
   // Unique id is used to differentiate datasets that are exactly the same,
   // but come from two different data sources
@@ -164,7 +167,7 @@ export class DataSource {
     return this._fields;
   }
 
-  set fields(value) {
+  set fields(value: string[]) {
     if (value == null) {
       value = [];
     }
@@ -174,6 +177,21 @@ export class DataSource {
       t.onFieldChange();
     });
     this.reqMetrics.next(true);
+  }
+
+  get debugMode() {
+    return this._debugMode;
+  }
+
+  set debugMode(value: boolean) {
+    if (this._debugMode === value) {
+      return;
+    }
+    this._debugMode = value;
+    this.transforms.forEach( (t) => {
+      t.debugMode = value;
+      t.onDebugModeChange();
+    });
   }
 
   getTransform(transformName: string): MetricTransform<any> {

@@ -52,7 +52,7 @@ export class Diagnosticsv1Service extends AbstractService {
   }
   
   /** Update Module object */
-  public UpdateModule(O_Name, body: IDiagnosticsModule, stagingID: string = "", trimObject: boolean = true):Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}> {
+  public UpdateModule(O_Name, body: IDiagnosticsModule, stagingID: string = "", previousVal: IDiagnosticsModule = null, trimObject: boolean = true):Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/diagnostics/v1/modules/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -65,7 +65,7 @@ export class Diagnosticsv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new DiagnosticsModule(body))
+      body = TrimDefaultsAndEmptyFields(body, new DiagnosticsModule(body), previousVal)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}>;
   }

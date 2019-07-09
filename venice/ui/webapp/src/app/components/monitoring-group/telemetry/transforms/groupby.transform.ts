@@ -51,6 +51,12 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
         opts.dataset.label += ' - ' + groupByValue;
       }
     } else {
+      const tags = MetricsMetadata[opts.measurement].tags;
+      if (tags != null && tags.includes('SingleReporter')) {
+        // Don't put average if the stat is only reported by one entity
+        return;
+      }
+
       opts.dataset.label = 'Avg ' + opts.dataset.label;
     }
   }

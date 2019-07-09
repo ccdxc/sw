@@ -261,8 +261,8 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       } else {
         const thirdStatName = maxNode.name;
         let thirdStat = thirdStatName;
-        if (thirdStat.length > 10) {
-          thirdStat = thirdStat.substring(0, 11) + '...';
+        if (thirdStat.length > 8) {
+          thirdStat = thirdStat.substring(0, 9) + '...';
         }
         thirdStat += ' (' + Math.round(maxNode.max) + '%)';
         heroCard.thirdStat.value = thirdStat;

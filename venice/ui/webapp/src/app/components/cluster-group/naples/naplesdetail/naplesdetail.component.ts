@@ -2,7 +2,7 @@ import {Component, OnInit, OnDestroy} from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Animations } from '@app/animations';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint, IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { MetricsUtility } from '@app/common/MetricsUtility';
@@ -53,8 +53,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   showExpandedDetailsCard: boolean;
 
   // Holds all objects, should be only one item in the array
-  objList: ReadonlyArray<ClusterSmartNIC>;
-  objEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  objList: ReadonlyArray<IClusterSmartNIC>;
+  objEventUtility: HttpEventUtility<IClusterSmartNIC>;
 
   // Whether we show a deletion overlay
   showDeletionScreen: boolean;
@@ -165,7 +165,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       }
     );
     this.subscriptions.push(getSubscription);
-    this.objEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
+    this.objEventUtility = new HttpEventUtility<IClusterSmartNIC>();
     this.objList = this.objEventUtility.array;
     const subscription = this.clusterService.WatchSmartNIC({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
       response => {
@@ -179,13 +179,13 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             this.objList.map((naples) => naples.meta.name).join(', '));
         }
         if (this.selectedObj != null && this.objList.length > 0) {
-          this.selectedObj = this.objList[0];
+          this.selectedObj = new ClusterSmartNIC(this.objList[0]);
         } else if (this.selectedObj == null && this.objList.length > 0) {
           // In case object was deleted and then readded while we are on the same screen
           this.showDeletionScreen = false;
           // In case object wasn't created yet and then was added while we are on the same screen
           this.showMissingScreen = false;
-          this.selectedObj = this.objList[0];
+          this.selectedObj = new ClusterSmartNIC(this.objList[0]);
           this.alertseventsSelector = {
             eventSelector: {
               selector: 'object-ref.name=' + this.selectedObj.spec.id + ',object-ref.kind=SmartNIC',
@@ -396,7 +396,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     const obj = new ClusterSmartNIC(this.selectedObj.getModelValues());
     const name = this.selectedObj.meta.name;
     obj.meta.labels = labels;
-    const sub = this.clusterService.UpdateSmartNIC(name, obj).subscribe(response => {
+    const sub = this.clusterService.UpdateSmartNIC(name, obj, '', this.objList[0]).subscribe(response => {
       this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${this.selectedObj.meta.name}'s labels`);
     }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
     this.subscriptions.push(sub);

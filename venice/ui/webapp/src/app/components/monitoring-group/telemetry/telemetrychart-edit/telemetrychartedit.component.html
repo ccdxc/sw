@@ -7,6 +7,7 @@
         <app-telemetrychart fxFlex #chart
                             [chartConfig]="chartConfig"
                             [inEditMode]="true"
+                            [inDebugMode]="showDebug"
                             (saveChartReq)="saveChartReq.emit($event)"
                             [selectedTimeRange]="selectedTimeRange"></app-telemetrychart>
       </div>
@@ -269,9 +270,10 @@
 
 <!-- Field Selector -->
 <ng-template #FieldSelectorEdit let-transform="transform">
-  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start"
+  <div *ngIf="transform.fieldData != null && transform.fieldData.length >= 1" fxFlex="nogrow"
+       fxLayout="row" fxLayoutAlign="start start"
        class="telemetrychartedit-field-selector-edit">
-    <div fxFlex="nogrow" class="telemetrychartedit-field-selector-title">Filter by fields: </div>
+    <div fxFlex="nogrow" class="telemetrychartedit-field-selector-title">Filter: </div>
     <div fxFlex="5px"></div>
     <app-repeater fxFlex="auto"
                   [data]="transform.fieldData"

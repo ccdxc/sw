@@ -175,6 +175,8 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
   cpsData: ITelemetry_queryMetricsQueryResult;
   sessionAvg: ITelemetry_queryMetricsQueryResult;
   cpsAvg: ITelemetry_queryMetricsQueryResult;
+  sessionDataCurrent: ITelemetry_queryMetricsQueryResult;
+  currActiveFlows: number;
 
   constructor(private router: Router,
               protected metricsqueryService: MetricsqueryService) { }
@@ -210,6 +212,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
     queryList.queries.push(this.cpsTimeSeriesQuery());
     queryList.queries.push(this.sessionAvgQuery());
     queryList.queries.push(this.cpsAvgQuery());
+    queryList.queries.push(this.sessionCurrentQuery());
 
     const sub = this.metricsqueryService.pollMetrics('policyHealthCards', queryList).subscribe(
       (data: ITelemetry_queryMetricsQueryResponse) => {
@@ -219,6 +222,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
             this.cpsData = data.results[1];
             this.sessionAvg = data.results[2];
             this.cpsAvg = data.results[3];
+            this.sessionDataCurrent = data.results[4];
             this.lastUpdateTime = new Date().toISOString();
             this.cardState = CardStates.READY;
             this.tryGenMetrics();
@@ -237,21 +241,34 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
 
   setupCard() {
     if (MetricsUtility.resultHasData(this.sessionData)) {
-      const data = MetricsUtility.transformToChartjsTimeSeries(this.sessionData.series[0], 'totalActiveSessions');
+      let data = MetricsUtility.transformToChartjsTimeSeries(this.sessionData.series[0], 'totalActiveSessions', true);
+      if (MetricsUtility.resultHasData(this.sessionDataCurrent)) {
+        const currData = MetricsUtility.transformToChartjsTimeSeries(this.sessionDataCurrent.series[0], 'totalActiveSessions', true);
+        data = data.concat(currData);
+      }
       this.activeFlows.data = data;
     }
+
+    if (MetricsUtility.resultHasData(this.sessionDataCurrent)) {
+      const currData = MetricsUtility.transformToChartjsTimeSeries(this.sessionDataCurrent.series[0], 'totalActiveSessions', true);
+      this.currActiveFlows = currData[currData.length - 1].y;
+    }
+
     if (MetricsUtility.resultHasData(this.cpsData)) {
       const data = MetricsUtility.transformToChartjsTimeSeries(this.cpsData.series[0], 'connectionsPerSecond');
       this.totalConnections.data = data;
     }
+
     if (MetricsUtility.resultHasData(this.sessionAvg)) {
       const index = MetricsUtility.findFieldIndex(this.sessionAvg.series[0].columns, 'totalActiveSessions');
       this.activeFlows.defaultValue = Math.round(this.sessionAvg.series[0].values[0][index]);
     }
+
     if (MetricsUtility.resultHasData(this.cpsAvg)) {
       const index = MetricsUtility.findFieldIndex(this.cpsAvg.series[0].columns, 'connectionsPerSecond');
       this.totalConnections.defaultValue = Math.round(this.cpsAvg.series[0].values[0][index]);
     }
+
     this.cardState = CardStates.READY;
     if (this.graphDrawn) {
       // Manually calling setup charts to redraw as default
@@ -270,6 +287,10 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
 
   sessionTimeSeriesQuery(): MetricsPollingQuery {
     return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics');
+  }
+
+  sessionCurrentQuery(): MetricsPollingQuery {
+    return MetricsUtility.currentFiveMinPolling('SessionSummaryMetrics');
   }
 
   sessionAvgQuery(): MetricsPollingQuery {

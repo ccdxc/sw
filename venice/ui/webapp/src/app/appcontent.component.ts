@@ -549,7 +549,10 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         if (body.items == null) {
           body.items = [];
         }
-        this.startingAlertCount = body.items.length;
+        const openAlerts = body.items.filter((alert: MonitoringAlert) => {
+          return (this.isAlertInOpenState(alert));
+        });
+        this.startingAlertCount = openAlerts.length;
         this.alertNumbers = this.startingAlertCount;
         // Now that we have the count already in the system, we start the watch
         this.getAlertsWatch();

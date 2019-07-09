@@ -7,9 +7,10 @@ import * as _ from 'lodash';
   // model should be the venice sdk model object
   // This is useful for removing nested objects that have validation that
   // only apply if an object is given (Ex. pagination spec for telemetry queries)
-  export const TrimDefaultsAndEmptyFields = (request: any, model) => {
+  // If the field's empty value is present in previousVal, the field is not trimmed
+  export const TrimDefaultsAndEmptyFields = (request: any, model, previousVal = null) => {
     request = _.cloneDeep(request);
-    const helperFunc = (obj, model): boolean => {
+    const helperFunc = (obj, model, previousVal): boolean => {
       let retValue = true;
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
@@ -21,8 +22,18 @@ import * as _ from 'lodash';
             obj[key] = obj[key].toISOString();
           }
           if (_.isObjectLike(obj[key])) {
-            if (helperFunc(obj[key], model[key])) {
-              delete obj[key];
+            let prevVal = previousVal
+            if (previousVal != null) {
+              prevVal = previousVal[key]
+            }
+            if (helperFunc(obj[key], model[key], prevVal)) {
+              // If the existing object has a value as {}, we submit the value 
+              // as {}, not null
+              if (_.isEqual(prevVal, {})) {
+                obj[key] = {};
+              } else {
+                delete obj[key];
+              }
             } else {
               retValue = false;
             }
@@ -33,6 +44,6 @@ import * as _ from 'lodash';
       }
       return retValue;
     };
-    helperFunc(request, model);
+    helperFunc(request, model, previousVal);
     return request;
   }

@@ -25,6 +25,11 @@ describe('Field Selector transform', () => {
     // Verifying repeater data
     verifyFieldData('Node');
 
+    // Setting debug mode
+    transform.debugMode = true;
+    transform.onDebugModeChange();
+
+    verifyFieldData('Node', true);
 
     // Verifying currValue and stringValue are updated when the
     // control is changed
@@ -48,7 +53,7 @@ describe('Field Selector transform', () => {
     transform.onMeasurementChange();
 
     // Verifying repeater data
-    verifyFieldData('SmartNIC');
+    verifyFieldData('SmartNIC', true);
 
     // Verifying currValue and stringValue are updated when the
     // control is changed
@@ -168,9 +173,14 @@ describe('Field Selector transform', () => {
     expect(_.isEqual(opts, expResults)).toBeTruthy();
   });
 
-  function verifyFieldData(selectedMeasurement) {
+  function verifyFieldData(selectedMeasurement, inDebugMode: boolean = false) {
     const fieldData = transform.fieldData;
-    const expFields = MetricsMetadata[selectedMeasurement].fields;
+    let expFields = MetricsMetadata[selectedMeasurement].fields;
+
+    if (!inDebugMode) {
+      expFields = expFields.filter(x => x.isTag);
+    }
+
     expect(fieldData.length).toBe(expFields.length);
     expFields.forEach( (expField) => {
       const entry = fieldData.find( x => x.key.value === expField.name);

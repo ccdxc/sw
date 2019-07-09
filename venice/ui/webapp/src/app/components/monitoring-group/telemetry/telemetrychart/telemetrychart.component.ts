@@ -60,6 +60,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   @ViewChild('pChart') chartContainer: UIChartComponent;
   @Input() chartConfig: GraphConfig;
   @Input() inEditMode: boolean = false;
+  @Input() inDebugMode: boolean = false;
   @Input() selectedTimeRange: TimeRange;
   @Output() saveChartReq: EventEmitter<GraphConfig> = new EventEmitter<GraphConfig>();
 
@@ -223,8 +224,13 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // If the time range is changed, we refetch metrics.
     // We don't want this to run on first change because the data sources
     // might not be ready yet.
-    if (!changes.selectedTimeRange.isFirstChange()) {
+    if (changes.selectedTimeRange != null && !changes.selectedTimeRange.isFirstChange()) {
       this.getMetrics();
+    }
+    if (changes.inDebugMode) {
+      this.dataSources.forEach( (s) => {
+        s.debugMode = this.inDebugMode;
+      });
     }
   }
 
@@ -384,6 +390,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       new LabelSelectorTransform(this.labelMap),
       new FieldValueTransform(this.fieldQueryMap, this.fieldValueMap), // This needs to be last to transform the query properly
     ]);
+    source.debugMode = this.inDebugMode;
     this.dataSources.push(source);
     return source;
   }

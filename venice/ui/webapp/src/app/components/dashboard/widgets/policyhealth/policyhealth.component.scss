@@ -7,14 +7,16 @@
 }
 
 .dsbdpolicyhealth-stat-value {
-  font-size: 34px;
+  font-size: 45px;
+  color: #61b3a0;
+  margin-left: 50px;
 }
 
 .dsbdpolicyhealth-stat-description {
   white-space: nowrap;
-  @include primary-font(14px);
+  @include primary-font(24px);
   color: #676763;
-  margin-top: 17px;
+  margin-top: 20px;
   margin-left: 22px;
 }
 

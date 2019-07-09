@@ -76,12 +76,25 @@ export class FieldSelectorTransform extends MetricTransform<FieldSelectorTransfo
   }
 
 
+  onDebugModeChange() {
+    // Reset the form array
+    this.currValue = [];
+    this.formArray = new FormArray([]);
+    this.updateRepeaterOptions();
+  }
+
   updateRepeaterOptions() {
     const fields = MetricsMetadata[this.measurement].fields;
     const res: RepeaterData[] = [];
     fields.forEach( (field) => {
       const type = field.jsType;
       let op;
+      if (!this.debugMode && field.isTag) {
+        op = SearchUtil.stringOperators;
+      } else if (!this.debugMode) {
+        // Don't add any non tag fields if we are not in debug mode
+        return;
+      }
       if (type === 'string') {
         op = SearchUtil.stringOperators;
       } else {
@@ -102,8 +115,7 @@ export class FieldSelectorTransform extends MetricTransform<FieldSelectorTransfo
   }
 
   buildFieldValuePlaceholder() {
-    // Some metric field names may be very long, so we change the default to be blank
-    return '';
+    return 'Value 1, Value 2';
   }
 
   transformQuery(opts: TransformQuery) {
