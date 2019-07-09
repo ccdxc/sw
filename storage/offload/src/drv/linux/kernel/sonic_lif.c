@@ -1120,11 +1120,16 @@ static void sonic_lif_reset_ctl_work(struct lif *lif,
 	}
 }
 
-void sonic_lif_reset_ctl_start(struct lif *lif)
+int sonic_lif_reset_ctl_start(struct lif *lif)
 {
+	int err = EBUSY;
+
 	if (sonic_lif_reset_ctl_deferred_enqueue(lif, RESET_CTL_ST_PRE_RESET, 1)) {
 		OSAL_LOG_NOTICE("LIF reset_ctl started");
+		err = 0;
 	}
+
+	return err;
 }
 
 static int cmp_u64(const void *a, const void *b)
@@ -1153,10 +1158,6 @@ int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg)
 	/* Allow small amount of time for pending notify msgs */
 	msleep(500);
 
-	LIF_FOR_EACH_PC_RES(lif, i, res) {
-		sonic_lif_per_core_resource_pre_reset(res);
-	}
-
 	count = (uint32_t) atomic_read(&lif->reset_ctl.suspect_info_count);
 	if (count > MAX_RESET_CTL_SUSPECT_INFO_COUNT)
 		count = 0;
@@ -1176,6 +1177,10 @@ int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg)
 		}
 	}
 	atomic_set(&lif->reset_ctl.suspect_info_sorted_count, count);
+
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		sonic_lif_per_core_resource_pre_reset(res);
+	}
 
 	OSAL_LOG_DEBUG("exit sonic_lif_reset_ctl_pre_reset");
 

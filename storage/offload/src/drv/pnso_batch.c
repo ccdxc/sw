@@ -451,6 +451,16 @@ out:
 	OSAL_LOG_DEBUG("exit!");
 }
 
+void
+bat_clear_batch(struct per_core_resource *pcr)
+{
+	if (pcr && pcr->batch_ctx) {
+		OSAL_LOG_DEBUG("clear batch pcr: 0x" PRIx64 " poll_ctx: 0x" PRIx64,
+				(uint64_t) pcr, (uint64_t) pcr->batch_ctx);
+		pcr->batch_ctx = NULL;
+	}
+}
+
 static pnso_error_t
 add_page(struct batch_info *batch_info)
 {

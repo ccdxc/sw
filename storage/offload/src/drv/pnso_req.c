@@ -848,6 +848,13 @@ submit_chain(struct request_params *req_params)
 		OSAL_LOG_DEBUG("failed to complete request/chain! err: %d",
 				err);
 		PAS_INC_NUM_CHAIN_FAILURES(pcr);
+
+		if ((err == ETIMEDOUT || err == PNSO_LIF_IO_ERROR) &&
+		    pnso_lif_reset_ctl_pending()) {
+			OSAL_LOG_DEBUG("skip destroying chain 0x" PRIx64,
+				       (uint64_t) chain);
+			goto out;
+		}
 		goto out_chain;
 	}
 
@@ -1053,6 +1060,13 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	err = bat_flush_batch(&req_params);
 	if (err) {
 		OSAL_LOG_DEBUG("flush request failed! err: %d", err);
+		if ((err == ETIMEDOUT || err == PNSO_LIF_IO_ERROR) &&
+		    pnso_lif_reset_ctl_pending()) {
+			/* Let the lif_reset logic do cleanup */
+			OSAL_LOG_DEBUG("skip destroying batch for pcr 0x" PRIx64,
+				       (uint64_t) pcr);
+			bat_clear_batch(pcr);
+		}
 		goto out;
 	}
 	PAS_INC_NUM_BATCHES(pcr);

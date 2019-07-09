@@ -512,9 +512,11 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 	PAS_SET_HW_PERF(chain->sc_hw_latency_start);
 
 	if (is_timeout) {
-		chn_report_suspect_chain(chain, chn_pprint_suspect_chain);
+		if (pnso_lif_reset_ctl_pending()) {
+			chn_report_suspect_chain(chain, chn_pprint_suspect_chain);
 
-		chn_report_suspect_chain(chain, chn_pprint_suspect_chain_ex);
+			chn_report_suspect_chain(chain, chn_pprint_suspect_chain_ex);
+		}
 
 		err = ETIMEDOUT;
 	} else {
@@ -1406,7 +1408,7 @@ chn_execute_chain(struct service_chain *chain)
 	err = ce_last->ce_svc_info.si_ops.poll(&ce_last->ce_svc_info);
 	PAS_END_HW_PERF(pcr);
 	if (err) {
-		/* in sync-mode, poll() will return either OK or ETIMEDOUT */
+		/* in sync-mode, poll() will return either OK or ETIMEDOUT or EIO */
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
 			       ce_last->ce_svc_info.si_type, err);
 		goto out;

@@ -81,6 +81,7 @@ pnso_error_t bat_add_to_batch(struct per_core_resource *pcr,
 pnso_error_t bat_flush_batch(struct request_params *req_params);
 
 void bat_destroy_batch(struct per_core_resource *pcr);
+void bat_clear_batch(struct per_core_resource *pcr);
 
 pnso_error_t bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout);
 void bat_poll_timeout_all(struct per_core_resource *pcr);

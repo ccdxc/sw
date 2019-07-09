@@ -170,7 +170,7 @@ void sonic_lif_reset_ctl_register(struct lif *lif,
 				  enum reset_ctl_state state,
 				  reset_ctl_cb cb,
 				  void *cb_arg);
-void sonic_lif_reset_ctl_start(struct lif *lif);
+int sonic_lif_reset_ctl_start(struct lif *lif);
 int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg);
 int sonic_lif_reset_ctl_reset(struct lif *lif, void *cb_arg);
 int sonic_lif_reset_ctl_reinit(struct lif *lif, void *cb_arg);

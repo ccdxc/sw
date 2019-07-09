@@ -3101,6 +3101,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			    batch_ctx->res_rc == ETIMEDOUT) {
 				PNSO_LOG_WARN("Leak timed out batch_ctx for testcase %u.",
 					      testcase->node.idx);
+				fail_count++;
 			} else {
 				batch_ctx->cb_ctx.s.gen_id++;
 				worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
@@ -3231,9 +3232,9 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		print_testcase_ctx(ctx);
 	}
 
-	if (batch_completion_count != batch_submit_count) {
-		PNSO_LOG_WARN("Waiting 5 seconds for possible race cleanup\n");
-		osal_msleep(5000); /* final attempt at nice cleanup */
+	if (fail_count || (batch_completion_count != batch_submit_count)) {
+		PNSO_LOG_WARN("Waiting 10 seconds for possible race cleanup\n");
+		osal_msleep(10000); /* final attempt at nice cleanup */
 	}
 
 	/* Final tally for stats */

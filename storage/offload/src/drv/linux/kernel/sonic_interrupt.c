@@ -27,7 +27,7 @@
 #define SONIC_ISR_MAX_IDLE_COUNT 10000
 #define SONIC_EV_WORK_POLLER_TIMEOUT (500 * OSAL_NSEC_PER_MSEC)
 #define SONIC_EV_IDLE_WORK_JIFFIES 1
-#define SONIC_EV_EXPIRED_WORK_MSEC 2000
+#define SONIC_EV_EXPIRED_WORK_MSEC 4000
 #define SONIC_EV_EXPIRED_WORK_JIFFIES (msecs_to_jiffies(SONIC_EV_EXPIRED_WORK_MSEC))
 #define SONIC_EV_WORK_EXPIRED_TIMEOUT (SONIC_EV_EXPIRED_WORK_MSEC * OSAL_NSEC_PER_MSEC)
 #define SONIC_EV_REINIT_TIMEOUT (2 * SONIC_EV_WORK_EXPIRED_TIMEOUT)
@@ -324,7 +324,17 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		/* poll status */
 		err = pnso_request_poller((void *) evd->data);
 		if (err == EBUSY && evd->expired) {
-			err = pnso_request_poll_timeout((void *) evd->data);
+			if (!sonic_error_reset_recovery_en_get() ||
+			    READ_ONCE(evl->flushing)) {
+				/* Timeout request immediately */
+				err = pnso_request_poll_timeout((void *) evd->data);
+			} else {
+				if (sonic_lif_reset_ctl_start(evl->pc_res->lif) == 0) {
+					OSAL_LOG_NOTICE("Async work handler initiated sonic lif reset");
+				}
+				/* Don't timeout pnso_request here, it'll be freed by lif_reset_ctl */
+				err = ETIMEDOUT;
+			}
 		}
 		if (err != EBUSY) {
 			evd->data = 0;
@@ -423,14 +433,6 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	}
 
 done:
-#if 0
-	if ((cur_ts - swd->reinit_ts) > SONIC_EV_REINIT_TIMEOUT) {
-		if (sonic_error_reset_recovery_en_get()) {
-			OSAL_LOG_WARN("Async work handler initiating sonic lif reset");
-			sonic_lif_reset_ctl_start(sonic_get_lif());
-		}
-	}
-#endif
 
 	OSAL_LOG_DEBUG("... exit sonic_ev_work_handler workid %u, %u complete, %u incomplete, %u npolled",
 		       work_id, complete_count, incomplete_count, npolled);
