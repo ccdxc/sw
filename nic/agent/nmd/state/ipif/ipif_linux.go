@@ -5,7 +5,9 @@ package ipif
 import (
 	"encoding/binary"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"os"
 	"strings"
 	"time"
 
@@ -68,6 +70,20 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 		err := netlink.RouteAdd(defaultRoute)
 		if err != nil {
 			log.Errorf("Failed to add default gw %v for the interface %v. Usually happens when the default gateway is already setup. Err: %v", ipConfig.DefaultGW, c.intf, err)
+		}
+	}
+
+	if len(ipConfig.DNSServers) > 0 {
+		log.Infof("Got DNS Servers. Populating /etc/resolv.conf with nameservers. %v", ipConfig.DNSServers)
+		var resolvStr string
+		for _, ip := range ipConfig.DNSServers {
+			resolvStr = resolvStr + fmt.Sprintf("nameserver %v\n", ip)
+		}
+		os.Remove("/etc/resolv.conf")
+
+		err := ioutil.WriteFile("/etc/resolv.conf", []byte(resolvStr), 0666)
+		if err != nil {
+			log.Errorf("Failed to write DNS information into resolv.conf")
 		}
 	}
 
