@@ -59,7 +59,7 @@ last_lba:
     tblmincri.f SESSPREXTSTX_C_INDEX, d.log_num_entries, 1  //Flush
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \
-                        K_GLOBAL_LIF, NVME_QTYPE_SESSXTSTX, DB_ADDR)
+                        K_GLOBAL_LIF, NVME_QTYPE_SESS, DB_ADDR)
     //use the incremented cindex of R0 as the pindex of R1
     CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, SESSPOSTXTS_TX_RING_ID, \
                         SESSPREXTSTX_C_INDEX, DB_DATA) 
@@ -85,8 +85,9 @@ non_last_lba:
     //lbas. Hence setting up a doorbell to do nothing. This wastes doorbell 
     //machine bandwidth, but we have to live with this as this seems to be a 
     //limitation imposed by barco.
+
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_NO_UPDATE, DB_NO_SCHED_WR, \
-                        K_GLOBAL_LIF, NVME_QTYPE_SESSXTSTX, DB_ADDR)
+                        K_GLOBAL_LIF, NVME_QTYPE_SESS, DB_ADDR)
     CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, SESSPOSTXTS_TX_RING_ID, \
                         r0, DB_DATA) 
     phvwrpair   p.xts_desc_doorbell_address, DB_ADDR.dx, \

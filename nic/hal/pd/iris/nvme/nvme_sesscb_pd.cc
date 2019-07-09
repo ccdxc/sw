@@ -30,6 +30,14 @@ namespace pd {
 
 extern pd_nvme_global_t *g_pd_nvme_global;
 
+enum nvme_sess_qsubtype {
+    NVME_SESS_XTS_TX = 0,
+    NVME_SESS_DGST_TX = 1,
+    NVME_SESS_XTS_RX = 2,
+    NVME_SESS_DGST_RX = 3,
+    NVME_SESS_RQ = 4,
+    NVME_SESS_RF = 5
+};
 void *
 nvme_sesscb_pd_get_hw_key_func (void *entry)
 {
@@ -200,7 +208,8 @@ p4pd_add_or_del_sessxtstxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     g_sess_id = nvme_sesscb_pd->nvme_sesscb->g_sess_id;
     lif_sess_id = nvme_sesscb_pd->nvme_sesscb->lif_sess_id;
 
-    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, lif_sess_id);
+    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_SESS,
+                                                   (lif_sess_id+(NVME_SESS_XTS_TX*HAL_MAX_NVME_SESSIONS)));
     SDK_ASSERT(data_addr != 0);
 
     //total and host are reversed in auto-generated structs
@@ -251,7 +260,8 @@ p4pd_add_or_del_sessdgsttxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     g_sess_id = nvme_sesscb_pd->nvme_sesscb->g_sess_id;
     lif_sess_id = nvme_sesscb_pd->nvme_sesscb->lif_sess_id;
 
-    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, lif_sess_id);
+    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_SESS,
+                                                   (lif_sess_id+(NVME_SESS_DGST_TX*HAL_MAX_NVME_SESSIONS)));
     SDK_ASSERT(data_addr != 0);
 
     //total and host are reversed in auto-generated structs
@@ -359,18 +369,33 @@ p4pd_add_or_del_rqcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del, NvmeSess
     hal_ret_t ret = HAL_RET_OK;
     nvme_rqcb_t data = { 0 };
     uint64_t data_addr = 0;
-    uint32_t g_sess_id, lif_sess_id, serq_qid;
+    uint32_t lif, g_sess_id, lif_sess_id, serq_qid;
+    uint64_t offset;
     
     SDK_ASSERT(nvme_sesscb_pd != NULL);
     SDK_ASSERT(nvme_sesscb_pd->nvme_sesscb != NULL);
 
+    lif = nvme_sesscb_pd->nvme_sesscb->lif;
     g_sess_id = nvme_sesscb_pd->nvme_sesscb->g_sess_id;
     lif_sess_id = nvme_sesscb_pd->nvme_sesscb->lif_sess_id;
     serq_qid = nvme_sesscb_pd->nvme_sesscb->serq_qid;
 
+    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_SESS,
+                                                   (lif_sess_id+(NVME_SESS_RQ*HAL_MAX_NVME_SESSIONS)));
+    SDK_ASSERT(data_addr != 0);
+
     HAL_TRACE_DEBUG("lif: {} g_sess_id: {} lif_sess_id: {} ns_sess_id: {}",
                     nvme_sesscb_pd->nvme_sesscb->lif,
                     g_sess_id, lif_sess_id, nvme_sesscb_pd->nvme_sesscb->ns_sess_id);
+
+    //total and host are reversed in auto-generated structs
+    data.host = 10;
+    data.total = 10;
+
+    get_program_offset((char *)"txdma_stage0.bin",
+                       (char *)"nvme_rq_stage0",
+                       &offset);
+    data.pc = offset; //pc
 
     // Get SERQ address of the TCP flow
     wring_hw_id_t  serq_base;
@@ -390,7 +415,7 @@ p4pd_add_or_del_rqcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del, NvmeSess
                       serq_qid);
     }
 
-    HAL_TRACE_DEBUG("Sesq id: {:#x} Sesq base: {:#x}, size: {}",
+    HAL_TRACE_DEBUG("Serq id: {:#x} Serq base: {:#x}, size: {}",
                     serq_qid, serq_base, serq_size);
 
     if (rsp != NULL) {
@@ -400,6 +425,11 @@ p4pd_add_or_del_rqcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del, NvmeSess
 
     data.base_addr = serq_base;
     data.log_num_entries = log2(serq_size);
+    data.tcp_serq_ci_addr = tcpcb_pd_serq_prod_ci_addr_get(serq_qid);
+
+    HAL_TRACE_DEBUG("Programming rqcb with tcpcb serq base_addr: {:#x} log_num_entries: {:#x} \
+                    tcp_serq_ci_addr: {:#x}",
+                    data.base_addr, data.log_num_entries, data.tcp_serq_ci_addr);
 
     //data.tcpcb_serq_db_addr = tcpcb_serq_db_addr(serq_qid);
     //data.tcpcb_serq_db_data = tcpcb_serq_db_data(serq_qid);
@@ -415,6 +445,19 @@ p4pd_add_or_del_rqcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del, NvmeSess
     if(!p4plus_hbm_write(data_addr,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to write rqcb for NVME Session CB");
+        return (HAL_RET_HW_FAIL);
+    }
+
+    HAL_TRACE_DEBUG("Programming tcpcb consumer lif, qtype, qid: {:#x}, "
+                    "{:#x}, {:#x}", lif, NVME_QTYPE_SESS,
+                    (lif_sess_id+(NVME_SESS_RQ*HAL_MAX_NVME_SESSIONS)));
+
+    ret = tcpcb_pd_serq_lif_qtype_qstate_ring_set(serq_qid, lif,
+                           NVME_QTYPE_SESS,
+                           lif_sess_id+(NVME_SESS_RQ*HAL_MAX_NVME_SESSIONS),
+                           0 /* ring_id */);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to write TCP CB with sesq_ci_addr");
         ret = HAL_RET_HW_FAIL;
     }
 
@@ -438,7 +481,8 @@ p4pd_add_or_del_sessxtsrxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     g_sess_id = nvme_sesscb_pd->nvme_sesscb->g_sess_id;
     lif_sess_id = nvme_sesscb_pd->nvme_sesscb->lif_sess_id;
 
-    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_XTSQ, lif_sess_id);
+    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_SESS,
+                                                   (lif_sess_id+(NVME_SESS_XTS_RX*HAL_MAX_NVME_SESSIONS)));
     SDK_ASSERT(data_addr != 0);
 
     //total and host are reversed in auto-generated structs
@@ -489,7 +533,8 @@ p4pd_add_or_del_sessdgstrxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     g_sess_id = nvme_sesscb_pd->nvme_sesscb->g_sess_id;
     lif_sess_id = nvme_sesscb_pd->nvme_sesscb->lif_sess_id;
 
-    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_DGSTQ, lif_sess_id);
+    data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_SESS,
+                                                   (lif_sess_id+(NVME_SESS_DGST_RX*HAL_MAX_NVME_SESSIONS)));
     SDK_ASSERT(data_addr != 0);
 
     //total and host are reversed in auto-generated structs

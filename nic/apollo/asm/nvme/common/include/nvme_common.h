@@ -93,6 +93,15 @@
 #define NMDPR_RING_ENTRY_SIZE   (1 << LOG_NMDPR_RING_ENTRY_SIZE)
 #define LOG_HBM_AL_RING_ENTRY_SIZE  3 // 2^3 = 8
 
+#define MAX_NUM_SESSIONS        128
+#define LOG_MAX_NUM_SESSIONS    7 //2^7 = 128
+#define NVME_SESS_XTS_TX        0
+#define NVME_SESS_DGST_TX       1
+#define NVME_SESS_XTS_RX        2
+#define NVME_SESS_DGST_RX       3
+#define NVME_SESS_RQ            4
+#define NVME_SESS_RF            5
+
 //rings, their ids and priorities
 //sq
 #define MAX_REQ_TX_RINGS        1
@@ -156,10 +165,11 @@
 #define NVME_QTYPE_SQ           0
 #define NVME_QTYPE_CQ           1
 #define NVME_QTYPE_ARMQ         2
-#define NVME_QTYPE_SESSXTSTX    3
-#define NVME_QTYPE_SESSDGSTTX   4
-#define NVME_QTYPE_SESSXTSRX    5
-#define NVME_QTYPE_SESSDGSTRX   6
+#define NVME_QTYPE_SESS         3
+//#define NVME_QTYPE_SESSXTSTX    3
+//#define NVME_QTYPE_SESSDGSTTX   4
+//#define NVME_QTYPE_SESSXTSRX    5
+//#define NVME_QTYPE_SESSDGSTRX   6
 
 //dma cmd ptrs
 #define NVME_REQ_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(cmd_ctxt_dma_dma_cmd_type)/16)

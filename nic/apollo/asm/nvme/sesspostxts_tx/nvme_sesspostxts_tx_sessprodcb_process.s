@@ -39,8 +39,9 @@ nvme_sesspostxts_tx_sessprodtxcb_process:
 
     //ring the doorbell of dgst_q
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \
-                        K_GLOBAL_LIF, NVME_QTYPE_SESSDGSTTX, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(d.dgst_qid, SESSPREDGST_TX_RING_ID, DGST_Q_PI, DB_DATA) 
+                        K_GLOBAL_LIF, NVME_QTYPE_SESS, DB_ADDR)
+    add         r1, d.dgst_qid, NVME_SESS_DGST_TX, LOG_MAX_NUM_SESSIONS
+    CAPRI_SETUP_DB_DATA(r1, SESSPREDGST_TX_RING_ID, DGST_Q_PI, DB_DATA)
 
     phvwr       p.session_db_data, DB_DATA.dx
     

@@ -20,11 +20,12 @@ typedef enum nvme_qtype {
     NVME_QTYPE_SQ        = 0,
     NVME_QTYPE_CQ        = 1,
     NVME_QTYPE_ARMQ      = 2,
-    NVME_QTYPE_TX_SESS_XTSQ = 3,
-    NVME_QTYPE_TX_SESS_DGSTQ = 4,
-    NVME_QTYPE_RX_SESS_XTSQ = 5,
-    NVME_QTYPE_RX_SESS_DGSTQ = 6,
-    NVME_QTYPE_MAX
+    NVME_QTYPE_SESS      = 3,
+    //NVME_QTYPE_TX_SESS_XTSQ = 3,
+    //NVME_QTYPE_TX_SESS_DGSTQ = 4,
+    //NVME_QTYPE_RX_SESS_XTSQ = 5,
+    //NVME_QTYPE_RX_SESS_DGSTQ = 6,
+    NVME_QTYPE_MAX = 7
 } nvme_qtype_t;
 
 

@@ -67,11 +67,11 @@ queue_types:
                         desc        : ref://factory/templates/id=DESC_NVME_ARMQ
 
     - queue_type:
-        id          : NVME_SESS_XTS_TX
+        id          : NVME_SESS
         type        : 3
-        purpose     : LIF_QUEUE_PURPOSE_NVME_SESS_XTS_TX
+        purpose     : LIF_QUEUE_PURPOSE_NVME_SESS
         size        : 64
-        count       : 128
+        count       : 1024
         queues:
             - queue:
                 id          : SESSXTSTX
@@ -92,13 +92,6 @@ queue_types:
                         size        : 32
                         desc        : ref://factory/templates/id=DESC_NVME_SESSQ
 
-    - queue_type:
-        id          : NVME_SESS_DGST_TX
-        type        : 4
-        purpose     : LIF_QUEUE_PURPOSE_NVME_SESS_DGST_TX
-        size        : 64
-        count       : 128
-        queues:
             - queue:
                 id          : SESSDGSTTX
                 count       : 128
@@ -118,13 +111,6 @@ queue_types:
                         size        : 32
                         desc        : ref://factory/templates/id=DESC_NVME_SESSQ
 
-    - queue_type:
-        id          : NVME_SESS_XTS_RX
-        type        : 5
-        purpose     : LIF_QUEUE_PURPOSE_NVME_SESS_XTS_RX
-        size        : 64
-        count       : 128
-        queues:
             - queue:
                 id          : SESSXTSRX
                 count       : 128
@@ -144,13 +130,6 @@ queue_types:
                         size        : 32
                         desc        : ref://factory/templates/id=DESC_NVME_SESSQ
 
-    - queue_type:
-        id          : NVME_SESS_DGST_RX
-        type        : 6
-        purpose     : LIF_QUEUE_PURPOSE_NVME_SESS_DGST_RX
-        size        : 64
-        count       : 128
-        queues:
             - queue:
                 id          : SESSDGSTRX
                 count       : 128
@@ -161,7 +140,7 @@ queue_types:
                         pi          : 0
                         ci          : 0
                         size        : 32
-                        desc        : ref://factory/templates/id=DESC_NVME_TCPRQ
+                        desc        : ref://factory/templates/id=DESC_NVME_SESSQ
                     - ring:
                         id          : POSTDGST
                         hw_ring_id  : 1
@@ -169,3 +148,25 @@ queue_types:
                         ci          : 0
                         size        : 32
                         desc        : ref://factory/templates/id=DESC_NVME_SESSQ
+            - queue:
+                id          : SESSRQ
+                count       : 128
+                rings:
+                    - ring:
+                        id          : RQ
+                        hw_ring_id  : 0
+                        pi          : 0
+                        ci          : 0
+                        size        : 64
+                        desc        : ref://factory/templates/id=DESC_NVME_TCPRQ
+            #- queue:
+            #    id          : SESSRF
+            #    count       : 128
+            #    rings:
+            #        - ring:
+            #            id          : PREDGST
+            #            hw_ring_id  : 0
+            #            pi          : 0
+            #            ci          : 0
+            #            size        : 32
+            #            desc        : ref://factory/templates/id=DESC_NVME_SESSQ

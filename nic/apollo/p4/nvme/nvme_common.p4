@@ -1223,8 +1223,10 @@ header_type rqcb_t {
         //4B
         curr_plen                       : 32;
 
-        pad                             : 256;
+        tcp_serq_ci_addr                : 34;
+        rsvd3                           :  6;
 
+        pad                             : 216;
     }
 }
 
@@ -1232,7 +1234,7 @@ header_type rqcb_t {
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, \
 base_addr, log_wqe_size, log_num_entries, ring_empty_sched_eval_done, rsvd0, \
 r0_busy, rsvd1, wb_r0_busy, resource_alloc_done, rsvd2, session_id, pduid, \
-segment_offset, pdu_offset, curr_plen, pad
+segment_offset, pdu_offset, curr_plen, tcp_serq_ci_addr, rsvd3, pad
 
 #define GENERATE_RQCB_D                                           \
     modify_field(rqcb_d.rsvd, rsvd);                              \
@@ -1260,6 +1262,8 @@ segment_offset, pdu_offset, curr_plen, pad
     modify_field(rqcb_d.segment_offset, segment_offset);          \
     modify_field(rqcb_d.pdu_offset, pdu_offset);                  \
     modify_field(rqcb_d.curr_plen, curr_plen);                    \
+    modify_field(rqcb_d.tcp_serq_ci_addr, tcp_serq_ci_addr);      \
+    modify_field(rqcb_d.rsvd3, rsvd3);                            \
     modify_field(rqcb_d.pad, pad);                                \
 
 #define RQCB_PARAMS_NON_STG0 \

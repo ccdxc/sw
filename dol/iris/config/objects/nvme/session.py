@@ -169,25 +169,31 @@ class NvmeSessionObject(base.ConfigObjectBase):
         self.rx_serq_num_entries = resp_spec.rx_serq_num_entries #Q num_entries of Rx TCP SERQ
 
         # Both R0/R1 of sessxtstx use the same q
-        self.tx_xtsq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_XTS_TX', self.sess_id)
+        self.tx_xtsq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS', self.sess_id+(0*128))
         self.tx_xtsq.SetRingParams('PREXTS', True, None, self.tx_xtsq_base, self.tx_xtsq_num_entries)
         self.tx_xtsq.SetRingParams('POSTXTS', True, None, self.tx_xtsq_base, self.tx_xtsq_num_entries)
 
         # Both R0/R1 of sessdgsttx use the same q
-        self.tx_dgstq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_DGST_TX', self.sess_id)
+        self.tx_dgstq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS', self.sess_id+(1*128))
         self.tx_dgstq.SetRingParams('PREDGST', True, None, self.tx_dgstq_base, self.tx_dgstq_num_entries)
         self.tx_dgstq.SetRingParams('POSTDGST', True, None, self.tx_dgstq_base, self.tx_dgstq_num_entries)
 
         # Both R0/R1 of sessxtsrx use the same q
-        self.rx_xtsq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_XTS_RX', self.sess_id)
+        self.rx_xtsq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS', self.sess_id+(2*128))
         self.rx_xtsq.SetRingParams('PREXTS', True, None, self.rx_xtsq_base, self.rx_xtsq_num_entries)
         self.rx_xtsq.SetRingParams('POSTXTS', True, None, self.rx_xtsq_base, self.rx_xtsq_num_entries)
 
-        # R0 of sessdgstrx is same as TCP SERQ
-        # R1 of sessdgstrx is the session q
-        self.rx_dgstq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_DGST_RX', self.sess_id)
-        self.rx_dgstq.SetRingParams('PREDGST', True, None, self.rx_serq_base, self.rx_serq_num_entries)
+        # Both R0/R1 of sessdgstrx use the same q
+        self.rx_dgstq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS', self.sess_id+(3*128))
+        self.rx_dgstq.SetRingParams('PREDGST', True, None, self.rx_dgstq_base, self.rx_dgstq_num_entries)
         self.rx_dgstq.SetRingParams('POSTDGST', True, None, self.rx_dgstq_base, self.rx_dgstq_num_entries)
+
+        # R0 of sessrq is the serq
+        self.rx_rq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS', self.sess_id+(4*128))
+        self.rx_rq.SetRingParams('RQ', True, None, self.rx_serq_base, self.rx_serq_num_entries)
+
+        #self.rx_rf = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS', self.sess_id+(5*128))
+        #self.rx_rf.SetRingParams('RF', True, None, self.rx_serq_base, self.rx_serq_num_entries)
 
         #TBD: for now there is no modeling object for TCP SESQ
         return

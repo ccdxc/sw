@@ -1867,6 +1867,50 @@ p4pd_update_sesq_ci_addr (uint32_t qid, uint64_t ci_addr)
     return ret;
 }
 
+hal_ret_t
+tcpcb_pd_serq_lif_qtype_qstate_ring_set (uint32_t tcp_qid, uint32_t lif,
+                                         uint32_t qtype, uint32_t qid,
+                                         uint32_t ring)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    uint64_t                addr = 0;
+    s6_t0_tcp_rx_dma_d      rx_dma_d = { 0 };
+    wring_hw_id_t           serq_base;
+
+    addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TCP_PROXY, 0,
+            tcp_qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_DMA);
+
+    if(sdk::asic::asic_mem_read(addr,  (uint8_t *)&rx_dma_d, sizeof(rx_dma_d))) {
+        HAL_TRACE_ERR("Failed to get rx: read_tx2rx entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+    ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
+                                 tcp_qid, &serq_base);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to receive serq base for qid: {}", qid);
+    } else {
+        HAL_TRACE_DEBUG("Serq base: {:#x}", serq_base);
+        rx_dma_d.serq_base = htonll(serq_base);
+    }
+
+    rx_dma_d.consumer_lif = htons(lif);
+    rx_dma_d.consumer_qtype = qtype;
+    rx_dma_d.consumer_qid = htons(qid);
+    rx_dma_d.consumer_ring = ring;
+
+    HAL_TRACE_DEBUG("Updating consumer lif: {:#x}, qtype: {:#x}, qid: {:#x}, "
+                    "ring: {:#x} for TCP CB qid: {:#x} TCPCB write addr: {:#x}",
+                    lif, qtype, qid, ring, tcp_qid, addr);
+
+    if(!p4plus_hbm_write(addr,  (uint8_t *)&rx_dma_d, sizeof(rx_dma_d),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
+        HAL_TRACE_ERR("Failed to update consumer lif,qtype,qid for for TCP CB qid: {:#x} "
+                      "TCPCB write addr: {:#x}",
+                      tcp_qid, addr);
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
+}
 
 }    // namespace pd
 }    // namespace hal

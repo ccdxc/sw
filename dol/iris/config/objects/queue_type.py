@@ -16,7 +16,7 @@ from infra.common.logging       import logger
 
 eth_queue_type_ids = {'RX', 'TX', 'ADMIN'}
 rdma_queue_type_ids = {'RDMA_AQ', 'RDMA_SQ', 'RDMA_RQ', 'RDMA_CQ', 'RDMA_EQ'}
-nvme_queue_type_ids = {'NVME_SQ', 'NVME_CQ', 'NVME_ARMQ', 'NVME_SESS_XTS_TX', 'NVME_SESS_DGST_TX', 'NVME_SESS_XTS_RX', 'NVME_SESS_DGST_RX'}
+nvme_queue_type_ids = {'NVME_SQ', 'NVME_CQ', 'NVME_ARMQ', 'NVME_SESS'}
 
 
 class QueueTypeObject(base.ConfigObjectBase):

@@ -36,10 +36,11 @@ nvme_req_tx_sessprodtxcb_process:
     DMA_CMD_BASE_GET(DMA_CMD_BASE, session_wqe_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sess_wqe_cmdid, sess_wqe_pduid, r3)
 
+    add         r1, d.xts_qid, NVME_SESS_XTS_TX, LOG_MAX_NUM_SESSIONS
     //ring the doorbell of xts_q
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \
-                        K_GLOBAL_LIF, NVME_QTYPE_SESSXTSTX, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(d.xts_qid, SESSPREXTS_TX_RING_ID, XTS_Q_PI, DB_DATA) 
+                        K_GLOBAL_LIF, NVME_QTYPE_SESS, DB_ADDR)
+    CAPRI_SETUP_DB_DATA(r1, SESSPREXTS_TX_RING_ID, XTS_Q_PI, DB_DATA)
 
     phvwr       p.session_db_data, DB_DATA.dx
     

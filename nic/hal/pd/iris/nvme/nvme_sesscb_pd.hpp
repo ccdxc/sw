@@ -14,6 +14,7 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_NVME_SESSCBS 2048
+#define HAL_MAX_NVME_SESSIONS 128
 
 typedef uint64_t    nvme_sesscb_hw_id_t;
 

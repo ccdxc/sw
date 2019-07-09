@@ -268,6 +268,12 @@ nvme_tx_sessdgst_stage0:
     nop
 
 .align
+nvme_rq_stage0:
+    #j nvme_req_rx_process
+    nop.e
+    nop
+
+.align
 nvme_rx_sessxts_stage0:
     #j nvme_sessxts_rx_cb_process
     nop.e

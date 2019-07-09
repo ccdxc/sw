@@ -99,6 +99,11 @@ extern void *tcpcb_pd_get_hw_key_func(void *entry);
 extern uint32_t tcpcb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool tcpcb_pd_compare_hw_key_func(void *key1, void *key2);
 extern uint64_t tcpcb_pd_serq_prod_ci_addr_get(uint32_t qid);
+extern hal_ret_t tcpcb_pd_serq_lif_qtype_qstate_ring_set (uint32_t tcp_qid,
+                                                          uint32_t lif,
+                                                          uint32_t qtype,
+                                                          uint32_t qid,
+                                                          uint32_t ring);
 
 //Short term fix. Bypasses state
 hal_ret_t

@@ -74,7 +74,7 @@ setup_txhwxtscb (uint64_t data_addr)
 
     if(!p4plus_hbm_write(data_addr, (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
-        HAL_TRACE_ERR("Failed to write to HW XTS CB for NVME Global Info");
+        HAL_TRACE_ERR("Failed to write to Tx HW XTS CB for NVME Global Info");
         ret = HAL_RET_HW_FAIL;
     }
 
@@ -99,6 +99,55 @@ setup_txhwdgstcb (uint64_t data_addr)
     if(!p4plus_hbm_write(data_addr, (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to write to Tx HW DGST CB for NVME Global Info");
+        ret = HAL_RET_HW_FAIL;
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+setup_rxhwxtscb (uint64_t data_addr)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    //Setup Rx HW/Barco XTS CB
+    nvme_rxhwxtscb_t data = { 0 };
+
+    data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
+    data.xts_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS1);
+    data.ci = 0;
+    data.pi = 0;
+    data.choke_counter = 0;
+
+    memrev((uint8_t*)&data, sizeof(data));
+
+    if(!p4plus_hbm_write(data_addr, (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
+        HAL_TRACE_ERR("Failed to write to Rx HW XTS CB for NVME Global Info");
+        ret = HAL_RET_HW_FAIL;
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+setup_rxhwdgstcb (uint64_t data_addr)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    //Setup Rx HW/Barco XTS CB
+    nvme_rxhwdgstcb_t data = { 0 };
+
+    data.log_sz = log2(BARCO_CRYPTO_DC_RING_SIZE);
+    data.dgst_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_DC);
+    data.ci = 0;
+    data.pi = 0;
+    data.choke_counter = 0;
+
+    memrev((uint8_t*)&data, sizeof(data));
+    if(!p4plus_hbm_write(data_addr, (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
+        HAL_TRACE_ERR("Failed to write to Rx HW DGST CB for NVME Global Info");
         ret = HAL_RET_HW_FAIL;
     }
 
@@ -489,7 +538,6 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
         return ret;
     }
 
-#if 0
     ret = setup_rxhwxtscb(nvme_global_pd->rx_hwxtscb_addr);
 
     if (ret != HAL_RET_OK) {
@@ -497,7 +545,6 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
                       ret);
         return ret;
     }
-#endif
 
     ret = setup_txhwdgstcb(nvme_global_pd->tx_hwdgstcb_addr);
 
@@ -507,7 +554,6 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
         return ret;
     }
 
-#if 0
     ret = setup_rxhwdgstcb(nvme_global_pd->rx_hwdgstcb_addr);
 
     if (ret != HAL_RET_OK) {
@@ -515,7 +561,6 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
                       ret);
         return ret;
     }
-#endif
 
     return ret;
 }

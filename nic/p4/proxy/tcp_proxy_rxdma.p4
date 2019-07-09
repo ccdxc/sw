@@ -414,6 +414,7 @@ header_type tcp_rx_dma_d_t {
         rx2tx_clean_retx_pi     : 16;
         rx2tx_fast_retx_pi      : 16;
         consumer_qid            : 16;
+        consumer_qtype          : 8;
 
         // stats
         pkts_rcvd               : 8;
@@ -1193,7 +1194,8 @@ action ooo_qbase_cb_load(ooo_rx2tx_ci,
         rx_stats_base, serq_base, nde_shift, nde_offset, nde_len, \
         consumer_lif, consumer_ring, consumer_num_slots_mask, \
         pkts_rcvd, rx2tx_send_ack_pi, \
-        rx2tx_clean_retx_pi, rx2tx_fast_retx_pi, consumer_qid \
+        rx2tx_clean_retx_pi, rx2tx_fast_retx_pi, consumer_qid, \
+        consumer_qtype \
 
 #define RX_DMA_D_FIELDS \
     modify_field(tcp_rx_dma_d.rx_stats_base, rx_stats_base); \
@@ -1208,7 +1210,8 @@ action ooo_qbase_cb_load(ooo_rx2tx_ci,
     modify_field(tcp_rx_dma_d.rx2tx_send_ack_pi, rx2tx_send_ack_pi); \
     modify_field(tcp_rx_dma_d.rx2tx_clean_retx_pi, rx2tx_clean_retx_pi); \
     modify_field(tcp_rx_dma_d.rx2tx_fast_retx_pi, rx2tx_fast_retx_pi); \
-    modify_field(tcp_rx_dma_d.consumer_qid, consumer_qid);
+    modify_field(tcp_rx_dma_d.consumer_qid, consumer_qid); \
+    modify_field(tcp_rx_dma_d.consumer_qtype, consumer_qtype);
 
 
 /*

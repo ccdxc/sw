@@ -27,7 +27,7 @@ nvme_sesspredgst_tx_cb_writeback_process:
     add            PDU_CTXT_P, PDU_CTXT_P, NVME_PDU_CTXT_PAGE_LIST_OFFSET
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \
-                        K_GLOBAL_LIF, NVME_QTYPE_SESSDGSTTX, DB_ADDR)
+                        K_GLOBAL_LIF, NVME_QTYPE_SESS, DB_ADDR)
     CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, SESSPOSTDGST_TX_RING_ID, \
                         SESSPREDGSTTX_C_INDEX, DB_DATA)
 

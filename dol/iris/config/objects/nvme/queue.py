@@ -203,7 +203,30 @@ class NvmeSessXTSRxQstate(Packet):
         LEShortField("p_index1", 0),
         LEShortField("c_index1", 0),
 
-        BitField("pad", 0, 384),
+        BitField("base_addr", 0, 34),
+        BitField("log_num_entries", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        ByteField("rsvd0", 0),
+
+        BitField("r0_busy", 0, 1),
+        BitField("rsvd1", 0, 7),
+
+        BitField("wb_r0_busy", 0, 1),
+        BitField("rsvd2", 0, 7),
+
+        ShortField("nxt_lba_offset", 0),
+
+        BitField("r1_busy", 0, 1),
+        BitField("rsvd3", 0, 7),
+
+        BitField("wb_r1_busy", 0, 1),
+        BitField("rsvd4", 0, 7),
+
+        LongField("page_ptr", 0),
+
+        ShortField("session_id", 0),
+
+        BitField("pad", 0, 208),
     ]
 
 class NvmeSessDGSTRxQstate(Packet):
@@ -225,7 +248,104 @@ class NvmeSessDGSTRxQstate(Packet):
         LEShortField("p_index1", 0),
         LEShortField("c_index1", 0),
 
-        BitField("pad", 0, 384),
+        BitField("rx_q_base_addr", 0, 34),
+        BitField("rx_q_log_num_entries", 0, 5),
+        BitField("rsvd5", 0, 25),
+
+        BitField("base_addr", 0, 34),
+        BitField("log_num_entries", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        ByteField("rsvd0", 0),
+
+        BitField("r0_busy", 0, 1),
+        BitField("rsvd1", 0, 7),
+
+        BitField("wb_r0_busy", 0, 1),
+        BitField("rsvd2", 0, 7),
+
+        BitField("r1_busy", 0, 1),
+        BitField("rsvd3", 0, 7),
+
+        BitField("wb_r1_busy", 0, 1),
+        BitField("rsvd4", 0, 7),
+
+        ShortField("session_id", 0),
+
+        BitField("pad", 0, 224),
+    ]
+
+class NvmeSessRqQstate(Packet):
+    name = "NvmeSessRqQstate"
+    fields_desc = [
+        # SessRqCB0
+        ByteField("pc_offset", 0),
+        ByteField("rsvd0", 0),
+        BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("total", 0, 4),
+        BitField("host", 0, 4),
+        ShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+
+        BitField("base_addr", 0, 34),
+        BitField("log_wqe_size", 0, 5),
+        BitField("log_num_entries", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        BitField("rsvd0", 0, 3),
+
+        BitField("r0_busy", 0, 1),
+        BitField("rsvd1", 0, 7),
+
+        BitField("wb_r0_busy", 0, 1),
+        BitField("resource_alloc_done", 0, 1),
+        BitField("rsvd2", 0, 6),
+
+        ShortField("session_id", 0),
+        ShortField("pduid", 0),
+        ShortField("segment_offset", 0),
+        ShortField("pdu_offset", 0),
+        IntField("curr_plen", 0),
+
+        BitField("tcp_serq_ci_addr", 0, 34),
+        BitField("rsvd3", 0, 6),
+
+        BitField("pad", 0, 216),
+    ]
+
+class NvmeSessRfQstate(Packet):
+    name = "NvmeSessRfQstate"
+    fields_desc = [
+        # SessRfQCB0
+        ByteField("pc_offset", 0),
+        ByteField("rsvd0", 0),
+        BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("total", 0, 4),
+        BitField("host", 0, 4),
+        ShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+
+        BitField("base_addr", 0, 34),
+        BitField("log_num_entries", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        BitField("rsvd0", 0, 7),
+
+        BitField("r0_busy", 0, 1),
+        BitField("rsvd1", 0, 7),
+
+        BitField("wb_r0_busy", 0, 1),
+        BitField("rsvd2", 0, 7),
+
+
+        BitField("pad", 0, 318),
     ]
 
 qt_params = {
@@ -237,6 +357,8 @@ qt_params = {
     'NVME_SESS_DGST_TX': {'state': NvmeSessDGSTTxQstate, 'hrings': 0, 'trings': 2, 'has_label':0, 'label': '', 'prog': ''},
     'NVME_SESS_XTS_RX': {'state': NvmeSessXTSRxQstate, 'hrings': 0, 'trings': 2, 'has_label':0, 'label': '', 'prog': ''},
     'NVME_SESS_DGST_RX': {'state': NvmeSessDGSTRxQstate, 'hrings': 0, 'trings': 2, 'has_label':0, 'label': '', 'prog': ''},
+    'NVME_SESS_RQ': {'state': NvmeSessRqQstate, 'hrings': 0, 'trings': 2, 'has_label':0, 'label': '', 'prog': ''},
+    'NVME_SESS_RF': {'state': NvmeSessRfQstate, 'hrings': 0, 'trings': 2, 'has_label':0, 'label': '', 'prog': ''},
 }
 
 class NvmeQstateObject(object):
@@ -366,14 +488,14 @@ class NvmeQueueObject(QueueObject):
     @property
     def qstate(self):
         if self._qstate is None:
-            self._qstate = NvmeQstateObject(queue_type=self.queue_type.GID(), addr=self.GetQstateAddr(), size=self.queue_type.size)
+            self._qstate = NvmeQstateObject(queue_type=self.GetQSubType(), addr=self.GetQstateAddr(), size=self.queue_type.size)
         return self._qstate
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.lif_handle = 0  # HW LIF ID is not known in DOL. Assume it is filled in by hal::LifCreate.
         req_spec.type_num = self.queue_type.type
         req_spec.qid = self.id
-        qt_params_entry = qt_params[self.queue_type.GID()]
+        qt_params_entry = qt_params[self.GetQSubType()]
         qstate = qt_params_entry["state"]()
         qstate.host = qt_params_entry["hrings"]
         qstate.total = qt_params_entry["trings"]
@@ -386,6 +508,23 @@ class NvmeQueueObject(QueueObject):
 
     def GetQstateAddr(self):
         return self.queue_type.GetQstateAddr() + (self.id * self.queue_type.size)
+
+    def GetQSubType(self):
+        if (self.queue_type.GID() == 'NVME_SESS'):
+            if (self.id < 128):
+                return 'NVME_SESS_XTS_TX'
+            elif (self.id >= 128 and self.id < 256):
+                return 'NVME_SESS_DGST_TX'
+            elif (self.id >= 256 and self.id < 384):
+                return 'NVME_SESS_XTS_RX'
+            elif (self.id >= 384 and self.id < 512):
+                return 'NVME_SESS_DGST_RX'
+            elif (self.id >= 512 and self.id < 640):
+                return 'NVME_SESS_RQ'
+            elif (self.id >= 640 and self.id < 768):
+                return 'NVME_SESS_RF'
+        else:
+            return self.queue_type.GID()
 
     def ConfigureRings(self):
         self.obj_helper_ring.Configure()

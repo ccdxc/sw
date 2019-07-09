@@ -40,10 +40,11 @@ nvme_req_rx_sessprodcb_process:
     DMA_CMD_BASE_GET(DMA_CMD_BASE, session_wqe_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sess_wqe_cmdid, sess_wqe_pduid, r3)
 
+    add         r1, d.dgst_qid, NVME_SESS_DGST_RX, LOG_MAX_NUM_SESSIONS
     //ring the doorbell of dgst_q
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \
-                        K_GLOBAL_LIF, NVME_QTYPE_SESSDGSTRX, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(d.dgst_qid, SESSPREDGST_RX_RING_ID, DGST_Q_PI, DB_DATA) 
+                        K_GLOBAL_LIF, NVME_QTYPE_SESS, DB_ADDR)
+    CAPRI_SETUP_DB_DATA(r1, SESSPREDGST_RX_RING_ID, DGST_Q_PI, DB_DATA)
 
     phvwr       p.session_db_data, DB_DATA.dx
     

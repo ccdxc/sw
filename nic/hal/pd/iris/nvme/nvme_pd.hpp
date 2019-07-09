@@ -19,6 +19,9 @@
 #define MAX_SQ_RINGS 1
 #define MAX_SQ_HOST_RINGS 1
 
+#define MAX_RQ_RINGS 1
+#define MAX_RQ_HOST_RINGS 0
+
 #define CQ_RING_ID      RING_ID_0
 
 #define MAX_CQ_RINGS 1

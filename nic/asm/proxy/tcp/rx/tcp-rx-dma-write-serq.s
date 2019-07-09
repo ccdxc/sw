@@ -83,7 +83,7 @@ ring_doorbell:
     add         r1, k.to_s6_serq_pidx, 1
     and         r1, r1, d.consumer_num_slots_mask
 
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, d.consumer_lif) // r4 = addr
+    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, d.consumer_qtype, d.consumer_lif) // r4 = addr
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE(tls_doorbell_dma_cmd, r4, db_data_pid, db_data_index)
     CAPRI_RING_DOORBELL_DATA(0, d.consumer_qid, d.consumer_ring, r1) // r3 = data
     phvwr.e     p.{db_data_pid...db_data_index}, r3.dx
