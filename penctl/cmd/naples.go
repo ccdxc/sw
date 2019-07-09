@@ -151,8 +151,8 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 			}
 		} else {
 			fmt.Printf("Unable to update naples, error: %v\n", err)
+			return err
 		}
-		return err
 	}
 
 	if managedBy == "host" {
