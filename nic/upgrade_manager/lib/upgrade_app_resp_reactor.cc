@@ -83,6 +83,10 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
                 UPG_OBFL_TRACE("Upgrade failed last time. So going to restart apps.");
                 sleep(5);
                 if (exists("/nic/tools/fwupdate")) {
+                    cmd = "rm -rf /tmp/naples-netagent.db";
+                    if ((ret = system (cmd.c_str())) != 0) {
+                        UPG_LOG_INFO("Unable to delete naples-netagent.db");
+                    }
                     cmd = "/nic/tools/reload_mnic_drv.sh";
                     if ((ret = system (cmd.c_str())) != 0) {
                         UPG_LOG_INFO("Unable to reload mnic driver");
