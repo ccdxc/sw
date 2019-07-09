@@ -2604,8 +2604,10 @@ sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		break;
 	}
 
-	if (*ret_q_hint == NULL)
+	if (*ret_q_hint == NULL) {
+		REPORT_PCR_COUNTERS(pc_res);
 		return err;
+	}
 
 	return 0;
 }

@@ -1294,8 +1294,12 @@ chn_create_chain(struct request_params *req_params,
 	}
 
 	err = hw_ring_take(chain);
-	if (err)
+	if (err) {
+		if (err == EAGAIN) {
+			REPORT_PCR_COUNTERS(pcr);
+		}
 		goto out_chain;
+	}
 
 	*ret_chain = chain;
 	err = PNSO_OK;

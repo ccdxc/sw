@@ -135,4 +135,12 @@ void sonic_pprint_seq_bmps(struct per_core_resource *pcr);
 void sonic_pprint_pcr_ev_list(struct per_core_resource *pcr);
 void sonic_pprint_ev_lists(void);
 
+void sonic_report_pcr_counters(const struct per_core_resource *pcr);
+
+#define REPORT_PCR_COUNTERS(pcr)					\
+	do {								\
+		if (OSAL_LOG_ON(OSAL_LOG_LEVEL_WARNING)) 		\
+			sonic_report_pcr_counters(pcr);			\
+	} while (0)
+
 #endif /* SONIC_API_INT_H */

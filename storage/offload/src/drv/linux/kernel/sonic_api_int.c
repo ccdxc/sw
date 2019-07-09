@@ -470,3 +470,116 @@ sonic_is_accel_dev_ready()
 
 	return (glif && (glif->flags & LIF_F_INITED)) ? true : false;
 }
+
+static void __attribute__((unused))
+report_queue_resource(const struct queue *q)
+{
+	OSAL_LOG_WARN("%30s: %s", "name", q->name);
+	OSAL_LOG_WARN("%30s: %u", "qid", q->qid);
+
+	OSAL_LOG_WARN("%30s: %d", "pindex", q->pindex);
+	OSAL_LOG_WARN("%30s: %d", "pid", q->pid);
+	OSAL_LOG_WARN("%30s: %d", "qpos", q->qpos);
+	OSAL_LOG_WARN("%30s: %d", "qtype", q->qtype);
+	OSAL_LOG_WARN("%30s: %d", "ref_count", q->ref_count);
+
+	OSAL_LOG_WARN("%30s: %d", "descs_inuse",
+			osal_atomic_read(&q->descs_inuse));
+}
+
+static void __attribute__((unused))
+report_ring_resource(uint32_t ring_id)
+{
+	struct sonic_accel_ring *ring;
+
+	ring = sonic_get_accel_ring(ring_id);
+	if (!ring)
+		return;
+
+	OSAL_LOG_WARN("%30s: %s", "name", sonic_accel_ring_name_get(ring_id));
+	OSAL_LOG_WARN("%30s: %d", "descs_inuse",
+			osal_atomic_read(&ring->descs_inuse));
+}
+
+static void __attribute__((unused))
+report_status_queues(const struct per_core_resource *pcr)
+{
+	struct queue_tracking *track;
+	unsigned int count;
+
+	OSAL_LOG_WARN("%30s: ", "=== cpdc_seq_status_qs");
+	OSAL_LOG_WARN("%30s: %u", "num_queues",
+			pcr->cpdc_statusq_track.num_queues);
+	OSAL_LOG_WARN("%30s: %d", "next_free_id",
+			pcr->cpdc_statusq_track.next_free_id);
+
+	track = (struct queue_tracking *) &pcr->cpdc_statusq_track;
+	spin_lock(&track->lock);
+	count = bitmap_weight(track->bmp, pcr->cpdc_statusq_track.num_queues);
+	spin_unlock(&track->lock);
+	OSAL_LOG_WARN("%30s: %u", "# of non-zero entries", count);
+
+	OSAL_LOG_WARN("%30s: ", "=== crypto_seq_status_qs");
+	OSAL_LOG_WARN("%30s: %u", "num_queues",
+			pcr->crypto_statusq_track.num_queues);
+	OSAL_LOG_WARN("%30s: %d", "next_free_id",
+			pcr->crypto_statusq_track.next_free_id);
+
+	track = (struct queue_tracking *) &pcr->crypto_statusq_track;
+	spin_lock(&track->lock);
+	count = bitmap_weight(track->bmp, pcr->crypto_statusq_track.num_queues);
+	spin_unlock(&track->lock);
+	OSAL_LOG_WARN("%30s: %u", "# of non-zero entries", count);
+}
+
+void __attribute__((unused))
+sonic_report_pcr_counters(const struct per_core_resource *pcr)
+{
+	struct lif *lif;
+	const struct queue *q;
+
+	if (!pcr)
+		return;
+
+	OSAL_LOG_WARN("%.*s", 30, "==================================================");
+	OSAL_LOG_WARN("%30s: ", "=== pcr");
+	OSAL_LOG_WARN("%30s: %d", "core_id", pcr->core_id);
+	OSAL_LOG_WARN("%30s:  %d", "index", pcr->idx);
+
+	lif = pcr->lif;
+	OSAL_LOG_WARN("%30s: ", "=== lif");
+	OSAL_LOG_WARN("%30s: %s", "name", pcr->lif->name);
+	OSAL_LOG_WARN("%30s: %u", "index", pcr->lif->index);
+	OSAL_LOG_WARN("%30s: %u", "id", pcr->lif->lif_id);
+	OSAL_LOG_WARN("%30s: %u", "seq_q_index", pcr->lif->seq_q_index);
+	OSAL_LOG_WARN("%30s: " PRIu64, "last_eid", pcr->lif->last_eid);
+	OSAL_LOG_WARN("%30s: %u", "flags", pcr->lif->flags);
+
+	q = &pcr->cp_seq_q;
+	OSAL_LOG_WARN("%30s: ", "=== cp_seq_q");
+	report_queue_resource(q);
+
+	q = &pcr->dc_seq_q;
+	OSAL_LOG_WARN("%30s: ", "=== dc_seq_q");
+	report_queue_resource(q);
+
+	q = &pcr->crypto_enc_seq_q;
+	OSAL_LOG_WARN("%30s: ", "=== enc_seq_q");
+	report_queue_resource(q);
+
+	q = &pcr->crypto_dec_seq_q;
+	OSAL_LOG_WARN("%30s: ", "=== dec_seq_q");
+	report_queue_resource(q);
+
+	report_status_queues(pcr);
+
+	OSAL_LOG_WARN("%30s: ", "=== ring");
+	report_ring_resource(ACCEL_RING_CP);
+	report_ring_resource(ACCEL_RING_CP_HOT);
+	report_ring_resource(ACCEL_RING_DC);
+	report_ring_resource(ACCEL_RING_DC_HOT);
+	report_ring_resource(ACCEL_RING_XTS0);
+	report_ring_resource(ACCEL_RING_XTS1);
+
+	OSAL_LOG_WARN("%.*s", 30, "==================================================");
+}
