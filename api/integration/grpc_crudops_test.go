@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/apigw/pkg"
 
@@ -3437,14 +3439,13 @@ func TestWatcherEviction(t *testing.T) {
 	go func() {
 		books, err := apicl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{})
 		if err != nil {
-			t.Fatalf("failed to list orders (%s)\n", err)
+			doneDel <- errors.Wrap(err, "failed to list orders")
 			return
 		}
 		for i := range books {
 			_, err := apicl.BookstoreV1().Book().Delete(ctx, &books[i].ObjectMeta)
 			if err != nil {
-				t.Fatalf("failed to delete order [%v](%s)\n", books[i].Name, err)
-				return
+				t.Errorf("failed to delete order [%v](%s)\n", books[i].Name, err)
 			}
 		}
 		t.Logf("done deleting current objects")
@@ -3494,7 +3495,10 @@ func TestWatcherEviction(t *testing.T) {
 	}()
 	watcher, err := apicl.BookstoreV1().Book().Watch(ctx, &api.ListWatchOptions{})
 	AssertOk(t, err, "failed to create watch")
-	<-doneDel
+	err = <-doneDel
+	if err != nil {
+		t.Fatalf("delete failed (%s)", err)
+	}
 	wait := true
 	aft := time.After(time.Second * 90)
 	close(startCreate)

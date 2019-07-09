@@ -541,13 +541,10 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	}
 
 	if oper == apiintf.CreateOper {
-		// Do not regenerate UUID for dry runs
-		if !dryRun {
-			i, err = m.requestType.CreateUUID(i)
-			if err != nil {
-				l.ErrorLog("msg", "UUID creation failed", "err", err, "URI", URI)
-				return nil, errInternalError.makeError(i, []string{err.Error()}, "")
-			}
+		i, err = m.requestType.CreateUUID(i)
+		if err != nil {
+			l.ErrorLog("msg", "UUID creation failed", "err", err, "URI", URI)
+			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 		}
 		i, err = m.requestType.WriteCreationTime(i)
 		if err != nil {
