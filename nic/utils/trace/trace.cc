@@ -86,7 +86,8 @@ bool
 log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
           bool syslogger, const char *trace_file_name,
           size_t file_size, size_t max_files,
-          trace_level_e trace_level, syslog_level_e syslog_level) {
+          trace_level_e trace_level, syslog_level_e syslog_level,
+          bool truncate) {
     std::function<void()> worker_thread_cb = set_cpu_affinity;
 
     // first time when *any* logger is created, save the cpu mask and use it
@@ -109,8 +110,15 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
     if (syslogger) {
         logger_ = spdlog::syslog_logger(name, name, LOG_PID);
     } else {
-        logger_ = spdlog::rotating_logger_mt(name, trace_file_name, file_size,
-                                             max_files);
+        if (truncate) {
+            logger_ = spdlog::rotating_logger_mt(name, trace_file_name, file_size,
+                                                 max_files);
+        } else {
+            auto sink = std::make_shared < spdlog::sinks::rotating_file_sink_mt >
+                       (trace_file_name, file_size, max_files);
+
+            logger_ = std::make_shared < spdlog::logger > (name, sink);
+        }
     }
     if (logger_) {
         logger_->set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
@@ -131,7 +139,8 @@ log *
 log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
              bool syslogger, const char *trace_file_name,
              size_t file_size, size_t max_files,
-             trace_level_e trace_level, syslog_level_e syslog_level) {
+             trace_level_e trace_level, syslog_level_e syslog_level,
+             bool truncate) {
     void    *mem;
     log     *new_logger;
 
@@ -146,8 +155,8 @@ log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
 
     new_logger = new (mem) log();
     if (new_logger->init(name, cpu_mask, log_mode, syslogger, trace_file_name,
-                         file_size, max_files,
-                         trace_level, syslog_level) == false) {
+                         file_size, max_files, trace_level, syslog_level,
+                         truncate) == false) {
         new_logger->~log();
         free(new_logger);
         return NULL;

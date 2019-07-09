@@ -53,7 +53,8 @@ capri_impl::init_(void) {
             utils::log::factory("obfl", api::g_pds_state.control_cores_mask(),
                                 utils::log_mode_sync, false,
                                 "/obfl/asicmon.log", (1 << 20), 5,
-                                utils::trace_debug, utils::log_none);
+                                utils::trace_debug, utils::log_none,
+                                false);
     }
     return SDK_RET_OK;
 }

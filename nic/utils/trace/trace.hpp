@@ -99,7 +99,8 @@ public:
                         size_t file_size = TRACE_FILE_SIZE_DEFAULT,
                         size_t max_files = TRACE_NUM_FILES_DEFAULT,
                         trace_level_e trace_level = trace_err,
-                        syslog_level_e syslog_level = log_notice);
+                        syslog_level_e syslog_level = log_notice,
+                        bool truncate = true);
     static void destroy(log *logger_obj);
     void set_trace_level(trace_level_e level);
     trace_level_e trace_level(void) const { return trace_level_; }
@@ -123,7 +124,8 @@ private:
     bool init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
               bool syslogger, const char *trace_file_name,
               size_t file_size, size_t max_files,
-              trace_level_e trace_level, syslog_level_e syslog_level);
+              trace_level_e trace_level, syslog_level_e syslog_level,
+              bool truncate);
     static void set_cpu_affinity(void);
     spdlog::level::level_enum trace_level_to_spdlog_level(trace_level_e level);
     spdlog::level::level_enum syslog_level_to_spdlog_level(syslog_level_e level);
