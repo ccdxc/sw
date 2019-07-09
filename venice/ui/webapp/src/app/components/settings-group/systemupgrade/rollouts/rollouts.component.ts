@@ -14,6 +14,7 @@ import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil.ts';
 
 /**
  * This component let user manage Venice Rollouts.
@@ -107,7 +108,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     this.pendingRollouts.length = 0;
     this.pastRollouts.length = 0;
     for  (let i = 0; i < this.dataObjects.length; i++) {
-      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.PROGRESSING) {
+      if ( RolloutUtil.isRolloutPending(this.dataObjects[i]) ) {
         this.pendingRollouts.push(this.dataObjects[i]);
       } else {
         this.pastRollouts.push(this.dataObjects[i]);
@@ -231,7 +232,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   }
 
   isDeletable(data): boolean {
-    if (data.status.state !== RolloutRolloutStatus_state.SUSPEND_IN_PROGRESS) {
+    if (data.status.state === RolloutRolloutStatus_state.SUSPENDED) {
       return true;
     } else {
       return false;

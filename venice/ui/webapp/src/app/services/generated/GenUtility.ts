@@ -2,7 +2,7 @@ import { HttpClient, HttpResponse, HttpErrorResponse } from '@angular/common/htt
 import { Utility } from '@app/common/Utility';
 import * as oboe from 'oboe';
 import { publishReplay, refCount, delay } from 'rxjs/operators';
-import { Observable ,  Subject, Subscriber, TeardownLogic } from 'rxjs';
+import { Observable ,  Subject, Subscriber, TeardownLogic, NEVER } from 'rxjs';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { MockDataUtil } from '@app/common/MockDataUtil';
 import { AUTH_KEY } from '@app/core/auth/auth.reducer';
@@ -159,8 +159,19 @@ export class GenServiceUtility {
     return this.urlServiceMap[url];
   }
 
+  public isAllowed(eventPayloadID: any) {
+    // checking maintenance mode (but get version object)
+    if (Utility.getInstance().getMaintenanceMode() && eventPayloadID !== 'WatchVersion' && eventPayloadID !== 'WatchRollout') {
+      return false;
+    }
+    return true;
+  }
+
   public invokeAJAX(method: string, url: string, payload: any,
     eventPayloadID: any, isOnline: boolean = false): Observable<VeniceResponse> {
+    if (!this.isAllowed(eventPayloadID)) {
+      return NEVER;
+    }
     // Removing time fields as null values will be attempted to be parsed
     if (payload != null) {
       if (payload.meta != null) {

@@ -76,6 +76,8 @@ import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.componen
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PortalModule } from '@angular/cdk/portal';
 import { BgfileuploadComponent } from './widgets/bgfileupload/bgfileupload.component';
+import { RolloutService } from '@app/services/generated/rollout.service';
+import { RolloutsModule } from './components/settings-group/systemupgrade/rollouts/rollouts.module';
 
 /**
  * This is pensando UI web-app module. It imports all required libraries.
@@ -147,6 +149,7 @@ import { BgfileuploadComponent } from './widgets/bgfileupload/bgfileupload.compo
     FlexLayoutModule,
     DragDropModule,
     PortalModule,
+    RolloutsModule
   ],
   providers: [
     // Generated Services
@@ -160,6 +163,7 @@ import { BgfileuploadComponent } from './widgets/bgfileupload/bgfileupload.compo
     TelemetryqueryServiceGen,
     MetricsqueryService,
     AuditService,
+    RolloutService,
 
     // Route Guards
     AuthGuard,

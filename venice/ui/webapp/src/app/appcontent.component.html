@@ -1,6 +1,9 @@
+<p-blockUI [blocked]="isScreenBlocked">
+</p-blockUI>
+
 <div class="pensUI-app {{os}} {{browsertype}} {{browserversion}} {{_currentComponent? _currentComponent['component']: ''}} "
      id="pensando-ui-screen">
-  <p-confirmDialog header="Confirmation" [closable]="false" icon="pi pi-exclamation-triangle">
+  <p-confirmDialog #confirmDialog [closable]="false" icon="pi pi-exclamation-triangle">
   </p-confirmDialog>
   <div class="pensUI-app-center">
     <ng-container>
@@ -21,25 +24,27 @@
                             <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
                         </button> -->
           </div>
-
-          <div class="app-shell-header-search-div">
-            <app-searchbox></app-searchbox>
-          </div>
-
+          <ng-container *ngIf="!isUINavigationBlocked">
+            <div class="app-shell-header-search-div">
+              <app-searchbox></app-searchbox>
+            </div>
+          </ng-container>
           <span class="app-shell-spacer"></span>
           <div class="app-shell-toolbar-icon-div">
             <a class="app-shell-doclink" [href]="docLink" target="_blank">
               <button [disableRipple]="true" mat-button>DOCS</button>
             </a>
-            <app-helpoverlay *ngIf="false" fxFlex="none"></app-helpoverlay>
-            <!-- Commenting out for August release -->
-            <!-- <button mat-button>Save</button> -->
-            <button *roleGuard="'monitoringAlert_read'" mat-icon-button
-                    (click)="onToolbarIconClick($event, 'notifications')">
-              <mat-icon>notifications </mat-icon>
-              <span class="app-notification-number" [ngClass]=getAlertNotificationClass()
-                    *ngIf="alertNumbers>0">{{alertNumbers}}</span>
-            </button>
+            <ng-container *ngIf="!isUINavigationBlocked">
+              <app-helpoverlay *ngIf="false" fxFlex="none"></app-helpoverlay>
+              <!-- Commenting out for August release -->
+              <!-- <button mat-button>Save</button> -->
+              <button *roleGuard="'monitoringAlert_read'" mat-icon-button
+                      (click)="onToolbarIconClick($event, 'notifications')">
+                <mat-icon>notifications </mat-icon>
+                <span class="app-notification-number" [ngClass]=getAlertNotificationClass()
+                      *ngIf="alertNumbers>0">{{alertNumbers}}</span>
+              </button>
+            </ng-container>
             <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
               <mat-icon>person</mat-icon>
             </button>
@@ -50,10 +55,12 @@
                 <span>Sign out</span>
               </button>
             </mat-menu>
-            <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')"
-                    class="hidden-sm-down">
-              <mat-icon>settings</mat-icon>
-            </button>
+            <ng-container *ngIf="!isUINavigationBlocked">
+              <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')"
+                      class="hidden-sm-down">
+                <mat-icon>settings</mat-icon>
+              </button>
+            </ng-container>
           </div>
         </mat-toolbar-row>
 
@@ -173,27 +180,30 @@
 </p-overlayPanel>
 
 <ng-template #SideNavMenu let-items="items">
-  <ng-container *ngFor="let item of items">
-    <li *roleGuard="item.roleGuard">
-      <a *ngIf="item.children == null" [routerLink]="item.link"
-         routerLinkActive="app-sidenav-selected" class="app-sidenav-item" [id]="item.label">
-        <i
-           [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
-        <span class="app-l-side-nav-item-label">{{item.label}}</span>
-      </a>
+  <ng-container *ngIf="!isUINavigationBlocked">
+    <ng-container *ngFor="let item of items">
+      <li *roleGuard="item.roleGuard">
+        <a *ngIf="item.children == null" [routerLink]="item.link"
+           routerLinkActive="app-sidenav-selected" class="app-sidenav-item" [id]="item.label">
+          <i
+             [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
+          <span class="app-l-side-nav-item-label">{{item.label}}</span>
+        </a>
 
-      <a *ngIf="item.children != null" class="app-sidenav-group-header" data-toggle="collapse"
-         aria-expanded="false" [href]="'#' + item.label + 'Submenu'">
-        <i
-           [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
-        <span class="app-l-side-nav-item-label">{{item.label}}</span>
-      </a>
+        <a *ngIf="item.children != null" class="app-sidenav-group-header" data-toggle="collapse"
+           aria-expanded="false" [href]="'#' + item.label + 'Submenu'">
+          <i
+             [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
+          <span class="app-l-side-nav-item-label">{{item.label}}</span>
+        </a>
 
-      <ul *ngIf="item.children != null && item.children.length > 0"
-          class="collapse list-unstyled app-l-side-nav-ul-submenu" [id]="item.label + 'Submenu'">
-        <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:item.children}"></ng-container>
-      </ul>
-    </li>
+        <ul *ngIf="item.children != null && item.children.length > 0"
+            class="collapse list-unstyled app-l-side-nav-ul-submenu" [id]="item.label + 'Submenu'">
+          <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:item.children}">
+          </ng-container>
+        </ul>
+      </li>
+    </ng-container>
   </ng-container>
 </ng-template>
 
@@ -205,23 +215,29 @@
 </ng-template>
 
 <ng-template #sideNavSettings let-item="item">
-  <div fxFlex fxLayout="column">
-    <div fxFlex="auto" class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
-      <!-- comment out for GS0.3 -->
+  <ng-container *ngIf="!isUINavigationBlocked">
+    <div fxFlex fxLayout="column">
+      <div fxFlex="auto" class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
+        <!-- comment out for GS0.3 -->
+        <!--  
       <!--  
+        <!--  
+      <!--  
+        <!--  
             <button mat-icon-button routerLink="settings" class="app-shell-button-sideNav-settings">
                 <mat-icon>settings</mat-icon>
                 Themes and endpoints
             </button>
             -->
-      <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
-      <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])"
-              class="app-shell-button-sideNav-settings" *roleGuard="'rolloutrollout_read'">
-        <mat-icon>cloud_upload</mat-icon>
-        System Upgrade
-      </button>
+        <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
+        <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])"
+                class="app-shell-button-sideNav-settings" *roleGuard="'rolloutrollout_read'">
+          <mat-icon>cloud_upload</mat-icon>
+          System Upgrade
+        </button>
+      </div>
     </div>
-  </div>
+  </ng-container>
 </ng-template>
 
 

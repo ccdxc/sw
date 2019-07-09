@@ -183,6 +183,11 @@ export class UIConfigsService {
    * @param route
    */
   canActivateSubRoute(route: string): boolean {
+
+    if (Utility.getInstance().getMaintenanceMode() && route !== 'maintenance') {
+      return false;
+    }
+
     if (this.pageRequirements[route] == null) {
       return true;
     }

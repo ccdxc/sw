@@ -1,6 +1,6 @@
 
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Animations } from '@app/animations';
 
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
@@ -18,6 +18,7 @@ import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { RolloutUtil } from '../RolloutUtil';
 import { EnumRolloutOptions } from '../';
 import { TableCol } from '@app/components/shared/tableviewedit';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 /**
  * This component let user monitor a rollout status.
@@ -76,7 +77,8 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute, protected UIConfigService: UIConfigsService,
-    protected rolloutService: RolloutService, private clusterService: ClusterService) {
+    protected rolloutService: RolloutService, private clusterService: ClusterService,
+    protected router: Router) {
     super(_controllerService, UIConfigService);
   }
   /**
@@ -85,7 +87,12 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   ngOnInit() {
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'RolloutstatusComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._route.paramMap.subscribe(params => {
-      const id = params.get('id');
+      let id = '';
+      if (this.router.url === '/maintenance') {
+        id = Utility.getInstance().getCurrentRollout().meta.name;
+      } else {
+        id = params.get('id');
+      }
       this.selectedRolloutId = id;
       this.showDeletionScreen = false;
       this.showMissingScreen = false;
@@ -111,8 +118,8 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
 
   addToolbarButton() {
     const toolbarData: ToolbarData = this._controllerService.getToolbarData();
-    if (this.selectedRollout && this.selectedRollout.status.state === RolloutRolloutStatus_state.PROGRESSING) {
-      if (!this.hasStopButtonAlready(toolbarData)) {  // VS-328.  We just want to add stop-button once.
+    if (this.selectedRollout && RolloutUtil.isRolloutPending(this.selectedRollout) ) {
+      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete)) {  // VS-328.  We just want to add stop-button once.
         toolbarData.buttons.push(
           {
             cssClass: 'global-button-primary rolloutstatus-toolbar-button',
@@ -152,6 +159,14 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     return this.constructor.name;
   }
 
+  handleWatchSmartNICFailure(error) {
+    if (Utility.getInstance().getMaintenanceMode()) {
+      this.getNaples();
+    } else {
+      this._controllerService.webSocketErrorToaster('Failed to get Naples', error);
+    }
+  }
+
   getNaples() {
     this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
@@ -159,7 +174,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       response => {
         this.naplesEventUtility.processEvents(response);
       },
-      this._controllerService.webSocketErrorHandler('Failed to get Naples')
+      this.handleWatchSmartNICFailure
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
@@ -204,6 +219,14 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     this.subscriptions.push(getSubscription);
   }
 
+  handleWatchRolloutFailure(error) {
+    if (Utility.getInstance().getMaintenanceMode()) {
+      this.watchRolloutDetail();
+    } else {
+      this._controllerService.webSocketErrorToaster('Failed to get Rollout', error);
+    }
+  }
+
   watchRolloutDetail() {
     this.rolloutsEventUtility = new HttpEventUtility<RolloutRollout>(RolloutRollout);
     this.rollouts = this.rolloutsEventUtility.array;
@@ -236,7 +259,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
           this.selectedRollout = null;
         }
       },
-      this._controllerService.webSocketErrorHandler('Failed to get Rollout')
+      this.handleWatchRolloutFailure
     );
     this.subscriptions.push(subscription);
   }

@@ -447,6 +447,11 @@ export class ControllerService {
   }
 
   invokeRESTErrorToaster(summary: string, error: any, removeSameSummary: boolean = true) {
+
+    if (Utility.getInstance().getMaintenanceMode()) {
+      return;
+    }
+
     if (error == null) {
       return;
     }

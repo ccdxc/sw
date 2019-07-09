@@ -16,8 +16,8 @@ import { Store } from '@ngrx/store';
 import { IApiStatus, IAuthUser } from '@sdk/v1/models/generated/auth';
 import { ClusterVersion } from '@sdk/v1/models/generated/cluster';
 import { MonitoringAlert, IMonitoringAlert, IMonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
-import { Subject, Subscription } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { Subject, Subscription, timer, interval } from 'rxjs';
+import { map, takeUntil, tap, retryWhen, delayWhen } from 'rxjs/operators';
 import { CommonComponent } from './common.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';
@@ -27,6 +27,10 @@ import { AuthService } from './services/generated/auth.service';
 import { ClusterService } from './services/generated/cluster.service';
 import { sideNavMenu, SideNavItem } from './appcontent.sidenav';
 import { TemplatePortalDirective } from '@angular/cdk/portal';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { RolloutService } from '@app/services/generated/rollout.service';
+import { RolloutRollout, RolloutRolloutStatus_state} from '@sdk/v1/models/generated/rollout';
+import { ConfirmDialog } from 'primeng/primeng';
 
 export interface GetUserObjRequest {
   success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
@@ -59,6 +63,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   subscriptions: Subscription[] = [];
 
+  rolloutsEventUtility: HttpEventUtility<RolloutRollout>;
+  rolloutObjects: ReadonlyArray<RolloutRollout>;
+  currentRollout: RolloutRollout = null;
 
   // idling
   showIdleWarning = false;
@@ -81,6 +88,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   versionEventUtility: HttpEventUtility<ClusterVersion>;
   versionArray: ReadonlyArray<ClusterVersion> = [];
   version: ClusterVersion = new ClusterVersion();
+  versionSubscription: Subscription = null;
 
   @HostBinding('class') componentCssClass;
   private unsubscribeStore$: Subject<void> = new Subject<void>();
@@ -89,8 +97,14 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   @ViewChild('container') _container: MatSidenavContainer;
   @ViewChild('breadcrumbToolbar') _breadcrumbToolbar: ToolbarComponent;
   @ViewChild('AppHelp') helpTemplate: TemplatePortalDirective;
+  @ViewChild('confirmDialog') confirmDialog: ConfirmDialog;
 
   protected _rightSivNavIndicator = 'notifications';
+
+  // isScreenBlocked generates an greyed-out overlay over the entire screen, prevents the user clicking anything else.
+  // isUINavigationBlocked stops the sidenav and other elements from rendering.
+  isScreenBlocked: boolean = false;
+  isUINavigationBlocked: boolean = false;
 
   constructor(
     protected _controllerService: ControllerService,
@@ -103,7 +117,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService,
     protected clusterService: ClusterService,
-    protected authService: AuthService
+    protected authService: AuthService,
+    protected rolloutService: RolloutService,
   ) {
     super();
   }
@@ -125,6 +140,60 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this._bindtoStore();
     this.userName = Utility.getInstance().getLoginName() ;
     this.setMomentJSSettings();
+  }
+
+  updateRolloutUIBlock() {
+    this.isUINavigationBlocked = true;
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_read)) {
+      this.getRollouts();
+      this.isScreenBlocked = false;
+    } else {
+      this.isScreenBlocked = true;
+      this._controllerService.invokeConfirm({
+        header: 'Venice Unavailable',
+        message: 'A rollout is in progress. Venice is temporarily unavailable.',
+        acceptVisible: true,
+        rejectVisible: false,
+        accept: () => {
+          // When a primeng alert is created, it tries to "focus" on a button, not adding a button returns an error.
+          // So we create a button but hide it later.
+        }
+        });
+      setTimeout(() => {
+        this.confirmDialog.acceptVisible = false;
+      }, 0);
+    }
+  }
+
+  removeRolloutUIBlock() {
+    this.isScreenBlocked = false;
+    this.isUINavigationBlocked = false;
+  }
+
+  getRollouts() {
+    this.rolloutsEventUtility = new HttpEventUtility<RolloutRollout>(RolloutRollout, true);
+    this.rolloutObjects = this.rolloutsEventUtility.array as ReadonlyArray<RolloutRollout>;
+    const subscription = this.rolloutService.WatchRollout().subscribe(
+      response => {
+        this.rolloutsEventUtility.processEvents(response);
+        this.checkRollouts();
+      },
+      this._controllerService.restErrorHandler('Failed to get Rollouts info')
+    );
+    this.subscriptions.push(subscription);
+  }
+
+  checkRollouts() {
+    for  (let i = 0; i < this.rolloutObjects.length; i++) {
+      if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.PROGRESSING) {
+        this.currentRollout = this.rolloutObjects[i];
+        break;
+      } else if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.SUCCESS && this.rolloutObjects[i] === this.currentRollout) {
+        this.onRolloutComplete();
+      }
+    }
+    Utility.getInstance().setCurrentRollout(this.currentRollout);
+    this._controllerService.navigate(['/maintenance']);
   }
 
   setMomentJSSettings() {
@@ -166,22 +235,50 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   }
 
   redirectHome() {
-    this.uiconfigsService.navigateToHomepage();
+    if (!this.isUINavigationBlocked) {
+      this.uiconfigsService.navigateToHomepage();
+    }
+  }
+
+  handleWatchVersionResponse(response) {
+    this.versionEventUtility.processEvents(response);
+    if (this.versionArray.length > 0) {
+      this.version = this.versionArray[0];
+      if (!!this.version.status['rollout-build-version']) {
+        this.updateRolloutUIBlock();
+        Utility.getInstance().setMaintenanceMode(true);
+      } else {
+        // set maintenance mode back to false when version object is reupdated.
+        if (Utility.getInstance().getMaintenanceMode() === true) {
+          Utility.getInstance().setMaintenanceMode(false);
+          this.removeRolloutUIBlock();
+        }
+      }
+    }
+  }
+
+  handleWatchVersionFail(error) {
+    if (Utility.getInstance().getMaintenanceMode()) {
+      this.getVersion();
+    } else {
+      this._controllerService.webSocketErrorToaster('Failed to get Cluster Version', error);
+    }
   }
 
   getVersion() {
     this.versionEventUtility = new HttpEventUtility<ClusterVersion>(ClusterVersion, true);
     this.versionArray = this.versionEventUtility.array as ReadonlyArray<ClusterVersion>;
-    const subscription = this.clusterService.WatchVersion().subscribe(
-      response => {
-        this.versionEventUtility.processEvents(response);
-        if (this.versionArray.length > 0) {
-          this.version = this.versionArray[0];
-        }
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get Cluster Version'),
-    );
-    this.subscriptions.push(subscription);
+    if (this.versionSubscription) {
+      this.versionSubscription.unsubscribe();
+    } else {
+      this.versionSubscription = this.clusterService.WatchVersion().subscribe(
+        response => {
+          this.handleWatchVersionResponse(response);
+        },
+        this.handleWatchVersionFail,
+      );
+      this.subscriptions.push(this.versionSubscription);
+    }
   }
 
   /**
@@ -377,6 +474,15 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   onLogoutClick() {
     this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'User logged out' });
+  }
+
+  onRolloutComplete() {
+    this.currentRollout = null;
+    Utility.getInstance().setCurrentRollout(null);
+    this._controllerService.invokeInfoToaster('Rollout', 'Rollout completed. Page will reload in 5 seconds.');
+    setTimeout(() => {
+      window.location.reload();
+    }, 5000);
   }
 
   /**

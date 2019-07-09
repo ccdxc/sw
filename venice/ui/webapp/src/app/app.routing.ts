@@ -6,6 +6,7 @@ import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { AppcontentComponent } from '@app/appcontent.component';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
+import { RolloutstatusComponent } from './components/settings-group/systemupgrade/rollouts/rolloutstatus/rolloutstatus.component';
 
 
 /**
@@ -71,6 +72,10 @@ export const routes: Routes = [
       {
         path: 'searchresult',
         component: SearchresultComponent,
+      },
+      {
+        path: 'maintenance',
+        component: RolloutstatusComponent,
       },
       {
         path: '**',

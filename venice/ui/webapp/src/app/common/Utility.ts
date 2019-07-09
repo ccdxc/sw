@@ -16,8 +16,8 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
-import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterNode, ClusterSmartNICCondition_type } from '@sdk/v1/models/generated/cluster';
-import { ILabelsSelector } from '@sdk/v1/models/generated/rollout';
+import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterSmartNICCondition_type, ClusterNode } from '@sdk/v1/models/generated/cluster';
+import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
 import { NaplesCondition, NaplesConditionValues, NodeConditionValues} from '@app/components/cluster-group/naples/index.ts';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
 import {ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterSmartNICStatus_admission_phase} from '@sdk/v1/models/generated/cluster';
@@ -50,6 +50,9 @@ export class Utility {
 
   myControllerService: ControllerService;
   myLogService: LogService;
+
+  private _maintenanceMode: boolean = false;
+  private _currentRollout: RolloutRollout = null;
 
   private constructor() { }
 
@@ -1722,5 +1725,21 @@ export class Utility {
         }
       }
     }
+  }
+
+  getMaintenanceMode() {
+    return this._maintenanceMode;
+  }
+
+  setMaintenanceMode(flag: boolean) {
+    this._maintenanceMode = flag;
+  }
+
+  getCurrentRollout() {
+    return this._currentRollout;
+  }
+
+  setCurrentRollout(rollout: RolloutRollout) {
+    this._currentRollout = rollout;
   }
 }

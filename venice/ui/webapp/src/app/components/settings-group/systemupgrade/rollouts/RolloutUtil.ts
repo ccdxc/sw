@@ -1,5 +1,5 @@
 import { EnumRolloutOptions } from '.';
-import { IRolloutRollout, RolloutRollout, RolloutRolloutSpec, ILabelsSelector, LabelsSelector, LabelsRequirement, ILabelsRequirement  } from '@sdk/v1/models/generated/rollout';
+import { IRolloutRollout, RolloutRollout, RolloutRolloutSpec, RolloutRolloutStatus_state, ILabelsSelector, LabelsSelector, LabelsRequirement, ILabelsRequirement  } from '@sdk/v1/models/generated/rollout';
 import { Utility } from '@app/common/Utility';
 
 export class RolloutUtil {
@@ -60,5 +60,12 @@ export class RolloutUtil {
     }
     const list = Utility.convertLabelSelectorsToStringList(rollout.spec['order-constraints']);
     return list;
+  }
+
+  public static isRolloutPending(rollout: RolloutRollout) {
+    if (rollout.status.state === RolloutRolloutStatus_state.PROGRESSING || rollout.status.state === RolloutRolloutStatus_state.SCHEDULED || rollout.status.state === RolloutRolloutStatus_state.PRECHECK_IN_PROGRESS) {
+      return true;
+    }
+    return false;
   }
 }
