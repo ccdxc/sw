@@ -32,7 +32,7 @@ descriptors:
                 rp_time_reset                   : 300
                 rp_byte_reset                   : 32767
                 rp_ai_rate                      : 5
-                rp_hai_rate                     : 50
+                rp_hai_rate                     : 15
 
     - descriptor:
         id      : EXP_AQ_DESC
@@ -58,7 +58,8 @@ descriptors:
                 rp_time_reset                   : 300
                 rp_byte_reset                   : 32767
                 rp_ai_rate                      : 5
-                rp_hai_rate                     : 50
+                rp_hai_rate                     : 15
+                rp_min_target_rate              : 2
 
     - descriptor:
         id      : EXP_CQ_DESC

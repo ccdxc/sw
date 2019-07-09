@@ -16,8 +16,12 @@ struct resp_tx_s4_t0_k k;
 #define IN_P t0_s2s_cfg_to_dcqcn_info
 
 #define K_G_VAL	CAPRI_KEY_FIELD(IN_P, g_val)
-#define K_TIMER_EXP_THR CAPRI_KEY_FIELD(IN_P, timer_exp_thr)
 #define K_ALPHA_TIMER_INTERVAL CAPRI_KEY_RANGE(IN_P, alpha_timer_interval_sbit0_ebit7, alpha_timer_interval_sbit24_ebit31)
+#define K_Ai CAPRI_KEY_RANGE(IN_P, ai_rate_sbit0_ebit7, ai_rate_sbit16_ebit17)
+#define K_HAi CAPRI_KEY_RANGE(IN_P, hai_rate_sbit0_ebit5, hai_rate_sbit14_ebit17)
+#define K_THRESHOLD CAPRI_KEY_RANGE(IN_P, threshold_sbit0_ebit3, threshold_sbit4_ebit4)
+#define K_BYTE_RESET CAPRI_KEY_RANGE(IN_P, byte_reset_sbit0_ebit6, byte_reset_sbit31_ebit31)
+#define K_CLAMP_TGT_RATE CAPRI_KEY_FIELD(IN_P, clamp_tgt_rate)
 
 // Note: Below values are constants related to g and alpha.
 // TODO: Hardcoding it for now. Check if they have to be fed from HAL.
@@ -31,8 +35,10 @@ struct resp_tx_s4_t0_k k;
 // TODO: This can be fed as a loader-param from HAL.
 #define QP_MAX_RATE             100000 
 
-#define IN_TO_S4_P to_s4_dcqcn_info
-#define K_NEW_TIMER_CINDEX CAPRI_KEY_RANGE(IN_TO_S4_P, new_timer_cindex_sbit0_ebit6, new_timer_cindex_sbit15_ebit15)
+#define IN_TO_S4_P to_s4_dcqcn_rate_timer_info
+#define K_NEW_TIMER_CINDEX CAPRI_KEY_FIELD(IN_TO_S4_P, new_timer_cindex)
+#define K_MIN_QP_RATE CAPRI_KEY_FIELD(IN_TO_S4_P, min_qp_rate)
+#define K_MIN_QP_TARGET_RATE CAPRI_KEY_RANGE(IN_TO_S4_P, min_qp_target_rate_sbit0_ebit7, min_qp_target_rate_sbit24_ebit31)
 
 %%
 resp_tx_dcqcn_rate_process:
@@ -47,9 +53,11 @@ resp_tx_dcqcn_rate_process:
     seq     c2, d.num_cnp_rcvd, d.num_cnp_processed 
     bcf     [!c2], cnp_recv_process
 
-    // Load F with 5 iterations. Check should F be configurable??
-    addi    F, r0, 5
+    add     F, r0, K_THRESHOLD
     add     TARGET_RATE, d.target_rate, r0
+
+    // Update dcqcn_cb values from config
+    tblwr   d.byte_counter_thr, K_BYTE_RESET
 
     //  Find if Max(T, BC) < F. If yes, jump to fast_recovery
     slt     c2, d.byte_counter_exp_cnt, d.timer_exp_cnt
@@ -69,10 +77,8 @@ additive_increase:
     bcf     [!c1], skip_target_rate_inc
     nop
 
-    // Rt = Rt + Ri. 
-    //TODO: Check if Ri should be configurable?? Setting it to 5 Mbps by default.
-    addi    Ri, r0, 5
-    add     TARGET_RATE, d.target_rate, Ri
+    // Rt = Rt + Ai. 
+    add     TARGET_RATE, d.target_rate, K_Ai
 
     // Rc = ((Rt + Rc) / 2)
     add     r1, d.rate_enforced, TARGET_RATE
@@ -104,11 +110,8 @@ hyper_increase:
     slt     c1, d.target_rate, QP_MAX_RATE
     bcf     [!c1], skip_target_rate_inc
     nop
-    // Rt = Rt + (i * Ri). 
-    //TODO:Check if Ri and i should be configurable?? Setting it to 5 Mbps and 3 by default.
-    addi    Ri, r0, 5
-    muli    r1, Ri, 3
-    add     TARGET_RATE, d.target_rate, r1
+    // Rt = Rt + HAi. 
+    add     TARGET_RATE, d.target_rate, K_HAi
 
 skip_target_rate_inc:
     // Rc = ((Rt + Rc) / 2)
@@ -133,8 +136,9 @@ cnp_recv_process:
     tblwr   d.cur_byte_counter, 0
     tblwr   d.timer_exp_cnt, 0
 
-    // Set cur-rate to target-rate. Rt = Rc
-    tblwr   d.target_rate, d.rate_enforced
+    // Set cur-rate to target-rate only if clamp is not set. Rt = Rc
+    sne         c2, K_CLAMP_TGT_RATE, 1
+    tblwr.c2    d.target_rate, d.rate_enforced
 
     // cut rate-enforced. 
     // Rc = ((Rc * (alpha_max - (int_alpha >> 1))) >> log_alpha_max)
@@ -143,12 +147,13 @@ cnp_recv_process:
     mul     r3, r4, d.rate_enforced
     srl     r4, r3, LOG_ALPHA_MAX
 
-    // If rate_enforced becomes 0 after cut, set it to min rate of 1 Mbps with target rate of 2 Mbps
-    seq      c1, r4, 0
-    cmov     r4, c1, 1, r4
-    tblwr    d.rate_enforced, r4 
-    tblwr.c1 d.target_rate, 2
-
+    // If rate_enforced goes below min_rate after cut, set it to the configured min rate with target rate atleast twice min_rate
+    slt         c1, r4, K_MIN_QP_RATE
+    add.c1      r4, r0, K_MIN_QP_RATE
+    add.c1      r5, r0, K_MIN_QP_TARGET_RATE
+    tblwr       d.rate_enforced, r4
+    setcf       c3, [c1 & c2]
+    tblwr.c3    d.target_rate, r5
 
     // Update alpha value.                         
     // int_alpha =  (((g_max - int_g) * int_alpha) >> log_g_max) + int_g

@@ -15,8 +15,8 @@ default_profile:
     rp_gd                           : 11
     rp_min_dec_fac                  : 50
     rp_clamp_flags                  : 2
-    rp_threshold                    : 1
-    rp_time_reset                   : 300
-    rp_byte_reset                   : 32767
+    rp_threshold                    : 5
+    rp_time_reset                   : 5
+    rp_byte_reset                   : 31
     rp_ai_rate                      : 5
-    rp_hai_rate                     : 50
+    rp_hai_rate                     : 15

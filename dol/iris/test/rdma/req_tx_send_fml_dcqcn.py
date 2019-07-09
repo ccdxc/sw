@@ -5,6 +5,7 @@ import pdb
 import copy
 from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger as logger
+from iris.config.objects.rdma.dcqcn_profile_table import *
 def Setup(infra, module):
     return
 
@@ -23,6 +24,10 @@ def TestCaseSetup(tc):
     # Feeding timestamp from dcqcn_cb since model doesn't support timestamps.
     rs.lqp.ReadDcqcnCb()
     tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
+
+    tc.pvtdata.dcqcn_profile = RdmaDcqcnProfileObject(rs.lqp.pd.ep.intf.lif, rs.lqp.rq.qstate.data.dcqcn_cfg_id)
+    tc.pvtdata.pre_dcqcn_profile = copy.deepcopy(tc.pvtdata.dcqcn_profile.data)
+
     rs.lqp.dcqcn_data.last_sched_timestamp = 0x0
     rs.lqp.dcqcn_data.cur_timestamp = 0xCA06C0 # 13240k ticks
     rs.lqp.dcqcn_data.rate_enforced = 1  # 1 Mbps (rate_enforced is in Mbps)
@@ -30,6 +35,8 @@ def TestCaseSetup(tc):
     rs.lqp.dcqcn_data.num_sched_drop = 0
     rs.lqp.dcqcn_data.token_bucket_size = 150000 #150kb
     rs.lqp.dcqcn_data.byte_counter_thr = 3072
+    tc.pvtdata.dcqcn_profile.data.rp_byte_reset = 3072
+    tc.pvtdata.dcqcn_profile.WriteWithDelay()
     rs.lqp.dcqcn_data.delta_tokens_last_sched = 0
     rs.lqp.WriteDcqcnCb()
     return
@@ -99,6 +106,8 @@ def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     #Disable congestion mgmt in qstate
     rs = tc.config.rdmasession
+    tc.pvtdata.dcqcn_profile.data = copy.deepcopy(tc.pvtdata.pre_dcqcn_profile)
+    tc.pvtdata.dcqcn_profile.WriteWithDelay()
     # Restore rqcb/sqcb state
     rs.lqp.sq.qstate.Read()
     rs.lqp.sq.qstate.data = copy.deepcopy(tc.pvtdata.sq_pre_qstate)

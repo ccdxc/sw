@@ -18,7 +18,10 @@ def TestCaseSetup(tc):
     tc.pvtdata.slab = rs.lqp.pd.ep.GetNewSlab()  
     tc.pvtdata.mr_slab = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab.GID())
     # purposely set atomic request's VA to an address which is NOT 8-byte aligned
-    tc.pvtdata.va = tc.pvtdata.slab.address + 65
+    if (GlobalOptions.dryrun):
+        tc.pvtdata.va = 0
+    else:
+        tc.pvtdata.va = tc.pvtdata.slab.address + 65
 
     return
 

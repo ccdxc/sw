@@ -1373,12 +1373,17 @@ struct dcqcn_config_cb_t {
             rp_min_dec_fac:8;
             // RP Rate increase
             rp_clamp_flags:8;
-            rp_threshold:8;
-            rp_time_reset:32;
+            rp_rsvd3:3;        
+            rp_threshold:5;
+            rp_rsvd4:16;
+            rp_time_reset:16;
             rp_byte_reset:32;
-            rp_ai_rate:32;
-            rp_hai_rate:32;
-            rp_rsvd:64;
+            rp_rsvd:14;
+            rp_ai_rate:18;
+            rp_rsvd1:14;
+            rp_hai_rate:18;
+            rp_min_target_rate:32;
+            rp_rsvd2:32;
 };
 
 //Common DCQCN CB for both req and resp paths.
@@ -1790,11 +1795,15 @@ struct aqwqe_t {
             rp_min_dec_fac:8;
             rp_clamp_flags:8;
             rp_threshold:8;
-            rp_time_reset:32;
+            rp_rsvd4:16;
+            rp_time_reset:16;
             rp_byte_reset:32;
-            rp_ai_rate:32;
-            rp_hai_rate:32;
-            rp_rsvd:64;
+            rp_rsvd:14;
+            rp_ai_rate:18;
+            rp_rsvd2:14;
+            rp_hai_rate:18;
+            rp_min_target_rate:32;
+            rp_rsvd3:32;
         } mod_dcqcn;
     };
 };

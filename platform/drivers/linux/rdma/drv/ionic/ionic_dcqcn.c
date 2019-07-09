@@ -26,7 +26,7 @@ enum dcqcn_var {
 	RP_CLAMP_TGT_RATE,		/* 0..1 (bool) */
 	RP_CLAMP_TGT_RATE_ATI,		/* 0..1 (bool) */
 	RP_THRESHOLD,			/* 1..31 */
-	RP_TIME_RESET,			/* 1..131071 (us) */
+	RP_TIME_RESET,			/* 1..32767 (x RP_DCE_TCP_RTT) */
 	RP_BYTE_RESET,			/* 1..32767 (B) */
 	RP_AI_RATE,			/* 1.. (Mbps) */
 	RP_HAI_RATE,			/* 1.. (Mbps) */
@@ -96,8 +96,8 @@ static const struct dcqcn_vals dcqcn_defaults[] = {
 		.v[RP_GD]				= 11,
 		.v[RP_MIN_DEC_FAC]			= 50,
 		.v[RP_CLAMP_TGT_RATE_ATI]		= 1,
-		.v[RP_THRESHOLD]			= 1,
-		.v[RP_TIME_RESET]			= 300,
+		.v[RP_THRESHOLD]			= 5,
+		.v[RP_TIME_RESET]			= 5,
 		.v[RP_BYTE_RESET]			= 32767,
 		.v[RP_AI_RATE]				= 5,
 		.v[RP_HAI_RATE]				= 50,

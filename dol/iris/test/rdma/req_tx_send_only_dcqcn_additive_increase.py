@@ -5,6 +5,7 @@ import pdb
 import copy
 from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger as logger
+from iris.config.objects.rdma.dcqcn_profile_table import *
 def Setup(infra, module):
     return
 
@@ -26,6 +27,10 @@ def TestCaseSetup(tc):
     # With below timestamps 500K more tokens should be added to available tokens
     rs.lqp.ReadDcqcnCb()
     tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
+
+    tc.pvtdata.dcqcn_profile = RdmaDcqcnProfileObject(rs.lqp.pd.ep.intf.lif, rs.lqp.rq.qstate.data.dcqcn_cfg_id)
+    tc.pvtdata.pre_dcqcn_profile = copy.deepcopy(tc.pvtdata.dcqcn_profile.data)
+
     rs.lqp.dcqcn_data.last_sched_timestamp = 0xC350 # 50k ticks
     rs.lqp.dcqcn_data.cur_timestamp = 0x186A0 # 100k ticks
     rs.lqp.dcqcn_data.cur_avail_tokens = 200
@@ -40,6 +45,7 @@ def TestCaseSetup(tc):
     # After additive-increase, target-rate should be set to 90.005 gbps since additive-increase
     # increases rate by 5 mbps rate-enforced should be set to 85.002 gbps based on Rc = ((Rt + Rc) / 2).
     rs.lqp.dcqcn_data.byte_counter_thr = 31
+    tc.pvtdata.dcqcn_profile.data.rp_byte_reset = 31
     rs.lqp.dcqcn_data.byte_counter_exp_cnt = 5
     rs.lqp.dcqcn_data.timer_exp_cnt = 0
     rs.lqp.dcqcn_data.sq_cindex = tc.pvtdata.sq_cindex 
@@ -52,6 +58,11 @@ def TestCaseSetup(tc):
     # Read EQ pre state
     rs.lqp.eq.qstate.Read()
     tc.pvtdata.eq_pre_qstate = rs.lqp.eq.qstate.data
+
+    tc.pvtdata.pre_rp_byte_reset = tc.pvtdata.dcqcn_profile.data.rp_byte_reset
+    tc.pvtdata.post_rp_byte_reset = 5
+    tc.pvtdata.dcqcn_profile.data.rp_byte_reset = tc.pvtdata.post_rp_byte_reset
+    tc.pvtdata.dcqcn_profile.WriteWithDelay()
 
     return
 
@@ -120,6 +131,16 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'rate_enforced', 85002):
             return False
 
+        # verify that byte_counter_thr is update after rate increase
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'byte_counter_thr', tc.pvtdata.post_rp_byte_reset):
+            return False
+
+        # restore byte_counter_thr for the next test step
+        tc.pvtdata.dcqcn_profile.data.rp_byte_reset = tc.pvtdata.pre_rp_byte_reset
+        tc.pvtdata.dcqcn_profile.WriteWithDelay()
+        rs.lqp.dcqcn_data.byte_counter_thr = tc.pvtdata.pre_rp_byte_reset
+        rs.lqp.WriteDcqcnCb()
+
     elif step.step_id == 1:
 
         # verify that byte_counter_exp_cnt is incremented again by 1.
@@ -161,6 +182,8 @@ def TestCaseStepVerify(tc, step):
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
+    tc.pvtdata.dcqcn_profile.data = copy.deepcopy(tc.pvtdata.pre_dcqcn_profile)
+    tc.pvtdata.dcqcn_profile.WriteWithDelay()
     rs.lqp.sq.qstate.Read()
     rs.lqp.sq.qstate.data.congestion_mgmt_enable = 0;
     rs.lqp.sq.qstate.WriteWithDelay()

@@ -213,17 +213,23 @@ header_type resp_tx_rqcb_to_dcqcn_cfg_info_t {
     fields {
         dcqcn_config_base                :   34;
         dcqcn_config_id                  :    4;
-        pad                              :  122;
+        dcqcn_rate_timer_toggle          :    1;
+        pad                              :  121;
     }
 }
 
 header_type resp_tx_cfg_to_dcqcn_info_t {
-	fields {
+    fields {
         alpha_timer_interval             :   32;
         timer_exp_thr                    :   16;
         g_val                            :   16;
-        pad                              :   96;
-	}
+        ai_rate                          :   18;
+        hai_rate                         :   18;
+        threshold                        :    5;
+        byte_reset                       :   32;
+        clamp_tgt_rate                   :    2;
+        pad                              :   21;
+    }
 }
 
 header_type resp_tx_to_stage_dcqcn_info_t {
@@ -231,9 +237,17 @@ header_type resp_tx_to_stage_dcqcn_info_t {
         dcqcn_cb_addr                    :   34;
         congestion_mgmt_enable           :    1;
         packet_len                       :   14;
-        new_timer_cindex                 :   16;
-        rsvd                             :   31;
+        rsvd                             :   47;
         pd                               :   32;
+    }
+}
+
+header_type resp_tx_to_stage_dcqcn_rate_timer_t {
+    fields {
+        min_qp_rate                      :   32;
+        min_qp_target_rate               :   32;
+        new_timer_cindex                 :   16;
+        pad                              :   48;
     }
 }
 
@@ -428,6 +442,11 @@ metadata resp_tx_to_stage_dcqcn_info_t to_s4_dcqcn_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_dcqcn_info_t to_s4_dcqcn_info_scr;
 
+@pragma pa_header_union ingress to_stage_4
+metadata resp_tx_to_stage_dcqcn_rate_timer_t to_s4_dcqcn_rate_timer_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_dcqcn_rate_timer_t to_s4_dcqcn_rate_timer_info_scr;
+
 @pragma pa_header_union ingress to_stage_5
 metadata resp_tx_to_stage_rqcb1_wb_info_t to_s5_rqcb1_wb_info;
 @pragma scratch_metadata
@@ -551,7 +570,6 @@ action resp_tx_dcqcn_enforce_process_s2 () {
     modify_field(to_s2_dcqcn_info_scr.dcqcn_cb_addr, to_s2_dcqcn_info.dcqcn_cb_addr);
     modify_field(to_s2_dcqcn_info_scr.congestion_mgmt_enable, to_s2_dcqcn_info.congestion_mgmt_enable);
     modify_field(to_s2_dcqcn_info_scr.packet_len, to_s2_dcqcn_info.packet_len);
-    modify_field(to_s2_dcqcn_info_scr.new_timer_cindex, to_s2_dcqcn_info.new_timer_cindex);
     modify_field(to_s2_dcqcn_info_scr.rsvd, to_s2_dcqcn_info.rsvd);
 
     // stage to stage
@@ -570,7 +588,6 @@ action resp_tx_dcqcn_enforce_process () {
     modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
     modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
     modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
-    modify_field(to_s4_dcqcn_info_scr.new_timer_cindex, to_s4_dcqcn_info.new_timer_cindex);
     modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
 
     // stage to stage
@@ -585,16 +602,21 @@ action resp_tx_dcqcn_rate_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
-    modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
-    modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
-    modify_field(to_s4_dcqcn_info_scr.new_timer_cindex, to_s4_dcqcn_info.new_timer_cindex);
-    modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
+    modify_field(to_s4_dcqcn_rate_timer_info.min_qp_rate, to_s4_dcqcn_rate_timer_info.min_qp_rate);
+    modify_field(to_s4_dcqcn_rate_timer_info.min_qp_target_rate, to_s4_dcqcn_rate_timer_info.min_qp_target_rate);
+    modify_field(to_s4_dcqcn_rate_timer_info.new_timer_cindex, to_s4_dcqcn_rate_timer_info.new_timer_cindex);
+    modify_field(to_s4_dcqcn_rate_timer_info.pad, to_s4_dcqcn_rate_timer_info.pad);
 
     // stage to stage
     modify_field(t0_s2s_cfg_to_dcqcn_info_scr.alpha_timer_interval, t0_s2s_cfg_to_dcqcn_info.alpha_timer_interval);
     modify_field(t0_s2s_cfg_to_dcqcn_info_scr.timer_exp_thr, t0_s2s_cfg_to_dcqcn_info.timer_exp_thr);
     modify_field(t0_s2s_cfg_to_dcqcn_info_scr.g_val, t0_s2s_cfg_to_dcqcn_info.g_val);
+    modify_field(t0_s2s_cfg_to_dcqcn_info_scr.ai_rate, t0_s2s_cfg_to_dcqcn_info.ai_rate);
+    modify_field(t0_s2s_cfg_to_dcqcn_info_scr.hai_rate, t0_s2s_cfg_to_dcqcn_info.hai_rate);
+    modify_field(t0_s2s_cfg_to_dcqcn_info_scr.threshold, t0_s2s_cfg_to_dcqcn_info.threshold);
+    modify_field(t0_s2s_cfg_to_dcqcn_info_scr.byte_reset, t0_s2s_cfg_to_dcqcn_info.byte_reset);
+    modify_field(t0_s2s_cfg_to_dcqcn_info_scr.clamp_tgt_rate, t0_s2s_cfg_to_dcqcn_info.clamp_tgt_rate);
+    modify_field(t0_s2s_cfg_to_dcqcn_info_scr.pad, t0_s2s_cfg_to_dcqcn_info.pad);
 
 }
 action resp_tx_dcqcn_timer_process () {
@@ -602,11 +624,6 @@ action resp_tx_dcqcn_timer_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
-    modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
-    modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
-    modify_field(to_s4_dcqcn_info_scr.new_timer_cindex, to_s4_dcqcn_info.new_timer_cindex);
-    modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
 
     // stage to stage
     modify_field(t0_s2s_cfg_to_dcqcn_info_scr.alpha_timer_interval, t0_s2s_cfg_to_dcqcn_info.alpha_timer_interval);
@@ -623,6 +640,8 @@ action resp_tx_dcqcn_config_load_process() {
     // stage to stage
     modify_field(t1_s2s_dcqcn_config_info_scr.dcqcn_config_base, t1_s2s_dcqcn_config_info.dcqcn_config_base);
     modify_field(t1_s2s_dcqcn_config_info_scr.dcqcn_config_id, t1_s2s_dcqcn_config_info.dcqcn_config_id);
+    modify_field(t1_s2s_dcqcn_config_info_scr.dcqcn_rate_timer_toggle, t1_s2s_dcqcn_config_info.dcqcn_rate_timer_toggle);
+    modify_field(t1_s2s_dcqcn_config_info_scr.pad, t1_s2s_dcqcn_config_info.pad);
 
 }
 action resp_tx_rqcb0_write_back_process () {
@@ -752,7 +771,6 @@ action resp_tx_rsqrkey_process () {
     modify_field(to_s3_dcqcn_info_scr.dcqcn_cb_addr, to_s3_dcqcn_info.dcqcn_cb_addr);
     modify_field(to_s3_dcqcn_info_scr.congestion_mgmt_enable, to_s3_dcqcn_info.congestion_mgmt_enable);
     modify_field(to_s3_dcqcn_info_scr.packet_len, to_s3_dcqcn_info.packet_len);
-    modify_field(to_s3_dcqcn_info_scr.new_timer_cindex, to_s3_dcqcn_info.new_timer_cindex);
     modify_field(to_s3_dcqcn_info_scr.rsvd, to_s3_dcqcn_info.rsvd);
     modify_field(to_s3_dcqcn_info_scr.pd, to_s3_dcqcn_info.pd);
 

@@ -57,7 +57,7 @@ invoke_dcqcn:
     seq         c1, CAPRI_KEY_FIELD(IN_P, last_or_only), 1
     cmov        IN_PROGRESS, c1, 0, 1
     phvwrpair   CAPRI_PHV_FIELD(RQCB0_WB_INFO_P, curr_read_rsp_psn), \
-                CAPRI_KEY_FIELD(IN_P, curr_read_rsp_psn), \
+                CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23), \
                 CAPRI_PHV_FIELD(RQCB0_WB_INFO_P, read_rsp_in_progress), \
                 IN_PROGRESS
 

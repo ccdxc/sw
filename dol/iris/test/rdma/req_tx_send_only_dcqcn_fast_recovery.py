@@ -5,6 +5,7 @@ import pdb
 import copy
 from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger as logger
+from iris.config.objects.rdma.dcqcn_profile_table import *
 def Setup(infra, module):
     return
 
@@ -15,6 +16,7 @@ def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
+    rs.lqp.rq.qstate.Read()
     rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
@@ -26,6 +28,10 @@ def TestCaseSetup(tc):
     # With below timestamps 500K more tokens should be added to available tokens
     rs.lqp.ReadDcqcnCb()
     tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
+
+    tc.pvtdata.dcqcn_profile = RdmaDcqcnProfileObject(rs.lqp.pd.ep.intf.lif, rs.lqp.rq.qstate.data.dcqcn_cfg_id)
+    tc.pvtdata.pre_dcqcn_profile = copy.deepcopy(tc.pvtdata.dcqcn_profile.data)
+
     rs.lqp.dcqcn_data.last_sched_timestamp = 0xC350 # 50k ticks
     rs.lqp.dcqcn_data.cur_timestamp = 0x186A0 # 100k ticks
     rs.lqp.dcqcn_data.cur_avail_tokens = 200
@@ -165,6 +171,8 @@ def TestCaseStepVerify(tc, step):
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
+    tc.pvtdata.dcqcn_profile.data = copy.deepcopy(tc.pvtdata.pre_dcqcn_profile)
+    tc.pvtdata.dcqcn_profile.WriteWithDelay()
     rs.lqp.sq.qstate.Read()
     rs.lqp.sq.qstate.data.congestion_mgmt_enable = 0;
     rs.lqp.sq.qstate.WriteWithDelay()

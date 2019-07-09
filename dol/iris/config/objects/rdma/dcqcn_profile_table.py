@@ -24,12 +24,17 @@ class RdmaDcqcnProfile(Packet):
         ByteField("rp_gd", 0),
         ByteField("rp_min_dec_fac", 0),
         BitField("rp_clamp_flags", 0, 8),
-        ByteField("rp_threshold", 0),
-        IntField("rp_time_reset", 0),
+        BitField("rp_rsvd3", 0, 3),
+        BitField("rp_threshold", 0, 5),
+        ShortField("rp_rsvd4", 0),
+        ShortField("rp_time_reset", 0),
         IntField("rp_byte_reset", 0),
-        IntField("rp_ai_rate", 0),
-        IntField("rp_hai_rate", 0),
-        BitField("rp_rsvd", 0, 64),
+        BitField("rp_rsvd", 0, 14),
+        BitField("rp_ai_rate", 0, 18),
+        BitField("rp_rsvd1", 0, 14),
+        BitField("rp_hai_rate", 0, 18),
+        IntField("rp_min_target_rate", 0),
+        BitField("rp_rsvd2", 0, 32),
     ]
 
 class RdmaDcqcnProfileObject(object):

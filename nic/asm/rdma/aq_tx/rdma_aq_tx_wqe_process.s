@@ -34,6 +34,7 @@ struct aq_tx_s1_t0_k k;
 #define TO_S2_INFO           to_s2_info
 
 #define WQE_SIZE_2_SGES 6 
+#define QP_MAX_RATE 100000
 
 #define AQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(_r, _tmp_r)   \
     KT_BASE_ADDR_GET2(_r, _tmp_r);                      \
@@ -824,9 +825,13 @@ modify_dcqcn:
     DMA_CMD_STATIC_BASE_GET(r1, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MODIFY_DCQCN_CONFIG_CB)
     DMA_HBM_PHV2MEM_SETUP(r1, dcqcn, dcqcn, r2)
 
+    add     r5, r0, d.mod_dcqcn.rp_min_rate, 1
+    sle     c2, r5, QP_MAX_RATE
+    cmov    r5, c2, r5, QP_MAX_RATE
+    phvwr   p.dcqcn, d.mod_dcqcn
     // init dcqcn config cb in phv
     b           prepare_feedback
-    phvwr   p.dcqcn, d.mod_dcqcn // BD slot
+    phvwr   p.dcqcn.rp_min_target_rate, r5 // BD slot
 
 query_qp:
     add         r3, r0, d.{id_ver}.wx
