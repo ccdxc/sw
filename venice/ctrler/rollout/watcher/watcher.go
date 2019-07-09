@@ -60,7 +60,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer cancel()
 
 	// node watcher
-	nodeWatcher, err := apicl.ClusterV1().Node().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec", "Status.Conditions[0].Status", "Status.Phase"}})
+	nodeWatcher, err := apicl.ClusterV1().Node().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec", "Status.Conditions", "Status.Phase"}})
 	if err != nil {
 		log.Errorf("Failed to start node watcher (%s)\n", err)
 		return

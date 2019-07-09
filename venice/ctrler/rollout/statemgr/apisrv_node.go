@@ -30,13 +30,20 @@ func (s nodeStates) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 func (sm *Statemgr) handleNodeEvent(et kvstore.WatchEventType, node *cluster.Node) {
 	switch et {
-	case kvstore.Created, kvstore.Updated:
+	case kvstore.Created:
 		log.Infof("SetNodeState - %s\n", node.Name)
 		err := sm.SetNodeState(node)
 		if err != nil {
 			log.Errorf("Error SetNodeState Node {%+v}. Err: %v", node, err)
 			return
 		}
+	case kvstore.Updated:
+		err := sm.SetNodeState(node)
+		if err != nil {
+			log.Errorf("Error SetNodeState Node {%+v}. Err: %v", node, err)
+			return
+		}
+
 	case kvstore.Deleted:
 		log.Infof("DeleteNodeState - %s\n", node.Name)
 		sm.DeleteNodeState(node)
@@ -50,6 +57,9 @@ func (sm *Statemgr) SetNodeState(n *cluster.Node) error {
 	}
 	var nodeState *NodeState
 
+	// print the Log only when the health changes or if object is created
+	printMsg := false
+
 	// All parameters are validated (using apiserver hooks) by the time we get here
 	obj, err := sm.FindObject(kindNode, n.Tenant, n.Name)
 	if err == nil {
@@ -61,9 +71,24 @@ func (sm *Statemgr) SetNodeState(n *cluster.Node) error {
 		nodeState = &NodeState{
 			Statemgr: sm,
 		}
+		printMsg = true
 	}
 
 	nodeState.Mutex.Lock()
+
+	if !printMsg {
+		if len(nodeState.Status.Conditions) != len(n.Status.Conditions) {
+			printMsg = true
+		}
+		if len(n.Status.Conditions) > 0 && len(nodeState.Status.Conditions) > 0 &&
+			nodeState.Status.Conditions[0].Status != n.Status.Conditions[0].Status {
+			printMsg = true
+		}
+	}
+	if printMsg {
+		log.Infof("SetNodeState - %s Condition[%s]=%s\n", n.Name, n.Status.Conditions[0].Type, n.Status.Conditions[0].Status)
+	}
+
 	nodeState.Node = n
 	nodeState.Mutex.Unlock()
 

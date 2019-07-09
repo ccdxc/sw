@@ -97,7 +97,6 @@ func (sm *Statemgr) runWatcher() {
 				return
 			}
 			node := evt.Object.(*cluster.Node)
-			log.Infof("Watcher: Got Node  watch event(%s): %v", evt.Type, node.Name)
 			sm.handleNodeEvent(evt.Type, node)
 
 		case evt, ok := <-sm.SmartNICWatcher:
