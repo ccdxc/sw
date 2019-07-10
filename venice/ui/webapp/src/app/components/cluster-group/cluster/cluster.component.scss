@@ -25,10 +25,13 @@ $table-headerheight: 55px;
 }
 
 .cluster-node-table-container {
-  margin: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   padding: 5px 20px;
   width: 450px;
   border: solid 2px #dddddd;
+  margin-left: 20px;
+  margin-right: 0px;
 }
 
 .cluster-node-table-title {
