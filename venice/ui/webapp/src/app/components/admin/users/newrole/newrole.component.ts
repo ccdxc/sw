@@ -380,7 +380,13 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     // Clearing out previous actions
     // otherwise, if user goes from an object with all actions, checks one, and then
     // moves to a kind with no group, we will accidentally send the old value as well.
-    permission.get('actions').setValue([]);
+    // VS 576: Kinds without group have default action Read
+    if (Utility.KINDS_WITHOUT_GROUP.includes($event.value)) {
+      permission.get('actions').setValue([{ label: 'Read', value: AuthPermission_actions.Read }]);
+    } else {
+      permission.get('actions').setValue([]);
+    }
+
   }
 
   setPermissionInputOnGroupChange(value: string, permission: FormControl) {
@@ -464,7 +470,10 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       if (values.includes(NewroleComponent.ACTIONOPTIONS_ALL)) {
         values.remove(values.indexOf(NewroleComponent.ACTIONOPTIONS_ALL));
       }
-      return;
+      // VS 576: Kinds without group have default action Read
+      if (!values.includes({ label: 'Read', value: AuthPermission_actions.Read })) {
+        values.push({ label: 'Read', value: AuthPermission_actions.Read });
+      }
     }
     if (values.length > 1) {
       if (index !== -1 && values.length - 1 === index) {
