@@ -475,6 +475,11 @@ def GetPacketEncapFromRoute(testcase, packet, args=None):
     encaps.append(__get_packet_encap_impl_from_route(testcase.config.devicecfg, testcase.config.route.TUNNEL, args))
     return encaps
 
+def GetCPSPacketIFlowFlagsFromRoute(testcase, packet, args=None):
+    if testcase.config.route.AddrFamily == 'IPV6':
+        return 128
+    return 0
+
 def __get_v4_from_v6(addr):
     if addr.version is 4:
         assert 0

@@ -29,6 +29,17 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+    - packet:
+        id          : CPS_DROP # Expected packet in case of DROP
+        clone       : ref://testcase/packets/id=IN_PKT
+        encaps      : callback://networking/packets/GetPacketEncapForCPS
+        headers     :
+            pencps  :
+                iflow_flags : callback://networking/packets/GetCPSPacketIFlowFlagsFromRoute
+                vpc         : ref://testcase/config/route/VPCId
+                nexthop_idx : 0 # nexthop_idx 0 is system default blackhole/drop entry
+                drop        : 0
+
 trigger:
     packets:
         - packet:
@@ -38,5 +49,5 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : None
+            object  : ref://testcase/packets/id=CPS_DROP
             port    : ref://testcase/config/switchport

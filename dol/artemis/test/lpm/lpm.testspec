@@ -31,9 +31,15 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : TO_CPU_PKT # Expected packet
+        id          : CPS_ALLOW # Expected packet in case of ALLOW
         clone       : ref://testcase/packets/id=FROM_HOST_PKT
-        # TODO: Add P4 header
+        encaps      : callback://networking/packets/GetPacketEncapForCPS
+        headers     :
+            pencps  :
+                iflow_flags : callback://networking/packets/GetCPSPacketIFlowFlagsFromRoute
+                vpc         : ref://testcase/config/route/VPCId
+                nexthop_idx : ref://testcase/config/route/NexthopId
+                drop        : 0
 
     - packet:
         id          : TO_SWITCH_PKT # Expected packet
@@ -62,5 +68,5 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            object  : ref://testcase/packets/id=CPS_ALLOW
             port    : ref://testcase/config/switchport
