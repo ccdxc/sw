@@ -475,10 +475,8 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
 
     // cleanup the session if it is an abort
     if (status == false) {
-        if (l4_sess->isCtrl) {
+        if (l4_sess->isCtrl == true) {
             g_rtsp_state->cleanup_app_session(l4_sess->app_session);
-        } else {
-            g_rtsp_state->cleanup_l4_sess(l4_sess);
         }
     } else if (l4_sess != NULL) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;

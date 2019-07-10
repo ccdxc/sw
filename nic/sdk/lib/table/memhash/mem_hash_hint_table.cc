@@ -104,16 +104,18 @@ mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::dealloc_(mem_hash_api_context *ctx) {
-    indexer::status irs = indexer_->free(ctx->hint);
-    if (irs == indexer::DUPLICATE_FREE) {
-        // TODO: Why do we need to special case duplicate free ?
-        SDK_ASSERT(0);
-        return SDK_RET_DUPLICATE_FREE;
+    if (HINT_IS_VALID(ctx->hint)) {
+        indexer::status irs = indexer_->free(ctx->hint);
+        if (irs == indexer::DUPLICATE_FREE) {
+            // TODO: Why do we need to special case duplicate free ?
+            SDK_ASSERT(0);
+            return SDK_RET_DUPLICATE_FREE;
+        }
+        if (irs != indexer::SUCCESS) {
+            return SDK_RET_ERR;
+        }
+        MEMHASH_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->hint);
     }
-    if (irs != indexer::SUCCESS) {
-        return SDK_RET_ERR;
-    }
-    MEMHASH_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->hint);
 
     // Clear the hint and set write pending
     HINT_SET_INVALID(ctx->hint);
@@ -291,6 +293,7 @@ mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
     SDK_ASSERT(ret == SDK_RET_OK);
 
     SDK_ASSERT(tctx);
+    dealloc_(tctx);
 
     // Destroy the all the api contexts of this chain
     if (tctx != ectx) {

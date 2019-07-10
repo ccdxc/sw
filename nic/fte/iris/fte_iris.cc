@@ -466,8 +466,8 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
                          fte_flow_log_info_t *log) {
     t_fwlg.Clear();
 
-    // Dont log for non-ipv4 flows
-    if (key.flow_type != hal::FLOW_TYPE_V4) return;
+    // Dont log for non-ipv4 flows or netflow
+    if (key.flow_type != hal::FLOW_TYPE_V4 || is_ipfix_flow()) return;
 
     t_fwlg.set_source_vrf(key.svrf_id);
     t_fwlg.set_dest_vrf(key.dvrf_id);
@@ -829,7 +829,8 @@ ctx_t::update_flow_table()
     }
 
 end:
-    if (!ipc_logging_disable() && 
+    // Dont log when we hit an error
+    if (!ipc_logging_disable() && (ret == HAL_RET_OK) &&
         ((session_exists == false) || (update_type == "delete"))) {
         /* Add flow logging only for initiator flows */
         uint8_t istage = 0;

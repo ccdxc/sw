@@ -193,6 +193,7 @@ telemetry_exec_delete (fte::ctx_t &ctx)
             g_hal_state->session_hal_telemetry_ht()->remove_entry(session,
                                                &session->hal_telemetry_ht_ctxt);
         }
+        ctx.set_is_ipfix_flow(true);
     }
 
     return fte::PIPELINE_CONTINUE;
