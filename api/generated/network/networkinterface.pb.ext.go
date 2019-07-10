@@ -53,12 +53,12 @@ var validatorMapNetworkinterface = make(map[string]map[string][]func(string, int
 
 // MakeKey generates a KV store key for the object
 func (m *NetworkInterface) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "smartnics/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "networkinterfaces/", m.Name)
 }
 
 func (m *NetworkInterface) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/smartnics/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/networkinterfaces/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil

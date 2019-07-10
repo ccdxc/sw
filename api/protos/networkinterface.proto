@@ -17,7 +17,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 message NetworkInterface {
 
-    option (venice.objectPrefix) = {Collection: "smartnics"};
+    option (venice.objectPrefix) = {Collection: "networkinterfaces"};
 
     api.TypeMeta T          = 1 [(gogoproto.embed) = true,
                                 (gogoproto.nullable) = false,

@@ -2133,7 +2133,7 @@ func makeURINetworkV1AutoGetNetworkGetOper(in *Network) string {
 
 //
 func makeURINetworkV1AutoGetNetworkInterfaceGetOper(in *NetworkInterface) string {
-	return fmt.Sprint("/configs/network/v1", "/smartnics/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/networkinterfaces/", in.Name)
 }
 
 //
@@ -2161,7 +2161,7 @@ func makeURINetworkV1AutoListNetworkListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURINetworkV1AutoListNetworkInterfaceListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/network/v1", "/smartnics")
+	return fmt.Sprint("/configs/network/v1", "/networkinterfaces")
 }
 
 //
@@ -2219,7 +2219,7 @@ func makeURINetworkV1AutoWatchNetworkWatchOper(in *api.ListWatchOptions) string 
 
 //
 func makeURINetworkV1AutoWatchNetworkInterfaceWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/network/v1", "/watch/smartnics")
+	return fmt.Sprint("/configs/network/v1", "/watch/networkinterfaces")
 }
 
 //

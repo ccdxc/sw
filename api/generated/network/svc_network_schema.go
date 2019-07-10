@@ -174,7 +174,7 @@ var keyMapSvc_network = map[string][]api.PathsMap{
 	"network.Network": []api.PathsMap{
 		{URI: "/configs/network/v1/tenant/{Tenant}/networks/{Name}", Key: "/venice/config/network/networks/{Tenant}/{Name}"}},
 	"network.NetworkInterface": []api.PathsMap{
-		{URI: "/configs/network/v1/smartnics/{Name}", Key: "/venice/config/network/smartnics/{Name}"}},
+		{URI: "/configs/network/v1/networkinterfaces/{Name}", Key: "/venice/config/network/networkinterfaces/{Name}"}},
 	"network.Service": []api.PathsMap{
 		{URI: "/configs/network/v1/tenant/{Tenant}/services/{Name}", Key: "/venice/config/network/services/{Tenant}/{Name}"}},
 	"network.VirtualRouter": []api.PathsMap{

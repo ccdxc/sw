@@ -336,7 +336,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/smartnics/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/networkinterfaces/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetService = srv.AddMethod("AutoGetService",
@@ -369,7 +369,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/smartnics/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/networkinterfaces/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListService = srv.AddMethod("AutoListService",
