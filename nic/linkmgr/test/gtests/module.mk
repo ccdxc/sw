@@ -9,9 +9,10 @@ MODULE_SOLIBS = pal sdkfru linkmgr_test_utils bm_allocator \
                 list shmmgr slab ht timerfd periodic halproto \
                 linkmgr_src sdklinkmgr haltrace \
                 linkmgr_libsrc sdklinkmgrcsr  \
-                haldelphiutils \
+                haldelphiutils linkmgrproto \
                 logger thread twheel sdkpal catalog utils trace
 MODULE_LDLIBS = ${NIC_HAL_ALL_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic
+MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 MODULE_ARCH   = x86_64
 include ${MKDEFS}/post.mk

@@ -8,9 +8,10 @@ MODULE_SOLIBS = pal sdkfru utils linkmgr_src sdklinkmgr linkmgr_libsrc hal_lib \
                 sdklinkmgrcsr linkmgrdelphi haltrace \
                 trace logger thread catalog sdkpal halproto  ht \
                 sdklinkmgr timerfd twheel periodic slab shmmgr list \
-                haldelphiutils sdkcapri_asicrw_if 
+                haldelphiutils sdkcapri_asicrw_if linkmgrproto
 MODULE_LDLIBS = pthread z dl m rt Judy ev :libprotobuf.so.14 sknobs \
                 grpc++ grpc++_reflection ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                 grpc++_unsecure grpc_unsecure AAPL
 MODULE_FLAGS  = -pthread -rdynamic
+MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 include ${MKDEFS}/post.mk

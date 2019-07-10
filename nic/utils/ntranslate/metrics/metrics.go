@@ -11,6 +11,7 @@ func init() {
 	tstr := ntranslate.MustGetTranslator()
 
 	tstr.Register("LifMetricsKey", &metricsTranslatorFns{})
+	tstr.Register("MacMetricsKey", &macMetricsXlate{})
 }
 
 type metricsTranslatorFns struct{}

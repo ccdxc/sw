@@ -5,11 +5,17 @@
 
 syntax = "proto3";
 package metrics;
-option go_package="halproto";
 
 import "delphi.proto";
+import "metrics_annotations.proto";
 
 message MacMetrics {
+    option (venice.metricInfo) = {
+        DisplayName: "Port Packet Statistics",
+        Description: "Key index - PORT ID",
+        Scope: PerPort,
+        Tags: [ Level7 ]
+    };
     fixed32             Key                     = 1;    // Port id
     delphi.Counter      frames_rx_ok            = 2;
     delphi.Counter      frames_rx_all           = 3;

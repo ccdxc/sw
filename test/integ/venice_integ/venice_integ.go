@@ -839,7 +839,7 @@ func (it *veniceIntegSuite) startAgent() {
 			}
 			snic.tmAgent = res
 
-			go res.ReportMetrics(10 * time.Second)
+			go res.ReportMetrics(10*time.Second, nil)
 		}
 	}
 }

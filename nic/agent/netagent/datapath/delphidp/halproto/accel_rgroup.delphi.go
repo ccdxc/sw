@@ -22,7 +22,6 @@ It is generated from these files:
 	kh.proto
 	l2segment.proto
 	l4lb.proto
-	mac_metrics.proto
 	multicast.proto
 	nat.proto
 	nic.proto
@@ -792,7 +791,6 @@ It has these top-level messages:
 	L4LbServiceGetRequestMsg
 	L4LbServiceGetResponse
 	L4LbServiceGetResponseMsg
-	MacMetrics
 	Oif
 	OifListEpd
 	OifListCpd

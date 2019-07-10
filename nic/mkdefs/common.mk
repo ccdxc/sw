@@ -88,7 +88,7 @@ export NIC_FTE_SOLIBS := fte fte_iris
 
 export NIC_HAL_TLS_SOLIBS := tls_pse tls_api
 
-export NIC_LINKMGR_SOLIBS := linkmgr_libsrc sdklinkmgrcsr sdklinkmgr linkmgrdelphi
+export NIC_LINKMGR_SOLIBS := linkmgr_libsrc sdklinkmgrcsr sdklinkmgr linkmgrdelphi linkmgrproto
 export NIC_LINKMGR_LDLIBS := AAPL
 
 export NIC_LKL_SOLIBS := lklshim_tls lkl_api
@@ -185,7 +185,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
                                nicmgrproto sdkcapri_asicrw_if commonproto haldelphiutils \
-							   ftestatsproto dropstatsproto rulestatsproto hal_mem
+			       ftestatsproto dropstatsproto rulestatsproto hal_mem linkmgrproto
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \

@@ -15,4 +15,5 @@ MODULE_LDLIBS = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                 ${NIC_COMMON_LDLIBS}
 #${NIC_HAL_ALL_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic
+MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 include ${MKDEFS}/post.mk

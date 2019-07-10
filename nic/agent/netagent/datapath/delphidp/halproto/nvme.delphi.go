@@ -25,7 +25,7 @@ type NvmeEnableRequest struct {
 func (m *NvmeEnableRequest) Reset()                    { *m = NvmeEnableRequest{} }
 func (m *NvmeEnableRequest) String() string            { return proto.CompactTextString(m) }
 func (*NvmeEnableRequest) ProtoMessage()               {}
-func (*NvmeEnableRequest) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{0} }
+func (*NvmeEnableRequest) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{0} }
 
 func (m *NvmeEnableRequest) GetMaxNs() uint32 {
 	if m != nil {
@@ -70,7 +70,7 @@ type NvmeEnableRequestMsg struct {
 func (m *NvmeEnableRequestMsg) Reset()                    { *m = NvmeEnableRequestMsg{} }
 func (m *NvmeEnableRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeEnableRequestMsg) ProtoMessage()               {}
-func (*NvmeEnableRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{1} }
+func (*NvmeEnableRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{1} }
 
 func (m *NvmeEnableRequestMsg) GetRequest() []*NvmeEnableRequest {
 	if m != nil {
@@ -98,7 +98,7 @@ type NvmeEnableResponse struct {
 func (m *NvmeEnableResponse) Reset()                    { *m = NvmeEnableResponse{} }
 func (m *NvmeEnableResponse) String() string            { return proto.CompactTextString(m) }
 func (*NvmeEnableResponse) ProtoMessage()               {}
-func (*NvmeEnableResponse) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{2} }
+func (*NvmeEnableResponse) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{2} }
 
 func (m *NvmeEnableResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -192,7 +192,7 @@ type NvmeEnableResponseMsg struct {
 func (m *NvmeEnableResponseMsg) Reset()                    { *m = NvmeEnableResponseMsg{} }
 func (m *NvmeEnableResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeEnableResponseMsg) ProtoMessage()               {}
-func (*NvmeEnableResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{3} }
+func (*NvmeEnableResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{3} }
 
 func (m *NvmeEnableResponseMsg) GetResponse() []*NvmeEnableResponse {
 	if m != nil {
@@ -215,7 +215,7 @@ type NvmeSqSpec struct {
 func (m *NvmeSqSpec) Reset()                    { *m = NvmeSqSpec{} }
 func (m *NvmeSqSpec) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSqSpec) ProtoMessage()               {}
-func (*NvmeSqSpec) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{4} }
+func (*NvmeSqSpec) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{4} }
 
 func (m *NvmeSqSpec) GetSqNum() uint32 {
 	if m != nil {
@@ -267,7 +267,7 @@ type NvmeSqRequestMsg struct {
 func (m *NvmeSqRequestMsg) Reset()                    { *m = NvmeSqRequestMsg{} }
 func (m *NvmeSqRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSqRequestMsg) ProtoMessage()               {}
-func (*NvmeSqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{5} }
+func (*NvmeSqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{5} }
 
 func (m *NvmeSqRequestMsg) GetRequest() []*NvmeSqSpec {
 	if m != nil {
@@ -284,7 +284,7 @@ type NvmeSqResponse struct {
 func (m *NvmeSqResponse) Reset()                    { *m = NvmeSqResponse{} }
 func (m *NvmeSqResponse) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSqResponse) ProtoMessage()               {}
-func (*NvmeSqResponse) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{6} }
+func (*NvmeSqResponse) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{6} }
 
 func (m *NvmeSqResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -301,7 +301,7 @@ type NvmeSqResponseMsg struct {
 func (m *NvmeSqResponseMsg) Reset()                    { *m = NvmeSqResponseMsg{} }
 func (m *NvmeSqResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSqResponseMsg) ProtoMessage()               {}
-func (*NvmeSqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{7} }
+func (*NvmeSqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{7} }
 
 func (m *NvmeSqResponseMsg) GetResponse() []*NvmeSqResponse {
 	if m != nil {
@@ -324,7 +324,7 @@ type NvmeCqSpec struct {
 func (m *NvmeCqSpec) Reset()                    { *m = NvmeCqSpec{} }
 func (m *NvmeCqSpec) String() string            { return proto.CompactTextString(m) }
 func (*NvmeCqSpec) ProtoMessage()               {}
-func (*NvmeCqSpec) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{8} }
+func (*NvmeCqSpec) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{8} }
 
 func (m *NvmeCqSpec) GetCqNum() uint32 {
 	if m != nil {
@@ -376,7 +376,7 @@ type NvmeCqRequestMsg struct {
 func (m *NvmeCqRequestMsg) Reset()                    { *m = NvmeCqRequestMsg{} }
 func (m *NvmeCqRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeCqRequestMsg) ProtoMessage()               {}
-func (*NvmeCqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{9} }
+func (*NvmeCqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{9} }
 
 func (m *NvmeCqRequestMsg) GetRequest() []*NvmeCqSpec {
 	if m != nil {
@@ -394,7 +394,7 @@ type NvmeCqResponse struct {
 func (m *NvmeCqResponse) Reset()                    { *m = NvmeCqResponse{} }
 func (m *NvmeCqResponse) String() string            { return proto.CompactTextString(m) }
 func (*NvmeCqResponse) ProtoMessage()               {}
-func (*NvmeCqResponse) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{10} }
+func (*NvmeCqResponse) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{10} }
 
 func (m *NvmeCqResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -418,7 +418,7 @@ type NvmeCqResponseMsg struct {
 func (m *NvmeCqResponseMsg) Reset()                    { *m = NvmeCqResponseMsg{} }
 func (m *NvmeCqResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeCqResponseMsg) ProtoMessage()               {}
-func (*NvmeCqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{11} }
+func (*NvmeCqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{11} }
 
 func (m *NvmeCqResponseMsg) GetResponse() []*NvmeCqResponse {
 	if m != nil {
@@ -443,7 +443,7 @@ type NvmeNsSpec struct {
 func (m *NvmeNsSpec) Reset()                    { *m = NvmeNsSpec{} }
 func (m *NvmeNsSpec) String() string            { return proto.CompactTextString(m) }
 func (*NvmeNsSpec) ProtoMessage()               {}
-func (*NvmeNsSpec) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{12} }
+func (*NvmeNsSpec) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{12} }
 
 func (m *NvmeNsSpec) GetNsid() uint32 {
 	if m != nil {
@@ -509,7 +509,7 @@ type NvmeNsRequestMsg struct {
 func (m *NvmeNsRequestMsg) Reset()                    { *m = NvmeNsRequestMsg{} }
 func (m *NvmeNsRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeNsRequestMsg) ProtoMessage()               {}
-func (*NvmeNsRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{13} }
+func (*NvmeNsRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{13} }
 
 func (m *NvmeNsRequestMsg) GetRequest() []*NvmeNsSpec {
 	if m != nil {
@@ -527,7 +527,7 @@ type NvmeNsResponse struct {
 func (m *NvmeNsResponse) Reset()                    { *m = NvmeNsResponse{} }
 func (m *NvmeNsResponse) String() string            { return proto.CompactTextString(m) }
 func (*NvmeNsResponse) ProtoMessage()               {}
-func (*NvmeNsResponse) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{14} }
+func (*NvmeNsResponse) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{14} }
 
 func (m *NvmeNsResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -551,7 +551,7 @@ type NvmeNsResponseMsg struct {
 func (m *NvmeNsResponseMsg) Reset()                    { *m = NvmeNsResponseMsg{} }
 func (m *NvmeNsResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeNsResponseMsg) ProtoMessage()               {}
-func (*NvmeNsResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{15} }
+func (*NvmeNsResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{15} }
 
 func (m *NvmeNsResponseMsg) GetResponse() []*NvmeNsResponse {
 	if m != nil {
@@ -572,7 +572,7 @@ type NvmeSessSpec struct {
 func (m *NvmeSessSpec) Reset()                    { *m = NvmeSessSpec{} }
 func (m *NvmeSessSpec) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSessSpec) ProtoMessage()               {}
-func (*NvmeSessSpec) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{16} }
+func (*NvmeSessSpec) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{16} }
 
 func (m *NvmeSessSpec) GetHwLifId() uint32 {
 	if m != nil {
@@ -610,7 +610,7 @@ type NvmeSessRequestMsg struct {
 func (m *NvmeSessRequestMsg) Reset()                    { *m = NvmeSessRequestMsg{} }
 func (m *NvmeSessRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSessRequestMsg) ProtoMessage()               {}
-func (*NvmeSessRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{17} }
+func (*NvmeSessRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{17} }
 
 func (m *NvmeSessRequestMsg) GetRequest() []*NvmeSessSpec {
 	if m != nil {
@@ -642,7 +642,7 @@ type NvmeSessResponse struct {
 func (m *NvmeSessResponse) Reset()                    { *m = NvmeSessResponse{} }
 func (m *NvmeSessResponse) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSessResponse) ProtoMessage()               {}
-func (*NvmeSessResponse) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{18} }
+func (*NvmeSessResponse) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{18} }
 
 func (m *NvmeSessResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -764,7 +764,7 @@ type NvmeSessResponseMsg struct {
 func (m *NvmeSessResponseMsg) Reset()                    { *m = NvmeSessResponseMsg{} }
 func (m *NvmeSessResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NvmeSessResponseMsg) ProtoMessage()               {}
-func (*NvmeSessResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{19} }
+func (*NvmeSessResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{19} }
 
 func (m *NvmeSessResponseMsg) GetResponse() []*NvmeSessResponse {
 	if m != nil {
@@ -796,9 +796,9 @@ func init() {
 	proto.RegisterType((*NvmeSessResponseMsg)(nil), "halproto.NvmeSessResponseMsg")
 }
 
-func init() { proto.RegisterFile("nvme.proto", fileDescriptor21) }
+func init() { proto.RegisterFile("nvme.proto", fileDescriptor20) }
 
-var fileDescriptor21 = []byte{
+var fileDescriptor20 = []byte{
 	// 1257 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x57, 0xdd, 0x72, 0xdb, 0x44,
 	0x14, 0xae, 0x5b, 0xc7, 0x3f, 0x27, 0x76, 0xec, 0x6c, 0x93, 0xc6, 0x4d, 0x66, 0x98, 0xa2, 0x8b,

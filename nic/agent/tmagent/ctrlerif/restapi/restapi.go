@@ -18,6 +18,8 @@ import (
 	"github.com/pensando/sw/nic/agent/httputils"
 	genapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/tmagent"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	"github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ntranslate"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -152,10 +154,13 @@ func (s *RestServer) getTagsFromMeta(meta *api.ObjectMeta) map[string]string {
 }
 
 // ReportMetrics sends metrics to tsdb
-func (s *RestServer) ReportMetrics(frequency time.Duration) {
+func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Client) {
 	defer s.waitGrp.Done()
 
 	tsdbObj := map[string]tsdb.Obj{}
+
+	// set delphi client for ntranslate
+	metrics.SetDelphiClient(dclient)
 
 	// create tsdb objects
 	for kind := range s.gensrv.GetPointsFuncList {

@@ -38,7 +38,7 @@ var DeviceMode_value = map[string]int32{
 func (x DeviceMode) String() string {
 	return proto.EnumName(DeviceMode_name, int32(x))
 }
-func (DeviceMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor20, []int{0} }
+func (DeviceMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor19, []int{0} }
 
 // Global config object for NIC
 type DeviceSpec struct {
@@ -50,7 +50,7 @@ type DeviceSpec struct {
 func (m *DeviceSpec) Reset()                    { *m = DeviceSpec{} }
 func (m *DeviceSpec) String() string            { return proto.CompactTextString(m) }
 func (*DeviceSpec) ProtoMessage()               {}
-func (*DeviceSpec) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{0} }
+func (*DeviceSpec) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{0} }
 
 func (m *DeviceSpec) GetDeviceMode() DeviceMode {
 	if m != nil {
@@ -80,7 +80,7 @@ type DeviceRequest struct {
 func (m *DeviceRequest) Reset()                    { *m = DeviceRequest{} }
 func (m *DeviceRequest) String() string            { return proto.CompactTextString(m) }
 func (*DeviceRequest) ProtoMessage()               {}
-func (*DeviceRequest) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{1} }
+func (*DeviceRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{1} }
 
 func (m *DeviceRequest) GetDevice() *DeviceSpec {
 	if m != nil {
@@ -96,7 +96,7 @@ type DeviceRequestMsg struct {
 func (m *DeviceRequestMsg) Reset()                    { *m = DeviceRequestMsg{} }
 func (m *DeviceRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DeviceRequestMsg) ProtoMessage()               {}
-func (*DeviceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{2} }
+func (*DeviceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{2} }
 
 func (m *DeviceRequestMsg) GetRequest() *DeviceRequest {
 	if m != nil {
@@ -112,7 +112,7 @@ type DeviceResponse struct {
 func (m *DeviceResponse) Reset()                    { *m = DeviceResponse{} }
 func (m *DeviceResponse) String() string            { return proto.CompactTextString(m) }
 func (*DeviceResponse) ProtoMessage()               {}
-func (*DeviceResponse) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{3} }
+func (*DeviceResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{3} }
 
 func (m *DeviceResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -128,7 +128,7 @@ type DeviceResponseMsg struct {
 func (m *DeviceResponseMsg) Reset()                    { *m = DeviceResponseMsg{} }
 func (m *DeviceResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DeviceResponseMsg) ProtoMessage()               {}
-func (*DeviceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{4} }
+func (*DeviceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{4} }
 
 func (m *DeviceResponseMsg) GetResponse() *DeviceResponse {
 	if m != nil {
@@ -143,7 +143,7 @@ type DeviceGetRequest struct {
 func (m *DeviceGetRequest) Reset()                    { *m = DeviceGetRequest{} }
 func (m *DeviceGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*DeviceGetRequest) ProtoMessage()               {}
-func (*DeviceGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{5} }
+func (*DeviceGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{5} }
 
 type DeviceGetRequestMsg struct {
 	Request *DeviceGetRequest `protobuf:"bytes,1,opt,name=request" json:"request,omitempty"`
@@ -152,7 +152,7 @@ type DeviceGetRequestMsg struct {
 func (m *DeviceGetRequestMsg) Reset()                    { *m = DeviceGetRequestMsg{} }
 func (m *DeviceGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DeviceGetRequestMsg) ProtoMessage()               {}
-func (*DeviceGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{6} }
+func (*DeviceGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{6} }
 
 func (m *DeviceGetRequestMsg) GetRequest() *DeviceGetRequest {
 	if m != nil {
@@ -169,7 +169,7 @@ type DeviceGetResponse struct {
 func (m *DeviceGetResponse) Reset()                    { *m = DeviceGetResponse{} }
 func (m *DeviceGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*DeviceGetResponse) ProtoMessage()               {}
-func (*DeviceGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{7} }
+func (*DeviceGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{7} }
 
 func (m *DeviceGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -192,7 +192,7 @@ type DeviceGetResponseMsg struct {
 func (m *DeviceGetResponseMsg) Reset()                    { *m = DeviceGetResponseMsg{} }
 func (m *DeviceGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DeviceGetResponseMsg) ProtoMessage()               {}
-func (*DeviceGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor20, []int{8} }
+func (*DeviceGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{8} }
 
 func (m *DeviceGetResponseMsg) GetResponse() *DeviceGetResponse {
 	if m != nil {
@@ -214,9 +214,9 @@ func init() {
 	proto.RegisterEnum("halproto.DeviceMode", DeviceMode_name, DeviceMode_value)
 }
 
-func init() { proto.RegisterFile("nic.proto", fileDescriptor20) }
+func init() { proto.RegisterFile("nic.proto", fileDescriptor19) }
 
-var fileDescriptor20 = []byte{
+var fileDescriptor19 = []byte{
 	// 510 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
 	0x18, 0xac, 0x1b, 0x29, 0x24, 0x5f, 0xa0, 0x38, 0xdb, 0xa6, 0x72, 0x43, 0x05, 0x91, 0x4f, 0x51,

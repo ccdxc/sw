@@ -89,6 +89,7 @@ nic/build/x86_64/iris/lib/libpenctlproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libnicmgrproto.so                         /nic/lib/
+nic/build/x86_64/iris/lib/liblinkmgrproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libpciemgrproto.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4loader.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libftestatsproto.so                       /nic/lib/

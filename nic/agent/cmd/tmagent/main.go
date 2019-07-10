@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/utils/nodewatcher"
 
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
+	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
 	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -117,7 +118,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 
 		// start reporting metrics
-		if err := s.tmagent.reportMetrics(s.tmagent.resolverClient); err != nil {
+		if err := s.tmagent.reportMetrics(s.tmagent.resolverClient, s.DelphiClient); err != nil {
 			log.Fatal(err)
 		}
 	} else {
@@ -128,7 +129,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	}
 }
 
-func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface) error {
+func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface, dclient clientApi.Client) error {
 	// report node metrics
 	node := &cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{
@@ -144,7 +145,7 @@ func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface) error {
 	}
 
 	// report delphi metrics
-	go ta.restServer.ReportMetrics(reportInterval)
+	go ta.restServer.ReportMetrics(reportInterval, dclient)
 	return nil
 }
 
@@ -228,8 +229,9 @@ func main() {
 	delphiService.DelphiClient = delphiClient
 	delphiService.sysmgrClient = sysmgr.NewClient(delphiClient, delphiService.Name())
 
-	// Mount delphi naples status object
+	// Mount delphi naples status and interface objects
 	delphiProto.NaplesStatusMount(delphiClient, dproto.MountMode_ReadMode)
+	dnetproto.InterfaceMount(delphiClient, dproto.MountMode_ReadMode)
 
 	// Set up watches
 	delphiProto.NaplesStatusWatch(delphiClient, delphiService)
