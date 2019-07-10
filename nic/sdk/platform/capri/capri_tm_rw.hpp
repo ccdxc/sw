@@ -83,14 +83,14 @@ using sdk::lib::indexer;
 // Offset at which the oqs for rxdma only classes start
 #define CAPRI_TM_RXDMA_OQ_OFFSET              16
 
-#define CAPRI_TM_P4_SPAN_QUEUE                            30
-#define CAPRI_TM_P4_CPU_COPY_QUEUE                        31
+#define CAPRI_TM_P4_CPU_COPY_QUEUE                        30
+#define CAPRI_TM_P4_SPAN_QUEUE                            31
 /* On P4 EG, due to the resercation of queues 30 and 31 for span and cpu-copy,
  * the uplink queues which are using these values in p4-ig need to use the 
  * below two values
  */
-#define CAPRI_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 0)
-#define CAPRI_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1) 
+#define CAPRI_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 0)
+#define CAPRI_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1)
 
 #define QOS_QUEUE_DEFAULT 0
 #define QOS_COS_DEFAULT   0

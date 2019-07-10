@@ -636,6 +636,8 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     inp_prop.src_lport = if_get_uplink_lport_id(hal_if);
     inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
+    // TODO get info from QOS class
+    inp_prop.flow_miss_qos_class_id = 0x2;
 
     // Classic:
     // - All Vlans are in Classic

@@ -1968,6 +1968,8 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
         inp_prop_mac_vlan_data.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)(pd_l2seg->l2seg));
         inp_prop_mac_vlan_data.flow_miss_idx = l2seg_get_bcast_oif_list((l2seg_t*)(pd_l2seg->l2seg));
+        // TODO get info from QOS class
+        inp_prop_mac_vlan_data.flow_miss_qos_class_id = 0x2;
 
 #if 0
         // Program dst_lport if there is pinning
