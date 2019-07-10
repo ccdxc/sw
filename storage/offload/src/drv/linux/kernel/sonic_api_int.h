@@ -139,7 +139,7 @@ void sonic_report_pcr_counters(const struct per_core_resource *pcr);
 
 #define REPORT_PCR_COUNTERS(pcr)					\
 	do {								\
-		if (OSAL_LOG_ON(OSAL_LOG_LEVEL_WARNING)) 		\
+		if (OSAL_LOG_ON(OSAL_LOG_LEVEL_NOTICE)) 		\
 			sonic_report_pcr_counters(pcr);			\
 	} while (0)
 
