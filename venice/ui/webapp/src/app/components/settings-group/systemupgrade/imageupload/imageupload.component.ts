@@ -106,25 +106,25 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   postNgInit() {
-      this.controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'ImageuploadComponent', 'state': Eventtypes.COMPONENT_INIT });
-      this.getRolloutImages();
-      this.subcribeToBackgroundFileUploadEvents();
+    this.controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'ImageuploadComponent', 'state': Eventtypes.COMPONENT_INIT });
+    this.getRolloutImages();
+    this.subcribeToBackgroundFileUploadEvents();
   }
 
   subcribeToBackgroundFileUploadEvents() {
-    const subSuccess = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_SUCCESS,  (payload) => {
+    const subSuccess = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_SUCCESS, (payload) => {
       this.onBackgroudUploadSuccess(payload);
     });
     this.subscriptions.push(subSuccess);
-    const subFailure = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_FAILURE,  (payload) => {
+    const subFailure = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_FAILURE, (payload) => {
       this.onBackgroudUploadFailure(payload);
     });
     this.subscriptions.push(subFailure);
-    const subProgress = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_PROGRESS,  (payload) => {
+    const subProgress = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_PROGRESS, (payload) => {
       this.onBackgroudUploadProgress(payload);
     });
     this.subscriptions.push(subProgress);
-    const subCancel = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_CANCEL,  (payload) => {
+    const subCancel = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_CANCEL, (payload) => {
       this.onBackgroudUploadCancel(payload);
     });
     this.subscriptions.push(subCancel);
@@ -190,11 +190,11 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
    * @param response
    */
   processRolloutImages(response) {
-  /**
-   * 2019-05-xx implementation logic
-   * once bundle.tar is uploaded, backend will un-tar it to multiple files. objstoreService.listXXX()/Watch() will bring back multiple files, including bundle.tar and metadat.json
-   * We get labels information from metadata.json,  attach metadata.labels to bundle.tar. We display bundle+version in table only. If user delete bundle.tar, backend will handle deleting the un-tar files.
-   */
+    /**
+     * 2019-05-xx implementation logic
+     * once bundle.tar is uploaded, backend will un-tar it to multiple files. objstoreService.listXXX()/Watch() will bring back multiple files, including bundle.tar and metadat.json
+     * We get labels information from metadata.json,  attach metadata.labels to bundle.tar. We display bundle+version in table only. If user delete bundle.tar, backend will handle deleting the un-tar files.
+     */
     let metaImage: ObjstoreObject = null;
     let rolloutImages: IObjstoreObjectList = null;
     rolloutImages = (response) ? response.body as IObjstoreObjectList : rolloutImages;
@@ -215,7 +215,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     }
   }
 
- onBeforeSend($event) {
+  onBeforeSend($event) {
     this.uploadInForeground = true;
     const xhr = $event.xhr;
     this._xhr = xhr;
@@ -312,6 +312,20 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     return filenames;
   }
 
+  /**
+   * This api servers html template.
+   * @param object
+   */
+  showDeleteButton(object: IObjstoreObject): boolean {
+    // VS-484. We don't want to delete an image that is lined to a pending rollout;
+    const rollout = Utility.getInstance().getCurrentRollout();
+    if (!rollout) {
+      return true;
+    } else {
+      return (rollout.spec.version !== this.getBundlerTarVersion(object));
+    }
+  }
+
   generateDeleteSuccessMsg(object: IObjstoreObject): string {
     return 'Deleted Image ' + object.meta.name;
   }
@@ -354,9 +368,9 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   ngOnDestroy() {
     this.controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'ImageuploadComponent', 'state': Eventtypes.COMPONENT_DESTROY });
     if (this.isFileUploadInProgress() && this.uploadInForeground) {
-     //  When user leaves upload image page, we don't cancel upload (//this.cancelUpload()), instead we put upload process in background.
-     BackgroundProcessManager.getInstance().registerVeniceImageFileUpload(this._xhr, this.uploadingFiles);
-     this.controllerService.invokeInfoToaster('Upload', 'File upload will be running in background.  Please do not leave Venice site');
+      //  When user leaves upload image page, we don't cancel upload (//this.cancelUpload()), instead we put upload process in background.
+      BackgroundProcessManager.getInstance().registerVeniceImageFileUpload(this._xhr, this.uploadingFiles);
+      this.controllerService.invokeInfoToaster('Upload', 'File upload will be running in background.  Please do not leave Venice site');
     }
     super.ngOnDestroy();
   }
