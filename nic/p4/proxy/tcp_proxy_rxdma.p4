@@ -404,6 +404,7 @@ header_type tcp_rx_dma_d_t {
     fields {
         rx_stats_base           : 64;
         serq_base               : 64;
+        app_type_cfg            : 8;
         nde_shift               : 8;
         nde_offset              : 8;
         nde_len                 : 8;
@@ -1191,7 +1192,7 @@ action ooo_qbase_cb_load(ooo_rx2tx_ci,
 }
 
 #define RX_DMA_D_PARAMS \
-        rx_stats_base, serq_base, nde_shift, nde_offset, nde_len, \
+        rx_stats_base, serq_base, app_type_cfg, nde_shift, nde_offset, nde_len, \
         consumer_lif, consumer_ring, consumer_num_slots_mask, \
         pkts_rcvd, rx2tx_send_ack_pi, \
         rx2tx_clean_retx_pi, rx2tx_fast_retx_pi, consumer_qid, \
@@ -1200,6 +1201,7 @@ action ooo_qbase_cb_load(ooo_rx2tx_ci,
 #define RX_DMA_D_FIELDS \
     modify_field(tcp_rx_dma_d.rx_stats_base, rx_stats_base); \
     modify_field(tcp_rx_dma_d.serq_base, serq_base); \
+    modify_field(tcp_rx_dma_d.app_type_cfg, app_type_cfg); \
     modify_field(tcp_rx_dma_d.nde_shift, nde_shift); \
     modify_field(tcp_rx_dma_d.nde_offset, nde_offset); \
     modify_field(tcp_rx_dma_d.nde_len, nde_len); \

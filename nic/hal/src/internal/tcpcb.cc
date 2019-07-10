@@ -127,17 +127,14 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_una = spec.snd_una();
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
+    tcpcb->proxy_type = spec.proxy_type();
     if (hal::tls::proxy_tls_bypass_mode) {
-        tcpcb->bypass_tls = true;
+        tcpcb->proxy_type = types::PROXY_TYPE_TCP;
         tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
         tcpcb->debug_dol_tx = spec.debug_dol_tx() | TCP_TX_DDOL_BYPASS_BARCO;
     } else {
-        tcpcb->bypass_tls = false;
         tcpcb->debug_dol = spec.debug_dol();
         tcpcb->debug_dol_tx = spec.debug_dol_tx();
-        if (spec.debug_dol() & TCP_DDOL_BYPASS_BARCO) {
-            tcpcb->bypass_tls = true;
-        }
     }
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
@@ -235,22 +232,19 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rtt_time = spec.rtt_time();
     tcpcb->ts_time = spec.ts_time();
     tcpcb->ts_offset = spec.ts_offset();
+    tcpcb->proxy_type = spec.proxy_type();
     HAL_TRACE_DEBUG("spec.ts_recent: {}", spec.ts_recent());
     HAL_TRACE_DEBUG("spec.rtt_time: {}", spec.rtt_time());
     HAL_TRACE_DEBUG("spec.rtt_seq_tsoffset: {}", spec.rtt_seq_tsoffset());
     HAL_TRACE_DEBUG("spec.ts_offset: {}", spec.ts_offset());
     HAL_TRACE_DEBUG("spec.ts_time: {}", spec.ts_time());
     if (hal::tls::proxy_tls_bypass_mode) {
-        tcpcb->bypass_tls = true;
+        tcpcb->proxy_type = types::PROXY_TYPE_TCP;
         tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
         tcpcb->debug_dol_tx = spec.debug_dol_tx() | TCP_TX_DDOL_BYPASS_BARCO;
     } else {
-        tcpcb->bypass_tls = false;
         tcpcb->debug_dol = spec.debug_dol();
         tcpcb->debug_dol_tx = spec.debug_dol_tx();
-        if (spec.debug_dol() & TCP_DDOL_BYPASS_BARCO) {
-            tcpcb->bypass_tls = true;
-        }
     }
     
     //tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_TSOPT_SUPPORT;
@@ -511,6 +505,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_source_lif(rtcpcb.source_lif);
     rsp->mutable_spec()->set_debug_dol_tx(rtcpcb.debug_dol_tx);
     rsp->mutable_spec()->set_l7_proxy_type(rtcpcb.l7_proxy_type);
+    rsp->mutable_spec()->set_proxy_type(rtcpcb.proxy_type);
     rsp->mutable_spec()->set_serq_pi(rtcpcb.serq_pi);
     rsp->mutable_spec()->set_serq_ci(rtcpcb.serq_ci);
     rsp->mutable_spec()->set_pred_flags(rtcpcb.pred_flags);

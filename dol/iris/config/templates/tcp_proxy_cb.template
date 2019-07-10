@@ -16,6 +16,7 @@ meta:
 
 id          : 0 # TCP Proxy CB Local ID
 spec        : None # (REF) TCP Proxy CB Spec from Base Config.
+proxy_type  : 2  # PROXY_TYPE_TLS
 rx_ts       : 0
 rcv_nxt     : 0
 snd_nxt     : 0

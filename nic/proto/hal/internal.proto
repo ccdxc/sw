@@ -437,6 +437,7 @@ message TcpCbSpec {
   uint32                ts_learned                 = 64;
   uint32                ts_offset                  = 65;
   uint32                ts_time                    = 66;
+  types.ProxyType       proxy_type                 = 68;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

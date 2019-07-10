@@ -503,9 +503,11 @@ lklshim_process_flow_miss_rx_packet (fte::ctx_t &ctx, void *pkt_skb,
     memcpy(&flow->flow_encap, flow_encap, sizeof(lklshim_flow_encap_t));
 
     proxy::tcp_create_cb(ctx, flow->iqid, flow->rqid, flow_encap->i_src_lif, flow_encap->i_src_vlan_id,
-                         eth, vlan, ip, tcp, true, proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid));
+                         eth, vlan, ip, tcp, true, proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid),
+                         pfi->proxy_type);
     proxy::tcp_create_cb(ctx, flow->rqid, flow->iqid, flow->flow_encap.r_src_lif, flow->flow_encap.r_src_vlan_id,
-                         eth, vlan, ip, tcp, false, proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid));
+                         eth, vlan, ip, tcp, false, proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid),
+                         pfi->proxy_type);
 
     // create tlscb
     hal::tls::tls_api_init_flow(flow_encap->encrypt_qid, flow_encap->decrypt_qid);

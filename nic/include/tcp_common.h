@@ -115,6 +115,12 @@
 #define TCP_OPT_FLAG_SACK_PERM              (1 << TCP_OPT_FLAG_SACK_PERM_BIT)
 #define TCP_OPT_FLAG_TIMESTAMPS             (1 << TCP_OPT_FLAG_TIMESTAMPS_BIT)
 
+// TCP App type
+
+#define TCP_APP_TYPE_BYPASS                 1
+#define TCP_APP_TYPE_TLS                    2
+#define TCP_APP_TYPE_NVME                   3
+
 #define TCP_QUICKACKS                       2
 
 //#define NEW_TIMER 1

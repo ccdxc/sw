@@ -265,7 +265,8 @@ hal_ret_t
 tcp_create_cb(fte::ctx_t &ctx, qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id,
               ether_header_t *eth, vlan_header_t* vlan,
               ipv4_header_t *ip, tcp_header_t *tcp,
-              bool is_itor_dir, types::AppRedirType l7_proxy_type)
+              bool is_itor_dir, types::AppRedirType l7_proxy_type,
+              types::ProxyType proxy_type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
@@ -296,6 +297,7 @@ tcp_create_cb(fte::ctx_t &ctx, qid_t qid, qid_t other_qid, uint16_t src_lif, uin
     }
 
     spec.set_l7_proxy_type(l7_proxy_type);
+    spec.set_proxy_type(proxy_type);
     ret = tcpcb_create(spec, &rsp);
     if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
         HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: {}",
@@ -309,7 +311,8 @@ tcp_create_cb(fte::ctx_t &ctx, qid_t qid, qid_t other_qid, uint16_t src_lif, uin
 
 hal_ret_t
 tcp_create_cb_v6(fte::ctx_t &ctx, qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id, ether_header_t *eth,
-        vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, types::AppRedirType l7_proxy_type)
+        vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, types::AppRedirType l7_proxy_type,
+        types::ProxyType proxy_type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
@@ -339,6 +342,7 @@ tcp_create_cb_v6(fte::ctx_t &ctx, qid_t qid, qid_t other_qid, uint16_t src_lif, 
     }
 
     spec.set_l7_proxy_type(l7_proxy_type);
+    spec.set_proxy_type(proxy_type);
     ret = tcpcb_create(spec, &rsp);
     if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
         HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: {}",

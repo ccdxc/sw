@@ -50,6 +50,12 @@ l7_proxy_type_SPAN = 2
 
 tcp_ddol_TBLADDR_VALUE = 0x59
 
+# from types.pb.h
+PROXY_TYPE_NONE = 0
+PROXY_TYPE_TCP = 1
+PROXY_TYPE_TLS = 2
+PROXY_TYPE_NVME = 12
+
 def SetupProxyArgs(tc):
     logger.info("Testcase Args:")
     same_flow = 0
@@ -435,8 +441,11 @@ def init_tcb_inorder(tc, tcb):
     if tc.pvtdata.test_mpu_tblsetaddr:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_tbl_setaddr
     if tc.pvtdata.bypass_barco:
+        tcb.proxy_type = PROXY_TYPE_TCP
         tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
         tcb.debug_dol |= tcp_debug_dol_bypass_barco
+    else:
+        tcb.proxy_type = PROXY_TYPE_TLS
     if tc.pvtdata.rto_backoff:
         tcb.rto_backoff = tc.pvtdata.rto_backoff
     if tc.pvtdata.snd_wnd:
@@ -616,8 +625,11 @@ def init_tcb_inorder2(tc, tcb):
     if tc.pvtdata.test_mpu_tblsetaddr:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_tbl_setaddr
     if tc.pvtdata.bypass_barco:
+        tcb.proxy_type = PROXY_TYPE_TCP
         tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
         tcb.debug_dol |= tcp_debug_dol_bypass_barco
+    else:
+        tcb.proxy_type = PROXY_TYPE_TLS
     if tc.pvtdata.rto_backoff:
         tcb.rto_backoff = tc.pvtdata.rto_backoff
     if tc.pvtdata.snd_wnd:

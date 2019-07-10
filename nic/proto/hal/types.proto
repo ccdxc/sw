@@ -297,6 +297,7 @@ enum ProxyType {
   PROXY_TYPE_APP_REDIR_PROXY_TCP      = 9;
   PROXY_TYPE_APP_REDIR_SPAN           = 10;
   PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN = 11;
+  PROXY_TYPE_NVME                     = 12;
 }
 
 // Types of Cryptographic Asymmetric keys

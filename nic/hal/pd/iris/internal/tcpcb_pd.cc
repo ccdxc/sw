@@ -162,7 +162,7 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             default:
                 data.u.tcp_rx_d.parsed_state &= ~TCP_PARSED_STATE_HANDLE_IN_CPU;
         }
-        if (tcpcb_pd->tcpcb->bypass_tls) {
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             data.u.tcp_rx_d.consumer_ring_shift = CAPRI_SESQ_RING_SLOTS_SHIFT;
         } else {
             data.u.tcp_rx_d.consumer_ring_shift = CAPRI_SERQ_RING_SLOTS_SHIFT;
@@ -296,7 +296,7 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         data.u.tcp_fc_d.rcv_wnd = htonl(tcpcb_pd->tcpcb->rcv_wnd);
-        if (tcpcb_pd->tcpcb->bypass_tls) {
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             data.u.tcp_fc_d.read_notify_addr = htonl(tcpcb_pd_read_notify_addr_get(tcpcb_pd->tcpcb->other_qid));
         } else {
             data.u.tcp_fc_d.read_notify_addr = 0;
@@ -304,7 +304,7 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_fc_d.rcv_scale = tcpcb_pd->tcpcb->rcv_wscale;
         data.u.tcp_fc_d.cpu_id = tcpcb_pd->tcpcb->cpu_id;
         data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_wup);
-        if (tcpcb_pd->tcpcb->bypass_tls) {
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             num_slots = CAPRI_SESQ_RING_SLOTS;
         } else {
             num_slots = CAPRI_SERQ_RING_SLOTS;
@@ -354,8 +354,12 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
                 TCP_RX_PER_FLOW_STATS_OFFSET);
         HAL_TRACE_DEBUG("tcp qid {}, rx stats base: {:#x}",
                         tcpcb_pd->tcpcb->cb_id, ntohll(rx_dma_d.rx_stats_base));
-        if (tcpcb_pd->tcpcb->bypass_tls) {
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_NVME) {
+            rx_dma_d.app_type_cfg = TCP_APP_TYPE_NVME;
+        }
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             // Get SESQ address of the other TCP flow
+            rx_dma_d.app_type_cfg = TCP_APP_TYPE_BYPASS;
             wring_hw_id_t  sesq_base;
             ret = wring_pd_get_base_addr(types::WRING_TYPE_SESQ,
                                          tcpcb_pd->tcpcb->other_qid,
@@ -377,6 +381,7 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
             rx_dma_d.consumer_num_slots_mask = htons(CAPRI_SESQ_RING_SLOTS_MASK);
         } else {
             // Get Serq address
+            rx_dma_d.app_type_cfg = TCP_APP_TYPE_TLS;
             wring_hw_id_t  serq_base;
             ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
                                          tcpcb_pd->tcpcb->cb_id,
@@ -687,7 +692,15 @@ p4pd_get_tcp_rx_rx_dma_entry(pd_tcpcb_t* tcpcb_pd)
     }
 
     tcpcb_pd->tcpcb->serq_base = ntohll(data.u.dma_d.serq_base);
+    if (data.u.dma_d.app_type_cfg == TCP_APP_TYPE_NVME) {
+        tcpcb_pd->tcpcb->proxy_type = types::PROXY_TYPE_NVME;
+    } else if (data.u.dma_d.app_type_cfg == TCP_APP_TYPE_TLS) {
+        tcpcb_pd->tcpcb->proxy_type = types::PROXY_TYPE_TLS;
+    } else {
+        tcpcb_pd->tcpcb->proxy_type = types::PROXY_TYPE_TCP;
+    }
     HAL_TRACE_DEBUG("Received serq_base: {:#x}", tcpcb_pd->tcpcb->serq_base);
+    HAL_TRACE_DEBUG("Received proxy_type: {}", tcpcb_pd->tcpcb->proxy_type);
 
     return HAL_RET_OK;
 }
@@ -1175,7 +1188,7 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
         uint64_t gc_base;
 
-        if (tcpcb_pd->tcpcb->bypass_tls) {
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             data.sesq_ci_addr =
                 htonll(tcpcb_pd_serq_prod_ci_addr_get(tcpcb_pd->tcpcb->other_qid));
         } else {
@@ -1188,7 +1201,7 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.retx_snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
 
         // get gc address
-        if (tcpcb_pd->tcpcb->bypass_tls) {
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC,
                     CAPRI_HBM_GC_RNMDR_QTYPE,
                     CAPRI_RNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
@@ -1199,7 +1212,7 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
         HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
         data.gc_base = htonll(gc_base);
-        if (tcpcb_pd->tcpcb->bypass_tls) {
+        if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             // Used by window update logic to wakeup proxy peer TCP segment queue
             data.consumer_qid = htons(tcpcb_pd->tcpcb->other_qid);
         } else {

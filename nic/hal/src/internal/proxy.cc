@@ -73,6 +73,7 @@ proxy_meta_init() {
     g_meta[types::PROXY_TYPE_APP_REDIR_PROXY_TCP] = {false, 0, {}, types::PROXY_TYPE_TCP, false},
     g_meta[types::PROXY_TYPE_APP_REDIR_SPAN] = {false, 0, {}, types::PROXY_TYPE_APP_REDIR, true},
     g_meta[types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN] = {false, 0, {}, types::PROXY_TYPE_TCP, false},
+    g_meta[types::PROXY_TYPE_NVME] = {false, 0, {}, types::PROXY_TYPE_TCP, false},
 
     // 128 bytes of P4PT state per connection (e.g. dir) and a total of 2^12 connections
     g_meta[types::PROXY_TYPE_P4PT] =

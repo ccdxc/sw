@@ -53,6 +53,7 @@ typedef struct tcpcb_s {
     tcpcb_id_t            cb_id;                   // TCP CB id
     uint64_t              cb_base;
     uint64_t              cb_base_qtype1;
+    types::ProxyType      proxy_type;
     uint32_t              rcv_nxt;
     uint32_t              rcv_wup;
     uint32_t              snd_nxt;
@@ -94,7 +95,6 @@ typedef struct tcpcb_s {
     uint32_t              pred_flags;
     uint32_t              rto_backoff;
     uint8_t               cpu_id;
-    bool                  bypass_tls;
     uint32_t              snd_wscale;
     uint32_t              rcv_wscale;
     uint32_t              rcv_wnd;
