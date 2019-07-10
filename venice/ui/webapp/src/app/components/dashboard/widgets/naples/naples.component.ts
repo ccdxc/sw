@@ -19,6 +19,7 @@ import { NaplesConditionValues} from '@app/components/cluster-group/naples/index
 import { Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-dsbdnapleswidget',
@@ -161,6 +162,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   constructor(private controllerService: ControllerService,
               protected metricsqueryService: MetricsqueryService,
               protected uiconfigsService: UIConfigsService,
+              protected router: Router,
     protected clusterService: ClusterService) { }
 
   toggleFlip() {
@@ -291,7 +293,18 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
           }
         }
       );
+      this.menuItems.push(
+        {
+          text: 'Navigate to Naples', onClick: () => {
+            this.goToNaples();
+          }
+        }
+      );
     }
+  }
+
+  goToNaples() {
+    this.router.navigateByUrl('/cluster/naples');
   }
 
   tryGenMetrics() {

@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 import { ControllerService } from '@app/services/controller.service';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
 import { NodeConditionValues } from '@app/components/cluster-group/naples';
+import {Router} from '@angular/router';
 
 
 interface BarGraphStat {
@@ -86,6 +87,11 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     {
       text: 'Export', onClick: () => {
         this.export();
+      }
+    },
+    {
+      text: 'Navigate to Cluster', onClick: () => {
+        this.goToCluster();
       }
     }
   ];
@@ -241,7 +247,8 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
   subscriptions: Subscription[] = [];
 
   constructor(protected controllerService: ControllerService,
-    protected clusterService: ClusterService) {
+    protected clusterService: ClusterService,
+    protected router: Router) {
   }
 
   toggleFlip() {
@@ -311,6 +318,10 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     const fieldName = 'systemcapacity-dataset.json';
     Utility.exportContent(JSON.stringify(exportObj, null, 2), 'text/json;charset=utf-8;', fieldName);
     Utility.getInstance().getControllerService().invokeInfoToaster('Data exported', 'Please find ' + fieldName + ' in your donwload folder');
+  }
+
+  goToCluster() {
+    this.router.navigateByUrl('/cluster/cluster');
   }
 
   setupData() {

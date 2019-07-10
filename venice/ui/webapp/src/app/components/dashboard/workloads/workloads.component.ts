@@ -107,6 +107,11 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
     //     this.toggleFlip();
     //   }
     // },
+    {
+      text: 'Navigate to Workload', onClick: () => {
+        this.goToWorkloads();
+      }
+    }
   ];
 
   showGraph: boolean = false;
@@ -121,6 +126,10 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes) {
+  }
+
+  goToWorkloads() {
+    this.router.navigateByUrl('/workload');
   }
 
   ngOnInit() {
