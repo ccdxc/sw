@@ -8,6 +8,6 @@ export const getFieldData = (measurement: string, field: string): MetricField =>
   return MetricsMetadata[measurement].fields.find( x => x.name === field);
 };
 
-export const getFieldsData = (measurement: string, field: string): MetricField[] => {
+export const getFieldsData = (measurement: string): MetricField[] => {
   return MetricsMetadata[measurement].fields;
 };

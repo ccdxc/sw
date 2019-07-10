@@ -184,8 +184,8 @@ export class UIConfigsService {
    */
   canActivateSubRoute(route: string): boolean {
 
-    if (Utility.getInstance().getMaintenanceMode() && route !== 'maintenance') {
-      return false;
+    if (route === 'maintenance') {
+      return Utility.getInstance().getMaintenanceMode();
     }
 
     if (this.pageRequirements[route] == null) {

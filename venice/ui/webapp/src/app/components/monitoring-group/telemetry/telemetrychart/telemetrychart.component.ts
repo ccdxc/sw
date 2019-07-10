@@ -133,46 +133,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     } = {};
 
 
-  fieldQueryMap: QueryMap = {
-    'SmartNIC': (res: ITelemetry_queryMetricsQuerySpec) => {
-      const field = 'reporterID';
-      res.selector.requirements.forEach( (req) => {
-        if (req.key === field) {
-          req.values = req.values.map( (v) => {
-            const mac = this.nameToMacAddr[v];
-            if (mac != null) {
-              return mac;
-            }
-            return v;
-          });
-        }
-      });
-    }
-  };
-
-  fieldValueMap: ValueMap = {
-    'SmartNIC': (res: ITelemetry_queryMetricsQueryResult) => {
-      const field = 'reporterID';
-      res.series.forEach( (s) => {
-        if (s.tags != null) {
-          const tagVal = s.tags[field];
-          if (tagVal != null && this.macAddrToName[tagVal] != null) {
-            s.tags[field] = this.macAddrToName[tagVal];
-          }
-        }
-        const fieldIndex = s.columns.findIndex((f) => {
-          return f.includes(field);
-        });
-        s.values = s.values.map( (v) => {
-          const mac = v[fieldIndex];
-          if (this.macAddrToName[mac] != null) {
-            v[fieldIndex] = this.macAddrToName[mac];
-          }
-          return v;
-        });
-      });
-    }
-  };
+  fieldQueryMap: QueryMap =  {};
+  fieldValueMap: ValueMap = {};
 
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
@@ -182,6 +144,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   }
 
   ngOnInit() {
+    this.setupValueOverrides();
     this.getNaples();
     this.getNodes();
 
@@ -218,6 +181,51 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     if (this.dataSources.length === 0) {
       this.addDataSource();
     }
+  }
+
+  setupValueOverrides() {
+    const queryMapNaplesReporterID = (res: ITelemetry_queryMetricsQuerySpec) => {
+      const field = 'reporterID';
+      res.selector.requirements.forEach( (req) => {
+        if (req.key === field) {
+          req.values = req.values.map( (v) => {
+            const mac = this.nameToMacAddr[v];
+            if (mac != null) {
+              return mac;
+            }
+            return v;
+          });
+        }
+      });
+    };
+    const valueMapNaplesReporterID = (res: ITelemetry_queryMetricsQueryResult) => {
+      const field = 'reporterID';
+      res.series.forEach( (s) => {
+        if (s.tags != null) {
+          const tagVal = s.tags[field];
+          if (tagVal != null && this.macAddrToName[tagVal] != null) {
+            s.tags[field] = this.macAddrToName[tagVal];
+          }
+        }
+        const fieldIndex = s.columns.findIndex((f) => {
+          return f.includes(field);
+        });
+        s.values = s.values.map( (v) => {
+          const mac = v[fieldIndex];
+          if (this.macAddrToName[mac] != null) {
+            v[fieldIndex] = this.macAddrToName[mac];
+          }
+          return v;
+        });
+      });
+    };
+    Object.keys(MetricsMetadata).forEach( (m) => {
+      const measurement = MetricsMetadata[m];
+      if (measurement.objectKind === 'SmartNIC') {
+        this.fieldQueryMap[measurement.name] = queryMapNaplesReporterID;
+        this.fieldValueMap[measurement.name] = valueMapNaplesReporterID;
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
