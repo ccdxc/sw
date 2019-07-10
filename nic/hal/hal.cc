@@ -274,8 +274,8 @@ hal_init (hal_cfg_t *hal_cfg)
             hal_thread_start(tid, hal_thread_get(tid));
         } else if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
             // set the number of instances as read from config
-            //ipc_logger::set_ipc_instances(hal_cfg->num_data_cores);
-            ipc_logger::set_ipc_instances(3);
+            // Number of instances is equal to number of data cores == 1.
+            ipc_logger::set_ipc_instances(hal_cfg->num_data_cores);
             // start fte threads
             for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {
                 // init IPC logger infra for FTE

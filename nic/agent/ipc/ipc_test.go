@@ -94,7 +94,6 @@ func TestBasicIPC(t *testing.T) {
 	shm, err := NewSharedMem(ipcMemSize, ipcInstances, f.Name())
 	Assert(t, err == nil, "Failed to open shared mem", err)
 	ipc1 := shm.IPCInstance()
-	ipc2 := shm.IPCInstance()
 	clientShm, err := NewSharedMem(ipcMemSize, ipcInstances, f.Name())
 	Assert(t, err == nil, "Failed to open shared mem", err)
 	shmInfo := clientShm.String()
@@ -104,10 +103,9 @@ func TestBasicIPC(t *testing.T) {
 	ipc1Info := ipc1.String()
 	Assert(t, strings.Contains(ipc1Info, "readindex: 0"), "invalid readindex", ipc1Info)
 	Assert(t, strings.Contains(ipc1Info, "writeindex: 0"), "invalid writeindex", ipc1Info)
-	Assert(t, strings.Contains(ipc1Info, "numbuffer: 255"), "invalid num_buffer", ipc1Info)
+	Assert(t, strings.Contains(ipc1Info, "numbuffer: 2047"), "invalid num_buffer", ipc1Info)
 
 	client1 := newIPCClient(clientShm, 0)
-	client2 := newIPCClient(clientShm, 1)
 
 	// write two messages tp ipc1 and one to ipc2.
 	buf := client1.getBuffer()
@@ -119,23 +117,15 @@ func TestBasicIPC(t *testing.T) {
 	size, err = wrFWLog(buf, 20001)
 	Assert(t, err == nil, "Failed to write log", err)
 	client1.putBuffer(buf, size)
-	buf = client2.getBuffer()
-	Assert(t, buf != nil, "failed to get buf")
-	size, err = wrFWLog(buf, 20002)
-	Assert(t, err == nil, "Failed to write log", err)
-	client2.putBuffer(buf, size)
 
 	callCount := 0
 	h := func(ev *FWEvent, ts time.Time) {
 		callCount++
 	}
 	Assert(t, len(ipc1.Dump()) == 2, "expected 2 msgs")
-	Assert(t, len(ipc2.Dump()) == 1, "expected 1 msgs")
 	ipc1.processIPC(h)
-	ipc2.processIPC(h)
 	Assert(t, ipc1.rxCount == 2, "Expected 2 msgs")
-	Assert(t, ipc2.rxCount == 1, "Expected 1 msg")
-	Assert(t, callCount == 3, "Expected 3 invocations")
+	Assert(t, callCount == 2, "Expected 3 invocations, got %v", callCount)
 
 	// some -ve cases for coverage
 	shm, err = NewSharedMem(0, ipcInstances, "/fwlog_ipc_shm")
