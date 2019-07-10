@@ -288,8 +288,22 @@ func (l *Node) runLeader(ctx context.Context, nodeWatcher kvstore.Watcher) {
 			return
 		case evt, ok := <-nodeWatcher.EventChan():
 			if !ok {
-				log.Errorf("node Watcher channel closed exiting watcher")
-				return
+				var err error
+
+				// return if node is stopped
+				if l.isStopped || ctx.Err() != nil {
+					return
+				}
+
+				log.Warnf("Node watcher channel closed. Retrying")
+				time.Sleep(time.Second)
+
+				// restart the prefix watcher
+				nodeWatcher, err = l.kvs.PrefixWatch(ctx, NodesMetastoreURL, "")
+				if err != nil {
+					log.Errorf("Error watching kvstore. Err: %v", err)
+				}
+				continue
 			}
 
 			// return if node is stopped
@@ -306,8 +320,8 @@ func (l *Node) runLeader(ctx context.Context, nodeWatcher kvstore.Watcher) {
 			// handle event type
 			switch evt.Type {
 			case kvstore.WatcherError:
-				log.Errorf("Got node watch error. closing watcher")
-				return
+				log.Errorf("Got node watch error. Retrying")
+				continue
 			case kvstore.Created:
 				fallthrough
 			case kvstore.Updated:
