@@ -715,7 +715,7 @@ TEST_F(enicif_test, test4)
     // uint64_t up_hdl1 = upif_rsp.mutable_status()->if_handle();
 
     // Create a lif
-    lif_spec.mutable_key_or_handle()->set_lif_id(41);
+    lif_spec.mutable_key_or_handle()->set_lif_id(42);
     lif_spec.mutable_packet_filter()->set_receive_promiscuous(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);

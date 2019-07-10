@@ -211,15 +211,16 @@
 #define LIF_CPU                        33 
 #define SERVICE_LIF_START              34
 
-#define LIF_TCP                        (SERVICE_LIF_START)
-#define LIF_TLS                        (SERVICE_LIF_START + 1) 
-#define LIF_IPSEC_ESP                  (SERVICE_LIF_START + 2)
-#define LIF_IPSEC_AH                   (SERVICE_LIF_START + 3)
-#define LIF_IPFIX                      (SERVICE_LIF_START + 4)
-#define LIF_APP_REDIR                  (SERVICE_LIF_START + 5)
-#define LIF_GC                         (SERVICE_LIF_START + 6)
-#define LIF_P4PT                       (SERVICE_LIF_START + 7)
-#define LIF_CPU_BYPASS                 (SERVICE_LIF_START + 8)
+#define LIF_APOLLO                     (SERVICE_LIF_START)
+#define LIF_TCP                        (SERVICE_LIF_START + 1)
+#define LIF_TLS                        (SERVICE_LIF_START + 2) 
+#define LIF_IPSEC_ESP                  (SERVICE_LIF_START + 3)
+#define LIF_IPSEC_AH                   (SERVICE_LIF_START + 4)
+#define LIF_IPFIX                      (SERVICE_LIF_START + 5)
+#define LIF_APP_REDIR                  (SERVICE_LIF_START + 6)
+#define LIF_GC                         (SERVICE_LIF_START + 7)
+#define LIF_P4PT                       (SERVICE_LIF_START + 8)
+#define LIF_CPU_BYPASS                 (SERVICE_LIF_START + 9)
 
 #define SERQ_QID                       0
 #define SESQ_QID                       1
