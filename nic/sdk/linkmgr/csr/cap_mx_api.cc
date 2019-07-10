@@ -525,6 +525,11 @@ void cap_mx_set_ch_mode(int chip_id, int inst_id, int ch, int mode) {
    cap_mx_apb_write(chip_id, inst_id, addr, mode);
 }
 
+// If the value of the length/type field in MAC frame >= 1536, then value
+// indicates type of the frame.
+// If the value of the length/type field in MAC frame < 1500, then value
+// indicates length of the frame.
+// All other values are undefined.
 void cap_mx_disable_eth_len_err(int chip_id, int inst_id, int ch, int value) {
 
    int addr = (ch == 1) ? 0x525 : (ch == 2) ? 0x625 : (ch == 3) ? 0x725 : 0x425;
@@ -557,7 +562,8 @@ void cap_mx_cfg_ch(int chip_id, int inst_id, int ch) {
     } else {
        cap_mx_set_mtu_jabber(chip_id, inst_id, ch, 9216, 9216+4);
     }
-    cap_mx_disable_eth_len_err(chip_id, inst_id, ch, 1);
+    // By default enable the RX len error check
+    cap_mx_disable_eth_len_err(chip_id, inst_id, ch, 0);
 }
 
 void cap_mx_cfg_ch_en(int chip_id, int inst_id, int ch, int enable) {
