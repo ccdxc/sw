@@ -657,13 +657,7 @@ func (n *NMD) SendNICUpdates() error {
 			// TODO : Get status from platform and fill nic Status
 			nicObj.Status = cmd.SmartNICStatus{
 				AdmissionPhase: cmd.SmartNICStatus_ADMITTED.String(),
-				Conditions: []cmd.SmartNICCondition{
-					{
-						Type:               cmd.SmartNICCondition_HEALTHY.String(),
-						Status:             cmd.ConditionStatus_TRUE.String(),
-						LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
-					},
-				},
+				Conditions:     n.UpdateNaplesHealth(),
 			}
 
 			// Send nic status
