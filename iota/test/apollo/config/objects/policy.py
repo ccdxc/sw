@@ -23,28 +23,88 @@ import iota.test.apollo.config.utils as utils
 from iota.harness.infra.utils.logger import Logger as logger
 from iota.test.apollo.config.store import Store
 
-
-class RuleObject:
-    def __init__(self, stateful, l3match, proto, prefix, l4match, sportlow, sporthigh, dportlow, dporthigh):
-        self.Stateful = stateful
-        self.L3Match = l3match
-        self.Proto = proto
-        self.Prefix = prefix
-        self.L4Match = l4match
-        self.L4SportLow = sportlow
-        self.L4SportHigh = sporthigh
-        self.L4DportLow = dportlow
-        self.L4DportHigh = dporthigh
+class L4MatchObject:
+    def __init__(self, valid=False,\
+                 sportlow=utils.L4PORT_MIN, sporthigh=utils.L4PORT_MAX,\
+                 dportlow=utils.L4PORT_MIN, dporthigh=utils.L4PORT_MAX,\
+                 icmptype=utils.ICMPTYPE_MIN, icmpcode=utils.ICMPCODE_MIN):
+        self.valid = valid
+        self.SportLow = sportlow
+        self.SportHigh = sporthigh
+        self.DportLow = dportlow
+        self.DportHigh = dporthigh
+        self.IcmpType = icmptype
+        self.IcmpCode = icmpcode
 
     def Show(self):
-        if self.L3Match:
-            logger.info("- Prefix:%s Proto:%d" %(self.Prefix, self.Proto))
+        if self.valid:
+            logger.info("    SrcPortRange:%d - %d"\
+                        %(self.SportLow, self.SportHigh))
+            logger.info("    DstPortRange:%d - %d"\
+                        %(self.DportLow, self.DportHigh))
+            logger.info("    Icmp Type:%d Code:%d"\
+                        %(self.IcmpType, self.IcmpCode))
         else:
-            logger.info("- No L3Match")
-        if self.L4Match:
-            logger.info("- SrcPortRange:%d - %d DstPortRange:%d - %d" %(self.L4SportLow, self.L4SportHigh, self.L4DportLow, self.L4DportHigh))
+            logger.info("    No L4Match")
+
+class L3MatchObject:
+    def __init__(self, valid=False, proto=utils.L3PROTO_MIN,\
+                 srcpfx=None, dstpfx=None,\
+                 srciplow=None, srciphigh=None, dstiplow=None,\
+                 dstiphigh=None, srctag=None, dsttag=None,\
+                 srctype=utils.L3MatchType.PFX, dsttype=utils.L3MatchType.PFX):
+        self.valid = valid
+        self.Proto = proto
+        self.SrcType = srctype
+        self.DstType = dsttype
+        self.SrcPrefix = srcpfx
+        self.DstPrefix = dstpfx
+        self.SrcIPLow = srciplow
+        self.SrcIPHigh = srciphigh
+        self.DstIPLow = dstiplow
+        self.DstIPHigh = dstiphigh
+        self.SrcTag = srctag
+        self.DstTag = dsttag
+
+    def Show(self):
+        def __get_tag_id(tagObj):
+            return tagObj.TagId if tagObj else None
+
+        if self.valid:
+            logger.info("    Proto:%s(%d)"\
+                        %(utils.GetIPProtoName(self.Proto), self.Proto))
+            logger.info("    SrcType:%s DstType:%s"\
+                        %(self.SrcType, self.DstType))
+            logger.info("    SrcPrefix:%s DstPrefix:%s"\
+                        %(self.SrcPrefix, self.DstPrefix))
+            logger.info("    SrcIPLow:%s SrcIPHigh:%s"\
+                        %(self.SrcIPLow, self.SrcIPHigh))
+            logger.info("    DstIPLow:%s DstIPHigh:%s"\
+                        %(self.DstIPLow, self.DstIPHigh))
+            logger.info("    SrcTag:%s DstTag:%s"\
+                        %(__get_tag_id(self.SrcTag), __get_tag_id(self.DstTag)))
         else:
-            logger.info("- No L4Match")
+            logger.info("    No L3Match")
+
+
+class RuleObject:
+    def __init__(self, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
+        self.Stateful = stateful
+        self.L3Match = l3match
+        self.L4Match = l4match
+        self.Priority = priority
+        self.Action = action
+
+    def Show(self):
+        def __get_action_str(action):
+            if action == policy_pb2.SECURITY_RULE_ACTION_ALLOW:
+                return "allow"
+            return "deny"
+
+        logger.info(" -- Stateful:%s Priority:%d Action:%s"\
+                    %(self.Stateful, self.Priority, __get_action_str(self.Action)))
+        self.L3Match.Show()
+        self.L4Match.Show()
 
 class PolicyObject(base.ConfigObjectBase):
     def __init__(self, parent, af, direction, rules, policytype, overlaptype):
@@ -70,17 +130,37 @@ class PolicyObject(base.ConfigObjectBase):
         return "PolicyID:%d" % (self.PolicyId)
 
     def FillRuleSpec(self, spec, rule):
+        proto = 0
         specrule = spec.Rules.add()
         specrule.Stateful = rule.Stateful
-        if rule.L4Match:
-            specrule.Match.L4Match.Ports.SrcPortRange.PortLow = rule.L4SportLow
-            specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = rule.L4SportHigh
-            specrule.Match.L4Match.Ports.DstPortRange.PortLow = rule.L4DportLow
-            specrule.Match.L4Match.Ports.DstPortRange.PortHigh = rule.L4DportHigh
-        if rule.L3Match:
-            specrule.Match.L3Match.Protocol = rule.Proto
-            if rule.Prefix is not None:
-                utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.Prefix)
+        specrule.Priority = rule.Priority
+        specrule.Action = rule.Action
+        l3match = rule.L3Match
+        if l3match and l3match.valid:
+            proto = l3match.Proto
+            specrule.Match.L3Match.Protocol = proto
+            if l3match.SrcIPLow and l3match.SrcIPHigh:
+                utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Match.L3Match.SrcRange)
+            if l3match.DstIPLow and l3match.DstIPHigh:
+                utils.GetRpcIPRange(l3match.DstIPLow, l3match.DstIPHigh, specrule.Match.L3Match.DstRange)
+            if l3match.SrcTag:
+                specrule.Match.L3Match.SrcTag = l3match.SrcTag.TagId
+            if l3match.DstTag:
+                specrule.Match.L3Match.DstTag = l3match.DstTag.TagId
+            if l3match.SrcPrefix is not None:
+                utils.GetRpcIPPrefix(l3match.SrcPrefix, specrule.Match.L3Match.SrcPrefix)
+            if l3match.DstPrefix is not None:
+                utils.GetRpcIPPrefix(l3match.DstPrefix, specrule.Match.L3Match.DstPrefix)
+        l4match = rule.L4Match
+        if l4match and l4match.valid:
+            if utils.IsICMPProtocol(proto):
+                specrule.Match.L4Match.TypeCode.type = l4match.IcmpType
+                specrule.Match.L4Match.TypeCode.code = l4match.IcmpCode
+            else:
+                specrule.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
+                specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh
+                specrule.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
+                specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
 
     def GetGrpcCreateMessage(self):
         grpcmsg = policy_pb2.SecurityPolicyRequest()

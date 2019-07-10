@@ -70,7 +70,7 @@ class RouteObject(base.ConfigObjectBase):
         grpcmsg = route_pb2.RouteTableRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.RouteTblId
-        spec.AF = utils.GetRpcIPAddrFamily(self.AddrFamily)
+        spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for route in self.routes:
             rtspec = spec.Routes.add()
             utils.GetRpcIPPrefix(route, rtspec.Prefix)

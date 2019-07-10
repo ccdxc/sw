@@ -86,22 +86,28 @@ class SubnetObject(base.ConfigObjectBase):
     def __fill_default_rules(self, policyobj):
         rules = []
         pfx = None
+        srcPfx = None
+        dstPfx = None
         if policyobj.AddrFamily == 'IPV4':
             if policyobj.PolicyType == 'default':
-                pfx = ipaddress.ip_network('0.0.0.0/0')
+                pfx = utils.IPV4_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[1])
         else:
             if policyobj.PolicyType == 'default':
-                pfx = ipaddress.ip_network('::/0')
+                pfx = utils.IPV6_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[0])
+        srcPfx = pfx
+        dstPfx = pfx
+        l4match = policy.L4MatchObject(True)
         for proto in protos:
-            rule = policy.RuleObject(False, True, proto, pfx, True, 0, 65535, \
-                                     0, 65535)
+            l3match = policy.L3MatchObject(True, proto, srcpfx=srcPfx, dstpfx=dstPfx)
+            rule = policy.RuleObject(l3match, l4match)
             rules.append(rule)
         policyobj.rules = rules
         policyobj.Show()
+
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.

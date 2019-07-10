@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import sys
+import enum
 import ipaddress
 import socket
 from random import sample
@@ -8,6 +9,33 @@ import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
 from iota.test.apollo.config.store import Store
+
+UINT32_MIN = 0
+UINT32_MAX = 4294967295
+
+IP_VERSION_6 = 6
+IP_VERSION_4 = 4
+
+L3PROTO_MIN = 0
+
+L4PORT_MIN = 0
+L4PORT_MAX = 65535
+
+ICMPTYPE_MIN = 0
+ICMPTYPE_MAX = 255
+
+ICMPCODE_MIN = 0
+ICMPCODE_MAX = 255
+
+ETHER_HDR_LEN = 14
+DOT1Q_HDR_LEN = 4
+
+IPV4_MINADDR = ipaddress.ip_address("0.0.0.0")
+IPV4_MAXADDR = ipaddress.ip_address("255.255.255.255")
+
+IPV6_MINADDR = ipaddress.ip_address("0::0")
+IPV6_MAXADDR = ipaddress.ip_address("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
+
 
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
@@ -22,6 +50,11 @@ IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name
     # Eth2/1 0x11020001 ==> 2 Switchport
 """
 INTF2PORT_TBL = { 0x11010001: 1, 0x11020001: 2}
+
+class L3MatchType(enum.IntEnum):
+    PFX = 0
+    PFXRANGE = 1
+    TAG = 2
 
 class rrobiniter:
     def __init__(self, objs):
@@ -47,6 +80,12 @@ def GetFilteredObjects(objs, maxlimits, random=True):
     if random:
         return sample(objs, k=num)
     return objs[0:num]
+
+def IsICMPProtocol(proto):
+    """
+        returns True if given proto is icmp/icmpv6
+    """
+    return 'ICMP' in GetIPProtoName(proto)
 
 def GetIPProtoName(proto):
     """

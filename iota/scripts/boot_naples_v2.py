@@ -413,9 +413,9 @@ class NaplesManagement(EntityManagement):
         self.Login(bringup_oob)
 
     def _getMemorySize(self):
-        mem_check_cmd = '''cat /proc/iomem | grep "System RAM" | grep "200000000" | cut  -d'-' -f 1'''
+        mem_check_cmd = '''cat /proc/iomem | grep "System RAM" | grep "240000000" | cut  -d'-' -f 1'''
         try:
-            self.SendlineExpect(mem_check_cmd, "200000000" + '\r\n' + '#', timeout = 1)
+            self.SendlineExpect(mem_check_cmd, "240000000" + '\r\n' + '#', timeout = 1)
             return "8G"
         except:
             return "4G"
