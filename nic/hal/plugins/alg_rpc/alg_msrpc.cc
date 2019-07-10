@@ -25,6 +25,12 @@ uuid_t epm_uuid = {0xe1af8308, 0x5d1f, 0x11c9, 0x91, 0xa4, {0x08, 0x00, 0x2b, 0x
 uuid_t ndr_64bit = {0x71710533, 0xbeba, 0x4937, 0x83, 0x19, {0xb5, 0xdb, 0xef, 0x9c, 0xcc, 0x36}};
 uuid_t ndr_32bit = {0x8a885d04, 0x1ceb, 0x11c9, 0x9f, 0xe8, {0x08, 0x00, 0x2b, 0x10, 0x48, 0x60}};
 
+static inline bool is_unsupported_ptype(msrpc_cn_common_hdr_t rpc_hdr) {
+    return ((rpc_hdr.ptype != PDU_REQ && rpc_hdr.ptype != PDU_RESP && rpc_hdr.ptype != PDU_REJECT
+             && rpc_hdr.ptype != PDU_BIND && rpc_hdr.ptype != PDU_BIND_ACK && rpc_hdr.ptype != PDU_BIND_NAK
+             && rpc_hdr.ptype != PDU_ALTER_CTXT && rpc_hdr.ptype != PDU_ALTER_CTXT_ACK));
+}
+
 std::ostream& operator<<(std::ostream& os, const rpc_info_t& val) {
     os << "{skip_sfw=" << val.skip_sfw;
     os << " ,rpc_frag_cont=" << val.rpc_frag_cont;
@@ -772,10 +778,13 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     if (pkt_len < (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
                        pkt_len, (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t)));
-        return 0;
+        return pkt_len;
     }
 
     pgm_offset = __parse_cn_common_hdr(pkt, rpc_msg_offset, &rpc_hdr, rpc_info);
+    if (rpc_hdr.rpc_ver != MSRPC_CN_RPC_VERS || is_unsupported_ptype(rpc_hdr)) {
+        return pkt_len;
+    }
 
     /*
      * L7 Fragment reassembly
@@ -942,10 +951,14 @@ size_t parse_msrpc_dg_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
                        pkt_len, (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t)));
         incr_parse_error(rpc_info);
-        return 0;
+        return pkt_len;
     }
 
     __parse_dg_common_hdr(pkt, rpc_msg_offset, &rpc_hdr, rpc_info);
+    if (rpc_hdr.rpc_ver != MSRPC_DG_RPC_VERS || 
+        (rpc_hdr.ptype != PDU_REQ && rpc_hdr.ptype != PDU_RESP)) {
+        return pkt_len;
+    }
 
     HAL_TRACE_VERBOSE("Parsed MSRPC Connectionless header: {}", rpc_hdr);
 

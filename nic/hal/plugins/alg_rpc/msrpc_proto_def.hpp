@@ -30,6 +30,8 @@
 #define L4_PROTO_SZ      4
 #define L3_PROTO_SZ      6
 #define DEFAULT_PROTO_SZ 2
+#define MSRPC_CN_RPC_VERS 5
+#define MSRPC_DG_RPC_VERS 4
 
 namespace hal {
 namespace plugins {
