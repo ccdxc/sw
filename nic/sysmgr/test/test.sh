@@ -35,7 +35,7 @@ runtest () {
     json=$1
     shift
     lines=("$@")
-    rm -rf *.log core.* /tmp/delphi*
+    rm -rf *.log core.* /tmp/delphi* *.out.log* *.err.log*
     echo Running $json test
     timeout -k $tm $tm ${BUILD_DIR}/bin/sysmgr $json .
     cat *.log

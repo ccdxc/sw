@@ -9,6 +9,7 @@
 
 #include "eventlogger.hpp"
 #include "fault_watcher.hpp"
+#include "pipedio.hpp"
 #include "service_watcher.hpp"
 #include "timer_watcher.hpp"
 #include "utils.hpp"
@@ -41,9 +42,17 @@ ServiceDepPtr ServiceDep::create(ServiceSpecDepPtr spec)
 
 void Service::launch()
 {
-    this->pid = ::launch(this->spec->name, this->spec->command);
+    process_t new_process;
+
+    ::launch(this->spec->name, this->spec->command, &new_process);
+    this->pid = new_process.pid;
+    this->stdout_pipe = PipedIO::create(new_process.stdout,
+        get_logname_for_process(this->spec->name, this->pid, "out"));
+    this->stderr_pipe = PipedIO::create(new_process.stderr,
+        get_logname_for_process(this->spec->name, this->pid, "err"));
     logger->info("Launched {}({}) using {}", this->spec->name, this->pid,
         this->spec->command);
+    
 
     if (this->child_watcher != nullptr)
     {
@@ -105,6 +114,8 @@ ServicePtr Service::create(ServiceSpecPtr spec)
     svc->child_watcher = nullptr;
     svc->timer_watcher = nullptr;
     svc->restart_count = 0;
+    svc->stdout_pipe = nullptr;
+    svc->stderr_pipe = nullptr;
     svc->config_state = SERVICE_CONFIG_STATE_ON;
     svc->running_state = SERVICE_RUNNING_STATE_OFF;
     svc->check_dep_and_launch();

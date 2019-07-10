@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #include <zlib.h>
 
 #include "nic/utils/penlog/lib/penlog.hpp"
@@ -19,6 +20,34 @@
 const pid_t mypid = getpid();
 std::string log_location = "/var/log/sysmgr";
 penlog::LoggerPtr logger = std::make_shared<penlog::NullLogger>();
+
+void redirect(const std::string &filename, int fd)
+{
+    int file_fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    
+    close(fd);
+
+    dup2(file_fd, fd);
+    
+    close(file_fd);
+}
+
+// Redirect stdout and stderr
+void redirect_stds(const std::string &name, pid_t pid)
+{
+    redirect(log_location + "/" + name + "." + std::to_string(pid) +
+        ".out" + ".log", 1);
+    redirect(log_location + "/" + name + "." + std::to_string(pid) +
+        ".err" + ".log", 2);
+}
+
+
+
+std::string get_logname_for_process(std::string name, int pid, std::string suffix)
+{
+    return log_location + "/" + name + "." + std::to_string(pid) +
+        "." + suffix + ".log";
+}
 
 void exists_or_mkdir(const char *dir)
 {
@@ -71,24 +100,13 @@ void mkdirs(const char *dir)
     exists_or_mkdir(tmp);
 }
 
-void redirect(const std::string &filename, int fd)
+void replace_fd(int from, int to)
 {
-    int file_fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-   
-    close(fd);
+    close(to);
 
-    dup2(file_fd, fd);
+    dup2(from, to);
 
-    close(file_fd);
-}
-
-// Redirect stdout and stderr
-void redirect_stds(const std::string &name, pid_t pid)
-{
-    redirect(log_location + "/" + name + "." + std::to_string(pid) +
-        ".out" + ".log", 1);
-    redirect(log_location + "/" + name + "." + std::to_string(pid) +
-        ".err" + ".log", 2);
+    close(from);
 }
 
 void exec_command(const std::string &command)
@@ -113,9 +131,17 @@ void exec_command(const std::string &command)
     exit(-1); // the only way to get here is if exec failed, exit
 }
 
-pid_t launch(const std::string &name, const std::string &command)
+void launch(const std::string &name, const std::string &command,
+             process_t *new_process)
 {
-    pid_t pid = fork();
+    pid_t pid;
+    int outfds[2];
+    int errfds[2];
+
+    pipe(outfds);
+    pipe(errfds);
+
+    pid = fork();
 
     if (pid == -1)
     {
@@ -124,14 +150,27 @@ pid_t launch(const std::string &name, const std::string &command)
     }
     else if (pid == 0)
     {
-        redirect_stds(name, getpid());
+        // replace the stdout with the "output" side of the "stdout" pipe
+        replace_fd(outfds[1], 0);
+        // for the child we close the "input" side of the pipe
+        close(outfds[0]);
+        // replace the stderr with the "output" side of the "stderr" pipe
+        replace_fd(errfds[1], 1);
+        // for the child we close the "input" side of the pipe
+        close(errfds[0]);
         // cpulock();
         exec_command(command);
     }
 
+    // On the parent side we close the "output" side of the pipes
+    close(outfds[1]);
+    close(errfds[1]);
+
     logger->info("Fork success. Child pid: {}", pid);
 
-    return pid;
+    new_process->pid = pid;
+    new_process->stdout = outfds[0];
+    new_process->stderr = errfds[0];
 }
 
 void switch_root()

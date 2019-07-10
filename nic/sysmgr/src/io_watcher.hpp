@@ -19,11 +19,11 @@ private:
     IOReactorPtr reactor;
     void io_callback(ev::io &watcher, int revents);
 public:
-    std::shared_ptr<IOWatcher> create(int fd, IOReactorPtr reactor);
+    static std::shared_ptr<IOWatcher> create(int fd, IOReactorPtr reactor);
     IOWatcher(int fd, IOReactorPtr reactor);
     ~IOWatcher();
     void stop();
 };
-
+typedef std::shared_ptr<IOWatcher> IOWatcherPtr;
 
 #endif // __IO_WATCHER_HPP__

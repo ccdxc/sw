@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "child_watcher.hpp"
+#include "pipedio.hpp"
 #include "service_spec.hpp"
 #include "service_watcher.hpp"
 #include "timer_watcher.hpp"
@@ -39,7 +40,6 @@ enum service_running_state
     SERVICE_RUNNING_STATE_OFF,
 };
 
-
 class Service : public std::enable_shared_from_this<Service>,
                 public ServiceReactor,
                 public ChildReactor,
@@ -54,6 +54,8 @@ private:
     enum service_config_state config_state;
     enum service_running_state running_state;
     int restart_count;
+    PipedIOPtr stdout_pipe;
+    PipedIOPtr stderr_pipe;
     void check_dep_and_launch();
     void start_heartbeat();
     void launch();
