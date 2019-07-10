@@ -102,6 +102,7 @@ typedef struct rfc_ctxt_s {
 } rfc_ctxt_t;
 
 void rfc_ctxt_destroy(rfc_ctxt_t *rfc_ctxt);
+void rfc_table_destroy(rfc_table_t *rfc_table);
 sdk_ret_t rfc_ctxt_init(rfc_ctxt_t *rfc_ctxt, policy_t *policy,
                         mem_addr_t base_addr, uint32_t mem_size);
 void itable_add_address_inodes(uint32_t rule, inode_t *addr_inode,

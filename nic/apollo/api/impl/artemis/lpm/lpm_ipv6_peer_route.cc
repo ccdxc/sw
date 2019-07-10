@@ -74,22 +74,19 @@ lpm_ipv6_peer_route_add_key_to_last_stage (uint8_t *bytes, uint32_t idx,
             sdk::lib::memrev(table->action_u.txlpm1_match1_64b_retrieve.key0,
                              &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                              IP6_ADDR8_LEN/2);
-            table->action_u.txlpm1_match1_64b_retrieve.data0 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_64b_retrieve.data0 = lpm_inode->data;
             break;
         case 1:
             sdk::lib::memrev(table->action_u.txlpm1_match1_64b_retrieve.key1,
                              &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                              IP6_ADDR8_LEN/2);
-            table->action_u.txlpm1_match1_64b_retrieve.data1 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_64b_retrieve.data1 = lpm_inode->data;
             break;
         case 2:
             sdk::lib::memrev(table->action_u.txlpm1_match1_64b_retrieve.key2,
                              &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                              IP6_ADDR8_LEN/2);
-            table->action_u.txlpm1_match1_64b_retrieve.data2 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_64b_retrieve.data2 = lpm_inode->data;
             break;
         default:
             break;
@@ -102,7 +99,7 @@ sdk_ret_t
 lpm_ipv6_peer_route_set_default_data (uint8_t *bytes, uint32_t default_data)
 {
     auto table = (txlpm1_actiondata_t *) bytes;
-    table->action_u.txlpm1_match1_64b_retrieve.data_ = (uint16_t)default_data;
+    table->action_u.txlpm1_match1_64b_retrieve.data_ = default_data;
     return SDK_RET_OK;
 }
 

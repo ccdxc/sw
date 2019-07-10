@@ -82,44 +82,37 @@ lpm_ipv4_peer_route_add_key_to_last_stage (uint8_t *bytes, uint32_t idx,
         case 0:
             table->action_u.txlpm1_match1_32b_retrieve.key0 =
                     lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.txlpm1_match1_32b_retrieve.data0 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_32b_retrieve.data0 = lpm_inode->data;
             break;
         case 1:
             table->action_u.txlpm1_match1_32b_retrieve.key1 =
                     lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.txlpm1_match1_32b_retrieve.data1 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_32b_retrieve.data1 = lpm_inode->data;
             break;
         case 2:
             table->action_u.txlpm1_match1_32b_retrieve.key2 =
                     lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.txlpm1_match1_32b_retrieve.data2 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_32b_retrieve.data2 = lpm_inode->data;
             break;
         case 3:
             table->action_u.txlpm1_match1_32b_retrieve.key3 =
                     lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.txlpm1_match1_32b_retrieve.data3 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_32b_retrieve.data3 = lpm_inode->data;
             break;
         case 4:
             table->action_u.txlpm1_match1_32b_retrieve.key4 =
                     lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.txlpm1_match1_32b_retrieve.data4 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_32b_retrieve.data4 = lpm_inode->data;
             break;
         case 5:
             table->action_u.txlpm1_match1_32b_retrieve.key5 =
                     lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.txlpm1_match1_32b_retrieve.data5 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_32b_retrieve.data5 = lpm_inode->data;
             break;
         case 6:
             table->action_u.txlpm1_match1_32b_retrieve.key6 =
                     lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.txlpm1_match1_32b_retrieve.data6 =
-                    (uint16_t)lpm_inode->data;
+            table->action_u.txlpm1_match1_32b_retrieve.data6 = lpm_inode->data;
             break;
         default:
             break;
@@ -132,8 +125,7 @@ sdk_ret_t
 lpm_ipv4_peer_route_set_default_data (uint8_t *bytes, uint32_t default_data)
 {
     auto table = (txlpm1_actiondata_t *) bytes;
-    table->action_u.txlpm1_match1_32b_retrieve.data_ =
-            (uint16_t)default_data;
+    table->action_u.txlpm1_match1_32b_retrieve.data_ = default_data;
     return SDK_RET_OK;
 }
 

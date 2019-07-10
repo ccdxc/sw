@@ -822,6 +822,8 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     rv = rte_bitmap_scan(cbm, &start_posn, &slab);
     if (rv == 0) {
         // no bit is set in the bitmap
+        PDS_TRACE_DEBUG("No bits set in bitmap, setting lowest priority");
+        RFC_RESULT_SET_PRIORITY_BITS(result, SACL_PRIORITY_LOWEST);
     } else {
         do {
             posn = RTE_BITMAP_START_SLAB_SCAN_POS;
@@ -834,14 +836,17 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                     result = 0;
                     if (rfc_ctxt->policy->rules[ruleidx].fw_act ==
                             SECURITY_RULE_ACTION_ALLOW) {
-                        RFC_RESULT_SET_ACTION_BIT(result, RFC_RESULT_RULE_ACTION_ALLOW);
+                        RFC_RESULT_SET_ACTION_BIT(result,
+                                                  RFC_RESULT_RULE_ACTION_ALLOW);
                     } else {
-                        RFC_RESULT_SET_ACTION_BIT(result, RFC_RESULT_RULE_ACTION_DENY);
+                        RFC_RESULT_SET_ACTION_BIT(result,
+                                                  RFC_RESULT_RULE_ACTION_DENY);
                     }
                     RFC_RESULT_SET_PRIORITY_BITS(result, priority);
                 } else {
                     PDS_TRACE_DEBUG("rule %u priority %u < current %u, skipping",
-                                    ruleidx, rfc_ctxt->policy->rules[ruleidx].priority,
+                                    ruleidx,
+                                    rfc_ctxt->policy->rules[ruleidx].priority,
                                     priority);
                 }
                 posn = new_posn;
@@ -1043,6 +1048,7 @@ sdk_ret_t
 rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
 {
     // combination 1
+    PDS_TRACE_DEBUG("Starting RFC combination 1");
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->sip_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
@@ -1054,8 +1060,11 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
                           SACL_P2_1_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_1_TABLE_OFFSET);
+    rfc_table_destroy(&rfc_ctxt->p1_table);
+    rfc_table_destroy(&rfc_ctxt->p2_table);
 
     // combination 2
+    PDS_TRACE_DEBUG("Starting RFC combination 2");
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->stag_tree.rfc_table,
                           &rfc_ctxt->dip_tree.rfc_table,
@@ -1067,8 +1076,11 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
                           SACL_P2_2_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_2_TABLE_OFFSET);
+    rfc_table_destroy(&rfc_ctxt->p1_table);
+    rfc_table_destroy(&rfc_ctxt->p2_table);
 
     // combination 3
+    PDS_TRACE_DEBUG("Starting RFC combination 3");
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->sip_tree.rfc_table,
                           &rfc_ctxt->dtag_tree.rfc_table,
@@ -1080,19 +1092,27 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
                           SACL_P2_3_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_3_TABLE_OFFSET);
+    rfc_table_destroy(&rfc_ctxt->p1_table);
+    rfc_table_destroy(&rfc_ctxt->p2_table);
 
     // combination 4
+    PDS_TRACE_DEBUG("Starting RFC combination 4");
+    PDS_TRACE_DEBUG("Computing P1 tables");
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->stag_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
                           SACL_P1_4_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P2 tables");
     rfc_compute_p2_tables(rfc_ctxt,
                           &rfc_ctxt->dtag_tree.rfc_table,
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_4_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P3 tables");
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_4_TABLE_OFFSET);
+    rfc_table_destroy(&rfc_ctxt->p1_table);
+    rfc_table_destroy(&rfc_ctxt->p2_table);
 
     return SDK_RET_OK;
 }

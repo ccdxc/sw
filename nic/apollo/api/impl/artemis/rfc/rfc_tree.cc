@@ -6,6 +6,7 @@
  * @brief   RFC tree related helper APIs
  */
 
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
 #include "nic/apollo/api/impl/artemis/rfc/rfc_tree.hpp"
 #include "nic/apollo/p4/include/artemis_sacl_defines.h"
@@ -121,13 +122,14 @@ itable_add_proto_port_inodes (uint32_t rule, inode_t *proto_port_inode,
     proto_port_inode->rfc.pad = 0;
 }
 
-static inline void
+void
 rfc_table_destroy (rfc_table_t *rfc_table)
 {
     rfc_table->cbm_map.clear();
     for (uint32_t i = 0; i < RFC_MAX_EQ_CLASSES; i++) {
         if (rfc_table->cbm_table[i].cbm) {
             free(rfc_table->cbm_table[i].cbm);
+            rfc_table->cbm_table[i].cbm = NULL;
         }
     }
 }
@@ -240,6 +242,18 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     // setup P2 table
     new (&rfc_ctxt->p2_table.cbm_map) cbm_map_t();
     rfc_ctxt->p2_table.max_classes = SACL_P2_MAX_CLASSES;
+
+#if 0
+    // initialize P3 tables's memory for all four combinations
+    sdk::lib::pal_mem_set(base_addr + SACL_P3_1_TABLE_OFFSET, 0xFF,
+                          SACL_P3_1_TABLE_SIZE);
+    sdk::lib::pal_mem_set(base_addr + SACL_P3_2_TABLE_OFFSET, 0xFF,
+                          SACL_P3_2_TABLE_SIZE);
+    sdk::lib::pal_mem_set(base_addr + SACL_P3_3_TABLE_OFFSET, 0xFF,
+                          SACL_P3_3_TABLE_SIZE);
+    sdk::lib::pal_mem_set(base_addr + SACL_P3_4_TABLE_OFFSET, 0xFF,
+                          SACL_P3_4_TABLE_SIZE);
+#endif
 
     // setup the scratch pad memory
     rfc_ctxt->cbm_size =

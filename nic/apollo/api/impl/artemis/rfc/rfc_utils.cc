@@ -6,6 +6,7 @@
  * @brief   RFC library internal helper functions
  */
 
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
 #include "nic/apollo/api/impl/artemis/rfc/rfc_utils.hpp"
@@ -120,6 +121,7 @@ rfc_compute_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
         return it->second;
     }
     class_id = rfc_table->num_classes++;
+    PDS_TRACE_DEBUG("class id allocated is %u", class_id);
     SDK_ASSERT(class_id < RFC_MAX_EQ_CLASSES);
     if (rfc_table->cbm_table[class_id].cbm) {
         bits = (uint8_t *)rfc_table->cbm_table[class_id].cbm;
@@ -135,6 +137,7 @@ rfc_compute_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     return class_id;
 }
 
+#if 0
 uint16_t
 rfc_compute_tag_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                              rte_bitmap *cbm, uint32_t cbm_size, void *ctxt)
@@ -164,5 +167,6 @@ rfc_compute_tag_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     rfc_table->cbm_map[cbm_new] = class_id;
     return class_id;
 }
+#endif
 
 }    // namespace rfc
