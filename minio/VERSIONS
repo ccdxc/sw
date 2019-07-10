@@ -1,12 +1,12 @@
 # format: <name> <version>
-third_party_libs 1.1.131
+third_party_libs 1.1.132
 lkl_libs 1.1.11
 openssl_libs 1.1.0
 platform_libs 0.0.36
 storage_libs 0.0.1
-asic_libs 74e94b790a8b0278d7e6a3e0d81bc1a6c4e61a7b
-ncc_tools 74e94b790a8b0278d7e6a3e0d81bc1a6c4e61a7b
-pbc_config 74e94b790a8b0278d7e6a3e0d81bc1a6c4e61a7b
+asic_libs 64269f50084cbb2ce2e23de86eb6150203b116d5
+ncc_tools 64269f50084cbb2ce2e23de86eb6150203b116d5
+pbc_config 64269f50084cbb2ce2e23de86eb6150203b116d5
 upgrade 1.0.14
 iota 1.0.2
 host_tools 1.0.21
