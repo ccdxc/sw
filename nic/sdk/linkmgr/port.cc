@@ -875,7 +875,6 @@ port::port_link_sm_process(void)
                 // disable and put mac in reset
                 port_mac_soft_reset(true);
                 port_mac_enable(false);
-                port_mac_stats_reset(true);
 
                 // reset number of link bringup retries
                 set_num_retries(0);
@@ -985,7 +984,6 @@ port::port_link_sm_process(void)
                 port_flush_set(true);
 
                 // bring MAC out of reset and enable
-                port_mac_stats_reset(false);
                 port_mac_enable(true);
                 port_mac_soft_reset(false);
 
