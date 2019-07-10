@@ -116,7 +116,8 @@ class FlowMapObjectHelper:
         mapsel.flow.filters.remove((key, fwdmode))
         rmapsel = copy.deepcopy(mapsel)
 
-        assert (fwdmode == 'VNET' or fwdmode == 'IGW' or fwdmode == 'SVCTUN') == True
+        assert (fwdmode == 'VNET' or fwdmode == 'IGW' or fwdmode == 'SVCTUN' or\
+                fwdmode == 'SVCTUN_REMOTE') == True
 
         if fwdmode == 'VNET':
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -144,11 +145,14 @@ class FlowMapObjectHelper:
 
             return utils.GetFilteredObjects(objs, selectors.maxlimits)
 
-        elif fwdmode == 'SVCTUN':
+        elif fwdmode == 'SVCTUN' or fwdmode == 'SVCTUN_REMOTE':
             for lobj in lmapping.GetMatchingObjects(mapsel):
                 vpc = lobj.VNIC.SUBNET.VPC
                 if vpc.Nat46_pfx is not None:
                     for routetblobj in routetable.GetAllMatchingObjects(mapsel):
+                        if fwdmode == 'SVCTUN_REMOTE':
+                            if routetblobj.TUNNEL.Remote is False:
+                                continue
                         obj = FlowMapObject(lobj, None, fwdmode, routetblobj)
                         objs.append(obj)
             return utils.GetFilteredObjects(objs, selectors.maxlimits)

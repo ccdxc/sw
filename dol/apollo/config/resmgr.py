@@ -78,6 +78,7 @@ SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::
 # -------------------------------------------------------------------
 SvcTunAllocator = None
 RemoteSvcTunAllocator = None
+RemoteSvcTunIPv4Addr = ipaddress.IPv4Network('30.0.0.0/24').hosts()
 
 #TODO: read from PDS header files & init
 MAX_DEVICE = 1

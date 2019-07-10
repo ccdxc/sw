@@ -31,6 +31,8 @@ def AddPacketEncapVxlan(pkt, encap):
         pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'vxlan'] + pkt.hdrsorder
     elif encap.meta.id == 'ENCAP_VXLAN_IPV6':
         pkt.hdrsorder = ['outereth', 'outeripv6', 'outerudp', 'vxlan'] + pkt.hdrsorder
+    elif encap.meta.id == 'ENCAP_VXLAN2':
+        pkt.hdrsorder = ['outereth_1', 'outeripv4_1', 'outerudp_1', 'outervxlan', 'outereth', 'outeripv4', 'outerudp', 'vxlan'] + pkt.hdrsorder
     else:
         assert 0
     return

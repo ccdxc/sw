@@ -1,0 +1,35 @@
+# Feature networking Modules List for Local to Remote scenario with service tunnels
+feature:
+    id          : networking
+    sub         : svctun
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_TCP_SVC_TUN_LOCAL2REMOTE
+        spec    : svctun_local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=SVCTUN,TunFamily=IPV4,Label=NETWORKING
+
+    - module:
+        name    : IPV4_TCP_SVC_TUN_REMOTE_LOCAL2REMOTE
+        spec    : svctun_local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=SVCTUN_REMOTE,TunFamily=IPV4,Label=NETWORKING
+
+    - module:
+        name    : IPV4_TCP_SVC_TUN_REMOTE2LOCAL
+        spec    : svctun_remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=SVCTUN,TunFamily=IPV4,Label=NETWORKING
+
+    - module:
+        name    : IPV4_TCP_SVC_TUN_REMOTE_REMOTE2LOCAL
+        spec    : svctun_remote_remote2local.testspec
+        args    :
+            - direction : remote2local
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=SVCTUN_REMOTE,TunFamily=IPV4,Label=NETWORKING

@@ -1,0 +1,84 @@
+# Test Spec
+#
+#   IN(l2,vlan,ip,udp)
+#
+#     Rx path
+#     Remove the vxlan encap after terminating based on received
+#     vnid
+#     IPv6 SIPi is xlated to IPv4 (last 32 bits of received IPv6
+#     packet)
+#     IPv6 DIPi is xlated to IPv4 (last 32 bits of received IPv6
+#     packet)
+#     vlan tag added from EGRESS_VNIC_INFO table
+
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 2
+    flow: filter://any
+    route: filter://VPCPeeringEnabled=False,HasBlackHoleRoute=False,HasServiceTunnel=True
+
+packets:
+    - packet:
+        id          : FROM_SWITCH_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV6_TCP
+        encaps      : callback://networking/packets/GetPacketEncapFromRoute
+        headers     :
+            outereth:
+                dst     : ref://testcase/config/devicecfg/MACAddr
+                src     : ref://testcase/config/route/TUNNEL/MACAddr
+            outeripv4:
+                dst     : ref://testcase/config/localmapping/ProviderIP
+                src     : callback://networking/packets/GetPacketV4DIPoRemote46
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/route/TUNNEL/EncapValue
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : 00:00:00:00:00:02
+            ipv6:
+                dst     : callback://networking/packets/GetIPV6FromNat46
+                src     : ref://testcase/config/route/TUNNEL/RemoteIP
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/localmapping/AppPort
+                dport   : ref://testcase/config/localmapping/AppPort
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : 00:00:00:00:00:02
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : callback://networking/packets/GetPacketV4DIPoRemote46
+                ttl     : 64
+            tcp:
+                sport   : ref://testcase/config/localmapping/AppPort
+                dport   : ref://testcase/config/localmapping/AppPort
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+            port    : ref://testcase/config/switchport
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TO_HOST_PKT
+            port    : ref://testcase/config/hostport

@@ -43,12 +43,15 @@ class TunnelObject(base.ConfigObjectBase):
                 else:
                     self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
+                self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
                 if hasattr(spec, "remote") and spec.remote is True:
                     self.Remote = True
+                    self.RemoteServicePublicIP = next(resmgr.RemoteSvcTunIPv4Addr)
+                    self.RemoteServiceEncap = next(resmgr.IGWVxlanIdAllocator)
                 else:
                     self.Remote = False
-                self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
                 self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
+        self.RemoteIP = str(self.RemoteIPAddr) # for testspec
         self.MACAddr = resmgr.TepMacAllocator.get()
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
 
@@ -77,6 +80,10 @@ class TunnelObject(base.ConfigObjectBase):
         spec.Nat = self.Nat
         if utils.IsPipelineArtemis():
             spec.MACAddress = self.MACAddr.getnum()
+            if self.Type is tunnel_pb2.TUNNEL_TYPE_SERVICE and self.Remote is True:
+                spec.RemoteService = self.Remote
+                utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
+                utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         return grpcmsg
 
     def IsWorkload(self):

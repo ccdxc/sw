@@ -2,32 +2,27 @@
 #
 # Scenario1-Service tunnel out :
 #
-#   IN(l2,vlan,ip,udp)
 #   OUT(l2o,ipo,udpo,vxlano,ORIG(l2,ip,udp)).
 #
 #   Tx path:
 #       SMACi is unchnged
 #       DMACi is unchanged
-#       SIPi xlated to IPv6 (from LOCAL_46_TX table)
+#       SIPi xlated to IPv6 (from LOCAL_46_TX table (local_46 pfx | local mapping v4 addr))
 #       DIPi xlated to IPv6 (comes from REMOTE_46_MAPPING table,
-#                            stored in the flow)
+#                            stored in the flow (remote_46 pfx | dst addr))
 #       L4 ports remain unchanged
 #       Vxlan encap is added (IPv4)
 #       SMACo is local device mac (table constant of EGRESS_VNIC_INFO)
 #       DMACo is from nexthop (comes from REMOTE_46_MAPPING table,
 #                              stored in flow table)
-#       SIPo is provider IP of SIPi (from NAT table)
+#       Service tunnel
+#           SIPo is provider IP of SIPi (from NAT table)
+#       Remote service tunnel
+#           SIPo is public IP of remote service tunnel (DIPo from NEXTHOP table)
 #       DIPo is last 32 bits of IPv6 address from REMOTE_46_MAPPING
 #       table
 #       vnid corresponding to the service tunnel (from NEXTHOP table)
-#   Rx path:
-#       Remove the vxlan encap after terminating based on received
-#       vnid
-#       IPv6 SIPi is xlated to IPv4 (last 32 bits of received IPv6
-#       packet)
-#       IPv6 DIPi is xlated to IPv4 (last 32 bits of received IPv6
-#       packet)
-#       vlan tag added from EGRESS_VNIC_INFO table
+
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 2
@@ -38,7 +33,7 @@ packets:
     - packet:
         id          : FROM_HOST_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -51,13 +46,9 @@ packets:
                 prio    : 0
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
-                dst     : callback://networking/packets/GetUsableHostFromRoute
+                dst     : callback://networking/packets/GetPacketV4DIPoRemote46
                 ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/localmapping/IP
-                dst     : callback://networking/packets/GetUsableHostFromRoute
-                hlim    : 64
-            udp:
+            tcp:
                 sport   : ref://testcase/config/localmapping/AppPort
                 dport   : ref://testcase/config/localmapping/AppPort
             payload:
@@ -65,32 +56,33 @@ packets:
 
     - packet:
         id          : TO_SWITCH_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV6_TCP
         encaps      : callback://networking/packets/GetPacketEncapFromRoute
         headers     :
             outereth:
                 src     : ref://testcase/config/devicecfg/MACAddr
                 dst     : ref://testcase/config/route/TUNNEL/MACAddr
             outeripv4:
-                src     : ref://testcase/config/localmapping/ProviderIP
+                src     : callback://networking/packets/GetSIPoFromSvcTun
                 dst     : callback://networking/packets/GetPacketV4DIPoRemote46
                 ttl     : 64
                 tos     : 0
                 id      : 0
-            outeripv6:
-                src     : ref://testcase/config/localmapping/ProviderIP
-                dst     : ref://testcase/config/route/TUNNEL/IPAddr
-                hlim    : 64
-            ipv6:
-                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VPC/Nat46_pfx
-                dst     : callback://networking/packets/GetPacketV6DIPoRemote46
-                hlim    : 64
             vxlan:
                 vni     : ref://testcase/config/route/TUNNEL/EncapValue
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
                 dst     : 00:00:00:00:00:02
+            ipv6:
+                src     : callback://networking/packets/GetIPV6FromNat46
+                dst     : ref://testcase/config/route/TUNNEL/RemoteIP
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/localmapping/AppPort
+                dport   : ref://testcase/config/localmapping/AppPort
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 trigger:
     packets:

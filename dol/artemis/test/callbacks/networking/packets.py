@@ -8,6 +8,7 @@ import infra.api.api as infra_api
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
 import policy_pb2 as policy_pb2
+import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
 
 IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
@@ -464,7 +465,12 @@ def GetIPFromLocalMapping(testcase, packet, args=None):
 
 def __get_packet_encap_impl_from_route(obj, tunnel, args):
     if obj.IsEncapTypeVXLAN():
-        encap = 'ENCAP_VXLAN'
+        direction = __get_module_args_value(args, 'direction')
+        if tunnel.Type is tunnel_pb2.TUNNEL_TYPE_SERVICE and \
+            tunnel.Remote is True and direction == "remote2local":
+            encap = 'ENCAP_VXLAN2'
+        else:
+            encap = 'ENCAP_VXLAN'
     else:
         assert 0
     return infra_api.GetPacketTemplate(encap)
@@ -472,54 +478,13 @@ def __get_packet_encap_impl_from_route(obj, tunnel, args):
 # This can be called for packets to switch or from switch
 def GetPacketEncapFromRoute(testcase, packet, args=None):
     encaps = []
-    encaps.append(__get_packet_encap_impl_from_route(testcase.config.devicecfg, testcase.config.route.TUNNEL, args))
+    encaps.append(__get_packet_encap_impl_from_route(testcase.config.devicecfg, testcase.config.route.TUNNEL, testcase.module.args))
     return encaps
 
 def GetCPSPacketIFlowFlagsFromRoute(testcase, packet, args=None):
     if testcase.config.route.AddrFamily == 'IPV6':
         return 128
     return 0
-
-def __get_v4_from_v6(addr):
-    if addr.version is 4:
-        assert 0
-    if addr.version is 6:
-        text = addr.exploded.split(":")
-        text = text[6] + text[7]
-        text = text[:2] + '.' + text[2:4] + '.' + text[4:6] +'.'+ text[6:]
-        return text
-    return None
-
-def __get_packet_v4_dipo_remote46(tunnel):
-    if tunnel is not None:
-        return __get_v4_from_v6(tunnel.RemoteIPAddr)
-    return None
-
-def GetPacketV4DIPoRemote46(testcase, packet, args=None):
-    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
-        return __get_packet_v4_dipo_remote46(testcase.config.route.TUNNEL)
-
-def __get_packet_v6_dipo_remote46(tunnel):
-    if tunnel is not None:
-        return tunnel.RemoteIPAddr
-    return None
-
-def GetPacketV6DIPoRemote46(testcase, packet, args=None):
-    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
-        return __get_packet_v6_dipo_remote46(testcase.config.route.TUNNEL)
-
-def __get_packet_template_impl_nat46(obj, args):
-    template = 'ETH'
-    af = "IPV4" if obj.AddrFamily is "IPV6" else "IPV6"
-    template += "_%s" % (af)
-
-    if args is not None:
-        template += "_%s" % (args.proto)
-    print(template)
-    return infra_api.GetPacketTemplate(template)
-
-def GetPacketTemplateForNat46(testcase, packet, args=None):
-    return __get_packet_template_impl_nat46(testcase.config.route.TUNNEL, args)
 
 def __get_host_from_route_impl(route, af):
     """
@@ -567,3 +532,55 @@ def GetUsableHostFromRoute(testcase, packet, args=None):
         else:
             return str(IPV4_MHOST) if testcase.config.route.AddrFamily == "IPV4" else str(IPV6_MHOST)
     return __get_host_from_route(testcase.module.args, route, testcase.config.route.AddrFamily)
+
+def __get_sipo_from_svctun(lmapping, tunnel):
+    if tunnel.Type is tunnel_pb2.TUNNEL_TYPE_SERVICE and tunnel.Remote is True:
+        return str(tunnel.RemoteServicePublicIP)
+    else:
+        return str(lmapping.ProviderIP)
+
+def GetSIPoFromSvcTun(testcase, packet, args=None):
+    return __get_sipo_from_svctun( \
+            testcase.config.localmapping, \
+            testcase.config.route.TUNNEL)
+
+def __get_ipv6_from_nat46(lmapping):
+    ipv6_pfx = lmapping.VNIC.SUBNET.VPC.Nat46_pfx
+    ipv6_pfx = ipv6_pfx.exploded.split("/")
+    ipv6_pfx = ipv6_pfx[0]
+    prefix6to4 = int(ipaddress.IPv6Address(ipv6_pfx))
+    ip4 = ipaddress.IPv4Address(lmapping.IP)
+    ip6 = ipaddress.IPv6Address(prefix6to4 | (int(ip4)))
+    return str(ip6)
+
+def GetIPV6FromNat46(testcase, packet, args=None):
+    if testcase.config.localmapping is not None:
+        return __get_ipv6_from_nat46(testcase.config.localmapping)
+
+def __get_ipv4_from_ipv6(addr):
+    if addr.version is 4:
+        assert 0
+    if addr.version is 6:
+        v4addr = addr.exploded.split(":")
+        v4addr = v4addr[6] + v4addr[7]
+        v4addr = v4addr[:2] + '.' + v4addr[2:4] + '.' + v4addr[4:6] +'.'+ v4addr[6:]
+        return v4addr
+    return None
+
+def __get_packet_v4_dipo_remote46(tunnel):
+    if tunnel is not None:
+        return __get_ipv4_from_ipv6(tunnel.RemoteIPAddr)
+    return None
+
+def GetPacketV4DIPoRemote46(testcase, packet, args=None):
+    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
+        return __get_packet_v4_dipo_remote46(testcase.config.route.TUNNEL)
+
+def __get_packet_v6_dipo_remote46(tunnel):
+    if tunnel is not None:
+        return tunnel.RemoteIPAddr
+    return None
+
+def GetPacketV6DIPoRemote46(testcase, packet, args=None):
+    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
+        return __get_packet_v6_dipo_remote46(testcase.config.route.TUNNEL)

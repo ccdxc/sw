@@ -125,7 +125,7 @@ class RouteObjectClient:
 
     def __internet_tunnel_get(self, nat, teptype=None):
         if teptype is not None and "service" in teptype:
-            if "remote" in teptype:
+            if "remoteservice" == teptype:
                 return resmgr.RemoteSvcTunAllocator.rrnext()
             return resmgr.SvcTunAllocator.rrnext()
         if nat is False:
