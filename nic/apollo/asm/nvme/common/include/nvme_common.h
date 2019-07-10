@@ -61,6 +61,14 @@
 #define SESSPREDGSTTX_C_INDEX   d.{ci_0}.hx
 #define SESSPOSTDGSTTX_P_INDEX  d.{pi_1}.hx
 #define SESSPOSTDGSTTX_C_INDEX  d.{ci_1}.hx
+#define SESSRSRCFREERX_P_INDEX  d.{pi_0}.hx
+#define SESSRSRCFREERX_C_INDEX  d.{ci_0}.hx
+#define RX_NMDPR_RING_PROXY_PI      d.{rx_nmdpr_ring_proxy_pi}
+#define RX_NMDPR_RING_PROXY_PI_LE   d.{rx_nmdpr_ring_proxy_pi}.hx
+#define RX_NMDPR_RING_PROXY_CI      d.{rx_nmdpr_ring_proxy_ci}
+#define RX_NMDPR_RING_PROXY_CI_LE   d.{rx_nmdpr_ring_proxy_ci}.hx
+#define RX_NMDPR_RING_PI            d.{rx_nmdpr_ring_pi}
+#define RX_NMDPR_RING_CI            d.{rx_nmdpr_ring_ci}
 
 //cb, ring entry sizes
 #define LOG_SQE_SIZE            6   //2^6 = 64
@@ -76,6 +84,7 @@
 #define LOG_PDUID_RING_ENTRY_SIZE   LOG_PDUID_SIZE
 #define TX_LOG_PDUID_RING_ENTRY_SIZE    LOG_PDUID_RING_ENTRY_SIZE
 #define RX_LOG_PDUID_RING_ENTRY_SIZE    LOG_PDUID_RING_ENTRY_SIZE
+#define RX_LOG_NMDPR_RING_ENTRY_SIZE    3 // 2^3 = 8
 
 #define LOG_SESS_Q_ENTRY_SIZE   (LOG_CMDID_SIZE+LOG_PDUID_SIZE)
 #define LOG_XTS_DESC_SIZE       7   //2^7 = 128
@@ -85,6 +94,7 @@
 #define LOG_IV_SIZE             4   //2^4 = 16
 #define LOG_ONE_AOL_SIZE        4   //2^4 = 16
 #define LOG_DGST_DESC_SIZE      6   //2^6 = 64
+#define LOG_SESS_RF_Q_ENTRY_SIZE (LOG_CMDID_SIZE+LOG_PDUID_SIZE+1) // 1 byte is for num_pages to free
 
 #define LOG_NMDPR_RING_SIZE     (CAPRI_TNMDPR_BIG_RING_SHIFT)
 #define NMDPR_RING_SIZE         (1 << LOG_NMDPR_RING_SIZE)
@@ -154,6 +164,11 @@
 #define SESSPREXTS_RX_RING_ID   0
 #define SESSPOSTXTS_RX_RING_ID  1
 
+//sessrsrcfreerx
+#define MAX_SESSRSRCFREE_RX_RINGS   1
+#define RF_PRI                      0
+#define RF_RING_ID                  0
+
 //globals
 #define K_GLOBAL_LIF            k.phv_global_common_lif
 #define K_GLOBAL_QTYPE          k.phv_global_common_qtype
@@ -177,6 +192,7 @@
 #define NVME_SESSPOSTXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(last_ddgst_aol_desc_dma_dma_cmd_type)/16)
 #define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pduid_dma_dma_cmd_type)/16)
 #define NVME_SESS_PRE_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pdu_hdr_dma_dma_cmd_type)/16)
+#define NVME_SESS_RSRC_FREE_RX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(nvme_cqe_dma_dma_cmd_type)/16)
 
 #define NVME_REQ_RX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pdu_ctxt1_dma_dma_cmd_type)/16)
 

@@ -16,7 +16,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512
 
-#define P4PLUS_SYMBOLS_MAX 85
+#define P4PLUS_SYMBOLS_MAX 86
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -320,6 +320,10 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = NVME_RESOURCECB;
     symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RESOURCECB);
+    i++;
+
+    symbols[i].name = NVME_NMDPR_RESOURCECB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_NMDPR_RESOURCECB);
     i++;
 
     symbols[i].name = NVME_TXSESSPRODCB_BASE;

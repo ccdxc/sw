@@ -206,6 +206,7 @@
 #define NVME_CMD_CONTEXT_BASE           "nvme_cmd_context_base"
 #define NVME_CMD_CONTEXT_RING_BASE      "nvme_cmd_context_ring_base"
 #define NVME_RESOURCECB                 "nvme_resourcecb_addr"
+#define NVME_NMDPR_RESOURCECB           "nvme_nmdpr_resourcecb_addr"
 #define NVME_TXSESSPRODCB_BASE          "nvme_txsessprodcb_base"
 #define NVME_RXSESSPRODCB_BASE          "nvme_rxsessprodcb_base"
 #define NVME_TX_PDU_CONTEXT_BASE        "nvme_tx_pdu_context_base"

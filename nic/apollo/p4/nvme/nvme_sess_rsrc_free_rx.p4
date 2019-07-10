@@ -46,8 +46,8 @@
 #define tx_table_s7_t2 s7_t2_nvme_sessrsrcfree_rx
 #define tx_table_s7_t3 s7_t3_nvme_sessrsrcfree_rx
 
-#define tx_stage0_lif_params_table lif_params_req_rx
-#define tx_table_s5_t4_lif_rate_limiter_table lif_rate_limiter_req_rx
+#define tx_stage0_lif_params_table lif_params_nvme_sessrsrcfree_rx
+#define tx_table_s5_t4_lif_rate_limiter_table lif_rate_limiter_nvme_sessrsrcfree_rx
 
 
 /**** action declarations ****/
@@ -105,31 +105,44 @@ header_type nvme_sessrsrcfree_rx_to_stage_rfwqe_info_t {
 
 header_type nvme_sessrsrcfree_rx_to_stage_pdu_ctxt_info_t {
     fields {
-        pad                              :  128;
+        num_pages                        :  16;
+        pad                              :  112;
     }
 }
 
 header_type nvme_sessrsrcfree_rx_to_stage_decr_refcnt_info_t {
     fields {
-        pad                              :  128;
+        num_pages                        :  16;
+        pad                              :  112;
     }
 }
 
 header_type nvme_sessrsrcfree_rx_to_nmdpr_resourcecb_info_t {
     fields {
-        pad                              :  128;
+        num_pages                        :  16;
+        pdu_ctxt_page_list_offset_addr   :  64;
+        free_first_page                  :  1;
+        free_last_page                   :  1;
+        pad                              :  46;
     }
 }
 
 header_type nvme_sessrsrcfree_rx_to_resourcecb_info_t {
     fields {
-        pad                              :  128;
+        pduid                            :  16;
+        cmdid                            :  16;
+        pad                              :  96;
     }
 }
 
 header_type nvme_sessrsrcfree_rx_to_stage_rfcb_writeback_info_t {
     fields {
-        pad                              :  128;
+        num_pages                        :  16;
+        pduid                            :  16;
+        cmdid                            :  16;
+        free_first_page                  :  1;
+        free_last_page                   :  1;
+        pad                              :  78;
     }
 }
 
@@ -326,39 +339,48 @@ metadata index16_t  cmdid;
 @pragma dont_trim
 metadata index16_t  pduid;
 @pragma dont_trim
-metadata index16_t  cq_pindex;
-@pragma dont_trim
 metadata index16_t  pduid_pindex;
 @pragma dont_trim
 metadata index16_t  cmdid_pindex;
 @pragma dont_trim
 metadata nvme_cqe_t nvme_cqe;
+@pragma dont_trim
+metadata index16_t  rx_nmdpr_pindex;
+@pragma dont_trim
+metadata index16_t  first_page_refcnt;
+@pragma dont_trim
+metadata index16_t  last_page_refcnt;
+@pragma dont_trim
+metadata data8_t    wb_r0_busy;
+
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t free_pages_src_dma1;         //dma cmd 0
+metadata dma_cmd_phv2mem_t nvme_cqe_dma;                //dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t free_pages_dst_dma1;         //dma cmd 1
+metadata dma_cmd_mem2mem_t free_pages_src_dma1;         //dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t free_pages_src_dma2;         //dma cmd 2
+metadata dma_cmd_mem2mem_t free_pages_dst_dma1;         //dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t free_pages_dst_dma2;         //dma cmd 3
+metadata dma_cmd_mem2mem_t free_pages_src_dma2;         //dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t free_pduid_dma;              //dma cmd 4
+metadata dma_cmd_mem2mem_t free_pages_dst_dma2;         //dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t pduid_pindex_dma;            //dma cmd 5
+metadata dma_cmd_phv2mem_t first_page_refcnt_dma;       //dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t free_cmdid_dma;              //dma cmd 6
+metadata dma_cmd_phv2mem_t last_page_refcnt_dma;        //dma cmd 6
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t cmdid_pindex_dma;            //dma cmd 7
+metadata dma_cmd_phv2mem_t wb_r0_busy_dma;              //dma cmd 7
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t cqe_sq_head_ptr_src_dma;     //dma cmd 8
+metadata dma_cmd_phv2mem_t rx_nmdpr_pindex_dma;         //dma cmd 8
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t cqe_sq_head_ptr_dst_dma;     //dma cmd 9
+metadata dma_cmd_phv2mem_t free_pduid_dma;              //dma cmd 9
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t cqe_pre_sq_head_ptr_dma;     //dma cmd 10
+metadata dma_cmd_phv2mem_t pduid_pindex_dma;            //dma cmd 10
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t cqe_post_sq_head_ptr_dma;    //dma cmd 11
+metadata dma_cmd_phv2mem_t free_cmdid_dma;              //dma cmd 11
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t cmdid_pindex_dma;            //dma cmd 12
 
 
 /*
@@ -410,6 +432,7 @@ action pdu_ctxt_fetch_pages_1_process (PDU_CTXT_PAGE_PTRS_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_info_scr.num_pages, to_s2_info.num_pages);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
@@ -424,6 +447,7 @@ action pdu_ctxt_fetch_pages_2_process (PDU_CTXT_PAGE_PTRS_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_info_scr.num_pages, to_s2_info.num_pages);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
@@ -451,6 +475,7 @@ action decr_refcnt_first_page_process (PAGE_METADATA_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s3_info_scr.num_pages, to_s3_info.num_pages);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -465,6 +490,7 @@ action decr_refcnt_last_page_process (PAGE_METADATA_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s3_info_scr.num_pages, to_s3_info.num_pages);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -492,6 +518,10 @@ action nmdpr_resourcecb_process(NMDPR_RESOURCECB_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_info_scr.num_pages, to_s4_info.num_pages);
+    modify_field(to_s4_info_scr.pdu_ctxt_page_list_offset_addr, to_s4_info.pdu_ctxt_page_list_offset_addr);
+    modify_field(to_s4_info_scr.free_first_page, to_s4_info.free_first_page);
+    modify_field(to_s4_info_scr.free_last_page, to_s4_info.free_last_page);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage
@@ -507,6 +537,8 @@ action resourcecb_process(RESOURCECB_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s5_info_scr.pduid, to_s5_info.pduid);
+    modify_field(to_s5_info_scr.cmdid, to_s5_info.cmdid);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
 
     // stage to stage
@@ -521,6 +553,11 @@ action rfcb_writeback_process (RFCB_PARAMS_NON_STG0) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s6_info_scr.num_pages, to_s6_info.num_pages);
+    modify_field(to_s6_info_scr.pduid, to_s6_info.pduid);
+    modify_field(to_s6_info_scr.cmdid, to_s6_info.cmdid);
+    modify_field(to_s6_info_scr.free_first_page, to_s6_info.free_first_page);
+    modify_field(to_s6_info_scr.free_last_page, to_s6_info.free_last_page);
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
     
     // stage to stage

@@ -11,6 +11,7 @@
 #include "gen/p4gen/nvme_sess_pre_xts_tx/include/nvme_sess_pre_xts_tx_p4pd_internal.h"
 #include "gen/p4gen/nvme_sess_pre_dgst_rx/include/nvme_sess_pre_dgst_rx_p4pd_internal.h"
 #include "gen/p4gen/nvme_sess_pre_xts_rx/include/nvme_sess_pre_xts_rx_p4pd_internal.h"
+#include "gen/p4gen/nvme_sess_rsrc_free_rx/include/nvme_sess_rsrc_free_rx_p4pd_internal.h"
 #include "gen/p4gen/nvme_req_tx/include/nvme_req_tx_p4pd_internal.h"
 #include "gen/p4gen/nvme_req_rx/include/nvme_req_rx_p4pd_internal.h"
 
@@ -18,6 +19,7 @@
 #define nvme_txsessprodcb_t s5_t0_nvme_req_tx_sessprodtxcb_process_bitfield_t
 #define nvme_rxsessprodcb_t s4_t0_nvme_req_rx_sessprodrxcb_process_bitfield_t
 #define nvme_resourcecb_t s4_t1_nvme_req_tx_resourcecb_process_bitfield_t
+#define nvme_nmdpr_resourcecb_t s4_t0_nvme_sessrsrcfree_rx_nmdpr_resourcecb_process_bitfield_t
 #define nvme_cmd_context_ring_entry_t s5_t1_nvme_req_tx_cmdid_fetch_process_bitfield_t
 #define nvme_tx_pdu_context_ring_entry_t s5_t2_nvme_req_tx_pduid_fetch_process_bitfield_t
 #define nvme_rx_pdu_context_ring_entry_t s2_t1_nvme_req_rx_pduid_fetch_process_bitfield_t

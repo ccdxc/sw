@@ -80,7 +80,7 @@ header_type cqcb_t {
         pc                             : 8;
         // 7 Bytes intrinsic header
         CAPRI_QSTATE_HEADER_COMMON
-        // 4 Bytes SQ ring
+        // 4 Bytes CQ ring
         CAPRI_QSTATE_HEADER_RING(0)
         /* 12 Bytes/96 bits Fixed header */
 
@@ -1105,6 +1105,12 @@ header_type nmdpr_t {
     }
 }
 
+header_type data8_t {
+    fields {
+        data: 8;
+    }
+}
+
 #define NMDPR_PARAMS \
 idx, full
 
@@ -1666,7 +1672,7 @@ header_type sess_rfwqe_t {
     fields {
         cmd_id      : 16; // command identifier
         pdu_id      : 16; // PDU identifier
-        num_pages   : 8;  // num-of-pages to free
+        num_pages   : 16;  // num-of-pages to free
     }
 }
 
@@ -1695,12 +1701,8 @@ header_type rfcb_t {
         ring_empty_sched_eval_done      : 1;
         rsvd0                           : 8;
     
-        //4B
-        sqid                           : 16; // Submission-Queue corresponding to this session.
-        cqid                           : 16; // Completion-Queue corresponding to this session.
- 
         // Status info/flags
-        // 7B
+        // 8B
         r0_busy                        : 1; // WO S0, RO S6
         rsvd1                          : 7;
 
@@ -1714,17 +1716,17 @@ header_type rfcb_t {
         rsvd3                          : 4; 
 
         cur_page                       : 8; 
-        num_pages                      : 8; // Num pages referred by cur_pduid.
+        num_pages                      : 16; // Num pages referred by cur_pduid.
         cur_pduid                      : 16; // pduid in processing.
 
-        pad                            : 280; 
+        pad                            : 304; 
     }
 }
 
 #define RFCB_PARAMS                                                          \
-rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0,          \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0,      \
 base_addr, log_num_entries, ring_empty_sched_eval_done, rsvd0,           \
-sqid, cqid, r0_busy, rsvd1, wb_r0_busy, rsvd2, in_progress, completion_done, \
+r0_busy, rsvd1, wb_r0_busy, rsvd2, in_progress, completion_done,         \
 pduid_freed, cmdid_freed, rsvd3, cur_page, num_pages, cur_pduid, pad 
 
 
@@ -1743,8 +1745,6 @@ pduid_freed, cmdid_freed, rsvd3, cur_page, num_pages, cur_pduid, pad
     modify_field(rfcb_d.log_num_entries, log_num_entries);        \
     modify_field(rfcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done); \
     modify_field(rfcb_d.rsvd0, rsvd0);                            \
-    modify_field(rfcb_d.sqid, sqid);                              \
-    modify_field(rfcb_d.cqid, cqid);                              \
     modify_field(rfcb_d.r0_busy, r0_busy);                        \
     modify_field(rfcb_d.rsvd1, rsvd1);                             \
     modify_field(rfcb_d.wb_r0_busy, wb_r0_busy);                  \
@@ -1783,21 +1783,23 @@ pad
 // Page metadata cb
 header_type page_metadata_cb_t {
     fields {
-        refcnt                          : 16;
+        rf_refcnt                       : 16;
+        rq_refcnt                       : 16;
         more_pdus                       :  1;
 
         //62 Bytes
-        pad                             : 495;
+        pad                             : 479;
     }
 }
 
 #define PAGE_METADATA_PARAMS                                            \
-refcnt, more_pdus, pad
+rf_refcnt, rq_refcnt, more_pdus, pad
 
 #define GENERATE_PAGE_METADATA_D                          \
-    modify_field(page_metadata_cb_d.refcnt, refcnt);      \
+    modify_field(page_metadata_cb_d.rf_refcnt, rf_refcnt);      \
+    modify_field(page_metadata_cb_d.rq_refcnt, rq_refcnt);      \
     modify_field(page_metadata_cb_d.more_pdus, more_pdus);      \
-    modify_field(page_metadata_cb_d.pad, pad);             \
+    modify_field(page_metadata_cb_d.pad, pad);                  \
 
 // PDU context page pointers
 header_type pdu_ctxt_page_ptrs_cb_t {
@@ -1837,15 +1839,16 @@ header_type nmdpr_resourcecb_t {
         rx_nmdpr_ring_proxy_ci          : 16;
         rx_nmdpr_ring_ci                : 16;
         rx_nmdpr_ring_choke_counter     : 16;
+        rx_nmdpr_ring_log_sz            : 5 ;
 
         //54 Bytes
-        pad                             : 432;
+        pad                             : 427;
     }
 }
 
 #define NMDPR_RESOURCECB_PARAMS                                   \
 rx_nmdpr_ring_pi, rx_nmdpr_ring_proxy_pi, rx_nmdpr_ring_proxy_ci, \
-rx_nmdpr_ring_ci, rx_nmdpr_ring_choke_counter, pad
+rx_nmdpr_ring_ci, rx_nmdpr_ring_choke_counter, rx_nmdpr_ring_log_sz, pad
 
 #define GENERATE_NMDPR_RESOURCECB_D                                           \
     modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_pi, rx_nmdpr_ring_pi);      \
@@ -1853,5 +1856,6 @@ rx_nmdpr_ring_ci, rx_nmdpr_ring_choke_counter, pad
     modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_proxy_ci, rx_nmdpr_ring_proxy_ci);      \
     modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_ci, rx_nmdpr_ring_ci);      \
     modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_choke_counter, rx_nmdpr_ring_choke_counter);      \
+    modify_field(nmdpr_resourcecb_d.rx_nmdpr_ring_log_sz, rx_nmdpr_ring_log_sz);      \
     modify_field(nmdpr_resourcecb_d.pad, pad);      
 
