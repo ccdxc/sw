@@ -294,16 +294,16 @@ table txdma_ipv4_flow_ohash_7 {
 
 control flow_lookup {
     apply(txdma_ipv4_flow);
-    apply(txdma_flow);
-
     apply(txdma_ipv4_flow_ohash_3);
-    //apply(txdma_ipv4_flow_ohash_4);
+    apply(txdma_ipv4_flow_ohash_4);
     apply(txdma_ipv4_flow_ohash_5);
     apply(txdma_ipv4_flow_ohash_6);
     apply(txdma_ipv4_flow_ohash_7);
+
+    apply(txdma_flow);
     apply(txdma_flow_ohash_3);
-    //apply(txdma_flow_ohash_4);
-    //apply(txdma_flow_ohash_5);
+    apply(txdma_flow_ohash_4);
+    apply(txdma_flow_ohash_5);
     apply(txdma_flow_ohash_6);
-    //apply(txdma_flow_ohash_7);
+    apply(txdma_flow_ohash_7);
 }

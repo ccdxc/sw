@@ -42,7 +42,7 @@ static p4pd_table_properties_t *_p4plus_txdma_tbls;
 
 namespace pt = boost::property_tree;
 
-static uint8_t
+static int
 p4pluspd_txdma_get_tableid_from_tablename (const char *tablename)
 {
     for (uint32_t i = 0; i < p4pd_txdma_tableid_max_get(); i++) {

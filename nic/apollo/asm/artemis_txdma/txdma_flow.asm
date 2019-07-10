@@ -14,8 +14,8 @@ struct phv_ p;
 #define FLOW_PARENT_FLIT    FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_PARENT_FLIT)
 #define FLOW_LEAF_FLIT      FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_LEAF_FLIT)
 
-// Support max of 6 flow lookups (so max 5 nrecircs)
-#define MAX_FLOW_LOOKUPS    4
+// Support max of 6 flow lookups (so max 4 nrecircs)
+#define MAX_FLOW_LOOKUPS    6
 %%
 
 flow_hash:
