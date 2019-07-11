@@ -51,6 +51,11 @@ func NewRPCServer(updateInterval time.Duration) *RPCServer {
 	return rpcServer
 }
 
+// Stop stops the thread that updates the health of the nodes to api-server
+func (s *RPCServer) Stop() {
+	s.stop <- struct{}{}
+}
+
 func (s *RPCServer) updateCondition(node *cache.NodeState, alive bool, lastHeartbeat time.Time) {
 	var status cluster.ConditionStatus
 	if alive {

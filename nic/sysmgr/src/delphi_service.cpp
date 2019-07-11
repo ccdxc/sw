@@ -44,7 +44,7 @@ void DelphiService::OnMountComplete()
         eventtypes::SYSTEM_COLDBOOT, "System booted");
 
     auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
-    obj->set_state(::sysmgr::Fault);
+    obj->set_state(::sysmgr::Normal);
     this->sdk->QueueUpdate(obj);
 }
 

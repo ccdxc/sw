@@ -92,6 +92,7 @@ func RunLeaderInstanceServer(url string, stopChannel chan bool) {
 	// wait until stop signal
 	<-stopChannel
 	rpcServer.Stop()
+	healthService.Stop()
 
 	log.Infof("Stopped CMD leader instance service at %v", url)
 }
