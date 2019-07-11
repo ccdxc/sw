@@ -133,15 +133,15 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		if sm.isSmartNICHealthy(&smartNic.SmartNIC) {
-			if _, ok := policy.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
-				policy.NodeVersions[smartNic.SmartNIC.Name] = ""
+		if sm.isSmartNICHealthy(nsnic) {
+			if _, ok := policy.NodeVersions[nsnic.Name]; !ok {
+				policy.NodeVersions[nsnic.Name] = ""
 				sm.PeriodicUpdaterPush(policy)
 			}
 		} else {
-			ver, ok := policy.NodeVersions[smartNic.SmartNIC.Name]
-			if ok && ver == "" {
-				delete(policy.NodeVersions, smartNic.SmartNIC.Name)
+			_, ok := policy.NodeVersions[nsnic.Name]
+			if ok {
+				delete(policy.NodeVersions, nsnic.Name)
 				sm.PeriodicUpdaterPush(policy)
 			}
 		}
@@ -150,14 +150,14 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 	// update firewall profiles
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
-		if sm.isSmartNICHealthy(&smartNic.SmartNIC) {
-			if _, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
-				fwprofile.NodeVersions[smartNic.SmartNIC.Name] = ""
+		if sm.isSmartNICHealthy(nsnic) {
+			if _, ok := fwprofile.NodeVersions[nsnic.Name]; ok == false {
+				fwprofile.NodeVersions[nsnic.Name] = ""
 				sm.PeriodicUpdaterPush(fwprofile)
 			} else {
-				ver, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]
-				if ok && ver == "" {
-					delete(fwprofile.NodeVersions, smartNic.SmartNIC.Name)
+				_, ok := fwprofile.NodeVersions[nsnic.Name]
+				if ok {
+					delete(fwprofile.NodeVersions, nsnic.Name)
 					sm.PeriodicUpdaterPush(fwprofile)
 				}
 			}
@@ -182,14 +182,20 @@ func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		delete(policy.NodeVersions, hs.SmartNIC.Name)
-		sm.PeriodicUpdaterPush(policy)
+		_, ok := policy.NodeVersions[hs.SmartNIC.Name]
+		if ok {
+			delete(policy.NodeVersions, hs.SmartNIC.Name)
+			sm.PeriodicUpdaterPush(policy)
+		}
 	}
 
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
-		delete(fwprofile.NodeVersions, hs.SmartNIC.Name)
-		sm.PeriodicUpdaterPush(fwprofile)
+		_, ok := fwprofile.NodeVersions[hs.SmartNIC.Name]
+		if ok {
+			delete(fwprofile.NodeVersions, hs.SmartNIC.Name)
+			sm.PeriodicUpdaterPush(fwprofile)
+		}
 	}
 
 	// walk all hosts and see if they need to be dis-associated to this snic
