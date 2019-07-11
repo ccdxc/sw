@@ -5,8 +5,8 @@ default:
 	cd ../../../ && make
 	../start_iota.sh
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/firewall -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/monitor -timeout 60m -v -ginkgo.v -topo 3Venice_2Naples
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples
+	VENICE_DEV=1 SKIP_INSTALL=1 go test github.com/pensando/sw/iota/test/venice/testsuites/monitor -timeout 60m -v -ginkgo.v -topo 3Venice_2Naples
+	VENICE_DEV=1 SKIP_INSTALL=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples
 	# VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/cluster -timeout 60m -v -ginkgo.v
 
 jobd:
@@ -17,7 +17,7 @@ jobd:
 	mkdir -p /go/src/github.com/pensando/sw/bin/upgrade-bundle
 	asset-pull bundle_image 0.12.0-53 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/firewall -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/monitor -timeout 60m -v -ginkgo.v -topo 3Venice_2Naples
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples
+	VENICE_DEV=1 SKIP_INSTALL=1 go test github.com/pensando/sw/iota/test/venice/testsuites/monitor -timeout 60m -v -ginkgo.v -topo 3Venice_2Naples
+	VENICE_DEV=1 SKIP_INSTALL=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples
 	# VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/rollout -timeout 240m -v -ginkgo.v -topo 3Venice_2Naples
 	# VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/cluster -timeout 60m -v -ginkgo.v
