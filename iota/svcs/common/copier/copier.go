@@ -59,7 +59,16 @@ func (c *Copier) getSftp(ipPort string) (*sftp.Client, error) {
 			}
 		}
 
-		sftpClient, err = sftp.NewClient(c.SSHClient)
+		waitCh := make(chan error, 1)
+		go func() {
+			sftpClient, err = sftp.NewClient(c.SSHClient)
+			waitCh <- err
+		}()
+
+		select {
+		case <-time.After(3 * time.Second):
+		case <-waitCh:
+		}
 		if sftpClient == nil || err != nil {
 			log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
 			c.SSHClient = nil
@@ -81,6 +90,7 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 		return err
 	}
 
+	defer sftpClient.Close()
 	// check if dst dir exists
 	if _, err := sftpClient.Lstat(dstDir); err != nil {
 		err = sftpClient.Mkdir(dstDir)
@@ -139,6 +149,7 @@ func (c *Copier) CopyFrom(ipPort, dstDir string, files []string) error {
 		return err
 	}
 
+	defer sftpClient.Close()
 	// check if dst dir exists
 	if _, err := os.Lstat(dstDir); err != nil {
 		err = os.Mkdir(dstDir, 0666)

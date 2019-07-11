@@ -277,9 +277,7 @@ func (n *TestNode) CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string
 	}
 
 	//Update SSH client for future
-	if n.SSHClient != nil {
-		n.SSHClient = copyHandle.SSHClient
-	}
+	n.SSHClient = copyHandle.SSHClient
 
 	return nil
 }
