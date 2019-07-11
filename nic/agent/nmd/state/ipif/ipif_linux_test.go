@@ -2,6 +2,8 @@ package ipif
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"os"
@@ -52,7 +54,21 @@ type dhcpSrv struct {
 }
 
 func TestMain(m *testing.M) {
+	input, err := ioutil.ReadFile("/etc/resolv.conf")
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	exitCode := m.Run()
+	// restore the contents of resolv.conf
+	if err == nil {
+		err = ioutil.WriteFile("/etc/resolv.conf", input, 0644)
+		if err != nil {
+			fmt.Println("Error overwriting /etc/resolv.conf")
+			fmt.Println(err)
+		}
+	}
+
 	os.Exit(exitCode)
 }
 
