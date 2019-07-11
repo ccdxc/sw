@@ -63,6 +63,9 @@ struct ionic {
 	struct work_struct nb_work;
 	struct notifier_block nb;
 	struct devlink *dl;
+
+	struct timer_list watchdog_timer;
+	int watchdog_period;
 };
 
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,

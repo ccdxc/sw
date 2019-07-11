@@ -135,6 +135,8 @@ struct ionic_dev {
 	u32 port_info_sz;
 
 	struct ionic_devinfo dev_info;
+	unsigned long last_hb_time;
+	u32 last_hb;
 };
 
 struct cq_info {
@@ -281,5 +283,6 @@ unsigned int ionic_q_space_avail(struct queue *q);
 bool ionic_q_has_space(struct queue *q, unsigned int want);
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
+int ionic_heartbeat_check(struct ionic *ionic);
 
 #endif /* _IONIC_DEV_H_ */

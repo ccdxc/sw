@@ -231,6 +231,10 @@ int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 		goto err_out;
 	}
 
+	err = ionic_heartbeat_check(lif->ionic);
+	if (err)
+		goto err_out;
+
 	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
 
 	dev_dbg(&lif->netdev->dev, "post admin queue command:\n");

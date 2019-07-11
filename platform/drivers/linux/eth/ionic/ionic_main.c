@@ -274,6 +274,7 @@ int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_seconds)
 	int opcode;
 	int done;
 	int err;
+	int hb;
 
 	WARN_ON(in_interrupt());
 
@@ -288,13 +289,20 @@ try_again:
 		if (done)
 			break;
 		msleep(20);
-	} while (!done && time_before(jiffies, max_wait));
+		hb = ionic_heartbeat_check(ionic);
+	} while (!done && !hb && time_before(jiffies, max_wait));
 	duration = jiffies - start_time;
 
 	opcode = idev->dev_cmd_regs->cmd.cmd.opcode;
 	dev_dbg(ionic->dev, "DEVCMD %s (%d) done=%d took %ld secs (%ld jiffies)\n",
 		ionic_opcode_to_str(opcode), opcode,
 		done, duration / HZ, duration);
+
+	if (!done && hb) {
+		dev_warn(ionic->dev, "DEVCMD %s (%d) failed - FW halted\n",
+			 ionic_opcode_to_str(opcode), opcode);
+		return -ENXIO;
+	}
 
 	if (!done && !time_before(jiffies, max_wait)) {
 		dev_warn(ionic->dev, "DEVCMD %s (%d) timeout after %ld secs\n",
