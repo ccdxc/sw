@@ -290,19 +290,26 @@ func (l *Node) runLeader(ctx context.Context, nodeWatcher kvstore.Watcher) {
 			if !ok {
 				var err error
 
-				// return if node is stopped
-				if l.isStopped || ctx.Err() != nil {
-					return
-				}
+			innerLoop:
+				for i := 0; i < l.clusterCfg.MetaStoreRetry; i++ {
+					// return if node is stopped
+					if l.isStopped || ctx.Err() != nil {
+						return
+					}
 
-				log.Warnf("Node watcher channel closed. Retrying")
-				time.Sleep(time.Second)
+					log.Warnf("Node watcher channel closed. Retrying")
+					time.Sleep(time.Second)
 
-				// restart the prefix watcher
-				nodeWatcher, err = l.kvs.PrefixWatch(ctx, NodesMetastoreURL, "")
-				if err != nil {
+					// restart the prefix watcher
+					nodeWatcher, err = l.kvs.PrefixWatch(ctx, NodesMetastoreURL, "")
+					if err == nil {
+						break innerLoop
+					}
+
 					log.Errorf("Error watching kvstore. Err: %v", err)
 				}
+
+				// continue to select loop
 				continue
 			}
 
