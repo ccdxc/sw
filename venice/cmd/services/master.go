@@ -21,6 +21,7 @@ import (
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
+	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
@@ -778,6 +779,24 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 
 		// Update current NIC state
 		nic := evtNIC
+
+		// When we receive an health update from the SmartNIC, we record the timestamp in the local cache.
+		// If locally we have a more recent health condition then ApiServer, as determined by timestamps,
+		// we should not override it.
+		evtHealthCond := cmdutils.GetNICCondition(nic, cmd.SmartNICCondition_HEALTHY)
+		localHealthCond := cmdutils.GetNICCondition(&oldNIC, cmd.SmartNICCondition_HEALTHY)
+		if evtHealthCond != nil && localHealthCond != nil {
+			evtLastTransitionTime, err1 := time.Parse(time.RFC3339, evtHealthCond.LastTransitionTime)
+			localLastTransitionTime, err2 := time.Parse(time.RFC3339, localHealthCond.LastTransitionTime)
+			if err1 == nil && err2 == nil {
+				if localLastTransitionTime.After(evtLastTransitionTime) {
+					cmdutils.SetNICCondition(nic, localHealthCond)
+				}
+			} else {
+				log.Errorf("Error parsing LastTransitionTime, err1: %v, err2: %v", err1, err2)
+			}
+		}
+
 		err = env.StateMgr.UpdateSmartNIC(nic, false)
 		if err != nil {
 			log.Errorf("Error updating smartnic {%+v} in StateMgr. Err: %v", evtNIC, err)

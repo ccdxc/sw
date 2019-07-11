@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	cmdcertutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/types"
+	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -64,15 +65,6 @@ var (
 	nicRegTimeout = 30 * time.Second
 )
 
-func getNICCondition(nic *cluster.SmartNIC, condType cluster.SmartNICCondition_ConditionType) *cluster.SmartNICCondition {
-	for _, cond := range nic.Status.Conditions {
-		if cond.Type == condType.String() {
-			return &cond
-		}
-	}
-	return nil
-}
-
 func updateCounters(nic *cluster.SmartNIC, m map[string]int64) {
 	switch nic.Status.AdmissionPhase {
 	case cluster.SmartNICStatus_ADMITTED.String():
@@ -87,7 +79,7 @@ func updateCounters(nic *cluster.SmartNIC, m map[string]int64) {
 		log.Errorf("Unexpected SmartNIC AdmissionPhase value: %+v", nic.Status.AdmissionPhase)
 	}
 
-	healthCond := getNICCondition(nic, cluster.SmartNICCondition_HEALTHY)
+	healthCond := cmdutils.GetNICCondition(nic, cluster.SmartNICCondition_HEALTHY)
 	if healthCond != nil {
 		switch healthCond.Status {
 		case cluster.ConditionStatus_TRUE.String():
@@ -252,8 +244,8 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	// decide whether to send to ApiServer or not before we make any adjustment
 	updateAPIServer := !runtime.FilterUpdate(refObj.Status, updObj.Status, []string{"LastTransitionTime"}, []string{"Conditions"})
 
-	refHealthCond := getNICCondition(refObj, cluster.SmartNICCondition_HEALTHY)
-	updHealthCond := getNICCondition(updObj, cluster.SmartNICCondition_HEALTHY)
+	refHealthCond := cmdutils.GetNICCondition(refObj, cluster.SmartNICCondition_HEALTHY)
+	updHealthCond := cmdutils.GetNICCondition(updObj, cluster.SmartNICCondition_HEALTHY)
 
 	// generate event if there was a health transition
 	if updHealthCond != nil && (refHealthCond == nil || refHealthCond.Status != updHealthCond.Status) {
