@@ -60,6 +60,7 @@ func NewNMDStateMachine() *NMDStateMachine {
 					if err := nmd.IPClient.DoDHCPConfig(); err != nil {
 						log.Errorf("Failed to do DHCP Config. Err: %v", err)
 						e.Err = err
+						return
 					}
 					// TODO We need to temporarily need to run dhclient here to ensure that the default routes are installed. Move this to dhcp config eventually
 					e.Err = runCmd(fmt.Sprintf("dhclient %s", nmd.IPClient.GetIPClientIntf()))
