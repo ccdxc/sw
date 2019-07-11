@@ -148,10 +148,12 @@ ionic_complete(struct ionic_completion *completion)               // IN
 {
         VMK_ASSERT(completion);
 
-        vmk_SpinlockLockIgnoreDeathPending(completion->lock);
-        completion->done = VMK_TRUE;
-        vmk_SpinlockUnlock(completion->lock);
-        vmk_WorldWakeup(completion->event_id);
+        if (completion && completion->lock) {
+                vmk_SpinlockLockIgnoreDeathPending(completion->lock);
+                completion->done = VMK_TRUE;
+                vmk_SpinlockUnlock(completion->lock);
+                vmk_WorldWakeup(completion->event_id);
+        }
 }
 
 
@@ -180,7 +182,7 @@ ionic_wait_for_completion_timeout(struct ionic_completion *completion,    // IN
                                   vmk_uint32 timeout_ms)                  // IN
 {
         VMK_ReturnStatus status = VMK_OK;
-        vmk_Bool is_timeout = VMK_FALSE;
+        vmk_Bool is_timeout = VMK_TRUE;
         VMK_ASSERT(completion);
 
         vmk_SpinlockLockIgnoreDeathPending(completion->lock);
