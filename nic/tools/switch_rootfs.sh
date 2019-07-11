@@ -16,7 +16,7 @@ usage()
 
 update_fwupgrade_state()
 {
-    echo $1 >> /var/run/fwupgrade.state
+    echo "`date`:: $1" >> /var/run/fwupgrade.state
 }
 
 save_fwupgrade_state()
