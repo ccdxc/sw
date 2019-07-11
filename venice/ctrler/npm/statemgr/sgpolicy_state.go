@@ -137,13 +137,13 @@ func (sgp *SgpolicyState) Write() error {
 	prop.Updated = 0
 	prop.Pending = 0
 	prop.MinVersion = ""
-	pendingNodes := ""
+	pendingNodes := []string{}
 	for nid, ver := range sgp.NodeVersions {
 		if ver == prop.GenerationID {
 			prop.Updated++
 		} else {
 			prop.Pending++
-			pendingNodes += fmt.Sprintf("%s, ", nid)
+			pendingNodes = append(pendingNodes, nid)
 			if prop.MinVersion == "" || versionToInt(ver) < versionToInt(prop.MinVersion) {
 				prop.MinVersion = ver
 			}
@@ -154,7 +154,8 @@ func (sgp *SgpolicyState) Write() error {
 	if prop.Pending == 0 {
 		prop.Status = fmt.Sprintf("Propagation Complete")
 	} else {
-		prop.Status = fmt.Sprintf("Propagation pending on: %s", pendingNodes)
+		prop.Status = fmt.Sprintf("Propagation pending on: %s", strings.Join(pendingNodes, ", "))
+		prop.PendingNaples = pendingNodes
 	}
 
 	return sgp.SGPolicy.Write()

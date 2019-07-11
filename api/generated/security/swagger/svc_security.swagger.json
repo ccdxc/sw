@@ -994,6 +994,16 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "propagation-status.pending-smartnics",
+            "description": "list of smartnics where propagation did not complete.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -2004,6 +2014,16 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "propagation-status.pending-smartnics",
+            "description": "list of smartnics where propagation did not complete.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -3129,6 +3149,16 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "propagation-status.pending-smartnics",
+            "description": "list of smartnics where propagation did not complete.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -4165,6 +4195,16 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "propagation-status.pending-smartnics",
+            "description": "list of smartnics where propagation did not complete.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -6629,6 +6669,13 @@
         "status": {
           "type": "string",
           "title": "Textual description of propagation status"
+        },
+        "pending-smartnics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of smartnics where propagation did not complete"
         }
       }
     },

@@ -14,6 +14,7 @@ export interface ISecurityPropagationStatus {
     'pending'?: number;
     'min-version'?: string;
     'status'?: string;
+    'pending-smartnics'?: Array<string>;
 }
 
 
@@ -24,6 +25,7 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
     'pending': number = null;
     'min-version': string = null;
     'status': string = null;
+    'pending-smartnics': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'generation-id': {
             required: false,
@@ -45,6 +47,10 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
         'status': {
             required: false,
             type: 'string'
+        },
+        'pending-smartnics': {
+            required: false,
+            type: 'Array<string>'
         },
     }
 
@@ -70,6 +76,7 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['pending-smartnics'] = new Array<string>();
         this.setValues(values, setDefaults);
     }
 
@@ -113,6 +120,13 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
         } else {
             this['status'] = null
         }
+        if (values && values['pending-smartnics'] != null) {
+            this['pending-smartnics'] = values['pending-smartnics'];
+        } else if (fillDefaults && SecurityPropagationStatus.hasDefaultValue('pending-smartnics')) {
+            this['pending-smartnics'] = [ SecurityPropagationStatus.propInfo['pending-smartnics'].default];
+        } else {
+            this['pending-smartnics'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -125,6 +139,7 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
                 'pending': CustomFormControl(new FormControl(this['pending']), SecurityPropagationStatus.propInfo['pending']),
                 'min-version': CustomFormControl(new FormControl(this['min-version']), SecurityPropagationStatus.propInfo['min-version']),
                 'status': CustomFormControl(new FormControl(this['status']), SecurityPropagationStatus.propInfo['status']),
+                'pending-smartnics': CustomFormControl(new FormControl(this['pending-smartnics']), SecurityPropagationStatus.propInfo['pending-smartnics']),
             });
         }
         return this._formGroup;
@@ -141,6 +156,7 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
             this._formGroup.controls['pending'].setValue(this['pending']);
             this._formGroup.controls['min-version'].setValue(this['min-version']);
             this._formGroup.controls['status'].setValue(this['status']);
+            this._formGroup.controls['pending-smartnics'].setValue(this['pending-smartnics']);
         }
     }
 }
