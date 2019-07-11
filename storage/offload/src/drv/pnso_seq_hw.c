@@ -802,8 +802,11 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	qtype = seq_info->sqi_qtype;
 
 	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
-	if (err)
-		goto out;
+	if (err) {
+		OSAL_LOG_DEBUG("failed to obtain sequencer statusq err: %d",
+				err);
+		return err;
+	}
 
 	seq_status_desc = (uint8_t *) sonic_q_consume_entry(
 			seq_spec->sqs_seq_status_q, &index);
@@ -896,8 +899,11 @@ hw_setup_cpdc_chain(struct service_info *svc_info,
 	seq_spec = &svc_info->si_cpdc_chain.ccp_seq_spec;
 	seq_info = &svc_info->si_seq_info;
 	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
-	if (err)
+	if (err) {
+		OSAL_LOG_DEBUG("failed to obtain sequencer statusq err: %d",
+				err);
 		return err;
+	}
 
 	seq_info->sqi_status_desc =
 		(uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q,
@@ -947,9 +953,9 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
 	if (err) {
-		OSAL_LOG_ERROR("failed to obtain sequencer statusq err: %d",
+		OSAL_LOG_DEBUG("failed to obtain sequencer statusq err: %d",
 				err);
-		goto out;
+		return err;
 	}
 
 	seq_status_desc = (uint8_t *) sonic_q_consume_entry(
@@ -1126,8 +1132,11 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	seq_spec = &svc_info->si_crypto_chain.ccp_seq_spec;
 	seq_info = &svc_info->si_seq_info;
 	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
-	if (err)
+	if (err) {
+		OSAL_LOG_DEBUG("failed to obtain sequencer statusq err: %d",
+				err);
 		return err;
+	}
 
 	seq_info->sqi_status_desc =
 		(uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q,
