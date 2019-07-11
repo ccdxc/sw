@@ -87,6 +87,7 @@ def process(topospec):
         for i in range(3):
             SwDscrRingHelper.main("ARQ", ('CPU%04d' % i), i)
             SwDscrRingHelper.main("ARQ-TX", ('CPU%04d' % i), i)
+            SwDscrRingHelper.main("TCP_ACTL", ('CPU%04d' % i), i)
 
     if app_redir == True:
         SwDscrRingHelper.main("RAWCCBQ")

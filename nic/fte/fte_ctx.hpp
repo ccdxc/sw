@@ -526,6 +526,7 @@ public:
     hal_ret_t init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
     hal_ret_t process(void);
+    void process_tcp_queues(void *tcp_ctx);
 
     hal_ret_t update_flow(const flow_update_t& flowupd, const hal::flow_role_t role);
 

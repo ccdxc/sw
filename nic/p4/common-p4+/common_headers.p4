@@ -227,6 +227,12 @@ header_type ring_entry_t {
     }
 }
 
+header_type ring_entry_64_t {
+    fields {
+        dword : 64;
+    }
+}
+
 /*
  * Ring entry containing both address and length
  */

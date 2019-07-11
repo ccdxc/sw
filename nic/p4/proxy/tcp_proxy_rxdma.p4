@@ -606,9 +606,13 @@ metadata tcp_fc_d_t tcp_fc_d;
 metadata tcp_rx_dma_d_t tcp_rx_dma_d;
 @pragma scratch_metadata
 metadata rdesc_alloc_d_t rdesc_alloc_d;
+#ifdef TCP_ACTL_Q
+@pragma scratch_metadata
+metadata tcp_actl_q_pi_d_t tcp_actl_q_rx_pi_d;
+#else
 @pragma scratch_metadata
 metadata arq_pi_d_t arq_rx_pi_d;
-
+#endif
 @pragma scratch_metadata
 metadata ooo_book_keeping_t ooo_book_keeping;
 @pragma scratch_metadata
@@ -736,6 +740,10 @@ metadata doorbell_data_t rx2tx_ooq_ready_db_data;
  */
 @pragma dont_trim
 metadata hbm_al_ring_entry_t ring_entry;
+@pragma dont_trim
+@pragma pa_header_union ingress ring_entry
+metadata ring_entry_64_t ring_entry_64;
+
 @pragma dont_trim
 metadata pkt_descr_aol_t aol;
 
@@ -1237,6 +1245,33 @@ action dma(RX_DMA_D_PARAMS) {
     RX_DMA_D_FIELDS
 }
 
+#ifdef TCP_ACTL_Q
+/*
+ * Stage 6 table 1 action
+ */
+action write_arq(TCP_ACTL_Q_PI_PARAMS) {
+
+    // k + i for stage 6
+
+    // from to_stage 6
+    modify_field(to_s6_scratch.page, to_s6.page);
+    modify_field(to_s6_scratch.descr, to_s6.descr);
+    modify_field(to_s6_scratch.payload_len, to_s6.payload_len);
+
+
+    // from stage to stage
+    modify_field(s6_t1_s2s_scratch.rnmdr_pidx, s6_t1_s2s.rnmdr_pidx);
+    modify_field(s6_t1_s2s_scratch.cpu_id, s6_t1_s2s.cpu_id);
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage to stage
+
+    // d for stage 6 table 1
+    GENERATE_TCP_ACTL_Q_PI_D(tcp_actl_q_rx_pi_d)
+}
+#else
 /*
  * Stage 6 table 1 action
  */
@@ -1262,6 +1297,7 @@ action write_arq(ARQ_PI_PARAMS) {
     // d for stage 6 table 1
     GENERATE_ARQ_PI_D(arq_rx_pi_d)
 }
+#endif
 
 /*
  * Stage 6 table 2 action

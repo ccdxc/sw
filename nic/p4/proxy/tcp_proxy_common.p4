@@ -2,6 +2,8 @@
 /* tcp_proxy_common.p4
 /*****************************************************************************/
 
+#define TCP_ACTL_Q
+
 /******************************************************************************
  * Rx2Tx shared state in PHV
  *****************************************************************************/
@@ -17,6 +19,22 @@
 #define WINDOW_WIDTH                    16
 #define MTU_WIDTH                       8
 #define TCP_OOO_NUM_CELLS               64 // needs to match entry in tcp-constants.h
+
+#ifdef TCP_ACTL_Q
+header_type tcp_actl_q_pi_d_t {
+    fields {
+        tcp_actl_q_pindex              : 32;
+        tcp_actl_q_full                : 8;
+    }
+}
+
+#define TCP_ACTL_Q_PI_PARAMS       \
+tcp_actl_q_pindex, tcp_actl_q_full
+
+#define GENERATE_TCP_ACTL_Q_PI_D(_d_struct)  \
+    modify_field(_d_struct.tcp_actl_q_pindex, tcp_actl_q_pindex); \
+    modify_field(_d_struct.tcp_actl_q_full, tcp_actl_q_full);
+#endif
 
 #define TXDMA_PARAMS_BASE                                                                             \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\

@@ -81,6 +81,9 @@ namespace capri {
 #define CAPRI_SEM_RNMDR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 28)
 #define CAPRI_SEM_RNMDR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 29)
 
+#define CAPRI_SEM_TCP_ACTL_Q_0_ADDR       (CAPRI_MEM_SEMA_START + 8 * 30)
+#define CAPRI_SEM_TCP_ACTL_Q_1_ADDR       (CAPRI_MEM_SEMA_START + 8 * 31)
+#define CAPRI_SEM_TCP_ACTL_Q_2_ADDR       (CAPRI_MEM_SEMA_START + 8 * 32)
 
 #define CAPRI_SEM_LAST_PI_CI_SEMAPHORE      (CAPRI_MEM_SEMA_START + 8 * 63)
 
@@ -369,6 +372,16 @@ namespace capri {
                             (CAPRI_SEM_ARQ_RAW_ADDR(_queue_id) + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_ARQ_INF_ADDR(_queue_id)                              \
                             (CAPRI_SEM_ARQ_ADDR(_queue_id) + CAPRI_SEM_INF_OFFSET)
+
+// TCP ACTL RXQ Semaphores
+#define CAPRI_SEM_TCP_ACTL_Q_ADDR(_queue_id)                                  \
+                            (CAPRI_SEM_TCP_ACTL_Q_0_ADDR + 8 * _queue_id)
+#define CAPRI_SEM_TCP_ACTL_Q_RAW_ADDR(_queue_id)                              \
+                            (CAPRI_SEM_TCP_ACTL_Q_ADDR(_queue_id) + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_TCP_ACTL_Q_CI_RAW_ADDR(_queue_id)                           \
+                            (CAPRI_SEM_TCP_ACTL_Q_RAW_ADDR(_queue_id) + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
+#define CAPRI_SEM_TCP_ACTL_Q_INF_ADDR(_queue_id)                              \
+                            (CAPRI_SEM_TCP_ACTL_Q_ADDR(_queue_id) + CAPRI_SEM_INF_OFFSET)
 
 // ASCQ Semaphores
 #define CAPRI_SEM_ASCQ_ADDR(_queue_id)                                  \

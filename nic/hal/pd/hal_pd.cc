@@ -375,6 +375,11 @@ hal_pd_load_symbols (void)
     // tnnl if
     PD_FUNC_LOAD(PD_FUNC_ID_TNNL_IF_GET_RW_IDX, pd_tunnelif_get_rw_idx);
 
+    // tcp
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_RINGS_CTXT_INIT, pd_tcp_rings_ctxt_init);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_RINGS_REGISTER, pd_tcp_rings_register);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_RINGS_POLL, pd_tcp_rings_poll);
+
     // cpu
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_ALLOC_INIT, pd_cpupkt_ctxt_alloc_init);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_REG_RXQ, pd_cpupkt_register_rx_queue);

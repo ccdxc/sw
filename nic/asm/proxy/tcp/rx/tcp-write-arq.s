@@ -11,13 +11,20 @@
 #include "INGRESS_p.h"
 #include "INGRESS_s6_t1_tcp_rx_k.h"
 
+#define TCP_ACTL_MSG_TYPE_PKT   0
+#define TCP_ACTL_MSG_TYPE_SHIFT 56
+
 struct phv_ p;
 struct s6_t1_tcp_rx_k_ k;
 struct s6_t1_tcp_rx_write_arq_d d;
 
 %%
     .align
+#ifndef TCP_ACTL_Q
     .param          ARQRX_BASE
+#else
+    .param          TCP_ACTL_Q_BASE
+#endif
 tcp_rx_write_arq_stage_start:
     CAPRI_CLEAR_TABLE1_VALID
 
@@ -83,9 +90,26 @@ dma_cmd_descr:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(pkt_descr_dma_dma_cmd, r1, aol_A0, aol_next_pkt)    
     
-
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ
 dma_cmd_arq_slot:
+#ifdef TCP_ACTL_Q
+    addui       r4, r0, hiword(TCP_ACTL_Q_BASE)
+    addi        r4, r4, loword(TCP_ACTL_Q_BASE)
+    TCP_ACTL_Q_BASE_FOR_ID(r2, r4, k.s6_t1_s2s_cpu_id)
+    add         r6, r0, d.{tcp_actl_q_pindex}.wx
+    addi        r3, r0, TCP_ACTL_MSG_TYPE_PKT
+    add         r3, k.to_s6_descr, r3, TCP_ACTL_MSG_TYPE_SHIFT
+    TCP_ACTL_Q_ENQUEUE(r5,
+                   r3,
+                   r6,
+                   r2,
+                   ring_entry_64_dword,
+                   ring_entry_64_dword,
+                   ring_slot_dma_cmd,
+                   1,
+                   1,
+                   c1)
+#else
     addui       r4, r0, hiword(ARQRX_BASE)
     addi        r4, r4, loword(ARQRX_BASE)
     CPU_RX_ARQ_BASE_FOR_ID(r2, r4, k.s6_t1_s2s_cpu_id)
@@ -94,13 +118,13 @@ dma_cmd_arq_slot:
                    k.to_s6_descr,
                    r6,
                    r2,
-                   ring_entry_pad,
-                   ring_entry_descr_addr,
+                   ring_entry_64_dword,
+                   ring_entry_64_dword,
                    ring_slot_dma_cmd, 
                    1, 
                    1, 
                    c1)  
-
+#endif
     
 flow_write_arq_process_done:
     nop.e

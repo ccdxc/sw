@@ -22,6 +22,7 @@ hal_ret_t serq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
 hal_ret_t armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
 hal_ret_t barco_gcm0_get_hw_meta(pd_wring_t* wring_pd);
+hal_ret_t tcp_actl_q_get_hw_meta(pd_wring_t* wring_pd);
 
 hal_ret_t
 wring_pd_meta_init() {
@@ -197,6 +198,12 @@ wring_pd_meta_init() {
                             CAPRI_OOO_RX2TX_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, NULL, NULL, false, 1, 0};
 
+    g_meta[types::WRING_TYPE_TCP_ACTL_Q] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_TCP_ACTL_Q, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                            "", 0, 0, armq_slot_parser, tcp_actl_q_get_hw_meta,
+			   false, 1, 0, 1};
+
+
     return HAL_RET_OK;
 }
 
@@ -338,20 +345,20 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
     if (meta->obj_size) {
         wring_obj_base = get_mem_addr(meta->obj_hbm_reg_name);
         if (wring_obj_base == INVALID_MEM_ADDRESS) {
-	    HAL_TRACE_ERR("Could not find base addr for {} region", meta->obj_hbm_reg_name);
-	    return HAL_RET_ERR;
+	        HAL_TRACE_ERR("Could not find base addr for {} region", meta->obj_hbm_reg_name);
+	        return HAL_RET_ERR;
         }
 
-	obj_reg_size = meta->num_slots * meta->obj_size;
+        obj_reg_size = meta->num_slots * meta->obj_size;
         if (meta->is_global) {
             meta->obj_base_addr[0] = wring_obj_base;
         } else {
             wring_obj_base += (wring_id * obj_reg_size);
-	    meta->obj_base_addr[wring_id] = wring_obj_base;
+            meta->obj_base_addr[wring_id] = wring_obj_base;
         }
-	HAL_TRACE_DEBUG("base-addr {:#x} size {} KB obj-base-addr {:#x} size {} KB",
-			wring_base, get_mem_size_kb(meta->hbm_reg_name),
-			wring_obj_base, get_mem_size_kb(meta->obj_hbm_reg_name));
+        HAL_TRACE_DEBUG("base-addr {:#x} size {} KB obj-base-addr {:#x} size {} KB",
+              wring_base, get_mem_size_kb(meta->hbm_reg_name),
+              wring_obj_base, get_mem_size_kb(meta->obj_hbm_reg_name));
     }
 
     uint32_t reg_size = get_mem_size_kb(meta->hbm_reg_name);
@@ -596,6 +603,39 @@ armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
     wring->slot_value = ntohll(*(uint64_t *)slot);
     // clear the 63rd bit
     wring->slot_value = wring->slot_value & ( ((uint64_t)1 << 63) - 1);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+tcp_actl_q_get_hw_meta(pd_wring_t* wring_pd)
+{
+    uint32_t			value = 0;
+    wring_hw_id_t addr = CAPRI_SEM_TCP_ACTL_Q_RAW_ADDR(wring_pd->wring->wring_id);
+    if(addr <= 0) {
+        HAL_TRACE_ERR("Failed to get semaphore register addr for id: {}",
+                    wring_pd->wring->wring_id);
+        return HAL_RET_QUEUE_NOT_FOUND;
+    }
+
+    if (sdk::asic::asic_reg_read(addr, &value) != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to read pindex value");
+		return HAL_RET_HW_FAIL;
+    }
+
+    wring_pd->wring->pi = value;
+    addr += 4;
+    if (sdk::asic::asic_reg_read(addr, &value) != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to read cindex value");
+		return HAL_RET_HW_FAIL;
+    }
+
+    wring_pd->wring->ci = value;
+
+    HAL_TRACE_DEBUG("TCP ACTL Q id: {} pi addr {:#x}, pi: {}, ci: {}",
+                    wring_pd->wring->wring_id,
+                    addr,
+                    wring_pd->wring->pi,
+                    wring_pd->wring->ci);
     return HAL_RET_OK;
 }
 

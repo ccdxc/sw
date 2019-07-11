@@ -25,6 +25,10 @@ hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
 
 void process_pending_queues();
 
+void *init_tcp_rings_ctxt(uint8_t fte_id, void *arm_ctx);
+
+void process_tcp_queues(void *ctx);
+
 }
 
 }

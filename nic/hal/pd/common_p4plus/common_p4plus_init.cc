@@ -151,6 +151,10 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
         sizeof(hal::pd::p4plus_to_p4_header_t) + L2HDR_DOT1Q_OFFSET;
     i++;
 
+    symbols[i].name = TCP_ACTL_Q_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_TCP_ACTL_Q);
+    i++;
+
     symbols[i].name = ARQRX_BASE;
     symbols[i].val = get_mem_addr(CAPRI_HBM_REG_ARQRX);
     i++;

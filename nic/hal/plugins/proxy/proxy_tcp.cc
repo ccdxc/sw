@@ -14,11 +14,13 @@
 #include "nic/include/tcp_common.h"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/pd/tcp_msg_api.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 using proxy::ProxyGlobalCfgRequest;
@@ -29,7 +31,18 @@ using proxy::ProxyGlobalCfgResponseMsg;
 namespace hal {
 namespace proxy {
 
+// Context for processing msgs from tcp rings
+typedef struct tcp_msg_proc_ctxt_s {
+    hal::pd::tcp_msg_batch_t batch;
+    void            *arm_ctx;
+    uint16_t        txpkt_cnt;
+    uint8_t         qid;
+//    txpkt_info_t    txpkts[MAX_QUEUED_PKTS];
+} tcp_msg_proc_ctxt_t;
+
 thread_local fte::ctx_t *gl_ctx;
+thread_local tcp_msg_proc_ctxt_t tcp_ctx;
+thread_local tcp_msg_proc_ctxt_t *gl_tcp_ctx;
 
 #define SET_COMMON_IP_HDR(_buf, _i) \
     _buf[_i++] = 0x08; \
@@ -999,6 +1012,34 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
+void
+tcp_exec_tcp_lif_alt(hal::pd::tcp_msg_info_t& msg_info)
+{
+    const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr = msg_info.u.pkt.cpu_rxhdr;
+    hal::flow_direction_t dir = hal::lklshim_get_flow_hit_pkt_direction(rxhdr->qid);
+
+    if (msg_info.u.pkt.pkt_len == 0) {
+        HAL_TRACE_DEBUG("tcp_exec_tcp_lif: LKL return {}",
+                        hal::pd::lkl_handle_flow_hit_hdr(
+                                                         hal::pd::lkl_alloc_skbuff(rxhdr,
+                                                                                   msg_info.u.pkt.pkt,
+                                                                                   msg_info.u.pkt.pkt_len,
+                                                                                   dir),
+                                                         dir,
+                                                         rxhdr));
+    } else {
+        HAL_TRACE_DEBUG("tcp_exec_tcp_lif: LKL return {}",
+                        hal::pd::lkl_handle_flow_hit_pkt(
+                                                         hal::pd::lkl_alloc_skbuff(rxhdr,
+                                                                                   msg_info.u.pkt.pkt,
+                                                                                   msg_info.u.pkt.pkt_len,
+                                                                                   dir),
+                                                         dir,
+                                                         rxhdr));
+    }
+    return;
+}
+
 fte::pipeline_action_t
 tcp_exec_tcp_lif(fte::ctx_t& ctx)
 {
@@ -1046,24 +1087,175 @@ tcp_transmit_pkt(unsigned char* pkt,
                  uint16_t src_lif,
                  uint16_t src_vlan_id)
 {
-    if (gl_ctx) {
-        HAL_TRACE_VERBOSE("tcp-proxy: txpkt src_lif={} src_vlan_id={}", src_lif, src_vlan_id);
+    if (!gl_ctx->tcp_proxy_pipeline()) {
+        if (gl_ctx) {
+            HAL_TRACE_DEBUG("tcp-proxy: txpkt src_lif={} src_vlan_id={}", src_lif, src_vlan_id);
+
+            hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
+            hal::pd::p4plus_to_p4_header_t  p4plus_header = {0};
+            cpu_header.src_lif = src_lif;
+            cpu_header.hw_vlan_id = src_vlan_id;
+            cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+            p4plus_header.lkp_inst = 1;
+            p4plus_header.compute_l4_csum = 1;
+            p4plus_header.compute_ip_csum = 1;
+
+            gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
+        } else {
+            HAL_TRACE_DEBUG("tcp-proxy: gl_ctx is NULL");
+        }
+    } else {
 
         hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
         hal::pd::p4plus_to_p4_header_t  p4plus_header = {0};
+        hal::pd::pd_cpupkt_send_args_t args;
+        hal::pd::pd_func_args_t pd_func_args = {0};
+        hal_ret_t ret;
+
+        if (gl_tcp_ctx == NULL || gl_tcp_ctx->arm_ctx == NULL) {
+            HAL_TRACE_ERR("gl_tcp_ctx not set !");
+            HAL_ABORT(0);
+        }
+
         cpu_header.src_lif = src_lif;
         cpu_header.hw_vlan_id = src_vlan_id;
         cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
         p4plus_header.lkp_inst = 1;
         p4plus_header.compute_l4_csum = 1;
         p4plus_header.compute_ip_csum = 1;
+        p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
 
-        gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
-    } else {
-        HAL_TRACE_VERBOSE("tcp-proxy: gl_ctx is NULL");
+        args.ctxt = (hal::pd::cpupkt_ctxt_t *)gl_tcp_ctx->arm_ctx;
+        args.type = types::WRING_TYPE_ASQ;
+        args.queue_id = gl_tcp_ctx->qid;
+        args.cpu_header = &cpu_header;
+        args.p4_header = &p4plus_header;
+        args.data = pkt;
+        args.data_len = len;
+        args.dest_lif = HAL_LIF_CPU;
+        args.qtype = CPU_ASQ_QTYPE;
+        args.qid = gl_tcp_ctx->qid;
+        args.ring_number = CPU_SCHED_RING_ASQ;
+        HAL_TRACE_DEBUG("txpkt lkp_inst={} src_lif={} vlan={} "
+                        "dest_lifq lif={} qtype={} qid={} ring={} wring={} pkt={:p} len={}",
+                        p4plus_header.lkp_inst,
+                        cpu_header.src_lif,
+                        cpu_header.hw_vlan_id,
+                        args.dest_lif, args.qtype, args.qid, args.ring_number, args.type,
+                        args.data, args.data_len);
+        pd_func_args.pd_cpupkt_send = &args;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
+        }
+        gl_tcp_ctx->txpkt_cnt++;
     }
 }
 
+void *
+tcp_rings_ctxt_init(uint8_t qid, void *arm_ctx)
+{
+    hal_ret_t ret;
+    hal::pd::pd_tcp_rings_ctxt_init_args_t args;
+    hal::pd::pd_tcp_rings_register_args_t reg_args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
+
+    /*
+     *  Init the global thread local ctx for tcp processing
+     *  Assumption: One to one mapping between tcp ring ctxt and calling thread
+     */
+    gl_tcp_ctx = &tcp_ctx;
+    // Tcp processing ctx requires arm ctx to send pkts. Only Rx tcp pkt is done under tcp ctx.
+    gl_tcp_ctx->arm_ctx = arm_ctx;
+    gl_tcp_ctx->qid = qid;
+
+    pd_func_args.pd_tcp_rings_ctxt_init = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TCP_RINGS_CTXT_INIT, &pd_func_args);
+    if (ret != HAL_RET_OK)
+        HAL_TRACE_DEBUG("Init failed {}", ret);                     \
+    SDK_ASSERT(ret == HAL_RET_OK);
+
+    reg_args.ctxt = args.ctxt;
+    reg_args.type = types::WRING_TYPE_TCP_ACTL_Q;
+    reg_args.queue_id = qid;
+    pd_func_args.pd_tcp_rings_register = &reg_args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TCP_RINGS_REGISTER, &pd_func_args);
+    if (ret != HAL_RET_OK)
+        HAL_TRACE_DEBUG("Register failed {}", ret);                     \
+    SDK_ASSERT(ret == HAL_RET_OK);
+
+    return args.ctxt;
+}
+
+hal_ret_t
+tcp_rings_poll(void *ctxt)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint32_t msg_cnt;
+    pd::pd_func_args_t pd_func_args = {0};
+    hal::pd::tcp_msg_batch_t *batch = &gl_tcp_ctx->batch;
+
+    hal::pd::pd_tcp_rings_poll_args_t args = {0};
+    args.ctxt = ctxt;
+    args.msg_batch = batch;
+    pd_func_args.pd_tcp_rings_poll = &args;
+    hal::pd::tcp_msg_info_t *msg_info;
+    uint8_t *pkt;
+    bool copied_pkt;
+
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TCP_RINGS_POLL, &pd_func_args);
+    if(ret != HAL_RET_OK) {
+        if (ret != HAL_RET_RETRY) {
+            HAL_TRACE_ERR("Failed to poll tcp rings: {}", ret);
+        }
+        return ret;
+    }
+
+    msg_cnt = batch->msg_cnt;
+    if (msg_cnt) {
+        HAL_TRACE_DEBUG("msg_cnt={}", msg_cnt);
+    }
+
+    for(uint32_t i = 0; i < msg_cnt; i++) {
+        msg_info = &batch->msg_info[i];
+        if (msg_info->msg_type == TCP_ACTL_MSG_TYPE_PKT) {
+            pkt = msg_info->u.pkt.pkt;
+            copied_pkt = msg_info->u.pkt.copied_pkt;
+            tcp_exec_tcp_lif_alt(*msg_info);
+
+            // TODO: Revisit. Who frees the descr/copied-to slab in case on txpkt_cnt non zero
+            if (gl_tcp_ctx->txpkt_cnt == 0) {
+                if (copied_pkt) {
+                    hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, (pkt-sizeof(hal::pd::p4_to_p4plus_cpu_pkt_t)));
+                } else {
+
+                    /*
+                     * Hand-over the packet to cpupkt library, to free any resources allocated
+                     * from the data-path for this packet.
+                     */
+                    hal::pd::pd_cpupkt_free_pkt_resources_args_t args;
+                    hal::pd::pd_func_args_t pd_func_args = {0};
+                    args.ctxt = NULL; // Unused field
+                    args.pkt = (pkt - sizeof(hal::pd::p4_to_p4plus_cpu_pkt_t));
+                    pd_func_args.pd_cpupkt_free_pkt_resources = &args;
+
+                    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_FREE_PKT_RES, &pd_func_args);
+                }
+            }
+        } else {
+            // Only pkt type msg supported as of now.
+            HAL_TRACE_ERR("Unexpected msg type {}", msg_info->msg_type);
+            HAL_ABORT(0);
+        }
+        // Reset txpkt_cnt after each tcp rxpkt processing
+        gl_tcp_ctx->txpkt_cnt = 0;
+    }
+
+    // Reset msg_cnt per polled batch processing, ready for next batch processing
+    batch->msg_cnt = 0;
+
+    return ret;
+}
 
 } // namespace hal
 } // namespace net

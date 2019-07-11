@@ -43,6 +43,7 @@
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/internal/cpucb_pd.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
+#include "nic/hal/pd/iris/tcp_proxy/tcp_rings.hpp"
 #include "nic/hal/pd/iris/internal/rawrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/iris/internal/rawccb_pd.hpp"
@@ -510,6 +511,14 @@ hal_state_pd::init(void)
                   hal::pd::cpucb_pd_compute_hw_hash_func,
                   hal::pd::cpucb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((cpucb_hwid_ht_ != NULL), false);
+
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCP_RINGS_PD)] =
+        slab::factory("tcp_rings_pd", HAL_SLAB_TCP_RINGS_PD,
+                      sizeof(hal::pd::tcp_rings_ctxt_t), MAX_TCP_RINGS_CTXT,
+                      true, true, true);
+
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCP_RINGS_PD)] != NULL),
+                      false);
 
     // initialize CPUPKT related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_PD)] =

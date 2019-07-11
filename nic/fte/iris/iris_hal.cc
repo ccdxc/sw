@@ -116,5 +116,25 @@ void process_pending_queues()
     hal::proxy::tls_poll_asym_pend_req_q();
 }
 
+//------------------------------------------------------------------------------
+// Allocate and Initialize TCP Rings Ctx
+//------------------------------------------------------------------------------
+void *init_tcp_rings_ctxt(uint8_t fte_id, void *arm_ctx)
+{
+    void * ctxt;
+
+    ctxt = hal::proxy::tcp_rings_ctxt_init(fte_id, arm_ctx);
+
+    return ctxt;
+}
+
+//------------------------------------------------------------------------------
+// Process msgs from TCP ACTL queue
+//------------------------------------------------------------------------------
+void process_tcp_queues(void *tcp_ctx)
+{
+    hal::proxy::tcp_rings_poll(tcp_ctx);
+}
+
 }
 }

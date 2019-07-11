@@ -69,6 +69,7 @@
 #define CAPRI_HBM_REG_ARQRX              "arq-rx"
 #define CAPRI_HBM_REG_ASQ                "asq"
 #define CAPRI_HBM_REG_ASCQ               "ascq"
+#define CAPRI_HBM_REG_TCP_ACTL_Q         "tcp-actl-q"
 #define CAPRI_HBM_REG_CPU_TX_DR          "cpu-tx-dr"
 #define CAPRI_HBM_REG_CPU_TX_PR          "cpu-tx-pr"
 #define CAPRI_HBM_REG_CPU_RX_DPR         "cpu-rx-dpr"
@@ -175,6 +176,8 @@
 #define TLS_PROXY_BARCO_MPP3_PI_HBM_TABLE_BASE "tls_barco_mpp3_pi_table_base"
 
 #define ARQRX_BASE              "hbm_arqrx_base"
+
+#define TCP_ACTL_Q_BASE          "tcp_actl_q_base"
 
 #define P4_FLOW_HASH_BASE               "p4_flow_hash_base"
 #define P4_FLOW_HASH_OVERFLOW_BASE      "p4_flow_hash_overflow_base"

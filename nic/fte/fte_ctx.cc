@@ -2,6 +2,7 @@
 #include "nic/hal/third-party/packet_parser/packet_to_string.h"
 #include "fte.hpp"
 #include "fte_ctx.hpp"
+#include "fte_impl.hpp"
 #include "fte_flow.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
@@ -184,6 +185,21 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
     }
 
     return HAL_RET_OK;
+}
+
+void
+ctx_t::process_tcp_queues(void *tcp_ctx)
+{
+    /*
+     *  arm_lifq_ is used to determine if the downcall from lkl to tcp plugin
+     *  for tcp_transmit_pkt is for a packet from tcp_proxy_pipeline or cpu
+     *  pipeline. Since process_tcp_queues processes rx pkts from
+     *  tcp_proxy_pipeline, we need to set arm_lifq_ so as to prepare for the
+     *  tx pkt downcall from lkl
+     */
+    arm_lifq_ = TCP_PROXY_LIFQ;
+
+    fte::impl::process_tcp_queues(tcp_ctx);
 }
 
 //------------------------------------------------------------------------------

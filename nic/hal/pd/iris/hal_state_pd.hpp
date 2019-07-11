@@ -113,6 +113,7 @@ public:
     slab *tnnl_rw_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNEL_RW_PD)]; }
     slab *cpucb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUCB_PD)]; }
     slab *cpupkt_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_PD)]; }
+    slab *tcp_rings_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCP_RINGS_PD)]; }
     slab *rawrcb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWRCB_PD)]; }
     slab *rawccb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWCCB_PD)]; }
     slab *proxyrcb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYRCB_PD)]; }

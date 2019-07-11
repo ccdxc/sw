@@ -65,6 +65,7 @@ public:
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
+    void                   *tcp_ctx_;
     mpscq_t                *softq_;
 
     ctx_t                  *ctx_;
@@ -254,6 +255,7 @@ std::string hex_str(const uint8_t *buf, size_t sz)
 inst_t::inst_t(uint8_t fte_id) :
     id_(fte_id),
     arm_ctx_(fte::impl::cpupkt_ctxt_alloc_init(fte_id)),
+    tcp_ctx_(NULL),
     softq_(mpscq_t::alloc(MAX_SOFTQ_SLOTS)),
     ctx_(NULL),
     feature_state_(NULL),
@@ -353,6 +355,10 @@ void inst_t::start(sdk::lib::thread *curr_thread)
     bypass_fte_ = hal_cfg->bypass_fte;
 
     ctx_mem_init();
+
+    // Init the tcp rings ctx
+    tcp_ctx_ = fte::impl::init_tcp_rings_ctxt(id_, arm_ctx_);
+
     while (true) {
         if (hal::is_platform_type_hw()) {
 
@@ -377,6 +383,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
         process_arq_new();
         process_softq();
         fte::impl::process_pending_queues();
+        ctx_->process_tcp_queues(tcp_ctx_);
         curr_thread->punch_heartbeat();
     }
 }

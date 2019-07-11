@@ -282,6 +282,7 @@ enum WRingType {
   WRING_TYPE_TCP_OOO_RX         = 32;
   WRING_TYPE_TCP_OOO_RX2TX      = 33;
   WRING_TYPE_CPU_RX_DPR         = 34;
+  WRING_TYPE_TCP_ACTL_Q         = 35;
 }
 
 // Types of Proxy Service

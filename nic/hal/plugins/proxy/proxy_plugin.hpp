@@ -53,6 +53,9 @@ void tcp_ring_doorbell(uint32_t qid);
 void quiesce_message_tx(void);
 hal_ret_t tls_poll_asym_pend_req_q(void);
 
+void *tcp_rings_ctxt_init(uint8_t queue_id, void *arm_ctx);
+hal_ret_t tcp_rings_poll(void *ctxt);
+
 hal_ret_t
 tls_proxy_cfg_rule_action(tcp_proxy_tls_cfg_t *tls_cfg, proxy_flow_info_t *pfi);
 

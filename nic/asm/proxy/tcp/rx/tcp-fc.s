@@ -192,7 +192,11 @@ flow_fc_skip_serq:
     nop
 
 tcp_cpu_rx:
+#ifdef TCP_ACTL_Q
+    CPU_TCP_ACTL_Q_SEM_INF_ADDR(d.cpu_id, r3)
+#else
     CPU_ARQ_SEM_INF_ADDR(d.cpu_id, r3)
+#endif
     phvwr       p.s6_t1_s2s_cpu_id, d.cpu_id
 
     CAPRI_NEXT_TABLE_READ(1,

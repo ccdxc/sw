@@ -41,6 +41,7 @@
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
 #include "platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
+#include "nic/hal/pd/tcp_msg_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_lif_manager.hpp"
@@ -2461,6 +2462,22 @@ typedef struct pd_tunnelif_get_rw_idx_args_s {
     uint32_t tnnl_rw_idx;
 } __PACK__ pd_tunnelif_get_rw_idx_args_t;
 
+// TCP rings APIs
+typedef struct pd_tcp_rings_ctxt_init_args_s {
+    void *ctxt; // OUT
+} __PACK__ pd_tcp_rings_ctxt_init_args_t;
+
+typedef struct pd_tcp_rings_register_args_s {
+    void *ctxt; // IN
+    types::WRingType type; // IN
+    uint32_t queue_id; // IN
+} __PACK__ pd_tcp_rings_register_args_t;
+
+typedef struct pd_tcp_rings_poll_args_s {
+    void *ctxt; // IN
+    tcp_msg_batch_t *msg_batch;
+} __PACK__ pd_tcp_rings_poll_args_t;
+
 // cpu pkt apis
 typedef struct pd_cpupkt_ctxt_alloc_init_args_s {
     cpupkt_ctxt_t *ctxt;
@@ -3547,7 +3564,10 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_GEN, 328, "PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_GEN")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_VERIFY, 329, "PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_VERIFY")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA_ENCRYPT,   330, "PD_FUNC_ID_BARCO_ASYM_RSA_ENCRYPT")\
-    ENTRY(PD_FUNC_ID_MAX,                      331, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_TCP_RINGS_CTXT_INIT,      331, "PD_FUNC_ID_TCP_RINGS_CTXT_INIT")\
+    ENTRY(PD_FUNC_ID_TCP_RINGS_REGISTER,       332, "PD_FUNC_ID_TCP_RINGS_REGISTER")\
+    ENTRY(PD_FUNC_ID_TCP_RINGS_POLL,           333, "PD_FUNC_ID_TCP_RINGS_POLL")\
+    ENTRY(PD_FUNC_ID_MAX,                      334, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3868,6 +3888,11 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_cpupkt_descr_alloc);
         PD_UNION_ARGS_FIELD(pd_cpupkt_program_send_ring_doorbell);
         PD_UNION_ARGS_FIELD(pd_cpupkt_get_global);
+
+        //tcp
+        PD_UNION_ARGS_FIELD(pd_tcp_rings_ctxt_init);
+        PD_UNION_ARGS_FIELD(pd_tcp_rings_register);
+        PD_UNION_ARGS_FIELD(pd_tcp_rings_poll);
 
         // rdma
         PD_UNION_ARGS_FIELD(pd_rxdma_table_entry_add);
@@ -4372,6 +4397,11 @@ PD_FUNCP_TYPEDEF(pd_rss_indir_table_entry_add);
 PD_FUNCP_TYPEDEF(pd_asic_init);
 
 PD_FUNCP_TYPEDEF(pd_table_properties_get);
+
+// tcp
+PD_FUNCP_TYPEDEF(pd_tcp_rings_ctxt_init);
+PD_FUNCP_TYPEDEF(pd_tcp_rings_register);
+PD_FUNCP_TYPEDEF(pd_tcp_rings_poll);
 
 // capri
 PD_FUNCP_TYPEDEF(pd_get_start_offset);
