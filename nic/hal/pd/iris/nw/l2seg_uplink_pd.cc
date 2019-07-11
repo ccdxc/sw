@@ -291,6 +291,7 @@ l2seg_uplink_depgm_input_properties_tbl (pd_del_l2seg_uplink_args_t *args)
 
 // ----------------------------------------------------------------------------
 // Form data for input properties table
+// TODO: This is redundant code. Resue from l2seg_pd.cc
 // ----------------------------------------------------------------------------
 hal_ret_t
 l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
@@ -332,8 +333,17 @@ l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
     inp_prop.src_lport = if_get_uplink_lport_id(args->intf);
     inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
+    // TODO get info from QOS class
+    inp_prop.flow_miss_qos_class_id = 0x2;
 
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    // Classic:
+    // - All Vlans are in Classic
+    // Hostpin:
+    // - OOB uplink is in Classic
+    // - Other uplinks are in classic for untagged l2seg.
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
+        (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
+        l2seg_is_mgmt(args->l2seg))) {
         inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (num_prom_lifs == 0) {
             // No prom. lifs => no promiscuous repl. needed.
@@ -358,9 +368,9 @@ l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
         inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
-    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {} ... ",
+    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}, NIC_MODE: {}",
                     inp_prop.clear_promiscuous_repl,
-                    inp_prop.dst_lport);
+                    inp_prop.dst_lport, inp_prop.nic_mode);
 
     if ((is_forwarding_mode_host_pinned()) &&
         (hal::l2seg_get_pinned_uplink(args->l2seg) != hal::if_get_hal_handle(args->intf))) {
