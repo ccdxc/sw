@@ -83,17 +83,17 @@ references:
   - iota
   - iota/test/venice
   - platform/drivers/linux
-  - iota/test/venice/hwtest
-  - iota/test/venice/hwtest/hwregression
+  #- iota/test/venice/hwtest
+  #- iota/test/venice/hwtest/hwregression
   - nic/utils/ftlite
 
 # in the current jobd infra this is a map. Hence the later entry overwrites earlier ones if there are duplicates..
 dependencies:
   test: platform
-  nic: iota/test/venice/hwtest
-  platform: iota/test/venice/hwtest
-  iota: iota/test/venice/hwtest
-  dol: iota/test/venice/hwtest 
+  #nic: iota/test/venice/hwtest
+  #platform: iota/test/venice/hwtest
+  #iota: iota/test/venice/hwtest
+  #dol: iota/test/venice/hwtest 
   dol/test/networking : nic
   storage/offload: storage/offload/linux-build-test
   vendor: venice
@@ -120,7 +120,7 @@ dir_dependencies:
   venice:
     - api
     - test/ci_targets/e2e
-    - iota/test/venice/hwtest
+    #- iota/test/venice/hwtest
   test:
     - api
     - test/ci_targets/e2e
