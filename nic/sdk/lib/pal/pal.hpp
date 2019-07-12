@@ -67,8 +67,9 @@ typedef struct pal_rwvectors_s {
     void        (*mem_unmap)(void *va);
     pal_ret_t   (*qsfp_set_led)(int port, pal_led_color_t led, pal_led_frequency_t frequency);
     pal_ret_t   (*program_marvell)(uint8_t marvell_addr, uint32_t data);
-    int         (*get_cpld_rev)();
-    int         (*get_cpld_id)();
+    pal_ret_t   (*marvell_link_status)(uint8_t marvell_addr, uint16_t *data, uint8_t phy);
+    int         (*get_cpld_rev)(void);
+    int         (*get_cpld_id)(void);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -222,13 +223,19 @@ pal_program_marvell(uint8_t addr, uint32_t data)
     return gl_pal_info.rwvecs.program_marvell(addr, data);
 }
 
+inline pal_ret_t
+marvell_link_status(uint8_t addr, uint16_t *data, uint8_t phy)
+{
+    return gl_pal_info.rwvecs.marvell_link_status(addr, data, phy);
+}
+
 static inline int
-pal_get_cpld_rev() {
+pal_get_cpld_rev(void) {
     return gl_pal_info.rwvecs.get_cpld_rev();
 }
 
 static inline int
-pal_get_cpld_id() {
+pal_get_cpld_id(void) {
     return gl_pal_info.rwvecs.get_cpld_id();
 }
 

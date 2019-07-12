@@ -72,6 +72,7 @@ checktemperature(void)
             max_die_temp = temperature.dietemp;
         }
         asictemp.die_temperature = temperature.dietemp;
+        pal_write_core_temp(temperature.dietemp);
 
         temperature.localtemp /= 1000;
         if (max_local_temp < temperature.localtemp) {
@@ -80,12 +81,14 @@ checktemperature(void)
             max_local_temp = temperature.localtemp;
         }
         asictemp.local_temperature = temperature.localtemp;
+        pal_write_board_temp(temperature.localtemp);
 
         if (max_hbm_temp < temperature.hbmtemp) {
             TRACE_INFO(GetLogger(), "HBM temperature is : {:d}C", temperature.hbmtemp);
             max_hbm_temp = temperature.hbmtemp;
         }
         asictemp.hbm_temperature = temperature.hbmtemp;
+        pal_write_hbm_temp(temperature.hbmtemp);
 
         if (startingfrequency_1100 == 1) {
             changefrequency(asictemp.hbm_temperature);
@@ -130,22 +133,27 @@ int configurefrequency() {
     }
 
     if (input.get_optional<std::string>(FREQUENCY_KEY)) {
-        frequency = input.get<std::string>(FREQUENCY_KEY);
-        if (frequency.compare("833") == 0) {
-            perf_id = PD_PERF_ID0;
-        } else if (frequency.compare("900") == 0) {
-            perf_id = PD_PERF_ID1;
-        } else if (frequency.compare("957") == 0) {
-            perf_id = PD_PERF_ID2;
-        } else if (frequency.compare("1033") == 0) {
-            perf_id = PD_PERF_ID3;
-        } else if (frequency.compare("1100") == 0) {
-            startingfrequency_1100 = 1;
-            perf_id = PD_PERF_ID4;
-        } else {
+        try {
+            frequency = input.get<std::string>(FREQUENCY_KEY);
+            if (frequency.compare("833") == 0) {
+                perf_id = PD_PERF_ID0;
+            } else if (frequency.compare("900") == 0) {
+                perf_id = PD_PERF_ID1;
+            } else if (frequency.compare("957") == 0) {
+                perf_id = PD_PERF_ID2;
+            } else if (frequency.compare("1033") == 0) {
+                perf_id = PD_PERF_ID3;
+            } else if (frequency.compare("1100") == 0) {
+                startingfrequency_1100 = 1;
+                perf_id = PD_PERF_ID4;
+            } else {
+                return -1;
+            }
+            status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_SET);
+        } catch (std::exception const &ex) {
+            TRACE_ERR(GetLogger(), "{}", ex.what());
             return -1;
         }
-        status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_SET);
     }
 
     if (status == PD_PERF_SUCCESS) {

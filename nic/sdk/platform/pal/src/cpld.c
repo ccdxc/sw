@@ -9,7 +9,8 @@
 #include "pal_locks.h"
 
 #ifdef __x86_64__
-int pal_is_qsfp_port_psnt(int port_no) {
+int pal_is_qsfp_port_psnt(int port_no)
+{
     return 0;
 }
 
@@ -26,46 +27,77 @@ pal_qsfp_reset_port(int port)
 }
 
 int
-pal_qsfp_set_low_power_mode(int port) {
+pal_qsfp_set_low_power_mode(int port)
+{
     return -1;
 }
 
 int
-pal_qsfp_reset_low_power_mode(int port) {
+pal_qsfp_reset_low_power_mode(int port)
+{
     return -1;
 }
 
 int
 pal_qsfp_set_led(int port, pal_led_color_t led,
-                 pal_led_frequency_t frequency) {
+                 pal_led_frequency_t frequency)
+{
     return -1;
 }
 
 int
-pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
+pal_program_marvell(uint8_t marvell_addr, uint32_t data)
+{
     return -1;
 }
 
 int
-pal_get_cpld_rev() {
+pal_get_cpld_rev(void)
+{
     return -1;
 }
 
 int
-pal_get_cpld_id() {
+pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy)
+{
     return -1;
 }
 
 int
-pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency) {
+pal_get_cpld_id(void)
+{
     return -1;
 }
 
+int
+pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency)
+{
+    return -1;
+}
+
+void
+pal_write_core_temp(int data)
+{
+    return -1;
+}
+
+void
+pal_write_hbm_temp(int data)
+{
+    return -1;
+}
+
+void
+pal_write_board_temp(int data)
+{
+    return -1;
+}
 #else
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <assert.h>
 #include "internal.h"
 #include <sys/ioctl.h>
 #include <linux/gpio.h>
@@ -83,10 +115,57 @@ struct gpiohandle_data {
         __u8 values[GPIOHANDLES_MAX];
 };
 
+#define GPIOHANDLE_GET_LINE_VALUES_IOCTL _IOWR(0xB4, 0x08, struct gpiohandle_data)
+#define GPIOHANDLE_SET_LINE_VALUES_IOCTL _IOWR(0xB4, 0x09, struct gpiohandle_data)
+#define GPIO_GET_LINEHANDLE_IOCTL _IOWR(0xB4, 0x03, struct gpiohandle_request)
+#define GPIO_GET_LINEEVENT_IOCTL _IOWR(0xB4, 0x04, struct gpioevent_request)
+
 const  int CPLD_FAIL    = -1;
 const  int CPLD_SUCCESS = 0;
 static int cpld_rev     = -1;
+static int cpld_id     = -1;
 static const char spidev_path[] = "/dev/spidev0.0";
+
+static int
+write_gpios(int gpio, uint32_t data)
+{
+    struct gpiochip_info ci;
+    struct gpiohandle_request hr;
+    struct gpiohandle_data hd;
+    int fd;
+
+    memset(&hr, 0, sizeof (hr));
+    //control only one gpio
+    if (gpio > 7) {
+        if ((fd = open("/dev/gpiochip1", O_RDWR, 0)) < 0) {
+            return CPLD_FAIL;
+        }
+        hr.lineoffsets[0] = gpio - 7;
+    } else {
+        if ((fd = open("/dev/gpiochip0", O_RDWR, 0)) < 0) {
+            return CPLD_FAIL;
+        }
+        hr.lineoffsets[0] = gpio;
+    }
+    if (ioctl(fd, GPIO_GET_CHIPINFO_IOCTL, &ci) < 0) {
+        close(fd);
+        return CPLD_FAIL;
+    }
+    hr.flags = GPIOHANDLE_REQUEST_OUTPUT;
+    hr.lines = 1;
+    hd.values[0] = data;
+    if (ioctl(fd, GPIO_GET_LINEHANDLE_IOCTL, &hr) < 0) {
+        close(fd);
+        return CPLD_FAIL;
+    }
+    close(fd);
+    if (ioctl(hr.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &hd) < 0) {
+        close(hr.fd);
+        return CPLD_FAIL;
+    }
+    close(hr.fd);
+    return CPLD_SUCCESS;
+}
 
 static int
 read_gpios(int d, uint32_t mask)
@@ -95,15 +174,15 @@ read_gpios(int d, uint32_t mask)
     struct gpiohandle_request hr;
     struct gpiohandle_data hd;
     char buf[32];
-    int r, fd, n, i;
+    int value, fd, n, i;
 
     snprintf(buf, sizeof (buf), "/dev/gpiochip%d", d);
     if ((fd = open(buf, O_RDWR, 0)) <  0) {
-        return -1;
+        return CPLD_FAIL;
     }
     if (ioctl(fd, GPIO_GET_CHIPINFO_IOCTL, &ci) < 0) {
         close(fd);
-        return -1;
+        return CPLD_FAIL;
     }
     memset(&hr, 0, sizeof (hr));
     n = 0;
@@ -116,19 +195,19 @@ read_gpios(int d, uint32_t mask)
     hr.lines = n;
     if (ioctl(fd, GPIO_GET_LINEHANDLE_IOCTL, &hr) < 0) {
         close(fd);
-        return -1;
+        return CPLD_FAIL;
     }
     close(fd);
     if (ioctl(hr.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &hd) < 0) {
         close(hr.fd);
-        return -1;
+        return CPLD_FAIL;
     }
     close(hr.fd);
-    r = 0;
+    value = 0;
     for (i = hr.lines - 1; i >= 0; i--) {
-        r = (r << 1) | (hd.values[i] & 0x1);
+        value = (value << 1) | (hd.values[i] & 0x1);
     }
-    return r;
+    return value;
 }
 
 static int
@@ -157,11 +236,11 @@ cpld_read(uint8_t addr)
     msg[1].len = 1;
 
     if ((fd = open(spidev_path, O_RDWR, 0)) < 0) {
-        return -1;
+        return CPLD_FAIL;
     }
     if (ioctl(fd, SPI_IOC_MESSAGE(1), msg) < 0) {
         close(fd);
-        return -1;
+        return CPLD_FAIL;
     }
 
     close(fd);
@@ -184,94 +263,152 @@ cpld_write(uint8_t addr, uint8_t data)
     msg[0].len = 3;
 
     if ((fd = open(spidev_path, O_RDWR, 0)) < 0) {
-        return -1;
+        return CPLD_FAIL;
     }
 
     if (ioctl(fd, SPI_IOC_MESSAGE(1), msg) < 0) {
         close(fd);
-        return -1;
-    }
-    close(fd);
-    return 0;
-}
-
-static int
-cpld_reg_bit_set(int reg, int bit) {
-    int cpld_data = 0;
-    int mask = 0x01 << bit;
-
-    cpld_data = cpld_reg_rd(reg);
-    if (cpld_data == -1) {
-        return cpld_data;
-    }
-
-    cpld_data |= mask;
-    return cpld_reg_wr(reg, cpld_data); 
-
-}
-
-static int
-cpld_reg_bit_reset(int reg, int bit) {
-    int cpld_data = 0;
-    int mask = 0x01 << bit;
-
-    cpld_data = cpld_reg_rd(reg);
-    if (cpld_data == -1) {
-        return cpld_data;
-    }
-
-    cpld_data &= ~mask;
-    return cpld_reg_wr(reg, cpld_data);
-
-}
-
-int
-cpld_reg_rd(uint8_t reg) {
-    int rc = 0;
-
-    if (!pal_wr_lock(CPLDLOCK)) {
-        printf("Could not lock pal.lck\n");
         return CPLD_FAIL;
     }
+    close(fd);
+    return CPLD_SUCCESS;
+}
 
-    rc = cpld_read(reg);
-
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        printf("Failed to unlock.\n");
+static int
+cpld_reg_bit_set(int reg, int bit)
+{
+    int cpld_data = 0;
+    int mask = 0x01 << bit;
+    int rc = CPLD_FAIL;
+    if (!pal_wr_lock(CPLDLOCK)) {
+        pal_mem_trace("Could not lock pal.lck\n");
+        return CPLD_FAIL;
     }
-
+    cpld_data = cpld_read(reg);
+    if (cpld_data == -1) {
+        return cpld_data;
+    }
+    cpld_data |= mask;
+    rc = cpld_write(reg, cpld_data);
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        pal_mem_trace("Failed to unlock.\n");
+        return CPLD_FAIL;
+    }
     return rc;
 }
 
-int
-cpld_reg_wr(uint8_t reg, uint8_t data) {
-    int rc = 0;
-
+static int
+cpld_reg_bit_reset(int reg, int bit)
+{
+    int cpld_data = 0;
+    int mask = 0x01 << bit;
+    int rc = CPLD_FAIL;
     if (!pal_wr_lock(CPLDLOCK)) {
-        printf("Could not lock pal.lck\n");
+        pal_mem_trace("Could not lock pal.lck\n");
         return CPLD_FAIL;
     }
-
-    rc = cpld_write(reg, data);
-
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        printf("Failed to unlock.\n");
+    cpld_data = cpld_read(reg);
+    if (cpld_data == -1) {
+        return cpld_data;
     }
-
+    cpld_data &= ~mask;
+    rc = cpld_write(reg, cpld_data);
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        pal_mem_trace("Failed to unlock.\n");
+        return CPLD_FAIL;
+    }
     return rc;
 }
 
 /* Public APIs */
 int
-pal_is_qsfp_port_psnt(int port_no) {
+cpld_reg_rd(uint8_t reg)
+{
+    int value = 0;
+    if (!pal_wr_lock(CPLDLOCK)) {
+        pal_mem_trace("Could not lock pal.lck\n");
+        return CPLD_FAIL;
+    }
+    value = cpld_read(reg);
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        pal_mem_trace("Failed to unlock.\n");
+        return CPLD_FAIL;
+    }
+    return value;
+}
+
+int
+cpld_reg_wr(uint8_t reg, uint8_t data)
+{
+    int rc = CPLD_FAIL;
+    if (!pal_wr_lock(CPLDLOCK)) {
+        pal_mem_trace("Could not lock pal.lck\n");
+        return CPLD_FAIL;
+    }
+    rc = cpld_write(reg, data);
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        pal_mem_trace("Failed to unlock.\n");
+        return CPLD_FAIL;
+    }
+    return rc;
+}
+
+int cpld_mdio_rd(uint8_t addr, uint16_t* data, uint8_t phy)
+{
+    uint8_t data_lo, data_hi;
+    if (!pal_wr_lock(CPLDLOCK)) {
+        pal_mem_trace("Could not lock pal.lck\n");
+        return CPLD_FAIL;
+    }
+    cpld_write(MDIO_CRTL_HI_REG, addr);
+    cpld_write(MDIO_CRTL_LO_REG, (phy << 3) | MDIO_RD_ENA | MDIO_ACC_ENA);
+    usleep(1000);
+    cpld_write(MDIO_CRTL_LO_REG, 0);
+    usleep(1000);
+    data_lo = cpld_read(MDIO_DATA_LO_REG);
+    data_hi = cpld_read(MDIO_DATA_HI_REG);
+    *data = (data_hi << 8) | data_lo;
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        pal_mem_trace("Failed to unlock.\n");
+    }
+    return CPLD_SUCCESS;
+}
+
+int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
+{
+    if (!pal_wr_lock(CPLDLOCK)) {
+        pal_mem_trace("Could not lock pal.lck\n");
+        return CPLD_FAIL;
+    }
+    cpld_write(MDIO_CRTL_HI_REG, addr);
+    cpld_write(MDIO_DATA_LO_REG, (data & 0xFF));
+    cpld_write(MDIO_DATA_HI_REG, ((data >> 8) & 0xFF));
+    cpld_write(MDIO_CRTL_LO_REG, (phy << 3) | MDIO_WR_ENA | MDIO_ACC_ENA);
+    usleep(1000);
+    cpld_write(MDIO_CRTL_LO_REG, 0);
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        pal_mem_trace("Failed to unlock.\n");
+        return CPLD_FAIL;
+    }
+    return CPLD_SUCCESS;
+}
+
+int
+write_cpld_gpios(int gpio, uint32_t data)
+{
+    return (write_gpios(gpio, data));
+}
+
+int
+pal_is_qsfp_port_psnt(int port_no)
+{
     int cpld_rd_data = cpld_reg_rd(CPLD_REGISTER_QSFP_CTRL);
 
-    if(port_no == 1) { 
+    if (port_no == 1) {
         return ((cpld_rd_data & 0x10) != 0);
     } else if (port_no == 2) {
         return ((cpld_rd_data & 0x20) != 0);
     }
-
     return CPLD_FAIL;
 }
 
@@ -281,14 +418,13 @@ pal_qsfp_set_port(int port)
 {
     int bit = 0;
 
-    if(port == 1) {
-	bit = 0;
+    if (port == 1) {
+        bit = 0;
     } else if (port == 2) {
-	bit = 1;
+        bit = 1;
     } else {
-	return CPLD_FAIL;
+        return CPLD_FAIL;
     }
-
     return cpld_reg_bit_reset(CPLD_REGISTER_QSFP_CTRL, bit);
 }
 
@@ -297,14 +433,13 @@ pal_qsfp_reset_port(int port)
 {
     int bit = 0;
 
-    if(port == 1) {
+    if (port == 1) {
         bit = 0;
     } else if (port == 2) {
         bit = 1;
     } else {
         return CPLD_FAIL;
     }
-
     return cpld_reg_bit_set(CPLD_REGISTER_QSFP_CTRL, bit);
 }
 
@@ -314,14 +449,13 @@ pal_qsfp_set_low_power_mode(int port)
 {
     int bit = 0;
 
-    if(port == 1) {
+    if (port == 1) {
         bit = 2;
     } else if (port == 2) {
         bit = 3;
     } else {
         return CPLD_FAIL;
     }
-
     return cpld_reg_bit_set(CPLD_REGISTER_QSFP_CTRL, bit);
 }
 
@@ -330,21 +464,20 @@ pal_qsfp_reset_low_power_mode(int port)
 {
     int bit = 0;
 
-    if(port == 1) {
+    if (port == 1) {
         bit = 2;
     } else if (port == 2) {
         bit = 3;
     } else {
         return CPLD_FAIL;
     }
-
     return cpld_reg_bit_reset(CPLD_REGISTER_QSFP_CTRL, bit);
 }
 
 static int
-pal_change_qsfp_frequency(uint8_t mask, uint8_t frequency) {
+pal_change_qsfp_frequency(uint8_t mask, uint8_t frequency)
+{
     uint8_t frequency_orig;
-
     frequency_orig = cpld_reg_rd(CPLD_REGISTER_QSFP_LED_FREQUENCY);
     frequency_orig = frequency_orig & mask;
     frequency_orig = frequency_orig | frequency;
@@ -353,7 +486,8 @@ pal_change_qsfp_frequency(uint8_t mask, uint8_t frequency) {
 
 int
 pal_qsfp_set_led(int port, pal_led_color_t led,
-                 pal_led_frequency_t frequency) {
+                 pal_led_frequency_t frequency)
+{
     static uint8_t qsfp_port1_led_color;
     static uint8_t qsfp_port2_led_color;
     static uint8_t qsfp_port1_green_led_frequency;
@@ -452,41 +586,54 @@ pal_qsfp_set_led(int port, pal_led_color_t led,
 }
 
 int
-pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
+pal_program_marvell(uint8_t marvell_addr, uint32_t data)
+{
     if (!pal_wr_lock(CPLDLOCK)) {
-        printf("Could not lock pal.lck\n");
+        pal_mem_trace("Could not lock pal.lck\n");
         return CPLD_FAIL;
     }
-
-    cpld_reg_wr(0x7, marvell_addr);
-    cpld_reg_wr(0x8, (data >> 8) && 0xff);
-    cpld_reg_wr(0x9, data && 0xff);
-    cpld_reg_wr(0x6, (0xc << 3) | 0x4 | 0x1);
-    cpld_reg_wr(0x6, 0);
-
+    cpld_write(0x7, marvell_addr);
+    cpld_write(0x8, (data >> 8) && 0xff);
+    cpld_write(0x9, data && 0xff);
+    cpld_write(0x6, (0xc << 3) | 0x4 | 0x1);
+    cpld_write(0x6, 0);
     if (!pal_wr_unlock(CPLDLOCK)) {
-        printf("Failed to unlock.\n");
+        pal_mem_trace("Failed to unlock.\n");
+        return CPLD_FAIL;
     }
-
     return CPLD_SUCCESS;
 }
 
 int
-pal_get_cpld_rev() {
+pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy)
+{
+    int rc = CPLD_FAIL;
+    rc = cpld_mdio_rd(marvell_addr, data, phy);
+    *data =  (*data >> 2) & 0x1;
+    return rc;
+}
+
+int
+pal_get_cpld_rev(void)
+{
     if (cpld_rev == -1) {
         cpld_rev = cpld_reg_rd(CPLD_REGISTER_REVISION);
     }
-
     return cpld_rev;
 }
 
 int
-pal_get_cpld_id() {
-    return cpld_reg_rd(CPLD_REGISTER_ID);
+pal_get_cpld_id(void)
+{
+    if (cpld_id == -1) {
+        cpld_id = cpld_reg_rd(CPLD_REGISTER_ID);
+    }
+    return cpld_id;
 }
 
 int
-pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency) {
+pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency)
+{
     switch(led) {
         case LED_COLOR_GREEN:
             switch(frequency) {
@@ -518,5 +665,33 @@ pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency) {
        default:
            return CPLD_FAIL;
     }
+}
+
+static void
+initialize_cpld(void)
+{
+    cpld_rev = cpld_reg_rd(CPLD_REGISTER_REVISION);
+    cpld_id = cpld_reg_rd(CPLD_REGISTER_ID);
+}
+
+void
+pal_write_core_temp(int data)
+{
+    data = (data > 127) ? 127 : data;
+    cpld_reg_wr(CPLD_REGISTER_CORE_TEMP, data);
+}
+
+void
+pal_write_hbm_temp(int data)
+{
+    data = (data > 127) ? 127 : data;
+    cpld_reg_wr(CPLD_REGISTER_HBM_TEMP, data);
+}
+
+void
+pal_write_board_temp(int data)
+{
+    data = (data > 127) ? 127 : data;
+    cpld_reg_wr(CPLD_REGISTER_BOARD_TEMP, data);
 }
 #endif
