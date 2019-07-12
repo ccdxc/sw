@@ -16,13 +16,15 @@
   <div fxFlex class="alertsevents-events-table">
     <app-lazyrender [data]="filteredEvents" [rows]="28" [virtualRowHeight]="36">
       <p-table #eventTable class="global-primeng-table-lazyload" [columns]="eventCols"
-               dataKey="meta.name" [responsive]="true"
-               sortField="meta.mod-time" [sortOrder]='-1'
-               [loading]="eventsLoading" [resizableColumns]="true">
+               dataKey="meta.name"
+               [responsive]="true" sortField="meta.mod-time" [sortOrder]='-1'
+               [loading]="eventsLoading"
+               [resizableColumns]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
           <app-tableheader title="Events" [count]="filteredEvents.length" [total]="eventsTotalCount"
-                           [icon]="eventsIcon" width="250px">
+                           [icon]="eventsIcon"
+                           width="250px">
             <div fxFlex></div>
             <!-- All events are currently informational, so we do not display severity filters or search filter -->
             <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
@@ -55,13 +57,10 @@
                  (click)="onEventNumberClick($event, 'INFO')" [matTooltip]="'Infomational Events'"
                  *ngIf="eventNumbers.INFO>0 && eventNumbers.INFO !== events.length">
               {{ eventNumbers.INFO }}</div>
-            <p-checkbox name="Show Debug Events"
-                        styleClass="alertsevents-checkbox"
-                        labelStyleClass="alertsevents-checkbox-label"
-                        binary="true"
+            <p-checkbox name="Show Debug Events" styleClass="alertsevents-checkbox"
+                        labelStyleClass="alertsevents-checkbox-label" binary="true"
                         label="Show Debug Events"
-                        [(ngModel)]="showDebugEvents"
-                        (onChange)="filterEvents()"></p-checkbox>
+                        [(ngModel)]="showDebugEvents" (onChange)="filterEvents()"></p-checkbox>
           </app-tableheader>
         </ng-template>
         <!-- Table Header -->
@@ -86,13 +85,17 @@
               </div>
               <ng-container *ngSwitchCase="'severity'">
                 <mat-icon *ngIf="rowData.severity === 'CRITICAL'"
-                          class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
+                          class="alertsevents-icon global-alert-critical-icon">
+                  error</mat-icon>
                 <mat-icon *ngIf="rowData.severity === 'WARN'"
-                          class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
+                          class="alertsevents-icon global-alert-warning-icon">error
+                </mat-icon>
                 <mat-icon *ngIf="rowData.severity === 'INFO'"
-                          class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
+                          class="alertsevents-icon global-alert-info-icon">
+                  notifications</mat-icon>
                 <mat-icon *ngIf="rowData.severity === 'DEBUG'"
-                          class="alertsevents-icon global-alert-info-icon">bug_report</mat-icon>
+                          class="alertsevents-icon global-alert-info-icon">
+                  bug_report</mat-icon>
                 <div style="display: inline; margin-left: 25px">
                   {{ severityEnum[rowData.severity] }} </div>
               </ng-container>
@@ -121,13 +124,31 @@
     <app-lazyrender [data]="filteredAlerts" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
       <p-table #eventTable class="global-primeng-table-lazyload" [columns]="alertCols"
                [rowTrackBy]='alertTrackBy'
-               sortField="meta.mod-time" [sortOrder]='-1'
-               dataKey="meta.name" [responsive]="true"
-               [loading]="alertsLoading" [resizableColumns]="true">
+               [(selection)]="selectedAlerts" sortField="meta.mod-time" [sortOrder]='-1'
+               dataKey="meta.name"
+               [responsive]="true" [loading]="alertsLoading" [resizableColumns]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
           <app-tableheader title="Alerts" [count]="filteredAlerts.length" [total]="alerts.length"
-                           [icon]="alertsIcon" width="250px">
+                           [icon]="alertsIcon"
+                           width="250px">
+            <div fxFelx="none" class="">
+              <mat-icon *ngIf="showBatchResolveIcon()" matTooltip="Resolve Selected Alerts"
+                        class="global-table-action-icon"
+                        (click)="resolveSelectedAlerts()">
+                done
+              </mat-icon>
+              <mat-icon *ngIf="showBatchAcknowLedgeIcon()" matTooltip="Acknowledge Selected Alerts"
+                        class="global-table-action-icon alertsevents-acknowledge-icon"
+                        (click)="acknowledgeSelectedAlerts()">
+                archive
+              </mat-icon>
+              <mat-icon *ngIf="showBatchOpenIcon()" matTooltip="Mark Selected Alerts as Open"
+                        class="global-table-action-icon alertsevents-open-icon"
+                        (click)="openSelectedAlerts()">
+                priority_high
+              </mat-icon>
+            </div>
             <div fxFlex></div>
             <div *ngIf="selector && selector.alertSelector && selector.alertSelector.name"
                  class="alertsevents-filter-sourcenode">
@@ -136,20 +157,19 @@
             <!-- Checkboxes for Open, Ack, Resolved states -->
             <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
               <ng-container *ngFor="let state of possibleFilterStates">
-                <p-checkbox name="stateFilter"
-                            styleClass="alertsevents-checkbox"
-                            labelStyleClass="alertsevents-checkbox-label"
-                            [value]="state"
+                <p-checkbox name="stateFilter" styleClass="alertsevents-checkbox"
+                            labelStyleClass="alertsevents-checkbox-label" [value]="state"
                             [label]="state"
                             [disabled]="selectedStateFilters.length === 1 && selectedStateFilters[0] === state"
-                            [(ngModel)]="selectedStateFilters"
-                            (onChange)="filterAlerts()"></p-checkbox>
+                            [(ngModel)]="selectedStateFilters" (onChange)="filterAlerts()">
+                </p-checkbox>
               </ng-container>
             </div>
             <!-- Removing the all button -->
             <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number "
                  (click)="onAlertNumberClick(null)"  [matTooltip]="'All Alerts'"
                  *ngIf="currentAlertSeverityFilter != null">All</div> -->
+
             <div class="global-button global-alert-critical alertsevents-main-menu-number "
                  [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'CRITICAL' ? 'alertsevents-disabled' : ''"
                  (click)="onAlertNumberClick('CRITICAL')" [matTooltip]="'Critical Alerts'"
@@ -165,13 +185,19 @@
                  (click)="onAlertNumberClick('INFO')" [matTooltip]="'Infomational Alerts'"
                  *ngIf="alertNumbers.INFO>0 && alertNumbers.INFO !== alerts.length">
               {{ alertNumbers.INFO }}</div>
+
+
           </app-tableheader>
         </ng-template>
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
           <tr>
+            <th style="width: 3em" *ngIf="alertUpdatable">
+              <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+            </th>
             <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''"
-                [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
+                [class]="col.class"
+                [colSpan]=" col.isLast ? 2 : 1">
               <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
               </app-sorticon>
             </th>
@@ -180,6 +206,9 @@
         <!-- Table Body -->
         <ng-template pTemplate="body" let-rowData>
           <tr class="alertsevents-tablerow">
+            <td *ngIf="alertUpdatable">
+              <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
+            </td>
             <td *ngFor="let col of alertCols" [ngSwitch]="col.field" [class]="col.class">
               <div *ngSwitchCase="'meta.mod-time'" class="alertseventsrecord-date-row">
                 {{rowData.meta['mod-time'] | PrettyDate }}
@@ -193,7 +222,8 @@
                 <mat-icon *ngIf="rowData.status.severity === 'WARN'"
                           class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
                 <mat-icon *ngIf="rowData.status.severity === 'INFO'"
-                          class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
+                          class="alertsevents-icon global-alert-info-icon">
+                  notifications</mat-icon>
                 <div style="display: inline; margin-left: 25px">
                   {{ severityEnum[rowData.status.severity] }} </div>
               </ng-container>
@@ -208,19 +238,18 @@
             </td>
             <td class="global-column-action">
               <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-                <mat-icon *ngIf="rowData.spec.state !== 'RESOLVED'"
+                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'RESOLVED'"
                           matTooltip="Resolve Alert"
-                          class="global-table-action-icon"
-                          (click)="resolveAlert(rowData)">
+                          class="global-table-action-icon" (click)="resolveAlert(rowData)">
                   done
                 </mat-icon>
-                <mat-icon *ngIf="rowData.spec.state !== 'ACKNOWLEDGED'"
+                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'ACKNOWLEDGED'"
                           matTooltip="Acknowledge Alert"
                           class="global-table-action-icon alertsevents-acknowledge-icon"
                           (click)="acknowledgeAlert(rowData)">
                   archive
                 </mat-icon>
-                <mat-icon *ngIf="rowData.spec.state !== 'OPEN'"
+                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'OPEN'"
                           matTooltip="Mark Alert as Open"
                           class="global-table-action-icon alertsevents-open-icon"
                           (click)="openAlert(rowData)">

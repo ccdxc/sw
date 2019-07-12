@@ -155,7 +155,8 @@
               <div fxFlex="" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-labels" fxFlex="200px">
-                  <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true">
+                  <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true"
+                           [scrollable]="true" scrollHeight="150px" [resizableColumns]="true">
                     <ng-template pTemplate="header">
                       <tr>
                         <th>Key</th>

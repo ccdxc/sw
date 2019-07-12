@@ -16,9 +16,9 @@ import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_sever
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
 
-
-import { Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, forkJoin, throwError, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 export interface AlertsEventsSelector {
   alertSelector: {
@@ -62,6 +62,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   @Input() selector: AlertsEventsSelector;
   @Output() activeTab: EventEmitter<string> = new EventEmitter<string>();
 
+  // this property indicate if user is authorized to update alerts
+  alertUpdatable: boolean = true;
+
   subscriptions: Subscription[] = [];
   severityEnum = EventsEventAttributes_severity;
 
@@ -102,7 +105,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   ];
 
   // Will hold mapping from severity types to counts
-  eventNumbers: { [severity in EventsEvent_severity]: number} = {
+  eventNumbers: { [severity in EventsEvent_severity]: number } = {
     'INFO': 0,
     'WARN': 0,
     'CRITICAL': 0,
@@ -153,10 +156,10 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   ];
 
   // Selected alerts
-  selectedAlerts: any[];
+  selectedAlerts: MonitoringAlert[];
 
   // Will hold mapping from severity types to counts
-  alertNumbers: { [severity in MonitoringAlertStatus_severity]: number} = {
+  alertNumbers: { [severity in MonitoringAlertStatus_severity]: number } = {
     'INFO': 0,
     'WARN': 0,
     'CRITICAL': 0,
@@ -187,6 +190,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   }
 
   ngOnInit() {
+
+    this.alertUpdatable = this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringalert_update);
     this.genQueryBodies();
     // Disabling search to reduce scope for august release
     // Adding <any> to prevent typescript compilation from failing due to unreachable code
@@ -490,17 +495,22 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * @param alert Alert to resolve
    */
   updateAlertState(alert: MonitoringAlert, newState: MonitoringAlertSpec_state, summary: string, msg: string) {
-    // Create copy so that when we modify it doesn't
-    // change the view
-    const payload = new MonitoringAlert(alert);
-    payload.spec.state = newState;
-    const subscription = this.monitoringService.UpdateAlert(payload.meta.name, payload).subscribe(
+    // Create copy so that when we modify it doesn't change the view
+    const observable = this.buildUpdateAlertStateObservable(alert, newState);
+    const subscription = observable.subscribe(
       response => {
         this._controllerService.invokeSuccessToaster(summary, msg);
       },
       this._controllerService.restErrorHandler(summary + ' Failed')
     );
     this.subscriptions.push(subscription);
+  }
+
+  buildUpdateAlertStateObservable(alert: MonitoringAlert, newState: MonitoringAlertSpec_state): Observable<any> {
+    const payload = new MonitoringAlert(alert);
+    payload.spec.state = newState;
+    const observable = this.monitoringService.UpdateAlert(payload.meta.name, payload);
+    return observable;
   }
 
   ngOnDestroy() {
@@ -519,4 +529,113 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
   }
 
+  /**
+   * This api serves html template
+   */
+  resolveSelectedAlerts() {
+    const summary = 'Alerts Resolved';
+    const msg = 'Marked selected alerts as resolved';
+    const newState = MonitoringAlertSpec_state.RESOLVED;
+    const observables = this.buildObservaleList(newState);
+    this.updateAlertList(observables, summary, msg);
+  }
+
+  /**
+   * This api serves html template
+   */
+  acknowledgeSelectedAlerts() {
+    const summary = 'Alerts Acknowledged';
+    const msg = 'Marked selected alerts as acknowledged';
+    const newState = MonitoringAlertSpec_state.ACKNOWLEDGED;
+    const observables = this.buildObservaleList(newState);
+    this.updateAlertList(observables, summary, msg);
+  }
+
+  /**
+   * This api serves html template
+   */
+  openSelectedAlerts() {
+    const summary = 'Alerts Opened';
+    const msg = 'Marked selected alerts as open';
+    const newState = MonitoringAlertSpec_state.OPEN;
+    const observables = this.buildObservaleList(newState);
+    this.updateAlertList(observables, summary, msg);
+  }
+
+  buildObservaleList(newState: MonitoringAlertSpec_state): Observable<any>[] {
+    const observables = [];
+    for (let i = 0; this.selectedAlerts && i < this.selectedAlerts.length; i++) {
+      const observable = this.buildUpdateAlertStateObservable(this.selectedAlerts[i], newState);
+      observables.push(observable);
+    }
+    return observables;
+  }
+
+  updateAlertList(observables: Observable<any>[], summary: string, msg: string) {
+    if (observables.length <= 0) {
+      return;
+    }
+    forkJoin(observables).subscribe((results) => {
+      const isAllOK = Utility.isForkjoinResultAllOK(results);
+      if (isAllOK) {
+        this._controllerService.invokeSuccessToaster(summary, msg);
+        this.selectedAlerts = []; // clear this.selectedAlerts
+      } else {
+        const error = Utility.joinErrors(results);
+        this._controllerService.invokeRESTErrorToaster(summary, error);
+      }
+    });
+  }
+
+  /**
+   * This is a helper function
+   * @param state
+   * @param reversed
+   * this.showBatchIconHelper(MonitoringAlertSpec_state.RESOLVED, true);
+   *      means that we want selected alerts all NOT in RESOLVED state
+   * this.showBatchIconHelper(MonitoringAlertSpec_state.OPEN, false);
+   *      means that we want selected alerts all in OPEN state
+   */
+  showBatchIconHelper(state: MonitoringAlertSpec_state, reversed: boolean = true): boolean {
+    if (!this.alertUpdatable || !this.selectedAlerts || this.selectedAlerts.length === 0) {
+      return false;
+    }
+    for (let i = 0; i < this.selectedAlerts.length; i++) {
+      const alert = this.selectedAlerts[i];
+      if (!reversed) {
+        if (alert.spec.state !== state) {
+          return false;
+        }
+      } else {
+        if (alert.spec.state === state) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * This api serves html template
+   */
+  showBatchResolveIcon(): boolean {
+    // we want selected alerts all NOT in RESOLVED state
+    return this.showBatchIconHelper(MonitoringAlertSpec_state.RESOLVED, true);
+  }
+
+  /**
+   * This api serves html template
+   */
+  showBatchAcknowLedgeIcon(): boolean {
+    // we want selected alerts all NOT in ACKNOWLEDGED state
+    return this.showBatchIconHelper(MonitoringAlertSpec_state.ACKNOWLEDGED, true);
+  }
+
+  /**
+   * This api serves html template
+   */
+  showBatchOpenIcon(): boolean {
+    // we want selected alerts all NOT in OPEN state
+    return this.showBatchIconHelper(MonitoringAlertSpec_state.OPEN, true);
+  }
 }
