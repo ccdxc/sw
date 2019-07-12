@@ -91,7 +91,7 @@ func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface
 			By(fmt.Sprintf("Error getting list of NICs: %v", err))
 			return false
 		}
-		refMetrics := cmdtypes.GetSmartNICMetricsZeroMap()
+		refMetrics = cmdtypes.GetSmartNICMetricsZeroMap()
 		for _, snic := range snics {
 			switch snic.Status.AdmissionPhase {
 			case cmd.SmartNICStatus_ADMITTED.String():
@@ -162,7 +162,7 @@ func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface
 		Expect(len(series.Values)).ShouldNot(BeZero(), "Query response had no value entries in its series")
 		mostRecentIndex := len(res.Results[0].Series[0].Values) - 1
 		values := series.Values[mostRecentIndex]
-		actualMetrics = make(map[string]int64)
+		actualMetrics = cmdtypes.GetSmartNICMetricsZeroMap()
 		// Counters get converted to float as they are read back form TSDB, so we need to convert back to int.
 		// Fields that are not float are either string or timestamp and we can ignore them.
 		for i, c := range series.Columns {
