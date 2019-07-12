@@ -328,6 +328,9 @@ type CfgWatcherService interface {
 	// APIClient returns a valid interface once the APIServer is good and
 	// accepting requests
 	APIClient() cluster.ClusterV1Interface
+
+	// GetCluster fetches the cluster object from APIServer with retries and timeouts
+	GetCluster() (*cluster.Cluster, error)
 }
 
 // SmartNICService is responsible for lifecycle management of SmartNIC object

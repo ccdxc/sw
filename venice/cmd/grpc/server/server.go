@@ -28,7 +28,7 @@ func RunUnauthServer(clusterMgmtURL, certsURL, nicRegURL string, stopChannel cha
 		log.Fatalf("Error creating Certificates server at %s: %v", certsURL, err)
 	}
 	env.LocalCertsRPCServer = certsRPCServer
-	certRPCHandler := certificates.NewRPCHandler(env.CertMgr)
+	certRPCHandler := certificates.NewRPCHandler()
 	certapi.RegisterCertificatesServer(certsRPCServer.GrpcServer, certRPCHandler)
 
 	// create an unauthenticated RPC server for SmartNIC registration

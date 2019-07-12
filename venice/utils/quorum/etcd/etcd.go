@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
@@ -239,7 +241,7 @@ func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
 
 	tlsConfig, err := GetQuorumClientCredentials()
 	if err != nil {
-		log.Errorf("Error creating client auth files: %v", err)
+		log.Errorf("Error getting quorum client credentials: %v", err)
 		return nil, err
 	}
 
@@ -293,17 +295,18 @@ func (e *etcdQuorum) Add(member *quorum.Member) error {
 	return nil
 }
 
-// Add adds new member to the quorum.
+// Defrag performs defrgmentation on a quorum member
 func (e *etcdQuorum) Defrag(member *quorum.Member) error {
+	if len(member.ClientURLs) == 0 {
+		return fmt.Errorf("Error defragmenting quorum member %s: no client URL", member.Name)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
 
 	_, err := e.client.Defragment(ctx, member.ClientURLs[0])
 	if err != nil {
 		return err
-
 	}
-
 	log.Infof("Defragmented member: %v", member.ClientURLs)
 	return nil
 }
@@ -318,4 +321,46 @@ func (e *etcdQuorum) Remove(id uint64) error {
 	}
 	log.Infof("Removed member: %v", id)
 	return nil
+}
+
+// GetStatus returns the status of the quorum member.
+func (e *etcdQuorum) GetStatus(member *quorum.Member) (interface{}, error) {
+	if len(member.ClientURLs) == 0 {
+		return nil, fmt.Errorf("Error getting status for quorum member %s: no client URL", member.Name)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := e.client.Status(ctx, member.ClientURLs[0])
+	if err != nil {
+		return nil, fmt.Errorf("Error getting endpoint %s status: %v", member.Name, err)
+	}
+	return resp, nil
+}
+
+// GetHealth returns the health of the quorum member by queryinh the /health REST endpoint
+// It queries the member REST endpoint /health
+func (e *etcdQuorum) GetHealth(member *quorum.Member) (bool, error) {
+	if len(member.ClientURLs) == 0 {
+		return false, fmt.Errorf("Error getting health for quorum member %s: no client URL", member.Name)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	tlsConfig, err := GetQuorumClientCredentials()
+	if err != nil {
+		log.Errorf("Error getting quorum client credentials: %v", err)
+		return false, err
+	}
+	client := netutils.NewHTTPClient()
+	client.WithContext(ctx)
+	client.WithTLSConfig(tlsConfig)
+
+	type HealthResp struct {
+		Health string `json:"health,omitempty"`
+	}
+	var resp HealthResp
+	status, err := client.Req("GET", fmt.Sprintf("%s/health", member.ClientURLs[0]), nil, &resp)
+	if err != nil || status != http.StatusOK {
+		return false, fmt.Errorf("Error getting endpoint %s health: %v, status code: %d", member.Name, err, status)
+	}
+	return resp.Health == "true", nil
 }

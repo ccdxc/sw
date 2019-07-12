@@ -10,7 +10,7 @@ import (
 )
 
 // makeQuorumConfig makes etcd quorum configuration for the specified quorum nodes.
-func makeQuorumConfig(uuid string, nodes []string) (*grpc.QuorumConfig, error) {
+func makeQuorumConfig(uuid string, nodes []string, existing bool) (*grpc.QuorumConfig, error) {
 	quorumMembers := make([]*grpc.QuorumMember, 0)
 	for ii := 0; ii < len(nodes); ii++ {
 		// Etcd requires IP:port pairs to bind to. If user provided a host name, we need to resolve.
@@ -28,5 +28,6 @@ func makeQuorumConfig(uuid string, nodes []string) (*grpc.QuorumConfig, error) {
 	return &grpc.QuorumConfig{
 		Id:            uuid,
 		QuorumMembers: quorumMembers,
+		Existing:      existing,
 	}, nil
 }

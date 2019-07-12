@@ -79,7 +79,10 @@ func (u *updater) Stop() {
 	defer u.Unlock()
 	u.Lock()
 	u.cancel()
-	close(u.modChan)
+	if u.modChan != nil {
+		close(u.modChan)
+		u.modChan = nil
+	}
 	// wait for all go routines to return after Stop() has been called
 	u.waitGrp.Wait()
 	u.stopped = true
@@ -89,6 +92,10 @@ func (u *updater) doWork(apicl apiclient.Services) error {
 	for {
 		select {
 		case wrk := <-u.modChan:
+			if wrk == nil {
+				u.logger.ErrorLog("method", "doWork", "msg", fmt.Sprintf("Received nil notification on mod channel"))
+				break
+			}
 			switch wrk.oper {
 			case Create:
 				// delete module object if it exists
@@ -121,6 +128,7 @@ func (u *updater) doWork(apicl apiclient.Services) error {
 				}
 			}
 		case <-u.ctx.Done():
+			u.logger.ErrorLog("method", "doWork", "msg", "Exiting worker loop")
 			return u.ctx.Err()
 		}
 	}

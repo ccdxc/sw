@@ -209,14 +209,15 @@ func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string, tr
 		if transportKeys[host] != nil {
 			var destination string
 			if len(nodes) > 1 {
-				destination = "QuorumNodes"
+				destination = quorumNodesCertMgrBundleName
 			} else {
 				destination = host
 			}
 			cmb, err := utils.MakeCertMgrBundle(env.CertMgr, destination, transportKeys[host])
 			if err != nil {
-				log.Errorf("Error making CertMgr bundle, host name: %v, err: %v", host, err)
-				return nil
+				werr := fmt.Errorf("Error making CertMgr bundle, host name: %v, err: %v", host, err)
+				log.Errorf(werr.Error())
+				return werr
 			}
 			newReq.CertMgrBundle = cmb
 		}

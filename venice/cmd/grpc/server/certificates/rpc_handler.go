@@ -9,22 +9,21 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
-	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // RPCHandler handles all certificates gRPC calls.
 type RPCHandler struct {
-	CertMgr *certmgr.CertificateMgr
 }
 
 // SignCertificateRequest checks a CSR submitted by a client, signs it and returns a certificate
 func (h *RPCHandler) SignCertificateRequest(ctx context.Context, req *certapi.CertificateSignReq) (*certapi.CertificateSignResp, error) {
 	peerID := ctxutils.GetPeerID(ctx)
-	if !h.CertMgr.IsReady() {
+	if env.CertMgr == nil || !env.CertMgr.IsReady() {
 		log.Errorf("Received invalid certificate request, peerID %v, error: CertMgr not ready", peerID)
 		return nil, fmt.Errorf("CertMgr not ready")
 	}
@@ -38,7 +37,7 @@ func (h *RPCHandler) SignCertificateRequest(ctx context.Context, req *certapi.Ce
 		log.Errorf("Received CSR with invalid signature, peerID: %v, error: %v", peerID, err)
 		return nil, errors.Wrap(err, "Certificate request has invalid signature")
 	}
-	cert, err := h.CertMgr.Ca().Sign(csr)
+	cert, err := env.CertMgr.Ca().Sign(csr)
 	if err != nil {
 		log.Errorf("Error signing CSR, peerID: %v, error: %v", peerID, err)
 		return nil, errors.Wrap(err, "Error signing certificate request")
@@ -51,25 +50,24 @@ func (h *RPCHandler) SignCertificateRequest(ctx context.Context, req *certapi.Ce
 
 // GetCaTrustChain returns the trust chain from the CA certificate to the root of trust
 func (h *RPCHandler) GetCaTrustChain(ctx context.Context, empty *certapi.Empty) (*certapi.CaTrustChain, error) {
-	if !h.CertMgr.IsReady() {
+	if env.CertMgr == nil || !env.CertMgr.IsReady() {
+		log.Errorf("CertMgr not ready %p", env.CertMgr)
 		return &certapi.CaTrustChain{}, fmt.Errorf("CertMgr not ready")
 	}
-	caTrustChain := utils.GetCaTrustChain(h.CertMgr)
+	caTrustChain := utils.GetCaTrustChain(env.CertMgr)
 	return caTrustChain, nil
 }
 
 // GetTrustRoots returns the trust roots that should be used by client when verifying trust chains
 func (h *RPCHandler) GetTrustRoots(ctx context.Context, empty *certapi.Empty) (*certapi.TrustRoots, error) {
-	if !h.CertMgr.IsReady() {
+	if env.CertMgr == nil || !env.CertMgr.IsReady() {
 		return &certapi.TrustRoots{}, fmt.Errorf("CertMgr not ready")
 	}
-	trustRoots := utils.GetTrustRoots(h.CertMgr)
+	trustRoots := utils.GetTrustRoots(env.CertMgr)
 	return trustRoots, nil
 }
 
 // NewRPCHandler returns a new handler for the RPC interface
-func NewRPCHandler(cm *certmgr.CertificateMgr) *RPCHandler {
-	return &RPCHandler{
-		CertMgr: cm,
-	}
+func NewRPCHandler() *RPCHandler {
+	return &RPCHandler{}
 }

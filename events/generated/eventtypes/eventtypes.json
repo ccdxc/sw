@@ -104,6 +104,36 @@
    "Name": "NODE_UNREACHABLE",
    "Severity": "CRITICAL",
    "Desc": "Node is unreachable"
+  },
+  {
+   "Name": "QUORUM_MEMBER_ADD",
+   "Severity": "INFO",
+   "Desc": "Added member to quorum"
+  },
+  {
+   "Name": "QUORUM_MEMBER_HEALTHY",
+   "Severity": "INFO",
+   "Desc": "Quorum member is now healthy"
+  },
+  {
+   "Name": "QUORUM_MEMBER_REMOVE",
+   "Severity": "INFO",
+   "Desc": "Removed member from quorum"
+  },
+  {
+   "Name": "QUORUM_MEMBER_UNHEALTHY",
+   "Severity": "CRITICAL",
+   "Desc": "Quorum member is now unhealthy"
+  },
+  {
+   "Name": "QUORUM_UNHEALTHY",
+   "Severity": "CRITICAL",
+   "Desc": "Quorum does not have enough healthy members"
+  },
+  {
+   "Name": "UNSUPPORTED_QUORUM_SIZE",
+   "Severity": "CRITICAL",
+   "Desc": "Quorum size is below supported minimum"
   }
  ],
  "Network": [

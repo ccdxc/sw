@@ -52,6 +52,16 @@ export enum ClusterNodeStatus_phase {
     'FAILED' = "FAILED",
 }
 
+export enum ClusterQuorumMemberCondition_type {
+    'HEALTHY' = "HEALTHY",
+}
+
+export enum ClusterQuorumMemberCondition_status {
+    'UNKNOWN' = "UNKNOWN",
+    'TRUE' = "TRUE",
+    'FALSE' = "FALSE",
+}
+
 export enum ClusterSmartNICCondition_type {
     'HEALTHY' = "HEALTHY",
     'NIC_HEALTH_UNKNOWN' = "NIC_HEALTH_UNKNOWN",
@@ -123,6 +133,16 @@ export enum ClusterNodeStatus_phase_uihint {
     'UNKNOWN' = "Unknown",
 }
 
+export enum ClusterQuorumMemberCondition_type_uihint {
+    'HEALTHY' = "Healthy",
+}
+
+export enum ClusterQuorumMemberCondition_status_uihint {
+    'FALSE' = "False",
+    'TRUE' = "True",
+    'UNKNOWN' = "Unknown",
+}
+
 export enum ClusterSmartNICCondition_type_uihint {
     'HEALTHY' = "Healthy",
     'NIC_HEALTH_UNKNOWN' = "Not Reachable",
@@ -191,6 +211,8 @@ export class AllEnums {
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
     ClusterNodeStatus_phase = ClusterNodeStatus_phase;
+    ClusterQuorumMemberCondition_type = ClusterQuorumMemberCondition_type;
+    ClusterQuorumMemberCondition_status = ClusterQuorumMemberCondition_status;
     ClusterSmartNICCondition_type = ClusterSmartNICCondition_type;
     ClusterSmartNICCondition_status = ClusterSmartNICCondition_status;
     ClusterSmartNICSpec_mgmt_mode = ClusterSmartNICSpec_mgmt_mode;
@@ -203,6 +225,8 @@ export class AllEnums {
     ClusterNodeCondition_type_uihint = ClusterNodeCondition_type_uihint;
     ClusterNodeCondition_status_uihint = ClusterNodeCondition_status_uihint;
     ClusterNodeStatus_phase_uihint = ClusterNodeStatus_phase_uihint;
+    ClusterQuorumMemberCondition_type_uihint = ClusterQuorumMemberCondition_type_uihint;
+    ClusterQuorumMemberCondition_status_uihint = ClusterQuorumMemberCondition_status_uihint;
     ClusterSmartNICCondition_type_uihint = ClusterSmartNICCondition_type_uihint;
     ClusterSmartNICCondition_status_uihint = ClusterSmartNICCondition_status_uihint;
     ClusterSmartNICSpec_mgmt_mode_uihint = ClusterSmartNICSpec_mgmt_mode_uihint;

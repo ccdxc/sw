@@ -2,6 +2,7 @@ package apiclient
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -132,7 +133,7 @@ func (k *CfgWatcherService) apiClient() (svcsclient.Services, error) {
 	if r != nil {
 		client, err = svcsclient.NewGrpcAPIClient(globals.Cmd, k.apiServerAddr, env.Logger, rpckit.WithBalancer(balancer.New(r)))
 	} else {
-		client, err = svcsclient.NewGrpcAPIClient(globals.Cmd, k.apiServerAddr, env.Logger, rpckit.WithRemoteServerName(globals.Cmd))
+		client, err = svcsclient.NewGrpcAPIClient(globals.Cmd, k.apiServerAddr, env.Logger, rpckit.WithRemoteServerName(globals.APIServer))
 	}
 	if err != nil {
 		k.logger.Errorf("#### RPC client creation failed with error: %v", err)
@@ -437,4 +438,12 @@ func (k *CfgWatcherService) runUntilCancel() {
 			return
 		}
 	}
+}
+
+// GetCluster fetches the Cluster object
+func (k *CfgWatcherService) GetCluster() (*cmd.Cluster, error) {
+	if env.StateMgr != nil {
+		return env.StateMgr.GetCluster()
+	}
+	return nil, fmt.Errorf("StateMgr not ready")
 }

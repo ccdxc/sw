@@ -143,7 +143,7 @@ func TestMasterServiceSetStatusOnLeadershipWin(t *testing.T) {
 func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 	t.Parallel()
 	l, s, cw, m := setupMaster(t)
-	clusterStatusUpdateTime = time.Second
+	ClusterStatusUpdateInterval = time.Second
 
 	s.Start()
 	l.Start() // node t.Name() will always become the leader. refer mock leader service

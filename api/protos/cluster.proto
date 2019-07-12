@@ -78,22 +78,24 @@ message ClusterSpec {
     string Key                  = 6 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "key,omitempty"];
 }
 
+// QuorumMemberCondition represents conditions that can affect quorum members
 message QuorumMemberCondition {
     enum ConditionType {
         // ui-hint: Healthy
         HEALTHY = 0; // Quorum member is alive and voting on transactions
     }
     // Type indicates a certain node condition
-    string Type                 = 1 [(venice.check) = "StrEnum(QuorumMemberCondition.ConditionType)",
-                                    (gogoproto.jsontag) = "type,omitempty"];
+    string Type                        = 1 [(venice.check) = "StrEnum(QuorumMemberCondition.ConditionType)",
+                                           (gogoproto.jsontag) = "type,omitempty"];
     // Condition Status
-    string Status               = 2 [(venice.check) = "StrEnum(ConditionStatus)",
-                                    (gogoproto.jsontag) = "status,omitempty"];
+    string Status                      = 2 [(venice.check) = "StrEnum(ConditionStatus)",
+                                           (gogoproto.jsontag) = "status,omitempty"];
 
     // The last time the condition transitioned
-    string LastTransitionTime   = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
+    api.Timestamp LastTransitionTime   = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
 }
 
+// QuorumMemberStatus represents the overall status of a quorum member
 message QuorumMemberStatus {
     // A unique identifier for this quorum member
     string ID                                 = 1 [(gogoproto.jsontag) = "id,omitempty"];
@@ -108,7 +110,7 @@ message QuorumMemberStatus {
     string Term                               = 4 [(gogoproto.jsontag) = "term,omitempty"];
 
     // Conditions reported by the quorum member
-    repeated QuorumMemberCondition Conditions = 5 [(gogoproto.jsontag) = "term,omitempty"];
+    repeated QuorumMemberCondition Conditions = 5 [(gogoproto.jsontag) = "conditions,omitempty"];
 }
 
 // QuorumStatus contains the current state of the quorum, including registered members and health
@@ -120,13 +122,18 @@ message QuorumStatus {
 message ClusterStatus {
     // Leader contains the node name of the cluster leader.
     string Leader                           = 1 [(gogoproto.jsontag) = "leader,omitempty"];
+
     // LastLeaderTransitionTime is when the leadership changed last time
     api.Timestamp LastLeaderTransitionTime  = 2 [(gogoproto.jsontag) = "last-leader-transition-time,omitempty"];
+
     // AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth
     bool AuthBootstrapped                   = 3 [(gogoproto.jsontag) = "auth-bootstrapped"];
+
     // List of current cluster conditions
     repeated ClusterCondition Conditions    = 7 [(gogoproto.nullable) = false,
                                                  (gogoproto.jsontag) = "conditions,omitempty"];
+    // Quorum represents the current state of the quorum, including registered members and health
+    QuorumStatus Quorum                     = 4 [(gogoproto.jsontag) = "quorum"];
 }
 
 // ClusterCondition describes the state of a cluster at a certain point.

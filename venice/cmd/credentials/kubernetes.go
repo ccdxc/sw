@@ -168,6 +168,7 @@ func RemoveKubeletCredentials() error {
 // Kubernetes components, including API Server and Kubelet
 func RemoveKubernetesCredentials() error {
 	dirs := []string{
+		globals.KubernetesAPIServerPKIDir,
 		globals.KubernetesAPIServerClientPKIDir,
 		globals.KubernetesServiceAccountsPKIDir,
 		globals.KubernetesControllerManagerPKIDir,

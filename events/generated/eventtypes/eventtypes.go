@@ -99,6 +99,42 @@ func init() {
 		Category: "Cluster",
 		Desc:     "Node is unreachable"}
 
+	eventTypes[QUORUM_MEMBER_ADD] = &EventTypeAttributes{
+		EType:    "QUORUM_MEMBER_ADD",
+		Severity: "INFO",
+		Category: "Cluster",
+		Desc:     "Added member to quorum"}
+
+	eventTypes[QUORUM_MEMBER_REMOVE] = &EventTypeAttributes{
+		EType:    "QUORUM_MEMBER_REMOVE",
+		Severity: "INFO",
+		Category: "Cluster",
+		Desc:     "Removed member from quorum"}
+
+	eventTypes[QUORUM_MEMBER_HEALTHY] = &EventTypeAttributes{
+		EType:    "QUORUM_MEMBER_HEALTHY",
+		Severity: "INFO",
+		Category: "Cluster",
+		Desc:     "Quorum member is now healthy"}
+
+	eventTypes[QUORUM_MEMBER_UNHEALTHY] = &EventTypeAttributes{
+		EType:    "QUORUM_MEMBER_UNHEALTHY",
+		Severity: "CRITICAL",
+		Category: "Cluster",
+		Desc:     "Quorum member is now unhealthy"}
+
+	eventTypes[UNSUPPORTED_QUORUM_SIZE] = &EventTypeAttributes{
+		EType:    "UNSUPPORTED_QUORUM_SIZE",
+		Severity: "CRITICAL",
+		Category: "Cluster",
+		Desc:     "Quorum size is below supported minimum"}
+
+	eventTypes[QUORUM_UNHEALTHY] = &EventTypeAttributes{
+		EType:    "QUORUM_UNHEALTHY",
+		Severity: "CRITICAL",
+		Category: "Cluster",
+		Desc:     "Quorum does not have enough healthy members"}
+
 	eventTypes[MODULE_CREATION_FAILED] = &EventTypeAttributes{
 		EType:    "MODULE_CREATION_FAILED",
 		Severity: "WARN",

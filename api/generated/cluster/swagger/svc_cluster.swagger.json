@@ -4400,6 +4400,10 @@
             "$ref": "#/definitions/clusterClusterCondition"
           },
           "title": "List of current cluster conditions"
+        },
+        "quorum": {
+          "$ref": "#/definitions/clusterQuorumStatus",
+          "title": "Quorum represents the current state of the quorum, including registered members and health"
         }
       },
       "description": "ClusterStatus contains the current state of the Cluster."
@@ -4679,6 +4683,88 @@
         }
       },
       "title": "OS information"
+    },
+    "clusterQuorumMemberCondition": {
+      "type": "object",
+      "required": [
+        "type",
+        "status"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "HEALTHY"
+          ],
+          "default": "HEALTHY",
+          "x-ui-hints": {
+            "HEALTHY": "Healthy"
+          },
+          "title": "Type indicates a certain node condition"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "TRUE",
+            "FALSE"
+          ],
+          "default": "UNKNOWN",
+          "x-ui-hints": {
+            "FALSE": "False",
+            "TRUE": "True",
+            "UNKNOWN": "Unknown"
+          },
+          "title": "Condition Status"
+        },
+        "last-transition-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "The last time the condition transitioned"
+        }
+      },
+      "title": "QuorumMemberCondition represents conditions that can affect quorum members"
+    },
+    "clusterQuorumMemberStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "A unique identifier for this quorum member"
+        },
+        "name": {
+          "type": "string",
+          "title": "The name of the quorum member, matching the node name"
+        },
+        "status": {
+          "type": "string",
+          "title": "\"Started\" if the member succesfully joined the quorum, \"Unstarted\" otherwise"
+        },
+        "term": {
+          "type": "string",
+          "title": "The last election term this member has participated in"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterQuorumMemberCondition"
+          },
+          "title": "Conditions reported by the quorum member"
+        }
+      },
+      "title": "QuorumMemberStatus represents the overall status of a quorum member"
+    },
+    "clusterQuorumStatus": {
+      "type": "object",
+      "properties": {
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterQuorumMemberStatus"
+          }
+        }
+      },
+      "title": "QuorumStatus contains the current state of the quorum, including registered members and health"
     },
     "clusterSmartNIC": {
       "type": "object",

@@ -121,6 +121,16 @@ func main() {
 		}
 	}
 
+	if csuiOpt := cmdutils.GetConfigProperty("ClusterStatusUpdateInterval"); csuiOpt != "" {
+		csui, err := time.ParseDuration(csuiOpt)
+		if err == nil {
+			log.Infof("Overriding default Cluster Status Update Interval. New value: %v", csui)
+			services.ClusterStatusUpdateInterval = csui
+		} else {
+			log.Errorf("Invalid ClusterStatusUpdateInterval: %v", csuiOpt)
+		}
+	}
+
 	cInfo := cmdutils.GetContainerInfo()
 	ntpContainerName := cInfo[globals.Ntp]
 	cmdutils.NtpContainer = ntpContainerName.ImageName

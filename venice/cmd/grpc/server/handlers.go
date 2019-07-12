@@ -5,6 +5,7 @@ package server
 import (
 	"crypto"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -45,7 +46,8 @@ const (
 
 // clusterRPCHandler handles all cluster gRPC calls.
 type clusterRPCHandler struct {
-	peerTransportKey crypto.PublicKey
+	peerTransportKey      crypto.PublicKey
+	authServerStopChannel chan bool
 }
 
 // PreJoin handles the prejoin request for joining a cluster. Will fail if
@@ -57,13 +59,16 @@ func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoi
 		return nil, fmt.Errorf("Already part of cluster +%v", cluster)
 	}
 	utils.SyncTimeOnce(req.NtpServers)
+	log.Infof("Received PreJoin request: %+v", req)
 
 	var transportKeyBytes []byte
 	if req.TransportKey != nil {
 		if env.CertMgr == nil {
 			cm, err := certmgr.NewGoCryptoCertificateMgr(certutils.GetCertificateMgrDir())
 			if err != nil {
-				return nil, fmt.Errorf("Failed to instantiate certificate manager, error: %v", err)
+				werr := fmt.Errorf("Failed to instantiate certificate manager, error: %v", err)
+				log.Errorf(werr.Error())
+				return nil, werr
 			}
 			env.CertMgr = cm
 		}
@@ -72,7 +77,9 @@ func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoi
 		if !env.CertMgr.IsReady() {
 			transportKey, err := env.CertMgr.GetKeyAgreementKey("self")
 			if err != nil {
-				return nil, fmt.Errorf("Error generating key-agreement-key")
+				werr := fmt.Errorf("Error generating key-agreement-key: %v", err)
+				log.Errorf(werr.Error())
+				return nil, werr
 			}
 			if c.peerTransportKey != nil {
 				log.Warnf("Overriding peerTransportKey from previous unfinished exchange")
@@ -115,11 +122,15 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		defer func() { c.peerTransportKey = nil }()
 		err := certutils.UnpackCertMgrBundle(env.CertMgr, req.CertMgrBundle, c.peerTransportKey)
 		if err != nil {
-			return nil, fmt.Errorf("Error unpacking CertMgr bundle: %v", err)
+			werr := fmt.Errorf("Error unpacking CertMgr bundle: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 		err = env.CertMgr.StartCa(false)
 		if err != nil || !env.CertMgr.IsReady() {
-			return nil, fmt.Errorf("Error starting CertMgr: %v", err)
+			werr := fmt.Errorf("Error starting CertMgr: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 		// Now that CA has started, Recorderclients can talk RPC to eventsProxy
 		env.Recorder.StartExport()
@@ -160,7 +171,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			kvServers = append(kvServers, strings.Join(member.ClientUrls, ","))
 		}
 		if !found {
-			return nil, fmt.Errorf("%v received Join without itself in it", req.NodeId)
+			werr := fmt.Errorf("%v received Join without itself in it", req.NodeId)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		qConfig := &quorum.Config{
@@ -169,26 +182,29 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			DataDir:    env.Options.KVStore.DataDir,
 			CfgFile:    env.Options.KVStore.ConfigFile,
 			MemberName: req.NodeId,
-			Existing:   false,
+			Existing:   req.QuorumConfig.Existing,
 			Members:    members,
 		}
 
 		err := credentials.SetQuorumInstanceAuth(qConfig, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
 		if err != nil {
-			log.Errorf("Failed to obtain instance auth credentials for quorum with error: %v", err)
-			return nil, err
+			werr := fmt.Errorf("Failed to obtain instance auth credentials for quorum with error: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		err = credentials.GenQuorumClientAuth(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
 		if err != nil {
-			log.Errorf("Failed to obtain client auth credentials for quorum with error: %v", err)
-			return nil, err
+			werr := fmt.Errorf("Failed to obtain client auth credentials for quorum with error: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		quorumIntf, err := store.New(qConfig)
 		if err != nil {
-			log.Errorf("Failed to create quorum with error: %v", err)
-			return nil, err
+			werr := fmt.Errorf("Failed to create quorum with error: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		env.Quorum = quorumIntf
@@ -206,14 +222,16 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		}
 
 		if ii == maxIters {
-			log.Errorf("KV Store failed to come up in %v seconds", maxIters*sleepBetweenItersMsec/1000)
-			return nil, fmt.Errorf("KV Store failed to come up in %v seconds", maxIters*sleepBetweenItersMsec/1000)
+			werr := fmt.Errorf("KV Store failed to come up in %v seconds", maxIters*sleepBetweenItersMsec/1000)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		kvStoreTLSConfig, err := etcd.GetEtcdClientCredentials()
 		if err != nil {
-			log.Errorf("Failed to get kvstore client credentials with error: %v", err)
-			return nil, err
+			werr := fmt.Errorf("Failed to get kvstore client credentials with error: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		sConfig := kstore.Config{
@@ -233,8 +251,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			time.Sleep(sleepBetweenItersMsec * time.Millisecond)
 		}
 		if err != nil {
-			log.Errorf("Failed to create kvstore, error: %v", err)
-			return nil, err
+			werr := fmt.Errorf("Failed to create kvstore, error: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		err = credentials.GenKubernetesCredentials(req.NodeId, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots(), []string{req.VirtualIp})
@@ -279,8 +298,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		// (ApiServer for example) may still need to contact quorum services or KVStore.
 		err := credentials.GenQuorumClientAuth(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
 		if err != nil {
-			log.Errorf("Failed to obtain client auth credentials for quorum with error: %v", err)
-			return nil, err
+			werr := fmt.Errorf("Failed to obtain client auth credentials for quorum with error: %v", err)
+			log.Errorf(werr.Error())
+			return nil, werr
 		}
 
 		err = credentials.GenVosAuth(req.NodeId, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustChain(), env.CertMgr.Ca().TrustRoots())
@@ -336,7 +356,8 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 
 	if shouldStartAuthServer {
-		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
+		c.authServerStopChannel = make(chan bool)
+		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, c.authServerStopChannel)
 	}
 
 	env.HealthClient = health.NewClient(env.ResolverClient)
@@ -345,7 +366,15 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 }
 
 func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoinReq) (*grpc.ClusterDisjoinResp, error) {
+	env.Logger.Infof("Received disjoin request %+v", req)
 	var err error
+	if c.authServerStopChannel != nil {
+		close(c.authServerStopChannel)
+		c.authServerStopChannel = nil
+	}
+	if env.MasterService != nil {
+		env.MasterService.Stop()
+	}
 	// Stop CertificatesMgr and cleanup CA keys
 	if env.CertMgr != nil {
 		err = env.CertMgr.Close()
@@ -373,6 +402,9 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 			err = err2
 		}
 	}
+	if env.K8sService != nil {
+		env.K8sService.Stop()
+	}
 	if env.ServiceTracker != nil {
 		env.ServiceTracker.Stop()
 	}
@@ -387,15 +419,25 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 		env.SystemdService.Stop()
 		env.SystemdService = nil
 	}
-
 	if env.MetricsService != nil {
 		env.MetricsService.Stop()
 		env.MetricsService = nil
 	}
-
 	if env.HealthClient != nil {
 		env.HealthClient.Stop()
 		env.HealthClient = nil
+	}
+	if env.ServiceRolloutClient != nil {
+		env.ServiceRolloutClient.Stop()
+	}
+	if env.CfgWatcherService != nil {
+		env.CfgWatcherService.Stop()
+	}
+	if env.NodeService != nil {
+		env.NodeService.Stop()
+	}
+	if env.LeaderService != nil {
+		env.LeaderService.Stop()
 	}
 
 	// Cleanup all credentials
@@ -416,7 +458,15 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 		env.Logger.Errorf("Error removing Vos credentials: %v", cerr)
 	}
 
+	// Cleanup etcd data dir
+	os.RemoveAll(globals.EtcdMountedDataDir)
+
 	env.ClusterName = ""
+	env.QuorumNodes = []string{}
+	cerr = utils.DeleteCluster()
+	if err != nil {
+		env.Logger.Errorf("Error deleting cluster: %v", cerr)
+	}
 
 	return &grpc.ClusterDisjoinResp{}, err
 }

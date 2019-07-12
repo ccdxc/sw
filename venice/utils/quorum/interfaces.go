@@ -70,4 +70,10 @@ type Interface interface {
 
 	// Remove removes an existing quorum member.
 	Remove(id uint64) error
+
+	// GetStatus returns the status of the member
+	GetStatus(member *Member) (interface{}, error)
+
+	// GetHealth returns the health of the member
+	GetHealth(member *Member) (bool, error)
 }

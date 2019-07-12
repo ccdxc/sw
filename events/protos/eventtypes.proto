@@ -64,6 +64,30 @@ enum EventTypes {
     NODE_UNREACHABLE                = 10 [(category) = Cluster,
                                           (severity) = CRITICAL,
                                           (desc)     = "Node is unreachable"];
+    // ------------------------------- Quorum events ----------------------------- //
+    QUORUM_MEMBER_ADD               = 15 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Added member to quorum"];
+
+    QUORUM_MEMBER_REMOVE            = 16 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Removed member from quorum"];
+
+    QUORUM_MEMBER_HEALTHY           = 17 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Quorum member is now healthy"];
+
+    QUORUM_MEMBER_UNHEALTHY         = 18 [(category) = Cluster,
+                                         (severity) = CRITICAL,
+                                         (desc)     = "Quorum member is now unhealthy"];
+
+    UNSUPPORTED_QUORUM_SIZE         = 19 [(category) = Cluster,
+                                         (severity) = CRITICAL,
+                                         (desc)     = "Quorum size is below supported minimum"];
+
+    QUORUM_UNHEALTHY                = 20 [(category) = Cluster,
+                                         (severity) = CRITICAL,
+                                         (desc)     = "Quorum does not have enough healthy members"];
 
     // ------------------------------- Diagnostic events ----------------------------- //
     MODULE_CREATION_FAILED          = 24 [(category) = Cluster,

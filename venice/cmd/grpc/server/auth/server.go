@@ -53,7 +53,7 @@ func RunAuthServer(url string, stopChannel chan bool) {
 	//
 	// CertMgr is thread-safe, so the same CertMgr instance can be shared between the two
 	// Certificates API endpoints.
-	certRPCHandler := certificates.NewRPCHandler(env.CertMgr)
+	certRPCHandler := certificates.NewRPCHandler()
 	certapi.RegisterCertificatesServer(env.AuthRPCServer.GrpcServer, certRPCHandler)
 
 	if env.TokenAuthService == nil {
@@ -63,11 +63,12 @@ func RunAuthServer(url string, stopChannel chan bool) {
 	tokenauth.RegisterTokenAuthV1Server(env.AuthRPCServer.GrpcServer, tokenAuthRPCHandler)
 
 	rpcServer.Start()
-
 	log.Infof("Started CMD authenticated service at %v", url)
 
-	// wait forever
+	// wait until stop
 	<-stopChannel
+	log.Infof("Stopped CMD authenticated service at %v", url)
+	env.AuthRPCServer = nil
 }
 
 // RunLeaderInstanceServer creates a gRPC server for authenticated services offered by leader CMD.

@@ -807,6 +807,12 @@ func (c *CfgWatcherService) APIClient() cmd.ClusterV1Interface {
 	return &c.DummyAPIClient
 }
 
+// GetCluster returns the Cluster object
+func (c *CfgWatcherService) GetCluster() (*cmd.Cluster, error) {
+	cl := c.APIClient()
+	return cl.Cluster().Get(context.TODO(), &api.ObjectMeta{})
+}
+
 // NodeService is the interface for starting/stopping/configuring services running on all controller nodes
 type NodeService struct {
 	K8sAPIServerLocation string

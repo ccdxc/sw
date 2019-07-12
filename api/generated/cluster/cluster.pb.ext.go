@@ -284,6 +284,9 @@ func (m *ClusterStatus) Defaults(ver string) bool {
 		i := m.Conditions[k]
 		ret = i.Defaults(ver) || ret
 	}
+	if m.Quorum != nil {
+		ret = m.Quorum.Defaults(ver) || ret
+	}
 	return ret
 }
 
@@ -990,6 +993,19 @@ func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 			ret = append(ret, errs...)
 		}
 	}
+
+	if m.Quorum != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Quorum"
+			if errs := m.Quorum.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
@@ -998,6 +1014,10 @@ func (m *ClusterStatus) Normalize() {
 	for _, v := range m.Conditions {
 		v.Normalize()
 
+	}
+
+	if m.Quorum != nil {
+		m.Quorum.Normalize()
 	}
 
 }

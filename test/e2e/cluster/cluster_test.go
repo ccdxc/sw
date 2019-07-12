@@ -210,6 +210,11 @@ func validateCluster() {
 	Expect(cl.Kind).Should(Equal("Cluster"))
 	Expect(cl.UUID).ShouldNot(BeEmpty())
 
+	By(fmt.Sprintf("All quorum members should be healthy"))
+	Eventually(func() error {
+		return checkQuorumHealth(clusterIf, &obj, len(ts.tu.QuorumNodes))
+	}, 60, 5).Should(BeNil(), "Quorum is not healthy")
+
 	versionIf := apiClient.ClusterV1().Version()
 	vl, err := versionIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
 	By(fmt.Sprintf("Version fields should be ok"))

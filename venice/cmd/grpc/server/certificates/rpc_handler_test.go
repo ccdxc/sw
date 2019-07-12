@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
@@ -34,7 +35,8 @@ func newRPCServer(serverName, listenURL string, cm *certmgr.CertificateMgr) (*rp
 		return nil, errors.Wrap(err, "Error creating rpc server")
 	}
 	// Instantiate handlers for certificates API
-	srv := NewRPCHandler(cm)
+	env.CertMgr = cm
+	srv := NewRPCHandler()
 	// register the RPC handlers
 	certapi.RegisterCertificatesServer(rpcServer.GrpcServer, srv)
 	// start

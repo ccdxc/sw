@@ -2,7 +2,8 @@
     "Properties": {
         "SmartNICDeadInterval": "10s",
         "SmartNICHealthWatchInterval": "5s",
-        "ClusterMetricsSendInterval": "2s"
+        "ClusterMetricsSendInterval": "2s",
+        "ClusterStatusUpdateInterval": "5s"
     },
     "DisabledModules": [
         "pen-ntp"

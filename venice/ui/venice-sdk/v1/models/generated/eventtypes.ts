@@ -29,6 +29,12 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NODE_HEALTHY',
     'NODE_JOINED',
     'NODE_UNREACHABLE',
+    'QUORUM_MEMBER_ADD',
+    'QUORUM_MEMBER_HEALTHY',
+    'QUORUM_MEMBER_REMOVE',
+    'QUORUM_MEMBER_UNHEALTHY',
+    'QUORUM_UNHEALTHY',
+    'UNSUPPORTED_QUORUM_SIZE',
   ],
   Network: [
     'LINK_DOWN',
@@ -156,6 +162,36 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NODE_UNREACHABLE",
       "Severity": EventsEvent_severity.CRITICAL,
       "Desc": "Node is unreachable",
+  },
+  'QUORUM_MEMBER_ADD' : {
+      "Name": "QUORUM_MEMBER_ADD",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Added member to quorum",
+  },
+  'QUORUM_MEMBER_HEALTHY' : {
+      "Name": "QUORUM_MEMBER_HEALTHY",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Quorum member is now healthy",
+  },
+  'QUORUM_MEMBER_REMOVE' : {
+      "Name": "QUORUM_MEMBER_REMOVE",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Removed member from quorum",
+  },
+  'QUORUM_MEMBER_UNHEALTHY' : {
+      "Name": "QUORUM_MEMBER_UNHEALTHY",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "Quorum member is now unhealthy",
+  },
+  'QUORUM_UNHEALTHY' : {
+      "Name": "QUORUM_UNHEALTHY",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "Quorum does not have enough healthy members",
+  },
+  'UNSUPPORTED_QUORUM_SIZE' : {
+      "Name": "UNSUPPORTED_QUORUM_SIZE",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "Quorum size is below supported minimum",
   },
   'LINK_DOWN' : {
       "Name": "LINK_DOWN",

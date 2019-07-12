@@ -15,6 +15,7 @@ var (
 	// parameters for pushing updates to ApiServer
 	maxAPIServerWriteRetries = 10
 	apiServerRPCTimeout      = 10 * time.Second
+	apiClientRetryInterval   = 3 * time.Second
 )
 
 // APIClientGetter is an interface that returns an API Client.

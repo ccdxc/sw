@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -55,8 +54,7 @@ var (
 	}
 	// cluster status will be updated every 30 seconds or
 	// when any leader event is observed or when cluster is created/updated
-	clusterStatusUpdateTime = 30 * time.Second
-	jt                      = NewDefragJobTicker()
+	ClusterStatusUpdateInterval = 30 * time.Second
 )
 
 type masterService struct {
@@ -101,12 +99,6 @@ func getNextTickDuration() time.Duration {
 //NewDefragJobTicker creates a new Ticker
 func NewDefragJobTicker() DefragJobTicker {
 	return DefragJobTicker{time.NewTimer(getNextTickDuration())}
-}
-
-//update Ticker with new duration
-func (jt DefragJobTicker) updateDefragJobTicker() {
-	log.Infof("updating  DefragJobTicker")
-	jt.t.Reset(getNextTickDuration())
 }
 
 // WithCfgWatcherMasterOption to pass a specifc types.CfgWatcherService implementation
@@ -415,9 +407,9 @@ func (m *masterService) Stop() {
 	m.Lock()
 	defer m.Unlock()
 	m.enabled = false
+	m.diagModuleSvc.Stop()
 	m.stopLeaderServices()
 	m.k8sSvc.Stop()
-	m.diagModuleSvc.Stop()
 	m.resolverSvc.Stop()
 
 	// Stop elastic curator service
@@ -460,58 +452,43 @@ func (m *masterService) AreLeaderServicesRunning() bool {
 	// TODO: Need systemd API for this
 	return true
 }
-func (m *masterService) updateClusterStatus() {
 
+func (m *masterService) updateClusterStatus() {
 	updateStatus := func() {
 		if !m.isLeader {
 			// Only leader should write the status
 			return
 		}
-		ac := m.cfgWatcherSvc.APIClient()
-		if ac == nil {
-			log.Infof("APIClient not ready yet")
+		clusterObj, err := m.cfgWatcherSvc.GetCluster()
+		if err != nil {
+			log.Errorf("Error getting Cluster object")
 			return
 		}
-		cl := ac.Cluster()
-		if cl == nil {
-			log.Infof("APIClient retured nil Cluster client")
-			return
-		}
-		var options api.ListWatchOptions
+		update := false
 		hostname := m.leaderSvc.ID()
-		nctx, cancel := context.WithTimeout(context.Background(), clusterStatusUpdateTime)
-		defer cancel()
-		clList, err := cl.List(nctx, &options)
-		if err != nil {
-			log.Infof("error %s getting Cluster from APIServer", err)
-			return
+		if clusterObj.Status.Leader != hostname {
+			clusterObj.Status.Leader = hostname
+			ts, err := gogotypes.TimestampProto(time.Now())
+			if err != nil {
+				log.Errorf("Cluster %#v status update with new leader errored %s while getting time", clusterObj, err)
+			}
+			clusterObj.Status.LastLeaderTransitionTime = &api.Timestamp{Timestamp: *ts}
+			update = true
 		}
 
-		if !m.isLeader {
-			return
-		}
-		if len(clList) == 0 {
-			log.Errorf("cluster object is nil from APIServer even though this node is leader")
-			return
-		}
-		if clList[0].Status.Leader == hostname {
-			return
-		}
+		update = updateQuorumStatus(env.Quorum, clusterObj) || update
 
-		clList[0].Status.Leader = hostname
-		ts, err := gogotypes.TimestampProto(time.Now())
-		if err != nil {
-			log.Errorf("Cluster %#v status update with new leader errored %s while getting time", clList[0], err)
-			return
-		}
-		clList[0].Status.LastLeaderTransitionTime = &api.Timestamp{Timestamp: *ts}
-		_, err = cl.Update(nctx, clList[0])
-		if err != nil {
-			log.Errorf("Cluster %#v update on Leadership win returned %#v", clList[0], err)
+		if update {
+			err := env.StateMgr.UpdateClusterStatus(clusterObj)
+			if err != nil {
+				log.Errorf("Cluster %#v update returned %#v", clusterObj, err)
+				return
+			}
+			log.Infof("Quorum status updated in cluster object: %+v", clusterObj)
 		}
 	}
 
-	ticker := time.NewTicker(clusterStatusUpdateTime)
+	ticker := time.NewTicker(ClusterStatusUpdateInterval)
 	for {
 		select {
 		case <-ticker.C:
@@ -521,6 +498,7 @@ func (m *masterService) updateClusterStatus() {
 				updateStatus()
 			} else {
 				close(m.closeCh)
+				log.Infof("Stopping updateClusterStatus master service function")
 				return
 			}
 		}
@@ -581,29 +559,18 @@ func (m *masterService) OnNotifySystemdEvent(e types.SystemdEvent) error {
 	return nil
 }
 
-// handleNodeEvent handles Node update
-func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
-	if m.isLeader {
-		switch et {
-		case kvstore.Created:
-			// Check if not already in cluster
-			if node.Status.Phase != cmd.NodeStatus_JOINED.String() {
-				op := ops.NewNodeJoinOp(node)
-				_, err := ops.Run(op)
-				if err != nil {
-					log.Infof("Error %v while joining Node %v to cluster", err, node.Name)
-				}
-			}
-		case kvstore.Updated:
-		case kvstore.Deleted:
-			op := ops.NewNodeDisjoinOp(node)
-			_, err := ops.Run(op)
-			if err != nil {
-				log.Infof("Error %v while disjoin Node %v from cluster", err, node.Name)
-			}
+// isQuorumNode returns true if the node name is in the list of quorum nodes
+func isQuorumNode(nodeName string) bool {
+	for _, qn := range env.QuorumNodes {
+		if qn == nodeName {
+			return true
 		}
 	}
+	return false
+}
 
+// handleNodeEvent handles Node update
+func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
 	// update local cache
 	var err error
 	switch et {
@@ -616,6 +583,34 @@ func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Nod
 	}
 	if err != nil {
 		log.Errorf("Error updating local state, Op: %v, object: %+v", et, node)
+	}
+
+	if m.isLeader {
+		switch et {
+		case kvstore.Created:
+			// Check if not already in cluster
+			if node.Status.Phase != cmd.NodeStatus_JOINED.String() {
+				// This can either be a new non-quorum node that is joining OR
+				// it can be an existing quorum node that was disjoined and then rejoined.
+				op := ops.NewNodeJoinOp(node)
+				_, err := ops.Run(op)
+				if err != nil {
+					log.Errorf("Error %v while joining Node %v to cluster", err, node.Name)
+				}
+			}
+		case kvstore.Updated:
+		case kvstore.Deleted:
+			cl, err := m.cfgWatcherSvc.GetCluster()
+			if err != nil {
+				log.Errorf("Error getting cluster object: %v", err)
+				break
+			}
+			op := ops.NewNodeDisjoinOp(node, cl)
+			_, err = ops.Run(op)
+			if err != nil {
+				log.Errorf("Error %v while disjoining Node %v from cluster", err, node.Name)
+			}
+		}
 	}
 }
 
@@ -636,29 +631,6 @@ func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *c
 	case kvstore.Deleted:
 		return
 	}
-}
-
-// do defragment on Quorum member
-func performQuorumDefrag(start bool) {
-
-	if start {
-
-		for {
-			<-jt.t.C
-			if env.Quorum != nil {
-				if members, err := env.Quorum.List(); err == nil {
-					for _, member := range members {
-						env.Quorum.Defrag(&member)
-						time.Sleep(time.Minute * 5)
-					}
-				}
-			}
-			jt.updateDefragJobTicker()
-		}
-	} else {
-		jt.t.Stop()
-	}
-
 }
 
 // handleSmartNIC handles SmartNIC updates

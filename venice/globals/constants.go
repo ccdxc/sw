@@ -47,6 +47,8 @@ const (
 
 	// Data directory
 	EtcdDataDir = "/var/lib/etcd"
+	// Etcd data directory that gets mounted into the etcd container
+	EtcdMountedDataDir = "/var/lib/pensando/etcd"
 
 	// PKI directories
 	//
@@ -219,6 +221,9 @@ const (
 
 	// DefaultClusterVersionName
 	DefaultVersionName = "clusterVersion"
+
+	// MinSupportedQuorumSize is the minimum size of the Quorum
+	MinSupportedQuorumSize = 3
 )
 
 var (

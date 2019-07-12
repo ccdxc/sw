@@ -155,6 +155,8 @@ func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 // business logic for this service.
 func (k *k8sService) waitForAPIServerOrCancel() {
 	ii := 0
+	ticker := time.NewTicker(waitTime)
+	defer ticker.Stop()
 	var err error
 	for {
 		select {
@@ -162,7 +164,7 @@ func (k *k8sService) waitForAPIServerOrCancel() {
 			k.Done()
 			log.Infof("k8sService waitForAPIServerOrCancel canceled")
 			return
-		case <-time.After(waitTime):
+		case <-ticker.C:
 			if _, err = k.client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
 				err := programClusterConfig(k.client)
 				if err != nil {
