@@ -10,7 +10,6 @@
 2. Helper scripts go in scripts/
 3. Common protos go in protos/
 
-## Ginkgo version 1.5.0
 
 ## Building and using new workload images
 1. Update box.rb in workload-images to add packages to iota workload image
