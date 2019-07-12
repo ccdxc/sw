@@ -146,14 +146,14 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		return errBadRequest(fmt.Errorf("invalid mode %v specified", cfg.Spec.Mode))
 	}
 
-	if err := n.persistState(); err != nil {
+	if err := n.persistState(false); err != nil {
 		return errInternalServer(err)
 	}
 
 	return nil
 }
 
-func (n *NMD) persistState() (err error) {
+func (n *NMD) persistState(updateDelphi bool) (err error) {
 	// Persist BoltDB
 	log.Info("Persisting state")
 	if err = n.store.Write(&n.config); err != nil {
@@ -168,7 +168,7 @@ func (n *NMD) persistState() (err error) {
 	}
 
 	n.config.Status.Mode = n.config.Spec.Mode
-	if n.DelphiClient != nil {
+	if updateDelphi && n.DelphiClient != nil {
 		if err = n.writeDelphiObjects(); err != nil {
 			return err
 		}
@@ -340,6 +340,11 @@ func (n *NMD) handleHostModeTransition() error {
 		n.config.Status.Controllers = []string{}
 		n.config.Status.TransitionPhase = ""
 		n.config.Status.AdmissionPhase = ""
+
+		if err := n.persistState(true); err != nil {
+			log.Errorf("Failed to persist Naples Config. Err : %v", err)
+			return err
+		}
 		return nil
 	}
 	log.Error("Failed to stop network mode control loop")
@@ -607,6 +612,10 @@ func (n *NMD) AdmitNaples() {
 					// Registration is complete here. Set the status to Registration done.
 					log.Infof("Setting the transition phase to registration done")
 					n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
+					if err = n.persistState(true); err != nil {
+						log.Errorf("Failed to persist naples state. Err: %v", err)
+					}
+
 					nic, _ := n.GetSmartNIC()
 					recorder.Event(eventtypes.NIC_ADMITTED, fmt.Sprintf("Smart NIC %s admitted to the cluster", nic.Name), nic)
 					// Transition to reboot pending only on successful admission only if reboot has not been done.
