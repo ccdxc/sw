@@ -185,6 +185,9 @@ public:
     uint32_t mac_faults(void) { return this->mac_faults_; }
     void set_mac_faults(uint32_t faults) { this->mac_faults_ = faults; }
 
+    uint32_t num_mac_nofaults(void) { return this->num_mac_nofaults_; }
+    void set_num_mac_nofaults(uint32_t faults) { this->num_mac_nofaults_ = faults; }
+
     sdk_ret_t port_enable(void);
     sdk_ret_t port_disable(void);
     sdk_ret_t port_link_sm_process(void);
@@ -355,7 +358,8 @@ private:
     uint32_t              num_link_down_;             // number of link down
     cable_type_t          cable_type_;                // cable type
     port_loopback_mode_t  loopback_mode_;             // port loopback mode - MAC/PHY
-    uint32_t              mac_faults_;                // number of MAC faults detected
+    uint32_t              mac_faults_;                // number of times MAC faults detected
+    uint32_t              num_mac_nofaults_;          // number of times no MAC faults were detected (applicable for 10G/25G-no-fec)
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);

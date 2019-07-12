@@ -672,7 +672,6 @@ mac_faults_get_hw (uint32_t inst_id, uint32_t mac_ch)
     int chip_id = 0;
     int faults = 0;
     faults = cap_mx_base_r_pcs_status2(chip_id, inst_id, mac_ch);
-    SDK_LINKMGR_TRACE_DEBUG("inst: %u, ch: %u, faults: %u", inst_id, mac_ch, faults);
     return faults != 0;
 }
 

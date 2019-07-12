@@ -38,7 +38,16 @@ port::port_debounce_timer(void)
 bool
 port::port_link_status(void)
 {
-    return port_mac_sync_get();
+    // check for MAC sync and MAC faults
+    if (port_mac_sync_get() == false) {
+        return false;
+    }
+    if (port_mac_faults_get() == true) {
+        SDK_LINKMGR_TRACE_DEBUG("port %u, MAC %u, MAC faults detected",
+                                port_num(), mac_id());
+        return false;
+    }
+    return true;
 }
 
 sdk_ret_t
@@ -861,6 +870,9 @@ port::port_link_sm_process(void)
                 // reset MAC faults counter
                 set_mac_faults(0);
 
+                // reset MAC no-faults counter
+                set_num_mac_nofaults(0);
+
                 // disable and clear mac interrupts
                 port_mac_intr_en(false);
                 port_mac_intr_clr();
@@ -1094,6 +1106,9 @@ port::port_link_sm_process(void)
 
                 // If the PCS faults/errors after MAC sync is persistent, restart SM
                 if (this->mac_faults() > 0) {
+                    // if MAC errors are detected, reset the MAC no-faults counter
+                    set_num_mac_nofaults(0);
+
                     if (this->mac_faults() < 3) {
                         SDK_PORT_SM_DEBUG(this, "MAC faults detected");
                         timeout = 100;
@@ -1115,6 +1130,27 @@ port::port_link_sm_process(void)
                         this->set_port_link_sm(
                                 port_link_sm_t::PORT_LINK_SM_ENABLED);
                         break;
+                    }
+                } else if (fec_type() == port_fec_type_t::PORT_FEC_TYPE_NONE) {
+                    // For 10G/25G-no-fec scenario, comira MAC has an issue
+                    // where MAC gets sync and PCS error counter could still
+                    // be 0 though peer is shutdown or not connected.
+                    // To workaround that, check the error counter
+                    // multiple times
+                    if (port_speed() == port_speed_t::PORT_SPEED_10G ||
+                        port_speed() == port_speed_t::PORT_SPEED_25G) {
+                        set_num_mac_nofaults(num_mac_nofaults() + 1);
+                        if (num_mac_nofaults() < 3) {
+                            SDK_PORT_SM_DEBUG(this, "MAC faults check retry");
+                            timeout = 100;
+                            this->bringup_timer_val_ += timeout;
+                            this->link_bring_up_timer_ =
+                                sdk::lib::timer_schedule(
+                                    SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
+                                    (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                                    false);
+                            break;
+                        }
                     }
                 }
 
