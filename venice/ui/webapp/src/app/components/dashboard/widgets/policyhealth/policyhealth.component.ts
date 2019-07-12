@@ -252,6 +252,8 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
     if (MetricsUtility.resultHasData(this.sessionDataCurrent)) {
       const currData = MetricsUtility.transformToChartjsTimeSeries(this.sessionDataCurrent.series[0], 'totalActiveSessions', true);
       this.currActiveFlows = currData[currData.length - 1].y;
+    } else {
+      this.currActiveFlows = 0;
     }
 
     if (MetricsUtility.resultHasData(this.cpsData)) {

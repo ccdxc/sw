@@ -48,12 +48,10 @@ export class TechSupport {
         const appPage4Collections = new AppPage();
         appPage4Collections.setContainerCSS ('.newtechsupport-row-collectionselector');
         await this.pressAddTechSupportButton() ;
-        await browser.sleep(5000); // wati for animation complete
+        await browser.sleep(2000); // wati for animation complete
         await this.getTechsupportName().sendKeys(techsupportRequestValue.name);
-        await this.getTechsupportVerbosity().sendKeys(techsupportRequestValue.verbosity);
-        await this.getTechsupportNodes().sendKeys(techsupportRequestValue.nodes);
-        await appPage4Nodes.setLabelSelectorValues(techsupportRequestValue.nodeSelectorValues);
-        await appPage4Collections.setLabelSelectorValues(techsupportRequestValue.collectionSelectorValues);
+        const nodeList = 'p-listbox .ui-listbox-list-wrapper .ui-listbox-item > span';
+        await E2EuiTools.setListBoxValue(techsupportRequestValue.nodes.split(','), nodeList);
         // click save button
         await this.pressSaveTechSupportButton();
     }
@@ -63,7 +61,6 @@ export class TechSupport {
     async deleteTechsupport(techsupportRequestValue: TechsupportRequestValue) {
         const tsTableRowActionBlockDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(techsupportRequestValue.name);
         await E2EuiTools.clickElement(tsTableRowActionBlockDeleteButtonCSS);
-        await browser.sleep(2000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();
     }
 }

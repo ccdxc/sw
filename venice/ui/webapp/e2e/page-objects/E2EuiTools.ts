@@ -117,17 +117,18 @@ export class E2EuiTools {
 
     public static async clickConfirmAlertFirstButton() {
         const buttonCSS = 'p-confirmdialog .ui-dialog-footer.ui-widget-content  > button:nth-child(1)';
+        const EC = protractor.ExpectedConditions;
+        await browser.wait(EC.presenceOf(element(by.css(buttonCSS))), 5000, 'confirm button took too long to appear in DOM');
         await this.clickElement(buttonCSS);
     }
 
     public static async verifyRecordAddRemoveInTable(recordName: string, isToVerifyCreate: boolean) {
         const trElemenentCSS = this.getTableEditViewTableRowTRCSS(recordName);
-        const trRowElement = await element(by.css(trElemenentCSS));
-        const msg = (isToVerifyCreate) ? 'Created' : 'Deleted';
+        const EC = protractor.ExpectedConditions;
         if (isToVerifyCreate) {
-              expect(await trRowElement.isPresent()).toBeTruthy(recordName + ' ' + msg);
+            browser.wait(EC.presenceOf(element(by.css(trElemenentCSS))), 5000, recordName + ' didn\'t show up in table');
         } else {
-              expect( trRowElement.isPresent()).toBeFalsy(recordName + ' ' + msg);
+            browser.wait(EC.stalenessOf(element(by.css(trElemenentCSS))), 5000, recordName + ' was still in table');
         }
     }
 

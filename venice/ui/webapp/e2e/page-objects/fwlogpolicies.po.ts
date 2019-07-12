@@ -44,7 +44,6 @@ export class FwlogPolicies {
     async deleteFwlogPolicy(monitoringFwlogPolicy: IMonitoringFwlogPolicy) {
         const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringFwlogPolicy.meta.name);
         await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
-        await browser.sleep(5000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();
     }
 

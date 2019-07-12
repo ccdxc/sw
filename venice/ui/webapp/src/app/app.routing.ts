@@ -7,6 +7,7 @@ import { UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { AppcontentComponent } from '@app/appcontent.component';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
 import { RolloutstatusComponent } from './components/settings-group/systemupgrade/rollouts/rolloutstatus/rolloutstatus.component';
+import { LoginComponent } from './components/login/login.component';
 
 
 /**
@@ -17,7 +18,7 @@ import { RolloutstatusComponent } from './components/settings-group/systemupgrad
 export const routes: Routes = [
   {
     path: 'login',
-    loadChildren: '@components/login/login.module#LoginModule',
+    component: LoginComponent
   },
   {
     path: '',

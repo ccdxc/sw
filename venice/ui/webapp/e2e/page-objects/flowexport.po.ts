@@ -33,11 +33,9 @@ export class FlowExport {
         // syslogInputCSS should show 8 input-boxes, we are preparing values for them
         const values = [
             // source
-            monitoringFlowExportPolicy.spec['match-rules'][0].source.endpoints[0],
             monitoringFlowExportPolicy.spec['match-rules'][0].source['ip-addresses'][0],
             monitoringFlowExportPolicy.spec['match-rules'][0].source['mac-addresses'][0],
             // destination
-            monitoringFlowExportPolicy.spec['match-rules'][0].destination.endpoints[0],
             monitoringFlowExportPolicy.spec['match-rules'][0].destination['ip-addresses'][0],
             monitoringFlowExportPolicy.spec['match-rules'][0].destination['mac-addresses'][0],
 
@@ -61,7 +59,6 @@ export class FlowExport {
         const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringFlowExportPolicy.meta.name);
         await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
 
-        await browser.sleep(5000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();
     }
 }

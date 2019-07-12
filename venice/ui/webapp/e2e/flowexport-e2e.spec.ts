@@ -56,7 +56,7 @@ describe('venice-ui flowexport', () => {
                 '10.1.1.1'
               ],
               'mac-addresses': [
-                'aa:bb:cc:dd:ee:ff'
+                'aabb.ccdd.eeff'
               ]
             },
             'destination': {
@@ -67,7 +67,7 @@ describe('venice-ui flowexport', () => {
                 '10.2.2.2'
               ],
               'mac-addresses': [
-                'ff:ee:dd:cc:bb:aa'
+                'ffee.ddcc.bbaa'
               ]
             },
             'app-protocol-selectors': {
@@ -83,7 +83,7 @@ describe('venice-ui flowexport', () => {
         'exports': [
           {
             'destination': '10.3.3.3',
-            'transport': 'TCP/90',
+            'transport': 'UDP/90',
             'credentials': {
               'auth-type': 'AUTHTYPE_NONE'
             }

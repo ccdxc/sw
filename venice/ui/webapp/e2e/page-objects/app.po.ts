@@ -18,7 +18,7 @@ export class AppPage {
   async logout() {
     await this._openLoginNamePanel();
     // sleeping to make sure it registers hover state before clicking
-    await browser.sleep(1000);
+    await browser.sleep(500);
     await browser.actions().click().perform();
     const loginPage = new LoginPage();
     await loginPage.verifyPage();
@@ -32,7 +32,7 @@ export class AppPage {
     const logoutButton = element(by.css('.app-logout-button'));
     await browser.wait(EC.presenceOf(logoutButton), 10000, 'Logout button was not present');
     // sleeping to make sure animation finishes
-    await browser.sleep(2000);
+    await browser.sleep(1000);
     const button = browser.driver.findElement(By.css('.app-logout-button'));
     await browser.actions().mouseMove(await button).perform();
   }
@@ -62,8 +62,9 @@ export class AppPage {
 
   async verifyInVenice() {
     const EC = protractor.ExpectedConditions;
-    const appShellComponent = element(by.css('.app-shell-container'));
-    expect(await appShellComponent.isPresent()).toBeTruthy(); // VeniceUI should be in logged-in stage.
+    // const appShellComponent = element(by.css('.app-shell-container'));
+    await browser.wait(EC.presenceOf(element(by.css('.app-shell-container'))), 10000, 'app shell taking too long to appear in the DOM');
+    // expect(await appShellComponent.isPresent()).toBeTruthy(); // VeniceUI should be in logged-in stage.
   }
 
   /**

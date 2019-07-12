@@ -1,6 +1,11 @@
 <p-blockUI [blocked]="isScreenBlocked">
 </p-blockUI>
 
+<img [style.display]="'none'" src="../../../assets/images/pensando-logo.svg"
+     alt="Pensando Venice" />
+<img [style.display]="'none'" src="../../../assets/images/venice/venice-pictures-wallpapers-7.jpg"
+     alt="Pensando Venice" />
+
 <div class="pensUI-app {{os}} {{browsertype}} {{browserversion}} {{_currentComponent? _currentComponent['component']: ''}} "
      id="pensando-ui-screen">
   <p-confirmDialog #confirmDialog [closable]="false" icon="pi pi-exclamation-triangle">

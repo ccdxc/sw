@@ -3,6 +3,7 @@ import { LoginPage } from './page-objects/login.po';
 import { Auditevents } from './page-objects/auditevents.po';
 import { AppPage } from './page-objects/app.po';
 import { FieldSelectorCriteria } from './page-objects';
+import { E2EuiTools } from './page-objects/E2EuiTools';
 
 describe('venice-ui auditevents', () => {
   let auditeventsPage: Auditevents;
@@ -61,22 +62,11 @@ describe('venice-ui auditevents', () => {
    * 2. click search buttons and verify returned data
    */
   it('should filter table', async () => {
-    const values: FieldSelectorCriteria[] = [
-        {
-          key: 'action',
-          operator: 'not equals',
-          value: 'login'
-        },
-        {
-          key: 'user.name',
-          operator: 'equals',
-          value: 'test'
-        }
-    ];
-    await appPage.setFieldSelectorValues(values);
+    const search = 'field:Action!=login; field:Act On (name)=test;';
+    await E2EuiTools.setInputBoxValue('.advanced-search-bar-input', search);
 
     // click search button
-    const searchButton = await element(by.css('.global-button-primary.auditevents-searchbutton.auditevents-searchbutton-save'));
+    const searchButton = await element(by.css('.advanced-search-bar-button-search'));
     await searchButton.click();
     await browser.sleep(5000);
 

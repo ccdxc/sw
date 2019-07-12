@@ -78,6 +78,7 @@ import { PortalModule } from '@angular/cdk/portal';
 import { BgfileuploadComponent } from './widgets/bgfileupload/bgfileupload.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { RolloutsModule } from './components/settings-group/systemupgrade/rollouts/rollouts.module';
+import { LoginModule } from './components/login/login.module';
 
 /**
  * This is pensando UI web-app module. It imports all required libraries.
@@ -149,7 +150,8 @@ import { RolloutsModule } from './components/settings-group/systemupgrade/rollou
     FlexLayoutModule,
     DragDropModule,
     PortalModule,
-    RolloutsModule
+    RolloutsModule,
+    LoginModule,
   ],
   providers: [
     // Generated Services

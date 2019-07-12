@@ -1,5 +1,5 @@
 import { browser, by, element, protractor, ElementFinder } from 'protractor';
-import { EventsEvent_severity_uihint } from '@sdk/v1/models/generated/events';
+import { EventsEvent_severity } from '@sdk/v1/models/generated/events';
 import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, MonitoringAlertPolicy, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { E2EuiTools } from './E2EuiTools';
 import { AppPage } from './app.po';
@@ -35,10 +35,10 @@ export class Alertsevents {
     await browser.sleep(1000);
     const rows = await element.all(by.css('.ui-table-scrollable-body-table tbody tr'));
     let limit = rows.length;
-    // Limiting to first 10 events due to the maount of time it takes
+    // Limiting to first 2 events due to the maount of time it takes
     // to check each row
-    if (limit > 10) {
-      limit = 10;
+    if (limit > 2) {
+      limit = 2;
     }
     for (let index = 0; index < limit; index++) {
       // We re select the element to avoid our reference being stale
@@ -52,8 +52,7 @@ export class Alertsevents {
           // Icon should be present
           await browser.wait(EC.presenceOf((colVal.element(by.css('mat-icon')))), 1000, 'mat-icon for severity was missing');
           // Checking severity is a ui hint value
-          const severityValues = Object.values(EventsEvent_severity_uihint);
-          const ecSeverity: Function[] = [];
+          const severityValues = Object.values(EventsEvent_severity);
           const actualSeverityText = await colVal.element(by.css('div')).getText();
           expect(severityValues).toContain(actualSeverityText, 'severity value was not one of the ui hint values');
         } else {
@@ -126,7 +125,6 @@ export class Alertsevents {
     await browser.sleep(5000);  // wait for overlay node dismiss
     const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringAlertDestination.meta.name) + ' .global-table-action-icon.mat-icon[mattooltip="Delete destination"]';
     await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
-    await browser.sleep(5000); // wait for alert pop-up
     await E2EuiTools.clickConfirmAlertFirstButton();
 
   }
@@ -166,7 +164,7 @@ export class Alertsevents {
     const dropdownCSS = 'app-eventalertpolicies  app-neweventalertpolicy .neweventalertpolicy-container p-dropdown[formControlName="severity"] .ui-dropdown-trigger > span';
     await E2EuiTools.setDropdownValue(monitoringAlertPolicy.spec.severity, 0, dropdownCSS);
     // click update-save button
-    await E2EuiTools.clickElement('app-eventalertpolicies app-neweventalertpolicy .neweventalertpolicy-buttoncontainer div:nth-child(1) > span');
+    await E2EuiTools.clickElement('app-eventalertpolicies app-neweventalertpolicy .neweventalertpolicy-save');
   }
 
   async verifyEventAlertPolicy(monitoringAlertPolicy: IMonitoringAlertPolicy, severityValueCSS: string, elementValue: string, isToOpenEventPolicyPage: boolean = false) {
@@ -185,7 +183,6 @@ export class Alertsevents {
     await this.openEventAlertPolicyPage();
     const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringAlertPolicy.meta.name) + ' .global-table-action-icon.mat-icon[mattooltip="Delete policy"]';
     await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
-    await browser.sleep(5000); // wait for alert pop-up
     await E2EuiTools.clickConfirmAlertFirstButton();
   }
 

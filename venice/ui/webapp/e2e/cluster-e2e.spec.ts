@@ -42,7 +42,9 @@ describe('venice-ui cluster', () => {
     });
 
     it('should show cluster statictics ', async () => {
-        const stats = await element.all(by.css('app-cluster app-herocard app-basecard .herocard-first-stat-value'));
+        const EC = protractor.ExpectedConditions;
+        await browser.wait(EC.presenceOf(element(by.css('app-cluster app-herocard .herocard-first-stat-value'))), 10000, 'Failed to find herocard stat');
+        const stats = await element.all(by.css('app-cluster app-herocard .herocard-first-stat-value'));
         const types = ['CPU', 'Memory', 'Storage'];
         await E2EuiTools.verifyStatistics(stats, types, 'Cluster');
     });
@@ -51,9 +53,10 @@ describe('venice-ui cluster', () => {
         const nodelink = await element(by.css('app-cluster .cluster-node-container .cluster-node-name span')); // get the first node
         const nodeName = await nodelink.getText();
         await nodelink.click(); // go to cluster/nodeID page
-        await browser.sleep(3000);  // wait for browser loads data
 
-        const stats = await element.all(by.css('app-nodedetail app-herocard app-basecard .herocard-first-stat-value'));
+        const EC = protractor.ExpectedConditions;
+        await browser.wait(EC.presenceOf(element(by.css('app-nodedetail app-herocard .herocard-first-stat-value'))), 10000, 'Failed to find herocard stat');
+        const stats = await element.all(by.css('app-nodedetail app-herocard .herocard-first-stat-value'));
         const types = ['CPU', 'Memory', 'Storage'];
         await E2EuiTools.verifyStatistics(stats, types, 'Node Datail:' + nodeName);
 

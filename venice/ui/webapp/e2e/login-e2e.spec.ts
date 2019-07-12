@@ -39,7 +39,7 @@ describe('venice-ui Login', () => {
     await browser.waitForAngularEnabled(false);
     const EC = protractor.ExpectedConditions;
     await browser.wait(EC.presenceOf(element(by.css('.app-shell-container'))), 60000, 'app shell taking too long to appear in the DOM');
-    await browser.wait(EC.urlContains('/cluster/cluster'), 10000, 'did not reroute to /cluster/cluster as expected');
+    await browser.wait(EC.urlContains('/dashboard'), 10000, 'did not reroute to /dashboard as expected');
 
     // Should not be able to read the token
     const cookies = browser.executeScript('return document.cookie');
@@ -58,7 +58,7 @@ describe('venice-ui Login', () => {
     await browser.waitForAngularEnabled(false);
     const EC = protractor.ExpectedConditions;
     const shell = browser.wait(EC.presenceOf(element(by.css('.app-shell-container'))), 10000, 'app shell taking too long to appear in the DOM');
-    const url = browser.wait(EC.urlContains('/cluster/cluster'), 10000, 'did not reroute to /cluster/cluster as expected');
+    const url = browser.wait(EC.urlContains('/dashboard'), 10000, 'did not reroute to /dashboard as expected');
     await Promise.all([shell, url]);
 
     // Refresh the page and go back to login

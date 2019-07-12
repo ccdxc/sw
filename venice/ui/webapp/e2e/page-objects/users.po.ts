@@ -160,7 +160,6 @@ export class UsersPage {
         const authObjectBlockCSS = await this._setFocusToAuthObjectUIElement(type, authObject); // put focus to the auth-object block
         const deletebtnCSS = authObjectBlockCSS + ' ' + '.usertemplate-div-card-icon-delete-button';
         await E2EuiTools.clickElement(deletebtnCSS);
-        await browser.sleep(1000);
         await E2EuiTools.clickConfirmAlertFirstButton();
     }
 

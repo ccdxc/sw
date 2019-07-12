@@ -39,7 +39,7 @@ describe('venice-ui techsupport', () => {
     const _techsupportRequestValue: TechsupportRequestValue = {
       name: 'techsupport-' + E2EuiTools.s4(),
       verbosity: E2EuiTools.getRandomInt(0, 9),
-      nodes: 'node-1, Nic-1, SmartNic-1',
+      nodes: 'node1',
       nodeSelectorValues: [
         {
           key: 'env',
