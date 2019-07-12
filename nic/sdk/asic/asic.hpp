@@ -8,6 +8,7 @@
 #include "include/sdk/types.hpp"
 #include "lib/catalog/catalog.hpp"
 #include "platform/utils/mpartition.hpp"
+#include "platform/ring/ring.hpp"
 #include "p4/loader/loader.hpp"
 
 namespace sdk {
@@ -39,10 +40,13 @@ typedef struct asic_cfg_s {
     std::string          pgm_name;
     uint8_t              num_pgm_cfgs;
     uint8_t              num_asm_cfgs;
+    uint8_t              num_rings;
     asic_pgm_cfg_t       pgm_cfg[SDK_ASIC_PGM_CFG_MAX];
     asic_asm_cfg_t       asm_cfg[SDK_ASIC_ASM_CFG_MAX];
     sdk::lib::catalog    *catalog;
     mpartition           *mempartition;
+    sdk::platform::ring_meta_t
+                         *ring_meta;
     platform_type_t      platform;
     completion_cb_t      completion_func;
 } asic_cfg_t;

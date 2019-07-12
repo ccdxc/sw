@@ -42,6 +42,7 @@ impl_base::init(pds_init_params_t *params, asic_cfg_t *asic_cfg) {
     // initialize program and asm specific configs
     pipeline_impl_->program_config_init(params, asic_cfg);
     pipeline_impl_->asm_config_init(params, asic_cfg);
+    pipeline_impl_->ring_config_init(asic_cfg);
 
     // perform asic initialization
     asic_impl_->asic_init(asic_cfg);

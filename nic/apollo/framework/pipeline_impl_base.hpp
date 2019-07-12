@@ -49,12 +49,17 @@ public:
     virtual void program_config_init(pds_init_params_t *init_params,
                                      asic_cfg_t *asic_cfg) { }
 
-    /// \brief Initialize asm configuration
+    /// \brief initialize asm configuration
     ///
-    /// \param[in] init_params Initialization time parameters passed by app
-    /// \param[in] asic_cfg ASIC configuration to be populated with asm info
+    /// \param[in] init_params initialization time parameters passed by app
+    /// \param[in] asic_cfg asic configuration to be populated with asm info
     virtual void asm_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) { }
+
+    /// \brief initialize ring configuration
+    ///
+    /// \param[in] asic_cfg asic configuration to be populated with rings info
+    virtual void ring_config_init(asic_cfg_t *asic_cfg) { }
 
     ///
     /// \brief Init routine to initialize the pipeline

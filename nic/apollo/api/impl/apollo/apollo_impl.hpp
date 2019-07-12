@@ -49,6 +49,11 @@ public:
     virtual void asm_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) override;
 
+    /// \brief     initialize ring configuration
+    /// \param[in] asic_cfg    asic configuration to be populated with ring
+    ///            information
+    virtual void ring_config_init(asic_cfg_t *asic_cfg) override;
+
     /// \brief  init routine to initialize the pipeline
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) override;

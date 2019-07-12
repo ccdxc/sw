@@ -30,7 +30,6 @@
 #else
 #define DBG_PRINT(fmt, args...)
 #endif
-#define htonll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
 
 using sdk::table::ftlv6;
 using sdk::table::ftlv4;

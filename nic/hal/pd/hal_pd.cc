@@ -671,6 +671,8 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     asic_cfg.cfg_path = hal_cfg->cfg_path;
     asic_cfg.catalog = hal_cfg->catalog;
     asic_cfg.mempartition = hal_cfg->mempartition;
+    asic_cfg.num_rings = 0;
+    asic_cfg.ring_meta = NULL;
     asic_cfg.platform = hal_cfg->platform;
     args.cfg = &asic_cfg;
     pd_func_args.pd_asic_init = &args;

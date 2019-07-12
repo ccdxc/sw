@@ -258,6 +258,11 @@ artemis_impl::asm_config_init(pds_init_params_t *init_params,
     asic_cfg->asm_cfg[2].symbols_func = txdma_symbols_init_;
 }
 
+void
+artemis_impl::ring_config_init(asic_cfg_t *asic_cfg) {
+    asic_cfg->num_rings = 0;
+}
+
 sdk_ret_t
 artemis_impl::key_native_init_(void) {
     sdk_ret_t                  ret;

@@ -16,6 +16,8 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 // TODO: clean this up
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "nic/sdk/platform/capri/capri_common.hpp"
+#include "nic/sdk/platform/ring/ring.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
@@ -206,6 +208,11 @@ apollo_impl::asm_config_init(pds_init_params_t *init_params,
     asic_cfg->asm_cfg[2].path = std::string("txdma_asm");
     asic_cfg->asm_cfg[2].base_addr = std::string(MEM_REGION_TXDMA_PROGRAM_NAME);
     asic_cfg->asm_cfg[2].symbols_func = txdma_symbols_init_;
+}
+
+void
+apollo_impl::ring_config_init(asic_cfg_t *asic_cfg) {
+    asic_cfg->num_rings = 0;
 }
 
 sdk_ret_t

@@ -569,6 +569,10 @@ asic_init (asic_cfg_t *cfg)
         capri_cfg.asm_cfg[i].sort_func =
             cfg->asm_cfg[i].sort_func;
     }
+    for (int i = 0; i < cfg->num_rings; i++) {
+        sdk::platform::ring ring(&cfg->ring_meta[i], cfg->mempartition);
+        ring.init();
+    }
     capri_cfg.completion_func = cfg->completion_func;
     return capri_init(&capri_cfg);
 }
