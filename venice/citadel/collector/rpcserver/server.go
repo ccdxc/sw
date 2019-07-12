@@ -182,6 +182,12 @@ func (s *CollRPCSrv) convertToPoints(mb *metric.MetricBundle) []models.Point {
 			continue
 		}
 
+		// drop points with time drift
+		if time.Since(ts) > 15*time.Minute {
+			s.badPoints++
+			continue
+		}
+
 		p, err := models.NewPoint(m.Name, mTags, fields, ts)
 		if err != nil {
 			s.badPoints++
