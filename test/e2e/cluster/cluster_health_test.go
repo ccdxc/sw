@@ -35,6 +35,8 @@ var _ = Describe("cluster health tests", func() {
 	})
 
 	It(fmt.Sprintf("Test cluster health by killing %s (venice service)", globals.EvtsMgr), func() {
+		Skip("skipping this test until we get PR #13927 fixed and working")
+
 		// repeatedly kill evtsmgr on one of the nodes and check cluster health
 		nodeIP := ts.tu.VeniceNodeIPs[0]
 		Eventually(func() bool {
