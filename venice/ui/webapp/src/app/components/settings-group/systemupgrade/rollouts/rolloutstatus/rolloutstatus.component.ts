@@ -90,14 +90,13 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       let id = '';
       if (this.router.url === '/maintenance') {
         id = Utility.getInstance().getCurrentRollout().meta.name;
+        this.selectedRolloutId = id;
       } else {
-        id = params.get('id');
+        this.selectedRolloutId = params.get('id');
       }
-      this.selectedRolloutId = id;
+      this.getRolloutDetail();
       this.showDeletionScreen = false;
       this.showMissingScreen = false;
-
-      this.getRolloutDetail();
       this.setDefaultToolbar(this.selectedRolloutId);
 
      this.getNaples();
@@ -159,14 +158,6 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     return this.constructor.name;
   }
 
-  handleWatchSmartNICFailure(error) {
-    if (Utility.getInstance().getMaintenanceMode()) {
-      this.getNaples();
-    } else {
-      this._controllerService.webSocketErrorToaster('Failed to get Naples', error);
-    }
-  }
-
   getNaples() {
     this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
@@ -174,7 +165,20 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       response => {
         this.naplesEventUtility.processEvents(response);
       },
-      this.handleWatchSmartNICFailure
+      (error) => {
+        if (Utility.getInstance().getMaintenanceMode()) {
+          setTimeout(() => {
+            this.getNaples();
+          }, 0);
+        } else {
+          this._controllerService.webSocketErrorToaster('Failed to get Naples', error);
+        }
+      },
+      () => {
+        setTimeout(() => {
+          this.getNaples();  // Watch ends during rollout, try again so new updates can be shown on UI
+        }, 0);
+      }
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
@@ -219,14 +223,6 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     this.subscriptions.push(getSubscription);
   }
 
-  handleWatchRolloutFailure(error) {
-    if (Utility.getInstance().getMaintenanceMode()) {
-      this.watchRolloutDetail();
-    } else {
-      this._controllerService.webSocketErrorToaster('Failed to get Rollout', error);
-    }
-  }
-
   watchRolloutDetail() {
     this.rolloutsEventUtility = new HttpEventUtility<RolloutRollout>(RolloutRollout);
     this.rollouts = this.rolloutsEventUtility.array;
@@ -259,7 +255,20 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
           this.selectedRollout = null;
         }
       },
-      this.handleWatchRolloutFailure
+      (error) => {
+        if (Utility.getInstance().getMaintenanceMode()) {
+          setTimeout(() => {
+            this.watchRolloutDetail();
+          }, 0);
+        } else {
+        this._controllerService.webSocketErrorToaster('Failed to get Rollout', error);
+        }
+      },
+      () => {
+        setTimeout(() => {
+          this.watchRolloutDetail();
+        }, 0);
+      }
     );
     this.subscriptions.push(subscription);
   }

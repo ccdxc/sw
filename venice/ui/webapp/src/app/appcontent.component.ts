@@ -242,9 +242,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   handleWatchVersionResponse(response) {
     this.versionEventUtility.processEvents(response);
-    if (this.versionArray.length > 0) {
-      this.version = this.versionArray[0];
-      if (!!this.version.status['rollout-build-version']) {
+    if (this.versionArray.length > 0 && this.version.status['rollout-build-version'] !== this.versionArray[0].status['rollout-build-version']) {
+      if (!!this.versionArray[0].status['rollout-build-version'] ) {
         this.updateRolloutUIBlock();
         Utility.getInstance().setMaintenanceMode(true);
       } else {
@@ -252,17 +251,11 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         if (Utility.getInstance().getMaintenanceMode() === true) {
           Utility.getInstance().setMaintenanceMode(false);
           this.removeRolloutUIBlock();
+          this.onRolloutComplete();
         }
       }
     }
-  }
-
-  handleWatchVersionFail(error) {
-    if (Utility.getInstance().getMaintenanceMode()) {
-      this.getVersion();
-    } else {
-      this._controllerService.webSocketErrorToaster('Failed to get Cluster Version', error);
-    }
+    this.version = this.versionArray[0];
   }
 
   getVersion() {
@@ -275,7 +268,21 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         response => {
           this.handleWatchVersionResponse(response);
         },
-        this.handleWatchVersionFail,
+        (error) => {
+          if (Utility.getInstance().getMaintenanceMode()) {
+            setTimeout(() => {
+              this.getVersion();  // Watch ends during rollout, try again so new updates can be shown on UI
+            }, 0);
+          } else {
+          this._controllerService.webSocketErrorToaster('Failed to get Cluster Version', error);
+          }
+        },
+        () => {
+          setTimeout(() => {
+            this.version = new ClusterVersion();
+            this.getVersion();
+          }, 0);
+        }
       );
       this.subscriptions.push(this.versionSubscription);
     }

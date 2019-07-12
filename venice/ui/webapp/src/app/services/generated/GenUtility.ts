@@ -161,7 +161,7 @@ export class GenServiceUtility {
 
   public isAllowed(eventPayloadID: any) {
     // checking maintenance mode (but get version object)
-    if (Utility.getInstance().getMaintenanceMode() && eventPayloadID !== 'WatchVersion' && eventPayloadID !== 'WatchRollout') {
+    if (Utility.getInstance().getMaintenanceMode() && eventPayloadID !== 'WatchVersion' && eventPayloadID !== 'WatchRollout' && eventPayloadID !== 'GetRollout' ) {
       return false;
     }
     return true;
