@@ -7,81 +7,11 @@
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
+#include "kcompat.h"
 
 #ifdef CONFIG_DEBUG_FS
 
-static int blob_open(struct inode *inode, struct file *filp)
-{
-	filp->private_data = inode->i_private;
-	return 0;
-}
-
-static ssize_t blob_read(struct file *filp, char __user *buffer,
-			 size_t count, loff_t *ppos)
-{
-	struct debugfs_blob_wrapper *blob = filp->private_data;
-
-	if (*ppos >= blob->size)
-		return 0;
-	if (*ppos + count > blob->size)
-		count = blob->size - *ppos;
-
-	if (copy_to_user(buffer, blob->data + *ppos, count))
-		return -EFAULT;
-
-	*ppos += count;
-
-	return count;
-}
-
-static ssize_t blob_write(struct file *filp, const char __user *buffer,
-			  size_t count, loff_t *ppos)
-{
-	struct debugfs_blob_wrapper *blob = filp->private_data;
-
-	if (*ppos >= blob->size)
-		return 0;
-	if (*ppos + count > blob->size)
-		count = blob->size - *ppos;
-
-	if (copy_from_user(blob->data + *ppos, buffer, count))
-		return -EFAULT;
-
-	*ppos += count;
-
-	return count;
-}
-
-static const struct file_operations blob_fops = {
-	.owner = THIS_MODULE,
-	.open = blob_open,
-	.read = blob_read,
-	.write = blob_write,
-};
-
-struct dentry *debugfs_create_blob(const char *name, umode_t mode,
-				   struct dentry *parent,
-				   struct debugfs_blob_wrapper *blob)
-{
-	return debugfs_create_file(name, mode | 0200, parent, blob,
-				   &blob_fops);
-}
-
 static struct dentry *ionic_dir;
-
-#define single(name) \
-static int name##_open(struct inode *inode, struct file *f)	\
-{								\
-	return single_open(f, name##_show, inode->i_private);	\
-}								\
-								\
-static const struct file_operations name##_fops = {		\
-	.owner = THIS_MODULE,					\
-	.open = name##_open,					\
-	.read = seq_read,					\
-	.llseek = seq_lseek,					\
-	.release = single_release,				\
-}
 
 void ionic_debugfs_create(void)
 {
@@ -126,7 +56,7 @@ static int bars_show(struct seq_file *seq, void *v)
 
 	return 0;
 }
-single(bars);
+DEFINE_SHOW_ATTRIBUTE(bars);
 
 int ionic_debugfs_add_bars(struct ionic *ionic)
 {
@@ -229,7 +159,7 @@ static int identity_show(struct seq_file *seq, void *v)
 
 	return 0;
 }
-single(identity);
+DEFINE_SHOW_ATTRIBUTE(identity);
 
 int ionic_debugfs_add_ident(struct ionic *ionic)
 {
@@ -259,7 +189,7 @@ static int q_tail_show(struct seq_file *seq, void *v)
 
 	return 0;
 }
-single(q_tail);
+DEFINE_SHOW_ATTRIBUTE(q_tail);
 
 static int q_head_show(struct seq_file *seq, void *v)
 {
@@ -269,7 +199,7 @@ static int q_head_show(struct seq_file *seq, void *v)
 
 	return 0;
 }
-single(q_head);
+DEFINE_SHOW_ATTRIBUTE(q_head);
 
 static int cq_tail_show(struct seq_file *seq, void *v)
 {
@@ -279,7 +209,7 @@ static int cq_tail_show(struct seq_file *seq, void *v)
 
 	return 0;
 }
-single(cq_tail);
+DEFINE_SHOW_ATTRIBUTE(cq_tail);
 
 static const struct debugfs_reg32 intr_ctrl_regs[] = {
 	{ .name = "coal_init", .offset = 0, },
@@ -465,7 +395,7 @@ static int netdev_show(struct seq_file *seq, void *v)
 
 	return 0;
 }
-single(netdev);
+DEFINE_SHOW_ATTRIBUTE(netdev);
 
 static int lif_identity_show(struct seq_file *seq, void *v)
 {
@@ -519,7 +449,7 @@ static int lif_identity_show(struct seq_file *seq, void *v)
 
 	return 0;
 }
-single(lif_identity);
+DEFINE_SHOW_ATTRIBUTE(lif_identity);
 
 int ionic_debugfs_add_lif(struct lif *lif)
 {

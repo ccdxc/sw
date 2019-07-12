@@ -5,7 +5,6 @@
 #include <linux/netdevice.h>
 
 #include "ionic.h"
-#include "ionic_api.h"
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_ethtool.h"
@@ -57,13 +56,9 @@ static int ionic_get_sset_count(struct net_device *netdev, int sset)
 	case ETH_SS_STATS:
 		count = ionic_get_stats_count(lif);
 		break;
-	case ETH_SS_TEST:
-		break;
 	case ETH_SS_PRIV_FLAGS:
 		count = PRIV_FLAGS_COUNT;
 		break;
-	default:
-		return -EOPNOTSUPP;
 	}
 	return count;
 }
@@ -81,10 +76,6 @@ static void ionic_get_strings(struct net_device *netdev,
 		memcpy(buf, ionic_priv_flags_strings,
 		       PRIV_FLAGS_COUNT * ETH_GSTRING_LEN);
 		break;
-	case ETH_SS_TEST:
-		// IONIC_TODO
-	default:
-		netdev_err(netdev, "Invalid sset %d\n", sset);
 	}
 }
 
@@ -131,7 +122,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_dev *idev = &lif->ionic->idev;
-	int fake_port_type = 0;
+	int copper_seen = 0;
 
 	ethtool_link_ksettings_zero_link_mode(ks, supported);
 	ethtool_link_ksettings_zero_link_mode(ks, advertising);
@@ -158,14 +149,14 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 						     100000baseCR4_Full);
 		ethtool_link_ksettings_add_link_mode(ks, advertising,
 						     100000baseCR4_Full);
-fake_port_type++;
+		copper_seen++;
 		break;
 	case XCVR_PID_QSFP_40GBASE_CR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     40000baseCR4_Full);
 		ethtool_link_ksettings_add_link_mode(ks, advertising,
 						     40000baseCR4_Full);
-fake_port_type++;
+		copper_seen++;
 		break;
 #ifdef HAVE_ETHTOOL_25G_BITS
 	case XCVR_PID_SFP_25GBASE_CR_S:
@@ -175,7 +166,7 @@ fake_port_type++;
 						     25000baseCR_Full);
 		ethtool_link_ksettings_add_link_mode(ks, advertising,
 						     25000baseCR_Full);
-fake_port_type++;
+		copper_seen++;
 		break;
 #endif
 	case XCVR_PID_SFP_10GBASE_AOC:
@@ -191,7 +182,7 @@ fake_port_type++;
 		ethtool_link_ksettings_add_link_mode(ks, advertising,
 						     10000baseT_Full);
 #endif
-fake_port_type++;
+		copper_seen++;
 		break;
 
 		/* Fibre */
@@ -306,7 +297,7 @@ fake_port_type++;
 #endif
 
 	if (idev->port_info->status.xcvr.phy == PHY_TYPE_COPPER ||
-	    fake_port_type) {
+	    copper_seen) {
 		ks->base.port = PORT_DA;
 	} else if (idev->port_info->status.xcvr.phy == PHY_TYPE_FIBER) {
 		ks->base.port = PORT_FIBRE;
@@ -335,58 +326,63 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 	struct ionic_dev *idev = &lif->ionic->idev;
 #ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
 	u8 fec_type = PORT_FEC_TYPE_NONE;
-	u32 req_rs, req_b;
+	u32 req_rs, req_fc;
 #endif
 	int err = 0;
 
 	/* set autoneg */
 	if (ks->base.autoneg != idev->port_info->config.an_enable) {
-		idev->port_info->config.an_enable = ks->base.autoneg;
 		mutex_lock(&ionic->dev_cmd_lock);
 		ionic_dev_cmd_port_autoneg(idev, ks->base.autoneg);
 		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 		mutex_unlock(&ionic->dev_cmd_lock);
 		if (err)
 			return err;
+
+		idev->port_info->config.an_enable = ks->base.autoneg;
 	}
 
 	/* set speed */
 	if (ks->base.speed != le32_to_cpu(idev->port_info->config.speed)) {
-		idev->port_info->config.speed = cpu_to_le32(ks->base.speed);
 		mutex_lock(&ionic->dev_cmd_lock);
 		ionic_dev_cmd_port_speed(idev, ks->base.speed);
 		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 		mutex_unlock(&ionic->dev_cmd_lock);
 		if (err)
 			return err;
+
+		idev->port_info->config.speed = cpu_to_le32(ks->base.speed);
 	}
 
 #ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
 	/* set FEC */
 	req_rs = ethtool_link_ksettings_test_link_mode(ks, advertising, FEC_RS);
-	req_b = ethtool_link_ksettings_test_link_mode(ks, advertising, FEC_BASER);
-	if (req_rs && req_b) {
+	req_fc = ethtool_link_ksettings_test_link_mode(ks, advertising, FEC_BASER);
+	if (req_rs && req_fc) {
 		netdev_info(netdev, "Only select one FEC mode at a time\n");
 		return -EINVAL;
 
-	} else if (req_b &&
+	} else if (req_fc &&
 		   idev->port_info->config.fec_type != PORT_FEC_TYPE_FC) {
 		fec_type = PORT_FEC_TYPE_FC;
 	} else if (req_rs &&
 		   idev->port_info->config.fec_type != PORT_FEC_TYPE_RS) {
 		fec_type = PORT_FEC_TYPE_RS;
-	} else if (!(req_rs | req_b) &&
+	} else if (!(req_rs | req_fc) &&
 		 idev->port_info->config.fec_type != PORT_FEC_TYPE_NONE) {
 		fec_type = PORT_FEC_TYPE_NONE;
 	}
 
-	idev->port_info->config.fec_type = fec_type;
-	mutex_lock(&ionic->dev_cmd_lock);
-	ionic_dev_cmd_port_fec(idev, PORT_FEC_TYPE_NONE);
-	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
-	mutex_unlock(&ionic->dev_cmd_lock);
-	if (err)
-		return err;
+	if (fec_type != idev->port_info->config.fec_type) {
+		mutex_lock(&ionic->dev_cmd_lock);
+		ionic_dev_cmd_port_fec(idev, fec_type);
+		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+		mutex_unlock(&ionic->dev_cmd_lock);
+		if (err)
+			return err;
+
+		idev->port_info->config.fec_type = fec_type;
+	}
 #endif
 
 	return 0;
@@ -715,13 +711,11 @@ static int ionic_set_rxfh(struct net_device *netdev, const u32 *indir,
 
 static u32 ionic_get_priv_flags(struct net_device *netdev)
 {
-	u32 priv_flags = 0;
-#ifdef IONIC_DEBUG_STATS
 	struct lif *lif = netdev_priv(netdev);
+	u32 priv_flags = 0;
 
 	if (test_bit(LIF_SW_DEBUG_STATS, lif->state))
 		priv_flags |= PRIV_F_SW_DBG_STATS;
-#endif
 
 	return priv_flags;
 }
@@ -731,11 +725,9 @@ static int ionic_set_priv_flags(struct net_device *netdev, u32 priv_flags)
 	struct lif *lif = netdev_priv(netdev);
 	u32 flags = lif->flags;
 
-#ifdef IONIC_DEBUG_STATS
 	clear_bit(LIF_SW_DEBUG_STATS, lif->state);
 	if (priv_flags & PRIV_F_SW_DBG_STATS)
 		set_bit(LIF_SW_DEBUG_STATS, lif->state);
-#endif
 
 	if (flags != lif->flags)
 		lif->flags = flags;

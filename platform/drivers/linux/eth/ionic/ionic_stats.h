@@ -50,4 +50,4 @@ struct ionic_stat_desc {
 	u64 offset;
 };
 
-#endif // _IONIC_STATS_H_
+#endif /* _IONIC_STATS_H_ */

@@ -168,7 +168,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	struct ionic *ionic;
 	int err;
 
-	ionic = devm_kzalloc(dev, sizeof(*ionic), GFP_KERNEL);
+	ionic = ionic_devlink_alloc(dev);
 	if (!ionic)
 		return -ENOMEM;
 
@@ -187,11 +187,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_clear_drvdata;
 	}
 
-	err = ionic_debugfs_add_dev(ionic);
-	if (err) {
-		dev_err(dev, "Cannot add device debugfs: %d , aborting\n", err);
-		goto err_out_clear_drvdata;
-	}
+	ionic_debugfs_add_dev(ionic);
 
 	/* Setup PCI device */
 	err = pci_enable_device_mem(pdev);
@@ -278,12 +274,11 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = ionic_devlink_register(ionic);
 	if (err)
-		dev_err(dev, "Cannot register devlink (ignored): %d\n", err);
+		dev_err(dev, "Cannot register devlink: %d\n", err);
 
 	return 0;
 
 err_out_deinit_lifs:
-	ionic_devlink_unregister(ionic);
 	ionic_lifs_deinit(ionic);
 err_out_free_lifs:
 	ionic_lifs_free(ionic);
@@ -306,6 +301,7 @@ err_out_debugfs_del_dev:
 	ionic_debugfs_del_dev(ionic);
 err_out_clear_drvdata:
 	mutex_destroy(&ionic->dev_cmd_lock);
+	ionic_devlink_free(ionic);
 	pci_set_drvdata(pdev, NULL);
 
 	return err;
@@ -331,9 +327,8 @@ static void ionic_remove(struct pci_dev *pdev)
 		pci_disable_device(pdev);
 		ionic_debugfs_del_dev(ionic);
 		mutex_destroy(&ionic->dev_cmd_lock);
+		ionic_devlink_free(ionic);
 		pci_set_drvdata(pdev, NULL);
-
-		dev_info(ionic->dev, "removed\n");
 	}
 }
 

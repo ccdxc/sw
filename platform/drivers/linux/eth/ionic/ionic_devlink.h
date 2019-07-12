@@ -7,9 +7,14 @@
 #include <net/devlink.h>
 
 #ifdef DEVLINK_INFO_VERSION_GENERIC_BOARD_ID
+struct ionic *ionic_devlink_alloc(struct device *dev);
+void ionic_devlink_free(struct ionic *ionic);
 int ionic_devlink_register(struct ionic *ionic);
 void ionic_devlink_unregister(struct ionic *ionic);
 #else
+#define ionic_devlink_alloc(dev)  devm_kzalloc(dev, sizeof(struct ionic), GFP_KERNEL)
+#define ionic_devlink_free(i)     devm_kfree(i->dev, i)
+
 #define ionic_devlink_register(x)    0
 #define ionic_devlink_unregister(x)
 #endif

@@ -939,6 +939,8 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	return NETDEV_TX_OK;
 
 err_out_drop:
+	netif_stop_subqueue(netdev, queue_index);
+	q->stop++;
 	q->drop++;
 	dev_kfree_skb(skb);
 	return NETDEV_TX_OK;

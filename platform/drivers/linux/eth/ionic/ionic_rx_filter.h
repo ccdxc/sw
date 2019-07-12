@@ -14,7 +14,8 @@ struct rx_filter {
 	struct hlist_node by_id;
 };
 
-#define RX_FILTER_HLISTS	BIT(10)
+#define RX_FILTER_HASH_BITS	10
+#define RX_FILTER_HLISTS	BIT(RX_FILTER_HASH_BITS)
 #define RX_FILTER_HLISTS_MASK	(RX_FILTER_HLISTS - 1)
 struct rx_filters {
 	spinlock_t lock;				/* filter list lock */

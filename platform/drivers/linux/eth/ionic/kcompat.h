@@ -6012,6 +6012,21 @@ static inline unsigned long _kc_array_index_mask_nospec(unsigned long index,
 	(typeof(_i)) (_i & _mask);					\
 })
 #endif /* array_index_nospec */
+#ifndef DEFINE_SHOW_ATTRIBUTE
+#define DEFINE_SHOW_ATTRIBUTE(name) \
+static int name##_open(struct inode *inode, struct file *f)	\
+{								\
+	return single_open(f, name##_show, inode->i_private);	\
+}								\
+								\
+static const struct file_operations name##_fops = {		\
+	.owner = THIS_MODULE,					\
+	.open = name##_open,					\
+	.read = seq_read,					\
+	.llseek = seq_lseek,					\
+	.release = single_release,				\
+}
+#endif
 #else /* >= 4.16 */
 #include <linux/nospec.h>
 #define HAVE_XDP_BUFF_RXQ

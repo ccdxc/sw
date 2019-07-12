@@ -5,13 +5,13 @@
 #define _IONIC_H_
 
 #include "kcompat.h"
-#include "ionic_api.h"
+
+#include "ionic_if.h"
 #include "ionic_dev.h"
-#include "ionic_debugfs.h"
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.10.0"
+#define DRV_VERSION		"0.14.0"
 
 // TODO: register these with the official include/linux/pci_ids.h
 #define PCI_VENDOR_ID_PENSANDO			0x1dd8
@@ -52,14 +52,6 @@ struct ionic {
 #ifndef HAVE_PCI_IRQ_API
 	struct msix_entry *msix;
 #endif
-
-#ifdef CONFIG_DEBUG_FS
-#ifdef DEBUGFS_TEST_API
-	void *scratch_bufs[NUM_SCRATCH_BUFS];
-	dma_addr_t scratch_bufs_pa[NUM_SCRATCH_BUFS];
-	struct debugfs_blob_wrapper scratch_bufs_blob[NUM_SCRATCH_BUFS];
-#endif
-#endif
 	struct work_struct nb_work;
 	struct notifier_block nb;
 	struct devlink *dl;
@@ -71,6 +63,7 @@ struct ionic {
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       ionic_cq_done_cb done_cb, void *done_arg);
 
+int ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);

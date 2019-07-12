@@ -221,6 +221,56 @@ static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	return err;
 }
 
+static void ionic_adminq_cb(struct queue *q, struct desc_info *desc_info,
+			    struct cq_info *cq_info, void *cb_arg)
+{
+	struct ionic_admin_ctx *ctx = cb_arg;
+	struct admin_comp *comp = cq_info->cq_desc;
+	struct device *dev = &q->lif->netdev->dev;
+
+	if (!ctx)
+		return;
+
+	memcpy(&ctx->comp, comp, sizeof(*comp));
+
+	dev_dbg(dev, "comp admin queue command:\n");
+	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->comp, sizeof(ctx->comp), true);
+
+	complete_all(&ctx->work);
+}
+
+int ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
+{
+	struct queue *adminq = &lif->adminqcq->q;
+	int err = 0;
+
+	WARN_ON(in_interrupt());
+
+	spin_lock(&lif->adminq_lock);
+	if (!ionic_q_has_space(adminq, 1)) {
+		err = -ENOSPC;
+		goto err_out;
+	}
+
+	err = ionic_heartbeat_check(lif->ionic);
+	if (err)
+		goto err_out;
+
+	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
+
+	dev_dbg(&lif->netdev->dev, "post admin queue command:\n");
+	dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->cmd, sizeof(ctx->cmd), true);
+
+	ionic_q_post(adminq, true, ionic_adminq_cb, ctx);
+
+err_out:
+	spin_unlock(&lif->adminq_lock);
+
+	return err;
+}
+
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	struct net_device *netdev = lif->netdev;
@@ -228,7 +278,7 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	const char *name;
 	int err;
 
-	err = ionic_api_adminq_post(lif, ctx);
+	err = ionic_adminq_post(lif, ctx);
 	if (err) {
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
 		netdev_err(netdev, "Posting of %s (%d) failed: %d\n",
@@ -355,7 +405,9 @@ int ionic_setup(struct ionic *ionic)
 	if (err)
 		return err;
 
-	return ionic_debugfs_add_dev_cmd(ionic);
+	ionic_debugfs_add_dev_cmd(ionic);
+
+	return 0;
 }
 
 int ionic_identify(struct ionic *ionic)
@@ -394,9 +446,7 @@ int ionic_identify(struct ionic *ionic)
 	if (err)
 		goto err_out_unmap;
 
-	err = ionic_debugfs_add_ident(ionic);
-	if (err)
-		goto err_out_unmap;
+	ionic_debugfs_add_ident(ionic);
 
 	return 0;
 
@@ -537,7 +587,6 @@ static void __exit ionic_cleanup_module(void)
 {
 	ionic_bus_unregister_driver();
 	ionic_debugfs_destroy();
-	pr_info("%s removed\n", DRV_NAME);
 }
 
 module_init(ionic_init_module);

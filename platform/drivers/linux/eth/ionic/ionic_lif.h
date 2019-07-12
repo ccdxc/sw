@@ -4,13 +4,10 @@
 #ifndef _IONIC_LIF_H_
 #define _IONIC_LIF_H_
 
-#define IONIC_ADMINQ_LENGTH		16	/* must be a power of two */
-#define IONIC_NOTIFYQ_LENGTH	64	/* must be a power of two */
-
 #include "ionic_rx_filter.h"
 
-/* Compile this out for removing debug stats */
-#define IONIC_DEBUG_STATS
+#define IONIC_ADMINQ_LENGTH	16	/* must be a power of two */
+#define IONIC_NOTIFYQ_LENGTH	64	/* must be a power of two */
 
 #define GET_NAPI_CNTR_IDX(work_done)	(work_done)
 #define MAX_NUM_NAPI_CNTR	(NAPI_POLL_WEIGHT + 1)
@@ -88,7 +85,7 @@ struct qcqst {
 #define napi_to_qcq(napi)	container_of(napi, struct qcq, napi)
 #define napi_to_cq(napi)	(&napi_to_qcq(napi)->cq)
 
-enum deferred_work_type {
+enum ionic_deferred_work_type {
 	DW_TYPE_RX_MODE,
 	DW_TYPE_RX_ADDR_ADD,
 	DW_TYPE_RX_ADDR_DEL,
@@ -96,16 +93,16 @@ enum deferred_work_type {
 	DW_TYPE_LIF_RESET,
 };
 
-struct deferred_work {
+struct ionic_deferred_work {
 	struct list_head list;
-	enum deferred_work_type type;
+	enum ionic_deferred_work_type type;
 	union {
 		unsigned int rx_mode;
 		u8 addr[ETH_ALEN];
 	};
 };
 
-struct deferred {
+struct ionic_deferred {
 	spinlock_t lock;		/* lock for deferred work list */
 	struct list_head list;
 	struct work_struct work;
@@ -179,7 +176,7 @@ struct lif {
 	u32 rss_ind_tbl_sz;
 
 	struct rx_filters rx_filters;
-	struct deferred deferred;
+	struct ionic_deferred deferred;
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
 	struct mutex dbid_inuse_lock;	/* lock the dbid bit list */
@@ -255,7 +252,6 @@ int ionic_reset_queues(struct lif *lif);
 
 struct lif *ionic_netdev_lif(struct net_device *netdev);
 
-#ifdef IONIC_DEBUG_STATS
 static inline void debug_stats_txq_post(struct qcq *qcq,
 					struct txq_desc *desc, bool dbell)
 {
@@ -293,13 +289,5 @@ static inline void debug_stats_napi_poll(struct qcq *qcq,
 	debug_stats_txq_post(qcq, txdesc, dbell)
 #define DEBUG_STATS_NAPI_POLL(qcq, work_done) \
 	debug_stats_napi_poll(qcq, work_done)
-
-#else
-#define DEBUG_STATS_RX_BUFF_CNT(qcq)
-#define DEBUG_STATS_TXQ_POST(qcq, txdesc, dbell)
-#define DEBUG_STATS_NAPI_POLL(qcq, work_done)
-#define DEBUG_STATS_INTR_REARM(intr)
-#define DEBUG_STATS_CQE_CNT(cq)
-#endif
 
 #endif /* _IONIC_LIF_H_ */

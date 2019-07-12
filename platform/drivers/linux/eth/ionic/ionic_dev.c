@@ -49,13 +49,13 @@ int ionic_dev_setup(struct ionic *ionic)
 
 	/* BAR0: dev_cmd and interrupts */
 	if (num_bars < 1) {
-		dev_info(dev, "No bars found, aborting\n");
+		dev_err(dev, "No bars found, aborting\n");
 		return -EFAULT;
 	}
 
 	if (bar->len < BAR0_SIZE) {
-		dev_info(dev, "Resource bar size %lu too small, aborting\n",
-			 bar->len);
+		dev_err(dev, "Resource bar size %lu too small, aborting\n",
+			bar->len);
 		return -EFAULT;
 	}
 
@@ -75,7 +75,7 @@ int ionic_dev_setup(struct ionic *ionic)
 	/* BAR1: doorbells */
 	bar++;
 	if (num_bars < 2) {
-		dev_info(dev, "Doorbell bar missing, aborting\n");
+		dev_err(dev, "Doorbell bar missing, aborting\n");
 		return -EFAULT;
 	}
 
@@ -462,7 +462,6 @@ void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa)
 
 void ionic_cq_bind(struct cq *cq, struct queue *q)
 {
-	// TODO support many:1 bindings using qid as index into bound_q array
 	cq->bound_q = q;
 }
 

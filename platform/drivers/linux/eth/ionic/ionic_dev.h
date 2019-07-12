@@ -163,7 +163,7 @@ struct desc_info {
 	void *cb_arg;
 };
 
-#define QUEUE_NAME_MAX_SZ		(32)
+#define QUEUE_NAME_MAX_SZ		32
 
 struct queue {
 	char name[QUEUE_NAME_MAX_SZ];
@@ -192,8 +192,8 @@ struct queue {
 	u64 wake;
 };
 
-#define INTR_INDEX_NOT_ASSIGNED		(-1)
-#define INTR_NAME_MAX_SZ		(32)
+#define INTR_INDEX_NOT_ASSIGNED		-1
+#define INTR_NAME_MAX_SZ		32
 
 struct intr {
 	char name[INTR_NAME_MAX_SZ];

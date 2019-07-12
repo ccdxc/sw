@@ -10,7 +10,6 @@
 
 #include "ionic.h"
 #include "ionic_bus.h"
-#include "ionic_api.h"
 #include "ionic_lif.h"
 #include "ionic_txrx.h"
 #include "ionic_ethtool.h"
@@ -44,12 +43,13 @@ static int ionic_notifyq_clean(struct lif *lif, int budget);
 static void ionic_lif_deferred_work(struct work_struct *work)
 {
 	struct lif *lif = container_of(work, struct lif, deferred.work);
-	struct deferred *def = &lif->deferred;
-	struct deferred_work *w = NULL;
+	struct ionic_deferred *def = &lif->deferred;
+	struct ionic_deferred_work *w = NULL;
 
 	spin_lock_bh(&def->lock);
 	if (!list_empty(&def->list)) {
-		w = list_first_entry(&def->list, struct deferred_work, list);
+		w = list_first_entry(&def->list,
+				     struct ionic_deferred_work, list);
 		list_del(&w->list);
 	}
 	spin_unlock_bh(&def->lock);
@@ -83,8 +83,8 @@ static void ionic_lif_deferred_work(struct work_struct *work)
 	}
 }
 
-static void ionic_lif_deferred_enqueue(struct deferred *def,
-				       struct deferred_work *work)
+static void ionic_lif_deferred_enqueue(struct ionic_deferred *def,
+				       struct ionic_deferred_work *work)
 {
 	spin_lock_bh(&def->lock);
 	list_add_tail(&work->list, &def->list);
@@ -347,8 +347,7 @@ static void ionic_link_status_check(struct lif *lif)
 	link_up = link_status == PORT_OPER_STATUS_UP;
 
 	/* filter out the no-change cases */
-	if ((link_up && netif_carrier_ok(netdev)) ||
-	    (!link_up && !netif_carrier_ok(netdev)))
+	if (link_up == netif_carrier_ok(netdev))
 		return;
 
 	if (link_up) {
@@ -367,16 +366,12 @@ static void ionic_link_status_check(struct lif *lif)
 		if (test_bit(LIF_UP, lif->state))
 			netif_tx_stop_all_queues(netdev);
 	}
-
-	/* TODO: Propagate link_status to other lifs on
-	 *       this ionic device.
-	 */
 }
 
 static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 {
 	union notifyq_comp *comp = cq_info->cq_desc;
-	struct deferred_work *work;
+	struct ionic_deferred_work *work;
 	struct net_device *netdev;
 	struct queue *q;
 	struct lif *lif;
@@ -388,7 +383,7 @@ static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 	eid = le64_to_cpu(comp->event.eid);
 
 	/* Have we run out of new completions to process? */
-	if (!(eid > lif->last_eid))
+	if ((s64)(eid - lif->last_eid) <= 0)
 		return false;
 
 	lif->last_eid = eid;
@@ -435,7 +430,7 @@ static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 			       comp->log.data, sizeof(comp->log.data), true);
 		break;
 	default:
-		netdev_warn(netdev, "Notifyq bad event ecode=%d eid=%lld\n",
+		netdev_warn(netdev, "Notifyq unknown event ecode=%d eid=%lld\n",
 			    comp->event.ecode, eid);
 		break;
 	}
@@ -468,7 +463,7 @@ static int ionic_notifyq_clean(struct lif *lif, int budget)
 	 * there was a long list of link events from a flap episode.
 	 */
 	if (test_bit(LIF_LINK_CHECK_NEEDED, lif->state)) {
-		struct deferred_work *work;
+		struct ionic_deferred_work *work;
 
 		work = kzalloc(sizeof(*work), GFP_ATOMIC);
 		if (!work) {
@@ -628,7 +623,7 @@ static int ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 {
 	struct ionic *ionic = lif->ionic;
-	struct deferred_work *work;
+	struct ionic_deferred_work *work;
 	unsigned int nmfilters;
 	unsigned int nufilters;
 
@@ -714,7 +709,7 @@ static void ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_PROMISC");
 	if (rx_mode & RX_MODE_F_ALLMULTI)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_ALLMULTI");
-	netdev_info(lif->netdev, "lif%d %s\n", lif->index, buf);
+	netdev_dbg(lif->netdev, "lif%d %s\n", lif->index, buf);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -726,7 +721,7 @@ static void ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 
 static void _ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 {
-	struct deferred_work *work;
+	struct ionic_deferred_work *work;
 
 	if (in_interrupt()) {
 		work = kzalloc(sizeof(*work), GFP_ATOMIC);
@@ -914,7 +909,6 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev, __be16 proto,
 		},
 	};
 	struct rx_filter *f;
-	int err;
 
 	spin_lock_bh(&lif->rx_filters.lock);
 
@@ -931,11 +925,7 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev, __be16 proto,
 	ionic_rx_filter_free(lif, f);
 	spin_unlock_bh(&lif->rx_filters.lock);
 
-	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err)
-		return err;
-
-	return 0;
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 static int ionic_slave_alloc(struct ionic *ionic)
@@ -1841,12 +1831,10 @@ static void ionic_lif_free(struct lif *lif)
 	struct device *dev = lif->ionic->dev;
 
 	/* free rss indirection table */
-	if (lif->rss_ind_tbl) {
-		dma_free_coherent(dev, lif->rss_ind_tbl_sz, lif->rss_ind_tbl,
-				  lif->rss_ind_tbl_pa);
-		lif->rss_ind_tbl = NULL;
-		lif->rss_ind_tbl_pa = 0;
-	}
+	dma_free_coherent(dev, lif->rss_ind_tbl_sz, lif->rss_ind_tbl,
+			  lif->rss_ind_tbl_pa);
+	lif->rss_ind_tbl = NULL;
+	lif->rss_ind_tbl_pa = 0;
 
 	/* free queues */
 	ionic_qcqs_free(lif);
@@ -1857,11 +1845,9 @@ static void ionic_lif_free(struct lif *lif)
 
 	/* free lif info */
 	kfree(lif->identity);
-	if (lif->info) {
-		dma_free_coherent(dev, lif->info_sz, lif->info, lif->info_pa);
-		lif->info = NULL;
-		lif->info_pa = 0;
-	}
+	dma_free_coherent(dev, lif->info_sz, lif->info, lif->info_pa);
+	lif->info = NULL;
+	lif->info_pa = 0;
 
 	/* unmap doorbell page */
 	ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
@@ -1926,14 +1912,11 @@ int ionic_lif_rss_config(struct lif *lif, const u16 types,
 
 static int ionic_lif_rss_init(struct lif *lif)
 {
-	static const u8 toeplitz_symmetric_key[] = {
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-	};
-	unsigned int i, tbl_sz;
+	u8 rss_key[IONIC_RSS_HASH_KEY_SIZE];
+	unsigned int tbl_sz;
+	unsigned int i;
+
+	netdev_rss_key_fill(rss_key, IONIC_RSS_HASH_KEY_SIZE);
 
 	lif->rss_types = IONIC_RSS_TYPE_IPV4     |
 			 IONIC_RSS_TYPE_IPV4_TCP |
@@ -1945,10 +1928,9 @@ static int ionic_lif_rss_init(struct lif *lif)
 	/* Fill indirection table with 'default' values */
 	tbl_sz = le16_to_cpu(lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
 	for (i = 0; i < tbl_sz; i++)
-		lif->rss_ind_tbl[i] = i % lif->nxqs;
+		lif->rss_ind_tbl[i] = ethtool_rxfh_indir_default(i, lif->nxqs);
 
-	return ionic_lif_rss_config(lif, lif->rss_types,
-				    toeplitz_symmetric_key, NULL);
+	return ionic_lif_rss_config(lif, lif->rss_types, rss_key, NULL);
 }
 
 static int ionic_lif_rss_deinit(struct lif *lif)
@@ -2079,10 +2061,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	qcq->flags |= QCQ_F_INITED;
 
-	err = ionic_debugfs_add_qcq(lif, qcq);
-	if (err)
-		netdev_warn(lif->netdev, "debugfs add for adminq failed %d\n",
-			    err);
+	ionic_debugfs_add_qcq(lif, qcq);
 
 	return 0;
 }
@@ -2131,9 +2110,7 @@ static int ionic_lif_notifyq_init(struct lif *lif)
 
 	qcq->flags |= QCQ_F_INITED;
 
-	err = ionic_debugfs_add_qcq(lif, qcq);
-	if (err)
-		dev_warn(dev, "debugfs add for notifyq failed %d\n", err);
+	ionic_debugfs_add_qcq(lif, qcq);
 
 	return 0;
 }
@@ -2377,10 +2354,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	qcq->flags |= QCQ_F_INITED;
 
-	err = ionic_debugfs_add_qcq(lif, qcq);
-	if (err)
-		netdev_warn(lif->netdev, "debugfs add for txq %d failed %d\n",
-			    q->hw_index, err);
+	ionic_debugfs_add_qcq(lif, qcq);
 
 	return 0;
 }
@@ -2454,10 +2428,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	qcq->flags |= QCQ_F_INITED;
 
-	err = ionic_debugfs_add_qcq(lif, qcq);
-	if (err)
-		netdev_warn(lif->netdev, "debugfs add for rxq %d failed %d\n",
-			    q->hw_index, err);
+	ionic_debugfs_add_qcq(lif, qcq);
 
 	return 0;
 }
@@ -2503,14 +2474,14 @@ static int ionic_station_set(struct lif *lif)
 		return err;
 
 	if (!is_zero_ether_addr(netdev->dev_addr)) {
-		netdev_info(lif->netdev, "deleting station MAC addr %pM\n",
-			    netdev->dev_addr);
+		netdev_dbg(lif->netdev, "deleting station MAC addr %pM\n",
+			   netdev->dev_addr);
 		ionic_lif_addr(lif, netdev->dev_addr, false);
 	}
 	memcpy(netdev->dev_addr, ctx.comp.lif_getattr.mac,
 	       netdev->addr_len);
-	netdev_info(lif->netdev, "adding station MAC addr %pM\n",
-		    netdev->dev_addr);
+	netdev_dbg(lif->netdev, "adding station MAC addr %pM\n",
+		   netdev->dev_addr);
 	ionic_lif_addr(lif, netdev->dev_addr, true);
 
 	return 0;
@@ -2524,11 +2495,7 @@ static int ionic_lif_init(struct lif *lif)
 	int dbpage_num;
 	int err;
 
-	err = ionic_debugfs_add_lif(lif);
-	if (err) {
-		dev_err(dev, "lif debugfs add failed: %d\n", err);
-		return err;
-	}
+	ionic_debugfs_add_lif(lif);
 
 	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_init(idev, lif->index, lif->info_pa);
@@ -2634,56 +2601,6 @@ static void ionic_lif_notify_work(struct work_struct *ws)
 {
 }
 
-#ifndef DISABLE_LINK_AG_SUPPORT
-#ifdef NETDEV_CHANGEUPPER
-static void ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
-				  struct netdev_notifier_changeupper_info *info)
-{
-	struct netdev_lag_upper_info *upper_info;
-
-	dev_dbg(ionic->dev, "lif %d is lag port %d\n",
-		lif->index, netif_is_lag_port(lif->netdev));
-	dev_dbg(ionic->dev, "lif %d upper %s is lag master %d\n",
-		lif->index, info->upper_dev->name,
-		netif_is_lag_master(info->upper_dev));
-	dev_dbg(ionic->dev, "lif %d has upper info %d\n",
-		lif->index, !!info->upper_info);
-
-	if (!netif_is_lag_port(lif->netdev) ||
-	    !netif_is_lag_master(info->upper_dev) ||
-	    !info->upper_info)
-		return;
-
-	upper_info = info->upper_info;
-
-	dev_dbg(ionic->dev, "upper tx type %d\n",
-		upper_info->tx_type);
-}
-#endif /* NETDEV_CHANGEUPPER */
-
-#ifdef NETDEV_CHANGELOWERSTATE
-static void ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
-			    struct netdev_notifier_changelowerstate_info *info)
-{
-	struct netdev_lag_lower_state_info *lower_info;
-
-	dev_dbg(ionic->dev, "lif %d is lag port %d\n",
-		lif->index, netif_is_lag_port(lif->netdev));
-	dev_dbg(ionic->dev, "lif %d has lower info %d\n",
-		lif->index, !!info->lower_state_info);
-
-	if (!netif_is_lag_port(lif->netdev) ||
-	    !info->lower_state_info)
-		return;
-
-	lower_info = info->lower_state_info;
-
-	dev_dbg(ionic->dev, "link up %d enable %d\n",
-		lower_info->link_up, lower_info->tx_enabled);
-}
-#endif /* NETDEV_CHANGELOWERSTATE */
-#endif /* DISABLE_LINK_AG_SUPPORT */
-
 static void ionic_lif_set_netdev_info(struct lif *lif)
 {
 	struct ionic_admin_ctx ctx = {
@@ -2727,23 +2644,9 @@ static int ionic_lif_notify(struct notifier_block *nb,
 		return NOTIFY_DONE;
 
 	switch (event) {
-#ifndef DISABLE_LINK_AG_SUPPORT
-#ifdef NETDEV_CHANGEUPPER
-	case NETDEV_CHANGEUPPER:
-		ionic_lif_changeupper(ionic, lif, info);
-		break;
-#endif
-#ifdef NETDEV_CHANGELOWERSTATE
-	case NETDEV_CHANGELOWERSTATE:
-		ionic_lif_changelowerstate(ionic, lif, info);
-		break;
-#endif
-#endif /* DISABLE_LINK_AG_SUPPORT */
 	case NETDEV_CHANGENAME:
 		ionic_lif_set_netdev_info(lif);
 		break;
-	default:
-		return NOTIFY_DONE;
 	}
 
 	return NOTIFY_DONE;
@@ -2751,7 +2654,6 @@ static int ionic_lif_notify(struct notifier_block *nb,
 
 int ionic_lifs_register(struct ionic *ionic)
 {
-	struct device *dev = ionic->dev;
 	int err;
 
 	INIT_WORK(&ionic->nb_work, ionic_lif_notify_work);
@@ -2762,9 +2664,10 @@ int ionic_lifs_register(struct ionic *ionic)
 	if (err)
 		ionic->nb.notifier_call = NULL;
 
+	/* only register LIF0 for now */
 	err = register_netdev(ionic->master_lif->netdev);
 	if (err) {
-		dev_err(dev, "Cannot register net device, aborting\n");
+		dev_err(ionic->dev, "Cannot register net device, aborting\n");
 		return err;
 	}
 
@@ -2782,7 +2685,7 @@ void ionic_lifs_unregister(struct ionic *ionic)
 		ionic->nb.notifier_call = NULL;
 	}
 
-	/* There is only one lif every registered in the
+	/* There is only one lif ever registered in the
 	 * current model, so don't bother searching the
 	 * ionic->lif for candidates to unregister
 	 */
@@ -2896,7 +2799,9 @@ try_again:
 	ionic->nintrs = nintrs;
 	ionic->nslaves = nslaves;
 
-	return ionic_debugfs_add_sizes(ionic);
+	ionic_debugfs_add_sizes(ionic);
+
+	return 0;
 
 try_fewer:
 	if (nnqs_per_lif > 1) {
