@@ -106,9 +106,13 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "github.com/minio/minio-go"
   version = "6.0.6"
 
+[[override]]
+  name = "github.com/hpcloud/tail"
+  revision = "000912af8de2d2b9d184786b4cf4c3542b7884e5"
+
 [[constraint]]
   name = "github.com/onsi/ginkgo"
-  version = "1.4.0"
+  version = "1.5.0"
 
 [[constraint]]
   name = "github.com/onsi/gomega"

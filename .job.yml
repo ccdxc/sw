@@ -96,10 +96,15 @@ dependencies:
   dol: iota/test/venice/hwtest 
   dol/test/networking : nic
   storage/offload: storage/offload/linux-build-test
+  vendor: venice
 
 dir_dependencies:
   platform:
     - nic/apollo
+  vendor:
+    - api
+    - venice
+    - test/ci_targets/e2e
   nic/sdk:
     - nic/apollo
   nic/conf/apollo:
