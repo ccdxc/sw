@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	rdebug "runtime/debug"
 	"strings"
 	"time"
 
@@ -35,6 +36,17 @@ import (
 )
 
 const maxRetry = 120
+
+// periodicFreeMemory forces garbage collection every minute and frees OS memory
+func periodicFreeMemory() {
+	for {
+		select {
+		case <-time.After(time.Minute):
+			// force GC and free OS memory
+			rdebug.FreeOSMemory()
+		}
+	}
+}
 
 func main() {
 	// command line flags
@@ -159,6 +171,8 @@ func main() {
 	qsrv, err := query.NewQueryService(*queryURL, br, diagOption, watcherOption)
 
 	log.Infof("query server is listening on %+v", qsrv)
+
+	go periodicFreeMemory()
 
 	// Wait forever
 	select {}

@@ -441,7 +441,7 @@ func (dn *DNode) newQueryStore() error {
 func (dn *DNode) executeAggQuery(ctx context.Context, req *tproto.QueryReq, querystr string, database string) (*tproto.QueryResp, error) {
 	var resp tproto.QueryResp
 
-	// aggreagted query
+	// aggregated query
 	ch, err := dn.tsQueryStore.ExecuteQuery(querystr, database)
 	if err != nil {
 		dn.logger.Errorf("Error executing query aggregator %s on db %s. Err: %v", querystr, database, err)
