@@ -413,7 +413,9 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 }
 func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.stopRolloutTimer()
-	ros.setEndTime()
+	if ros.Status.StartTime != nil {
+		ros.setEndTime()
+	}
 	ros.Mutex.Lock()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUCCESS)]
 	ros.Status.CompletionPercentage = 100

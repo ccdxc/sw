@@ -447,11 +447,13 @@ func (ros *RolloutState) setVenicePhase(name, reason, message string, phase ropr
 		}
 
 	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
-		endTime := api.Timestamp{}
-		endTime.SetTime(time.Now())
-		_, eTime := ros.getRolloutTimeStamps(ros.Status.ControllerNodesStatus[index].Name)
-		if eTime == nil {
-			ros.Status.ControllerNodesStatus[index].EndTime = &endTime
+		if ros.Status.ControllerNodesStatus[index].StartTime != nil {
+			endTime := api.Timestamp{}
+			endTime.SetTime(time.Now())
+			_, eTime := ros.getRolloutTimeStamps(ros.Status.ControllerNodesStatus[index].Name)
+			if eTime == nil {
+				ros.Status.ControllerNodesStatus[index].EndTime = &endTime
+			}
 		}
 
 	case roproto.RolloutPhase_PRE_CHECK:
@@ -490,10 +492,11 @@ func (ros *RolloutState) setServicePhase(name, reason, message string, phase rop
 		ros.Status.ControllerServicesStatus[index].StartTime = &startTime
 
 	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
-		endTime := api.Timestamp{}
-		endTime.SetTime(time.Now())
-		ros.Status.ControllerServicesStatus[index].EndTime = &endTime
-
+		if ros.Status.ControllerServicesStatus[index].StartTime != nil {
+			endTime := api.Timestamp{}
+			endTime.SetTime(time.Now())
+			ros.Status.ControllerServicesStatus[index].EndTime = &endTime
+		}
 	case roproto.RolloutPhase_PRE_CHECK:
 	case roproto.RolloutPhase_DEPENDENCIES_CHECK:
 	case roproto.RolloutPhase_WAITING_FOR_TURN:
