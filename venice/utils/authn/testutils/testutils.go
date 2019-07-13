@@ -105,6 +105,16 @@ func NewLoggedInContext(ctx context.Context, apiGW string, in *auth.PasswordCred
 func NewLoggedInContextWithTimeout(ctx context.Context, apiGW string, in *auth.PasswordCredential, d time.Duration) (context.Context, error) {
 	var err error
 	var nctx context.Context
+
+	t, ok := ctx.Deadline()
+
+	var timeout string
+	if !ok {
+		timeout = "100s" // seconds
+	} else {
+		timeout = time.Until(t).String()
+	}
+
 	if testutils.CheckEventually(func() (bool, interface{}) {
 		tctx, cancel := context.WithTimeout(ctx, d)
 		defer cancel()
@@ -118,8 +128,8 @@ func NewLoggedInContextWithTimeout(ctx context.Context, apiGW string, in *auth.P
 			}
 		}
 		log.Errorf("unable to get logged in context (%v)", err)
-		return false, nil
-	}, "1s", "100s") {
+		return false, fmt.Sprintf("unable to get logged in context (%v)", err)
+	}, d.String(), timeout) {
 		return nctx, err
 	}
 

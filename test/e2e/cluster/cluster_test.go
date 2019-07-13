@@ -160,6 +160,7 @@ func getServices(node string) cmdprotos.ServiceList {
 }
 
 func validateCluster() {
+	By(fmt.Sprintf("ts:%s Validating Cluster", time.Now().String()))
 	By(fmt.Sprintf("pen-base should be running on all nodes"))
 	for _, ip := range ts.tu.VeniceNodeIPs {
 		Eventually(func() string {
@@ -251,10 +252,14 @@ func validateCluster() {
 		return ""
 	}, 15, 3).Should(BeEmpty(), "Resolver data should be same on all quorum nodes")
 
+	By(fmt.Sprintf("ts:%s Cluster Health check", time.Now().String()))
 	// cluster should be in healthy state
 	Eventually(func() bool {
-		cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(ctx), &obj)
+		cancel()
 		if err != nil {
+			By(fmt.Sprintf("ts:%s err:%v getting cluster Info", time.Now().String(), err))
 			return false
 		}
 		for _, cond := range cl.Status.Conditions {
@@ -262,7 +267,8 @@ func validateCluster() {
 				return cond.Status == cmd.ConditionStatus_TRUE.String()
 			}
 		}
-
+		By(fmt.Sprintf("ts:%s cluster health status:%v", time.Now().String(), cl.Status.Conditions))
 		return false
-	}, 60, 2).Should(BeTrue(), "cluster should be in healthy state")
+	}, 60, 5).Should(BeTrue(), "cluster should be in healthy state")
+	By(fmt.Sprintf("ts:%s Cluster is Healthy", time.Now().String()))
 }
