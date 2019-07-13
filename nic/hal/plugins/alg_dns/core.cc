@@ -15,6 +15,7 @@
 #define DNS_OPCODE_SHIFT       3
 #define DNS_HEADER_OPCODE_LEN  2
 #define DNS_HEADER_RR_LEN      6
+#define DNS_MIN_TIMEOUT        1 
 
 namespace hal {
 namespace plugins {
@@ -445,11 +446,17 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         /* Get the DNS id in the packet */
         bool response = get_dnsid_pkt(ctx, l4_sess);
       
-        /* Cleanup if the response is seen */ 
-        if (response == true) { 
-            if (dns_info->timer)
-                //sdk::lib::timer_delete(dns_info->timer);
+        /* Cleanup if the response is seen 
+         * There is a possibility that an old response
+         * is sitting in the flow-miss queue along with 
+         * a new query. In that case, we dont want to 
+         * cleanup the session yet
+         */
+        if (ctx.alg_cflow() == true && response == true) { 
+            if (dns_info->timer) {
+                sdk::lib::timer_delete(dns_info->timer);
                 dns_info->timer = NULL;
+            }
 
             dns_info->response_rcvd = response;
 
