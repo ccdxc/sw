@@ -346,10 +346,11 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
     }
 
     if (oper == TABLE_OPER_INSERT) {
-        ret = acl_tbl->insert(&key, &mask, &data, 0, &fte_span_pd->handle);
+        ret = acl_tbl->insert(&key, &mask, &data, ACL_FTE_SPAN_PRIORITY, 
+                              &fte_span_pd->handle);
     } else {
         // Update
-        ret = acl_tbl->update(fte_span_pd->handle, &key, &mask, &data, 0);
+        ret = acl_tbl->update(fte_span_pd->handle, &key, &mask, &data, ACL_FTE_SPAN_PRIORITY);
     }
 
     if (ret == HAL_RET_OK) {
