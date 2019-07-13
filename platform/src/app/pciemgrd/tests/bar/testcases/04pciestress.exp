@@ -29,7 +29,7 @@ vfe(V4) 11 vfs(V3) 14 prt_size(V2) 12 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 |............111111111111111111111111111111111111111111111rr.....|
 +----------------------------------------------------------------+
 vfe(V4) 4 vfs(V3) 7 prt_size(V2) 5 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-2   34   mem   rwl   128   0x3ffffffffff80 0:02:00.0 0   0    0   
+2   34   io    rwl   128   0x3ffffffffff80 0:02:00.0 0   0    0   
     5    res   --p-  32    0x3ffffffffff80 0x13f000000
     6    res   -n--  32    0x3ffffffffffa0 0x13f000000
     7    res   i---  32    0x3ffffffffffc0 0x13f000000

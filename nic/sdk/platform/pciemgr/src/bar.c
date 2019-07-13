@@ -40,10 +40,10 @@ pciehw_bar_find(const char *name, const int idx)
 static char *
 bar_type_str(pciehwbartype_t bartype)
 {
-    static char *bartypestr[4] = {
-        "NONE", "mem", "mem64", "io"
+    static char *bartypestr[8] = {
+        "NONE0", "mem", "mem64", "NONE3", "NONE4", "io", "NONE6", "NONE7"
     };
-    return bartypestr[bartype & 0x3];
+    return bartypestr[bartype & 0x7];
 }
 
 static pciehwbartype_t

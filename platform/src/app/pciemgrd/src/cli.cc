@@ -283,6 +283,7 @@ add_nvme(int argc, char *argv[])
     pfres->intrc = 4;
     pfres->intrdmask = 0;
     pfres->nvme.regspa = 0x13d000000; /* XXX */
+    pfres->nvme.regssz = 0x1000;
     pfres->nvme.qidc = 64;
 
     getopt_reset(4, 2);
@@ -888,6 +889,11 @@ cli_loop(pciemgrenv_t *pme)
     char *line, prompt[32], *av[16];
     int r, port, ac;
 
+#ifdef __aarch64__
+    // On arm let's log to the usual place,
+    // even in interactive mode.
+    logger_init();
+#endif
     pciemgrd_params(pme);
     pciemgrd_sched_init(pme);
     if ((r = open_hostports()) < 0) {
