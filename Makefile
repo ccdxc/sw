@@ -91,6 +91,27 @@ default:
 	$(MAKE) build
 	$(MAKE) unit-test-cover
 
+ut-odd:
+	$(MAKE) pregen-clean
+	$(MAKE) ws-tools
+	$(MAKE) pull-assets
+	$(MAKE) gen-clean
+	$(MAKE) gen
+	$(MAKE) checks
+	$(MAKE) build
+	$(MAKE) unit-test-cover-odd
+
+ut-even:
+	$(MAKE) pregen-clean
+	$(MAKE) ws-tools
+	$(MAKE) pull-assets
+	$(MAKE) gen-clean
+	$(MAKE) gen
+	$(MAKE) build
+	$(MAKE) unit-test-cover-even
+
+
+
 pregen:
 	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_PREGEN_INSTALL}
 	@for c in ${TO_PREGEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
@@ -147,7 +168,7 @@ gopkgsinstall:
 	@$(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 gopkglist: gopkgsinstall
 	@$(eval GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}))
-	$(eval GO_PKG_UTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep -v ${INTEG_TEST_PATTERNS}))
+	$(eval GO_PKG_UTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep -v ${INTEG_TEST_PATTERNS} | sort ))
 	$(eval GO_PKG_INTEGTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep ${INTEG_TEST_PATTERNS}))
 
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
@@ -168,6 +189,15 @@ build: gopkglist
 unit-test-cover: gopkglist
 	$(info +++ running go tests on $(GO_PKG_UTEST))
 	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG_UTEST}
+
+unit-test-cover-odd: gopkglist
+	@$(eval ODDF := $(shell echo ${GO_PKG_UTEST} | awk '{for (i=1; i<=NF; i+=2) printf("%s ",$$i)}'))
+	$(info +++ running go tests on $(ODDF))
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${ODDF}
+unit-test-cover-even: gopkglist
+	@$(eval EVENF := $(shell echo ${GO_PKG_UTEST} | awk '{for (i=2; i<=NF; i+=2) printf("%s ",$$i)}'))
+	$(info +++ running go tests on $(EVENF))
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${EVENF}
 
 integ-test: gopkglist
 	$(info +++ running go tests on $(GO_PKG_INTEGTEST))
