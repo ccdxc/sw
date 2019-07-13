@@ -61,6 +61,7 @@ var _ = Describe("cluster health tests", func() {
 	})
 
 	It("Test cluster health by pausing/resuming CMD", func() {
+		Skip("skipping this test until we get PR #14069 fixed and working")
 		if ts.tu.NumQuorumNodes < 2 {
 			Skip(fmt.Sprintf("Skipping: %d quorum nodes found, need >= 2", ts.tu.NumQuorumNodes))
 		}
