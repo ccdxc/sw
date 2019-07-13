@@ -21,6 +21,7 @@
 #include "nic/apollo/api/impl/apollo/security_policy_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 #include "nic/apollo/api/impl/apollo/mirror_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/nexthop_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -57,6 +58,9 @@ public:
     mirror_impl_state *mirror_impl_db(void) {
         return mirror_impl_db_;
     }
+    nexthop_impl_state *nexthop_impl_db(void) {
+        return nexthop_impl_db_;
+    }
 
 private:
     apollo_impl_state          *apollo_impl_db_;
@@ -67,47 +71,62 @@ private:
     route_table_impl_state     *route_table_impl_db_;
     security_policy_impl_state *security_policy_impl_db_;
     mirror_impl_state          *mirror_impl_db_;
+    nexthop_impl_state         *nexthop_impl_db_;
 };
 extern pds_impl_state g_pds_impl_state;
 
-static inline
-apollo_impl_state *apollo_impl_db (void) {
+static inline apollo_impl_state *
+apollo_impl_db (void)
+{
     return  g_pds_impl_state.apollo_impl_db();
 }
 
-static inline
-lif_impl_state *lif_impl_db (void) {
+static inline lif_impl_state *
+lif_impl_db (void)
+{
     return g_pds_impl_state.lif_impl_db();
 }
 
-static inline
-tep_impl_state *tep_impl_db (void) {
+static inline tep_impl_state *
+tep_impl_db (void)
+{
     return g_pds_impl_state.tep_impl_db();
 }
 
-static inline
-vnic_impl_state *vnic_impl_db (void) {
+static inline vnic_impl_state *
+vnic_impl_db (void)
+{
     return g_pds_impl_state.vnic_impl_db();
 }
 
-static inline
-mapping_impl_state *mapping_impl_db (void) {
+static inline mapping_impl_state *
+mapping_impl_db (void)
+{
     return g_pds_impl_state.mapping_impl_db();
 }
 
-static inline
-route_table_impl_state *route_table_impl_db (void) {
+static inline route_table_impl_state *
+route_table_impl_db (void)
+{
     return g_pds_impl_state.route_table_impl_db();
 }
 
-static inline
-security_policy_impl_state *security_policy_impl_db (void) {
+static inline security_policy_impl_state *
+security_policy_impl_db (void)
+{
     return g_pds_impl_state.security_policy_impl_db();
 }
 
-static inline
-mirror_impl_state *mirror_impl_db (void) {
+static inline mirror_impl_state *
+mirror_impl_db (void)
+{
     return g_pds_impl_state.mirror_impl_db();
+}
+
+static inline nexthop_impl_state *
+nexthop_impl_db (void)
+{
+    return g_pds_impl_state.nexthop_impl_db();
 }
 
 /// \@}

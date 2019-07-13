@@ -15,6 +15,13 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
+#include "nic/apollo/p4/include/defines.h"
+
+#define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID    0
+#define PDS_IMPL_TEP_INVALID_INDEX            0xFFFF
+
+// nexthop types
+#define PDS_IMPL_NH_TYPE_PEER_VPC_MASK        ROUTE_RESULT_TYPE_PEER_VPC_MASK
 
 namespace api {
 namespace impl {

@@ -13,6 +13,7 @@
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/tep_impl.hpp"
 #include "nic/apollo/api/impl/apollo/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apollo/mapping_impl.hpp"
@@ -197,7 +198,7 @@ mapping_impl::build(pds_mapping_key_t *key) {
     }
     remote_vnic_tx_hdl = api_params.handle;
 
-    ret = tep_impl_db()->nh_tbl()->retrieve(
+    ret = nexthop_impl_db()->nh_tbl()->retrieve(
               remote_vnic_mapping_tx_data.nexthop_group_index, &nh_data);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
@@ -961,7 +962,7 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
         return ret;
     }
     nh_index = remote_vnic_mapping_tx_data.nexthop_group_index;
-    ret = tep_impl_db()->nh_tbl()->retrieve(nh_index, &nh_data);
+    ret = nexthop_impl_db()->nh_tbl()->retrieve(nh_index, &nh_data);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -1049,7 +1050,7 @@ mapping_impl::tep_idx(pds_mapping_key_t *key) {
 
     vpc = vpc_db()->find(&key->vpc);
     if (unlikely(vpc == NULL)) {
-        return PDS_TEP_IMPL_INVALID_INDEX;
+        return PDS_IMPL_TEP_INVALID_INDEX;
     }
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vpc->hw_id(), &key->ip_addr,
@@ -1063,14 +1064,14 @@ mapping_impl::tep_idx(pds_mapping_key_t *key) {
         PDS_TRACE_ERR("Failed to find mapping (%u, %s) in "
                       "REMOTE_VNIC_MAPPING_TX table, err %u",
                       key->vpc.id, ipaddr2str(&key->ip_addr), ret);
-        return PDS_TEP_IMPL_INVALID_INDEX;
+        return PDS_IMPL_TEP_INVALID_INDEX;
     }
-    ret = tep_impl_db()->nh_tbl()->retrieve(
+    ret = nexthop_impl_db()->nh_tbl()->retrieve(
               remote_vnic_mapping_tx_data.nexthop_group_index, &nh_data);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read NH_TX table at index %u, err %u",
                       remote_vnic_mapping_tx_data.nexthop_group_index, ret);
-        return PDS_TEP_IMPL_INVALID_INDEX;
+        return PDS_IMPL_TEP_INVALID_INDEX;
     }
     return nh_data.action_u.nexthop_nexthop_info.tep_index;
 }

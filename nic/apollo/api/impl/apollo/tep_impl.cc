@@ -58,7 +58,7 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     hw_id_ = idx & 0xFFFF;
 
     // reserve an entry in NH_TX table
-    ret = tep_impl_db()->nh_tbl()->reserve(&idx);
+    ret = nexthop_impl_db()->nh_tbl()->reserve(&idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in NH table, err %u", ret);
         return ret;
@@ -74,7 +74,7 @@ tep_impl::release_resources(api_base *api_obj) {
         hw_id_ = 0xFFFF;
     }
     if (nh_id_ != 0xFFFF) {
-        tep_impl_db()->nh_tbl()->release(nh_id_);
+        nexthop_impl_db()->nh_tbl()->release(nh_id_);
         nh_id_ = 0xFFFF;
     }
     return SDK_RET_OK;
@@ -87,7 +87,7 @@ tep_impl::nuke_resources(api_base *api_obj) {
         hw_id_ = 0xFFFF;
     }
     if (nh_id_ != 0xFFFF) {
-        tep_impl_db()->nh_tbl()->remove(nh_id_);
+        nexthop_impl_db()->nh_tbl()->remove(nh_id_);
         nh_id_ = 0xFFFF;
     }
     return SDK_RET_OK;
@@ -149,7 +149,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         nh_data.action_u.nexthop_nexthop_info.dst_slot_id =
             tep_spec->encap.val.value;
     }
-    ret = tep_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_id_);
+    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_id_);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Nexthop Tx table programming failed for TEP %s, "
                       "nexthop hw id %u, err %u", api_obj->key2str().c_str(),
@@ -169,7 +169,7 @@ tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     //      tep_impl_db()->tep_tbl()->remove(hw_id_);
     //}
     //if (nh_id_ != 0xFFFF) {
-    //    tep_impl_db()->nh_tbl()->remove(nh_id_);
+    //    nexthop_impl_db()->nh_tbl()->remove(nh_id_);
     //}
     return sdk::SDK_RET_OK;
 }
@@ -242,8 +242,8 @@ tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     (void)api_obj;
     (void)key;
 
-    if (tep_impl_db()->nh_tbl()->retrieve(nh_id_,
-                                          &nh_data) != SDK_RET_OK) {
+    if (nexthop_impl_db()->nh_tbl()->retrieve(nh_id_,
+                                              &nh_data) != SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     if (tep_impl_db()->tep_tbl()->retrieve(hw_id_,

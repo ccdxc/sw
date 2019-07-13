@@ -14,8 +14,8 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/nexthop.hpp"
-#include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
-#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/nexthop_impl.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
@@ -97,6 +97,7 @@ nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         break;
 
     case PDS_NH_TYPE_IP:
+#if 0
         // DIPo, DMACo are no-op for this native IP type nexthop
         nh_data.action_u.nexthop_nexthop_info.vni = spec->vlan;
         nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
@@ -109,6 +110,7 @@ nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             // TODO: currently MAC must be specified in all cases
             SDK_ASSERT(0);
         }
+#endif
         break;
     default:
         ret = SDK_RET_INVALID_ARG;
@@ -158,6 +160,7 @@ nexthop_impl::fill_status_(pds_nexthop_status_t *status) {
 
 sdk_ret_t
 nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec) {
+#if 0
     nexthop_actiondata_t nh_data = { 0 };
 
     if (nexthop_impl_db()->nh_tbl()->retrieve(
@@ -175,7 +178,7 @@ nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec) {
     spec->vlan = nh_data.action_u.nexthop_nexthop_info.vni;
     sdk::lib::memrev(spec->mac, nh_data.action_u.nexthop_nexthop_info.dmaci,
                      ETH_ADDR_LEN);
-
+#endif
     return SDK_RET_OK;
 }
 

@@ -20,8 +20,6 @@
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
-#define PDS_TEP_IMPL_INVALID_INDEX    0xFFFF
-
 namespace api {
 namespace impl {
 

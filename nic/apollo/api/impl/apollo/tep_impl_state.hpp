@@ -16,10 +16,6 @@
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
-// default drop/blackhole nexthop (dataplane drops pkts when this nh is hit)
-#define PDS_SYSTEM_DROP_NEXTHOP_HW_ID 0
-#define PDS_NH_TYPE_PEER_VPC_MASK     0x8000
-
 namespace api {
 namespace impl {
 
@@ -52,13 +48,11 @@ public:
 
 private:
     directmap *tep_tbl(void) { return tep_tbl_; }
-    directmap *nh_tbl(void) { return nh_tbl_; }
     friend class tep_impl;         ///< tep_impl, friend of tep_impl_state
     friend class mapping_impl;     ///< mapping_impl, friend of tep_impl_state
 
 private:
     directmap *tep_tbl_;    ///< directmap table for TEP
-    directmap *nh_tbl_;     ///< directmap table for NH
 };
 
 ///   \@}

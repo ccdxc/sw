@@ -12,6 +12,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/route.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/route_impl.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/api/tep.hpp"
@@ -119,7 +120,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_OOM;
     }
     rtable->af = spec->af;
-    rtable->default_nhid = PDS_SYSTEM_DROP_NEXTHOP_HW_ID;
+    rtable->default_nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
     if (rtable->af == IP_AF_IPV4) {
         rtable->max_routes = route_table_impl_db()->v4_max_routes();
     } else {
@@ -131,7 +132,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
         switch (spec->routes[i].nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
-            rtable->routes[i].nhid = PDS_SYSTEM_DROP_NEXTHOP_HW_ID;
+            rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
             PDS_TRACE_DEBUG("Processing route table %u, route %s -> blackhole "
                             "nh id %u, ", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
@@ -164,7 +165,8 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid = PDS_NH_TYPE_PEER_VPC_MASK | vpc->hw_id();
+            rtable->routes[i].nhid =
+                PDS_IMPL_NH_TYPE_PEER_VPC_MASK | vpc->hw_id();
             PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc hw "
                             "id %u, ", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),

@@ -20,14 +20,15 @@ service RouteSvc {
 
 // route object
 message Route {
-  types.IPPrefix      Prefix    = 1;
+  types.IPPrefix      Prefix         = 1;
   // route either points to a Nexthop ID or peer-VPC in case of VPC peering
   oneof Nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
-      types.IPAddress NextHop   = 2;
-      uint32          NexthopId = 3;
-      uint32          VPCId     = 4;
-      uint32          TunnelId  = 5;
+      types.IPAddress NextHop        = 2;
+      uint32          NexthopId      = 3;
+      uint32          NexthopGroupId = 4;
+      uint32          VPCId          = 5;
+      uint32          TunnelId       = 6;
   }
 }
 
