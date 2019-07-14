@@ -146,7 +146,8 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		return errBadRequest(fmt.Errorf("invalid mode %v specified", cfg.Spec.Mode))
 	}
 
-	if err := n.persistState(false); err != nil {
+	// TODO : For now always push controllers to Delphi. Once we have Venice in ESX sanities, we must revert to only pushing controllers after admission.
+	if err := n.persistState(true); err != nil {
 		return errInternalServer(err)
 	}
 
