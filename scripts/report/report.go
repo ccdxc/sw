@@ -18,8 +18,6 @@ import (
 
 // minCoverage is the minimum expected coverage for a package
 const (
-	goTestCmd = "GOPATH=%s VENICE_DEV=1 CGO_LDFLAGS_ALLOW=-I/usr/local/share/libtool go test -timeout 20m -cover" +
-		" -tags test -p 1 %s"
 	minCoverage = 75.0
 	failPrefix  = "--- FAIL:"
 	// report should not enforce coverage when there are no test files.
@@ -154,7 +152,14 @@ func (t *TestReport) testCoveragePass() {
 }
 
 func (tgt *Target) test(ignoredPackages []string) error {
-	cmd := fmt.Sprintf(goTestCmd, os.Getenv("GOPATH"), tgt.Name)
+	goTestCmd := "GOPATH=%s VENICE_DEV=1 CGO_LDFLAGS_ALLOW=-I/usr/local/share/libtool go test -timeout 20m %s -tags test -p 1 %s"
+	cover := "-cover"
+	isCovIgnored := tgt.checkCoverageIgnore(ignoredPackages)
+	if isCovIgnored {
+		cover = "" // no need for coverage for tests for which coverage is ignored
+	}
+	cmd := fmt.Sprintf(goTestCmd, os.Getenv("GOPATH"), cover, tgt.Name)
+
 	start := time.Now()
 	defer func(tgt *Target) {
 		tgt.Duration = time.Since(start).String()
@@ -167,7 +172,6 @@ func (tgt *Target) test(ignoredPackages []string) error {
 
 	err = tgt.parseCmdOutput(out)
 	if tgt.Error == "" {
-		isCovIgnored := tgt.checkCoverageIgnore(ignoredPackages)
 		if tgt.Coverage < minCoverage && !isCovIgnored {
 			tgt.Error = ErrTestCovFailed.Error()
 		}
