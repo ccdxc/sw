@@ -340,7 +340,7 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 	Assert(t, nm.GetAgentID() == nodeID, "Failed to match nodeUUID", nm)
 
 	// Ensure the NMD's rest server is started
-	nm.CreateMockIPClient(nil)
+	nm.CreateMockIPClient()
 	cfg := nm.GetNaplesConfig()
 
 	if cfg.Spec.IPConfig == nil {

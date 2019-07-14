@@ -224,6 +224,10 @@ const (
 
 	// MinSupportedQuorumSize is the minimum size of the Quorum
 	MinSupportedQuorumSize = 3
+
+	// NaplesPipeline
+	NaplesPipelineIris   = "iris"
+	NaplesPipelineApollo = "apollo"
 )
 
 var (

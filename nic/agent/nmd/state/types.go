@@ -81,6 +81,41 @@ type NMD struct {
 	tsdbCancel   context.CancelFunc
 	rebootNeeded bool
 	metrics      *NMDMetrics
+	Pipeline     Pipeline
+}
+
+// Agent is the wrapper object that contains NMD and Platform components
+type Agent struct {
+
+	// NMD object
+	Nmd *NMD
+
+	// Platform object
+	Platform nmdapi.PlatformAPI
+
+	// Upgrademgr Interface
+	Upgmgr nmdapi.UpgMgrAPI
+}
+
+// String returns string value of the datapath kind
+func (k *Kind) String() string {
+	return string(*k)
+}
+
+// Kind holds the pipeline kind. It could either be iris or apollo.
+type Kind string
+
+// Pipeline is the APIs provided by respective pipeline modules
+type Pipeline interface {
+	InitDelphi() interface{}
+	MountDelphiObjects() interface{}
+	InitSysmgr()
+	MountSysmgrObjects() interface{}
+	RunDelphiClient(Agent) interface{}
+	GetDelphiClient() clientAPI.Client
+	SetNmd(interface{})
+	WriteDelphiObjects() (err error)
+	GetSysmgrSystemStatus() (string, string)
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples

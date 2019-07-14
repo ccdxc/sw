@@ -17,7 +17,6 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
-	sysmgrProto "github.com/pensando/sw/nic/sysmgr/proto/sysmgr"
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
@@ -359,14 +358,9 @@ func (n *NMD) UpdateNaplesHealth() []cmd.SmartNICCondition {
 	status := cmd.ConditionStatus_TRUE.String()
 	reason := ""
 
-	if n.DelphiClient != nil {
-		sysmgrSysStatus := sysmgrProto.GetSysmgrSystemStatus(n.DelphiClient)
-		if sysmgrSysStatus != nil && sysmgrSysStatus.State == sysmgrProto.SystemState_Fault {
-			status = cmd.ConditionStatus_FALSE.String()
-			reason = sysmgrSysStatus.Reason
-		}
+	if n.Pipeline != nil {
+		status, reason = n.Pipeline.GetSysmgrSystemStatus()
 	}
-
 	Conditions := []cmd.SmartNICCondition{
 		{
 			Type:               health,

@@ -69,7 +69,7 @@ func WithRolloutAPI(ro nmdapi.RolloutCtrlAPI) NewNMDOption {
 }
 
 // NewNMD returns a new NMD instance
-func NewNMD(delphiClient clientAPI.Client,
+func NewNMD(pipeline Pipeline,
 	dbPath, listenURL, revProxyURL string,
 	regInterval, updInterval time.Duration,
 	opts ...NewNMDOption) (*NMD, error) {
@@ -83,10 +83,15 @@ func NewNMD(delphiClient clientAPI.Client,
 		return nil, fmt.Errorf("error creating platform agent. Err: %v", err)
 	}
 
-	//create a upgrade client
-	uc, err := upg.NewNaplesUpgradeClient(delphiClient)
-	if err != nil {
-		return nil, fmt.Errorf("error creating Upgrade client . Err: %v", err)
+	var uc *upg.NaplesUpgClient
+	uc = nil
+	if pipeline != nil {
+		//create a upgrade client
+		delClient := pipeline.GetDelphiClient()
+		uc, err = upg.NewNaplesUpgradeClient(delClient)
+		if err != nil {
+			return nil, fmt.Errorf("error creating Upgrade client . Err: %v", err)
+		}
 	}
 
 	// create reverse proxy for all NAPLES REST APIs
@@ -226,6 +231,10 @@ func NewNMD(delphiClient clientAPI.Client,
 		BackupNMDDB()
 	}
 
+	var delClient clientAPI.Client
+	if pipeline != nil {
+		delClient = pipeline.GetDelphiClient()
+	}
 	// create NMD object
 	nm := NMD{
 		store:              emdb,
@@ -233,7 +242,7 @@ func NewNMD(delphiClient clientAPI.Client,
 		macAddr:            fru.MacStr,
 		Platform:           pa,
 		Upgmgr:             uc,
-		DelphiClient:       delphiClient,
+		DelphiClient:       delClient,
 		nic:                nil,
 		certsListenURL:     globals.Localhost + ":" + globals.CMDUnauthCertAPIPort,
 		nicRegInitInterval: regInterval,
@@ -285,7 +294,7 @@ func NewNMD(delphiClient clientAPI.Client,
 		return nil, err
 	}
 
-	if nm.Upgmgr != nil {
+	if nm.Upgmgr != nil && uc != nil {
 		err = nm.Upgmgr.RegisterNMD(&nm)
 		if err != nil {
 			log.Fatalf("Error Registering NMD with upgmgr, err: %+v", err)
@@ -1202,7 +1211,7 @@ func (n *NMD) GetListenURL() string {
 }
 
 // CreateIPClient creates IPClient to run DHCP
-func (n *NMD) CreateIPClient(delphiClient clientAPI.Client) {
+func (n *NMD) CreateIPClient() {
 	n.Lock()
 	defer n.Unlock()
 	var ipClient *ipif.IPClient
@@ -1228,7 +1237,7 @@ func (n *NMD) CreateIPClient(delphiClient clientAPI.Client) {
 }
 
 // CreateMockIPClient creates IPClient in Mock mode to run in venice integ environment
-func (n *NMD) CreateMockIPClient(delphiClient clientAPI.Client) {
+func (n *NMD) CreateMockIPClient() {
 	n.Lock()
 	defer n.Unlock()
 	ipClient, err := ipif.NewIPClient(n, ipif.NaplesMockInterface)

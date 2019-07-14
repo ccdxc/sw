@@ -5,7 +5,6 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"strings"
 	"time"
 
@@ -16,7 +15,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
@@ -169,106 +167,13 @@ func (n *NMD) persistState(updateDelphi bool) (err error) {
 	}
 
 	n.config.Status.Mode = n.config.Spec.Mode
-	if updateDelphi && n.DelphiClient != nil {
-		if err = n.writeDelphiObjects(); err != nil {
+	if updateDelphi && n.Pipeline != nil {
+		if err = n.Pipeline.WriteDelphiObjects(); err != nil {
 			return err
 		}
 	}
 
 	return
-}
-
-func (n *NMD) writeDelphiObjects() (err error) {
-	var mgmtIP string
-
-	var transitionPhase delphiProto.NaplesStatus_Transition
-
-	switch n.config.Status.TransitionPhase {
-	case nmd.NaplesStatus_DHCP_SENT.String():
-		transitionPhase = delphiProto.NaplesStatus_DHCP_SENT
-	case nmd.NaplesStatus_DHCP_DONE.String():
-		transitionPhase = delphiProto.NaplesStatus_DHCP_DONE
-	case nmd.NaplesStatus_DHCP_TIMEDOUT.String():
-		transitionPhase = delphiProto.NaplesStatus_DHCP_TIMEDOUT
-	case nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String():
-		transitionPhase = delphiProto.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES
-	case nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String():
-		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_SENT
-	case nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String():
-		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
-	case nmd.NaplesStatus_VENICE_UNREACHABLE.String():
-		transitionPhase = delphiProto.NaplesStatus_VENICE_UNREACHABLE
-	case nmd.NaplesStatus_REBOOT_PENDING.String():
-		transitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
-	default:
-		transitionPhase = 0
-	}
-
-	// For static case write only the IP in mgmt IP and not the subnet
-	if ip, _, err := net.ParseCIDR(n.config.Status.IPConfig.IPAddress); err == nil {
-		mgmtIP = ip.String()
-	} else {
-		mgmtIP = n.config.Status.IPConfig.IPAddress
-	}
-
-	// Set up appropriate mode
-	var naplesMode delphiProto.NaplesStatus_Mode
-
-	switch n.config.Spec.NetworkMode {
-	case nmd.NetworkMode_INBAND.String():
-		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
-	case nmd.NetworkMode_OOB.String():
-		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_OOB
-	default:
-		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
-		naplesStatus := delphiProto.NaplesStatus{
-			NaplesMode:   naplesMode,
-			ID:           n.config.Spec.ID,
-			SmartNicName: n.config.Status.SmartNicName,
-			Fru: &delphiProto.NaplesFru{
-				ManufacturingDate: n.config.Status.Fru.ManufacturingDate,
-				Manufacturer:      n.config.Status.Fru.Manufacturer,
-				ProductName:       n.config.Status.Fru.ProductName,
-				SerialNum:         n.config.Status.Fru.SerialNum,
-				PartNum:           n.config.Status.Fru.PartNum,
-				BoardId:           n.config.Status.Fru.BoardId,
-				EngChangeLevel:    n.config.Status.Fru.EngChangeLevel,
-				NumMacAddr:        n.config.Status.Fru.NumMacAddr,
-				MacStr:            n.config.Status.Fru.MacStr,
-			},
-		}
-		if err := n.DelphiClient.SetObject(&naplesStatus); err != nil {
-			log.Errorf("Error writing the naples status object in host mode. Err: %v", err)
-			return err
-		}
-	}
-
-	naplesStatus := delphiProto.NaplesStatus{
-		Controllers:     n.config.Status.Controllers,
-		NaplesMode:      naplesMode,
-		TransitionPhase: transitionPhase,
-		MgmtIP:          mgmtIP,
-		ID:              n.config.Spec.ID,
-		SmartNicName:    n.config.Status.SmartNicName,
-		Fru: &delphiProto.NaplesFru{
-			ManufacturingDate: n.config.Status.Fru.ManufacturingDate,
-			Manufacturer:      n.config.Status.Fru.Manufacturer,
-			ProductName:       n.config.Status.Fru.ProductName,
-			SerialNum:         n.config.Status.Fru.SerialNum,
-			PartNum:           n.config.Status.Fru.PartNum,
-			BoardId:           n.config.Status.Fru.BoardId,
-			EngChangeLevel:    n.config.Status.Fru.EngChangeLevel,
-			NumMacAddr:        n.config.Status.Fru.NumMacAddr,
-			MacStr:            n.config.Status.Fru.MacStr,
-		},
-	}
-
-	if err := n.DelphiClient.SetObject(&naplesStatus); err != nil {
-		log.Errorf("Error writing the naples status object in network mode. Err: %v", err)
-		return err
-	}
-
-	return nil
 }
 
 func (n *NMD) handleNetworkModeTransition() error {

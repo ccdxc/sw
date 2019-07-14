@@ -14,33 +14,11 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/pensando/sw/nic/agent/nmd"
-	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
-	"github.com/pensando/sw/nic/delphi/gosdk"
-	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-	"github.com/pensando/sw/nic/delphi/proto/delphi"
-	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
-	sysmgrProto "github.com/pensando/sw/nic/sysmgr/proto/sysmgr"
+	"github.com/pensando/sw/nic/agent/nmd/pipeline"
+	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
-
-type service struct {
-	name         string
-	sysmgrClient *sysmgr.Client
-}
-
-var srv = &service{
-	name: "nmd",
-}
-
-func (s *service) OnMountComplete() {
-	log.Printf("OnMountComplete() done for %s\n", s.name)
-	s.sysmgrClient.InitDone()
-}
-
-func (s *service) Name() string {
-	return s.name
-}
 
 // Main function for Naples Management Daemon (NMD)
 func main() {
@@ -103,23 +81,21 @@ func main() {
 		os.MkdirAll(path.Dir(globals.NmdBackupDBPath), 0664)
 	}
 
-	var delphiClient clientAPI.Client
-	//var uc api.UpgMgrAPI
-	var dServ *nmd.DelphiService
-	//if !*standalone {
-	dServ = nmd.NewDelphiService()
-	delphiClient, err = gosdk.NewClient(dServ)
-	if err != nil {
-		log.Fatalf("Error creating delphi client . Err: %v", err)
+	pipelineType := globals.NaplesPipelineIris
+	if val, ok := os.LookupEnv("NAPLES_PIPELINE"); ok {
+		pipelineType = val
 	}
-	dServ.DelphiClient = delphiClient
+	p, err := pipeline.NewPipeline(state.Kind(pipelineType))
+	if err != nil {
+		log.Fatalf("Error creating setting up pipeline. Err: %v", err)
+	}
 
-	// mount objects
-	delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
-	log.Infof("Mounting naples status rw")
+	p.InitDelphi()
 
-	srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
-	nm, err := nmd.NewAgent(delphiClient,
+	// init sysmgr
+	p.InitSysmgr()
+
+	nm, err := nmd.NewAgent(p,
 		*nmdDbPath,
 		globals.Localhost+":"+globals.NmdRESTPort,
 		*revProxyURL,
@@ -130,17 +106,12 @@ func main() {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
 
-	if delphiClient != nil {
-		// mount objects
-		delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
-		log.Infof("Mounting naples status rw")
+	if p.GetDelphiClient() != nil {
+		p.MountDelphiObjects()
 
-		sysmgrProto.SysmgrSystemStatusMount(delphiClient, delphi.MountMode_ReadMode)
-		log.Infof("Mounting SysmgrSystemStatus")
+		p.MountSysmgrObjects()
 
-		nm.DelphiClient = delphiClient
-		dServ.Agent = nm
-		go delphiClient.Run()
+		p.RunDelphiClient(state.Agent(*nm))
 	}
 
 	log.Infof("%s is running {%+v}", globals.Nmd, nm)

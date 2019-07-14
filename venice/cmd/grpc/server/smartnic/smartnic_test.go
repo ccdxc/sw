@@ -294,7 +294,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmd.Agent, error)
 
 	// Ensure the NMD's rest server is started
 	nmdHandle := ag.GetNMD()
-	nmdHandle.CreateMockIPClient(nil)
+	nmdHandle.CreateMockIPClient()
 
 	cfg := nmdHandle.GetNaplesConfig()
 	cfg.Spec.Controllers = []string{"localhost"}
