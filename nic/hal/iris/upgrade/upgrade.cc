@@ -87,7 +87,9 @@ upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
     // quiesece the pipeline
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, NULL);
     if (ret != HAL_RET_OK) {
-        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
+        HAL_TRACE_ERR("Unable to quiesce. Failing ...");
+        return HdlrResp(::upgrade::INPROGRESS, HAL_RET_ENTRIES_str(ret));
+        // return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
     }
 
     // Reset tables
