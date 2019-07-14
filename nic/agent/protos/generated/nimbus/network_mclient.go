@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 			log.Infof("Ctrlerif: agent %s got Network watch event: Type: {%+v} Network:{%+v}", client.clientName, evt.EventType, evt.Network)
 
 			client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
-			client.processNetworkEvent(*evt, reactor, ostream)
+			go client.processNetworkEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

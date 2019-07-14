@@ -482,54 +482,6 @@ var topo1Venice2Naples15NaplesSim200Scale = Topology{
 			HostOS:      "esx",
 		},
 		{
-			NodeName:    "naples8",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
-			NodeName:    "naples9",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
-			NodeName:    "naples10",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
-			NodeName:    "naples11",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
-			NodeName:    "naples12",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
-			NodeName:    "naples13",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
-			NodeName:    "naples14",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
-			NodeName:    "naples15",
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
-			HostOS:      "esx",
-		},
-		{
 			NodeName:    "naplesSimScale1",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
@@ -878,7 +830,7 @@ var topo1VeniceScaleNaples = Topology{
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
 			HostOS:      "esx",
 		},
-		{
+		/*{
 			NodeName:    "naples10",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
@@ -913,7 +865,7 @@ var topo1VeniceScaleNaples = Topology{
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
 			HostOS:      "esx",
-		},
+		}, */
 		{
 			NodeName:    "venice1",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,

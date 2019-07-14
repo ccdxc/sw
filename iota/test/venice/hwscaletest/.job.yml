@@ -21,12 +21,12 @@ e2e-targets:
        count: 1
        resources:
          cpus: 12
-         memory: 16
+         memory: 32
          pvt-networks:
          - control-1
          - control-2
      - image: build-10
-       count: 15
+       count: 9
        resources:
          # server-type could be server-a or server-d
          server-type: server-d

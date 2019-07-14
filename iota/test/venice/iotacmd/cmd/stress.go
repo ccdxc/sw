@@ -15,17 +15,22 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+const (
+	stressRunFile = "/tmp/run.log"
+)
+
 type testsuite struct {
 	name        string
 	focus       string
 	path        string
 	stopOnError bool
+	scaleData   bool
 	successCnt  int
 	runCnt      int
 }
 
 //runCmd run shell command
-func runCmd(cmdArgs []string, env []string) (int, string) {
+func runCmd(cmdArgs []string, outfile string, env []string) (int, string) {
 
 	var process *exec.Cmd
 	shell := true
@@ -45,6 +50,15 @@ func runCmd(cmdArgs []string, env []string) (int, string) {
 	}
 
 	mwriter := io.MultiWriter(os.Stdout)
+	if outfile != "" {
+		f, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		mwriter = io.MultiWriter(f)
+	}
+
 	process.Stderr = mwriter
 	process.Stdout = mwriter
 	process.Start()
@@ -95,15 +109,22 @@ func (suite testsuite) run(skipInstall bool, rebootOnly bool, iterations int, tr
 		}
 
 		env = append(env, "VENICE_DEV=1")
+		env = append(env, "STOP_ON_ERROR=1")
 
 		cmd := []string{"go", "test", testPath, "-timeout", "120m", "-v", "-ginkgo.v", "-topo", topology, "-testbed", testbed}
 		if suite.focus != "" {
 			cmd = append(cmd, "-ginkgo.focus")
 			cmd = append(cmd, "\""+suite.focus+"\"")
 		}
-		if !dryRun {
-			exitCode, stdoutStderr = runCmd(cmd, env)
+		if suite.scaleData {
+			cmd = append(cmd, " -scale-data")
+			cmd = append(cmd, " -scale")
 		}
+		cmd = append(cmd, "-ginkgo.failFast")
+		if !dryRun {
+			exitCode, stdoutStderr = runCmd(cmd, stressRunFile, env)
+		}
+		fmt.Printf("Test command %v\n", strings.Join(cmd, " "))
 
 		suite.runCnt++
 		if exitCode != 0 {
@@ -131,15 +152,8 @@ func (suite testsuite) run(skipInstall bool, rebootOnly bool, iterations int, tr
 
 	for _, tg := range triggers {
 		//First time suite running, don't skip setup.
-		skipSetup := false
 		for it := 0; it < iterations; it++ {
-			if it == 0 {
-				if err := runSuite(it, skipSetup); err != nil {
-					return err
-				}
-			}
-			//All future runs of the trigger skip setup as per trigger configuration
-			skipSetup = tg.SkipSetup()
+			skipSetup := tg.SkipSetup()
 			if err := runTrigger(it, tg); err != nil {
 				return err
 			}
@@ -160,6 +174,7 @@ type stressRecipe struct {
 	Config struct {
 		Iterations    int    `yaml:"iterations"`
 		RunType       string `yaml:"run-type"`
+		ScaleData     bool   `yaml:"scale-data"`
 		StopOnFailure bool   `yaml:"stop-on-failure"`
 	} `yaml:"config"`
 	Testsuites []struct {
@@ -193,8 +208,11 @@ func (stRecipe *stressRecipe) execute() error {
 		triggers = append(triggers, nTrigger)
 	}
 	for _, suite := range stRecipe.Testsuites {
-		st := testsuite{name: suite.Suite, path: suiteDirectory + "/" + suite.Suite, focus: suite.Focus}
-		st.run(skipInstall, rebootOnly, stRecipe.Config.Iterations, triggers)
+		st := testsuite{name: suite.Suite, path: suiteDirectory + "/" + suite.Suite, focus: suite.Focus,
+			stopOnError: stRecipe.Config.StopOnFailure, scaleData: stRecipe.Config.ScaleData}
+		if err := st.run(skipInstall, rebootOnly, stRecipe.Config.Iterations, triggers); err != nil {
+			return err
+		}
 		//After first suite, no need to run install
 		skipInstall = true
 		rebootOnly = false

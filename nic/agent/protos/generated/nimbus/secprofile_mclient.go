@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 			log.Infof("Ctrlerif: agent %s got SecurityProfile watch event: Type: {%+v} SecurityProfile:{%+v}", client.clientName, evt.EventType, evt.SecurityProfile)
 
 			client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
-			client.processSecurityProfileEvent(*evt, reactor, ostream)
+			go client.processSecurityProfileEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

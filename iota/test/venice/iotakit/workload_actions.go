@@ -222,6 +222,7 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 	trig := act.model.tb.NewTrigger()
 	for _, srvWrkld := range srvWorkloads {
 		trig.AddCommand("pkill nc", srvWrkld.WorkloadName, srvWrkld.NodeName)
+		trig.AddCommand("pkill fuz", srvWrkld.WorkloadName, srvWrkld.NodeName)
 	}
 	trig.Run()
 
@@ -360,6 +361,52 @@ func (act *ActionCtx) UDPSessionFails(wpc *WorkloadPairCollection, port int) err
 	}
 
 	return act.netcatTrigger(wpc, "-u --sh-exec 'echo test'", "-u", port, true, 0, "test")
+}
+
+// WorkloadsSayHelloToDataPath discover workloads so that datapath know about it
+func (act *ActionCtx) WorkloadsSayHelloToDataPath() error {
+
+	cmds := []*iota.Command{}
+	for _, wr := range act.model.Workloads().workloads {
+		ipAddr := strings.Split(wr.iotaWorkload.IpPrefix, "/")[0]
+		cmd := iota.Command{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("arping -c  5 -U %s -I %s ", ipAddr, wr.iotaWorkload.Interface),
+			EntityName: wr.iotaWorkload.WorkloadName,
+			NodeName:   wr.iotaWorkload.NodeName,
+		}
+		cmds = append(cmds, &cmd)
+	}
+
+	log.Infof("Rediscovering workloads")
+
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !act.model.tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
+
+	trigMsg := &iota.TriggerMsg{
+		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
+		TriggerMode: trmode,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Commands:    cmds,
+	}
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
+	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to trigger a arping. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	}
+
+	for _, cmdResp := range triggerResp.Commands {
+		if cmdResp.ExitCode != 0 {
+			//Don't return error for now.
+			log.Errorf("Discovery failed. Resp: %#v", cmdResp)
+		}
+	}
+
+	return nil
 }
 
 // VerifyWorkloadStatus verifies workload status in venice
@@ -624,6 +671,7 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 	trig := act.model.tb.NewTrigger()
 	for _, ws := range workloads {
 		trig.AddCommand("pkill fuz", ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
+		trig.AddCommand("pkill nc", ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
 	}
 	trig.Run()
 
@@ -662,10 +710,10 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 			if len(clientInput[wsName].Connections) > 1 {
 				filename := fmt.Sprintf("%s_fuz_client.json", ws.iotaWorkload.WorkloadName)
 				outfilename := fmt.Sprintf("%s_fuz_client_out.json", ws.iotaWorkload.WorkloadName)
-				trig.AddCommand(fmt.Sprintf("./fuz -talk -jsonInput %s -jsonOut > %s", filename, outfilename),
+				trig.AddCommand(fmt.Sprintf("./fuz  -attempts 5 -talk -jsonInput %s -jsonOut > %s", filename, outfilename),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
 			} else {
-				trig.AddBackgroundCommand(fmt.Sprintf("./fuz -talk -proto %v %v", clientInput[wsName].Connections[0].Proto,
+				trig.AddCommand(fmt.Sprintf("./fuz  -attempts 5 -talk -proto %v %v", clientInput[wsName].Connections[0].Proto,
 					clientInput[wsName].Connections[0].ServerIPPort),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
 			}

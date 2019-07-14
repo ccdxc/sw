@@ -31,21 +31,22 @@ const defaultNumNetworks = 2
 
 // SysModel represents a model of the system under test
 type SysModel struct {
-	hosts          map[string]*Host          // hosts
-	switches       map[string]*Switch        // switches in test
-	switchPorts    []*SwitchPort             // switches in test
-	naples         map[string]*Naples        // Naples instances
-	workloads      map[string]*Workload      // workloads
-	subnets        []*Network                // subnets
-	sgpolicies     map[string]*SGPolicy      // security policies
-	msessions      map[string]*MirrorSession // mirror sessions
-	veniceNodes    map[string]*VeniceNode    // Venice nodes
-	fakeHosts      map[string]*Host          // simulated hosts
-	fakeNaples     map[string]*Naples        // simulated Naples instances
-	fakeWorkloads  map[string]*Workload      // simulated workloads
-	fakeSubnets    map[string]*Network       // simulated subnets
-	fakeApps       map[string]*App           // simulated apps
-	fakeSGPolicies map[string]*SGPolicy      // simulated security policies
+	hosts             map[string]*Host          // hosts
+	switches          map[string]*Switch        // switches in test
+	switchPorts       []*SwitchPort             // switches in test
+	naples            map[string]*Naples        // Naples instances
+	workloads         map[string]*Workload      // workloads
+	subnets           []*Network                // subnets
+	sgpolicies        map[string]*SGPolicy      // security policies
+	msessions         map[string]*MirrorSession // mirror sessions
+	veniceNodes       map[string]*VeniceNode    // Venice nodes
+	fakeHosts         map[string]*Host          // simulated hosts
+	fakeNaples        map[string]*Naples        // simulated Naples instances
+	fakeWorkloads     map[string]*Workload      // simulated workloads
+	fakeSubnets       map[string]*Network       // simulated subnets
+	fakeApps          map[string]*App           // simulated apps
+	fakeSGPolicies    map[string]*SGPolicy      // simulated security policies
+	defaultSgPolicies []*SGPolicyCollection     //default sg policy pushed
 
 	tb *TestBed // testbed
 
@@ -269,8 +270,8 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 	}
 
 	if len(hosts) == 0 {
-		msg := "No real hosts run traffic tests"
-		return errors.New(msg)
+		//msg := "No real hosts run traffic tests"
+		//return errors.New(msg)
 	}
 
 	for _, sw := range sm.tb.DataSwitches {
@@ -342,6 +343,9 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 			if err != nil {
 				return err
 			}
+		} else {
+			//Every workload is found, just send arping so that they can get discovered again by datapath
+			sm.Action().WorkloadsSayHelloToDataPath()
 		}
 	} else {
 		// bringup the workloads
@@ -397,7 +401,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale b
 	if scale {
 		cfg.SGPolicyParams.NumRulesPerPolicy = 50000
 		cfg.WorkloadParams.WorkloadsPerHost = 100
-		cfg.AppParams.NumApps = 1000
+		cfg.AppParams.NumApps = 5000
 	} else {
 		cfg.SGPolicyParams.NumRulesPerPolicy = 5
 		cfg.WorkloadParams.WorkloadsPerHost = 50
@@ -564,6 +568,12 @@ func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale b
 			return err
 		}
 
+	}
+
+	//Append default Sg polcies
+	for _, sgPolicy := range sm.fakeSGPolicies {
+		sgPolicy.sm = sm
+		sm.defaultSgPolicies = append(sm.defaultSgPolicies, sm.NewVeniceSGPolicy(sgPolicy))
 	}
 
 	return nil

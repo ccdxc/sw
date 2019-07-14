@@ -896,6 +896,85 @@ TEST_F(nwsec_policy_test, test6) {
     //ASSERT_TRUE(is_leak == false);
 }
 
+//Verify policy reeval
+TEST_F(nwsec_policy_test, test7) {
+    hal_ret_t                               ret;
+    SecurityPolicySpec                      pol_spec;
+    SecurityPolicyResponse                  res;
+    SecurityRule                           *rule_spec, rule_spec2;
+    SecurityPolicyDeleteRequest             pol_del_req;
+    SecurityPolicyDeleteResponse            pol_del_rsp;
+    hal_handle_t                            sess_hdl = 0, skip_sess_hdl = 0;
+    hal::session_t                          *session = NULL;
+
+    hal::vrf_t *vrf = hal::vrf_lookup_by_handle(nwsec_policy_test::vrfh);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(11);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
+    rule_spec = pol_spec.add_rule();
+
+    // Create nwsec
+    rule_spec->set_rule_id(1);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    types::RuleMatch *match = rule_spec->mutable_match();
+    match->set_protocol(types::IPPROTO_TCP);
+
+    types::IPAddressObj *dst_addr = match->add_dst_address();
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000002);
+    types::IPAddressObj *src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
+
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_create(pol_spec, &res);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t policy_handle = res.policy_status().key_or_handle().security_policy_handle();
+
+
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(10);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
+    rule_spec = pol_spec.add_rule();
+
+    // Create nwsec
+    rule_spec->set_rule_id(1);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    match = rule_spec->mutable_match();
+    match->set_protocol(types::IPPROTO_TCP);
+
+    dst_addr = match->add_dst_address();
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000002);
+    src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
+
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_create(pol_spec, &res);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret != HAL_RET_OK);
+    
+    // Delete policy
+    pol_del_req.mutable_key_or_handle()->set_security_policy_handle(policy_handle);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
+    svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
+    hal::hal_wait();
+#endif
+
+
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
+    //post = hal_test_utils_collect_slab_stats();
+    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    //ASSERT_TRUE(is_leak == false);
+}
+
 #if 0
 TEST_F(nwsec_policy_test, test6)
 {

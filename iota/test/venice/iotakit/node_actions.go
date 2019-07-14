@@ -438,3 +438,16 @@ func (act *ActionCtx) RemoveAddNaples(naples *NaplesCollection) error {
 
 	return nil
 }
+
+// FlapMgmtLinkNaples flap mgmt link for naples
+func (act *ActionCtx) FlapMgmtLinkNaples(naples *NaplesCollection) error {
+
+	cmd := "ifconfig oob_mnic0 down && sleep 300 ifconfig oob_mnic0 up && dhclient oob_mnic0"
+	stdout, err := act.RunNaplesCommand(naples, cmd)
+	if err != nil {
+		log.Errorf("Failed to flap mgmt link node %v :%v", err, stdout)
+		return err
+	}
+
+	return nil
+}

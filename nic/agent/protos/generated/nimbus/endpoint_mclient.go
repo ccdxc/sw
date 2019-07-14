@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 			log.Infof("Ctrlerif: agent %s got Endpoint watch event: Type: {%+v} Endpoint:{%+v}", client.clientName, evt.EventType, evt.Endpoint)
 
 			client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
-			client.processEndpointEvent(*evt, reactor, ostream)
+			go client.processEndpointEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 			log.Infof("Ctrlerif: agent %s got SecurityGroup watch event: Type: {%+v} SecurityGroup:{%+v}", client.clientName, evt.EventType, evt.SecurityGroup)
 
 			client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
-			client.processSecurityGroupEvent(*evt, reactor, ostream)
+			go client.processSecurityGroupEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

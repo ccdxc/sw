@@ -33,7 +33,7 @@ var _ = Describe("firewall tests", func() {
 			}
 
 			// ping all workload pairs in same subnet
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultSGPolicy(), "tcp")
 			Eventually(func() error {
 				return ts.model.Action().TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
@@ -41,29 +41,12 @@ var _ = Describe("firewall tests", func() {
 
 		It("Should not establish TCP session between any workload with deny policy", func() {
 			// change the default policy to deny all
-			err := ts.model.SGPolicy("default-policy").Rules().Update("action = DENY").Commit()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			// verify policy was propagated correctly
-			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
-			}).Should(Succeed())
-
+			workloadPairs := ts.model.WorkloadPairs().Deny(ts.model.DefaultSGPolicy(), "tcp")
 			// randomly pick one workload and verify ping fails between them
-			workloadPair := ts.model.WorkloadPairs().WithinNetwork()
 			Eventually(func() error {
-				return ts.model.Action().TCPSessionFails(workloadPair, 8000)
+				return ts.model.Action().TCPSessionFails(workloadPairs, 8000)
 			}).Should(Succeed())
 
-			// change the default policy back to allow all
-			err = ts.model.SGPolicy("default-policy").Rules().Update("action = PERMIT").Commit()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			// ping any workload pairs in same subnet
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
-			Eventually(func() error {
-				return ts.model.Action().TCPSession(workloadPairs, 8000)
-			}).Should(Succeed())
 		})
 	})
 })

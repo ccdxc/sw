@@ -44,7 +44,8 @@ var _ = Describe("rulestats tests", func() {
 				return ts.model.Action().VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
-			startTime := time.Now()
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 			// establish TCP session between workload pairs in same subnet
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			Eventually(func() error {
@@ -76,7 +77,8 @@ var _ = Describe("rulestats tests", func() {
 				return ts.model.Action().VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
-			startTime := time.Now()
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 			// establish UDP session between workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			Eventually(func() error {
@@ -108,7 +110,8 @@ var _ = Describe("rulestats tests", func() {
 				return ts.model.Action().VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
-			startTime := time.Now()
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 
 			// establish ICMP session between workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)

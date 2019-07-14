@@ -63,6 +63,15 @@ func (sm *SysModel) NewSGPolicy(name string) *SGPolicyCollection {
 	}
 }
 
+// NewVeniceSGPolicy creates a new SG policy
+func (sm *SysModel) NewVeniceSGPolicy(policy *SGPolicy) *SGPolicyCollection {
+	return &SGPolicyCollection{
+		policies: []*SGPolicy{
+			policy,
+		},
+	}
+}
+
 // SGPolicy finds an SG policy by name
 func (sm *SysModel) SGPolicy(name string) *SGPolicyCollection {
 	pol, ok := sm.sgpolicies[name]
@@ -89,7 +98,7 @@ func (sm *SysModel) SGPolicies() *SGPolicyCollection {
 
 // DefaultSGPolicy resturns default-policy that prevails across tests cases in the system
 func (sm *SysModel) DefaultSGPolicy() *SGPolicyCollection {
-	return sm.NewSGPolicy("default-policy")
+	return sm.defaultSgPolicies[0]
 }
 
 // Restore is a very context specific function, which restores permit any any policy

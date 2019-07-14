@@ -271,6 +271,7 @@ do {                                                       \
     ENTRY(HAL_RET_QOS_CLASS_PAUSE_TYPE_INVALID,                 100, "qos class invalid pause type")                \
     ENTRY(HAL_RET_RETRANSMISSION,                               101,"retransmission detected in flow miss path")    \
     ENTRY(HAL_RET_FTE_SRC_LIF_MISMATCH,                         102,"src lif mismatch detected in fte")             \
+    ENTRY(HAL_RET_POLICY_EXIST,                                 103, "security policy exists")                      \
     ENTRY(HAL_RET_ERR,                                          255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)

@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 			log.Infof("Ctrlerif: agent %s got Namespace watch event: Type: {%+v} Namespace:{%+v}", client.clientName, evt.EventType, evt.Namespace)
 
 			client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
-			client.processNamespaceEvent(*evt, reactor, ostream)
+			go client.processNamespaceEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

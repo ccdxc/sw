@@ -94,7 +94,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 			log.Infof("Ctrlerif: agent %s got {{$crudObject}} watch event: Type: {%+v} {{$crudObject}}:{%+v}", client.clientName, evt.EventType, evt.{{$crudObject}})
 
 			client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
-			client.process{{$crudObject}}Event(*evt, reactor, ostream)
+			go client.process{{$crudObject}}Event(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

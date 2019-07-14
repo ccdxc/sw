@@ -1334,8 +1334,13 @@ security_policy_lookup_key_or_handle(SecurityPolicyKeyHandle& kh)
 
 static hal_ret_t
 validate_nwsec_policy_create (nwsec::SecurityPolicySpec&     spec,
+                              nwsec_policy_t                 *nwsec_policy,   
                               nwsec::SecurityPolicyResponse  *rsp)
 {
+    rule_cfg_t *rcfg = rule_cfg_get(nwsec_acl_ctx_name(nwsec_policy->key.vrf_id));
+    if (rcfg != NULL) {
+        return HAL_RET_POLICY_EXIST;
+    } 
     return HAL_RET_OK;
 }
 
@@ -1493,13 +1498,6 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
     //nwsec_spec_dump(&spec);
     trim_mem_usage("Before Create");
 
-    ret = validate_nwsec_policy_create(spec, res);
-
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("validation failed ");
-        goto end;
-    }
-
     nwsec_policy = nwsec_policy_alloc_init();
     if (nwsec_policy == NULL) {
         HAL_TRACE_ERR(" unable to"
@@ -1522,6 +1520,13 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
         }
         nwsec_policy->key.vrf_id = vrf->vrf_id;
     }
+    ret = validate_nwsec_policy_create(spec, nwsec_policy,res);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("validation failed");
+        nwsec_policy_free(nwsec_policy);
+        goto end;
+    }
+    
 
     nwsec_policy->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_POLICY);
     if (nwsec_policy->hal_handle == HAL_HANDLE_INVALID) {
@@ -1582,7 +1587,7 @@ end:
     nwsec_policy_prepare_rsp(res, ret, nwsec_policy ? nwsec_policy->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("------------------------ API End -----------------------------");
     trim_mem_usage("After Create");
-    return HAL_RET_OK;
+    return ret;
 }
 
 // Update policy

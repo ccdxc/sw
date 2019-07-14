@@ -5,10 +5,11 @@ import (
 )
 
 const (
-	hostReboot      = "HostReboot"
-	veniceReboot    = "VeniceReboot"
-	flapDataPorts   = "FlapDataPorts"
-	naplesRemoveAdd = "NaplesRemoveAdd"
+	hostReboot         = "HostReboot"
+	veniceReboot       = "VeniceReboot"
+	flapDataPorts      = "FlapDataPorts"
+	naplesRemoveAdd    = "NaplesRemoveAdd"
+	naplesMgmtLinkFlap = "NaplesMgmtLinkFlap"
 )
 
 type triggerBase struct {
@@ -36,6 +37,10 @@ type flapDataPortsTrigger struct {
 }
 
 type naplesRemoveAddTrigger struct {
+	triggerBase
+}
+
+type naplesMgmtLinkFlapTrigger struct {
 	triggerBase
 }
 
@@ -91,6 +96,14 @@ func (h *naplesRemoveAddTrigger) Run() error {
 	return doNaplesRemoveAdd(percent)
 }
 
+func (h *naplesMgmtLinkFlapTrigger) Run() error {
+	percent, err := h.triggerBase.getPercent()
+	if err != nil {
+		return err
+	}
+	return doNaplesMgmtLinkFlap(percent)
+}
+
 func newHostRebootTrigger(name string, percent string, skipSetup bool) trigger {
 	return &hostRebootTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent, SkipSetupVar: skipSetup}}
 }
@@ -107,11 +120,16 @@ func newNaplesRemoveAddTrigger(name string, percent string, skipSetup bool) trig
 	return &naplesRemoveAddTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent, SkipSetupVar: skipSetup}}
 }
 
+func newNaplesMgmtLinkFlapTrigger(name string, percent string, skipSetup bool) trigger {
+	return &naplesMgmtLinkFlapTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent, SkipSetupVar: skipSetup}}
+}
+
 var triggers = map[string]func(string, string, bool) trigger{
-	hostReboot:      newHostRebootTrigger,
-	veniceReboot:    newVeniceRebootTrigger,
-	flapDataPorts:   newflapDataPortsTrigger,
-	naplesRemoveAdd: newNaplesRemoveAddTrigger,
+	hostReboot:         newHostRebootTrigger,
+	veniceReboot:       newVeniceRebootTrigger,
+	flapDataPorts:      newflapDataPortsTrigger,
+	naplesRemoveAdd:    newNaplesRemoveAddTrigger,
+	naplesMgmtLinkFlap: newNaplesMgmtLinkFlapTrigger,
 }
 
 func newTrigger(name string, percent string, skipSetup bool) trigger {

@@ -24,14 +24,14 @@ var _ = Describe("fwlog tests", func() {
 
 		// delete test policy if its left over. we can ignore thes error here
 		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.SGPolicy("default-policy").Delete()
+		ts.model.DefaultSGPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "any", "PERMIT").Commit()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultSGPolicy().Commit()).ShouldNot(HaveOccurred())
 
 		// verify policy was propagated correctly
 		Eventually(func() error {
-			return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
+			return ts.model.Action().VerifyPolicyStatus(ts.model.DefaultSGPolicy())
 		}).Should(Succeed())
 	})
 
@@ -42,7 +42,8 @@ var _ = Describe("fwlog tests", func() {
 			}
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			startTime := time.Now()
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 
 			Eventually(func() error {
 				return ts.model.Action().PingPairs(workloadPairs)
@@ -61,8 +62,9 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			startTime := time.Now()
+			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultSGPolicy(), "tcp")
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 
 			Eventually(func() error {
 				return ts.model.Action().TCPSession(workloadPairs, 8000)
@@ -81,8 +83,14 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			startTime := time.Now()
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
+			// allow policy
+			policy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "PERMIT")
+			Expect(policy.Commit()).ShouldNot(HaveOccurred())
 
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
@@ -101,8 +109,9 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
-			startTime := time.Now()
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 
 			// deny policy
 			denyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "icmp", "DENY")
@@ -132,8 +141,9 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
-			startTime := time.Now()
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 
 			// deny policy
 			debyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "DENY")
@@ -163,7 +173,7 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
 
 			// deny policy
 			debyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "DENY")
@@ -176,7 +186,8 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			startTime := time.Now()
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
@@ -194,8 +205,9 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
-			startTime := time.Now()
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 
 			// reject policy
 			denyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "icmp", "REJECT")
@@ -223,8 +235,9 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
-			startTime := time.Now()
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 
 			// deny policy
 			denyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "REJECT")
@@ -254,7 +267,7 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
 
 			// reject policy
 			rejectPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "REJECT")
@@ -267,7 +280,8 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			startTime := time.Now()
+			//Naples time is set in UTC
+			startTime := time.Now().UTC()
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {

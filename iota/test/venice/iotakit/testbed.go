@@ -132,6 +132,7 @@ type TestBed struct {
 type TestCaseResult struct {
 	passCount int
 	failCount int
+	duration  time.Duration
 }
 
 // NewTestBed initializes a new testbed and returns a testbed handler
@@ -324,7 +325,8 @@ func (tb *TestBed) getNaplesInstanceByName(name string) *InstanceParams {
 
 	for _, naples := range tb.naplesDataMap {
 		for idx, inst := range tb.unallocatedInstances {
-			if inst.Type == "bm" && naples.ID == inst.ID {
+			if inst.Type == "bm" && naples.Naples == name && inst.ID == naples.ID {
+				log.Infof("Choosing  %v %v %v %v", inst.ID, name, naples.ID, naples.Naples)
 				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
 				return inst
 			}
@@ -1179,7 +1181,7 @@ func (tb *TestBed) setupTestBed() error {
 			return fmt.Errorf("Error while getting nodes from testbed")
 		}
 
-		log.Debugf("Got get node resp: %+v", getNodeResp)
+		log.Infof("Got get node resp: %+v", getNodeResp)
 		tb.addNodeResp = getNodeResp
 	}
 
@@ -1190,6 +1192,7 @@ func (tb *TestBed) setupTestBed() error {
 		nodeAdded := false
 		node := tb.Nodes[i]
 		for _, nr := range tb.addNodeResp.Nodes {
+			log.Infof("Checking %v %v", node.NodeName, nr.Name)
 			if node.NodeName == nr.Name {
 				log.Infof("Adding node %v as used", node.topoNode.NodeName)
 				node.NodeUUID = nr.NodeUuid
@@ -1252,18 +1255,20 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 		veniceIPs := strings.Join(node.NaplesConfig.VeniceIps, ",")
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			// set date on naples
-			trig.AddCommand(fmt.Sprintf("rm /etc/localtime"), node.NodeName+"_naples", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), node.NodeName+"_naples", node.NodeName)
-			cmd := fmt.Sprintf("date -s \"%s\"", time.Now().Format("2006-01-02 15:04:05"))
-			trig.AddCommand(cmd, node.NodeName+"_naples", node.NodeName)
+			//trig.AddCommand(fmt.Sprintf("rm /etc/localtime"), node.NodeName+"_naples", node.NodeName)
+			//trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), node.NodeName+"_naples", node.NodeName)
+			//cmd := fmt.Sprintf("date -s \"%s\"", time.Now().Format("2006-01-02 15:04:05"))
+			//trig.AddCommand(cmd, node.NodeName+"_naples", node.NodeName)
 
 			// untar the package
-			cmd = fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
+			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 
 			// clean up roots of trust, if any
 			trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
 
+			// disable watchdog for naples
+			trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), node.NodeName+"_naples", node.NodeName)
 			// trigger mode switch
 			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, node.NodeName, node.iotaNode.NodeUuid)
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
@@ -1316,30 +1321,6 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
-
-	// set date on naples
-	trig = tb.NewTrigger()
-	for _, node := range nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			trig.AddCommand(fmt.Sprintf("rm /etc/localtime"), node.NodeName+"_naples", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), node.NodeName+"_naples", node.NodeName)
-			cmd := fmt.Sprintf("date -s \"%s\"", time.Now().Add(time.Hour*30).Format("2006-01-02 15:04:05"))
-			trig.AddCommand(cmd, node.NodeName+"_naples", node.NodeName)
-
-		}
-	}
-	resp, err = trig.Run()
-	if err != nil {
-		return fmt.Errorf("Error untaring penctl package. Err: %v", err)
-	}
-	// check the response
-	for _, cmdResp := range resp {
-		if cmdResp.ExitCode != 0 {
-			log.Errorf("setting date failed. %+v", cmdResp)
-			return fmt.Errorf("setting date failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
-
-		}
-	}
 
 	return nil
 }
@@ -1478,6 +1459,8 @@ func (tb *TestBed) AddTaskResult(taskName string, err error) {
 	} else {
 		tb.caseResult[testName].failCount++
 	}
+
+	tb.caseResult[testName].duration += testInfo.Duration
 }
 
 // PrintResult prints test result summary
@@ -1488,9 +1471,9 @@ func (tb *TestBed) PrintResult() {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
 
-	fmt.Fprintf(w, "Test Bundle\t Group\t Case\t Pass\t Fail\n")
+	fmt.Fprintf(w, "Test Bundle\t Group\t Case\t Pass\t Fail\t Time\n")
 	for key, res := range tb.caseResult {
-		fmt.Fprintf(w, "%s\t    %d\t    %d\n", key, res.passCount, res.failCount)
+		fmt.Fprintf(w, "%s\t    %d\t    %d\t    %v\n", key, res.passCount, res.failCount, res.duration)
 	}
 	w.Flush()
 

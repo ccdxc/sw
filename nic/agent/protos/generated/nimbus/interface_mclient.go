@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 			log.Infof("Ctrlerif: agent %s got Interface watch event: Type: {%+v} Interface:{%+v}", client.clientName, evt.EventType, evt.Interface)
 
 			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-			client.processInterfaceEvent(*evt, reactor, ostream)
+			go client.processInterfaceEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

@@ -5,15 +5,15 @@ meta:
 config:
     #Run a particular testcase
     #Number of iterations
-    iterations: 2
+    iterations: 3
     #Run lineraly or randomize suites
     run-type: linear
+    #Scale data run
+    scale-data: True
     stop-on-failure: True
 
 testsuites:
     - suite: firewall
-      focus: ""
-    - suite: fwlog
       focus: ""
 
 triggers:
@@ -27,5 +27,8 @@ triggers:
       percent: 50
       skip-setup: True
     - trigger: NaplesRemoveAdd
+      percent: 50
+      skip-setup: True
+    - trigger: NaplesMgmtLinkFlap
       percent: 50
       skip-setup: True

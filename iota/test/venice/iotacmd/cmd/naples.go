@@ -72,3 +72,14 @@ func doNaplesRemoveAdd(percent int) error {
 
 	return setupModel.Action().RemoveAddNaples(naples)
 }
+
+func doNaplesMgmtLinkFlap(percent int) error {
+
+	naples, err := setupModel.Naples().SelectByPercentage(percent)
+
+	if err != nil {
+		return err
+	}
+
+	return setupModel.Action().FlapMgmtLinkNaples(naples)
+}

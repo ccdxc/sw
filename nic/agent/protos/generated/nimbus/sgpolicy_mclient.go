@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 			log.Infof("Ctrlerif: agent %s got SGPolicy watch event: Type: {%+v} SGPolicy:{%+v}", client.clientName, evt.EventType, evt.SGPolicy)
 
 			client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-			client.processSGPolicyEvent(*evt, reactor, ostream)
+			go client.processSGPolicyEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

@@ -35,6 +35,7 @@ type WorkloadCollection struct {
 type WorkloadPair struct {
 	first  *Workload
 	second *Workload
+	port   string
 }
 
 // WorkloadPairCollection is collection of workload pairs
@@ -279,6 +280,79 @@ func (wc *WorkloadCollection) Delete() error {
 	}
 
 	return nil
+}
+
+func (wpc *WorkloadPairCollection) policyHelper(policyCollection *SGPolicyCollection, action, proto string) *WorkloadPairCollection {
+	if wpc.err != nil {
+		return wpc
+	}
+	newCollection := WorkloadPairCollection{}
+	type ipPair struct {
+		sip   string
+		dip   string
+		proto string
+	}
+	actionCache := make(map[string][]ipPair)
+
+	ipPairPresent := func(pair ipPair) bool {
+		for _, pairs := range actionCache {
+			for _, ippair := range pairs {
+				if ippair.dip == pair.dip && ippair.sip == pair.sip && ippair.proto == pair.proto {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	for _, pol := range policyCollection.policies {
+		for _, rule := range pol.venicePolicy.Spec.Rules {
+			for _, sip := range rule.FromIPAddresses {
+				for _, dip := range rule.ToIPAddresses {
+					for _, proto := range rule.ProtoPorts {
+						pair := ipPair{sip: sip, dip: dip, proto: proto.Protocol}
+						if _, ok := actionCache[rule.Action]; !ok {
+							actionCache[rule.Action] = []ipPair{}
+						}
+						//if this IP pair was already added, then don't pick it as precedence is based on order
+						if !ipPairPresent(pair) {
+							actionCache[rule.Action] = append(actionCache[rule.Action], pair)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for _, pair := range wpc.pairs {
+		cache, ok := actionCache[action]
+		if ok {
+			for _, ippair := range cache {
+				if ippair.dip == strings.Split(pair.first.iotaWorkload.GetIpPrefix(), "/")[0] &&
+					ippair.sip == strings.Split(pair.second.iotaWorkload.GetIpPrefix(), "/")[0] &&
+					ippair.proto == proto &&
+					pair.first.iotaWorkload.UplinkVlan == pair.second.iotaWorkload.UplinkVlan {
+					newCollection.pairs = append(newCollection.pairs, pair)
+				}
+			}
+		}
+	}
+
+	return &newCollection
+}
+
+// Permit get allowed workloads with proto
+func (wpc *WorkloadPairCollection) Permit(policyCollection *SGPolicyCollection, proto string) *WorkloadPairCollection {
+	return wpc.policyHelper(policyCollection, "PERMIT", proto)
+}
+
+// Deny get Denied workloads with proto
+func (wpc *WorkloadPairCollection) Deny(policyCollection *SGPolicyCollection, proto string) *WorkloadPairCollection {
+	return wpc.policyHelper(policyCollection, "DENY", proto)
+}
+
+// Reject get rejected workloads with proto
+func (wpc *WorkloadPairCollection) Reject(policyCollection *SGPolicyCollection, proto string) *WorkloadPairCollection {
+	return wpc.policyHelper(policyCollection, "REJECT", proto)
 }
 
 // WithinNetwork filters workload pairs to only withon subnet

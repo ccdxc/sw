@@ -437,26 +437,15 @@ func (ts *TopologyService) CleanNodes(ctx context.Context, req *iota.TestNodesMs
 		return req, nil
 	}
 
-	nodes := []*testbed.TestNode{}
-
-	for _, node := range ts.Nodes {
-		nodeRemove := false
-		for _, n := range req.Nodes {
-			if node.Node.GetName() == n.GetNodeName() {
-				nodeRemove = true
-				_, ok := ts.ProvisionedNodes[n.GetNodeName()]
-				if ok {
-					delete(ts.ProvisionedNodes, n.GetNodeName())
-				}
-				break
-			}
-		}
-		if !nodeRemove {
-			nodes = append(nodes, node)
+	log.Info("TOPO SVC | Clean Nodes , cleaning up node")
+	for _, n := range req.Nodes {
+		_, ok := ts.ProvisionedNodes[n.GetNodeName()]
+		if ok {
+			delete(ts.ProvisionedNodes, n.GetNodeName())
+		       log.Infof("TOPO SVC | Clean Nodes , cleaning up node %v", n.GetNodeName())
 		}
 	}
 
-	ts.Nodes = nodes
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 

@@ -81,7 +81,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 			log.Infof("Ctrlerif: agent %s got Tenant watch event: Type: {%+v} Tenant:{%+v}", client.clientName, evt.EventType, evt.Tenant)
 
 			client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
-			client.processTenantEvent(*evt, reactor, ostream)
+			go client.processTenantEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
