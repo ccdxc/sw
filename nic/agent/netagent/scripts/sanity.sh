@@ -26,6 +26,6 @@ if [ "$1" == "stand-alone" ]; then
   LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v ./nic/agent/tests/standalone || cleanup $?
   cleanup
 fi
-go test -v ./test/integ/venice_integ -run TestVeniceInteg -datapath=hal -hosts=1 || cleanup $?
+go test -v ./test/integ/venice_integ -run TestVeniceInteg -datapath=hal -hosts=1 -timeout=15m || cleanup $?
 go test -v ./test/integ/npminteg/... || cleanup $?
 cleanup
