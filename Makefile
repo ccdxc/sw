@@ -56,6 +56,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./asset-build/... \
 							./nic/delphi/compiler/... \
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
+							./vendor/github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc \
 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa

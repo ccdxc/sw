@@ -1950,6 +1950,18 @@
   revision = "b15cd069a83443be3154b719d0cc9fe8117f09fb"
 
 [[projects]]
+  digest = "1:533a737df4137ca4029a5ed47dbcd28b110d6762967d87f6ae72f47627eb1494"
+  name = "github.com/pseudomuto/protoc-gen-doc"
+  packages = [
+    ".",
+    "cmd/protoc-gen-doc",
+    "parser",
+  ]
+  pruneopts = "NUT"
+  revision = "728a624b38e5ae90bb3e5da5f406e05138f1517c"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:89948a031cefb021d77be478c260502337228ad35eb5e8c811eb16f0a759b9ae"
   name = "github.com/rcrowley/go-metrics"
@@ -2948,6 +2960,7 @@
     "github.com/pensando/vic/pkg/vsphere/simulator/esx",
     "github.com/pkg/errors",
     "github.com/pkg/sftp",
+    "github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc",
     "github.com/russross/blackfriday",
     "github.com/satori/go.uuid",
     "github.com/sethvargo/go-password/password",
