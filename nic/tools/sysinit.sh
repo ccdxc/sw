@@ -110,7 +110,7 @@ rm -f *.log
 rm -f agent.log* /tmp/*.db
 
 if [ -z "$GOLDFW" ]; then
-    PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr /nic/conf/sysmgr.json &
+    PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr &
 else
     PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr /nic/conf/sysmgr_gold.json &
 fi

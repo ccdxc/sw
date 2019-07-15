@@ -7,6 +7,9 @@
 
 #include "nic/utils/penlog/lib/penlog.hpp"
 
+#define DEVICE_JSON "/sysconfig/config0/device.conf"
+#define DEFAULT_SYSMGR_JSON "/nic/conf/sysmgr.json"
+
 extern const pid_t       mypid;
 extern std::string       log_location;
 extern penlog::LoggerPtr logger;
@@ -21,15 +24,16 @@ typedef struct process_ {
 extern void        exec_command(const std::string &command);
 extern void        exists_or_mkdir(const char *dir);
 extern void        launch(const std::string &name, const std::string &command,
-                          process_t *new_process);
+                          unsigned long cpu_affinity, process_t *new_process);
 extern void        mkdirs(const char *dir);
 extern std::string parse_status(int status);
 extern void        redirect(const std::string &filename, int fd);
 extern void        redirect_stds(const std::string &name, pid_t pid);
 extern void        switch_root();
 extern void        save_stdout_stderr(const std::string &name, pid_t pid);
-extern void        cpulock();
+extern void        cpulock(unsigned long cpu_affinity);
 extern std::string get_logname_for_process(std::string name, int pid,
                                            std::string suffix);
+extern std::string get_main_config_file();
 
 #endif // __UTILS_HPP__

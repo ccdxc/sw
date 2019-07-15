@@ -31,6 +31,7 @@ public:
     std::vector<ServiceSpecDepPtr> dependencies;
     int                            flags;
     double                         timeout;
+    unsigned long                  cpu_affinity;
     static std::shared_ptr<ServiceSpec>   create();
 };
 typedef std::shared_ptr<ServiceSpec> ServiceSpecPtr;

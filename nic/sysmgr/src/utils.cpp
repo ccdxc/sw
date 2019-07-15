@@ -6,20 +6,27 @@
 #include <sstream>
 #include <string>
 
-#include <boost/format.hpp>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <zlib.h>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
 #include "nic/utils/penlog/lib/penlog.hpp"
 #include "nic/utils/penlog/lib/null_logger.hpp"
+#include "gen/proto/device.pb.h"
 
 #define CHUNK_SIZE (64 * 1024)
 
 const pid_t mypid = getpid();
 std::string log_location = "/var/log/sysmgr";
 penlog::LoggerPtr logger = std::make_shared<penlog::NullLogger>();
+
+namespace pt = boost::property_tree;
 
 void redirect(const std::string &filename, int fd)
 {
@@ -40,8 +47,6 @@ void redirect_stds(const std::string &name, pid_t pid)
     redirect(log_location + "/" + name + "." + std::to_string(pid) +
         ".err" + ".log", 2);
 }
-
-
 
 std::string get_logname_for_process(std::string name, int pid, std::string suffix)
 {
@@ -132,7 +137,7 @@ void exec_command(const std::string &command)
 }
 
 void launch(const std::string &name, const std::string &command,
-             process_t *new_process)
+    unsigned long cpu_affinity, process_t *new_process)
 {
     pid_t pid;
     int outfds[2];
@@ -158,7 +163,7 @@ void launch(const std::string &name, const std::string &command,
         replace_fd(errfds[1], 1);
         // for the child we close the "input" side of the pipe
         close(errfds[0]);
-        // cpulock();
+        cpulock(cpu_affinity);
         exec_command(command);
     }
 
@@ -253,17 +258,22 @@ void save_stdout_stderr(const std::string &name, pid_t pid)
     copy_std(name, pid, "err");
 }
 
-// Lock to CPU 0
-void cpulock()
+// Set the cpu_affinity
+void cpulock(unsigned long cpu_affinity)
 {
     cpu_set_t set;
     int rc;
     pid_t pid;
 
     CPU_ZERO(&set);
-    CPU_SET(0, &set);
-    CPU_SET(2, &set);
-    CPU_SET(3, &set);
+    for (size_t i = 0; i < sizeof(cpu_affinity) * 8; i++)
+    {
+        if (cpu_affinity & (1 << i))
+        {
+            CPU_SET(i, &set);
+            logger->debug("Setting affinity to cpu {}", i);
+        }
+    }
     pid = getpid();
 
     rc = sched_setaffinity(pid, sizeof(set), &set);
@@ -273,3 +283,66 @@ void cpulock()
     }
 }
 
+std::string get_main_config_file()
+{
+    pt::ptree ptree;
+    std::string fwd_mode;
+    std::string feature;
+
+    if (access(DEVICE_JSON, R_OK) < 0)
+    {
+        return DEFAULT_SYSMGR_JSON;
+    }
+
+    pt::read_json(DEVICE_JSON, ptree);
+
+    fwd_mode = ptree.get<std::string>("forwarding-mode",
+        "FORWARDING_MODE_CLASSIC");
+    if (fwd_mode == "FORWARDING_MODE_CLASSIC")
+    {
+        fwd_mode = "classic";
+    }
+    else if (fwd_mode == "FORWARDING_MODE_HOSTPIN")
+    {
+        fwd_mode = "hostpin";
+    }
+    else if (fwd_mode == "FORWARDING_MODE_SWITCH")
+    {
+        fwd_mode = "switch";
+    }
+    else
+    {
+        logger->error("Unknown forwarding mode '{}'", fwd_mode);
+        return DEFAULT_SYSMGR_JSON;
+    }
+
+    int feature_profile = ptree.get<int>("feature-profile", 
+                                         device::FEATURE_PROFILE_CLASSIC_DEFAULT);
+    if (feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
+        feature = "default";
+    } else if (feature_profile == device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
+        feature = "eth-dev-scale";
+    } else {
+        logger->error("Unknown feature profile '{}'", feature);
+        return DEFAULT_SYSMGR_JSON;
+    }
+
+#if 0
+    feature = ptree.get<std::string>("feature-profile", "classic-default");
+    if (feature == "classic-default")
+    {
+        feature = "default";
+    }
+    else if (feature == "classic-eth-dev-scale")
+    {
+        feature = "eth-dev-scale";
+    }
+    else
+    {
+        logger->error("Unknown feature profile '{}'", feature);
+        return DEFAULT_SYSMGR_JSON;
+    }
+#endif
+
+    return "/nic/conf/sysmgr-" + fwd_mode + "-" + feature + ".json";
+}

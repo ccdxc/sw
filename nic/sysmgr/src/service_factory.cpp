@@ -5,9 +5,9 @@
 
 #include <unistd.h>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/algorithm/string.hpp>
 #include <ev++.h>
 
 #include "nic/utils/penlog/lib/penlog.hpp"
@@ -67,6 +67,12 @@ static std::vector<ServiceSpecDepPtr> dependencies_from_obj(pt::ptree obj)
    return dependencies;
 }
 
+static unsigned long cpu_affinity_from_obj(pt::ptree obj)
+{
+    std::string val = obj.get<std::string>("cpu-affinity", "0xffffffff");
+    return std::stoul(val, nullptr, 16);
+}
+
 static ServiceSpecPtr spec_from_obj(pt::ptree obj)
 {
     ServiceSpecPtr spec = ServiceSpec::create();
@@ -75,6 +81,7 @@ static ServiceSpecPtr spec_from_obj(pt::ptree obj)
     spec->flags = flags_from_obj(obj);
     spec->timeout = obj.get<double>("timeout");
     spec->dependencies = dependencies_from_obj(obj);
+    spec->cpu_affinity = cpu_affinity_from_obj(obj);
 
     return spec;
 }
@@ -107,6 +114,8 @@ void ServiceFactory::on_config_add(ServiceSpecPtr spec)
 void ServiceFactory::load_config(std::string path)
 {
     pt::ptree root;
+
+    logger->info("Loading config from {}", path);
 
     if (access(path.c_str(), F_OK) == -1 )
     {

@@ -44,14 +44,15 @@ void Service::launch()
 {
     process_t new_process;
 
-    ::launch(this->spec->name, this->spec->command, &new_process);
+    ::launch(this->spec->name, this->spec->command, this->spec->cpu_affinity,
+        &new_process);
     this->pid = new_process.pid;
     this->stdout_pipe = PipedIO::create(new_process.stdout,
         get_logname_for_process(this->spec->name, this->pid, "out"));
     this->stderr_pipe = PipedIO::create(new_process.stderr,
         get_logname_for_process(this->spec->name, this->pid, "err"));
-    logger->info("Launched {}({}) using {}", this->spec->name, this->pid,
-        this->spec->command);
+    logger->info("Launched {}({}) using {} with affinity {}", this->spec->name, this->pid,
+        this->spec->command, this->spec->cpu_affinity);
     
 
     if (this->child_watcher != nullptr)

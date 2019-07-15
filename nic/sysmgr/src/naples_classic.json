@@ -1,0 +1,197 @@
+[
+    {
+        "name": "delphi",
+        "command": "/nic/bin/delphi_hub",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "pciemgrd",
+        "command": "/platform/bin/pciemgrd -d",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            }],
+        "flags": ["critical"],
+        "timeout": 30.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "nicmgr",
+        "command": "/bin/sh /platform/tools/start-nicmgr-haps.sh",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "pciemgrd"
+            }],
+        "flags": [],
+        "timeout": 30.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "hal",
+        "command": "/bin/sh /nic/tools/start-hal-haps.sh",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "nicmgr"
+            }],
+        "flags": [],
+        "timeout": 30.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "netagent",
+        "command": "/nic/bin/netagent -datapath hal",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }],
+        "flags": ["save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "asicerrord",
+        "command": "/platform/bin/asicerrord",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "nmd",
+        "command": "/bin/sh /nic/tools/start-nmd.sh",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "upgrade"
+            },
+            {
+                "kind": "service",
+                "service-name": "nicmgr"
+            },
+            {
+                "kind": "service",
+                "service-name": "pciemgrd"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }
+        ],
+        "flags": ["restartable", "save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "tmagent",
+        "command": "/nic/bin/tmagent",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }],
+        "flags": ["restartable", "save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "nevtsproxy",
+        "command": "/nic/bin/nevtsproxy",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }],
+        "flags": ["restartable", "save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "sysmond",
+        "command": "/platform/bin/sysmond",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }],
+        "flags": [],
+        "timeout": 30.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "upgrade",
+        "command": "/nic/bin/upgrade",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }
+        ],
+        "flags": ["restartable", "save_stdout_on_crash"],
+        "timeout": 30.0,
+        "cpu-affinity": "0xF"
+    },
+    {
+        "name": "pen-ntsa",
+        "command": "/nic/bin/ntsa -config /nic/conf/naples-tsa.json",
+        "dependencies": [
+                {
+                        "kind": "service",
+                        "service-name": "delphi"
+                },
+                {
+                        "kind": "service",
+                        "service-name": "hal"
+                }
+        ],
+        "flags": ["restartable", "save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0xF"
+    }
+]

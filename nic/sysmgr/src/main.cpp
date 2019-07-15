@@ -24,11 +24,6 @@ main(int argc, char *argv[])
     DelphiServicePtr svc = DelphiService::create(delphi_sdk);
     WatchdogPtr watchdog;
 
-    if (argc < 2) {
-       fprintf(stderr, "Please use %s <CONFIG_FILE>\n`", argv[0]);
-       return -1;
-    }
-    
     if (argc == 3) {
         log_location = argv[2];
     }
@@ -42,16 +37,21 @@ main(int argc, char *argv[])
         exit(-1);
     }
     redirect_stds("sysmgr", getpid());
-    cpulock();
+    cpulock(0xffffffff);
 
     delphi_sdk->RegisterService(svc);
     logger = penlog::logger_init(delphi_sdk, "sysmgr");
     watchdog = Watchdog::create();
 
-    logger->debug("Loading config\n");
-    service_factory->load_config(argv[1]);
-    logger->debug("Config loaded!\n");
-
+    if (argc > 1)
+    {
+        service_factory->load_config(argv[1]);
+    }
+    else
+    {
+        service_factory->load_config(get_main_config_file());
+    }
+    
     logger->debug("Trying /data/sysmgr.json");
     service_factory->load_config("/data/sysmgr.json");
     logger->debug("Done with /data/sysmgr.json");

@@ -9,6 +9,9 @@ nic/conf/iris/classic-plugins.json                                  /nic/conf/ir
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
 nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
+nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-default.json
+nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-eth-dev-scale.json
+nic/sysmgr/src/naples_hostpin.json                                  /nic/conf/sysmgr-hostpin-default.json
 nic/sysmgr/src/naples_gold.json                                     /nic/conf/sysmgr_gold.json
 nic/conf/naples-tsa.json                                            /nic/conf/
 nic/build/aarch64/iris/bin/p4asm/                                   /nic/conf/iris/asm_bin/
