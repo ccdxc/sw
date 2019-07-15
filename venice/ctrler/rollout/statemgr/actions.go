@@ -593,7 +593,7 @@ func (ros *RolloutState) computeProgressDelta() {
 
 	for _, s := range sn {
 		log.Infof("Status %s", spew.Sdump(s))
-		numNaples++
+		numNaples = numNaples + len(s)
 	}
 
 	ros.completionDelta = float32(100 / (2*numVenice + 2*numNaples + 2))
