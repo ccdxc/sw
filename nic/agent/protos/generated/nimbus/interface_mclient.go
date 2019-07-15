@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 
 			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
 			go client.processInterfaceEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

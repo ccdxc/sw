@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 
 			client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
 			go client.processAppEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

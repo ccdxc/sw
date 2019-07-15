@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 
 			client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
 			go client.processNamespaceEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

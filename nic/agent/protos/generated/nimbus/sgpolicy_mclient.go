@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 
 			client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
 			go client.processSGPolicyEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

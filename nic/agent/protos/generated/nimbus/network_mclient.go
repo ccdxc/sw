@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 
 			client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
 			go client.processNetworkEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

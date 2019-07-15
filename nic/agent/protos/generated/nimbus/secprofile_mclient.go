@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 
 			client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
 			go client.processSecurityProfileEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

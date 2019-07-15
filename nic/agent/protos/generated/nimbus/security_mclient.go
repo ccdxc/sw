@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 
 			client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
 			go client.processSecurityGroupEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects

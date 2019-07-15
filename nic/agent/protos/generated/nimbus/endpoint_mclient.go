@@ -82,6 +82,8 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 
 			client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
 			go client.processEndpointEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
