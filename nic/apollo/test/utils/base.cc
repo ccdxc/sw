@@ -2,11 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the base class implementation of test classes
-///
-//----------------------------------------------------------------------------
 
 #include <iostream>
 #include <getopt.h>

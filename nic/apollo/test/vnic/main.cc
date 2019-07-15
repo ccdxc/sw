@@ -20,7 +20,7 @@
 #include "nic/apollo/test/utils/vpc.hpp"
 
 namespace api_test {
-
+/// \cond
 //----------------------------------------------------------------------------
 // VNIC test class
 //----------------------------------------------------------------------------
@@ -46,15 +46,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // VNIC test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup VNIC
+/// \defgroup VNIC Vnic Tests
 /// @{
 
 /// \brief VNIC WF_TMP_1
+/// \ref WF_TMP_1
 TEST_F(vnic_test, vnic_workflow_tmp_1) {
     // todo: delete this workflow when deletes are supported on artemis
     if (apollo()) return;
@@ -66,6 +67,7 @@ TEST_F(vnic_test, vnic_workflow_tmp_1) {
 }
 
 /// \brief VNIC WF_1
+/// \ref WF_1
 TEST_F(vnic_test, vnic_workflow_1) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -77,6 +79,7 @@ TEST_F(vnic_test, vnic_workflow_1) {
 }
 
 /// \brief VNIC WF_2
+/// \ref WF_2
 TEST_F(vnic_test, vnic_workflow_2) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -88,6 +91,7 @@ TEST_F(vnic_test, vnic_workflow_2) {
 }
 
 /// \brief VNIC WF_3
+/// \ref WF_3
 TEST_F(vnic_test, vnic_workflow_3) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -101,6 +105,7 @@ TEST_F(vnic_test, vnic_workflow_3) {
 }
 
 /// \brief VNIC WF_4
+/// \ref WF_4
 TEST_F(vnic_test, vnic_workflow_4) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -112,6 +117,7 @@ TEST_F(vnic_test, vnic_workflow_4) {
 }
 
 /// \brief VNIC WF_5
+/// \ref WF_5
 TEST_F(vnic_test, vnic_workflow_5) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -125,6 +131,7 @@ TEST_F(vnic_test, vnic_workflow_5) {
 }
 
 /// \brief VNIC WF_6
+/// \ref WF_6
 TEST_F(vnic_test, vnic_workflow_6) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -139,6 +146,7 @@ TEST_F(vnic_test, vnic_workflow_6) {
 }
 
 /// \brief VNIC WF_7
+/// \ref WF_7
 TEST_F(vnic_test, vnic_workflow_7) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -153,6 +161,7 @@ TEST_F(vnic_test, vnic_workflow_7) {
 }
 
 /// \brief VNIC WF_8
+/// \ref WF_8
 TEST_F(vnic_test, DISABLED_vnic_workflow_8) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -168,6 +177,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_8) {
 }
 
 /// \brief VNIC WF_9
+/// \ref WF_9
 TEST_F(vnic_test, vnic_workflow_9) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -181,6 +191,7 @@ TEST_F(vnic_test, vnic_workflow_9) {
 }
 
 /// \brief VNIC WF_10
+/// \ref WF_10
 TEST_F(vnic_test, DISABLED_vnic_workflow_10) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -201,6 +212,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_10) {
 }
 
 /// \brief VNIC WF_N_1
+/// \ref WF_N_1
 TEST_F(vnic_test, vnic_workflow_neg_1) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -212,6 +224,7 @@ TEST_F(vnic_test, vnic_workflow_neg_1) {
 }
 
 /// \brief VNIC WF_N_2
+/// \ref WF_N_2
 TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -223,6 +236,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
 }
 
 /// \brief VNIC WF_N_3
+/// \ref WF_N_3
 TEST_F(vnic_test, vnic_workflow_neg_3) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -234,6 +248,7 @@ TEST_F(vnic_test, vnic_workflow_neg_3) {
 }
 
 /// \brief VNIC WF_N_4
+/// \ref WF_N_4
 TEST_F(vnic_test, vnic_workflow_neg_4) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -246,6 +261,7 @@ TEST_F(vnic_test, vnic_workflow_neg_4) {
 }
 
 /// \brief VNIC WF_N_5
+/// \ref WF_N_5
 TEST_F(vnic_test, DISABLED_vnic_workflow_neg_5) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -259,6 +275,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_5) {
 }
 
 /// \brief VNIC WF_N_6
+/// \ref WF_N_6
 TEST_F(vnic_test, vnic_workflow_neg_6) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -272,6 +289,7 @@ TEST_F(vnic_test, vnic_workflow_neg_6) {
 }
 
 /// \brief VNIC WF_N_7
+/// \ref WF_N_7
 TEST_F(vnic_test, vnic_workflow_neg_7) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -286,6 +304,7 @@ TEST_F(vnic_test, vnic_workflow_neg_7) {
 }
 
 /// \brief VNIC WF_N_8
+/// \ref WF_N_8
 TEST_F(vnic_test, vnic_workflow_neg_8) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
@@ -306,6 +325,7 @@ TEST_F(vnic_test, vnic_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

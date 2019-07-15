@@ -17,6 +17,11 @@
 
 namespace api_test {
 
+/// \addtogroup  PDS_FEEDER
+/// @{
+
+/// \brief Compare the config with values read from hardware
+/// Compares both key and spec
 template <typename feeder_T, typename info_T>
 sdk::sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info) {
     if (!feeder.key_compare(&info->spec.key)) {
@@ -32,6 +37,8 @@ sdk::sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info) {
     return sdk::SDK_RET_OK;
 }
 
+/// \brief Compare the config with values read from hardware
+/// Comapres only spec
 template <typename feeder_T, typename info_T>
 sdk::sdk_ret_t api_info_compare_singleton(
     feeder_T& feeder, info_T *info) {
@@ -44,6 +51,7 @@ sdk::sdk_ret_t api_info_compare_singleton(
     return sdk::SDK_RET_OK;
 }
 
+/// \brief Invokes the PDS create apis for test objects
 #define API_CREATE(_api_str)                                                 \
 inline sdk::sdk_ret_t                                                        \
 create(_api_str##_feeder& feeder) {                                          \
@@ -53,12 +61,15 @@ create(_api_str##_feeder& feeder) {                                          \
     return (pds_##_api_str##_create(&spec));                                 \
 }
 
+/// \brief Dummy function for Read
 #define API_NO_READ(_api_str)                                                \
 inline sdk::sdk_ret_t                                                        \
 read(_api_str##_feeder& feeder) {                                            \
     return sdk::SDK_RET_OK;                                                  \
 }
 
+/// \brief Invokes the PDS read apis for test objects
+/// Also it compares the config values with values read from hardware
 #define API_READ(_api_str)                                                   \
 inline sdk::sdk_ret_t                                                        \
 read(_api_str##_feeder& feeder) {                                            \
@@ -75,6 +86,8 @@ read(_api_str##_feeder& feeder) {                                            \
                 feeder, &info));                                             \
 }
 
+/// \brief Invokes the PDS read apis for test objects
+/// Also it compares the config values with values read from hardware
 #define API_READ_SINGLETON(_api_str)                                         \
 inline sdk::sdk_ret_t                                                        \
 read(_api_str##_feeder& feeder) {                                            \
@@ -89,6 +102,7 @@ read(_api_str##_feeder& feeder) {                                            \
             pds_##_api_str##_info_t>(feeder, &info));                        \
 }
 
+/// \brief Invokes the PDS update apis for test objects
 #define API_UPDATE(_api_str)                                                 \
 inline sdk::sdk_ret_t                                                        \
 update(_api_str##_feeder& feeder) {                                          \
@@ -98,6 +112,7 @@ update(_api_str##_feeder& feeder) {                                          \
     return (pds_##_api_str##_update(&spec));                                 \
 }
 
+/// \brief Invokes the PDS delete apis for test objects
 #define API_DELETE(_api_str)                                                 \
 inline sdk::sdk_ret_t                                                        \
 del(_api_str##_feeder& feeder) {                                             \
@@ -107,12 +122,14 @@ del(_api_str##_feeder& feeder) {                                             \
     return (pds_##_api_str##_delete(&key));                                  \
 }
 
+/// \brief Invokes the PDS delete apis for test objects
 #define API_DELETE_SINGLETON(_api_str)                                       \
 inline sdk::sdk_ret_t                                                        \
 del(_api_str##_feeder& feeder) {                                             \
     return (pds_##_api_str##_delete());                                      \
 }
 
+/// \brief Invokes the create apis for all the config objects
 template <typename feeder_T>
 void many_create(feeder_T& feeder) {
     feeder_T tmp = feeder;
@@ -121,6 +138,7 @@ void many_create(feeder_T& feeder) {
     }
 }
 
+/// \brief Invokes the read apis for all the config objects
 template <typename feeder_T>
 void many_read(feeder_T& feeder,
                sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK) {
@@ -133,6 +151,7 @@ void many_read(feeder_T& feeder,
     }
 }
 
+/// \brief Invokes the update apis for all the config objects
 template <typename feeder_T>
 void many_update(feeder_T& feeder) {
     feeder_T tmp = feeder;
@@ -141,6 +160,7 @@ void many_update(feeder_T& feeder) {
     }
 }
 
+/// \brief Invokes the delete apis for all the config objects
 template <typename feeder_T>
 void many_delete(feeder_T& feeder) {
     feeder_T tmp = feeder;
@@ -148,6 +168,8 @@ void many_delete(feeder_T& feeder) {
         SDK_ASSERT(del(tmp) == sdk::SDK_RET_OK);
     }
 }
+
+/// @}
 
 }    // namespace api_test
 

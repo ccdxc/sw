@@ -19,9 +19,9 @@
 /// \defgroup PDS_POLICY Policy API
 /// @{
 
-#define PDS_MAX_SECURITY_POLICY                  1023
-#define PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY   1023
-#define PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY     15
+#define PDS_MAX_SECURITY_POLICY                  1023    ///< Maximum security policies
+#define PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY   1023    ///< Maximum IPV4 rules per policy
+#define PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY     15    ///< Maximum IPV6 rules per policy
 
 /// \brief    rule direction
 typedef enum rule_dir_e {
@@ -92,7 +92,7 @@ typedef union rule_action_data_s {
 /// \brief    generic rule
 typedef struct rule_s {
     bool                  stateful;       ///< true, if rule is stateful
-    uint32_t              priority;       /// Rule Priority
+    uint32_t              priority;       ///< rule Priority
     rule_match_t          match;          ///< rule match
     rule_action_data_t    action_data;    ///< action and related information
 } __PACK__ rule_t;
@@ -103,8 +103,9 @@ typedef enum policy_type_s {
     POLICY_TYPE_FIREWALL = 1,
 } policy_type_t;
 
-/// \brief    generic policy
+/// \brief    generic policy specification
 typedef struct pds_policy_spec_s    pds_policy_spec_t;
+/// \brief    generic policy specification
 struct pds_policy_spec_s {
     pds_policy_key_t    key;            ///< policy key
     policy_type_t       policy_type;    ///< type of policy
@@ -119,6 +120,7 @@ struct pds_policy_spec_s {
             SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);
         }
     }
+    /// assignment operator
     pds_policy_spec_t& operator= (const pds_policy_spec_t& policy) {
         // self-assignment guard
         if (this == &policy) {
@@ -140,14 +142,17 @@ struct pds_policy_spec_s {
     }
 } __PACK__;
 
+/// \brief policy status
 typedef struct pds_policy_status_s {
     // TODO : Only base address of the tree stored in HBM is read
 } pds_policy_status_t;
 
+/// \brief policy statistics
 typedef struct pds_policy_stats_s {
 
 } pds_policy_stats_t;
 
+/// \brief policy info
 typedef struct pds_policy_info_s {
     pds_policy_spec_t spec;         ///< Specification
     pds_policy_status_t status;     ///< Status
@@ -155,17 +160,18 @@ typedef struct pds_policy_info_s {
 } pds_policy_info_t;
 
 /// \brief    create policy
-/// \param[in] policy    policy information
+/// \param[in] policy    policy configurationn
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
 
 /// \brief    update policy
-/// \param[in] policy    policy information
+/// \param[in] policy    policy configuration
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_update(pds_policy_spec_t *policy);
 
 /// \brief    read policy, base address of the tree stored in HBM is read
-/// \param[in] key    policy key
+/// \param[in]  key    policy key
+/// \param[out] info    policy information
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_read(pds_policy_key_t *key, pds_policy_info_t *info);
 
@@ -174,6 +180,6 @@ sdk_ret_t pds_policy_read(pds_policy_key_t *key, pds_policy_info_t *info);
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_delete(pds_policy_key_t *key);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_POLICY_HPP__

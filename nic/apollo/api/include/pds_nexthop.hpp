@@ -18,8 +18,8 @@
 /// \defgroup PDS_NEXTHOP nexthop & nexthop group APIs
 /// @{
 
-#define PDS_MAX_NEXTHOP                4095
-#define PDS_MAX_NEXTHOP_GROUP          1024
+#define PDS_MAX_NEXTHOP                4095    ///< Maximum nexthops
+#define PDS_MAX_NEXTHOP_GROUP          1024    ///< Maximum nexthop groups
 
 /// \brief nexthop type
 typedef enum pds_nh_type_e {
@@ -116,6 +116,6 @@ typedef struct pds_nexthop_group_info_s {
     pds_nexthop_group_stats_t  stats;     ///< statistics
 } __PACK__ pds_nexthop_group_info_t;
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_NEXTHOP_HPP__

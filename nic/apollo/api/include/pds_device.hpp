@@ -15,8 +15,8 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 
-#define PDS_DROP_REASON_MAX        64
-#define PDS_MAX_DROP_NAME_LEN      32
+#define PDS_DROP_REASON_MAX        64    ///< Maximum packet drop reasons
+#define PDS_MAX_DROP_NAME_LEN      32    ///< Packet drop reason string length
 
 /// \defgroup PDS_DEVICE Device API
 /// \@{
@@ -35,8 +35,8 @@ typedef struct pds_device_status_s {
 
 /// \brief Drop statistics
 typedef struct pds_device_drop_stats_s {
-    char     name[PDS_MAX_DROP_NAME_LEN];
-    uint64_t count;
+    char     name[PDS_MAX_DROP_NAME_LEN];   ///< drop reason name
+    uint64_t count;                         ///< drop count
 } __PACK__ pds_device_drop_stats_t;
 
 /// \brief device statistics
@@ -77,6 +77,6 @@ sdk_ret_t pds_device_update(pds_device_spec_t *spec);
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_device_delete(void);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_DEVICE_HPP__

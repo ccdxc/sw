@@ -15,7 +15,7 @@
 #include "nic/apollo/test/utils/vpc.hpp"
 
 namespace api_test {
-
+/// \cond
 //----------------------------------------------------------------------------
 // Svc mapping test class
 //----------------------------------------------------------------------------
@@ -39,15 +39,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // Svc mapping test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup SVC_MAPPING_TEST
+/// \defgroup SVC_MAPPING_TEST Service Mapping Tests
 /// @{
 
-/// \brief SVC_MAPPING WF_TMP_1
+/// \brief SVC MAPPING WF_TMP_1
+/// \ref WF_TMP_1
 TEST_F(svc_mapping_test, svc_mapping_workflow_tmp_1) {
     svc_mapping_feeder feeder;
 
@@ -55,7 +56,8 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_tmp_1) {
     workflow_tmp_1<svc_mapping_feeder>(feeder);
 }
 
-/// \brief SVC_MAPPING WF_1
+/// \brief SVC MAPPING WF_1
+/// \ref WF_1
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_1) {
     svc_mapping_feeder feeder;
 
@@ -64,6 +66,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_1) {
 }
 
 /// \brief SVC MAPPING WF_2
+/// \ref WF_2
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_2) {
     svc_mapping_feeder feeder;
 
@@ -71,6 +74,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_2) {
 }
 
 /// \brief SVC MAPPING WF_3
+/// \ref WF_3
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_3) {
     svc_mapping_feeder feeder1, feeder2, feeder3;
 
@@ -78,6 +82,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_3) {
 }
 
 /// \brief SVC MAPPING WF_4
+/// \ref WF_4
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_4) {
     svc_mapping_feeder feeder;
 
@@ -85,6 +90,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_4) {
 }
 
 /// \brief SVC MAPPING WF_5
+/// \ref WF_5
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_5) {
     svc_mapping_feeder feeder1, feeder2, feeder3;
 
@@ -92,6 +98,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_5) {
 }
 
 /// \brief SVC MAPPING WF_6
+/// \ref WF_6
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_6) {
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
 
@@ -99,6 +106,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_6) {
 }
 
 /// \brief SVC MAPPING WF_7
+/// \ref WF_7
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow7) {
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
 
@@ -106,6 +114,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow7) {
 }
 
 /// \brief SVC MAPPING WF_8
+/// \ref WF_8
 TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow8) {
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
 
@@ -113,6 +122,7 @@ TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow8) {
 }
 
 /// \brief SVC MAPPING WF_9
+/// \ref WF_9
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow9) {
     svc_mapping_feeder feeder1, feeder1A;
 
@@ -120,6 +130,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow9) {
 }
 
 /// \brief SVC MAPPING WF_10
+/// \ref WF_10
 TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow10) {
     svc_mapping_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
@@ -128,6 +139,7 @@ TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow10) {
 }
 
 /// \brief SVC MAPPING WF_N_1
+/// \ref WF_N_1
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_1) {
     svc_mapping_feeder feeder;
 
@@ -135,6 +147,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_1) {
 }
 
 /// \brief SVC MAPPING WF_N_2
+/// \ref WF_N_2
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_2) {
     svc_mapping_feeder feeder;
 
@@ -142,6 +155,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_2) {
 }
 
 /// \brief SVC MAPPING WF_N_3
+/// \ref WF_N_3
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_3) {
     svc_mapping_feeder feeder;
 
@@ -149,6 +163,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_3) {
 }
 
 /// \brief SVC MAPPING WF_N_4
+/// \ref WF_N_4
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_4) {
     svc_mapping_feeder feeder1, feeder2;
 
@@ -156,6 +171,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_4) {
 }
 
 /// \brief SVC MAPPING WF_N_5
+/// \ref WF_N_5
 TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow_neg_5) {
     svc_mapping_feeder feeder1, feeder1A;
 
@@ -163,6 +179,7 @@ TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow_neg_5) {
 }
 
 /// \brief SVC MAPPING WF_N_6
+/// \ref WF_N_6
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_6) {
     svc_mapping_feeder feeder1, feeder1A;
 
@@ -170,6 +187,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_6) {
 }
 
 /// \brief SVC MAPPING WF_N_7
+/// \ref WF_N_7
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_7) {
     svc_mapping_feeder feeder1, feeder1A, feeder2;
 
@@ -177,6 +195,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_7) {
 }
 
 /// \brief SVC MAPPING WF_N_8
+/// \ref WF_N_8
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_8) {
     svc_mapping_feeder feeder1, feeder2;
 
@@ -191,6 +210,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

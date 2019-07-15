@@ -21,7 +21,7 @@
 /// \defgroup PDS_SUBNET Subnet API
 /// @{
 
-#define PDS_MAX_SUBNET    64
+#define PDS_MAX_SUBNET    64    ///< Max subnets
 
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {
@@ -100,6 +100,6 @@ sdk_ret_t pds_subnet_update(pds_subnet_spec_t *spec);
 ///  - A valid subnet key should be passed
 sdk_ret_t pds_subnet_delete(pds_subnet_key_t *key);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_SUBNET_HPP__

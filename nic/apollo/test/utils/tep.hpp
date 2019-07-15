@@ -2,11 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the tep test utility routines
-///
-//----------------------------------------------------------------------------
 #ifndef __TEST_UTILS_TEP_HPP__
 #define __TEST_UTILS_TEP_HPP__
 

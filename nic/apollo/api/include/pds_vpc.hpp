@@ -105,10 +105,8 @@ typedef struct pds_vpc_peer_spec_s {
 
 /// \brief VPC peering status
 typedef struct pds_vpc_peer_status_s {
-    /// \h/w id for (vpc1, vpc2) entry
-    uint16_t hw_id1;
-    /// \h/w id for (vpc2, vpc1) entry
-    uint16_t hw_id2;
+    uint16_t hw_id1;    ///< h/w id for (vpc1, vpc2) entry
+    uint16_t hw_id2;    ///< h/w id for (vpc2, vpc1) entry
 } __PACK__ pds_vpc_peer_status_t;
 
 /// \brief VPC peerings statistics, if any
@@ -144,6 +142,6 @@ sdk_ret_t pds_vpc_peer_read(pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info);
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vpc_peer_delete(pds_vpc_peer_key_t *key);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_VPC_HPP__

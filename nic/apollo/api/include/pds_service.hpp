@@ -20,7 +20,7 @@
 /// \defgroup PDS_SERVICE_MAPPING Mapping API
 /// @{
 
-#define PDS_SERVICE_TAG_INVALID    0
+#define PDS_SERVICE_TAG_INVALID    0    ///< Invalid service tag id
 
 /// \brief  service mapping specification
 typedef struct pds_svc_mapping_spec_s {

@@ -25,29 +25,29 @@
 #define PDS_POLICY_ID_INVALID         0x0    ///< Invalid policy id
 
 // Basic PDS data types
-typedef uint32_t                  pds_vpc_id_t;
-typedef uint32_t                  pds_subnet_id_t;
-typedef uint16_t                  pds_vnic_id_t;
-typedef uint32_t                  pds_rule_id_t;
-typedef uint32_t                  pds_rsc_pool_id_t;
-typedef uint32_t                  pds_epoch_t;
-typedef uint32_t                  pds_slot_id_t;
-typedef uint32_t                  pds_vnid_id_t;
-typedef uint32_t                  pds_mpls_tag_t;
-typedef uint32_t                  pds_mapping_id_t;
-typedef uint32_t                  pds_route_table_id_t;
-typedef uint32_t                  pds_policy_id_t;
-typedef uint16_t                  pds_lif_key_t;
-typedef uint32_t                  pds_ifindex_t;
-typedef uint32_t                  pds_mirror_session_id_t;
-typedef uint32_t                  pds_meter_id_t;
-typedef uint32_t                  pds_tag_id_t;
-typedef uint32_t                  pds_vpc_peer_id_t;
-typedef uint32_t                  pds_nexthop_id_t;
-typedef uint32_t                  pds_nexthop_group_id_t;
-typedef uint32_t                  pds_tep_id_t;
-typedef pds_nexthop_id_t          pds_nexthop_key_t;
-typedef pds_nexthop_group_id_t    pds_nexthop_group_key_t;
+typedef uint32_t                  pds_vpc_id_t;     ///< VPC id
+typedef uint32_t                  pds_subnet_id_t;  ///< Subnet id
+typedef uint16_t                  pds_vnic_id_t;    ///< VNIC id
+typedef uint32_t                  pds_rule_id_t;    ///< Rule index
+typedef uint32_t                  pds_rsc_pool_id_t;    ///< Resource pool id
+typedef uint32_t                  pds_epoch_t;          ///< Epoch id
+typedef uint32_t                  pds_slot_id_t;        ///< MPLS tag value
+typedef uint32_t                  pds_vnid_id_t;        ///< VXLAN id
+typedef uint32_t                  pds_mpls_tag_t;       ///< MPLS tag value
+typedef uint32_t                  pds_mapping_id_t;     ///< Mapping table index
+typedef uint32_t                  pds_route_table_id_t; ///< Route table index
+typedef uint32_t                  pds_policy_id_t;      ///< Policy table index
+typedef uint16_t                  pds_lif_key_t;        ///< LIF key id
+typedef uint32_t                  pds_ifindex_t;        ///< Interface index
+typedef uint32_t                  pds_mirror_session_id_t;   ///< Mirror session table index
+typedef uint32_t                  pds_meter_id_t;            ///< Meter table index
+typedef uint32_t                  pds_tag_id_t;              ///< TAG table index
+typedef uint32_t                  pds_vpc_peer_id_t;         ///< VPC peer id
+typedef uint32_t                  pds_nexthop_id_t;          ///< Nexthop table index
+typedef uint32_t                  pds_nexthop_group_id_t;    ///< Nexthop group table index
+typedef uint32_t                  pds_tep_id_t;              ///< TEP table index
+typedef pds_nexthop_id_t          pds_nexthop_key_t;         ///< Nexthop id
+typedef pds_nexthop_group_id_t    pds_nexthop_group_key_t;   ///< Nexthop group id
 
 /// \brief Encapsulation type
 typedef enum pds_encap_type_e {
@@ -58,11 +58,13 @@ typedef enum pds_encap_type_e {
     PDS_ENCAP_TYPE_VXLAN    = 4,    ///< VxLAN encap
 } pds_encap_type_t;
 
+/// \brief QinQ tag values
 typedef struct pds_qinq_tag_s {
     uint16_t c_tag;    ///< Customer VLAN tag
     uint16_t s_tag;    ///< Service VLAN tag
 } pds_qinq_tag_t;
 
+/// \brief Encapsulation values
 typedef union pds_encap_val_u {
     uint16_t       vlan_tag;    ///< 12 bit .1q tag
     pds_qinq_tag_t qinq_tag;    ///< QinQ tag
@@ -71,9 +73,10 @@ typedef union pds_encap_val_u {
     uint32_t       value;       ///< generic value to refer to other values
 } pds_encap_val_t;
 
+/// \brief Encapsulation config
 typedef struct pds_encap_s {
-    pds_encap_type_t type;
-    pds_encap_val_t  val;
+    pds_encap_type_t type;    ///< Encap type
+    pds_encap_val_t  val;     ///< Encap value
 } pds_encap_t;
 
 /// \@}
@@ -146,6 +149,7 @@ typedef struct pds_svc_mapping_key_s {
     uint16_t svc_port;    ///< L4 service port
 
     // operator== is required to compare keys in case of hash collision
+    /// compare operator
     bool operator==(const struct pds_svc_mapping_key_s &p) const {
         return (vpc.id == p.vpc.id) && (svc_port == p.svc_port) &&
             (!memcmp(&vip, &p.vip, sizeof(ip_addr_t)));
@@ -153,8 +157,10 @@ typedef struct pds_svc_mapping_key_s {
 
 } __PACK__ pds_svc_mapping_key_t;
 
+/// \brief    service mapping hash function
 class pds_svc_mapping_hash_fn {
 public:
+    /// function call operator
     std::size_t operator()(const pds_svc_mapping_key_t &key) const {
         return hash_algo::fnv_hash((void *)&key, sizeof(key));
     }
@@ -162,7 +168,8 @@ public:
 
 /// \brief    vpc peering key
 typedef struct pds_vpc_peer_key_s {
-    pds_vpc_peer_id_t id;
+    pds_vpc_peer_id_t id;    ///< VPC peer id
 } __PACK__ pds_vpc_peer_key_t;
 
+/// @}
 #endif    // __INCLUDE_API_PDS_HPP__

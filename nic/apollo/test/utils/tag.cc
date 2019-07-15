@@ -2,12 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the route table test utility routines implementation
-///
-//----------------------------------------------------------------------------
-
 #include <iostream>
 #include "nic/apollo/test/utils/tag.hpp"
 #include "nic/apollo/test/utils/tep.hpp"

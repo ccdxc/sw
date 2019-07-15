@@ -39,13 +39,13 @@ typedef struct pds_conntrack_cfg_s {
 
 /// \brief Resource limits
 typedef struct pds_rsrc_limits_s {
-    ///< Limits per class
+    /// Limits per class
     pds_class_limits_t class_limits[PDS_TRAFFIC_CLASS_MAX];
-    ///< Connection tracking limits
+    /// Connection tracking limits
     pds_conntrack_cfg_t conn_track;
 } __PACK__ pds_rsrc_limits_t;
 
-///< Resource pool
+/// Resource pool
 typedef struct pds_rsrc_pool_s {
     pds_rsrc_pool_id_t key;      ///< Key
     pds_rsrc_limits_t limits;    ///< Limits
@@ -63,6 +63,6 @@ pds_status_t pds_rsrc_pool_create(pds_rsrc_pool_t *rsrc_pool);
 /// \return #SDK_RET_OK on success, failure status code on error
 pds_status_t pds_rsrc_pool_delete(pds_rsrc_pool_key_t *key);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_RESOURCE_POOL_HPP_

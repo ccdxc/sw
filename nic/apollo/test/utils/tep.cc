@@ -2,12 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the tep test utility routines implementation
-///
-//----------------------------------------------------------------------------
-
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/tep_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"

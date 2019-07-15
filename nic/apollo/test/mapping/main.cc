@@ -28,7 +28,7 @@
 #include "nic/apollo/test/utils/remote_mapping.hpp"
 
 namespace api_test {
-
+/// \cond
 // Globals
 static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 
@@ -215,15 +215,15 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // Mapping test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup Mapping
+/// \defgroup MAPPING_TEST Mapping tests
 /// @{
 
-/// --------------------------- IPv4 MAPPINGS -----------------------
+// --------------------------- IPv4 MAPPINGS -----------------------
 
 static void
 remote_mapping_stepper_seed_init (remote_mapping_stepper_seed_t *seed,
@@ -255,9 +255,10 @@ step_up_ip_next (ip_prefix_t *pfx, uint16_t num_steps)
     }
 }
 
-/// --------------------------- LOCAL MAPPINGS -----------------------
+// --------------------------- LOCAL MAPPINGS -----------------------
 
 /// \brief local mappings WF_1
+/// \ref WF_1
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_1) {
     local_mapping_stepper_seed_t seed = {0};
 
@@ -271,6 +272,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_1) {
 }
 
 /// \brief local mappings WF_2
+/// \ref WF_2
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_2) {
     local_mapping_stepper_seed_t seed = {0};
 
@@ -285,6 +287,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_2) {
 }
 
 /// \brief local mappings WF_3
+/// \ref WF_3
 TEST_F(mapping_test, DISABLED_local_mapping_workflow_3) {
     uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
     uint32_t num_vnics_per_set = 341;
@@ -335,6 +338,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_3) {
 }
 
 /// \brief local mappings WF_4
+/// \ref WF_4
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_4) {
     local_mapping_stepper_seed_t seed = {0};
 
@@ -348,6 +352,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_4) {
 }
 
 /// \brief local mappings WF_5
+/// \ref WF_5
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_5) {
     uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
     uint32_t num_vnics_per_set = 341;
@@ -398,6 +403,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_5) {
 }
 
 /// \brief local mappings WF_6
+/// \ref WF_6
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_6) {
     local_mapping_stepper_seed_t seed1 = {0};
     local_mapping_stepper_seed_t seed1A = {0};
@@ -427,6 +433,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_6) {
 }
 
 /// \brief local mappings WF_7
+/// \ref WF_7
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_7) {
     local_mapping_stepper_seed_t seed1 = {0};
     local_mapping_stepper_seed_t seed1A = {0};
@@ -456,6 +463,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_7) {
 }
 
 /// \brief local mappings WF_8
+/// \ref WF_8
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_8) {
     local_mapping_stepper_seed_t seed1 = {0};
     local_mapping_stepper_seed_t seed1A = {0};
@@ -485,6 +493,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_8) {
 }
 
 /// \brief local mappings WF_9
+/// \ref WF_9
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_9) {
     local_mapping_stepper_seed_t seed1 = {0};
     local_mapping_stepper_seed_t seed1A = {0};
@@ -507,6 +516,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_9) {
 }
 
 /// \brief local mappings WF_10
+/// \ref WF_10
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_10) {
     uint32_t per_set_vnics = 256;
     uint32_t ip_stepper = per_set_vnics * PDS_MAX_VNIC_IP;
@@ -577,6 +587,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_10) {
 }
 
 /// \brief local mappings WF_N_1
+/// \ref WF_N_1
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_1) {
     local_mapping_stepper_seed_t seed = {0};
 
@@ -590,6 +601,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_1) {
 }
 
 /// \brief local mappings WF_N_2
+/// \ref WF_N_2
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_2) {
     local_mapping_stepper_seed_t seed = {0};
 
@@ -610,6 +622,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_2) {
 }
 
 /// \brief local mappings WF_N_3
+/// \ref WF_N_3
 TEST_F(mapping_test, v4_local_mapping_workflow_neg_3) {
     uint32_t vnic_id = 9999;
     uint64_t vnic_mac = 0x0000000040302010;
@@ -627,6 +640,7 @@ TEST_F(mapping_test, v4_local_mapping_workflow_neg_3) {
 }
 
 /// \brief local mappings WF_N_4
+/// \ref WF_N_4
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_4) {
     uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
     uint32_t num_vnics_per_set = 512;
@@ -665,6 +679,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_4) {
 }
 
 /// \brief local mappings WF_N_5
+/// \ref WF_N_5
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_5) {
     local_mapping_stepper_seed_t seed1 = {0};
     local_mapping_stepper_seed_t seed1A = {0};
@@ -686,6 +701,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_5) {
 }
 
 /// \brief local mappings WF_N_6
+/// \ref WF_N_6
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_6) {
     local_mapping_stepper_seed_t seed1 = {0};
     local_mapping_stepper_seed_t seed1A = {0};
@@ -707,6 +723,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_6) {
 }
 
 /// \brief local mappings WF_N_7
+/// \ref WF_N_7
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_7) {
     uint32_t num_vnics_per_set = 512;
     uint32_t ip_stepper = num_vnics_per_set * PDS_MAX_VNIC_IP;
@@ -749,6 +766,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_7) {
 }
 
 /// \brief local mappings WF_N_8
+/// \ref WF_N_8
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_8) {
     uint32_t num_vnics_per_set = 512;
     uint32_t ip_stepper = num_vnics_per_set * PDS_MAX_VNIC_IP;
@@ -783,11 +801,12 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_8) {
     workflow_neg_8<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed2);
 }
 
-/// --------------------------- END LOCAL MAPPINGS -----------------------
+// --------------------------- END LOCAL MAPPINGS -----------------------
 
-/// --------------------------- REMOTE MAPPINGS -----------------------
+// --------------------------- REMOTE MAPPINGS -----------------------
 
 /// \brief remote mappings WF_1
+/// \ref WF_1
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_1) {
     remote_mapping_stepper_seed_t seed = {0};
 
@@ -800,6 +819,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_1) {
 }
 
 /// \brief remote mappings WF_2
+/// \ref WF_2
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_2) {
     remote_mapping_stepper_seed_t seed = {0};
 
@@ -812,6 +832,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_2) {
 }
 
 /// \brief remote mappings WF_3
+/// \ref WF_3
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
     uint32_t num_vnics_per_set = k_max_vnic;
     uint32_t num_teps_per_set = 341;
@@ -854,6 +875,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
 }
 
 /// \brief remote mappings WF_4
+/// \ref WF_4
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_4) {
     remote_mapping_stepper_seed_t seed = {0};
 
@@ -866,6 +888,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_4) {
 }
 
 /// \brief remote mappings WF_5
+/// \ref WF_5
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
     uint32_t num_vnics_per_set = k_max_vnic;
     uint32_t num_teps_per_set = 341;
@@ -908,6 +931,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
 }
 
 /// \brief remote mappings WF_6
+/// \ref WF_6
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_6) {
     remote_mapping_stepper_seed_t seed1 = {0};
     remote_mapping_stepper_seed_t seed1A = {0};
@@ -935,6 +959,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_6) {
 }
 
 /// \brief remote mappings WF_7
+/// \ref WF_7
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_7) {
     remote_mapping_stepper_seed_t seed1 = {0};
     remote_mapping_stepper_seed_t seed1A = {0};
@@ -962,6 +987,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_7) {
 }
 
 /// \brief remote mappings WF_8
+/// \ref WF_8
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_8) {
     remote_mapping_stepper_seed_t seed1 = {0};
     remote_mapping_stepper_seed_t seed1A = {0};
@@ -989,6 +1015,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_8) {
 }
 
 /// \brief remote mappings WF_9
+/// \ref WF_9
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_9) {
     remote_mapping_stepper_seed_t seed1 = {0};
     remote_mapping_stepper_seed_t seed1A = {0};
@@ -1009,6 +1036,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_9) {
 }
 
 /// \brief remote mappings WF_10
+/// \ref WF_10
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
     uint32_t num_vnics_per_set = k_max_vnic;
     uint32_t num_teps_per_set = 256;
@@ -1081,6 +1109,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
 }
 
 /// \brief remote mappings WF_N_1
+/// \ref WF_N_1
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_1) {
     remote_mapping_stepper_seed_t seed = {0};
 
@@ -1093,6 +1122,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_1) {
 }
 
 /// \brief remote mappings WF_N_2
+/// \ref WF_N_2
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
     remote_mapping_stepper_seed_t seed = {0};
 
@@ -1112,6 +1142,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
 }
 
 /// \brief remote mappings WF_N_3
+/// \ref WF_N_3
 TEST_F(mapping_test, v4_remote_mapping_workflow_neg_3) {
     uint64_t vnic_mac = 0x0000000040302010;
     std::string vnic_cidr = "100.99.98.97";
@@ -1128,6 +1159,7 @@ TEST_F(mapping_test, v4_remote_mapping_workflow_neg_3) {
 }
 
 /// \brief remote mappings WF_N_4
+/// \ref WF_N_4
 TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
     uint32_t num_vnics_per_set = k_max_vnic;
     uint32_t num_teps_per_set = 511;
@@ -1159,6 +1191,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
 }
 
 /// \brief remote mappings WF_N_5
+/// \ref WF_N_5
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_5) {
     remote_mapping_stepper_seed_t seed1 = {0};
     remote_mapping_stepper_seed_t seed1A = {0};
@@ -1179,6 +1212,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_5) {
 }
 
 /// \brief remote mappings WF_N_6
+/// \ref WF_N_6
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_6) {
     remote_mapping_stepper_seed_t seed1 = {0};
     remote_mapping_stepper_seed_t seed1A = {0};
@@ -1199,6 +1233,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_6) {
 }
 
 /// \brief remote mappings WF_N_7
+/// \ref WF_N_7
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_7) {
     uint32_t num_vnics_per_set = k_max_vnic;
     uint32_t num_teps_per_set = 511;
@@ -1237,6 +1272,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_7) {
 }
 
 /// \brief remote mappings WF_N_8
+/// \ref WF_N_8
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
     uint32_t num_vnics_per_set = k_max_vnic;
     uint32_t num_teps_per_set = 511;
@@ -1278,6 +1314,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

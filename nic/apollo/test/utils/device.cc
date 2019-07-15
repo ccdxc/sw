@@ -2,11 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the device test utility routines implementation
-///
-//----------------------------------------------------------------------------
 
 #include "nic/apollo/api/device_utils.hpp"
 #include "nic/apollo/test/utils/device.hpp"

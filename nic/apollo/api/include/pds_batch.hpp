@@ -46,6 +46,6 @@ sdk::sdk_ret_t pds_batch_commit(void);
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk::sdk_ret_t pds_batch_abort(void);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_BATCH_HPP__

@@ -20,7 +20,7 @@
 #include "nic/apollo/test/utils/workflow.hpp"
 
 namespace api_test {
-
+/// \cond
 static constexpr uint32_t k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
 static constexpr uint32_t k_base_ms = 1;
 static const char * const k_tep_ip1 = "10.1.1.1";
@@ -60,12 +60,12 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // mirror session test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup MIRROR_TEST
+/// \defgroup MIRROR_TEST Mirror tests
 /// @{
 
 static inline void
@@ -112,10 +112,8 @@ mirror_session_stepper_seed_init (int seed_base, uint8_t max_ms,
     }
 }
 
-/// \brief Create and delete max mirror sessions in the same batch
-/// The operation should be de-duped by framework and is
-/// a NO-OP from hardware perspective
-/// [ Create SetMax, Delete SetMax ] - Read
+/// \brief Mirror session WF_1
+/// \ref WF_1
 TEST_F(mirror_session_test, mirror_session_workflow_1) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed = {};
@@ -125,8 +123,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_1) {
     workflow_1<mirror_session_util, mirror_session_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete some and create another set of nodes in the same batch
-/// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+/// \brief Mirror session WF_3
+/// \ref WF_3
 TEST_F(mirror_session_test, mirror_session_workflow_3) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -141,10 +139,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_3) {
         &seed1, &seed2, &seed3);
 }
 
-/// \brief Create and delete mirror sessions in two batches
-/// The hardware should create and delete mirror sessions correctly.
-/// Validate using reads at each batch end
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief Mirror session WF_4
+/// \ref WF_4
 TEST_F(mirror_session_test, mirror_session_workflow_4) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed = {};
@@ -154,8 +150,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_4) {
     workflow_4<mirror_session_util, mirror_session_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of mirror sessions in two batches
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+/// \brief Mirror session WF_5
+/// \ref WF_5
 TEST_F(mirror_session_test, mirror_session_workflow_5) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -173,9 +169,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_5) {
         &seed1, &seed2, &seed3);
 }
 
-/// \brief Create update, update and delete max mirror sessions in the same batch
-/// a NO-OP kind of result from hardware perspective
-/// [ Create SetMax, Update SetMax, Update SetMax Delete SetMax ] - Read
+/// \brief Mirror session WF_6
+/// \ref WF_6
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_6) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -192,11 +187,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_6) {
         &seed1, &seed1a, &seed1b);
 }
 
-/// \brief Create delete create update and update
-/// max mirror sessions in the same batch
-/// Last update should be retained
-/// [ Create SetMax, Delete SetMax, Create SetMax, Update SetMax,
-/// Update SetMax ] - Read
+/// \brief Mirror session WF_7
+/// \ref WF_7
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_7) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -213,11 +205,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_7) {
         &seed1, &seed1a, &seed1b);
 }
 
-/// \brief Create update in a batch, update in a batch
-/// delete in a batch max mirror sessions
-/// checking multiple updates, each in different batch
-/// [ Create SetMax, Update SetMax ] - Read
-/// [ Update SetMax ] - Read  [ Delete SetMax ] - Read
+/// \brief Mirror session WF_8
+/// \ref WF_8
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_8) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -235,9 +224,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_8) {
 
 }
 
-/// \brief Create in a batch, update and delete in a batch
-/// Delete checking after Update
-/// [ Create SetMax ] - Read [ Update SetMax , Delete SetMax] - Read
+/// \brief Mirror session WF_9
+/// \ref WF_9
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_9) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -251,9 +239,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_9) {
         &seed1, &seed1a);
 }
 
-/// \brief Create and delete mix and match of mirror sessions in two batches
-/// [ Create Set1, Set2, Set3 Delete Set1, Update Set2  ] - Read
-/// [ Update Set3 - Delete  Set2, Create Set4 ] - Read
+/// \brief Mirror session WF_10
+/// \ref WF_10
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_10) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -281,8 +268,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_10) {
         &seed1, &seed2, &seed2a, &seed3, &seed3a, &seed4);
 }
 
-/// \brief Create maximum number of mirror sessions in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief Mirror session WF_N_1
+/// \ref WF_N_1
 TEST_F(mirror_session_test, mirror_session_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed = {};
@@ -292,8 +279,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_neg_1) {
     workflow_neg_1<mirror_session_util, mirror_session_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of mirror sessions supported.
-/// [ Create SetMax+1] - Read
+/// \brief Mirror session WF_N_2
+/// \ref WF_N_2
 TEST_F(mirror_session_test, mirror_session_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed = {};
@@ -303,8 +290,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_neg_2) {
     workflow_neg_2<mirror_session_util, mirror_session_stepper_seed_t>(&seed);
 }
 
-/// \brief Read of a non-existing mirror session should return entry not found.
-/// Read NonEx
+/// \brief Mirror session WF_N_3
+/// \ref WF_N_3
 TEST_F(mirror_session_test, mirror_session_workflow_neg_3) {
     mirror_session_stepper_seed_t seed = {};
 
@@ -313,8 +300,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_neg_3) {
     workflow_neg_3<mirror_session_util, mirror_session_stepper_seed_t>(&seed);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
+/// \brief Mirror session WF_N_4
+/// \ref WF_N_4
 TEST_F(mirror_session_test, mirror_session_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -329,9 +316,8 @@ TEST_F(mirror_session_test, mirror_session_workflow_neg_4) {
         &seed1, &seed2);
 }
 
-/// \brief Create max mirror sessions in a batch,
-/// delete and update in a batch which fails resulting same old state as create.
-/// [ Create SetMax ] - Read - [Delete SetMax Update SetMax] - Read
+/// \brief Mirror session WF_N_5
+/// \ref WF_N_5
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_5) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -345,9 +331,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_5) {
         &seed1, &seed1a);
 }
 
-/// \brief Updation of more than max mirror sessions
-/// should fail leaving old state unchanged
-/// [Create SetMax] -  Read - [Update SetMax+1] - Read
+/// \brief Mirror session WF_N_6
+/// \ref WF_N_6
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_6) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -362,9 +347,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_6) {
         &seed1, &seed1a);
 }
 
-/// \brief Create set1 in a batch, update set1 and set2 in next batch
-/// fails leaving set1 unchanged
-/// [ Create Set1 ] - Read - [ Update Set1 Update Set2 ] - Read
+/// \brief Mirror session WF_N_7
+/// \ref WF_N_7
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_7) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -382,9 +366,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_7) {
         &seed1, &seed1a, &seed2);
 }
 
-/// \brief Create set1 in a batch, delete set1 and update set2 in next batch
-/// fails leaving set1 unchanged
-/// [ Create Set1 ] - Read - [ Delete Set1 Update Set2 ] - Read
+/// \brief Mirror session WF_N_8
+/// \ref WF_N_8
 TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_8) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
@@ -406,6 +389,7 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

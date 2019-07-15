@@ -15,11 +15,11 @@
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 
-/// \defgroup PDS_TAG (Service) Tag APIs
+/// \defgroup PDS_TAG Service Tag APIs
 /// @{
 
-#define PDS_MAX_TAG                 64
-#define PDS_MAX_PREFIX_PER_TAG      16383
+#define PDS_MAX_TAG                 64       ///< Maximum tags
+#define PDS_MAX_PREFIX_PER_TAG      16383    ///< Maximum prefix per tag
 
 /// \brief tag policy rule
 typedef struct pds_tag_rule_s {
@@ -32,6 +32,7 @@ typedef struct pds_tag_rule_s {
 
 /// \brief tag configuration
 typedef struct pds_tag_spec_s    pds_tag_spec_t;
+/// \brief tag configuration
 struct pds_tag_spec_s {
     pds_tag_key_t     key;             ///< key
     uint8_t           af;              ///< address family - v4 or v6
@@ -51,7 +52,7 @@ struct pds_tag_spec_s {
         }
     }
 
-    // assignment operator
+    /// assignment operator
     pds_tag_spec_t& operator= (const pds_tag_spec_t& spec) {
         // self-assignment guard
         if (this == &spec) {
@@ -120,6 +121,6 @@ sdk_ret_t pds_tag_delete(pds_tag_key_t *key);
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_tag_read(pds_tag_key_t *key, pds_tag_info_t *info);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_TAG_HPP__

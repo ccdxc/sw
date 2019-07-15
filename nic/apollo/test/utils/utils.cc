@@ -2,11 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the common utility routines implementation
-///
-//----------------------------------------------------------------------------
 #include <iostream>
 #include <iomanip>
 #include <gtest/gtest.h>

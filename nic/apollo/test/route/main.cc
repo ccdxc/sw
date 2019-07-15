@@ -16,7 +16,7 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-
+/// \cond
 static constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_route_per_tbl = PDS_MAX_ROUTE_PER_TABLE;
@@ -61,15 +61,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // Route table test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup Route table
+/// \defgroup ROUTE_TESTS Route table tests
 /// @{
 
 /// \brief Route table WF_1
+/// \ref WF_1
 TEST_F(route_test, v4v6_route_table_workflow_1) {
     route_table_feeder feeder;
 
@@ -92,6 +93,7 @@ TEST_F(route_test, v4v6_route_table_workflow_1) {
 }
 
 /// \brief Route table WF_2
+/// \ref WF_2
 TEST_F(route_test, v4v6_route_table_workflow_2) {
     route_table_feeder feeder;
 
@@ -114,6 +116,7 @@ TEST_F(route_test, v4v6_route_table_workflow_2) {
 }
 
 /// \brief Route table WF_3
+/// \ref WF_3
 TEST_F(route_test, v4v6_route_table_workflow_3) {
     route_table_feeder feeder1, feeder2, feeder3;
 
@@ -151,6 +154,7 @@ TEST_F(route_test, v4v6_route_table_workflow_3) {
 }
 
 /// \brief Route table WF_4
+/// \ref WF_4
 TEST_F(route_test, v4v6_route_table_workflow_4) {
     route_table_feeder feeder;
 
@@ -173,6 +177,7 @@ TEST_F(route_test, v4v6_route_table_workflow_4) {
 }
 
 /// \brief Route table WF_5
+/// \ref WF_5
 TEST_F(route_test, v4v6_route_table_workflow_5) {
     route_table_feeder feeder1, feeder2, feeder3;
 
@@ -210,6 +215,7 @@ TEST_F(route_test, v4v6_route_table_workflow_5) {
 }
 
 /// \brief Route table WF_6
+/// \ref WF_6
 TEST_F(route_test, v4v6_route_table_workflow_6) {
     route_table_feeder feeder1, feeder1A, feeder1B;
 
@@ -235,6 +241,7 @@ TEST_F(route_test, v4v6_route_table_workflow_6) {
 }
 
 /// \brief Route table WF_7
+/// \ref WF_7
 TEST_F(route_test, v4v6_route_table_workflow_7) {
     route_table_feeder feeder1, feeder1A, feeder1B;
 
@@ -260,6 +267,7 @@ TEST_F(route_test, v4v6_route_table_workflow_7) {
 }
 
 /// \brief Route table WF_8
+/// \ref WF_8
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
     route_table_feeder feeder1, feeder1A, feeder1B;
 
@@ -285,6 +293,7 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
 }
 
 /// \brief Route table WF_9
+/// \ref WF_9
 TEST_F(route_test, v4v6_route_table_workflow_9) {
     route_table_feeder feeder1, feeder1A;
 
@@ -304,6 +313,7 @@ TEST_F(route_test, v4v6_route_table_workflow_9) {
 }
 
 /// \brief Route table WF_10
+/// \ref WF_10
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_10) {
     route_table_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
@@ -347,6 +357,7 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_10) {
 }
 
 /// \brief Route table WF_N_1
+/// \ref WF_N_1
 TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
     route_table_feeder feeder;
 
@@ -369,6 +380,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
 }
 
 /// \brief Route table WF_N_2
+/// \ref WF_N_2
 TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
     route_table_feeder feeder;
 
@@ -416,6 +428,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
 }
 
 /// \brief Route table WF_N_3
+/// \ref WF_N_3
 TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
     route_table_feeder feeder;
 
@@ -438,6 +451,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
 }
 
 /// \brief Route table WF_N_4
+/// \ref WF_N_4
 TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
     route_table_feeder feeder1, feeder2;
 
@@ -467,6 +481,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
 }
 
 /// \brief Route table WF_N_5
+/// \ref WF_N_5
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_5) {
     route_table_feeder feeder1, feeder1A;
 
@@ -489,6 +504,7 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_5) {
 
 
 /// \brief Route table WF_N_6
+/// \ref WF_N_6
 TEST_F(route_test, v4v6_route_table_workflow_neg_6) {
     route_table_feeder feeder1, feeder1A;
 
@@ -510,6 +526,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_6) {
 }
 
 /// \brief Route table WF_N_7
+/// \ref WF_N_7
 TEST_F(route_test, v4v6_route_table_workflow_neg_7) {
     route_table_feeder feeder1, feeder1A, feeder2;
 
@@ -533,6 +550,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_7) {
 }
 
 /// \brief Route table WF_N_8
+/// \ref WF_N_8
 TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
     route_table_feeder feeder1, feeder2;
 
@@ -559,6 +577,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

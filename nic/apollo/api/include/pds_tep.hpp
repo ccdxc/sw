@@ -18,7 +18,7 @@
 /// \defgroup PDS_TEP Tunnel End Point API
 /// @{
 
-#define PDS_MAX_TEP 1023
+#define PDS_MAX_TEP 1023    ///< Maximum tunnels
 
 /// \brief type of the TEP
 typedef enum pds_tep_type_e {
@@ -38,24 +38,24 @@ typedef struct pds_tep_spec_s {
                                ///< (unused currently)
     mac_addr_t     mac;        ///< MAC address of this TEP
     pds_tep_type_t type;       ///< type/role of the TEP
-    ///< encap to be used, if specified
-    ///< for PDS_TEP_TYPE_WORKLOAD type TEP, encap value itself comes from the
-    ///< mapping configuration so need not be specified here, however for the
-    ///< PDS_TEP_TYPE_IGW, encap has to be specified here ... PDS will take
-    ///< the encap value, if specified here, always so agent needs to set this
-    ///< appropriately
+    /// encap to be used, if specified
+    /// for PDS_TEP_TYPE_WORKLOAD type TEP, encap value itself comes from the
+    /// mapping configuration so need not be specified here, however for the
+    /// PDS_TEP_TYPE_IGW, encap has to be specified here ... PDS will take
+    /// the encap value, if specified here, always so agent needs to set this
+    /// appropriately
     pds_encap_t    encap;
-    ///< perform SNAT for traffic going to this TEP and DNAT for traffic coming
-    ///< from this TEP, if this is set to true (note that mappings need to have
-    ///< public IP configured for this to take effect)
+    /// perform SNAT for traffic going to this TEP and DNAT for traffic coming
+    /// from this TEP, if this is set to true (note that mappings need to have
+    /// public IP configured for this to take effect)
     bool           nat;
-    ///< true, if tunnel is of type PDS_TEP_TYPE_SERVICE and service is in
-    ///< remote data center/pod
+    /// true, if tunnel is of type PDS_TEP_TYPE_SERVICE and service is in
+    /// remote data center/pod
     bool           remote_svc;
-    ///< fabric encap for remote service
+    /// fabric encap for remote service
     pds_encap_t    remote_svc_encap;
-    ///< public IP of this service tunnel that is used as SIPo in the
-    ///< encapsulated VXLAN packet in the Tx direction
+    /// public IP of this service tunnel that is used as SIPo in the
+    /// encapsulated VXLAN packet in the Tx direction
     ip_addr_t      remote_svc_public_ip;
 } __PACK__ pds_tep_spec_t;
 
@@ -105,6 +105,6 @@ sdk_ret_t pds_tep_update(pds_tep_spec_t *spec);
 /// \remark    valid TEP key should be passed
 sdk_ret_t pds_tep_delete(pds_tep_key_t *key);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_TEP_HPP__

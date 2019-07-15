@@ -2,12 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the policy test utility routines
-///
-//----------------------------------------------------------------------------
-
 #ifndef __TEST_UTILS_POLICY_HPP__
 #define __TEST_UTILS_POLICY_HPP__
 

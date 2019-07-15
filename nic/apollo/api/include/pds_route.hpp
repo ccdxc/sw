@@ -21,8 +21,8 @@
 /// @{
 
 // TODO: should be same as PDS_MAX_SUBNET
-#define PDS_MAX_ROUTE_TABLE            1024
-#define PDS_MAX_ROUTE_PER_TABLE        1023
+#define PDS_MAX_ROUTE_TABLE            1024   ///< Maximum route tables
+#define PDS_MAX_ROUTE_PER_TABLE        1023   ///< Maximum routes per table
 
 /// \brief route
 typedef struct pds_route_s {
@@ -40,6 +40,7 @@ typedef struct pds_route_s {
 
 /// \brief route table configuration
 typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
+/// \brief route table configuration
 struct pds_route_table_spec_s {
     pds_route_table_key_t    key;          ///< key
     uint8_t                  af;           ///< address family - v4 or v6
@@ -56,7 +57,7 @@ struct pds_route_table_spec_s {
         }
     }
 
-    // assignment operator
+    /// assignment operator
     pds_route_table_spec_t& operator= (const pds_route_table_spec_t& route_table) {
         // self-assignment guard
         if (this == &route_table) {
@@ -101,6 +102,6 @@ sdk_ret_t pds_route_table_update(pds_route_table_spec_t *spec);
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_ROUTE_HPP__

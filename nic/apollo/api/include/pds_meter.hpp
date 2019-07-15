@@ -18,8 +18,8 @@
 /// \defgroup PDS_METER Meter APIs
 /// @{
 
-#define PDS_MAX_METER               64
-#define PDS_MAX_PREFIX_PER_METER    1023
+#define PDS_MAX_METER               64       ///< Maximum meters
+#define PDS_MAX_PREFIX_PER_METER    1023     ///< Maximum prefixes per meter
 
 /// \brief meter type
 typedef enum pds_meter_type_e {
@@ -52,6 +52,7 @@ typedef struct pds_meter_rule_s {
 
 /// \brief metering configuration
 typedef struct pds_meter_spec_s    pds_meter_spec_t;
+/// \brief metering configuration
 struct pds_meter_spec_s {
     pds_meter_key_t  key;          ///< key
     uint8_t          af;           ///< address family - v4 or v6
@@ -71,7 +72,7 @@ struct pds_meter_spec_s {
         SDK_FREE(PDS_MEM_ALLOC_ID_METER, rules);
     }
 
-    // assignment operator
+    /// assignment operator
     pds_meter_spec_t& operator= (const pds_meter_spec_t& spec) {
         // self-assignment guard
         if (this == &spec) {
@@ -149,6 +150,6 @@ sdk_ret_t pds_meter_delete(pds_meter_key_t *key);
 /// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_read(pds_meter_key_t *key, pds_meter_info_t *info);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_METER_HPP__

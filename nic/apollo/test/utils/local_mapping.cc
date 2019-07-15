@@ -2,11 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the local IP map test utility routines implementation
-///
-//----------------------------------------------------------------------------
 
 #include "iostream"
 #include "nic/sdk/include/sdk/ip.hpp"

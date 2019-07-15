@@ -17,37 +17,41 @@
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 
-char *g_input_cfg_file = NULL;
-char *g_cfg_file = NULL;
-bool g_daemon_mode = false;
-string g_profile;
+/// \defgroup SCALE_TEST Scale Test
+/// This test validates the hardware by configuring maximum objects supported.
+/// @{
 
+char *g_input_cfg_file = NULL;   ///< Test Config file
+char *g_cfg_file = NULL;         ///< HAL config file
+bool g_daemon_mode = false;      ///< Daemon mode
+string g_profile;                ///< Profile file
+
+/// \brief scale test base class
 class scale_test : public pds_test_base {
 protected:
     scale_test() {}
     virtual ~scale_test() {}
-    /**< called immediately after the constructor before each test */
+    /** called immediately after the constructor before each test */
     virtual void SetUp() {}
-    /**< called immediately after each test before the destructor */
+    /** called immediately after each test before the destructor */
     virtual void TearDown() {}
-    /**< called at the beginning of all test cases in this class */
+    /** called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
-        /**< call base class function */
+        /* call base class function */
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
         params.enable_fte = false;
         params.profile = g_profile;
         pds_test_base::SetUpTestCase(params);
     }
+    /** called at the end of all test cases in this class */
     static void TearDownTestCase() {
         pds_test_base::TearDownTestCase();
     }
 };
 
-/// \defgroup Scale
-/// @{
 
-/// Scale test
+/// \brief Scale test
 TEST_F(scale_test, scale_test_create)
 {
     sdk_ret_t rv;
@@ -84,6 +88,7 @@ static void inline print_usage(char **argv)
             argv[0]);
 }
 
+/// @private
 int
 main (int argc, char **argv)
 {

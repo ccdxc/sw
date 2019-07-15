@@ -19,7 +19,7 @@
 /// \defgroup PDS_VNIC VNIC API
 /// @{
 
-#define PDS_MAX_VNIC    128
+#define PDS_MAX_VNIC    128    ///< Maximum vnics
 
 /// \brief VNIC specification
 typedef struct pds_vnic_spec_s {

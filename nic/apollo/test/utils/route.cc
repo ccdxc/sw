@@ -2,12 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the route table test utility routines implementation
-///
-//----------------------------------------------------------------------------
-
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/test/utils/route.hpp"

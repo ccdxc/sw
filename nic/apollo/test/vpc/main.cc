@@ -16,7 +16,7 @@
 #include "nic/apollo/test/utils/vpc.hpp"
 
 namespace api_test {
-
+/// \cond
 // Globals
 static constexpr uint32_t k_max_vpc = PDS_MAX_VPC + 1;
 
@@ -37,15 +37,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // VPC test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup VPC_TEST
+/// \defgroup VPC_TEST VPC Tests
 /// @{
 
 /// \brief VPC WF_1
+/// \ref WF_1
 TEST_F(vpc, vpc_workflow_1) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder;
@@ -55,6 +56,7 @@ TEST_F(vpc, vpc_workflow_1) {
 }
 
 /// \brief VPC WF_2
+/// \ref WF_2
 TEST_F(vpc, vpc_workflow_2) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder;
@@ -64,6 +66,7 @@ TEST_F(vpc, vpc_workflow_2) {
 }
 
 /// \brief VPC WF_3
+/// \ref WF_3
 TEST_F(vpc, vpc_workflow_3) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
     vpc_feeder feeder1, feeder2, feeder3;
@@ -75,6 +78,7 @@ TEST_F(vpc, vpc_workflow_3) {
 }
 
 /// \brief VPC WF_4
+/// \ref WF_4
 TEST_F(vpc, vpc_workflow_4) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder;
@@ -84,6 +88,7 @@ TEST_F(vpc, vpc_workflow_4) {
 }
 
 /// \brief VPC WF_5
+/// \ref WF_5
 TEST_F(vpc, vpc_workflow_5) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
     vpc_feeder feeder1, feeder2, feeder3;
@@ -95,6 +100,7 @@ TEST_F(vpc, vpc_workflow_5) {
 }
 
 /// \brief VPC WF_6
+/// \ref WF_6
 TEST_F(vpc, vpc_workflow_6) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A, feeder1B;
@@ -106,6 +112,7 @@ TEST_F(vpc, vpc_workflow_6) {
 }
 
 /// \brief VPC WF_7
+/// \ref WF_7
 TEST_F(vpc, vpc_workflow_7) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A, feeder1B;
@@ -117,6 +124,7 @@ TEST_F(vpc, vpc_workflow_7) {
 }
 
 /// \brief VPC WF_8
+/// \ref WF_8
 TEST_F(vpc, DISABLED_vpc_workflow_8) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A, feeder1B;
@@ -128,6 +136,7 @@ TEST_F(vpc, DISABLED_vpc_workflow_8) {
 }
 
 /// \brief VPC WF_9
+/// \ref WF_9
 TEST_F(vpc, vpc_workflow_9) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A;
@@ -138,6 +147,7 @@ TEST_F(vpc, vpc_workflow_9) {
 }
 
 /// \brief VPC WF_10
+/// \ref WF_10
 TEST_F(vpc, DISABLED_vpc_workflow_10) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
                   key4 = {.id = 100};
@@ -154,6 +164,7 @@ TEST_F(vpc, DISABLED_vpc_workflow_10) {
 }
 
 /// \brief VPC WF_N_1
+/// \ref WF_N_1
 TEST_F(vpc, vpc_workflow_neg_1) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder;
@@ -163,6 +174,7 @@ TEST_F(vpc, vpc_workflow_neg_1) {
 }
 
 /// \brief VPC WF_N_2
+/// \ref WF_N_2
 TEST_F(vpc, vpc_workflow_neg_2) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder;
@@ -172,6 +184,7 @@ TEST_F(vpc, vpc_workflow_neg_2) {
 }
 
 /// \brief VPC WF_N_3
+/// \ref WF_N_3
 TEST_F(vpc, vpc_workflow_neg_3) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder;
@@ -181,6 +194,7 @@ TEST_F(vpc, vpc_workflow_neg_3) {
 }
 
 /// \brief VPC WF_N_4
+/// \ref WF_N_4
 TEST_F(vpc, vpc_workflow_neg_4) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
     vpc_feeder feeder1, feeder2;
@@ -191,6 +205,7 @@ TEST_F(vpc, vpc_workflow_neg_4) {
 }
 
 /// \brief VPC WF_N_5
+/// \ref WF_N_5
 TEST_F(vpc, DISABLED_vpc_workflow_neg_5) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A;
@@ -201,6 +216,7 @@ TEST_F(vpc, DISABLED_vpc_workflow_neg_5) {
 }
 
 /// \brief VPC WF_N_6
+/// \ref WF_N_6
 TEST_F(vpc, vpc_workflow_neg_6) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A;
@@ -211,6 +227,7 @@ TEST_F(vpc, vpc_workflow_neg_6) {
 }
 
 /// \brief VPC WF_N_7
+/// \ref WF_N_7
 TEST_F(vpc, vpc_workflow_neg_7) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
     vpc_feeder feeder1, feeder1A, feeder2;
@@ -222,6 +239,7 @@ TEST_F(vpc, vpc_workflow_neg_7) {
 }
 
 /// \brief VPC WF_N_8
+/// \ref WF_N_8
 TEST_F(vpc, vpc_workflow_neg_8) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
     vpc_feeder feeder1, feeder2;
@@ -239,6 +257,7 @@ TEST_F(vpc, vpc_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

@@ -26,6 +26,7 @@ typedef enum pds_init_mode_e {
     PDS_INIT_MODE_POST_UPGRADE,    ///< initialize using state preserved, if any
 } pds_init_mode_t;
 
+/// \brief Initialization profiles
 typedef enum pds_scale_profile_e {
     PDS_SCALE_PROFILE_DEFAULT,
     ///< P1 = 128 VPCs, 128 subnets, 1K vnics, 1M mappings,
@@ -54,7 +55,7 @@ typedef struct pds_init_params_s {
     pds_scale_profile_t       scale_profile;    ///< scale profile for pipeline
     std::string               cfg_file;         ///< config files directory path
                                                 ///< all config files are present,
-                                                ///< files under <cfg_path>/pipeline/
+                                                ///< files under \<cfg_path\>/pipeline/
                                                 ///< are picked by the software
     bool                      batching_en;      ///< true if API batching is enabled
                                                 ///< or else every API call is
@@ -70,6 +71,6 @@ sdk::sdk_ret_t pds_init(pds_init_params_t *params);
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk::sdk_ret_t pds_teardown(void);
 
-/// \@}
+/// @}
 
 #endif    // __INCLUDE_API_PDS_INIT_HPP__

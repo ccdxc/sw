@@ -20,7 +20,7 @@ namespace api_test {
 //----------------------------------------------------------------------------
 // Device test class
 //----------------------------------------------------------------------------
-
+/// \cond
 class device_test : public pds_test_base {
 protected:
     device_test() {}
@@ -34,15 +34,17 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
+/// \endcond
 
 //----------------------------------------------------------------------------
 // Device test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup DEVICE_TEST
+/// \defgroup DEVICE_TEST Device Tests
 /// @{
 
 /// \brief Device WF_1
+/// \ref WF_1
 TEST_F(device_test, device_workflow_1) {
     device_feeder feeder;
     feeder.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -50,6 +52,7 @@ TEST_F(device_test, device_workflow_1) {
 }
 
 /// \brief Device WF_2
+/// \ref WF_2
 TEST_F(device_test, device_workflow_2) {
     device_feeder feeder;
     feeder.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -57,6 +60,7 @@ TEST_F(device_test, device_workflow_2) {
 }
 
 /// \brief Device WF_4
+/// \ref WF_4
 TEST_F(device_test, device_workflow_4) {
     device_feeder feeder;
     feeder.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -64,6 +68,7 @@ TEST_F(device_test, device_workflow_4) {
 }
 
 /// \brief Device WF_6
+/// \ref WF_6
 TEST_F(device_test, device_workflow_6) {
     device_feeder feeder1, feeder1A, feeder1B;
     feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -73,6 +78,7 @@ TEST_F(device_test, device_workflow_6) {
 }
 
 /// \brief Device WF_7
+/// \ref WF_7
 TEST_F(device_test, device_workflow_7) {
     device_feeder feeder1, feeder1A, feeder1B;
     feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -82,6 +88,7 @@ TEST_F(device_test, device_workflow_7) {
 }
 
 /// \brief Device WF_8
+/// \ref WF_8
 TEST_F(device_test, DISABLED_device_workflow_8) {
     device_feeder feeder1, feeder1A, feeder1B;
     feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -91,6 +98,7 @@ TEST_F(device_test, DISABLED_device_workflow_8) {
 }
 
 /// \brief Device WF_9
+/// \ref WF_9
 TEST_F(device_test, DISABLED_device_workflow_9) {
     device_feeder feeder1, feeder1A;
     feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -99,6 +107,7 @@ TEST_F(device_test, DISABLED_device_workflow_9) {
 }
 
 /// \brief Device WF_N_1
+/// \ref WF_N_1
 TEST_F(device_test, device_workflow_neg_1) {
     device_feeder feeder;
     feeder.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -106,6 +115,7 @@ TEST_F(device_test, device_workflow_neg_1) {
 }
 
 /// \brief Device WF_N_3
+/// \ref WF_N_3
 TEST_F(device_test, device_workflow_neg_3) {
     device_feeder feeder;
     feeder.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -113,6 +123,7 @@ TEST_F(device_test, device_workflow_neg_3) {
 }
 
 /// \brief Device WF_N_5
+/// \ref WF_N_5
 TEST_F(device_test, DISABLED_device_workflow_neg_5) {
     device_feeder feeder1, feeder1A;
     feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
@@ -128,6 +139,7 @@ TEST_F(device_test, DISABLED_device_workflow_neg_5) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

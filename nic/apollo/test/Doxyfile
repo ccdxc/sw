@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "Apollo Tests"
+PROJECT_NAME    = "PDS TEST"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       =
+OUTPUT_DIRECTORY    = /tmp
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -733,7 +733,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = apollo/test
+INPUT    = ./apollo/test/mapping/main.cc ./apollo/test/scale/main.cc ./apollo/test/subnet/main.cc ./apollo/test/tep/main.cc ./apollo/test/utils/api_base.hpp ./apollo/test/utils/base.hpp ./apollo/test/utils/feeder.hpp ./apollo/test/utils/workflow1.hpp ./apollo/test/vnic/main.cc ./apollo/test/device/main.cc ./apollo/test/policy/main.cc ./apollo/test/route/main.cc ./apollo/test/mirror/main.cc ./apollo/test/vpc/main.cc ./apollo/test/nexthop/main.cc ./apollo/test/svc_mapping/main.cc ./apollo/test/tag/main.cc ./apollo/test/vpc_peer/main.cc
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -759,7 +759,7 @@ FILE_PATTERNS          =
 # be searched for input files as well.
 # The default value is: NO.
 
-RECURSIVE              = YES
+RECURSIVE    = NO
 
 # The EXCLUDE tag can be used to specify files and/or directories that should be
 # excluded from the INPUT source files. This way you can easily exclude a

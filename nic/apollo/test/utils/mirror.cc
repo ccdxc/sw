@@ -2,12 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the mirror test utility routines implementation
-///
-//----------------------------------------------------------------------------
-
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/base.hpp"

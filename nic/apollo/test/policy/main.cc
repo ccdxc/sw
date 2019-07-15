@@ -13,7 +13,7 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-
+/// \cond
 // Globals
 static constexpr uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY;
 static constexpr uint16_t g_num_stateful_rules = 512;
@@ -43,15 +43,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // Policy test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup SUBNET_TEST
+/// \defgroup POLICY_TEST Policy Tests
 /// @{
 
 /// \brief POLICY WF_1
+/// \ref WF_1
 TEST_F(policy, policy_workflow_1) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder;
@@ -63,6 +64,7 @@ TEST_F(policy, policy_workflow_1) {
 }
 
 /// \brief POLICY WF_2
+/// \ref WF_2
 TEST_F(policy, policy_workflow_2) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder;
@@ -77,6 +79,7 @@ TEST_F(policy, policy_workflow_2) {
 }
 
 /// \brief POLICY WF_3
+/// \ref WF_3
 TEST_F(policy, policy_workflow_3) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
     policy_feeder feeder1, feeder2, feeder3;
@@ -94,6 +97,7 @@ TEST_F(policy, policy_workflow_3) {
 }
 
 /// \brief POLICY WF_4
+/// \ref WF_4
 TEST_F(policy, policy_workflow_4) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder;
@@ -104,6 +108,7 @@ TEST_F(policy, policy_workflow_4) {
 }
 
 /// \brief POLICY WF_5
+/// \ref WF_5
 TEST_F(policy, policy_workflow_5) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
     policy_feeder feeder1, feeder2, feeder3;
@@ -118,6 +123,7 @@ TEST_F(policy, policy_workflow_5) {
 }
 
 /// \brief POLICY WF_6
+/// \ref WF_6
 TEST_F(policy, policy_workflow_6) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A, feeder1B;
@@ -135,6 +141,7 @@ TEST_F(policy, policy_workflow_6) {
 }
 
 /// \brief POLICY WF_7
+/// \ref WF_7
 TEST_F(policy, policy_workflow_7) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A, feeder1B;
@@ -152,6 +159,7 @@ TEST_F(policy, policy_workflow_7) {
 }
 
 /// \brief POLICY WF_8
+/// \ref WF_8
 TEST_F(policy, DISABLED_policy_workflow_8) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A, feeder1B;
@@ -169,6 +177,7 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
 }
 
 /// \brief POLICY WF_9
+/// \ref WF_9
 TEST_F(policy, policy_workflow_9) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A;
@@ -183,6 +192,7 @@ TEST_F(policy, policy_workflow_9) {
 }
 
 /// \brief POLICY WF_10
+/// \ref WF_10
 TEST_F(policy, DISABLED_policy_workflow_10) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
                   key4 = {.id = 100};
@@ -212,6 +222,7 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
 }
 
 /// \brief POLICY WF_N_1
+/// \ref WF_N_1
 TEST_F(policy, policy_workflow_neg_1) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder;
@@ -223,6 +234,7 @@ TEST_F(policy, policy_workflow_neg_1) {
 }
 
 /// \brief POLICY WF_N_2
+/// \ref WF_N_2
 /// \brief Create more than maximum number of policies supported.
 /// [ Create SetMax+1] - Read
 // @saratk - need to enable this after fixing the max policy value; search
@@ -239,6 +251,7 @@ TEST_F(policy, policy_workflow_neg_2) {
 }
 
 /// \brief POLICY WF_N_3
+/// \ref WF_N_3
 TEST_F(policy, policy_workflow_neg_3) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder;
@@ -250,6 +263,7 @@ TEST_F(policy, policy_workflow_neg_3) {
 }
 
 /// \brief POLICY WF_N_4
+/// \ref WF_N_4
 TEST_F(policy, policy_workflow_neg_4) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
     policy_feeder feeder1, feeder2;
@@ -263,6 +277,7 @@ TEST_F(policy, policy_workflow_neg_4) {
 }
 
 /// \brief POLICY WF_N_5
+/// \ref WF_N_5
 TEST_F(policy, DISABLED_policy_workflow_neg_5) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A;
@@ -277,6 +292,7 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
 }
 
 /// \brief POLICY WF_N_6
+/// \ref WF_N_6
 TEST_F(policy, policy_workflow_neg_6) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A;
@@ -291,6 +307,7 @@ TEST_F(policy, policy_workflow_neg_6) {
 }
 
 /// \brief POLICY WF_N_7
+/// \ref WF_N_7
 TEST_F(policy, policy_workflow_neg_7) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
     policy_feeder feeder1, feeder1A, feeder2;
@@ -308,6 +325,7 @@ TEST_F(policy, policy_workflow_neg_7) {
 }
 
 /// \brief POLICY WF_N_8
+/// \ref WF_N_8
 TEST_F(policy, policy_workflow_neg_8) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
     policy_feeder feeder1, feeder2;
@@ -349,6 +367,7 @@ TEST_F(policy, policy_workflow_neg_9) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

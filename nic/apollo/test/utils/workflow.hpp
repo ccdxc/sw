@@ -2,13 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains all workflows
-///
-//----------------------------------------------------------------------------
-
-
 #ifndef __TEST_UTILS_WORKFLOW_HPP__
 #define __TEST_UTILS_WORKFLOW_HPP__
 

@@ -15,20 +15,28 @@
 
 namespace api_test {
 
-// Base class for feeder
+/// \defgroup PDS_FEEDER Feeder module
+/// @{
+
+/// \brief Base class for feeder
+/// This class will be used by all modules to create single or multiple
+/// configuration specs
 class feeder {
 public:
-    uint32_t num_obj;
+    uint32_t num_obj;    ///< Number of objects created
 
-    // Iterate helper routines
+    /// \brief Initialize the iterator
     void iter_init(void) { cur_iter_pos = 0; }
+    /// \brief Returns true if there are more objects 
     bool iter_more(void) const { return (cur_iter_pos < num_obj); }
-
+    /// \brief Whether this object support read
     bool read_unsupported(void) const { return false; }
 
 protected:
-    uint32_t cur_iter_pos;
+    uint32_t cur_iter_pos;  ///< Current iterator position
 };
+
+/// @}
 
 }    // namespace api_test
 

@@ -19,8 +19,7 @@
 #include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
-/// \defgroup PDS_VPC VPC API
-/// @{
+/// \cond DO_NOT_DOCUMENT
 
 typedef enum pds_clock_freq_e {
     PDS_CLOCK_FREQUENCY_833  = 0,
@@ -99,6 +98,5 @@ sdk_ret_t pds_fte_table_stats_clear(void);
 
 }    // namespace debug
 
-/// \@}
-
+/// \endcond
 #endif    // __INCLUDE_API_PDS_DEBUG_HPP__

@@ -14,7 +14,7 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-
+/// \cond
 // Globals
 static const char * const k_base_nh_ip = "50.50.1.1";
 static const std::string k_base_dipi = "50::50:1:1";
@@ -40,15 +40,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // TEP test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup TEP
+/// \defgroup TEP TEP Tests
 /// @{
 
 /// \brief TEP WF_1
+/// \ref WF_1
 TEST_F(tep_test, tep_workflow_1) {
     tep_feeder feeder;
 
@@ -61,6 +62,7 @@ TEST_F(tep_test, tep_workflow_1) {
 }
 
 /// \brief TEP WF_2
+/// \ref WF_2
 TEST_F(tep_test, tep_workflow_2) {
     tep_feeder feeder;
 
@@ -73,6 +75,7 @@ TEST_F(tep_test, tep_workflow_2) {
 }
 
 /// \brief TEP WF_3
+/// \ref WF_3
 TEST_F(tep_test, tep_workflow_3) {
     tep_feeder feeder1, feeder2, feeder3;
 
@@ -92,6 +95,7 @@ TEST_F(tep_test, tep_workflow_3) {
 }
 
 /// \brief TEP WF_4
+/// \ref WF_4
 TEST_F(tep_test, tep_workflow_4) {
     tep_feeder feeder;
 
@@ -104,6 +108,7 @@ TEST_F(tep_test, tep_workflow_4) {
 }
 
 /// \brief TEP WF_5
+/// \ref WF_5
 TEST_F(tep_test, tep_workflow_5) {
     tep_feeder feeder1, feeder2, feeder3;
 
@@ -123,6 +128,7 @@ TEST_F(tep_test, tep_workflow_5) {
 }
 
 /// \brief TEP WF_6
+/// \ref WF_6
 TEST_F(tep_test, tep_workflow_6) {
     tep_feeder feeder1, feeder1A, feeder1B;
 
@@ -147,6 +153,7 @@ TEST_F(tep_test, tep_workflow_6) {
 }
 
 /// \brief TEP WF_7
+/// \ref WF_7
 TEST_F(tep_test, tep_workflow7) {
     tep_feeder feeder1, feeder1A, feeder1B;
 
@@ -171,6 +178,7 @@ TEST_F(tep_test, tep_workflow7) {
 }
 
 /// \brief TEP WF_8
+/// \ref WF_8
 TEST_F(tep_test, DISABLED_tep_workflow8) {
     tep_feeder feeder1, feeder1A, feeder1B;
 
@@ -195,6 +203,7 @@ TEST_F(tep_test, DISABLED_tep_workflow8) {
 }
 
 /// \brief TEP WF_9
+/// \ref WF_9
 TEST_F(tep_test, tep_workflow9) {
     tep_feeder feeder1, feeder1A;
 
@@ -214,6 +223,7 @@ TEST_F(tep_test, tep_workflow9) {
 }
 
 /// \brief TEP WF_10
+/// \ref WF_10
 TEST_F(tep_test, DISABLED_tep_workflow10) {
     tep_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
@@ -244,6 +254,7 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
 }
 
 /// \brief TEP WF_N_1
+/// \ref WF_N_1
 TEST_F(tep_test, tep_workflow_neg_1) {
     tep_feeder feeder;
 
@@ -256,6 +267,7 @@ TEST_F(tep_test, tep_workflow_neg_1) {
 }
 
 /// \brief TEP WF_N_2
+/// \ref WF_N_2
 TEST_F(tep_test, tep_workflow_neg_2) {
     tep_feeder feeder;
 
@@ -268,6 +280,7 @@ TEST_F(tep_test, tep_workflow_neg_2) {
 }
 
 /// \brief TEP WF_N_3
+/// \ref WF_N_3
 TEST_F(tep_test, tep_workflow_neg_3) {
     tep_feeder feeder;
 
@@ -280,6 +293,7 @@ TEST_F(tep_test, tep_workflow_neg_3) {
 }
 
 /// \brief TEP WF_N_4
+/// \ref WF_N_4
 TEST_F(tep_test, tep_workflow_neg_4) {
     tep_feeder feeder1, feeder2;
 
@@ -296,6 +310,7 @@ TEST_F(tep_test, tep_workflow_neg_4) {
 }
 
 /// \brief TEP WF_N_5
+/// \ref WF_N_5
 TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
     tep_feeder feeder1, feeder1A;
 
@@ -314,6 +329,7 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
 }
 
 /// \brief TEP WF_N_6
+/// \ref WF_N_6
 TEST_F(tep_test, tep_workflow_neg_6) {
     tep_feeder feeder1, feeder1A;
 
@@ -332,6 +348,7 @@ TEST_F(tep_test, tep_workflow_neg_6) {
 }
 
 /// \brief TEP WF_N_7
+/// \ref WF_N_7
 TEST_F(tep_test, tep_workflow_neg_7) {
     tep_feeder feeder1, feeder1A, feeder2;
 
@@ -352,6 +369,7 @@ TEST_F(tep_test, tep_workflow_neg_7) {
 }
 
 /// \brief TEP WF_N_8
+/// \ref WF_N_8
 TEST_F(tep_test, tep_workflow_neg_8) {
     tep_feeder feeder1, feeder2;
 
@@ -376,6 +394,7 @@ TEST_F(tep_test, tep_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

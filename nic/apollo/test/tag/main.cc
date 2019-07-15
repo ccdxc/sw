@@ -14,7 +14,7 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-
+/// \cond
 // Globals
 static constexpr int k_max_tag_table = 4;
 static constexpr int k_max_prefixes_per_tbl = PDS_MAX_PREFIX_PER_TAG;
@@ -39,15 +39,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // Tag table test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup Tag table
+/// \defgroup TAG_TESTS Tag table tests
 /// @{
 
-/// \brief RTag table WF_1
+/// \brief Tag table WF_1
+/// \ref WF_1
 TEST_F(tag_test, v4v6_tag_table_workflow_1) {
     tag_feeder feeder;
 
@@ -63,6 +64,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_1) {
 }
 
 /// \brief Tag table WF_2
+/// \ref WF_2
 TEST_F(tag_test, v4v6_tag_table_workflow_2) {
     tag_feeder feeder;
 
@@ -78,6 +80,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_2) {
 }
 
 /// \brief Tag table WF_3
+/// \ref WF_3
 TEST_F(tag_test, v4v6_tag_table_workflow_3) {
     tag_feeder feeder1, feeder2, feeder3;
 
@@ -101,6 +104,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_3) {
 }
 
 /// \brief Tag table WF_4
+/// \ref WF_4
 TEST_F(tag_test, v4v6_tag_table_workflow_4) {
     tag_feeder feeder;
 
@@ -116,6 +120,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_4) {
 }
 
 /// \brief Tag table WF_5
+/// \ref WF_5
 TEST_F(tag_test, v4v6_tag_table_workflow_5) {
     tag_feeder feeder1, feeder2, feeder3;
 
@@ -139,6 +144,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_5) {
 }
 
 /// \brief Tag table WF_6
+/// \ref WF_6
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_6) {
     tag_feeder feeder1, feeder1A, feeder1B;
 
@@ -155,6 +161,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_6) {
 }
 
 /// \brief Tag table WF_7
+/// \ref WF_7
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_7) {
     tag_feeder feeder1, feeder1A, feeder1B;
 
@@ -171,6 +178,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_7) {
 }
 
 /// \brief Tag table WF_8
+/// \ref WF_8
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_8) {
     tag_feeder feeder1, feeder1A, feeder1B;
 
@@ -200,6 +208,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_9) {
 }
 
 /// \brief Tag table WF_10
+/// \ref WF_10
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_10) {
     tag_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;
 
@@ -221,6 +230,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_10) {
 }
 
 /// \brief Tag table WF_N_1
+/// \ref WF_N_1
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_1) {
     tag_feeder feeder;
 
@@ -236,6 +246,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_1) {
 }
 
 /// \brief Tag table WF_N_2
+/// \ref WF_N_2
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_2) {
     tag_feeder feeder;
 
@@ -251,6 +262,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_2) {
 }
 
 /// \brief Tag table WF_N_3
+/// \ref WF_N_3
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_3) {
     tag_feeder feeder;
 
@@ -266,6 +278,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_3) {
 }
 
 /// \brief Tag table WF_N_4
+/// \ref WF_N_4
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_4) {
     tag_feeder feeder1, feeder2;
 
@@ -285,6 +298,7 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_4) {
 }
 
 /// \brief Tag table WF_N_5
+/// \ref WF_N_5
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_5) {
     tag_feeder feeder1, feeder1A;
 
@@ -298,6 +312,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_5) {
 }
 
 /// \brief Tag table WF_N_6
+/// \ref WF_N_6
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_6) {
     tag_feeder feeder1, feeder1A;
 
@@ -311,6 +326,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_6) {
 }
 
 /// \brief Tag table WF_N_7
+/// \ref WF_N_7
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_7) {
     tag_feeder feeder1, feeder2, feeder1A;
 
@@ -325,6 +341,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_7) {
 }
 
 /// \brief Tag table WF_N_8
+/// \ref WF_N_8
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_8) {
     tag_feeder feeder1 = {}, feeder2 = {};
 
@@ -343,6 +360,7 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

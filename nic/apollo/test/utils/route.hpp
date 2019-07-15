@@ -2,11 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the route table test utility routines
-///
-//----------------------------------------------------------------------------
 
 #ifndef __TEST_UTILS_ROUTE_TABLE_HPP__
 #define __TEST_UTILS_ROUTE_TABLE_HPP__

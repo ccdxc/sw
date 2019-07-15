@@ -2,12 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the nh test utility routines implementation
-///
-//----------------------------------------------------------------------------
-
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/encap_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
@@ -17,7 +11,7 @@
 namespace api_test {
 
 //----------------------------------------------------------------------------
-// VPC feeder class routines
+// NEXTHOP feeder class routines
 //----------------------------------------------------------------------------
 
 void

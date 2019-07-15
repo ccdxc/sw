@@ -2,11 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the vpc peer test utility routines
-///
-//----------------------------------------------------------------------------
 
 #ifndef __TEST_UTILS_VPC_PEER_HPP__
 #define __TEST_UTILS_VPC_PEER_HPP__

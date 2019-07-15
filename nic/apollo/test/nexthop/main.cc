@@ -14,7 +14,7 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-
+/// \cond
 // Globals
 static const std::string k_base_nh_ip = "50.50.1.1";
 static constexpr uint64_t k_base_mac = 0x0E0D0A0B0200;
@@ -37,15 +37,16 @@ protected:
         pds_test_base::TearDownTestCase();
     }
 };
-
+/// \endcond
 //----------------------------------------------------------------------------
 // NH test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup NH
+/// \defgroup NH Nexthop Tests
 /// @{
 
 /// \brief NH WF_1
+/// \ref WF_1
 TEST_F(nh_test, nh_workflow_1) {
     nexthop_feeder feeder;
 
@@ -54,6 +55,7 @@ TEST_F(nh_test, nh_workflow_1) {
 }
 
 /// \brief NH WF_2
+/// \ref WF_2
 TEST_F(nh_test, nh_workflow_2) {
     nexthop_feeder feeder;
 
@@ -62,6 +64,7 @@ TEST_F(nh_test, nh_workflow_2) {
 }
 
 /// \brief NH WF_3
+/// \ref WF_3
 TEST_F(nh_test, nh_workflow_3) {
     nexthop_feeder feeder1, feeder2, feeder3;
 
@@ -72,6 +75,7 @@ TEST_F(nh_test, nh_workflow_3) {
 }
 
 /// \brief NH WF_4
+/// \ref WF_4
 TEST_F(nh_test, nh_workflow_4) {
     nexthop_feeder feeder;
 
@@ -80,6 +84,7 @@ TEST_F(nh_test, nh_workflow_4) {
 }
 
 /// \brief NH WF_5
+/// \ref WF_5
 TEST_F(nh_test, nh_workflow_5) {
     nexthop_feeder feeder1, feeder2, feeder3;
 
@@ -90,6 +95,7 @@ TEST_F(nh_test, nh_workflow_5) {
 }
 
 /// \brief NH WF_6
+/// \ref WF_6
 TEST_F(nh_test, nh_workflow_6) {
     nexthop_feeder feeder1, feeder1A, feeder1B;
 
@@ -102,6 +108,7 @@ TEST_F(nh_test, nh_workflow_6) {
 }
 
 /// \brief NH WF_7
+/// \ref WF_7
 TEST_F(nh_test, nh_workflow_7) {
     nexthop_feeder feeder1, feeder1A, feeder1B;
 
@@ -114,6 +121,7 @@ TEST_F(nh_test, nh_workflow_7) {
 }
 
 /// \brief NH WF_8
+/// \ref WF_8
 TEST_F(nh_test, DISABLED_nh_workflow_8) {
     nexthop_feeder feeder1, feeder1A, feeder1B;
 
@@ -126,6 +134,7 @@ TEST_F(nh_test, DISABLED_nh_workflow_8) {
 }
 
 /// \brief NH WF_9
+/// \ref WF_9
 TEST_F(nh_test, nh_workflow_9) {
     nexthop_feeder feeder1, feeder1A;
 
@@ -136,6 +145,7 @@ TEST_F(nh_test, nh_workflow_9) {
 }
 
 /// \brief NH WF_10
+/// \ref WF_10
 TEST_F(nh_test, DISABLED_nh_workflow_10) {
     nexthop_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
@@ -152,6 +162,7 @@ TEST_F(nh_test, DISABLED_nh_workflow_10) {
 }
 
 /// \brief NH WF_N_1
+/// \ref WF_N_1
 TEST_F(nh_test, nh_workflow_neg_1) {
     nexthop_feeder feeder;
 
@@ -160,6 +171,7 @@ TEST_F(nh_test, nh_workflow_neg_1) {
 }
 
 /// \brief NH WF_N_2
+/// \ref WF_N_2
 TEST_F(nh_test, DISABLED_nh_workflow_neg_2) {
     nexthop_feeder feeder;
 
@@ -169,6 +181,7 @@ TEST_F(nh_test, DISABLED_nh_workflow_neg_2) {
 }
 
 /// \brief NH WF_N_3
+/// \ref WF_N_3
 TEST_F(nh_test, nh_workflow_neg_3) {
     nexthop_feeder feeder;
 
@@ -177,6 +190,7 @@ TEST_F(nh_test, nh_workflow_neg_3) {
 }
 
 /// \brief NH WF_N_4
+/// \ref WF_N_4
 TEST_F(nh_test, nh_workflow_neg_4) {
     nexthop_feeder feeder1, feeder2;
 
@@ -186,6 +200,7 @@ TEST_F(nh_test, nh_workflow_neg_4) {
 }
 
 /// \brief NH WF_N_5
+/// \ref WF_N_5
 TEST_F(nh_test, DISABLED_nh_workflow_neg_5) {
     nexthop_feeder feeder1, feeder1A;
 
@@ -196,6 +211,7 @@ TEST_F(nh_test, DISABLED_nh_workflow_neg_5) {
 }
 
 /// \brief NH WF_N_6
+/// \ref WF_N_6
 TEST_F(nh_test, DISABLED_nh_workflow_neg_6) {
     nexthop_feeder feeder1, feeder1A;
 
@@ -206,6 +222,7 @@ TEST_F(nh_test, DISABLED_nh_workflow_neg_6) {
 }
 
 /// \brief NH WF_N_7
+/// \ref WF_N_7
 TEST_F(nh_test, nh_workflow_neg_7) {
     nexthop_feeder feeder1, feeder1A, feeder2;
 
@@ -216,6 +233,7 @@ TEST_F(nh_test, nh_workflow_neg_7) {
 }
 
 /// \brief NH WF_N_8
+/// \ref WF_N_8
 TEST_F(nh_test, nh_workflow_neg_8) {
     nexthop_feeder feeder1, feeder2;
 
@@ -232,6 +250,7 @@ TEST_F(nh_test, nh_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
+/// @private
 int
 main (int argc, char **argv)
 {

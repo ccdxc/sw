@@ -2,10 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-///
-/// \file
-/// This file contains the basic artemis pipeline test case
-///
+// This file contains the basic artemis pipeline test case
 //----------------------------------------------------------------------------
 
 #include <stdio.h>

@@ -16,18 +16,18 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 
-/// \defgroup PDS_MIRROR    mirrir session APIs
+/// \defgroup PDS_MIRROR    mirror session APIs
 /// @{
 
-#define PDS_MAX_MIRROR_SESSION    8
+#define PDS_MAX_MIRROR_SESSION    8   ///< Maximum mirror sessions
 
-///< \brief    RSPAN configuration
+/// \brief    RSPAN configuration
 typedef struct pds_rspan_spec_s {
     pds_ifindex_t interface;    ///< outgoing interface
     pds_encap_t encap;          ///< encap details
 } __PACK__ pds_rspan_spec_t;
 
-///< \brief    ERSPAN configuration
+/// \brief    ERSPAN configuration
 typedef struct pds_erspan_spec_s {
     pds_vpc_key_t vpc;    ///< vpc of the destination IP
     ip_addr_t dst_ip;     ///< IP address of ERSPAN destination
@@ -43,7 +43,7 @@ typedef enum pds_mirror_session_type_e {
     PDS_MIRROR_SESSION_TYPE_MAX    = PDS_MIRROR_SESSION_TYPE_ERSPAN,
 } pds_mirror_session_type_t;
 
-///< \brief    mirror session configuration
+/// \brief    mirror session configuration
 typedef struct pds_mirror_session_spec_s {
     pds_mirror_session_key_t key;         ///< key of the mirror session
     pds_mirror_session_type_t type;       ///< mirror session type
@@ -54,11 +54,11 @@ typedef struct pds_mirror_session_spec_s {
     };
 } __PACK__ pds_mirror_session_spec_t;
 
-///< \brief    mirror session operational status
+/// \brief    mirror session operational status
 typedef struct pds_mirror_session_status_s {
 } __PACK__ pds_mirror_session_status_t;
 
-///< \brief    mirror session statistics, if any
+/// \brief    mirror session statistics, if any
 typedef struct pds_mirror_session_stats_s {
 } __PACK__ pds_mirror_session_stats_t;
 
