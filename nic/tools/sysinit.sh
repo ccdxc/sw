@@ -110,9 +110,9 @@ rm -f *.log
 rm -f agent.log* /tmp/*.db
 
 if [ -z "$GOLDFW" ]; then
-    $NIC_DIR/bin/sysmgr /nic/conf/sysmgr.json &
+    PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr /nic/conf/sysmgr.json &
 else
-    $NIC_DIR/bin/sysmgr /nic/conf/sysmgr_gold.json &
+    PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr /nic/conf/sysmgr_gold.json &
 fi
 
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Sysmgr failed to start!" && exit 1
