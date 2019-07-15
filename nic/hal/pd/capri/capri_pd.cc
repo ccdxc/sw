@@ -151,6 +151,13 @@ pd_capri_barco_ring_meta_get (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
+pd_capri_barco_ring_meta_config_get (pd_func_args_t *pd_func_args)
+{
+    pd_capri_barco_ring_meta_config_get_args_t *args = pd_func_args->pd_capri_barco_ring_meta_config_get;
+    return capri_barco_get_meta_config_info(args->ring_type, args->meta);
+}
+
+hal_ret_t
 pd_capri_barco_asym_add_pend_req(pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_add_pend_req_args_t *args = pd_func_args->pd_capri_barco_asym_add_pend_req;

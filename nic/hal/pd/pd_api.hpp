@@ -2708,6 +2708,11 @@ typedef struct pd_capri_barco_ring_meta_get_args_s {
     uint32_t *ci;
 } __PACK__ pd_capri_barco_ring_meta_get_args_t;
 
+typedef struct pd_capri_barco_ring_meta_config_get_args_s {
+    types::BarcoRings ring_type;
+    barco_ring_meta_config_t *meta;
+} __PACK__ pd_capri_barco_ring_meta_config_get_args_t;
+
 // crypto
 typedef struct pd_capri_barco_asym_async_args_s {
     bool async_en;
@@ -3567,7 +3572,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_TCP_RINGS_CTXT_INIT,      331, "PD_FUNC_ID_TCP_RINGS_CTXT_INIT")\
     ENTRY(PD_FUNC_ID_TCP_RINGS_REGISTER,       332, "PD_FUNC_ID_TCP_RINGS_REGISTER")\
     ENTRY(PD_FUNC_ID_TCP_RINGS_POLL,           333, "PD_FUNC_ID_TCP_RINGS_POLL")\
-    ENTRY(PD_FUNC_ID_MAX,                      334, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, 334, "PD_FUNC_ID_BARCO_RING_META_CONFIG_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      335, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3926,6 +3932,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_req_descr_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_symm_req_descr_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_get);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_config_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecc_point_mul_p256);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_gen);
@@ -4418,6 +4425,7 @@ PD_FUNCP_TYPEDEF(pd_capri_program_to_base_addr);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_symm_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_get);
+PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_config_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecc_point_mul_p256);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_gen);

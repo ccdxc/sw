@@ -61,6 +61,7 @@ service Internal {
   rpc GetOpaqueTagAddr (GetOpaqueTagAddrRequestMsg) returns (GetOpaqueTagAddrResponseMsg) {}
   rpc BarcoGetReqDescrEntry (BarcoGetReqDescrEntryRequestMsg) returns (BarcoGetReqDescrEntryResponseMsg) {}
   rpc BarcoGetRingMeta      (BarcoGetRingMetaRequestMsg) returns (BarcoGetRingMetaResponseMsg) {}
+  rpc BarcoGetRingMetaConfig (BarcoGetRingMetaConfigRequestMsg) returns (BarcoGetRingMetaConfigResponseMsg) {}
 
   // Crypto keys
   rpc CryptoKeyCreate (CryptoKeyCreateRequestMsg) returns (CryptoKeyCreateResponseMsg) {}
@@ -68,6 +69,9 @@ service Internal {
   rpc CryptoKeyRead (CryptoKeyReadRequestMsg) returns (CryptoKeyReadResponseMsg) {}
   rpc CryptoKeyUpdate (CryptoKeyUpdateRequestMsg) returns (CryptoKeyUpdateResponseMsg) {}
   rpc CryptoKeyDelete (CryptoKeyDeleteRequestMsg) returns (CryptoKeyDeleteResponseMsg) {}
+  rpc CryptoAsymKeyCreate (CryptoAsymKeyCreateRequestMsg) returns (CryptoAsymKeyCreateResponseMsg) {}
+  rpc CryptoAsymKeyDelete (CryptoAsymKeyDeleteRequestMsg) returns (CryptoAsymKeyDeleteResponseMsg) {}
+  rpc CryptoAsymKeyWrite (CryptoAsymKeyWriteRequestMsg) returns (CryptoAsymKeyWriteResponseMsg) {}
 
   //CryptoApi
   rpc CryptoApiInvoke (CryptoApiRequestMsg) returns (CryptoApiResponseMsg) {}
@@ -899,6 +903,36 @@ message BarcoGetRingMetaResponseMsg {
   repeated BarcoGetRingMetaResponse    response = 1;    // batch get response
 }
 
+// BarcoGetRingMetaConfigRequest - get ring meta config data for a barco ring
+message BarcoGetRingMetaConfigRequest {
+  types.BarcoRings     ring_type     = 1;    // Barco Ring Type
+}
+
+// BarcoGetRingMetaConfigRequestMsg is batched GET requests for barco rings
+message BarcoGetRingMetaConfigRequestMsg {
+  repeated BarcoGetRingMetaConfigRequest    request = 1;    // batched get request
+}
+
+// BarcoGetRingMetaConfigResponse returns the barco ring meta data
+// only if api_status indicates success, other fields are valid
+message BarcoGetRingMetaConfigResponse {
+  types.ApiStatus    api_status     = 1;    // API status code
+  types.BarcoRings   ring_type      = 2;    // Barco Ring Type
+  uint64             ring_base      = 3;
+  uint64             producer_idx_addr = 4;
+  uint64             shadow_pndx_addr  = 5;
+  uint64             opaque_tag_addr   = 6;
+  uint32             ring_size         = 7;
+  uint32             desc_size         = 8;
+  uint32             pndx_size         = 9;
+  uint32             opaque_tag_size   = 10;
+}
+
+// BarcoGetRingMetaConfigResponseMsg is batched response to BarcoGetRingMetaConfigRequestMsg
+message BarcoGetRingMetaConfigResponseMsg {
+  repeated BarcoGetRingMetaConfigResponse    response = 1;    // batch get response
+}
+
 message CryptoKeyCreateRequest {
 }
 message CryptoKeyCreateRequestMsg {
@@ -977,6 +1011,52 @@ message CryptoKeyDeleteResponse {
 }
 message CryptoKeyDeleteResponseMsg {
     repeated CryptoKeyDeleteResponse response   = 1;
+}
+
+message CryptoAsymKeyCreateRequest {
+}
+message CryptoAsymKeyCreateRequestMsg {
+    repeated CryptoAsymKeyCreateRequest request = 1;
+}
+message CryptoAsymKeyCreateResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoAsymKeyCreateResponseMsg {
+    repeated CryptoAsymKeyCreateResponse response= 1;
+}
+
+message CryptoAsymKeyDeleteRequest {
+  uint32                keyindex                = 1;
+}
+message CryptoAsymKeyDeleteRequestMsg {
+    repeated CryptoAsymKeyDeleteRequest request = 1;
+}
+message CryptoAsymKeyDeleteResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoAsymKeyDeleteResponseMsg {
+    repeated CryptoAsymKeyDeleteResponse response= 1;
+}
+
+message CryptoAsymKeySpec {
+  uint32                keyindex                = 1;
+  bytes                 key                     = 2;
+}
+
+message CryptoAsymKeyWriteRequest {
+  CryptoAsymKeySpec         key                 = 1;
+}
+message CryptoAsymKeyWriteRequestMsg {
+    repeated CryptoAsymKeyWriteRequest request  = 1;
+}
+message CryptoAsymKeyWriteResponse{
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoAsymKeyWriteResponseMsg {
+    repeated CryptoAsymKeyWriteResponse response= 1;
 }
 
 // Types of Crypto Hash algos

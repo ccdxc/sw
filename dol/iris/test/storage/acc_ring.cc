@@ -71,8 +71,8 @@ acc_ring_t::acc_ring_t(const char *ring_name,
         eos_ignore_addr(ring_opaque_tag_pa, opaque_data_size);
     }
 
-    printf("%s ring_base_mem_pa 0x%lx ring_opaque_tag_pa 0x%lx\n",
-           ring_name, ring_base_mem_pa, ring_opaque_tag_pa);
+    OFFL_FUNC_INFO("{} ring_base_mem_pa {:#x} ring_opaque_tag_pa {:#x}",
+                   ring_name, ring_base_mem_pa, ring_opaque_tag_pa);
 }
 
 /*
@@ -194,7 +194,7 @@ acc_ring_t::push(const void *src_desc,
         break;
 
     default:
-        printf("%s unsupported push_type %d\n", ring_name, push_type);
+        OFFL_FUNC_ERR("{} unsupported push_type {}", ring_name, push_type);
         assert(0);
         break;
     }
@@ -229,8 +229,8 @@ acc_ring_t::resync(void)
     uint32_t    curr_shadow;
 
     curr_shadow = *((uint32_t *)shadow_pd_idx_mem->read_thru()) % ring_size;
-    printf("%s resync shadow %u to PI %u\n", ring_name,
-           curr_shadow, curr_pd_idx);
+    OFFL_FUNC_INFO("{} resync shadow {} to PI {}", ring_name,
+                   curr_shadow, curr_pd_idx);
     curr_pd_idx = curr_shadow;
     prev_pd_idx = curr_shadow;
 }
@@ -283,8 +283,8 @@ acc_ring_t::post_push(uint32_t push_amount)
          */
 
     default:
-        printf("%s nothing to do for curr_push_type %d\n",
-               ring_name, curr_push_type);
+        OFFL_FUNC_INFO("{} nothing to do for curr_push_type {}",
+                       ring_name, curr_push_type);
         curr_push_type = ACC_RING_PUSH_INVALID;
         break;
     }

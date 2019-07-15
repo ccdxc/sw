@@ -523,6 +523,35 @@ def run_hal_test_fips(port, args):
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
+# Run offload test
+def run_offload_test(port, args):
+    wait_for_hal()
+    bin_dir = nic_dir + "/../nic/build/x86_64/iris/bin"
+    script_dir = nic_dir + "/third-party/nist-cavp"
+    if args.rtl:
+        if args.offload_test:
+            cmd = ['./offload_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.offload_test, '--poll_interval', '3600', '--long_poll_interval', '3600']
+        else:
+            cmd = ['./offload_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--poll_interval', '3600', '--long_poll_interval', '3600']
+    else:
+        if args.offload_test:
+            cmd = ['./offload_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.offload_test]
+        else:
+            cmd = ['./offload_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip)]
+    if args.rtl:
+        cmd.append('--rtl')
+    if args.offload_test and args.offload_test == 'nicmgr':
+        cmd.extend(shlex.split('--nicmgr_config_file /sw/platform/src/app/nicmgrd/etc/offload.json'))
+
+    #pass additional arguments to offload_test
+    os.chdir(bin_dir)
+    if args.offload_runargs:
+        cmd.extend(shlex.split(args.offload_runargs))
+
+    print 'Executing command [%s]' % ', '.join(map(str, cmd))
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
+
 # Run filter tests for libiris-c.so
 def run_filter_gtest(args):
     #os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
@@ -1099,6 +1128,8 @@ def main():
                         help='Run storage dol as well.')
     parser.add_argument('--hal_test_fips', dest='hal_test_fips', action="store_true",
                         help='Run FIPS hal_test.')
+    parser.add_argument('--offload', dest='offload', action="store_true",
+                        help='Run offload dol as well.')
     parser.add_argument('--nicmgr', dest='nicmgr', action="store_true",
                         help='Run nicmgr standalone.')
     parser.add_argument('--nicmgr_platform_model_server', dest='nicmgr_platform_model_server', action="store_true",
@@ -1186,6 +1217,10 @@ def main():
                         help='any extra options that should be passed to storage as run_args.')
     parser.add_argument('--hal_test_fips_runargs', dest='hal_test_fips_runargs', default='',
                         help='FIPS hal_test command arguments.')
+    parser.add_argument('--offload_test', dest='offload_test', default=None,
+                        help='Run only a subtest of offload test suite')
+    parser.add_argument('--offload_runargs', dest='offload_runargs', default='',
+                        help='any extra options that should be passed to offload as run_args.')
     parser.add_argument('--no_error_check', dest='no_error_check', default=None,
                         action='store_true',
                         help='Disable model error checking')
@@ -1372,6 +1407,10 @@ def main():
         status = run_hal_test_fips(port, args)
         if status != 0:
             print "- hal_test failed, status=", status
+    elif args.offload:
+        status = run_offload_test(port, args)
+        if status != 0:
+            print "- offload_test failed, status=", status
     else:
         if args.mbt:
             mbt_port = find_port()

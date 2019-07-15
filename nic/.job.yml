@@ -88,6 +88,15 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
+  # ====================== Offload Tests ===========================
+  offload:
+    commands: ["make", "jobd/offload"]
+    owners: ["email:raghava@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-iris-x86
 
   # ====================== Config Tests ===========================
   #configtest:

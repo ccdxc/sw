@@ -151,4 +151,78 @@ hal_ret_t   cryptokey_delete(internal::CryptoKeyDeleteRequest &request,
     return ret;
 }
 
+hal_ret_t   cryptoasymkey_create(internal::CryptoAsymKeyCreateRequest &request,
+        internal::CryptoAsymKeyCreateResponse *response)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    int32_t             key_idx = -1;
+    pd::pd_crypto_asym_alloc_key_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    args.key_idx = &key_idx;
+    pd_func_args.pd_crypto_asym_alloc_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, &pd_func_args);
+
+    if ((ret != HAL_RET_OK) || (key_idx < 0)) {
+        response->set_api_status(types::API_STATUS_OUT_OF_MEM);
+    }
+    else {
+        response->set_keyindex((uint32_t) key_idx);
+        response->set_api_status(types::API_STATUS_OK);
+    }
+    return ret;
+}
+
+hal_ret_t   cryptoasymkey_write(internal::CryptoAsymKeyWriteRequest &request,
+        internal::CryptoAsymKeyWriteResponse *response)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    int32_t                     key_idx = -1;
+    crypto_asym_key_t           pd_key;
+    pd::pd_crypto_asym_write_key_args_s args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    const internal::CryptoAsymKeySpec &key = request.key();
+    key_idx = key.keyindex();
+
+    if (key_idx >= 0) {
+        memcpy((void *)&pd_key, (void *)key.key().data(), sizeof(pd_key));
+        args.key_idx = key_idx;
+        args.key = &pd_key;
+        pd_func_args.pd_crypto_asym_write_key = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            response->set_api_status(types::API_STATUS_ERR);
+        } else {
+            response->set_api_status(types::API_STATUS_OK);
+            response->set_keyindex(key_idx);
+        }
+    } else {
+        response->set_api_status(types::API_STATUS_INVALID_ARG);
+    }
+    return ret;
+}
+
+hal_ret_t   cryptoasymkey_delete(internal::CryptoAsymKeyDeleteRequest &request,
+        internal::CryptoAsymKeyDeleteResponse *response)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    int32_t                     key_idx = -1;
+    pd::pd_crypto_asym_free_key_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    key_idx = request.keyindex();
+    args.key_idx = key_idx;
+    pd_func_args.pd_crypto_asym_free_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        response->set_api_status(types::API_STATUS_INVALID_ARG);
+    }
+    else {
+        response->set_keyindex((uint32_t) key_idx);
+        response->set_api_status(types::API_STATUS_OK);
+    }
+    return ret;
+}
+
 }

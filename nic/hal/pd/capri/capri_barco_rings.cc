@@ -56,6 +56,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         sizeof(uint32_t),
+        sizeof(uint32_t),
         0,
         0,
         true,   // run-time modified based on platform
@@ -78,6 +79,7 @@ capri_barco_ring_t  barco_rings[] = {
         sizeof(uint32_t),
         sizeof(uint32_t),
         0,
+        0,
         true,   // run-time modified based on platform
         false,
         capri_barco_gcm0_init,
@@ -97,6 +99,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         sizeof(uint32_t),
         sizeof(uint32_t),
+        0,
         0,
         true,   // run-time modified based on platform
         false,
@@ -118,6 +121,7 @@ capri_barco_ring_t  barco_rings[] = {
         sizeof(uint32_t),
         sizeof(uint32_t),
         0,
+        0,
         true,   // run-time modified based on platform
         false,
         capri_barco_xts0_init,
@@ -138,6 +142,7 @@ capri_barco_ring_t  barco_rings[] = {
         sizeof(uint32_t),
         sizeof(uint32_t),
         0,
+        0,
         true,   // run-time modified based on platform
         false,
         capri_barco_xts1_init,
@@ -156,6 +161,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         sizeof(uint32_t),
+        0,
         0,
         0,
         true,   // run-time modified based on platform
@@ -178,6 +184,7 @@ capri_barco_ring_t  barco_rings[] = {
         sizeof(uint32_t),
         0,
         0,
+        0,
         true,   // run-time modified based on platform
         false,
         capri_barco_mpp1_init,
@@ -198,6 +205,7 @@ capri_barco_ring_t  barco_rings[] = {
         sizeof(uint32_t),
         0,
         0,
+        0,
         true,   // run-time modified based on platform
         false,
         capri_barco_mpp2_init,
@@ -216,6 +224,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         sizeof(uint32_t),
+        0,
         0,
         0,
         true,   // run-time modified based on platform
@@ -246,6 +255,7 @@ capri_barco_ring_t  barco_rings[] = {
         sizeof(uint32_t),
         sizeof(uint32_t),
         0,
+        0,
         true,   // run-time modified based on platform
         true,   //   "        "
         capri_barco_cp_init,
@@ -263,8 +273,9 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
-        0,
         sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
         0,
         true,   // run-time modified based on platform
         true,   //   "        "
@@ -286,6 +297,7 @@ capri_barco_ring_t  barco_rings[] = {
         sizeof(uint32_t),
         sizeof(uint32_t),
         0,
+        0,
         true,   // run-time modified based on platform
         true,   //   "        "
         capri_barco_dc_init,
@@ -303,8 +315,9 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
-        0,
         sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
         0,
         true,   // run-time modified based on platform
         true,   //   "        "
@@ -423,6 +436,7 @@ hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
 
     hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.pk_producer_idx.write();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.pk_producer_idx.get_offset();
 
     // CI is read-only
     //hens.dhs_crypto_ctl.pk_consumer_idx.fld(barco_ring->consumer_idx);
@@ -562,6 +576,7 @@ hal_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
 
     hens.dhs_crypto_ctl.xts_enc_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.xts_enc_producer_idx.write();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.xts_enc_producer_idx.get_offset();
 
     // CI is read-only
     //hens.dhs_crypto_ctl.xts_enc_consumer_idx.fld(barco_ring->consumer_idx);
@@ -648,6 +663,7 @@ hal_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
 
     hens.dhs_crypto_ctl.xts_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.xts_producer_idx.write();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.xts_producer_idx.get_offset();
 
     // CI is read-only
     //hens.dhs_crypto_ctl.xts_consumer_idx.fld(barco_ring->consumer_idx);
@@ -746,6 +762,7 @@ hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
 
     mpns.dhs_crypto_ctl.mpp0_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp0_producer_idx.write();
+    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp0_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld(barco_ring->consumer_idx);
@@ -921,6 +938,7 @@ hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
 
     mpns.dhs_crypto_ctl.mpp1_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp1_producer_idx.write();
+    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp1_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld(barco_ring->consumer_idx);
@@ -1013,6 +1031,7 @@ hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
 
     mpns.dhs_crypto_ctl.mpp2_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp2_producer_idx.write();
+    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp2_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
@@ -1105,6 +1124,7 @@ hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
 
     mpns.dhs_crypto_ctl.mpp3_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp3_producer_idx.write();
+    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp3_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
@@ -1202,6 +1222,7 @@ hal_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
 
     gcm0_pi = hens.dhs_crypto_ctl.gcm0_producer_idx.fld().convert_to<uint32_t>();
     gcm0_ci = hens.dhs_crypto_ctl.gcm0_consumer_idx.fld().convert_to<uint32_t>();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.gcm0_producer_idx.get_offset();
 
     assert((gcm0_pi == 0) && (gcm0_ci == 0));
 
@@ -1378,6 +1399,7 @@ hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
 
     gcm1_pi = hens.dhs_crypto_ctl.gcm1_producer_idx.fld().convert_to<uint32_t>();
     gcm1_ci = hens.dhs_crypto_ctl.gcm1_consumer_idx.fld().convert_to<uint32_t>();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.gcm1_producer_idx.get_offset();
 
     assert((gcm1_pi == 0) && (gcm1_ci == 0));
 
@@ -1458,6 +1480,7 @@ hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
 
     hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.write();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.get_offset();
 
     HAL_TRACE_DEBUG("Barco compression ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -1501,6 +1524,7 @@ hal_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
 
     hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.write();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.get_offset();
 
     HAL_TRACE_DEBUG("Barco compression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -1586,6 +1610,7 @@ hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
 
     hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.write();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.get_offset();
 
     HAL_TRACE_DEBUG("Barco decompression ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -1629,6 +1654,7 @@ hal_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring)
 
     hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.write();
+    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.get_offset();
 
     HAL_TRACE_DEBUG("Barco decompression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -1844,17 +1870,19 @@ hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr)
     return HAL_RET_OK;
 }
 
-hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type, uint64_t* shadow_pndx_addr,
-                                           uint32_t *shadow_pndx_size, uint32_t *desc_size,
-                                           uint32_t *opaque_tag_size)
+hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type,
+                                           barco_ring_meta_config_t *meta)
 {
-    *shadow_pndx_addr = barco_rings[ring_type].shadow_pndx_addr;
-    *desc_size = barco_rings[ring_type].descriptor_size;
-    *shadow_pndx_size = barco_rings[ring_type].shadow_pndx_size;
-    *opaque_tag_size = barco_rings[ring_type].opaque_tag_size;
+    meta->shadow_pndx_addr = barco_rings[ring_type].shadow_pndx_addr;
+    meta->desc_size = barco_rings[ring_type].descriptor_size;
+    meta->pndx_size = barco_rings[ring_type].shadow_pndx_size;
+    meta->opaque_tag_size = barco_rings[ring_type].opaque_tag_size;
+    meta->ring_base = barco_rings[ring_type].ring_base;
+    meta->producer_idx_addr = barco_rings[ring_type].producer_idx_addr;
+    meta->opaque_tag_addr = barco_rings[ring_type].opaque_tag_addr;
+    meta->ring_size = barco_rings[ring_type].ring_size;
     return HAL_RET_OK;
 }
-
 hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
                                        bool *sw_reset_capable, bool *sw_enable_capable)
 {

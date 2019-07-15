@@ -119,6 +119,7 @@ typedef struct capri_barco_ring_s {
     uint16_t            opaque_tag_size;    /*  size of opa tag                 */
     uint16_t            shadow_pndx_size;   /*  size of shadow pindex, if any   */
     uint64_t            shadow_pndx_addr;   /*  address of shadow pindx         */
+    uint64_t            producer_idx_addr;  /*  address of HW pindx register    */
     bool                sw_reset_capable;   /*  support soft ring reset         */
     bool                sw_enable_capable;  /*  support soft ring enable/disable*/
     /* TBD lock/spinlock for ring access */
@@ -210,9 +211,8 @@ static inline int get_opaque_tag_offset(types::BarcoRings ring_type)
     return (ring_type * CAPRI_BARCO_OPAQUE_TAG_ENTRY_SIZE);
 }
 
-hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type, uint64_t* shadow_pndx_addr,
-                                           uint32_t *shadow_pndx_size, uint32_t *desc_size,
-                                           uint32_t *opaque_tag_size);
+hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type,
+                                           barco_ring_meta_config_t *meta);
 hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
                                        bool *sw_reset_capable, bool *sw_enable_capable);
 

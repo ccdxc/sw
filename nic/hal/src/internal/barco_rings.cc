@@ -155,5 +155,42 @@ hal_ret_t barco_get_ring_meta(BarcoGetRingMetaRequest& request,
     return HAL_RET_OK;
 }
 
+hal_ret_t barco_get_ring_meta_config(BarcoGetRingMetaConfigRequest& request,
+			             BarcoGetRingMetaConfigResponseMsg *response_msg)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    pd::pd_capri_barco_ring_meta_config_get_args_t args;
+    barco_ring_meta_config_t meta = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    BarcoGetRingMetaConfigResponse *response = response_msg->add_response();
+
+    args.ring_type = request.ring_type();
+    args.meta = &meta;
+    pd_func_args.pd_capri_barco_ring_meta_config_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("BarcoGetRingMetaConfig({}): Failed, "
+		      "err: {}", types::BarcoRings_Name(request.ring_type()), ret);
+	response->set_api_status(types::API_STATUS_ERR);
+	return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("BarcoGetRingMetaConfig({}): succeeded ",
+		    types::BarcoRings_Name(request.ring_type()));
+
+    // fill in the common fields in the response
+    response->set_ring_type(request.ring_type());
+    response->set_ring_base(meta.ring_base);
+    response->set_ring_size(meta.ring_size);
+    response->set_producer_idx_addr(meta.producer_idx_addr);
+    response->set_shadow_pndx_addr(meta.shadow_pndx_addr);
+    response->set_opaque_tag_addr(meta.opaque_tag_addr);
+    response->set_desc_size(meta.desc_size);
+    response->set_pndx_size(meta.pndx_size);
+    response->set_opaque_tag_size(meta.opaque_tag_size);
+
+    response->set_api_status(types::API_STATUS_OK);
+    return HAL_RET_OK;
+}
+
 
 }

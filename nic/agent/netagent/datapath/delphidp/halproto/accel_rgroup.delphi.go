@@ -516,6 +516,10 @@ It has these top-level messages:
 	BarcoGetRingMetaRequestMsg
 	BarcoGetRingMetaResponse
 	BarcoGetRingMetaResponseMsg
+	BarcoGetRingMetaConfigRequest
+	BarcoGetRingMetaConfigRequestMsg
+	BarcoGetRingMetaConfigResponse
+	BarcoGetRingMetaConfigResponseMsg
 	CryptoKeyCreateRequest
 	CryptoKeyCreateRequestMsg
 	CryptoKeyCreateResponse
@@ -537,6 +541,19 @@ It has these top-level messages:
 	CryptoKeyDeleteRequestMsg
 	CryptoKeyDeleteResponse
 	CryptoKeyDeleteResponseMsg
+	CryptoAsymKeyCreateRequest
+	CryptoAsymKeyCreateRequestMsg
+	CryptoAsymKeyCreateResponse
+	CryptoAsymKeyCreateResponseMsg
+	CryptoAsymKeyDeleteRequest
+	CryptoAsymKeyDeleteRequestMsg
+	CryptoAsymKeyDeleteResponse
+	CryptoAsymKeyDeleteResponseMsg
+	CryptoAsymKeySpec
+	CryptoAsymKeyWriteRequest
+	CryptoAsymKeyWriteRequestMsg
+	CryptoAsymKeyWriteResponse
+	CryptoAsymKeyWriteResponseMsg
 	ECCPoint
 	CryptoAsymApiECCDomainParamsFp
 	CryptoAsymApiReqECCPointMulFp

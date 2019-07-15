@@ -8,6 +8,7 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/tests.cc \
                   ${MODULE_SRC_DIR}/nvme_dp_tests.cc \
                   ${MODULE_SRC_DIR}/queues.cc \
                   ${MODULE_SRC_DIR}/dp_mem.cc \
+                  ${MODULE_SRC_DIR}/logger.cc \
                   ${MODULE_SRC_DIR}/xts.cc \
                   ${MODULE_SRC_DIR}/acc_ring.cc \
                   ${MODULE_SRC_DIR}/xts_tests.cc \

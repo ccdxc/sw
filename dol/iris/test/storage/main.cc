@@ -313,7 +313,7 @@ void sig_handler(int sig) {
 int common_setup() {
   // Initialize hal interface
   hal_if::init_hal_if();
-  printf("HAL client initialized\n");
+  OFFL_FUNC_INFO("HAL client initialized\n");
 
   // Initialize host memory
   int ret;
@@ -323,24 +323,24 @@ int common_setup() {
     ret = init_host_mem();
   }
   if (ret < 0) {
-    printf("Host mem init failed (is model running?)\n");
+    OFFL_FUNC_ERR("Host mem init failed (is model running?)");
     return -1;
   }
-  printf("Host mem initialized\n");
+  OFFL_FUNC_INFO("Host mem initialized\n");
 
   // Initialize storage hbm memory
   if (utils::hbm_buf_init() < 0) {
-    printf("HBM buf init failed is \n");
+    OFFL_FUNC_ERR("HBM buf init failed (is model running?)");
     return -1;
   }
-  printf("HBM buf initialized\n");
+  OFFL_FUNC_INFO("HBM buf initialized\n");
 
   // Initialize model client
   if (lib_model_connect() < 0) {
-    printf("Failed to connect with model (is model running?)\n");
+    OFFL_FUNC_ERR("Failed to connect with model (is model running?)");
     return -1;
   }
-  printf("Model client initialized\n");
+  OFFL_FUNC_INFO("Model client initialized\n");
 
   return 0;
 }
@@ -416,6 +416,8 @@ int acc_scale_test_str_parse(std::string& acc_scale_test_str)
 
 size_t tcid = 0;
 int main(int argc, char**argv) {
+  offl::logger::init(true);
+
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   signal(SIGSEGV, sig_handler);
 
@@ -794,6 +796,9 @@ int main(int argc, char**argv) {
     printf("\nOverall Report: FAILURE \n");
   } else {
     printf("\nOverall Report: SUCCESS \n");
+  }
+  if (offl::logger::logger()) {
+      offl::logger::logger()->flush();
   }
   fflush(stdout);
   if (rc != 0) return rc;

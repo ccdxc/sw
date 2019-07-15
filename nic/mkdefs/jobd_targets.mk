@@ -284,6 +284,10 @@ jobd/storage/combined: ${JOBD_PREREQS}
 jobd/hal_test_fips/rsa-siggen15-0: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --hal_test_fips --hal_test_fips_runargs "fips-rsa-siggen15 rsa-testvectors/SigGen15_186-3.txt"
 
+.PHONY: jobd/offload
+jobd/offload: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --offload
+
 .PHONY: jobd/configtest
 jobd/configtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --configtest

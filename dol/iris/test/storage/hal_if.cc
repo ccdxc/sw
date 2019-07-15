@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <grpc++/grpc++.h>
 #include <memory>
+#include <ctime>
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/interface.pb.h"
@@ -11,6 +12,8 @@
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "gflags/gflags.h"
 #include "nic/sdk/storage/storage_seq_common.h"
+
+#define HAL_WAIT_READY_TIMEOUT_SECS 300
 
 DECLARE_uint64(hal_port);
 DECLARE_string(hal_ip);
@@ -42,18 +45,34 @@ void init_hal_if() {
     return;
 
   char host_addr[32];
+  std::time_t start, end, elapsed;
+  grpc_connectivity_state state = GRPC_CHANNEL_INIT;
+
   sprintf(host_addr, "%s:%lu", FLAGS_hal_ip.c_str(), FLAGS_hal_port);
   hal_channel = std::move(grpc::CreateChannel(
       host_addr, grpc::InsecureChannelCredentials()));
-  int i;
-  for (i = 0; i < 500; i++) {
-    if (hal_channel->GetState(true) == GRPC_CHANNEL_READY)
-      break;
-    usleep(10000);
+
+  OFFL_FUNC_INFO("Waiting for HAL channel ready");
+  for (start = std::time(nullptr), end = start, elapsed = 0; 
+       elapsed < HAL_WAIT_READY_TIMEOUT_SECS;
+       end = std::time(nullptr)) {
+
+      state = hal_channel->GetState(true);
+      elapsed = end - start;
+      if (state == GRPC_CHANNEL_READY) {
+          break;
+      }
+
+      // Wait for State change or deadline
+      hal_channel->WaitForStateChange(state,
+                               gpr_time_from_seconds(1, GPR_TIMESPAN));
   }
-  if (i == 500) {
-    printf("Channel never reached ready, cur_state=%d\n",
-           hal_channel->GetState(true));
+  if (state == GRPC_CHANNEL_READY) {
+      OFFL_FUNC_INFO("HAL channel became ready state in {} seconds",
+                     (int)elapsed);
+  } else {
+      OFFL_FUNC_INFO("HAL channel never reached ready state after {} seconds",
+                     (int)elapsed);
   }
 
   std::unique_ptr<Internal::Stub> int_stub(
@@ -112,7 +131,7 @@ int create_lif(lif_params_t *params, uint64_t *ret_lif_id) {
 
   auto status = interface_stub->LifCreate(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("LIF create failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
@@ -133,7 +152,7 @@ int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id) {
 
   auto status = internal_stub->ConfigureLifBdf(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("set_lif_bdf failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
@@ -158,8 +177,8 @@ get_lif_info(uint32_t sw_lif_id, uint64_t *ret_hw_lif_id)
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() == types::API_STATUS_OK) {
-                printf("[INFO] Get Lif %u hw_lif_id 0x%lx\n",
-                       sw_lif_id, rsp.status().hw_lif_id());
+                OFFL_FUNC_INFO("Lif {} hw_lif_id {:#x}",
+                               sw_lif_id, rsp.status().hw_lif_id());
                 *ret_hw_lif_id = rsp.status().hw_lif_id();
                 return 0;
             }
@@ -184,7 +203,7 @@ int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {
 
   auto status = internal_stub->GetProgramAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("get_pgm_base_addr failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
@@ -209,7 +228,7 @@ int get_pgm_label_offset(const char *prog_name, const char *label, uint8_t *off)
 
   auto status = internal_stub->GetProgramAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("get_pgm_label_offset failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
@@ -233,13 +252,13 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid, uint64_t *qa
 
   auto status = interface_stub->LifGetQState(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("get_lif_qstate_addr failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
   // TODO: Check number of responses ?
   if (resp_msg.resps(0).error_code()) {
-    printf("get_lif_qstate_addr error: %d\n", resp_msg.resps(0).error_code());
+    OFFL_FUNC_ERR("error: {}", resp_msg.resps(0).error_code());
     return -1;
   }
 
@@ -256,7 +275,7 @@ int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) 
     return -1;
 
   auto req = req_msg.add_reqs();
-  printf("getting q state for lif %u type %u qid %u \n", lif, qtype, qid);
+  OFFL_FUNC_INFO("lif {} type {} qid {}", lif, qtype, qid);
   req->set_lif_handle(lif);
   req->set_type_num(qtype);
   req->set_qid(qid);
@@ -264,7 +283,7 @@ int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) 
 
   auto status = interface_stub->LifGetQState(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("get_lif_qstate failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
@@ -282,7 +301,7 @@ int set_lif_qstate_size(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qst
   intf::SetQStateResponseMsg resp_msg;
 
   if (!qstate) {
-    printf("q state null \n");
+    OFFL_FUNC_INFO("q state null");
     return -1;
   }
 
@@ -294,13 +313,13 @@ int set_lif_qstate_size(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qst
 
   auto status = interface_stub->LifSetQState(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("get_lif_qstate_size failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
   // TODO: Check number of responses ?
   if (resp_msg.resps(0).error_code()) {
-    printf("resp error %d \n", resp_msg.resps(0).error_code());
+    OFFL_FUNC_ERR("error {}", resp_msg.resps(0).error_code());
     return -1;
   }
 
@@ -324,7 +343,7 @@ int alloc_hbm_address(const char *handle, uint64_t *addr, uint32_t *size) {
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("alloc_hbm_address failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
@@ -353,13 +372,39 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr, bool is_gcm) {
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("get_xts_ring_base_address failed: %s\n", status.error_message().c_str());
+    OFFL_FUNC_ERR("failed: {}", status.error_message());
     return -1;
   }
 
   // TODO: Check number of responses ?
   *addr = resp_msg.response(0).addr();
 
+  return 0;
+}
+
+int get_ring_meta_config(types::BarcoRings ring_type,
+                         hal::barco_ring_meta_config_t *meta)
+{
+  grpc::ClientContext context;
+  internal::BarcoGetRingMetaConfigRequestMsg req_msg;
+  internal::BarcoGetRingMetaConfigResponseMsg resp_msg;
+  auto req = req_msg.add_request();
+  req->set_ring_type(ring_type);
+
+  auto status = crypto_stub->BarcoGetRingMetaConfig(&context, req_msg, &resp_msg);
+  if (!status.ok()) {
+    OFFL_FUNC_ERR("BarcoGetRingMetaConfig request failed");
+    return -1;
+  }
+
+  meta->ring_base = resp_msg.response(0).ring_base();
+  meta->opaque_tag_addr = resp_msg.response(0).opaque_tag_addr();
+  meta->shadow_pndx_addr = resp_msg.response(0).shadow_pndx_addr();
+  meta->producer_idx_addr = resp_msg.response(0).producer_idx_addr();
+  meta->pndx_size = resp_msg.response(0).pndx_size();
+  meta->desc_size = resp_msg.response(0).desc_size();
+  meta->ring_size = resp_msg.response(0).ring_size();
+  meta->opaque_tag_size = resp_msg.response(0).opaque_tag_size();
   return 0;
 }
 
@@ -372,11 +417,11 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
 
   auto status = crypto_stub->CryptoKeyCreate(&context, cr_req_msg, &cr_resp_msg);
   if (!status.ok()) {
-    printf("Create request failed \n");
+    OFFL_FUNC_ERR("Create request failed");
     return -1;
   }
   if(cr_resp_msg.response(0).keyindex() == *key_index) {
-    printf("Create request failed \n");
+    OFFL_FUNC_ERR("Create request failed");
     return -1;
   }
   *key_index = cr_resp_msg.response(0).keyindex();
@@ -385,19 +430,19 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
   internal::CryptoKeyUpdateResponseMsg upd_resp_msg;
   auto upd_req = upd_req_msg.add_request();
   internal::CryptoKeySpec* spec =   upd_req->mutable_key();
-  spec->set_key(key);
+  spec->set_key(key, key_size);
   spec->set_keyindex(*key_index);
   spec->set_key_size(key_size);
   spec->set_key_type(key_type);
 
   status = crypto_stub->CryptoKeyUpdate(&context2, upd_req_msg, &upd_resp_msg);
   if (!status.ok()) {
-    printf("Update request failed \n");
+    OFFL_FUNC_ERR("Update request failed");
     return -1;
   }
   if(upd_resp_msg.response(0).keyindex() != *key_index) {
-    printf(" Expected keyindex %u recvd %u \n", *key_index, upd_resp_msg.response(0).keyindex());
-    printf("Update request failed \n");
+    OFFL_FUNC_ERR("Expected keyindex {} recvd {}", *key_index, upd_resp_msg.response(0).keyindex());
+    OFFL_FUNC_ERR("Update request failed");
     return -1;
   }
 
@@ -412,11 +457,65 @@ int delete_key(uint32_t key_index) {
   req->set_keyindex(key_index);
   auto status = crypto_stub->CryptoKeyDelete(&context, del_req_msg, &del_resp_msg);
   if (!status.ok()) {
-    printf("Delete request failed \n");
+    OFFL_FUNC_ERR("Delete request failed");
     return -1;
   }
   if(del_resp_msg.response(0).keyindex() != key_index) {
-    printf("Delete request failed with bad keyindex \n");
+    OFFL_FUNC_ERR("Delete request failed with bad keyindex");
+    return -1;
+  }
+  return 0;
+}
+
+int get_asym_key_index(const uint8_t *key_desc,
+                       uint32_t key_size,
+                       uint32_t *key_index) {
+  grpc::ClientContext context, context2;
+  *key_index = 0xffffffff;
+  internal::CryptoAsymKeyCreateRequestMsg cr_req_msg;
+  internal::CryptoAsymKeyCreateResponseMsg cr_resp_msg;
+  cr_req_msg.add_request();
+
+  auto status = crypto_stub->CryptoAsymKeyCreate(&context, cr_req_msg, &cr_resp_msg);
+  if (!status.ok()) {
+    OFFL_FUNC_ERR("Create request failed");
+    return -1;
+  }
+  *key_index = cr_resp_msg.response(0).keyindex();
+
+  internal::CryptoAsymKeyWriteRequestMsg wr_req_msg;
+  internal::CryptoAsymKeyWriteResponseMsg wr_resp_msg;
+  auto wr_req = wr_req_msg.add_request();
+  internal::CryptoAsymKeySpec* spec = wr_req->mutable_key();
+  spec->set_key(key_desc, key_size);
+  spec->set_keyindex(*key_index);
+
+  status = crypto_stub->CryptoAsymKeyWrite(&context2, wr_req_msg, &wr_resp_msg);
+  if (!status.ok()) {
+    OFFL_FUNC_ERR("Write request failed");
+    return -1;
+  }
+  if(wr_resp_msg.response(0).keyindex() != *key_index) {
+    OFFL_FUNC_ERR(" Expected keyindex {} recvd {}", *key_index, wr_resp_msg.response(0).keyindex());
+    OFFL_FUNC_ERR("Write request failed");
+    return -1;
+  }
+  return 0;
+}
+
+int delete_asym_key(uint32_t key_index) {
+  grpc::ClientContext context;
+  internal::CryptoAsymKeyDeleteRequestMsg del_req_msg;
+  internal::CryptoAsymKeyDeleteResponseMsg del_resp_msg;
+  auto req = del_req_msg.add_request();
+  req->set_keyindex(key_index);
+  auto status = crypto_stub->CryptoAsymKeyDelete(&context, del_req_msg, &del_resp_msg);
+  if (!status.ok()) {
+    OFFL_FUNC_ERR("Delete request failed");
+    return -1;
+  }
+  if(del_resp_msg.response(0).keyindex() != key_index) {
+    OFFL_FUNC_ERR("Delete request failed with bad keyindex");
     return -1;
   }
   return 0;
@@ -437,7 +536,7 @@ int get_xts_opaque_tag_addr(bool is_decr, uint64_t* addr, bool is_gcm) {
     else req->set_ring_type(types::BARCO_RING_GCM0);
   auto status = brings_stub->GetOpaqueTagAddr(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("get_xts_opaque_tag_addr request failed \n");
+    OFFL_FUNC_ERR("failed");
     return -1;
   }
   *addr = resp_msg.response(0).opaque_tag_addr();

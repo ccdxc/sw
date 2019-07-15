@@ -20,6 +20,7 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
     hbm_addr(0),
     num_lines(num_lines),
     line_size(spec_line_size),
+    content_size(spec_line_size),
     total_size(num_lines * line_size),
     curr_line(0),
     next_line(0),
@@ -55,6 +56,7 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
              */
             if (num_lines > 1) {
                 line_size = utils::roundup_to_pow_2(spec_line_size);
+                content_size = line_size;
                 total_size = num_lines * line_size;
             }
         }
@@ -68,8 +70,8 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
              * align_spec_size should be a power of 2
              */
             if (!spec_align_size || (spec_align_size & (spec_align_size - 1))) {
-                printf("%s spec_align_size %u is not a valid power of 2\n", 
-                       __FUNCTION__, spec_align_size);
+                OFFL_FUNC_ERR("spec_align_size {} is not a valid power of 2", 
+                              spec_align_size);
                 assert(spec_align_size && !(spec_align_size & (spec_align_size - 1)));
             }
 
@@ -89,15 +91,14 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
                        utils::hbm_addr_alloc_spec_aligned(total_size, &hbm_addr,
                                                           spec_align_size);
             if (alloc_rc < 0) {
-                printf("%s unable to allocate HBM memory size %u\n",
-                       __FUNCTION__, total_size);
+                OFFL_FUNC_ERR("unable to allocate HBM memory size {}",
+                              total_size);
                 assert(alloc_rc >= 0);
             }
 
             cache = new (std::nothrow) uint8_t[total_size];
             if (!cache) {
-                printf("%s unable to allocate cache size %u\n",
-                       __FUNCTION__, total_size);
+                OFFL_FUNC_ERR("unable to allocate cache size {}", total_size);
                 assert(cache);
             }
 
@@ -116,8 +117,8 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
                     (uint8_t *)alloc_spec_aligned_host_mem(total_size,
                                                            spec_align_size);
             if (!cache) {
-                printf("%s unable to allocate host memory size %u\n",
-                       __FUNCTION__, total_size);
+                OFFL_FUNC_ERR("unable to allocate host memory size {}",
+                              total_size);
                 assert(cache);
             }
 
@@ -127,8 +128,7 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
             break;
 
         default:
-            printf("%s invalid memory type %u\n",
-                   __FUNCTION__, mem_type);
+            OFFL_FUNC_ERR("invalid memory type {}", mem_type);
             assert((mem_type == DP_MEM_TYPE_HBM) ||
                    (mem_type == DP_MEM_TYPE_HOST_MEM));
             break;
@@ -150,6 +150,7 @@ dp_mem_t::dp_mem_t(uint8_t *mem_addr,
     hbm_addr(0),
     num_lines(num_lines),
     line_size(line_size),
+    content_size(line_size),
     total_size(num_lines * line_size),
     curr_line(0),
     next_line(0),
@@ -168,8 +169,7 @@ dp_mem_t::dp_mem_t(uint8_t *mem_addr,
         hbm_addr = (uint64_t)mem_addr;
         cache = new (std::nothrow) uint8_t[total_size];
         if (!cache) {
-            printf("%s unable to allocate cache size %u\n",
-                   __FUNCTION__, total_size);
+            OFFL_FUNC_ERR("unable to allocate cache size {}", total_size);
             assert(cache);
         }
 
@@ -190,8 +190,7 @@ dp_mem_t::dp_mem_t(uint8_t *mem_addr,
         break;
 
     default:
-        printf("%s invalid memory type %u\n",
-               __FUNCTION__, mem_type);
+        OFFL_FUNC_ERR("invalid memory type {}", mem_type);
         assert((mem_type == DP_MEM_TYPE_HBM) ||
                (mem_type == DP_MEM_TYPE_HOST_MEM));
         break;
@@ -289,6 +288,19 @@ dp_mem_t::line_advance(void)
     next_line_set();
     curr_line = next_line;
     return curr_line;
+}
+
+
+/*
+ * Hack to set content size to support the case where the actual
+ * amount of data stored is smaller than the line size. This assumes
+ * that all lines will then have the same content size.
+ */
+void
+dp_mem_t::content_size_set(uint32_t size)
+{
+    assert(size <= line_size);
+    content_size = size;
 }
 
 
@@ -426,8 +438,8 @@ dp_mem_t::write_bit_fields(uint32_t start_bit_offset,
     uint32_t    byte_size = (size_in_bits + BITS_PER_BYTE - 1) / BITS_PER_BYTE;
 
     if ((byte_offset + byte_size) > line_size) {
-        printf("%s start_bit_offset %u size_in_bits %u > line_size %u\n",
-               __FUNCTION__, start_bit_offset, size_in_bits, line_size);
+        OFFL_FUNC_ERR("start_bit_offset {} size_in_bits {} > line_size {}",
+                      start_bit_offset, size_in_bits, line_size);
         assert((byte_offset + byte_size) <= line_size);
         return;
     }
@@ -517,8 +529,8 @@ dp_mem_t::fragment_find(uint32_t frag_offset,
 	std::unordered_map<uint64_t, dp_mem_t*>::const_iterator fragment_it;
 
     if ((frag_offset + frag_size) > line_size) {
-        printf("%s frag_offset %u plus size %u exceeds line_size %u\n",
-               __FUNCTION__, frag_offset, frag_size, line_size);
+        OFFL_FUNC_ERR("frag_offset {} plus size {} exceeds line_size {}",
+                      frag_offset, frag_size, line_size);
         assert((frag_offset + frag_size) <= line_size);
         return nullptr;
     }
@@ -530,6 +542,7 @@ dp_mem_t::fragment_find(uint32_t frag_offset,
         fragment = new dp_mem_t(0, 0, DP_MEM_ALIGN_NONE, mem_type);
         fragment->num_lines = 1;
         fragment->line_size = frag_size;
+        fragment->content_size = frag_size;
         fragment->total_size = frag_size;
         if (is_mem_type_hbm()) {
             fragment->hbm_addr = hbm_line_addr() + frag_offset;

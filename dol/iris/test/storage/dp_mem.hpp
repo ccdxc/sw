@@ -75,6 +75,7 @@ public:
     uint32_t next_line_set(void);
     void line_set(uint32_t line);
     uint32_t line_advance(void);
+    void content_size_set(uint32_t size);
 
     void clear(void);
     void clear_thru(void);
@@ -94,6 +95,11 @@ public:
     uint64_t pa(void);
 
     // simple inline methods
+    dp_mem_type_t mem_type_get(void)
+    {
+        return mem_type;
+    }
+
     bool is_mem_type_hbm(void)
     {
         return mem_type == DP_MEM_TYPE_HBM;
@@ -114,6 +120,11 @@ public:
         return line_size;
     }
 
+    uint32_t content_size_get(void)
+    {
+        return content_size;
+    }
+
 private:
 
     // method functions
@@ -125,6 +136,7 @@ private:
     uint64_t        hbm_addr;
     uint32_t        num_lines;
     uint32_t        line_size;
+    uint32_t        content_size;
     uint32_t        total_size;
     uint32_t        curr_line;
     uint32_t        next_line;

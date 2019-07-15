@@ -378,6 +378,7 @@ PD_FUNC_STUB(pd_capri_program_to_base_addr);
 PD_FUNC_STUB(pd_capri_barco_asym_req_descr_get);
 PD_FUNC_STUB(pd_capri_barco_symm_req_descr_get);
 PD_FUNC_STUB(pd_capri_barco_ring_meta_get);
+PD_FUNC_STUB(pd_capri_barco_ring_meta_config_get);
 PD_FUNC_STUB(pd_capri_barco_asym_ecc_point_mul_p256);
 PD_FUNC_STUB(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
 PD_FUNC_STUB(pd_capri_barco_asym_ecdsa_p256_sig_gen);

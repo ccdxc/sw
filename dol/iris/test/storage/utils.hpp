@@ -1,10 +1,11 @@
-#ifndef _LOG_HPP_
-#define _LOG_HPP_
+#ifndef _UTILS_HPP_
+#define _UTILS_HPP_
 
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include "logger.hpp"
 
 const static uint32_t kMinHostMemAllocSize = 64;
 
@@ -34,7 +35,20 @@ int hbm_addr_alloc_page_aligned(uint32_t size, uint64_t *alloc_ptr);
 int hbm_addr_alloc_spec_aligned(uint32_t size, uint64_t *alloc_ptr, uint32_t spec_align_size);
 uint32_t roundup_to_pow_2(uint32_t x);
 
+/*
+ * namespace utils version of Poller, for use by offload
+ */
+class Poller {
+public:
+  Poller() : timeout(60) { }
+  Poller(int timeout, bool fast_poll=true) : timeout(timeout), fast_poll(fast_poll) { }
+  int operator()(std::function<int(void)> poll_func);
+private:
+  int timeout; //Default overall timeout
+  bool fast_poll = true;
+};
+
 }  // namespace utils
 
 
-#endif  // _LOG_HPP_
+#endif  // _UTILS_HPP_

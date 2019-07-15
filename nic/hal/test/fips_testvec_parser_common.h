@@ -4,9 +4,9 @@
 class fips_common_parser {
 
     protected:    
-        int fips_parse_hex_bn(char *ascii_in, char *out, size_t *len)
+        int fips_parse_hex_bn(const char *ascii_in, char *out, size_t *len)
         {
-            char        *curr_ptr = ascii_in;
+            const char  *curr_ptr = ascii_in;
             char        *curr_out_ptr;
             uint8_t     byte = 0;
             size_t      pend_len = *len;
@@ -69,7 +69,7 @@ class fips_common_parser {
         }
 
 #define INT_STR_MAX_SZ  32
-        int fips_parse_dec_int(char *ascii_in, uint16_t *int_out)
+        int fips_parse_dec_int(const char *ascii_in, uint16_t *int_out)
         {
             char            int_str[INT_STR_MAX_SZ];
             uint16_t        int_str_ptr = 0, pend_len = (INT_STR_MAX_SZ - 1);

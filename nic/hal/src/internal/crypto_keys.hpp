@@ -56,8 +56,7 @@ typedef struct crypto_asym_key_s {
                                                    key/param */
     uint32_t                command_reg;        /* Command associated with this
                                                    key descriptor */
-
-
+    uint32_t                reserved;
 } __PACK__ crypto_asym_key_t;
 
 }    // namespace hal

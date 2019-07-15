@@ -90,6 +90,9 @@ hal_ret_t   barco_get_req_descr_entry(internal::BarcoGetReqDescrEntryRequest& re
 hal_ret_t   barco_get_ring_meta(internal::BarcoGetRingMetaRequest& request,
                  internal::BarcoGetRingMetaResponseMsg *response);
 
+hal_ret_t   barco_get_ring_meta_config(internal::BarcoGetRingMetaConfigRequest& request,
+                 internal::BarcoGetRingMetaConfigResponseMsg *response);
+
 
 hal_ret_t   cryptokey_create(internal::CryptoKeyCreateRequest &request,
         internal::CryptoKeyCreateResponse *response);
@@ -105,6 +108,15 @@ hal_ret_t   cryptokey_update(internal::CryptoKeyUpdateRequest &request,
 
 hal_ret_t   cryptokey_delete(internal::CryptoKeyDeleteRequest &request,
         internal::CryptoKeyDeleteResponse *response);
+
+hal_ret_t   cryptoasymkey_create(internal::CryptoAsymKeyCreateRequest &request,
+        internal::CryptoAsymKeyCreateResponse *response);
+
+hal_ret_t   cryptoasymkey_delete(internal::CryptoAsymKeyDeleteRequest &request,
+        internal::CryptoAsymKeyDeleteResponse *response);
+
+hal_ret_t   cryptoasymkey_write(internal::CryptoAsymKeyWriteRequest &request,
+        internal::CryptoAsymKeyWriteResponse *response);
 
 hal_ret_t cryptoapi_invoke(internal::CryptoApiRequest &req,
         internal::CryptoApiResponse *resp);

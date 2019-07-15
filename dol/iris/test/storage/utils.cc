@@ -1,6 +1,9 @@
 #include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "nic/sdk/storage/storage_seq_common.h"
+#include "dp_mem.hpp"
+
+using namespace dp_mem;
 
 namespace utils {
 
@@ -57,12 +60,12 @@ hbm_buf_init()
 {
   // Allocatge HBM address for storage
   if (hal_if::alloc_hbm_address(STORAGE_SEQ_HBM_HANDLE, &storage_hbm_addr, &storage_hbm_size) < 0) {
-    printf("can't allocate HBM address for storage \n");
+    OFFL_FUNC_ERR("can't allocate HBM address for storage");
     return -1;
   }
-  printf("Storage HBM address %lx size %d KB\n", storage_hbm_addr, storage_hbm_size);
+  OFFL_FUNC_INFO("Storage HBM address {:#x} size {} KB", storage_hbm_addr, storage_hbm_size);
   storage_hbm_size = storage_hbm_size * 1024;
-  printf("Storage HBM address %lx (byte) size %d \n", storage_hbm_addr, storage_hbm_size);
+  OFFL_FUNC_INFO("Storage HBM address {:#x} (byte) size {}", storage_hbm_addr, storage_hbm_size);
   storage_hbm_running_size = 0;
   return 0;
 }
@@ -72,8 +75,8 @@ hbm_addr_alloc(uint32_t size, uint64_t *alloc_ptr)
 {
   if (!alloc_ptr) return -1;
   if ((size + storage_hbm_running_size) >= storage_hbm_size) {
-    printf("total size %u running size %u requested size %u can't fit \n",
-           storage_hbm_size, storage_hbm_running_size, size);
+    OFFL_FUNC_ERR("total size {} running size {} requested size {} can't fit",
+                  storage_hbm_size, storage_hbm_running_size, size);
     return -1;
   }
   *alloc_ptr = storage_hbm_addr + storage_hbm_running_size;
@@ -91,8 +94,8 @@ hbm_addr_alloc_spec_aligned(uint32_t size, uint64_t *alloc_ptr, uint32_t spec_al
     return hbm_addr_alloc(size, alloc_ptr);
   uint32_t aligned_size = spec_align_size + size;
   if ((aligned_size + storage_hbm_running_size) >= storage_hbm_size) {
-    printf("total size %u running size %u requested size %u aligned size %u can't fit \n",
-           storage_hbm_size, storage_hbm_running_size, size, aligned_size);
+    OFFL_FUNC_ERR("total size {} running size {} requested size {} aligned size {} can't fit",
+                  storage_hbm_size, storage_hbm_running_size, size, aligned_size);
     return -1;
   }
   *alloc_ptr = (storage_hbm_addr + storage_hbm_running_size + spec_align_size - 1) & ~((uint64_t)spec_align_size - 1);
@@ -116,6 +119,49 @@ roundup_to_pow_2(uint32_t val)
         roundup <<= 1;
     }
     return roundup;
+}
+
+/*
+ * namespace utils version of Poller, for use by offload
+ * so it doesn't have to link in tests.cc.
+ */
+
+static void
+verification_time_advance(void)
+{
+    static dp_mem_t *time_adv_buf;
+
+    if (!time_adv_buf) {
+        time_adv_buf = new dp_mem_t(1, sizeof(uint32_t));
+    }
+    if (time_adv_buf) {
+        assert(time_adv_buf->is_mem_type_hbm());
+        time_adv_buf->read_thru();
+    }
+}
+
+int 
+Poller::operator()(std::function<int(void)> poll_func)
+{
+    std::time_t start = std::time(nullptr);
+    std::time_t end;
+    int rv;
+    do {
+        rv = poll_func();
+        if (0 == rv)
+            return rv;
+        verification_time_advance();
+        if (fast_poll) {
+            usleep(10000); //Sleep 10msec
+        } else {
+            // For performance mode
+            sleep(30);
+        }
+        end = std::time(nullptr);
+    } while(end - start < timeout);
+
+    OFFL_LOG_ERR("Polling timeout {} exceeded - Giving up!", timeout);
+    return -1;
 }
 }  // namespace utils
 

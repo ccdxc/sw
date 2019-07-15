@@ -1369,6 +1369,24 @@ func (mr *MockInternalClientMockRecorder) BarcoGetRingMeta(ctx, in interface{}, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetRingMeta", reflect.TypeOf((*MockInternalClient)(nil).BarcoGetRingMeta), varargs...)
 }
 
+// BarcoGetRingMetaConfig mocks base method
+func (m *MockInternalClient) BarcoGetRingMetaConfig(ctx context.Context, in *BarcoGetRingMetaConfigRequestMsg, opts ...grpc.CallOption) (*BarcoGetRingMetaConfigResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "BarcoGetRingMetaConfig", varargs...)
+	ret0, _ := ret[0].(*BarcoGetRingMetaConfigResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BarcoGetRingMetaConfig indicates an expected call of BarcoGetRingMetaConfig
+func (mr *MockInternalClientMockRecorder) BarcoGetRingMetaConfig(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetRingMetaConfig", reflect.TypeOf((*MockInternalClient)(nil).BarcoGetRingMetaConfig), varargs...)
+}
+
 // CryptoKeyCreate mocks base method
 func (m *MockInternalClient) CryptoKeyCreate(ctx context.Context, in *CryptoKeyCreateRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -1457,6 +1475,60 @@ func (m *MockInternalClient) CryptoKeyDelete(ctx context.Context, in *CryptoKeyD
 func (mr *MockInternalClientMockRecorder) CryptoKeyDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyDelete", reflect.TypeOf((*MockInternalClient)(nil).CryptoKeyDelete), varargs...)
+}
+
+// CryptoAsymKeyCreate mocks base method
+func (m *MockInternalClient) CryptoAsymKeyCreate(ctx context.Context, in *CryptoAsymKeyCreateRequestMsg, opts ...grpc.CallOption) (*CryptoAsymKeyCreateResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoAsymKeyCreate", varargs...)
+	ret0, _ := ret[0].(*CryptoAsymKeyCreateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoAsymKeyCreate indicates an expected call of CryptoAsymKeyCreate
+func (mr *MockInternalClientMockRecorder) CryptoAsymKeyCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoAsymKeyCreate", reflect.TypeOf((*MockInternalClient)(nil).CryptoAsymKeyCreate), varargs...)
+}
+
+// CryptoAsymKeyDelete mocks base method
+func (m *MockInternalClient) CryptoAsymKeyDelete(ctx context.Context, in *CryptoAsymKeyDeleteRequestMsg, opts ...grpc.CallOption) (*CryptoAsymKeyDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoAsymKeyDelete", varargs...)
+	ret0, _ := ret[0].(*CryptoAsymKeyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoAsymKeyDelete indicates an expected call of CryptoAsymKeyDelete
+func (mr *MockInternalClientMockRecorder) CryptoAsymKeyDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoAsymKeyDelete", reflect.TypeOf((*MockInternalClient)(nil).CryptoAsymKeyDelete), varargs...)
+}
+
+// CryptoAsymKeyWrite mocks base method
+func (m *MockInternalClient) CryptoAsymKeyWrite(ctx context.Context, in *CryptoAsymKeyWriteRequestMsg, opts ...grpc.CallOption) (*CryptoAsymKeyWriteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoAsymKeyWrite", varargs...)
+	ret0, _ := ret[0].(*CryptoAsymKeyWriteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoAsymKeyWrite indicates an expected call of CryptoAsymKeyWrite
+func (mr *MockInternalClientMockRecorder) CryptoAsymKeyWrite(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoAsymKeyWrite", reflect.TypeOf((*MockInternalClient)(nil).CryptoAsymKeyWrite), varargs...)
 }
 
 // CryptoApiInvoke mocks base method
@@ -2219,6 +2291,19 @@ func (mr *MockInternalServerMockRecorder) BarcoGetRingMeta(arg0, arg1 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetRingMeta", reflect.TypeOf((*MockInternalServer)(nil).BarcoGetRingMeta), arg0, arg1)
 }
 
+// BarcoGetRingMetaConfig mocks base method
+func (m *MockInternalServer) BarcoGetRingMetaConfig(arg0 context.Context, arg1 *BarcoGetRingMetaConfigRequestMsg) (*BarcoGetRingMetaConfigResponseMsg, error) {
+	ret := m.ctrl.Call(m, "BarcoGetRingMetaConfig", arg0, arg1)
+	ret0, _ := ret[0].(*BarcoGetRingMetaConfigResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BarcoGetRingMetaConfig indicates an expected call of BarcoGetRingMetaConfig
+func (mr *MockInternalServerMockRecorder) BarcoGetRingMetaConfig(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetRingMetaConfig", reflect.TypeOf((*MockInternalServer)(nil).BarcoGetRingMetaConfig), arg0, arg1)
+}
+
 // CryptoKeyCreate mocks base method
 func (m *MockInternalServer) CryptoKeyCreate(arg0 context.Context, arg1 *CryptoKeyCreateRequestMsg) (*CryptoKeyCreateResponseMsg, error) {
 	ret := m.ctrl.Call(m, "CryptoKeyCreate", arg0, arg1)
@@ -2282,6 +2367,45 @@ func (m *MockInternalServer) CryptoKeyDelete(arg0 context.Context, arg1 *CryptoK
 // CryptoKeyDelete indicates an expected call of CryptoKeyDelete
 func (mr *MockInternalServerMockRecorder) CryptoKeyDelete(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyDelete", reflect.TypeOf((*MockInternalServer)(nil).CryptoKeyDelete), arg0, arg1)
+}
+
+// CryptoAsymKeyCreate mocks base method
+func (m *MockInternalServer) CryptoAsymKeyCreate(arg0 context.Context, arg1 *CryptoAsymKeyCreateRequestMsg) (*CryptoAsymKeyCreateResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoAsymKeyCreate", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoAsymKeyCreateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoAsymKeyCreate indicates an expected call of CryptoAsymKeyCreate
+func (mr *MockInternalServerMockRecorder) CryptoAsymKeyCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoAsymKeyCreate", reflect.TypeOf((*MockInternalServer)(nil).CryptoAsymKeyCreate), arg0, arg1)
+}
+
+// CryptoAsymKeyDelete mocks base method
+func (m *MockInternalServer) CryptoAsymKeyDelete(arg0 context.Context, arg1 *CryptoAsymKeyDeleteRequestMsg) (*CryptoAsymKeyDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoAsymKeyDelete", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoAsymKeyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoAsymKeyDelete indicates an expected call of CryptoAsymKeyDelete
+func (mr *MockInternalServerMockRecorder) CryptoAsymKeyDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoAsymKeyDelete", reflect.TypeOf((*MockInternalServer)(nil).CryptoAsymKeyDelete), arg0, arg1)
+}
+
+// CryptoAsymKeyWrite mocks base method
+func (m *MockInternalServer) CryptoAsymKeyWrite(arg0 context.Context, arg1 *CryptoAsymKeyWriteRequestMsg) (*CryptoAsymKeyWriteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoAsymKeyWrite", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoAsymKeyWriteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoAsymKeyWrite indicates an expected call of CryptoAsymKeyWrite
+func (mr *MockInternalServerMockRecorder) CryptoAsymKeyWrite(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoAsymKeyWrite", reflect.TypeOf((*MockInternalServer)(nil).CryptoAsymKeyWrite), arg0, arg1)
 }
 
 // CryptoApiInvoke mocks base method

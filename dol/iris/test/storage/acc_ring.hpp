@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#include "logger.hpp"
 #include "dp_mem.hpp"
 
 using namespace dp_mem;

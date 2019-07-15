@@ -23,6 +23,10 @@ using internal::BarcoGetRingMetaRequest;
 using internal::BarcoGetRingMetaRequestMsg;
 using internal::BarcoGetRingMetaResponse;
 using internal::BarcoGetRingMetaResponseMsg;
+using internal::BarcoGetRingMetaConfigRequest;
+using internal::BarcoGetRingMetaConfigRequestMsg;
+using internal::BarcoGetRingMetaConfigResponse;
+using internal::BarcoGetRingMetaConfigResponseMsg;
 
 namespace hal {
 
@@ -53,6 +57,17 @@ typedef struct barco_asym_descr_s {
     uint32_t                flag_b;
     uint32_t                barco_status;
 } barco_asym_descr_t;
+
+typedef struct barco_ring_meta_config_s {
+    uint64_t                ring_base;
+    uint64_t                producer_idx_addr;
+    uint64_t                shadow_pndx_addr;
+    uint64_t                opaque_tag_addr;
+    uint32_t                ring_size;
+    uint32_t                desc_size;
+    uint32_t                pndx_size;
+    uint32_t                opaque_tag_size;
+} barco_ring_meta_config_t;
 
 hal_ret_t barco_get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
 

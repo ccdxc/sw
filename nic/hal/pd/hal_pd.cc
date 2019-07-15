@@ -427,6 +427,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET, pd_capri_barco_asym_req_descr_get);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, pd_capri_barco_symm_req_descr_get);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_RING_META_GET, pd_capri_barco_ring_meta_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, pd_capri_barco_ring_meta_config_get);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, pd_capri_barco_asym_ecc_point_mul_p256);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, pd_capri_barco_asym_ecdsa_p256_sig_gen);

@@ -4,6 +4,7 @@ MODULE_TARGET   = libstorage_nvme_dp.so
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/nvme_dp.cc \
                   ${MODULE_SRC_DIR}/queues.cc \
+                  ${MODULE_SRC_DIR}/logger.cc \
 				  ${MODULE_SRC_DIR}/dp_mem.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/hal/third-party/grpc/include \

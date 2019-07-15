@@ -179,26 +179,41 @@ accel_ring_sw_reset_capable(types::BarcoRings ring_type)
 }
 
 /*
+ * Retrieve ring meta config info from HAL
+ */
+static void
+accel_ring_meta_config_get(types::BarcoRings ring_type,
+                           accel_rgroup_ring_info_t *ret_info)
+{
+    barco_ring_meta_config_t    meta = {0};
+
+    capri_barco_get_meta_config_info(ring_type, &meta);
+    ret_info->base_pa = meta.ring_base;
+    ret_info->opaque_tag_pa = meta.opaque_tag_addr;
+    ret_info->shadow_pndx_pa = meta.shadow_pndx_addr;
+    ret_info->pndx_pa = meta.producer_idx_addr;
+    ret_info->pndx_size = meta.pndx_size;
+    ret_info->desc_size = meta.desc_size;
+    ret_info->ring_size = meta.ring_size;
+    ret_info->opaque_tag_size = meta.opaque_tag_size;
+}
+
+/*
  * Write to shadow pndx
  */
 static inline hal_ret_t
 accel_shadow_pndx_write(types::BarcoRings ring_type,
                         uint32_t val)
 {
-    uint64_t    shadow_pndx_pa;
-    uint32_t    shadow_pndx_size;
-    uint32_t    desc_size;
-    uint32_t    opaque_tag_size;
+    barco_ring_meta_config_t meta = {0};
 
-    capri_barco_get_meta_config_info(ring_type, &shadow_pndx_pa,
-                                     &shadow_pndx_size, &desc_size,
-                                     &opaque_tag_size);
-    if (shadow_pndx_size) {
-        assert(shadow_pndx_size <= sizeof(val));
-        if (sdk::asic::asic_mem_write(shadow_pndx_pa, (uint8_t *)&val,
-                                shadow_pndx_size)) {
+    capri_barco_get_meta_config_info(ring_type, &meta);
+    if (meta.pndx_size) {
+        assert(meta.pndx_size <= sizeof(val));
+        if (sdk::asic::asic_mem_write(meta.shadow_pndx_addr, (uint8_t *)&val,
+                                meta.pndx_size)) {
             HAL_TRACE_ERR("Failed to write shadow pndx @ {:x} size {}",
-                          shadow_pndx_pa, shadow_pndx_size);
+                          meta.shadow_pndx_addr, meta.pndx_size);
             return HAL_RET_HW_FAIL;
         }
     }
@@ -778,19 +793,10 @@ accel_ring_cp_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(cp_cfg_q_base_adr_w0, cp_cfg_q_base_adr_w1, info.base_pa);
-    ACCEL_CFG_READ64(cp_cfg_host_opaque_tag_adr_w0, cp_cfg_host_opaque_tag_adr_w1,
-                      info.opaque_tag_pa);
-    ACCEL_CFG_OFFSET(cp_cfg_q_pd_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    CPDC_RING_SIZE_READ32(cp_cfg_dist, info.ring_size,
-                          BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_SHFT,
-                          BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_MASK);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
@@ -946,18 +952,10 @@ accel_ring_cp_hot_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(cp_cfg_hotq_base_adr_w0, cp_cfg_hotq_base_adr_w1,
-                     info.base_pa);
-    ACCEL_CFG_OFFSET(cp_cfg_hotq_pd_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    CPDC_RING_SIZE_READ32(cp_cfg_dist, info.ring_size,
-                          BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_SHFT,
-                          BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
@@ -1082,19 +1080,10 @@ accel_ring_dc_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(dc_cfg_q_base_adr_w0, dc_cfg_q_base_adr_w1, info.base_pa);
-    ACCEL_CFG_READ64(dc_cfg_host_opaque_tag_adr_w0, dc_cfg_host_opaque_tag_adr_w1,
-                     info.opaque_tag_pa);
-    ACCEL_CFG_OFFSET(dc_cfg_q_pd_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    CPDC_RING_SIZE_READ32(dc_cfg_dist, info.ring_size,
-                          BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_SHFT,
-                          BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_MASK);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
@@ -1250,18 +1239,10 @@ accel_ring_dc_hot_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(dc_cfg_hotq_base_adr_w0, dc_cfg_hotq_base_adr_w1,
-                     info.base_pa);
-    ACCEL_CFG_OFFSET(dc_cfg_hotq_pd_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    CPDC_RING_SIZE_READ32(dc_cfg_dist, info.ring_size,
-                          BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_SHFT,
-                          BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
@@ -1386,18 +1367,10 @@ accel_ring_xts0_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(xts_enc_ring_base_w0, xts_enc_ring_base_w1, info.base_pa);
-    ACCEL_CFG_READ64(xts_enc_opa_tag_addr_w0, xts_enc_opa_tag_addr_w1,
-                     info.opaque_tag_pa);
-    ACCEL_CFG_OFFSET(xts_enc_producer_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    ACCEL_CFG_READ32(xts_enc_ring_size, info.ring_size);
-
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
@@ -1526,18 +1499,10 @@ accel_ring_xts1_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(xts_ring_base_w0, xts_ring_base_w1, info.base_pa);
-    ACCEL_CFG_READ64(xts_opa_tag_addr_w0, xts_opa_tag_addr_w1,
-                     info.opaque_tag_pa);
-    ACCEL_CFG_OFFSET(xts_producer_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    ACCEL_CFG_READ32(xts_ring_size, info.ring_size);
-
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
@@ -1666,18 +1631,10 @@ accel_ring_gcm0_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(gcm0_ring_base_w0, gcm0_ring_base_w1, info.base_pa);
-    ACCEL_CFG_READ64(gcm0_opa_tag_addr_w0, gcm0_opa_tag_addr_w1,
-                     info.opaque_tag_pa);
-    ACCEL_CFG_OFFSET(gcm0_producer_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    ACCEL_CFG_READ32(gcm0_ring_size, info.ring_size);
-
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
@@ -1806,18 +1763,10 @@ accel_ring_gcm1_t::info_get(uint32_t ring_handle,
     info.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
-    ACCEL_CFG_READ64(gcm1_ring_base_w0, gcm1_ring_base_w1, info.base_pa);
-    ACCEL_CFG_READ64(gcm1_opa_tag_addr_w0, gcm1_opa_tag_addr_w1,
-                     info.opaque_tag_pa);
-    ACCEL_CFG_OFFSET(gcm1_producer_idx, info.pndx_pa);
-    capri_barco_get_meta_config_info(ring_type, &info.shadow_pndx_pa,
-                                     &info.pndx_size, &info.desc_size,
-                                     &info.opaque_tag_size);
+    accel_ring_meta_config_get(ring_type, &info);
     capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
-    ACCEL_CFG_READ32(gcm1_ring_size, info.ring_size);
-
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
