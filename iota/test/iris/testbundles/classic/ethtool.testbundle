@@ -11,8 +11,8 @@ testcases:
         args    :
             type         : remote_only
 
-    -   name    : transciever
-        testcase: testcases.drivers.ethtool.transciever
+    -   name    : transceiver
+        testcase: testcases.drivers.ethtool.transceiver
         enable  : True
         args    :
             type         : remote_only

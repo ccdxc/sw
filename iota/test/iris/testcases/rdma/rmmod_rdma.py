@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
+import iota.test.iris.utils.naples_host as host
 
 def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()
@@ -21,7 +22,7 @@ def Trigger(tc):
     api.Logger.info("Uninstalling RDMA driver on the following nodes: {0}".format(tc.nodes))
 
     for n in tc.nodes:
-        if tc.os == 'linux':
+        if tc.os == host.OS_TYPE_LINUX:
             api.Trigger_AddHostCommand(req, n, "rmmod ionic_rdma")
             api.Trigger_AddHostCommand(req, n, "rmmod rdma_krping")
         else:

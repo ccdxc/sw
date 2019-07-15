@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.test.iris.utils.naples_host as host
 import time
 
 def Setup(tc):
@@ -38,7 +39,7 @@ def Setup(tc):
 def StatsCmds(tc, w, dev, counter):
     if w.IsNaples():
         cmds = {}
-        if api.GetNodeOs(w.node_name) == 'linux':
+        if api.GetNodeOs(w.node_name) == host.OS_TYPE_LINUX:
             # set counter lifespan zero so it does not return an old value if the test runs quickly
             cmds['lifespan'] = 'echo 0 > /sys/class/infiniband/{dev}/ports/1/hw_counters/lifespan'
             cmds['counter'] = 'cat /sys/class/infiniband/{dev}/ports/1/hw_counters/{counter}'

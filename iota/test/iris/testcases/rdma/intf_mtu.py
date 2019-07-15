@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
+import iota.test.iris.utils.naples_host as host
 
 def Setup(tc):
     tc.nodes = api.GetWorkloadNodeHostnames() 
@@ -22,7 +23,7 @@ def Trigger(tc):
     api.Logger.info("Setting MTU to 8192 on the following interfaces: {0} on {1}, and {2} on {3}"\
                      .format(w1.interface, w1.node_name, w2.interface, w2.node_name))
 
-    if tc.os == 'linux':
+    if tc.os == host.OS_TYPE_LINUX:
        opt_s = " -s "
     else:
        opt_s = " "

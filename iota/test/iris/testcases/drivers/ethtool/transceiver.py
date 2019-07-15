@@ -3,6 +3,7 @@ import re
 import iota.harness.api as api
 import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
+import iota.test.iris.utils.naples_host as host
 # tc.desc = 'Extract Driver info, Firmware Info, and Card info'
 
 def Setup(tc):
@@ -19,12 +20,10 @@ def Trigger(tc):
         intfs = api.GetNaplesHostInterfaces(n)
         for i in intfs:
             api.Logger.info("Get EEPOM Data from %s" % i)
-            if tc.os == 'linux':
+            if tc.os == host.OS_TYPE_LINUX:
                 api.Trigger_AddHostCommand(req, n, "ethtool -m %s" % i)
-            elif tc.os == 'freebsd':
-                # iota passes interface name in a form of "ionic0". BSD sysctl wants "ionic.0".
-                i =i[:len(i)-1] + '.' + i[len(i)-1:]
-                api.Trigger_AddHostCommand(req, n, "sysctl dev.%s.media_status" % i)
+            elif tc.os == host.OS_TYPE_BSD:
+                api.Trigger_AddHostCommand(req, n, "sysctl dev.%s.media_status" % host.GetNaplesSysctl(i))
             else:
                 return api.types.status.FAILURE
 

@@ -188,7 +188,8 @@ ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 	unsigned int i;
 
 	/* Bail out if the interface was disabled in response to an error */
-	if (unlikely(ionic_dev_cmd_disabled(idev)))
+	if (unlikely(cmd->lif_init.opcode != CMD_OPCODE_LIF_RESET &&
+		     ionic_dev_cmd_disabled(idev)))
 		return;
 
 	for (i = 0; i < ARRAY_SIZE(cmd->words); i++)

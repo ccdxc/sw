@@ -190,7 +190,7 @@ def GetIPAddress(node, interface):
 
 def LoadDriver (os_type, node):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    
+
     if os_type == OS_TYPE_LINUX:
         api.Trigger_AddHostCommand(req, node, "insmod " + LinuxDriverPath)
     elif os_type == OS_TYPE_BSD:
@@ -202,7 +202,7 @@ def LoadDriver (os_type, node):
     resp = api.Trigger(req)
     if resp is None:
         return api.types.status.FAILURE
-    
+
     for cmd in resp.commands:
         if cmd.exit_code != 0:
             if os_type == OS_TYPE_LINUX:
@@ -216,16 +216,16 @@ def LoadDriver (os_type, node):
                     api.PrintCommandResults(cmd)
                     return api.types.status.FAILURE
                 else:
-                    api.Logger.info("Driver was already loaded. Unload is expected to fail")
+                    api.Logger.info("Driver was already loaded. Load is expected to fail")
             else:
                 api.Logger.info("Unknown os_type - %s" % os_type)
                 return api.types.status.FAILURE
-    
+
     return api.types.status.SUCCESS
 
 
 def UnloadDriver (os_type, node, whichdriver = "all" ):
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True) 
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     if os_type == None or node == None:
         api.Logger.info("Undefined parameters in Unload Driver")
@@ -235,7 +235,7 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
         command = "rmmod"
     elif os_type == OS_TYPE_BSD:
         command = "kldunload"
-    else: 
+    else:
         api.Logger.info("Unknown os_type - %s" % os_type)
         return api.types.status.FAILURE
 
@@ -250,7 +250,7 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
     resp = api.Trigger(req)
     if resp is None:
         return api.types.status.FAILURE
-    
+
     for cmd in resp.commands:
         if cmd.exit_code != 0:
             if os_type == OS_TYPE_LINUX:
@@ -265,5 +265,9 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
                     return api.types.status.FAILURE
                 else:
                     api.Logger.info("Driver was NOT loaded. Unload is expected to fail")
-            
+
     return api.types.status.SUCCESS
+
+def GetNaplesSysctl(intf):
+    # iota passes interface name "ionic0". BSD sysctl wants "ionic.0".
+    return intf[:-1] + '.' + intf[-1]

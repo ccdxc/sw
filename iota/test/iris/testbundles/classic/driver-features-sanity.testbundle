@@ -202,3 +202,9 @@ testcases:
         iterators :
         args      :
             loops     : 100
+
+    -   name    : DriverWatchdog
+        testcase: testcases.drivers.watchdog
+        disable : False
+        iterators :
+        args    :

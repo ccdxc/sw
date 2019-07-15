@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
+import iota.test.iris.utils.naples_host as host
 
 def Setup(tc):
 
@@ -10,7 +11,7 @@ def Setup(tc):
     tc.os = api.GetNodeOs(tc.nodes[0])
     tc.pkgname_linux = 'drivers-linux.tar.xz'
     tc.pkgname_freebsd = 'drivers-freebsd.tar.xz'
-    if tc.os == 'linux':
+    if tc.os == host.OS_TYPE_LINUX:
         fullpath = api.GetTopDir() + '/platform/gen/' + tc.pkgname_linux
     else:
         fullpath = api.GetTopDir() + '/platform/gen/' + tc.pkgname_freebsd
@@ -25,7 +26,7 @@ def Setup(tc):
 
     # Copy show_gid on all nodes
     tc.other_nodes = api.GetWorkloadNodeHostnames()
-    if tc.os == 'linux':
+    if tc.os == host.OS_TYPE_LINUX:
         fullpath = api.GetTopDir() + '/platform/gen/drivers-linux/show_gid'
     else:
         fullpath = api.GetTopDir() + '/platform/gen/drivers-freebsd/show_gid'
@@ -49,7 +50,7 @@ def Trigger(tc):
 
     for n in tc.nodes:
         api.Trigger_AddHostCommand(req_uname, n, "uname -r")
-        if tc.os == 'linux':
+        if tc.os == host.OS_TYPE_LINUX:
             api.Trigger_AddHostCommand(req, n, "tar xmf %s" % tc.pkgname_linux,
                                    rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./setup_libs.sh",

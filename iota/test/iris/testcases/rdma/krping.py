@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
+import iota.test.iris.utils.naples_host as host
 
 def Setup(tc):
 
@@ -53,7 +54,7 @@ def Trigger(tc):
     api.Logger.info("Starting krping_rdma test from %s" % (tc.cmd_descr))
 
     # cmd for server
-    if api.GetNodeOs(w1.node_name) == 'linux':
+    if api.GetNodeOs(w1.node_name) == host.OS_TYPE_LINUX:
         krpfile = " /proc/krping "
     else:
         krpfile = " /dev/krping "

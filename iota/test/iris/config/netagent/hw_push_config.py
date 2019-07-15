@@ -94,7 +94,7 @@ def __add_config_worklads(req, target_node = None):
         if not node_name:
             node_name = ep.spec.node_uuid
         if target_node and target_node != node_name:
-            api.Logger.info("Skipping add workload for node %s" % node_name)
+            api.Logger.debug("Skipping add workload for node %s" % node_name)
             continue
         if not api.IsNaplesNode(node_name):
             #if api.GetNicMode() == 'hostpin' and third_party_workload_count > 0:
@@ -434,7 +434,7 @@ def AddNaplesWorkloads(target_node=None):
     wloads = api.GetNaplesWorkloads()
     for wl in wloads:
         if wl.SkipNodePush() or (target_node and target_node != wl.node_name):
-            api.Logger.info("Skipping add workload for node %s" % wl.node_name)
+            api.Logger.debug("Skipping add workload for node %s" % wl.node_name)
             continue
         wl_msg = req.workloads.add()
         wl_msg.workload_name = wl.workload_name
@@ -455,7 +455,7 @@ def __delete_classic_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
     for wl in api.GetWorkloads():
         if target_node and target_node != wl.node_name:
-            api.Logger.info("Skipping delete workload for node %s" % wl.node_name)
+            api.Logger.debug("Skipping delete workload for node %s" % wl.node_name)
             continue
         req.workload_op = topo_svc.DELETE
         wl_msg = req.workloads.add()
@@ -472,7 +472,7 @@ def __readd_classic_workloads(target_node = None):
     #pdb.set_trace()
     for wl in api.GetWorkloads():
         if target_node and target_node != wl.node_name:
-            api.Logger.info("Skipping add classic workload for node %s" % wl.node_name)
+            api.Logger.debug("Skipping add classic workload for node %s" % wl.node_name)
             continue
         wl_msg = req.workloads.add()
         wl_msg.ip_prefix = wl.ip_prefix
