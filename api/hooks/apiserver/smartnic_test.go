@@ -8,6 +8,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -58,6 +60,9 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 			AdmissionPhase: "UNKNOWN",
 			SerialNum:      "TestNIC",
 			PrimaryMAC:     "00ae.cd01.0001",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "192.168.10.3/32",
+			},
 		},
 	}
 
@@ -71,28 +76,40 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	AssertOk(t, err, fmt.Sprintf("Error creating object in KVStore"))
 
 	// Test delete/decommission restrictions
+	// create module for testing smartnic update/delete
+	modules := diagnostics.NewNaplesModules(nic.Name, "", "V1")
+	kv.Create(ctx, modules[0].MakeKey(string(apiclient.GroupDiagnostics)), modules[0])
+
 	for _, phase := range cluster.SmartNICStatus_Phase_name {
 		nic.Status.AdmissionPhase = phase
 		err = kv.Update(ctx, key, &nic)
 		AssertOk(t, err, fmt.Sprintf("Error updating object in KVStore, phase: %s", phase))
 
 		// Create and update should always go through
-		_, r, err := hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.CreateOper, false, nic)
+		txn := kv.NewTxn()
+		_, r, err := hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.CreateOper, false, nic)
 		Assert(t, r == true && err == nil, "smartNICPreCommitHook returned unexpected error, op: CREATE, phase: %s", phase)
-		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, nic)
+		Assert(t, !txn.IsEmpty(), "transaction should contain module object")
+
+		txn = kv.NewTxn()
+		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.UpdateOper, false, nic)
 		Assert(t, r == true && err == nil, "smartNICPreCommitHook returned unexpected error, op: UPDATE, phase: %s", phase)
+		Assert(t, !txn.IsEmpty(), "transaction should contain module object")
 
 		// MgmtMode change only goes through if phase == ADMITTED
-		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, decomNICUpd)
+		txn = kv.NewTxn()
+		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.UpdateOper, false, decomNICUpd)
 		Assert(t, r == true && (err == nil || phase != cluster.SmartNICStatus_ADMITTED.String()),
 			"smartNICPreCommitHook returned unexpected result on mode change, op: UPDATE, phase: %s, err: %v", phase, err)
+		Assert(t, !txn.IsEmpty(), "transaction should contain module object")
 
 		// delete only goes through if phase != ADMITTED
-		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.DeleteOper, false, nic)
+		txn = kv.NewTxn()
+		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.DeleteOper, false, nil)
 		Assert(t, r == true && (err == nil || phase == cluster.SmartNICStatus_ADMITTED.String()),
 			"smartNICPreCommitHook returned unexpected result, op: DELETE, phase: %s, err: %v", phase, err)
+		Assert(t, phase == cluster.SmartNICStatus_ADMITTED.String() || !txn.IsEmpty(), "transaction should contain module object")
 	}
-
 	// Test unsupported Spec modifications
 	tlsKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	AssertOk(t, err, "Error generating key")
@@ -136,4 +153,12 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 			}
 		}
 	}
+	for _, oper := range []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper} {
+		_, _, err := hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, oper, false, nil)
+		Assert(t, reflect.DeepEqual(err, errInvalidInputType), fmt.Sprintf("unexpected error: %v", err))
+	}
+	nic.Status.IPConfig = nil
+	txn := kv.NewTxn()
+	hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.CreateOper, false, nic)
+	Assert(t, !txn.IsEmpty(), "module object should be created if IP config is not present in smart nic status")
 }

@@ -969,13 +969,18 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.SearchRequest_Full.String(),
 			"",
-			1,
+			2,
 			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
 							"4444.4400.0001": nil,
+						},
+					},
+					"Monitoring": {
+						"Module": {
+							"4444.4400.0001-pen-netagent": nil,
 						},
 					},
 				},

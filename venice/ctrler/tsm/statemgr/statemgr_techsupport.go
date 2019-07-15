@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -342,6 +343,11 @@ func (sm *Statemgr) PurgeDeletedTechSupportObjects(objList interface{}) {
 		}
 	case []*cluster.Node:
 		kind = KindControllerNode
+		for _, obj := range objs {
+			objNameMap[obj.GetObjectMeta().Name] = true
+		}
+	case []*diagnostics.Module:
+		kind = KindModule
 		for _, obj := range objs {
 			objNameMap[obj.GetObjectMeta().Name] = true
 		}

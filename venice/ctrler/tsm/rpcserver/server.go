@@ -41,9 +41,13 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, er
 	// create techsupport RPC server
 	tsServer := NewTechSupportRPCServer(stateMgr)
 
+	// create diagnostics RPC server
+	diagServer := NewDiagnosticsServer(stateMgr)
+
 	// register the RPC handlers and start the server
 	tsproto.RegisterMirrorSessionApiServer(grpcServer.GrpcServer, msServer)
 	tsproto.RegisterTechSupportApiServer(grpcServer.GrpcServer, tsServer)
+	tsproto.RegisterDiagnosticsApiServer(grpcServer.GrpcServer, diagServer)
 	grpcServer.Start()
 
 	// create rpc server object

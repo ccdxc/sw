@@ -74,6 +74,9 @@ message ModuleStatus {
 
     // Ports on which this process is listening
     repeated ServicePort ServicePorts = 8 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-ports,omitempty"];
+
+    // MACAddress of the smart nic on which this module runs
+    string MACAddress                 = 9 [(gogoproto.jsontag) = "mac-address,omitempty"];
 }
 
 // ServicePort is to qualify diagnostics request for a specific port in case service is listening on multiple ports

@@ -112,6 +112,7 @@ var typesMapModule = map[string]*api.Struct{
 			"labels":              api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"last-restart-reason": api.CLIInfo{Path: "Status.LastRestartReason", Skip: false, Insert: "", Help: ""},
 			"log-level":           api.CLIInfo{Path: "Spec.LogLevel", Skip: false, Insert: "", Help: ""},
+			"mac-address":         api.CLIInfo{Path: "Status.MACAddress", Skip: false, Insert: "", Help: ""},
 			"module":              api.CLIInfo{Path: "Status.Module", Skip: false, Insert: "", Help: ""},
 			"name":                api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":           api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
@@ -153,6 +154,8 @@ var typesMapModule = map[string]*api.Struct{
 			"Service": api.Field{Name: "Service", CLITag: api.CLIInfo{ID: "service", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ServicePorts": api.Field{Name: "ServicePorts", CLITag: api.CLIInfo{ID: "service-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service-ports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "diagnostics.ServicePort"},
+
+			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"diagnostics.ServicePort": &api.Struct{

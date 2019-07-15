@@ -62,6 +62,17 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 	defer smartNICNodeWatcher.Stop()
 
+	moduleOpts := api.ListWatchOptions{
+		// We don't care about meta updates and we don't want to get back our own status updates
+		FieldChangeSelector: []string{"Spec"},
+	}
+	moduleWatcher, err := apicl.DiagnosticsV1().Module().Watch(ctx1, &moduleOpts)
+	if err != nil {
+		log.Errorf("Failed to start module watch (%s)\n", err)
+		return
+	}
+	defer moduleWatcher.Stop()
+
 	// wait for events
 	// api server will send events for all existing mirror session objects as well
 	log.Infof("Waiting for events from api-server")
@@ -98,6 +109,13 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 				return
 			}
 			w.statemgr.TechSupportWatcher <- *evt
+
+		case evt, ok := <-moduleWatcher.EventChan(): // receive notifications for module events
+			if !ok {
+				log.Errorf("Error receiving from apisrv Module watcher")
+				return
+			}
+			w.statemgr.DiagnosticsModuleWatcher <- *evt
 
 		case <-ctx1.Done():
 			return
@@ -148,6 +166,11 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 			nnList, err := apicl.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
 			if err == nil {
 				w.statemgr.PurgeDeletedTechSupportObjects(nnList)
+			}
+			// purge module objects
+			moduleList, err := apicl.DiagnosticsV1().Module().List(ctx, &api.ListWatchOptions{})
+			if err == nil {
+				w.statemgr.PurgeDeletedModuleObjects(moduleList)
 			}
 
 			// handle api server watch events

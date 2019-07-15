@@ -1,6 +1,6 @@
 OutDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restapi/tsagent
 
-DEST := matchrule.pb.go mirror.pb.go  techsupport.pb.go ${OutDir}/mirror_api.go ${OutDir}/mirror_api_test.go ${OutDir}/techsupport_api.go
+DEST := matchrule.pb.go mirror.pb.go  techsupport.pb.go diagnostics.pb.go ${OutDir}/mirror_api.go ${OutDir}/mirror_api_test.go ${OutDir}/techsupport_api.go
 default: ${DEST}
 
 mirror.pb.go: mirror.proto matchrule.proto
@@ -26,6 +26,13 @@ techsupport.pb.go: techsupport.proto
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
 	--gofast_out=plugins=grpc:. techsupport.proto
 	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' *.go
+	rm -f *.bak_
+
+diagnostics.pb.go: diagnostics.proto
+	protoc -I/usr/local/include -I. -I../../../../vendor -I${GOPATH}/src -I../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
+	--gofast_out=plugins=grpc:. diagnostics.proto
+	sed -i.bak_ 's/api\/protos/api\/generated\/diagnostics/g' *.go
 	rm -f *.bak_
 
 ${OutDir}/%_api.go ${OutDir}/%_api_test.go: %.proto

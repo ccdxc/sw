@@ -19,6 +19,7 @@ export interface IDiagnosticsModuleStatus {
     'last-restart-reason'?: string;
     'service'?: string;
     'service-ports'?: Array<IDiagnosticsServicePort>;
+    'mac-address'?: string;
 }
 
 
@@ -31,6 +32,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
     'last-restart-reason': string = null;
     'service': string = null;
     'service-ports': Array<DiagnosticsServicePort> = null;
+    'mac-address': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'node': {
             required: false,
@@ -65,6 +67,10 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
         'service-ports': {
             required: false,
             type: 'object'
+        },
+        'mac-address': {
+            required: false,
+            type: 'string'
         },
     }
 
@@ -153,6 +159,13 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
         } else {
             this['service-ports'] = [];
         }
+        if (values && values['mac-address'] != null) {
+            this['mac-address'] = values['mac-address'];
+        } else if (fillDefaults && DiagnosticsModuleStatus.hasDefaultValue('mac-address')) {
+            this['mac-address'] = DiagnosticsModuleStatus.propInfo['mac-address'].default;
+        } else {
+            this['mac-address'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -168,6 +181,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
                 'last-restart-reason': CustomFormControl(new FormControl(this['last-restart-reason']), DiagnosticsModuleStatus.propInfo['last-restart-reason']),
                 'service': CustomFormControl(new FormControl(this['service']), DiagnosticsModuleStatus.propInfo['service']),
                 'service-ports': new FormArray([]),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), DiagnosticsModuleStatus.propInfo['mac-address']),
             });
             // generate FormArray control elements
             this.fillFormArray<DiagnosticsServicePort>('service-ports', this['service-ports'], DiagnosticsServicePort);
@@ -194,6 +208,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
             this._formGroup.controls['last-restart-reason'].setValue(this['last-restart-reason']);
             this._formGroup.controls['service'].setValue(this['service']);
             this.fillModelArray<DiagnosticsServicePort>(this, 'service-ports', this['service-ports'], DiagnosticsServicePort);
+            this._formGroup.controls['mac-address'].setValue(this['mac-address']);
         }
     }
 }

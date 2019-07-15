@@ -385,6 +385,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.mac-address",
+            "description": "MACAddress of the smart nic on which this module runs.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1192,6 +1199,10 @@
             "$ref": "#/definitions/diagnosticsServicePort"
           },
           "title": "Ports on which this process is listening"
+        },
+        "mac-address": {
+          "type": "string",
+          "title": "MACAddress of the smart nic on which this module runs"
         }
       },
       "title": "ModuleStatus contains collected diagnostics of a process"

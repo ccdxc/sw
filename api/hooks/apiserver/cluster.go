@@ -548,6 +548,7 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Node", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Cluster", apiintf.CreateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)
 	svc.GetCrudService("Cluster", apiintf.UpdateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).WithPreCommitHook(r.populateExistingTLSConfig).GetRequestType().WithValidate(r.validateClusterConfig)
+	svc.GetCrudService("SmartNIC", apiintf.CreateOper).WithPreCommitHook(r.smartNICPreCommitHook)
 	svc.GetCrudService("SmartNIC", apiintf.UpdateOper).WithPreCommitHook(r.smartNICPreCommitHook)
 	svc.GetCrudService("SmartNIC", apiintf.DeleteOper).WithPreCommitHook(r.smartNICPreCommitHook)
 	// hook to set bootstrap flag

@@ -1068,10 +1068,13 @@ func TestNICDecommissionFlow(t *testing.T) {
 		checkE2EState(t, nmd, pencluster.SmartNICStatus_DECOMMISSIONED.String())
 		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_HOST.String())
 
+		_, err := tInfo.apiClient.DiagnosticsV1().Module().Get(context.TODO(), &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", meta.Name, globals.Netagent)})
+		AssertOk(t, err, "Error retrieving module object")
 		// Delete SmartNIC object
 		_, err = tInfo.apiClient.ClusterV1().SmartNIC().Delete(context.Background(), &meta)
 		AssertOk(t, err, "Error deleting SmartNIC object")
-
+		_, err = tInfo.apiClient.DiagnosticsV1().Module().Get(context.TODO(), &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", meta.Name, globals.Netagent)})
+		Assert(t, err != nil, "expected module object to be deleted")
 		// Switch again to network-managed mode
 		setNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
 		// We should go to PENDING, because the Cluster.Spec.AutoAdmitNICs = false

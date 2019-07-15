@@ -38,6 +38,9 @@ type Statemgr struct {
 	// Affected objects can be TechSupportRequests, Controller nodes and SmartNIC nodes
 	TechSupportWatcher chan kvstore.WatchEvent
 
+	// Channels to receive diagnostics module events from ApiServer
+	DiagnosticsModuleWatcher chan kvstore.WatchEvent
+
 	stopFlag syncFlag
 
 	// Resource allocation/tracking
@@ -126,6 +129,18 @@ func (sm *Statemgr) runTechSupportWatchers() {
 	}
 }
 
+// runDiagnosticsModuleWatcher watches on a channel for changes from api server and internal events
+func (sm *Statemgr) runDiagnosticsModuleWatchers() {
+	defer sm.waitGrp.Done()
+	log.Infof("Diagnostics Module Watcher running")
+
+	// loop till channel is closed
+	for evt := range sm.DiagnosticsModuleWatcher {
+		evt := evt // create a copy for range scope variable.
+		sm.handleDiagnosticsModuleEvent(&evt)
+	}
+}
+
 func (sm *Statemgr) setStop() {
 	sm.stopFlag.Lock()
 	sm.stopFlag.flag = true
@@ -171,6 +186,7 @@ func (sm *Statemgr) Stop() {
 	close(sm.MirrorSessionWatcher)
 	close(sm.mirrorTimerWatcher)
 	close(sm.TechSupportWatcher)
+	close(sm.DiagnosticsModuleWatcher)
 	// wait for all go routines to exit
 	log.Debugf("Tsm wait for all go routines")
 	sm.waitGrp.Wait()
@@ -181,12 +197,13 @@ func (sm *Statemgr) Stop() {
 func NewStatemgr(wr writer.Writer, rslvr resolver.Interface) (*Statemgr, error) {
 	// create new statemgr instance
 	stateMgr := &Statemgr{
-		memDB:                memdb.NewMemdb(),
-		writer:               wr,
-		objstoreClient:       nil,
-		MirrorSessionWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
-		mirrorTimerWatcher:   make(chan MirrorTimerEvent, watcherQueueLen),
-		TechSupportWatcher:   make(chan kvstore.WatchEvent, watcherQueueLen),
+		memDB:                    memdb.NewMemdb(),
+		writer:                   wr,
+		objstoreClient:           nil,
+		MirrorSessionWatcher:     make(chan kvstore.WatchEvent, watcherQueueLen),
+		mirrorTimerWatcher:       make(chan MirrorTimerEvent, watcherQueueLen),
+		TechSupportWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
+		DiagnosticsModuleWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
 		stopFlag: syncFlag{
 			flag: false,
 		},
@@ -216,9 +233,10 @@ func NewStatemgr(wr writer.Writer, rslvr resolver.Interface) (*Statemgr, error) 
 		}
 	}
 
-	stateMgr.waitGrp.Add(2)
+	stateMgr.waitGrp.Add(3)
 	go stateMgr.runMirrorSessionWatcher()
 	go stateMgr.runTechSupportWatchers()
+	go stateMgr.runDiagnosticsModuleWatchers()
 
 	return stateMgr, nil
 }

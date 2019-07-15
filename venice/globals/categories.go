@@ -45,4 +45,5 @@ var Kind2Category = map[string]string{
 	"FwlogPolicy":             "Monitoring",
 	"MirrorSession":           "Monitoring",
 	"AuditEvent":              "Monitoring",
+	"Module":                  "Monitoring",
 }
