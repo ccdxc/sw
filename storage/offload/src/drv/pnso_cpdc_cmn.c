@@ -339,7 +339,7 @@ cpdc_get_batch_bulk_desc(struct mem_pool *mpool)
 
 	desc = (struct cpdc_desc *) mpool_get_object(mpool);
 	if (!desc) {
-		OSAL_LOG_ERROR("cannot obtain cpdc bulk object from pool!");
+		OSAL_LOG_DEBUG("cannot obtain cpdc bulk object from pool!");
 		return NULL;
 	}
 
@@ -427,7 +427,7 @@ cpdc_setup_status_desc(struct service_info *svc_info,
 			cpdc_get_status_type(per_block),
 			&svc_info->si_status_desc);
 	if (err) {
-		OSAL_LOG_ERROR("cannot obtain status desc! svc_type: %d per_block: %d err: %d",
+		OSAL_LOG_DEBUG("cannot obtain status desc! svc_type: %d per_block: %d err: %d",
 				svc_info->si_type, per_block, err);
 		goto out;
 	}

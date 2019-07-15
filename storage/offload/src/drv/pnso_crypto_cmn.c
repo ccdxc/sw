@@ -397,7 +397,7 @@ crypto_get_batch_bulk_desc(struct mem_pool *mpool)
 
 	desc = (struct crypto_desc *) mpool_get_object(mpool);
 	if (!desc) {
-		OSAL_LOG_ERROR("cannot obtain crypto bulk object from pool!");
+		OSAL_LOG_DEBUG("cannot obtain crypto bulk object from pool!");
 		return NULL;
 	}
 

@@ -1155,8 +1155,8 @@ chn_create_chain(struct request_params *req_params,
 
 	chain = (struct service_chain *) mpool_get_object(svc_chain_mpool);
 	if (!chain) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("cannot obtain service chain object from pool! err: %d",
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("cannot obtain service chain object from pool! err: %d",
 				err);
 		goto out;
 	}
@@ -1204,8 +1204,8 @@ chn_create_chain(struct request_params *req_params,
 		centry = (struct chain_entry *)
 			mpool_get_object(svc_chain_entry_mpool);
 		if (!centry) {
-			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain service chain entry object from pool! err: %d",
+			err = EAGAIN;
+			OSAL_LOG_DEBUG("cannot obtain service chain entry object from pool! err: %d",
 				err);
 			goto out_chain;
 		}

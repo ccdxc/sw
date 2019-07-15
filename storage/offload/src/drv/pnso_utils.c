@@ -317,15 +317,16 @@ pc_res_svc_status_get(const struct per_core_resource *pcr,
 		      enum mem_pool_type mpool_type,
 		      struct service_status_desc *svc_status)
 {
-	pnso_error_t err = ENOMEM;
+	pnso_error_t err = EAGAIN;
 
 	svc_status->desc = pc_res_mpool_object_get_with_num_vec_elems(pcr,
 					mpool_type, &svc_status->num_elems,
 					&svc_status->elem_size);
 	if (!svc_status->desc) {
 		if (!mpool_type_is_soft_get_error(mpool_type)) {
-			OSAL_LOG_ERROR("cannot obtain service_status from pool "
-				"%s: err: %d", mpool_get_type_str(mpool_type), err);
+			OSAL_LOG_DEBUG("cannot obtain service_status from pool "
+				"%s: err: %d", mpool_get_type_str(mpool_type),
+				err);
 		}
 		goto out;
 	}

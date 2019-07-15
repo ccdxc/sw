@@ -148,16 +148,16 @@ get_mpool_batch_object(struct per_core_resource *pcr,
 
 	batch_page_mpool = pcr->mpools[MPOOL_TYPE_BATCH_PAGE];
 	batch_info_mpool = pcr->mpools[MPOOL_TYPE_BATCH_INFO];
-	if (!batch_page_mpool || !batch_info_mpool) {
-		OSAL_ASSERT(0);
+	if (!batch_page_mpool || !batch_info_mpool)
 		goto out;
-	}
 
 	p =  (void *) ((pool_type == MPOOL_TYPE_BATCH_PAGE) ?
 			mpool_get_object(batch_page_mpool) :
 			mpool_get_object(batch_info_mpool));
 	if (!p) {
-		OSAL_ASSERT(0);
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("cannot obtain batch page/info object from pool! err: %d",
+				err);
 		goto out;
 	}
 
@@ -167,7 +167,7 @@ get_mpool_batch_object(struct per_core_resource *pcr,
 	return p;
 
 out:
-	OSAL_LOG_ERROR("exit! failed to obtain batch page/info object from mpool. pcr: 0x" PRIx64 " pool_type: %d err: %d",
+	OSAL_LOG_DEBUG("exit! failed to obtain batch page/info object from mpool. pcr: 0x" PRIx64 " pool_type: %d err: %d",
 			(uint64_t) pcr, pool_type, err);
 	return p;
 }
@@ -223,8 +223,8 @@ get_bulk_batch_desc(struct batch_info *batch_info, uint32_t page_idx)
 	}
 
 	if (!batch_info->bi_bulk_desc[page_idx]) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("failed to obtain batch bulk desc. pcr: 0x " PRIx64 " pool_type: %d page_idx: %d err: %d",
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("failed to obtain batch bulk desc. pcr: 0x " PRIx64 " pool_type: %d page_idx: %d err: %d",
 			(uint64_t) pcr, batch_info->bi_mpool_type, page_idx, err);
 		goto out;
 	}
@@ -472,6 +472,7 @@ add_page(struct batch_info *batch_info)
 		get_mpool_batch_object(batch_info->bi_pcr,
 				MPOOL_TYPE_BATCH_PAGE);
 	if (!batch_page) {
+		err = EAGAIN;
 		OSAL_LOG_DEBUG("failed to obtain batch page from pool! err: %d",
 				err);
 		goto out;
@@ -809,6 +810,7 @@ bat_add_to_batch(struct per_core_resource *pcr,
 	if (!batch_info) {
 		batch_info = init_batch_info(pcr, svc_req);
 		if (!batch_info) {
+			err = EAGAIN;
 			OSAL_LOG_DEBUG("failed to init batch! err: %d",
 					err);
 			goto out;
@@ -854,7 +856,7 @@ out_batch:
 	pcr->batch_ctx = NULL;
 	deinit_batch(batch_info);
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 

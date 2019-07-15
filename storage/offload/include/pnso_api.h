@@ -550,6 +550,7 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *	-ENOMEM - on failing to allocate memory
+ *	-EAGAIN - on request not done
  *
  */
 pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
@@ -608,6 +609,7 @@ pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
  * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
+ *	-EAGAIN - on request not done
  *
  */
 pnso_error_t pnso_flush_batch(completion_cb_t cb,
