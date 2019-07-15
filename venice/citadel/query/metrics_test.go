@@ -222,7 +222,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:       []string{"cpu"},
 				GroupbyField: "ReporterID",
 			},
-			resp: "SELECT cpu FROM test-db GROUP BY ReporterID ORDER BY time ASC",
+			resp: "SELECT cpu FROM test-db GROUP BY \"ReporterID\" ORDER BY time ASC",
 			pass: true,
 		},
 		{

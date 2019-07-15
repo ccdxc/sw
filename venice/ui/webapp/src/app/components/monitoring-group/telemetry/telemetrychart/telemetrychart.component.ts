@@ -452,7 +452,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       this.drawGraph();
       return;
     }
-    this.metricSubscription = this.telemetryqueryService.pollMetrics('telemetryExplore', queryList).subscribe(
+    this.metricSubscription = this.telemetryqueryService.pollMetrics('telemetryExplore-' + Utility.s4() + Utility.s4(), queryList).subscribe(
       (data: ITelemetry_queryMetricsQueryResponse) => {
         // If tenant is null, then it is the default response from the behavior subject, and not from the backend
         if (data.tenant != null) {

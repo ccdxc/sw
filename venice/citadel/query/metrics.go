@@ -282,7 +282,8 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 	}
 
 	if qs.GroupbyField != "" {
-		groupby = append(groupby, fmt.Sprintf("%s", qs.GroupbyField))
+		// Need to escape with quotes incase value is an influx keyword (ex. name)
+		groupby = append(groupby, fmt.Sprintf("\"%s\"", qs.GroupbyField))
 	}
 
 	if len(groupby) > 0 {
