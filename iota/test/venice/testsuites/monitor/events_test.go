@@ -35,7 +35,8 @@ var _ = Describe("events tests", func() {
 			if ts.tb.HasNaplesSim() {
 				Skip("link flap cannot be run on NAPLES sim")
 			}
-			startTime := time.Now()
+			//Naples time in UTC
+			startTime := time.Now().UTC()
 			startTime = startTime.Add(-3 * time.Minute) // TODO: remove this; there is ~2 to ~3 minute delay between naples sim and rund VM
 
 			// get a random naples and flap the port
