@@ -583,6 +583,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         this.alerts = this.alertsEventUtility.array.filter((alert: MonitoringAlert) => {
           return (this.isAlertInOpenState(alert));
         });
+        // VS-630 sort the alerts in desc order
+        this.alerts = Utility.sortDate(this.alerts, ['meta', 'mod-time'], -1);
         this.updateHighestSeverity();
         // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {

@@ -370,10 +370,44 @@ export class Utility {
     return new Date(today.getFullYear(), today.getMonth(), today.getDate() + Math.random() * direction * rangeOfDays, Math.random() * hourRange + startHour, Math.random() * 60);
   }
 
-  static vitalsDataSortHelper(a, b): number {
-    const aDate = new Date(a['date']);
-    const bDate = new Date(b['date']);
-    return aDate.getTime() - bDate.getTime();
+  /**
+   *
+   * @param field Field to sort by
+   * @param order 1 for asc, -1 for dec
+   */
+  static dateSortHelper(a: any, b: any, fields: any, order: number): number {
+    const aField = _.get(a, fields, 0);
+    const bField = _.get(a, fields, 0);
+    const aDate = new Date(aField).getTime();
+    const bDate = new Date(bField).getTime();
+    if (aDate < bDate) {
+      return -1 * order;
+    } else if (aDate > bDate) {
+      return 1 * order;
+    }
+    return 0;
+  }
+
+  /**
+   * Sort objects by date
+   * @param list
+   * @param fields
+   * @param order
+   *
+   * For example:
+   *  VS-630 sort the alerts in desc order
+   *  this.alerts = Utility.sortDate(this.alerts, ['meta', 'mod-time'], -1);
+   *
+   */
+  static sortDate(list: any, fields: string[], order: number): any[] {
+      if (order !== 1 && order !== -1) {
+        console.error('Invalid sort order given');
+        return list;
+      }
+      const sortedList = list.sort( (a, b) => {
+        return this.dateSortHelper(a, b, fields, order);
+      });
+      return sortedList;
   }
 
   static getTimeDifferenceDuration(diff): string {
