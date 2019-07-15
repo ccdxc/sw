@@ -2,10 +2,11 @@ package watchstream
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/api/api_test"
+	apitest "github.com/pensando/sw/api/api_test"
 	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -108,15 +109,15 @@ func TestWatchEventQ(t *testing.T) {
 		t.Fatalf("Failed to create watchEventQ")
 	}
 	ctx := context.Background()
-	rcvdEvents := 0
-	rcvdErrors := 0
+	rcvdEvents := int32(0)
+	rcvdErrors := int32(0)
 	cbfunc := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
 		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
-			t.Logf("Q [%s] received object %+v", id, obj)
+			t.Logf("Q [%s] received event %s object %+v", id, evType, obj)
 			if evType == kvstore.WatcherError {
-				rcvdErrors++
+				atomic.AddInt32(&rcvdErrors, 1)
 			} else {
-				rcvdEvents++
+				atomic.AddInt32(&rcvdEvents, 1)
 			}
 		}
 	}
@@ -229,8 +230,8 @@ func TestWatchEventQ(t *testing.T) {
 	q.Enqueue(kvstore.Created, &b5, nil)
 	testutils.AssertConsistently(t, func() (bool, interface{}) {
 		t.Logf("events is %d", rcvdEvents)
-		return rcvdEvents == 6, nil
-	}, "expecting 6 events", "10ms", "100ms")
+		return atomic.LoadInt32(&rcvdEvents) == 6, nil
+	}, "expecting 6 events", "10ms", "200ms")
 
 	if q.eventList.Len() != 5 {
 		t.Errorf("incorrect number of events")
@@ -243,11 +244,11 @@ func TestWatchEventQ(t *testing.T) {
 	}
 
 	t.Logf(" --> janitor slow watchers")
-	slowrcvd := 0
-	slowBlockCount := 3
+	slowrcvd := int32(0)
+	slowBlockCount := int32(3)
 	slowcb := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
 		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
-			slowrcvd++
+			atomic.AddInt32(&slowrcvd, 1)
 			t.Logf("q[%s] slowCb called", id)
 			if slowrcvd < slowBlockCount {
 				return
@@ -339,9 +340,9 @@ func TestWatchEventQ(t *testing.T) {
 	if q4.watcherList.Len() != 0 {
 		t.Errorf("not expecing any watchers, got %d", q4.watcherList.Len())
 	}
-	cleanupCalled := 0
+	cleanupCalled := int32(0)
 	cleanfunc := func() {
-		cleanupCalled++
+		atomic.AddInt32(&cleanupCalled, 1)
 	}
 	go q4.Dequeue(nctx, 0, cbfunc("slow-q4-0"), cleanfunc)
 	testutils.AssertEventually(t, func() (bool, interface{}) {

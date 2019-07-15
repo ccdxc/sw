@@ -15,8 +15,8 @@ import (
 	"github.com/tchap/go-patricia/patricia"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/utils"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -134,7 +134,7 @@ type watchEventQ struct {
 	watcherList *safelist.SafeList
 	// refCount is the number of references to this watchEventQ
 	refCount int
-	// cond is the condition variable that will be signalled on enqueue
+	// cond is the condition variable that will be signaled on enqueue
 	cond *sync.Cond
 	// stopCh stops the watchEventQ
 	stopCh chan error
