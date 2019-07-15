@@ -7,8 +7,8 @@
 
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/api/nexthop_utils.hpp"
-#include "nic/apollo/test/utils/feeder.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 

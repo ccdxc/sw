@@ -6,7 +6,6 @@
 #ifndef __TEST_UTILS_REMOTE_MAPPING_HPP__
 #define __TEST_UTILS_REMOTE_MAPPING_HPP__
 
-#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 
 #define PDS_MAX_VNIC_IP 33

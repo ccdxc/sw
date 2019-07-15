@@ -5,10 +5,9 @@
 #ifndef __TEST_UTILS_POLICY_HPP__
 #define __TEST_UTILS_POLICY_HPP__
 
-#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
-#include "nic/apollo/api/include/pds_policy.hpp"
 
 namespace api_test {
 

@@ -6,10 +6,9 @@
 #ifndef __TEST_UTILS_TAG_HPP__
 #define __TEST_UTILS_TAG_HPP__
 
-#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
-#include "nic/apollo/test/utils/feeder.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 

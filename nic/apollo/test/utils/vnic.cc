@@ -5,7 +5,6 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
-#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 
 namespace api_test {

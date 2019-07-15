@@ -2,7 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-#include <iostream>
 #include "nic/apollo/test/utils/tag.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/utils.hpp"

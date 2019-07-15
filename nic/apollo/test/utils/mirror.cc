@@ -2,10 +2,9 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-#include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/mirror.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 

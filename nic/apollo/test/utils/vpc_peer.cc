@@ -2,11 +2,9 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-#include <iostream>
-#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
-#include "nic/apollo/test/utils/vpc_peer.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/vpc_peer.hpp"
 
 namespace api_test {
 

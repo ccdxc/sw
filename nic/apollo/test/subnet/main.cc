@@ -8,13 +8,9 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/test/utils/utils.hpp"
-#include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/test/utils/batch.hpp"
-#include "nic/apollo/test/utils/api_base.hpp"
-#include "nic/apollo/test/utils/workflow1.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
 /// \cond

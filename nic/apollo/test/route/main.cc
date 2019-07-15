@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/route.hpp"
 #include "nic/apollo/test/utils/tep.hpp"

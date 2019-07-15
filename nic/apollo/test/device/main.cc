@@ -8,12 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/device.hpp"
-#include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 

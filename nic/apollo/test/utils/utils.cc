@@ -5,8 +5,8 @@
 #include <iostream>
 #include <iomanip>
 #include <gtest/gtest.h>
-#include "nic/apollo/test/utils/utils.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace api_test {

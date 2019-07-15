@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include <getopt.h>
-#include <gtest/gtest.h>
 #include <stdarg.h>
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"

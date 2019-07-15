@@ -3,12 +3,10 @@
 //
 //----------------------------------------------------------------------------
 
-#include <iostream>
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/policy.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 
-using namespace std;
 namespace api_test {
 
 //----------------------------------------------------------------------------

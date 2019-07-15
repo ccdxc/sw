@@ -8,24 +8,23 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
-#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
-#include "nic/apollo/test/utils/workflow.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
-#include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/device.hpp"
-#include "nic/apollo/test/utils/vpc.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
-#include "nic/apollo/test/utils/tep.hpp"
-#include "nic/apollo/test/utils/route.hpp"
-#include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/local_mapping.hpp"
 #include "nic/apollo/test/utils/remote_mapping.hpp"
+#include "nic/apollo/test/utils/route.hpp"
+#include "nic/apollo/test/utils/subnet.hpp"
+#include "nic/apollo/test/utils/tep.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/vnic.hpp"
+#include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 
 namespace api_test {
 /// \cond

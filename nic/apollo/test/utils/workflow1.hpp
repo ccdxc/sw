@@ -11,8 +11,8 @@
 #ifndef __TEST_UTILS_WORKFLOW1_HPP__
 #define __TEST_UTILS_WORKFLOW1_HPP__
 
-#include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
 
 namespace api_test {
 
