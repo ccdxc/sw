@@ -41,6 +41,21 @@ using acl::AclStats;
 
 namespace hal {
 
+/*
+ * General Rule:
+ * - All drop ACLs have to be above FTE span. Otherwise, packets will not be dropped
+ *   and they will have unintended behavior.
+ *
+ * ACL_HOSTPIN_HOST_MGMT_DROP has to be above EPLearn:
+ * - Packets coming from host mgmt IFs with hostpin mode should not be accepted. 
+ *   ARPs should hit host-mgmt-drop acl before EP Learn.
+ *
+ * ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY has to be above ACL_FTE_SPAN_PRIORITY  
+ * - Fragmented packets should be dropped with acl. If span is above frag drop,
+ *   frag packets will have undefined behavior as flow key will not be 
+ *   formed properly.
+ */
+
 #define HAL_MAX_ACLS 512
 
 #define ACL_IP_FRAGMENT_DROP_ENTRY_ID    0
@@ -50,13 +65,13 @@ namespace hal {
 #define ACL_EPLEARN_ENTRY_ID_END         7
 
 #define ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    0
-#define ACL_FTE_SPAN_PRIORITY                  1
-#define ACL_QUIESCE_ENTRY_PRIORITY             2
-#define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       3
-#define ACL_EPLEARN_ENTRY_PRIORITY_END         7
-#define ACL_SNAKE_TEST_PRIORITY_BEGIN          8
-#define ACL_SNAKE_TEST_PRIORITY_END            23
-#define ACL_HOSTPIN_HOST_MGMT_DROP             24
+#define ACL_HOSTPIN_HOST_MGMT_DROP             1
+#define ACL_FTE_SPAN_PRIORITY                  2
+#define ACL_QUIESCE_ENTRY_PRIORITY             3
+#define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       4
+#define ACL_EPLEARN_ENTRY_PRIORITY_END         8
+#define ACL_SNAKE_TEST_PRIORITY_BEGIN          9
+#define ACL_SNAKE_TEST_PRIORITY_END            24
 
 
 typedef struct acl_eth_match_spec_s {
