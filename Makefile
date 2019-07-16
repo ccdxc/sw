@@ -170,7 +170,7 @@ gopkgsinstall:
 gopkglist: gopkgsinstall
 	@$(eval GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}))
 	$(eval GO_PKG_UTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep -v ${INTEG_TEST_PATTERNS} | sort ))
-	$(eval GO_PKG_INTEGTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep ${INTEG_TEST_PATTERNS}))
+	$(eval GO_PKG_INTEGTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep ${INTEG_TEST_PATTERNS} | sort))
 
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
 build: gopkglist
@@ -201,8 +201,17 @@ unit-test-cover-even: gopkglist
 	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${EVENF}
 
 integ-test: gopkglist
-	$(info +++ running go tests on $(GO_PKG_INTEGTEST))
-	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG_INTEGTEST}
+	$(MAKE) integ-test-odd
+	$(MAKE) integ-test-even
+
+integ-test-odd: gopkglist
+	@$(eval ODDF := $(shell echo ${GO_PKG_INTEGTEST} | awk '{for (i=1; i<=NF; i+=2) printf("%s ",$$i)}'))
+	$(info +++ running go tests on $(ODDF))
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${ODDF}
+integ-test-even: gopkglist
+	@$(eval EVENF := $(shell echo ${GO_PKG_INTEGTEST} | awk '{for (i=2; i<=NF; i+=2) printf("%s ",$$i)}'))
+	$(info +++ running go tests on $(EVENF))
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${EVENF}
 
 ci-integ-test:
 	$(MAKE) pregen-clean
@@ -210,7 +219,25 @@ ci-integ-test:
 	$(MAKE) pull-assets
 	$(MAKE) gen-clean
 	$(MAKE) gen
-	$(MAKE) integ-test
+	$(MAKE) integ-test-odd
+	$(MAKE) integ-test-even
+
+ci-integ-test-odd:
+	$(MAKE) pregen-clean
+	$(MAKE) ws-tools
+	$(MAKE) pull-assets
+	$(MAKE) gen-clean
+	$(MAKE) gen
+	$(MAKE) integ-test-odd
+
+ci-integ-test-even:
+	$(MAKE) pregen-clean
+	$(MAKE) ws-tools
+	$(MAKE) pull-assets
+	$(MAKE) gen-clean
+	$(MAKE) gen
+	$(MAKE) integ-test-even
+
 
 unit-race-test: gopkglist
 	$(info +++ running go tests with race detector)

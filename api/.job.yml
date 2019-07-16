@@ -1,8 +1,14 @@
 ---
 version: 2.0
 targets:
-  venice-integ:
-    commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make ci-integ-test" ]
+  venice-integ-odd:
+    commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make ci-integ-test-odd" ]
+    owners: ["email:venice-dev@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  venice-integ-even:
+    commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make ci-integ-test-even" ]
     owners: ["email:venice-dev@pensando.io"]
     area:
     sub-area:
