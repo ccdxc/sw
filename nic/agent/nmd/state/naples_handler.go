@@ -534,7 +534,7 @@ func (n *NMD) AdmitNaples() {
 					}
 
 					nic, _ := n.GetSmartNIC()
-					recorder.Event(eventtypes.NIC_ADMITTED, fmt.Sprintf("Smart NIC %s admitted to the cluster", nic.Name), nic)
+					recorder.Event(eventtypes.NIC_ADMITTED, fmt.Sprintf("SmartNIC %s(%s) admitted to the cluster", nic.Spec.ID, nic.Name), nic)
 					// Transition to reboot pending only on successful admission only if reboot has not been done.
 					if n.rebootNeeded {
 						if err := n.stateMachine.FSM.Event("rebootPending", n); err != nil {

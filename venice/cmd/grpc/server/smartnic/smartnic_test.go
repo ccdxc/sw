@@ -99,7 +99,7 @@ func isErrorResponse(r *grpc.RegisterNICResponse) bool {
 	return phase == cmd.SmartNICStatus_REJECTED.String() || phase == cmd.SmartNICStatus_UNKNOWN.String()
 }
 
-func (t testInfo) CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string) {
+func (t testInfo) CheckNICVersionForAdmission(nicSku, nicVersion string) (string, string) {
 	return "", ""
 }
 
@@ -254,18 +254,6 @@ func createRPCServerClient() (*rpckit.RPCServer, *rpckit.RPCClient) {
 func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmd.Agent, error) {
 	CreateFruJSON(priMac)
 
-	//// create a platform agent
-	//pa, err := platform.NewNaplesPlatformAgent()
-	//if err != nil {
-	//	log.Fatalf("Error creating platform agent. Err: %v", err)
-	//}
-	//
-	//uc, err := upg.NewNaplesUpgradeClient(nil)
-	//if err != nil {
-	//	log.Fatalf("Error creating Upgrade client . Err: %v", err)
-	//}
-
-	//r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(resolverURLs, ",")})
 	// create the new NMD
 	ag, err := nmd.NewAgent(
 		nil,
@@ -974,6 +962,7 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 	}
 
 	for i, req := range invalidAdmReqs {
+		req := req
 		stream, err := smartNICRegistrationRPCClient.RegisterNIC(context.Background())
 		AssertOk(t, err, "Error creating stream")
 		err = stream.Send(&req)
@@ -1614,7 +1603,7 @@ func TestReadmitSmartNIC(t *testing.T) {
 	AssertOk(t, err, "Error reading SmartNIC object from ApiServer")
 	Assert(t, curNicObj.Spec.ID == nicID && curNicObj.Spec.ID != refNicObj.Spec.ID,
 		"New NIC parameter (hostname) not honored: %+v", curNicObj)
-	Assert(t, curNicObj.Spec.Admit == true, "Old NIC parameter (Admit) should not have been overriden: %+v", curNicObj)
+	Assert(t, curNicObj.Spec.Admit == true, "Old NIC parameter (Admit) should not have been overridden: %+v", curNicObj)
 }
 
 func TestHostNICPairing(t *testing.T) {

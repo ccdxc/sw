@@ -139,7 +139,7 @@ var _ = Describe("events test", func() {
 				return fmt.Errorf("got only %d (%s events) while expecting atleast %d events", int(res.TotalHits()), eventtypes.NIC_ADMITTED.String(), ts.tu.NumNaplesHosts)
 			}
 			return nil
-		}, 100, 1).Should(BeNil(), fmt.Sprintf("ts: %s could not find enough number of %s events in elasticsearch", eventtypes.NIC_ADMITTED.String(), time.Now().String()))
+		}, 100, 1).Should(BeNil(), fmt.Sprintf("ts: %s could not find enough number of %s events in elasticsearch", time.Now().String(), eventtypes.NIC_ADMITTED.String()))
 	})
 
 	AfterEach(func() {
