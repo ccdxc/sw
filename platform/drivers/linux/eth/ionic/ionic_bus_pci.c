@@ -328,7 +328,6 @@ static void ionic_remove(struct pci_dev *pdev)
 		ionic_debugfs_del_dev(ionic);
 		mutex_destroy(&ionic->dev_cmd_lock);
 		ionic_devlink_free(ionic);
-		pci_set_drvdata(pdev, NULL);
 	}
 }
 

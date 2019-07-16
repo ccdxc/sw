@@ -6,7 +6,11 @@
 
 #include <net/devlink.h>
 
+/* make sure we've got a new-enough devlink support to use dev info */
 #ifdef DEVLINK_INFO_VERSION_GENERIC_BOARD_ID
+
+#define IONIC_DEVLINK
+
 struct ionic *ionic_devlink_alloc(struct device *dev);
 void ionic_devlink_free(struct ionic *ionic);
 int ionic_devlink_register(struct ionic *ionic);

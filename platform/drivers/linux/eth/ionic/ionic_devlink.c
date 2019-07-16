@@ -10,38 +10,7 @@
 #include "ionic_lif.h"
 #include "ionic_devlink.h"
 
-
-/* We're only using the devlink dev info facility at this point,
- * which didn't show up until v5.1, so let's predicate this code
- * on one of the #defines that came with it.
- *
- * Using this facility also requires a devlink user program from
- * v5.1 or newer.
- *  Example:
- *	$ ./devlink -j -p dev info pci/0000:b6:00.0
- *	{
- *	    "info": {
- *		"pci/0000:b6:00.0": {
- *		    "driver": "ionic",
- *		    "serial_number": "FLM18420073",
- *		    "versions": {
- *			"fixed": {
- *			    "fw_version": "0.11.0-50",
- *			    "fw_status": "0x1",
- *			    "fw_heartbeat": "0x716ce",
- *			    "asic_type": "0x0",
- *			    "asic_rev": "0x0"
- *			}
- *		    }
- *		}
- *	    }
- *	}
- *
- * If/when we add devlink dev param support, we can predicate on
- * DEVLINK_PARAM_GENERIC instead.
- */
-#ifdef DEVLINK_INFO_VERSION_GENERIC_BOARD_ID
-
+#ifdef IONIC_DEVLINK
 static int ionic_dl_info_get(struct devlink *dl, struct devlink_info_req *req,
 			     struct netlink_ext_ack *extack)
 {
@@ -54,10 +23,6 @@ static int ionic_dl_info_get(struct devlink *dl, struct devlink_info_req *req,
 
 	devlink_info_version_running_put(req, "fw_version",
 					 idev->dev_info.fw_version);
-
-	val = ioread8(&idev->dev_info_regs->fw_status);
-	snprintf(buf, sizeof(buf), "0x%x", val);
-	devlink_info_version_running_put(req, "fw_status", buf);
 
 	val = ioread32(&idev->dev_info_regs->fw_heartbeat);
 	snprintf(buf, sizeof(buf), "0x%x", val);
@@ -85,7 +50,7 @@ struct ionic *ionic_devlink_alloc(struct device *dev)
 
 	dl = devlink_alloc(&ionic_dl_ops, sizeof(struct ionic));
 	if (!dl) {
-		dev_warn(ionic->dev, "devlink_alloc failed");
+		dev_warn(dev, "devlink_alloc failed");
 		return NULL;
 	}
 
@@ -108,6 +73,20 @@ int ionic_devlink_register(struct ionic *ionic)
 	if (err)
 		dev_warn(ionic->dev, "devlink_register failed: %d\n", err);
 
+#if ( LINUX_VERSION_CODE < KERNEL_VERSION(5,2,0) )
+	devlink_port_attrs_set(&ionic->dl_port, DEVLINK_PORT_FLAVOUR_PHYSICAL,
+			       0, false, 0);
+#else
+	devlink_port_attrs_set(&ionic->dl_port, DEVLINK_PORT_FLAVOUR_PHYSICAL,
+			       0, false, 0, NULL, 0);
+#endif
+	err = devlink_port_register(ionic->dl, &ionic->dl_port, 0);
+	if (err)
+		dev_err(ionic->dev, "devlink_port_register failed: %d\n", err);
+	else
+		devlink_port_type_eth_set(&ionic->dl_port,
+					  ionic->master_lif->netdev);
+
 	return err;
 }
 
@@ -116,6 +95,7 @@ void ionic_devlink_unregister(struct ionic *ionic)
 	if (!ionic || !ionic->dl)
 		return;
 
+	devlink_port_unregister(&ionic->dl_port);
 	devlink_unregister(ionic->dl);
 }
-#endif
+#endif /* IONIC_DEVLINK */

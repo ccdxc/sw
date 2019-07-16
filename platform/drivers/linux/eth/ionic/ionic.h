@@ -8,6 +8,7 @@
 
 #include "ionic_if.h"
 #include "ionic_dev.h"
+#include "ionic_devlink.h"
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
@@ -54,7 +55,10 @@ struct ionic {
 #endif
 	struct work_struct nb_work;
 	struct notifier_block nb;
+#ifdef IONIC_DEVLINK
 	struct devlink *dl;
+	struct devlink_port dl_port;
+#endif
 
 	struct timer_list watchdog_timer;
 	int watchdog_period;
