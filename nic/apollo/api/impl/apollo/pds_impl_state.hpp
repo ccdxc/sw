@@ -22,6 +22,7 @@
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 #include "nic/apollo/api/impl/apollo/mirror_impl_state.hpp"
 #include "nic/apollo/api/impl/apollo/nexthop_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/nexthop_group_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -61,6 +62,9 @@ public:
     nexthop_impl_state *nexthop_impl_db(void) {
         return nexthop_impl_db_;
     }
+    nexthop_group_impl_state *nexthop_group_impl_db(void) {
+        return nexthop_group_impl_db_;
+    }
 
 private:
     apollo_impl_state          *apollo_impl_db_;
@@ -72,6 +76,7 @@ private:
     security_policy_impl_state *security_policy_impl_db_;
     mirror_impl_state          *mirror_impl_db_;
     nexthop_impl_state         *nexthop_impl_db_;
+    nexthop_group_impl_state   *nexthop_group_impl_db_;
 };
 extern pds_impl_state g_pds_impl_state;
 
@@ -127,6 +132,12 @@ static inline nexthop_impl_state *
 nexthop_impl_db (void)
 {
     return g_pds_impl_state.nexthop_impl_db();
+}
+
+static inline nexthop_group_impl_state *
+nexthop_group_impl_db (void)
+{
+    return g_pds_impl_state.nexthop_group_impl_db();
 }
 
 /// \@}
