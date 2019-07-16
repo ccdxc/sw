@@ -27,4 +27,11 @@ insmod /nic/bin/mnet.ko &> /var/log/pensando/mnet_load.log
 # start cronjobs
 nice crond -c /nic/conf/apollo/crontabs
 
+# if not already present, create a cache file recording the firmware inventory
+# at boot-time.  will be preserved across a live-update, and so always
+# provides a record of how things looked when we booted (seen with fwupdate -L)
+if [[ ! -r /var/run/fwupdate.cache ]]; then
+    /nic/tools/fwupdate -C
+fi
+
 echo "System initialization done ..."
