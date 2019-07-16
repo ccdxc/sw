@@ -1,6 +1,7 @@
 package copier
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -50,7 +51,7 @@ func (c *Copier) getSftp(ipPort string) (*sftp.Client, error) {
 		return sshclient, nil
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 
 		if c.SSHClient == nil {
 			c.SSHClient, err = connect()
@@ -66,7 +67,7 @@ func (c *Copier) getSftp(ipPort string) (*sftp.Client, error) {
 		}()
 
 		select {
-		case <-time.After(3 * time.Second):
+		case <-time.After(10 * time.Second):
 		case <-waitCh:
 		}
 		if sftpClient == nil || err != nil {
@@ -78,6 +79,9 @@ func (c *Copier) getSftp(ipPort string) (*sftp.Client, error) {
 		return sftpClient, nil
 	}
 
+	if sftpClient == nil {
+		err = errors.New("Sftp client setup failed")
+	}
 	return nil, err
 }
 

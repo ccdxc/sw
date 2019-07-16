@@ -60,9 +60,14 @@ def Verify(tc):
     tc.resp = api.Trigger(req)
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
+
+    for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
-        netagent_cfg_api.PushBaseConfig(ignore_error = False)
+        ret = netagent_cfg_api.PushBaseConfig(ignore_error = False)
+        if ret != api.types.status.SUCCESS:
+            api.Logger.info("policy push failed")
+            #return api.types.status.FAILURE
         if arping.ArPing(tc) != api.types.status.SUCCESS:
             api.Logger.info("arping failed on verify")
         if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
@@ -72,17 +77,17 @@ def Verify(tc):
         try:
             for item in resp['Status']['status']:
                 if not item['Op'] == 4:
-                    print("opcode is bad")
+                    api.Logger.info("opcode is bad")
                     return api.types.status.FAILURE
                 if not item['opstatus'] == 'failure':
-                    print("opstatus is bad")
+                    api.Logger.info("opstatus is bad")
                     return api.types.status.FAILURE
                 if "Compat Check Failed. Metadata version mismatch: Component versions" not in item['Message']:
-                    print("message is bad")
+                    api.Logger.info("message is bad")
                     return api.types.status.FAILURE
             return api.types.status.SUCCESS
         except:
-            print("No Status field returned")
+            api.Logger.info("No Status field returned")
             return api.types.status.SUCCESS
 
 def Teardown(tc):
