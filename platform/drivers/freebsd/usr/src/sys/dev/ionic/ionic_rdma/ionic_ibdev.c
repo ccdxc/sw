@@ -4430,6 +4430,56 @@ err_qp:
 	return ERR_PTR(rc);
 }
 
+static void ionic_notify_flush_cq(struct ionic_cq *cq)
+{
+	if (cq->flush && cq->ibcq.comp_handler)
+		cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
+}
+
+static void ionic_notify_qp_cqs(struct ionic_qp *qp)
+{
+	if (qp->ibqp.send_cq)
+		ionic_notify_flush_cq(to_ionic_cq(qp->ibqp.send_cq));
+	if (qp->ibqp.recv_cq && qp->ibqp.recv_cq != qp->ibqp.send_cq)
+		ionic_notify_flush_cq(to_ionic_cq(qp->ibqp.recv_cq));
+}
+
+static void ionic_flush_qp(struct ionic_qp *qp)
+{
+	struct ionic_cq *cq;
+	unsigned long irqflags;
+
+	if (qp->ibqp.send_cq) {
+		cq = to_ionic_cq(qp->ibqp.send_cq);
+
+		/* Hold the CQ lock and QP sq_lock to set up flush */
+		spin_lock_irqsave(&cq->lock, irqflags);
+		spin_lock(&qp->sq_lock);
+		qp->sq_flush = true;
+		if (!ionic_queue_empty(&qp->sq)) {
+			cq->flush = true;
+			list_move_tail(&qp->cq_flush_sq, &cq->flush_sq);
+		}
+		spin_unlock(&qp->sq_lock);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
+
+	if (qp->ibqp.recv_cq) {
+		cq = to_ionic_cq(qp->ibqp.recv_cq);
+
+		/* Hold the CQ lock and QP rq_lock to set up flush */
+		spin_lock_irqsave(&cq->lock, irqflags);
+		spin_lock(&qp->rq_lock);
+		qp->rq_flush = true;
+		if (!ionic_queue_empty(&qp->rq)) {
+			cq->flush = true;
+			list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
+		}
+		spin_unlock(&qp->rq_lock);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
+}
+
 static void ionic_reset_qp(struct ionic_qp *qp)
 {
 	struct ionic_cq *cq;
@@ -4580,9 +4630,11 @@ static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	if (mask & IB_QP_STATE) {
 		qp->state = attr->qp_state;
 
-		if (attr->qp_state == IB_QPS_RESET) {
+		if (attr->qp_state == IB_QPS_ERR) {
+			ionic_flush_qp(qp);
+			ionic_notify_qp_cqs(qp);
+		} else if (attr->qp_state == IB_QPS_RESET) {
 			ionic_reset_qp(qp);
-
 			ionic_put_res(dev, &qp->rrq_res);
 			ionic_put_res(dev, &qp->rsq_res);
 		}
@@ -5432,6 +5484,7 @@ static int ionic_post_send_common(struct ionic_ibdev *dev,
 				  struct ib_send_wr **bad)
 {
 	unsigned long irqflags;
+	bool notify = false;
 	int spend, rc = 0;
 
 	if (!bad)
@@ -5502,12 +5555,16 @@ out:
 	}
 
 	if (qp->sq_flush) {
+		notify = true;
 		cq->flush = true;
 		list_move_tail(&qp->cq_flush_sq, &cq->flush_sq);
 	}
 
 	spin_unlock(&qp->sq_lock);
 	spin_unlock_irqrestore(&cq->lock, irqflags);
+
+	if (notify && cq->ibcq.comp_handler)
+		cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
 
 	*bad = wr;
 	return rc;
@@ -5521,6 +5578,7 @@ static int ionic_post_recv_common(struct ionic_ibdev *dev,
 				  struct ib_recv_wr **bad)
 {
 	unsigned long irqflags;
+	bool notify = false;
 	int spend, rc = 0;
 
 	if (!bad)
@@ -5580,12 +5638,16 @@ out:
 	}
 
 	if (qp->rq_flush) {
+		notify = true;
 		cq->flush = true;
 		list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
 	}
 
 	spin_unlock(&qp->rq_lock);
 	spin_unlock_irqrestore(&cq->lock, irqflags);
+
+	if (notify && cq->ibcq.comp_handler)
+		cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
 
 out_unlocked:
 	*bad = wr;
@@ -6360,60 +6422,25 @@ static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 		do_flush = true;
 	}
 
-	while (i-- > 0) {
+	for (i = dev->aq_count; i > 0;) {
+		--i;
+		/* Flush incomplete admin commands */
 		if (do_flush)
 			ionic_admin_poll_locked(dev->aq_vec[i]);
 		spin_unlock(&dev->aq_vec[i]->lock);
 	}
 
-	if (!do_flush) {
-		local_irq_restore(irqflags);
-		return;
+	if (do_flush) {
+		/* Flush qp send and recv, and notify completion */
+		spin_lock(&dev->dev_lock);
+		list_for_each_entry(qp, &dev->qp_list, qp_list_ent)
+			ionic_flush_qp(qp);
+		list_for_each_entry(cq, &dev->cq_list, cq_list_ent)
+			ionic_notify_flush_cq(cq);
+		spin_unlock(&dev->dev_lock);
 	}
 
-	/* Hold the dev spinlock so no QPs or CQs can be destroyed */
-	spin_lock(&dev->dev_lock);
-
-	/* Mark each QP to flush all WR to unclog clients */
-	list_for_each_entry(qp, &dev->qp_list, qp_list_ent) {
-		if (qp->ibqp.send_cq) {
-			cq = to_ionic_cq(qp->ibqp.send_cq);
-
-			/* Hold the CQ lock and QP sq_lock to set up flush */
-			spin_lock(&cq->lock);
-			spin_lock(&qp->sq_lock);
-			qp->sq_flush = true;
-			if (!ionic_queue_empty(&qp->sq)) {
-				cq->flush = true;
-				list_move_tail(&qp->cq_flush_sq,
-					       &cq->flush_sq);
-			}
-			spin_unlock(&qp->sq_lock);
-			spin_unlock(&cq->lock);
-		}
-		if (qp->ibqp.recv_cq) {
-			cq = to_ionic_cq(qp->ibqp.recv_cq);
-
-			/* Hold the CQ lock and QP rq_lock to set up flush */
-			spin_lock(&cq->lock);
-			spin_lock(&qp->rq_lock);
-			qp->rq_flush = true;
-			if (!ionic_queue_empty(&qp->rq)) {
-				cq->flush = true;
-				list_move_tail(&qp->cq_flush_rq,
-					       &cq->flush_rq);
-			}
-			spin_unlock(&qp->rq_lock);
-			spin_unlock(&cq->lock);
-		}
-	}
-
-	/* Notify each affected CQ */
-	list_for_each_entry(cq, &dev->cq_list, cq_list_ent)
-		if (cq->flush && cq->ibcq.comp_handler)
-			cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
-
-	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
+	local_irq_restore(irqflags);
 
 	/* Post a fatal event if requested */
 	if (fatal_path)

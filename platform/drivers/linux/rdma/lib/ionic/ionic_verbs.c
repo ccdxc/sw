@@ -1125,6 +1125,44 @@ err_qp:
 	return NULL;
 }
 
+static void ionic_flush_qp(struct ionic_qp *qp)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
+	struct ionic_cq *cq;
+
+	if (qp->vqp.qp.send_cq) {
+		cq = to_ionic_cq(qp->vqp.qp.send_cq);
+
+		/* Hold the CQ lock and QP sq_lock while setting up flush */
+		ionic_spin_lock(ctx, &cq->lock);
+		ionic_spin_lock(ctx, &qp->sq_lock);
+		qp->sq_flush = true;
+		if (!ionic_queue_empty(&qp->sq)) {
+			cq->flush = true;
+			list_del(&qp->cq_flush_sq);
+			list_add_tail(&cq->flush_sq, &qp->cq_flush_sq);
+		}
+		ionic_spin_unlock(ctx, &qp->sq_lock);
+		ionic_spin_unlock(ctx, &cq->lock);
+	}
+
+	if (qp->vqp.qp.recv_cq) {
+		cq = to_ionic_cq(qp->vqp.qp.recv_cq);
+
+		/* Hold the CQ lock and QP rq_lock while setting up flush */
+		ionic_spin_lock(ctx, &cq->lock);
+		ionic_spin_lock(ctx, &qp->rq_lock);
+		qp->rq_flush = true;
+		if (!ionic_queue_empty(&qp->rq)) {
+			cq->flush = true;
+			list_del(&qp->cq_flush_rq);
+			list_add_tail(&cq->flush_rq, &qp->cq_flush_rq);
+		}
+		ionic_spin_unlock(ctx, &qp->rq_lock);
+		ionic_spin_unlock(ctx, &cq->lock);
+	}
+}
+
 static void ionic_reset_qp(struct ionic_qp *qp)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
@@ -1187,8 +1225,12 @@ static int ionic_modify_qp(struct ibv_qp *ibqp,
 	if (rc)
 		goto err_cmd;
 
-	if (attr_mask & IBV_QP_STATE && attr->qp_state == IBV_QPS_RESET)
-		ionic_reset_qp(qp);
+	if (attr_mask & IBV_QP_STATE) {
+		if (attr->qp_state == IBV_QPS_ERR)
+			ionic_flush_qp(qp);
+		else if (attr->qp_state == IBV_QPS_RESET)
+			ionic_reset_qp(qp);
+	}
 
 err_cmd:
 	return rc;
