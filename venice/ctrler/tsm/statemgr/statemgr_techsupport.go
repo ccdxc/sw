@@ -175,7 +175,7 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 		isTimeout := func(results map[string]*monitoring.TechSupportNodeResult) bool {
 			isTo := false
 			for _, s := range results {
-				if s.Status != monitoring.TechSupportJobStatus_Completed.String() {
+				if s.Status != monitoring.TechSupportJobStatus_Completed.String() && s.Status != monitoring.TechSupportJobStatus_Failed.String() {
 					s.Status = monitoring.TechSupportJobStatus_TimeOut.String()
 					isTo = true
 				}

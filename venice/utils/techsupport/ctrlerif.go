@@ -349,6 +349,7 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	err := action.CollectTechSupport(ag.cfg, targetID)
 	if err != nil {
 		log.Errorf("Err : %v", err)
+		return err
 	}
 
 	err = export.GenerateTechsupportZip(vosTarget, ag.cfg.FileSystemRoot+"/"+targetID)
