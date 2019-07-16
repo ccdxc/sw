@@ -1,7 +1,6 @@
 package iris
 
 import (
-	"fmt"
 	"net"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
@@ -57,7 +56,6 @@ func NewDelSrv() *DelSrv {
 // OnMountComplete is the function which is called by Delphi when the mounting of Service objects is completed.
 func (d *DelSrv) OnMountComplete() {
 	log.Infof("OnMountComplete() done for %s", d.Name())
-	fmt.Printf("%+v", d)
 	if err := d.Agent.Nmd.UpdateNaplesConfig(d.Agent.Nmd.GetNaplesConfig()); err != nil {
 		log.Errorf("Failed to update naples during onMountComplete. Err: %v", err)
 	}
@@ -94,7 +92,6 @@ func (p *Pipeline) GetDelphiClient() clientAPI.Client {
 func (p *Pipeline) MountDelphiObjects() interface{} {
 	// mount objects
 	log.Infof("Mounting naples status rw")
-	fmt.Printf("%+v", p)
 	delphiProto.NaplesStatusMount(p.DelSrv.DelphiClient, delphi.MountMode_ReadWriteMode)
 	return nil
 }
