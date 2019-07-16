@@ -150,7 +150,7 @@ var _ = Describe("Rollout object tests", func() {
 			filename := "venice.upg.tgz"
 
 			By(fmt.Sprintf("\nts:%s uploading image to object store..", time.Now().String()))
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			err = uploadVeniceImg(ctx, ts.tu.VOSClient, "/import/src/github.com/pensando/sw/bin/", version, filename, "venice.tgz")
 			Expect(err).Should(BeNil(), "Failed to upload file")
 			meta := map[string]map[string]string{

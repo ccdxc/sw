@@ -54,7 +54,7 @@ var _ = Describe("auth tests", func() {
 				return err
 			}, 10, 1).Should(BeNil())
 			// updating auth policy re-generates JWT secret so login again to a get new JWT
-			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			ts.loggedInCtx = ts.tu.MustGetLoggedInContext(context.TODO())
 			// TODO: Create a tenant if radius config specifies a non-default tenant
 			Eventually(func() error {
 				_, err = ts.restSvc.AuthV1().RoleBinding().Create(ts.loggedInCtx,
@@ -241,7 +241,7 @@ var _ = Describe("auth tests", func() {
 				return err
 			}, 10, 1).Should(BeNil())
 			// updating auth policy re-generates JWT secret so login again to a get new JWT
-			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			ts.loggedInCtx = ts.tu.MustGetLoggedInContext(context.TODO())
 		})
 	})
 	Context("jwt", func() {
@@ -259,7 +259,7 @@ var _ = Describe("auth tests", func() {
 			}, 10, 1).Should(BeNil())
 			Expect(authPolicy.Spec.TokenExpiry).Should(Equal("2m"))
 			time.Sleep(6 * time.Second)
-			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			ts.loggedInCtx = ts.tu.MustGetLoggedInContext(context.TODO())
 		})
 		It("check expiry", func() {
 			var err error
@@ -268,7 +268,7 @@ var _ = Describe("auth tests", func() {
 			Expect(err).Should(HaveOccurred())
 		})
 		AfterEach(func() {
-			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			ts.loggedInCtx = ts.tu.MustGetLoggedInContext(context.TODO())
 			var authPolicy *auth.AuthenticationPolicy
 			var err error
 			Eventually(func() error {
@@ -280,7 +280,7 @@ var _ = Describe("auth tests", func() {
 				_, err = ts.restSvc.AuthV1().AuthenticationPolicy().Update(ts.loggedInCtx, authPolicy)
 				return err
 			}, 10, 1).Should(BeNil())
-			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			ts.loggedInCtx = ts.tu.MustGetLoggedInContext(context.TODO())
 		})
 	})
 	Context("auth events", func() {
@@ -498,7 +498,7 @@ var _ = Describe("auth tests", func() {
 			}, 10, 1).Should(BeNil())
 			loginTime, err := user.Status.LastLogin.Time()
 			Expect(err).ShouldNot(HaveOccurred())
-			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			ts.loggedInCtx = ts.tu.MustGetLoggedInContext(context.TODO())
 			Eventually(func() error {
 				user, err = ts.restSvc.AuthV1().User().Get(ts.loggedInCtx, &api.ObjectMeta{Name: ts.tu.User, Tenant: globals.DefaultTenant})
 				return err

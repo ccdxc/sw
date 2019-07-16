@@ -147,7 +147,7 @@ func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface
 				},
 			},
 		}
-		ctx := ts.tu.NewLoggedInContext(ctx)
+		ctx := ts.tu.MustGetLoggedInContext(ctx)
 		res, err := tc.Metrics(ctx, query)
 		if err != nil {
 			By(fmt.Sprintf("Query for Cluster metrics returned err: %s", err))

@@ -37,7 +37,7 @@ func GetNodeAuthToken(ctx context.Context, endpointURL string, audience []string
 	}
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return "", fmt.Errorf("no authorizaton header in context")
+		return "", fmt.Errorf("no authorization header in context")
 	}
 	req.Header.Set("Authorization", authzHeader)
 

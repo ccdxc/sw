@@ -248,7 +248,7 @@ func testObjCUDOps() func() {
 		h := md5.New()
 		h.Write(fileBuf)
 
-		ctx := ts.tu.NewLoggedInContext(context.Background())
+		ctx := ts.tu.MustGetLoggedInContext(context.Background())
 		apigwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 		restClient, err := apiclient.NewRestAPIClient(apigwAddr)
 		Expect(err).To(BeNil())

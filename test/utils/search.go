@@ -131,7 +131,7 @@ func Search(ctx context.Context, apigw string, query *search.SearchRequest, resp
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return fmt.Errorf("no authorizaton header in context")
+		return fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
 	log.Infof("@@@ Search request: %+v\n", query)
@@ -153,7 +153,7 @@ func GetAuditEvent(ctx context.Context, apiGwAddr, eventID string, resp *audit.E
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return fmt.Errorf("no authorizaton header in context")
+		return fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
 	status, err := restcl.Req("GET", auditURL, &audit.EventRequest{}, resp)

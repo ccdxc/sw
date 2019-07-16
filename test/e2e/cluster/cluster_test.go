@@ -44,7 +44,7 @@ var _ = Describe("cluster tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			clusterIf = apiClient.ClusterV1().Cluster()
 			smartNICIf = apiClient.ClusterV1().SmartNIC()
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			obj = api.ObjectMeta{Name: "testCluster"}
 			cl, err = clusterIf.Get(ctx, &obj)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -64,7 +64,7 @@ var _ = Describe("cluster tests", func() {
 			By(fmt.Sprintf("Pausing cmd on old leader %v", oldLeader))
 			ts.tu.CommandOutput(oldLeaderIP, "docker pause pen-cmd")
 			Eventually(func() bool {
-				cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+				cl, err = clusterIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), &obj)
 				if err != nil {
 					return false
 				}
@@ -138,7 +138,7 @@ var _ = Describe("cluster tests", func() {
 			// Wait 1.5 * dead interval (15 s) to make sure NIC is marked ad unhealthy
 			// if no fresh updates are received.
 			time.Sleep(15 * time.Second)
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			validateNICHealth(ctx, smartNICIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
 		})
 	})
@@ -204,7 +204,7 @@ func validateCluster() {
 	Expect(err).ShouldNot(HaveOccurred())
 	clusterIf := apiClient.ClusterV1().Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
-	cl, err := clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+	cl, err := clusterIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), &obj)
 
 	By(fmt.Sprintf("Cluster fields should be ok"))
 	Expect(err).ShouldNot(HaveOccurred())
@@ -217,11 +217,34 @@ func validateCluster() {
 	}, 60, 5).Should(BeNil(), "Quorum is not healthy")
 
 	versionIf := apiClient.ClusterV1().Version()
-	vl, err := versionIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+
+	var nctx context.Context
+
 	By(fmt.Sprintf("Version fields should be ok"))
-	Expect(err).ShouldNot(HaveOccurred())
-	Expect(vl.Kind).Should(Equal("Version"))
-	Expect(vl.APIVersion).ShouldNot(BeEmpty())
+	Eventually(func() bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		nctx, err = ts.tu.NewLoggedInContext(ctx)
+		if err != nil {
+			cancel()
+			By(fmt.Sprintf("ts:%s err:%v logging in", time.Now().String(), err))
+			return false
+		}
+		vl, err := versionIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), &obj)
+		cancel()
+		if err != nil {
+			By(fmt.Sprintf("ts:%s err:%v getting version Info", time.Now().String(), err))
+			return false
+		}
+		if vl.Kind != "Version" {
+			By(fmt.Sprintf("ts:%s unknown Kind %s", time.Now().String(), vl.Kind))
+			return false
+		}
+		if vl.APIVersion == "" {
+			By(fmt.Sprintf("ts:%s APIVersion is empty", time.Now().String()))
+			return false
+		}
+		return true
+	}, 60, 5).Should(BeTrue(), "version object should have correct values")
 
 	Eventually(func() string {
 		s1 := getServices(ts.tu.QuorumNodes[0])
@@ -253,10 +276,17 @@ func validateCluster() {
 	}, 15, 3).Should(BeEmpty(), "Resolver data should be same on all quorum nodes")
 
 	By(fmt.Sprintf("ts:%s Cluster Health check", time.Now().String()))
+
 	// cluster should be in healthy state
 	Eventually(func() bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(ctx), &obj)
+		nctx, err = ts.tu.NewLoggedInContext(ctx)
+		if err != nil {
+			cancel()
+			By(fmt.Sprintf("ts:%s err:%v logging in", time.Now().String(), err))
+			return false
+		}
+		cl, err = clusterIf.Get(nctx, &obj)
 		cancel()
 		if err != nil {
 			By(fmt.Sprintf("ts:%s err:%v getting cluster Info", time.Now().String(), err))

@@ -33,7 +33,7 @@ var securityTg = &securityTestGroup{}
 func (stg *securityTestGroup) setupTest() {
 	stg.suite = ts
 	Eventually(func() error {
-		ctx, cancel := context.WithTimeout(ts.tu.NewLoggedInContext(context.Background()), 5*time.Second)
+		ctx, cancel := context.WithTimeout(ts.tu.MustGetLoggedInContext(context.Background()), 5*time.Second)
 		defer cancel()
 		var err error
 		stg.authAgentClient, err = utils.GetNodeAuthTokenHTTPClient(ctx, ts.tu.APIGwAddr, []string{"*"})

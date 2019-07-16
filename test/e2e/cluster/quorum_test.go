@@ -10,7 +10,7 @@ import (
 
 // helper to check if the quorum is healthy and size is as expected
 func checkQuorumHealth(clusterIf cmd.ClusterV1ClusterInterface, clusterObjMeta *api.ObjectMeta, quorumSize int) error {
-	cl, err := clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), clusterObjMeta)
+	cl, err := clusterIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), clusterObjMeta)
 	if err != nil {
 		return fmt.Errorf("Unable to get cluster object")
 	}

@@ -33,7 +33,7 @@ var _ = Describe("flow export policy tests", func() {
 		AfterEach(func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			By("cleanup flow export policy")
 			if testFlowExpSpecList, err := flowExpClient.List(ctx, &api.ListWatchOptions{}); err == nil {
@@ -47,7 +47,7 @@ var _ = Describe("flow export policy tests", func() {
 		BeforeEach(func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			apiGwAddr = ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
@@ -68,7 +68,7 @@ var _ = Describe("flow export policy tests", func() {
 			Skip("Temporarily skipped pending successful ARP resolution changes in the dind env")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumExportPolicy)
 
@@ -249,7 +249,7 @@ var _ = Describe("flow export policy tests", func() {
 			Skip("Temporarily skipped pending successful ARP resolution changes in the dind env")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumCollectorsPerPolicy)
 
@@ -464,7 +464,7 @@ var _ = Describe("flow export policy tests", func() {
 			Skip("Temporarily skipped pending successful ARP resolution changes in the dind env")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumCollectorsPerPolicy)
 
@@ -679,7 +679,7 @@ var _ = Describe("flow export policy tests", func() {
 			Skip("+++to debug CI failure")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumCollectorsPerPolicy)
 			collectors := make([]struct {
 				addr string
@@ -786,7 +786,7 @@ var _ = Describe("flow export policy tests", func() {
 		It("validate flow export policy", func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			testFlowExpSpecList := []struct {
 				name   string
@@ -1150,7 +1150,7 @@ var _ = Describe("flow export policy tests", func() {
 		It("validate max. collectors", func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			policy := &monitoring.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
@@ -1191,7 +1191,7 @@ var _ = Describe("flow export policy tests", func() {
 		It("validate max. flow export policy", func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			policy := &monitoring.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{

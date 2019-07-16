@@ -33,7 +33,7 @@ var _ = Describe("negative tests for unsupported cluster operations", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			clusterIf = apiClient.ClusterV1().Cluster()
 			obj = api.ObjectMeta{Name: "testCluster"}
-			cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+			cl, err = clusterIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), &obj)
 			Expect(err).ShouldNot(HaveOccurred())
 
 		})

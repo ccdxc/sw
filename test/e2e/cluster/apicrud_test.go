@@ -37,7 +37,7 @@ const (
 
 func testAPICRUDOps() func() {
 	return func() {
-		lctx, cancel := context.WithCancel(ts.tu.NewLoggedInContext(context.Background()))
+		lctx, cancel := context.WithCancel(ts.tu.MustGetLoggedInContext(context.Background()))
 		waitWatch := make(chan bool)
 		grpcClient := ts.tu.APIClient
 		Expect(grpcClient).ShouldNot(BeNil())

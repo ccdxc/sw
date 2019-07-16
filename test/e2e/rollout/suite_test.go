@@ -61,7 +61,7 @@ var _ = BeforeSuite(func() {
 	ts.tu.Init()
 
 	// get auth context
-	ts.loggedInCtx = ts.tu.NewLoggedInContext(context.Background())
+	ts.loggedInCtx = ts.tu.MustGetLoggedInContext(context.Background())
 
 	// create apigw workload client
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
@@ -106,7 +106,7 @@ var _ = BeforeSuite(func() {
 					},
 				},
 			}
-			_, err = ts.restSvc.ClusterV1().Host().Create(ts.tu.NewLoggedInContext(context.Background()), host)
+			_, err = ts.restSvc.ClusterV1().Host().Create(ts.tu.MustGetLoggedInContext(context.Background()), host)
 			Expect(err).ShouldNot(HaveOccurred())
 			// Switch to managed mode
 			naples.Spec.Mode = nmd.MgmtMode_NETWORK.String()

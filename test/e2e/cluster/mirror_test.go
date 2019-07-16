@@ -78,7 +78,7 @@ var _ = Describe("MirrorSession Tests", func() {
 			// check that it starts running and then stops after 5s
 			// delete mirror session
 
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			ms := testMirrorSessions[0]
 			By("Creating MirrorSession ------")
 			_, err := mirrorRestIf.Create(ctx, &ms)

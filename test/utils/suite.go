@@ -18,7 +18,7 @@ import (
 	"github.com/onsi/gomega"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/pensando/sw/venice/utils/objstore/client"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 
 	"github.com/pensando/sw/api"
 
@@ -328,7 +328,6 @@ func (tu *TestUtils) SetupAuth() {
 	if err != nil {
 		// 401 when auth is already bootstrapped. we are ok with that
 		if !strings.HasPrefix(err.Error(), "Status:(401)") {
-			//ginkgo.Fail(fmt.Sprintf("CreateRoleBinding failed with err: %v", err))
 			ginkgo.Fail(fmt.Sprintf("UpdateRoleBinding failed with err: %v", err))
 		}
 	}
@@ -378,16 +377,11 @@ func (tu *TestUtils) Init() {
 	obj := api.ObjectMeta{Name: "testCluster"}
 	var cl *cluster.Cluster
 	gomega.Eventually(func() bool {
-		cl, err = clusterIf.Get(tu.NewLoggedInContext(context.Background()), &obj)
-		if err == nil {
-			return true
-		}
-		return false
+		cl, err = clusterIf.Get(tu.MustGetLoggedInContext(context.Background()), &obj)
+		return err == nil
 	}, 45, 2).Should(gomega.BeTrue(), "cluster object should be readable via api gateway but failing with %v", err)
 
-	for _, qn := range cl.Spec.QuorumNodes {
-		tu.QuorumNodes = append(tu.QuorumNodes, qn)
-	}
+	tu.QuorumNodes = append(tu.QuorumNodes, cl.Spec.QuorumNodes...)
 	ginkgo.By(fmt.Sprintf("QuorumNodes: %+v ", tu.QuorumNodes))
 
 	servers := make([]string, 0)
@@ -503,7 +497,7 @@ func (tu *TestUtils) LocalCommandOutput(command string) string {
 }
 
 // CommandOutput runs a command on a node and returns output in string format
-func (tu *TestUtils) CommandOutput(ip string, command string) string {
+func (tu *TestUtils) CommandOutput(ip, command string) string {
 	c := tu.client[ip]
 
 	session, err := c.NewSession()
@@ -519,7 +513,7 @@ func (tu *TestUtils) CommandOutput(ip string, command string) string {
 }
 
 // CommandOutputIgnoreError runs a command on a node and returns output in string format
-func (tu *TestUtils) CommandOutputIgnoreError(ip string, command string) string {
+func (tu *TestUtils) CommandOutputIgnoreError(ip, command string) string {
 	c := tu.client[ip]
 
 	session, err := c.NewSession()
@@ -563,7 +557,7 @@ func (tu *TestUtils) GetNodeForService(serviceName string) string {
 
 // DebugStats fills the statsStruct with the debug stats of serviceName by issuing a REST request to restPort
 //	here it assumes that the service is served using a resolver
-func (tu *TestUtils) DebugStats(serviceName string, restPort string, statsStruct interface{}) {
+func (tu *TestUtils) DebugStats(serviceName, restPort string, statsStruct interface{}) {
 	tu.DebugStatsOnNode(tu.GetNodeForService(serviceName), restPort, statsStruct)
 }
 
@@ -576,13 +570,18 @@ func (tu *TestUtils) DebugStatsOnNode(node string, restPort string, statsStruct 
 	}
 }
 
-// NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
-func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
+// MustGetLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT. Panics on Failure/Timeout
+func (tu *TestUtils) MustGetLoggedInContext(ctx context.Context) context.Context {
 	nctx, err := testutils.NewLoggedInContext(ctx, tu.APIGwAddr, &auth.PasswordCredential{Username: tu.User, Password: tu.Password, Tenant: globals.DefaultTenant})
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
 	return nctx
+}
+
+//NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT. Returns error on Failure
+func (tu *TestUtils) NewLoggedInContext(ctx context.Context) (context.Context, error) {
+	return testutils.NewLoggedInContext(ctx, tu.APIGwAddr, &auth.PasswordCredential{Username: tu.User, Password: tu.Password, Tenant: globals.DefaultTenant})
 }
 
 // Search sends a search query to API Gateway
@@ -603,7 +602,7 @@ func (tu *TestUtils) DebugOnAPIGw(ctx context.Context, apiGwAddr string, req *di
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return "", fmt.Errorf("no authorizaton header in context")
+		return "", fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
 	_, err := restcl.Req("POST", debugURL, req, &resp)
@@ -650,7 +649,7 @@ func (tu *TestUtils) KillContainer(serviceName string) (string, error) {
 			break
 		}
 	}
-	if len(containerID) == 0 {
+	if containerID == "" {
 		return "", fmt.Errorf("couldn't find container for service %s", serviceName)
 	}
 	ginkgo.By(fmt.Sprintf("killing service {%s} running on node {%s}", serviceName, nodeIP))
@@ -661,7 +660,7 @@ func (tu *TestUtils) KillContainer(serviceName string) (string, error) {
 // KillContainerOnNodeByName finds a container with the serviceName on the given node ip and kills it
 func (tu *TestUtils) KillContainerOnNodeByName(ip string, serviceName string) error {
 	containerID := tu.GetContainerOnNode(ip, serviceName)
-	if len(containerID) == 0 {
+	if containerID == "" {
 		return fmt.Errorf("couldn't find container for service %s", serviceName)
 	}
 	tu.KillContainerOnNodeByID(ip, containerID)

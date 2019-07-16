@@ -45,7 +45,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 		AfterEach(func() {
 			By("cleanup fwlog policy")
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			if testFwSpecList, err := fwlogClient.List(ctx, &api.ListWatchOptions{}); err == nil {
 				for i := range testFwSpecList {
 					By(fmt.Sprintf("delete %v", testFwSpecList[i].ObjectMeta))
@@ -110,7 +110,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 			// delete all
 			By("cleanup fwlog policy")
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			if testFwSpecList, err := fwlogClient.List(ctx, &api.ListWatchOptions{}); err == nil {
 				for i := range testFwSpecList {
 					By(fmt.Sprintf("delete %v", testFwSpecList[i].ObjectMeta))
@@ -120,7 +120,7 @@ var _ = Describe("fwlog policy tests", func() {
 		})
 
 		It("Should create/update/delete fwlog policy", func() {
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 
 			By("create fwlog Policy")
 			for i := range testFwSpecList {
@@ -266,7 +266,7 @@ var _ = Describe("fwlog policy tests", func() {
 		// check collectors
 		It("Should receive syslog in Collector", func() {
 			Skip("skip to debug CI failures")
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 
 			// use token api to get NAPLES access credentials
 			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
@@ -354,7 +354,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 			// delete all
 			By("cleanup fwlog policy")
-			ctx = ts.tu.NewLoggedInContext(context.Background())
+			ctx = ts.tu.MustGetLoggedInContext(context.Background())
 			for i := range testFwSpecList {
 				objMeta := &api.ObjectMeta{
 					Name:      fmt.Sprintf("fwpolicy-%d", i),
@@ -800,7 +800,7 @@ var _ = Describe("fwlog policy tests", func() {
 				},
 			}
 
-			ctx := ts.tu.NewLoggedInContext(context.Background())
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			for i := range testFwPolicy {
 				_, err := fwlogClient.Create(ctx, testFwPolicy[i].policy)
 				if testFwPolicy[i].fail == true {
@@ -815,7 +815,7 @@ var _ = Describe("fwlog policy tests", func() {
 		It("validate max. collectors", func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			policy := &monitoring.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -858,7 +858,7 @@ var _ = Describe("fwlog policy tests", func() {
 		It("validate max. fwlog export policy", func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
-			ctx := ts.tu.NewLoggedInContext(pctx)
+			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			policy := &monitoring.FwlogPolicy{
 				TypeMeta: api.TypeMeta{

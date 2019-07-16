@@ -38,7 +38,7 @@ func testQueryingMetrics(kind string) {
 				},
 			},
 		}
-		ctx := ts.tu.NewLoggedInContext(context.Background())
+		ctx := ts.tu.MustGetLoggedInContext(context.Background())
 		res, err := tc.Metrics(ctx, nodeQuery)
 		if err != nil {
 			By(fmt.Sprintf("Query for %s returned err: %s", kind, err))
@@ -165,7 +165,7 @@ func testQueryingFwlogs() {
 			},
 		},
 	}
-	ctx := ts.tu.NewLoggedInContext(context.Background())
+	ctx := ts.tu.MustGetLoggedInContext(context.Background())
 
 	verifyLogs := func() {
 		Eventually(func() bool {
@@ -317,7 +317,7 @@ var _ = Describe("telemetry tests", func() {
 
 			smartnics := map[string]int{}
 			Eventually(func() bool {
-				ctx := ts.tu.NewLoggedInContext(context.Background())
+				ctx := ts.tu.MustGetLoggedInContext(context.Background())
 				snic, err := apiClient.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
 				if err != nil {
 					By(fmt.Sprintf("failed to get smartnics %v", err))
@@ -365,7 +365,7 @@ var _ = Describe("telemetry tests", func() {
 						},
 					}
 
-					ctx := ts.tu.NewLoggedInContext(context.Background())
+					ctx := ts.tu.MustGetLoggedInContext(context.Background())
 					res, err := tc.Fwlogs(ctx, fwQuery)
 					if err != nil {
 						By(fmt.Sprintf("failed to get fwlog, %s", err))
@@ -409,7 +409,7 @@ var _ = Describe("telemetry tests", func() {
 							},
 						}
 
-						ctx := ts.tu.NewLoggedInContext(context.Background())
+						ctx := ts.tu.MustGetLoggedInContext(context.Background())
 						res, err := tc.Fwlogs(ctx, fwQuery)
 						if err != nil {
 							By(fmt.Sprintf("failed to get fwlog, %s", err))
@@ -454,7 +454,7 @@ var _ = Describe("telemetry tests", func() {
 							},
 						}
 
-						ctx := ts.tu.NewLoggedInContext(context.Background())
+						ctx := ts.tu.MustGetLoggedInContext(context.Background())
 						mres, err := tc.Metrics(ctx, mquery)
 						if err != nil {
 							By(fmt.Sprintf("failed to get metrics, %s", err))

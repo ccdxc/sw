@@ -28,7 +28,7 @@ var _ = Describe("cluster health tests", func() {
 		apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
 		Expect(err).ShouldNot(HaveOccurred())
 		clusterIf = apiClient.ClusterV1().Cluster()
-		ctx := ts.tu.NewLoggedInContext(context.Background())
+		ctx := ts.tu.MustGetLoggedInContext(context.Background())
 		obj = api.ObjectMeta{Name: "testCluster"}
 		_, err = clusterIf.Get(ctx, &obj)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -90,7 +90,7 @@ var _ = Describe("cluster health tests", func() {
 // helper to check if the cluster health meets the given expected condition
 func checkClusterHealth(clusterIf cmd.ClusterV1ClusterInterface, clusterObjMeta *api.ObjectMeta,
 	expectedHealthCondition, expectedReason string) bool {
-	cl, err := clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), clusterObjMeta)
+	cl, err := clusterIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), clusterObjMeta)
 	if err != nil {
 		return false
 	}
