@@ -197,8 +197,19 @@ func (n *NMD) handleNetworkModeTransition() error {
 		n.config.Status.Controllers = n.config.Spec.Controllers
 		if err := n.stateMachine.FSM.Event("doDynamic", n); err != nil {
 			log.Errorf("Dynamic mode transition event failed. Err: %v", err)
+			if n.IPClient != nil {
+				switch n.IPClient.GetDHCPState() {
+				case "dhcpTimedout":
+					n.config.Status.TransitionPhase = nmd.NaplesStatus_DHCP_TIMEDOUT.String()
+				case "missingVendorAttributes":
+					n.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
+				}
+			}
+			n.config.Status.AdmissionPhase = ""
+			n.config.Status.IPConfig = &cmd.IPConfig{}
 			return fmt.Errorf("dynamic mode transition event failed. Err: %v", err)
 		}
+
 	}
 
 	if err := n.stateMachine.FSM.Event("doNTP", n); err != nil {

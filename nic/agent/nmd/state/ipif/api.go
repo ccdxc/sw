@@ -19,6 +19,7 @@ type IPClientIf interface {
 	DoDHCPConfig() error
 	DoNTPSync() error
 	GetIPClientIntf() string
+	GetDHCPState() string
 }
 
 // IPClient helps to set the IP address of the management interfaces

@@ -259,6 +259,13 @@ func (c *IPClient) GetIPClientIntf() string {
 	return c.intf.Attrs().Name
 }
 
+// GetDHCPState get current dhcp state
+func (c *IPClient) GetDHCPState() string {
+	c.dhcpState.Lock()
+	defer c.dhcpState.Unlock()
+	return c.dhcpState.CurState
+}
+
 func (d *DHCPState) parseVeniceIPs(vendorOpts []byte) {
 	log.Info("Found Raw Vendor Specified Attributes: ", vendorOpts)
 	// Check for code 241 if not parse the entire vendor attrs as string

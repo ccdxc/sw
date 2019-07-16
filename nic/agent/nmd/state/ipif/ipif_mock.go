@@ -42,3 +42,8 @@ func (c *MockIPClient) DoNTPSync() error {
 func (c *MockIPClient) GetIPClientIntf() string {
 	return "mock"
 }
+
+// GetDHCPState get current dhcp state
+func (c *MockIPClient) GetDHCPState() string {
+	return "none"
+}
