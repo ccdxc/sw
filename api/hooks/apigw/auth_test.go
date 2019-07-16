@@ -546,6 +546,212 @@ func TestAuthBootstrap(t *testing.T) {
 
 }
 
+func TestLdapCheck(t *testing.T) {
+	tests := []struct {
+		name string
+		in   *auth.AuthenticationPolicy
+		err  error
+	}{
+		{
+			name: "Missing LDAP Server",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{},
+
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			err: errors.New("ldap server not defined"),
+		},
+		{
+			name: "missing LDAP server URL",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+
+			err: errors.New("missing server url"),
+		},
+		{
+			name: "Valid LDAP Config with port in server URL",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost:389",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+
+			err: nil,
+		},
+		{
+			name: "Valid LDAP Config without port in server URL, default port 389 used",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			err: nil,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	for _, test := range tests {
+		_, out, skipCall, err := r.ldapCheck(context.TODO(), test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
+		if test.err == nil {
+			_, ok := out.(*auth.AuthenticationPolicy)
+			Assert(t, ok, fmt.Sprintf("[%s] test failed, expected AuthenticationPolicy object", test.name))
+			Assert(t, skipCall == false, fmt.Sprintf("[%s] test failed, expected skipCall to be false", test.name))
+		}
+	}
+}
+
+func TestLdapCheckHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerLdapCheckHook(svc)
+	AssertOk(t, err, "ldapCheck hook registration failed")
+
+	ids := []serviceID{
+		{"AuthenticationPolicy", apiintf.CreateOper},
+		{"AuthenticationPolicy", apiintf.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		AssertOk(t, err, "error getting service profile for [%s] [%s]", id.kind, id.action)
+		Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre-call hooks [%d] for [%s] [%s] profile", len(prof.PreCallHooks()), id.kind, id.action))
+	}
+
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerLdapCheckHook(svc)
+	Assert(t, err != nil, "expected error in ldapCheck hook registration")
+}
+
 func TestLdapConnectionCheck(t *testing.T) {
 	authpolicy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
@@ -631,6 +837,97 @@ func TestLdapConnectionCheck(t *testing.T) {
 				Result: auth.LdapServerStatus_Connect_Success.String(),
 			},
 			err: errors.New("ldap authenticator config not defined"),
+		},
+		{
+			name: "missing LDAP server URL",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Failure.String(),
+			},
+			err: nil,
+		},
+		{
+			name: "valid ldap config",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Success.String(),
+			},
+			err: nil,
 		},
 		{
 			name: "no ldap servers",
@@ -788,7 +1085,7 @@ func TestLdapBindCheck(t *testing.T) {
 			},
 			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
 			status: &auth.LdapServerStatus{
-				Result: auth.LdapServerStatus_Connect_Success.String(),
+				Result: auth.LdapServerStatus_Bind_Success.String(),
 			},
 			err: errors.New("ldap authenticator config not defined"),
 		},
@@ -823,9 +1120,100 @@ func TestLdapBindCheck(t *testing.T) {
 			},
 			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
 			status: &auth.LdapServerStatus{
-				Result: auth.LdapServerStatus_Connect_Success.String(),
+				Result: auth.LdapServerStatus_Bind_Success.String(),
 			},
 			err: errors.New("ldap server not defined"),
+		},
+		{
+			name: "missing LDAP server URL",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Bind_Failure.String(),
+			},
+			err: nil,
+		},
+		{
+			name: "valid ldap config",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Bind_Success.String(),
+			},
+			err: nil,
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
