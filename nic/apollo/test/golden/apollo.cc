@@ -1017,11 +1017,11 @@ rewrite_init (void)
 
     nexthop_group_init(g_nexthop_group_index2, g_nexthop_index2);
     nexthop_init(g_nexthop_index2, g_tep_index2, g_gw_slot_id2);
-    tep_init(g_tep_index2, TEP_VXLAN_TEP_ID, g_gw_dip, g_gw_dmac);
+    tep_init(g_tep_index2, TEP_IPV4_VXLAN_TEP_ID, g_gw_dip, g_gw_dmac);
 
     nexthop_group_init(g_nexthop_group_index3, g_nexthop_index3);
     nexthop_init(g_nexthop_index3, g_tep_index3, g_local_slot_id3);
-    tep_init(g_tep_index3, TEP_VXLAN_TEP_ID, mytep_ip, mytep_mac);
+    tep_init(g_tep_index3, TEP_IPV4_VXLAN_TEP_ID, mytep_ip, mytep_mac);
 }
 
 static void

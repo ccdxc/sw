@@ -116,7 +116,7 @@ namespace impl {
 #define nat_action                    action_u.nat_nat
 #define nh_action                     action_u.nexthop_nexthop_info
 #define tep_mpls_udp_action           action_u.tep_mpls_udp_tep
-#define tep_vxlan_action              action_u.tep_vxlan_tep
+#define tep_ipv4_vxlan_action         action_u.tep_ipv4_vxlan_tep
 #define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 
 mapping_impl *
@@ -214,8 +214,8 @@ mapping_impl::build(pds_mapping_key_t *key) {
         if (tep_data.tep_mpls_udp_action.dipo == device->ip_addr()) {
             local_mapping = true;
         }
-    } else if (tep_data.action_id == TEP_VXLAN_TEP_ID) {
-        if (tep_data.tep_vxlan_action.dipo == device->ip_addr()) {
+    } else if (tep_data.action_id == TEP_IPV4_VXLAN_TEP_ID) {
+        if (tep_data.tep_ipv4_vxlan_action.dipo == device->ip_addr()) {
             local_mapping = true;
         }
     }
@@ -247,7 +247,7 @@ mapping_impl::build(pds_mapping_key_t *key) {
         local_vnic_by_slot_rx_key.mpls_dst_label =
             remote_vnic_mapping_tx_data.dst_slot_id;
         local_vnic_by_slot_rx_key.vxlan_1_vni = 0;
-    } else if (tep_data.action_id == TEP_VXLAN_TEP_ID) {
+    } else if (tep_data.action_id == TEP_IPV4_VXLAN_TEP_ID) {
         local_vnic_by_slot_rx_key.mpls_dst_label = 0;
         local_vnic_by_slot_rx_key.vxlan_1_vni =
             remote_vnic_mapping_tx_data.dst_slot_id;
@@ -881,10 +881,10 @@ mapping_impl::fill_mapping_spec_(
         spec->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
         spec->tep.ip_addr.af = IP_AF_IPV4;
         spec->tep.ip_addr.addr.v4_addr = tep_data->tep_mpls_udp_action.dipo;
-    } else if (tep_data->action_id  == TEP_VXLAN_TEP_ID) {
+    } else if (tep_data->action_id  == TEP_IPV4_VXLAN_TEP_ID) {
         spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         spec->tep.ip_addr.af = IP_AF_IPV4;
-        spec->tep.ip_addr.addr.v4_addr = tep_data->tep_vxlan_action.dipo;
+        spec->tep.ip_addr.addr.v4_addr = tep_data->tep_ipv4_vxlan_action.dipo;
     }
 }
 

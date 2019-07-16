@@ -24,7 +24,7 @@ namespace impl {
 /// @{
 
 #define tep_mpls_udp_action       action_u.tep_mpls_udp_tep
-#define tep_vxlan_action          action_u.tep_vxlan_tep
+#define tep_ipv4_vxlan_action     action_u.tep_ipv4_vxlan_tep
 #define nh_action                 action_u.nexthop_nexthop_info
 
 tep_impl *
@@ -112,9 +112,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         break;
 
     case PDS_ENCAP_TYPE_VXLAN:
-        tep_data.action_id = TEP_VXLAN_TEP_ID;
-        tep_data.tep_vxlan_action.dipo = tep_spec->key.ip_addr.addr.v4_addr;
-        memcpy(tep_data.tep_vxlan_action.dmac, tep->mac(), ETH_ADDR_LEN);
+        tep_data.action_id = TEP_IPV4_VXLAN_TEP_ID;
+        tep_data.tep_ipv4_vxlan_action.dipo = tep_spec->key.ip_addr.addr.v4_addr;
+        memcpy(tep_data.tep_ipv4_vxlan_action.dmac, tep->mac(), ETH_ADDR_LEN);
         break;
 
     default:
@@ -198,9 +198,9 @@ tep_impl::fill_status_(tep_actiondata_t *tep_data,
                          tep_data->action_u.tep_mpls_udp_tep.dmac,
                          ETH_ADDR_LEN);
         break;
-    case TEP_VXLAN_TEP_ID:
+    case TEP_IPV4_VXLAN_TEP_ID:
         sdk::lib::memrev(status->dmac,
-                         tep_data->action_u.tep_vxlan_tep.dmac,
+                         tep_data->action_u.tep_ipv4_vxlan_tep.dmac,
                          ETH_ADDR_LEN);
         break;
     }
@@ -224,12 +224,12 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
         }
         spec->encap.val.mpls_tag =
             nh_data->action_u.nexthop_nexthop_info.dst_slot_id;
-    } else if (tep_data->action_id == TEP_VXLAN_TEP_ID) {
+    } else if (tep_data->action_id == TEP_IPV4_VXLAN_TEP_ID) {
         spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
         spec->encap.val.vnid =
             nh_data->action_u.nexthop_nexthop_info.dst_slot_id;
         spec->key.ip_addr.af = IP_AF_IPV4;
-        spec->key.ip_addr.addr.v4_addr = tep_data->tep_vxlan_action.dipo;
+        spec->key.ip_addr.addr.v4_addr = tep_data->tep_ipv4_vxlan_action.dipo;
     }
     spec->nat = nh_data->action_u.nexthop_nexthop_info.snat_required;
 }

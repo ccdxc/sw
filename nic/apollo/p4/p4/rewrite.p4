@@ -173,7 +173,7 @@ action mpls_udp_tep(dipo, dmac) {
     }
 }
 
-action vxlan_tep(dipo, dmac) {
+action ipv4_vxlan_tep(dipo, dmac) {
     // remove headers
     remove_header(ctag_1);
 
@@ -219,6 +219,51 @@ action vxlan_tep(dipo, dmac) {
     }
 }
 
+action ipv6_vxlan_tep(dipo, dmac, sipo) {
+    // remove headers
+    remove_header(ctag_1);
+
+    // add tunnel headers
+    add_header(ethernet_0);
+    add_header(ipv6_0);
+    add_header(udp_0);
+    add_header(vxlan_0);
+
+    modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len);
+    if (ctag_1.valid == TRUE) {
+        subtract_from_field(scratch_metadata.ip_totallen, 4);
+        modify_field(ethernet_1.etherType, ctag_1.etherType);
+    }
+    // account for new headers that are added
+    // 8 bytes of UDP header, 8 bytes of vxlan header
+    add_to_field(scratch_metadata.ip_totallen, 8 + 8);
+
+    modify_field(ethernet_0.dstAddr, dmac);
+    // mytep_macsa is a table constant
+    modify_field(ethernet_0.srcAddr, scratch_metadata.mytep_macsa);
+    modify_field(ethernet_0.etherType, ETHERTYPE_IPV6);
+
+    modify_field(ipv6_0.version, 6);
+    modify_field(ipv6_0.payloadLen, scratch_metadata.ip_totallen);
+    modify_field(ipv6_0.hopLimit, 64);
+    modify_field(ipv6_0.nextHdr, IP_PROTO_UDP);
+    modify_field(ipv6_0.dstAddr, dipo);
+    modify_field(ipv6_0.srcAddr, sipo);
+
+    modify_field(udp_0.srcPort, (0xC000 | p4e_apollo_i2e.entropy_hash));
+    modify_field(udp_0.dstPort, UDP_PORT_VXLAN);
+    modify_field(udp_0.len, scratch_metadata.ip_totallen);
+
+    modify_field(vxlan_0.flags, 0x8);
+    modify_field(vxlan_0.vni, rewrite_metadata.dst_slot_id);
+    modify_field(vxlan_0.reserved, 0);
+    modify_field(vxlan_0.reserved2, 0);
+
+    if (sipo == dipo) {
+        modify_field(control_metadata.local_switching, 1);
+    }
+}
+
 @pragma stage 4
 table tep {
     reads {
@@ -227,7 +272,8 @@ table tep {
     actions {
         gre_tep;
         mpls_udp_tep;
-        vxlan_tep;
+        ipv4_vxlan_tep;
+        ipv6_vxlan_tep;
     }
     size : TEP_TABLE_SIZE;
 }
