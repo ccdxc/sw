@@ -18,11 +18,11 @@ insmod /nic/bin/mnet.ko &> /var/log/pensando/mnet_load.log
 
 # start agent
 
-#if [[ -f $NIC_DIR/tools/start-agent.sh ]]; then
-    #echo "Launching agent ..."
-    #$NIC_DIR/tools/start-agent.sh
-    #[[ $? -ne 0 ]] && echo "Aborting sysinit, failed to start agent!" && exit 1
-#fi
+if [[ -f $NIC_DIR/tools/start-agent.sh ]]; then
+    echo "Launching agent ..."
+    $NIC_DIR/tools/start-agent.sh
+    [[ $? -ne 0 ]] && echo "Aborting sysinit, failed to start agent!" && exit 1
+fi
 
 # start cronjobs
 nice crond -c /nic/conf/apollo/crontabs

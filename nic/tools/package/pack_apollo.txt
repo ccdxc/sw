@@ -185,6 +185,7 @@ nic/conf/captrace/sample-conf.json                                /nic/conf/capt
 
 # agent specific files
 nic/apollo/tools/start-agent.sh                                   /nic/tools/
+nic/apollo/tools/start-nmd.sh                                     /nic/tools/
 nic/apollo/tools/store_agent_log.sh                               /nic/tools/
 nic/build/$ARCH/$PIPELINE/lib/libsvc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsagentcore.so                  /nic/lib/
