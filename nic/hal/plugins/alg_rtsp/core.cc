@@ -169,7 +169,7 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
      */
     g_rtsp_state->cleanup_l4_sess(l4_sess);
     if (app_sess->ctrl_app_sess != NULL &&
-        (get_num_data_sessions(l4_sess->app_session->ctrl_app_sess) == 1)) {
+        (get_num_data_sessions(app_sess->ctrl_app_sess) == 1)) {
         alg_utils::l4_alg_status_t   *ctrl_l4_sess = (alg_utils::l4_alg_status_t *)dllist_entry(\
                      app_sess->ctrl_app_sess->l4_sess_lhead.next, alg_utils::l4_alg_status_t, l4_sess_lentry);
         /*

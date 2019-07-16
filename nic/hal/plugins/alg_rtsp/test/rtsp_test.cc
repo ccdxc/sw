@@ -621,3 +621,91 @@ TEST_F(rtsp_test, rtsp_session_id_error)
     EXPECT_EQ(alg_sessions, 3);
     EXPECT_EQ(ctrl_alg_sessions, 1);
 }
+
+TEST_F(rtsp_test, rtsp_session_session_delete)
+{
+    hal_ret_t ret;
+    hal::session_t *session = NULL, *data_session=NULL;
+
+    // Create TCP control session
+    // TCP SYN
+    Tins::TCP tcp = Tins::TCP(RTSP_PORT, 1003);
+    tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_FALSE(ctx_.drop_flow());
+    EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.mcast_en);
+    EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
+    EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    session = ctx_.session();
+    EXPECT_NE(session->sfw_rule_id, 0);
+    EXPECT_EQ(session->skip_sfw_reval, 0);
+    EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 0x30);
+
+    tcp = Tins::TCP(1003, RTSP_PORT);
+    tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    //TCP ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(RTSP_PORT, 1003);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.seq(1);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+
+    // RTSP Setup
+    tcp = Tins::TCP(RTSP_PORT, 1003) /
+        Tins::RawPDU("SETUP rtsp://example.com/foo/bar/baz.rm RTSP/1.0\r\n"
+                     "CSeq: 302\r\n"
+                     "Transport: RTP/AVP;unicast;client_port=4588-4589\r\n"
+                     "\r\n");
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    //RTSP Resp
+    tcp = Tins::TCP(1003, RTSP_PORT) /
+        Tins::RawPDU("RTSP/1.0 200 OK\r\n"
+                     "CSeq: 302\r\n"
+                     "Session: 47112344\r\n"
+                     "Transport: RTP/AVP;unicast;\r\n"
+                     "  source=10.0.0.2;destination=10.0.0.1;\r\n"
+                     "  client_port=4688-4689;server_port=6256-6257\r\n"
+                     "\r\n");
+    tcp.seq(1);
+
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    // Check expected flows
+    CHECK_ALLOW_UDP(server_eph, client_eph, 6256, 4688, "c:4588 -> s:6256");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_RTSP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    data_session = ctx_.session();
+
+    ret = session_delete(session);
+    ASSERT_EQ(ret, HAL_RET_INVALID_CTRL_SESSION_OP);
+
+    ret = session_delete(data_session, true);
+    ASSERT_EQ(ret, HAL_RET_OK);
+}

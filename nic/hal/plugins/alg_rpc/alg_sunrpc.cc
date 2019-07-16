@@ -30,6 +30,10 @@ namespace alg_rpc {
 using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
+static inline bool is_unsupported_msgtype(struct rpc_msg msg) {
+    return ((msg.rm_direction != RPC_CALL) && (msg.rm_direction != RPC_REPLY));
+}
+
 uint32_t __parse_rpcb_res_hdr(const uint8_t *pkt, uint32_t dlen, char *uaddr,
                               rpc_info_t *rpc_info) {
     uint32_t len = 0, offset = 0;
@@ -164,9 +168,9 @@ uint32_t __parse_call_hdr(const uint8_t *pkt, uint32_t dlen,
     cmsg->rm_call.cb_vers = __pack_uint32(pkt, &offset);
     cmsg->rm_call.cb_proc = __pack_uint32(pkt, &offset);
     // Move the offset after Auth credentials and verif
+    offset += WORD_BYTES;
     len = __pack_uint32(pkt, &offset);
-    if (len == 0)
-        len = 4;
+    HAL_TRACE_VERBOSE("Offset: {} len: {}", offset, len);
     offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
     if ((dlen-offset) < WORD_BYTES) {
         incr_parse_error(rpc_info);
@@ -174,10 +178,16 @@ uint32_t __parse_call_hdr(const uint8_t *pkt, uint32_t dlen,
                       (dlen-offset));
         return 0;
     }
+    offset += WORD_BYTES;
     len = __pack_uint32(pkt, &offset);
-    if (len == 0)
-        len = 4;
+    HAL_TRACE_VERBOSE("Offset: {} len: {}", offset, len);
     offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
+    if (dlen < offset) {
+        incr_parse_error(rpc_info);
+        HAL_TRACE_ERR("Cannot parse further dlen {} is smaller than offset {}",
+                      dlen, offset);
+        return 0;
+    }
 
     return offset;
 }
@@ -201,9 +211,8 @@ uint32_t __parse_reply_hdr(const uint8_t *pkt, uint32_t dlen,
             return 0;
         }
         // Move the offset after Auth credentials and verif
+        offset += WORD_BYTES;
         len = __pack_uint32(pkt, &offset);
-        if (len == 0)
-            len = 4;
         offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
         if ((dlen-offset) < WORD_BYTES) {
             incr_parse_error(rpc_info);
@@ -226,6 +235,7 @@ uint32_t __parse_rpc_msg(const uint8_t *pkt, uint32_t payload_offset,
     msg->rm_xid = __pack_uint32(pkt, &offset);
     msg->rm_direction = (msg_type)__pack_uint32(pkt, &offset);
 
+    HAL_TRACE_VERBOSE("Xid: {} Message type: {}", msg->rm_xid, msg->rm_direction);
     if (msg->rm_direction == RPC_CALL) {
         hdr_offset = __parse_call_hdr(&pkt[offset], (dlen-offset), msg, rpc_info);
     } else {
@@ -398,7 +408,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
         // Packet length is smaller than the RPC common header
         // Size. We cannot process this packet.
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {} ",
-                      ctx->pkt_len(),  rpc_msg_offset);
+                      pkt_len,  rpc_msg_offset);
         return 0;
     }
 
@@ -406,9 +416,19 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                                  (rpc_msg_offset+WORD_BYTES):rpc_msg_offset,
                                  pkt_len, &rpc_msg, rpc_info);
     if (!pgm_offset) {
+        return 0;
+    }
+
+    if (is_unsupported_msgtype(rpc_msg)) {
         return pkt_len;
     }
+ 
     pgm_offset += rpc_msg_offset;
+    if (pgm_offset > pkt_len) {
+        HAL_TRACE_ERR("Packet len: {} is less than program offset: {}",
+                      pkt_len,  pgm_offset);
+        return 0;
+    }
 
     /*
      * L7 Fragment reassembly

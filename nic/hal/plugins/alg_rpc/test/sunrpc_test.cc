@@ -376,3 +376,109 @@ TEST_F(rpc_test, sunrpc_session_fragmentation)
     EXPECT_FALSE(ctx_.drop());
     EXPECT_EQ(ctx_.session(), session);
 }
+
+TEST_F(rpc_test, sunrpc_getport_fragmentation)
+{
+    SessionGetRequest       req;
+    SessionGetResponseMsg   rsp;
+    hal_ret_t               ret;
+    uint8_t                 getport_call[] = {0x80, 0x00, 0x00, 0x64, 0xEA, 0x1B, 0x76, 0xA2, 
+                                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
+                                              0x00, 0x01, 0x86, 0xA0, 0x00, 0x00, 0x00, 0x02, 
+                                              0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 
+                                              0x00, 0x00, 0x00, 0x2C, 0x00, 0x41, 0xA1, 0xAA, 
+                                              0x00, 0x00, 0x00, 0x15, 0x6C, 0x6F, 0x63, 0x61, 
+                                              0x6C, 0x68, 0x6F, 0x73, 0x74, 0x2E, 0x6C, 0x6F, 
+                                              0x63, 0x61, 0x00, 0x41, 0xA1, 0xAA, 0x00, 0x00, 
+                                              0x00, 0x15, 0x6C, 0x6F, 0x63, 0x61, 0x6C, 0x68, 
+                                              0x6F, 0x73, 0x74, 0x2E, 0x6C, 0x6F, 0x63, 0x61, 
+                                              0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x2C, 
+                                              0x00, 0x41, 0xA1, 0xAA, 0x00, 0x00, 0x00, 0x15, 
+                                              0x6C, 0x6F, 0x63, 0x61, 0x6C, 0x68, 0x6F, 0x73};
+    uint8_t                 getport_call2[] = {0x00, 0x41, 0xA1, 0xAA, 0x00, 0x00, 0x00, 0x15, 
+                                               0x6C, 0x6F, 0x63, 0x61, 0x6C, 0x68, 0x6F, 0x73,
+                                               0x00, 0x41, 0xA1, 0xAA, 0x00, 0x00, 0x00, 0x15, 
+                                               0x6C, 0x6F, 0x63, 0x61, 0x00, 0x01, 0x86, 0xa0, 
+                                               0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x11, 
+                                               0x00, 0x00, 0x00, 0x00};
+    uint8_t                 getport_rsp[] = {0x80, 0x00, 0x00, 0x1C, 0xEA, 0x1B, 0x76, 0xA2,
+                                             0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6f};
+
+    
+    // Create TCP control session
+    // TCP SYN
+    Tins::TCP tcp = Tins::TCP(SUNRPC_PORT, 5003);
+    tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_FALSE(ctx_.drop_flow());
+    EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.mcast_en);
+    EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
+    EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_SUN_RPC);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    hal::session_t *session = ctx_.session();
+
+    // TCP SYN/ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(5003, SUNRPC_PORT);
+    tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+
+    // TCP ACK
+    tcp = Tins::TCP(SUNRPC_PORT, 5003);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+
+    //SUNRPC Getport call1
+    tcp = Tins::TCP(SUNRPC_PORT, 5003) /
+          Tins::RawPDU(getport_call, sizeof(getport_call));
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_EQ(ctx_.session(), session);
+
+    //SUNRPC Getport call2
+    tcp = Tins::TCP(SUNRPC_PORT, 5003) /
+          Tins::RawPDU(getport_call2, sizeof(getport_call2));
+    tcp.seq(105);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_EQ(ctx_.session(), session);
+
+    //
+    tcp = Tins::TCP(5003, SUNRPC_PORT) /
+         Tins::RawPDU(getport_rsp, sizeof(getport_rsp));
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_EQ(ctx_.session(), session);
+
+    CHECK_ALLOW_TCP(server_eph, client_eph, 111, 54890, "c:54890 -> s:111");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_SUN_RPC);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    CHECK_DENY_TCP(server_eph, client_eph, 32776, 59374, "c:59374 -> s:32776");
+}
