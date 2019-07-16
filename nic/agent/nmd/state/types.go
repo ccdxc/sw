@@ -116,6 +116,7 @@ type Pipeline interface {
 	SetNmd(interface{})
 	WriteDelphiObjects() (err error)
 	GetSysmgrSystemStatus() (string, string)
+	GetPipelineType() string
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples

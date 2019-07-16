@@ -106,7 +106,7 @@ func main() {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
 
-	if p.GetDelphiClient() != nil {
+	if p.GetPipelineType() == globals.NaplesPipelineIris {
 		p.MountDelphiObjects()
 
 		p.MountSysmgrObjects()

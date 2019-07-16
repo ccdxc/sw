@@ -139,6 +139,11 @@ func (p *Pipeline) SetNmd(nmd interface{}) {
 	log.Infof("type validation failed for nmd")
 }
 
+// GetPipelineType ...
+func (p *Pipeline) GetPipelineType() string {
+	return p.Type.String()
+}
+
 // WriteDelphiObjects ...
 func (p *Pipeline) WriteDelphiObjects() (err error) {
 	n := p.Nmd
