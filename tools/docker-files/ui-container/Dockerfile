@@ -68,9 +68,9 @@ ENV PATH=/usr/local/go/bin:/opt/bin:/import/bin:/usr/local/sbin:/usr/local/bin:/
 RUN yarn global add yalc
 
 # Adding web-app-framework to yalc so that webapp's node modules have all dependencies installed
-RUN mkdir -p /usr/local/lib/web-app-framework/dist
-COPY web-app-framework/dist/web-app-framework-0.0.0.tgz /usr/local/lib/web-app-framework/dist/web-app-framework-0.0.0.tgz
-RUN cd /usr/local/lib/web-app-framework/dist/ && tar zxf web-app-framework-0.0.0.tgz && cd package && yalc publish --private
+RUN mkdir -p /usr/local/lib/web-app-framework/
+COPY web-app-framework/web-app-framework.tgz /usr/local/lib/web-app-framework/web-app-framework.tgz
+RUN cd /usr/local/lib/web-app-framework/ && tar xvf web-app-framework.tgz && cd dist && yalc publish --private
 RUN cd /usr/local/lib/webapp && yalc add web-app-framework
 RUN cd /usr/local/lib/webapp && yarn install --offline
 

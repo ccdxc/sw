@@ -67,7 +67,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.13
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.26
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.27
 DIND_CONTAINER ?= pens-dind:v0.3
 E2E_CONTAINER ?= pens-e2e:v0.4
 TARGETS ?= ws-tools pull-assets gen build
@@ -314,7 +314,7 @@ debug-container:
 ui-container-helper:
 	mkdir -p tools/docker-files/ui-container/web-app-framework/dist tools/docker-files/ui-container/venice-sdk
 	# copy local packages
-	cp venice/ui/web-app-framework/dist/web-app-framework-0.0.0.tgz tools/docker-files/ui-container/web-app-framework/dist/web-app-framework-0.0.0.tgz
+	cp venice/ui/web-app-framework/web-app-framework.tgz tools/docker-files/ui-container/web-app-framework/web-app-framework.tgz
 	cp venice/ui/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz tools/docker-files/ui-container/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz
 	# copy package.json and yarn.locks files, removing local packages
 	$(eval FILENAME := package.json)
