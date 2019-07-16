@@ -37,10 +37,10 @@ struct ionic {
 	struct dentry *dentry;
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	unsigned int num_bars;
-	struct identity ident;
-	struct list_head lifs;
-	struct lif *master_lif;
 	bool is_mgmt_nic;
+	struct lif *master_lif;
+	struct list_head lifs;
+	struct identity ident;
 	unsigned int nnqs_per_lif;
 	unsigned int neqs_per_lif;
 	unsigned int ntxqs_per_lif;

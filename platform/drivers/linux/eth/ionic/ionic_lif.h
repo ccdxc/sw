@@ -135,23 +135,24 @@ enum lif_state_flags {
 
 #define LIF_NAME_MAX_SZ		(32)
 struct lif {
-	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
 	struct net_device *netdev;
 	struct net_device *upper_dev;
 	DECLARE_BITMAP(state, LIF_STATE_SIZE);
 	struct ionic *ionic;
-	bool registered;
 	unsigned int index;
 	unsigned int hw_index;
-	unsigned int kern_pid;
-	u64 __iomem *kern_dbpage;
 	spinlock_t adminq_lock;		/* lock for AdminQ operations */
 	struct qcq *adminqcq;
 	struct qcq *notifyqcq;
 	struct qcqst *txqcqs;
 	struct qcqst *rxqcqs;
+	struct ionic_deferred deferred;
+	struct work_struct tx_timeout_work;
 	u64 last_eid;
+	u32 flags;
+	unsigned int kern_pid;
+	u64 __iomem *kern_dbpage;
 	unsigned int neqs;
 	unsigned int nxqs;
 	unsigned int ntxq_descs;
@@ -159,10 +160,12 @@ struct lif {
 	u32 rx_copybreak;
 	unsigned int rx_mode;
 	u64 hw_features;
+	bool registered;
 	bool mc_overflow;
-	unsigned int nmcast;
 	bool uc_overflow;
+	unsigned int nmcast;
 	unsigned int nucast;
+	char name[LIF_NAME_MAX_SZ];
 
 	union lif_identity *identity;
 	struct lif_info *info;
@@ -176,7 +179,6 @@ struct lif {
 	u32 rss_ind_tbl_sz;
 
 	struct rx_filters rx_filters;
-	struct ionic_deferred deferred;
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
 	struct mutex dbid_inuse_lock;	/* lock the dbid bit list */
@@ -185,8 +187,6 @@ struct lif {
 	void *api_private;
 	void (*api_reset_cb)(void *api_private);
 	struct dentry *dentry;
-	u32 flags;
-	struct work_struct tx_timeout_work;
 };
 
 #define lif_to_txqcq(lif, i)	((lif)->txqcqs[i].qcq)

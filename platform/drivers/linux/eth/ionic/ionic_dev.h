@@ -118,6 +118,9 @@ struct ionic_dev {
 	union dev_info_regs __iomem *dev_info_regs;
 	union dev_cmd_regs __iomem *dev_cmd_regs;
 
+	unsigned long last_hb_time;
+	u32 last_hb;
+
 	u64 __iomem *db_pages;
 	dma_addr_t phy_db_pages;
 
@@ -130,13 +133,11 @@ struct ionic_dev {
 	dma_addr_t phy_cmb_pages;
 	u32 cmb_npages;
 
+	u32 port_info_sz;
 	struct port_info *port_info;
 	dma_addr_t port_info_pa;
-	u32 port_info_sz;
 
 	struct ionic_devinfo dev_info;
-	unsigned long last_hb_time;
-	u32 last_hb;
 };
 
 struct cq_info {
@@ -166,9 +167,15 @@ struct desc_info {
 #define QUEUE_NAME_MAX_SZ		32
 
 struct queue {
-	char name[QUEUE_NAME_MAX_SZ];
-	struct ionic_dev *idev;
+	u64 dbell_count;
+	u64 drop;
+	u64 stop;
+	u64 wake;
 	struct lif *lif;
+	struct desc_info *info;
+	struct desc_info *tail;
+	struct desc_info *head;
+	struct ionic_dev *idev;
 	unsigned int index;
 	unsigned int type;
 	unsigned int hw_index;
@@ -178,18 +185,11 @@ struct queue {
 	void *sg_base;
 	dma_addr_t base_pa;
 	dma_addr_t sg_base_pa;
-	struct desc_info *info;
-	struct desc_info *tail;
-	struct desc_info *head;
 	unsigned int num_descs;
 	unsigned int desc_size;
 	unsigned int sg_desc_size;
-	void *nop_desc;
 	unsigned int pid;
-	u64 dbell_count;
-	u64 drop;
-	u64 stop;
-	u64 wake;
+	char name[QUEUE_NAME_MAX_SZ];
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		-1
@@ -212,10 +212,10 @@ struct cq {
 	struct cq_info *tail;
 	struct queue *bound_q;
 	struct intr *bound_intr;
-	u64 compl_count;
-	unsigned int num_descs;
-	unsigned int desc_size;
 	bool done_color;
+	unsigned int num_descs;
+	u64 compl_count;
+	unsigned int desc_size;
 };
 
 struct ionic;
