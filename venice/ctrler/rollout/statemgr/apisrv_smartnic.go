@@ -4,6 +4,7 @@ package statemgr
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -44,6 +45,9 @@ func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.SmartNIC) error {
 	}
 	var smartNICState *SmartNICState
 
+	// print the Log only when the health changes or if object is created
+	printMsg := false
+
 	// All parameters are validated (using apiserver hooks) by the time we get here
 	obj, err := sm.FindObject(kindSmartNIC, smartNIC.Tenant, smartNIC.Name)
 	if err == nil {
@@ -55,9 +59,30 @@ func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.SmartNIC) error {
 		smartNICState = &SmartNICState{
 			Statemgr: sm,
 		}
+		printMsg = true
 	}
 
 	smartNICState.Mutex.Lock()
+	if !printMsg {
+		if len(smartNICState.Status.Conditions) != len(smartNIC.Status.Conditions) {
+			printMsg = true
+		}
+		if len(smartNIC.Status.Conditions) > 0 && len(smartNICState.Status.Conditions) > 0 &&
+			smartNICState.Status.Conditions[0].Status != smartNIC.Status.Conditions[0].Status {
+			printMsg = true
+		}
+		if !printMsg && !reflect.DeepEqual(smartNIC.Labels, smartNICState.Labels) {
+			printMsg = true
+		}
+	}
+	if printMsg {
+		if len(smartNIC.Status.Conditions) > 0 {
+			log.Infof("SetSmartNICState - %s Labels:%s Condition[%s]=%s\n", smartNIC.Name, smartNIC.Labels, smartNIC.Status.Conditions[0].Type, smartNIC.Status.Conditions[0].Status)
+		} else {
+			log.Infof("SetSmartNICState - %s Labels:%s Nil Conditions\n", smartNIC.Name, smartNIC.Labels)
+		}
+	}
+
 	smartNICState.SmartNIC = smartNIC
 	smartNICState.Mutex.Unlock()
 

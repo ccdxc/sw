@@ -4,6 +4,7 @@ package statemgr
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"sync"
 
@@ -84,9 +85,16 @@ func (sm *Statemgr) SetNodeState(n *cluster.Node) error {
 			nodeState.Status.Conditions[0].Status != n.Status.Conditions[0].Status {
 			printMsg = true
 		}
+		if !printMsg && !reflect.DeepEqual(n.Labels, nodeState.Labels) {
+			printMsg = true
+		}
 	}
 	if printMsg {
-		log.Infof("SetNodeState - %s Condition[%s]=%s\n", n.Name, n.Status.Conditions[0].Type, n.Status.Conditions[0].Status)
+		if len(n.Status.Conditions) > 0 {
+			log.Infof("SetNodeState - %s Labels:%s Condition[%s]=%s\n", n.Name, n.Labels, n.Status.Conditions[0].Type, n.Status.Conditions[0].Status)
+		} else {
+			log.Infof("SetNodeState - %s Labels:%s Nil Conditions\n", n.Name, n.Labels)
+		}
 	}
 
 	nodeState.Node = n

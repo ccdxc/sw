@@ -35,13 +35,13 @@ func (w *Watcher) Stop() {
 }
 
 // NewWatcher returns a new watcher object
-func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL string, resolver resolver.Interface, debugStats *debugStats.Stats) (*Watcher, error) {
+func NewWatcher(smgr *statemgr.Statemgr, apisrvURL string, rslvr resolver.Interface, debugStats *debugStats.Stats) (*Watcher, error) {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	// create a watcher
 	watcher := &Watcher{
-		statemgr:    statemgr,
+		statemgr:    smgr,
 		watchCtx:    watchCtx,
 		watchCancel: watchCancel,
 		debugStats:  debugStats,
@@ -49,7 +49,7 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL string, resolver resolver
 	// setup wait group
 	watcher.waitGrp.Add(1)
 	// handle api watchers
-	go watcher.runApisrvWatcher(watchCtx, apisrvURL, resolver)
+	go watcher.runApisrvWatcher(watchCtx, apisrvURL, rslvr)
 
 	return watcher, nil
 }
@@ -77,7 +77,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 
 	// smartNIC Watcher
-	smartNICWatcher, err := apicl.ClusterV1().SmartNIC().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec", "Status.AdmissionPhase", "Status.Conditions[0].Status", "Status.Conditions[1].Status"}})
+	smartNICWatcher, err := apicl.ClusterV1().SmartNIC().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"ObjectMeta.Labels", "Spec", "Status.AdmissionPhase", "Status.Conditions[0].Status", "Status.Conditions[1].Status"}})
 	if err != nil {
 		log.Errorf("Failed to start node watcher (%s)\n", err)
 		return
@@ -127,7 +127,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 }
 
 // runApisrvWatcher run API server watcher forever
-func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolver resolver.Interface) {
+func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, rslvr resolver.Interface) {
 	// if we have no URL, exit
 	if apisrvURL == "" {
 		return
@@ -138,7 +138,7 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 	// create logger
 	config := log.GetDefaultConfig("RolloutApiWatcher")
 	l := log.GetNewLogger(config)
-	b := balancer.New(resolver)
+	b := balancer.New(rslvr)
 
 	// loop forever
 	for {
