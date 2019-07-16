@@ -144,9 +144,25 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
-		err = n.Upgmgr.StartUpgOnNextHostReboot("naples_fw.tar")
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.Status.InProgressOp.Version)
 		if err != nil {
-			log.Errorf("StartDisruptiveUpgrade returned %s", err)
+			log.Errorf("Failed to get naples version from objectstore %+v", err)
+			cancel()
+			return
+		}
+		cancel()
+		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Minute)
+		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
+		if err != nil {
+			log.Errorf("Failed to download naples image from objectstore %+v", err)
+			cancel()
+			return
+		}
+		cancel()
+		_, err = naplesHostDisruptiveUpgrade("naples_fw.tar")
+		if err != nil {
+			log.Errorf("naplesHostDisruptiveUpgrade failed %s", err)
 			return
 		}
 	case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
