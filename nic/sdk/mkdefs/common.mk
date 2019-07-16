@@ -15,6 +15,7 @@ export NIC_CSR_FLAGS := -Wno-unused-function -Wno-unused-variable \
 export SDK_THIRD_PARTY_INCLUDES := \
        ${SDKDIR}/third-party/googletest-release-1.8.0/googletest/include \
        ${SDKDIR}/third-party/libev/include \
+       ${SDKDIR}/third-party/libz/include \
        ${SDKDIR}/third-party/boost/include \
        ${SDKDIR}/third-party/zmq/include \
        ${SDKDIR}/third-party/edit/include \
