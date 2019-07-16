@@ -55,6 +55,10 @@ using pds::VPC;
 using pds::VPCPeerRequest;
 using pds::VPCPeerSpec;
 using pds::VPCPeerResponse;
+using pds::VPCDeleteRequest;
+using pds::VPCDeleteResponse;
+using pds::VPCGetRequest;
+using pds::VPCGetResponse;
 using pds::Route;
 using pds::RouteTableRequest;
 using pds::RouteTableSpec;
@@ -247,8 +251,32 @@ populate_vpc_request (VPCRequest *req, pds_vpc_spec_t *vpc)
     if (!vpc || !req) {
         return;
     }
+
     VPCSpec *spec = req->add_request();
     vpc_api_spec_to_proto_spec(spec, vpc);
+    return;
+}
+
+// TODO : Use single function template for delete and get
+static void
+populate_vpc_delete_request (VPCDeleteRequest *req, pds_vpc_key_t *key)
+{
+    if (!key || !req) {
+        return;
+    }
+    req->add_id(key->id);
+
+    return;
+}
+
+static void
+populate_vpc_get_request (VPCGetRequest *req, pds_vpc_key_t *key)
+{
+    if (!key || !req) {
+        return;
+    }
+    req->add_id(key->id);
+
     return;
 }
 

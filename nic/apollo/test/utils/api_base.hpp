@@ -14,6 +14,10 @@
 #include <iostream>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#ifdef AGENT_MODE
+#include "nic/apollo/agent/client/app.hpp"
+#endif
+#include "nic/apollo/test/scale/api.hpp"
 
 namespace api_test {
 
@@ -129,11 +133,65 @@ del(_api_str##_feeder& feeder) {                                             \
     return (pds_##_api_str##_delete());                                      \
 }
 
+// TODO - Defining the following APIs temporarily till all objects are changed
+#define API_CREATE1(_api_str)                                                \
+inline sdk::sdk_ret_t                                                        \
+create(_api_str##_feeder& feeder) {                                          \
+    pds_##_api_str##_spec_t spec;                                            \
+                                                                             \
+    if (feeder.num_obj == 0)                                                 \
+        return (create_##_api_str(NULL));                                    \
+    feeder.spec_build(&spec);                                                \
+    return (create_##_api_str(&spec));                                       \
+}
+
+#define API_READ1(_api_str)                                                  \
+inline sdk::sdk_ret_t                                                        \
+read(_api_str##_feeder& feeder) {                                            \
+    sdk_ret_t rv;                                                            \
+    pds_##_api_str##_key_t key;                                              \
+    pds_##_api_str##_info_t info;                                            \
+                                                                             \
+    feeder.key_build(&key);                                                  \
+    memset(&info, 0, sizeof(pds_##_api_str##_info_t));                       \
+    if ((rv = read_##_api_str(&key, &info)) != sdk::SDK_RET_OK)              \
+        return rv;                                                           \
+                                                                             \
+    return (api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(    \
+                feeder, &info));                                             \
+}
+
+#define API_UPDATE1(_api_str)                                                \
+inline sdk::sdk_ret_t                                                        \
+update(_api_str##_feeder& feeder) {                                          \
+    pds_##_api_str##_spec_t spec;                                            \
+                                                                             \
+    if (feeder.num_obj == 0)                                                 \
+        return (update_##_api_str(NULL));                                    \
+    feeder.spec_build(&spec);                                                \
+    return (update_##_api_str(&spec));                                       \
+}
+
+#define API_DELETE1(_api_str)                                                \
+inline sdk::sdk_ret_t                                                        \
+del(_api_str##_feeder& feeder) {                                             \
+    pds_##_api_str##_key_t key;                                              \
+                                                                             \
+    if (feeder.num_obj == 0)                                                 \
+        return (delete_##_api_str(NULL));                                    \
+    feeder.key_build(&key);                                                  \
+    return (delete_##_api_str(&key));                                        \
+}
+
 /// \brief Invokes the create apis for all the config objects
 template <typename feeder_T>
 void many_create(feeder_T& feeder) {
     feeder_T tmp = feeder;
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
+        SDK_ASSERT(create(tmp) == sdk::SDK_RET_OK);
+    }
+    if (agent_mode()) {
+        tmp.num_obj = 0;
         SDK_ASSERT(create(tmp) == sdk::SDK_RET_OK);
     }
 }
@@ -158,6 +216,10 @@ void many_update(feeder_T& feeder) {
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
         SDK_ASSERT(update(tmp) == sdk::SDK_RET_OK);
     }
+    if (agent_mode()) {
+        tmp.num_obj = 0;
+        SDK_ASSERT(update(tmp) == sdk::SDK_RET_OK);
+    }
 }
 
 /// \brief Invokes the delete apis for all the config objects
@@ -165,6 +227,10 @@ template <typename feeder_T>
 void many_delete(feeder_T& feeder) {
     feeder_T tmp = feeder;
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
+        SDK_ASSERT(del(tmp) == sdk::SDK_RET_OK);
+    }
+    if (agent_mode()) {
+        tmp.num_obj = 0;
         SDK_ASSERT(del(tmp) == sdk::SDK_RET_OK);
     }
 }

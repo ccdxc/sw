@@ -42,22 +42,36 @@ artemis ()
     return (pipeline_get() == "artemis");
 }
 
-// Returns true if mock_mode is enabled, otherwise false
+// Returns true if CAPRI_MOCK_MODE is enabled, otherwise false
 static inline bool
 capri_mock_mode (void)
 {
-    static bool input_check = false;
+    static bool input_check1 = false;
     static bool capri_mock_mode = true;
 
-    if (!input_check) {
+    if (!input_check1) {
         if (getenv("CAPRI_MOCK_MODE") == NULL)
             capri_mock_mode = false;
-        input_check = true;
+        input_check1 = true;
     }
 
     return capri_mock_mode;
 }
 
+static inline bool
+agent_mode (void)
+{
+    static bool input_check2 = false;
+    static bool agent_mode = false;
+
+    if (!input_check2) {
+        if (getenv("AGENT_MODE") != NULL)
+            agent_mode = true;
+        input_check2 = true;
+    }
+
+    return agent_mode;
+}
 
 /// \defgroup PDS_TEST Base test module
 /// @{

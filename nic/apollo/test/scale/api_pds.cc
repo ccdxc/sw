@@ -94,6 +94,24 @@ create_vpc (pds_vpc_spec_t *pds_vpc)
 }
 
 sdk_ret_t
+read_vpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
+{
+    return pds_vpc_read(key, info);
+}
+
+sdk_ret_t
+update_vpc (pds_vpc_spec_t *pds_vpc)
+{
+    return pds_vpc_update(pds_vpc);
+}
+
+sdk_ret_t
+delete_vpc (pds_vpc_key_t *key)
+{
+    return pds_vpc_delete(key);
+}
+
+sdk_ret_t
 create_vpc_peer (pds_vpc_peer_spec_t *pds_vpc_peer)
 {
     if (pds_vpc_peer) {

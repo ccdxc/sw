@@ -3,28 +3,12 @@
 //------------------------------------------------------------------------------
 
 #define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-#include <thread>
-#include <iostream>
-#include <fstream>
-#include <math.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <google/protobuf/util/json_util.h>
-#include <stdio.h>
-#include <getopt.h>
-#include <gtest/gtest.h>
-#include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/agent/test/scale/utils.hpp"
-#include "nic/apollo/agent/test/scale/app.hpp"
-#include "nic/apollo/test/scale/test.hpp"
+#include "nic/apollo/agent/client/utils.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using std::string;
 
-extern std::string  g_svc_endpoint_;
+std::string g_svc_endpoint_;
 
 std::unique_ptr<pds::RouteSvc::Stub>             g_route_table_stub_;
 std::unique_ptr<pds::MappingSvc::Stub>           g_mapping_stub_;
@@ -54,6 +38,8 @@ MeterRequest             g_meter_req;
 TagRequest               g_tag_req;
 NexthopRequest           g_nexthop_req;
 SvcMappingRequest        g_svc_mapping_req;
+VPCDeleteRequest         g_vpc_req_del;
+VPCGetRequest            g_vpc_req_get;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -195,11 +181,98 @@ create_vpc_grpc (pds_vpc_spec_t *spec)
     populate_vpc_request(&g_vpc_req, spec);
     if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vpc_stub_->VPCCreate(&context, g_vpc_req, &response);
-        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s failed!\n", __FUNCTION__);
+        if (!ret_status.ok() ||
+            (response.apistatus() != types::API_STATUS_OK)) {
+            printf("create vpc failed id:%u ret_status:%u response:%u err:%u\n",
+                   spec ? spec->key.id : 0, ret_status.ok(),
+                   response.apistatus(), ret_status.error_code());
             return SDK_RET_ERR;
         }
         g_vpc_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+update_vpc_grpc (pds_vpc_spec_t *vpc)
+{
+    ClientContext   context;
+    VPCResponse     response;
+    Status          ret_status;
+
+    populate_vpc_request(&g_vpc_req, vpc);
+    if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vpc) {
+        ret_status = g_vpc_stub_->VPCUpdate(&context, g_vpc_req, &response);
+        if (!ret_status.ok() ||
+            (response.apistatus() != types::API_STATUS_OK)) {
+            printf("update vpc failed id:%u ret_status:%u response:%u err:%u\n",
+                   vpc?vpc->key.id:0, ret_status.ok(), response.apistatus(),
+                   ret_status.error_code());
+            return SDK_RET_ERR;
+        }
+        g_vpc_req.clear_request();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+delete_vpc_grpc (pds_vpc_key_t *key)
+{
+    ClientContext   context;
+    VPCDeleteResponse     response;
+    Status          ret_status;
+
+    populate_vpc_delete_request(&g_vpc_req_del, key);
+
+    if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !key) {
+        ret_status = g_vpc_stub_->VPCDelete(&context, g_vpc_req_del, &response);
+        if (!ret_status.ok()) {
+            printf("delete vpc failed ret_status:%u err:%u\n", ret_status.ok(),
+                   ret_status.error_code());
+            return SDK_RET_ERR;
+        }
+        for (int i = 0; i < response.apistatus_size(); i++) {
+            int status = response.apistatus(i);
+            if (status != types::API_STATUS_OK) {
+                printf("%s failed for request i:%d, status:%d\n",
+                       __FUNCTION__, i, status);
+                return SDK_RET_ERR;
+            }
+        }
+        g_vpc_req_del.clear_id();
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+read_vpc_grpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
+{
+    ClientContext   context;
+    VPCGetResponse  response;
+    Status          ret_status;
+    pds::VPCSpec vpcspec;
+
+    // TODO - check if batching is needed for read APIs, for now dont batch
+    populate_vpc_get_request(&g_vpc_req_get, key);
+    if ((g_vpc_req_get.id_size() >= APP_GRPC_BATCH_COUNT) || !key || 1) {
+        ret_status = g_vpc_stub_->VPCGet(&context, g_vpc_req_get, &response);
+        if (!ret_status.ok()) {
+            printf("get vpc failed :%u ret_status:%u response:%u err:%u\n",
+                   key ? key->id : 0, ret_status.ok(), response.apistatus(),
+                   ret_status.error_code());
+            return SDK_RET_ERR;
+        }
+        g_vpc_req_get.clear_id();
+        if (response.apistatus() == types::API_STATUS_NOT_FOUND) {
+            // ApiStatus::NOTFOUND is 5, SDK_RET_ENTRY_NOT_FOUND is 4
+            return SDK_RET_ENTRY_NOT_FOUND;
+        } else if (response.apistatus() == types::API_STATUS_OK) {
+            auto getresponse = response.response(0);  // get first info
+            vpcspec = getresponse.spec();
+            pds_agent_vpc_api_spec_fill(&info->spec, vpcspec);
+        }
     }
 
     return SDK_RET_OK;
@@ -422,10 +495,19 @@ batch_commit_grpc (void)
 }
 
 sdk_ret_t
-test_app_push_configs (void)
+batch_abort_grpc (void)
 {
-    // create objects
-    create_objects();
+    ClientContext       abort_context;
+    types::Empty        empty_spec;
+    types::Empty        response;
+    Status              ret_status;
+
+    /* Batch abort */
+    ret_status = g_batch_stub_->BatchAbort(&abort_context, empty_spec, &response);
+    if (!ret_status.ok()) {
+        printf("%s: Batch abort failed!\n", __FUNCTION__);
+        return SDK_RET_ERR;
+    }
     return SDK_RET_OK;
 }
 

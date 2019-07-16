@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <math.h>
-#include "nic/apollo/agent/test/scale/app.hpp"
+#include "nic/apollo/agent/client/app.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
 
 static int g_epoch = 1;
@@ -58,6 +58,24 @@ sdk_ret_t
 create_vpc (pds_vpc_spec_t *pds_vpc)
 {
     return create_vpc_grpc(pds_vpc);
+}
+
+sdk_ret_t
+read_vpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
+{
+    return read_vpc_grpc(key, info);
+}
+
+sdk_ret_t
+update_vpc (pds_vpc_spec_t *pds_vpc)
+{
+    return update_vpc_grpc(pds_vpc);
+}
+
+sdk_ret_t
+delete_vpc (pds_vpc_key_t *key)
+{
+    return delete_vpc_grpc(key);
 }
 
 sdk_ret_t

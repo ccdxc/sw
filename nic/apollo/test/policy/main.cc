@@ -29,7 +29,8 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        pds_test_base::SetUpTestCase(g_tc_params);
+        if (!agent_mode())
+            pds_test_base::SetUpTestCase(g_tc_params);
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
@@ -40,7 +41,8 @@ protected:
         batch_start();
         sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
-        pds_test_base::TearDownTestCase();
+        if (!agent_mode())
+            pds_test_base::TearDownTestCase();
     }
 };
 /// \endcond

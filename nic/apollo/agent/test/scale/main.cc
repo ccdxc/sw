@@ -25,8 +25,9 @@
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
-#include "nic/apollo/agent/test/scale/app.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
+#include "nic/apollo/agent/client/app.hpp"
+#include "nic/apollo/test/scale/test.hpp"
 
 using std::string;
 namespace pt = boost::property_tree;
@@ -53,6 +54,14 @@ static void inline print_usage(char **argv)
 }
 
 std::string  g_svc_endpoint_;
+
+sdk_ret_t
+test_app_push_configs (void)
+{
+    /* Create objects */
+    create_objects();
+    return SDK_RET_OK;
+}
 
 int
 main (int argc, char **argv)

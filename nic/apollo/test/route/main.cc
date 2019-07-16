@@ -36,7 +36,8 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        pds_test_base::SetUpTestCase(g_tc_params);
+        if (!agent_mode())
+            pds_test_base::SetUpTestCase(g_tc_params);
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         if (apollo()) {
@@ -57,7 +58,8 @@ protected:
         }
         sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
-        pds_test_base::TearDownTestCase();
+        if (!agent_mode())
+            pds_test_base::TearDownTestCase();
     }
 };
 /// \endcond

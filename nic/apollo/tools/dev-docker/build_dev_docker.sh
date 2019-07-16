@@ -41,6 +41,7 @@ copy_files() {
 
     protobuf=" "
     if [ $agent == 1 ];then
+        export AGENT_MODE=1
         protobuf+='vendor/github.com vendor/golang.org vendor/google.golang.org vendor/gopkg.in '
         protobuf+='venice/utils/log venice/utils/testenv '
         protobuf+='nic/hal/third-party/google nic/proto/hal/module_gogo.mk nic/hal/third-party/grpc '

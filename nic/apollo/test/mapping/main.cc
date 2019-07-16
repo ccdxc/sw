@@ -59,7 +59,8 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        pds_test_base::SetUpTestCase(g_tc_params);
+        if (!agent_mode())
+            pds_test_base::SetUpTestCase(g_tc_params);
         uint16_t vpc_id = api_test::g_vpc_id;
         uint16_t vnic_stepper = api_test::g_vpc_id;
         uint32_t num_vnics = k_max_vnic;
@@ -211,7 +212,8 @@ protected:
         DEVICE_DELETE(&device_seed);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 #endif
-        pds_test_base::TearDownTestCase();
+        if (!agent_mode())
+            pds_test_base::TearDownTestCase();
     }
 };
 /// \endcond

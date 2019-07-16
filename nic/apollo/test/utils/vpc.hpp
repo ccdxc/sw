@@ -44,6 +44,7 @@ public:
     // Compare routines
     bool key_compare(const pds_vpc_key_t *key) const;
     bool spec_compare(const pds_vpc_spec_t *spec) const;
+
 };
 
 // Dump prototypes
@@ -56,10 +57,10 @@ operator<<(std::ostream& os, const vpc_feeder& obj) {
 }
 
 // CRUD prototypes
-API_CREATE(vpc);
-API_READ(vpc);
-API_UPDATE(vpc);
-API_DELETE(vpc);
+API_CREATE1(vpc);
+API_READ1(vpc);
+API_UPDATE1(vpc);
+API_DELETE1(vpc);
 
 // Misc function prototypes
 void sample_vpc_setup(pds_vpc_type_t type);
