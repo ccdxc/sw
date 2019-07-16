@@ -22,6 +22,7 @@ import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/service
 import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order, FieldsRequirement_operator } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { SelectItem } from 'primeng/api';
+import { MetricsUtility } from '@app/common/MetricsUtility';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -65,6 +66,7 @@ import { SelectItem } from 'primeng/api';
 class SecuritySGRuleWrapper {
   order: number;
   rule: ISecuritySGRule;
+  ruleHash: string;
 }
 
 interface RuleHitEntry {
@@ -172,11 +174,13 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
   ruleCount: number = 0;
 
-  // Map from rule index to aggregate hits
-  ruleMetrics: RuleHitEntry[] = [];
-  // Map from rule index to tooltip string
+  // map from rule index to rule hash
+  ruleHashMap: { [index: number]: string} = {};
+  // Map from rule has to aggregate hits
+  ruleMetrics: { [hash: string]: RuleHitEntry } = {};
+  // Map from rule hash to tooltip string
   // Helps avoid rebuidling the string unless there are changes
-  ruleMetricsTooltip: string[] = [];
+  ruleMetricsTooltip: { [hash: string]: string } = {};
 
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
@@ -494,6 +498,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           // Set sgpolicyrules
           this.selectedPolicy = this.sgPolicies[0];
           this.searchPolicyInvoked = false;
+          this.generateRuleMap();
           this.getPolicyMetrics();
           this.updateRulesByPolicy();
         } else {
@@ -512,83 +517,82 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.subscriptions.push(subscription);
   }
 
-  getPolicyMetrics() {
+  generateRuleMap() {
+    this.ruleHashMap = {};
     if (this.selectedPolicy == null) {
+      return;
+    }
+    this.selectedPolicy.status['rule-status'].forEach( (rule, index) => {
+      this.ruleHashMap[index] = rule['rule-hash'];
+    });
+  }
+
+  getPolicyMetrics() {
+    if (this.selectedPolicy == null || this.selectedPolicy.status['rule-status'].length === 0) {
       return;
     }
     const queryList: TelemetryPollingMetricQueries = {
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
-    this.selectedPolicy.status['rule-status'].forEach((rule, index) => {
-      queryList.queries.push(
-        { query: this.generateRuleQuery(rule['rule-hash']) }
-      );
-    });
-    if (queryList.queries.length === 0) {
-      // No queries to execute yet
-      return;
-    }
+    const query: ITelemetry_queryMetricsQuerySpec = {
+      'kind': 'RuleMetrics',
+      function: Telemetry_queryMetricsQuerySpec_function.NONE,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Descending,
+      'group-by-field': 'reporterID',
+      'start-time': 'now() - 2m' as any,
+      'end-time': 'now()' as any,
+      fields: [],
+    };
+    queryList.queries.push({ query: query });
     // We create a new query for each rule
     // We then group each rule by reporter ID
     // We then sum them to generate the total for the rule
     const sub = this.metricsqueryService.pollMetrics('sgpolicyDetail', queryList).subscribe(
       (data: ITelemetry_queryMetricsQueryResponse) => {
         if (data && data.results) {
-          this.ruleMetrics = [];
-          this.ruleMetricsTooltip = [];
+          this.ruleMetrics = {};
+          this.ruleMetricsTooltip = {};
           data.results.forEach((res) => {
-            const ruleHits: RuleHitEntry = {
-              EspHits: 0,
-              IcmpHits: 0,
-              OtherHits: 0,
-              TcpHits: 0,
-              TotalHits: 0,
-              UdpHits: 0
-            };
+            if (res.series == null) {
+              return;
+            }
             res.series.forEach( (s) => {
-              if (s.values.length === 0) {
+              if (s.tags == null) {
                 return;
               }
-              this.ruleHitItems.map(item => item.value).forEach( (col) => {
-                const index = s.columns.indexOf(col);
-                ruleHits[col] += s.values[0][index];
+              const ruleHash = s.tags['name'];
+              // We go through all the points, and keep the first point
+              // for every different naples
+              // Since we made the query in descending order, the first point is the most recent
+              const uniquePoints = Utility.getLodash().uniqBy(s.values, (val) => {
+                const i = MetricsUtility.findFieldIndex(s.columns, 'reporterID');
+                return val[i];
               });
+              // Sum up all the unique points
+              const ruleHits: RuleHitEntry = {
+                EspHits: 0,
+                IcmpHits: 0,
+                OtherHits: 0,
+                TcpHits: 0,
+                TotalHits: 0,
+                UdpHits: 0
+              };
+              uniquePoints.forEach( (point) => {
+                this.ruleHitItems.map(item => item.value).forEach( (col) => {
+                  const index = s.columns.indexOf(col);
+                  ruleHits[col] += point[index];
+                });
+              });
+              this.ruleMetrics[ruleHash] = ruleHits;
+              this.ruleMetricsTooltip[ruleHash] = this.createRuleTooltip(ruleHits);
             });
-            this.ruleMetrics.push(ruleHits);
-            this.ruleMetricsTooltip.push(this.createRuleTooltip(ruleHits));
           });
         }
       },
     );
     this.subscriptions.push(sub);
   }
-
-  generateRuleQuery(ruleHash: string) {
-    const query: ITelemetry_queryMetricsQuerySpec = {
-      'kind': 'RuleMetrics',
-      name: null,
-      selector: {
-        'requirements': [
-          {
-            'key': 'name',
-            'operator': FieldsRequirement_operator.equals,
-            'values': [ruleHash]
-          }
-        ]
-      },
-      function: Telemetry_queryMetricsQuerySpec_function.NONE,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Descending,
-      pagination: {
-        count: 1,
-        offset: 0,
-      },
-      'group-by-field': 'reporterID',
-      fields: [],
-    };
-    return query;
-  }
-
 
   /**
    * Adds a wrapper object around the rules to store ordering
@@ -601,7 +605,8 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       retRules.push(
         {
           order: index,
-          rule: rule
+          rule: rule,
+          ruleHash: this.ruleHashMap[index],
         }
       );
     });
@@ -614,7 +619,8 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       retRules.push(
         {
           order: rule.index,
-          rule: rule.rule
+          rule: rule.rule,
+          ruleHash: this.ruleHashMap[rule.index],
         }
       );
     });
@@ -637,7 +643,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       case 'action':
         return SecuritySGRule_action_uihint[rowData.rule.action];
       case 'TotalHits':
-        const entry = this.ruleMetrics[rowData.order];
+        const entry = this.ruleMetrics[rowData.ruleHash];
         if (entry == null) {
           return '';
         }

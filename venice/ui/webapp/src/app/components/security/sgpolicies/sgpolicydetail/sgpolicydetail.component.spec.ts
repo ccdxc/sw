@@ -34,7 +34,8 @@ import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.sp
 import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
+import { TelemetryqueryService } from '@app/services/generated/telemetryquery.service';
 
 
 
@@ -340,6 +341,11 @@ describe('SgpolicydetailComponent', () => {
       },
       spec: {
         'rules': rules1
+      },
+      status: {
+        'rule-status': [
+          'hash1'
+        ]
       }
     };
 
@@ -755,5 +761,50 @@ describe('SgpolicydetailComponent', () => {
     expect(getOverlay()).toBeTruthy();
 
   });
+
+  it('should fetch rule metrics', () => {
+    const data: ITelemetry_queryMetricsQueryResponse = {
+      results: [
+        {
+          series: [
+            {
+              tags: {
+                name: 'hash1'
+              },
+              columns: [
+                'time',
+                'EspHits',
+                'IcmpHits',
+                'OtherHits',
+                'TcpHits',
+                'TotalHits',
+                'UdpHits',
+                'reporterID',
+                'namespace',
+                'tenant'
+              ],
+              values: [
+                ['', 0, 0, 0, 0, 0, 15, 'naples1', '', ''],
+                ['', 2, 0, 0, 0, 0, 2, 'naples2', '', ''],
+                ['', 0, 2, 0, 0, 0, 2, 'naples3', '', ''],
+                ['', 0, 0, 0, 0, 0, 10, 'naples1', '', ''],
+              ]
+            }
+          ]
+        }
+      ]
+    };
+    const service = TestBed.get(MetricsqueryService);
+    const spy = spyOn(service, 'pollMetrics').and.returnValue(
+      new BehaviorSubject<any>(data)
+    );
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+    expect(component.ruleMetrics['hash1']).toBeTruthy();
+    expect(component.ruleMetrics['hash1']['UdpHits']).toBe(19);
+    expect(component.ruleMetrics['hash1']['EspHits']).toBe(2);
+    expect(component.ruleMetrics['hash1']['IcmpHits']).toBe(2);
+  });
+
 
 });

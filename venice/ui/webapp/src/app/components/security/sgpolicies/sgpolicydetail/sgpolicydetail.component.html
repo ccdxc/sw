@@ -148,7 +148,7 @@
               [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-row sgpolicy-match' : 'sgpolicy-row'">
             <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
                 [fxFlex]="col.width"
-                [matTooltip]=" col.field === 'TotalHits' && ruleMetricsTooltip.length > rowData.order ? ruleMetricsTooltip[rowData.order]: ''"
+                [matTooltip]=" col.field === 'TotalHits' ? ruleMetricsTooltip[rowData.ruleHash]: ''"
                 [matTooltipShowDelay]="100"
                 [matTooltipClass]="'global-info-tooltip sgpolicy-tooltip'">
               {{displayColumn(rowData, col)}}
