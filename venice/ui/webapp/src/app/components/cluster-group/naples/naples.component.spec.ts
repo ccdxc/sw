@@ -46,6 +46,7 @@ describe('NaplesComponent', () => {
       'id': 'naples1-host'
     },
     'status': {
+      'host': 'naples-host-1',
       'ip-config': {
         'ip-address': '0.0.0.0/0'
       },
@@ -68,6 +69,7 @@ describe('NaplesComponent', () => {
       'id': 'naples2-host'
     },
     'status': {
+      'host': 'naples-host-2',
       'ip-config': {
         'ip-address': '0.0.0.10'
       },
@@ -79,7 +81,7 @@ describe('NaplesComponent', () => {
 
   const naples3 = {
     'meta': {
-      'name': 'naples2',
+      'name': 'naples3',
       'labels': {
         'Location': 'us-east-A'
       },
@@ -87,9 +89,10 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:20:08.534909931Z'
     },
     'spec': {
-      'id': 'naples2-host'
+      'id': 'naples3-host'
     },
     'status': {
+      'host': 'naples-host-3',
       'ip-config': {
         'ip-address': '0.0.0.10'
       },

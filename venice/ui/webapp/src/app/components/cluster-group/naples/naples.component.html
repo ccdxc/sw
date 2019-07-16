@@ -61,6 +61,9 @@
             <div *ngSwitchCase="'status.smartNicVersion'">
               {{rowData.status["smartNicVersion"]}}
             </div>
+            <div *ngSwitchCase="'status.host'">
+              <a routerLink="/cluster/hosts"> {{rowData.status["host"]}}</a>
+            </div>
             <div *ngSwitchCase="'status.admission-phase'"
                  [matTooltip]="rowData.status['admission-phase'] === 'REJECTED' || rowData.status['admission-phase'] === 'PENDING' ?  rowData.status['adm-phase-reason'] : ''">
               {{displayColumn(rowData, col)}}

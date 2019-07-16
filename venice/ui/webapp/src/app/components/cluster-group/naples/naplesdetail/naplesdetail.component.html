@@ -70,7 +70,7 @@
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
-                  <div>Host Name:</div>
+                  <div>ID:</div>
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
@@ -83,6 +83,10 @@
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
                   <div>Smart Nic Version:</div>
+                </div>
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <div>Host:</div>
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
@@ -150,6 +154,12 @@
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-version">
                   {{ selectedObj?.status['smartNicVersion'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-version">
+                  <a routerLink="/cluster/hosts"> {{ selectedObj?.status['host'] }}</a>
                 </div>
               </div>
               <div fxFlex="" fxLayout="row" fxLayoutAlign="start center"

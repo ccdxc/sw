@@ -193,7 +193,8 @@
         <ng-template pTemplate="header" let-columns>
           <tr>
             <th style="width: 3em" *ngIf="alertUpdatable">
-              <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+              <p-tableHeaderCheckbox matTooltip="Select/Deselect All Records In Current Page">
+              </p-tableHeaderCheckbox>
             </th>
             <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''"
                 [class]="col.class"

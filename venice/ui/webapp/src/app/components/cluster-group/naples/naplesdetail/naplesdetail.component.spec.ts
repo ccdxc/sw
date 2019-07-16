@@ -62,7 +62,7 @@ describe('NaplesdetailComponent', () => {
 
   function verifyMeta(naples: IClusterSmartNIC) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
-    expect(fields.length).toBe(7);
+    expect(fields.length).toBe(8); // there are 8 columns defined in naplesdetail.c.ts
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
@@ -190,6 +190,7 @@ describe('NaplesdetailComponent', () => {
       },
       'status': {
         'admission-phase': 'ADMITTED',
+        'host': 'naples-host-1',
         'conditions': [
           {
             'type': 'HEALTHY',
@@ -217,6 +218,7 @@ describe('NaplesdetailComponent', () => {
       },
       'spec': {},
       'status': {
+        'host': 'naples-host-1',
         'admission-phase': 'PENDING'
       }
     });
@@ -235,6 +237,7 @@ describe('NaplesdetailComponent', () => {
       },
       'spec': {},
       'status': {
+        'host': 'naples-host-3',
         'admission-phase': 'REJECTED'
       }
     });
@@ -334,11 +337,11 @@ describe('NaplesdetailComponent', () => {
     // get attached link directive instances
     // using each DebugElement's injector
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
-    expect(routerLinks.length).toBe(1, 'should have 1 routerLinks');
-    expect(routerLinks[0].linkParams).toBe('../');
+    expect(routerLinks.length).toBe(2, 'should have 2 routerLinks');
+    expect(routerLinks[1].linkParams).toBe('../'); // VS-639
 
     testingUtility.sendClick(buttons[0]);
-    expect(routerLinks[0].navigatedTo).toBe('../');
+    expect(routerLinks[1].navigatedTo).toBe('../'); // VS-639
 
   });
 

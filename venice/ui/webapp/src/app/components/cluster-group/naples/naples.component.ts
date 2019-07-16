@@ -32,11 +32,12 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   cols: any[] = [
     { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true },
-    { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-host-name', sortable: true },
+    { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-id-name', sortable: true },
     { field: 'status.smartNicVersion', header: 'Version', class: 'naples-column-version', sortable: true },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
     { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
     { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true},
+    { field: 'status.host', header: 'Host', class: 'naples-column-host', sortable: true},
     { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true },
   ];

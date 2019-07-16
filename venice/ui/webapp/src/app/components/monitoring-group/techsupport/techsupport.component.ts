@@ -358,4 +358,12 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     return 'Deleted tech-support-request ' + object.meta.name;
   }
 
+  /**
+   * This API serves html template
+   * @param rowData
+   */
+  showDeleteIcon(rowData: MonitoringTechSupportRequest): boolean {
+     return ( rowData.status.status !==  MonitoringTechSupportRequestStatus_status.Running);
+  }
+
 }
