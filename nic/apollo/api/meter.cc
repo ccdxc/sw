@@ -157,6 +157,7 @@ meter_entry::read(pds_meter_key_t *key, pds_meter_info_t *info) {
         return impl_->read_hw(this, (impl::obj_key_t *)key,
                           (impl::obj_info_t *)info);
     }
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_METER_ENTRY

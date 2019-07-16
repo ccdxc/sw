@@ -17,7 +17,7 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_NEXTHOP_IMPL_STATE - tep database functionality
+/// \defgroup PDS_NEXTHOP_IMPL_STATE - nexthop database functionality
 /// \ingroup PDS_NEXTHOP
 /// \@{
 
