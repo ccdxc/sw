@@ -314,4 +314,27 @@ port_get (uint32_t ifindex, port_get_cb_t port_get_cb, void *ctxt)
     return SDK_RET_OK;
 }
 
+/**
+ * @brief    start AACS server
+ * @param[in]    aacs_server_port     AACS server port
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+start_aacs_server (uint32_t aacs_server_port)
+{
+    sdk::linkmgr::start_aacs_server(aacs_server_port);
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    stop AACS server
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+stop_aacs_server (void)
+{
+    sdk::linkmgr::stop_aacs_server();
+    return SDK_RET_OK;
+}
+
 }    // namespace api

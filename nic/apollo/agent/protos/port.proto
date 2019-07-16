@@ -13,6 +13,8 @@ import "types.proto";
 service PortSvc {
   rpc PortGet (PortGetRequest) returns (PortGetResponse) {}
   rpc PortUpdate (PortUpdateRequest) returns (PortUpdateResponse) {}
+  rpc StartAacsServer (AacsRequest) returns (types.Empty) {}
+  rpc StopAacsServer (types.Empty) returns (types.Empty) {}
 }
 
 //------------------------------------------------------------------------------
@@ -318,4 +320,8 @@ message PortUpdateRequest {
 
 message PortUpdateResponse {
   types.ApiStatus ApiStatus = 1;
+}
+
+message AacsRequest {
+  uint32 AacsServerPort = 1;
 }

@@ -663,5 +663,11 @@ PortServiceImpl::StopAacsServer (ServerContext *context,
                                  const types::Empty *req,
                                  types::Empty *rsp)
 {
+    HAL_TRACE_DEBUG("Rcvd Port AACS server Request");
+
+    hal_cfg_db_open(CFG_OP_WRITE);
+    sdk::linkmgr::stop_aacs_server();
+    hal_cfg_db_close();
+
     return Status::OK;
 }

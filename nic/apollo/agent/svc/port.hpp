@@ -16,6 +16,8 @@ using pds::PortGetRequest;
 using pds::PortSpec;
 using pds::PortStats;
 using pds::PortGetResponse;
+using pds::AacsRequest;
+using types::Empty;
 
 class PortSvcImpl final : public PortSvc::Service {
 public:
@@ -23,6 +25,10 @@ public:
                    pds::PortGetResponse *rsp) override;
     Status PortUpdate(ServerContext *context, const pds::PortUpdateRequest *req,
                       pds::PortUpdateResponse *rsp) override;
+    Status StartAacsServer(ServerContext *context, const pds::AacsRequest *req,
+                           Empty *rsp) override;
+    Status StopAacsServer(ServerContext *context, const Empty *req,
+                          Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_PORT_HPP__

@@ -31,6 +31,7 @@ var (
 	portFecType    string
 	portAutoNeg    string
 	portSpeed      string
+	aacsServerPort uint32
 )
 
 var portShowCmd = &cobra.Command{
@@ -60,6 +61,20 @@ var portUpdateCmd = &cobra.Command{
 	Run:   portUpdateCmdHandler,
 }
 
+var portAacsServerStartCmd = &cobra.Command{
+	Use:   "aacs-server-start",
+	Short: "start aacs server",
+	Long:  "start aacs server",
+	Run:   portAacsServerStartCmdHandler,
+}
+
+var portAacsServerStopCmd = &cobra.Command{
+	Use:   "aacs-server-stop",
+	Short: "stop aacs server",
+	Long:  "stop aacs server",
+	Run:   portAacsServerStopCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
@@ -74,6 +89,72 @@ func init() {
 	portUpdateCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable")
 	portUpdateCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portUpdateCmd.MarkFlagRequired("port")
+
+	portUpdateCmd.AddCommand(portAacsServerStartCmd)
+	portAacsServerStartCmd.Flags().Uint32Var(&aacsServerPort, "server-port", 9000, "Specify AACS server listen port")
+	portUpdateCmd.AddCommand(portAacsServerStopCmd)
+}
+
+func portAacsServerStartCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if (cmd == nil) ||
+		(cmd.Flags().Changed("server-port") == false) {
+		fmt.Printf("Specify server port\n")
+		return
+	}
+
+	req := &pds.AacsRequest{
+		AacsServerPort: aacsServerPort,
+	}
+
+	client := pds.NewPortSvcClient(c)
+
+	_, err = client.StartAacsServer(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Start AACS server failed. %v\n", err)
+		return
+	}
+
+	fmt.Printf("AACS server started\n")
+}
+
+func portAacsServerStopCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewPortSvcClient(c)
+
+	var empty *pds.Empty
+
+	_, err = client.StopAacsServer(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Stop AACS server failed. %v\n", err)
+		return
+	}
+
+	fmt.Printf("AACS server stopped\n")
 }
 
 func portUpdateCmdHandler(cmd *cobra.Command, args []string) {

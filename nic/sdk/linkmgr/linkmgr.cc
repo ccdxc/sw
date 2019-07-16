@@ -1341,7 +1341,7 @@ start_aacs_server (int port)
     thread_id = LINKMGR_THREAD_ID_AACS_SERVER;
     sdk::lib::thread *thread =
         sdk::lib::thread::factory(
-                        std::string("linkmgr-aacs-server").c_str(),
+                        std::string("aacs-server").c_str(),
                         thread_id,
                         sdk::lib::THREAD_ROLE_CONTROL,
                         0x0 /* use all control cores */,
