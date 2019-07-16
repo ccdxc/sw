@@ -184,7 +184,7 @@ func TestDataNodeBasic(t *testing.T) {
 		}
 
 		resp, err := dnclient.ExecuteQuery(context.Background(), &req)
-		AssertOk(t, err, "Error execuitng query")
+		AssertOk(t, err, "Error executing query")
 		log.Infof("Got query resp: %+v", resp)
 	}
 
@@ -365,14 +365,14 @@ func TestDataNodeErrors(t *testing.T) {
 
 		// send update shard
 		_, err := dnclient.UpdateShard(context.Background(), &req)
-		Assert(t, (err != nil), "update shard with invalid params suceeded")
+		Assert(t, (err != nil), "update shard with invalid params succeeded")
 		_, err = dnclient.DeleteShard(context.Background(), &req)
-		Assert(t, (err != nil), "delete shard with invalid params suceeded")
+		Assert(t, (err != nil), "delete shard with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeKstore
 		_, err = dnclient.UpdateShard(context.Background(), &req)
-		Assert(t, (err != nil), "update shard with invalid params suceeded")
+		Assert(t, (err != nil), "update shard with invalid params succeeded")
 		_, err = dnclient.DeleteShard(context.Background(), &req)
-		Assert(t, (err != nil), "delete shard with invalid params suceeded")
+		Assert(t, (err != nil), "delete shard with invalid params succeeded")
 	}
 
 	// sync shard messages with invalid params
@@ -386,10 +386,10 @@ func TestDataNodeErrors(t *testing.T) {
 
 		// send the message
 		_, err := dnclient.SyncShardReq(context.Background(), &req)
-		Assert(t, (err != nil), "SyncShardReq with invalid params suceeded")
+		Assert(t, (err != nil), "SyncShardReq with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeKstore
 		_, err = dnclient.SyncShardReq(context.Background(), &req)
-		Assert(t, (err != nil), "SyncShardReq with invalid params suceeded")
+		Assert(t, (err != nil), "SyncShardReq with invalid params succeeded")
 	}
 
 	// sync shard info messages with invalid params
@@ -404,10 +404,10 @@ func TestDataNodeErrors(t *testing.T) {
 
 		// send the message
 		_, err := dnclient.SyncShardInfo(context.Background(), &req)
-		Assert(t, (err != nil), "SyncShardInfo with invalid params suceeded")
+		Assert(t, (err != nil), "SyncShardInfo with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeKstore
 		_, err = dnclient.SyncShardInfo(context.Background(), &req)
-		Assert(t, (err != nil), "SyncShardInfo with invalid params suceeded")
+		Assert(t, (err != nil), "SyncShardInfo with invalid params succeeded")
 	}
 
 	// create database with invalid params
@@ -421,13 +421,27 @@ func TestDataNodeErrors(t *testing.T) {
 		}
 
 		_, err := dnclient.CreateDatabase(context.Background(), &req)
-		Assert(t, (err != nil), "create database with invalid params suceeded")
+		Assert(t, (err != nil), "create database with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeTstore
 		req.ReplicaID = 100
 		_, err = dnclient.CreateDatabase(context.Background(), &req)
-		Assert(t, (err != nil), "create database with invalid params suceeded")
+		Assert(t, (err != nil), "create database with invalid params succeeded")
 		_, err = dnclient.DeleteDatabase(context.Background(), &req)
-		Assert(t, (err != nil), "delete database with invalid params suceeded")
+		Assert(t, (err != nil), "delete database with invalid params succeeded")
+	}
+
+	// read database from invalid shard
+	for idx := 0; idx < 1; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeKstore,
+			ReplicaID:   uint64(idx + 100),
+			Database:    "db0",
+		}
+
+		_, err := dnclient.ReadDatabases(context.Background(), &req)
+		Assert(t, err != nil, "didn't fail invalid shard")
 	}
 
 	// write points with invalid params
@@ -445,11 +459,11 @@ func TestDataNodeErrors(t *testing.T) {
 		}
 
 		_, err := dnclient.PointsWrite(context.Background(), &req)
-		Assert(t, (err != nil), "points write with invalid params suceeded")
+		Assert(t, (err != nil), "points write with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeTstore
 		req.ReplicaID = 300
 		_, err = dnclient.PointsWrite(context.Background(), &req)
-		Assert(t, (err != nil), "points write with invalid params suceeded")
+		Assert(t, (err != nil), "points write with invalid params succeeded")
 	}
 
 	// execute some query
@@ -465,11 +479,25 @@ func TestDataNodeErrors(t *testing.T) {
 		}
 
 		_, err := dnclient.ExecuteQuery(context.Background(), &req)
-		Assert(t, (err != nil), "query with invalid params suceeded")
+		Assert(t, err != nil, "query with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeTstore
 		req.ReplicaID = 300
 		_, err = dnclient.ExecuteQuery(context.Background(), &req)
-		Assert(t, (err != nil), "query with invalid params suceeded")
+		Assert(t, err != nil, "query with invalid params succeeded")
+	}
+
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.QueryReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   uint64(idx + 1),
+			Database:    "db0",
+			TxnID:       uint64(idx + 1),
+			Query:       "SELECT ** FROM cpu",
+		}
+		_, err = dnclient.ExecuteQuery(context.Background(), &req)
+		Assert(t, err != nil, "query with invalid params succeeded")
 	}
 
 	// write keys with invalid params
@@ -497,11 +525,11 @@ func TestDataNodeErrors(t *testing.T) {
 		}
 
 		_, err := dnclient.WriteReq(context.Background(), &req)
-		Assert(t, (err != nil), "kv write with invalid params suceeded")
+		Assert(t, (err != nil), "kv write with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeKstore
 		req.ReplicaID = 300
 		_, err = dnclient.WriteReq(context.Background(), &req)
-		Assert(t, (err != nil), "kv write with invalid params suceeded")
+		Assert(t, (err != nil), "kv write with invalid params succeeded")
 	}
 
 	// read a key with invalid params
@@ -528,11 +556,11 @@ func TestDataNodeErrors(t *testing.T) {
 		}
 
 		_, err := dnclient.ReadReq(context.Background(), &req)
-		Assert(t, (err != nil), "kv read with invalid params suceeded")
+		Assert(t, (err != nil), "kv read with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeKstore
 		req.Table = "table1"
 		_, err = dnclient.ReadReq(context.Background(), &req)
-		Assert(t, (err != nil), "kv read with invalid params suceeded")
+		Assert(t, (err != nil), "kv read with invalid params succeeded")
 	}
 
 	// list all keys in a table
@@ -547,7 +575,7 @@ func TestDataNodeErrors(t *testing.T) {
 		}
 
 		resp, err := dnclient.ListReq(context.Background(), &req)
-		Assert(t, (err != nil), "kv list with invalid params suceeded")
+		Assert(t, (err != nil), "kv list with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeKstore
 		resp, err = dnclient.ListReq(context.Background(), &req)
 		AssertOk(t, err, "Error listing table")
@@ -578,10 +606,10 @@ func TestDataNodeErrors(t *testing.T) {
 		}
 
 		_, err := dnclient.DelReq(context.Background(), &req)
-		Assert(t, (err != nil), "kv delete with invalid params suceeded")
+		Assert(t, (err != nil), "kv delete with invalid params succeeded")
 		req.ClusterType = meta.ClusterTypeKstore
 		_, err = dnclient.DelReq(context.Background(), &req)
-		Assert(t, (err != nil), "kv delete with non-existing keys suceeded")
+		Assert(t, (err != nil), "kv delete with non-existing keys succeeded")
 	}
 }
 

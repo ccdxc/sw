@@ -194,6 +194,9 @@ func DefaultClusterConfig() *ClusterConfig {
 	}
 }
 
+// DefaultQueryLimit is the default number of points returned from the query
+const DefaultQueryLimit = 50000 // limited by GRPC limit
+
 // AddNode adds a node to
 func (cl *TscaleCluster) AddNode(nodeUUID, nodeURL string) (*NodeState, error) {
 	// check if we already have the node

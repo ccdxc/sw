@@ -15,7 +15,6 @@ import (
 	meta2 "github.com/influxdata/influxdb/services/meta"
 
 	"github.com/google/uuid"
-	"github.com/influxdata/influxdb/coordinator"
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
 	"github.com/influxdata/influxdb/toml"
@@ -160,8 +159,7 @@ func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*
 		resp.Status = err.Error()
 		return &resp, err
 	}
-
-	dn.logger.Infof("shard %v replica %v wrote %d points", req.ShardID, req.ReplicaID, len(points))
+	dn.logger.Debugf("shard %v replica %v wrote %d points", req.ShardID, req.ReplicaID, len(points))
 
 	// replicate to all secondaries
 	err = dn.replicatePoints(ctx, req, shard)
@@ -239,7 +237,7 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 		}
 	}
 
-	log.Infof("shard:%d replica:%d replicated points to %v", req.ShardID, req.ReplicaID, secRepl)
+	log.Debugf("shard:%d replica:%d replicated points to %v", req.ShardID, req.ReplicaID, secRepl)
 	return nil
 }
 
@@ -419,7 +417,7 @@ func (dn *DNode) newQueryStore() error {
 
 	// cache to 2 GB
 	cfg.CacheMaxMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
-	cfg.CacheSnapshotMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotMemorySize = 2 * tsdb.DefaultCacheSnapshotMemorySize
 	cfg.CacheSnapshotWriteColdDuration = toml.Duration(time.Duration(time.Hour))
 	cfg.CompactFullWriteColdDuration = toml.Duration(time.Duration(12 * time.Hour))
 	cfg.MaxSeriesPerDatabase = 5 * tsdb.DefaultMaxSeriesPerDatabase
@@ -511,8 +509,7 @@ func (dn *DNode) executeAggQuery(ctx context.Context, req *tproto.QueryReq, quer
 
 // writePointsInAggregator writes points in aggregator db
 func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, resultCh []<-chan *query.Result) error {
-	// create a buffer  for points
-	buff := coordinator.NewBufferedPointsWriter(dn.tsQueryStore, queryDb, "default", 50000)
+	numPoints := 0
 
 	// read results, go one by one shard to avoid out of order timestamp in batches
 	for _, ch := range resultCh {
@@ -536,23 +533,30 @@ func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, res
 				}
 			} else {
 				for _, s := range res.Series {
-					if point, err := convertRowToPoints(measurement, tagKeys, s); err != nil {
+					// did we reach the limit, continue to drain the channels
+					if numPoints > meta.DefaultQueryLimit {
+						break
+					}
+
+					points, err := convertRowToPoints(measurement, tagKeys, s)
+					if err != nil {
 						dn.logger.Errorf("failed to convert points %s", err)
-					} else {
-						if err := buff.WritePointsInto(&coordinator.IntoWriteRequest{
-							Database:        queryDb,
-							RetentionPolicy: "default",
-							Points:          point}); err != nil {
-							dn.logger.Errorf("failed to buffer points %s", err)
+						continue
+					}
+
+					if len(points) > 0 {
+						if err := dn.tsQueryStore.WritePoints(queryDb, points); err != nil {
+							dn.logger.Errorf("failed to write points to %v, %s", queryDb, err)
+							continue
 						}
+						numPoints += len(points)
 					}
 				}
 			}
 		}
 	}
 
-	dn.logger.Infof("writing %v points to %s", buff.Len(), queryDb)
-	return buff.Flush()
+	return nil
 }
 
 // executeQueryRemote executes a query on the remote replica
