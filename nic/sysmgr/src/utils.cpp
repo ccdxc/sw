@@ -156,11 +156,11 @@ void launch(const std::string &name, const std::string &command,
     else if (pid == 0)
     {
         // replace the stdout with the "output" side of the "stdout" pipe
-        replace_fd(outfds[1], 0);
+        replace_fd(outfds[1], 1);
         // for the child we close the "input" side of the pipe
         close(outfds[0]);
         // replace the stderr with the "output" side of the "stderr" pipe
-        replace_fd(errfds[1], 1);
+        replace_fd(errfds[1], 2);
         // for the child we close the "input" side of the pipe
         close(errfds[0]);
         cpulock(cpu_affinity);
