@@ -404,7 +404,7 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 		ros.doUpdateSmartNICs()
 
 		numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
-		if numFailures <= ros.Spec.MaxNICFailuresBeforeAbort {
+		if numFailures == 0 {
 			ros.eventChan <- fsmEvSuccess
 		} else {
 			ros.eventChan <- fsmEvFail

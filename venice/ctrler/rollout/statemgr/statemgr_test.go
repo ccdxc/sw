@@ -1053,7 +1053,7 @@ func TestMaxFailuresNotHit(t *testing.T) {
 	AssertEventually(t, addSmartNICResponse("naples0", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples0 spec to have outstanding Precheck Op")
 	AssertEventually(t, addSmartNICResponse("naples0", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, addSmartNICFailResponse("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
-	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutSuccess) }, "Expecting Rollout to be in Success  state", "100ms", "2s")
+	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Fail state", "100ms", "2s")
 }
 
 // When number of failures is > MaxFailures, rollout should be in failed state.
