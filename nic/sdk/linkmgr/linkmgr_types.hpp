@@ -73,6 +73,17 @@ typedef struct linkmgr_queue_s {
     linkmgr_entry_t  entries[LINKMGR_CONTROL_Q_SIZE]; // entries
 } linkmgr_queue_t;
 
+//------------------------------------------------------------------------------
+// linkmgr thread uses this to post / awake the linkgmr ctrl thread
+//------------------------------------------------------------------------------
+typedef struct linkmgr_sync_s {
+    pthread_mutex_t mutex;
+    pthread_cond_t  cond;
+    int             post;
+} linkmgr_sync_t;
+
+
+
 }    // namespace linkmgr
 }    // namespace sdk
 

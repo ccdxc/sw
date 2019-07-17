@@ -36,9 +36,29 @@ port *link_poll_timer_list[MAX_LOGICAL_PORTS];
 
 // per producer request queues
 linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
+linkmgr_sync_t  g_linkmgr_sync;
 
 // Global setting for link status poll. Default is enabled.
 bool port_link_poll_en = true;
+
+static inline void
+wait_linkmgr(void) {
+    pthread_mutex_lock(&g_linkmgr_sync.mutex);
+    while (g_linkmgr_sync.post == 0) {
+        int rc = pthread_cond_wait(&g_linkmgr_sync.cond, &g_linkmgr_sync.mutex);
+        //check for rc
+    }
+    g_linkmgr_sync.post = 0;
+    pthread_mutex_unlock(&g_linkmgr_sync.mutex);
+}
+
+static inline void
+signal_linkmgr(void) {
+    pthread_mutex_lock(&g_linkmgr_sync.mutex);
+    g_linkmgr_sync.post=1;
+    pthread_cond_signal(&g_linkmgr_sync.cond);
+    pthread_mutex_unlock(&g_linkmgr_sync.mutex);
+}
 
 bool
 port_link_poll_enabled (void)
@@ -262,6 +282,8 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
 
     SDK_ATOMIC_FETCH_ADD(&g_linkmgr_workq[curr_tid].nentries, 1);
 
+    signal_linkmgr();
+
     if (mode == q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING) {
         while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
             if (can_yield == true) {
@@ -463,8 +485,7 @@ linkmgr_event_loop (void* ctxt)
 
         // all queues scanned once, check if any work was found
         if (!work_done) {
-            // didn't find any work, yield and give chance to other threads
-            pthread_yield();
+            wait_linkmgr(); //Wait here until any one of the producers gives work to do
         }
     }
 }
@@ -535,6 +556,10 @@ linkmgr_workq_init (void)
     for (qid = 0; qid < LINKMGR_THREAD_ID_MAX; qid++) {
         g_linkmgr_workq[qid].nentries = 0;
     }
+    g_linkmgr_sync.post = 0;
+    pthread_mutex_init(&g_linkmgr_sync.mutex, NULL);
+    pthread_cond_init(&g_linkmgr_sync.cond, NULL);
+
 }
 
 sdk_ret_t
