@@ -153,6 +153,7 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 		EndTime:   result.EndTime,
 		Status:    jobStatus,
 		URI:       result.URI,
+		Reason:    result.Reason,
 	}
 
 	switch nodeKind {
