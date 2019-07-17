@@ -108,7 +108,7 @@ func (s *SyslogExporter) Stop() {
 		s.writers.Unlock()
 
 		if fileOffset, err := s.GetLastProcessedOffset(); err != nil {
-			s.logger.Debugf("exporter {%s} stopped", s.name)
+			s.logger.Debugf("exporter {%s} failed to get offset, err: %v", s.name, err)
 		} else {
 			s.logger.Debugf("exporter {%s} stopping at offset: {%v: %v}", s.name, fileOffset.Filename, fileOffset.BytesRead)
 		}
@@ -167,7 +167,11 @@ func (s *SyslogExporter) WriteEvents(evts []*evtsapi.Event) error {
 
 // GetLastProcessedOffset returns the last bookmarked offset by this exporter
 func (s *SyslogExporter) GetLastProcessedOffset() (*events.Offset, error) {
-	return s.eventsOffsetTracker.GetOffset()
+	if s.eventsOffsetTracker != nil {
+		return s.eventsOffsetTracker.GetOffset()
+	}
+
+	return nil, fmt.Errorf("offset tracker not available")
 }
 
 // startWorker watches the events using the event channel from dispatcher.

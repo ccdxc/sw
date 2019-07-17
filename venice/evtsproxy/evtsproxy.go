@@ -156,6 +156,8 @@ func (ep *EventsProxy) RegisterEventsExporter(exporterType exporters.Type, confi
 		}
 
 		if err := ep.registerExporter("venice", veniceExporter); err != nil {
+			// close connections that got established to evtsmgr if any
+			veniceExporter.Stop()
 			return nil, err
 		}
 
@@ -175,6 +177,7 @@ func (ep *EventsProxy) RegisterEventsExporter(exporterType exporters.Type, confi
 		}
 
 		if err := ep.registerExporter(exporterConfig.Name, syslogExporter); err != nil {
+			syslogExporter.Stop()
 			return nil, err
 		}
 

@@ -130,9 +130,10 @@ func (v *VeniceExporter) Stop() {
 		}
 
 		if fileOffset, err := v.GetLastProcessedOffset(); err != nil {
-			v.logger.Debugf("exporter {%s} stopped", v.name)
+			v.logger.Debugf("exporter {%s} failed to get offset, err: %v", v.name, err)
 		} else {
-			v.logger.Debugf("exporter {%s} stopping at offset: {%v: %v}", v.name, fileOffset.Filename, fileOffset.BytesRead)
+			v.logger.Debugf("exporter {%s} stopping at offset: {%v: %v}", v.name, fileOffset.Filename,
+				fileOffset.BytesRead)
 		}
 	})
 }
@@ -179,7 +180,11 @@ func (v *VeniceExporter) WriteEvents(events []*evtsapi.Event) error {
 
 // GetLastProcessedOffset returns the last bookmarked offset by this exporter
 func (v *VeniceExporter) GetLastProcessedOffset() (*events.Offset, error) {
-	return v.eventsOffsetTracker.GetOffset()
+	if v.eventsOffsetTracker != nil {
+		return v.eventsOffsetTracker.GetOffset()
+	}
+
+	return nil, fmt.Errorf("offset tracker not available")
 }
 
 // startWorker watches the events using the event channel from dispatcher.
