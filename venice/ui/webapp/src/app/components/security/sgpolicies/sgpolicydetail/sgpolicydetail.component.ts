@@ -539,7 +539,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       'kind': 'RuleMetrics',
       function: Telemetry_queryMetricsQuerySpec_function.NONE,
       'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Descending,
-      'group-by-field': 'reporterID',
+      'group-by-field': 'name',
       'start-time': 'now() - 2m' as any,
       'end-time': 'now()' as any,
       fields: [],
