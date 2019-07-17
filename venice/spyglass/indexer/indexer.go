@@ -69,6 +69,9 @@ type Indexer struct {
 	apiServerAddr string
 	apiClient     apiservice.Services
 
+	// VOS client
+	vosClient apiservice.Services
+
 	// ElasticDB client object
 	elasticClient elastic.ESClient
 
@@ -131,12 +134,22 @@ type Indexer struct {
 
 	// Policy cache
 	cache cache.Interface
+
+	// Whether or not to watch VOS objects
+	watchVos bool
 }
 
 // WithElasticClient passes a custom client for Elastic
 func WithElasticClient(esClient elastic.ESClient) Option {
-	return func(fdr *Indexer) {
-		fdr.elasticClient = esClient
+	return func(idr *Indexer) {
+		idr.elasticClient = esClient
+	}
+}
+
+// DisableVOSWatcher disables indexing VOS objects
+func DisableVOSWatcher() Option {
+	return func(idr *Indexer) {
+		idr.watchVos = false
 	}
 }
 
@@ -173,6 +186,7 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		doneCh:            make(chan error),
 		count:             0,
 		cache:             cache,
+		watchVos:          true,
 	}
 
 	for _, opt := range opts {
@@ -204,8 +218,24 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		indexer.elasticClient.Close()
 		return nil, err
 	}
+
 	logger.Debugf("Created API client")
 	indexer.apiClient = result.(apiservice.Services)
+
+	if indexer.watchVos {
+		result, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.Vos, logger, rpckit.WithBalancer(balancer.New(rsr)))
+		}, apiSrvWaitIntvl, maxAPISrvRetries)
+		if err != nil {
+			logger.Errorf("Failed to create vos client, addr: %s err: %v",
+				apiServerAddr, err)
+			indexer.elasticClient.Close()
+			return nil, err
+		}
+
+		logger.Debugf("Created Vos API client")
+		indexer.vosClient = result.(apiservice.Services)
+	}
 
 	logger.Infof("Created new indexer: {%+v}", &indexer)
 	return &indexer, nil

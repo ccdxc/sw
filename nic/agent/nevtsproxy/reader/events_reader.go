@@ -179,7 +179,7 @@ func convertToVeniceEvent(nEvt *halproto.Event) *evtsapi.Event {
 			Tenant:    globals.DefaultTenant,
 			Namespace: globals.DefaultNamespace,
 			SelfLink:  fmt.Sprintf("/events/v1/events/%s", uuid),
-			Labels:    map[string]string{"_category": globals.Kind2Category["Event"]},
+			Labels:    map[string]string{"_category": globals.Kind2Category("Event")},
 		},
 		EventAttributes: evtsapi.EventAttributes{
 			Type:     eTypeAttrs.EType,

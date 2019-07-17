@@ -8,15 +8,13 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchTextRequirement, ISearchTextRequirement } from './search-text-requirement.model';
-import { SearchSearchQuery_categories,  } from './enums';
-import { SearchSearchQuery_kinds,  } from './enums';
 import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 
 export interface ISearchSearchQuery {
     'texts'?: Array<ISearchTextRequirement>;
-    'categories'?: Array<SearchSearchQuery_categories>;
-    'kinds'?: Array<SearchSearchQuery_kinds>;
+    'categories'?: Array<string>;
+    'kinds'?: Array<string>;
     'fields'?: IFieldsSelector;
     'labels'?: ILabelsSelector;
 }
@@ -25,9 +23,9 @@ export interface ISearchSearchQuery {
 export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     'texts': Array<SearchTextRequirement> = null;
     /** length of string should be between 0 and 64 */
-    'categories': Array<SearchSearchQuery_categories> = null;
-    /** length of string should be between 0 and 64 */
-    'kinds': Array<SearchSearchQuery_kinds> = null;
+    'categories': Array<string> = null;
+    /** should be a valid object Kind */
+    'kinds': Array<string> = null;
     'fields': FieldsSelector = null;
     'labels': LabelsSelector = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -36,16 +34,13 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
             type: 'object'
         },
         'categories': {
-            enum: SearchSearchQuery_categories,
-            default: 'Cluster',
             description:  'length of string should be between 0 and 64',
             required: false,
             type: 'Array<string>'
         },
         'kinds': {
-            enum: SearchSearchQuery_kinds,
-            default: 'Cluster',
-            description:  'length of string should be between 0 and 64',
+            description:  'should be a valid object Kind',
+            hint:  'Network',
             required: false,
             type: 'Array<string>'
         },
@@ -82,8 +77,8 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['texts'] = new Array<SearchTextRequirement>();
-        this['categories'] = new Array<SearchSearchQuery_categories>();
-        this['kinds'] = new Array<SearchSearchQuery_kinds>();
+        this['categories'] = new Array<string>();
+        this['kinds'] = new Array<string>();
         this['fields'] = new FieldsSelector();
         this['labels'] = new LabelsSelector();
         this.setValues(values, setDefaults);

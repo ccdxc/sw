@@ -29,6 +29,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api/generated/objstore"
+	"github.com/pensando/sw/api/generated/search"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/netutils"
 
@@ -222,7 +223,25 @@ func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 	return resp, nil
 }
 
-func testObjCUDOps() func() {
+func getObjstoreSearchCount() (int64, error) {
+	query := &search.SearchRequest{
+		Query: &search.SearchQuery{
+			Categories: []string{"Objstore"},
+		},
+		Mode: search.SearchRequest_Full.String(),
+	}
+	resp := &search.SearchResponse{}
+	err := ts.tu.Search(ts.loggedInCtx, query, resp)
+	if err != nil {
+		return 0, err
+	}
+	return resp.ActualHits, nil
+}
+
+func testObjCUDOps(testSearch bool) func() {
+	// There is a known issue where after reboot some minio servers may not get
+	// object events (VS-340)
+	// For now, we don't test spyglass indexing during VOS restart test
 	return func() {
 		filename := "bundle.tar"
 		version := "1.0.0"
@@ -233,7 +252,16 @@ func testObjCUDOps() func() {
 			"Releasedate": "May2018",
 		}
 
-		_, err := createBundle()
+		var startingSearchCount int64
+		var err error
+
+		// Getting current number of search entries for objstore
+		if testSearch {
+			startingSearchCount, err = getObjstoreSearchCount()
+			Expect(err).To(BeNil())
+		}
+
+		_, err = createBundle()
 		if err != nil {
 			log.Infof("Error (%+v) creating file /tmp/bundle.tar", err)
 			Fail(fmt.Sprintf("Failed to create /tmp/bundle.tar"))
@@ -259,6 +287,21 @@ func testObjCUDOps() func() {
 			_, err = uploadFile(ctx, filename, metadata, fileBuf)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to upload file (%s)", err))
+
+		// File should be searchable
+		if testSearch {
+			Eventually(func() error {
+				count, err := getObjstoreSearchCount()
+				if err != nil {
+					return err
+				}
+				newEntries := count - startingSearchCount
+				if newEntries <= 0 {
+					return fmt.Errorf("Failed to find uploaded file, started with %v hits, got %v new hits", startingSearchCount, newEntries)
+				}
+				return nil
+			}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to find file in spyglass (%s)", err))
+		}
 
 		Eventually(func() error {
 			_, _, err = downloadFile(version)
@@ -286,6 +329,20 @@ func testObjCUDOps() func() {
 
 		_, err = restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
 		Expect(err).ShouldNot(BeNil())
+
+		if testSearch {
+			// Search count should be back to starting amount
+			Eventually(func() error {
+				count, err := getObjstoreSearchCount()
+				if err != nil {
+					return err
+				}
+				if count != startingSearchCount {
+					return fmt.Errorf("Objstore counts should have gone back down. started with %v hits, got %v hits", startingSearchCount, count)
+				}
+				return nil
+			}, 90, 1).Should(BeNil(), fmt.Sprintf("file failed to be deleted in spyglass (%s)", err))
+		}
 	}
 }
 
@@ -331,7 +388,7 @@ var _ = Describe("Objstore Write and read test", func() {
 		Expect(err).Should(BeNil(), "failed to create objstore client")
 	})
 
-	It("Exercise objstore Upload/Download", testObjCUDOps())
+	It("Exercise objstore Upload/Download", testObjCUDOps(true))
 
 	It("Restart VOS backends and check CUD operations", func() {
 		//
@@ -351,7 +408,7 @@ var _ = Describe("Objstore Write and read test", func() {
 				}
 				return ""
 			}, 30, 1).Should(BeEmpty(), fmt.Sprintf("Did not find Vos nodes on all Quorum nodes, found (%d)", len(vosNodes)))
-			testObjCUDOps()()
+			testObjCUDOps(false)()
 			nodeid++
 		}
 	})

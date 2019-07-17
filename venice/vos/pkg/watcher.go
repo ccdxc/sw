@@ -59,6 +59,11 @@ func (s *storeImpl) List(bucket, kind string, opts api.ListWatchOptions) ([]runt
 				Digest: stat.ETag,
 			},
 		}
+		parts := strings.Split(bucket, ".")
+		if len(parts) == 2 {
+			lobj.Tenant = parts[0]
+			lobj.Namespace = parts[1]
+		}
 		updateObjectMeta(&stat, &lobj.ObjectMeta)
 		ret = append(ret, lobj)
 	}

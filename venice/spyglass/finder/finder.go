@@ -14,11 +14,11 @@ import (
 	"github.com/gogo/protobuf/types"
 	es "github.com/olivere/elastic"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc"
 	grpccode "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
@@ -302,6 +302,32 @@ func (fdr *Finder) AutoWatchSvcEventsV1(*api.ListWatchOptions, evtsapi.EventsV1_
 	return errors.New("not implemented")
 }
 
+func (fdr *Finder) validate(in *search.SearchRequest) error {
+	// Validate search params
+	errorStrings := []string{}
+	if errs := in.Validate("", "", true, false); errs != nil {
+		for _, e := range errs {
+			errorStrings = append(errorStrings, e.Error())
+		}
+	}
+
+	// Verify categories
+	if in.Query != nil {
+		for _, cat := range in.Query.Categories {
+			if cat != "" && len(globals.Category2Kinds(cat)) == 0 {
+				errorStrings = append(errorStrings, fmt.Sprintf("%s is not a valid category", cat))
+			}
+		}
+	}
+
+	if len(errorStrings) != 0 {
+		err := apierrors.ToGrpcError("Validation Failed", errorStrings, int32(grpccode.InvalidArgument), "", nil)
+		fdr.logger.Infof("search request failed validation: {%+v}", strings.Join(errorStrings, ". "))
+		return err
+	}
+	return nil
+}
+
 // Query is the handler for Search request
 func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search.SearchResponse, error) {
 
@@ -309,13 +335,13 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	fdr.logger.Infof("Search request: {%+v}", *in)
 
-	// Validate search params
-	if errs := in.Validate("", "", true, false); errs != nil {
+	if err := fdr.validate(in); err != nil {
+		var sr search.SearchResponse
 		sr.Error = &search.Error{
 			Type:   grpccode.InvalidArgument.String(),
 			Reason: ErrInvalidParams.Error(),
 		}
-		return &sr, grpc.Errorf(grpccode.InvalidArgument, ErrInvalidParams.Error())
+		return &sr, err
 	}
 
 	// ElasticSearch's Query and Aggregations JSON structure

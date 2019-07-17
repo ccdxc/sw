@@ -90,7 +90,7 @@ var _ = Describe("diagnostics tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs for [%s|%s] successful login", globals.DefaultTenant, ts.tu.User)
 				}
-				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
 				for _, event := range events {
 					if (event.Object.Action == svc.LoginAction) &&
 						(event.Object.Outcome == audit.Outcome_Success.String()) &&
@@ -162,7 +162,7 @@ var _ = Describe("diagnostics tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs for [%s] Debug action", updatedModObj.Name)
 				}
-				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
 				for _, event := range events {
 					if (event.Object.Action == "Debug") &&
 						(event.Object.Outcome == audit.Outcome_Success.String()) &&

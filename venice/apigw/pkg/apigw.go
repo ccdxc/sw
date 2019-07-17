@@ -822,7 +822,7 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 			Name:   eventID,
 			UUID:   eventUUID,
 			Tenant: user.Tenant,
-			Labels: map[string]string{"_category": globals.Kind2Category["AuditEvent"]},
+			Labels: map[string]string{"_category": globals.Kind2Category("AuditEvent")},
 			CreationTime: api.Timestamp{
 				Timestamp: *creationTime,
 			},

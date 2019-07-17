@@ -15,10 +15,6 @@ import (
 
 var typesMapSearch = map[string]*api.Struct{
 
-	"search.Category": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Category{}) },
-		Fields: map[string]api.Field{},
-	},
 	"search.CategoryAggregation": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(CategoryAggregation{}) },
 		Fields: map[string]api.Field{
@@ -96,10 +92,6 @@ var typesMapSearch = map[string]*api.Struct{
 
 			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
-	},
-	"search.Kind": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Kind{}) },
-		Fields: map[string]api.Field{},
 	},
 	"search.KindAggregation": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(KindAggregation{}) },

@@ -66,7 +66,7 @@ var _ = Describe("audit tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs for node auth token")
 				}
-				events = resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+				events = resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
 				return nil
 			}, 30, 1).Should(BeNil())
 			for _, event := range events {

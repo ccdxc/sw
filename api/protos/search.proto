@@ -59,71 +59,6 @@ import "github.com/pensando/sw/api/protos/sgpolicy.proto";
 //        MirrorSession
 //        MetricObjects (TBD ??)
 
-// List of search categories, specified via "category" modifier
-// TODO: generate these enums if possible and use it for validation
-message Category {
-    enum Type {
-        // api-groups
-        Cluster     = 0;
-        Workload    = 1;
-        Security    = 2;
-        Auth        = 3;
-        Network     = 4;
-        Monitoring  = 5;
-
-        // Additional categories
-        // granular categories
-        Telemetry   = 6;
-        Events      = 7;
-        Alerts      = 8;
-
-        // special categories
-        AuditTrail  = 9;
-   }
-}
-
-// List of all allowed Kinds in search, specified via "kind" modifier
-// TODO: Define a list/map of Kinds per Category
-// TODO: generate these enums if possible and use it for validation per Category
-//       This is a placeholder enum until we have a way to auto-generate list
-//       of all kinds
-message Kind {
-    enum Type {
-        Cluster                 = 0;
-        Node                    = 1;
-        SmartNIC                = 2;
-        Rollout                 = 3;
-        Tenant                  = 4;
-        Endpoint                = 5;
-        SecurityGroup           = 6;
-        SGPolicy                = 7;
-        App                     = 8;
-        AppUser                 = 9;
-        AppUserGrp              = 10;
-        Certificate             = 11;
-        TrafficEncryptionPolicy = 12;
-        User                    = 13;
-        AuthenticationPolicy    = 14;
-        Role                    = 15;
-        RoleBinding             = 16;
-        Network                 = 17;
-        Service                 = 18;
-        LbPolicy                = 19;
-        Alert                   = 20;
-        AlertDestination        = 21;
-        AlertPolicy             = 22;
-        Event                   = 23;
-        EventPolicy             = 24;
-        StatsPolicy             = 25;
-        FlowExportPolicy        = 26;
-        FwlogPolicy             = 27;
-        MirrorSession           = 28;
-        Workload                = 29;
-        Host                    = 30;
-        AuditEvent              = 31;
-    }
-}
-
 // TextRequirement is AND of text-strings in the list
 // It is comprised of words or phrases for text search support.
 // If a text-string has space separated multi-word, it will be
@@ -179,14 +114,11 @@ message SearchQuery {
 
   // OR of Categories to be matched, AND and Exclude are not supported for this type
   // The max category string length is 64 bytes
-  repeated string Categories        = 2 [(venice.check) = "StrEnum(Category.Type)",
-                                         (venice.check) = "EmptyOr(StrLen(0,64))",
+  repeated string Categories        = 2 [(venice.check) = "EmptyOr(StrLen(0,64))",
                                          (gogoproto.jsontag) = "categories,omitempty"];
 
   // OR of Kinds to be matched, AND and Exclude are not supported for this type
-  // The max kind string length is 64 bytes
-  repeated string Kinds             = 3 [(venice.check) = "StrEnum(Kind.Type)",
-                                         (venice.check) = "EmptyOr(StrLen(0,64))",
+  repeated string Kinds             = 3 [(venice.check) = "EmptyOr(ValidKind())",
                                          (gogoproto.jsontag) = "kinds,omitempty"];
 
   // Field Selector is AND of field.Requirements

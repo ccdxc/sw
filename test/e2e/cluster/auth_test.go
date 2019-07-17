@@ -109,7 +109,7 @@ var _ = Describe("auth tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs for [%s|%s] successful login", globals.DefaultTenant, ts.tu.User)
 				}
-				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
 				for _, event := range events {
 					if (event.Object.Action == svc.LoginAction) &&
 						(event.Object.Outcome == audit.Outcome_Success.String()) &&
@@ -163,7 +163,7 @@ var _ = Describe("auth tests", func() {
 					if resp.ActualHits == 0 {
 						return fmt.Errorf("no audit logs for authentication policy update at stage %s", stage)
 					}
-					events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+					events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
 					for _, event := range events {
 						if (event.Object.Action == auth.Permission_Update.String()) &&
 							(event.Object.Resource.Kind == string(auth.KindAuthenticationPolicy)) &&
@@ -178,7 +178,7 @@ var _ = Describe("auth tests", func() {
 			// query by category
 			query = &search.SearchRequest{
 				Query: &search.SearchQuery{
-					Categories: []string{search.Category_Monitoring.String()},
+					Categories: []string{globals.Kind2Category("AuditEvent")},
 				},
 				From:       0,
 				MaxResults: 50,
@@ -192,7 +192,7 @@ var _ = Describe("auth tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs retrieved for monitoring category query")
 				}
-				if len(resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries) == 0 {
+				if len(resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries) == 0 {
 					return fmt.Errorf("no audit events found for monitoring category search")
 				}
 				return err
@@ -289,7 +289,7 @@ var _ = Describe("auth tests", func() {
 			Expect(err).Should(HaveOccurred())
 			query := &search.SearchRequest{
 				Query: &search.SearchQuery{
-					Categories: []string{search.Category_Monitoring.String()},
+					Categories: []string{globals.Kind2Category("AuditEvent")},
 					Kinds:      []string{auth.Permission_Event.String()},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
@@ -323,7 +323,7 @@ var _ = Describe("auth tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no events found for failed login attempt")
 				}
-				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_Event.String()].Entries
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_Event.String()].Entries
 
 				for _, evt := range events {
 					if strings.Contains(evt.Object.Message, fmt.Sprintf("%s|%s", globals.DefaultTenant, ts.tu.User)) {
@@ -473,7 +473,7 @@ var _ = Describe("auth tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs for successful staging buffer commit")
 				}
-				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
 				for _, event := range events {
 					if (event.Object.Action == auth.Permission_Commit.String()) &&
 						(event.Object.Outcome == audit.Outcome_Success.String()) &&

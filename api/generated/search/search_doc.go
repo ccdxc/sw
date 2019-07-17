@@ -7,14 +7,12 @@ Input file: search.proto
 
 The following Messages are defined.
 
-  Category
   CategoryAggregation
   CategoryPreview
   ConfigEntry
   Entry
   EntryList
   Error
-  Kind
   KindAggregation
   KindPreview
   PolicyMatchEntries

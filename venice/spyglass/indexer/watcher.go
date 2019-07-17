@@ -13,6 +13,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -47,7 +48,7 @@ func (idr *Indexer) createWatchers() error {
 	apiClientVal := reflect.ValueOf(idr.apiClient)
 
 	for group := range groupMap {
-		// TODO: Enable objstore when it's watch is ready
+		// Objstore is handled separately below
 		if group == "objstore" || group == "bookstore" {
 			continue
 		}
@@ -68,27 +69,61 @@ func (idr *Indexer) createWatchers() error {
 
 		serviceGroup := groupFunc.Call(nil)
 		watch, err := serviceGroup[0].Interface().(service).Watch(idr.ctx, &opts)
+		err = idr.addWatcher(key, watch, err)
 		if err != nil {
-			apiErr := apierrors.FromError(err)
-			switch apiErr.GetCode() {
-			case http.StatusNotImplemented:
-				idr.logger.Errorf("Error starting watcher for API Group %s, err unimplemented: %v", key, err)
-				break
-			case http.StatusGone:
-				// API Server no longer has records for our resource version.
-				// Shutdown indexer and have spyglass recreate in case we missed delete events
-				idr.logger.Errorf("Error starting watcher for API Group %s, outdated res version: %v", key, err)
-				idr.doneCh <- err
-				return err
-			default:
-				idr.logger.Errorf("Error starting watcher for API Group %s, err: %v", key, err)
-				return err
-			}
-		} else {
-			idr.logger.Infof("Created watcher for API Group %s", key)
-			idr.watchers[key] = watch
-			idr.channels[key] = watch.EventChan()
+			return err
 		}
+	}
+
+	// Handling objstore separately
+	// Need to create multiple watches, one for each bucket type
+	// Objstore currently does not support resource version
+	// There is a possibility of missing a delete if this watch connection goes down briefly.
+	// TODO: Add resource version
+	if !idr.watchVos {
+		idr.logger.Infof("Skipping VOS watchers")
+		return nil
+	}
+	for _, bucket := range objstore.Buckets_name {
+		key := fmt.Sprintf("objstore-%s", bucket)
+		opts := api.ListWatchOptions{}
+		opts.Tenant = globals.DefaultTenant
+		// To watch on a bucket, bucket name must be provided as the namespace
+		opts.Namespace = bucket
+		watch, err := idr.vosClient.ObjstoreV1().Object().Watch(idr.ctx, &opts)
+		err = idr.addWatcher(key, watch, err)
+		if err != nil {
+			// VOS does not support restarting a watch currently. Indexer should shutdown and recreate our index
+			// incase we missed delete events
+			idr.doneCh <- err
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (idr *Indexer) addWatcher(key string, watch kvstore.Watcher, err error) error {
+	if err != nil {
+		apiErr := apierrors.FromError(err)
+		switch apiErr.GetCode() {
+		case http.StatusNotImplemented:
+			idr.logger.Errorf("Error starting watcher for API Group %s, err unimplemented: %v", key, err)
+			return err
+		case http.StatusGone:
+			// API Server no longer has records for our resource version.
+			// Shutdown indexer and have spyglass recreate in case we missed delete events
+			idr.logger.Errorf("Error starting watcher for API Group %s, outdated res version: %v", key, err)
+			idr.doneCh <- err
+			return err
+		default:
+			idr.logger.Errorf("Error starting watcher for API Group %s, err: %v", key, err)
+			return err
+		}
+	} else {
+		idr.logger.Infof("Created watcher for API Group %s", key)
+		idr.watchers[key] = watch
+		idr.channels[key] = watch.EventChan()
 	}
 	return nil
 }
@@ -146,7 +181,13 @@ func (idr *Indexer) startWatchers() {
 				// needed. In all other cases, it is a watcher error that
 				// needs to be re-established.
 				if idr.GetRunningStatus() == true {
-					idr.logger.Errorf("Channel read not ok")
+					err := fmt.Errorf("Channel read not ok for API Group %s", apiGroupMappings[chosen])
+					idr.logger.Errorf(err.Error())
+					// if its an error for objstore, we restart spyglass since we may have missed an event by the time we come back up
+					if strings.Contains(apiGroupMappings[chosen], "Objstore") {
+						idr.doneCh <- err
+						return
+					}
 					idr.restartWatchers()
 					return
 				}
@@ -271,7 +312,20 @@ func (idr *Indexer) startWriter(id int) {
 					id, req.object, err)
 				continue
 			}
-			idr.logger.Debugf("Writer %d, processing object: <%s %s %v, %+v>", id, req.object.(runtime.Object).GetObjectKind(), ometa.GetName(), ometa.GetUUID(), req)
+			kind := req.object.(runtime.Object).GetObjectKind()
+			uuid := ometa.GetUUID()
+			if kind == "Object" && uuid == "" {
+				// VOS objects do not have a UUID
+				// Artificially create one using Objstore-Object-<tenant>-<namespace>-<meta.name>
+				uuid = fmt.Sprintf("Objstore-%s-%s-%s-%s", kind, ometa.GetTenant(), ometa.GetNamespace(), ometa.GetName())
+			}
+			idr.logger.Infof("Writer %d, processing object: <%s %s %v %v>", id, kind, ometa.GetName(), uuid, req.evType)
+			idr.logger.Debugf("Writer %d, processing object: <%s %s %v, %+v>", id, kind, ometa.GetName(), uuid, req)
+			if uuid == "" {
+				idr.logger.Errorf("Writer %d, object %s %s has no uuid", id, kind, ometa.GetName())
+				// Skip indexing as write is guaranteed to fail without uuid
+				continue
+			}
 
 			// determine the operation type based on event-type
 			var reqType string
@@ -285,7 +339,6 @@ func (idr *Indexer) startWriter(id int) {
 			}
 
 			// Update Policy cache for SGpolicy objects
-			kind := req.object.(runtime.Object).GetObjectKind()
 			switch kind {
 			case "SGPolicy":
 				idr.logger.Infof("Policy cache update: %s/%s/%s evType: %v",
@@ -298,8 +351,9 @@ func (idr *Indexer) startWriter(id int) {
 
 			// TODO: Once the category is available in Kind attribute or a new Meta
 			// attribute we will use it here. Until then, it is derived from this map.
-			category := globals.Kind2Category[kind]
+			category := globals.Kind2Category(kind)
 			if category == "" {
+				idr.logger.Errorf("Couldn't find category for %s, setting default", kind)
 				category = "default"
 			}
 
@@ -322,7 +376,7 @@ func (idr *Indexer) startWriter(id int) {
 				RequestType: reqType,
 				Index:       elastic.GetIndex(globals.Configs, globals.DefaultTenant),
 				IndexType:   elastic.GetDocType(globals.Configs),
-				ID:          ometa.GetUUID(),
+				ID:          uuid,
 				Obj:         req.object,
 			}
 			idr.requests[id] = append(idr.requests[id], request)

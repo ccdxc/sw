@@ -12,7 +12,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import {AuditService} from '@app/services/generated/audit.service';
 import {LRUMap} from 'lru_map';
 import {AuditEvent, IAuditEvent, AuditEvent_outcome} from '@sdk/v1/models/generated/audit';
-import {SearchSearchQuery_kinds, SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
 import {Observable, Subscription, zip} from 'rxjs';
 import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';

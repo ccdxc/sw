@@ -37,14 +37,12 @@ func (s *ssearchSearchBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 	l.Infof("registering message for ssearchSearchBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"search.Category":             apisrvpkg.NewMessage("search.Category"),
 		"search.CategoryAggregation":  apisrvpkg.NewMessage("search.CategoryAggregation"),
 		"search.CategoryPreview":      apisrvpkg.NewMessage("search.CategoryPreview"),
 		"search.ConfigEntry":          apisrvpkg.NewMessage("search.ConfigEntry"),
 		"search.Entry":                apisrvpkg.NewMessage("search.Entry"),
 		"search.EntryList":            apisrvpkg.NewMessage("search.EntryList"),
 		"search.Error":                apisrvpkg.NewMessage("search.Error"),
-		"search.Kind":                 apisrvpkg.NewMessage("search.Kind"),
 		"search.KindAggregation":      apisrvpkg.NewMessage("search.KindAggregation"),
 		"search.KindPreview":          apisrvpkg.NewMessage("search.KindPreview"),
 		"search.PolicyMatchEntries":   apisrvpkg.NewMessage("search.PolicyMatchEntries"),

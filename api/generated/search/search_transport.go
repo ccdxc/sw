@@ -17,40 +17,6 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-func encodeHTTPCategory(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPCategory(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Category
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqCategory encodes GRPC request
-func EncodeGrpcReqCategory(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Category)
-	return req, nil
-}
-
-// DecodeGrpcReqCategory decodes GRPC request
-func DecodeGrpcReqCategory(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Category)
-	return req, nil
-}
-
-// EncodeGrpcRespCategory encodes GRC response
-func EncodeGrpcRespCategory(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespCategory decodes GRPC response
-func DecodeGrpcRespCategory(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPCategoryAggregation(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -252,40 +218,6 @@ func EncodeGrpcRespError(ctx context.Context, response interface{}) (interface{}
 
 // DecodeGrpcRespError decodes GRPC response
 func DecodeGrpcRespError(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPKind(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPKind(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Kind
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqKind encodes GRPC request
-func EncodeGrpcReqKind(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Kind)
-	return req, nil
-}
-
-// DecodeGrpcReqKind decodes GRPC request
-func DecodeGrpcReqKind(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Kind)
-	return req, nil
-}
-
-// EncodeGrpcRespKind encodes GRC response
-func EncodeGrpcRespKind(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespKind decodes GRPC response
-func DecodeGrpcRespKind(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

@@ -396,7 +396,7 @@ func TestAuditAuthz(t *testing.T) {
 	// query by category and kind
 	query := &search.SearchRequest{
 		Query: &search.SearchQuery{
-			Categories: []string{search.Category_Monitoring.String()},
+			Categories: []string{globals.Kind2Category("AuditEvent")},
 			Kinds:      []string{auth.Permission_AuditEvent.String()},
 		},
 		From:       0,
@@ -426,7 +426,7 @@ func TestAuditAuthz(t *testing.T) {
 		}
 		return true, nil
 	}, "user with auditing permissions should able to retrieve audit logs for its tenant")
-	Assert(t, len(resp.AggregatedEntries.Tenants[testTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries) != 0,
+	Assert(t, len(resp.AggregatedEntries.Tenants[testTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries) != 0,
 		fmt.Sprintf("user with auditing permissions should able to retrieve audit logs for its tenant: %#v", resp))
 	_, ok := resp.AggregatedEntries.Tenants[globals.DefaultTenant]
 	Assert(t, !ok, fmt.Sprintf("user should not be able to retrieve audit logs for other tenants: %#v", resp))

@@ -26,98 +26,6 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// Category_Type_normal is a map of normalized values for the enum
-var Category_Type_normal = map[string]string{
-	"Alerts":     "Alerts",
-	"AuditTrail": "AuditTrail",
-	"Auth":       "Auth",
-	"Cluster":    "Cluster",
-	"Events":     "Events",
-	"Monitoring": "Monitoring",
-	"Network":    "Network",
-	"Security":   "Security",
-	"Telemetry":  "Telemetry",
-	"Workload":   "Workload",
-	"alerts":     "Alerts",
-	"audittrail": "AuditTrail",
-	"auth":       "Auth",
-	"cluster":    "Cluster",
-	"events":     "Events",
-	"monitoring": "Monitoring",
-	"network":    "Network",
-	"security":   "Security",
-	"telemetry":  "Telemetry",
-	"workload":   "Workload",
-}
-
-// Kind_Type_normal is a map of normalized values for the enum
-var Kind_Type_normal = map[string]string{
-	"Alert":                   "Alert",
-	"AlertDestination":        "AlertDestination",
-	"AlertPolicy":             "AlertPolicy",
-	"App":                     "App",
-	"AppUser":                 "AppUser",
-	"AppUserGrp":              "AppUserGrp",
-	"AuditEvent":              "AuditEvent",
-	"AuthenticationPolicy":    "AuthenticationPolicy",
-	"Certificate":             "Certificate",
-	"Cluster":                 "Cluster",
-	"Endpoint":                "Endpoint",
-	"Event":                   "Event",
-	"EventPolicy":             "EventPolicy",
-	"FlowExportPolicy":        "FlowExportPolicy",
-	"FwlogPolicy":             "FwlogPolicy",
-	"Host":                    "Host",
-	"LbPolicy":                "LbPolicy",
-	"MirrorSession":           "MirrorSession",
-	"Network":                 "Network",
-	"Node":                    "Node",
-	"Role":                    "Role",
-	"RoleBinding":             "RoleBinding",
-	"Rollout":                 "Rollout",
-	"SGPolicy":                "SGPolicy",
-	"SecurityGroup":           "SecurityGroup",
-	"Service":                 "Service",
-	"SmartNIC":                "SmartNIC",
-	"StatsPolicy":             "StatsPolicy",
-	"Tenant":                  "Tenant",
-	"TrafficEncryptionPolicy": "TrafficEncryptionPolicy",
-	"User":                    "User",
-	"Workload":                "Workload",
-	"alert":                   "Alert",
-	"alertdestination":        "AlertDestination",
-	"alertpolicy":             "AlertPolicy",
-	"app":                     "App",
-	"appuser":                 "AppUser",
-	"appusergrp":              "AppUserGrp",
-	"auditevent":              "AuditEvent",
-	"authenticationpolicy":    "AuthenticationPolicy",
-	"certificate":             "Certificate",
-	"cluster":                 "Cluster",
-	"endpoint":                "Endpoint",
-	"event":                   "Event",
-	"eventpolicy":             "EventPolicy",
-	"flowexportpolicy":        "FlowExportPolicy",
-	"fwlogpolicy":             "FwlogPolicy",
-	"host":                    "Host",
-	"lbpolicy":                "LbPolicy",
-	"mirrorsession":           "MirrorSession",
-	"network":                 "Network",
-	"node":                    "Node",
-	"role":                    "Role",
-	"rolebinding":             "RoleBinding",
-	"rollout":                 "Rollout",
-	"securitygroup":           "SecurityGroup",
-	"service":                 "Service",
-	"sgpolicy":                "SGPolicy",
-	"smartnic":                "SmartNIC",
-	"statspolicy":             "StatsPolicy",
-	"tenant":                  "Tenant",
-	"trafficencryptionpolicy": "TrafficEncryptionPolicy",
-	"user":                    "User",
-	"workload":                "Workload",
-}
-
 // PolicySearchResponse_MatchStatus_normal is a map of normalized values for the enum
 var PolicySearchResponse_MatchStatus_normal = map[string]string{
 	"MATCH": "MATCH",
@@ -144,27 +52,6 @@ var SearchRequest_SortOrderEnum_normal = map[string]string{
 
 var _ validators.DummyVar
 var validatorMapSearch = make(map[string]map[string][]func(string, interface{}) error)
-
-// Clone clones the object into into or creates one of into is nil
-func (m *Category) Clone(into interface{}) (interface{}, error) {
-	var out *Category
-	var ok bool
-	if into == nil {
-		out = &Category{}
-	} else {
-		out, ok = into.(*Category)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*Category))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *Category) Defaults(ver string) bool {
-	return false
-}
 
 // Clone clones the object into into or creates one of into is nil
 func (m *CategoryAggregation) Clone(into interface{}) (interface{}, error) {
@@ -289,27 +176,6 @@ func (m *Error) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Error) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *Kind) Clone(into interface{}) (interface{}, error) {
-	var out *Kind
-	var ok bool
-	if into == nil {
-		out = &Kind{}
-	} else {
-		out, ok = into.(*Kind)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*Kind))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *Kind) Defaults(ver string) bool {
 	return false
 }
 
@@ -494,16 +360,6 @@ func (m *SearchQuery) Defaults(ver string) bool {
 			ret = i.Defaults(ver) || ret
 		}
 	}
-	ret = true
-	switch ver {
-	default:
-		for k := range m.Categories {
-			m.Categories[k] = "Cluster"
-		}
-		for k := range m.Kinds {
-			m.Kinds[k] = "Cluster"
-		}
-	}
 	return ret
 }
 
@@ -626,19 +482,6 @@ func (m *TextRequirement) Defaults(ver string) bool {
 
 // Validators and Requirements
 
-func (m *Category) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *Category) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *Category) Normalize() {
-
-}
-
 func (m *CategoryAggregation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -717,19 +560,6 @@ func (m *Error) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) [
 }
 
 func (m *Error) Normalize() {
-
-}
-
-func (m *Kind) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *Kind) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *Kind) Normalize() {
 
 }
 
@@ -973,16 +803,8 @@ func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *SearchQuery) Normalize() {
 
-	for k, v := range m.Categories {
-		m.Categories[k] = Category_Type_normal[strings.ToLower(v)]
-	}
-
 	if m.Fields != nil {
 		m.Fields.Normalize()
-	}
-
-	for k, v := range m.Kinds {
-		m.Kinds[k] = Kind_Type_normal[strings.ToLower(v)]
 	}
 
 	if m.Labels != nil {
@@ -1134,20 +956,6 @@ func init() {
 	validatorMapSearch["SearchQuery"] = make(map[string][]func(string, interface{}) error)
 	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchQuery)
-
-		for k, v := range m.Categories {
-			if _, ok := Category_Type_value[v]; !ok {
-				vals := []string{}
-				for k1, _ := range Category_Type_value {
-					vals = append(vals, k1)
-				}
-				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Categories", k, vals)
-			}
-		}
-		return nil
-	})
-	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
-		m := i.(*SearchQuery)
 		args := make([]string, 0)
 		args = append(args, "0")
 		args = append(args, "64")
@@ -1162,29 +970,12 @@ func init() {
 
 	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchQuery)
-
 		for k, v := range m.Kinds {
-			if _, ok := Kind_Type_value[v]; !ok {
-				vals := []string{}
-				for k1, _ := range Kind_Type_value {
-					vals = append(vals, k1)
-				}
-				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Kinds", k, vals)
+			if err := validators.EmptyOr(validators.ValidKind, v, nil); err != nil {
+				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"Kinds", k, err.Error())
 			}
 		}
-		return nil
-	})
-	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {
-		m := i.(*SearchQuery)
-		args := make([]string, 0)
-		args = append(args, "0")
-		args = append(args, "64")
 
-		for _, v := range m.Kinds {
-			if err := validators.EmptyOr(validators.StrLen, v, args); err != nil {
-				return fmt.Errorf("%v failed validation: %s", path+"."+"Kinds", err.Error())
-			}
-		}
 		return nil
 	})
 

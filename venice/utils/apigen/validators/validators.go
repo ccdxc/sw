@@ -11,7 +11,7 @@ import (
 
 	govldtr "github.com/asaskevich/govalidator"
 
-	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -21,7 +21,6 @@ type DummyVar bool
 // kindsMap maintains a map of the Kind to api group, initialized the first time
 //  it is used.
 var (
-	kindsMap     map[string]string
 	groupMap     map[string][]string
 	kindsMapOnce sync.Once
 )
@@ -62,18 +61,9 @@ var RegexpList = map[string]regexpEntry{
 	},
 }
 
-func populateKindsMap() {
+func populateGroupMap() {
 	schema := runtime.GetDefaultScheme()
 	groupMap = schema.Kinds()
-	kindsMap = make(map[string]string)
-	for k, v := range groupMap {
-		for _, v1 := range v {
-			if _, ok := kindsMap[v1]; ok {
-				log.Fatalf("duplicate kind registrated [%v]", v1)
-			}
-			kindsMap[v1] = k
-		}
-	}
 }
 
 // convInt is a utility function to get convert string to integer
@@ -474,8 +464,7 @@ func ProtoPort(port string) error {
 
 // ValidKind validates that the kind is one of the registered Kinds
 func ValidKind(in string) error {
-	kindsMapOnce.Do(populateKindsMap)
-	if _, ok := kindsMap[in]; !ok {
+	if len(globals.Kind2Category(in)) == 0 {
 		return fmt.Errorf("Value must be a valid kind")
 	}
 	return nil
@@ -483,7 +472,7 @@ func ValidKind(in string) error {
 
 // ValidGroup validates the API group is one of the known groups
 func ValidGroup(in string) error {
-	kindsMapOnce.Do(populateKindsMap)
+	kindsMapOnce.Do(populateGroupMap)
 	if _, ok := groupMap[in]; !ok {
 		return fmt.Errorf("Value must be a valid API group")
 	}

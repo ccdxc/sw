@@ -41,54 +41,6 @@ export enum SearchPolicySearchResponse_status {
     'MISS' = "MISS",
 }
 
-export enum SearchSearchQuery_categories {
-    'Cluster' = "Cluster",
-    'Workload' = "Workload",
-    'Security' = "Security",
-    'Auth' = "Auth",
-    'Network' = "Network",
-    'Monitoring' = "Monitoring",
-    'Telemetry' = "Telemetry",
-    'Events' = "Events",
-    'Alerts' = "Alerts",
-    'AuditTrail' = "AuditTrail",
-}
-
-export enum SearchSearchQuery_kinds {
-    'Cluster' = "Cluster",
-    'Node' = "Node",
-    'SmartNIC' = "SmartNIC",
-    'Rollout' = "Rollout",
-    'Tenant' = "Tenant",
-    'Endpoint' = "Endpoint",
-    'SecurityGroup' = "SecurityGroup",
-    'SGPolicy' = "SGPolicy",
-    'App' = "App",
-    'AppUser' = "AppUser",
-    'AppUserGrp' = "AppUserGrp",
-    'Certificate' = "Certificate",
-    'TrafficEncryptionPolicy' = "TrafficEncryptionPolicy",
-    'User' = "User",
-    'AuthenticationPolicy' = "AuthenticationPolicy",
-    'Role' = "Role",
-    'RoleBinding' = "RoleBinding",
-    'Network' = "Network",
-    'Service' = "Service",
-    'LbPolicy' = "LbPolicy",
-    'Alert' = "Alert",
-    'AlertDestination' = "AlertDestination",
-    'AlertPolicy' = "AlertPolicy",
-    'Event' = "Event",
-    'EventPolicy' = "EventPolicy",
-    'StatsPolicy' = "StatsPolicy",
-    'FlowExportPolicy' = "FlowExportPolicy",
-    'FwlogPolicy' = "FwlogPolicy",
-    'MirrorSession' = "MirrorSession",
-    'Workload' = "Workload",
-    'Host' = "Host",
-    'AuditEvent' = "AuditEvent",
-}
-
 export enum SearchSearchRequest_sort_order {
     'Ascending' = "Ascending",
     'Descending' = "Descending",
@@ -173,8 +125,6 @@ export class AllEnums {
     FieldsRequirement_operator = FieldsRequirement_operator;
     LabelsRequirement_operator = LabelsRequirement_operator;
     SearchPolicySearchResponse_status = SearchPolicySearchResponse_status;
-    SearchSearchQuery_categories = SearchSearchQuery_categories;
-    SearchSearchQuery_kinds = SearchSearchQuery_kinds;
     SearchSearchRequest_sort_order = SearchSearchRequest_sort_order;
     SearchSearchRequest_mode = SearchSearchRequest_mode;
     SecuritySGRule_action = SecuritySGRule_action;

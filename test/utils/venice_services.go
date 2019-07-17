@@ -229,7 +229,12 @@ func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache s
 	case "indexer": // create the indexer
 		log.Info("starting indexer ...")
 		ctx := context.Background()
-		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, cache, logger, indexer.WithElasticClient(esClient))
+		spyglassOpts := func(idr *indexer.Indexer) {
+			indexer.DisableVOSWatcher()(idr)
+			indexer.WithElasticClient(esClient)(idr)
+		}
+
+		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, cache, logger, spyglassOpts)
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create indexer, err: %v", err)
 		}

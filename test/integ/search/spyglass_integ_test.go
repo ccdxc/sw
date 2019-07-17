@@ -531,7 +531,11 @@ func TestSpyglass(t *testing.T) {
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, indexer.WithElasticClient(tInfo.esClient))
+			spyglassOpts := func(idr *indexer.Indexer) {
+				indexer.DisableVOSWatcher()(idr)
+				indexer.WithElasticClient(tInfo.esClient)(idr)
+			}
+			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, spyglassOpts)
 			if err != nil {
 				t.Logf("Error creating indexer: %v", err)
 				return false, nil

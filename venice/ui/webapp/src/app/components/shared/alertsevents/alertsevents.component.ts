@@ -13,7 +13,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { EventsEvent_severity, EventsEventAttributes_severity, IApiListWatchOptions, IEventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
-import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
+import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
 
 import { Observable, forkJoin, throwError, Subscription } from 'rxjs';
@@ -424,7 +424,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     this.eventsLoading = true;
     const body = new SearchSearchRequest();
     body['max-results'] = 100;
-    body.query.kinds = [SearchSearchQuery_kinds.Event];
+    body.query.kinds = ['Event'];
     body['sort-by'] = 'meta.mod-time';
 
     if (this.currentEventSeverityFilter != null) {

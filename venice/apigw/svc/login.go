@@ -334,7 +334,7 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 			Name:   eventID,
 			UUID:   eventID,
 			Tenant: user.Tenant,
-			Labels: map[string]string{"_category": globals.Kind2Category["AuditEvent"]},
+			Labels: map[string]string{"_category": globals.Kind2Category("AuditEvent")},
 			CreationTime: api.Timestamp{
 				Timestamp: *creationTime,
 			},

@@ -199,7 +199,7 @@
           },
           {
             "name": "query.kinds",
-            "description": "OR of Kinds to be matched, AND and Exclude are not supported for this type\nThe max kind string length is 64 bytes. length of string should be between 0 and 64",
+            "description": "OR of Kinds to be matched, AND and Exclude are not supported for this type. should be a valid object Kind",
             "in": "query",
             "required": false,
             "type": "array",
@@ -857,19 +857,6 @@
           "items": {
             "type": "string"
           },
-          "enum": [
-            "Cluster",
-            "Workload",
-            "Security",
-            "Auth",
-            "Network",
-            "Monitoring",
-            "Telemetry",
-            "Events",
-            "Alerts",
-            "AuditTrail"
-          ],
-          "default": "Cluster",
           "maxLength": 64,
           "description": "length of string should be between 0 and 64",
           "title": "OR of Categories to be matched, AND and Exclude are not supported for this type\nThe max category string length is 64 bytes"
@@ -879,44 +866,9 @@
           "items": {
             "type": "string"
           },
-          "enum": [
-            "Cluster",
-            "Node",
-            "SmartNIC",
-            "Rollout",
-            "Tenant",
-            "Endpoint",
-            "SecurityGroup",
-            "SGPolicy",
-            "App",
-            "AppUser",
-            "AppUserGrp",
-            "Certificate",
-            "TrafficEncryptionPolicy",
-            "User",
-            "AuthenticationPolicy",
-            "Role",
-            "RoleBinding",
-            "Network",
-            "Service",
-            "LbPolicy",
-            "Alert",
-            "AlertDestination",
-            "AlertPolicy",
-            "Event",
-            "EventPolicy",
-            "StatsPolicy",
-            "FlowExportPolicy",
-            "FwlogPolicy",
-            "MirrorSession",
-            "Workload",
-            "Host",
-            "AuditEvent"
-          ],
-          "default": "Cluster",
-          "maxLength": 64,
-          "description": "length of string should be between 0 and 64",
-          "title": "OR of Kinds to be matched, AND and Exclude are not supported for this type\nThe max kind string length is 64 bytes"
+          "example": "Network",
+          "description": "should be a valid object Kind",
+          "title": "OR of Kinds to be matched, AND and Exclude are not supported for this type"
         },
         "fields": {
           "$ref": "#/definitions/fieldsSelector",
