@@ -43,7 +43,7 @@ $GDB artemis_nh_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/art
 [[ $? -ne 0 ]] && echo "artemis_nh_test failed!" && exit 1
 
 echo "Running route table test"
-$GDB artemis_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_route_test.xml" > artemis_route_test.log.txt
+$GDB artemis_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_route_test.xml" > /dev/null
 [[ $? -ne 0 ]] && echo "artemis_route_test failed!" && exit 1
 
 echo "Running vnic test"
@@ -55,7 +55,7 @@ $GDB artemis_svc_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS
 [[ $? -ne 0 ]] && echo "artemis_svc_mapping_test failed!" && exit 1
 
 echo "Running tag test"
-$GDB artemis_tag_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_tag_test.xml" > artemis_tag_test.log.txt
+$GDB artemis_tag_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_tag_test.xml" > /dev/null
 [[ $? -ne 0 ]] && echo "artemis_tag_test failed!" && exit 1
 
 echo "Success"

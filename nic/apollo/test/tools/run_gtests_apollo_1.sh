@@ -27,7 +27,7 @@ export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
 echo "Running scale test"
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log.txt
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > /dev/null
 [[ $? -ne 0 ]] && echo "apollo_scale_test failed!" && exit 1
 
 echo "Running device test"
@@ -43,7 +43,7 @@ $GDB apollo_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/
 [[ $? -ne 0 ]] && echo "apollo_subnet_test failed!" && exit 1
 
 echo "Running route test"
-$GDB apollo_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_route_test.xml" > apollo_route_test.log.txt
+$GDB apollo_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_route_test.xml" > /dev/null
 [[ $? -ne 0 ]] && echo "apollo_route_test failed!" && exit 1
 
 echo "Running vnic test"
@@ -55,7 +55,7 @@ $GDB apollo_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apo
 [[ $? -ne 0 ]] && echo "apollo_tep_test failed!" && exit 1
 
 echo "Running mapping test"
-$GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml" > apollo_mapping_test.log.txt
+$GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml" > /dev/null
 [[ $? -ne 0 ]] && echo "apollo_mapping_test failed!" && exit 1
 
 echo "Running mirror session test"
@@ -65,6 +65,6 @@ $GDB apollo_mirror_session_test -c hal.json --gtest_output="xml:${GEN_TEST_RESUL
 
 echo "Running memhash test"
 MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
-LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test > memhash_test.log.txt
+LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test > /dev/null
 
 slhash_test > slhash_test_log.txt

@@ -235,8 +235,8 @@ jobd/gft/gtest: ${JOBD_PREREQS}
 .PHONY: jobd/apollo/gtest_1
 jobd/apollo/gtest_1: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
-	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > apollo_scale_test.log.txt
-	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > apollo_scale_vxlan_test.log.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > /dev/null
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > /dev/null
 	${NICDIR}/apollo/test/tools/run_gtests_apollo_1.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/apollo/gtest_2
@@ -250,7 +250,7 @@ jobd/artemis/gtest: ${JOBD_PREREQS}
 
 .PHONY: jobd/artemis/scale_test_sim
 jobd/artemis/scale_test_sim: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --artemis_scale_test > artemis_scale_test.log.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --artemis_scale_test > /dev/null
 
 .PHONY: jobd/artemis/ftlite
 jobd/artemis/ftlite: ${JOBD_PREREQS}
