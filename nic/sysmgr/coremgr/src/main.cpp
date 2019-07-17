@@ -1,6 +1,3 @@
-//------------------------------------------------------------------------------
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// -----------------------------------------------------------------------------
 
 #include <algorithm>
 #include <memory>
@@ -21,7 +18,7 @@
 #include <unistd.h>
 #include <zlib.h>
 
-#include "lib/logger/logger.hpp"
+#include "logger.hpp"
 
 #define CHUNK_SIZE (64 * 1204)
 // MIN_SPACE needed is 512MB
@@ -35,34 +32,32 @@ struct direntry_t {
     time_t timestamp;
 };
 
-namespace sdk {
-namespace platform {
-namespace coremgr {
-
 // Give a path make all the directories necessary to get to that path
-void mkdirs(const char *dir)
-{
-    char tmp[PATH_MAX];
-    char *p = NULL;
-    size_t len;
+void mkdirs(const char *dir) {
+        char tmp[PATH_MAX];
+        char *p = NULL;
+        size_t len;
 
-    snprintf(tmp, sizeof(tmp), "%s", dir);
-    len = strlen(tmp);
+        snprintf(tmp, sizeof(tmp), "%s", dir);
+        len = strlen(tmp);
 
-    if(tmp[len - 1] == '/') {
-        tmp[len - 1] = 0;
-    }
-
-    for(p = tmp + 1; *p; p++) {
-        if(*p == '/') {
-            *p = 0;
-            mkdir(tmp, S_IRWXU);
-            SDK_TRACE_INFO("Creating directory %s", tmp);
-            *p = '/';
+        if(tmp[len - 1] == '/')
+        {
+            tmp[len - 1] = 0;
         }
-    }
-    SDK_TRACE_INFO("Creating directory %s", tmp);
-    mkdir(tmp, S_IRWXU);
+                
+        for(p = tmp + 1; *p; p++)
+        {
+            if(*p == '/')
+            {
+                *p = 0;
+                mkdir(tmp, S_IRWXU);
+                INFO("Creating directory {}", tmp);
+                *p = '/';
+            }
+        }
+        INFO("Creating directory {}", tmp);
+        mkdir(tmp, S_IRWXU);
 }
 
 // Order by timestamp descending
@@ -89,7 +84,8 @@ std::vector<direntry_t> list_dir(char *path)
         direntry_t direntry;
 
         snprintf(fullpath, PATH_MAX, "%s/%s", path, entry->d_name);
-        if (stat(fullpath, &sb) != 0 || S_ISDIR(sb.st_mode)) {
+        if (stat(fullpath, &sb) != 0 || S_ISDIR(sb.st_mode))
+        {
             continue;
         }
         entries.push_back(direntry_t{std::string(fullpath), (uint64_t)sb.st_size, sb.st_ctime});
@@ -104,7 +100,8 @@ void manage_space(char *path)
 {
     struct statvfs sb;
     int rc = statvfs(path, &sb);
-    if (rc == -1) {
+    if (rc == -1)
+    {
         return;
     }
 
@@ -116,17 +113,18 @@ void manage_space(char *path)
     for (auto e: entries) {
         used_space += e.size;
     }
-    SDK_TRACE_INFO("Max: %u, Min: %u", MAX_SPACE, MIN_SPACE);
-    SDK_TRACE_INFO("Free: %u, Used: %u", free_space, used_space);
-
-    while (((used_space > MAX_SPACE) || (free_space < MIN_SPACE)) && (entries.size() > 0)) {
+    INFO("Max: {}, Min: {}", MAX_SPACE, MIN_SPACE);
+    INFO("Free: {}, Used: {}", free_space, used_space);
+    
+    while (((used_space > MAX_SPACE) || (free_space < MIN_SPACE)) && (entries.size() > 0))
+    {
         auto e = entries.back();
         entries.pop_back();
         unlink(e.name.c_str());
         free_space += e.size;
         used_space -= e.size;
-        SDK_TRACE_INFO("Unlink: %s (%u bytes)", e.name, e.size);
-        SDK_TRACE_INFO("Free: %u, Used: %u", free_space, used_space);
+        INFO("Unlink: {} ({} bytes)", e.name, e.size);
+        INFO("Free: {}, Used: {}", free_space, used_space);
     }
 }
 
@@ -134,8 +132,9 @@ void manage_space(char *path)
 void ensure_path(char *path)
 {
     struct stat sb;
-
-    if (!(stat(path, &sb) == 0 && S_ISDIR(sb.st_mode))) {
+    
+    if (!(stat(path, &sb) == 0 && S_ISDIR(sb.st_mode)))
+    {
         mkdirs(path);
     }
 
@@ -150,22 +149,22 @@ std::string get_filename(char *path, char *name, pid_t pid)
     time_t current_time = time(NULL);
 
     strftime(timestring, PATH_MAX, "%Y%m%d%H%M%S", gmtime(&current_time));
-
+    
     snprintf(filename, PATH_MAX, "%s/core_%s_%i_%s.gz", path, name, pid, timestring);
 
     return std::string(filename);
 }
 
-int dump_core (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int c;
     char *path = NULL;
     char *exec_name = NULL;
-    pid_t pid = 0;
     std::string dest_filename;
-
+    pid_t pid = 0;
+    
     static struct option long_options[] =
-    {
+    {         
         {"path",           required_argument, 0, 'P'}, // path to save the core files
         {"pid",            required_argument, 0, 'p'}, // the pid of the cored process
         {"executable",     required_argument, 0, 'e'}, // the executable name of the cored process
@@ -175,74 +174,74 @@ int dump_core (int argc, char *argv[])
     };
     int option_index;
 
-    while ((c = getopt_long(argc, argv, "P:p:e:t:M:m:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "P:p:e:t:M:m:", long_options, &option_index)) != -1)
+    {
         int minmb = 0;
         int maxmb = 0;
-        switch (c) {
+        switch (c)
+        {
             case 'P':
                 path = optarg;
-                SDK_TRACE_INFO("Option 'P': %s", path);
+                INFO("Option 'P': {}", path);
                 break;
             case 'p':
                 pid = atoi(optarg);
-                SDK_TRACE_INFO("Option 'p': %d", pid);
+                INFO("Option 'p': {}", pid);
                 break;
             case 'e':
                 exec_name = optarg;
-                SDK_TRACE_INFO("Option 'e': %s", exec_name);
+                INFO("Option 'e': {}", exec_name);
                 break;
             case 'M':
                 maxmb = atoi(optarg);
-                SDK_TRACE_INFO("Option 'M': %d", maxmb);
-                if (maxmb > 0) {
+                INFO("Option 'M': {}", maxmb);
+                if (maxmb > 0)
+                {
                     MAX_SPACE = maxmb * 1024 * 1024L;
                 }
                 break;
             case 'm':
                 minmb = atoi(optarg);
-                SDK_TRACE_INFO("Option 'm': %d", minmb);
-                if (minmb > 0) {
+                INFO("Option 'm': {}", minmb);
+                if (minmb > 0)
+                {
                     MIN_SPACE = minmb * 1024 * 1024L;
                 }
                 break;
             default:
-                SDK_TRACE_ERR("Unknown argument %c\n", c);
+                ERR("Unknown argument %c\n", c);
                 return 1;
         }
     }
 
     if (path == NULL) {
-        SDK_TRACE_ERR("--path option is required");
+        ERR("--path option is required");
         return 1;
     }
     if (pid == 0) {
-        SDK_TRACE_ERR("--pid option is required");
+        ERR("--pid option is required");
         return 1;
     }
     if (exec_name == NULL) {
-        SDK_TRACE_ERR("--executable is required");
+        ERR("--executable is required");
         return 1;
     }
 
     ensure_path(path);
-
+    
     dest_filename = get_filename(path, exec_name, pid);
-    SDK_TRACE_INFO("Dumping core to %s", dest_filename.c_str());
+    INFO("Dumping core to {}", dest_filename);
     gzFile out = gzopen(dest_filename.c_str(), "w");
-
     while (true) {
         char buffer[CHUNK_SIZE];
         ssize_t n = read(STDIN_FILENO, buffer, CHUNK_SIZE);
-        if (n <= 0) {
+        if (n <= 0) 
+        {
             gzclose(out);
             return 0;
         }
         gzwrite(out, buffer, n);
     }
-
+    
     return 0;
 }
-
-} // namespace coremgr
-} // namespace platform
-} // namespace sdk

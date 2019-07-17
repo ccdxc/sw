@@ -46,7 +46,7 @@ copy_files() {
         protobuf+='venice/utils/log venice/utils/testenv '
         protobuf+='nic/hal/third-party/google nic/proto/hal/module_gogo.mk nic/hal/third-party/grpc '
         protobuf+='nic/third-party/gflags/include nic/hal/third-party/openssl/include '
-        protobuf+='nic/sdk/third-party/libz/include nic/third-party/liblmdb/include '
+        protobuf+='nic/third-party/libz/include nic/third-party/liblmdb/include '
         mkdir -p $DST/proto_bin
         cp -r /usr/bin/proto* $DST/proto_bin
         cp -r /usr/local/go $DST/

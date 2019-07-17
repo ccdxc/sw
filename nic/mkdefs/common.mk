@@ -21,7 +21,7 @@ export THIRD_PARTY_INCLUDES := \
        ${TOPDIR}/nic/hal/third-party/grpc/include \
        ${TOPDIR}/nic/hal/third-party/google/include \
        ${TOPDIR}/nic/hal/third-party/openssl/include \
-       ${TOPDIR}/nic/sdk/third-party/libz/include \
+       ${TOPDIR}/nic/third-party/libz/include \
        ${TOPDIR}/nic/third-party/liblmdb/include \
        ${SDK_THIRD_PARTY_INCLUDES}
 

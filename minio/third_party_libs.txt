@@ -37,7 +37,7 @@ nic/third-party/gflags/x86_64/*
 nic/third-party/gflags/aarch64/*
 nic/third-party/nist-cavp/*testvectors
 
-nic/sdk/third-party/libz/*
+nic/third-party/libz/*
 
 nic/third-party/liblmdb/*
 
