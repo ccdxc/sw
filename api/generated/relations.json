@@ -38,12 +38,5 @@
       "To": "monitoring/AlertDestination",
       "Field": "Destinations"
     }
-  ],
-  "monitoring.AlertReason": [
-    {
-      "Type": "NamedRef",
-      "To": "monitoring/AlertPolicy",
-      "Field": "PolicyID"
-    }
   ]
 }

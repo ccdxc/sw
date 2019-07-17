@@ -697,19 +697,6 @@ func (m *TsReport) References(tenant string, path string, resp map[string]apiint
 		if path == "" {
 			dlmtr = ""
 		}
-		tag := path + dlmtr + "alerts"
-
-		for _, v := range m.Alerts {
-
-			v.References(tenant, tag, resp)
-
-		}
-	}
-	{
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
 		tag := path + dlmtr + "policies"
 
 		for _, v := range m.Policies {

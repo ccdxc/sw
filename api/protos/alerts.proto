@@ -60,8 +60,7 @@ message AlertReason {
                                                        (gogoproto.jsontag) = "matched-requirements, omitempty"];
 
   // Alert Policy ID that matched
-  string PolicyID                                 = 2 [(gogoproto.jsontag) = "alert-policy-id, omitempty",
-                                                       (venice.objRelation) = {Type: "NamedRef", To: "monitoring/AlertPolicy"}];
+  string PolicyID                                 = 2 [(gogoproto.jsontag) = "alert-policy-id, omitempty"];
 }
 
 

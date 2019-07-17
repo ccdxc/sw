@@ -479,16 +479,6 @@ func (m *Alert) References(tenant string, path string, resp map[string]apiintf.R
 		if path == "" {
 			dlmtr = ""
 		}
-		tag := path + dlmtr + "status"
-
-		m.Status.References(tenant, tag, resp)
-
-	}
-	{
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
 		tag := path + dlmtr + "meta.tenant"
 		uref, ok := resp[tag]
 		if !ok {
@@ -896,27 +886,6 @@ func (m *AlertPolicyStatus) Normalize() {
 
 func (m *AlertReason) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
-	{
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		tag := path + dlmtr + "alert-policy-id"
-		uref, ok := resp[tag]
-		if !ok {
-			uref = apiintf.ReferenceObj{
-				RefType: apiintf.ReferenceType("NamedRef"),
-			}
-		}
-
-		if m.PolicyID != "" {
-			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/monitoring/"+"alertPolicies/"+tenant+"/"+m.PolicyID)
-		}
-
-		if len(uref.Refs) > 0 {
-			resp[tag] = uref
-		}
-	}
 }
 
 func (m *AlertReason) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -987,16 +956,6 @@ func (m *AlertSpec) Normalize() {
 
 func (m *AlertStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
-	{
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		tag := path + dlmtr + "reason"
-
-		m.Reason.References(tenant, tag, resp)
-
-	}
 }
 
 func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
