@@ -2998,6 +2998,8 @@ typedef struct tcpfin_args_ {
     session_state_t     session_state;
     bool                local_src;
     bool                local_dst;
+    int                 fte_id;
+    dllist_ctxt_t       dllist_ctxt;
 } __PACK__ tcpfin_args_t;
 
 /*
@@ -3049,15 +3051,44 @@ session_send_tcp_fin (void *data) {
     HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN, tcpfin);
 }
 
+hal_ret_t
+session_send_fin_list(dllist_ctxt_t *fin_list, bool async) 
+{
+    hal_ret_t ret = HAL_RET_OK;
+    dllist_ctxt_t *curr = NULL, *next = NULL;
+    dllist_for_each_safe(curr, next, fin_list) {
+        tcpfin_args_t *finargs = dllist_entry(curr, tcpfin_args_t, dllist_ctxt);
+        ret = fte::fte_softq_enqueue(finargs->fte_id,
+                                     session_send_tcp_fin,
+                                     (void *)finargs);
+        if (ret == HAL_RET_OK) {
+            HAL_TRACE_DEBUG("Successfully enqueued TCP FIN for {}",
+                                    finargs->session_handle);
+        }
+    }
+    return ret;
+}
+
 /*
  * Upgrade Handling -- Send TCP FIN to sessions with local EPs
  */
 hal_ret_t
 session_handle_upgrade (void)
 {
+    
+    struct session_upgrade_data_t {
+        dllist_ctxt_t session_list;
+        dllist_ctxt_t fin_list;
+        session_upgrade_data_t () {
+            dllist_reset(&session_list);
+            dllist_reset(&fin_list);
+        }
+    } ctxt;
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t             *session = (session_t *)entry;
-        dllist_ctxt_t              *list_head = (dllist_ctxt_t  *)ctxt;
+        session_upgrade_data_t     *session_data = (session_upgrade_data_t *) ctxt; 
+        dllist_ctxt_t              *list_head =     &session_data->session_list;
+        dllist_ctxt_t              *fin_list_head = &session_data->fin_list;
         ep_t                       *sep = NULL, *dep = NULL;
         bool                        src_is_local = false, dst_is_local = false;
         pd::pd_session_get_args_t   args;
@@ -3093,14 +3124,8 @@ session_handle_upgrade (void)
             finargs->session_handle = session->hal_handle;
             finargs->local_src = src_is_local;
             finargs->local_dst = dst_is_local;
-            ret = fte::fte_softq_enqueue(session->fte_id,
-                                         session_send_tcp_fin,
-                                         (void *)finargs);
-            if (ret == HAL_RET_OK) {
-                HAL_TRACE_DEBUG("Successfully enqueued TCP FIN for {}",
-                                        session->hal_handle);
-            }
-
+            finargs->fte_id = session->fte_id;
+            dllist_add(fin_list_head, &finargs->dllist_ctxt);
         }
 
         // Add the sessions to the list to send a delete
@@ -3119,12 +3144,11 @@ session_handle_upgrade (void)
         return false;
     };
 
-    dllist_ctxt_t session_list;
-    dllist_reset(&session_list);
-
     HAL_TRACE_DEBUG("calling walk func");
-    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
-    session_delete_list(&session_list);
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ctxt);
+    session_send_fin_list(&ctxt.fin_list, true);
+    session_delete_list(&ctxt.session_list);
+    
 
     return HAL_RET_OK;
 }
