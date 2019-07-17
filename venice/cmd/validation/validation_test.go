@@ -5,6 +5,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 func testCluster(name string, spec *cmd.ClusterSpec, status *cmd.ClusterStatus) *cmd.Cluster {
@@ -126,10 +127,43 @@ func TestValidateCluster(t *testing.T) {
 				},
 			),
 		},
+		// non-resolvable names
+		"good-cluster-with-non-resolvable-quorum-names": {
+			isExpectedFailure: true,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"node4", "node5", "node6"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		// name that resolves to more than 1 IP
+		"good-cluster-with-ambiguous-quorum-names": {
+			isExpectedFailure: true,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"node1", "node2", "node7"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
 	}
 
+	r := netutils.NewMockResolver()
+	r.AddHost("node1", []string{"192.168.30.11"})
+	r.AddHost("node1.pensando.io", []string{"192.168.30.11"})
+	r.AddHost("node2", []string{"192.168.30.12"})
+	r.AddHost("node2.pensando.io", []string{"192.168.30.12"})
+	r.AddHost("node3", []string{"192.168.30.13"})
+	r.AddHost("node3.pensando.io", []string{"192.168.30.13"})
+	r.AddHost("node4", []string{""})
+	r.AddHost("node5", nil)
+	r.AddHost("node7", []string{"192.168.30.17", "192.168.31.17"})
+
 	for name, scenario := range scenarios {
-		errs := ValidateCluster(scenario.cluster)
+		errs := ValidateCluster(scenario.cluster, r)
 		if len(errs) == 0 && scenario.isExpectedFailure {
 			t.Errorf("Unexpected success for scenario: %s", name)
 		}

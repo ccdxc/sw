@@ -3,6 +3,7 @@ package ops
 import (
 	"context"
 	"fmt"
+	"net"
 	"path"
 	"time"
 
@@ -52,7 +53,7 @@ func (o *clusterCreateOp) Validate() error {
 	}
 
 	// Validate arguments.
-	if errs := validation.ValidateCluster(o.cluster); len(errs) != 0 {
+	if errs := validation.ValidateCluster(o.cluster, net.DefaultResolver); len(errs) != 0 {
 		return errors.NewInvalid("cluster", "", errs)
 	}
 	return nil

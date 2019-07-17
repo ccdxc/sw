@@ -1,9 +1,11 @@
 package validation
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"reflect"
+	"time"
 
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -11,6 +13,15 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 )
+
+var (
+	resolverTimeout = 5 * time.Second
+)
+
+// ResolverInterface is the interface that validator uses to resolve names
+type ResolverInterface interface {
+	LookupHost(ctx context.Context, host string) (addrs []string, err error)
+}
 
 // IsValidNodeIP returns true if the supplied IP address is valid for a cluster node.
 // IsGlobalUnicast returns (!ip.Equal(IPv4bcast) && !ip.IsUnspecified() && !ip.IsLoopback() && !ip.IsMulticast() && !ip.IsLinkLocalUnicast())
@@ -31,7 +42,7 @@ func ValidateObjectMeta(meta *api.ObjectMeta, fldPath *field.Path) field.ErrorLi
 }
 
 // ValidateClusterSpecQuorumNodes validates the quorumNodes configuration in cluster spec.
-func ValidateClusterSpecQuorumNodes(nodes []string, fldPath *field.Path) field.ErrorList {
+func ValidateClusterSpecQuorumNodes(resolver ResolverInterface, nodes []string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	// Non zero number of nodes.
@@ -60,6 +71,18 @@ func ValidateClusterSpecQuorumNodes(nodes []string, fldPath *field.Path) field.E
 			if len(validation.IsDNS1123Subdomain(n)) > 0 {
 				allErrs = append(allErrs, field.Invalid(fldPath, nodes, fmt.Sprintf("quorum node %v is not a valid DNS name or IP address", n)))
 			}
+			// Check that it resolves to exactly 1 IP address
+			ctx, cancel := context.WithTimeout(context.Background(), resolverTimeout)
+			addrs, err := resolver.LookupHost(ctx, n)
+			if err != nil {
+				allErrs = append(allErrs, field.Invalid(fldPath, nodes, fmt.Sprintf("Error resolving IP address for node %v: %v", n, err)))
+			}
+			if len(addrs) == 0 {
+				allErrs = append(allErrs, field.Invalid(fldPath, nodes, fmt.Sprintf("DNS did not return an IP address for node %v", n)))
+			} else if len(addrs) > 1 {
+				allErrs = append(allErrs, field.Invalid(fldPath, nodes, fmt.Sprintf("DNS returned too many IP address for node %v: %v. Exactly 1 is required", n, addrs)))
+			}
+			cancel()
 		}
 	}
 
@@ -67,7 +90,7 @@ func ValidateClusterSpecQuorumNodes(nodes []string, fldPath *field.Path) field.E
 }
 
 // ValidateClusterSpec validates the cluster specification.
-func ValidateClusterSpec(spec *cmd.ClusterSpec, fldPath *field.Path) field.ErrorList {
+func ValidateClusterSpec(resolver ResolverInterface, spec *cmd.ClusterSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if spec == nil {
 		return allErrs
@@ -84,15 +107,15 @@ func ValidateClusterSpec(spec *cmd.ClusterSpec, fldPath *field.Path) field.Error
 	}
 
 	// Validate specified quorum nodes.
-	allErrs = append(allErrs, ValidateClusterSpecQuorumNodes(spec.QuorumNodes, fldPath.Child("quorumNodes"))...)
+	allErrs = append(allErrs, ValidateClusterSpecQuorumNodes(resolver, spec.QuorumNodes, fldPath.Child("quorumNodes"))...)
 
 	return allErrs
 }
 
 // ValidateCluster validates the cluster object.
-func ValidateCluster(cluster *cmd.Cluster) field.ErrorList {
+func ValidateCluster(cluster *cmd.Cluster, resolver ResolverInterface) field.ErrorList {
 	allErrs := ValidateObjectMeta(&cluster.ObjectMeta, field.NewPath("metadata"))
-	allErrs = append(allErrs, ValidateClusterSpec(&cluster.Spec, field.NewPath("spec"))...)
+	allErrs = append(allErrs, ValidateClusterSpec(resolver, &cluster.Spec, field.NewPath("spec"))...)
 	if !reflect.DeepEqual(cluster.Status, cmd.ClusterStatus{}) {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("status"), cluster.Status, "cluster status must be empty"))
 	}
