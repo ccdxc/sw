@@ -4,7 +4,7 @@
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
   display: flex;
   width: 100%;
-  padding: 10px;
+  padding: 10px 0px 10px 0px;
 }
 
 .alertlistitem-widget-check {
@@ -33,7 +33,7 @@
 }
 
 .alertlistitem-front-group-div .mat-icon {
-  width: 50px;
+  width: 40px;
   font-size: 36px;
 }
 
@@ -56,7 +56,7 @@
 .alertlistitem-display-text-bold {
   min-height: 34px;
   /** https://pensando.atlassian.net/browse/VS-296  alert.desc can be very long */
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   font-style: normal;
   font-stretch: condensed;
@@ -89,4 +89,5 @@
 
 .alertlistitem-time {
   float: right;
+  margin-right: 5px;
 }
