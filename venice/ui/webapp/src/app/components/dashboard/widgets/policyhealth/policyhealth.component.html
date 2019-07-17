@@ -77,7 +77,7 @@
     <div fxFlex="100%" fxLayout="column" fxLayoutAlign="center stretch">
       <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex fxLayout="row">
         <div fxFlex="nogrow" class="dsbdpolicyhealth-stat-value">{{ currActiveFlows }} </div>
-        <div fxFlex="nogrow" class="dsbdpolicyhealth-stat-description">Total Flows</div>
+        <div fxFlex="nogrow" class="dsbdpolicyhealth-stat-description"> Flows per Naples</div>
       </div>
       <app-linegraph [@fade] #lineGraph *ngIf="cardState === cardStates.READY" fxFlex="70%"
                      fxLayout="row"

@@ -178,7 +178,7 @@ export class MetricsUtility {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.NONE,
+      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
       'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
