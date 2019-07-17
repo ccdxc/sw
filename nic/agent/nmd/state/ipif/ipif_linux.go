@@ -101,6 +101,7 @@ func (c *IPClient) DoDHCPConfig() error {
 	client, err := dhcp.New(dhcp.HardwareAddr(c.intf.Attrs().HardwareAddr), dhcp.Connection(pktSock))
 	if err != nil {
 		log.Errorf("Failed to instantiate new DHCP Client. Err: %v", err)
+		pktSock.Close()
 		return err
 	}
 	// Start the control loop and keep polling for err
@@ -108,6 +109,7 @@ func (c *IPClient) DoDHCPConfig() error {
 
 	if err := c.startDHCP(client); err != nil {
 		log.Errorf("Failed to start dhcp client. Err: %v", err)
+		pktSock.Close()
 		return err
 	}
 
