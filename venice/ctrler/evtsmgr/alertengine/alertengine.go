@@ -328,6 +328,10 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		return false, err
 	}, 60*time.Millisecond, maxRetry)
 
+	if err != nil {
+		return false, err
+	}
+
 	// TODO: run field selector on it (AlertDestination.Spec.Selector)
 	if alertCreated.(bool) { // export alert
 		if err := a.exporter.Export(alertPolicy.Spec.GetDestinations(), alert); err != nil {
