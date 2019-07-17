@@ -49,7 +49,7 @@ type config struct {
 
 // represents the list of event services (includes both network and host modes)
 type evtServices struct {
-	sync.Mutex
+	sync.RWMutex
 	config                   *config
 	resolverClient           resolver.Interface
 	eps                      *evtsproxy.EventsProxy // events proxy server
@@ -279,6 +279,12 @@ func (e *evtServices) registerVeniceExporter() {
 		case <-e.ctx.Done():
 			return
 		default:
+			e.RLock()
+			if e.veniceExporterRegistered {
+				e.RUnlock()
+				return
+			}
+			e.RUnlock()
 			// register venice exporter (exports events to evtsmgr -> elastic)
 			// it will fail if it is already registered
 			if _, err := e.eps.RegisterEventsExporter(exporters.Venice, nil); err != nil {
@@ -287,7 +293,9 @@ func (e *evtServices) registerVeniceExporter() {
 				continue
 			}
 			e.logger.Infof("registered venice exporter")
+			e.Lock()
 			e.veniceExporterRegistered = true
+			e.Unlock()
 			return
 		}
 	}
@@ -303,8 +311,10 @@ func (e *evtServices) stopNetworkModeServices() {
 	}
 
 	// unregister venice exporter (exports events to evtsmgr -> elastic)
-	e.eps.UnregisterEventsExporter(exporters.Venice.String())
-	e.veniceExporterRegistered = false
+	if e.veniceExporterRegistered {
+		e.eps.UnregisterEventsExporter(exporters.Venice.String())
+		e.veniceExporterRegistered = false
+	}
 }
 
 // helper function to start services based on the given mode
