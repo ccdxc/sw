@@ -223,7 +223,8 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
             ev_now_update(EV_A);
         };
     } else {
-        evutil_add_prepare(EV_A_ &prepare, EdmaQ::PollCb, this);
+        if (ctx->cb)
+            evutil_add_prepare(EV_A_ &prepare, EdmaQ::PollCb, this);
     }
 
     return true;
