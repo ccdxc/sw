@@ -29,6 +29,7 @@ import { NewrolloutComponent } from './newrollout.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { AuthService } from '@app/services/auth.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
 
 describe('NewrolloutComponent', () => {
   let component: NewrolloutComponent;
@@ -60,7 +61,8 @@ describe('NewrolloutComponent', () => {
         SearchService,
         MessageService,
         RolloutService,
-        ObjstoreService
+        ObjstoreService,
+        ClusterService
       ]
     });
     });

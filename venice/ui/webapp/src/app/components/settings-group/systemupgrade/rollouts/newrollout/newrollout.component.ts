@@ -1,14 +1,13 @@
-import { AfterViewInit, ViewChild, Component, OnDestroy, OnInit, ViewEncapsulation, EventEmitter, Input, Output, OnChanges, SimpleChanges, } from '@angular/core';
-import { FormArray, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation, EventEmitter, Input, Output, OnChanges, SimpleChanges, ViewChildren, QueryList, ChangeDetectorRef } from '@angular/core';
+import { FormArray, ValidatorFn } from '@angular/forms';
 import { BaseComponent } from '@components/base/base.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { ControllerService } from '@app/services/controller.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
-import { ToolbarButton, ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
+import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec } from '@sdk/v1/models/generated/rollout';
-import { IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
-import { RepeaterComponent, RepeaterData, ValueType } from 'web-app-framework';
-import { LabelsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
+import { IObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
+import { RepeaterComponent, RepeaterData, ValueType, RepeaterItem } from 'web-app-framework';
 import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
@@ -17,8 +16,41 @@ import { Utility } from '@common/Utility';
 import { RolloutImageLabel, EnumRolloutOptions, RolloutImageOption } from '../index';
 import { RolloutUtil } from '../RolloutUtil';
 import { SearchExpression } from '@app/components/search/index.ts';
+import { LabelsSelector } from '@sdk/v1/models/generated/security';
+import { SearchUtil } from '@app/components/search/SearchUtil';
+import { SearchService } from '@app/services/generated/search.service';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from '@app/services/generated/cluster.service';
 
+export class RolloutOrder {
+  orderSummary: string = '';
+  matchedSmartNICs: any = [];
+  editable: boolean = false;
+}
 
+/**
+ * Description:
+
+  When Naples are assigned labels we can specify a sequence for the rollout to progress in.
+  This means that the 1st order group will be updated before the 2nd and so on.
+  The UI allows the user to select NICs for group with the help of label selectors.
+
+  When one or more labels are selected for group the updated label count is shown on the order HTML element.
+  User can choose to add multiple such group though only one can be edited at one time.
+
+  The 'Save Rollout' button is disabled until isAllInputsValidated() return true.
+
+ * Key functions:
+  onInit() -> fetch all Naples
+  setSpecOrderConstrains() - generates the order constraints
+  buildRollout() - built the rollout object based on the form
+  saveRollout() - call the rollout create api with the built rollout object
+  getRuleResults() - checks the naplesRuleMap to find NICs matching the given labels
+  repeaterValueChange(index) - updates the order summary and match count, when the repeater value changes
+  isAllInputsValidated()
+
+ */
 
 @Component({
   selector: 'app-newrollout',
@@ -28,8 +60,8 @@ import { SearchExpression } from '@app/components/search/index.ts';
   encapsulation: ViewEncapsulation.None,
 })
 export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-  @ViewChild('orderConstraintsLabelRepeater') ocLabelRepeater: RepeaterComponent;
-
+  orders: RolloutOrder[] = [];
+  repeaterList: RepeaterItem[] = [];
   newRollout: RolloutRollout;
   subscriptions = [];
   oldToolbarData: ToolbarData;
@@ -63,8 +95,18 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     matIcon: 'update'
   };
 
-  constructor(private rolloutService: RolloutService, private objstoreService: ObjstoreService,
-    protected controllerService: ControllerService) {
+  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  naplesIdMap: { [id: string]: ClusterSmartNIC } = {};
+  naplesRuleMap: { [rule: string]: Set<string> } = {};
+
+  constructor(private rolloutService: RolloutService,
+    private objstoreService: ObjstoreService,
+    protected _searchService: SearchService,
+    protected controllerService: ControllerService,
+    protected clusterService: ClusterService,
+    protected cd: ChangeDetectorRef,
+  ) {
     super(controllerService);
   }
 
@@ -74,20 +116,65 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
 
   ngOnInit() {
+    this.getNaplesLabelsKeyValues();
     // prepare for label-selector repeater
-    this.orderConstraintslabelData = [
-      {
-        key: { label: 'text', value: 'text' },
-        operators: Utility.convertEnumToSelectItem(LabelsRequirement_operator),
-        fieldType: ValueType.inputField,
-        valueType: ValueType.inputField
-      }
-    ];
     if (!this.newRollout) {
       // below ngChange() should initialize rolloutData.
       this.initRolloutData();
     }
+    this.addOrder();
     this.minDate = new Date();
+  }
+
+  // When we get a response containing all SmartNICs objects, we build labelData to be used for the label selector.
+  // We also generate a Map of each label-rule to all the matchedSmartNICs.
+  handleReadSmartNICsResponse(response) {
+    this.orderConstraintslabelData = [];
+    this.naplesEventUtility.processEvents(response);
+    this.generateRuleAndIdMap();
+    const labels = Utility.getLabels(this.naples as any[]);
+    for (const key of Object.keys(labels)) {
+      const valList = [];
+      for (const val of Object.keys(labels[key])) {
+        valList.push({ value: val, label: val });
+      }
+      const label = {
+        key: { value: key, label: key },
+        values: valList,
+        operators: SearchUtil.stringOperators,
+        fieldType: ValueType.singleSelect,
+        valueType: ValueType.multiSelect
+      };
+      this.orderConstraintslabelData.push(label);
+    }
+  }
+
+  // We also create naplesIdMap which can be used to show matched naples details in the future.
+  generateRuleAndIdMap() {
+    this.naples.forEach(element => {
+      if (element.meta.labels) {
+        for (const key of Object.keys(element.meta.labels)) {
+          const keyValText = key + '=' + element.meta.labels[key];
+          if (!(keyValText in this.naplesRuleMap)) {
+            this.naplesRuleMap[keyValText] = new Set<string>();
+          }
+          this.naplesRuleMap[keyValText].add(element.meta.name);
+          this.naplesIdMap[element.meta.name] = element;
+        }
+      }
+    });
+  }
+
+  getNaplesLabelsKeyValues() {
+    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
+    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+      response => {
+        this.handleReadSmartNICsResponse(response);
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get labels')
+    );
+    this.subscriptions.push(subscription);
   }
 
   initRolloutData() {
@@ -163,17 +250,20 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       return false;
     }
     if (this.newRollout.$formGroup.get(['spec', 'smartnic-must-match-constraint']).value) {
-      const repeaterSarchExpression: SearchExpression[] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater);
-      if  (repeaterSarchExpression.length === 0) {
-        return false;
-      } else {
-        for (let i = 0; i < repeaterSarchExpression.length; i++) {
-          if (Utility.isEmpty(repeaterSarchExpression[i].key ) || Utility.isEmpty(repeaterSarchExpression[i].values)) {
-            return false;
+      const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+      for ( let ix = 0; ix < orders.length; ix++) {
+        const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(orders.at(ix).value);
+        if  (repeaterSearchExpression.length === 0) {
+          return false;
+        } else {
+          for (let i = 0; i < repeaterSearchExpression.length; i++) {
+            if (Utility.isEmpty(repeaterSearchExpression[i].key ) || Utility.isEmpty(repeaterSearchExpression[i].values)) {
+              return false;
+            }
           }
         }
       }
-   }
+    }
     if (Utility.isEmpty(this.newRollout.$formGroup.get(['meta', 'name']).value)) {
       return false;
     }
@@ -187,6 +277,34 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     }
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newRollout.$formGroup);
     return hasFormGroupError === null;
+  }
+
+  // Example:
+  // orderValue = {
+  // requirements: [{
+  //   keyFormControl: "key",
+  //   operatorFormControl: "in",
+  //   valueFormControl: ["1"]}]
+  // }
+  convertFormArrayToSearchExpression(orderValue: any, addMetatag: boolean = false): SearchExpression[] {
+    const data = orderValue.requirements;
+    if (data == null) {
+      return null;
+    }
+
+    let retData = data.filter((item) => {
+      return !Utility.isEmpty(item.keyFormControl) && !Utility.isEmpty(item.valueFormControl) && item.valueFormControl.length !== 0;
+    });
+    // make sure the value field is an array
+    retData = retData.map((item) => {
+      const searchExpression: SearchExpression = {
+        key: ((addMetatag) ? 'meta.labels.' : '')  + item.keyFormControl,
+        operator: item.operatorFormControl,
+        values: Array.isArray(item.valueFormControl) ? item.valueFormControl : item.valueFormControl.trim().split(',')
+      };
+      return searchExpression;
+    });
+    return retData;
   }
 
   onRolloutNowChange(checked) {
@@ -303,11 +421,14 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    */
   private setSpecOrderConstrains(rollout: IRolloutRollout) {
     if (rollout.spec['smartnic-must-match-constraint']) {
-      const labelsSelectorCriteria = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater); // Some Naples will be updated.
       const orderConstraints = [];
-      const requirements = labelsSelectorCriteria;
-      const obj = { 'requirements' : requirements};
-      orderConstraints.push(obj);
+      const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+      for ( let ix = 0; ix < orders.length; ix++) {
+        const labelsSelectorCriteria = this.convertFormArrayToSearchExpression(orders.at(ix).value); // Some Naples will be updated.
+        const requirements = labelsSelectorCriteria;
+        const obj = { 'requirements' : requirements};
+        orderConstraints.push(obj);
+      }
       rollout.spec['order-constraints'] = orderConstraints;
     } else {
       rollout.spec['order-constraints'] = []; // All Naples will be updated.
@@ -449,5 +570,158 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     return 'value';
   }
 
+  // adds new HTML element with labelselectors
+  // automatically collapses all open orders
+  addOrder() {
+    const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+    const norder = new LabelsSelector();
+    orders.push(norder.$formGroup);
+    this.orders.push(new RolloutOrder());
+    this.makeOrderEditable(orders.length - 1, null);
+  }
 
+  // removes order HTML element and also from formarray
+  deleteOrder(index) {
+    const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+    orders.removeAt(index);
+    this.orders.splice(index, 1);
+  }
+
+  // toggle order state between saved and editable
+  // Make a saved order editable will make all other orders closed.
+  toggleOrderState(index) {
+    if (this.orders[index].editable) {
+      this.makeOrderSaved(index);
+    } else {
+      this.makeOrderEditable(index, null);
+    }
+  }
+
+  // Only one order can be edited at one time.
+  // If we create a new order or edit an existing one, previously open order is automatically saved.
+  makeOrderEditable(index, event) {
+    for (let i = 0; i < this.orders.length; i++) {
+      if (i !== index) {
+        this.makeOrderSaved(i);
+      } else {
+        this.orders[index].editable = true;
+      }
+    }
+    if (event) {
+      event.stopPropagation();
+    }
+  }
+
+  // "save" simply hides the label selectors
+  // save updates the order summary string and the matchedNIC count.
+  makeOrderSaved(index) {
+    this.orders[index].editable = false;
+    this.matchNICs(index);
+    this.setOrderSummary(index);
+  }
+
+  // saved orders show a summary of the label selectors contained inside.
+  setOrderSummary(index) {
+    const data = this.newRollout.$formGroup.get(['spec', 'order-constraints']).value[index].requirements;
+    const reqs = Utility.formatRepeaterData(data);
+    const stringForm = Utility.stringifyRepeaterData(reqs).join('    ');
+    this.orders[index].orderSummary = stringForm;
+  }
+
+  moveOrder(index, direction) {
+    const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+    const newIndex = index + direction;
+
+    if (newIndex < 0 || newIndex >= orders.controls.length) {
+      return;
+    }
+
+    const tempC = orders.controls[index];
+    orders.controls[index] = orders.controls[newIndex];
+    orders.controls[newIndex] = tempC;
+
+    const tempV = orders.value[index];
+    orders.value[index] = orders.value[newIndex];
+    orders.value[newIndex] = tempV;
+
+    const tempO = this.orders[index];
+    this.orders[index] = this.orders[newIndex];
+    this.orders[newIndex] = tempO;
+
+    this.cd.detectChanges();
+  }
+
+  repeaterValueChange(index) {
+    setTimeout(() => {
+      this.matchNICs(index);
+      this.setOrderSummary(index);
+    }, 0);
+  }
+
+  matchNICs(index) {
+    const repeaterValues = this.newRollout.$formGroup.get(['spec', 'order-constraints']).value[index].requirements;
+    const matchRules = [];
+    for (let ix = 0; ix < repeaterValues.length; ix++) {
+      matchRules.push([repeaterValues[ix].keyFormControl, repeaterValues[ix].operatorFormControl, repeaterValues[ix].valueFormControl]);
+    }
+    this.updateMatches(index, matchRules);
+  }
+
+  makeRuleMapKey(labelKey, labelValue) {
+    return labelKey + '=' + labelValue;
+  }
+
+  // Compares the labelselector rules with the naplesRuleMap to get all matched NICs
+  getRuleResults(matchRule) {
+    const ok: boolean = true;
+    let NICSet: string[] = [];
+    if (typeof matchRule[2] === 'object' && !!matchRule[2]) {
+      for (const i of matchRule[2]) {
+        const rule = this.makeRuleMapKey(matchRule[0], i);
+        if (rule in this.naplesRuleMap) {
+          NICSet = NICSet.concat(Array.from(this.naplesRuleMap[rule]));
+        }
+      }
+    } else {
+      const rule = this.makeRuleMapKey(matchRule[0], matchRule[2]);
+      if (rule in this.naplesRuleMap) {
+        NICSet = Array.from(this.naplesRuleMap[rule]);
+      }
+    }
+
+    if (NICSet.length > 0) {
+      return NICSet;
+    } else {
+      return null;
+    }
+  }
+
+  updateMatches(index, matchRules) {
+    let NICSet: string[] = null;
+    for (const matchRule of matchRules) {
+      const ret = this.getRuleResults(matchRule);
+      if (!!ret) {
+        if (NICSet === null) {
+          NICSet = Array.from(ret);
+        } else {
+          if (matchRule[1] === '=') {
+            NICSet = NICSet.filter(x => Array.from(ret).includes(x));
+          } else {
+            NICSet = NICSet.filter(x => !Array.from(ret).includes(x));
+          }
+        }
+      }
+    }
+
+    if (NICSet === null) { this.orders[index].matchedSmartNICs = []; } else { this.orders[index].matchedSmartNICs = NICSet; }
+  }
+
+  // If there are no labels added (for any of the NICs), the upgrade using labels toggle button is hidden.
+  enableUpgradeByLabel() {
+    if (Object.keys(this.naplesRuleMap).length > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

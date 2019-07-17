@@ -977,5 +977,128 @@ export class SearchUtil {
     return key;
   }
 
+  public static buildCategoriesPayload(obj: any): any {
+    return SearchUtil.filterOutInvalidCategoryOrKind(obj, true);
+  }
+
+  public static buildKindsPayload(obj: SearchGrammarItem): any {
+    return SearchUtil.filterOutInvalidCategoryOrKind(obj, false);
+  }
+
+  public static buildFieldsPayload(obj, isEvent = false): any {
+    return SearchUtil.buildSearchFieldsLabelsPayloadHelper(obj, true, isEvent);
+  }
+
+  public static buildLabelsPayload(obj): any {
+    return SearchUtil.buildSearchFieldsLabelsPayloadHelper(obj, false);
+  }
+
+    /**
+   * Build payload for text Search REST-API.
+   * @param searched
+   */
+  public static buildTextSearchPayload(searched: string) {
+    // encode special characters like MAC string 0242.c0a8.1c02
+    const texts = (typeof searched === 'string') ? [SearchUtil.searchEncodeText(searched)] : SearchUtil.searchEncodeText(searched);
+    return {
+      'max-results': SearchUtil.SEARCH_MAX_RESULT,
+      'query': {
+        'texts': [
+          {
+            'text': texts
+          }
+        ]
+      }
+    };
+  }
+
+    /**
+   * Generate text search criteria
+   * @param obj
+   * encode special characters like MAC string 0242.c0a8.1c02
+   */
+  public static generateSearchTexts(obj: SearchGrammarItem): any {
+    // obj.value is "node1,default"
+    if (typeof obj.value === 'string') {
+      const str = obj.value  as string;
+      const texts = str.split(',');
+      const newList = [];
+      texts.filter((str1) => {
+        const myObj = {};
+        myObj['text'] = [SearchUtil.searchEncodeText(str1)];
+        newList.push(myObj);
+      });
+      return newList;
+    }
+    // obj.value is "[node1,defaul pen]"
+    if (Array.isArray(obj.value)) {
+      const newList = [];
+      const strList = [];
+      obj.value.filter ( (str1) => {
+        strList.length = 0;
+        const texts = str1.split(',');
+        texts.filter((str2) => {
+          strList.push(SearchUtil.searchEncodeText(str2));
+        });
+        const myObj = {};
+        myObj['text'] = Utility.getLodash().cloneDeep(strList);
+        newList.push(myObj);
+      });
+      return newList;
+    }
+    return [];
+  }
+
+    /**
+   * This function builds request json for invoking Search API
+   * It should examine the current search context to decide the type of search. (by category, kind, label, fields,etc)
+   * @param searched
+   */
+  public static buildComplexSearchPayload(list: any[], searched: string): any {
+    let payload = {
+      'max-results': SearchUtil.SEARCH_MAX_RESULT,
+      'query': {
+      }
+    };
+    // We evaluate the has operations last so that we
+    // know if the object kind is an event or not.
+    const fieldRequirementIndexes = [];
+    for (let i = 0; i < list.length; i++) {
+      const obj: SearchGrammarItem = list[i];
+      switch (obj.type) {
+        case SearchsuggestionTypes.OP_IN:
+          payload.query['categories'] = this.buildCategoriesPayload(obj);
+          break;
+        case SearchsuggestionTypes.OP_IS:
+          payload.query['kinds'] = this.buildKindsPayload(obj);
+          break;
+        case SearchsuggestionTypes.OP_HAS:
+          fieldRequirementIndexes.push(i);
+
+          break;
+        case SearchsuggestionTypes.OP_TAG:
+          payload.query['labels'] = {
+            'requirements': this.buildLabelsPayload(obj)
+          };
+          break;
+        case SearchsuggestionTypes.OP_TXT:
+          const texts = this.generateSearchTexts(obj);
+          payload.query['texts'] = texts;
+          break;
+        default:
+          console.log('buildComplexSearchPayload() does not recognize ' + searched);
+          payload = SearchUtil.buildTextSearchPayload(searched);
+      }
+    }
+    fieldRequirementIndexes.forEach((index) => {
+      const obj = list[index];
+      const isEvent = payload.query['kinds'] != null && payload.query['kinds'].length === 1 && SearchUtil.isKindInSpecialEventList(payload.query['kinds'][0]);
+        // checking if (payload.query['kinds'][0] === 'Event' || payload.query['kinds'][0] === 'AuditEvent') ;
+      payload.query['fields'] = {
+        'requirements': this.buildFieldsPayload(obj, isEvent)
+      };
+    });
+    return payload;
+  }
 
 }
