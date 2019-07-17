@@ -318,7 +318,8 @@ std::string get_main_config_file()
 
     int feature_profile = ptree.get<int>("feature-profile", 
                                          device::FEATURE_PROFILE_CLASSIC_DEFAULT);
-    if (feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
+    if (feature_profile == device::FEATURE_PROFILE_NONE ||
+        feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
         feature = "default";
     } else if (feature_profile == device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
         feature = "eth-dev-scale";
