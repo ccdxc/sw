@@ -421,15 +421,25 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
         unsigned int i;
         u8 opcode, flags, nsge;
         u64 addr;
+        vmk_uint32 map_len;
 
         cb_arg = NULL;
 
         decode_txq_desc_cmd(desc->cmd, &opcode, &flags, &nsge, &addr);
 
-        for (i = 0; i < nsge; i++, elem++)
+        for (i = 0; i < nsge; i++) {
+                if (i == 0) {
+                        map_len = desc->len;
+                } else {
+                        map_len = elem->len;
+                        addr = elem->addr;
+                        elem++;
+                }
                 ionic_tx_unmap_frag(q,
-                                    elem->len,
-                                    (vmk_IOA) elem->addr);
+                                    map_len,
+                                    (vmk_IOA)addr);
+        }
+
         if (VMK_LIKELY(pkt)) {
                 if (ionic_q_has_space(q, IONIC_EN_WAKE_QUEUE_THRESHOLD)) {
                         vmk_CPUMemFenceReadWrite();
@@ -748,7 +758,7 @@ ionic_tx_calc_csum(struct queue *q,
                 flags |= IONIC_TXQ_DESC_FLAG_ENCAP;
 
         desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_HW,
-                        flags, ctx->nr_frags - 1, addr);
+                                        flags, ctx->nr_frags - 1, addr);
         desc->len = ctx->mapped_len;
 
         stats->csum++;
@@ -810,11 +820,11 @@ static int ionic_tx_pkt_frags(struct queue *q,
         struct txq_sg_desc *sg_desc = q->head->sg_desc;
         struct txq_sg_elem *elem = sg_desc->elems;
         dma_addr_t dma_addr;
-        vmk_uint32 i;
+        vmk_uint32 i, nr_frags = ctx->nr_frags;
 
         VMK_ASSERT(len_left >= 0);
 
-        for (i = 1; len_left; i++, elem++) {
+        for (i = 1; len_left && i < nr_frags; i++, elem++) {
                 sg_elem = vmk_PktSgElemGet(pkt, i);
                 if (VMK_UNLIKELY(!sg_elem)) {
                         ionic_en_err("vmk_PktSgElemGet() for index: %d failed", i);
@@ -831,10 +841,14 @@ static int ionic_tx_pkt_frags(struct queue *q,
                         stats->dma_map_err++;
                         goto map_err;
                 }
-                          
+
                 elem->len = sg_elem->length;
                 elem->addr = dma_addr;
                 len_left -= elem->len;
+
+                if (len_left < 0) {
+                        len_left = 0;
+                }
                 stats->frags++;
         }
 
@@ -1027,6 +1041,12 @@ ionic_tx_descs_needed(vmk_PktHandle *pkt,
                 /* we need one additional descriptor per tso segment */
                 *num_tx_descs += (ctx->frame_len / ctx->mss);
 
+                /* todo: need to linearize only if number of frags in
+                 * mss is greater than MAX_SG_ELEMS*/
+                if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS + 1) {
+                        *is_linearize_needed = VMK_TRUE;
+                }
+        } else {
                 if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS + 1) {
                         *is_linearize_needed = VMK_TRUE;
                 }

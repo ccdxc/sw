@@ -2699,6 +2699,7 @@ try_again:
                    "nrxqs_per_lif: %d, nintrs: %d, nlifs: %d", neqs_per_lif,
                    ntxqs_per_lif, nrxqs_per_lif, nintrs, nlifs);
 
+        priv_data->is_lifs_size_compl = VMK_TRUE;
         return status;
 
 try_fewer:
@@ -2725,7 +2726,6 @@ intrs_bit_vector_err:
                        ionic_driver.heap_id,
                        ionic->en_dev.pci_device,
                        priv_data->intr_cookie_array);
-        return status;
 
 intr_alloc_err:
         ionic_heap_free(ionic_driver.heap_id,
@@ -2746,4 +2746,6 @@ ionic_lifs_size_undo(struct ionic_en_priv_data *priv_data)
                        ionic_driver.heap_id,
                        priv_data->ionic.en_dev.pci_device,
                        priv_data->intr_cookie_array);
+
+        priv_data->is_lifs_size_compl = VMK_FALSE;
 }

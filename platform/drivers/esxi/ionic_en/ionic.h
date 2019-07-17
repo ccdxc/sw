@@ -154,6 +154,7 @@ struct ionic_en_priv_data {
         vmk_HeapID                    heap_id;
         struct ionic                  ionic;
         struct ionic_en_uplink_handle uplink_handle;
+        vmk_Name                      uplink_name;
         vmk_DMAEngine                 dma_engine_streaming;
         vmk_DMAEngine                 dma_engine_coherent;
         vmk_LockDomainID              lock_domain;

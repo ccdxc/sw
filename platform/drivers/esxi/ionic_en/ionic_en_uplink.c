@@ -1214,6 +1214,9 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
         vmk_Memcpy(&uplink_handle->uplink_name,
                    &uplink_name,
                    sizeof(vmk_Name));
+        vmk_Memcpy(&priv_data->uplink_name,
+                   &uplink_name,
+                   sizeof(vmk_Name));
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
@@ -1362,23 +1365,18 @@ VMK_ReturnStatus
 ionic_en_uplink_disassociate(vmk_AddrCookie driver_data)          // IN
 {
         VMK_ReturnStatus status;
-        vmk_Name uplink_name;
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
-        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
         ionic_en_dbg("ionic_en_uplink_disassociate() called");
 
-        uplink_name = vmk_UplinkNameGet(uplink_handle->uplink_dev);
-
-        status = ionic_device_list_remove(uplink_name,
+        status = ionic_device_list_remove(priv_data->uplink_name,
                                           &ionic_driver.uplink_dev_list,
                                           NULL);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_device_list_remove() failed, status: %s",
                           vmk_StatusToString(status));
         }
-
 
         vmk_WorldDestroy(priv_data->dev_recover_world);
         vmk_WorldWaitForDeath(priv_data->dev_recover_world);
@@ -1553,7 +1551,7 @@ ionic_en_uplink_start_io(vmk_AddrCookie driver_data)              // IN
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
 
-        status = ionic_open(lif);
+         status = ionic_open(lif);
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_open() failed, status: %s",
