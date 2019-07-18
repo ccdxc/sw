@@ -96,11 +96,12 @@ tep_impl::nuke_resources(api_base *api_obj) {
 
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t                  ret;
-    tep_entry                  *tep;
-    pds_tep_spec_t             *tep_spec;
-    tep_actiondata_t           tep_data = { 0 };
-    nexthop_actiondata_t       nh_data = { 0 };
+    sdk_ret_t               ret;
+    tep_entry               *tep;
+    device_entry            *device;
+    pds_tep_spec_t          *tep_spec;
+    tep_actiondata_t        tep_data = { 0 };
+    nexthop_actiondata_t    nh_data = { 0 };
 
     // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
@@ -118,7 +119,11 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             tep_data.tep_ipv4_vxlan_action.dipo =
                 tep_spec->key.ip_addr.addr.v4_addr;
         } else {
+            device = device_db()->find();
             tep_data.action_id = TEP_IPV6_VXLAN_TEP_ID;
+            sdk::lib::memrev(tep_data.tep_ipv6_vxlan_action.sipo,
+                             device->ip_addr().addr.v6_addr.addr8,
+                             IP6_ADDR8_LEN);
             sdk::lib::memrev(tep_data.tep_ipv6_vxlan_action.dipo,
                              tep_spec->key.ip_addr.addr.v6_addr.addr8,
                              IP6_ADDR8_LEN);
