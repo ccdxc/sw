@@ -46,9 +46,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
   cols: TableCol[] = [
     {field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 20},
-    {field: 'meta.mod-time', header: 'Modification Time', class: 'hosts-column-date', sortable: true, width: 20},
-    {field: 'meta.creation-time', header: 'Creation Time', class: 'hosts-column-date', sortable: true, width: 30},
-    {field: 'spec.smart-nics', header: 'Smart Nics', class: 'hosts-column-smart-nics', sortable: false, width: 30},
+    {field: 'meta.mod-time', header: 'Modification Time', class: 'hosts-column-date', sortable: true, width: '180px'},
+    {field: 'meta.creation-time', header: 'Creation Time', class: 'hosts-column-date', sortable: true, width: '180px'},
+    {field: 'spec.smart-nics', header: 'Smart Nics', class: 'hosts-column-smart-nics', sortable: false},
   ];
 
   exportFilename: string = 'Venice-hosts';

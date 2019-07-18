@@ -7,9 +7,12 @@ import * as moment from 'moment';
 })
 export class PrettyDatePipe extends DatePipe implements PipeTransform {
   transform(value: string, args?: any): string {
+    if (value == null || (typeof(value) === 'string' && value.trim().length === 0)) {
+      return '';
+    }
 
     let precision: number = 9;
-    if ( !!args && typeof(args === 'string') && args.includes(',')) {
+    if ( !!args && typeof(args) === 'string' && args.includes(',')) {
       const splittedString = args.split(',');
       precision = parseInt(splittedString[1], 10);
       precision = precision ? precision : 9;
@@ -17,10 +20,6 @@ export class PrettyDatePipe extends DatePipe implements PipeTransform {
     }
 
     if (args === 'ns') {
-      if (value == null) {
-        return '';
-      }
-
       // Assuming value is in RFC spec
       const ns = parseFloat(value.substring(value.indexOf('.'), value.length - 1)).toFixed(precision).toString();
       return super.transform(value, 'yyyy-MM-dd HH:mm:ss', 'UTC') + ns + ' UTC';

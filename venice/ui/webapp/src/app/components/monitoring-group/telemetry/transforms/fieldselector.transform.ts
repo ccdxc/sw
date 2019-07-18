@@ -84,8 +84,12 @@ export class FieldSelectorTransform extends MetricTransform<FieldSelectorTransfo
   }
 
   updateRepeaterOptions() {
-    const fields = MetricsMetadata[this.measurement].fields;
     const res: RepeaterData[] = [];
+    if (this.measurement == null) {
+      this.fieldData = res;
+      return;
+    }
+    const fields = MetricsMetadata[this.measurement].fields;
     fields.forEach( (field) => {
       const type = field.jsType;
       let op;

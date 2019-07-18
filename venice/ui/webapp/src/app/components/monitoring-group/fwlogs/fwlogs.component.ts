@@ -21,7 +21,8 @@ import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { PolicyRuleTuple } from './';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { TimeRange } from '@app/components/shared/timerange/utility';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-fwlogs',
@@ -103,6 +104,8 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
   searchSubscription: Subscription;
 
+  fwlogsQueryObserver: Subject<ITelemetry_queryFwlogsQueryList> = new Subject();
+
   constructor(
     protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -158,6 +161,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   }
 
   postNgInit() {
+    this.fwlogQueryListener();
     this.getNaples();
     this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
     this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
@@ -310,6 +314,38 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     this.subscriptions.push(subscription);
   }
 
+  fwlogQueryListener() {
+    // In case multiple components invoke a request for logs
+    // We buffer them and take the last request in a 500ms window
+    this.fwlogsQueryObserver.pipe(debounceTime(500)).subscribe(
+      (queryList) => {
+        this.searchSubscription = this.telemetryService.PostFwlogs(queryList).subscribe(
+          (resp) => {
+            this.controllerService.removeToaster('Fwlog Search Failed');
+            this.lastUpdateTime = new Date().toISOString();
+            const body = resp.body as ITelemetry_queryFwlogsQueryResponse;
+            let logs = null;
+            if (body.results && body.results[0]) {
+              logs = body.results[0].logs;
+            }
+            if (logs != null) {
+              this.dataObjects = logs.map((l) => {
+                return new Telemetry_queryFwlog(l);
+              });
+            } else {
+              this.dataObjects = [];
+            }
+          },
+          (error) => {
+            this.dataObjects = [];
+            this.controllerService.invokeRESTErrorToaster('Fwlog Search Failed', error);
+          }
+        );
+        this.subscriptions.push(this.searchSubscription);
+      }
+    );
+  }
+
   getFwlogs(order = this.tableWrapper.table.sortOrder) {
     if (this.query.$formGroup.invalid) {
       this.controllerService.invokeErrorToaster('Fwlog Search', 'Invalid query');
@@ -393,27 +429,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       ],
     };
     // Get request
-
-    this.searchSubscription = this.telemetryService.PostFwlogs(queryList).subscribe(
-      (resp) => {
-        this.controllerService.removeToaster('Fwlog Search Failed');
-        this.lastUpdateTime = new Date().toISOString();
-        const body = resp.body as ITelemetry_queryFwlogsQueryResponse;
-        const logs = body.results[0].logs;
-        if (logs != null) {
-          this.dataObjects = logs.map((l) => {
-            return new Telemetry_queryFwlog(l);
-          });
-        } else {
-          this.dataObjects = [];
-        }
-      },
-      (error) => {
-        this.dataObjects = [];
-        this.controllerService.invokeRESTErrorToaster('Fwlog Search Failed', error);
-      }
-    );
-    this.subscriptions.push(this.searchSubscription);
+    this.fwlogsQueryObserver.next(queryList);
   }
 
   keyUpInput(event) {

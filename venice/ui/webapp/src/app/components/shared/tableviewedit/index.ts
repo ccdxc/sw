@@ -4,7 +4,7 @@ export interface TableCol {
   header: string;
   sortable?: boolean;
   class?: string;
-  width?: number;
+  width?: number | string;
   exportable?: boolean;
   disableSearch?: boolean;
   kind?: string;

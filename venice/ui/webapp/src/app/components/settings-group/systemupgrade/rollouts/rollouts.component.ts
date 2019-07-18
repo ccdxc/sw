@@ -50,9 +50,9 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
 
   cols: TableCol[] = [
     {field: 'meta.name', header: 'Name', class: '', sortable: true, width: 10},
-    {field: 'meta.mod-time', header: 'Updated Time', class: '', sortable: true, width: 10},
-    {field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: 10},
-    {field: 'spec.version', header: 'Version', class: '', sortable: true, width: 5},
+    {field: 'meta.mod-time', header: 'Updated Time', class: '', sortable: true, width: '180px'},
+    {field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: '180px'},
+    {field: 'spec.version', header: 'Version', class: '', sortable: true},
     {
       field: 'spec.scheduled-start-time',
       header: 'Scheduled Start Time',
