@@ -63,6 +63,25 @@ $vertical-gutter: 5px;
   margin-top: 10px;
 }
 
+.sgpolicy-summary-panel-content-value-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sgpolicy-summary-panel-content-pendingNaples {
+  margin-top: 10px;
+}
+
+.sgpolicy-summary-panel-content-pendingNaples-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.sgpolicy-summary-panel-content-nic-div-link {
+  margin-top: 5px;
+  margin-right: 60px;
+}
+
 .sgpolicy-summary-panel-content-label2 {
   display: inline-block;
   width: 100px;

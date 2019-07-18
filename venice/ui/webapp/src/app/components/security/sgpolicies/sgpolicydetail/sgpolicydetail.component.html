@@ -31,11 +31,14 @@
           <div class="sgpolicy-summary-panel-content-value sgpolicy-summary-panel-content-value-warning"
                *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] != selectedPolicy?.meta['generation-id']">
             Policy not propagated</div>
-          <div class="sgpolicy-summary-panel-content-value  sgpolicy-summary-panel-content-value-warning"
-               *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending>0">
+          <div class="sgpolicy-summary-panel-content-value  sgpolicy-summary-panel-content-value-warning sgpolicy-summary-panel-content-value-link"
+               *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending>0"
+               (click)="viewPendingNaplesList()"
+               [matTooltip]="viewPendingNaples ? 'Click to hide Pending Naples List' : 'Click to view Pending Naples List'">
             {{selectedPolicy.status['propagation-status'].pending}} Out Of
             {{selectedPolicy.status['propagation-status'].pending + selectedPolicy.status['propagation-status'].updated }}
-            Pending</div>
+            Pending
+          </div>
           <div class="sgpolicy-summary-panel-content-value"
                *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending==0">
             Complete</div>
@@ -44,6 +47,17 @@
           <div class="sgpolicy-summary-panel-content-label2">Last Modified: </div>
           <div class="sgpolicy-summary-panel-content-value">
             {{selectedPolicy?.meta["mod-time"] | PrettyDate }}</div>
+        </div>
+      </div>
+      <!-- Displays pending naples on which the policy couldn't be propagated -->
+      <div [@slideInOut] class="sgpolicy-summary-panel-content-pendingNaples"
+           *ngIf="selectedPolicy?.status['propagation-status']['pending-smartnics'].length>0 && viewPendingNaples">
+        <div class="sgpolicy-summary-panel-content-pendingNaples-grid">
+          <div
+               *ngFor="let nicMac of selectedPolicy?.status['propagation-status']['pending-smartnics']">
+            <a routerLink="/cluster/naples/{{nicMac}}"
+               class="sgpolicy-summary-panel-content-nic-div-link">{{getNaplesName(nicMac)}}</a>
+          </div>
         </div>
       </div>
     </div>

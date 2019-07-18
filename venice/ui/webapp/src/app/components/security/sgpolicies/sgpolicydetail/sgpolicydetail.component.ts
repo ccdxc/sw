@@ -23,6 +23,9 @@ import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_funct
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { SelectItem } from 'primeng/api';
 import { MetricsUtility } from '@app/common/MetricsUtility';
+import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { Animations } from '@app/animations';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -78,11 +81,13 @@ interface RuleHitEntry {
     UdpHits: number;
 }
 
+
 @Component({
   selector: 'app-sgpolicydetail',
   templateUrl: './sgpolicydetail.component.html',
   styleUrls: ['./sgpolicydetail.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  animations: [Animations]
 })
 export class SgpolicydetailComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('sgpolicyTable') sgpolicyTurboTable: Table;
@@ -90,6 +95,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   viewInitComplete: boolean = false;
   searchPolicyInvoked: boolean = false;  // avoid loop caused by invokeSearchPolicy
   subscriptions = [];
+  macToNameMap: { [key: string]: string } = {};
+  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  viewPendingNaples: boolean = false;
 
   cols: TableCol[] = [
     { field: 'ruleNum', header: '', class: 'sgpolicy-rule-number', width: 4 },
@@ -186,6 +195,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     protected securityService: SecurityService,
     protected searchService: SearchService,
     private _route: ActivatedRoute,
+    private clusterService: ClusterService,
     protected uiconfigsService: UIConfigsService,
     protected metricsqueryService: MetricsqueryService,
   ) {
@@ -195,7 +205,6 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
   ngOnInit() {
     this.initializeData();
-
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'SgpolicydetailComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -224,6 +233,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.ruleCount = 0;
     this.showDeletionScreen = false;
     this.showMissingScreen = false;
+    this.viewPendingNaples = false;
     this.searchErrorMessage = '';
     this.selectedRuleIndex = null;
     this.currentSearch = null;
@@ -232,6 +242,34 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.destIpFormControl.setValue('');
     this.portFormControl.setValue('');
     this.enableFormControls();
+    this.getNaples();
+  }
+
+  getNaples() {
+    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
+    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+      response => {
+        this.naplesEventUtility.processEvents(response);
+        // mac-address to Name map
+        this.macToNameMap = {};
+        for (const smartnic of this.naples) {
+          if (smartnic.spec.id != null && smartnic.spec.id !== '') {
+            this.macToNameMap[smartnic.meta.name] = smartnic.spec.id;
+          }
+        }
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get NAPLES info')
+    );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+  }
+
+  getNaplesName(mac: string): string {
+    return this.macToNameMap[mac];
+  }
+
+  viewPendingNaplesList() {
+    this.viewPendingNaples = !this.viewPendingNaples;
   }
 
   disableFormControls() {

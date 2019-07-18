@@ -36,6 +36,8 @@ import { AuthService } from '@app/services/auth.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { TelemetryqueryService } from '@app/services/generated/telemetryquery.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+
 
 
 
@@ -263,6 +265,7 @@ describe('SgpolicydetailComponent', () => {
         UIConfigsService,
         AuthService,
         MessageService,
+        ClusterService,
         MetricsqueryService,
         {
           provide: ActivatedRoute,
