@@ -352,7 +352,6 @@ pciemgrd_start()
     pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
     pme->poll_port = 1;
     pme->poll_dev = 0;
-    pme->cpumask = 0x1;
     pme->fifopri = 50;
 
     params->strict_crs = 1;
