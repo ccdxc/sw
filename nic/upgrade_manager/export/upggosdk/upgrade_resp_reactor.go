@@ -61,12 +61,14 @@ func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespCreate called %d", obj.GetUpgRespVal())
 	ctx.deleteUpgReqSpec()
 	ctx.invokeAgentHandler(obj)
+	removeUpgMetaFiles()
 }
 
 func (ctx *upgrespctx) OnUpgRespUpdate(old, obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespUpdate called %d", obj.GetUpgRespVal())
 	ctx.deleteUpgReqSpec()
 	ctx.invokeAgentHandler(obj)
+	removeUpgMetaFiles()
 }
 
 func (ctx *upgrespctx) OnUpgRespDelete(obj *upgrade.UpgResp) {

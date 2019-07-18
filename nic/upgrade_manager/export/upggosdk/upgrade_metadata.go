@@ -114,7 +114,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 	if isPreUpg {
 		_, err := os.Stat("/nic/tools/fwupdate")
 		if err == nil {
-			file = "/tmp/running_meta.json"
+			file = "/data/running_meta.json"
 		} else {
 			file = "/sw/nic/upgrade_manager/meta/upgrade_metadata.json"
 		}
@@ -165,7 +165,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 	} else {
 		_, err := os.Stat("/nic/tools/fwupdate")
 		if err == nil {
-			file = "/tmp/upg_meta.json"
+			file = "/data/upg_meta.json"
 		} else {
 			file = "/sw/nic/upgrade_manager/meta/MANIFEST.json"
 		}
@@ -234,4 +234,15 @@ func isUpgradeAllowed(pkgName string) error {
 		}
 	}
 	return nil
+}
+
+func removeUpgMetaFiles() {
+	if _, err := os.Stat("/nic/tools/fwupdate"); err == nil {
+		if _, err := os.Stat("/data/upg_meta.json"); err == nil {
+			os.Remove("/data/upg_meta.json")
+		}
+		if _, err = os.Stat("/data/running_meta.json"); err == nil {
+			os.Remove("/data/running_meta.json")
+		}
+	}
 }

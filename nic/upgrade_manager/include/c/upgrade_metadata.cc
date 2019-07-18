@@ -127,20 +127,21 @@ bool GetUpgCtxTablesFromMeta(string metafile,
 
 bool GetUpgCtxFromMeta(UpgCtx& ctx) {
     bool ret = true;
+    string premetafile = "/data/running_meta.json";
+    string postmetafile = "/data/upg_meta.json";
 
     if (exists("/nic/tools/fwupdate")) {
-        string result = exec("/nic/tools/fwupdate -L");
-        string premetafile = "/tmp/running_meta.json";
-        mkfile(result, premetafile.c_str());
+        if (!exists(premetafile.c_str())) {
+            string result = exec("/nic/tools/fwupdate -L");
+            mkfile(result, premetafile.c_str());
+	}
         ret = GetUpgCtxTablesFromMeta(premetafile, ctx.preUpgMeta, true);
-        string postmetacmd = "/bin/tar xfO /update/" + ctx.firmwarePkgName + " MANIFEST";
-        result = exec(postmetacmd.c_str());
-        string postmetafile = "/tmp/upg_meta.json";
-        mkfile(result, postmetafile.c_str());
+        if (!exists(postmetafile.c_str())) {
+            string postmetacmd = "/bin/tar xfO /update/" + ctx.firmwarePkgName + " MANIFEST";
+            string result = exec(postmetacmd.c_str());
+            mkfile(result, postmetafile.c_str());
+        }
         ret = GetUpgCtxTablesFromMeta(postmetafile, ctx.postUpgMeta, false);
-
-        //remove(premetafile.c_str());
-        //remove(postmetafile.c_str());
     } else {
         string premetafile = "/sw/nic/upgrade_manager/meta/upgrade_metadata.json";
         ret = GetUpgCtxTablesFromMeta(premetafile, ctx.preUpgMeta, true);

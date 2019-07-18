@@ -29,19 +29,37 @@ func execCmd(req *nmd.NaplesCmdExecute) (string, error) {
 }
 
 func createMetaFile(filename string, content string) error {
-	f, err := os.Create(filename)
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		f, err := os.Create(filename)
+		if err != nil {
+			return err
+		}
+
+		defer f.Close()
+
+		if _, err = f.WriteString(content); err != nil {
+			return err
+		}
+
+		f.Sync()
+	}
+	return nil
+}
+
+func createMetaFiles(pkgName string) error {
+	content, err := getRunningMeta()
 	if err != nil {
 		return err
 	}
-
-	defer f.Close()
-
-	if _, err = f.WriteString(content); err != nil {
+	err = createMetaFile("/data/running_meta.json", content)
+	if err != nil {
 		return err
 	}
-
-	f.Sync()
-	return nil
+	content, err = getUpgImageMeta(pkgName)
+	if err != nil {
+		return err
+	}
+	return createMetaFile("/data/upg_meta.json", content)
 }
 
 func getRunningMeta() (string, error) {
@@ -58,22 +76,6 @@ func getUpgImageMeta(pkgName string) (string, error) {
 		Opts:       strings.Join([]string{"xfO ", "/update/" + pkgName, " MANIFEST"}, ""),
 	}
 	return execCmd(v)
-}
-
-func createMetaFiles(pkgName string) error {
-	content, err := getRunningMeta()
-	if err != nil {
-		return err
-	}
-	err = createMetaFile("/tmp/running_meta.json", content)
-	if err != nil {
-		return err
-	}
-	content, err = getUpgImageMeta(pkgName)
-	if err != nil {
-		return err
-	}
-	return createMetaFile("/tmp/upg_meta.json", content)
 }
 
 func pkgVerify(pkgName string) (string, error) {
