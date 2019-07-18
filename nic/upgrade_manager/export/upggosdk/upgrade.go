@@ -223,6 +223,7 @@ func (u *upgSdk) startUpgrade(upgType upgrade.UpgType, firmwarePkgName string) e
 		}
 		err = isUpgradeAllowed(firmwarePkgName)
 		if err != nil {
+			removeUpgMetaFiles()
 			if err.Error() == "Upgrade image is same as running image" {
 				go upgRespCtx.agentHdlrs.UpgSuccessful()
 				return nil
@@ -262,6 +263,7 @@ func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType, firmwarePkgName stri
 		}
 		err = isUpgradeAllowed(firmwarePkgName)
 		if err != nil {
+			removeUpgMetaFiles()
 			if err.Error() == "Upgrade image is same as running image" {
 				go upgRespCtx.agentHdlrs.UpgPossible(&upgCtx)
 				return nil
