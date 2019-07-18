@@ -1,5 +1,6 @@
 <app-pagebody [icon]="bodyIcon" header="Rollout Images" class="systemupgrade">
   <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel"
+                       *roleGuard="'objstoreobject_create'"
                        [expanded]="isThereBackgroudFileUpload()">
     <mat-expansion-panel-header class="imageupload-expansionpanel-header">
       <mat-panel-title class="imageupload-summary-panel-header">
@@ -84,6 +85,7 @@
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
        *ngIf="showDeleteButton(rowData)">
     <mat-icon matTooltip="Delete image" class="global-table-action-icon"
+              *roleGuard="'objstoreobject_delete'"
               (click)="onDeleteRecord($event, rowData)">
       delete</mat-icon>
   </div>
