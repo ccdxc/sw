@@ -676,6 +676,7 @@ func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPol
 func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
 	if c.format == monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String() {
 		if err := c.syslogFd.Info(&syslog.Message{
+			Msg:   data["action"],
 			MsgID: data["rule-id"], // set rule-id
 			StructuredData: syslog.StrData{
 				fmt.Sprintf("firewall-log@%d", globals.PensandoPEN): data,
