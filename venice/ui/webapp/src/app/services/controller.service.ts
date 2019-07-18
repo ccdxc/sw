@@ -130,12 +130,14 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('memory', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-memory.svg'));
     this.matIconRegistry.addSvgIcon('cpu', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-cpu.svg'));
     this.matIconRegistry.addSvgIcon('storage', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-storage.svg'));
+    this.matIconRegistry.addSvgIcon('host', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/ico-host.svg'));
 
     // Naple icons
     this.matIconRegistry.addSvgIcon('naples', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/naples/ico-naples.svg'));
 
 
     this.matIconRegistry.addSvgIcon('un-pin', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/dashboard/ico-unpinned.svg'));
+    this.matIconRegistry.addSvgIcon('auth-pol', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/admin/ico-auth-pol.svg'));
 
   }
 

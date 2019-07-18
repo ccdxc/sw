@@ -19,12 +19,12 @@ import { TableCol } from '@app/components/shared/tableviewedit';
 })
 export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterHost> implements OnInit {
 
-  bodyicon: any = {
+  bodyicon: Icon = {
     margin: {
       top: '9px',
       left: '8px'
     },
-    matIcon: 'developer_board'
+    svgIcon: 'host'
   };
 
   headerIcon: Icon = {

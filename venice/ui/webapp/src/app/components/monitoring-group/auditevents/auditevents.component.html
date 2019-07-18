@@ -33,7 +33,8 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords" width="250px"
+  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords"
+                   [icon]="headerIcon" width="250px"
                    [tableMenuItems]="tableMenuItems"
                    [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
                    (refreshIconClick)="getAuditevents()">

@@ -153,10 +153,9 @@ a[aria-expanded="true"]::before {
   background: url("/assets/images/icons/cluster/ico-cluster.svg") center center no-repeat;
 }
 
-.app-l-side-nav-cluster-hosts {
-  background-color: white;
-  -webkit-mask-image: url("/assets/images/icons/cluster/ico-hosts.svg");
-  mask-image: url("/assets/images/icons/cluster/ico-hosts.svg");
+.app-l-side-nav-cluster-host {
+  background: url("/assets/images/icons/cluster/ico-host-w.svg") center center no-repeat;
+  background-size: contain;
 }
 
 .app-l-side-nav-cluster-nodes {
@@ -237,8 +236,20 @@ a[aria-expanded="true"]::before {
 
 .app-l-side-nav-monitoring-auditevents {
   background: url("/assets/images/icons/monitoring/ic_audit_w.svg") center center no-repeat;
+  background-size: contain;
 }
 
 .app-l-side-nav-monitoring-techsupport {
   background: url("/assets/images/icons/monitoring/ic_tech_support_w.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.app-l-side-nav-admin {
+  background: url("/assets/images/icons/admin/ico-admin-w.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.app-l-side-nav-admin-auth-pol {
+  background: url("/assets/images/icons/admin/ico-auth-pol-w.svg") center center no-repeat;
+  background-size: contain;
 }

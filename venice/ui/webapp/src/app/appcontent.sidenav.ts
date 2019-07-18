@@ -51,7 +51,7 @@ export const sideNavMenu: SideNavItem[] = [
       {
         label: 'Hosts',
         icon: {
-          cssClass: 'app-l-side-nav-cluster-hosts'
+          cssClass: 'app-l-side-nav-cluster-host'
         },
         roleGuard: UIRolePermissions.clusterhost_read,
         link: ['/cluster/', 'hosts']
@@ -173,8 +173,7 @@ export const sideNavMenu: SideNavItem[] = [
   {
     label: 'Admin',
     icon: {
-      cssClass: 'material-icons',
-      matIconName: 'settings',
+      cssClass: 'app-l-side-nav-admin',
     },
     // TODO: to be included later, currently every user should have access to this object
     //           to be able to modify or see their own implicit permissions
@@ -191,8 +190,7 @@ export const sideNavMenu: SideNavItem[] = [
       {
         label: 'Auth Policy',
         icon: {
-          cssClass: 'material-icons',
-          matIconName: 'settings',
+          cssClass: 'app-l-side-nav-admin-auth-pol',
         },
         roleGuard: UIRolePermissions.authauthenticationpolicy_read,
         link: ['/admin', 'authpolicy']
@@ -201,7 +199,7 @@ export const sideNavMenu: SideNavItem[] = [
         label: 'User Management',
         icon: {
           cssClass: 'material-icons',
-          matIconName: 'person',
+          matIconName: 'people',
         },
         // TODO: to be included later, currently every user should have access to this object
         //           to be able to modify or see their own implicit permissions

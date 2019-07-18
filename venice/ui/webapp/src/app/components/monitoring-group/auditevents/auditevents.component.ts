@@ -19,6 +19,7 @@ import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanc
 import {RepeaterData} from 'web-app-framework';
 import { RowClickEvent, TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
+import {Icon} from '@app/models/frontend/shared/icon.interface';
 
 @Component({
   selector: 'app-auditevents',
@@ -65,6 +66,14 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
       left: '8px',
     },
     url: '/assets/images/icons/monitoring/ic_audit-black.svg',
+  };
+
+  headerIcon: Icon = {
+    margin: {
+      top: '0px',
+      left: '0px',
+    },
+    matIcon: 'grid_on'
   };
   // Backend currently only supports time being sorted
   cols: TableCol[] = [

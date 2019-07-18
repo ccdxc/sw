@@ -12,6 +12,7 @@ import { Observable } from 'rxjs';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import {Icon} from '@app/models/frontend/shared/icon.interface';
 
 
 /**
@@ -33,6 +34,15 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   encapsulation: ViewEncapsulation.None
 })
 export class AuthpolicyComponent extends BaseComponent implements OnInit {
+
+  bodyicon: Icon = {
+    margin: {
+      top: '9px',
+      left: '8px'
+    },
+    svgIcon: 'auth-pol'
+  };
+
   // Allows accessing enum value in html
   authTypes = AuthAuthenticators_authenticator_order;
 

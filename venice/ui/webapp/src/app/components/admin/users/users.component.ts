@@ -113,7 +113,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       top: '9px',
       left: '8px'
     },
-    url: '/assets/images/icons/auth/ico-authorizations.svg'
+    matIcon: 'people'
   };
 
 
