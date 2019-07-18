@@ -52,7 +52,7 @@
 #include "table.h"
 #include "list.h"
 
-#define IONIC_MIN_RDMA_VERSION	0
+#define IONIC_MIN_RDMA_VERSION	1
 #define IONIC_MAX_RDMA_VERSION	1
 
 #define IONIC_META_LAST ((void *)1ul)

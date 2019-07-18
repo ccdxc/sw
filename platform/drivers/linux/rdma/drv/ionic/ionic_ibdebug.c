@@ -27,8 +27,10 @@ static void ionic_umem_show(struct seq_file *s, const char *w,
 	seq_printf(s, "%sumem.offset():\t%#x\n", w, ib_umem_offset(umem));
 	seq_printf(s, "%sumem.start():\t%#lx\n", w, ib_umem_start(umem));
 	seq_printf(s, "%sumem.end():\t%#lx\n", w, ib_umem_end(umem));
-	seq_printf(s, "%sumem.num_pages():\t%lu\n", w, ib_umem_num_pages(umem));
-	seq_printf(s, "%sumem.page_count():\t%d\n", w, ib_umem_page_count(umem));
+	seq_printf(s, "%sumem.num_pages():\t%lu\n",
+		   w, ib_umem_num_pages(umem));
+	seq_printf(s, "%sumem.page_count():\t%d\n",
+		   w, ib_umem_page_count(umem));
 }
 
 static void ionic_umem_dump(struct seq_file *s, struct ib_umem *umem)
@@ -666,7 +668,8 @@ static int ionic_aq_wqe_show(struct seq_file *s, void *v)
 	struct ionic_aq *aq = s->private;
 	struct ionic_v1_admin_wqe *wqe = &aq->debug_wr->wqe;
 
-	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1, wqe, sizeof(*wqe), true);
+	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1, wqe, sizeof(*wqe),
+		     true);
 
 	return 0;
 }
@@ -688,7 +691,8 @@ static int ionic_aq_cqe_show(struct seq_file *s, void *v)
 	struct ionic_aq *aq = s->private;
 	struct ionic_v1_cqe *cqe = &aq->debug_wr->cqe;
 
-	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1, cqe, sizeof(*cqe), true);
+	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1, cqe, sizeof(*cqe),
+		     true);
 
 	return 0;
 }
@@ -970,7 +974,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		if (qp->sq_is_cmb) {
 			seq_printf(s, "sq_cmb_order:\t%d\n", qp->sq_cmb_order);
 			seq_printf(s, "sq_cmb_pgid:\t%d\n", qp->sq_cmb_pgid);
-			seq_printf(s, "sq_cmb_addr:\t%#llx\n", (u64)qp->sq_cmb_addr);
+			seq_printf(s, "sq_cmb_addr:\t%#llx\n",
+				   (u64)qp->sq_cmb_addr);
 		}
 
 		seq_printf(s, "sq_flush:\t%d\n", qp->sq_flush);
@@ -990,7 +995,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		if (qp->rq_is_cmb) {
 			seq_printf(s, "rq_cmb_order:\t%d\n", qp->rq_cmb_order);
 			seq_printf(s, "rq_cmb_pgid:\t%d\n", qp->rq_cmb_pgid);
-			seq_printf(s, "rq_cmb_addr:\t%#llx\n", (u64)qp->rq_cmb_addr);
+			seq_printf(s, "rq_cmb_addr:\t%#llx\n",
+				   (u64)qp->rq_cmb_addr);
 		}
 
 		seq_printf(s, "rq_flush:\t%d\n", qp->rq_flush);

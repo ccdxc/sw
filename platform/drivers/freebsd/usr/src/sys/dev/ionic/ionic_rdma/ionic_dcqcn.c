@@ -188,7 +188,8 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 		wr.wqe.mod_dcqcn.rp_clamp_flags |= IONIC_RPF_CLAMP_TGT_RATE;
 
 	if (prof->vals.v[RP_CLAMP_TGT_RATE_ATI])
-		wr.wqe.mod_dcqcn.rp_clamp_flags |= IONIC_RPF_CLAMP_TGT_RATE_ATI;
+		wr.wqe.mod_dcqcn.rp_clamp_flags |=
+			IONIC_RPF_CLAMP_TGT_RATE_ATI;
 
 	wr.wqe.mod_dcqcn.rp_threshold =
 		prof->vals.v[RP_THRESHOLD];

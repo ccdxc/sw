@@ -203,7 +203,8 @@ static void ionic_ioread32(struct sysctl_ctx_list *ctx,
 			"IU", descr);
 }
 
-typedef int (*ionic_ctrl_handler)(void *context, const char *buf, size_t count);
+typedef int (*ionic_ctrl_handler)(void *context,
+				  const char *buf, size_t count);
 
 static int ionic_sysctl_ctrl(SYSCTL_HANDLER_ARGS)
 {
@@ -387,12 +388,15 @@ void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 
 	ionic_int(ctx, parent, &dev->lif_id, "lif_id", "LIF ID");
 	ionic_int(ctx, parent, &dev->dbid, "dbid", "Doorbell ID");
-	ionic_u16(ctx, parent, &dev->rdma_version, "rdma_version", "RDMA FW ABI");
+	ionic_u16(ctx, parent, &dev->rdma_version, "rdma_version",
+		  "RDMA FW ABI");
 	ionic_u8(ctx, parent, &dev->qp_opcodes, "qp_opcodes", "QP Opcodes");
-	ionic_u8(ctx, parent, &dev->admin_opcodes, "admin_opcodes", "Admin Opcodes");
+	ionic_u8(ctx, parent, &dev->admin_opcodes, "admin_opcodes",
+		 "Admin Opcodes");
 
 	ionic_u32(ctx, parent, &dev->aq_base, "aq_base", "Admin QID Base");
-	ionic_u32(ctx, parent, &dev->cq_base, "cq_base", "Completion QID Base");
+	ionic_u32(ctx, parent, &dev->cq_base, "cq_base",
+		  "Completion QID Base");
 	ionic_u32(ctx, parent, &dev->eq_base, "eq_base", "Event QID Base");
 
 	ionic_u32(ctx, parent, &dev->aq_count, "aq_count", "Admin Q Count");
@@ -410,7 +414,8 @@ void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 	ionic_u8(ctx, parent, &dev->rrq_stride, "rrq_stride", "RRQ Stride");
 	ionic_u8(ctx, parent, &dev->rsq_stride, "rsq_stride", "RSQ Stride");
 
-	ionic_int(ctx, parent, (int *)&dev->admin_state, "admin_state", "AQ State");
+	ionic_int(ctx, parent, (int *)&dev->admin_state, "admin_state",
+		  "AQ State");
 
 	ionic_hweight(ctx, parent,
 		      dev->inuse_pdid.inuse,
@@ -562,7 +567,8 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 	ctx = &mr->debug_ctx;
 	sysctl_ctx_init(ctx);
 
-	oidp = ionic_id_node(ctx, parent, ionic_mrid_index(mr->mrid), "MR Info");
+	oidp = ionic_id_node(ctx, parent, ionic_mrid_index(mr->mrid),
+			     "MR Info");
 	if (!oidp)
 		return;
 
