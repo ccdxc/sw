@@ -50,6 +50,7 @@ typedef struct test_params_s {
         uint64_t device_mac;
         ip_addr_t device_gw_ip;
         pds_encap_t fabric_encap;
+        bool v4_outer;
         bool dual_stack;
     };
     // TEP config
@@ -186,7 +187,7 @@ inline sdk_ret_t
 parse_test_cfg (const char *cfg_file, test_params_t *test_params)
 {
     pt::ptree json_pt;
-    string pfxstr;
+    string pfxstr, str;
     uint32_t i;
     char *tep_encap_env;
 
@@ -198,19 +199,32 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                        json_pt.get_child("objects")) {
             std::string kind = obj.second.get<std::string>("kind");
             if (kind == "device") {
+                str = obj.second.get<std::string>("outer-v4", "");
+                if (str.empty() || !str.compare("true")) {
+                    // fabric is IPv4 only
+                    test_params->v4_outer = true;
+                } else {
+                    // fabric is IPv6 only
+                    test_params->v4_outer = false;
+                }
                 test_params->device_mac =
                     std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
-
                 str2ipaddr(obj.second.get<std::string>("ip-addr").c_str(),
                            &test_params->device_ip);
                 str2ipaddr(obj.second.get<std::string>("gw-ip-addr").c_str(),
                            &test_params->device_gw_ip);
+                if (test_params->v4_outer) {
+                    assert(test_params->device_ip.af == IP_AF_IPV4);
+                    assert(test_params->device_gw_ip.af == IP_AF_IPV4);
+                } else {
+                    assert(test_params->device_ip.af == IP_AF_IPV6);
+                    assert(test_params->device_gw_ip.af == IP_AF_IPV6);
+                }
                 if (!obj.second.get<std::string>("encap").compare("vxlan")) {
                     test_params->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                 } else {
                     test_params->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
                 }
-
                 test_params->dual_stack = false;
                 if (!obj.second.get<std::string>("dual-stack").compare("true")) {
                     test_params->dual_stack = true;
@@ -238,8 +252,13 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                 // reduce num_teps by 2, (MyTEP and GW-TEP)
                 test_params->num_teps -= 2;
                 pfxstr = obj.second.get<std::string>("prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(),
-                                   &test_params->tep_pfx) == 0);
+                if (test_params->v4_outer) {
+                    assert(str2ipv4pfx((char *)pfxstr.c_str(),
+                                       &test_params->tep_pfx) == 0);
+                } else {
+                    assert(str2ipv6pfx((char *)pfxstr.c_str(),
+                                       &test_params->tep_pfx) == 0);
+                }
                 pfxstr = obj.second.get<std::string>("svc-prefix", "");
                 if (pfxstr.empty() == false) {
                     assert(str2ipv6pfx((char *)pfxstr.c_str(),

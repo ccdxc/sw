@@ -60,10 +60,17 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
             if (apollo()) {
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 120);
-                v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
-                v6route_table.routes[j].nh_ip.addr.v4_addr =
-                        tep_pfx->addr.addr.v4_addr + tep_offset++;
-
+                if (g_test_params.v4_outer) {
+                    v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+                    v6route_table.routes[j].nh_ip.addr.v4_addr =
+                            tep_pfx->addr.addr.v4_addr + tep_offset++;
+                } else {
+                    v6route_table.routes[j].nh_ip.af = IP_AF_IPV6;
+                    v6route_table.routes[j].nh_ip.addr.v6_addr =
+                        tep_pfx->addr.addr.v6_addr;
+                    v6route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                        htonl(ntohl(v6route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset++);
+                }
                 tep_offset %= (num_teps + 3);
                 if (tep_offset == 0) {
                     // skip MyTEP and gateway IPs
@@ -118,9 +125,17 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 route_table.routes[j].prefix.addr.addr.v4_addr =
                         ((0xC << 28) | (rtnum++ << 8));
                 route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                route_table.routes[j].nh_ip.af = IP_AF_IPV4;
-                route_table.routes[j].nh_ip.addr.v4_addr =
-                    tep_pfx->addr.addr.v4_addr + tep_offset++;
+                if (g_test_params.v4_outer) {
+                    route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+                    route_table.routes[j].nh_ip.addr.v4_addr =
+                        tep_pfx->addr.addr.v4_addr + tep_offset++;
+                } else {
+                    route_table.routes[j].nh_ip.af = IP_AF_IPV6;
+                    route_table.routes[j].nh_ip.addr.v6_addr =
+                        tep_pfx->addr.addr.v6_addr;
+                    route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                        htonl(ntohl(route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset++);
+                }
                 tep_offset %= (num_teps + 3);
                 if (tep_offset == 0) {
                     // skip MyTEP and gateway IPs
@@ -361,7 +376,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             }
         }
     }
-    // Batching: push leftover objects
+    // push leftover objects
     rv = create_local_mapping(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create v4 local mapping failed, ret %u", rv);
@@ -391,9 +406,17 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.fabric_encap.val.mpls_tag =
                         remote_slot++;
                 }
-                pds_remote_mapping.tep.ip_addr.af = IP_AF_IPV4;
-                pds_remote_mapping.tep.ip_addr.addr.v4_addr =
-                    teppfx->addr.addr.v4_addr + tep_offset;
+                if (g_test_params.v4_outer) {
+                    pds_remote_mapping.tep.ip_addr.af = IP_AF_IPV4;
+                    pds_remote_mapping.tep.ip_addr.addr.v4_addr =
+                        teppfx->addr.addr.v4_addr + tep_offset;
+                } else {
+                    pds_remote_mapping.tep.ip_addr.af = IP_AF_IPV6;
+                    pds_remote_mapping.tep.ip_addr.addr.v6_addr =
+                        teppfx->addr.addr.v6_addr;
+                    pds_remote_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                        htonl(ntohl(pds_remote_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset);
+                }
                 MAC_UINT64_TO_ADDR(
                     pds_remote_mapping.vnic_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
@@ -424,9 +447,17 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                           g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.key.ip_addr.addr.v6_addr,
                                                     pds_remote_mapping.key.ip_addr.addr.v4_addr);
-                    pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV4;
-                    pds_remote_v6_mapping.tep.ip_addr.addr.v4_addr =
-                        teppfx->addr.addr.v4_addr + v6_tep_offset;
+                    if (g_test_params.v4_outer) {
+                        pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV4;
+                        pds_remote_v6_mapping.tep.ip_addr.addr.v4_addr =
+                            teppfx->addr.addr.v4_addr + v6_tep_offset;
+                    } else {
+                        pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV6;
+                        pds_remote_v6_mapping.tep.ip_addr.addr.v6_addr =
+                            teppfx->addr.addr.v6_addr;
+                        pds_remote_v6_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                            htonl(ntohl(pds_remote_v6_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset);
+                    }
                     if (artemis() && i == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
                         pds_remote_v6_mapping.provider_ip_valid = true;
                         pds_remote_v6_mapping.provider_ip = v6_provider_pfx->addr;
@@ -454,7 +485,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             }
         }
     }
-    // Batching: push leftover objects
+    // push leftover objects
     rv = create_remote_mapping(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create v6 remote mapping failed, ret %u", rv);
@@ -556,7 +587,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                                 num_vpcs + 1, rv);
     }
 
-    // Batching: push leftover objects
+    // push leftover objects
     rv = create_vnic(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create vnic failed, ret %u", rv);
@@ -659,7 +690,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
                                 pds_subnet.key.id, rv);
     }
 
-    // Batching: push leftover vpc and subnet objects
+    // push leftover vpc and subnet objects
     rv = create_vpc(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create vpc failed, rv %u", rv);
@@ -694,7 +725,7 @@ create_vpc_peers (uint32_t num_vpcs)
                                 "create vpc peer %u failed, ret %u",
                                 vpc_peer_id - 1, rv);
     }
-    // Batching: push leftover vpc and subnet objects
+    // push leftover vpc and subnet objects
     rv = create_vpc_peer(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create vpc peer failed, ret %u", rv);
@@ -824,7 +855,7 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
                                 "create tag %u failed, ret %u",
                                 pds_tag.key.id, ret);
     }
-    // Batching: push leftover objects
+    // push leftover objects
     ret = create_tag(NULL);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "create tag failed, ret %u", ret);
@@ -974,7 +1005,7 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
                                 "create meter %u failed, ret %u",
                                 pds_meter.key.id, ret);
     }
-    // Batching: push leftover objects
+    // push leftover objects
     ret = create_meter(NULL);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "create meter failed, ret %u", ret);
@@ -1012,7 +1043,7 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
             return ret;
         }
     }
-    // Batching: push leftover objects
+    // push leftover objects
     ret = create_nexthop(NULL);
     if (ret != SDK_RET_OK) {
         SDK_ASSERT(0);
@@ -1085,8 +1116,16 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         memset(&pds_tep, 0, sizeof(pds_tep));
         // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
         // so we skip the 1st (even for MyTEP we create a TEP)
-        pds_tep.key.ip_addr.af = IP_AF_IPV4;
-        pds_tep.key.ip_addr.addr.v4_addr = ip_pfx->addr.addr.v4_addr + 1 + i;
+        if (g_test_params.v4_outer) {
+            pds_tep.key.ip_addr.af = IP_AF_IPV4;
+            pds_tep.key.ip_addr.addr.v4_addr =
+                ip_pfx->addr.addr.v4_addr + 1 + i;
+        } else {
+            pds_tep.key.ip_addr.af = IP_AF_IPV6;
+            pds_tep.key.ip_addr.addr.v6_addr = ip_pfx->addr.addr.v6_addr;
+            pds_tep.key.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                htonl(ntohl(pds_tep.key.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + 1 + i);
+        }
         MAC_UINT64_TO_ADDR(pds_tep.mac, (((uint64_t)0x0303 << 22) | i));
         if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
             pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
@@ -1100,7 +1139,8 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
             return rv;
         }
     }
-    // Batching: push leftover objects
+
+    // push leftover objects
     rv = create_tunnel(0, NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);

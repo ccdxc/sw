@@ -3,9 +3,10 @@
     "objects" : [
         {
             "kind" : "device",
-            "gw-ip-addr": "1.0.0.1",
-            "ip-addr" : "1.0.0.2",
             "mac-addr" : "0x000201000001",
+            "gw-ip-addr" : "1.0.0.1",
+            "ip-addr" : "1.0.0.2",
+            "outer-v4" : "true",
             "dual-stack": "true",
             "_comment_" : "encap is either vxlan or mplsoudp",
             "encap": "vxlan"
@@ -75,7 +76,7 @@
         {
             "kind" : "flows",
             "num_tcp": "0",
-            "num_udp": "0",
+            "num_udp": "8388608",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "100",
