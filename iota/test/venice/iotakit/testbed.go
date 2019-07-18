@@ -284,16 +284,6 @@ func (tb *TestBed) IsMockMode() bool {
 	return tb.mockMode
 }
 
-//GetBaseVlan Return base vlan for the testbed
-func (tb *TestBed) GetBaseVlan() uint32 {
-	for _, inst := range tb.Params.Instances {
-		if inst.ID != 0 {
-			return (uint32)(inst.ID)
-		}
-	}
-	return 0
-}
-
 // getAvailableInstance returns next instance of a given type
 func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *InstanceParams {
 	for idx, inst := range tb.unallocatedInstances {

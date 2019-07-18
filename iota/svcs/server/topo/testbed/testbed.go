@@ -394,7 +394,9 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vla
 	if switchPortID == 0 {
 		return nil, nil
 	}
-	for i := switchPortID; i < switchPortID+constants.VlansPerTestBed; i++ {
+
+	startVlan := (switchPortID * constants.VlansPerTestBed) % constants.MaxVlanRange
+	for i := startVlan; i < startVlan+constants.VlansPerTestBed; i++ {
 		vlans = append(vlans, i)
 	}
 

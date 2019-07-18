@@ -176,8 +176,8 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *Host) (*WorkloadCollection, error) {
 	var wc WorkloadCollection
 	nwMap := make(map[uint32]uint32)
 
-	for i := 2 + sm.tb.GetBaseVlan(); i <= defaultNumNetworks+sm.tb.GetBaseVlan()+1; i++ {
-		nwMap[((uint32)(i))] = 0
+	for i := 0; i < defaultNumNetworks; i++ {
+		nwMap[sm.tb.allocatedVlans[i]] = 0
 	}
 
 	wloadsPerNetwork := defaultWorkloadPerHost / defaultNumNetworks
@@ -242,7 +242,7 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 	}
 
 	// generate scale configuration if required
-	err := sm.populateConfig(ctx, sm.tb.GetBaseVlan(), scale)
+	err := sm.populateConfig(ctx, scale)
 	if err != nil {
 		return fmt.Errorf("Error generating scale config: %s", err)
 	}
@@ -394,7 +394,7 @@ func timeTrack(start time.Time, name string) {
 
 // populateConfig creates scale configuration based on some predetermined parameters
 // TBD: we can enhance this to take the scale parameters fromt he user
-func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale bool) error {
+func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	cfg := cfgen.DefaultCfgenParams
 	cfg.SGPolicyParams.NumPolicies = 1
 
@@ -494,6 +494,11 @@ func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale b
 	createWorkloads := func() error {
 
 		defer timeTrack(time.Now(), "Create workloads")
+		nwMap := make(map[uint32]uint32)
+
+		tbVlans := make([]uint32, len(sm.tb.allocatedVlans))
+		copy(tbVlans, sm.tb.allocatedVlans)
+
 		for _, o := range cfg.ConfigItems.Workloads {
 			w := &Workload{veniceWorkload: o}
 			if _, ok := realHostNames[o.Spec.HostName]; ok {
@@ -503,7 +508,15 @@ func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale b
 				sm.fakeWorkloads[o.ObjectMeta.Name] = w
 			}
 
-			w.veniceWorkload.Spec.Interfaces[0].ExternalVlan += vlanBase
+			if wireVlan, ok := nwMap[w.veniceWorkload.Spec.Interfaces[0].ExternalVlan]; ok {
+				w.veniceWorkload.Spec.Interfaces[0].ExternalVlan = wireVlan
+			} else {
+				if len(tbVlans) == 0 {
+					return errors.New("Not enough vlans in the testbed for the config")
+				}
+				nwMap[w.veniceWorkload.Spec.Interfaces[0].ExternalVlan] = tbVlans[0]
+				tbVlans = tbVlans[1:]
+			}
 			err := sm.tb.CreateWorkload(w.veniceWorkload)
 			if err != nil {
 				return err

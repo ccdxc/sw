@@ -31,6 +31,9 @@ const (
 	// VlansPerTestBed vlans that a testbed can manage
 	VlansPerTestBed = 10
 
+	// MaxVlanRange max vlan range to be used for allocation
+	MaxVlanRange = 4000
+
 	// SSHPort captures the port where SSH is running
 	SSHPort = 22
 
