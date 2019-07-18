@@ -70,6 +70,8 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
 
   tabIndex: number = 0;
 
+  currentIndex: number = 0;
+
   constructor(protected controllerService: ControllerService,
               protected cdr: ChangeDetectorRef,
               protected rolloutService: RolloutService,
@@ -77,6 +79,20 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
               protected router: Router,
               protected uiconfigsService: UIConfigsService) {
     super(controllerService, cdr);
+  }
+
+  /**
+   * NEED OF OVERRIDING:
+   * In order to create a new rollout, we are switching to PENDING Tab if the control is on PAST Tab.
+   * After creation of new rollout or canceling the creation, we need to switch back to original Tab.
+   * This function would allow us to close the form as well as switch back to the original Tab.
+   */
+
+  creationFormClose() {
+    super.creationFormClose();
+    if (this.currentIndex !== this.tabIndex) {
+      setTimeout(() => {this.tabIndex = this.currentIndex; }, 200);
+    }
   }
 
   getClassName(): string {
@@ -132,6 +148,13 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     this.controllerService.setToolbarData(this.buildToolbarData());
   }
 
+  /**
+   * This function helps to build Toolbar Data.
+   * CREATE ROLLOUT button allows to create new rollout.
+   * It works as following:
+   *  - It switches to PENDING Tab, if it is on PAST Tab
+   *  - Once it is on PENDING Tab, it opens up the CREATION FORM
+   */
   buildToolbarData(): ToolbarData {
     const toolbarData: ToolbarData = {
       breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade'}],
@@ -142,10 +165,17 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
         {
           cssClass: 'global-button-primary rollouts-button',
           text: 'CREATE ROLLOUT',
-          // We show 'create button' in 'pending tab'
-          computeClass: () =>  this.tabIndex < 1 ? (this.shouldEnableButtons ? '' : 'global-button-disabled') : 'global-button-hide',
+          // We show 'create button' in 'pending tab' and 'past tab'
+          computeClass: () =>  this.shouldEnableButtons ? '' : 'global-button-disabled',
           callback: () => {
-            this.createNewObject();
+            // Switching to PENDING Tab for creation if on some other Tab
+            this.currentIndex = this.tabIndex;
+            if (this.tabIndex === 0) {
+              this.createNewObject();
+            } else {
+              this.tabIndex = 0;
+              setTimeout(() => {this.createNewObject(); }, 200);
+            }
           }
         }
       );

@@ -1,7 +1,8 @@
 <app-pagebody [icon]="bodyicon" header="Rollouts Overview" class="rollouts">
 
   <mat-tab-group fxFlex [disableRipple]="true"
-                 (selectedIndexChange)="selectedIndexChangeEvent($event)">
+                 (selectedIndexChange)="selectedIndexChangeEvent($event)"
+                 [selectedIndex]="tabIndex">
     <mat-tab
              label="PENDING {{ (pendingRollouts && pendingRollouts.length >0)?  ' (' +  pendingRollouts.length + ')' : '' }}">
       <app-tableviewedit fxLayout="column" style="height: 100%"
