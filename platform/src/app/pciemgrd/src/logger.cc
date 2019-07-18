@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -9,10 +9,10 @@
 #include <unistd.h>
 #include <cinttypes>
 
+#include "spdlog/spdlog.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-
-#include "spdlog/spdlog.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 
 static std::shared_ptr<spdlog::logger> spdlogger;
@@ -49,6 +49,12 @@ static void
 logerror(const char *fmt, va_list ap)
 {
     spdlogger->error(logfmt(fmt, ap));
+}
+
+static void
+logflush(void *arg)
+{
+    spdlogger->flush();
 }
 
 static pciesys_logger_t pciemgrd_logger = {
@@ -94,7 +100,9 @@ logger_init(void)
 
     spdlogger->set_pattern("[%Y%m%d-%H:%M:%S.%e]:%L %v");
     spdlogger->set_level(default_loglevel());
-    spdlogger->flush_on(spdlog::level::debug);
+
+    static evutil_check logcheck;
+    evutil_add_check(EV_DEFAULT_ &logcheck, logflush, NULL);
 
     pciesys_set_logger(&pciemgrd_logger);
 }

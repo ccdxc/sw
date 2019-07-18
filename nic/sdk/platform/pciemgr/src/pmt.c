@@ -287,8 +287,10 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
     if (!phwbar->valid) return;
 
 #ifdef __aarch64__
+#ifdef PCIEMGR_DEBUG
     pciesys_loginfo("%s: bar %d pmt %d loaded\n",
                     pciehwdev_get_name(phwdev), spmt->cfgidx, pmti);
+#endif
 #endif
 
     for ( ; spmt < spmte; spmt++, pmti++) {
@@ -317,9 +319,11 @@ pciehw_pmt_unload_bar(pciehwbar_t *phwbar)
     u_int32_t pmti = phwbar->pmtb;
 
 #ifdef __aarch64__
+#ifdef PCIEMGR_DEBUG
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
     pciesys_loginfo("%s: bar %d pmt %d unloaded\n",
                     pciehwdev_get_name(phwdev), spmt->cfgidx, pmti);
+#endif
 #endif
 
     assert(phwbar->valid);
@@ -360,9 +364,11 @@ pciehw_pmt_setaddr(pciehwbar_t *phwbar, const u_int64_t addr)
     pciehw_spmt_t *spmte = spmt + phwbar->pmtc;
 
 #ifdef __aarch64__
+#ifdef PCIEMGR_DEBUG
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
     pciesys_loginfo("%s: bar %d pmt %d setaddr 0x%" PRIx64 "\n",
                     pciehwdev_get_name(phwdev), spmt->cfgidx, pmti, addr);
+#endif
 #endif
 
     /* update addr */

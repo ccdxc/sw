@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
+#include <sys/mman.h>
 
 #include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/pal/include/pal.h"
@@ -257,6 +258,7 @@ pciemgrd_params(pciemgrenv_t *pme)
     pme->poll_dev = pciemgrd_param_ull("PCIE_POLL_DEV", pme->poll_dev);
     pme->cpumask = pciemgrd_param_ull("PCIE_CPUMASK", pme->cpumask);
     pme->fifopri = pciemgrd_param_ull("PCIE_FIFOPRI", pme->fifopri);
+    pme->mlockall = pciemgrd_param_ull("PCIE_MLOCKALL", pme->mlockall);
 
     if (pme->params.restart) {
         if (upgrade_state_restore() < 0) {
@@ -300,12 +302,36 @@ pciemgrd_catalog_defaults(pciemgrenv_t *pme)
 }
 
 /*
+ * Lock our memory.  We are not swapping on our system, but the system
+ * might reclaim text pages if low on memory, slowing our reaction to
+ * pcie events.
+ */
+static void
+pciemgrd_mem_init(pciemgrenv_t *pme)
+{
+#ifdef __aarch64__
+    if (pme->mlockall) {
+        if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0) {
+            pciesys_logerror("mlockall failed: %s\n", strerror(errno));
+        }
+
+        /* Fault in our stack here by writing to each stack page. */
+        volatile char big_stack[64 * 1024];
+        const int pagesize = getpagesize();
+        for (unsigned int i = 0; i < sizeof(big_stack); i += pagesize) {
+            big_stack[i] = 0;
+        }
+    }
+#endif
+}
+
+/*
  * Set the cpu affinity mask to restrict to cpu 0.
  * Set sched policy to SCHED_FIFO to select "real-time"
  * scheduling so pciemgr can respond to pcie transactions
  * in "pcie transaction timeout" time frames, typically 50ms.
  */
-void
+static void
 pciemgrd_sched_init(pciemgrenv_t *pme)
 {
 #ifdef __aarch64__
@@ -339,6 +365,13 @@ pciemgrd_sched_init(pciemgrenv_t *pme)
         }
     }
 #endif
+}
+
+void
+pciemgrd_sys_init(pciemgrenv_t *pme)
+{
+    pciemgrd_mem_init(pme);
+    pciemgrd_sched_init(pme);
 }
 
 void

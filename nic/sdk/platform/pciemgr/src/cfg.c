@@ -536,9 +536,11 @@ pciehw_cfgwr_sriov_ctrl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
     cfg_en = (sriovctrl & PCI_SRIOV_CTRL_VFE) != 0;
     bar_en = cfg_en && (sriovctrl & PCI_SRIOV_CTRL_MSE) != 0;
 
+#ifdef PCIEMGR_DEBUG
     pciesys_loginfo("sriov_ctrl: "
                     "ctrl 0x%04x (cfg_en %d bar_en %d) numvfs %d->%d\n",
                     sriovctrl, cfg_en, bar_en, phwdev->numvfs, numvfs);
+#endif
 
     pciehw_sriov_enable_numvfs(phwdev, numvfs, cfg_en, bar_en);
 }

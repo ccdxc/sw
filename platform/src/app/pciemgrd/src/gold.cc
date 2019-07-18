@@ -45,7 +45,7 @@ gold_loop(pciemgrenv_t *pme)
     pme->poll_port = 1;
     pme->poll_dev = 1;
     pciemgrd_params(pme);
-    pciemgrd_sched_init(pme);
+    pciemgrd_sys_init(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }

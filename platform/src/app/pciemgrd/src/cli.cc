@@ -895,7 +895,7 @@ cli_loop(pciemgrenv_t *pme)
     logger_init();
 #endif
     pciemgrd_params(pme);
-    pciemgrd_sched_init(pme);
+    pciemgrd_sys_init(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }

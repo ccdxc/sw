@@ -219,9 +219,10 @@ server_loop(pciemgrenv_t *pme)
     pciesys_loginfo("restart: %d\n", pme->params.restart);
     pciesys_loginfo("cpumask: %d\n", pme->cpumask);
     pciesys_loginfo("fifopri: %d\n", pme->fifopri);
+    pciesys_loginfo("mlockall: %d\n", pme->mlockall);
     pciesys_loginfo("---------------- config ----------------\n");
 
-    pciemgrd_sched_init(pme);
+    pciemgrd_sys_init(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }
