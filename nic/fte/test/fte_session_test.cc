@@ -224,3 +224,30 @@ TEST_F (fte_session_test, fte_test_local_local_ep_lookup)
     ASSERT_NE(l2seg, nullptr);
     ASSERT_EQ(l3sep->l2seg_handle, l2segh);
 }
+
+TEST_F (fte_session_test, fte_test_icmp_session)
+{
+    hal_ret_t ret;
+    hal::session_t *session = NULL;
+
+    // Create TCP session
+    Tins::ICMP icmp = Tins::ICMP();
+    icmp.type(Tins::ICMP::Flags::INFO_REQUEST);
+    icmp.code(0);
+    
+    Tins::EthernetII eth =
+         Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:01"),
+                          Tins::HWAddress<6>("aa:bb:0a:00:00:02")) /
+                          Tins::Dot1Q(100) /
+                          Tins::IP(Tins::IPv4Address(htonl(0x0A000001)), Tins::IPv4Address(htonl(0x0A000002))) /
+                          icmp;
+
+    ret = inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh2, l2segh, eth);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_NE(ctx_.session(), nullptr);
+    session = ctx_.session();
+
+    ret = session_delete(session, true);
+    ASSERT_EQ(ret, HAL_RET_OK);     
+}

@@ -572,9 +572,14 @@ p4pd_fill_flow_hash_key (flow_key_t *flow_key, uint32_t lkp_vrf,
         } else if ((flow_key->proto == IP_PROTO_ICMP) ||
                 (flow_key->proto == IP_PROTO_ICMPV6)) {
             // Set Sport for ECHO request/response
-            if (flow_key->icmp_type == ICMP_TYPE_ECHO_REQUEST ||
-                flow_key->icmp_code == ICMP_TYPE_ECHO_RESPONSE)
+            if (((flow_key->icmp_type == ICMP_TYPE_ECHO_REQUEST || 
+                  flow_key->icmp_type == ICMPV6_TYPE_ECHO_REQUEST) && 
+                 flow_key->icmp_code == ICMP_CODE_ECHO_REQUEST) ||
+                ((flow_key->icmp_type == ICMP_TYPE_ECHO_RESPONSE ||
+                  flow_key->icmp_type == ICMPV6_TYPE_ECHO_RESPONSE) &&
+                 flow_key->icmp_code == ICMP_CODE_ECHO_RESPONSE)) {
                 key.flow_lkp_metadata_lkp_sport = flow_key->icmp_id;
+            }
             key.flow_lkp_metadata_lkp_dport =
                 ((flow_key->icmp_type << 8) | flow_key->icmp_code);
         } else if (flow_key->proto == IPPROTO_ESP) {
@@ -647,9 +652,14 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
         } else if ((flow_key->proto == IP_PROTO_ICMP) ||
                 (flow_key->proto == IP_PROTO_ICMPV6)) {
             // Set Sport for ECHO request/response
-            if (flow_key->icmp_type == ICMP_TYPE_ECHO_REQUEST ||
-                flow_key->icmp_code == ICMP_TYPE_ECHO_RESPONSE)
+            if (((flow_key->icmp_type == ICMP_TYPE_ECHO_REQUEST ||
+                  flow_key->icmp_type == ICMPV6_TYPE_ECHO_REQUEST) &&
+                 flow_key->icmp_code == ICMP_CODE_ECHO_REQUEST) ||
+                ((flow_key->icmp_type == ICMP_TYPE_ECHO_RESPONSE ||
+                  flow_key->icmp_type == ICMPV6_TYPE_ECHO_RESPONSE) &&
+                 flow_key->icmp_code == ICMP_CODE_ECHO_RESPONSE)) {
                 key.flow_lkp_metadata_lkp_sport = flow_key->icmp_id;
+            }
             key.flow_lkp_metadata_lkp_dport =
                 ((flow_key->icmp_type << 8) | flow_key->icmp_code);
         } else if (flow_key->proto == IPPROTO_ESP) {
