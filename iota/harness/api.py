@@ -690,17 +690,21 @@ def CopyToHostTools(node_name, files):
         req.files.append(f)
     return EntityCopy(req)
 
-def CopyToNaples(node_name, files, dest_dir):
+def CopyToNaples(node_name, files, dest_dir, via_oob=False):
     # Assumption is that destination directory is always / and then user should move the file by executing a command.
     # Will change this function to perform that operation as consumer test case is only 1
     copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
                              "%s_host" % node_name, files, dest_dir)
     if not copy_resp:
         return None
+    if via_oob:
+        mgmtip = GetNicMgmtIP(node_name)
+    else:
+        mgmtip = GetNicIntMgmtIP(node_name)
     if copy_resp.api_response.api_status == types_pb2.API_STATUS_OK:
         req = Trigger_CreateExecuteCommandsRequest()
         for f in files:
-            copy_cmd = "sshpass -p %s scp -o StrictHostKeyChecking=no  %s %s@%s:/" % ("pen123", os.path.basename(f), 'root', GetNicIntMgmtIP(node_name))
+            copy_cmd = "sshpass -p %s scp -o StrictHostKeyChecking=no  %s %s@%s:/" % ("pen123", os.path.basename(f), 'root', mgmtip)
             Trigger_AddHostCommand(req, node_name, copy_cmd)
         tresp = Trigger(req)
         for cmd in tresp.commands:

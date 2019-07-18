@@ -16,6 +16,7 @@ setup:
     topology: test/apollo/topologies/2Naples_Switch/classic_baremetal.topology
     config  :
         #- step : utils.naples_workloads
+        - step : verif.config.verify_oob
         - step : config.generator
           args :
              spec : 2naples_switch.cfgyml
