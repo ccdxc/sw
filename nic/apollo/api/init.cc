@@ -106,7 +106,7 @@ pds_init (pds_init_params_t *params)
     asic_cfg_t    asic_cfg;
     std::string   mem_json;
 
-    // initializer the logger
+    // initialize the logger
     sdk::lib::logger::init(params->trace_cb);
     register_trace_cb(params->trace_cb);
 
@@ -197,9 +197,6 @@ pds_init (pds_init_params_t *params)
 
     // schedule all global timers
     core::schedule_timers(&api::g_pds_state, api::sysmon_cb);
-
-    // initialize api engine
-    api::g_api_engine.set_batching_en(params->batching_en);
 
     return SDK_RET_OK;
 }

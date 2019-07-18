@@ -24,10 +24,7 @@
 sdk_ret_t
 pds_batch_start (_In_ pds_batch_params_t *batch_params)
 {
-    if (api::g_api_engine.batching_en()) {
-        return api::g_api_engine.batch_begin(batch_params);
-    }
-    return SDK_RET_INVALID_OP;
+    return api::g_api_engine.batch_begin(batch_params);
 }
 
 /**

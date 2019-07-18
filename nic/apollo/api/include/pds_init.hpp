@@ -57,9 +57,6 @@ typedef struct pds_init_params_s {
                                                 ///< all config files are present,
                                                 ///< files under \<cfg_path\>/pipeline/
                                                 ///< are picked by the software
-    bool                      batching_en;      ///< true if API batching is enabled
-                                                ///< or else every API call is
-                                                ///< treated as batch of one
 } pds_init_params_t;
 
 /// \brief initialize routine

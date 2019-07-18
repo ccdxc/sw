@@ -159,9 +159,6 @@ public:
     /// \return slab pointer
     slab *api_params_slab(void) { return api_params_slab_; }
 
-    /// \brief set whether batching is enabled/not
-    void set_batching_en(bool batching_en) { batching_en_ = batching_en; }
-
     /// \brief return true if batching is enabled or else false
     /// \return true or false based on whether batching is enabled or not
     bool batching_en(void) const { return batching_en_; }

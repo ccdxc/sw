@@ -10,11 +10,11 @@ Status
 BatchSvcImpl::BatchStart(ServerContext *context,
                          const pds::BatchSpec *proto_spec,
                          pds::BatchStatus *proto_status) {
-    pds_batch_params_t api_batch_params = {0};
+    pds_batch_params_t api_batch_params = { 0 };
     api_batch_params.epoch = proto_spec->epoch();
 
-    // TODO: Adding this here since there is no proto defs for
-    // flows. This needs to be cleaned up
+    // TODO: adding this here since there is no proto defs for
+    // flows, this needs to be cleaned up
     if (hooks::batch_start(api_batch_params.epoch) != SDK_RET_OK) {
         return Status::CANCELLED;
     }

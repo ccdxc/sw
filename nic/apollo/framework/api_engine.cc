@@ -653,11 +653,12 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 sdk_ret_t
 api_engine::process_api(api_ctxt_t *api_ctxt) {
     sdk_ret_t ret;
+    bool batching = batching_en_;
     static pds_batch_params_t batch_params;
 
     // if batching is disabled, every API call is batch of 1
-    if (batching_en_ == false) {
-        batch_params.epoch++;
+    if (batching == false) {
+        batch_params.epoch = g_current_epoch_ + 1;
         ret = batch_begin(&batch_params);
         if (unlikely(ret != SDK_RET_OK)) {
             return ret;
@@ -671,7 +672,7 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
     batch_ctxt_.api_ctxts.push_back(*api_ctxt);
 
     // end internal batching
-    if (batching_en_ == false) {
+    if (batching == false) {
         ret = batch_commit();
         if (unlikely(ret != SDK_RET_OK)) {
             // TODO: batch_abort() when abort starts working
@@ -687,9 +688,10 @@ api_engine::batch_begin(pds_batch_params_t *params) {
     SDK_ASSERT_RETURN((params != NULL), sdk::SDK_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((params->epoch != PDS_EPOCH_INVALID),
                       sdk::SDK_RET_INVALID_ARG);
+    batching_en_ = true;
     batch_ctxt_.epoch = params->epoch;
     batch_ctxt_.stage = API_BATCH_STAGE_INIT;
-    batch_ctxt_.api_ctxts.reserve(16);
+    batch_ctxt_.api_ctxts.reserve(64);
     return SDK_RET_OK;
 };
 
@@ -788,6 +790,7 @@ api_engine::batch_commit(void) {
     g_current_epoch_ = batch_ctxt_.epoch;
     batch_ctxt_.epoch = PDS_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
+    batching_en_ = false;
 
     return SDK_RET_OK;
 }
@@ -842,6 +845,7 @@ api_engine::batch_abort(void) {
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
+    batching_en_ = false;
 
     return SDK_RET_OK;
 }

@@ -85,7 +85,6 @@ pds_test_base::SetUpTestCase(test_case_params_t& params)
             init_params.scale_profile = PDS_SCALE_PROFILE_P2;
         }
     }
-    init_params.batching_en = true;
     pds_init(&init_params);
 }
 
