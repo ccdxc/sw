@@ -329,6 +329,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     // Current stat calculation - we take the last point
     if (MetricsUtility.resultHasData(this.avgData)) {
       const index = this.avgData.series[0].columns.indexOf(fieldName);
+      heroCard.firstStat.numericValue = Math.round(this.avgData.series[0].values[0][index]);
       heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
     }
 
@@ -336,6 +337,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     const avgDayData = this.avgDayData;
     if (avgDayData.series[0].values.length !== 0) {
       const index = this.avgDayData.series[0].columns.indexOf(fieldName);
+      heroCard.secondStat.numericValue = Math.round(avgDayData.series[0].values[0][index]);
       heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
     }
 
@@ -353,6 +355,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     // Cluster average
     if (this.clusterAvgData.series[0].values.length !== 0) {
       const index = this.clusterAvgData.series[0].columns.indexOf(fieldName);
+      heroCard.thirdStat.numericValue = Math.round(this.clusterAvgData.series[0].values[0][index]);
       heroCard.thirdStat.value = Math.round(this.clusterAvgData.series[0].values[0][index]) + '%';
     }
 

@@ -246,6 +246,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     if (MetricsUtility.resultHasData(this.avgData)) {
       const index = this.avgData.series[0].columns.indexOf(fieldName);
       heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
+      heroCard.firstStat.numericValue = Math.round(this.avgData.series[0].values[0][index]);
     }
 
     // Avg
@@ -253,6 +254,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     if (avgDayData.series[0].values.length !== 0) {
       const index = this.avgDayData.series[0].columns.indexOf(fieldName);
       heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
+      heroCard.secondStat.numericValue = Math.round(avgDayData.series[0].values[0][index]);
     }
 
     // For determining arrow direction, we compare the current value to the average value
@@ -283,6 +285,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
             thirdStat += ' (' + Math.round(maxNaples.max) + '%)';
             heroCard.thirdStat.value = thirdStat;
             heroCard.thirdStat.url = '/cluster/naples/' + thirdStatNaples.meta.name;
+            heroCard.thirdStat.numericValue = Math.round(maxNaples.max);
           }
         } else {
           heroCard.thirdStat.value = null;

@@ -8,6 +8,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 export interface Stat {
   value: any;
+  numericValue: number;
   description: string;
   tooltip?: string;
   url?: string;
@@ -109,9 +110,6 @@ export class HerocardComponent implements OnInit, OnChanges {
     if (this.cardState === CardStates.READY) {
       this.setupDataset();
     }
-    if ( Object.keys(this.thresholds).length > 0 && Object.keys(this.conditionColors).length > 0) {
-      this.updateStatColor();
-    }
   }
 
   ngOnInit() {
@@ -134,20 +132,19 @@ export class HerocardComponent implements OnInit, OnChanges {
     return 'rgb(' + r.toString() + ',' + g.toString() + ',' + b.toString() + ')';
   }
 
-  updateStatColor() {
-    if (this.thresholds) {
+  updateStatColor(stat) {
+    if (Object.keys(this.thresholds).length > 0 && Object.keys(this.conditionColors).length > 0 && stat.numericValue !== null) {
       let color, value;
-      if ( typeof this.firstStat.value === 'string') {
-        value = parseInt(this.firstStat.value.substring(0, this.firstStat.value.length - 1), 10);
+      if ( typeof stat.numericValue === 'string') {
+        value = parseInt(stat.numericValue.substring(0, stat.numericValue.length - 1), 10);
         color = this.getConditionColor(value);
-      } else if (typeof this.firstStat.value === 'number') {
-        value = this.firstStat.value;
+      } else if (typeof stat.numericValue === 'number') {
+        value = stat.numericValue;
         color = this.getConditionColor(value);
       }
-
-      if (!!color) {
-        this.statColor = this.getRGBString(color['r'], color['g'], color['b']);
-      }
+      return this.getRGBString(color['r'], color['g'], color['b']);
+    } else {
+      return this.themeColor;
     }
   }
 

@@ -404,16 +404,19 @@ export class MetricsUtility {
     return {
       title: 'CPU',
       firstStat: {
+        numericValue: null,
         value: null,
         description: 'CPU Usage',
         tooltip: 'Averaged over past 5m'
       },
       secondStat: {
+        numericValue: null,
         value: null,
         description: '24h Avg',
         tooltip: 'Averaged over past 24h'
       },
       thirdStat: {
+        numericValue: null,
         value: null,
         description: 'Highest CPU Usage',
         tooltip: 'Averaged over past 5m'
@@ -436,16 +439,19 @@ export class MetricsUtility {
     return {
       title: 'Memory',
       firstStat: {
+        numericValue: null,
         value: null,
         description: 'Memory Usage',
         tooltip: 'Averaged over past 5m'
       },
       secondStat: {
+        numericValue: null,
         value: null,
         description: '24h Avg',
         tooltip: 'Averaged over past 24h'
       },
       thirdStat: {
+        numericValue: null,
         value: null,
         description: 'Highest Memory Usage',
         tooltip: 'Averaged over past 5m'
@@ -468,16 +474,19 @@ export class MetricsUtility {
     return {
       title: 'Storage',
       firstStat: {
+        numericValue: null,
         value: null,
         description: 'Disk Usage',
         tooltip: 'Averaged over past 5m'
       },
       secondStat: {
+        numericValue: null,
         value: null,
         description: '24h Avg',
         tooltip: 'Averaged over past 24h'
       },
       thirdStat: {
+        numericValue: null,
         value: null,
         description: 'Highest Disk Usage',
         tooltip: 'Averaged over past 5m'
@@ -500,16 +509,19 @@ export class MetricsUtility {
     return {
       title: 'CPU',
       firstStat: {
+        numericValue: null,
         value: null,
         description: 'CPU Usage',
         tooltip: 'Averaged over past 5m'
       },
       secondStat: {
+        numericValue: null,
         value: null,
         description: '24h Avg',
         tooltip: 'Averaged over past 24h'
       },
       thirdStat: {
+        numericValue: null,
         value: null,
         description: 'Cluster Usage',
         tooltip: 'Averaged over past 5m'
@@ -531,16 +543,19 @@ export class MetricsUtility {
     return {
       title: 'Memory',
       firstStat: {
+        numericValue: null,
         value: null,
         description: 'Memory Usage',
         tooltip: 'Averaged over past 5m'
       },
       secondStat: {
+        numericValue: null,
         value: null,
         description: '24h Avg',
         tooltip: 'Averaged over past 24h'
       },
       thirdStat: {
+        numericValue: null,
         value: null,
         description: 'Cluster Usage',
         tooltip: 'Averaged over past 5m'
@@ -562,16 +577,19 @@ export class MetricsUtility {
     return {
       title: 'Storage',
       firstStat: {
+        numericValue: null,
         value: null,
         description: 'Disk Usage',
         tooltip: 'Averaged over past 5m'
       },
       secondStat: {
+        numericValue: null,
         value: null,
         description: '24h Avg',
         tooltip: 'Averaged over past 24h'
       },
       thirdStat: {
+        numericValue: null,
         value: null,
         description: 'Cluster Usage',
         tooltip: 'Averaged over past 5m'

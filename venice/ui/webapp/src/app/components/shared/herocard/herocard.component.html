@@ -22,7 +22,8 @@
                  [matTooltip]="firstStat.tooltip"
                  [style.cursor]="firstStat.url != null ? 'pointer' : 'auto'"
                  (click)="firstStatClick()">
-              <div fxFlex="nogrow" [style.color]="statColor" class="herocard-first-stat-value">
+              <div fxFlex="nogrow" [style.color]="updateStatColor(firstStat)"
+                   class="herocard-first-stat-value">
                 {{ firstStat.value }}</div>
               <div fxFlex="nogrow" class="herocard-first-stat-description">
                 {{ firstStat.description }}</div>
@@ -38,7 +39,8 @@
                  [matTooltip]="secondStat.tooltip"
                  [style.cursor]="secondStat.url != null ? 'pointer' : 'auto'"
                  (click)="secondStatClick()">
-              <div fxFlex="nogrow" [style.color]="themeColor" class="herocard-second-stat-value">
+              <div fxFlex="nogrow" [style.color]="updateStatColor(secondStat)"
+                   class="herocard-second-stat-value">
                 {{ secondStat.value}}</div>
               <div fxFlex="nogrow" class="herocard-second-stat-description">
                 {{ secondStat.description }}</div>
@@ -54,7 +56,8 @@
                  [matTooltip]="thirdStat.tooltip"
                  [style.cursor]="thirdStat.url != null ? 'pointer' : 'auto'"
                  (click)="thirdStatClick()">
-              <div fxFlex="auto" [style.color]="themeColor" class="herocard-third-stat-value">
+              <div fxFlex="auto" [style.color]="updateStatColor(thirdStat)"
+                   class="herocard-third-stat-value">
                 {{ thirdStat.value }}</div>
               <div fxFlex="auto" class="herocard-third-stat-description">{{ thirdStat.description }}
               </div>

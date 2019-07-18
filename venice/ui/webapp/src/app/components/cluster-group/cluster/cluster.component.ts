@@ -232,6 +232,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     // current avg
     if (MetricsUtility.resultHasData(this.avgData)) {
       const index = this.avgData.series[0].columns.indexOf(fieldName);
+      heroCard.firstStat.numericValue = Math.round(this.avgData.series[0].values[0][index]);
       heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
     }
 
@@ -239,6 +240,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     const avgDayData = this.avgDayData;
     if (avgDayData.series[0].values.length !== 0) {
       const index = this.avgDayData.series[0].columns.indexOf(fieldName);
+      heroCard.secondStat.numericValue = Math.round(avgDayData.series[0].values[0][index]);
       heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
     }
 
@@ -265,6 +267,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
           thirdStat = thirdStat.substring(0, 9) + '...';
         }
         thirdStat += ' (' + Math.round(maxNode.max) + '%)';
+        heroCard.thirdStat.numericValue = Math.round(maxNode.max);
         heroCard.thirdStat.value = thirdStat;
         heroCard.thirdStat.url = '/cluster/cluster/' + thirdStatName;
       }

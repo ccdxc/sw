@@ -69,18 +69,21 @@ describe('HerocardComponent', () => {
     // Check stat clicking
     component.cardState = CardStates.READY;
     component.firstStat = {
+      numericValue : 0,
       value: 'firstStatVal',
       description: 'firstStatDesc',
       url: 'firstStatUrl',
       tooltip: 'firstStatTooltip'
     };
     component.secondStat = {
+      numericValue : 0,
       value: 'secondStatVal',
       description: 'secondStatDesc',
       url: 'secondStatUrl',
       tooltip: 'secondStatTooltip'
     };
     component.thirdStat = {
+      numericValue : 0,
       value: 'thirdStatVal',
       description: 'thirdStatDesc',
       url: 'thirdStatUrl',
@@ -166,6 +169,7 @@ describe('HerocardComponent', () => {
     expect(arrows.length).toBe(0);
 
     component.firstStat = {
+      numericValue : 0,
       value: 'statValue',
       description: 'statDesc',
     };
