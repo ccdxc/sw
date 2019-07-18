@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -144,10 +145,24 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
+		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
+			log.Errorf("/update/naples_fw.tar not found %s", err)
+			go n.UpgFailed(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
+			return
+		}
+		_, err = naplesHostDisruptiveUpgrade("naples_fw.tar")
+		if err != nil {
+			log.Errorf("naplesHostDisruptiveUpgrade failed %s", err)
+			go n.UpgFailed(&[]string{fmt.Sprintf("naplesHostDisruptiveUpgrade failed %s", err)})
+			return
+		}
+		go n.UpgSuccessful()
+	case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to get naples version from objectstore %+v", err)})
 			cancel()
 			return
 		}
@@ -156,15 +171,18 @@ func (n *NMD) issueNextPendingOp() {
 		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to download naples image from objectstore %+v", err)})
 			cancel()
 			return
 		}
 		cancel()
-		_, err = naplesHostDisruptiveUpgrade("naples_fw.tar")
+		_, err = naplesPkgVerify("naples_fw.tar")
 		if err != nil {
-			log.Errorf("naplesHostDisruptiveUpgrade failed %s", err)
+			log.Errorf("Firmware image verification failed %s", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Firmware image verification failed %s", err)})
 			return
 		}
+		go n.UpgPossible()
 	case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.Status.InProgressOp.Version)
