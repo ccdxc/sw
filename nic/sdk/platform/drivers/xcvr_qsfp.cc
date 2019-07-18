@@ -165,6 +165,13 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
+    case 0x7:
+        // 100GBASE-PSM4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_PSM4);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        break;
+
     case 0x8:
         // 100G ACC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);

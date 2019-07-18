@@ -2899,7 +2899,8 @@ ionic_ifmedia_xcvr(struct lif *lif)
 
 	case XCVR_PID_QSFP_100G_LR4:
 	case XCVR_PID_QSFP_100G_ER4:
-        case XCVR_PID_QSFP_100G_CWDM4:
+	case XCVR_PID_QSFP_100G_CWDM4:
+	case XCVR_PID_QSFP_100G_PSM4:
 		media |= IFM_100G_LR4;
 		break;
 
