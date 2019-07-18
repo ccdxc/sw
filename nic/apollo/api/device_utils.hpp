@@ -17,17 +17,15 @@
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_device_spec_t *spec) {
-    os << " ip: " << ipv4addr2str(spec->device_ip_addr)
+    os << " ip: " << ipaddr2str(&spec->device_ip_addr)
        << " mac: " << macaddr2str(spec->device_mac_addr)
-       << " gw ip: " << ipv4addr2str(spec->gateway_ip_addr);
+       << " gw ip: " << ipaddr2str(&spec->gateway_ip_addr);
     return os;
 }
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_device_info_t *obj) {
-    os << "Device info =>"
-       << &obj->spec
-       << std::endl;
+    os << "Device info =>" << &obj->spec << std::endl;
     return os;
 }
 

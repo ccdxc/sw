@@ -93,7 +93,7 @@ mapping_impl::factory(pds_mapping_spec_t *spec) {
     impl->is_local_ = spec->is_local;
     if (spec->is_local) {
         spec->tep.ip_addr.af = IP_AF_IPV4;
-        spec->tep.ip_addr.addr.v4_addr = device->ip_addr();
+        spec->tep.ip_addr = device->ip_addr();
     }
     return impl;
 }

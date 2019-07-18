@@ -23,9 +23,9 @@
 
 /// \brief device specification
 typedef struct pds_device_s {
-    ipv4_addr_t device_ip_addr;     ///< device IP address
-    mac_addr_t  device_mac_addr;    ///< device MAC address
-    ipv4_addr_t gateway_ip_addr;    ///< gateway IP address
+    ip_addr_t     device_ip_addr;     ///< device IP address
+    mac_addr_t    device_mac_addr;    ///< device MAC address
+    ip_addr_t     gateway_ip_addr;    ///< gateway IP address
 } __PACK__ pds_device_spec_t;
 
 /// \brief device status

@@ -137,7 +137,7 @@ public:
 
     /// \brief  return the device's IP address
     /// \return IP address of the device
-    ipv4_addr_t ip_addr(void) const { return ip_addr_; }
+    ip_addr_t ip_addr(void) const { return ip_addr_; }
 
     /// \brief  return the device's MAC addresss
     /// \return MAC address of the device
@@ -145,7 +145,7 @@ public:
 
     /// \brief  return the device's gateway IP address
     /// \return gateway IP address of the device
-    ipv4_addr_t gw_ip_addr(void) const { return gw_ip_addr_; }
+    ip_addr_t gw_ip_addr(void) const { return gw_ip_addr_; }
 
 private:
     /// \brief constructor
@@ -165,10 +165,10 @@ private:
     }
 
 private:
-    ipv4_addr_t    ip_addr_;       ///< physical IP (aka. MyTEP IP) in substrate
-    mac_addr_t     mac_addr_;      ///< MyTEP mac address
-    ipv4_addr_t    gw_ip_addr_;    ///< IP of default gw in the substrate
-    impl_base      *impl_;         ///< impl object instance
+    ip_addr_t     ip_addr_;       ///< physical IP (aka. MyTEP IP) in substrate
+    mac_addr_t    mac_addr_;      ///< MyTEP mac address
+    ip_addr_t     gw_ip_addr_;    ///< IPv4 addres of default gw in substrate
+    impl_base     *impl_;         ///< impl object instance
 } __PACK__;
 
 /// \@}

@@ -30,22 +30,24 @@ device_feeder::spec_build(pds_device_spec_t *spec) const {
     SDK_ASSERT(str2ipv4pfx((char *)device_ip_str.c_str(), &device_ip_pfx) == 0);
     SDK_ASSERT(str2ipv4pfx((char *)gw_ip_str.c_str(), &gw_ip_pfx) == 0);
 
-    spec->device_ip_addr = device_ip_pfx.addr.addr.v4_addr;
-    spec->gateway_ip_addr = gw_ip_pfx.addr.addr.v4_addr;
+    spec->device_ip_addr.af = IP_AF_IPV4;
+    spec->device_ip_addr.addr.v4_addr = device_ip_pfx.addr.addr.v4_addr;
+    spec->gateway_ip_addr.af = IP_AF_IPV4;
+    spec->gateway_ip_addr.addr.v4_addr = gw_ip_pfx.addr.addr.v4_addr;
     mac_str_to_addr((char *)mac_addr_str.c_str(), spec->device_mac_addr);
 }
 
 bool
 device_feeder::spec_compare(const pds_device_spec_t *spec) const {
-    if (device_ip_str.compare(ipv4addr2str(spec->device_ip_addr)) != 0)
+    if (device_ip_str.compare(ipaddr2str(&spec->device_ip_addr)) != 0) {
         return false;
-
-    if (mac_addr_str.compare(macaddr2str(spec->device_mac_addr)) !=0)
+    }
+    if (mac_addr_str.compare(macaddr2str(spec->device_mac_addr)) != 0) {
         return false;
-
-    if (gw_ip_str.compare(ipv4addr2str(spec->gateway_ip_addr)) != 0)
+    }
+    if (gw_ip_str.compare(ipaddr2str(&spec->gateway_ip_addr)) != 0) {
         return false;
-
+    }
     return true;
 }
 

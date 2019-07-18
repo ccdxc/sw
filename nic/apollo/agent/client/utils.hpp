@@ -305,9 +305,7 @@ populate_device_request (DeviceRequest *req, pds_device_spec_t *device)
         return;
     }
     spec = req->mutable_request();
-    ipv4addr_api_spec_to_proto_spec(spec->mutable_ipaddr(), &device->device_ip_addr);
-    ipv4addr_api_spec_to_proto_spec(spec->mutable_gatewayip(), &device->gateway_ip_addr);
-    spec->set_macaddr(MAC_TO_UINT64(device->device_mac_addr));
+    device_api_spec_to_proto_spec(spec, device);
     return;
 }
 

@@ -44,7 +44,10 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
 
     sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_VNIC_MAPPING,
                                               &val);
-    spec->device_ip_addr = (ipv4_addr_t)val;
+    if (val) {
+        spec->device_ip_addr.af = IP_AF_IPV4;
+        spec->device_ip_addr.addr.v4_addr = (ipv4_addr_t)val;
+    }
     sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_TEP1_RX, &val);
     MAC_UINT64_TO_ADDR(spec->device_mac_addr, val);
 }
@@ -87,18 +90,21 @@ sdk_ret_t
 device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     device_entry *device;
+    ip_addr_t ip_addr;
 
     switch (api_op) {
     case API_OP_CREATE:
     case API_OP_UPDATE:
         device = (device_entry *)api_obj;
+        ip_addr = device->ip_addr();
         PDS_TRACE_DEBUG("Activating device IP %s, MAC %s as table constants",
-                        ipv4addr2str(device->ip_addr()),
-                        macaddr2str(device->mac()));
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_VNIC_MAPPING,
-                                                     device->ip_addr());
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP,
-                                                     device->ip_addr());
+                        ipaddr2str(&ip_addr), macaddr2str(device->mac()));
+        if (ip_addr.af == IP_AF_IPV4) {
+            sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_VNIC_MAPPING,
+                                                         ip_addr.addr.v4_addr);
+            sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP,
+                                                         ip_addr.addr.v4_addr);
+        }
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_EGRESS_VNIC_INFO,
                                                      MAC_TO_UINT64(device->mac()));
         break;

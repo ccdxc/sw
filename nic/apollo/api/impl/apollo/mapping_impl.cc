@@ -120,7 +120,7 @@ namespace impl {
 #define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 
 mapping_impl *
-mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
+mapping_impl::factory(pds_mapping_spec_t *spec) {
     mapping_impl    *impl;
     device_entry    *device;
 
@@ -130,10 +130,9 @@ mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
     }
     new (impl) mapping_impl();
     device = device_db()->find();
-    if (pds_mapping->is_local) {
+    if (spec->is_local) {
         impl->is_local_ = true;
-        pds_mapping->tep.ip_addr.af = IP_AF_IPV4;
-        pds_mapping->tep.ip_addr.addr.v4_addr = device->ip_addr();
+        spec->tep.ip_addr = device->ip_addr();
     } else {
         impl->is_local_ = false;
     }
@@ -211,11 +210,13 @@ mapping_impl::build(pds_mapping_key_t *key) {
     }
 
     if (tep_data.action_id == TEP_MPLS_UDP_TEP_ID) {
-        if (tep_data.tep_mpls_udp_action.dipo == device->ip_addr()) {
+        if (tep_data.tep_mpls_udp_action.dipo ==
+                device->ip_addr().addr.v4_addr) {
             local_mapping = true;
         }
     } else if (tep_data.action_id == TEP_IPV4_VXLAN_TEP_ID) {
-        if (tep_data.tep_ipv4_vxlan_action.dipo == device->ip_addr()) {
+        if (tep_data.tep_ipv4_vxlan_action.dipo ==
+                device->ip_addr().addr.v4_addr) {
             local_mapping = true;
         }
     }

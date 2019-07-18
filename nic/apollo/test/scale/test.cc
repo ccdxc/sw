@@ -650,7 +650,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
         // create a subnet under infra/substrate/provider VPC
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
-        pds_subnet.v4_vr_ip = g_test_params.device_ip;
+        pds_subnet.v4_vr_ip = g_test_params.device_gw_ip.addr.v4_addr;
         pds_subnet.vpc.id = num_vpcs + 1;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, substrate_vr_mac);
         rv = create_subnet(&pds_subnet);
@@ -1110,14 +1110,14 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 }
 
 sdk_ret_t
-create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
+create_device_cfg (ip_addr_t *ipaddr, uint64_t macaddr, ip_addr_t *gwip)
 {
     sdk_ret_t            rv;
 
     memset(&g_device, 0, sizeof(g_device));
-    g_device.device_ip_addr = ipaddr;
+    g_device.device_ip_addr = *ipaddr;
     MAC_UINT64_TO_ADDR(g_device.device_mac_addr, macaddr);
-    g_device.gateway_ip_addr = gwip;
+    g_device.gateway_ip_addr = *gwip;
 
     rv = create_device(&g_device);
 
@@ -1323,8 +1323,8 @@ create_objects (void)
     }
 
     // create device config
-    ret = create_device_cfg(g_test_params.device_ip, g_test_params.device_mac,
-                            g_test_params.device_gw_ip);
+    ret = create_device_cfg(&g_test_params.device_ip, g_test_params.device_mac,
+                            &g_test_params.device_gw_ip);
     if (ret != SDK_RET_OK) {
         return ret;
     }

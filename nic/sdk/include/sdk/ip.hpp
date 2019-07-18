@@ -279,6 +279,38 @@ ippfx2str (const ip_prefix_t *ip_pfx)
     return buf;
 }
 
+static inline int
+str2ipv4addr (const char *str, ipv4_addr_t *v4_addr)
+{
+    struct in_addr    addr;
+
+    if (!inet_aton(str, &addr)) {
+        return -1;
+    }
+    *v4_addr = ntohl(addr.s_addr);
+    return 0;
+}
+
+static inline int
+str2ipaddr (const char *str, ip_addr_t *ip_addr)
+{
+    struct in6_addr    addr6;
+
+    memset(ip_addr, 0, sizeof(*ip_addr));
+    if (!str2ipv4addr(str, &ip_addr->addr.v4_addr)) {
+        ip_addr->af = IP_AF_IPV4;
+        return 0;
+    } else {
+        if (inet_pton(AF_INET6, str, &addr6) != 1) {
+            return -1;
+        }
+        memcpy(ip_addr->addr.v6_addr.addr8, addr6.s6_addr, IP6_ADDR8_LEN);
+        ip_addr->af = IP_AF_IPV6;
+        return 0;
+    }
+    return -1;
+}
+
 static inline  int
 str2ipv4pfx (char *str, ip_prefix_t *ip_pfx)
 {
@@ -432,7 +464,8 @@ ipv6_mask_to_prefix_len (ipv6_addr_t *v6_addr)
     int prefix_len = 0;
     unsigned inv;
     unsigned i;
-    for (i = 0; v6_addr->addr8[i] && (i < SDK_ARRAY_SIZE(v6_addr->addr8)); i++) {
+    for (i = 0; v6_addr->addr8[i] &&
+         (i < SDK_ARRAY_SIZE(v6_addr->addr8)); i++) {
         if (v6_addr->addr8[i] == 0xff) {
             prefix_len += 8;
         } else {
@@ -607,7 +640,7 @@ ip_addr_is_greaterthan (const ip_addr_t *ip_addr1, const ip_addr_t *ip_addr2)
     }
 }
 
-// Returns true if ip_prefix1 lies within ip_prefix2
+// returns true if ip_prefix1 lies within ip_prefix2
 static inline bool
 ip_prefix_within_prefix (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
 {
@@ -634,7 +667,7 @@ ip_prefix_within_prefix (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
     return false;
 }
 
-// Returns true if ip_prefix1 lies within ip_prefix2
+// returns true if ip_prefix1 lies within ip_prefix2
 static inline bool
 ipv4_prefix_within_prefix (ipv4_prefix_t *ip_prefix1, ipv4_prefix_t *ip_prefix2)
 {

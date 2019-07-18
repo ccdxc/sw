@@ -49,7 +49,7 @@
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "gen/proto/types.pb.h"
 
-// Populate proto buf spec from meter API spec
+// populate proto buf spec from meter API spec
 static inline void
 meter_api_spec_to_proto_spec (pds::MeterSpec *proto_spec,
                               const pds_meter_spec_t *api_spec)
@@ -97,7 +97,7 @@ meter_api_spec_to_proto_spec (pds::MeterSpec *proto_spec,
     return;
 }
 
-// Populate proto buf spec from tag API spec
+// populate proto buf spec from tag API spec
 static inline void
 tag_api_spec_to_proto_spec (pds::TagSpec *proto_spec,
                             const pds_tag_spec_t *api_spec)
@@ -117,21 +117,21 @@ tag_api_spec_to_proto_spec (pds::TagSpec *proto_spec,
 #endif
 }
 
-// Populate proto buf status from tag API status
+// populate proto buf status from tag API status
 static inline void
 tag_api_status_to_proto_status (const pds_tag_status_t *api_status,
                                 pds::TagStatus *proto_status)
 {
 }
 
-// Populate proto buf stats from tag API stats
+// populate proto buf stats from tag API stats
 static inline void
 tag_api_stats_to_proto_stats (const pds_tag_stats_t *api_stats,
                               pds::TagStats *proto_stats)
 {
 }
 
-// Populate proto buf from tag API info
+// populate proto buf from tag API info
 static inline void
 tag_api_info_to_proto (const pds_tag_info_t *api_info, void *ctxt)
 {
@@ -182,7 +182,7 @@ pds_tag_proto_spec_to_api_spec (pds_tag_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
-// Populate proto buf spec from vnic API spec
+// populate proto buf spec from vnic API spec
 static inline void
 vnic_api_spec_to_proto_spec (pds::VnicSpec *proto_spec,
                              const pds_vnic_spec_t *api_spec)
@@ -221,7 +221,7 @@ vnic_api_spec_to_proto_spec (pds::VnicSpec *proto_spec,
     proto_spec->set_switchvnic(api_spec->switch_vnic);
 }
 
-// Populate VPCPeer protobuf spec from VPCPeer API spec
+// populate VPCPeer protobuf spec from VPCPeer API spec
 static inline void
 vpc_peer_api_spec_to_proto_spec (pds::VPCPeerSpec *proto_spec,
                                  const pds_vpc_peer_spec_t *api_spec)
@@ -234,7 +234,7 @@ vpc_peer_api_spec_to_proto_spec (pds::VPCPeerSpec *proto_spec,
     proto_spec->set_vpc2(api_spec->vpc2.id);
 }
 
-// Populate VPCPeer api spec from VPCPeer proto spec
+// populate VPCPeer api spec from VPCPeer proto spec
 static inline void
 pds_agent_vpc_peer_api_spec_fill (pds_vpc_peer_spec_t *api_spec,
                                   const pds::VPCPeerSpec &proto_spec)
@@ -247,7 +247,7 @@ pds_agent_vpc_peer_api_spec_fill (pds_vpc_peer_spec_t *api_spec,
     api_spec->vpc2.id = proto_spec.vpc2();
 }
 
-// Populate proto buf spec from tep API spec
+// populate proto buf spec from tep API spec
 static inline void
 tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
                             const pds_tep_spec_t *api_spec)
@@ -287,7 +287,7 @@ tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
     }
 }
 
-// Populate proto buf spec from service API spec
+// populate proto buf spec from service API spec
 static inline void
 service_api_spec_to_proto_spec (pds::SvcMappingSpec *proto_spec,
                                 const pds_svc_mapping_spec_t *api_spec)
@@ -305,21 +305,21 @@ service_api_spec_to_proto_spec (pds::SvcMappingSpec *proto_spec,
     proto_spec->set_port(api_spec->svc_port);
 }
 
-// Populate proto buf status from service API status
+// populate proto buf status from service API status
 static inline void
 service_api_status_to_proto_status (pds::SvcMappingStatus *proto_status,
                                     const pds_svc_mapping_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from service API stats
+// populate proto buf stats from service API stats
 static inline void
 service_api_stats_to_proto_stats (pds::SvcMappingStats *proto_stats,
                                   const pds_svc_mapping_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from service API info
+// populate proto buf from service API info
 static inline void
 service_api_info_to_proto (const pds_svc_mapping_info_t *api_info, void *ctxt)
 {
@@ -534,7 +534,7 @@ pds_rule_action_to_proto_action (rule_action_data_t *action_data)
     }
 }
 
-// Populate proto buf spec from policy API spec
+// populate proto buf spec from policy API spec
 inline void
 policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
                                const pds_policy_spec_t *api_spec)
@@ -635,7 +635,7 @@ pds_agent_nh_api_spec_fill (pds_nexthop_spec_t *api_spec,
     }
 }
 
-// Populate proto buf spec from nh API spec
+// populate proto buf spec from nh API spec
 static inline void
 nh_api_spec_to_proto_spec (pds::NexthopSpec *proto_spec,
                            const pds_nexthop_spec_t *api_spec)
@@ -653,21 +653,21 @@ nh_api_spec_to_proto_spec (pds::NexthopSpec *proto_spec,
     }
 }
 
-// Populate proto buf status from nh API status
+// populate proto buf status from nh API status
 static inline void
 nh_api_status_to_proto_status (pds::NexthopStatus *proto_status,
                                const pds_nexthop_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from nh API stats
+// populate proto buf stats from nh API stats
 static inline void
 nh_api_stats_to_proto_stats (pds::NexthopStats *proto_stats,
                              const pds_nexthop_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from nh API info
+// populate proto buf from nh API info
 static inline void
 nh_api_info_to_proto (const pds_nexthop_info_t *api_info, void *ctxt)
 {
@@ -689,28 +689,28 @@ pds_agent_nh_group_api_spec_fill (pds_nexthop_group_spec_t *api_spec,
 {
 }
 
-// Populate proto buf spec from nh API spec
+// populate proto buf spec from nh API spec
 static inline void
 nh_group_api_spec_to_proto_spec (pds::NhGroupSpec *proto_spec,
                                  const pds_nexthop_group_spec_t *api_spec)
 {
 }
 
-// Populate proto buf status from nh group API status
+// populate proto buf status from nh group API status
 static inline void
 nh_group_api_status_to_proto_status (pds::NhGroupStatus *proto_status,
                                      const pds_nexthop_group_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from nh group API stats
+// populate proto buf stats from nh group API stats
 static inline void
 nh_group_api_stats_to_proto_stats (pds::NhGroupStats *proto_stats,
                                    const pds_nexthop_group_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from nh API info
+// populate proto buf from nh API info
 static inline void
 nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info, void *ctxt)
 {
@@ -1161,30 +1161,26 @@ mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
-// Populate proto buf spec from device API spec
+// populate proto buf spec from device API spec
 static inline void
 device_api_spec_to_proto_spec (pds::DeviceSpec *proto_spec,
                                const pds_device_spec_t *api_spec)
 {
-    if (api_spec->device_ip_addr != 0) {
-        proto_spec->mutable_ipaddr()->set_af(types::IP_AF_INET);
-        proto_spec->mutable_ipaddr()->set_v4addr(api_spec->device_ip_addr);
-    }
-    if (api_spec->gateway_ip_addr != 0) {
-        proto_spec->mutable_gatewayip()->set_af(types::IP_AF_INET);
-        proto_spec->mutable_gatewayip()->set_v4addr(api_spec->gateway_ip_addr);
-    }
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_ipaddr(),
+                                  &api_spec->device_ip_addr);
     proto_spec->set_macaddr(MAC_TO_UINT64(api_spec->device_mac_addr));
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_gatewayip(),
+                                  &api_spec->gateway_ip_addr);
 }
 
-// Populate proto buf status from device API status
+// populate proto buf status from device API status
 static inline void
 device_api_status_to_proto_status (pds::DeviceStatus *proto_status,
                                    const pds_device_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from device API stats
+// populate proto buf stats from device API stats
 static inline void
 device_api_stats_to_proto_stats (pds::DeviceStats *proto_stats,
                                  const pds_device_stats_t *api_stats)
@@ -1205,25 +1201,32 @@ device_api_stats_to_proto_stats (pds::DeviceStats *proto_stats,
     }
 }
 
-static inline void
+static inline sdk_ret_t
 pds_agent_device_api_spec_fill (pds_device_spec_t *api_spec,
                                 const pds::DeviceSpec &proto_spec)
 {
     types::IPAddress ipaddr = proto_spec.ipaddr();
-    types::IPAddress gatewayip = proto_spec.gatewayip();
+    types::IPAddress gwipaddr = proto_spec.gatewayip();
     uint64_t macaddr = proto_spec.macaddr();
 
     memset(api_spec, 0, sizeof(pds_device_spec_t));
-    if (types::IP_AF_INET == ipaddr.af()) {
-        api_spec->device_ip_addr = ipaddr.v4addr();
+    if ((ipaddr.af() == types::IP_AF_INET) ||
+        (ipaddr.af() == types::IP_AF_INET6)) {
+        ipaddr_proto_spec_to_api_spec(&api_spec->device_ip_addr, ipaddr);
+    } else {
+        return SDK_RET_INVALID_ARG;
     }
-    if (types::IP_AF_INET == gatewayip.af()) {
-        api_spec->gateway_ip_addr = gatewayip.v4addr();
+    if ((gwipaddr.af() == types::IP_AF_INET) ||
+        (gwipaddr.af() == types::IP_AF_INET6)) {
+        ipaddr_proto_spec_to_api_spec(&api_spec->gateway_ip_addr, gwipaddr);
+    } else {
+        return SDK_RET_INVALID_ARG;
     }
     MAC_UINT64_TO_ADDR(api_spec->device_mac_addr, macaddr);
+    return SDK_RET_OK;
 }
 
-// Populate proto buf spec from subnet API spec
+// populate proto buf spec from subnet API spec
 static inline void
 subnet_api_spec_to_proto_spec (pds::SubnetSpec *proto_spec,
                                const pds_subnet_spec_t *api_spec)
@@ -1246,21 +1249,21 @@ subnet_api_spec_to_proto_spec (pds::SubnetSpec *proto_spec,
     proto_spec->set_egv6securitypolicyid(api_spec->egr_v6_policy.id);
 }
 
-// Populate proto buf status from subnet API status
+// populate proto buf status from subnet API status
 static inline void
 subnet_api_status_to_proto_status (pds::SubnetStatus *proto_status,
                                    const pds_subnet_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from subnet API stats
+// populate proto buf stats from subnet API stats
 static inline void
 subnet_api_stats_to_proto_stats (pds::SubnetStats *proto_stats,
                                  const pds_subnet_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from subnet API info
+// populate proto buf from subnet API info
 static inline void
 subnet_api_info_to_proto (const pds_subnet_info_t *api_info, void *ctxt)
 {
@@ -1320,7 +1323,7 @@ pds_agent_vpc_api_spec_fill (pds_vpc_spec_t *api_spec,
     api_spec->v6_route_table.id = proto_spec.v6routetableid();
 }
 
-// Populate proto buf spec from vpc API spec
+// populate proto buf spec from vpc API spec
 static inline void
 vpc_api_spec_to_proto_spec (pds::VPCSpec *proto_spec,
                             const pds_vpc_spec_t *api_spec)
@@ -1340,21 +1343,21 @@ vpc_api_spec_to_proto_spec (pds::VPCSpec *proto_spec,
     proto_spec->set_v6routetableid(api_spec->v6_route_table.id);
 }
 
-// Populate proto buf status from vpc API status
+// populate proto buf status from vpc API status
 static inline void
 vpc_api_status_to_proto_status (pds::VPCStatus *proto_status,
                                 const pds_vpc_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from vpc API stats
+// populate proto buf stats from vpc API stats
 static inline void
 vpc_api_stats_to_proto_stats (pds::VPCStats *proto_stats,
                               const pds_vpc_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from vpc API info
+// populate proto buf from vpc API info
 static inline void
 vpc_api_info_to_proto (const pds_vpc_info_t *api_info, void *ctxt)
 {
@@ -1369,21 +1372,21 @@ vpc_api_info_to_proto (const pds_vpc_info_t *api_info, void *ctxt)
     vpc_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }
 
-// Populate proto buf status from vpc API status
+// populate proto buf status from vpc API status
 static inline void
 vpc_peer_api_status_to_proto_status (pds::VPCPeerStatus *proto_status,
                                      const pds_vpc_peer_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from vpc API stats
+// populate proto buf stats from vpc API stats
 static inline void
 vpc_peer_api_stats_to_proto_stats (pds::VPCPeerStats *proto_stats,
                                    const pds_vpc_peer_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from vpc API info
+// populate proto buf from vpc API info
 static inline void
 vpc_peer_api_info_to_proto (const pds_vpc_peer_info_t *api_info, void *ctxt)
 {
@@ -1398,21 +1401,21 @@ vpc_peer_api_info_to_proto (const pds_vpc_peer_info_t *api_info, void *ctxt)
     vpc_peer_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }
 
-// Populate proto buf status from tep API status
+// populate proto buf status from tep API status
 static inline void
 tep_api_status_to_proto_status (pds::TunnelStatus *proto_status,
                                 const pds_tep_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from tep API stats
+// populate proto buf stats from tep API stats
 static inline void
 tep_api_stats_to_proto_stats (pds::TunnelStats *proto_stats,
                               const pds_tep_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from tep API info
+// populate proto buf from tep API info
 static inline void
 tep_api_info_to_proto (const pds_tep_info_t *api_info, void *ctxt)
 {
@@ -1679,21 +1682,21 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
-// Populate proto buf status from vnic API status
+// populate proto buf status from vnic API status
 static inline void
 vnic_api_status_to_proto_status (pds::VnicStatus *proto_status,
                                  const pds_vnic_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from vnic API stats
+// populate proto buf stats from vnic API stats
 static inline void
 vnic_api_stats_to_proto_stats (pds::VnicStats *proto_stats,
                                const pds_vnic_stats_t *api_stats)
 {
 }
 
-// Populate proto buf from vnic API info
+// populate proto buf from vnic API info
 static inline void
 vnic_api_info_to_proto (const pds_vnic_info_t *api_info, void *ctxt)
 {
@@ -1755,14 +1758,14 @@ pds_meter_proto_spec_to_api_spec (pds_meter_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
-// Populate proto buf status from meter API status
+// populate proto buf status from meter API status
 static inline void
 meter_api_status_to_proto_status (pds::MeterStatus *proto_status,
                                   const pds_meter_status_t *api_status)
 {
 }
 
-// Populate proto buf stats from meter API stats
+// populate proto buf stats from meter API stats
 static inline void
 meter_api_stats_to_proto_stats (pds::MeterStats *proto_stats,
                                 const pds_meter_stats_t *api_stats)
@@ -1772,7 +1775,7 @@ meter_api_stats_to_proto_stats (pds::MeterStats *proto_stats,
     proto_stats->set_txbytes(api_stats->tx_bytes);
 }
 
-// Populate proto buf from meter API info
+// populate proto buf from meter API info
 static inline void
 meter_api_info_to_proto (const pds_meter_info_t *api_info, void *ctxt)
 {

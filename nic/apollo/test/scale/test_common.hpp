@@ -46,9 +46,9 @@ typedef struct test_params_s {
     std::string pipeline;
     // device config
     struct {
-        uint32_t device_ip;
+        ip_addr_t device_ip;
         uint64_t device_mac;
-        uint32_t device_gw_ip;
+        ip_addr_t device_gw_ip;
         pds_encap_t fabric_encap;
         bool dual_stack;
     };
@@ -198,19 +198,13 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                        json_pt.get_child("objects")) {
             std::string kind = obj.second.get<std::string>("kind");
             if (kind == "device") {
-                struct in_addr ipaddr, gwip;
-
                 test_params->device_mac =
                     std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
 
-                inet_aton(obj.second.get<std::string>("ip-addr").c_str(),
-                          &ipaddr);
-                test_params->device_ip = ntohl(ipaddr.s_addr);
-
-                inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
-                          &gwip);
-                test_params->device_gw_ip = ntohl(gwip.s_addr);
-
+                str2ipaddr(obj.second.get<std::string>("ip-addr").c_str(),
+                           &test_params->device_ip);
+                str2ipaddr(obj.second.get<std::string>("gw-ip-addr").c_str(),
+                           &test_params->device_gw_ip);
                 if (!obj.second.get<std::string>("encap").compare("vxlan")) {
                     test_params->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                 } else {
