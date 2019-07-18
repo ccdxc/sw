@@ -16,7 +16,8 @@ PipedIOPtr PipedIO::create(int fd, std::string filename)
     PipedIOPtr io = std::make_shared<PipedIO>();
     io->in_fd = fd;
     io->filename = filename;
-    io->out_fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    io->out_fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC,
+        S_IRUSR | S_IWUSR);
     io->watcher = IOWatcher::create(fd, io);
     io->size = 0;
 
@@ -39,7 +40,7 @@ void PipedIO::rotate()
         unlink(old.c_str());
         close(this->out_fd);
         rename(this->filename.c_str(), old.c_str());
-        this->out_fd = open(filename.c_str(), O_RDWR | O_CREAT,
+        this->out_fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC,
             S_IRUSR | S_IWUSR);
         this->size = 0;
     }

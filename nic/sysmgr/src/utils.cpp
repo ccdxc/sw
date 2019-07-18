@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <zlib.h>
 
+#include <ev.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -136,6 +138,26 @@ void exec_command(const std::string &command)
     exit(-1); // the only way to get here is if exec failed, exit
 }
 
+void close_on_exec(int fd)
+{
+    int flags;
+    int rc;
+
+    flags = fcntl(fd, F_GETFD, 0);
+    if (flags == -1)
+    {
+        logger->error("fcntl F_GETFD: %d", errno);
+        return;
+    }
+
+    flags |= FD_CLOEXEC;
+    rc = fcntl(fd, F_SETFD, flags);
+    if (rc == -1)
+    {
+        logger->error("fcntl F_SETFD: %d", errno);
+    }
+}
+
 void launch(const std::string &name, const std::string &command,
     unsigned long cpu_affinity, process_t *new_process)
 {
@@ -143,8 +165,17 @@ void launch(const std::string &name, const std::string &command,
     int outfds[2];
     int errfds[2];
 
+    /* 
+     * We are using the pipe for the stdout and stderr of the children so we can
+     * rotate the files. The "output" side of the pipe is where the child writes
+     *
+     * The "input" side of the pipe should be closed whenever we do an exec. It
+     * is only supposed to be open in the sysmgr and not in the children
+     */
     pipe(outfds);
+    close_on_exec(outfds[0]);
     pipe(errfds);
+    close_on_exec(errfds[0]);
 
     pid = fork();
 
@@ -155,14 +186,13 @@ void launch(const std::string &name, const std::string &command,
     }
     else if (pid == 0)
     {
+        // Destroy the ev loop
+        ev_loop_fork(EV_DEFAULT);
+        ev_loop_destroy(EV_DEFAULT);
         // replace the stdout with the "output" side of the "stdout" pipe
         replace_fd(outfds[1], 1);
-        // for the child we close the "input" side of the pipe
-        close(outfds[0]);
         // replace the stderr with the "output" side of the "stderr" pipe
         replace_fd(errfds[1], 2);
-        // for the child we close the "input" side of the pipe
-        close(errfds[0]);
         cpulock(cpu_affinity);
         exec_command(command);
     }
