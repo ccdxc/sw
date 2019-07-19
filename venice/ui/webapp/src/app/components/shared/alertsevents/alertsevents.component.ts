@@ -575,7 +575,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     if (observables.length <= 0) {
       return;
     }
-    forkJoin(observables).subscribe((results) => {
+    forkJoin(observables).subscribe(
+      (results) => {
       const isAllOK = Utility.isForkjoinResultAllOK(results);
       if (isAllOK) {
         this._controllerService.invokeSuccessToaster(summary, msg);
@@ -584,7 +585,10 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         const error = Utility.joinErrors(results);
         this._controllerService.invokeRESTErrorToaster(summary, error);
       }
-    });
+    },
+    this._controllerService.restErrorHandler(summary + ' Failed')
+
+    );
   }
 
   /**

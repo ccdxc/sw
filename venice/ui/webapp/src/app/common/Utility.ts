@@ -18,9 +18,9 @@ import { LogService } from '../services/logging/log.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterSmartNICCondition_type, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
-import { NaplesCondition, NaplesConditionValues, NodeConditionValues} from '@app/components/cluster-group/naples/index.ts';
+import { NaplesCondition, NaplesConditionValues, NodeConditionValues } from '@app/components/cluster-group/naples/index.ts';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
-import {ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterSmartNICStatus_admission_phase} from '@sdk/v1/models/generated/cluster';
+import { ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterSmartNICStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
 
 
 
@@ -56,20 +56,21 @@ export class Utility {
 
   private constructor() { }
 
-   /**
-   * Takes in a list of objects, and reads their labels to build a map
-   * Mapping is from label key to a map of label values which maps
-   * to object names that have that label.
-   */
-  public static getLabels(objList: any[]): { [labelKey: string]:
-      { [labelValue: string]: string[] }
-    } {
+  /**
+  * Takes in a list of objects, and reads their labels to build a map
+  * Mapping is from label key to a map of label values which maps
+  * to object names that have that label.
+  */
+  public static getLabels(objList: any[]): {
+    [labelKey: string]:
+    { [labelValue: string]: string[] }
+  } {
     const labels = {};
-    objList.forEach( (obj) => {
+    objList.forEach((obj) => {
       if (obj == null || obj.meta == null || obj.meta.labels == null) {
         return;
       }
-      Object.keys(obj.meta.labels).forEach( (key) => {
+      Object.keys(obj.meta.labels).forEach((key) => {
         const value = obj.meta.labels[key];
         let currVals = labels[key];
         if (currVals == null) {
@@ -375,17 +376,29 @@ export class Utility {
    * @param field Field to sort by
    * @param order 1 for asc, -1 for dec
    */
-  static dateSortHelper(a: any, b: any, fields: any, order: number): number {
-    const aField = _.get(a, fields, 0);
-    const bField = _.get(a, fields, 0);
-    const aDate = new Date(aField).getTime();
-    const bDate = new Date(bField).getTime();
-    if (aDate < bDate) {
-      return -1 * order;
-    } else if (aDate > bDate) {
-      return 1 * order;
+  static dateSortHelper(aObject: any, bObject: any, fields: any, order: number): number {
+    const value1 = _.get(aObject, fields, 0);
+    const value2 = _.get(bObject, fields, 0);
+
+    let result = 0;
+
+    if (value1 === null && value2 !== null) {
+      result = -1;
+    } else if (value1 !== null && value2 === null) {
+      result = 1;
+    } else if (value1 === null && value2 === null) {
+      result = 0;
+    } else {
+      const aDate = new Date(value1).getTime();
+      const bDate = new Date(value2).getTime();
+
+      if (aDate < bDate) {
+        result = -1;
+      } else if (aDate > bDate) {
+        result = 1;
+      }
     }
-    return 0;
+    return (result * order);
   }
 
   /**
@@ -400,14 +413,14 @@ export class Utility {
    *
    */
   static sortDate(list: any, fields: string[], order: number): any[] {
-      if (order !== 1 && order !== -1) {
-        console.error('Invalid sort order given');
-        return list;
-      }
-      const sortedList = list.sort( (a, b) => {
-        return this.dateSortHelper(a, b, fields, order);
-      });
-      return sortedList;
+    if (order !== 1 && order !== -1) {
+      console.error('Invalid sort order given');
+      return list;
+    }
+    const sortedList = list.sort((a, b) => {
+      return this.dateSortHelper(a, b, fields, order);
+    });
+    return sortedList;
   }
 
   static getTimeDifferenceDuration(diff): string {
@@ -1387,7 +1400,7 @@ export class Utility {
     // make sure the value field is an array
     retData = retData.map((item) => {
       const searchExpression: SearchExpression = {
-        key: ((addMetatag) ? 'meta.labels.' : '')  + item[repeater.keytextFormName],
+        key: ((addMetatag) ? 'meta.labels.' : '') + item[repeater.keytextFormName],
         operator: item[repeater.operatorFormName],
         values: Array.isArray(item[repeater.valueFormName]) ? item[repeater.valueFormName] : item[repeater.valueFormName].trim().split(',')
       };
@@ -1535,7 +1548,7 @@ export class Utility {
 
     // Check if the dates are equal
     const same = d1.getTime() === d2.getTime();
-    if (same) {return 0; }
+    if (same) { return 0; }
 
     // Check if the first is greater than second
     if (d1 > d2) { return 1; }
@@ -1570,9 +1583,9 @@ export class Utility {
 
   public static actionMethodNameToObject(methodName) {
     let ret;
-    Object.keys(CategoryMapping).some( (cat) => {
-      return Object.keys(CategoryMapping[cat]).some( (kind) => {
-        const actions = CategoryMapping[cat][kind].actions.map( a => a.toLowerCase());
+    Object.keys(CategoryMapping).some((cat) => {
+      return Object.keys(CategoryMapping[cat]).some((kind) => {
+        const actions = CategoryMapping[cat][kind].actions.map(a => a.toLowerCase());
         if (actions.includes(methodName.toLowerCase())) {
           ret = {
             category: cat,
@@ -1605,22 +1618,22 @@ export class Utility {
 
   public static getNaplesConditionObject(naples: Readonly<ClusterSmartNIC>): NaplesCondition {
     if (!naples || naples.status['admission-phase'] !== ClusterSmartNICStatus_admission_phase.ADMITTED) {
-      return {isHealthy: false, condition : NaplesConditionValues.EMPTY};
+      return { isHealthy: false, condition: NaplesConditionValues.EMPTY };
     } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
-      return {isHealthy : false, condition : NaplesConditionValues.UNKNOWN};
+      return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
     } else {
       for (const cond of naples.status.conditions) {
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.FALSE)) {
-          return {isHealthy: false, condition : NaplesConditionValues.UNHEALTHY};
+          return { isHealthy: false, condition: NaplesConditionValues.UNHEALTHY };
         }
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.TRUE)) {
-          return {isHealthy: true, condition : NaplesConditionValues.HEALTHY};
+          return { isHealthy: true, condition: NaplesConditionValues.HEALTHY };
         }
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.UNKNOWN)) {
-        return {isHealthy: false, condition : NaplesConditionValues.UNKNOWN};
+          return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
         }
       }
-      return {isHealthy: false, condition : NaplesConditionValues.UNKNOWN};
+      return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
     }
   }
 
@@ -1637,7 +1650,7 @@ export class Utility {
   public static displayReasons(naples: Readonly<ClusterSmartNIC>): string {
     const reasonarray: string[] = [];
     if (naples.status.conditions != null) {
-      for (let i = 0; i < naples.status['conditions'].length; i ++) {
+      for (let i = 0; i < naples.status['conditions'].length; i++) {
         if (!this.isNaplesNICHealthy(naples)) {
           if (naples.status.conditions[i].reason != null) {
             const cond = naples.status.conditions[i];
@@ -1661,16 +1674,16 @@ export class Utility {
 
   public static formatDateWithinString(cond: ClusterSmartNICCondition): string {
     const words: any[] = cond.reason.split(' ');
-    for (let j = 0; j < words.length; j ++) {    // parsing reason string to check for and format date/time events
+    for (let j = 0; j < words.length; j++) {    // parsing reason string to check for and format date/time events
       const w = words[j];
-      const regex = /\d{4}-\d{2}-\d{2}.*/ ;
+      const regex = /\d{4}-\d{2}-\d{2}.*/;
       if (w.match(regex) != null) {
         const date = new PrettyDatePipe('en-US').transform(w);
         words.splice(words.indexOf(w), 1, date);
       }
     }
     let reason = '';
-    for (let k = 0; k < words.length; k ++) {   // reconstructing new string
+    for (let k = 0; k < words.length; k++) {   // reconstructing new string
       reason = reason.concat(words[k], ' ');
     }
     return reason;
@@ -1726,7 +1739,7 @@ export class Utility {
 
   isAdmin(): boolean {
     const user: IAuthUser = this.getLoginUser();
-    if (user != null && user.status != null && user.status.roles != null && user.status.roles.includes('AdminRole'))  {
+    if (user != null && user.status != null && user.status.roles != null && user.status.roles.includes('AdminRole')) {
       return true;
     }
     return false;
