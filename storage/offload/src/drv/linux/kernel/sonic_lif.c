@@ -1126,6 +1126,7 @@ int sonic_lif_reset_ctl_start(struct lif *lif)
 
 	if (sonic_lif_reset_ctl_deferred_enqueue(lif, RESET_CTL_ST_PRE_RESET, 1)) {
 		OSAL_LOG_NOTICE("LIF reset_ctl started");
+		lif->num_resets++;
 		err = 0;
 	}
 
@@ -1311,7 +1312,10 @@ static int sonic_sysctl_init(struct lif *lif)
 	child = SYSCTL_CHILDREN(tree);
 
 	PNSO_INIT_STATS;
+
 	PNSO_INIT_LIF_RESET(lif);
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "lif_resets", CTLFLAG_RD,
+			&lif->num_resets, "Number of resets attempted on this LIF");
 
 	/* Register default reset_ctl work handlers */
 	//sonic_lif_reset_ctl_register(lif, sonic_lif_reset_ctl_work, lif);

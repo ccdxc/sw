@@ -139,7 +139,9 @@ struct lif {
 	struct dentry *dentry;
 	unsigned int flags;
 	struct res res;
-        struct reset_ctl reset_ctl;
+	struct reset_ctl reset_ctl;
+
+	uint64_t num_resets;
 };
 
 enum sonic_queue_type {
