@@ -24,7 +24,7 @@
 </app-pagebody>
 
 <ng-template #DataTable>
-  <app-lazyrender [data]="naples" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
+  <app-lazyrender [data]="filteredNaples" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
     <p-table #naplesTable
              class="global-primeng-table-lazyload" [columns]="cols"
              dataKey="meta.name" [responsive]="true"
@@ -32,8 +32,21 @@
              [resizableColumns]="true">
       <!-- Table Caption -->
       <ng-template pTemplate="caption">
-        <app-tableheader title="Naples" [total]="naples.length" [icon]="naplesIcon" width="250px">
-        </app-tableheader>
+        <div fxFlex="auto" fxLayout="row">
+          <div>
+            <app-tableheader title="Naples" [total]="filteredNaples.length" [icon]="naplesIcon"
+                             width="250px">
+            </app-tableheader>
+          </div>
+          <div fxFlex="grow" class="naples-table-advsearch" fxLayout="column">
+            <app-advanced-search #advancedSearchComponent
+                                 [formArray]="fieldFormArray" [cols]="cols"
+                                 (cancelEmitter)="onCancelSearch($event)"
+                                 (searchEmitter)="getSmartNICs()"
+                                 kind="SmartNIC">
+            </app-advanced-search>
+          </div>
+        </div>
       </ng-template>
       <!-- Table Header -->
       <ng-template pTemplate="header" let-columns>

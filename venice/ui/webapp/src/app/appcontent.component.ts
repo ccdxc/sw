@@ -272,7 +272,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           if (Utility.getInstance().getMaintenanceMode()) {
             setTimeout(() => {
               this.getVersion();  // Watch ends during rollout, try again so new updates can be shown on UI
-            }, 0);
+            }, 10000);
           } else {
           this._controllerService.webSocketErrorToaster('Failed to get Cluster Version', error);
           }
@@ -281,7 +281,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           setTimeout(() => {
             this.version = new ClusterVersion();
             this.getVersion();
-          }, 0);
+          }, 10000);
         }
       );
       this.subscriptions.push(this.versionSubscription);

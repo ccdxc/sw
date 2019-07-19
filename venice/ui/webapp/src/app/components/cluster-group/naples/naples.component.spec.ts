@@ -23,6 +23,7 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { SearchService } from '@app/services/generated/search.service';
 
 @Component({
   template: ''
@@ -128,7 +129,8 @@ describe('NaplesComponent', () => {
         ClusterService,
         MatIconRegistry,
         MetricsqueryService,
-        MessageService
+        MessageService,
+        SearchService
       ]
     });
       });

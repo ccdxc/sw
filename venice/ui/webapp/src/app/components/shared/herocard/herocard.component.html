@@ -14,9 +14,11 @@
              fxLayoutAlign="start start">
           <div fxFlex="28px"></div>
           <ng-container *ngIf="firstStat != null && firstStat.value != null">
-            <mat-icon *ngIf="arrowDirection==='UP'" [style.color]="statColor" fxFlex="none"
+            <mat-icon *ngIf="arrowDirection==='UP'" [style.color]="updateStatColor(firstStat)"
+                      fxFlex="none"
                       class="herocard-stat-arrow">arrow_upward</mat-icon>
-            <mat-icon *ngIf="arrowDirection==='DOWN'" [style.color]="statColor" fxFlex="none"
+            <mat-icon *ngIf="arrowDirection==='DOWN'" [style.color]="updateStatColor(firstStat)"
+                      fxFlex="none"
                       class="herocard-stat-arrow">arrow_downward</mat-icon>
             <div fxFlex="auto" fxLayout="column" class="herocard-first-stat"
                  [matTooltip]="firstStat.tooltip"

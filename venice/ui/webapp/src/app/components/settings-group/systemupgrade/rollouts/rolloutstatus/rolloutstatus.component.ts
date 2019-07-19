@@ -171,7 +171,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
         if (Utility.getInstance().getMaintenanceMode()) {
           setTimeout(() => {
             this.getNaples();
-          }, 0);
+          }, 10000);
         } else {
           this._controllerService.webSocketErrorToaster('Failed to get Naples', error);
         }
@@ -179,7 +179,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       () => {
         setTimeout(() => {
           this.getNaples();  // Watch ends during rollout, try again so new updates can be shown on UI
-        }, 0);
+        }, 10000);
       }
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
@@ -261,7 +261,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
         if (Utility.getInstance().getMaintenanceMode()) {
           setTimeout(() => {
             this.watchRolloutDetail();
-          }, 0);
+          }, 10000);
         } else {
         this._controllerService.webSocketErrorToaster('Failed to get Rollout', error);
         }
@@ -269,7 +269,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       () => {
         setTimeout(() => {
           this.watchRolloutDetail();
-        }, 0);
+        }, 10000);
       }
     );
     this.subscriptions.push(subscription);

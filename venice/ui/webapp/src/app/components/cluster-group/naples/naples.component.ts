@@ -8,13 +8,17 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNIC, IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 import { NaplesConditionValues } from '.';
+import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
+import { FormArray } from '@angular/forms';
+import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { SearchService } from '@app/services/generated/search.service';
 
 @Component({
   selector: 'app-naples',
@@ -23,12 +27,28 @@ import { NaplesConditionValues } from '.';
   styleUrls: ['./naples.component.scss']
 })
 
+/**
+ * Added advanced search to naples table.
+ *
+ * When WatchSmartNIC sends a response, we create a map mapping naples name (spec.id) to the naples object.
+ * Whenever advanced search is used, a new searchrequest is created using this.advancedSearchComponent.getSearchRequest
+ * Then we make an api call to get all the matching NICs using _callSearchRESTAPI.
+ * These results do not contain spec information, so we lookup the original naples object from the naplesMap.
+ * The matching naples objects are added to this.filteredNaples which is used to render the table.
+ */
+
 export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy {
   @ViewChild('naplesTable') naplesTurboTable: Table;
+  @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
   naples: ReadonlyArray<ClusterSmartNIC> = [];
+  filteredNaples: ReadonlyArray<ClusterSmartNIC> = [];
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naplesMap: { [napleName: string]: ClusterSmartNIC };
+
+  fieldFormArray = new FormArray([]);
+  maxRecords: number = 8000;
 
   cols: any[] = [
     { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true },
@@ -93,6 +113,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
+    protected searchService: SearchService,
   ) {
     super(controllerService);
   }
@@ -109,11 +130,16 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
   getNaples() {
+    this.naplesMap = {};
     this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
+    this.filteredNaples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
+        for (const naple of this.naples) {
+          this.naplesMap[naple.meta.name] = naple;
+        }
       },
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
     );
@@ -307,6 +333,62 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     }
     return null;
   }
+
+  getSmartNICs(field = this.naplesTurboTable.sortField,
+    order = this.naplesTurboTable.sortOrder) {
+
+    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'SmartNIC', this.maxRecords);
+
+    this._callSearchRESTAPI(searchSearchRequest);
+  }
+
+  populateFieldSelector() {
+    this.fieldFormArray = new FormArray([]);
+  }
+
+    /**
+   * This serves HTML API. It clear naples search and refresh data.
+   * @param $event
+   */
+  onCancelSearch($event) {
+    this.populateFieldSelector();
+    this.getSmartNICs();
+    this.controllerService.invokeInfoToaster('Infomation', 'Cleared search criteria, NICs refreshed.');
+  }
+
+  private _callSearchRESTAPI(searchSearchRequest: SearchSearchRequest) {
+    const subscription = this.searchService.PostQuery(searchSearchRequest).subscribe(
+
+      response => {
+        const data: SearchSearchResponse = response.body as SearchSearchResponse;
+        let objects = data.entries;
+        if (!objects || objects.length === 0) {
+          this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
+          objects = [];
+        }
+        const entries = [];
+        for (let k = 0; k < objects.length; k++) {
+          entries.push(objects[k].object); // objects[k] is a SearchEntry object
+        }
+
+        this.lastUpdateTime = new Date().toISOString();
+        this.filteredNaples = this.filterNaplesByName(entries);
+      },
+      (error) => {
+        this.controllerService.invokeRESTErrorToaster('Failed to get naples', error);
+      }
+    );
+    this.subscriptions.push(subscription);
+  }
+
+  filterNaplesByName(entries: IClusterSmartNIC[]): ClusterSmartNIC[] {
+    const tmpMap = {};
+    entries.forEach(ele => {
+      const key = ele.meta.name;
+      tmpMap[key] = this.naplesMap[key];
+    });
+    return Object.values(tmpMap);
+}
 
   ngOnDestroy() {
     this.subscriptions.forEach(subscription => {

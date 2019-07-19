@@ -16,6 +16,7 @@ import * as _ from 'lodash';
 import {SearchSearchRequest, SearchSearchRequest_sort_order} from '@sdk/v1/models/generated/search';
 import {ControllerService} from '@app/services/controller.service';
 import {Utility} from '@common/Utility';
+import * as moment from 'moment';
 
 /**
  * Advanced Search Component
@@ -252,9 +253,9 @@ export class AdvancedSearchComponent implements OnInit {
    * @param date
    */
   formatDate(date: string): string {
-    const timestamp = Date.parse(date);
+    const timestamp = moment(date);
 
-    if (isNaN(timestamp) === false) {
+    if (timestamp.isValid() !== false) {
       const d = new Date(date),
         year = d.getFullYear();
       let month = '' + (d.getMonth() + 1),
@@ -294,9 +295,21 @@ export class AdvancedSearchComponent implements OnInit {
     if (model !== null && model.length !== 0) {
       const fields = [];
 
+      const instance = SearchUtil.getModelInfo(Utility.findCategoryByKind(this.kind), this.kind);
       model.forEach(ele => {
         // all value post process logic goes here
-        const processedValue = ele.valueFormControl.map(e => this.formatDate(e));
+        let processedValue;
+        if (field !== '') {
+          const type = Utility.getNestedPropInfo(instance, ele.keyFormControl) ? Utility.getNestedPropInfo(instance, ele.keyFormControl).type : '';
+          if (type === 'Date') {
+            processedValue = ele.valueFormControl.map(e => this.formatDate(e));
+          } else {
+            processedValue = ele.valueFormControl.map(e => e);
+          }
+        } else {
+          processedValue = [];
+        }
+
         fields.push({
           key: ele.keyFormControl,
           operator: ele.operatorFormControl,
