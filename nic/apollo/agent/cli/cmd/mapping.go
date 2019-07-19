@@ -115,10 +115,10 @@ func printMappingHeader() {
 func printMapping(mapping *pds.Mapping) {
 	spec := mapping.GetSpec()
 	encapStr := utils.EncapToString(spec.GetEncap())
-	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-14s%-7d%-16s%-16s%-6d\n",
+	fmt.Printf("%-6s%-16s%-9s%-16s%-20s%-14s%-7d%-16s%-16s%-6d\n",
 		spec.GetId().GetVPCId(),
 		utils.IPAddrToStr(spec.GetId().GetIPAddr()),
-		spec.GetSubnetId(), spec.GetTunnelId(),
+		spec.GetSubnetId(), utils.IPAddrToStr(spec.GetTunnelIP()),
 		utils.MactoStr(spec.GetMACAddr()),
 		encapStr, spec.GetVnicId(),
 		utils.IPAddrToStr(spec.GetPublicIP()),

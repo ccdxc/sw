@@ -33,8 +33,8 @@ message MappingSpec {
   MappingKey      Id          = 1;
   // subnet this mapping is in
   uint32          SubnetId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // Tunnel id of the TEP, if the mapping is remote, 0 for local mappings
-  uint32          TunnelId    = 3;
+  // Tunnel IP of the TEP, if the mapping is remote, none for local mappings
+  types.IPAddress TunnelIP    = 3;
   // overlay MAC address of this mapping
   uint64          MACAddr     = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // fabric encap information specific to this mapping, if any

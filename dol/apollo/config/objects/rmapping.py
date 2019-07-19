@@ -60,7 +60,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.Id.VPCId = self.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.SUBNET.SubnetId
-        spec.TunnelId = int(self.TunIPAddr)
+        utils.GetRpcIPAddr(self.TunIPAddr, spec.TunnelIP)
         spec.MACAddr = self.MACAddr.getnum()
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():
@@ -89,7 +89,7 @@ class RemoteMappingObjectClient:
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'rmap', None) == None:
             return
-            
+
         stack = parent.VPC.Stack
 
         for rmap_spec_obj in subnet_spec_obj.rmap:
