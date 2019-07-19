@@ -262,7 +262,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   }
 
   isDeletable(data): boolean {
-    if (data.status.state === RolloutRolloutStatus_state.SUSPENDED) {
+    if (data.status.state === RolloutRolloutStatus_state.SUSPENDED || data.status.state === RolloutRolloutStatus_state.FAILURE || data.status.state === RolloutRolloutStatus_state.SUCCESS || data.status.state === RolloutRolloutStatus_state.DEADLINE_EXCEEDED) {
       return true;
     } else {
       return false;

@@ -72,6 +72,11 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   ];
 
   naples: ReadonlyArray<ClusterSmartNIC> = [];
+// During progressing rollout, WatchSmartNIC may fail resulting in this.naples to be set to empty.
+// This affects the "name" column of the NICs table (see getNICID func).
+// Hence we keep the last valid copy of naples as naplesCopy, which is used to render NIC names.
+  naplesCopy: ReadonlyArray<ClusterSmartNIC> = [];
+
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
@@ -100,9 +105,8 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       this.showDeletionScreen = false;
       this.showMissingScreen = false;
       this.setDefaultToolbar(this.selectedRolloutId);
-
-     this.getNaples();
     });
+    this.getNaples();
   }
 
 
@@ -166,6 +170,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
+        this.naplesCopy = this.naples;
       },
       (error) => {
         if (Utility.getInstance().getMaintenanceMode()) {
@@ -316,7 +321,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   }
 
   getNICID(nicNameInMAC: string): string {
-    const matchedNaple  = this.naples.find(naple => {
+    const matchedNaple  = this.naplesCopy.find(naple => {
       return naple.meta.name === nicNameInMAC;
     });
     return matchedNaple ? matchedNaple.spec.id : nicNameInMAC;

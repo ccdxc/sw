@@ -120,7 +120,7 @@
                         <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="center center">
                           <mat-icon [ngClass]="first?'newrollout-order-disabledarrow':'newrollout-order-buttons'"
                                     (click)="moveOrder(index, -1)">arrow_drop_up</mat-icon>
-                          <div class="newrollout-order-index">{{index}}</div>
+                          <div class="newrollout-order-index">{{index+1}}</div>
                           <mat-icon [ngClass]="last?'newrollout-order-disabledarrow':'newrollout-order-buttons'"
                                     (click)="moveOrder(index, 1)">arrow_drop_down</mat-icon>
                         </div>
@@ -145,6 +145,16 @@
                                           [matTooltip]="'Delete'"
                                           (click)="deleteOrder(index)"
                                           fxFlex="nogrow">delete
+                                </mat-icon>
+                                <mat-icon class="global-alert-warning-icon"
+                                          *ngIf="orders[index].incomplete"
+                                          [matTooltip]="'Empty Order'"
+                                          fxFlex="nogrow">error
+                                </mat-icon>
+                                <mat-icon class="global-alert-info-icon"
+                                          *ngIf="orders[index].duplicatesWith.length>0"
+                                          [matTooltip]="duplicateMatchTooltip(index)"
+                                          fxFlex="nogrow">notifications
                                 </mat-icon>
                               </div>
                               <div fxFlex="5px"></div>

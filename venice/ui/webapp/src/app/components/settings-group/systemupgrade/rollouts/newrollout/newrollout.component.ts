@@ -25,8 +25,10 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 
 export class RolloutOrder {
   orderSummary: string = '';
-  matchedSmartNICs: any = [];
+  matchedSmartNICs: string[] = [];
   editable: boolean = false;
+  duplicatesWith: number[] = [];
+  incomplete: boolean = true;
 }
 
 /**
@@ -40,6 +42,11 @@ export class RolloutOrder {
   User can choose to add multiple such group though only one can be edited at one time.
 
   The 'Save Rollout' button is disabled until isAllInputsValidated() return true.
+
+  Everytime a change is made, we built the duplicateMatchMap.
+  It is a mapping from nic.meta.name to list of orderindices
+  We iterate over all orders (and their matches NICs) and built the map.
+  When we see that a matched NIC already has order(s) in the map, we show the info icon to notify the user.
 
  * Key functions:
   onInit() -> fetch all Naples
@@ -99,6 +106,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   naples: ReadonlyArray<ClusterSmartNIC> = [];
   naplesIdMap: { [id: string]: ClusterSmartNIC } = {};
   naplesRuleMap: { [rule: string]: Set<string> } = {};
+  duplicateMatchMap: { [nicid: string]: number[] } = {};
 
   constructor(private rolloutService: RolloutService,
     private objstoreService: ObjstoreService,
@@ -245,7 +253,18 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     return Utility.isModelNameUniqueValidator(existingRollouts, 'rollout-name');
   }
 
+  countMatchedNICs() {
+    let count = 0;
+    for (const order of this.orders) {
+      count += order.matchedSmartNICs.length;
+    }
+    return count;
+  }
+
   isAllInputsValidated(): boolean {
+    if (this.newRollout.$formGroup['smartnic-must-match-constraint'] && this.countMatchedNICs() !== 0) {
+      return false;
+    }
     if (!this.newRollout || !this.newRollout.$formGroup) {
       return false;
     }
@@ -367,7 +386,30 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   addRollout() {
-    this._saveRollout();
+    if (this.newRollout.$formGroup.value.spec['smartnic-must-match-constraint']) {
+      let duplicate = false;
+      for (const order of this.orders) {
+        if (order.duplicatesWith.length > 0) {
+          duplicate = true;
+          break;
+        }
+      }
+      if (duplicate) {
+        this._controllerService.invokeConfirm({
+          header: 'Multiple orders matching some NICs.',
+          message: 'The earliest order in the sequence will take preference for each of these NICs. Do you want to make some changes?',
+          acceptLabel: 'Yes',
+          rejectLabel: 'No',
+          reject: () => {
+            this._saveRollout();
+          }
+        });
+      } else {
+        this._saveRollout();
+      }
+    } else {
+      this._saveRollout();
+    }
   }
 
   updateRollout() {
@@ -578,6 +620,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     orders.push(norder.$formGroup);
     this.orders.push(new RolloutOrder());
     this.makeOrderEditable(orders.length - 1, null);
+    this.orders[orders.length - 1].incomplete = true;
   }
 
   // removes order HTML element and also from formarray
@@ -618,6 +661,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     this.orders[index].editable = false;
     this.matchNICs(index);
     this.setOrderSummary(index);
+    this.buildDuplicationMap();
   }
 
   // saved orders show a summary of the label selectors contained inside.
@@ -655,6 +699,19 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     setTimeout(() => {
       this.matchNICs(index);
       this.setOrderSummary(index);
+      this.buildDuplicationMap();
+      const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+      const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(orders.at(index).value);
+      if ( repeaterSearchExpression.length > 0 ) {
+        this.orders[index].incomplete = false;
+        for (let i = 0; i < repeaterSearchExpression.length; i++) {
+          if (Utility.isEmpty(repeaterSearchExpression[i].key ) || Utility.isEmpty(repeaterSearchExpression[i].values)) {
+            this.orders[index].incomplete = true;
+          }
+        }
+      } else {
+        this.orders[index].incomplete = true;
+      }
     }, 0);
   }
 
@@ -674,46 +731,57 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   // Compares the labelselector rules with the naplesRuleMap to get all matched NICs
   getRuleResults(matchRule) {
     const ok: boolean = true;
-    let NICSet: string[] = [];
+    let naplesNICSet: string[] = [];
     if (typeof matchRule[2] === 'object' && !!matchRule[2]) {
       for (const i of matchRule[2]) {
         const rule = this.makeRuleMapKey(matchRule[0], i);
         if (rule in this.naplesRuleMap) {
-          NICSet = NICSet.concat(Array.from(this.naplesRuleMap[rule]));
+          naplesNICSet = naplesNICSet.concat(Array.from(this.naplesRuleMap[rule]));
         }
       }
     } else {
       const rule = this.makeRuleMapKey(matchRule[0], matchRule[2]);
       if (rule in this.naplesRuleMap) {
-        NICSet = Array.from(this.naplesRuleMap[rule]);
+        naplesNICSet = Array.from(this.naplesRuleMap[rule]);
       }
     }
 
-    if (NICSet.length > 0) {
-      return NICSet;
+    if (naplesNICSet.length > 0) {
+      return naplesNICSet;
     } else {
       return null;
     }
   }
 
+  getAllNICs() {
+    const naplesNICSet: Set<string> = new Set<string>();
+    for (const item of this.naples) {
+      naplesNICSet.add(item.meta.name);
+    }
+    return Array.from(naplesNICSet);
+  }
+
   updateMatches(index, matchRules) {
-    let NICSet: string[] = null;
+    let naplesNICSet: string[] = null;
     for (const matchRule of matchRules) {
       const ret = this.getRuleResults(matchRule);
-      if (!!ret) {
-        if (NICSet === null) {
-          NICSet = Array.from(ret);
-        } else {
-          if (matchRule[1] === '=') {
-            NICSet = NICSet.filter(x => Array.from(ret).includes(x));
-          } else {
-            NICSet = NICSet.filter(x => !Array.from(ret).includes(x));
-          }
+      if (ret === null) {
+        break; // since all rules are 'AND'ed together. If one matches nothing, we dont have to check for the rest.
+      }
+      if (matchRule[1] === 'in') {
+        if (naplesNICSet === null) {
+          naplesNICSet = Array.from(ret);
         }
+        naplesNICSet = naplesNICSet.filter(x => Array.from(ret).includes(x));
+      } else {
+        if (naplesNICSet === null) {
+          naplesNICSet = this.getAllNICs();
+        }
+        naplesNICSet = naplesNICSet.filter(x => !Array.from(ret).includes(x));
       }
     }
 
-    if (NICSet === null) { this.orders[index].matchedSmartNICs = []; } else { this.orders[index].matchedSmartNICs = NICSet; }
+    if (naplesNICSet === null) { this.orders[index].matchedSmartNICs = []; } else { this.orders[index].matchedSmartNICs = naplesNICSet; }
   }
 
   // If there are no labels added (for any of the NICs), the upgrade using labels toggle button is hidden.
@@ -722,6 +790,34 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       return true;
     } else {
       return false;
+    }
+  }
+
+  duplicateMatchTooltip(index) {
+    let msg = 'Has common matches with Order';
+    msg += this.orders[index].duplicatesWith.length > 1 ? 's ' : ' ';
+    const arr = this.orders[index].duplicatesWith.map( (value) => {
+      return value + 1;
+    } );
+    msg += arr.join(', ');
+    return msg;
+  }
+
+  buildDuplicationMap() {
+    this.duplicateMatchMap = {};
+    for (let ix = 0; ix < this.orders.length; ix++) {
+      const order = this.orders[ix];
+      this.orders[ix].duplicatesWith = [];
+      for (const match of order.matchedSmartNICs) {
+        if ( !(match in this.duplicateMatchMap) ) {
+          this.duplicateMatchMap[match] = [ix];
+        } else {
+          this.orders[ix].duplicatesWith = this.orders[ix].duplicatesWith.concat([...this.duplicateMatchMap[match]]);
+          this.duplicateMatchMap[match].push(ix);
+        }
+      }
+      // sort and get unique
+      this.orders[ix].duplicatesWith = this.orders[ix].duplicatesWith.sort().filter(function(el, i, a) {return i === a.indexOf(el); });
     }
   }
 }
