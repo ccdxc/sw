@@ -13,6 +13,7 @@
 #define AVAILABLE_MEMORY "MemAvailable"
 
 #define AVAILABLE_MEMORY_THRESHOLD (16 * 1024)
+#define LOW_MEMORY_THRESHOLD (500 * 1024)
 #define PROCESS_CHANGE_THRESHOLD 1024
 #define MB_TO_KB 1024
 #define GB_TO_KB (1024 * 1024)
@@ -227,6 +228,10 @@ monitorfreememory(void) {
                         (double)avail_memory_lowest / 1024.0);
                         mem_diff = 0;
                     }
+                }
+                if (curr_memory < LOW_MEMORY_THRESHOLD) {
+                    TRACE_INFO(GetObflLogger(), "Available memory is {:.1f} MB",
+                    (double)curr_memory / 1024.0);
                 }
                 asicmemory.availablememory = curr_memory;
             }
