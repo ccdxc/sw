@@ -337,7 +337,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   getSmartNICs(field = this.naplesTurboTable.sortField,
     order = this.naplesTurboTable.sortOrder) {
 
-    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'SmartNIC', this.maxRecords);
+    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'SmartNIC', true, this.maxRecords);
 
     this._callSearchRESTAPI(searchSearchRequest);
   }
