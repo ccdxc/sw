@@ -256,7 +256,8 @@ class PolicyObjectClient:
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
         stack = parent.Stack
-        self.__objs = []
+        isV4Stack = True if ((stack == "dual") or (stack == 'ipv4')) else False
+        isV6Stack = True if ((stack == "dual") or (stack == 'ipv6')) else False
         self.__v4ingressobjs[vpcid] = []
         self.__v6ingressobjs[vpcid] = []
         self.__v4egressobjs[vpcid] = []
@@ -265,17 +266,6 @@ class PolicyObjectClient:
         self.__v6ipolicyiter[vpcid] = None
         self.__v4epolicyiter[vpcid] = None
         self.__v6epolicyiter[vpcid] = None
-
-        def __is_v4stack():
-            if stack == "dual" or stack == 'ipv4':
-                return True
-            return False
-
-        def __is_v6stack():
-            return False #v6 policy not supported in HAL yet
-            if stack == "dual" or stack == 'ipv6':
-                return True
-            return False
 
         def __get_l4_rule(af, rulespec):
             sportlow = rulespec.sportlow if hasattr(rulespec, 'sportlow') else 0
@@ -344,7 +334,7 @@ class PolicyObjectClient:
 
         def __add_user_specified_policy(policyspec, policytype, overlaptype):
             direction = policyspec.direction
-            if __is_v4stack():
+            if isV4Stack:
                 v4rules = __get_rules(utils.IP_VERSION_4, policyspec)
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions
@@ -353,7 +343,7 @@ class PolicyObjectClient:
                 else:
                     policyobj = __add_v4policy(direction, v4rules, policytype, overlaptype)
 
-            if __is_v6stack():
+            if isV6Stack:
                 v6rules = __get_rules(utils.IP_VERSION_6, policyspec)
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions

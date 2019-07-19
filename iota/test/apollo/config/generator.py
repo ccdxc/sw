@@ -89,7 +89,6 @@ def __create():
     #VpcObjectClient(Store.Get)
     #vpc.client.CreateObjects()
 
-    api.Logger.info("Generating VPC objects")
 
     # Commit the Batch
     device.client.Commit()
@@ -110,7 +109,6 @@ def Main(args):
     __generate(cfgpec)
 
     api.Logger.info("Creating objects in Agent")
-    api.Logger.info("Skipping Creating objects in Agent")
     __create()
     api.Logger.info("Creating objects in Agent complete")
     timeprofiler.ConfigTimeProfiler.Stop()

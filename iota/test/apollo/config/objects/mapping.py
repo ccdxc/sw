@@ -169,10 +169,10 @@ class LocalMappingObjectClient:
                 #ADd remote tunnel for rest of them.
                 for device in Store.GetDevices():
                     if device != parent.device:
-                        remoteTunnel = parent.device.GetRemoteTunnel(device)
+                        remoteTunnel = device.GetRemoteTunnel(parent.device)
                         assert(remoteTunnel)
                         obj = RemoteMappingObject(parent, obj.IPAddr, remoteTunnel, utils.IP_VERSION_6)
-                        self.__localMappings[parent.device].append(obj)
+                        self.__localMappings[device].append(obj)
                 c = c + 1
             if c < vnic_spec_obj.ipcount and (stack == "dual" or stack == 'ipv4'):
                 obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_4)
@@ -201,9 +201,7 @@ class LocalMappingObjectClient:
                 for mapping in mappings:
                     if hasattr(mapping, "VNIC") and mapping.VNIC.GID() == vnic.GID():
                         if mapping.AddrFamily == 'IPV6':
-                            #TODO, have to add support for ipv6
-                            pass
-                            #ip_addresses.append(mapping.IPAddr + "/" + mapping.VNIC.subnet.IPPrefix[1].prefixlen)
+                            ip_addresses.append(str(mapping.IPAddr) + "/" + str(mapping.VNIC.SUBNET.IPPrefix[0].prefixlen))
                         else:
                             ip_addresses.append(str(mapping.IPAddr) + "/" + str(mapping.VNIC.SUBNET.IPPrefix[1].prefixlen))
 

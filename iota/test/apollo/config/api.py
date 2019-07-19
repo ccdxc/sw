@@ -46,12 +46,25 @@ class Endpoint:
         self.ip_addresses = ip_addresses
         self.node_name = vnic_inst.device.node_name
 
+def __get_vnic_ip_address(vnic_addresses, iptype):
+    for ipaddr in vnic_addresses:
+        ippfx = ipaddress.ip_interface(ipaddr).network
+        if isinstance(ippfx, iptype):
+            return ipaddr
+    return None
+
+def __get_vnic_addresses(vnic_addresses):
+    ip_addresses = []
+    ip_addresses.append(__get_vnic_ip_address(vnic_addresses, ipaddress.IPv4Network))
+    ip_addresses.append(__get_vnic_ip_address(vnic_addresses, ipaddress.IPv6Network))
+    return ip_addresses
 
 def GetEndpoints():
     vnics = vnic.client.Objects()
     eps = []
     for vnic_inst in vnics:
-        ip_addresses = mapping.client.GetVnicAddresses(vnic_inst)
+        vnic_addresses = mapping.client.GetVnicAddresses(vnic_inst)
+        ip_addresses = __get_vnic_addresses(vnic_addresses)
         ep = Endpoint(vnic_inst, ip_addresses)
         eps.append(ep)
 
@@ -60,7 +73,8 @@ def GetEndpoints():
 def __findWorkloadsByIP(ip):
     wloads = api.GetWorkloads()
     for wload in wloads:
-        if wload.ip_address == ip:
+        if wload.ip_address == ip or\
+           wload.ipv6_address == ip:
             return wload
     api.Logger.error("Workload {} not found".format(ip))
     return None
@@ -81,6 +95,8 @@ def __findWorkloadByVnic(vnic_inst):
     vnic1_ip_addresses = mapping.client.GetVnicAddresses(vnic_inst)
     for wload in wloads:
         if wload.ip_prefix in vnic1_ip_addresses:
+            return wload
+        elif wload.ipv6_prefix in vnic1_ip_addresses:
             return wload
     return None
 

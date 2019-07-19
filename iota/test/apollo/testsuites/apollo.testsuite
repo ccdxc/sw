@@ -21,6 +21,7 @@ setup:
           args :
              spec : 2naples_switch.cfgyml
         - step : config.bringup_workloads
+        - step : config.set_max_mtu
         - step : config.add_static_arp
 
 

@@ -22,6 +22,7 @@ def __add_workloads():
         wl_msg.workload_name = ep.name
         wl_msg.node_name = ep.node_name
         wl_msg.ip_prefix = ep.ip_addresses[0]
+        wl_msg.ipv6_prefix = ep.ip_addresses[1]
         wl_msg.mac_address = str(ep.macaddr)
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
         wl_msg.encap_vlan = ep.vlan

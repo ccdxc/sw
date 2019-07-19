@@ -24,6 +24,7 @@ def Trigger(tc):
     if tc.skip: return api.types.status.SUCCESS
 
     req = None
+    count = "5"
     interval = "0.2"
     if not api.IsSimulation():
         req = api.Trigger_CreateAllParallelCommandsRequest()
@@ -32,19 +33,20 @@ def Trigger(tc):
         interval = "3"
     tc.cmd_cookies = []
 
+    ping_base_cmd = "ping -A -W 1 -c %s -i %s -s %s " % (count, interval, tc.iterators.pktsize)
+    ping6_base_cmd = "ping6 -A -W 1 -c %s -i %s -s %s " % (count, interval, tc.iterators.pktsize)
     for pair in tc.workload_pairs:
         w1 = pair[0]
         w2 = pair[1]
         if tc.iterators.ipaf == 'ipv6':
             cmd_cookie = "%s(%s) --> %s(%s)" %\
                          (w1.workload_name, w1.ipv6_address, w2.workload_name, w2.ipv6_address)
-            api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                                   "ping6 -i %s -c 20 -s %d %s" % (interval, tc.iterators.pktsize, w2.ipv6_address))
+            ping_cmd = ping6_base_cmd + w2.ipv6_address
         else:
             cmd_cookie = "%s(%s) --> %s(%s)" %\
                          (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
-            api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                                   "ping -i %s -c 20 -s %d %s" % (interval, tc.iterators.pktsize, w2.ip_address))
+            ping_cmd = ping_base_cmd + w2.ip_address
+        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, ping_cmd)
         api.Logger.info("Ping test from %s" % (cmd_cookie))
         tc.cmd_cookies.append(cmd_cookie)
 

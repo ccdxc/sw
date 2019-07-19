@@ -32,7 +32,9 @@ from iota.test.apollo.config.store import Store
 
 PROTO_TCP = 6
 PROTO_UDP = 17
-protos = {PROTO_TCP, PROTO_UDP}
+PROTO_ICMP = 1
+PROTO_ICMPV6 = 58
+protos = {PROTO_TCP, PROTO_UDP, PROTO_ICMP, PROTO_ICMPV6}
 
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
@@ -74,7 +76,8 @@ class SubnetObject(base.ConfigObjectBase):
         return
 
     def __fill_default_rules_in_policy(self):
-        ids = {self.IngV4SecurityPolicyId, self.EgV4SecurityPolicyId}
+        ids = [self.IngV4SecurityPolicyId, self.EgV4SecurityPolicyId]
+        ids += [self.IngV6SecurityPolicyId, self.EgV6SecurityPolicyId]
         for id in ids:
             policyobjs = policy.client.Objects()
             for policyobj in policyobjs:
