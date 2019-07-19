@@ -1112,6 +1112,7 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 		mgmtIP := s.getMgmtIPAddr()
 		if err := s.netAgent.CreateLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
 			log.Errorf("Failed to create lateral objects in netagent. Err: %v", err)
+			return fmt.Errorf("failed to create lateral objects in netagent. Err: %v", err)
 		}
 	}
 

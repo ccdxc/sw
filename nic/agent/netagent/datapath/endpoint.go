@@ -15,6 +15,7 @@ import (
 )
 
 // --------------------------- Local Endpoint CRUDs --------------------------- //
+var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 
 // CreateLocalEndpoint creates a local endpoint in the datapath
 func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
@@ -27,7 +28,6 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	var lifHandle *halproto.LifKeyHandle
 
 	// convert mac address
-	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 

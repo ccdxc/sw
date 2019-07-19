@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 			}
 			client.debugStats.AddInt("SecurityProfileWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got SecurityProfile watch event: Type: {%+v} SecurityProfile:{%+v}", client.clientName, evt.EventType, evt.SecurityProfile)
+			log.Infof("Ctrlerif: agent %s got SecurityProfile watch event: Type: {%+v} SecurityProfile:{%+v}", client.clientName, evt.EventType, evt.SecurityProfile.ObjectMeta)
 
 			client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
 			go client.processSecurityProfileEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 				// create the SecurityProfile
 				err = reactor.CreateSecurityProfile(&evt.SecurityProfile)
 				if err != nil {
-					log.Errorf("Error creating the SecurityProfile {%+v}. Err: %v", evt.SecurityProfile, err)
+					log.Errorf("Error creating the SecurityProfile {%+v}. Err: %v", evt.SecurityProfile.ObjectMeta, err)
 					client.debugStats.AddInt("CreateSecurityProfileError", 1)
 				} else {
 					client.debugStats.AddInt("CreateSecurityProfile", 1)

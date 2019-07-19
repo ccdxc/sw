@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 			}
 			client.debugStats.AddInt("EndpointWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got Endpoint watch event: Type: {%+v} Endpoint:{%+v}", client.clientName, evt.EventType, evt.Endpoint)
+			log.Infof("Ctrlerif: agent %s got Endpoint watch event: Type: {%+v} Endpoint:{%+v}", client.clientName, evt.EventType, evt.Endpoint.ObjectMeta)
 
 			client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
 			go client.processEndpointEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 				// create the Endpoint
 				err = reactor.CreateEndpoint(&evt.Endpoint)
 				if err != nil {
-					log.Errorf("Error creating the Endpoint {%+v}. Err: %v", evt.Endpoint, err)
+					log.Errorf("Error creating the Endpoint {%+v}. Err: %v", evt.Endpoint.ObjectMeta, err)
 					client.debugStats.AddInt("CreateEndpointError", 1)
 				} else {
 					client.debugStats.AddInt("CreateEndpoint", 1)

@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 			}
 			client.debugStats.AddInt("InterfaceWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got Interface watch event: Type: {%+v} Interface:{%+v}", client.clientName, evt.EventType, evt.Interface)
+			log.Infof("Ctrlerif: agent %s got Interface watch event: Type: {%+v} Interface:{%+v}", client.clientName, evt.EventType, evt.Interface.ObjectMeta)
 
 			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
 			go client.processInterfaceEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 				// create the Interface
 				err = reactor.CreateInterface(&evt.Interface)
 				if err != nil {
-					log.Errorf("Error creating the Interface {%+v}. Err: %v", evt.Interface, err)
+					log.Errorf("Error creating the Interface {%+v}. Err: %v", evt.Interface.ObjectMeta, err)
 					client.debugStats.AddInt("CreateInterfaceError", 1)
 				} else {
 					client.debugStats.AddInt("CreateInterface", 1)

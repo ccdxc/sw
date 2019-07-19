@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 			}
 			client.debugStats.AddInt("NetworkWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got Network watch event: Type: {%+v} Network:{%+v}", client.clientName, evt.EventType, evt.Network)
+			log.Infof("Ctrlerif: agent %s got Network watch event: Type: {%+v} Network:{%+v}", client.clientName, evt.EventType, evt.Network.ObjectMeta)
 
 			client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
 			go client.processNetworkEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 				// create the Network
 				err = reactor.CreateNetwork(&evt.Network)
 				if err != nil {
-					log.Errorf("Error creating the Network {%+v}. Err: %v", evt.Network, err)
+					log.Errorf("Error creating the Network {%+v}. Err: %v", evt.Network.ObjectMeta, err)
 					client.debugStats.AddInt("CreateNetworkError", 1)
 				} else {
 					client.debugStats.AddInt("CreateNetwork", 1)

@@ -66,7 +66,7 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 		},
 	}
 
-	log.Infof("Sending SGPolicy Create to datapath: %+v", sgPolicyReqMsg)
+	log.Infof("Sending SGPolicy Create to datapath: %+v", sgPolicyReqMsg.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyCreate(context.Background(), sgPolicyReqMsg)
@@ -143,7 +143,7 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 		},
 	}
 
-	log.Infof("Sending SGPolicy Update to datapath: %+v", sgPolicyUpdateReqMsg)
+	log.Infof("Sending SGPolicy Update to datapath: %+v", sgPolicyUpdateReqMsg.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyUpdate(context.Background(), sgPolicyUpdateReqMsg)
@@ -196,7 +196,7 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 		},
 	}
 
-	log.Infof("Sending SGPolicy Delete to datapath: %+v", sgPolicyDelReq)
+	log.Infof("Sending SGPolicy Delete to datapath: %+v", sgPolicyDelReq.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyDelete(context.Background(), sgPolicyDelReq)

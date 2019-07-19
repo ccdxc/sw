@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
+
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/httputils"
@@ -23,6 +25,8 @@ func addSystemDebugRoutes(r *mux.Router, srv *RestServer) {
 	r.Methods("GET").Subrouter().HandleFunc("/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	r.Methods("GET").Subrouter().HandleFunc("/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 	r.Methods("GET").Subrouter().HandleFunc("/uptime", httputils.MakeHTTPHandler(srv.getNetAgentUptime))
+	r.Methods("DELETE").Subrouter().Handle("/", debugStats.ClearHandler())
+
 }
 
 func (s *RestServer) getNetAgentUptime(r *http.Request) (interface{}, error) {

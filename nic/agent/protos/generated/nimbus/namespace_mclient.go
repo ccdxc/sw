@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 			}
 			client.debugStats.AddInt("NamespaceWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got Namespace watch event: Type: {%+v} Namespace:{%+v}", client.clientName, evt.EventType, evt.Namespace)
+			log.Infof("Ctrlerif: agent %s got Namespace watch event: Type: {%+v} Namespace:{%+v}", client.clientName, evt.EventType, evt.Namespace.ObjectMeta)
 
 			client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
 			go client.processNamespaceEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processNamespaceEvent(evt netproto.NamespaceEvent, r
 				// create the Namespace
 				err = reactor.CreateNamespace(&evt.Namespace)
 				if err != nil {
-					log.Errorf("Error creating the Namespace {%+v}. Err: %v", evt.Namespace, err)
+					log.Errorf("Error creating the Namespace {%+v}. Err: %v", evt.Namespace.ObjectMeta, err)
 					client.debugStats.AddInt("CreateNamespaceError", 1)
 				} else {
 					client.debugStats.AddInt("CreateNamespace", 1)

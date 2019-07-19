@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 			}
 			client.debugStats.AddInt("TenantWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got Tenant watch event: Type: {%+v} Tenant:{%+v}", client.clientName, evt.EventType, evt.Tenant)
+			log.Infof("Ctrlerif: agent %s got Tenant watch event: Type: {%+v} Tenant:{%+v}", client.clientName, evt.EventType, evt.Tenant.ObjectMeta)
 
 			client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
 			go client.processTenantEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 				// create the Tenant
 				err = reactor.CreateTenant(&evt.Tenant)
 				if err != nil {
-					log.Errorf("Error creating the Tenant {%+v}. Err: %v", evt.Tenant, err)
+					log.Errorf("Error creating the Tenant {%+v}. Err: %v", evt.Tenant.ObjectMeta, err)
 					client.debugStats.AddInt("CreateTenantError", 1)
 				} else {
 					client.debugStats.AddInt("CreateTenant", 1)

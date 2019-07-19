@@ -76,7 +76,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 	// perform a diff of the states
 	client.diff{{$crudObject}}s(objList, reactor, ostream)
 
-	
+
 	// start grpc stream recv
 	recvCh := make(chan *netproto.{{$crudObject}}Event, evChanLength)
 	go client.watch{{$crudObject}}RecvLoop(stream, recvCh)
@@ -91,7 +91,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 			}
 			client.debugStats.AddInt("{{$crudObject}}WatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got {{$crudObject}} watch event: Type: {%+v} {{$crudObject}}:{%+v}", client.clientName, evt.EventType, evt.{{$crudObject}})
+			log.Infof("Ctrlerif: agent %s got {{$crudObject}} watch event: Type: {%+v} {{$crudObject}}:{%+v}", client.clientName, evt.EventType, evt.{{$crudObject}}.ObjectMeta)
 
 			client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
 			go client.process{{$crudObject}}Event(*evt, reactor, ostream)
@@ -198,7 +198,7 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 				// create the {{$crudObject}}
 				err = reactor.Create{{$crudObject}}(&evt.{{$crudObject}})
 				if err != nil {
-					log.Errorf("Error creating the {{$crudObject}} {%+v}. Err: %v", evt.{{$crudObject}}, err)
+					log.Errorf("Error creating the {{$crudObject}} {%+v}. Err: %v", evt.{{$crudObject}}.ObjectMeta, err)
 					client.debugStats.AddInt("Create{{$crudObject}}Error", 1)
 				} else {
 					client.debugStats.AddInt("Create{{$crudObject}}", 1)
@@ -257,6 +257,6 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 	}
 }
 
-       {{end}}       
+       {{end}}
     {{end}}
 {{end}}

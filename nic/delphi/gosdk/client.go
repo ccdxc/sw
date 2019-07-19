@@ -123,7 +123,7 @@ func (c *client) IsConnected() bool {
 // call this explicitly. It is getting called automatically when there is a
 // change in any object.
 func (c *client) SetObject(obj clientApi.BaseObject) error {
-	log.Infof("Delphi: Client set object: %v", obj)
+	log.Infof("Delphi: Client set object: %v", obj.GetDelphiKey())
 	meta := obj.GetDelphiMeta()
 	if meta == nil {
 		obj.SetDelphiMeta(&delphi.ObjectMeta{
@@ -175,7 +175,7 @@ func (c *client) DeleteObject(obj clientApi.BaseObject) error {
 }
 
 func (c *client) queueChange(change *change) {
-	log.Infof("Delphi: Change queued: %v %v", change.op, change.obj)
+	log.Infof("Delphi: Change queued: %v %v", change.op, change.obj.GetDelphiKey())
 	c.changeQueue <- change
 	// update subtree now so a back to back Set/Get will work
 	c.updateSubtree(change.op, change.obj.GetDelphiMeta().Kind,

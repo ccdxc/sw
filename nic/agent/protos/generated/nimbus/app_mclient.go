@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 			}
 			client.debugStats.AddInt("AppWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got App watch event: Type: {%+v} App:{%+v}", client.clientName, evt.EventType, evt.App)
+			log.Infof("Ctrlerif: agent %s got App watch event: Type: {%+v} App:{%+v}", client.clientName, evt.EventType, evt.App.ObjectMeta)
 
 			client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
 			go client.processAppEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 				// create the App
 				err = reactor.CreateApp(&evt.App)
 				if err != nil {
-					log.Errorf("Error creating the App {%+v}. Err: %v", evt.App, err)
+					log.Errorf("Error creating the App {%+v}. Err: %v", evt.App.ObjectMeta, err)
 					client.debugStats.AddInt("CreateAppError", 1)
 				} else {
 					client.debugStats.AddInt("CreateApp", 1)

@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 			}
 			client.debugStats.AddInt("SecurityGroupWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got SecurityGroup watch event: Type: {%+v} SecurityGroup:{%+v}", client.clientName, evt.EventType, evt.SecurityGroup)
+			log.Infof("Ctrlerif: agent %s got SecurityGroup watch event: Type: {%+v} SecurityGroup:{%+v}", client.clientName, evt.EventType, evt.SecurityGroup.ObjectMeta)
 
 			client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
 			go client.processSecurityGroupEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroup
 				// create the SecurityGroup
 				err = reactor.CreateSecurityGroup(&evt.SecurityGroup)
 				if err != nil {
-					log.Errorf("Error creating the SecurityGroup {%+v}. Err: %v", evt.SecurityGroup, err)
+					log.Errorf("Error creating the SecurityGroup {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
 					client.debugStats.AddInt("CreateSecurityGroupError", 1)
 				} else {
 					client.debugStats.AddInt("CreateSecurityGroup", 1)

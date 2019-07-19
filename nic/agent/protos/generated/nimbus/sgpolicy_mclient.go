@@ -78,7 +78,7 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 			}
 			client.debugStats.AddInt("SGPolicyWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got SGPolicy watch event: Type: {%+v} SGPolicy:{%+v}", client.clientName, evt.EventType, evt.SGPolicy)
+			log.Infof("Ctrlerif: agent %s got SGPolicy watch event: Type: {%+v} SGPolicy:{%+v}", client.clientName, evt.EventType, evt.SGPolicy.ObjectMeta)
 
 			client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
 			go client.processSGPolicyEvent(*evt, reactor, ostream)
@@ -184,7 +184,7 @@ func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, rea
 				// create the SGPolicy
 				err = reactor.CreateSGPolicy(&evt.SGPolicy)
 				if err != nil {
-					log.Errorf("Error creating the SGPolicy {%+v}. Err: %v", evt.SGPolicy, err)
+					log.Errorf("Error creating the SGPolicy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
 					client.debugStats.AddInt("CreateSGPolicyError", 1)
 				} else {
 					client.debugStats.AddInt("CreateSGPolicy", 1)

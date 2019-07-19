@@ -280,9 +280,9 @@ func (na *Nagent) startRefreshLoop(refreshCtx context.Context, IP net.IP) {
 			select {
 			case <-ticker.C:
 				mac := na.resolveWithDeadline(refreshCtx, IP)
-				fmt.Println("Resolved Mac: ", mac)
+				log.Infof("Resolved Mac: %s", mac)
 			case <-refreshCtx.Done():
-				fmt.Println("Cancelling ARP refresh loop for ", IP)
+				log.Infof("Cancelling ARP refresh loop for %v ", IP)
 				return
 			}
 		}
@@ -295,12 +295,11 @@ func (na *Nagent) resolveWithDeadline(ctx context.Context, IP net.IP) string {
 	arpChan := make(chan string, 1)
 
 	go func(arpChan chan string, IP net.IP) {
-		fmt.Println("Resolving IP. ", IP)
 		mac, err := na.ArpClient.Resolve(IP)
 		if err != nil {
 			log.Errorf("Failed to resolve MAC for %v", err)
 		}
-		log.Infof("FOUND MAC: %v", mac)
+		log.Infof("Resolved IP: %s | MAC: %v", IP.String(), mac)
 		// Populate the ARPCache.
 		na.ArpCache.Cache.LoadOrStore(IP.String(), mac.String())
 		arpChan <- mac.String()
