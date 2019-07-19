@@ -102,6 +102,8 @@ $${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
 	${AT}$$(strip ${CMD_GOBIN} $${${1}_FLAGS}) -o $$@ $${${1}_GOPKG}
 	${AT}mkdir -p ${BLD_BIN_DIR}
 	${NAT}${AT}echo ${NAME_SYMLINK} ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})
+	${AT} echo ${NAME_UPX} ${TOPDIR}/bin/upx $$@ > /dev/null
+	${NAT} ${TOPDIR}/bin/upx $$@
 	${AT}ln -sf $$@ ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})
 endef
 
