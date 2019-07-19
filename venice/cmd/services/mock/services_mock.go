@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -86,10 +87,11 @@ func (i *IPService) ClearError() {
 
 //LeaderService mocks Leader Service
 type LeaderService struct {
-	id        string
-	observers []types.LeadershipObserver
-	LeaderID  string
-	started   bool
+	id                 string
+	observers          []types.LeadershipObserver
+	LeaderID           string
+	started            bool
+	lastTransitionTime time.Time
 }
 
 // NewLeaderService creates a mock leader Service
@@ -97,6 +99,11 @@ func NewLeaderService(id string) *LeaderService {
 	return &LeaderService{
 		id: id,
 	}
+}
+
+// LastTransitionTime mock impl.
+func (l *LeaderService) LastTransitionTime() time.Time {
+	return l.lastTransitionTime
 }
 
 // ID returns the leader ID.
@@ -169,6 +176,7 @@ func (l *LeaderService) processEvent(leader string) error {
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventChange, Leader: leader})
 	}
 	l.LeaderID = leader
+	l.lastTransitionTime = time.Now()
 	return nil
 }
 

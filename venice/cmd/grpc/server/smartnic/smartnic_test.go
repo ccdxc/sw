@@ -607,6 +607,7 @@ func doRegisterNIC(t *testing.T, client grpc.SmartNICRegistrationClient, mac, ni
 
 // TestRegisterSmartNICByNaples tests RegisterNIC functionality initiated by NAPLES
 func TestRegisterSmartNICByNaples(t *testing.T) {
+	StateMgrWarmupInterval = 5 * time.Second // to speed up tests
 
 	// Init required components
 	testSetup()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/events/generated/eventtypes"
@@ -21,14 +22,15 @@ const (
 // leaderService contains the state for leader election service.
 type leaderService struct {
 	sync.Mutex
-	leaderKey string
-	id        string
-	leader    string
-	stopped   bool
-	store     kvstore.Interface
-	election  kvstore.Election
-	cancel    context.CancelFunc
-	observers []types.LeadershipObserver
+	leaderKey          string
+	id                 string
+	leader             string
+	stopped            bool
+	store              kvstore.Interface
+	election           kvstore.Election
+	cancel             context.CancelFunc
+	observers          []types.LeadershipObserver
+	lastTransitionTime time.Time
 }
 
 // NewLeaderService creates a leader election service.
@@ -192,6 +194,7 @@ func (l *leaderService) processEvent(leader string) {
 	}
 	log.Infof("Setting leader to %v", leader)
 	l.leader = leader
+	l.lastTransitionTime = time.Now()
 }
 
 // IsLeader checks if this instance is the leader.
@@ -208,4 +211,8 @@ func (l *leaderService) Leader() string {
 
 func (l *leaderService) ID() string {
 	return l.id
+}
+
+func (l *leaderService) LastTransitionTime() time.Time {
+	return l.lastTransitionTime
 }

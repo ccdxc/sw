@@ -63,6 +63,10 @@ var (
 	// It includes the time neede to create/update the object
 	// in ApiServer.
 	nicRegTimeout = 30 * time.Second
+
+	// StateMgrWarmupInterval local statemgr/cache warm up interval; once the new leader is elected,
+	// this interval allows the cache to come in sync with the current system state.
+	StateMgrWarmupInterval = 60 * time.Second
 )
 
 func updateCounters(nic *cluster.SmartNIC, m map[string]int64) {
@@ -710,6 +714,12 @@ func (s *RPCServer) MonitorHealth() {
 		case <-time.After(s.HealthWatchIntvl):
 			if env.LeaderService == nil || !env.LeaderService.IsLeader() {
 				// only leader gets updates from the NIC and so can detect when a NIC becomes unresponsive
+				continue
+			}
+
+			// if the leader transitioned in past 60s, then wait for the cache to be warmed up
+			if time.Since(env.LeaderService.LastTransitionTime()) <= StateMgrWarmupInterval {
+				time.Sleep(StateMgrWarmupInterval)
 				continue
 			}
 

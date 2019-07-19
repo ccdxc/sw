@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"time"
 
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -47,6 +48,7 @@ type LeaderService interface {
 	Leader() string
 	IsLeader() bool
 	ID() string
+	LastTransitionTime() time.Time
 
 	// Register registers for Observer. The Observers are called in the Order of registration
 	// NOTE: In the future if we need a different order to be called for Start and Stop routines, then
