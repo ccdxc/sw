@@ -61,6 +61,18 @@ func isNaplesReachable() error {
 	return nil
 }
 
+func isNaplesReachableOverLocalHost() error {
+	seconds := 5
+	timeOut := time.Duration(seconds) * time.Second
+	_, err := net.DialTimeout("tcp", "127.0.0.1"+":"+revProxyPort, timeOut)
+
+	if err != nil {
+		fmt.Printf("Could not reach Naples on %s\n", "127.0.0.1"+":"+revProxyPort)
+		return err
+	}
+	return nil
+}
+
 //TODO: Fix the username
 func getNaplesUser() string {
 	if mockMode {

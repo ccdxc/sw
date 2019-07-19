@@ -64,7 +64,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to save logs post-upgrade");
             }
-            cmd = "NAPLES_URL=http://localhost /nic/bin/penctl system tech-support -b naples-disruptive-upgrade-tech-support --odir /data";
+            cmd = "NAPLES_URL=http://localhost /nic/bin/penctl system tech-support -b naples-disruptive-upgrade-tech-support --tmpdir /data --odir /data";
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to create penctl tech-support");
             }

@@ -32,14 +32,17 @@ var destDir string
 var cmdFile string
 var tarFile string
 var tarFileDir string
+var tmpDir string
 
 func init() {
 	sysCmd.AddCommand(showTechCmd)
 
 	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
 	showTechCmd.Flags().StringVarP(&tarFileDir, "odir", "", "", "Directory to create the tech-support in")
+	showTechCmd.Flags().StringVarP(&tmpDir, "tmpdir", "", "", "Transient directory to collect files into")
 
 	showTechCmd.Flags().MarkHidden("odir")
+	showTechCmd.Flags().MarkHidden("tmpdir")
 }
 
 var cmdToExecute = `
@@ -183,7 +186,9 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	timeStr = strings.Replace(timeStr, " ", "-", -1)
 
 	destDir = "/tmp"
-	if val, ok := os.LookupEnv("TMPDIR"); ok {
+	if cmd.Flags().Changed("tmpdir") {
+		destDir = tmpDir
+	} else if val, ok := os.LookupEnv("TMPDIR"); ok {
 		destDir = val
 		if verbose {
 			fmt.Printf("$TMPDIR set to %s\n", val)
@@ -195,6 +200,92 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 
 	if _, err := os.Stat(destDir); os.IsNotExist(err) {
 		os.MkdirAll(destDir, os.ModePerm)
+	}
+
+	fmt.Printf("Executing commands:\n")
+	//Execute cmds pointed to by YML file
+	cmdDestDir := destDir + "/cmd_out/"
+	createDestDir(cmdDestDir)
+
+	var naplesCmds NaplesCmds
+	err := yaml.UnmarshalStrict([]byte(cmdToExecute), &naplesCmds)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	for _, naplesCmd := range naplesCmds.Cmds {
+		if naplesCmd.Outputfile == "" || naplesCmd.Cmd == "" {
+			fmt.Printf("\nMissing command attributes %+v\n", naplesCmd)
+			continue
+		}
+		cmd := strings.Fields(naplesCmd.Cmd)
+		opts := strings.Join(cmd[1:], " ")
+		v := &nmd.NaplesCmdExecute{
+			Executable: cmd[0],
+			Opts:       opts,
+		}
+		resp, err := restGetWithBody(v, "cmd/v1/naples/")
+		if err != nil {
+			fmt.Println(err)
+		}
+		if len(resp) > 3 {
+			fmt.Println(naplesCmd.Cmd)
+			s := strings.Replace(string(resp), `\n`, "\n", -1)
+			s = strings.Replace(s, "\\", "", -1)
+			file = cmdDestDir + "/" + naplesCmd.Outputfile
+			out, err := os.Create(file)
+			if err != nil {
+				fmt.Println(err)
+			}
+			defer out.Close()
+			w := bufio.NewWriter(out)
+			w.WriteString("===" + cmd[0] + " " + opts + "===\n" + s)
+			w.Flush()
+		}
+	}
+	fmt.Printf("Commands executed\n")
+
+	file = destDir + "/penctl.ver"
+	out, err := os.Create(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer out.Close()
+	w := bufio.NewWriter(out)
+	w.WriteString(getPenctlVer())
+	w.Flush()
+
+	if !cmd.Flags().Changed("tarball") {
+		tarFile = "naples-tech-support"
+	}
+	if !cmd.Flags().Changed("odir") {
+		tarFileDir = "./"
+	}
+	tarFile = tarFileDir + "/" + tarFile
+
+	if isNaplesReachableOverLocalHost() == nil {
+		fmt.Println("penctl running tar locally on naples")
+		fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
+		tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir, "/data/", "/var/log/", "/update/", "/var/lib/pensando/events/", "/obfl/")
+		tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
+		var tarout bytes.Buffer
+		tarcmd.Stdout = &tarout
+		err = tarcmd.Run()
+		if err != nil {
+			return err
+		}
+		fmt.Println(tarFile + ".tar.gz generated")
+
+		fmt.Println("removing " + destDir)
+		rmdestdircmd := exec.Command("rm", "-rf", destDir)
+		rmdestdircmd.Stdin = strings.NewReader("rm -rf " + destDir)
+		var rmout bytes.Buffer
+		rmdestdircmd.Stdout = &rmout
+		err = rmdestdircmd.Run()
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
 	fmt.Printf("Fetching data directory")
@@ -210,6 +301,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	for _, file := range retS {
+		fmt.Println(file)
 		if strings.HasSuffix(file, "/") || strings.Contains(file, "naples-disruptive-upgrade-tech-support") {
 			continue
 		}
@@ -294,66 +386,6 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("\nLogs fetched\n")
 
-	fmt.Printf("Executing commands:\n")
-	//Execute cmds pointed to by YML file
-	cmdDestDir := destDir + "/cmd_out/"
-	createDestDir(cmdDestDir)
-
-	var naplesCmds NaplesCmds
-	err = yaml.UnmarshalStrict([]byte(cmdToExecute), &naplesCmds)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	for _, naplesCmd := range naplesCmds.Cmds {
-		if naplesCmd.Outputfile == "" || naplesCmd.Cmd == "" {
-			fmt.Printf("\nMissing command attributes %+v\n", naplesCmd)
-			continue
-		}
-		cmd := strings.Fields(naplesCmd.Cmd)
-		opts := strings.Join(cmd[1:], " ")
-		v := &nmd.NaplesCmdExecute{
-			Executable: cmd[0],
-			Opts:       opts,
-		}
-		resp, err := restGetWithBody(v, "cmd/v1/naples/")
-		if err != nil {
-			fmt.Println(err)
-		}
-		if len(resp) > 3 {
-			fmt.Println(naplesCmd.Cmd)
-			s := strings.Replace(string(resp), `\n`, "\n", -1)
-			s = strings.Replace(s, "\\", "", -1)
-			file = cmdDestDir + "/" + naplesCmd.Outputfile
-			out, err := os.Create(file)
-			if err != nil {
-				fmt.Println(err)
-			}
-			defer out.Close()
-			w := bufio.NewWriter(out)
-			w.WriteString("===" + cmd[0] + " " + opts + "===\n" + s)
-			w.Flush()
-		}
-	}
-	fmt.Printf("Commands executed\n")
-
-	file = destDir + "/penctl.ver"
-	out, err := os.Create(file)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer out.Close()
-	w := bufio.NewWriter(out)
-	w.WriteString(getPenctlVer())
-	w.Flush()
-
-	if !cmd.Flags().Changed("tarball") {
-		tarFile = "naples-tech-support"
-	}
-	if !cmd.Flags().Changed("odir") {
-		tarFileDir = "./"
-	}
-	tarFile = tarFileDir + "/" + tarFile
 	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
 	tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir)
 	tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
