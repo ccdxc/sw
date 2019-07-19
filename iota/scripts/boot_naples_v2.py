@@ -795,11 +795,6 @@ def NaplesOnlySetup():
         if GlobalOptions.mem_size:
             naples.CheckMemorySize(GlobalOptions.mem_size)
 
-        #Start agent
-        naples.SendlineExpect("/nic/tools/start-agent.sh", "#")
-
-        time.sleep(60)
-
 
     if GlobalOptions.only_init == True:
         return

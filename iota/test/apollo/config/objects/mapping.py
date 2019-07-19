@@ -68,7 +68,6 @@ class LocalMappingObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.VNIC.SUBNET.SubnetId
         spec.VnicId = self.VNIC.VnicId
-        spec.TunnelId = 0
         spec.MACAddr = self.VNIC.MACAddr.getnum()
         utils.GetRpcEncap(self.VNIC.device.name, self.VNIC.MplsSlot, self.VNIC.Vnid, spec.Encap)
         spec.PublicIP.Af = types_pb2.IP_AF_NONE
@@ -136,7 +135,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.Id.VPCId = self.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.SUBNET.SubnetId
-        spec.TunnelId = int(self.TunIPAddr)
+        utils.GetRpcIPAddr(self.TunIPAddr, spec.TunnelIP)
         spec.MACAddr = self.MACAddr.getnum()
         utils.GetRpcEncap(self.parent.device.name, self.MplsSlot, self.Vnid, spec.Encap)
         return grpcmsg

@@ -37,3 +37,4 @@ if [[ -f $NIC_DIR/tools/start-vpp.sh ]]; then
     $NIC_DIR/tools/start-vpp.sh &
     [[ $? -ne 0 ]] && echo "Aborting Sysinit - VPP failed to start!" && exit 1
 fi
+exit 0
