@@ -26,7 +26,6 @@ def TestPing(tc, type, ipaf, pktsize):
         req = api.Trigger_CreateAllParallelCommandsRequest()
     else:
         req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-        interval = "3"
     tc.cmd_cookies = []
 
     for pair in tc.workload_pairs:
@@ -36,12 +35,12 @@ def TestPing(tc, type, ipaf, pktsize):
             cmd_cookie = "%s(%s) --> %s(%s)" %\
                          (w1.workload_name, w1.ipv6_address, w2.workload_name, w2.ipv6_address)
             api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                                   "ping6 -i %s -c 20 -s %d %s" % (interval, pktsize, w2.ipv6_address))
+                                   "ping6 -i %s -c 20 -s %d %s" % (interval, pktsize, w2.ipv6_address), timeout = 60)
         else:
             cmd_cookie = "%s(%s) --> %s(%s)" %\
                          (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
             api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                                   "ping -i %s -c 20 -s %d %s" % (interval, pktsize, w2.ip_address))
+                                   "ping -i %s -c 20 -s %d %s" % (interval, pktsize, w2.ip_address), timeout = 60)
         api.Logger.info("Ping test from %s" % (cmd_cookie))
         tc.cmd_cookies.append(cmd_cookie)
 
