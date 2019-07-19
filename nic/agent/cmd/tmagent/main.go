@@ -40,6 +40,7 @@ type TelemetryAgent struct {
 	resolverClient resolver.Interface
 	mode           string
 	restServer     *restapi.RestServer
+	nodewatcher    nodewatcher.NodeInterface
 }
 
 type service struct {
@@ -122,10 +123,33 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			log.Fatal(err)
 		}
 	} else {
+		log.Infof("switching to host mode")
 		s.tmagent.tpState.UpdateHostName(obj.GetSmartNicName())
 		if err := s.tmagent.tpState.Reset(); err != nil {
-			log.Fatalf("failed to delete the existing policies, err: %v", err)
+			log.Errorf("failed to delete the existing policies, err: %v", err)
 		}
+
+		// stop handling venice policy
+		s.tmagent.tpClient.Stop()
+
+		s.tmagent.tpState.Close()
+
+		// stop node watcher
+		s.tmagent.nodewatcher.Close()
+
+		// stop metrics
+		s.tmagent.restServer.StopMetrics()
+
+		// shutdown tsdb
+		s.tmagent.tpState.TsdbCleanup()
+
+		// create new instance
+		tpState, err := state.NewTpAgent(s.tmagent.ctx, globals.AgentRESTPort)
+		if err != nil {
+			log.Fatalf("failed to init tmagent state, err: %v", err)
+		}
+		s.tmagent.tpState = tpState
+
 	}
 }
 
@@ -140,12 +164,15 @@ func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface, dclient clientApi
 		},
 	}
 
-	if err := nodewatcher.NewNodeWatcher(ta.ctx, node, reportInterval, log.WithContext("pkg", "nodewatcher")); err != nil {
+	nodeWatcher, err := nodewatcher.NewNodeWatcher(ta.ctx, node, reportInterval, log.WithContext("pkg", "nodewatcher"))
+	if err != nil {
 		return err
 	}
 
+	ta.nodewatcher = nodeWatcher
+
 	// report delphi metrics
-	go ta.restServer.ReportMetrics(reportInterval, dclient)
+	ta.restServer.ReportMetrics(reportInterval, dclient)
 	return nil
 }
 

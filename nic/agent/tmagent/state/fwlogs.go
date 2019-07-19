@@ -42,6 +42,11 @@ func (s *PolicyState) TsdbInit(nodeUUID string, rc resolver.Interface) error {
 	return nil
 }
 
+// TsdbCleanup free up tsdb resources
+func (s *PolicyState) TsdbCleanup() {
+	tsdb.Cleanup()
+}
+
 // FwlogInit starts processing fwlogs
 func (s *PolicyState) FwlogInit(path string) error {
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))

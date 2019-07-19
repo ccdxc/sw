@@ -799,7 +799,7 @@ func (it *veniceIntegSuite) startAgent() {
 		it.snics = append(it.snics, &snic)
 
 		if i == 0 { // start only 1 instance
-			err = nodewatcher.NewNodeWatcher(it.ctx, node, 10*time.Second, it.logger)
+			_, err = nodewatcher.NewNodeWatcher(it.ctx, node, 10*time.Second, it.logger)
 			if err != nil {
 				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
 			}
@@ -839,7 +839,7 @@ func (it *veniceIntegSuite) startAgent() {
 			}
 			snic.tmAgent = res
 
-			go res.ReportMetrics(10*time.Second, nil)
+			res.ReportMetrics(10*time.Second, nil)
 		}
 	}
 }

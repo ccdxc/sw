@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
@@ -43,37 +44,57 @@ type nodeMetrics struct {
 
 // nodewatcher monitors system resources. It can run on Venice Nodes or on NAPLES.
 type nodewatcher struct {
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
 	frequency time.Duration
 	table     tsdb.Obj
 	metricObj *nodeMetrics
 	logger    log.Logger
 }
 
+// NodeInterface provides functions to manage nodewatcher
+type NodeInterface interface {
+	Close()
+}
+
 // NewNodeWatcher starts a watcher that monitors system resources.
 // TSDB must have been initialized with tsdb.Init() before calling this function
-func NewNodeWatcher(ctx context.Context, obj runtime.Object, frequency time.Duration, logger log.Logger) error {
+func NewNodeWatcher(pctx context.Context, obj runtime.Object, frequency time.Duration, logger log.Logger) (NodeInterface, error) {
 	if frequency < minFrequency {
-		return fmt.Errorf("minimum frequency is %v, got %v", minFrequency, frequency)
+		return nil, fmt.Errorf("minimum frequency is %v, got %v", minFrequency, frequency)
 	}
 
 	logger.Infof("Creating new table")
 	metricObj := &nodeMetrics{}
 	table, err := tsdb.NewVeniceObj(obj, metricObj, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	ctx, cancel := context.WithCancel(pctx)
 	w := &nodewatcher{
+		ctx:       ctx,
+		cancel:    cancel,
 		frequency: frequency,
 		table:     table,
 		metricObj: metricObj,
 		logger:    logger,
 	}
+	w.wg.Add(1)
 	go w.periodicUpdate(ctx)
-	return nil
+	return w, nil
+}
+
+// Close stops node watcher
+func (w *nodewatcher) Close() {
+	w.cancel()
+	w.wg.Wait()
 }
 
 // periodically updates the system metrics.
 func (w *nodewatcher) periodicUpdate(ctx context.Context) {
+	defer w.wg.Done()
 	for {
 		select {
 		case <-ctx.Done():

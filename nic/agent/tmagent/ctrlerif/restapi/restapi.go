@@ -31,7 +31,8 @@ import (
 type RestServer struct {
 	ctx           context.Context
 	cancel        context.CancelFunc
-	waitGrp       sync.WaitGroup
+	metricsCancel context.CancelFunc
+	wg            sync.WaitGroup
 	TpAgent       types.CtrlerIntf       // telemetry policy agent
 	listenURL     string                 // URL where http server is listening
 	listener      net.Listener           // socket listener
@@ -140,7 +141,6 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	// create a http server
 	srv.httpServer = &http.Server{Addr: listenURL, Handler: router}
 	go srv.httpServer.Serve(listener)
-	srv.waitGrp.Add(1)
 	return &srv, nil
 }
 
@@ -155,8 +155,8 @@ func (s *RestServer) getTagsFromMeta(meta *api.ObjectMeta) map[string]string {
 
 // ReportMetrics sends metrics to tsdb
 func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Client) {
-	defer s.waitGrp.Done()
-
+	metricsCtx, metricsCancel := context.WithCancel(s.ctx)
+	s.metricsCancel = metricsCancel
 	tsdbObj := map[string]tsdb.Obj{}
 
 	// set delphi client for ntranslate
@@ -178,35 +178,46 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 		tsdbObj[kind] = obj
 	}
 
-	for {
-		select {
-		case <-time.After(frequency):
-			ts := time.Now()
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		for {
 
-			for kind, obj := range tsdbObj {
-				mi, err := s.gensrv.GetPointsFuncList[kind]()
-				if err != nil {
-					log.Errorf("failed to get %s metrics, %s", kind, err)
-					continue
+			select {
+			case <-time.After(frequency):
+				ts := time.Now()
+
+				for kind, obj := range tsdbObj {
+					mi, err := s.gensrv.GetPointsFuncList[kind]()
+					if err != nil {
+						log.Errorf("failed to get %s metrics, %s", kind, err)
+						continue
+					}
+
+					// skip empty entry
+					if len(mi) == 0 {
+						continue
+					}
+
+					if err := obj.Points(mi, ts); err != nil {
+						log.Errorf("failed to add <%s> metrics to tsdb, %s", kind, err)
+						continue
+					}
+
 				}
 
-				// skip empty entry
-				if len(mi) == 0 {
-					continue
-				}
-
-				if err := obj.Points(mi, ts); err != nil {
-					log.Errorf("failed to add <%s> metrics to tsdb, %s", kind, err)
-					continue
-				}
-
+			case <-metricsCtx.Done():
+				log.Infof("stopped reporting metrics")
+				return
 			}
-
-		case <-s.ctx.Done():
-			log.Infof("stopped reporting metrics")
-			return
 		}
-	}
+	}()
+}
+
+// StopMetrics stops reporting metrics
+func (s *RestServer) StopMetrics() {
+	s.metricsCancel()
+	s.wg.Wait()
 }
 
 // GetListenURL returns the listen URL of the http server
@@ -223,13 +234,13 @@ func (s *RestServer) SetNodeUUID(uuid string) {
 	s.gensrv.SetNodeUUID(uuid)
 }
 
-// Stop stops the http server
+// Stop stops the http server, metrics reporter
 func (s *RestServer) Stop() error {
 	if s.httpServer != nil {
 		s.httpServer.Close()
 	}
 
 	s.cancel()
-	s.waitGrp.Wait()
+	s.wg.Wait()
 	return nil
 }

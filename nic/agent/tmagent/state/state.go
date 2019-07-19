@@ -69,7 +69,6 @@ func (f *fwlogCollector) String() string {
 
 // NewTpAgent creates new telemetry policy agent state
 func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
-
 	s, err := emstore.NewEmstore(emstore.MemStoreType, "")
 	if err != nil {
 		log.Errorf("failed to create db, %s", err)
@@ -410,26 +409,16 @@ func (s *PolicyState) deleteCollectors(vrf uint64) error {
 	return nil
 }
 
-// Reset delete all the existing fwlog policies and flow export policies
+// Reset deletes all existing fwlog policies
 func (s *PolicyState) Reset() error {
-	fwlogPolicies, err := s.ListFwlogPolicy(s.ctx)
-	if err != nil {
-		return err
-	}
-	for _, policy := range fwlogPolicies {
-		if err := s.DeleteFwlogPolicy(s.ctx, policy); err != nil {
-			log.Errorf("failed to delete fwlog policy, err: %v", err)
+	if fwlogPolicies, err := s.ListFwlogPolicy(s.ctx); err == nil {
+		for _, policy := range fwlogPolicies {
+			if err := s.DeleteFwlogPolicy(s.ctx, policy); err != nil {
+				log.Errorf("failed to delete fwlog policy, err: %v", err)
+			}
 		}
-	}
-
-	flowExportsPolicies, err := s.ListFlowExportPolicy(s.ctx)
-	if err != nil {
-		return err
-	}
-	for _, policy := range flowExportsPolicies {
-		if err := s.DeleteFlowExportPolicy(s.ctx, policy); err != nil {
-			log.Errorf("failed to delete flow export policy, err: %v", err)
-		}
+	} else {
+		log.Errorf("failed to get fwlog policy, %v", err)
 	}
 
 	return nil

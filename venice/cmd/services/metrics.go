@@ -26,14 +26,15 @@ var (
 
 type metricsService struct {
 	sync.Mutex
-	running   bool
-	nodeID    string
-	clusterID string
-	tsdbOpts  *tsdb.Opts
-	table     tsdb.Obj
-	ctx       context.Context
-	cancelFn  context.CancelFunc
-	metrics   *types.ClusterMetrics
+	running     bool
+	nodeID      string
+	clusterID   string
+	tsdbOpts    *tsdb.Opts
+	table       tsdb.Obj
+	ctx         context.Context
+	cancelFn    context.CancelFunc
+	metrics     *types.ClusterMetrics
+	nodeWatcher nodewatcher.NodeInterface
 }
 
 // NewMetricsService returns a new metricsService instance
@@ -78,11 +79,12 @@ func (ms *metricsService) Start() error {
 	nodeMeta := &cluster.Node{}
 	nodeMeta.Defaults("all")
 	nodeMeta.Name = ms.nodeID
-	err = nodewatcher.NewNodeWatcher(ms.ctx, nodeMeta, ms.tsdbOpts.SendInterval, log.WithContext("pkg", "nodewatcher"))
+	nodeWatcher, err := nodewatcher.NewNodeWatcher(ms.ctx, nodeMeta, ms.tsdbOpts.SendInterval, log.WithContext("pkg", "nodewatcher"))
 	if err != nil {
 		return fmt.Errorf("Error starting node watcher: %v", err)
 	}
 
+	ms.nodeWatcher = nodeWatcher
 	ms.running = true
 	log.Infof("Started metrics service")
 	return nil
@@ -94,6 +96,7 @@ func (ms *metricsService) Stop() {
 	defer ms.Unlock()
 	ms.running = false
 	log.Infof("Stopping metrics service")
+	ms.nodeWatcher.Close()
 	if ms.cancelFn != nil {
 		ms.cancelFn()
 	}
