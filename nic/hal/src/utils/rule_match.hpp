@@ -112,7 +112,8 @@ typedef struct rule_cfg_s {
     ht_ctxt_t           ht_ctxt;
     ht                 *rule_ctr_ht; // Hash table for counters keyed by: rule key
     rule_ctr_cb_t       rule_ctr_cb;
-} __PACK__ rule_cfg_t;
+    acl::ref_t          ref_count;
+} rule_cfg_t;
 
 typedef struct rule_data_s {
     void       *user_data;

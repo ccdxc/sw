@@ -746,7 +746,7 @@ static inline void ipsec_acl_ctx_name (char *name, vrf_id_t vrf_id)
 {
     //thread_local static char name[ACL_NAMESIZE];
     std::snprintf(name, ACL_NAMESIZE, "ipsec-ipv4-rules:%lu", vrf_id);
-    HAL_TRACE_DEBUG("Returning {}", name);
+    HAL_TRACE_VERBOSE("Returning {}", name);
     //return name;
 }
 

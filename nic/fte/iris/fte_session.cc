@@ -165,7 +165,7 @@ session_update_in_fte (hal_handle_t session_handle)
                     session->hal_handle,
                     (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
 
-    HAL_TRACE_DEBUG("num features: {} feature state size: {}", num_features, fstate_size);
+    HAL_TRACE_VERBOSE("num features: {} feature state size: {}", num_features, fstate_size);
 
     feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
     if (!feature_state) {
@@ -176,7 +176,7 @@ session_update_in_fte (hal_handle_t session_handle)
     //Init context
     ret = ctx.init(session, iflow, rflow, feature_state, num_features);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
+        HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
         goto end;
     }
     ctx.set_pipeline_event(FTE_SESSION_UPDATE);
@@ -206,7 +206,7 @@ session_update_async (hal::session_t *session)
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
             fn_ctx->ret = session_update_in_fte(fn_ctx->session_handle);
             if (fn_ctx->ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("session update in fte failed for handle: {}", fn_ctx->session_handle);
+                HAL_TRACE_ERR("session update in fte failed for handle: {}", fn_ctx->session_handle);
             }
             HAL_FREE(hal::HAL_MEM_ALLOC_SESS_UPD_DATA, fn_ctx);
         }, fn_ctx);
@@ -283,7 +283,7 @@ session_get (hal::session_t *session, SessionGetResponse *response)
     //Init context
     ret = ctx.init(session, iflow, rflow, feature_state, num_features);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
+        HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
         goto end;
     }
     ctx.set_pipeline_event(FTE_SESSION_GET);

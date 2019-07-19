@@ -394,6 +394,7 @@ init_rule_ctr(rule_cfg_t *cfg, rule_ctr_t *ctr, rule_key_t rule_key)
     ctr->ht_ctxt.reset();
     
     ctr->rule_cfg = cfg;
+    ref_inc(&cfg->ref_count);
     ctr->rule_key = rule_key;
     if (cfg->rule_ctr_cb) {
         // If there is a callback set, rule lib
@@ -431,6 +432,7 @@ init_rule_ctr(rule_cfg_t *cfg, rule_ctr_t *ctr, rule_key_t rule_key)
         }
         cfg->rule_ctr_ht->remove(&ctr->rule_key);
         g_hal_state->rule_ctr_slab()->free(ctr);
+        ref_dec(&cfg->ref_count);
     });
 
     return HAL_RET_OK;
@@ -549,20 +551,19 @@ static ht *g_rule_cfg_ht = ht::factory(256, rule_cfg_get_key_func,
 void 
 rule_lib_delete(const char *name)
 {
-    rule_cfg_t     *rcfg = NULL;
+    rule_cfg_t     *rcfg = NULL; 
     const acl_ctx_t  *acl_ctx = acl::acl_get(name);
     if (acl_ctx) {
         HAL_TRACE_DEBUG("deleted acl");
         acl::acl_delete(acl_ctx);    
     }
-    // walk rule_data_ht and free them
+
     rcfg = (rule_cfg_t *)g_rule_cfg_ht->remove((void *)name);
-    if (rcfg) {
-        ht::destroy(rcfg->rule_ctr_ht);
-        g_hal_state->rule_cfg_slab()->free(rcfg);
-    } else {
+    if (rcfg == NULL) {
         HAL_TRACE_ERR("Rule cfg not found");
+        return;
     }
+    ref_dec(&rcfg->ref_count);
     return;
 }
 
@@ -578,6 +579,15 @@ rule_lib_init(const char *name, acl_config_t *cfg, rule_lib_cb_t *rule_cb)
     memcpy(&rcfg->acl_cfg, &ip_acl_config_glbl, sizeof(acl_config_t));
     memcpy(cfg, &ip_acl_config_glbl, sizeof(acl_config_t));
     memcpy(&rcfg->name, name, 64);
+    ref_init(&rcfg->ref_count, [] (const ref_t *ref) {
+        rule_cfg_t *rcfg = container_of(ref, rule_cfg_t, ref_count);
+        HAL_TRACE_DEBUG("Free rule cfg :{}", rcfg->name);
+        if (rcfg->rule_ctr_ht) {
+            ht::destroy(rcfg->rule_ctr_ht);
+        }
+        g_hal_state->rule_cfg_slab()->free(rcfg);
+    });
+    
     rcfg->acl_ctx = acl_create(name, (const acl_config_t *)&rcfg->acl_cfg);
 
     rcfg->rule_ctr_ht = ht::factory(8192,
