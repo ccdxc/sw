@@ -80,6 +80,7 @@ var _ = Describe("diagnostics tests", func() {
 				},
 				From:       0,
 				MaxResults: 50,
+				Aggregate:  true,
 			}
 			Eventually(func() error {
 				resp := testutils.AuditSearchResponse{}
@@ -152,6 +153,7 @@ var _ = Describe("diagnostics tests", func() {
 				},
 				From:       0,
 				MaxResults: 50,
+				Aggregate:  true,
 			}
 			Eventually(func() error {
 				resp := testutils.AuditSearchResponse{}

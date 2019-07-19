@@ -99,6 +99,7 @@ var _ = Describe("auth tests", func() {
 				},
 				From:       0,
 				MaxResults: 50,
+				Aggregate:  true,
 			}
 			Eventually(func() error {
 				resp := testutils.AuditSearchResponse{}
@@ -153,6 +154,7 @@ var _ = Describe("auth tests", func() {
 					},
 					From:       0,
 					MaxResults: 50,
+					Aggregate:  true,
 				}
 				Eventually(func() error {
 					resp := testutils.AuditSearchResponse{}
@@ -182,6 +184,7 @@ var _ = Describe("auth tests", func() {
 				},
 				From:       0,
 				MaxResults: 50,
+				Aggregate:  true,
 			}
 			Eventually(func() error {
 				resp := search.SearchResponse{}
@@ -313,6 +316,7 @@ var _ = Describe("auth tests", func() {
 				},
 				From:       0,
 				MaxResults: 50,
+				Aggregate:  true,
 			}
 			Eventually(func() error {
 				resp := testutils.EventSearchResponse{}
@@ -463,6 +467,7 @@ var _ = Describe("auth tests", func() {
 				},
 				From:       0,
 				MaxResults: 50,
+				Aggregate:  true,
 			}
 			Eventually(func() error {
 				resp := testutils.AuditSearchResponse{}

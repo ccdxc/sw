@@ -401,6 +401,7 @@ func TestAuditAuthz(t *testing.T) {
 		},
 		From:       0,
 		MaxResults: 50,
+		Aggregate:  true,
 	}
 	resp := search.SearchResponse{}
 	AssertEventually(t, func() (bool, interface{}) {

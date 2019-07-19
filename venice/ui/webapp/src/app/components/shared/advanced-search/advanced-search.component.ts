@@ -283,7 +283,7 @@ export class AdvancedSearchComponent implements OnInit {
    * @param maxRecords
    * @returns {SearchSearchRequest}
    */
-  getSearchRequest(field, order, kind, maxRecords = 8000): SearchSearchRequest {
+  getSearchRequest(field, order, kind, aggregate = true, maxRecords = 8000): SearchSearchRequest {
     let sortOrder = SearchSearchRequest_sort_order.Ascending;
     if (order === -1) {
       sortOrder = SearchSearchRequest_sort_order.Descending;
@@ -347,6 +347,7 @@ export class AdvancedSearchComponent implements OnInit {
     searchSearchRequest['sort-order'] = sortOrder;
     searchSearchRequest.from = 0;
     searchSearchRequest['max-results'] = maxRecords;
+    searchSearchRequest['aggregate'] = aggregate;
     return searchSearchRequest;
   }
 

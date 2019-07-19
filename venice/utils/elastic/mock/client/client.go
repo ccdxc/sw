@@ -182,7 +182,8 @@ func (e *mockClient) Delete(ctx context.Context, index, iType, ID string) error 
 }
 
 // Search - mock implementation of search operation
-func (e *mockClient) Search(ctx context.Context, index, iType string, query es.Query, aggregation es.Aggregation, from, size int32, sortByField string, sortAsc bool) (*es.SearchResult, error) {
+func (e *mockClient) Search(ctx context.Context, index, iType string, query es.Query, aggregation es.Aggregation,
+	from, size int32, sortByField string, sortAsc bool, options ...elastic.SearchOption) (*es.SearchResult, error) {
 	var totalHits int64
 
 	if _, ok := e.indexes[index]; !ok {

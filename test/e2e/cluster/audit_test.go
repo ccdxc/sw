@@ -55,6 +55,7 @@ var _ = Describe("audit tests", func() {
 				},
 				From:       0,
 				MaxResults: 50,
+				Aggregate:  true,
 			}
 			var events []*testutils.AuditEntry
 			Eventually(func() error {

@@ -93,6 +93,7 @@ func (hc *HTTPClient) Req(method, url string, body, resp interface{}) (int, erro
 	if err != nil {
 		return rc, err
 	}
+	defer r.Body.Close()
 
 	if r.StatusCode != http.StatusOK {
 		return r.StatusCode, fmt.Errorf("Server responded with %d", r.StatusCode)
@@ -102,7 +103,6 @@ func (hc *HTTPClient) Req(method, url string, body, resp interface{}) (int, erro
 		return r.StatusCode, nil
 	}
 
-	defer r.Body.Close()
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return r.StatusCode, err

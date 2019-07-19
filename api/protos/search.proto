@@ -331,6 +331,10 @@ message SearchRequest {
     // OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant
     // of the logged in user
     repeated string Tenants     = 8 [(gogoproto.jsontag) = "tenants,omitempty"];
+
+    // Indicates whether to perform aggregation on the search results or not
+    bool Aggregate              = 9 [(gogoproto.jsontag) = "aggregate",
+                                     (venice.default) = "true"];
 }
 
 // SearchResponse is the output provided by the search API

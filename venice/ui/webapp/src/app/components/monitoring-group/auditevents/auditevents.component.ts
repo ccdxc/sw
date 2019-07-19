@@ -155,7 +155,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
 
     this.loading = true;
 
-    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'AuditEvent', this.maxRecords);
+    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'AuditEvent', false, this.maxRecords);
 
     this._callSearchRESTAPI(searchSearchRequest);
   }

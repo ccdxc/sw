@@ -569,7 +569,17 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 
 			// as all the operations are performed, it should be 0 now
 			if bulkReq.NumberOfActions() != 0 {
-				return nil, NewError(ErrBulkRequestFailed, "")
+				var errs []string
+				for _, item := range bulkResp.Items {
+					for key, val := range item {
+						if val.Error != nil {
+							e.logger.Debugf("request {%s} failed with err: %+v", key, val.Error)
+							errs = append(errs, val.Error.Reason)
+						}
+					}
+				}
+				return nil, NewError(ErrBulkRequestFailed,
+					fmt.Sprintf("failed to complete some actions from bulk request, err: %s", strings.Join(errs, ",")))
 			}
 
 			// check for partial failures
@@ -577,7 +587,16 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 			// will have Error details for each entry sent in the bulkRequest.
 			// Caller is expected to retry the Bulk operation for failed entries.
 			if bulkResp.Errors == true {
-				return bulkResp, NewError(ErrBulkRequestFailed, "Partial-failure")
+				var errs []string
+				for _, item := range bulkResp.Items {
+					for key, val := range item {
+						if val.Error != nil {
+							e.logger.Debugf("request {%s} failed with err: %+v", key, val.Error)
+							errs = append(errs, val.Error.Reason)
+						}
+					}
+				}
+				return bulkResp, NewError(ErrBulkRequestFailed, strings.Join(errs, ","))
 			}
 
 			return bulkResp, nil
@@ -646,7 +665,7 @@ func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
 // so the document will be available to search 1s after indexing it.
 // This behavior can be changed by adjusting `index.refresh_interval` in indices settings.
 func (e *Client) Search(ctx context.Context, index, iType string, query es.Query, aggregation es.Aggregation,
-	from, size int32, sortByField string, sortAsc bool) (*es.SearchResult, error) {
+	from, size int32, sortByField string, sortAsc bool, options ...SearchOption) (*es.SearchResult, error) {
 
 	// validate index
 	if len(strings.TrimSpace(index)) == 0 {
@@ -671,6 +690,11 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 		} else if _, err := json.Marshal(src); err != nil {
 			return nil, NewError(ErrInvalidSearchAggregation, err.Error())
 		}
+	}
+
+	sOptions := &searchOptions{}
+	for _, opt := range options {
+		opt(sOptions)
 	}
 
 	retryCount := 0
@@ -715,6 +739,10 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 				request = request.Size(int(size))
 			} else {
 				request = request.Size(int(defaultMaxResults))
+			}
+
+			if sOptions.sourceContext != nil {
+				request = request.FetchSourceContext(sOptions.sourceContext)
 			}
 
 			// Add sort option if valid

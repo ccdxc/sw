@@ -172,7 +172,7 @@ func (fdr *Finder) QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 		return es.NewQueryStringQuery(req.QueryString), nil
 	}
 
-	// Constuct Bool query based on search requirements
+	// Construct Bool query based on search requirements
 	if req.Query == nil {
 		fdr.logger.Error("Query in Body is nil")
 		return nil, errors.New("Nil search request")
@@ -330,18 +330,144 @@ func (fdr *Finder) validate(in *search.SearchRequest) error {
 
 // Query is the handler for Search request
 func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search.SearchResponse, error) {
-
-	var sr search.SearchResponse
-
 	fdr.logger.Infof("Search request: {%+v}", *in)
 
+	var resp search.SearchResponse
+
 	if err := fdr.validate(in); err != nil {
-		var sr search.SearchResponse
-		sr.Error = &search.Error{
+		resp.Error = &search.Error{
 			Type:   grpccode.InvalidArgument.String(),
 			Reason: ErrInvalidParams.Error(),
 		}
-		return &sr, err
+		return &resp, err
+	}
+
+	// construct search query
+	query, err := fdr.constructSearchQuery(ctx, in)
+	if err != nil {
+		return &resp, err
+	}
+
+	// execute the query with required index, etc
+	result, err := fdr.elasticClient.Search(ctx,
+		fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
+		"", //  skip the index/doc type for search
+		query,
+		fdr.constructAggregateQuery(in),
+		in.From,
+		in.MaxResults,
+		in.SortBy,
+		in.SortOrder == search.SearchRequest_Ascending.String(),
+		[]elastic.SearchOption{elastic.ExcludeFields([]string{"response-object", "request-object"})}...)
+	if err != nil {
+		fdr.logger.Errorf("Search failed for query: %v, result: %+v err: %v", query, result, err)
+		var eType, eReason string
+		if result != nil && result.Error != nil {
+			eType = result.Error.Type
+			eReason = result.Error.Reason
+		} else {
+			eType = err.Error()
+		}
+		resp.Error = &search.Error{
+			Type:   eType,
+			Reason: eReason,
+		}
+		return &resp, err
+	}
+
+	fdr.processSearchResults(in, result, &resp)
+	fdr.logger.Info("search query completed")
+	return &resp, nil
+}
+
+// constructs a elastic search query from the given search request.
+func (fdr *Finder) constructSearchQuery(ctx context.Context, req *search.SearchRequest) (es.Query, error) {
+	// Build Elastic query
+	query := es.NewBoolQuery().QueryName("CompleteQueryWithAuthorizedKinds")
+
+	rQuery, err := fdr.QueryBuilder(req)
+	if err != nil {
+		fdr.logger.Errorf("error building query from *search.SearchRequest")
+		return query, err
+	}
+	query = query.Must(rQuery)
+
+	// returns authz query only if request is coming from API Gw
+	aQuery, err := fdr.authzQuery(ctx, req.Tenants, req)
+	if err != nil {
+		fdr.logger.Errorf("error adding authorization to search query :%v", err)
+		return query, err
+	}
+	if aQuery != nil {
+		// aQuery could be nil if the search request is not coming from API Gw and authz is not required
+		query = query.Must(aQuery)
+	}
+
+	return query, nil
+}
+
+// authzQuery returns query to limit search by authorized kinds for tenants specified in search request. It returns nil query
+// if request is not coming from API Gw.
+func (fdr *Finder) authzQuery(ctx context.Context, tenants []string, req *search.SearchRequest) (es.Query, error) {
+	// add authorization only if request is coming from API GW
+	if ctxutils.GetPeerID(ctx) != globals.APIGw {
+		fdr.logger.Infof("not constraining search query with authz info")
+		return nil, nil
+	}
+	userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
+	if !ok {
+		fdr.logger.Errorf("no user in grpc metadata")
+		return nil, errors.New("no user in context")
+	}
+	user := &auth.User{ObjectMeta: *userMeta}
+	// constrain search by authorized kinds
+	authorizer, err := authzgrpc.NewAuthorizer(ctx)
+	if err != nil {
+		fdr.logger.Errorf("error creating grpc authorizer for search: %v", err)
+		return nil, err
+	}
+	var authorizedTenantsFound, authorizedClusterKindsFound bool
+	query := es.NewBoolQuery().QueryName("AllowedKindsForTenants")
+	for _, tenant := range tenants {
+		allowedTenantScopedOps := authorizer.AuthorizedOperations(user, tenant, authz.ResourceNamespaceAll, auth.Permission_Read)
+		if len(allowedTenantScopedOps) > 0 {
+			var allowedTenantScopedKinds []string
+			kquery := es.NewBoolQuery().QueryName("AllowedKindsForTenant")
+			kquery = kquery.Must(es.NewMatchPhraseQuery("meta.tenant", tenant))
+			kindReq := es.NewBoolQuery().QueryName("AllowedKinds")
+			for _, op := range allowedTenantScopedOps {
+				kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", op.GetResource().GetKind())).MinimumNumberShouldMatch(1)
+				allowedTenantScopedKinds = append(allowedTenantScopedKinds, op.GetResource().GetKind())
+			}
+			kquery = kquery.Must(kindReq)
+			query = query.Should(kquery).MinimumNumberShouldMatch(1)
+			authorizedTenantsFound = true
+			fdr.logger.Infof("user [%s|%s] allowed to search kinds [%#v] in tenant [%s]", user.Tenant, user.Name, allowedTenantScopedKinds, tenant)
+		}
+	}
+	allowedClusterScopedOps := authorizer.AuthorizedOperations(user, "", "", auth.Permission_Read)
+	kindReq := es.NewBoolQuery().QueryName("AllowedClusterKinds")
+	var allowedClusterScopedKinds []string
+	for _, op := range allowedClusterScopedOps {
+		kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", op.GetResource().GetKind())).MinimumNumberShouldMatch(1)
+		allowedClusterScopedKinds = append(allowedClusterScopedKinds, op.GetResource().GetKind())
+		authorizedClusterKindsFound = true
+	}
+	if authorizedClusterKindsFound {
+		query = query.Should(kindReq).MinimumNumberShouldMatch(1)
+		fdr.logger.Infof("user [%s|%s] allowed to search cluster kinds [%#v]", user.Tenant, user.Name, allowedClusterScopedKinds)
+	}
+	if !authorizedTenantsFound && !authorizedClusterKindsFound {
+		fdr.logger.Errorf("user [%s|%s] unauthorized to search any kind", user.Tenant, user.Name)
+		return nil, grpcstatus.Error(grpccode.PermissionDenied, "unauthorized to search any objects")
+	}
+	return query, nil
+}
+
+// constructs query for aggregation based on the request.
+func (fdr *Finder) constructAggregateQuery(in *search.SearchRequest) es.Aggregation {
+	if !in.Aggregate {
+		return nil
 	}
 
 	// ElasticSearch's Query and Aggregations JSON structure
@@ -385,38 +511,13 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	//   "size": 10
 	// }
 
-	// Build Elastic query
-	query := es.NewBoolQuery().QueryName("CompleteQueryWithAuthorizedKinds")
-
-	rQuery, err := fdr.QueryBuilder(in)
-	if err != nil {
-		fdr.logger.Errorf("error building query from *search.SearchRequest")
-		return &sr, err
-	}
-	query = query.Must(rQuery)
-	// returns authz query only if request is coming from API Gw
-	aQuery, err := fdr.authzQuery(ctx, in.Tenants)
-	if err != nil {
-		fdr.logger.Errorf("error adding authorization to search query :%v", err)
-		return &sr, err
-	}
-	if aQuery != nil {
-		// aQuery could be nil if the search request is not coming from API Gw and authz is not required
-		query = query.Must(aQuery)
-	}
-
 	// Top-hits Aggregation #4
 	topAgg := es.NewTopHitsAggregation().From(int(in.From)).Size(int(in.MaxResults))
 
-	// Add sort option if it is valid
-	sortAscending := false
-	if in.SortOrder == search.SearchRequest_Ascending.String() {
-		sortAscending = true
-	}
 	if len(in.SortBy) != 0 {
 		sortInfo := es.SortInfo{
 			Field:     in.SortBy,
-			Ascending: sortAscending,
+			Ascending: in.SortOrder == search.SearchRequest_Ascending.String(),
 			Missing:   "_last",
 			// UnmappedType prevents search failing when an index
 			// doesn't have a mapping for the field.
@@ -443,31 +544,171 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	// Add Category-Aggregation to Tenant-Aggregation
 	aggTenant = aggTenant.SubAggregation(elastic.CategoryAggKey, aggCategory)
 
-	// Execute Search with required index, query etc
+	return aggTenant
+}
 
-	result, err := fdr.elasticClient.Search(ctx,
-		fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
-		"", //  Skip the index/doc type for search
-		query,
-		aggTenant,
-		in.From,
-		in.MaxResults,
-		in.SortBy,
-		sortAscending)
-	if err != nil {
-		fdr.logger.Errorf("Search failed for query: %v, result: %+v err: %v", query, result, err)
-		var eType, eReason string
-		if result != nil && result.Error != nil {
-			eType = result.Error.Type
-			eReason = result.Error.Reason
+// processes the elastic search results by un-marshalling it to a user understandable format.
+func (fdr *Finder) processSearchResults(req *search.SearchRequest, result *es.SearchResult, resp *search.SearchResponse) {
+	// Marshall the elasticDB response and populate the SearchResult
+	resp.TotalHits = result.Hits.TotalHits
+	resp.ActualHits = int64(len(result.Hits.Hits))
+	resp.TimeTakenMsecs = result.TookInMillis
+
+	// Decode the Hits when the request mode is "full"
+	if req.Mode == search.SearchRequest_Full.String() {
+		resp.Entries = make([]*search.Entry, 0, len(result.Hits.Hits))
+
+		wg := &sync.WaitGroup{}
+		entries := make(chan *es.SearchHit, len(result.Hits.Hits))
+		fdr.startSearchResultProcessors(5, wg, &sync.Mutex{}, entries, resp)
+		for i, entry := range result.Hits.Hits {
+			fdr.logger.Debugf("SearchHit - entry: %d {%+v}", i, entry)
+			entries <- entry
+		}
+		close(entries)
+		wg.Wait()
+	}
+
+	fdr.processAggregatedResults(req, result, resp)
+}
+
+func (fdr *Finder) startSearchResultProcessors(numWorkers int, wg *sync.WaitGroup, l *sync.Mutex,
+	entries <-chan *es.SearchHit, resp *search.SearchResponse) {
+	for numWorkers > 0 {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			fdr.searchResultProcessor(id, entries, l, resp)
+		}(numWorkers)
+		numWorkers--
+	}
+}
+
+func (fdr *Finder) searchResultProcessor(id int, entries <-chan *es.SearchHit, l *sync.Mutex,
+	resp *search.SearchResponse) {
+	fdr.logger.Debugf("starting search result processor {%d}", id)
+	count := 0
+	for entry := range entries {
+		count++
+		jsonData, err := entry.Source.MarshalJSON()
+		if err == nil {
+
+			var entry *search.ConfigEntry
+			var robj runtime.Object
+			dataBytes := []byte(jsonData)
+
+			fdr.logger.Debugf("{worker %d} Search hits result - raw string: [ %s ]", id, string(dataBytes))
+			err = json.Unmarshal([]byte(dataBytes), &entry)
+			if err != nil {
+				fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
+				continue
+			}
+			fdr.logger.Debugf("{worker %d} Search hits result - entry: {%+v}", id, entry)
+
+			switch entry.Kind {
+			case "Event":
+				eObj := &evtsapi.Event{}
+				err = json.Unmarshal([]byte(dataBytes), eObj)
+				if err != nil {
+					fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
+					continue
+				}
+				delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
+				fdr.logger.Debugf("{worker %d} Search hits result - event entry: {%+v}", id, eObj)
+				robj = eObj
+				obj, err := types.MarshalAny(robj.(proto.Message))
+				if err != nil {
+					fdr.logger.Errorf("Unable to unmarshall event object {%+v} (%v) ", obj, err)
+					continue
+				}
+				l.Lock()
+				resp.Entries = append(resp.Entries, &search.Entry{
+					Object: &api.Any{
+						Any: *obj,
+					},
+				})
+				l.Unlock()
+
+			case "Alert":
+				aObj := &monapi.Alert{}
+				err = json.Unmarshal([]byte(dataBytes), &aObj)
+				if err != nil {
+					fdr.logger.Errorf("Error unmarshalling json data to search result alert entry : %+v", err)
+					continue
+				}
+				delete(aObj.ObjectMeta.Labels, globals.CategoryLabel)
+				fdr.logger.Debugf("{worker %d} Search hits result - alert entry: {%+v}", id, aObj)
+				robj = aObj
+				obj, err := types.MarshalAny(robj.(proto.Message))
+				if err != nil {
+					fdr.logger.Errorf("Unable to unmarshall alert object {%+v} (%v) ", obj, err)
+					continue
+				}
+				l.Lock()
+				resp.Entries = append(resp.Entries, &search.Entry{
+					Object: &api.Any{
+						Any: *obj,
+					},
+				})
+				l.Unlock()
+			case "AuditEvent":
+				eObj := &audit.Event{}
+				err = json.Unmarshal([]byte(dataBytes), eObj)
+				if err != nil {
+					fdr.logger.Errorf("Error un-marshalling json data to search result audit event entry : %+v", err)
+					continue
+				}
+				delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
+				fdr.logger.Debugf("{worker %d} Search hits result - audit event entry: {%+v}", id, eObj)
+				robj = eObj
+				obj, err := types.MarshalAny(robj.(proto.Message))
+				if err != nil {
+					fdr.logger.Errorf("Unable to unmarshal audit event object {%+v} (%v) ", obj, err)
+					continue
+				}
+				l.Lock()
+				resp.Entries = append(resp.Entries, &search.Entry{
+					Object: &api.Any{
+						Any: *obj,
+					},
+				})
+				l.Unlock()
+			default:
+				cObj := &search.ConfigEntry{}
+				err = json.Unmarshal([]byte(dataBytes), &cObj)
+				if err != nil {
+					fdr.logger.Errorf("Error unmarshalling json data to search result config entry : %+v", err)
+					continue
+				}
+				delete(cObj.ObjectMeta.Labels, globals.CategoryLabel)
+				fdr.logger.Debugf("{worker %d} Search hits result - config entry: {%+v}", id, cObj)
+				robj = cObj
+				obj, err := types.MarshalAny(robj.(proto.Message))
+				if err != nil {
+					fdr.logger.Errorf("Unable to unmarshall config object {%+v} (%v) ", obj, err)
+					continue
+				}
+				l.Lock()
+				resp.Entries = append(resp.Entries, &search.Entry{
+					Object: &api.Any{
+						Any: *obj,
+					},
+				})
+				l.Unlock()
+			}
 		} else {
-			eType = err.Error()
+			fdr.logger.Errorf("{worker %d} Failed to marshal hits result-Source %v err:%v", id, entry, err)
+			resp.Entries = append(resp.Entries, nil)
+			// TBD: Stop here with error or continue with best effort ?
 		}
-		sr.Error = &search.Error{
-			Type:   eType,
-			Reason: eReason,
-		}
-		return &sr, err
+	}
+	fdr.logger.Debugf("search result processor {%d} processed {%d} entries", id, count)
+}
+
+// processes the elastic aggregation results by un-marshalling it to a user understandable format.
+func (fdr *Finder) processAggregatedResults(req *search.SearchRequest, result *es.SearchResult, resp *search.SearchResponse) {
+	if !req.Aggregate {
+		return
 	}
 
 	// Elastic Aggregations JSON structure
@@ -648,137 +889,16 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	//     }
 	//   }
 
-	// Marshall the elasticDB response and populate the SearchResult
-	var resp search.SearchResponse
-	resp.TotalHits = result.Hits.TotalHits
-	resp.ActualHits = int64(len(result.Hits.Hits))
-	resp.TimeTakenMsecs = result.TookInMillis
-
-	// Decode the Hits when the request mode is "full"
-	if in.Mode == search.SearchRequest_Full.String() {
-		resp.Entries = make([]*search.Entry, len(result.Hits.Hits))
-
-		for i, entry := range result.Hits.Hits {
-			fdr.logger.Debugf("SearchHit - entry: %d {%+v}", i, entry)
-			jsondata, err := entry.Source.MarshalJSON()
-			if err == nil {
-
-				var entry *search.ConfigEntry
-				var robj runtime.Object
-				databytes := []byte(jsondata)
-
-				fdr.logger.Debugf("Search hits result - raw string: %d [ %s ]", i, string(databytes))
-				err = json.Unmarshal([]byte(databytes), &entry)
-				if err != nil {
-					fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
-					continue
-				}
-				fdr.logger.Debugf("Search hits result - entry: %d {%+v}", i, entry)
-
-				switch entry.Kind {
-				case "Event":
-					eObj := &evtsapi.Event{}
-					err = json.Unmarshal([]byte(databytes), eObj)
-					if err != nil {
-						fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
-						continue
-					}
-					delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
-					fdr.logger.Debugf("Search hits result - event entry: %d {%+v}", i, eObj)
-					robj = eObj
-					obj, err := types.MarshalAny(robj.(proto.Message))
-					if err != nil {
-						fdr.logger.Errorf("Unable to unmarshall event object {%+v} (%v) ", obj, err)
-						continue
-					}
-					resp.Entries[i] = &search.Entry{
-						Object: &api.Any{
-							Any: *obj,
-						},
-					}
-
-				case "Alert":
-					aObj := &monapi.Alert{}
-					err = json.Unmarshal([]byte(databytes), &aObj)
-					if err != nil {
-						fdr.logger.Errorf("Error unmarshalling json data to search result alert entry : %+v", err)
-						continue
-					}
-					delete(aObj.ObjectMeta.Labels, globals.CategoryLabel)
-					fdr.logger.Debugf("Search hits result - alert entry: %d {%+v}", i, aObj)
-					robj = aObj
-					obj, err := types.MarshalAny(robj.(proto.Message))
-					if err != nil {
-						fdr.logger.Errorf("Unable to unmarshall alert object {%+v} (%v) ", obj, err)
-						continue
-					}
-					resp.Entries[i] = &search.Entry{
-						Object: &api.Any{
-							Any: *obj,
-						},
-					}
-				case "AuditEvent":
-					eObj := &audit.Event{}
-					err = json.Unmarshal([]byte(databytes), eObj)
-					if err != nil {
-						fdr.logger.Errorf("Error un-marshalling json data to search result audit event entry : %+v", err)
-						continue
-					}
-					delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
-					// removing response and request to make audit event small
-					eObj.ResponseObject = ""
-					eObj.RequestObject = ""
-					fdr.logger.Debugf("Search hits result - audit event entry: %d {%+v}", i, eObj)
-					robj = eObj
-					obj, err := types.MarshalAny(robj.(proto.Message))
-					if err != nil {
-						fdr.logger.Errorf("Unable to unmarshal audit event object {%+v} (%v) ", obj, err)
-						continue
-					}
-					resp.Entries[i] = &search.Entry{
-						Object: &api.Any{
-							Any: *obj,
-						},
-					}
-				default:
-					cObj := &search.ConfigEntry{}
-					err = json.Unmarshal([]byte(databytes), &cObj)
-					if err != nil {
-						fdr.logger.Errorf("Error unmarshalling json data to search result config entry : %+v", err)
-						continue
-					}
-					delete(cObj.ObjectMeta.Labels, globals.CategoryLabel)
-					fdr.logger.Debugf("Search hits result - config entry: %d {%+v}", i, cObj)
-					robj = cObj
-					obj, err := types.MarshalAny(robj.(proto.Message))
-					if err != nil {
-						fdr.logger.Errorf("Unable to unmarshall config object {%+v} (%v) ", obj, err)
-						continue
-					}
-					resp.Entries[i] = &search.Entry{
-						Object: &api.Any{
-							Any: *obj,
-						},
-					}
-				}
-			} else {
-				resp.Entries[i] = nil
-				fdr.logger.Errorf("Failed to marshal hits result-Source i:%d err:%v", i, err)
-				// TBD: Stop here with error or continue with best effort ?
-			}
-		}
-	}
-
 	// Deserialize Tenant aggregations
 	if tenantAgg, found := result.Aggregations.Terms(elastic.TenantAggKey); found {
 
-		if in.Mode == search.SearchRequest_Full.String() {
+		if req.Mode == search.SearchRequest_Full.String() {
 			resp.AggregatedEntries = &search.TenantAggregation{
 				Tenants: make(map[string]*search.CategoryAggregation, len(result.Aggregations)),
 			}
 		}
 
-		if in.Mode == search.SearchRequest_Preview.String() {
+		if req.Mode == search.SearchRequest_Preview.String() {
 			resp.PreviewEntries = &search.TenantPreview{
 				Tenants: make(map[string]*search.CategoryPreview, len(result.Aggregations)),
 			}
@@ -789,13 +909,13 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 			// Deserialize Category aggregations
 			if categoryAgg, found := tenantBucket.Terms(elastic.CategoryAggKey); found {
 
-				if in.Mode == search.SearchRequest_Full.String() {
+				if req.Mode == search.SearchRequest_Full.String() {
 					resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)] = &search.CategoryAggregation{
 						Categories: make(map[string]*search.KindAggregation, len(categoryAgg.Buckets)),
 					}
 				}
 
-				if in.Mode == search.SearchRequest_Preview.String() {
+				if req.Mode == search.SearchRequest_Preview.String() {
 					resp.PreviewEntries.Tenants[tenantBucket.Key.(string)] = &search.CategoryPreview{
 						Categories: make(map[string]*search.KindPreview, len(categoryAgg.Buckets)),
 					}
@@ -806,13 +926,13 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 					// Deserialize Kind aggregations
 					if kindAgg, found := categoryBucket.Terms(elastic.KindAggKey); found {
 
-						if in.Mode == search.SearchRequest_Full.String() {
+						if req.Mode == search.SearchRequest_Full.String() {
 							resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)] = &search.KindAggregation{
 								Kinds: make(map[string]*search.EntryList, len(kindAgg.Buckets)),
 							}
 						}
 
-						if in.Mode == search.SearchRequest_Preview.String() {
+						if req.Mode == search.SearchRequest_Preview.String() {
 							resp.PreviewEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)] = &search.KindPreview{
 								Kinds: make(map[string]int64, len(kindAgg.Buckets)),
 							}
@@ -825,7 +945,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 							if topHits, ok := kindBucket.TopHits(string(elastic.TopHitsKey)); ok {
 
 								hits := topHits.Hits.Hits
-								if in.Mode == search.SearchRequest_Full.String() {
+								if req.Mode == search.SearchRequest_Full.String() {
 									resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)] = &search.EntryList{
 										Entries: make([]*search.Entry, len(hits)),
 									}
@@ -889,9 +1009,6 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 													continue
 												}
 												delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
-												// removing response and request to make audit event small
-												eObj.ResponseObject = ""
-												eObj.RequestObject = ""
 												fdr.logger.Debugf("Search hits result - audit event entry: %d {%+v}", i, eObj)
 												robj = eObj
 												obj, err := types.MarshalAny(robj.(proto.Message))
@@ -934,7 +1051,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 									}
 								}
 
-								if in.Mode == search.SearchRequest_Preview.String() {
+								if req.Mode == search.SearchRequest_Preview.String() {
 									resp.PreviewEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)] = int64(len(hits))
 								}
 
@@ -945,67 +1062,6 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 			}
 		}
 	}
-
-	fdr.logger.Infof("Search response: {%+v}", resp)
-	return &resp, nil
-}
-
-// authzQuery returns query to limit search by authorized kinds for tenants specified in search request. It returns nil query
-// if request is not coming from API Gw.
-func (fdr *Finder) authzQuery(ctx context.Context, tenants []string) (es.Query, error) {
-	// add authorization only if request is coming from API GW
-	if ctxutils.GetPeerID(ctx) != globals.APIGw {
-		fdr.logger.Infof("not constraining search query with authz info")
-		return nil, nil
-	}
-	userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
-	if !ok {
-		fdr.logger.Errorf("no user in grpc metadata")
-		return nil, errors.New("no user in context")
-	}
-	user := &auth.User{ObjectMeta: *userMeta}
-	// constrain search by authorized kinds
-	authorizer, err := authzgrpc.NewAuthorizer(ctx)
-	if err != nil {
-		fdr.logger.Errorf("error creating grpc authorizer for search: %v", err)
-		return nil, err
-	}
-	var authorizedTenantsFound, authorizedClusterKindsFound bool
-	query := es.NewBoolQuery().QueryName("AllowedKindsForTenants")
-	for _, tenant := range tenants {
-		allowedTenantScopedOps := authorizer.AuthorizedOperations(user, tenant, authz.ResourceNamespaceAll, auth.Permission_Read)
-		if len(allowedTenantScopedOps) > 0 {
-			var allowedTenantScopedKinds []string
-			kquery := es.NewBoolQuery().QueryName("AllowedKindsForTenant")
-			kquery = kquery.Must(es.NewMatchPhraseQuery("meta.tenant", tenant))
-			kindReq := es.NewBoolQuery().QueryName("AllowedKinds")
-			for _, op := range allowedTenantScopedOps {
-				kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", op.GetResource().GetKind())).MinimumNumberShouldMatch(1)
-				allowedTenantScopedKinds = append(allowedTenantScopedKinds, op.GetResource().GetKind())
-			}
-			kquery = kquery.Must(kindReq)
-			query = query.Should(kquery).MinimumNumberShouldMatch(1)
-			authorizedTenantsFound = true
-			fdr.logger.Infof("user [%s|%s] allowed to search kinds [%#v] in tenant [%s]", user.Tenant, user.Name, allowedTenantScopedKinds, tenant)
-		}
-	}
-	allowedClusterScopedOps := authorizer.AuthorizedOperations(user, "", "", auth.Permission_Read)
-	kindReq := es.NewBoolQuery().QueryName("AllowedClusterKinds")
-	var allowedClusterScopedKinds []string
-	for _, op := range allowedClusterScopedOps {
-		kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", op.GetResource().GetKind())).MinimumNumberShouldMatch(1)
-		allowedClusterScopedKinds = append(allowedClusterScopedKinds, op.GetResource().GetKind())
-		authorizedClusterKindsFound = true
-	}
-	if authorizedClusterKindsFound {
-		query = query.Should(kindReq).MinimumNumberShouldMatch(1)
-		fdr.logger.Infof("user [%s|%s] allowed to search cluster kinds [%#v]", user.Tenant, user.Name, allowedClusterScopedKinds)
-	}
-	if !authorizedTenantsFound && !authorizedClusterKindsFound {
-		fdr.logger.Errorf("user [%s|%s] unauthorized to search any kind", user.Tenant, user.Name)
-		return nil, grpcstatus.Error(grpccode.PermissionDenied, "unauthorized to search any objects")
-	}
-	return query, nil
 }
 
 // Start the RPC-server for the Query backend handling

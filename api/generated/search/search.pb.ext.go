@@ -388,6 +388,7 @@ func (m *SearchRequest) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.Aggregate = true
 		m.MaxResults = 50
 		m.Mode = "Full"
 		m.SortOrder = "Ascending"

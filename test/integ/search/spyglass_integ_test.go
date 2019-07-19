@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/url"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -304,7 +305,8 @@ func (tInfo *testInfo) removeResolverEntry(serviceName, url string) {
 	})
 }
 
-func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, mode, sortBy string, tenants []string) string {
+func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, mode, sortBy string,
+	aggregate bool, tenants []string) string {
 
 	// convert to query-string to url-encoded string
 	// to escape special characters like space, comma, braces.
@@ -320,6 +322,7 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 	if sortBy != "" {
 		str += fmt.Sprintf("&SortBy=%s", sortBy)
 	}
+	str += fmt.Sprintf("&Aggregate=%s", strconv.FormatBool(aggregate))
 	for _, tenant := range tenants {
 		str += fmt.Sprintf("&Tenants=%s", tenant)
 	}
@@ -501,10 +504,12 @@ func TestSpyglass(t *testing.T) {
 			restcl := netutils.NewHTTPClient()
 			restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 			restcl.SetHeader("Authorization", tInfo.authzHeader)
-			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), "", []string{"tesla"}), nil, &resp)
+			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(),
+				"", true, []string{"tesla"}), nil, &resp)
 			if err != nil {
 				t.Logf("GET on search REST endpoint: %s failed, err:%+v",
-					getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), "", []string{"tesla"}), err)
+					getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), "",
+						true, []string{"tesla"}), err)
 				return false, nil
 			}
 			return true, nil
@@ -612,6 +617,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:Tenant",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -635,6 +641,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:SmartNIC",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -655,6 +662,20 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			nil,
 		},
+		{ // no aggregation should be performed on the results
+			search.SearchRequest{
+				QueryString: "kind:SmartNIC",
+				From:        from,
+				MaxResults:  maxResults,
+				Aggregate:   false,
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			objectCount,
+			nil,
+			nil,
+			nil,
+		},
 		{
 			// Test Paginated query #1
 			// Use sort option for deterministic results
@@ -662,6 +683,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:SmartNIC",
 				From:        0, // from offset-0
 				MaxResults:  3, // get 3 results
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"meta.name.keyword",
@@ -687,6 +709,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:SmartNIC",
 				From:        3, // from offset-3
 				MaxResults:  2, // get 2 results
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"meta.name.keyword",
@@ -710,6 +733,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -742,6 +766,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -775,6 +800,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -821,6 +847,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -853,6 +880,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "SmartNIC",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -879,6 +907,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "infra",
 				From:        from,
 				MaxResults:  8192,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -910,6 +939,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  256,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -970,6 +1000,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "4444.4400.0001",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -998,6 +1029,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1021,6 +1053,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "smartnic",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			"",
 			"",
@@ -1047,6 +1080,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "smart*",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			"",
 			"",
@@ -1075,6 +1109,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:Contract",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1090,6 +1125,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1104,6 +1140,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: CreateAlphabetString(512),
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1119,6 +1156,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        -1,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1134,6 +1172,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        1200,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1149,6 +1188,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  -1,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1164,6 +1204,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  9000,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1181,6 +1222,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Preview.String(),
 			"",
@@ -1211,6 +1253,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:Event",
 				From:        from,
 				MaxResults:  maxResults * 2,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Preview.String(),
 			"",
@@ -1232,6 +1275,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Preview.String(),
 			"",
@@ -1251,6 +1295,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"", // default mode is Complete
 			"",
@@ -1275,6 +1320,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -1305,6 +1351,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       0, // from offset-0
 				MaxResults: 3, // get 3 results
 				SortBy:     "meta.name.keyword",
+				Aggregate:  true,
 			},
 			"",
 			"meta.name.keyword",
@@ -1333,6 +1380,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       3, // from offset-3
 				MaxResults: 2, // get 2 results
 				SortBy:     "meta.name.keyword",
+				Aggregate:  true,
 			},
 			"",
 			"meta.name.keyword",
@@ -1358,6 +1406,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1392,6 +1441,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1427,6 +1477,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1484,6 +1535,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1522,6 +1574,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1555,6 +1608,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1587,6 +1641,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1619,6 +1674,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1656,6 +1712,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1722,6 +1779,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1756,6 +1814,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1789,6 +1848,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1825,6 +1885,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1864,6 +1925,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1897,6 +1959,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1928,6 +1991,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1958,6 +2022,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				MaxResults: maxResults,
 				SortBy:     "meta.creation-time",
 				SortOrder:  search.SearchRequest_Descending.String(),
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -1992,6 +2057,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: 8192,
 				SortBy:     "meta.mod-time",
+				Aggregate:  true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -2023,6 +2089,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: 8192,
 				SortBy:     "meta.fake-field",
+				Aggregate:  true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -2063,6 +2130,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2105,6 +2173,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2145,6 +2214,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2171,6 +2241,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2191,6 +2262,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2211,6 +2283,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2228,6 +2301,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       -1,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2245,6 +2319,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       1200,
 				MaxResults: maxResults,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2262,6 +2337,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: -1,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2279,6 +2355,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: 9000,
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2303,6 +2380,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				MaxResults: maxResults,
 				Mode:       search.SearchRequest_Preview.String(),
 				Tenants:    []string{"audi", "tesla"},
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2347,6 +2425,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Mode:       search.SearchRequest_Preview.String(),
+				Aggregate:  true,
 			},
 			"",
 			"",
@@ -2357,6 +2436,9 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		},
 	}
 
+	httpClient := netutils.NewHTTPClient()
+	httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	httpClient.SetHeader("Authorization", tInfo.authzHeader)
 	// Execute the Query Testcases
 	for _, tc := range queryTestcases {
 
@@ -2371,13 +2453,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					if searchMethod == GetWithURI && len(tc.query.QueryString) != 0 {
 						// Query using URI params - via GET method
 						t.Logf("@@@ GET QueryString query: %s\n", tc.query.QueryString)
-						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Tenants)
+						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From,
+							tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Aggregate, tc.query.Tenants)
 						resp = search.SearchResponse{}
-						restcl := netutils.NewHTTPClient()
-						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
-						restcl.SetHeader("Authorization", tInfo.authzHeader)
 						start := time.Now().UTC()
-						_, err = restcl.Req("GET", searchURL, nil, &resp)
+						_, err = httpClient.Req("GET", searchURL, nil, &resp)
 						t.Logf("@@@ Search response time: %+v\n", time.Since(start))
 					} else {
 						// Query using Body - via POST, GET
@@ -2394,11 +2474,8 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 						t.Logf("@@@ Search request [%s] Body: %+v\n", httpMethod, tc.query)
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
-						restcl := netutils.NewHTTPClient()
-						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
-						restcl.SetHeader("Authorization", tInfo.authzHeader)
 						start := time.Now().UTC()
-						_, err = restcl.Req(httpMethod, searchURL, &tc.query, &resp)
+						_, err = httpClient.Req(httpMethod, searchURL, &tc.query, &resp)
 						t.Logf("@@@ Search response time: %+v\n", time.Since(start))
 					}
 
@@ -2412,7 +2489,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					}
 					tInfo.l.Infof("Query: %s, result : %+v", searchURL, resp)
 					return checkSearchQueryResponse(t, &tc.query, &resp, tc.expectedHits, tc.previewResults, tc.aggResults), nil
-				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
+				}, fmt.Sprintf("Search response does not meet the expected: %+v, ", tc.query.QueryString), "100ms", "1m")
 		})
 	}
 }
@@ -3132,6 +3209,10 @@ func checkSearchQueryResponse(t *testing.T, query *search.SearchRequest, resp *s
 		return true
 	}
 
+	if !query.Aggregate {
+		return resp.AggregatedEntries == nil
+	}
+
 	// Verification for "Complete" request mode
 	if query.Mode == search.SearchRequest_Full.String() {
 
@@ -3396,6 +3477,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:Tenant",
 				From:        from,
 				MaxResults:  maxResults,
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -3412,6 +3494,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"audi", "tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -3438,6 +3521,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -3454,6 +3538,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -3470,6 +3555,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{"tesla"},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -3496,6 +3582,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults,
 				Tenants:     []string{globals.DefaultTenant},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -3512,6 +3599,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 				From:        from,
 				MaxResults:  maxResults * 2,
 				Tenants:     []string{globals.DefaultTenant},
+				Aggregate:   true,
 			},
 			search.SearchRequest_Preview.String(),
 			"",
@@ -3540,7 +3628,8 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 					if searchMethod == GetWithURI && len(tc.query.QueryString) != 0 {
 						// Query using URI params - via GET method
 						t.Logf("@@@ GET QueryString query: %s\n", tc.query.QueryString)
-						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Tenants)
+						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From,
+							tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Aggregate, tc.query.Tenants)
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})

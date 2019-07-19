@@ -20,6 +20,7 @@ export interface ISearchSearchRequest {
     'mode': SearchSearchRequest_mode;
     'query'?: ISearchSearchQuery;
     'tenants'?: Array<string>;
+    'aggregate'?: boolean;
 }
 
 
@@ -47,6 +48,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     This cannot be specified as URI parameter. */
     'query': SearchSearchQuery = null;
     'tenants': Array<string> = null;
+    'aggregate': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'query-string': {
             description:  'length of string should be between 0 and 256',
@@ -90,6 +92,11 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         'tenants': {
             required: false,
             type: 'Array<string>'
+        },
+        'aggregate': {
+            default: 'true',
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -179,6 +186,13 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         } else {
             this['tenants'] = [];
         }
+        if (values && values['aggregate'] != null) {
+            this['aggregate'] = values['aggregate'];
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('aggregate')) {
+            this['aggregate'] = SearchSearchRequest.propInfo['aggregate'].default;
+        } else {
+            this['aggregate'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -194,6 +208,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
                 'mode': CustomFormControl(new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]), SearchSearchRequest.propInfo['mode']),
                 'query': CustomFormGroup(this['query'].$formGroup, SearchSearchRequest.propInfo['query'].required),
                 'tenants': CustomFormControl(new FormControl(this['tenants']), SearchSearchRequest.propInfo['tenants']),
+                'aggregate': CustomFormControl(new FormControl(this['aggregate']), SearchSearchRequest.propInfo['aggregate']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('query') as FormGroup).controls).forEach(field => {
@@ -218,6 +233,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
             this._formGroup.controls['mode'].setValue(this['mode']);
             this['query'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['tenants'].setValue(this['tenants']);
+            this._formGroup.controls['aggregate'].setValue(this['aggregate']);
         }
     }
 }
