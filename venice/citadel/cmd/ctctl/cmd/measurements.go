@@ -71,7 +71,7 @@ func measurementCmdHandler(cmd *cobra.Command, args []string) {
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
 
 	for _, m := range args {
-		resp, err := cmd2.QueryPoints(addr, fmt.Sprintf("SELECT * FROM %s", m))
+		resp, err := cmd2.QueryPoints(addr, fmt.Sprintf("SELECT * FROM %s ORDER BY time DESC", m))
 		if err != nil {
 			fmt.Println(err)
 			return
