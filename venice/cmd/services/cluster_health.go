@@ -27,6 +27,8 @@ import (
 
 var (
 	updateInterval = 30 * time.Second
+	// buffer time to let the cache populate and reflect current state of the system
+	cacheInitInterval = 30 * time.Second
 )
 
 // ClusterHealthMonitor represents the cluster health monitor and acts as a local
@@ -40,6 +42,7 @@ type ClusterHealthMonitor struct {
 	deploymentWatcher k8swatch.Interface      // k8s deployment watcher
 	daemonSetWatcher  k8swatch.Interface      // k8s daemon set watcher
 	podWatcher        k8swatch.Interface      // k8s pod watcher
+	updateCh          chan struct{}           // sends wake up call to the updater to update cluster health during updates
 	ctx               context.Context         // context
 	cancelFunc        context.CancelFunc      // to stop the health monitor
 	logger            log.Logger              // logger
@@ -73,6 +76,7 @@ func NewClusterHealthMonitor(configWatcher types.CfgWatcherService, k8sSvc types
 		servicesHealth: &k8sServices{services: make(map[string]*instances)},
 		cfgWatcherSvc:  configWatcher,
 		k8sSvc:         k8sSvc,
+		updateCh:       make(chan struct{}),
 		ctx:            ctx,
 		cancelFunc:     cancel,
 		logger:         logger,
@@ -81,6 +85,7 @@ func NewClusterHealthMonitor(configWatcher types.CfgWatcherService, k8sSvc types
 
 // Start starts the cluster health monitor by spinning node and service watchers along with health updater routine.
 func (c *ClusterHealthMonitor) Start() {
+	c.logger.Infof("starting venice cluster health monitor")
 	c.wg.Add(3)
 	go c.startNodeWatcher()
 	go c.startServiceWatcher()
@@ -89,7 +94,9 @@ func (c *ClusterHealthMonitor) Start() {
 
 // Stop stops the cluster health monitor by stopping watcher and updater routines.
 func (c *ClusterHealthMonitor) Stop() {
+	c.logger.Infof("stopping venice cluster health monitor")
 	c.cancelFunc()
+	close(c.updateCh)
 	c.wg.Wait()
 }
 
@@ -137,7 +144,6 @@ func (c *ClusterHealthMonitor) startNodeWatcher() {
 				return
 			}
 
-			c.logger.Infof("node watcher received %+v", event)
 			node, ok := event.Object.(*cmd.Node)
 			if !ok {
 				c.logger.Infof("node Watcher failed to get node object")
@@ -170,7 +176,7 @@ func (c *ClusterHealthMonitor) startServiceWatcher() {
 	}
 	k8sClient := c.k8sSvc.GetClient()
 
-	selCases := []reflect.SelectCase{}
+	var selCases []reflect.SelectCase
 	watchList := map[int]string{}
 
 	// watch daemon set
@@ -242,9 +248,15 @@ func (c *ClusterHealthMonitor) startServiceWatcher() {
 
 	for {
 		id, recVal, ok := reflect.Select(selCases)
-		if !ok { // context done or channel closed
-			c.logger.Errorf("error receiving watch events from watcher, restarting the watcher")
+		if id == len(selCases)-1 { // ctx-canceled
+			c.logger.Errorf("context canceled, stopping the watchers")
 			c.stopServiceWatchers()
+			return
+		}
+
+		if !ok {
+			c.logger.Errorf("error receiving watch events from watcher, restarting the watchers")
+			c.restartServiceWatchers()
 			return
 		}
 
@@ -273,6 +285,10 @@ func (c *ClusterHealthMonitor) startServiceWatcher() {
 func (c *ClusterHealthMonitor) runUntilCancel() {
 	defer c.wg.Done()
 
+	timeoutCtx, cancel := context.WithTimeout(c.ctx, cacheInitInterval)
+	<-timeoutCtx.Done()
+	cancel()
+
 	ticker := time.NewTicker(updateInterval)
 	defer ticker.Stop()
 
@@ -287,6 +303,18 @@ func (c *ClusterHealthMonitor) runUntilCancel() {
 
 			healthy, reason = c.checkK8sServicesHealth()
 			c.updateClusterHealth(healthy, reason)
+		// kicks in during any node or service failures; this avoids failures from going unnoticed
+		case _, ok := <-c.updateCh:
+			if ok {
+				healthy, reason := c.checkNodesHealth()
+				if !healthy {
+					c.updateClusterHealth(healthy, reason)
+					continue
+				}
+
+				healthy, reason = c.checkK8sServicesHealth()
+				c.updateClusterHealth(healthy, reason)
+			}
 		case <-c.ctx.Done():
 			return
 		}
@@ -296,7 +324,7 @@ func (c *ClusterHealthMonitor) runUntilCancel() {
 // update the cluster status using the given health info.
 func (c *ClusterHealthMonitor) updateClusterHealth(healthy bool, reason []string) {
 	reasonStr := strings.Join(reason, ",")
-	c.logger.Infof("time to update cluster health with %v, reasons: %v", healthy, reasonStr)
+	c.logger.Infof("update cluster health with %v, reasons: %v", healthy, reasonStr)
 
 	// wait for API client to be ready
 	for {
@@ -304,9 +332,11 @@ func (c *ClusterHealthMonitor) updateClusterHealth(healthy bool, reason []string
 			return
 		}
 		if c.cfgWatcherSvc.APIClient() != nil {
-			break
+			if _, err := c.cfgWatcherSvc.APIClient().Cluster().Get(c.ctx, &api.ObjectMeta{}); err == nil {
+				break
+			}
 		}
-		c.logger.Debugf("waiting for API client to update cluster health")
+		c.logger.Debug("waiting for API client to update cluster health")
 		time.Sleep(time.Second)
 	}
 	apiClient := c.cfgWatcherSvc.APIClient()
@@ -321,9 +351,10 @@ func (c *ClusterHealthMonitor) updateClusterHealth(healthy bool, reason []string
 		if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
 			if (healthy && cond.Status == cmd.ConditionStatus_TRUE.String()) ||
 				(!healthy && cond.Status == cmd.ConditionStatus_FALSE.String() && cond.Reason == reasonStr) {
-				c.logger.Infof("cluster status remains intact, nothing to be updated")
+				c.logger.Debug("cluster status remains intact, nothing to be updated")
 				return // nothing to be updated
 			}
+			break
 		}
 	}
 
@@ -350,8 +381,6 @@ func (c *ClusterHealthMonitor) updateClusterHealth(healthy bool, reason []string
 	if err != nil {
 		c.logger.Errorf("failed to update cluster health, err: %v", err)
 	}
-
-	c.logger.Infof("cluster after update: %v", cluster)
 }
 
 // check node(s) health that were obtained from API server
@@ -404,34 +433,48 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 // helper to process node watch events
 func (c *ClusterHealthMonitor) processNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
 	c.nodesHealth.Lock()
-	defer c.nodesHealth.Unlock()
+
+	c.logger.Debugf("node watcher received %v, %+v", et, node)
 
 	if _, ok := c.nodesHealth.nodes[node.GetName()]; !ok {
 		c.nodesHealth.nodes[node.GetName()] = false
 	}
 
 	switch et {
-	case kvstore.Created, kvstore.Updated:
+	case kvstore.Created:
 		for _, cond := range node.Status.Conditions {
 			if cond.Type == cmd.NodeCondition_HEALTHY.String() {
 				c.nodesHealth.nodes[node.GetName()] = cond.Status == cmd.ConditionStatus_TRUE.String()
+				c.nodesHealth.Unlock()
+				return
+			}
+		}
+	case kvstore.Updated:
+		for _, cond := range node.Status.Conditions {
+			if cond.Type == cmd.NodeCondition_HEALTHY.String() {
+				c.nodesHealth.nodes[node.GetName()] = cond.Status == cmd.ConditionStatus_TRUE.String()
+				if cond.Status != cmd.ConditionStatus_TRUE.String() {
+					c.updateCh <- struct{}{}
+				}
+				c.nodesHealth.Unlock()
 				return
 			}
 		}
 	case kvstore.Deleted:
 		delete(c.nodesHealth.nodes, node.GetName())
 	}
+	c.nodesHealth.Unlock()
 }
 
 // helper to process daemon set watch events
 func (c *ClusterHealthMonitor) processDaemonSetEvent(eventType k8swatch.EventType, ds *k8sv1beta1.DaemonSet) {
 	c.servicesHealth.Lock()
-	defer c.servicesHealth.Unlock()
 
 	switch eventType {
 	case k8swatch.Added:
 		if c.servicesHealth.services[ds.Name] != nil {
 			c.servicesHealth.services[ds.Name].desiredNumberScheduled = ds.Status.DesiredNumberScheduled
+			c.servicesHealth.Unlock()
 			return
 		}
 		c.servicesHealth.services[ds.Name] = &instances{desiredNumberScheduled: ds.Status.DesiredNumberScheduled}
@@ -443,17 +486,18 @@ func (c *ClusterHealthMonitor) processDaemonSetEvent(eventType k8swatch.EventTyp
 	case k8swatch.Deleted, k8swatch.Error:
 		delete(c.servicesHealth.services, ds.Name)
 	}
+	c.servicesHealth.Unlock()
 }
 
 // helper to process deployment watch events
 func (c *ClusterHealthMonitor) processDeploymentEvent(eventType k8swatch.EventType, deploy *k8sv1beta1.Deployment) {
 	c.servicesHealth.Lock()
-	defer c.servicesHealth.Unlock()
 
 	switch eventType {
 	case k8swatch.Added:
 		if c.servicesHealth.services[deploy.Name] != nil {
 			c.servicesHealth.services[deploy.Name].desiredNumberScheduled = *deploy.Spec.Replicas
+			c.servicesHealth.Unlock()
 			return
 		}
 		c.servicesHealth.services[deploy.Name] = &instances{desiredNumberScheduled: *deploy.Spec.Replicas}
@@ -465,12 +509,14 @@ func (c *ClusterHealthMonitor) processDeploymentEvent(eventType k8swatch.EventTy
 	case k8swatch.Deleted, k8swatch.Error:
 		delete(c.servicesHealth.services, deploy.Name)
 	}
+	c.servicesHealth.Unlock()
 }
 
 // helper to process pod watch events
 func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod *v1.Pod) {
 	c.servicesHealth.Lock()
-	defer c.servicesHealth.Unlock()
+
+	c.logger.Debugf("pod watcher received %v, %+v", eventType, pod)
 
 	var refName string // reference/owner (ds or deploy)
 	for _, ref := range pod.GetOwnerReferences() {
@@ -483,6 +529,7 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 			case protos.ModuleSpec_DaemonSet.String():
 				refName = ref.Name
 			default:
+				c.servicesHealth.Unlock()
 				return
 			}
 			break
@@ -502,7 +549,9 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 				if !c.isPodRunning(pod) { // delete the instance from list
 					c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list[:i],
 						c.servicesHealth.services[refName].list[i+1:]...)
+					c.updateCh <- struct{}{}
 				}
+				c.servicesHealth.Unlock()
 				return
 			}
 		}
@@ -516,10 +565,13 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 			if instanceName == pod.GetName() {
 				c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list[:i],
 					c.servicesHealth.services[refName].list[i+1:]...)
+				c.updateCh <- struct{}{}
+				c.servicesHealth.Unlock()
 				return
 			}
 		}
 	}
+	c.servicesHealth.Unlock()
 }
 
 // helper function that check if the given podding is in running state.

@@ -45,6 +45,7 @@ func setup(t *testing.T) (*ClusterHealthMonitor, *mock.CfgWatcherService, *k8sSe
 		servicesHealth: &k8sServices{services: make(map[string]*instances)},
 		cfgWatcherSvc:  configWatcher,
 		k8sSvc:         k8sSvc,
+		updateCh:       make(chan struct{}),
 		ctx:            ctx,
 		cancelFunc:     cancel,
 		logger:         tLogger,
@@ -73,7 +74,7 @@ func TestClusterHealth(t *testing.T) {
 		func() (bool, interface{}) {
 			return checkClusterHealth(configWatcher, cluster.ConditionStatus_FALSE.String(),
 				fmt.Sprintf("node %s is not healthy", node.GetName()))
-		}, "node not healthy, expected cluster to be unhealthy", "10s", "60s")
+		}, "node not healthy, expected cluster to be unhealthy", "5s", "60s")
 
 	// update node health and check cluster status
 	healthyCond := cluster.NodeCondition{
@@ -97,7 +98,7 @@ func TestClusterHealth(t *testing.T) {
 		func() (bool, interface{}) {
 			return checkClusterHealth(configWatcher, cluster.ConditionStatus_FALSE.String(),
 				"waiting for service updates from k8s")
-		}, "k8s services not running, expected cluster to be unhealthy", "10s", "60s")
+		}, "k8s services not running, expected cluster to be unhealthy", "5s", "60s")
 
 	pods := map[string]*v1.Pod{}
 	// simulate daemon sets/deployment watcher events
@@ -111,6 +112,7 @@ func TestClusterHealth(t *testing.T) {
 			controller := true
 			pods[module.Name] = &v1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
+					Name: CreateAlphabetString(5),
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							Controller: &controller,
@@ -121,6 +123,7 @@ func TestClusterHealth(t *testing.T) {
 				},
 			}
 		} else if module.Spec.Type == protos.ModuleSpec_Deployment {
+			name := CreateAlphabetString(5)
 			deployObj := createDeploymentObject(&module)
 			replicas := int32(1)
 			deployObj.Spec.Replicas = &replicas
@@ -130,11 +133,12 @@ func TestClusterHealth(t *testing.T) {
 			controller := true
 			pods[module.Name] = &v1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							Controller: &controller,
 							Kind:       protos.ModuleSpec_ReplicaSet.String(),
-							Name:       fmt.Sprintf("%s-%s", deployObj.Name, CreateAlphabetString(5)),
+							Name:       fmt.Sprintf("%s-%s", deployObj.Name, name),
 						},
 					},
 				},
@@ -151,7 +155,7 @@ func TestClusterHealth(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			return checkClusterHealth(configWatcher, cluster.ConditionStatus_TRUE.String(), "")
-		}, "expected cluster to be healthy", "10s", "60s")
+		}, "expected cluster to be healthy", "5s", "60s")
 
 	// simulate pod delete event and expect the status to change to unhealthy
 	clusterHealthMonitor.processPodEvent(k8swatch.Deleted, pods[globals.APIGw])
@@ -159,14 +163,14 @@ func TestClusterHealth(t *testing.T) {
 		func() (bool, interface{}) {
 			return checkClusterHealth(configWatcher, cluster.ConditionStatus_FALSE.String(),
 				fmt.Sprintf("Service %s failed to run desired number of instances", globals.APIGw))
-		}, fmt.Sprintf("%s stopped, expected the cluster to be unhealthy", globals.APIGw), "10s", "60s")
+		}, fmt.Sprintf("%s stopped, expected the cluster to be unhealthy", globals.APIGw), "5s", "60s")
 
 	// add the pod back event and expect the status to change back to healthy
 	clusterHealthMonitor.processPodEvent(k8swatch.Added, pods[globals.APIGw])
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			return checkClusterHealth(configWatcher, cluster.ConditionStatus_TRUE.String(), "")
-		}, "expected cluster to be healthy", "10s", "60s")
+		}, "expected cluster to be healthy", "5s", "60s")
 }
 
 func checkClusterHealth(configWatcher *mock.CfgWatcherService, status, reason string) (bool, interface{}) {

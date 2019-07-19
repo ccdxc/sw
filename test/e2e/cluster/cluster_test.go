@@ -275,7 +275,7 @@ func validateCluster() {
 		return ""
 	}, 15, 3).Should(BeEmpty(), "Resolver data should be same on all quorum nodes")
 
-	By(fmt.Sprintf("ts:%s Cluster Health check", time.Now().String()))
+	By(fmt.Sprintf("ts: %s Cluster Health check", time.Now().String()))
 
 	// cluster should be in healthy state
 	Eventually(func() bool {
@@ -283,22 +283,24 @@ func validateCluster() {
 		nctx, err = ts.tu.NewLoggedInContext(ctx)
 		if err != nil {
 			cancel()
-			By(fmt.Sprintf("ts:%s err:%v logging in", time.Now().String(), err))
+			By(fmt.Sprintf("ts: %s err: %v logging in", time.Now().String(), err))
 			return false
 		}
 		cl, err = clusterIf.Get(nctx, &obj)
 		cancel()
 		if err != nil {
-			By(fmt.Sprintf("ts:%s err:%v getting cluster Info", time.Now().String(), err))
+			By(fmt.Sprintf("ts: %s err: %v getting cluster Info", time.Now().String(), err))
 			return false
 		}
 		for _, cond := range cl.Status.Conditions {
 			if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
+				By(fmt.Sprintf("ts: %s cluster health status: %v, reason: %v", time.Now().String(), cond.Status,
+					cond.Reason))
 				return cond.Status == cmd.ConditionStatus_TRUE.String()
 			}
 		}
-		By(fmt.Sprintf("ts:%s cluster health status:%v", time.Now().String(), cl.Status.Conditions))
+		By(fmt.Sprintf("ts: %s cluster health status: %v", time.Now().String(), cl.Status.Conditions))
 		return false
 	}, 60, 5).Should(BeTrue(), "cluster should be in healthy state")
-	By(fmt.Sprintf("ts:%s Cluster is Healthy", time.Now().String()))
+	By(fmt.Sprintf("ts: %s Cluster is Healthy", time.Now().String()))
 }

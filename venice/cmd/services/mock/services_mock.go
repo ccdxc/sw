@@ -579,29 +579,38 @@ func (m *ResolverService) DeleteServiceInstance(si *protos.ServiceInstance) erro
 
 // Cluster mocks Dummy cluster
 type Cluster struct {
+	sync.RWMutex
 	DummyCluster cmd.Cluster
 }
 
 // Create mocks cluster Create
 func (c *Cluster) Create(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, error) {
+	c.Lock()
+	defer c.Unlock()
 	c.DummyCluster = *in
 	return &c.DummyCluster, nil
 }
 
 // Update mocks cluster Update
 func (c *Cluster) Update(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, error) {
+	c.Lock()
+	defer c.Unlock()
 	c.DummyCluster = *in
 	return &c.DummyCluster, nil
 }
 
 // UpdateStatus mocks cluster UpdateStatus
 func (c *Cluster) UpdateStatus(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, error) {
+	c.Lock()
+	defer c.Unlock()
 	c.DummyCluster = *in
 	return &c.DummyCluster, nil
 }
 
 // Get mocks cluster Get
 func (c *Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Cluster, error) {
+	c.RLock()
+	defer c.RUnlock()
 	if objMeta.Name == c.DummyCluster.Name && objMeta.Tenant == c.DummyCluster.Tenant {
 		return &c.DummyCluster, nil
 	}
@@ -615,6 +624,8 @@ func (c *Cluster) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Clu
 
 // List mocks cluster List
 func (c *Cluster) List(ctx context.Context, options *api.ListWatchOptions) ([]*cmd.Cluster, error) {
+	c.RLock()
+	defer c.RUnlock()
 	rv := make([]*cmd.Cluster, 1)
 	rv[0] = &c.DummyCluster
 	return rv, nil
@@ -643,23 +654,28 @@ func (c *Cluster) UpdateTLSConfig(ctx context.Context, in *cmd.UpdateTLSConfigRe
 
 // Node mocks Dummy node
 type Node struct {
+	sync.RWMutex
 	DummyNode   cmd.Node
 	nodeWatcher *mockNodeWathcer
 }
 
 // Create mocks nodes Create
 func (n *Node) Create(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
+	n.Lock()
+	defer n.Unlock()
 	n.DummyNode = *in
 	if n.nodeWatcher == nil {
 		_, cancel := context.WithCancel(context.Background())
-		n.nodeWatcher = &mockNodeWathcer{ch: make(chan *kvstore.WatchEvent), cancel: cancel}
+		n.nodeWatcher = &mockNodeWathcer{ch: make(chan *kvstore.WatchEvent, 100), cancel: cancel}
+		n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Created, Object: &n.DummyNode}
 	}
-	n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Created, Object: &n.DummyNode}
 	return &n.DummyNode, nil
 }
 
 // Update mocks nodes Update
 func (n *Node) Update(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
+	n.Lock()
+	defer n.Unlock()
 	n.DummyNode = *in
 	n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Updated, Object: &n.DummyNode}
 	return &n.DummyNode, nil
@@ -667,6 +683,8 @@ func (n *Node) Update(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
 
 // UpdateStatus mocks nodes UpdateStatus
 func (n *Node) UpdateStatus(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
+	n.Lock()
+	defer n.Unlock()
 	n.DummyNode = *in
 	n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Updated, Object: &n.DummyNode}
 	return &n.DummyNode, nil
@@ -674,6 +692,8 @@ func (n *Node) UpdateStatus(ctx context.Context, in *cmd.Node) (*cmd.Node, error
 
 // Get mocks nodes Get
 func (n *Node) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Node, error) {
+	n.RLock()
+	defer n.RUnlock()
 	if objMeta.Name == n.DummyNode.Name && objMeta.Tenant == n.DummyNode.Tenant {
 		return &n.DummyNode, nil
 	}
@@ -687,6 +707,8 @@ func (n *Node) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Node, 
 
 // List mocks nodes List
 func (n *Node) List(ctx context.Context, options *api.ListWatchOptions) ([]*cmd.Node, error) {
+	n.RLock()
+	defer n.RUnlock()
 	rv := make([]*cmd.Node, 1)
 	rv[0] = &n.DummyNode
 	return rv, nil
@@ -694,9 +716,12 @@ func (n *Node) List(ctx context.Context, options *api.ListWatchOptions) ([]*cmd.
 
 // Watch mocks nodes Watch - not implemented till we need this
 func (n *Node) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	n.Lock()
+	defer n.Unlock()
 	if n.nodeWatcher == nil {
 		_, cancel := context.WithCancel(context.Background())
-		n.nodeWatcher = &mockNodeWathcer{ch: make(chan *kvstore.WatchEvent), cancel: cancel}
+		n.nodeWatcher = &mockNodeWathcer{ch: make(chan *kvstore.WatchEvent, 100), cancel: cancel}
+		n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Created, Object: &n.DummyNode}
 	}
 	return n.nodeWatcher, nil
 }

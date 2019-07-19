@@ -630,6 +630,11 @@ func (k *k8sService) Stop() {
 		k.cancel()
 		k.cancel = nil
 	}
+
+	if k.client != nil {
+		k.client = nil
+	}
+
 	// release lock so that goroutines can make progress and terminate cleanly
 	k.Unlock()
 

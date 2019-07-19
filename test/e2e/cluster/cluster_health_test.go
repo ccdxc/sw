@@ -3,6 +3,8 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -11,7 +13,6 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 )
 
 // Contains all the cluster health related tests
@@ -35,55 +36,52 @@ var _ = Describe("cluster health tests", func() {
 	})
 
 	It(fmt.Sprintf("Test cluster health by killing %s (venice service)", globals.EvtsMgr), func() {
-		Skip("skipping this test until we get PR #13927 fixed and working")
-
-		// repeatedly kill evtsmgr on one of the nodes and check cluster health
+		// kill evtsmgr on one of the nodes and check cluster health
 		nodeIP := ts.tu.VeniceNodeIPs[0]
+		out := ts.tu.CommandOutput(nodeIP, fmt.Sprint("ps aux | grep [e]vtsmgr | awk '{print $2}'"))
+		By(fmt.Sprintf("ts: %s Killing %s (pid %s) on %v", time.Now(), globals.EvtsMgr, out, nodeIP))
+		killCmd := fmt.Sprintf("kill -9 %s", out)
+		killCmdOut := ts.tu.CommandOutput(nodeIP, killCmd)
+		By(fmt.Sprintf("ts: %s (%s) output: %s", time.Now(), killCmd, killCmdOut))
 		Eventually(func() bool {
-			out := ts.tu.CommandOutput(nodeIP,
-				fmt.Sprintf("docker ps | grep %s | grep -v pause | awk '{print $1}'", globals.EvtsMgr))
-			if !utils.IsEmpty(out) {
-				By(fmt.Sprintf("Killing %s on %v", globals.EvtsMgr, nodeIP))
-				ts.tu.CommandOutput(nodeIP, fmt.Sprintf("docker kill %s", out))
-			}
 			return checkClusterHealth(clusterIf, &obj, cmd.ConditionStatus_FALSE.String(),
 				fmt.Sprintf("Service %s failed to run desired number of instances", globals.EvtsMgr))
 		}, 150, 2).Should(BeTrue(),
-			fmt.Sprintf("Cluster status is expected to be un-healthy as %s is not running on %s",
-				globals.EvtsMgr, nodeIP))
+			fmt.Sprintf("ts: %s Cluster status is expected to be un-healthy as %s is not running on %s",
+				time.Now(), globals.EvtsMgr, nodeIP))
 
 		// pod should run the container again and things should be back to normal
 		Eventually(func() bool {
 			return checkClusterHealth(clusterIf, &obj, cmd.ConditionStatus_TRUE.String(), "")
 		}, 150, 2).Should(BeTrue(),
-			fmt.Sprintf("Cluster status is expected to be healthy as %s should be started back on node %s",
-				globals.EvtsMgr, nodeIP))
+			fmt.Sprintf("ts: %s Cluster status is expected to be healthy as %s should be started back on node %s",
+				time.Now(), globals.EvtsMgr, nodeIP))
 	})
 
 	It("Test cluster health by pausing/resuming CMD", func() {
-		Skip("skipping this test until we get PR #14069 fixed and working")
 		if ts.tu.NumQuorumNodes < 2 {
 			Skip(fmt.Sprintf("Skipping: %d quorum nodes found, need >= 2", ts.tu.NumQuorumNodes))
 		}
 
 		// pause cmd on one of the nodes and check cluster health
 		nodeIP := ts.tu.VeniceNodeIPs[0]
-		By(fmt.Sprintf("Pausing %s on %v", globals.Cmd, nodeIP))
+		By(fmt.Sprintf("ts: %s Pausing %s on %v", time.Now(), globals.Cmd, nodeIP))
 		ts.tu.CommandOutput(nodeIP, fmt.Sprintf("docker pause %s", globals.Cmd))
 		Eventually(func() bool {
 			return checkClusterHealth(clusterIf, &obj, cmd.ConditionStatus_FALSE.String(),
 				fmt.Sprintf("node %s is not healthy", ts.tu.IPToNameMap[nodeIP]))
 		}, 200, 2).Should(BeTrue(),
-			fmt.Sprintf("Cluster status is expected to be un-healthy as %s is not running on %s", globals.Cmd, nodeIP))
+			fmt.Sprintf("ts: %s Cluster status is expected to be un-healthy as %s is not running on %s",
+				time.Now(), globals.Cmd, nodeIP))
 
 		// resume cmd and check cluster status
-		By(fmt.Sprintf("Unpausing %s on %v", globals.Cmd, nodeIP))
+		By(fmt.Sprintf("ts: %s Unpausing %s on %v", time.Now(), globals.Cmd, nodeIP))
 		ts.tu.CommandOutput(nodeIP, fmt.Sprintf("docker unpause %s", globals.Cmd))
 		Eventually(func() bool {
 			return checkClusterHealth(clusterIf, &obj, cmd.ConditionStatus_TRUE.String(), "")
 		}, 200, 2).Should(BeTrue(),
-			fmt.Sprintf("Cluster status is expected to be healthy as %s is resumed back on node %s",
-				globals.Cmd, nodeIP))
+			fmt.Sprintf("ts: %s Cluster status is expected to be healthy as %s is resumed back on node %s",
+				time.Now(), globals.Cmd, nodeIP))
 	})
 })
 
@@ -96,7 +94,7 @@ func checkClusterHealth(clusterIf cmd.ClusterV1ClusterInterface, clusterObjMeta 
 	}
 	for _, cond := range cl.Status.Conditions {
 		if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
-			return cond.Status == expectedHealthCondition && cond.Reason == expectedReason
+			return cond.Status == expectedHealthCondition && strings.Contains(cond.Reason, expectedReason)
 		}
 	}
 	return false
