@@ -181,7 +181,7 @@ jobd/dol/apollo/mirror: ${JOBD_PREREQS}
 
 .PHONY: jobd/apollo/pds_scale_test_mock
 jobd/apollo/pds_scale_test_mock: ${JOBD_PREREQS}
-	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
+	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh > /dev/null
 	${NICDIR}/apollo/test/scale/runtestapp.sh
 
 .PHONY: jobd/apollo/aarch64/container

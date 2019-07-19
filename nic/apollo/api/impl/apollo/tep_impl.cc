@@ -118,6 +118,8 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             tep_data.action_id = TEP_IPV4_VXLAN_TEP_ID;
             tep_data.tep_ipv4_vxlan_action.dipo =
                 tep_spec->key.ip_addr.addr.v4_addr;
+            memcpy(tep_data.tep_ipv4_vxlan_action.dmac,
+                   tep->mac(), ETH_ADDR_LEN);
         } else {
             device = device_db()->find();
             tep_data.action_id = TEP_IPV6_VXLAN_TEP_ID;
@@ -127,8 +129,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             sdk::lib::memrev(tep_data.tep_ipv6_vxlan_action.dipo,
                              tep_spec->key.ip_addr.addr.v6_addr.addr8,
                              IP6_ADDR8_LEN);
+            memcpy(tep_data.tep_ipv6_vxlan_action.dmac,
+                   tep->mac(), ETH_ADDR_LEN);
         }
-        memcpy(tep_data.tep_ipv4_vxlan_action.dmac, tep->mac(), ETH_ADDR_LEN);
         break;
 
     default:

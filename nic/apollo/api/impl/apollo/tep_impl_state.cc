@@ -26,7 +26,6 @@ tep_impl_state::tep_impl_state(pds_state *state) {
 
     // instantiate P4 tables for bookkeeping
     p4pd_table_properties_get(P4TBL_ID_TEP, &tinfo);
-    // TODO: table_health_monitor_cb is passed as NULL here !!
     tep_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_TEP,
                                   tinfo.tabledepth,
                                   tinfo.actiondata_struct_size,
