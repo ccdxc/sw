@@ -131,6 +131,7 @@ header_type scratch_metadata_t {
         dnat                : 1;
         encap_type          : 1;
         ip_totallen         : 16;
+        packet_len          : 16;
 
         //common types
         mac                 : 48;

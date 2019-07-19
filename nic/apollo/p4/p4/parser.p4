@@ -359,6 +359,7 @@ parser parse_mpls_inner_ipv6 {
 /******************************************************************************
  * Layer 2
  *****************************************************************************/
+@pragma allow_set_meta offset_metadata.l2_2
 parser parse_ethernet_2 {
     set_metadata(offset_metadata.l2_2, current + 0);
     extract(ethernet_2);
@@ -379,6 +380,7 @@ parser parse_ctag_2 {
     }
 }
 
+@pragma allow_set_meta offset_metadata.l3_2
 parser parse_ipv4_2 {
     extract(ipv4_2);
     set_metadata(offset_metadata.l3_2, current + 0);
@@ -391,6 +393,7 @@ parser parse_ipv4_2 {
     }
 }
 
+@pragma allow_set_meta offset_metadata.l3_2
 parser parse_ipv6_2 {
     extract(ipv6_2);
     set_metadata(offset_metadata.l3_2, current + 0);
@@ -561,11 +564,17 @@ parser deparse_egress {
     // intrinsic headers
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    extract(capri_rxdma_intrinsic);
     extract(capri_txdma_intrinsic);
     // Below are headers used in case of egress-to-egress recirc
     extract(predicate_header);
     extract(txdma_to_p4e_header);
     extract(p4e_apollo_i2e);
+
+    extract(p4_to_p4plus_classic_nic);
+    extract(p4_to_p4plus_classic_nic_ip);
+    // splitter offset here for classic nic app
+    extract(p4_to_arm);
 
     // layer 0
     extract(ethernet_0);

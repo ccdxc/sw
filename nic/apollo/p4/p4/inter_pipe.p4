@@ -211,10 +211,19 @@ action egress_to_uplink() {
     } else {
         modify_field(capri_intrinsic.tm_span_session,
                      control_metadata.mirror_session);
-        if (control_metadata.direction == RX_FROM_SWITCH) {
-            modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_0);
-        } else {
-            modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_1);
+        if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
+            add_header(capri_p4_intrinsic);
+            add_header(capri_rxdma_intrinsic);
+            add_header(p4_to_p4plus_classic_nic);
+            add_header(p4_to_p4plus_classic_nic_ip);
+
+            modify_field(p4_to_p4plus_classic_nic.packet_len,
+                         capri_p4_intrinsic.packet_len);
+            modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
+                         P4PLUS_APPTYPE_CLASSIC_NIC);
+            modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                          P4PLUS_CLASSIC_NIC_HDR_SZ));
         }
         remove_header(predicate_header);
     }

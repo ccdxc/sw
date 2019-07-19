@@ -1,8 +1,9 @@
 #include "apollo.h"
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_egress_local_vnic_info_k.h"
 
-struct egress_local_vnic_info_k k;
+struct egress_local_vnic_info_k_ k;
 struct egress_local_vnic_info_d d;
 struct phv_ p;
 
@@ -16,6 +17,12 @@ egress_local_vnic_info_rx:
     seq         c1, d.egress_local_vnic_info_d.mirror_en, TRUE
     phvwr.c1    p.control_metadata_mirror_session, \
                     d.egress_local_vnic_info_d.mirror_session
+    seq         c1, d.egress_local_vnic_info_d.lif, r0
+    phvwr.!c1   p.capri_intrinsic_tm_oport, TM_PORT_DMA
+    phvwr.!c1   p.capri_intrinsic_lif, d.egress_local_vnic_info_d.lif
+    phvwr.!c1   p.capri_rxdma_intrinsic_qtype, d.egress_local_vnic_info_d.qtype
+    phvwr.!c1   p.capri_rxdma_intrinsic_qid, d.egress_local_vnic_info_d.qid
+    phvwr.c1    p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0
     .assert(offsetof(p, ethernet_2_valid) - offsetof(p, ethernet_1_valid) == 12)
     phvwr       p.{ethernet_2_valid...ethernet_1_valid}, 0
     seq         c1, k.ethernet_2_valid, 1
@@ -31,8 +38,14 @@ egress_local_vnic_info_rx:
     phvwr.!c1   p.ethernet_0_srcAddr, d.egress_local_vnic_info_d.vr_mac
 
 egress_local_vnic_rx_l2payload:
+    seq         c1, k.vxlan_1_valid, 1
+    sub.c1      r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_2  
+    sub.!c1     r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l3_2
+    add.!c1     r1, r1, 14
     seq         c1, d.egress_local_vnic_info_d.overlay_vlan_id, r0
+    add.!c1     r1, r1, 4
     bcf         [c1], egress_local_vnic_rx_native
+    phvwr       p.capri_p4_intrinsic_packet_len, r1
 
 egress_local_vnic_rx_vlan_tag:
     .assert(offsetof(p, ctag_0_valid) - offsetof(p, ethernet_0_valid) == 1)
@@ -54,7 +67,7 @@ egress_local_vnic_rx_native:
 egress_local_vnic_info_tx:
     phvwr.e     p.rewrite_metadata_src_slot_id, \
                     d.egress_local_vnic_info_d.src_slot_id
-    nop
+    phvwr       p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_1
 
 /*****************************************************************************/
 /* error function                                                            */

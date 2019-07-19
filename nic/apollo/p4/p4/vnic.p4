@@ -181,13 +181,24 @@ control ingress_vnic_info {
 }
 
 action egress_local_vnic_info(vr_mac, overlay_mac, overlay_vlan_id, subnet_id,
-                              src_slot_id, mirror_en, mirror_session) {
+                              src_slot_id, lif, qtype, qid, mirror_en, mirror_session) {
     if (control_metadata.direction == TX_FROM_HOST) {
         modify_field(rewrite_metadata.src_slot_id, src_slot_id);
+        modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_1);
     } else {
         modify_field(scratch_metadata.flag, mirror_en);
         if (scratch_metadata.flag == TRUE) {
             modify_field(control_metadata.mirror_session, mirror_session);
+        }
+
+        // set oport if lif is non-zero
+        if (lif != 0) {
+            modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
+            modify_field(capri_intrinsic.lif, lif);
+            modify_field(capri_rxdma_intrinsic.qtype, qtype);
+            modify_field(capri_rxdma_intrinsic.qid, qid);
+        } else {
+            modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_0);
         }
 
         // add header towards host
@@ -227,6 +238,16 @@ action egress_local_vnic_info(vr_mac, overlay_mac, overlay_vlan_id, subnet_id,
                 // TODO: what happens to non-ip packets ?
             }
         }
+
+        if (vxlan_1.valid == TRUE) {
+            modify_field(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size - offset_metadata.l2_2);
+        } else {
+            modify_field(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size - offset_metadata.l3_2 + 14);
+        }
+        if (overlay_vlan_id != 0) {
+            add_to_field(scratch_metadata.packet_len, 4);
+        }
+        modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
 
         // remove headers
         remove_header(ethernet_1);
