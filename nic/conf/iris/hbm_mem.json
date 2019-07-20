@@ -392,7 +392,7 @@
         },
         {
             "name": "nvme",
-            "size": "2048K",
+            "size": "6M",
             "reset": true
         },
         {
