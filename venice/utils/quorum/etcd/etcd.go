@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
@@ -25,6 +26,9 @@ import (
 type etcdQuorum struct {
 	client *clientv3.Client
 	config *quorum.Config
+
+	httpclient *netutils.HTTPClient // for Health checks of members - just keep one and reuse
+	sync.Mutex                      // one call to httpclient at a time since httpclient.ctx is shared across calls
 }
 
 const (
@@ -337,22 +341,37 @@ func (e *etcdQuorum) GetStatus(member *quorum.Member) (interface{}, error) {
 	return resp, nil
 }
 
-// GetHealth returns the health of the quorum member by queryinh the /health REST endpoint
-// It queries the member REST endpoint /health
-func (e *etcdQuorum) GetHealth(member *quorum.Member) (bool, error) {
-	if len(member.ClientURLs) == 0 {
-		return false, fmt.Errorf("Error getting health for quorum member %s: no client URL", member.Name)
+func (e *etcdQuorum) getHTTPClient() (*netutils.HTTPClient, error) {
+	if e.httpclient != nil {
+		return e.httpclient, nil
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 	tlsConfig, err := GetQuorumClientCredentials()
 	if err != nil {
 		log.Errorf("Error getting quorum client credentials: %v", err)
-		return false, err
+		return nil, err
 	}
-	client := netutils.NewHTTPClient()
+	e.httpclient = netutils.NewHTTPClient()
+	e.httpclient.WithTLSConfig(tlsConfig)
+	return e.httpclient, nil
+}
+
+// GetHealth returns the health of the quorum member by queryinh the /health REST endpoint
+// It queries the member REST endpoint /health
+func (e *etcdQuorum) GetHealth(member *quorum.Member) (bool, error) {
+	log.Infof("Entered GetHealth for member %s", member.Name)
+	if len(member.ClientURLs) == 0 {
+		return false, fmt.Errorf("Error getting health for quorum member %s: no client URL", member.Name)
+	}
+	client, err := e.getHTTPClient()
+	if err != nil {
+		return false, fmt.Errorf("error %v getting httpClient", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	e.Lock()
 	client.WithContext(ctx)
-	client.WithTLSConfig(tlsConfig)
+	defer e.Unlock()
 
 	type HealthResp struct {
 		Health string `json:"health,omitempty"`

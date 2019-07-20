@@ -477,7 +477,6 @@ func (m *masterService) updateClusterStatus() {
 		}
 
 		update = updateQuorumStatus(env.Quorum, clusterObj) || update
-
 		if update {
 			err := env.StateMgr.UpdateClusterStatus(clusterObj)
 			if err != nil {

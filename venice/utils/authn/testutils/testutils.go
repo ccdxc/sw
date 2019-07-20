@@ -333,8 +333,6 @@ func CreateVersion(apicl apiclient.Services, name string) (*cluster.Version, err
 
 // CreateTenant creates a tenant
 func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error) {
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelFunc()
 	tenant := &cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 		ObjectMeta: api.ObjectMeta{
@@ -345,7 +343,9 @@ func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error
 	var err error
 	var createdTenant *cluster.Tenant
 	if !testutils.CheckEventually(func() (bool, interface{}) {
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 		createdTenant, err = apicl.ClusterV1().Tenant().Create(ctx, tenant)
+		cancelFunc()
 		// 412 is returned when tenant and default roles already exist. 401 when auth is already bootstrapped.
 		if err == nil || strings.HasPrefix(err.Error(), "Status:(412)") || strings.HasPrefix(err.Error(), "Status:(401)") {
 			return true, nil
