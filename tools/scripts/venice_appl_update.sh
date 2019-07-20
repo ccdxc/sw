@@ -23,6 +23,9 @@ done
 if [ -z "$VER" ]
 then
     VER=0.14.0_last-built
+    curl -O http://pxe/builds/hourly/${VER}/VERSION
+    VER=$(cat VERSION) # something like 0.9.0-79 instead of aliases live 0.9.0_last-built
+    rm VERSION
 fi
 
 if [ -z "$IP" ]
@@ -36,9 +39,6 @@ fi
 SSH="ssh -oUserKnownHostsFile=/dev/null -o StrictHostKeyChecking=false"
 SCP="scp -oUserKnownHostsFile=/dev/null -o StrictHostKeyChecking=false"
 
-curl -O http://pxe/builds/hourly/${VER}/VERSION
-VER=$(cat VERSION) # something like 0.9.0-79 instead of aliases live 0.9.0_last-built
-rm VERSION
 
 if [ ! -z "$CLEAN" ]
 then

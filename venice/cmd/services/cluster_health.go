@@ -10,7 +10,7 @@ import (
 
 	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8swatch "k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/pkg/api/v1"
+	v1 "k8s.io/client-go/pkg/api/v1"
 	k8sv1beta1 "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"github.com/pensando/sw/api"

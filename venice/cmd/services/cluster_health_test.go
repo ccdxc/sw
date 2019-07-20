@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8swatch "k8s.io/apimachinery/pkg/watch"
 	fakek8sclient "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api/v1"
+	v1 "k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -162,7 +162,7 @@ func TestClusterHealth(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			return checkClusterHealth(configWatcher, cluster.ConditionStatus_FALSE.String(),
-				fmt.Sprintf("Service %s failed to run desired number of instances", globals.APIGw))
+				fmt.Sprintf("%s(0/1) running,", globals.APIGw))
 		}, fmt.Sprintf("%s stopped, expected the cluster to be unhealthy", globals.APIGw), "5s", "60s")
 
 	// add the pod back event and expect the status to change back to healthy
