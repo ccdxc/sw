@@ -233,6 +233,8 @@ using sdk::SDK_RET_ENTRY_NOT_FOUND;
 using sdk::SDK_RET_ENTRY_EXISTS;
 using sdk::SDK_RET_COMM_FAIL;
 using sdk::SDK_RET_OOM;
+using sdk::SDK_RET_OOB;
+using sdk::SDK_RET_NO_RESOURCE;
 using sdk::sdk_status_t;
 
 #endif    // __SDK_BASE_HPP__
