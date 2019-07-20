@@ -369,7 +369,7 @@ hal_handle_cfg_db_lock (bool readlock, bool lock)
 hal_ret_t
 hal_cfg_db_open (cfg_op_t op)
 {
-    HAL_TRACE_DEBUG("Opening cfg db with mode {}", op);
+    HAL_TRACE_VERBOSE("Opening cfg db with mode {}", op);
     return g_hal_state->cfg_db()->db_open(op);
 }
 
@@ -379,7 +379,7 @@ hal_cfg_db_open (cfg_op_t op)
 hal_ret_t
 hal_cfg_db_close (void)
 {
-    HAL_TRACE_DEBUG("Closing cfg db, current mode {}", t_cfg_db_ctxt.cfg_op_);
+    HAL_TRACE_VERBOSE("Closing cfg db, current mode {}", t_cfg_db_ctxt.cfg_op_);
     return g_hal_state->cfg_db()->db_close();
 }
 

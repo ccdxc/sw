@@ -88,7 +88,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         const char *ctx_name = nat_acl_ctx_name(ctx.get_key().svrf_id);
         acl_ctx = acl::acl_get(ctx_name);
         if (acl_ctx == NULL) {
-            HAL_TRACE_ERR("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
+            HAL_TRACE_VERBOSE("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
             ret = HAL_RET_ERR;
             goto fall_thro;
         }

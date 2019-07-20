@@ -294,7 +294,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
 {
     pipeline_action_t rc = PIPELINE_CONTINUE;
 
-    HAL_TRACE_DEBUG("Invoking pipeline with start: {} end: {} for ev {}",
+    HAL_TRACE_VERBOSE("Invoking pipeline with start: {} end: {} for ev {}",
                     start, end, ctx.pipeline_event());
 
     if (ctx.pipeline_event() == FTE_SESSION_DELETE) {

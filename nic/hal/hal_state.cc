@@ -808,7 +808,7 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
 
     t_cfg_db_ctxt.cfg_op_ = cfg_op;
     t_cfg_db_ctxt.cfg_db_open_ = true;
-    HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
+    HAL_TRACE_VERBOSE("{} acquired rlock, opened cfg db, cfg op : {}",
                     hal_get_current_thread()->name(), cfg_op);
     return HAL_RET_OK;
 }

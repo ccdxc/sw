@@ -47,7 +47,7 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
     d.action_id = FLOW_STATS_FLOW_STATS_ID;
     // P4 has 32 bits so we have to use top 32 bits. We lose the precision by 2^16 ns
     d.action_u.flow_stats_flow_stats.last_seen_timestamp = clock >> 16;
-    HAL_TRACE_DEBUG("Setting the last seen timestamp: {} clock {}",
+    HAL_TRACE_VERBOSE("Setting the last seen timestamp: {} clock {}",
                      d.action_u.flow_stats_flow_stats.last_seen_timestamp,
                      clock);
 

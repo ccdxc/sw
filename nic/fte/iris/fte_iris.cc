@@ -196,7 +196,7 @@ ctx_t::lookup_flow_objs()
         sif_ = hal::find_if_by_handle(sep_->if_handle);
         SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
     } else {
-        HAL_TRACE_ERR("fte: src ep unknown");
+        HAL_TRACE_DEBUG("fte: src ep unknown");
         //If we already found sl2seg_ during key lookup for flow miss
         //then we use that to derive the source ep
         if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {

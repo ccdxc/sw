@@ -167,7 +167,7 @@ is_virtaddr_cpu_rx_dpr_page (cpupkt_hw_id_t page_addr, int tg_cpu_id, cpupkt_hw_
      * get the corresponding virtual-address of the page which we can access
      * directly.
      */
-    HAL_TRACE_DEBUG2("CPU-RX-DPR virt-obj-base-addr {:p} size {} KB",
+    HAL_TRACE_VERBOSE("CPU-RX-DPR virt-obj-base-addr {:p} size {} KB",
 		    meta->virt_obj_base_addr[0], (meta->num_slots * meta->obj_size)/1024);
     if (page_addr >= (uint64_t)meta->virt_obj_base_addr[0] &&
 	page_addr <= ((uint64_t) meta->virt_obj_base_addr[0] + (meta->num_slots * meta->obj_size))) {
@@ -1626,7 +1626,7 @@ cpupkt_program_send_queue (cpupkt_ctxt_t* ctxt, types::WRingType type,
             HAL_TRACE_ERR2("Failed to program send queue");
 	    return HAL_RET_HW_FAIL;
 	}
-	HAL_TRACE_DEBUG2("Programming send queue: addr: {:#x} value: {:#x}",
+	HAL_TRACE_VERBOSE("Programming send queue: addr: {:#x} value: {:#x}",
 			qinst_info->pc_index_addr, descr_addr);
     }
 
@@ -1736,7 +1736,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
     no_copy = (is_cpu_zero_copy_enabled() &&
 	       is_virtaddr_cpu_rx_dpr_page((cpupkt_hw_id_t) data, queue_id, &phy_page_addr));
 
-    HAL_TRACE_DEBUG2("Doing {} Tx of packet on LIF/Qtype/ID/ring {}/{}/{}/{}",
+    HAL_TRACE_VERBOSE("Doing {} Tx of packet on LIF/Qtype/ID/ring {}/{}/{}/{}",
 		    no_copy ? "zero-copy" : "", dest_lif, qtype, qid, ring_number);
 
     if (no_copy) {
@@ -1771,7 +1771,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
 	write_addr = page_addr;
     }
 
-    HAL_TRACE_DEBUG2("CPU page-addr {:#x}, phy-page-addr {:#x} write-addr {:#x}",
+    HAL_TRACE_VERBOSE("CPU page-addr {:#x}, phy-page-addr {:#x} write-addr {:#x}",
 		    page_addr, phy_page_addr, write_addr);
     if (cpu_header != NULL) {
         // CPU header

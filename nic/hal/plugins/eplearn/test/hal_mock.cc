@@ -62,7 +62,7 @@ fte::ctx_t::invoke_completion_handlers(bool fail)
     HAL_TRACE_DEBUG("fte: invoking completion handlers");
     for (int i = 0; i < num_features_; i++) {
         if (feature_state_[i].completion_handler != nullptr) {
-            HAL_TRACE_DEBUG("fte: invoking completion handler {:p}",
+            HAL_TRACE_VERBOSE("fte: invoking completion handler {:p}",
                         (void*)(feature_state_[i].completion_handler));
             (*feature_state_[i].completion_handler)(*this, fail);
         }

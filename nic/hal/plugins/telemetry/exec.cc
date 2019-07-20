@@ -231,7 +231,7 @@ telemetry_exec (fte::ctx_t &ctx)
     sfw_info_t  *sfw_info = NULL;
     
     hal::session_t *session = ctx.session();
-    HAL_TRACE_DEBUG("telemetry plugin exec, event {}", ctx.pipeline_event());
+    HAL_TRACE_VERBOSE("telemetry plugin exec, event {}", ctx.pipeline_event());
     // IPFIX flows
     if ((session && session->is_ipfix_flow) ||
             (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
