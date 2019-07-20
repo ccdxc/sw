@@ -6170,27 +6170,27 @@
         "sort-order": {
           "type": "string",
           "enum": [
-            "None",
-            "ByName",
-            "ByNameReverse",
-            "ByVersion",
-            "ByVersionReverse",
-            "ByCreationTime",
-            "ByCreationTimeReverse",
-            "ByModTime",
-            "ByModTimeReverse"
+            "none",
+            "by-name",
+            "by-name-reverse",
+            "by-version",
+            "by-version-reverse",
+            "by-creation-time",
+            "by-creation-time-reverse",
+            "by-mod-time",
+            "by-mod-time-reverse"
           ],
-          "default": "None",
+          "default": "none",
           "x-ui-hints": {
-            "ByCreationTime": "By Creation Time",
-            "ByCreationTimeReverse": "By Creation Time Reverse",
-            "ByModTime": "By Modification Time",
-            "ByModTimeReverse": "By Modification Time Reverse",
-            "ByName": "By Name",
-            "ByNameReverse": "By Name Reverse",
-            "ByVersion": "By Version",
-            "ByVersionReverse": "By Version Reverse",
-            "None": "None"
+            "by-creation-time": "By Creation Time",
+            "by-creation-time-reverse": "By Creation Time Reverse",
+            "by-mod-time": "By Modification Time",
+            "by-mod-time-reverse": "By Modification Time Reverse",
+            "by-name": "By Name",
+            "by-name-reverse": "By Name Reverse",
+            "by-version": "By Version",
+            "by-version-reverse": "By Version Reverse",
+            "none": "None"
           },
           "description": "order to sort List results in."
         }
@@ -6476,13 +6476,13 @@
             "type": "string"
           },
           "enum": [
-            "LOCAL",
-            "LDAP",
-            "RADIUS"
+            "local",
+            "ldap",
+            "radius"
           ],
-          "default": "LOCAL",
+          "default": "local",
           "x-ui-hints": {
-            "LOCAL": "Local"
+            "local": "Local"
           },
           "title": "Order in which authenticators are applied. If an authenticator returns success, others are skipped"
         },
@@ -6688,12 +6688,12 @@
         "result": {
           "type": "string",
           "enum": [
-            "Connect_Success",
-            "Connect_Failure",
-            "Bind_Success",
-            "Bind_Failure"
+            "connect-success",
+            "connect-failure",
+            "bind-success",
+            "bind-failure"
           ],
-          "default": "Connect_Success",
+          "default": "connect-success",
           "title": "Result indicates if ldap check was successful"
         },
         "message": {
@@ -6727,23 +6727,22 @@
         "action": {
           "type": "string",
           "enum": [
-            "AllActions",
-            "Create",
-            "Read",
-            "Update",
-            "Delete",
-            "Commit",
-            "Clear"
+            "all-actions",
+            "create",
+            "read",
+            "update",
+            "delete",
+            "commit",
+            "clear"
           ],
-          "default": "AllActions",
+          "default": "all-actions",
           "x-ui-hints": {
-            "AllActions": "All Actions",
-            "Clear": "Clear Config",
-            "Commit": "Commit Config",
-            "Create": "Create",
-            "Delete": "Delete",
-            "Read": "Read",
-            "Update": "Update"
+            "clear": "Clear Config",
+            "commit": "Commit Config",
+            "create": "Create",
+            "delete": "Delete",
+            "read": "Read",
+            "update": "Update"
           }
         }
       },
@@ -6848,23 +6847,22 @@
             "type": "string"
           },
           "enum": [
-            "AllActions",
-            "Create",
-            "Read",
-            "Update",
-            "Delete",
-            "Commit",
-            "Clear"
+            "all-actions",
+            "create",
+            "read",
+            "update",
+            "delete",
+            "commit",
+            "clear"
           ],
-          "default": "AllActions",
+          "default": "all-actions",
           "x-ui-hints": {
-            "AllActions": "All Actions",
-            "Clear": "Clear Config",
-            "Commit": "Commit Config",
-            "Create": "Create",
-            "Delete": "Delete",
-            "Read": "Read",
-            "Update": "Update"
+            "clear": "Clear Config",
+            "commit": "Commit Config",
+            "create": "Create",
+            "delete": "Delete",
+            "read": "Read",
+            "update": "Update"
           },
           "title": "Actions are actions on a resource that a permission allows"
         }
@@ -6907,11 +6905,11 @@
         "auth-method": {
           "type": "string",
           "enum": [
-            "PAP",
-            "PEAP_MSCHAPv2",
-            "EAP_TTLS_PAP"
+            "pap",
+            "peap-mschapv2",
+            "eap-ttls-pap"
           ],
-          "default": "PAP",
+          "default": "pap",
           "title": "AuthMethod is authentication method to use with the RADIUS server"
         },
         "trusted-certs": {
@@ -6929,10 +6927,10 @@
         "result": {
           "type": "string",
           "enum": [
-            "Connect_Success",
-            "Connect_Failure"
+            "connect-success",
+            "connect-failure"
           ],
-          "default": "Connect_Success",
+          "default": "connect-success",
           "title": "Result indicates if radius check was successful"
         },
         "message": {
@@ -7284,13 +7282,13 @@
         "type": {
           "type": "string",
           "enum": [
-            "Local",
-            "External"
+            "local",
+            "external"
           ],
-          "default": "Local",
+          "default": "local",
           "x-ui-hints": {
-            "External": "External",
-            "Local": "Local"
+            "external": "External",
+            "local": "Local"
           }
         }
       },
@@ -7327,13 +7325,13 @@
             "type": "string"
           },
           "enum": [
-            "LOCAL",
-            "LDAP",
-            "RADIUS"
+            "local",
+            "ldap",
+            "radius"
           ],
-          "default": "LOCAL",
+          "default": "local",
           "x-ui-hints": {
-            "LOCAL": "Local"
+            "local": "Local"
           },
           "title": "Authenticators used for last successful login"
         },

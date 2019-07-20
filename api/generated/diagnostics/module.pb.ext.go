@@ -30,32 +30,71 @@ var _ listerwatcher.WatcherClient
 
 // DiagnosticsRequest_QueryType_normal is a map of normalized values for the enum
 var DiagnosticsRequest_QueryType_normal = map[string]string{
-	"Log":     "Log",
-	"Profile": "Profile",
-	"Stats":   "Stats",
-	"log":     "Log",
-	"profile": "Profile",
-	"stats":   "Stats",
+	"log":     "log",
+	"profile": "profile",
+	"stats":   "stats",
+}
+
+var DiagnosticsRequest_QueryType_vname = map[int32]string{
+	0: "log",
+	1: "profile",
+	2: "stats",
+}
+
+var DiagnosticsRequest_QueryType_vvalue = map[string]int32{
+	"log":     0,
+	"profile": 1,
+	"stats":   2,
+}
+
+func (x DiagnosticsRequest_QueryType) String() string {
+	return DiagnosticsRequest_QueryType_vname[int32(x)]
 }
 
 // ModuleSpec_LoggingLevel_normal is a map of normalized values for the enum
 var ModuleSpec_LoggingLevel_normal = map[string]string{
-	"Debug": "Debug",
-	"Error": "Error",
-	"Info":  "Info",
-	"Warn":  "Warn",
-	"debug": "Debug",
-	"error": "Error",
-	"info":  "Info",
-	"warn":  "Warn",
+	"debug": "debug",
+	"error": "error",
+	"info":  "info",
+	"warn":  "warn",
+}
+
+var ModuleSpec_LoggingLevel_vname = map[int32]string{
+	0: "info",
+	1: "warn",
+	2: "error",
+	3: "debug",
+}
+
+var ModuleSpec_LoggingLevel_vvalue = map[string]int32{
+	"info":  0,
+	"warn":  1,
+	"error": 2,
+	"debug": 3,
+}
+
+func (x ModuleSpec_LoggingLevel) String() string {
+	return ModuleSpec_LoggingLevel_vname[int32(x)]
 }
 
 // ModuleStatus_CategoryType_normal is a map of normalized values for the enum
 var ModuleStatus_CategoryType_normal = map[string]string{
-	"Naples": "Naples",
-	"Venice": "Venice",
-	"naples": "Naples",
-	"venice": "Venice",
+	"naples": "naples",
+	"venice": "venice",
+}
+
+var ModuleStatus_CategoryType_vname = map[int32]string{
+	0: "venice",
+	1: "naples",
+}
+
+var ModuleStatus_CategoryType_vvalue = map[string]int32{
+	"venice": 0,
+	"naples": 1,
+}
+
+func (x ModuleStatus_CategoryType) String() string {
+	return ModuleStatus_CategoryType_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -174,7 +213,7 @@ func (m *ModuleSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.LogLevel = "Info"
+		m.LogLevel = "info"
 	}
 	return ret
 }
@@ -201,7 +240,7 @@ func (m *ModuleStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Category = "Venice"
+		m.Category = "venice"
 	}
 	return ret
 }
@@ -414,9 +453,9 @@ func init() {
 	validatorMapModule["ModuleSpec"]["all"] = append(validatorMapModule["ModuleSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*ModuleSpec)
 
-		if _, ok := ModuleSpec_LoggingLevel_value[m.LogLevel]; !ok {
+		if _, ok := ModuleSpec_LoggingLevel_vvalue[m.LogLevel]; !ok {
 			vals := []string{}
-			for k1, _ := range ModuleSpec_LoggingLevel_value {
+			for k1, _ := range ModuleSpec_LoggingLevel_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"LogLevel", vals)
@@ -428,9 +467,9 @@ func init() {
 	validatorMapModule["ModuleStatus"]["all"] = append(validatorMapModule["ModuleStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*ModuleStatus)
 
-		if _, ok := ModuleStatus_CategoryType_value[m.Category]; !ok {
+		if _, ok := ModuleStatus_CategoryType_vvalue[m.Category]; !ok {
 			vals := []string{}
-			for k1, _ := range ModuleStatus_CategoryType_value {
+			for k1, _ := range ModuleStatus_CategoryType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Category", vals)

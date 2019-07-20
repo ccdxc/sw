@@ -84,7 +84,7 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         },
         'directions': {
             enum: Telemetry_queryFwlogsQuerySpec_directions_uihint,
-            default: 'from_host',
+            default: 'from-host',
             required: true,
             type: 'Array<string>'
         },
@@ -114,7 +114,7 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         },
         'sort-order': {
             enum: Telemetry_queryFwlogsQuerySpec_sort_order,
-            default: 'Descending',
+            default: 'descending',
             required: true,
             type: 'string'
         },

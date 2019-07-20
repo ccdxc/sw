@@ -31,6 +31,20 @@ var Buckets_normal = map[string]string{
 	"techsupport": "techsupport",
 }
 
+var Buckets_vname = map[int32]string{
+	0: "images",
+	1: "techsupport",
+}
+
+var Buckets_vvalue = map[string]int32{
+	"images":      0,
+	"techsupport": 1,
+}
+
+func (x Buckets) String() string {
+	return Buckets_vname[int32(x)]
+}
+
 // MakeKey generates a KV store key for the object
 func (m *Bucket) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "buckets/", m.Name)

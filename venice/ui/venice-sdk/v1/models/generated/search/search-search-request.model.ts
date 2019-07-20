@@ -73,14 +73,14 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         },
         'sort-order': {
             enum: SearchSearchRequest_sort_order,
-            default: 'Ascending',
+            default: 'ascending',
             description:  'SortOrder is an optional parameter and contains whether to sort ascending or descending This can be specified as URI parameter.',
             required: true,
             type: 'string'
         },
         'mode': {
             enum: SearchSearchRequest_mode,
-            default: 'Full',
+            default: 'full',
             required: true,
             type: 'string'
         },

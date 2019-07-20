@@ -28,30 +28,68 @@ var _ listerwatcher.WatcherClient
 
 // Level_normal is a map of normalized values for the enum
 var Level_normal = map[string]string{
-	"Basic":           "Basic",
-	"Request":         "Request",
-	"RequestResponse": "RequestResponse",
-	"Response":        "Response",
-	"basic":           "Basic",
-	"request":         "Request",
-	"requestresponse": "RequestResponse",
-	"response":        "Response",
+	"basic":            "basic",
+	"request":          "request",
+	"request-response": "request-response",
+	"response":         "response",
+}
+
+var Level_vname = map[int32]string{
+	0: "basic",
+	1: "request",
+	2: "response",
+	3: "request-response",
+}
+
+var Level_vvalue = map[string]int32{
+	"basic":            0,
+	"request":          1,
+	"response":         2,
+	"request-response": 3,
+}
+
+func (x Level) String() string {
+	return Level_vname[int32(x)]
 }
 
 // Stage_normal is a map of normalized values for the enum
 var Stage_normal = map[string]string{
-	"RequestAuthorization": "RequestAuthorization",
-	"RequestProcessing":    "RequestProcessing",
-	"requestauthorization": "RequestAuthorization",
-	"requestprocessing":    "RequestProcessing",
+	"requestauthorization": "requestauthorization",
+	"requestprocessing":    "requestprocessing",
+}
+
+var Stage_vname = map[int32]string{
+	0: "requestauthorization",
+	1: "requestprocessing",
+}
+
+var Stage_vvalue = map[string]int32{
+	"requestauthorization": 0,
+	"requestprocessing":    1,
+}
+
+func (x Stage) String() string {
+	return Stage_vname[int32(x)]
 }
 
 // Outcome_normal is a map of normalized values for the enum
 var Outcome_normal = map[string]string{
-	"Failure": "Failure",
-	"Success": "Success",
-	"failure": "Failure",
-	"success": "Success",
+	"failure": "failure",
+	"success": "success",
+}
+
+var Outcome_vname = map[int32]string{
+	0: "success",
+	1: "failure",
+}
+
+var Outcome_vvalue = map[string]int32{
+	"success": 0,
+	"failure": 1,
+}
+
+func (x Outcome) String() string {
+	return Outcome_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -102,9 +140,9 @@ func (m *EventAttributes) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Level = "Basic"
-		m.Outcome = "Success"
-		m.Stage = "RequestAuthorization"
+		m.Level = "basic"
+		m.Outcome = "success"
+		m.Stage = "requestauthorization"
 	}
 	return ret
 }
@@ -218,9 +256,9 @@ func init() {
 	validatorMapAudit["EventAttributes"]["all"] = append(validatorMapAudit["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
 
-		if _, ok := Level_value[m.Level]; !ok {
+		if _, ok := Level_vvalue[m.Level]; !ok {
 			vals := []string{}
-			for k1, _ := range Level_value {
+			for k1, _ := range Level_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Level", vals)
@@ -231,9 +269,9 @@ func init() {
 	validatorMapAudit["EventAttributes"]["all"] = append(validatorMapAudit["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
 
-		if _, ok := Outcome_value[m.Outcome]; !ok {
+		if _, ok := Outcome_vvalue[m.Outcome]; !ok {
 			vals := []string{}
-			for k1, _ := range Outcome_value {
+			for k1, _ := range Outcome_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Outcome", vals)
@@ -252,9 +290,9 @@ func init() {
 	validatorMapAudit["EventAttributes"]["all"] = append(validatorMapAudit["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
 
-		if _, ok := Stage_value[m.Stage]; !ok {
+		if _, ok := Stage_vvalue[m.Stage]; !ok {
 			vals := []string{}
-			for k1, _ := range Stage_value {
+			for k1, _ := range Stage_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Stage", vals)

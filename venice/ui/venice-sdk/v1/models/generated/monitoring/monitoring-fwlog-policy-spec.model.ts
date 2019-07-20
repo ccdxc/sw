@@ -38,13 +38,13 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         },
         'format': {
             enum: MonitoringFwlogPolicySpec_format_uihint,
-            default: 'SYSLOG_BSD',
+            default: 'syslog-bsd',
             required: true,
             type: 'string'
         },
         'filter': {
             enum: MonitoringFwlogPolicySpec_filter_uihint,
-            default: 'FIREWALL_ACTION_ALL',
+            default: 'all',
             required: true,
             type: 'Array<string>'
         },

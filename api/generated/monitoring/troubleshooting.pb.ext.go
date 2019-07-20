@@ -30,12 +30,25 @@ var _ listerwatcher.WatcherClient
 
 // TroubleshootingSessionState_normal is a map of normalized values for the enum
 var TroubleshootingSessionState_normal = map[string]string{
-	"TS_RUNNING":   "TS_RUNNING",
-	"TS_SCHEDULED": "TS_SCHEDULED",
-	"TS_STOPPED":   "TS_STOPPED",
-	"ts_running":   "TS_RUNNING",
-	"ts_scheduled": "TS_SCHEDULED",
-	"ts_stopped":   "TS_STOPPED",
+	"running":   "running",
+	"scheduled": "scheduled",
+	"stopped":   "stopped",
+}
+
+var TroubleshootingSessionState_vname = map[int32]string{
+	0: "running",
+	1: "stopped",
+	2: "scheduled",
+}
+
+var TroubleshootingSessionState_vvalue = map[string]int32{
+	"running":   0,
+	"stopped":   1,
+	"scheduled": 2,
+}
+
+func (x TroubleshootingSessionState) String() string {
+	return TroubleshootingSessionState_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -206,7 +219,7 @@ func (m *TroubleshootingSessionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.State = "TS_RUNNING"
+		m.State = "running"
 	}
 	return ret
 }
@@ -676,15 +689,17 @@ func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *TsPolicy) Normalize() {
 
-	for _, v := range m.InRules {
+	for k, v := range m.InRules {
 		if v != nil {
 			v.Normalize()
+			m.InRules[k] = v
 		}
 	}
 
-	for _, v := range m.OutRules {
+	for k, v := range m.OutRules {
 		if v != nil {
 			v.Normalize()
+			m.OutRules[k] = v
 		}
 	}
 
@@ -757,13 +772,15 @@ func (m *TsReport) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *TsReport) Normalize() {
 
-	for _, v := range m.Alerts {
+	for k, v := range m.Alerts {
 		v.Normalize()
+		m.Alerts[k] = v
 
 	}
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		v.Normalize()
+		m.Events[k] = v
 
 	}
 
@@ -771,8 +788,9 @@ func (m *TsReport) Normalize() {
 		m.MirrorStatus.Normalize()
 	}
 
-	for _, v := range m.Policies {
+	for k, v := range m.Policies {
 		v.Normalize()
+		m.Policies[k] = v
 
 	}
 
@@ -818,9 +836,9 @@ func init() {
 	validatorMapTroubleshooting["TroubleshootingSessionStatus"]["all"] = append(validatorMapTroubleshooting["TroubleshootingSessionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*TroubleshootingSessionStatus)
 
-		if _, ok := TroubleshootingSessionState_value[m.State]; !ok {
+		if _, ok := TroubleshootingSessionState_vvalue[m.State]; !ok {
 			vals := []string{}
-			for k1, _ := range TroubleshootingSessionState_value {
+			for k1, _ := range TroubleshootingSessionState_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)

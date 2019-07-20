@@ -11,8 +11,8 @@ export class AuthPolicyUtil {
             _checkResponseError.type = checkResponse.type;
             if (checkResponse.authpolicy.status['ldap-servers']) {
                 checkResponse.authpolicy.status['ldap-servers'].forEach(server => {
-                    if (server.result === AuthLdapServerStatus_result.Bind_Failure
-                        || server.result === AuthLdapServerStatus_result.Connect_Failure) {
+                    if (server.result === AuthLdapServerStatus_result['bind-failure']
+                        || server.result === AuthLdapServerStatus_result['bind-success']) {
                         _checkResponseError.errors.push(server);
                     }
                 });

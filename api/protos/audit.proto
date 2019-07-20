@@ -37,7 +37,7 @@ enum Level {
     // Response logs object in the response in addition to Basic level of audit logging
     Response        = 2;
     // RequestResponse logs object from the response in addition to Request level of audit logging
-    RequestResponse = 3;
+    RequestResponse = 3 [(venice.enumValueStr) = "request-response"];
 }
 
 // Stage defines the stages in request handling for which audit logs may be generated

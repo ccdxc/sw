@@ -21,7 +21,7 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'facility-override': {
             enum: MonitoringSyslogExportConfig_facility_override_uihint,
-            default: 'LOG_USER',
+            default: 'user',
             required: true,
             type: 'string'
         },

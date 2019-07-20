@@ -185,10 +185,10 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   checkRollouts() {
     for  (let i = 0; i < this.rolloutObjects.length; i++) {
-      if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.PROGRESSING) {
+      if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.progressing) {
         this.currentRollout = this.rolloutObjects[i];
         break;
-      } else if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.SUCCESS && this.rolloutObjects[i] === this.currentRollout) {
+      } else if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.success && this.rolloutObjects[i] === this.currentRollout) {
         this.onRolloutComplete();
       }
     }
@@ -524,21 +524,21 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     let alert: MonitoringAlert;
     for (let i = 0 ; i < this.alerts.length ; i++) {
       alert = this.alerts[i];
-      if (alert.status.severity === 'CRITICAL') {
-        this.alertHighestSeverity = 'CRITICAL';
+      if (alert.status.severity === 'critical') {
+        this.alertHighestSeverity = 'critical';
         break;
-      } else if (alert.status.severity === 'WARN' && this.alertHighestSeverity !== 'CRITICAL') {
-        this.alertHighestSeverity = 'WARN';
+      } else if (alert.status.severity === 'warn' && this.alertHighestSeverity !== 'critical') {
+        this.alertHighestSeverity = 'warn';
       }
     }
   }
 
   getAlertNotificationClass() {
-    if (this.alertHighestSeverity === 'CRITICAL') {
+    if (this.alertHighestSeverity === 'critical') {
       return 'app-notification-critical';
-    } else if (this.alertHighestSeverity === 'WARN') {
+    } else if (this.alertHighestSeverity === 'warn') {
       return 'app-notification-warn';
-    } else if (this.alertHighestSeverity === 'INFO') {
+    } else if (this.alertHighestSeverity === 'info') {
       return 'app-notification-info';
     }
   }
@@ -609,7 +609,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   }
 
   isAlertInOpenState(alert: MonitoringAlert): boolean {
-    return (alert.spec.state === 'OPEN');
+    return (alert.spec.state === 'open');
   }
   /**
    * This API serves html template

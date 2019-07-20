@@ -28,82 +28,162 @@ var _ listerwatcher.WatcherClient
 
 // AuthConfig_Algos_normal is a map of normalized values for the enum
 var AuthConfig_Algos_normal = map[string]string{
-	"MD5":  "MD5",
-	"SHA1": "SHA1",
-	"md5":  "MD5",
-	"sha1": "SHA1",
+	"md5":  "md5",
+	"sha1": "sha1",
+}
+
+var AuthConfig_Algos_vname = map[int32]string{
+	0: "md5",
+	1: "sha1",
+}
+
+var AuthConfig_Algos_vvalue = map[string]int32{
+	"md5":  0,
+	"sha1": 1,
+}
+
+func (x AuthConfig_Algos) String() string {
+	return AuthConfig_Algos_vname[int32(x)]
 }
 
 // PrivacyConfig_Algos_normal is a map of normalized values for the enum
 var PrivacyConfig_Algos_normal = map[string]string{
-	"AES128": "AES128",
-	"DES56":  "DES56",
-	"aes128": "AES128",
-	"des56":  "DES56",
+	"aes128": "aes128",
+	"des56":  "des56",
+}
+
+var PrivacyConfig_Algos_vname = map[int32]string{
+	0: "des56",
+	1: "aes128",
+}
+
+var PrivacyConfig_Algos_vvalue = map[string]int32{
+	"des56":  0,
+	"aes128": 1,
+}
+
+func (x PrivacyConfig_Algos) String() string {
+	return PrivacyConfig_Algos_vname[int32(x)]
 }
 
 // SNMPTrapServer_SNMPVersions_normal is a map of normalized values for the enum
 var SNMPTrapServer_SNMPVersions_normal = map[string]string{
-	"V2C": "V2C",
-	"V3":  "V3",
-	"v2c": "V2C",
-	"v3":  "V3",
+	"v2c": "v2c",
+	"v3":  "v3",
+}
+
+var SNMPTrapServer_SNMPVersions_vname = map[int32]string{
+	0: "v2c",
+	1: "v3",
+}
+
+var SNMPTrapServer_SNMPVersions_vvalue = map[string]int32{
+	"v2c": 0,
+	"v3":  1,
+}
+
+func (x SNMPTrapServer_SNMPVersions) String() string {
+	return SNMPTrapServer_SNMPVersions_vname[int32(x)]
 }
 
 // ExportAuthType_normal is a map of normalized values for the enum
 var ExportAuthType_normal = map[string]string{
-	"AUTHTYPE_CERTS":            "AUTHTYPE_CERTS",
-	"AUTHTYPE_NONE":             "AUTHTYPE_NONE",
-	"AUTHTYPE_TOKEN":            "AUTHTYPE_TOKEN",
-	"AUTHTYPE_USERNAMEPASSWORD": "AUTHTYPE_USERNAMEPASSWORD",
-	"authtype_certs":            "AUTHTYPE_CERTS",
-	"authtype_none":             "AUTHTYPE_NONE",
-	"authtype_token":            "AUTHTYPE_TOKEN",
-	"authtype_usernamepassword": "AUTHTYPE_USERNAMEPASSWORD",
+	"certs":             "certs",
+	"none":              "none",
+	"token":             "token",
+	"username-password": "username-password",
+}
+
+var ExportAuthType_vname = map[int32]string{
+	0: "none",
+	1: "username-password",
+	2: "token",
+	3: "certs",
+}
+
+var ExportAuthType_vvalue = map[string]int32{
+	"none":              0,
+	"username-password": 1,
+	"token":             2,
+	"certs":             3,
+}
+
+func (x ExportAuthType) String() string {
+	return ExportAuthType_vname[int32(x)]
 }
 
 // SyslogFacility_normal is a map of normalized values for the enum
 var SyslogFacility_normal = map[string]string{
-	"LOG_AUTH":     "LOG_AUTH",
-	"LOG_AUTHPRIV": "LOG_AUTHPRIV",
-	"LOG_CRON":     "LOG_CRON",
-	"LOG_DAEMON":   "LOG_DAEMON",
-	"LOG_FTP":      "LOG_FTP",
-	"LOG_KERN":     "LOG_KERN",
-	"LOG_LOCAL0":   "LOG_LOCAL0",
-	"LOG_LOCAL1":   "LOG_LOCAL1",
-	"LOG_LOCAL2":   "LOG_LOCAL2",
-	"LOG_LOCAL3":   "LOG_LOCAL3",
-	"LOG_LOCAL4":   "LOG_LOCAL4",
-	"LOG_LOCAL5":   "LOG_LOCAL5",
-	"LOG_LOCAL6":   "LOG_LOCAL6",
-	"LOG_LOCAL7":   "LOG_LOCAL7",
-	"LOG_LPR":      "LOG_LPR",
-	"LOG_MAIL":     "LOG_MAIL",
-	"LOG_NEWS":     "LOG_NEWS",
-	"LOG_SYSLOG":   "LOG_SYSLOG",
-	"LOG_USER":     "LOG_USER",
-	"LOG_UUCP":     "LOG_UUCP",
-	"log_auth":     "LOG_AUTH",
-	"log_authpriv": "LOG_AUTHPRIV",
-	"log_cron":     "LOG_CRON",
-	"log_daemon":   "LOG_DAEMON",
-	"log_ftp":      "LOG_FTP",
-	"log_kern":     "LOG_KERN",
-	"log_local0":   "LOG_LOCAL0",
-	"log_local1":   "LOG_LOCAL1",
-	"log_local2":   "LOG_LOCAL2",
-	"log_local3":   "LOG_LOCAL3",
-	"log_local4":   "LOG_LOCAL4",
-	"log_local5":   "LOG_LOCAL5",
-	"log_local6":   "LOG_LOCAL6",
-	"log_local7":   "LOG_LOCAL7",
-	"log_lpr":      "LOG_LPR",
-	"log_mail":     "LOG_MAIL",
-	"log_news":     "LOG_NEWS",
-	"log_syslog":   "LOG_SYSLOG",
-	"log_user":     "LOG_USER",
-	"log_uucp":     "LOG_UUCP",
+	"auth":     "auth",
+	"authpriv": "authpriv",
+	"cron":     "cron",
+	"daemon":   "daemon",
+	"ftp":      "ftp",
+	"kernel":   "kernel",
+	"local0":   "local0",
+	"local1":   "local1",
+	"local2":   "local2",
+	"local3":   "local3",
+	"local4":   "local4",
+	"local5":   "local5",
+	"local6":   "local6",
+	"local7":   "local7",
+	"lpr":      "lpr",
+	"mail":     "mail",
+	"news":     "news",
+	"syslog":   "syslog",
+	"user":     "user",
+	"uucp":     "uucp",
+}
+
+var SyslogFacility_vname = map[int32]string{
+	0:   "kernel",
+	8:   "user",
+	16:  "mail",
+	24:  "daemon",
+	32:  "auth",
+	40:  "syslog",
+	48:  "lpr",
+	56:  "news",
+	64:  "uucp",
+	72:  "cron",
+	80:  "authpriv",
+	88:  "ftp",
+	128: "local0",
+	136: "local1",
+	144: "local2",
+	152: "local3",
+	160: "local4",
+	168: "local5",
+	176: "local6",
+	184: "local7",
+}
+
+var SyslogFacility_vvalue = map[string]int32{
+	"kernel":   0,
+	"user":     8,
+	"mail":     16,
+	"daemon":   24,
+	"auth":     32,
+	"syslog":   40,
+	"lpr":      48,
+	"news":     56,
+	"uucp":     64,
+	"cron":     72,
+	"authpriv": 80,
+	"ftp":      88,
+	"local0":   128,
+	"local1":   136,
+	"local2":   144,
+	"local3":   152,
+	"local4":   160,
+	"local5":   168,
+	"local6":   176,
+	"local7":   184,
+}
+
+func (x SyslogFacility) String() string {
+	return SyslogFacility_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -131,7 +211,7 @@ func (m *AuthConfig) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Algo = "MD5"
+		m.Algo = "md5"
 	}
 	return ret
 }
@@ -183,7 +263,7 @@ func (m *ExternalCred) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.AuthType = "AUTHTYPE_NONE"
+		m.AuthType = "none"
 	}
 	return ret
 }
@@ -210,7 +290,7 @@ func (m *PrivacyConfig) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Algo = "DES56"
+		m.Algo = "des56"
 	}
 	return ret
 }
@@ -244,7 +324,7 @@ func (m *SNMPTrapServer) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Port = "162"
-		m.Version = "V2C"
+		m.Version = "v2c"
 	}
 	return ret
 }
@@ -271,7 +351,7 @@ func (m *SyslogExportConfig) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.FacilityOverride = "LOG_USER"
+		m.FacilityOverride = "user"
 	}
 	return ret
 }
@@ -507,9 +587,9 @@ func init() {
 	validatorMapExport["AuthConfig"]["all"] = append(validatorMapExport["AuthConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*AuthConfig)
 
-		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
+		if _, ok := AuthConfig_Algos_vvalue[m.Algo]; !ok {
 			vals := []string{}
-			for k1, _ := range AuthConfig_Algos_value {
+			for k1, _ := range AuthConfig_Algos_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Algo", vals)
@@ -542,9 +622,9 @@ func init() {
 	validatorMapExport["ExternalCred"]["all"] = append(validatorMapExport["ExternalCred"]["all"], func(path string, i interface{}) error {
 		m := i.(*ExternalCred)
 
-		if _, ok := ExportAuthType_value[m.AuthType]; !ok {
+		if _, ok := ExportAuthType_vvalue[m.AuthType]; !ok {
 			vals := []string{}
-			for k1, _ := range ExportAuthType_value {
+			for k1, _ := range ExportAuthType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AuthType", vals)
@@ -556,9 +636,9 @@ func init() {
 	validatorMapExport["PrivacyConfig"]["all"] = append(validatorMapExport["PrivacyConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*PrivacyConfig)
 
-		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
+		if _, ok := PrivacyConfig_Algos_vvalue[m.Algo]; !ok {
 			vals := []string{}
-			for k1, _ := range PrivacyConfig_Algos_value {
+			for k1, _ := range PrivacyConfig_Algos_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Algo", vals)
@@ -570,9 +650,9 @@ func init() {
 	validatorMapExport["SNMPTrapServer"]["all"] = append(validatorMapExport["SNMPTrapServer"]["all"], func(path string, i interface{}) error {
 		m := i.(*SNMPTrapServer)
 
-		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {
+		if _, ok := SNMPTrapServer_SNMPVersions_vvalue[m.Version]; !ok {
 			vals := []string{}
-			for k1, _ := range SNMPTrapServer_SNMPVersions_value {
+			for k1, _ := range SNMPTrapServer_SNMPVersions_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Version", vals)
@@ -584,9 +664,9 @@ func init() {
 	validatorMapExport["SyslogExportConfig"]["all"] = append(validatorMapExport["SyslogExportConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*SyslogExportConfig)
 
-		if _, ok := SyslogFacility_value[m.FacilityOverride]; !ok {
+		if _, ok := SyslogFacility_vvalue[m.FacilityOverride]; !ok {
 			vals := []string{}
-			for k1, _ := range SyslogFacility_value {
+			for k1, _ := range SyslogFacility_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"FacilityOverride", vals)

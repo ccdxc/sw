@@ -22,7 +22,7 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'algo': {
             enum: MonitoringPrivacyConfig_algo,
-            default: 'DES56',
+            default: 'des56',
             required: true,
             type: 'string'
         },

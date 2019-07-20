@@ -385,27 +385,27 @@
         "sort-order": {
           "type": "string",
           "enum": [
-            "None",
-            "ByName",
-            "ByNameReverse",
-            "ByVersion",
-            "ByVersionReverse",
-            "ByCreationTime",
-            "ByCreationTimeReverse",
-            "ByModTime",
-            "ByModTimeReverse"
+            "none",
+            "by-name",
+            "by-name-reverse",
+            "by-version",
+            "by-version-reverse",
+            "by-creation-time",
+            "by-creation-time-reverse",
+            "by-mod-time",
+            "by-mod-time-reverse"
           ],
-          "default": "None",
+          "default": "none",
           "x-ui-hints": {
-            "ByCreationTime": "By Creation Time",
-            "ByCreationTimeReverse": "By Creation Time Reverse",
-            "ByModTime": "By Modification Time",
-            "ByModTimeReverse": "By Modification Time Reverse",
-            "ByName": "By Name",
-            "ByNameReverse": "By Name Reverse",
-            "ByVersion": "By Version",
-            "ByVersionReverse": "By Version Reverse",
-            "None": "None"
+            "by-creation-time": "By Creation Time",
+            "by-creation-time-reverse": "By Creation Time Reverse",
+            "by-mod-time": "By Modification Time",
+            "by-mod-time-reverse": "By Modification Time Reverse",
+            "by-name": "By Name",
+            "by-name-reverse": "By Name Reverse",
+            "by-version": "By Version",
+            "by-version-reverse": "By Version Reverse",
+            "none": "None"
           },
           "description": "order to sort List results in."
         }
@@ -735,11 +735,11 @@
         "sa-type": {
           "type": "string",
           "enum": [
-            "NONE",
-            "ENCRYPT",
-            "DECRYPT"
+            "none",
+            "encrypt",
+            "decrypt"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "Security Association type"
         },
         "spi": {
@@ -810,23 +810,23 @@
         "protocol": {
           "type": "string",
           "enum": [
-            "NONE",
-            "AH",
-            "ESP"
+            "none",
+            "ah",
+            "esp"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "SA Decrypt protocol"
         },
         "authentication-algorithm": {
           "type": "string",
           "enum": [
-            "NONE",
-            "AES_GCM",
-            "AES_CCM",
-            "HMAC",
-            "AES_CBC_SHA"
+            "none",
+            "aes_gcm",
+            "aes_ccm",
+            "hmac",
+            "aes_cbc_sha"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "SA Decrypt Auth Algorithm"
         },
         "authentication-key": {
@@ -836,37 +836,37 @@
         "decryption-algorithm": {
           "type": "string",
           "enum": [
-            "NONE",
-            "AES_GCM_128",
-            "AES_GCM_256",
-            "AES_CCM_128",
-            "AES_CCM_192",
-            "AES_CCM_256",
-            "AES_CBC_128",
-            "AES_CBC_192",
-            "AES_CBC_256",
-            "DES3",
-            "CHA_CHA"
+            "none",
+            "aes_gcm_128",
+            "aes_gcm_256",
+            "aes_ccm_128",
+            "aes_ccm_192",
+            "aes_ccm_256",
+            "aes_cbc_128",
+            "aes_cbc_192",
+            "aes_cbc_256",
+            "des3",
+            "cha_cha"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "SA Decrypt Algorithm"
         },
         "rekey-decryption-algorithm": {
           "type": "string",
           "enum": [
-            "NONE",
-            "AES_GCM_128",
-            "AES_GCM_256",
-            "AES_CCM_128",
-            "AES_CCM_192",
-            "AES_CCM_256",
-            "AES_CBC_128",
-            "AES_CBC_192",
-            "AES_CBC_256",
-            "DES3",
-            "CHA_CHA"
+            "none",
+            "aes_gcm_128",
+            "aes_gcm_256",
+            "aes_ccm_128",
+            "aes_ccm_192",
+            "aes_ccm_256",
+            "aes_cbc_128",
+            "aes_cbc_192",
+            "aes_cbc_256",
+            "des3",
+            "cha_cha"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "Rekey Decrypt Algorithm"
         },
         "decryption-key": {
@@ -971,23 +971,23 @@
         "protocol": {
           "type": "string",
           "enum": [
-            "NONE",
-            "AH",
-            "ESP"
+            "none",
+            "ah",
+            "esp"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "SA Encrypt protocol"
         },
         "authentication-algorithm": {
           "type": "string",
           "enum": [
-            "NONE",
-            "AES_GCM",
-            "AES_CCM",
-            "HMAC",
-            "AES_CBC_SHA"
+            "none",
+            "aes_gcm",
+            "aes_ccm",
+            "hmac",
+            "aes_cbc_sha"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "SA Encrypt Auth Algorithm"
         },
         "authentication-key": {
@@ -997,19 +997,19 @@
         "encryption-algorithm": {
           "type": "string",
           "enum": [
-            "NONE",
-            "AES_GCM_128",
-            "AES_GCM_256",
-            "AES_CCM_128",
-            "AES_CCM_192",
-            "AES_CCM_256",
-            "AES_CBC_128",
-            "AES_CBC_192",
-            "AES_CBC_256",
-            "DES3",
-            "CHA_CHA"
+            "none",
+            "aes_gcm_128",
+            "aes_gcm_256",
+            "aes_ccm_128",
+            "aes_ccm_192",
+            "aes_ccm_256",
+            "aes_cbc_128",
+            "aes_cbc_192",
+            "aes_cbc_256",
+            "des3",
+            "cha_cha"
           ],
-          "default": "NONE",
+          "default": "none",
           "title": "SA Encrypt Algorithm"
         },
         "encryption-key": {

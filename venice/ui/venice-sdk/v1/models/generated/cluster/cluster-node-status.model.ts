@@ -26,7 +26,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'phase': {
             enum: ClusterNodeStatus_phase_uihint,
-            default: 'UNKNOWN',
+            default: 'unknown',
             description:  'Current lifecycle phase of the node.',
             required: true,
             type: 'string'

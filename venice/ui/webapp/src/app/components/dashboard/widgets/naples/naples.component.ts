@@ -319,7 +319,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       tenant: Utility.getInstance().getTenant()
     };
     const timeQuery = MetricsUtility.timeSeriesQueryPolling('Cluster');
-    timeQuery.query.function = Telemetry_queryMetricsQuerySpec_function.MEDIAN;
+    timeQuery.query.function = Telemetry_queryMetricsQuerySpec_function.median;
     queryList.queries.push(timeQuery);
     queryList.queries.push(this.avgQuery());
 
@@ -435,13 +435,13 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         admittedNics.push(naple);
       }
       switch (naple.status['admission-phase']) {
-        case ClusterSmartNICStatus_admission_phase.ADMITTED:
+        case ClusterSmartNICStatus_admission_phase.admitted:
           admitted += 1;
           break;
-        case ClusterSmartNICStatus_admission_phase.REJECTED:
+        case ClusterSmartNICStatus_admission_phase.rejected:
           rejected += 1;
           break;
-        case ClusterSmartNICStatus_admission_phase.PENDING:
+        case ClusterSmartNICStatus_admission_phase.pending:
           pending += 1;
           break;
       }

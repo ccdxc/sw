@@ -43,20 +43,20 @@
                  (click)="onEventNumberClick($event, null)" [matTooltip]="'All Events'"
                  *ngIf="currentEventSeverityFilter != null">All</div> -->
             <div class="global-button global-alert-critical alertsevents-main-menu-number "
-                 [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'CRITICAL' ? 'alertsevents-disabled' : ''"
-                 (click)="onEventNumberClick($event, 'CRITICAL')" [matTooltip]="'Critical Events'"
-                 *ngIf="eventNumbers.CRITICAL>0 && eventNumbers.CRITICAL !== events.length">
-              {{ eventNumbers.CRITICAL }}</div>
+                 [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
+                 (click)="onEventNumberClick($event, 'critical')" [matTooltip]="'Critical Events'"
+                 *ngIf="eventNumbers.critical>0 && eventNumbers.critical !== events.length">
+              {{ eventNumbers.critical }}</div>
             <div class="global-button global-alert-warning alertsevents-main-menu-number "
-                 [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'WARN' ? 'alertsevents-disabled' : ''"
-                 (click)="onEventNumberClick($event, 'WARN')" [matTooltip]="'Warning Events'"
-                 *ngIf="eventNumbers.WARN>0 && eventNumbers.WARN !== events.length">
-              {{ eventNumbers.WARN }}</div>
+                 [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
+                 (click)="onEventNumberClick($event, 'warn')" [matTooltip]="'Warning Events'"
+                 *ngIf="eventNumbers.warn>0 && eventNumbers.warn !== events.length">
+              {{ eventNumbers.warn }}</div>
             <div class="global-button global-alert-info alertsevents-main-menu-number "
-                 [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'INFO' ? 'alertsevents-disabled' : ''"
-                 (click)="onEventNumberClick($event, 'INFO')" [matTooltip]="'Infomational Events'"
-                 *ngIf="eventNumbers.INFO>0 && eventNumbers.INFO !== events.length">
-              {{ eventNumbers.INFO }}</div>
+                 [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
+                 (click)="onEventNumberClick($event, 'info')" [matTooltip]="'Infomational Events'"
+                 *ngIf="eventNumbers.info>0 && eventNumbers.info !== events.length">
+              {{ eventNumbers.info }}</div>
             <p-checkbox name="Show Debug Events" styleClass="alertsevents-checkbox"
                         labelStyleClass="alertsevents-checkbox-label" binary="true"
                         label="Show Debug Events"
@@ -84,16 +84,16 @@
                 {{rowData.meta['creation-time'] | PrettyDate }}
               </div>
               <ng-container *ngSwitchCase="'severity'">
-                <mat-icon *ngIf="rowData.severity === 'CRITICAL'"
+                <mat-icon *ngIf="rowData.severity === 'critical'"
                           class="alertsevents-icon global-alert-critical-icon">
                   error</mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'WARN'"
+                <mat-icon *ngIf="rowData.severity === 'warn'"
                           class="alertsevents-icon global-alert-warning-icon">error
                 </mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'INFO'"
+                <mat-icon *ngIf="rowData.severity === 'info'"
                           class="alertsevents-icon global-alert-info-icon">
                   notifications</mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'DEBUG'"
+                <mat-icon *ngIf="rowData.severity === 'debug'"
                           class="alertsevents-icon global-alert-info-icon">
                   bug_report</mat-icon>
                 <div style="display: inline; margin-left: 25px">
@@ -171,20 +171,20 @@
                  *ngIf="currentAlertSeverityFilter != null">All</div> -->
 
             <div class="global-button global-alert-critical alertsevents-main-menu-number "
-                 [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'CRITICAL' ? 'alertsevents-disabled' : ''"
-                 (click)="onAlertNumberClick('CRITICAL')" [matTooltip]="'Critical Alerts'"
-                 *ngIf="alertNumbers.CRITICAL>0 && alertNumbers.CRITICAL !== alerts.length">
-              {{ alertNumbers.CRITICAL }}</div>
+                 [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
+                 (click)="onAlertNumberClick('critical')" [matTooltip]="'Critical Alerts'"
+                 *ngIf="alertNumbers.critical>0 && alertNumbers.critical !== alerts.length">
+              {{ alertNumbers.critical }}</div>
             <div class="global-button global-alert-warning alertsevents-main-menu-number "
-                 [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'WARN' ? 'alertsevents-disabled' : ''"
-                 (click)="onAlertNumberClick('WARN')" [matTooltip]="'Warning Alerts'"
-                 *ngIf="alertNumbers.WARN>0 && alertNumbers.WARN !== alerts.length">
-              {{ alertNumbers.WARN }}</div>
+                 [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
+                 (click)="onAlertNumberClick('warn')" [matTooltip]="'Warning Alerts'"
+                 *ngIf="alertNumbers.warn>0 && alertNumbers.warn !== alerts.length">
+              {{ alertNumbers.warn }}</div>
             <div class="global-button global-alert-info alertsevents-main-menu-number "
-                 [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'INFO' ? 'alertsevents-disabled' : ''"
-                 (click)="onAlertNumberClick('INFO')" [matTooltip]="'Infomational Alerts'"
-                 *ngIf="alertNumbers.INFO>0 && alertNumbers.INFO !== alerts.length">
-              {{ alertNumbers.INFO }}</div>
+                 [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
+                 (click)="onAlertNumberClick('info')" [matTooltip]="'Infomational Alerts'"
+                 *ngIf="alertNumbers.info>0 && alertNumbers.info !== alerts.length">
+              {{ alertNumbers.info }}</div>
 
 
           </app-tableheader>
@@ -218,11 +218,11 @@
                 {{rowData.meta['creation-time'] | PrettyDate }}
               </div>
               <ng-container *ngSwitchCase="'status.severity'">
-                <mat-icon *ngIf="rowData.status.severity === 'CRITICAL'"
+                <mat-icon *ngIf="rowData.status.severity === 'critical'"
                           class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.status.severity === 'WARN'"
+                <mat-icon *ngIf="rowData.status.severity === 'warn'"
                           class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.status.severity === 'INFO'"
+                <mat-icon *ngIf="rowData.status.severity === 'info'"
                           class="alertsevents-icon global-alert-info-icon">
                   notifications</mat-icon>
                 <div style="display: inline; margin-left: 25px">

@@ -30,42 +30,94 @@ var _ listerwatcher.WatcherClient
 
 // SmartNICCondition_ConditionType_normal is a map of normalized values for the enum
 var SmartNICCondition_ConditionType_normal = map[string]string{
-	"HEALTHY":            "HEALTHY",
-	"NIC_HEALTH_UNKNOWN": "NIC_HEALTH_UNKNOWN",
-	"healthy":            "HEALTHY",
-	"nic_health_unknown": "NIC_HEALTH_UNKNOWN",
+	"healthy":            "healthy",
+	"nic_health_unknown": "nic_health_unknown",
+}
+
+var SmartNICCondition_ConditionType_vname = map[int32]string{
+	0: "healthy",
+	1: "nic_health_unknown",
+}
+
+var SmartNICCondition_ConditionType_vvalue = map[string]int32{
+	"healthy":            0,
+	"nic_health_unknown": 1,
+}
+
+func (x SmartNICCondition_ConditionType) String() string {
+	return SmartNICCondition_ConditionType_vname[int32(x)]
 }
 
 // SmartNICSpec_MgmtModes_normal is a map of normalized values for the enum
 var SmartNICSpec_MgmtModes_normal = map[string]string{
-	"HOST":    "HOST",
-	"NETWORK": "NETWORK",
-	"host":    "HOST",
-	"network": "NETWORK",
+	"host":    "host",
+	"network": "network",
+}
+
+var SmartNICSpec_MgmtModes_vname = map[int32]string{
+	0: "host",
+	1: "network",
+}
+
+var SmartNICSpec_MgmtModes_vvalue = map[string]int32{
+	"host":    0,
+	"network": 1,
+}
+
+func (x SmartNICSpec_MgmtModes) String() string {
+	return SmartNICSpec_MgmtModes_vname[int32(x)]
 }
 
 // SmartNICSpec_NetworkModes_normal is a map of normalized values for the enum
 var SmartNICSpec_NetworkModes_normal = map[string]string{
-	"INBAND": "INBAND",
-	"OOB":    "OOB",
-	"inband": "INBAND",
-	"oob":    "OOB",
+	"inband": "inband",
+	"oob":    "oob",
+}
+
+var SmartNICSpec_NetworkModes_vname = map[int32]string{
+	0: "oob",
+	1: "inband",
+}
+
+var SmartNICSpec_NetworkModes_vvalue = map[string]int32{
+	"oob":    0,
+	"inband": 1,
+}
+
+func (x SmartNICSpec_NetworkModes) String() string {
+	return SmartNICSpec_NetworkModes_vname[int32(x)]
 }
 
 // SmartNICStatus_Phase_normal is a map of normalized values for the enum
 var SmartNICStatus_Phase_normal = map[string]string{
-	"ADMITTED":       "ADMITTED",
-	"DECOMMISSIONED": "DECOMMISSIONED",
-	"PENDING":        "PENDING",
-	"REGISTERING":    "REGISTERING",
-	"REJECTED":       "REJECTED",
-	"UNKNOWN":        "UNKNOWN",
-	"admitted":       "ADMITTED",
-	"decommissioned": "DECOMMISSIONED",
-	"pending":        "PENDING",
-	"registering":    "REGISTERING",
-	"rejected":       "REJECTED",
-	"unknown":        "UNKNOWN",
+	"admitted":       "admitted",
+	"decommissioned": "decommissioned",
+	"pending":        "pending",
+	"registering":    "registering",
+	"rejected":       "rejected",
+	"unknown":        "unknown",
+}
+
+var SmartNICStatus_Phase_vname = map[int32]string{
+	0: "unknown",
+	1: "registering",
+	2: "rejected",
+	3: "pending",
+	4: "admitted",
+	5: "decommissioned",
+}
+
+var SmartNICStatus_Phase_vvalue = map[string]int32{
+	"unknown":        0,
+	"registering":    1,
+	"rejected":       2,
+	"pending":        3,
+	"admitted":       4,
+	"decommissioned": 5,
+}
+
+func (x SmartNICStatus_Phase) String() string {
+	return SmartNICStatus_Phase_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -196,8 +248,8 @@ func (m *SmartNICCondition) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "UNKNOWN"
-		m.Type = "HEALTHY"
+		m.Status = "unknown"
+		m.Type = "healthy"
 	}
 	return ret
 }
@@ -245,8 +297,8 @@ func (m *SmartNICSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.MgmtMode = "HOST"
-		m.NetworkMode = "OOB"
+		m.MgmtMode = "host"
+		m.NetworkMode = "oob"
 	}
 	return ret
 }
@@ -277,7 +329,7 @@ func (m *SmartNICStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.AdmissionPhase = "UNKNOWN"
+		m.AdmissionPhase = "unknown"
 	}
 	return ret
 }
@@ -547,8 +599,9 @@ func (m *SmartNICStatus) Normalize() {
 
 	m.AdmissionPhase = SmartNICStatus_Phase_normal[strings.ToLower(m.AdmissionPhase)]
 
-	for _, v := range m.Conditions {
+	for k, v := range m.Conditions {
 		v.Normalize()
+		m.Conditions[k] = v
 
 	}
 
@@ -590,9 +643,9 @@ func init() {
 	validatorMapSmartnic["SmartNICCondition"]["all"] = append(validatorMapSmartnic["SmartNICCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICCondition)
 
-		if _, ok := ConditionStatus_value[m.Status]; !ok {
+		if _, ok := ConditionStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range ConditionStatus_value {
+			for k1, _ := range ConditionStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
@@ -603,9 +656,9 @@ func init() {
 	validatorMapSmartnic["SmartNICCondition"]["all"] = append(validatorMapSmartnic["SmartNICCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICCondition)
 
-		if _, ok := SmartNICCondition_ConditionType_value[m.Type]; !ok {
+		if _, ok := SmartNICCondition_ConditionType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range SmartNICCondition_ConditionType_value {
+			for k1, _ := range SmartNICCondition_ConditionType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
@@ -617,9 +670,9 @@ func init() {
 	validatorMapSmartnic["SmartNICSpec"]["all"] = append(validatorMapSmartnic["SmartNICSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICSpec)
 
-		if _, ok := SmartNICSpec_MgmtModes_value[m.MgmtMode]; !ok {
+		if _, ok := SmartNICSpec_MgmtModes_vvalue[m.MgmtMode]; !ok {
 			vals := []string{}
-			for k1, _ := range SmartNICSpec_MgmtModes_value {
+			for k1, _ := range SmartNICSpec_MgmtModes_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"MgmtMode", vals)
@@ -642,9 +695,9 @@ func init() {
 	validatorMapSmartnic["SmartNICSpec"]["all"] = append(validatorMapSmartnic["SmartNICSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICSpec)
 
-		if _, ok := SmartNICSpec_NetworkModes_value[m.NetworkMode]; !ok {
+		if _, ok := SmartNICSpec_NetworkModes_vvalue[m.NetworkMode]; !ok {
 			vals := []string{}
-			for k1, _ := range SmartNICSpec_NetworkModes_value {
+			for k1, _ := range SmartNICSpec_NetworkModes_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"NetworkMode", vals)
@@ -656,9 +709,9 @@ func init() {
 	validatorMapSmartnic["SmartNICStatus"]["all"] = append(validatorMapSmartnic["SmartNICStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICStatus)
 
-		if _, ok := SmartNICStatus_Phase_value[m.AdmissionPhase]; !ok {
+		if _, ok := SmartNICStatus_Phase_vvalue[m.AdmissionPhase]; !ok {
 			vals := []string{}
-			for k1, _ := range SmartNICStatus_Phase_value {
+			for k1, _ := range SmartNICStatus_Phase_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AdmissionPhase", vals)

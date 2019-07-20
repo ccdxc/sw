@@ -39,7 +39,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'severity': {
             enum: MonitoringAlertStatus_severity,
-            default: 'INFO',
+            default: 'info',
             required: true,
             type: 'string'
         },

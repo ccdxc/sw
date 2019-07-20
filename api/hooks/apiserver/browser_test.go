@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	apisrvmocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	mocks2 "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -211,4 +212,18 @@ func TestProcessQuery(t *testing.T) {
 	Assert(t, bresp.QueryType == browser.QueryType_DependedBy.String(), "invalid querytype", nil)
 	Assert(t, bresp.RootURI == "/configs/test/v1/obj1", fmt.Sprintf("invalid root uri got [%v]", bresp.RootURI), nil)
 	Assert(t, len(bresp.Objects) == 3, fmt.Sprintf("expecting only one Object, got [%d]", len(bresp.Objects)), nil)
+}
+
+func TestBrowserRegistration(t *testing.T) {
+	srv := mocks2.NewFakeService()
+	meth := mocks2.NewFakeMethod(true)
+	srv.AddMethod("Query", meth)
+	srv.AddMethod("References", meth)
+	srv.AddMethod("Referrers", meth)
+	logger := log.GetDefaultInstance()
+	registerBrowserHooks(srv, logger)
+	fmeth := meth.(*mocks2.FakeMethod)
+	if fmeth.Pres != 3 {
+		t.Fatalf("unexpected number of hooks registered [%+v]", fmeth)
+	}
 }

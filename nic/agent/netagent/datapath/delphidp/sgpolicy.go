@@ -329,13 +329,13 @@ func convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMat
 func convertRuleAction(action string) *halproto.SecurityRuleAction {
 	var ruleAction halproto.SecurityRuleAction
 	switch action {
-	case "PERMIT":
+	case netproto.PolicyRule_PERMIT.String():
 		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW
-	case "DENY":
+	case netproto.PolicyRule_DENY.String():
 		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_DENY
-	case "REJECT":
+	case netproto.PolicyRule_REJECT.String():
 		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_REJECT
-	case "LOG":
+	case netproto.PolicyRule_LOG.String():
 		ruleAction.LogAction = halproto.LogAction_LOG_ON_SESSION_END
 	default:
 		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_NONE

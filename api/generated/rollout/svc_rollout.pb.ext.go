@@ -205,9 +205,10 @@ func (m *AutoMsgRolloutActionWatchHelper) Validate(ver, path string, ignoreStatu
 
 func (m *AutoMsgRolloutActionWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -264,9 +265,10 @@ func (m *AutoMsgRolloutWatchHelper) Validate(ver, path string, ignoreStatus bool
 
 func (m *AutoMsgRolloutWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -323,9 +325,10 @@ func (m *RolloutActionList) Validate(ver, path string, ignoreStatus bool, ignore
 
 func (m *RolloutActionList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -352,9 +355,10 @@ func (m *RolloutList) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *RolloutList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

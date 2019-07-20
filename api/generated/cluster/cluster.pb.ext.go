@@ -31,54 +31,128 @@ var _ listerwatcher.WatcherClient
 
 // ClusterCondition_ConditionType_normal is a map of normalized values for the enum
 var ClusterCondition_ConditionType_normal = map[string]string{
-	"HEALTHY": "HEALTHY",
-	"healthy": "HEALTHY",
+	"healthy": "healthy",
+}
+
+var ClusterCondition_ConditionType_vname = map[int32]string{
+	0: "healthy",
+}
+
+var ClusterCondition_ConditionType_vvalue = map[string]int32{
+	"healthy": 0,
+}
+
+func (x ClusterCondition_ConditionType) String() string {
+	return ClusterCondition_ConditionType_vname[int32(x)]
 }
 
 // MemInfo_MemType_normal is a map of normalized values for the enum
 var MemInfo_MemType_normal = map[string]string{
-	"DDR":     "DDR",
-	"HBM":     "HBM",
-	"UNKNOWN": "UNKNOWN",
-	"ddr":     "DDR",
-	"hbm":     "HBM",
-	"unknown": "UNKNOWN",
+	"ddr":     "ddr",
+	"hbm":     "hbm",
+	"unknown": "unknown",
+}
+
+var MemInfo_MemType_vname = map[int32]string{
+	0: "unknown",
+	1: "hbm",
+	2: "ddr",
+}
+
+var MemInfo_MemType_vvalue = map[string]int32{
+	"unknown": 0,
+	"hbm":     1,
+	"ddr":     2,
+}
+
+func (x MemInfo_MemType) String() string {
+	return MemInfo_MemType_vname[int32(x)]
 }
 
 // NodeCondition_ConditionType_normal is a map of normalized values for the enum
 var NodeCondition_ConditionType_normal = map[string]string{
-	"HEALTHY": "HEALTHY",
-	"LEADER":  "LEADER",
-	"healthy": "HEALTHY",
-	"leader":  "LEADER",
+	"healthy": "healthy",
+	"leader":  "leader",
+}
+
+var NodeCondition_ConditionType_vname = map[int32]string{
+	0: "leader",
+	1: "healthy",
+}
+
+var NodeCondition_ConditionType_vvalue = map[string]int32{
+	"leader":  0,
+	"healthy": 1,
+}
+
+func (x NodeCondition_ConditionType) String() string {
+	return NodeCondition_ConditionType_vname[int32(x)]
 }
 
 // NodeStatus_NodePhase_normal is a map of normalized values for the enum
 var NodeStatus_NodePhase_normal = map[string]string{
-	"FAILED":  "FAILED",
-	"JOINED":  "JOINED",
-	"PENDING": "PENDING",
-	"UNKNOWN": "UNKNOWN",
-	"failed":  "FAILED",
-	"joined":  "JOINED",
-	"pending": "PENDING",
-	"unknown": "UNKNOWN",
+	"failed":  "failed",
+	"joined":  "joined",
+	"pending": "pending",
+	"unknown": "unknown",
+}
+
+var NodeStatus_NodePhase_vname = map[int32]string{
+	0: "unknown",
+	1: "pending",
+	2: "joined",
+	3: "failed",
+}
+
+var NodeStatus_NodePhase_vvalue = map[string]int32{
+	"unknown": 0,
+	"pending": 1,
+	"joined":  2,
+	"failed":  3,
+}
+
+func (x NodeStatus_NodePhase) String() string {
+	return NodeStatus_NodePhase_vname[int32(x)]
 }
 
 // QuorumMemberCondition_ConditionType_normal is a map of normalized values for the enum
 var QuorumMemberCondition_ConditionType_normal = map[string]string{
-	"HEALTHY": "HEALTHY",
-	"healthy": "HEALTHY",
+	"healthy": "healthy",
+}
+
+var QuorumMemberCondition_ConditionType_vname = map[int32]string{
+	0: "healthy",
+}
+
+var QuorumMemberCondition_ConditionType_vvalue = map[string]int32{
+	"healthy": 0,
+}
+
+func (x QuorumMemberCondition_ConditionType) String() string {
+	return QuorumMemberCondition_ConditionType_vname[int32(x)]
 }
 
 // ConditionStatus_normal is a map of normalized values for the enum
 var ConditionStatus_normal = map[string]string{
-	"FALSE":   "FALSE",
-	"TRUE":    "TRUE",
-	"UNKNOWN": "UNKNOWN",
-	"false":   "FALSE",
-	"true":    "TRUE",
-	"unknown": "UNKNOWN",
+	"false":   "false",
+	"true":    "true",
+	"unknown": "unknown",
+}
+
+var ConditionStatus_vname = map[int32]string{
+	0: "unknown",
+	1: "true",
+	2: "false",
+}
+
+var ConditionStatus_vvalue = map[string]int32{
+	"unknown": 0,
+	"true":    1,
+	"false":   2,
+}
+
+func (x ConditionStatus) String() string {
+	return ConditionStatus_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -234,8 +308,8 @@ func (m *ClusterCondition) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "UNKNOWN"
-		m.Type = "HEALTHY"
+		m.Status = "unknown"
+		m.Type = "healthy"
 	}
 	return ret
 }
@@ -430,7 +504,7 @@ func (m *MemInfo) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = "UNKNOWN"
+		m.Type = "unknown"
 	}
 	return ret
 }
@@ -511,8 +585,8 @@ func (m *NodeCondition) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "UNKNOWN"
-		m.Type = "LEADER"
+		m.Status = "unknown"
+		m.Type = "leader"
 	}
 	return ret
 }
@@ -592,7 +666,7 @@ func (m *NodeStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Phase = "UNKNOWN"
+		m.Phase = "unknown"
 	}
 	return ret
 }
@@ -640,8 +714,8 @@ func (m *QuorumMemberCondition) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "UNKNOWN"
-		m.Type = "HEALTHY"
+		m.Status = "unknown"
+		m.Type = "healthy"
 	}
 	return ret
 }
@@ -1011,8 +1085,9 @@ func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 
 func (m *ClusterStatus) Normalize() {
 
-	for _, v := range m.Conditions {
+	for k, v := range m.Conditions {
 		v.Normalize()
+		m.Conditions[k] = v
 
 	}
 
@@ -1114,8 +1189,9 @@ func (m *HostSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *HostSpec) Normalize() {
 
-	for _, v := range m.SmartNICs {
+	for k, v := range m.SmartNICs {
 		v.Normalize()
+		m.SmartNICs[k] = v
 
 	}
 
@@ -1209,8 +1285,9 @@ func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *NetworkInfo) Normalize() {
 
-	for _, v := range m.Interfaces {
+	for k, v := range m.Interfaces {
 		v.Normalize()
+		m.Interfaces[k] = v
 
 	}
 
@@ -1387,8 +1464,9 @@ func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *NodeStatus) Normalize() {
 
-	for _, v := range m.Conditions {
+	for k, v := range m.Conditions {
 		v.Normalize()
+		m.Conditions[k] = v
 
 	}
 
@@ -1460,9 +1538,10 @@ func (m *QuorumMemberStatus) Validate(ver, path string, ignoreStatus bool, ignor
 
 func (m *QuorumMemberStatus) Normalize() {
 
-	for _, v := range m.Conditions {
+	for k, v := range m.Conditions {
 		if v != nil {
 			v.Normalize()
+			m.Conditions[k] = v
 		}
 	}
 
@@ -1489,9 +1568,10 @@ func (m *QuorumStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *QuorumStatus) Normalize() {
 
-	for _, v := range m.Members {
+	for k, v := range m.Members {
 		if v != nil {
 			v.Normalize()
+			m.Members[k] = v
 		}
 	}
 
@@ -1683,9 +1763,9 @@ func init() {
 	validatorMapCluster["ClusterCondition"]["all"] = append(validatorMapCluster["ClusterCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*ClusterCondition)
 
-		if _, ok := ConditionStatus_value[m.Status]; !ok {
+		if _, ok := ConditionStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range ConditionStatus_value {
+			for k1, _ := range ConditionStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
@@ -1696,9 +1776,9 @@ func init() {
 	validatorMapCluster["ClusterCondition"]["all"] = append(validatorMapCluster["ClusterCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*ClusterCondition)
 
-		if _, ok := ClusterCondition_ConditionType_value[m.Type]; !ok {
+		if _, ok := ClusterCondition_ConditionType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range ClusterCondition_ConditionType_value {
+			for k1, _ := range ClusterCondition_ConditionType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
@@ -1720,9 +1800,9 @@ func init() {
 	validatorMapCluster["MemInfo"]["all"] = append(validatorMapCluster["MemInfo"]["all"], func(path string, i interface{}) error {
 		m := i.(*MemInfo)
 
-		if _, ok := MemInfo_MemType_value[m.Type]; !ok {
+		if _, ok := MemInfo_MemType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range MemInfo_MemType_value {
+			for k1, _ := range MemInfo_MemType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
@@ -1734,9 +1814,9 @@ func init() {
 	validatorMapCluster["NodeCondition"]["all"] = append(validatorMapCluster["NodeCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeCondition)
 
-		if _, ok := ConditionStatus_value[m.Status]; !ok {
+		if _, ok := ConditionStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range ConditionStatus_value {
+			for k1, _ := range ConditionStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
@@ -1747,9 +1827,9 @@ func init() {
 	validatorMapCluster["NodeCondition"]["all"] = append(validatorMapCluster["NodeCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeCondition)
 
-		if _, ok := NodeCondition_ConditionType_value[m.Type]; !ok {
+		if _, ok := NodeCondition_ConditionType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range NodeCondition_ConditionType_value {
+			for k1, _ := range NodeCondition_ConditionType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
@@ -1761,9 +1841,9 @@ func init() {
 	validatorMapCluster["NodeStatus"]["all"] = append(validatorMapCluster["NodeStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeStatus)
 
-		if _, ok := NodeStatus_NodePhase_value[m.Phase]; !ok {
+		if _, ok := NodeStatus_NodePhase_vvalue[m.Phase]; !ok {
 			vals := []string{}
-			for k1, _ := range NodeStatus_NodePhase_value {
+			for k1, _ := range NodeStatus_NodePhase_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Phase", vals)
@@ -1775,9 +1855,9 @@ func init() {
 	validatorMapCluster["QuorumMemberCondition"]["all"] = append(validatorMapCluster["QuorumMemberCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*QuorumMemberCondition)
 
-		if _, ok := ConditionStatus_value[m.Status]; !ok {
+		if _, ok := ConditionStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range ConditionStatus_value {
+			for k1, _ := range ConditionStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
@@ -1788,9 +1868,9 @@ func init() {
 	validatorMapCluster["QuorumMemberCondition"]["all"] = append(validatorMapCluster["QuorumMemberCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*QuorumMemberCondition)
 
-		if _, ok := QuorumMemberCondition_ConditionType_value[m.Type]; !ok {
+		if _, ok := QuorumMemberCondition_ConditionType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range QuorumMemberCondition_ConditionType_value {
+			for k1, _ := range QuorumMemberCondition_ConditionType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)

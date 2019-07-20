@@ -76,7 +76,7 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
         },
         'direction': {
             enum: Telemetry_queryFwlog_direction_uihint,
-            default: 'from_host',
+            default: 'from-host',
             required: true,
             type: 'string'
         },

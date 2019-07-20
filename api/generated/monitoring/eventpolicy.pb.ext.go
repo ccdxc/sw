@@ -30,10 +30,22 @@ var _ listerwatcher.WatcherClient
 
 // MonitoringExportFormat_normal is a map of normalized values for the enum
 var MonitoringExportFormat_normal = map[string]string{
-	"SYSLOG_BSD":     "SYSLOG_BSD",
-	"SYSLOG_RFC5424": "SYSLOG_RFC5424",
-	"syslog_bsd":     "SYSLOG_BSD",
-	"syslog_rfc5424": "SYSLOG_RFC5424",
+	"syslog-bsd":     "syslog-bsd",
+	"syslog-rfc5424": "syslog-rfc5424",
+}
+
+var MonitoringExportFormat_vname = map[int32]string{
+	0: "syslog-bsd",
+	1: "syslog-rfc5424",
+}
+
+var MonitoringExportFormat_vvalue = map[string]int32{
+	"syslog-bsd":     0,
+	"syslog-rfc5424": 1,
+}
+
+func (x MonitoringExportFormat) String() string {
+	return MonitoringExportFormat_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -99,7 +111,7 @@ func (m *EventPolicySpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Format = "SYSLOG_BSD"
+		m.Format = "syslog-bsd"
 	}
 	return ret
 }
@@ -275,9 +287,10 @@ func (m *EventPolicySpec) Normalize() {
 		m.SyslogConfig.Normalize()
 	}
 
-	for _, v := range m.Targets {
+	for k, v := range m.Targets {
 		if v != nil {
 			v.Normalize()
+			m.Targets[k] = v
 		}
 	}
 
@@ -310,9 +323,9 @@ func init() {
 	validatorMapEventpolicy["EventPolicySpec"]["all"] = append(validatorMapEventpolicy["EventPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventPolicySpec)
 
-		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
+		if _, ok := MonitoringExportFormat_vvalue[m.Format]; !ok {
 			vals := []string{}
-			for k1, _ := range MonitoringExportFormat_value {
+			for k1, _ := range MonitoringExportFormat_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)

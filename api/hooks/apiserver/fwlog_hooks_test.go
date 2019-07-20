@@ -66,7 +66,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FwlogPolicySpec{
-					Format: "SYSLOG_BSD",
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Targets: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
@@ -91,7 +91,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FwlogPolicySpec{
-					Format: "SYSLOG_BSD",
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Targets: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",

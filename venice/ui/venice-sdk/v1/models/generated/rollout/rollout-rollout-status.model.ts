@@ -49,7 +49,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         },
         'state': {
             enum: RolloutRolloutStatus_state,
-            default: 'PROGRESSING',
+            default: 'progressing',
             required: true,
             type: 'string'
         },

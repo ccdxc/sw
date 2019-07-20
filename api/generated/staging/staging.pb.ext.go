@@ -30,26 +30,62 @@ var _ listerwatcher.WatcherClient
 
 // BufferStatus_ValidationStatus_normal is a map of normalized values for the enum
 var BufferStatus_ValidationStatus_normal = map[string]string{
-	"FAILED":  "FAILED",
-	"SUCCESS": "SUCCESS",
-	"failed":  "FAILED",
-	"success": "SUCCESS",
+	"failed":  "failed",
+	"success": "success",
+}
+
+var BufferStatus_ValidationStatus_vname = map[int32]string{
+	0: "success",
+	1: "failed",
+}
+
+var BufferStatus_ValidationStatus_vvalue = map[string]int32{
+	"success": 0,
+	"failed":  1,
+}
+
+func (x BufferStatus_ValidationStatus) String() string {
+	return BufferStatus_ValidationStatus_vname[int32(x)]
 }
 
 // ClearActionStatus_ClearStatus_normal is a map of normalized values for the enum
 var ClearActionStatus_ClearStatus_normal = map[string]string{
-	"FAILED":  "FAILED",
-	"SUCCESS": "SUCCESS",
-	"failed":  "FAILED",
-	"success": "SUCCESS",
+	"failed":  "failed",
+	"success": "success",
+}
+
+var ClearActionStatus_ClearStatus_vname = map[int32]string{
+	0: "success",
+	1: "failed",
+}
+
+var ClearActionStatus_ClearStatus_vvalue = map[string]int32{
+	"success": 0,
+	"failed":  1,
+}
+
+func (x ClearActionStatus_ClearStatus) String() string {
+	return ClearActionStatus_ClearStatus_vname[int32(x)]
 }
 
 // CommitActionStatus_CommitStatus_normal is a map of normalized values for the enum
 var CommitActionStatus_CommitStatus_normal = map[string]string{
-	"FAILED":  "FAILED",
-	"SUCCESS": "SUCCESS",
-	"failed":  "FAILED",
-	"success": "SUCCESS",
+	"failed":  "failed",
+	"success": "success",
+}
+
+var CommitActionStatus_CommitStatus_vname = map[int32]string{
+	0: "success",
+	1: "failed",
+}
+
+var CommitActionStatus_CommitStatus_vvalue = map[string]int32{
+	"success": 0,
+	"failed":  1,
+}
+
+func (x CommitActionStatus_CommitStatus) String() string {
+	return CommitActionStatus_CommitStatus_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -156,7 +192,7 @@ func (m *BufferStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.ValidationResult = "SUCCESS"
+		m.ValidationResult = "success"
 	}
 	return ret
 }
@@ -232,7 +268,7 @@ func (m *ClearActionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "SUCCESS"
+		m.Status = "success"
 	}
 	return ret
 }
@@ -308,7 +344,7 @@ func (m *CommitActionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "SUCCESS"
+		m.Status = "success"
 	}
 	return ret
 }
@@ -757,9 +793,9 @@ func init() {
 	validatorMapStaging["BufferStatus"]["all"] = append(validatorMapStaging["BufferStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*BufferStatus)
 
-		if _, ok := BufferStatus_ValidationStatus_value[m.ValidationResult]; !ok {
+		if _, ok := BufferStatus_ValidationStatus_vvalue[m.ValidationResult]; !ok {
 			vals := []string{}
-			for k1, _ := range BufferStatus_ValidationStatus_value {
+			for k1, _ := range BufferStatus_ValidationStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"ValidationResult", vals)
@@ -771,9 +807,9 @@ func init() {
 	validatorMapStaging["ClearActionStatus"]["all"] = append(validatorMapStaging["ClearActionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*ClearActionStatus)
 
-		if _, ok := ClearActionStatus_ClearStatus_value[m.Status]; !ok {
+		if _, ok := ClearActionStatus_ClearStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range ClearActionStatus_ClearStatus_value {
+			for k1, _ := range ClearActionStatus_ClearStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
@@ -785,9 +821,9 @@ func init() {
 	validatorMapStaging["CommitActionStatus"]["all"] = append(validatorMapStaging["CommitActionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*CommitActionStatus)
 
-		if _, ok := CommitActionStatus_CommitStatus_value[m.Status]; !ok {
+		if _, ok := CommitActionStatus_CommitStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range CommitActionStatus_CommitStatus_value {
+			for k1, _ := range CommitActionStatus_CommitStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)

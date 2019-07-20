@@ -46,7 +46,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         },
         'packet-filters': {
             enum: MonitoringMirrorSessionSpec_packet_filters_uihint,
-            default: 'ALL_PKTS',
+            default: 'all-packets',
             required: true,
             type: 'Array<string>'
         },

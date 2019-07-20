@@ -36,6 +36,18 @@ var _ listerwatcher.WatcherClient
 var {{$name}} = map[string]string {
 	{{$values}}
 }
+
+var {{getEnumVNameName .}} = map[int32]string {
+	{{getEnumVNameValues .}}
+}
+
+var {{getEnumVValueName .}} = map[string]int32 {
+	{{getEnumVValueValues .}}
+}
+
+func (x {{getEnumName .}}) String() string {
+	return {{getEnumVNameName .}}[int32(x)]
+}
 {{end}}
 {{if $validators.Fmap}}
 var _ validators.DummyVar
@@ -275,9 +287,10 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *{{$msgname}}) Normalize() {
 {{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/* this is a vector with validators */}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
-	for _, v := range m.{{$fldk}} { {{if $fldv.Pointer}}
+	for k, v := range m.{{$fldk}} { {{if $fldv.Pointer}}
 		if v != nil { {{end}}
-		v.Normalize()
+			v.Normalize()
+			m.{{$fldk}}[k] = v
 		{{if $fldv.Pointer}} } {{end}}
 	} {{else}}{{/*<4>*/}} {{if $fldv.Pointer}}
 	if m.{{$fldk}} != nil { {{end}}

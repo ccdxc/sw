@@ -116,13 +116,13 @@ export class MetricsUtility {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
+      function: Telemetry_queryMetricsQuerySpec_function.mean,
       'group-by-time': '5m',
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
       fields: [],
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       'start-time': 'now() - 24h' as any,
       // Round down so we don't pick up an incomplete bucket
       'end-time': Utility.roundDownTime(5).toISOString() as any,
@@ -178,8 +178,8 @@ export class MetricsUtility {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      function: Telemetry_queryMetricsQuerySpec_function.mean,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -207,8 +207,8 @@ export class MetricsUtility {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      function: Telemetry_queryMetricsQuerySpec_function.mean,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -237,8 +237,8 @@ export class MetricsUtility {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      function: Telemetry_queryMetricsQuerySpec_function.mean,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -263,8 +263,8 @@ export class MetricsUtility {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      function: Telemetry_queryMetricsQuerySpec_function.mean,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -295,8 +295,8 @@ export class MetricsUtility {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      function: Telemetry_queryMetricsQuerySpec_function.mean,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields

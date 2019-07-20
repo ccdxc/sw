@@ -21,7 +21,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'oper-state': {
             enum: MonitoringMirrorSessionStatus_oper_state_uihint,
-            default: 'NONE',
+            default: 'none',
             required: true,
             type: 'string'
         },

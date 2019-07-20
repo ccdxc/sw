@@ -75,7 +75,7 @@ func convertApp(aps *AppState) *netproto.App {
 		app.Spec.ALGType = aps.App.Spec.ALG.Type
 
 		switch aps.App.Spec.ALG.Type {
-		case "ICMP":
+		case security.ALG_ICMP.String():
 			if aps.App.Spec.ALG.Icmp != nil {
 				app.Spec.ProtoPorts = []string{"icmp"}
 				ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
@@ -86,7 +86,7 @@ func convertApp(aps *AppState) *netproto.App {
 					Code: uint32(icode),
 				}
 			}
-		case "DNS":
+		case security.ALG_DNS.String():
 			if aps.App.Spec.ALG.Dns != nil {
 				app.Spec.ALG.DNS = &netproto.DNS{
 					DropMultiQuestionPackets: aps.App.Spec.ALG.Dns.DropMultiQuestionPackets,
@@ -98,7 +98,7 @@ func convertApp(aps *AppState) *netproto.App {
 			} else {
 				app.Spec.ALG.DNS = &netproto.DNS{}
 			}
-		case "FTP":
+		case security.ALG_FTP.String():
 			if aps.App.Spec.ALG.Ftp != nil {
 				app.Spec.ALG.FTP = &netproto.FTP{
 					AllowMismatchIPAddresses: aps.App.Spec.ALG.Ftp.AllowMismatchIPAddress,
@@ -106,7 +106,7 @@ func convertApp(aps *AppState) *netproto.App {
 			} else {
 				app.Spec.ALG.FTP = &netproto.FTP{}
 			}
-		case "SunRPC":
+		case security.ALG_SunRPC.String():
 			for _, sunrpc := range aps.App.Spec.ALG.Sunrpc {
 				app.Spec.ALG.SUNRPC = append(app.Spec.ALG.SUNRPC,
 					&netproto.RPC{
@@ -118,7 +118,7 @@ func convertApp(aps *AppState) *netproto.App {
 			if len(app.Spec.ALG.SUNRPC) == 0 {
 				app.Spec.ALG.SUNRPC = []*netproto.RPC{}
 			}
-		case "MSRPC":
+		case security.ALG_MSRPC.String():
 			for _, msrpc := range aps.App.Spec.ALG.Msrpc {
 				app.Spec.ALG.MSRPC = append(app.Spec.ALG.MSRPC,
 					&netproto.RPC{
@@ -129,9 +129,9 @@ func convertApp(aps *AppState) *netproto.App {
 			if len(app.Spec.ALG.MSRPC) == 0 {
 				app.Spec.ALG.MSRPC = []*netproto.RPC{}
 			}
-		case "TFTP":
+		case security.ALG_TFTP.String():
 			app.Spec.ALG.TFTP = &netproto.TFTP{}
-		case "RTSP":
+		case security.ALG_RTSP.String():
 			app.Spec.ALG.RTSP = &netproto.RTSP{}
 		}
 	}

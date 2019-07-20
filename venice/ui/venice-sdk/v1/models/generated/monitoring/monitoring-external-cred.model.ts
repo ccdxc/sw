@@ -33,7 +33,7 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'auth-type': {
             enum: MonitoringExternalCred_auth_type_uihint,
-            default: 'AUTHTYPE_NONE',
+            default: 'none',
             required: true,
             type: 'string'
         },

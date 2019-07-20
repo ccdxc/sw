@@ -51,7 +51,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admission-phase': {
             enum: ClusterSmartNICStatus_admission_phase_uihint,
-            default: 'UNKNOWN',
+            default: 'unknown',
             description:  'Current admission phase of the SmartNIC. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
             required: true,
             type: 'string'

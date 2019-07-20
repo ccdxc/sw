@@ -136,10 +136,10 @@ message LdapAttributeMapping {
 
 message LdapServerStatus {
     enum LdapResult {
-        Connect_Success = 0;
-        Connect_Failure = 1;
-        Bind_Success    = 2;
-        Bind_Failure    = 3;
+        Connect_Success = 0 [(venice.enumValueStr) = "connect-success"];
+        Connect_Failure = 1 [(venice.enumValueStr) = "connect-failure"];
+        Bind_Success    = 2 [(venice.enumValueStr) = "bind-success"];
+        Bind_Failure    = 3 [(venice.enumValueStr) = "bind-failure"];
     }
     // Result indicates if ldap check was successful
     string Result     = 1 [(venice.check) = "StrEnum(LdapServerStatus.LdapResult)", (gogoproto.jsontag) = "result,omitempty"];
@@ -160,9 +160,9 @@ message Radius {
         // PAP is password auth protocol with only password attribute encrypted
         PAP           = 0;
         // PEAP_MSCHAPv2 sends user credentials using TLS tunnel
-        PEAP_MSCHAPv2 = 1;
+        PEAP_MSCHAPv2 = 1 [(venice.enumValueStr) = "peap-mschapv2"];
         // EAP_TTLS sends user credentials using TLS tunnel
-        EAP_TTLS_PAP  = 2;
+        EAP_TTLS_PAP  = 2[(venice.enumValueStr) = "eap-ttls-pap"];;
     }
     bool Enabled                  = 1 [(gogoproto.jsontag) = "enabled"];
     // NasID is a string identifying the NAS(API Gw) originating the Access-Request
@@ -184,8 +184,8 @@ message RadiusServer {
 
 message RadiusServerStatus {
     enum RadiusResult {
-        Connect_Success = 0;
-        Connect_Failure = 1;
+        Connect_Success = 0 [(venice.enumValueStr) = "connect-success"];;
+        Connect_Failure = 1 [(venice.enumValueStr) = "connect-failure"];;
     }
     // Result indicates if radius check was successful
     string Result       = 1 [(venice.check) = "StrEnum(RadiusServerStatus.RadiusResult)", (gogoproto.jsontag) = "result,omitempty"];
@@ -221,25 +221,25 @@ message Permission {
     // ResourceKind is a resource kind for which permission is defined
     enum ResrcKind {
         // Arbitrary API endpoint as a resource
-        APIEndpoint      = 0; // ui-hint: API Endpoint
+        APIEndpoint      = 0 [(venice.enumValueStr) = "APIEndpoint"];; // ui-hint: API Endpoint
         // Search
-        Search           = 1; // ui-hint: Search
+        Search           = 1 [(venice.enumValueStr) = "Search"]; // ui-hint: Search
         // Events
-        Event            = 2; // ui-hint: Events
+        Event            = 2[(venice.enumValueStr) = "Event"]; // ui-hint: Events
         // Metrics
-        MetricsQuery     = 3; // ui-hint: MetricsQuery
+        MetricsQuery     = 3[(venice.enumValueStr) = "MetricsQuery"]; // ui-hint: MetricsQuery
         // Audit events
-        AuditEvent       = 4; // ui-hint: AuditEvent
+        AuditEvent       = 4[(venice.enumValueStr) = "AuditEvent"]; // ui-hint: AuditEvent
         // Fwlogs
-        FwlogsQuery      = 5; // ui-hint: FwlogsQuery
+        FwlogsQuery      = 5 [(venice.enumValueStr) = "FwlogsQuery"]; // ui-hint: FwlogsQuery
         // TokenAuth
-        TokenAuth        = 6; // ui-hint: TokenAuth
+        TokenAuth        = 6 [(venice.enumValueStr) = "TokenAuth"]; // ui-hint: TokenAuth
     }
 
     // ActionType is an action on a resource that a permission allows
     enum ActionType {
         // Reserved keyword to imply all action types
-        AllActions = 0; // ui-hint: All Actions
+        AllActions = 0 [(venice.enumValueStr) = "all-actions"];; // ui-hint: All Actions
         Create     = 1; // ui-hint: Create
         Read       = 2; // ui-hint: Read
         Update     = 3; // ui-hint: Update

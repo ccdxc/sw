@@ -53,7 +53,7 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 		timeNow, _ := types.TimestampProto(time.Now())
 		if alertObj.Spec.State == monitoring.AlertState_OPEN.String() {
 			// current state: OPEN; possible states: ACKNOWLEDGED, RESOLVED
-			switch monitoring.AlertState(monitoring.AlertState_value[flags.alert.Spec.State]) {
+			switch monitoring.AlertState(monitoring.AlertState_vvalue[flags.alert.Spec.State]) {
 			case monitoring.AlertState_ACKNOWLEDGED:
 				alertObj.Status.Acknowledged = &monitoring.AuditInfo{
 					User: flags.userSelfLink,
@@ -71,7 +71,7 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 			}
 		} else if alertObj.Spec.State == monitoring.AlertState_ACKNOWLEDGED.String() {
 			// current state: ACKNOWLEDGED; possible states: OPEN, RESOLVED
-			switch monitoring.AlertState(monitoring.AlertState_value[flags.alert.Spec.State]) {
+			switch monitoring.AlertState(monitoring.AlertState_vvalue[flags.alert.Spec.State]) {
 			case monitoring.AlertState_RESOLVED:
 				alertObj.Status.Resolved = &monitoring.AuditInfo{
 					User: flags.userSelfLink,
@@ -88,7 +88,7 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 			}
 		} else if alertObj.Spec.State == monitoring.AlertState_RESOLVED.String() {
 			// current state: RESOLVED; possible states: OPEN, ACKNOWLEDGED
-			switch monitoring.AlertState(monitoring.AlertState_value[flags.alert.Spec.State]) {
+			switch monitoring.AlertState(monitoring.AlertState_vvalue[flags.alert.Spec.State]) {
 			case monitoring.AlertState_OPEN:
 				alertObj.Status.Resolved = nil
 				alertObj.Status.Acknowledged = nil
@@ -172,7 +172,7 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 
 func validateAlertDestinationSpec(ad *monitoring.AlertDestinationSpec) error {
 
-	if _, ok := monitoring.MonitoringExportFormat_value[ad.SyslogExport.Format]; !ok {
+	if _, ok := monitoring.MonitoringExportFormat_vvalue[ad.SyslogExport.Format]; !ok {
 		return fmt.Errorf("invalid format %v", ad.SyslogExport.Format)
 	}
 

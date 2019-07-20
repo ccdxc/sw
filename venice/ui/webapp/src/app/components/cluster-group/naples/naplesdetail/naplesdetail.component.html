@@ -124,14 +124,14 @@
                    class="naplesdetail-node-value">
                 <div *ngIf="selectedObj"
                      class="naplesdetail-details-panel-last-leader-transition-time"
-                     [matTooltip]="selectedObj.status['admission-phase'] === 'REJECTED' || selectedObj.status['admission-phase'] === 'PENDING' ? selectedObj.status['adm-phase-reason'] : ''">
+                     [matTooltip]="selectedObj.status['admission-phase'] === 'rejected' || selectedObj.status['admission-phase'] === 'pending' ? selectedObj.status['adm-phase-reason'] : ''">
                   {{ selectedObj ? admissionPhaseEnum[selectedObj.status['admission-phase']] : '' }}
-                  <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'REJECTED'"
+                  <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'rejected'"
                             fxFlex="nogrow"
                             [inline]="true"
                             class="global-alert-warning-icon naplesdetail-phase-icon">error
                   </mat-icon>
-                  <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'PENDING'"
+                  <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'pending'"
                             fxFlex="nogrow"
                             [inline]="true"
                             class="global-alert-info-icon naplesdetail-phase-icon">notifications

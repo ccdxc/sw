@@ -672,7 +672,7 @@ func checkHealthStatus(t *testing.T, meta *api.ObjectMeta, admPhase string) {
 					return false, nil
 				}
 				hc := nicObj.Status.Conditions[0]
-				if hc.Type != "HEALTHY" || hc.Status != "TRUE" || hc.LastTransitionTime == "" {
+				if hc.Type != pencluster.SmartNICCondition_HEALTHY.String() || hc.Status != pencluster.ConditionStatus_TRUE.String() || hc.LastTransitionTime == "" {
 					log.Errorf("NIC Object is not healthy, name:%s, %+v, index: %d", meta.Name, nicObj.Status, index)
 					return false, nil
 				}

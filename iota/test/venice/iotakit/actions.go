@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -73,7 +74,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 		log.Debugf("Got venice node object: %+v", vn)
 
-		if vn.Status.Phase != "JOINED" {
+		if vn.Status.Phase != cluster.NodeStatus_JOINED.String() {
 			err := fmt.Errorf("Invalid node status for %v. Status: %+v", node.iotaNode.Name, vn.Status)
 			log.Errorf("%v", err)
 			return err
@@ -109,7 +110,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 		log.Debugf("Got smartnic object: %+v", snic)
 
-		if snic.Status.AdmissionPhase != "ADMITTED" {
+		if snic.Status.AdmissionPhase != cluster.SmartNICStatus_ADMITTED.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", np.iotaNode.Name, snic.Status)
 		}
@@ -117,11 +118,11 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("No naples status reported for naples %v", np.iotaNode.Name)
 		}
-		if snic.Status.Conditions[0].Type != "HEALTHY" {
+		if snic.Status.Conditions[0].Type != cluster.SmartNICCondition_HEALTHY.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Status.Conditions[0].Type, np.iotaNode.Name)
 		}
-		if snic.Status.Conditions[0].Status != "TRUE" {
+		if snic.Status.Conditions[0].Status != cluster.ConditionStatus_TRUE.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("Invalid status %v for naples %v", snic.Status.Conditions[0].Status, np.iotaNode.Name)
 		}

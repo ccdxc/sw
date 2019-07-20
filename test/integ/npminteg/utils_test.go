@@ -359,7 +359,7 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 			Conditions: []cluster.SmartNICCondition{
 				{
 					Type:   "HEALTHY",
-					Status: "TRUE",
+					Status: cluster.ConditionStatus_TRUE.String(),
 				},
 			},
 		},

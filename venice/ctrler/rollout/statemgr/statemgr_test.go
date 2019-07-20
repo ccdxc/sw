@@ -522,7 +522,7 @@ func createNodeHelper(stateMgr *Statemgr, name string) {
 			Tenant: "default",
 		},
 		Status: cluster.NodeStatus{
-			Phase: "JOINED",
+			Phase: cluster.NodeStatus_JOINED.String(),
 			Conditions: []cluster.NodeCondition{
 				{
 					Type:   cluster.NodeCondition_HEALTHY.String(),

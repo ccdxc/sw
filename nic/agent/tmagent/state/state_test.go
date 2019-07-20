@@ -674,7 +674,7 @@ func TestFwPolicyOps(t *testing.T) {
 						Transport:   fmt.Sprintf("tcp/%d", 10000+i),
 					},
 				},
-				Format: monitoring.MonitoringExportFormat_name[int32(i%2)],
+				Format: monitoring.MonitoringExportFormat_vname[int32(i%2)],
 				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
 				Config: &monitoring.SyslogExportConfig{
 					FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
@@ -1165,7 +1165,7 @@ func TestPolicyUpdate(t *testing.T) {
 					vrf:         vrf,
 					filter:      filter,
 					format:      policySpec.Format,
-					facility:    syslog.Priority(monitoring.SyslogFacility_value[policySpec.Config.FacilityOverride]),
+					facility:    syslog.Priority(monitoring.SyslogFacility_vvalue[policySpec.Config.FacilityOverride]),
 					destination: target.Destination,
 					proto:       transport[0],
 					port:        transport[1],

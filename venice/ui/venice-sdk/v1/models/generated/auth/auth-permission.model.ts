@@ -61,7 +61,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         },
         'actions': {
             enum: AuthPermission_actions_uihint,
-            default: 'AllActions',
+            default: 'all-actions',
             required: true,
             type: 'Array<string>'
         },

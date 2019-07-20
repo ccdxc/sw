@@ -205,9 +205,10 @@ func (m *AutoMsgBucketWatchHelper) Validate(ver, path string, ignoreStatus bool,
 
 func (m *AutoMsgBucketWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -264,9 +265,10 @@ func (m *AutoMsgObjectWatchHelper) Validate(ver, path string, ignoreStatus bool,
 
 func (m *AutoMsgObjectWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -323,9 +325,10 @@ func (m *BucketList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *BucketList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -352,9 +355,10 @@ func (m *ObjectList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *ObjectList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

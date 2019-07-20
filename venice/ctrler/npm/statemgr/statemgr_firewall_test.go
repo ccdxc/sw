@@ -62,7 +62,7 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 							Ports:    "80",
 						},
 					},
-					Action: "PERMIT",
+					Action: security.SGRule_PERMIT.String(),
 				},
 			},
 		},
@@ -97,7 +97,7 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 				Ports:    "8000",
 			},
 		},
-		Action: "PERMIT",
+		Action: security.SGRule_PERMIT.String(),
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
 	err = stateMgr.ctrler.SGPolicy().Update(&sgp)
@@ -121,7 +121,7 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 							Ports:    "80",
 						},
 					},
-					Action: "PERMIT",
+					Action: security.SGRule_PERMIT.String(),
 				},
 			},
 		},
@@ -161,7 +161,7 @@ func createPolicy(s *Statemgr, name, version string) error {
 							Ports:    "80",
 						},
 					},
-					Action: "PERMIT",
+					Action: security.SGRule_PERMIT.String(),
 				},
 			},
 		},
@@ -182,8 +182,8 @@ func createSmartNic(s *Statemgr, name string) (*cluster.SmartNIC, error) {
 		Status: cluster.SmartNICStatus{
 			Conditions: []cluster.SmartNICCondition{
 				{
-					Type:   "HEALTHY",
-					Status: "TRUE",
+					Type:   cluster.SmartNICCondition_HEALTHY.String(),
+					Status: cluster.ConditionStatus_TRUE.String(),
 				},
 			},
 		},
@@ -289,7 +289,7 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 	}, "SGPolicy propagation state incorrect", "300ms", "10s")
 
 	// mark the smartnic as unhealthy
-	snic2.Status.Conditions[0].Status = "UNKNOWN"
+	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_UNKNOWN.String()
 	stateMgr.ctrler.SmartNIC().Update(snic2)
 
 	// verify propagation status
@@ -308,7 +308,7 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 	}, "SGPolicy propagation state incorrect", "300ms", "10s")
 
 	// mark the smartnic as healthy
-	snic2.Status.Conditions[0].Status = "TRUE"
+	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_TRUE.String()
 	stateMgr.ctrler.SmartNIC().Update(snic2)
 
 	// verify propagation status
@@ -556,7 +556,7 @@ func TestAlgPolicy(t *testing.T) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "FTP",
+				Type: security.ALG_FTP.String(),
 				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
@@ -581,7 +581,7 @@ func TestAlgPolicy(t *testing.T) {
 			Rules: []security.SGRule{
 				{
 					Apps:   []string{"ftpApp"},
-					Action: "PERMIT",
+					Action: security.SGRule_PERMIT.String(),
 				},
 				{
 					ProtoPorts: []security.ProtoPort{
@@ -590,7 +590,7 @@ func TestAlgPolicy(t *testing.T) {
 							Ports:    "8000",
 						},
 					},
-					Action: "PERMIT",
+					Action: security.SGRule_PERMIT.String(),
 				},
 			},
 		},

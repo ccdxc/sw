@@ -7,22 +7,22 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum ApiListWatchOptions_sort_order {
-    'None' = "None",
-    'ByName' = "ByName",
-    'ByNameReverse' = "ByNameReverse",
-    'ByVersion' = "ByVersion",
-    'ByVersionReverse' = "ByVersionReverse",
-    'ByCreationTime' = "ByCreationTime",
-    'ByCreationTimeReverse' = "ByCreationTimeReverse",
-    'ByModTime' = "ByModTime",
-    'ByModTimeReverse' = "ByModTimeReverse",
+    'none' = "none",
+    'by-name' = "by-name",
+    'by-name-reverse' = "by-name-reverse",
+    'by-version' = "by-version",
+    'by-version-reverse' = "by-version-reverse",
+    'by-creation-time' = "by-creation-time",
+    'by-creation-time-reverse' = "by-creation-time-reverse",
+    'by-mod-time' = "by-mod-time",
+    'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
 export enum FieldsRequirement_operator {
     'equals' = "equals",
-    'notEquals' = "notEquals",
+    'notequals' = "notequals",
     'in' = "in",
-    'notIn' = "notIn",
+    'notin' = "notin",
     'gt' = "gt",
     'gte' = "gte",
     'lt' = "lt",
@@ -37,8 +37,8 @@ export enum Telemetry_queryFwlog_action {
 }
 
 export enum Telemetry_queryFwlog_direction {
-    'from_host' = "from_host",
-    'from_uplink' = "from_uplink",
+    'from-host' = "from-host",
+    'from-uplink' = "from-uplink",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_actions {
@@ -49,40 +49,40 @@ export enum Telemetry_queryFwlogsQuerySpec_actions {
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_directions {
-    'from_host' = "from_host",
-    'from_uplink' = "from_uplink",
+    'from-host' = "from-host",
+    'from-uplink' = "from-uplink",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_sort_order {
-    'Ascending' = "Ascending",
-    'Descending' = "Descending",
+    'ascending' = "ascending",
+    'descending' = "descending",
 }
 
 export enum Telemetry_queryMetricsQuerySpec_function {
-    'NONE' = "NONE",
-    'MEAN' = "MEAN",
-    'MAX' = "MAX",
-    'MEDIAN' = "MEDIAN",
-    'DERIVATIVE' = "DERIVATIVE",
-    'DIFFERENCE' = "DIFFERENCE",
+    'none' = "none",
+    'mean' = "mean",
+    'max' = "max",
+    'median' = "median",
+    'derivative' = "derivative",
+    'difference' = "difference",
 }
 
 export enum Telemetry_queryMetricsQuerySpec_sort_order {
-    'Ascending' = "Ascending",
-    'Descending' = "Descending",
+    'ascending' = "ascending",
+    'descending' = "descending",
 }
 
 
 export enum ApiListWatchOptions_sort_order_uihint {
-    'ByCreationTime' = "By Creation Time",
-    'ByCreationTimeReverse' = "By Creation Time Reverse",
-    'ByModTime' = "By Modification Time",
-    'ByModTimeReverse' = "By Modification Time Reverse",
-    'ByName' = "By Name",
-    'ByNameReverse' = "By Name Reverse",
-    'ByVersion' = "By Version",
-    'ByVersionReverse' = "By Version Reverse",
-    'None' = "None",
+    'by-creation-time' = "By Creation Time",
+    'by-creation-time-reverse' = "By Creation Time Reverse",
+    'by-mod-time' = "By Modification Time",
+    'by-mod-time-reverse' = "By Modification Time Reverse",
+    'by-name' = "By Name",
+    'by-name-reverse' = "By Name Reverse",
+    'by-version' = "By Version",
+    'by-version-reverse' = "By Version Reverse",
+    'none' = "None",
 }
 
 export enum FieldsRequirement_operator_uihint {
@@ -90,8 +90,8 @@ export enum FieldsRequirement_operator_uihint {
     'gte' = "greater than or equals",
     'lt' = "less than",
     'lte' = "less than or equals",
-    'notEquals' = "not equals",
-    'notIn' = "not in",
+    'notequals' = "not equals",
+    'notin' = "not in",
 }
 
 export enum Telemetry_queryFwlog_action_uihint {
@@ -102,8 +102,8 @@ export enum Telemetry_queryFwlog_action_uihint {
 }
 
 export enum Telemetry_queryFwlog_direction_uihint {
-    'from_host' = "From Host",
-    'from_uplink' = "From Uplink",
+    'from-host' = "From Host",
+    'from-uplink' = "From Uplink",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_actions_uihint {
@@ -114,8 +114,8 @@ export enum Telemetry_queryFwlogsQuerySpec_actions_uihint {
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_directions_uihint {
-    'from_host' = "From Host",
-    'from_uplink' = "From Uplink",
+    'from-host' = "From Host",
+    'from-uplink' = "From Uplink",
 }
 
 

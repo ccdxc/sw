@@ -26,7 +26,7 @@ export class AuthOperation extends BaseModel implements IAuthOperation {
         },
         'action': {
             enum: AuthOperation_action_uihint,
-            default: 'AllActions',
+            default: 'all-actions',
             required: true,
             type: 'string'
         },

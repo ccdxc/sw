@@ -126,7 +126,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     const fields = col.field.split('.');
     const value = Utility.getObjectValueByPropertyPath(rowData, fields);
     const column = col.field;
-    const isComplete = (value === MonitoringTechSupportRequestStatus_status.Completed);
+    const isComplete = (value === MonitoringTechSupportRequestStatus_status.completed);
     if (isComplete  && !rowData[TechsupportComponent.TS_DOWNLOAD]) {
       // when TS.status is complete, we build UI model to list available download links. We build only once
       this.buildTSDownload(rowData);
@@ -135,7 +135,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   timeoutOrFailure(rowData: MonitoringTechSupportRequest): boolean {
-    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.TimeOut || rowData.status.status === MonitoringTechSupportRequestStatus_status.Failed) {
+    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout || rowData.status.status === MonitoringTechSupportRequestStatus_status.failed) {
       return true;
     }
     return false;
@@ -148,14 +148,14 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     const reasonArray: string[] = [];
     if (nodes != null) {
       Object.keys(nodes).forEach((key) => {
-        if (nodes != null && key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+        if (nodes != null && key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.timeout) {
           reasonArray.push(key + ' timed out during operation');
         }
       });
     }
     if (nics != null) {
        Object.keys(nics).forEach((key) => {
-         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.timeout) {
            reasonArray.push(key + ' timed out during operation');
           }
       });
@@ -173,14 +173,14 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     const reasonArray: string[] = [];
     if (nodes != null) {
       Object.keys(nodes).forEach((key) => {
-        if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.Failed) {
+        if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.failed) {
           reasonArray.push(nodes[key].reason);
         }
       });
     }
     if (nics != null) {
       Object.keys(nics).forEach((key) => {
-        if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+        if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.timeout) {
           reasonArray.push(nics[key].reason);
          }
      });
@@ -202,14 +202,14 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     const reasonArray: string[] = [];
     if (nodes != null) {
     Object.keys(nodes).forEach((key) => {
-      if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.Failed) {
+      if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.failed) {
         reasonArray.push(key + 'is unhealthy and causing the operation to fail');
       }
     });
   }
     if (nics != null) {
        Object.keys(nics).forEach((key) => {
-         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.Failed) {
+         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.failed) {
            reasonArray.push(key + ' is unhealthy and causing the operation to fail');
           }
       });
@@ -223,9 +223,9 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
 
   displayMessage(rowData: MonitoringTechSupportRequest): any {
-    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout) {
       return this.displayTimeOutMessage(rowData);
-    } else if (rowData.status.status === MonitoringTechSupportRequestStatus_status.Failed) {
+    } else if (rowData.status.status === MonitoringTechSupportRequestStatus_status.failed) {
       return this.displayFailureMessage(rowData);
     }
   }
@@ -292,7 +292,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   displayColumn_status(fields, value): string {
-    if (value === MonitoringTechSupportRequestStatus_status.Completed) {
+    if (value === MonitoringTechSupportRequestStatus_status.completed) {
       return '';
     } else {
       return value;
@@ -363,7 +363,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
    * @param rowData
    */
   showDeleteIcon(rowData: MonitoringTechSupportRequest): boolean {
-     return ( rowData.status.status !==  MonitoringTechSupportRequestStatus_status.Running);
+     return ( rowData.status.status !==  MonitoringTechSupportRequestStatus_status.running);
   }
 
 }

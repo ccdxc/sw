@@ -29,7 +29,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
         },
         'status': {
             enum: MonitoringTechSupportRequestStatus_status,
-            default: 'Scheduled',
+            default: 'scheduled',
             required: true,
             type: 'string'
         },

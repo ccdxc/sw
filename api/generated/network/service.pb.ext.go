@@ -30,12 +30,25 @@ var _ listerwatcher.WatcherClient
 
 // TLSServerPolicySpec_ClientAuthTypes_normal is a map of normalized values for the enum
 var TLSServerPolicySpec_ClientAuthTypes_normal = map[string]string{
-	"Mandatory": "Mandatory",
-	"None":      "None",
-	"Optional":  "Optional",
-	"mandatory": "Mandatory",
-	"none":      "None",
-	"optional":  "Optional",
+	"mandatory": "mandatory",
+	"none":      "none",
+	"optional":  "optional",
+}
+
+var TLSServerPolicySpec_ClientAuthTypes_vname = map[int32]string{
+	0: "mandatory",
+	1: "optional",
+	2: "none",
+}
+
+var TLSServerPolicySpec_ClientAuthTypes_vvalue = map[string]int32{
+	"mandatory": 0,
+	"optional":  1,
+	"none":      2,
+}
+
+func (x TLSServerPolicySpec_ClientAuthTypes) String() string {
+	return TLSServerPolicySpec_ClientAuthTypes_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -168,7 +181,7 @@ func (m *TLSServerPolicySpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.ClientAuthentication = "Mandatory"
+		m.ClientAuthentication = "mandatory"
 	}
 	return ret
 }
@@ -351,9 +364,9 @@ func init() {
 	validatorMapService["TLSServerPolicySpec"]["all"] = append(validatorMapService["TLSServerPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*TLSServerPolicySpec)
 
-		if _, ok := TLSServerPolicySpec_ClientAuthTypes_value[m.ClientAuthentication]; !ok {
+		if _, ok := TLSServerPolicySpec_ClientAuthTypes_vvalue[m.ClientAuthentication]; !ok {
 			vals := []string{}
-			for k1, _ := range TLSServerPolicySpec_ClientAuthTypes_value {
+			for k1, _ := range TLSServerPolicySpec_ClientAuthTypes_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"ClientAuthentication", vals)

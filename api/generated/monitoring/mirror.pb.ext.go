@@ -30,34 +30,74 @@ var _ listerwatcher.WatcherClient
 
 // MirrorSessionSpec_MirrorPacketFilter_normal is a map of normalized values for the enum
 var MirrorSessionSpec_MirrorPacketFilter_normal = map[string]string{
-	"ALL_DROPS":            "ALL_DROPS",
-	"ALL_PKTS":             "ALL_PKTS",
-	"FIREWALL_POLICY_DROP": "FIREWALL_POLICY_DROP",
-	"NETWORK_POLICY_DROP":  "NETWORK_POLICY_DROP",
-	"all_drops":            "ALL_DROPS",
-	"all_pkts":             "ALL_PKTS",
-	"firewall_policy_drop": "FIREWALL_POLICY_DROP",
-	"network_policy_drop":  "NETWORK_POLICY_DROP",
+	"all-drops":            "all-drops",
+	"all-packets":          "all-packets",
+	"firewall-policy-drop": "firewall-policy-drop",
+	"network-policy-drop":  "network-policy-drop",
+}
+
+var MirrorSessionSpec_MirrorPacketFilter_vname = map[int32]string{
+	0: "all-packets",
+	1: "all-drops",
+	2: "network-policy-drop",
+	3: "firewall-policy-drop",
+}
+
+var MirrorSessionSpec_MirrorPacketFilter_vvalue = map[string]int32{
+	"all-packets":          0,
+	"all-drops":            1,
+	"network-policy-drop":  2,
+	"firewall-policy-drop": 3,
+}
+
+func (x MirrorSessionSpec_MirrorPacketFilter) String() string {
+	return MirrorSessionSpec_MirrorPacketFilter_vname[int32(x)]
 }
 
 // PacketCollectorType_normal is a map of normalized values for the enum
 var PacketCollectorType_normal = map[string]string{
-	"ERSPAN": "ERSPAN",
-	"erspan": "ERSPAN",
+	"erspan": "erspan",
+}
+
+var PacketCollectorType_vname = map[int32]string{
+	0: "erspan",
+}
+
+var PacketCollectorType_vvalue = map[string]int32{
+	"erspan": 0,
+}
+
+func (x PacketCollectorType) String() string {
+	return PacketCollectorType_vname[int32(x)]
 }
 
 // MirrorSessionState_normal is a map of normalized values for the enum
 var MirrorSessionState_normal = map[string]string{
-	"ERR_NO_MIRROR_SESSION": "ERR_NO_MIRROR_SESSION",
-	"NONE":                  "NONE",
-	"RUNNING":               "RUNNING",
-	"SCHEDULED":             "SCHEDULED",
-	"STOPPED":               "STOPPED",
-	"err_no_mirror_session": "ERR_NO_MIRROR_SESSION",
-	"none":                  "NONE",
-	"running":               "RUNNING",
-	"scheduled":             "SCHEDULED",
-	"stopped":               "STOPPED",
+	"error-no-mirror-session": "error-no-mirror-session",
+	"none":                    "none",
+	"running":                 "running",
+	"scheduled":               "scheduled",
+	"stopped":                 "stopped",
+}
+
+var MirrorSessionState_vname = map[int32]string{
+	0: "none",
+	1: "running",
+	2: "stopped",
+	3: "scheduled",
+	4: "error-no-mirror-session",
+}
+
+var MirrorSessionState_vvalue = map[string]int32{
+	"none":                    0,
+	"running":                 1,
+	"stopped":                 2,
+	"scheduled":               3,
+	"error-no-mirror-session": 4,
+}
+
+func (x MirrorSessionState) String() string {
+	return MirrorSessionState_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -173,7 +213,7 @@ func (m *MirrorCollector) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = "ERSPAN"
+		m.Type = "erspan"
 	}
 	return ret
 }
@@ -260,7 +300,7 @@ func (m *MirrorSessionSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.PacketFilters {
-			m.PacketFilters[k] = "ALL_PKTS"
+			m.PacketFilters[k] = "all-packets"
 		}
 	}
 	return ret
@@ -288,7 +328,7 @@ func (m *MirrorSessionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.State = "NONE"
+		m.State = "none"
 	}
 	return ret
 }
@@ -639,13 +679,15 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool, ignore
 
 func (m *MirrorSessionSpec) Normalize() {
 
-	for _, v := range m.Collectors {
+	for k, v := range m.Collectors {
 		v.Normalize()
+		m.Collectors[k] = v
 
 	}
 
-	for _, v := range m.MatchRules {
+	for k, v := range m.MatchRules {
 		v.Normalize()
+		m.MatchRules[k] = v
 
 	}
 
@@ -736,9 +778,9 @@ func init() {
 	validatorMapMirror["MirrorCollector"]["all"] = append(validatorMapMirror["MirrorCollector"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorCollector)
 
-		if _, ok := PacketCollectorType_value[m.Type]; !ok {
+		if _, ok := PacketCollectorType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range PacketCollectorType_value {
+			for k1, _ := range PacketCollectorType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
@@ -764,9 +806,9 @@ func init() {
 		m := i.(*MirrorSessionSpec)
 
 		for k, v := range m.PacketFilters {
-			if _, ok := MirrorSessionSpec_MirrorPacketFilter_value[v]; !ok {
+			if _, ok := MirrorSessionSpec_MirrorPacketFilter_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range MirrorSessionSpec_MirrorPacketFilter_value {
+				for k1, _ := range MirrorSessionSpec_MirrorPacketFilter_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"PacketFilters", k, vals)
@@ -779,9 +821,9 @@ func init() {
 	validatorMapMirror["MirrorSessionStatus"]["all"] = append(validatorMapMirror["MirrorSessionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorSessionStatus)
 
-		if _, ok := MirrorSessionState_value[m.State]; !ok {
+		if _, ok := MirrorSessionState_vvalue[m.State]; !ok {
 			vals := []string{}
-			for k1, _ := range MirrorSessionState_value {
+			for k1, _ := range MirrorSessionState_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)

@@ -267,23 +267,23 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   }
 
   onInvokeCreateLDAP(ldap: AuthLdap) {
-    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.LDAP);
+    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.ldap);
     this.authPolicy.spec.authenticators.ldap = ldap;
     this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
   }
 
   onInvokeCreateRadius(radius: AuthRadius) {
-    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.RADIUS);
+    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.radius);
     this.authPolicy.spec.authenticators.radius = radius;
     this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
   }
 
   onInvokeRemoveRadius(radius: AuthRadius) {
-    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.RADIUS);
+    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.radius);
   }
 
   onInvokeRemoveLDAP(ldap: AuthLdap) {
-    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.LDAP);
+    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.ldap);
   }
 
   _onInvokeRemoveConfigHelper(type: any) {

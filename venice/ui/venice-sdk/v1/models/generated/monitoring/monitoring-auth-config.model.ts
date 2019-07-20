@@ -22,7 +22,7 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'algo': {
             enum: MonitoringAuthConfig_algo,
-            default: 'MD5',
+            default: 'md5',
             required: true,
             type: 'string'
         },

@@ -21,7 +21,7 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterMemInfo_type,
-            default: 'UNKNOWN',
+            default: 'unknown',
             required: true,
             type: 'string'
         },

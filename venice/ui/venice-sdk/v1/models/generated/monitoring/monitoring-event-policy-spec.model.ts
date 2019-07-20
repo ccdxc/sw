@@ -28,7 +28,7 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'format': {
             enum: MonitoringEventPolicySpec_format_uihint,
-            default: 'SYSLOG_BSD',
+            default: 'syslog-bsd',
             required: true,
             type: 'string'
         },

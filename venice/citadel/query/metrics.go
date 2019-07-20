@@ -63,7 +63,6 @@ func (q *Server) validateMetricsQuerySpec(qs *telemetry_query.MetricsQuerySpec) 
 		errorStrings = append(errorStrings, "invalid kind")
 	}
 
-	qs.Function = strings.ToUpper(qs.Function)
 	if qs.Function == "" {
 		qs.Function = telemetry_query.TsdbFunctionType_NONE.String()
 	}

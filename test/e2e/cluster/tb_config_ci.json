@@ -11,5 +11,5 @@
     "E2EMode":        "MOCK",
     "User":           "test",
     "Password":       "Pensando0$",
-    "AuthMethod":     "LOCAL"
+    "AuthMethod":     "local"
 }

@@ -54,7 +54,7 @@ func TestExporter(t *testing.T) {
 	alertDestUUID := uuid.NewV1().String()
 	alertDestBSDSyslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, alertDestUUID,
 		&monitoring.SyslogExport{
-			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+			Format: monitoring.MonitoringExportFormat_vname[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",
@@ -67,7 +67,7 @@ func TestExporter(t *testing.T) {
 			},
 			Config: &monitoring.SyslogExportConfig{
 				Prefix:           "pen-events-exporter-test",
-				FacilityOverride: monitoring.SyslogFacility_name[int32(monitoring.SyslogFacility_LOG_SYSLOG)],
+				FacilityOverride: monitoring.SyslogFacility_vname[int32(monitoring.SyslogFacility_LOG_SYSLOG)],
 			},
 		})
 	alertDestBSDSyslog.ObjectMeta.ModTime = api.Timestamp{}
@@ -157,7 +157,7 @@ func TestExporter(t *testing.T) {
 	// update the export from BSD to RFC
 	alertDestBSDSyslog = policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, alertDestUUID,
 		&monitoring.SyslogExport{
-			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+			Format: monitoring.MonitoringExportFormat_vname[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",

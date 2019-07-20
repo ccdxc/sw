@@ -14,9 +14,9 @@ import "export.proto";
 // ------------------------------- Event Policy --------------------------------
 enum MonitoringExportFormat {
     // ui-hint: BSD
-    SYSLOG_BSD      = 0;
+    SYSLOG_BSD      = 0 [(venice.enumValueStr) = "syslog-bsd"];
     // ui-hint: RFC5424
-    SYSLOG_RFC5424  = 1;
+    SYSLOG_RFC5424  = 1 [(venice.enumValueStr) = "syslog-rfc5424"];
 }
 
 // Event Policy represents the policy definition for Events.

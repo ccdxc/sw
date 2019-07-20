@@ -12,10 +12,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
+	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	gwplugins "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 
 	_ "github.com/pensando/sw/venice/utils/apigen/annotations"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
-	ref "github.com/pensando/sw/venice/utils/ref"
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 func TestMutator(t *testing.T) {
@@ -466,4 +468,133 @@ func TestSourceCodeInfo(t *testing.T) {
 		}
 	}
 
+}
+
+func parseBoolOptions(val interface{}) (interface{}, error) {
+	v, ok := val.(*bool)
+	if !ok {
+		return nil, fmt.Errorf("could not parse")
+	}
+	return *v, nil
+}
+
+func TestInsertFileDefaults(t *testing.T) {
+	params := make(map[string]string)
+	var req plugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example1.proto'
+		package: 'example'
+		syntax: 'proto3'
+		`,
+		`
+		name: 'example2.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileGrpcDest]: "xyz">
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	gwplugins.RegisterOptionParser("gogoproto.goproto_enum_stringer_all", parseBoolOptions)
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example1.proto", "example2.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file1, err := r.LookupFile("example1.proto")
+	if err != nil {
+		t.Fatalf("Could not find file1")
+	}
+	file2, err := r.LookupFile("example1.proto")
+	if err != nil {
+		t.Fatalf("Could not find file2")
+	}
+	// With no option
+	if err = insertFileDefaults(params, file1.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file1) {
+		t.Fatalf("not expecting extension to be added")
+	}
+	if err = insertFileDefaults(params, file2.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file2) {
+		t.Fatalf("not expecting extension to be added")
+	}
+
+	// With bad option
+	params[customEnumStringParam] = "junkvalue"
+	if err = insertFileDefaults(params, file1.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file1) {
+		t.Fatalf("not expecting extension to be added")
+	}
+	if err = insertFileDefaults(params, file2.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file2) {
+		t.Fatalf("not expecting extension to be added")
+	}
+	// With proper option but false
+	params[customEnumStringParam] = "false"
+	if err = insertFileDefaults(params, file1.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file1) {
+		t.Fatalf("not expecting extension to be added")
+	}
+	if err = insertFileDefaults(params, file2.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file2) {
+		t.Fatalf("not expecting extension to be added")
+	}
+	// with proper option and true
+	params[customEnumStringParam] = "true"
+	if err = insertFileDefaults(params, file1.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if !gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file1) {
+		t.Fatalf("expecting extension to be added")
+	}
+	if err = insertFileDefaults(params, file2.FileDescriptorProto); err != nil {
+		t.Fatalf("insertFileDefaults failed for file1")
+	}
+	if !gwplugins.HasExtension("gogoproto.goproto_enum_stringer_all", file2) {
+		t.Fatalf("expecting extension to be added")
+	}
+}
+
+func TestParseReqParams(t *testing.T) {
+	cases := []struct {
+		str string
+		exp map[string]string
+	}{
+		{
+			str: "custom_enumstr=true,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types",
+			exp: map[string]string{"custom_enumstr": "true", "Mgoogle/protobuf/timestamp.proto": "github.com/gogo/protobuf/types", "Mgoogle/protobuf/any.proto": "github.com/gogo/protobuf/types"},
+		},
+		{
+			str: "test1,test2=abc,test3=abc=xyx,test4:aaa",
+			exp: map[string]string{"test2": "abc", "test3": "abc=xyx"},
+		},
+	}
+
+	for _, c := range cases {
+		got := make(map[string]string)
+		err := parseReqParam(c.str, got)
+		if err != nil {
+			t.Fatalf("failed to parse parameters (%s)", err)
+		}
+		if !reflect.DeepEqual(got, c.exp) {
+			t.Fatalf("did not match \n[%+v]\n[%+v]", got, c.exp)
+		}
+	}
 }

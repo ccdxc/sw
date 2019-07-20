@@ -72,7 +72,7 @@ message RolloutSpec {
         //ui-hint: Disruptive
         Disruptive          = 0;
         //ui-hint: OnNextHostReboot
-        OnNextHostReboot    = 1;
+        OnNextHostReboot    = 1 [(venice.enumValueStr) = "on-next-reboot"];
     }
     string UpgradeType                          = 11 [(gogoproto.jsontag) = "upgrade-type",
                                                     (venice.check) = "StrEnum(RolloutSpec.SmartNICUpgradeType)"];
@@ -87,15 +87,15 @@ message RolloutPhase {
     enum Phases {
         // Pre rollout check (enough disk space, image download, validation,)
         //ui-hint: PreCheck
-        PRE_CHECK           = 0;
+        PRE_CHECK           = 0 [(venice.enumValueStr) = "pre-check"];
 
         // The dependencies are met (dependent nodes/services are at needed versions)
         //ui-hint: DependenciesCheck
-        DEPENDENCIES_CHECK  = 1;
+        DEPENDENCIES_CHECK  = 1 [(venice.enumValueStr) = "dependencies-check"];
 
         // Among the various nodes getting upgraded in parallel, waiting for this node's turn.
         //ui-hint: WaitingForTurn
-        WAITING_FOR_TURN    = 2;
+        WAITING_FOR_TURN    = 2 [(venice.enumValueStr) = "waiting-for-turn"];
 
         // Component is undergoing rollout - Either node is rebooting or service is restarting
         //ui-hint: Progressing
@@ -157,9 +157,9 @@ message RolloutStatus {
       SUCCESS               = 2;  // Rollout completed successfully with failures, if any, less than threshold
       SCHEDULED             = 3;  // Rollout is scheduled to start in Future time
       SUSPENDED             = 4;  // User has suspended rollout
-      SUSPEND_IN_PROGRESS   = 5;  // Waiting for a terminal state for the pause to complete
-      DEADLINE_EXCEEDED     = 6;  // Rollout could not be completed before the deadline specified by the user
-      PRECHECK_IN_PROGRESS  = 7;  // Rollout Precheck in progress
+      SUSPEND_IN_PROGRESS   = 5 [(venice.enumValueStr) = "suspend-in-progress"];  // Waiting for a terminal state for the pause to complete
+      DEADLINE_EXCEEDED     = 6 [(venice.enumValueStr) = "deadline-exceeded"];  // Rollout could not be completed before the deadline specified by the user
+      PRECHECK_IN_PROGRESS  = 7 [(venice.enumValueStr) = "precheck-in-progress"];  // Rollout Precheck in progress
     }
     string OperationalState                               = 4 [(venice.check) = "StrEnum(RolloutStatus.RolloutOperationalState)",
                                                              (gogoproto.jsontag) = "state,omitempty"];

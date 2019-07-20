@@ -219,8 +219,8 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
         const eleCopy = Utility.getLodash().cloneDeep(ele);
         const key = ele.meta.name;
           if (tmpMap.hasOwnProperty(key)) {
-            if (tmpMap[key].outcome === AuditEvent_outcome.Failure) {
-              eleCopy.outcome = AuditEvent_outcome.Failure;
+            if (tmpMap[key].outcome === AuditEvent_outcome.failure) {
+              eleCopy.outcome = AuditEvent_outcome.failure;
             }
             tmpMap[key] = Utility.getLodash().merge(tmpMap[key], eleCopy);
             tmpMap[key]['uuids'].push(eleCopy.meta.uuid);
@@ -279,8 +279,8 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     zip(...obs).subscribe(all => {
       this.auditEventDetail = {} as AuditEvent;
       all.forEach(ele => {
-        if (this.auditEventDetail.outcome === AuditEvent_outcome.Failure) {
-          ele.body.outcome = AuditEvent_outcome.Failure;
+        if (this.auditEventDetail.outcome === AuditEvent_outcome.failure) {
+          ele.body.outcome = AuditEvent_outcome.failure;
         }
         this.auditEventDetail = Utility.getLodash().merge(this.auditEventDetail, (ele.body as AuditEvent));
       });

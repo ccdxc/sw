@@ -63,7 +63,7 @@ export class RolloutUtil {
   }
 
   public static isRolloutPending(rollout: RolloutRollout) {
-    if (rollout.status.state === RolloutRolloutStatus_state.PROGRESSING || rollout.status.state === RolloutRolloutStatus_state.SCHEDULED || rollout.status.state === RolloutRolloutStatus_state.PRECHECK_IN_PROGRESS) {
+    if (rollout.status.state === RolloutRolloutStatus_state.progressing || rollout.status.state === RolloutRolloutStatus_state.scheduled || rollout.status.state === RolloutRolloutStatus_state['precheck-in-progress']) {
       return true;
     }
     return false;

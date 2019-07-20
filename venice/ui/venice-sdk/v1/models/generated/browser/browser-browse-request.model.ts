@@ -53,7 +53,7 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
         },
         'query-type': {
             enum: BrowserBrowseRequest_query_type,
-            default: 'Dependencies',
+            default: 'dependencies',
             required: true,
             type: 'string'
         },

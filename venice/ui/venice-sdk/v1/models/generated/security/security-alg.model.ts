@@ -34,7 +34,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: SecurityALG_type,
-            default: 'ICMP',
+            default: 'icmp',
             required: true,
             type: 'string'
         },

@@ -62,7 +62,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         },
         'strategy': {
             enum: RolloutRolloutSpec_strategy_uihint,
-            default: 'LINEAR',
+            default: 'linear',
             required: true,
             type: 'string'
         },
@@ -95,7 +95,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         },
         'upgrade-type': {
             enum: RolloutRolloutSpec_upgrade_type_uihint,
-            default: 'Disruptive',
+            default: 'disruptive',
             required: true,
             type: 'string'
         },

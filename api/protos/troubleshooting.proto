@@ -79,11 +79,11 @@ message TroubleshootingSessionStatus {
 
 enum TroubleshootingSessionState {
     // ui-hint: Running
-    TS_RUNNING     = 0;
+    TS_RUNNING     = 0  [(venice.enumValueStr) = "running"];
     // ui-hint: Stopped
-    TS_STOPPED     = 1;
+    TS_STOPPED     = 1  [(venice.enumValueStr) = "stopped"];
     // ui-hint: Scheduled
-    TS_SCHEDULED   = 2;    // Waiting for start time
+    TS_SCHEDULED   = 2  [(venice.enumValueStr) = "scheduled"]; // Waiting for start time
 }
 
 message TsResult {

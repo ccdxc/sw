@@ -167,7 +167,7 @@ var _ = Describe("auth tests", func() {
 					}
 					events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
 					for _, event := range events {
-						if (event.Object.Action == auth.Permission_Update.String()) &&
+						if (event.Object.Action == strings.Title(auth.Permission_Update.String())) &&
 							(event.Object.Resource.Kind == string(auth.KindAuthenticationPolicy)) &&
 							(event.Object.Outcome == audit.Outcome_Success.String()) &&
 							(event.Object.Stage == stage) {

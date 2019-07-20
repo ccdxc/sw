@@ -32,7 +32,7 @@ class MockAuthService extends AuthService {
     const items = {
       spec: {
         authenticators: {
-          'authenticator-order': [AuthAuthenticators_authenticator_order.LOCAL, AuthAuthenticators_authenticator_order.LDAP],
+          'authenticator-order': [AuthAuthenticators_authenticator_order.local, AuthAuthenticators_authenticator_order.ldap],
           ldap: {
             enabled: true,
             'base-dn': 'basedn',

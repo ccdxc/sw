@@ -71,7 +71,7 @@ describe('AlertseventsComponent', () => {
   poll1.push(genEvent(
     '2018-08-20T19:09:04.777255798Z',
     '2018-08-20T19:09:02.777255798Z',
-    'INFO', EventsEvent_type.AUDITING_FAILED, 'Service pen-evtsmgr running on node1',
+    'info', EventsEvent_type.AUDITING_FAILED, 'Service pen-evtsmgr running on node1',
     { component: 'pen-evtsmgr', 'node-name': 'node1' }, 1));
 
   let component: AlertseventsComponent;
@@ -134,7 +134,7 @@ describe('AlertseventsComponent', () => {
   });
 
   it('should have events in the table', ((done: DoneFn) => {
-    expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', { 'sort-order': ApiListWatchOptions_sort_order.None });
+    expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', { 'sort-order': ApiListWatchOptions_sort_order.none });
     // Switch to the events tab
     const tabs = fixture.debugElement.queryAll(By.css('.mat-tab-label'));
     expect(tabs.length).toBe(2);
@@ -173,7 +173,7 @@ describe('AlertseventsComponent', () => {
           const caseMap = {
             'severity': (field, rowData, rowIndex) => {
               expect(field.children.length).toBe(2);
-              if (rowData.severity === 'INFO') {
+              if (rowData.severity === 'info') {
                 expect(field.children[0].nativeElement.textContent).toContain('notifications');
               } else {
                 expect(field.children[0].nativeElement.textContent).toContain('error');

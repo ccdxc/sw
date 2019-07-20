@@ -21,7 +21,7 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'status': {
             enum: StagingCommitActionStatus_status,
-            default: 'SUCCESS',
+            default: 'success',
             required: true,
             type: 'string'
         },

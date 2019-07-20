@@ -283,7 +283,7 @@ func (sm *Statemgr) isSmartNICHealthy(nsnic *cluster.SmartNIC) bool {
 	isHealthy := false
 	if len(nsnic.Status.Conditions) > 0 {
 		for _, cond := range nsnic.Status.Conditions {
-			if cond.Type == "HEALTHY" && cond.Status == "TRUE" {
+			if cond.Type == cluster.SmartNICCondition_HEALTHY.String() && cond.Status == cluster.ConditionStatus_TRUE.String() {
 				isHealthy = true
 			}
 		}

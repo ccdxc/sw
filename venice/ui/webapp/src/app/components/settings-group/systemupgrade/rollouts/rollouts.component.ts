@@ -196,7 +196,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   isToBuildCreateButton(): boolean {
     const isBuild = true;
     for  (let i = 0; i < this.dataObjects.length; i++) {
-      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.PROGRESSING) {
+      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.progressing) {
         return false;
       }
     }
@@ -262,7 +262,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   }
 
   isDeletable(data): boolean {
-    if (data.status.state === RolloutRolloutStatus_state.SUSPENDED || data.status.state === RolloutRolloutStatus_state.FAILURE || data.status.state === RolloutRolloutStatus_state.SUCCESS || data.status.state === RolloutRolloutStatus_state.DEADLINE_EXCEEDED) {
+    if (data.status.state === RolloutRolloutStatus_state.suspended || data.status.state === RolloutRolloutStatus_state.failure || data.status.state === RolloutRolloutStatus_state.success || data.status.state === RolloutRolloutStatus_state['deadline-exceeded']) {
       return true;
     } else {
       return false;

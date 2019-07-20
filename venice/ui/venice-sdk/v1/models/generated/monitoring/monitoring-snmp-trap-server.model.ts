@@ -47,7 +47,7 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
         },
         'version': {
             enum: MonitoringSNMPTrapServer_version,
-            default: 'V2C',
+            default: 'v2c',
             required: true,
             type: 'string'
         },

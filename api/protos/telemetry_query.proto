@@ -89,9 +89,9 @@ enum FwlogActions {
 
 enum FwlogDirections {
     // ui-hint: From Host
-    from_host = 0;
+    from_host = 0 [(venice.enumValueStr) = "from-host"];
     // ui-hint: From Uplink
-    from_uplink = 1;
+    from_uplink = 1  [(venice.enumValueStr) = "from-uplink"];
 }
 
 
@@ -158,7 +158,7 @@ message FwlogsQuerySpec {
     // SortOrder specifies time ordering of results
     string SortOrder          = 14 [(gogoproto.jsontag) = "sort-order,omitempty",
                                      (venice.check) = "StrEnum(SortOrder)",
-                                     (venice.default) = "Descending"];
+                                     (venice.default) = "descending"];
 }
 
 // FwlogsQueryList contains a list of queries to execute

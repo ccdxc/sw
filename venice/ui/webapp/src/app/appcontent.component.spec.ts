@@ -213,7 +213,7 @@ describe('UIBlock during rollout progress', () => {
           'name'      : 'a1'},
         'spec'        : {},
         'status'      : {
-          'state'     : RolloutRolloutStatus_state.PROGRESSING }
+          'state'     : RolloutRolloutStatus_state.progressing }
         }
       }
     ]

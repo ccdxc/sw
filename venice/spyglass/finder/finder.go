@@ -334,6 +334,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	var resp search.SearchResponse
 
+	in.Normalize()
 	if err := fdr.validate(in); err != nil {
 		resp.Error = &search.Error{
 			Type:   grpccode.InvalidArgument.String(),

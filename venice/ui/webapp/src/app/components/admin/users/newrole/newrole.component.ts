@@ -382,7 +382,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     // moves to a kind with no group, we will accidentally send the old value as well.
     // VS 576: Kinds without group have default action Read
     if (Utility.KINDS_WITHOUT_GROUP.includes($event.value)) {
-      permission.get('actions').setValue([{ label: 'Read', value: AuthPermission_actions.Read }]);
+      permission.get('actions').setValue([{ label: 'read', value: AuthPermission_actions.read }]);
     } else {
       permission.get('actions').setValue([]);
     }
@@ -439,14 +439,14 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     // If it's a kind without a group, only read permission can be given
     if (Utility.KINDS_WITHOUT_GROUP.includes(selectedKind)) {
       return [{
-        label: AuthPermission_actions_uihint.Read,
-        value: AuthPermission_actions_uihint.Read
+        label: AuthPermission_actions_uihint.read,
+        value: AuthPermission_actions_uihint.read
       }];
     }
     if (permission.value['resource-group'] === 'staging') {
       return Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
     } else {
-      return Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [AuthPermission_actions.Clear, AuthPermission_actions.Commit]);
+      return Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [AuthPermission_actions.clear, AuthPermission_actions.commit]);
     }
   }
 
@@ -471,8 +471,8 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
         values.remove(values.indexOf(NewroleComponent.ACTIONOPTIONS_ALL));
       }
       // VS 576: Kinds without group have default action Read
-      if (!values.includes({ label: 'Read', value: AuthPermission_actions.Read })) {
-        values.push({ label: 'Read', value: AuthPermission_actions.Read });
+      if (!values.includes({ label: 'Read', value: AuthPermission_actions.read })) {
+        values.push({ label: 'Read', value: AuthPermission_actions.read });
       }
     }
     if (values.length > 1) {

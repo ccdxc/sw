@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -426,8 +427,8 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		}
 
 		// NAPLES must be in network-managed mode
-		if naplesNIC.Spec.MgmtMode != cluster.SmartNICSpec_NETWORK.String() {
-			return intErrResp, fmt.Errorf("Cannot admit SmartNIC because it is not in network-managed mode")
+		if strings.ToLower(naplesNIC.Spec.MgmtMode) != strings.ToLower(nmd.MgmtMode_NETWORK.String()) {
+			return intErrResp, fmt.Errorf("Cannot admit SmartNIC because it is not in network-managed mode [%v]", naplesNIC.Spec.MgmtMode)
 		}
 
 		log.Infof("Validated NIC: %s", name)
@@ -571,7 +572,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 	if resp != nil {
 		regNICResp := resp.(*grpc.RegisterNICResponse)
 		stream.Send(regNICResp)
-		if regNICResp.AdmissionResponse.Phase == cluster.SmartNICStatus_ADMITTED.String() {
+		if strings.ToLower(regNICResp.AdmissionResponse.Phase) == strings.ToLower(cluster.SmartNICStatus_ADMITTED.String()) {
 			log.Infof("SmartNIC %s is admitted to the cluster", name)
 		}
 	}
@@ -836,7 +837,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 				TypeMeta:   api.TypeMeta{Kind: "Naples"},
 				Spec: nmd.NaplesSpec{
 					Mode:        nmd.MgmtMode_NETWORK.String(),
-					NetworkMode: nicObj.Spec.NetworkMode,
+					NetworkMode: cluster.SmartNICSpec_NetworkModes_name[cluster.SmartNICSpec_NetworkModes_vvalue[nicObj.Spec.NetworkMode]],
 					PrimaryMAC:  nicObj.Name,
 					Controllers: []string{controller},
 					ID:          nicObj.Spec.ID,

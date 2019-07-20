@@ -25,7 +25,7 @@ export class DiagnosticsModuleSpec extends BaseModel implements IDiagnosticsModu
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'log-level': {
             enum: DiagnosticsModuleSpec_log_level,
-            default: 'Info',
+            default: 'info',
             description:  'LogLevel is the logging level of this module. Default is Info.',
             required: true,
             type: 'string'

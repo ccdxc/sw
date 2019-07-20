@@ -28,26 +28,54 @@ var _ listerwatcher.WatcherClient
 
 // TsdbFunctionType_normal is a map of normalized values for the enum
 var TsdbFunctionType_normal = map[string]string{
-	"DERIVATIVE": "DERIVATIVE",
-	"DIFFERENCE": "DIFFERENCE",
-	"MAX":        "MAX",
-	"MEAN":       "MEAN",
-	"MEDIAN":     "MEDIAN",
-	"NONE":       "NONE",
-	"derivative": "DERIVATIVE",
-	"difference": "DIFFERENCE",
-	"max":        "MAX",
-	"mean":       "MEAN",
-	"median":     "MEDIAN",
-	"none":       "NONE",
+	"derivative": "derivative",
+	"difference": "difference",
+	"max":        "max",
+	"mean":       "mean",
+	"median":     "median",
+	"none":       "none",
+}
+
+var TsdbFunctionType_vname = map[int32]string{
+	0: "none",
+	1: "mean",
+	2: "max",
+	3: "median",
+	4: "derivative",
+	5: "difference",
+}
+
+var TsdbFunctionType_vvalue = map[string]int32{
+	"none":       0,
+	"mean":       1,
+	"max":        2,
+	"median":     3,
+	"derivative": 4,
+	"difference": 5,
+}
+
+func (x TsdbFunctionType) String() string {
+	return TsdbFunctionType_vname[int32(x)]
 }
 
 // SortOrder_normal is a map of normalized values for the enum
 var SortOrder_normal = map[string]string{
-	"Ascending":  "Ascending",
-	"Descending": "Descending",
-	"ascending":  "Ascending",
-	"descending": "Descending",
+	"ascending":  "ascending",
+	"descending": "descending",
+}
+
+var SortOrder_vname = map[int32]string{
+	0: "ascending",
+	1: "descending",
+}
+
+var SortOrder_vvalue = map[string]int32{
+	"ascending":  0,
+	"descending": 1,
+}
+
+func (x SortOrder) String() string {
+	return SortOrder_vname[int32(x)]
 }
 
 // FwlogActions_normal is a map of normalized values for the enum
@@ -58,10 +86,42 @@ var FwlogActions_normal = map[string]string{
 	"reject":        "reject",
 }
 
+var FwlogActions_vname = map[int32]string{
+	0: "allow",
+	1: "deny",
+	2: "reject",
+	3: "implicit_deny",
+}
+
+var FwlogActions_vvalue = map[string]int32{
+	"allow":         0,
+	"deny":          1,
+	"reject":        2,
+	"implicit_deny": 3,
+}
+
+func (x FwlogActions) String() string {
+	return FwlogActions_vname[int32(x)]
+}
+
 // FwlogDirections_normal is a map of normalized values for the enum
 var FwlogDirections_normal = map[string]string{
-	"from_host":   "from_host",
-	"from_uplink": "from_uplink",
+	"from-host":   "from-host",
+	"from-uplink": "from-uplink",
+}
+
+var FwlogDirections_vname = map[int32]string{
+	0: "from-host",
+	1: "from-uplink",
+}
+
+var FwlogDirections_vvalue = map[string]int32{
+	"from-host":   0,
+	"from-uplink": 1,
+}
+
+func (x FwlogDirections) String() string {
+	return FwlogDirections_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -90,7 +150,7 @@ func (m *Fwlog) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Action = "allow"
-		m.Direction = "from_host"
+		m.Direction = "from-host"
 	}
 	return ret
 }
@@ -208,9 +268,9 @@ func (m *FwlogsQuerySpec) Defaults(ver string) bool {
 			m.Actions[k] = "allow"
 		}
 		for k := range m.Directions {
-			m.Directions[k] = "from_host"
+			m.Directions[k] = "from-host"
 		}
-		m.SortOrder = "Descending"
+		m.SortOrder = "descending"
 	}
 	return ret
 }
@@ -310,8 +370,8 @@ func (m *MetricsQuerySpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Function = "NONE"
-		m.SortOrder = "Ascending"
+		m.Function = "none"
+		m.SortOrder = "ascending"
 	}
 	return ret
 }
@@ -417,9 +477,10 @@ func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *FwlogsQueryList) Normalize() {
 
-	for _, v := range m.Queries {
+	for k, v := range m.Queries {
 		if v != nil {
 			v.Normalize()
+			m.Queries[k] = v
 		}
 	}
 
@@ -446,9 +507,10 @@ func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool, igno
 
 func (m *FwlogsQueryResponse) Normalize() {
 
-	for _, v := range m.Results {
+	for k, v := range m.Results {
 		if v != nil {
 			v.Normalize()
+			m.Results[k] = v
 		}
 	}
 
@@ -475,9 +537,10 @@ func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool, ignore
 
 func (m *FwlogsQueryResult) Normalize() {
 
-	for _, v := range m.Logs {
+	for k, v := range m.Logs {
 		if v != nil {
 			v.Normalize()
+			m.Logs[k] = v
 		}
 	}
 
@@ -557,9 +620,10 @@ func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool, ignoreS
 
 func (m *MetricsQueryList) Normalize() {
 
-	for _, v := range m.Queries {
+	for k, v := range m.Queries {
 		if v != nil {
 			v.Normalize()
+			m.Queries[k] = v
 		}
 	}
 
@@ -706,9 +770,9 @@ func init() {
 	validatorMapTelemetry_query["Fwlog"]["all"] = append(validatorMapTelemetry_query["Fwlog"]["all"], func(path string, i interface{}) error {
 		m := i.(*Fwlog)
 
-		if _, ok := FwlogActions_value[m.Action]; !ok {
+		if _, ok := FwlogActions_vvalue[m.Action]; !ok {
 			vals := []string{}
-			for k1, _ := range FwlogActions_value {
+			for k1, _ := range FwlogActions_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Action", vals)
@@ -719,9 +783,9 @@ func init() {
 	validatorMapTelemetry_query["Fwlog"]["all"] = append(validatorMapTelemetry_query["Fwlog"]["all"], func(path string, i interface{}) error {
 		m := i.(*Fwlog)
 
-		if _, ok := FwlogDirections_value[m.Direction]; !ok {
+		if _, ok := FwlogDirections_vvalue[m.Direction]; !ok {
 			vals := []string{}
-			for k1, _ := range FwlogDirections_value {
+			for k1, _ := range FwlogDirections_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Direction", vals)
@@ -734,9 +798,9 @@ func init() {
 		m := i.(*FwlogsQuerySpec)
 
 		for k, v := range m.Actions {
-			if _, ok := FwlogActions_value[v]; !ok {
+			if _, ok := FwlogActions_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range FwlogActions_value {
+				for k1, _ := range FwlogActions_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Actions", k, vals)
@@ -774,9 +838,9 @@ func init() {
 		m := i.(*FwlogsQuerySpec)
 
 		for k, v := range m.Directions {
-			if _, ok := FwlogDirections_value[v]; !ok {
+			if _, ok := FwlogDirections_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range FwlogDirections_value {
+				for k1, _ := range FwlogDirections_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Directions", k, vals)
@@ -788,9 +852,9 @@ func init() {
 	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogsQuerySpec)
 
-		if _, ok := SortOrder_value[m.SortOrder]; !ok {
+		if _, ok := SortOrder_vvalue[m.SortOrder]; !ok {
 			vals := []string{}
-			for k1, _ := range SortOrder_value {
+			for k1, _ := range SortOrder_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"SortOrder", vals)
@@ -840,9 +904,9 @@ func init() {
 	validatorMapTelemetry_query["MetricsQuerySpec"]["all"] = append(validatorMapTelemetry_query["MetricsQuerySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*MetricsQuerySpec)
 
-		if _, ok := TsdbFunctionType_value[m.Function]; !ok {
+		if _, ok := TsdbFunctionType_vvalue[m.Function]; !ok {
 			vals := []string{}
-			for k1, _ := range TsdbFunctionType_value {
+			for k1, _ := range TsdbFunctionType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Function", vals)
@@ -887,9 +951,9 @@ func init() {
 	validatorMapTelemetry_query["MetricsQuerySpec"]["all"] = append(validatorMapTelemetry_query["MetricsQuerySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*MetricsQuerySpec)
 
-		if _, ok := SortOrder_value[m.SortOrder]; !ok {
+		if _, ok := SortOrder_vvalue[m.SortOrder]; !ok {
 			vals := []string{}
-			for k1, _ := range SortOrder_value {
+			for k1, _ := range SortOrder_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"SortOrder", vals)

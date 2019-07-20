@@ -837,9 +837,10 @@ func (m *AlertDestinationList) Validate(ver, path string, ignoreStatus bool, ign
 
 func (m *AlertDestinationList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -866,9 +867,10 @@ func (m *AlertList) Validate(ver, path string, ignoreStatus bool, ignoreSpec boo
 
 func (m *AlertList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -908,9 +910,10 @@ func (m *AlertPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *AlertPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -937,9 +940,10 @@ func (m *AutoMsgAlertDestinationWatchHelper) Validate(ver, path string, ignoreSt
 
 func (m *AutoMsgAlertDestinationWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1009,9 +1013,10 @@ func (m *AutoMsgAlertPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgAlertPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1080,9 +1085,10 @@ func (m *AutoMsgAlertWatchHelper) Validate(ver, path string, ignoreStatus bool, 
 
 func (m *AutoMsgAlertWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1139,9 +1145,10 @@ func (m *AutoMsgEventPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgEventPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1198,9 +1205,10 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) Validate(ver, path string, ignoreSt
 
 func (m *AutoMsgFlowExportPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1257,9 +1265,10 @@ func (m *AutoMsgFwlogPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgFwlogPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1316,9 +1325,10 @@ func (m *AutoMsgMirrorSessionWatchHelper) Validate(ver, path string, ignoreStatu
 
 func (m *AutoMsgMirrorSessionWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1375,9 +1385,10 @@ func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgStatsPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1434,9 +1445,10 @@ func (m *AutoMsgTechSupportRequestWatchHelper) Validate(ver, path string, ignore
 
 func (m *AutoMsgTechSupportRequestWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1493,9 +1505,10 @@ func (m *AutoMsgTroubleshootingSessionWatchHelper) Validate(ver, path string, ig
 
 func (m *AutoMsgTroubleshootingSessionWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1552,9 +1565,10 @@ func (m *EventPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *EventPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1581,9 +1595,10 @@ func (m *FlowExportPolicyList) Validate(ver, path string, ignoreStatus bool, ign
 
 func (m *FlowExportPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1610,9 +1625,10 @@ func (m *FwlogPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *FwlogPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1639,9 +1655,10 @@ func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool, ignore
 
 func (m *MirrorSessionList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1668,9 +1685,10 @@ func (m *StatsPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *StatsPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1697,9 +1715,10 @@ func (m *TechSupportRequestList) Validate(ver, path string, ignoreStatus bool, i
 
 func (m *TechSupportRequestList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1726,9 +1745,10 @@ func (m *TroubleshootingSessionList) Validate(ver, path string, ignoreStatus boo
 
 func (m *TroubleshootingSessionList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

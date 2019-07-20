@@ -46,7 +46,7 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
         },
         'client-authentication': {
             enum: NetworkTLSServerPolicySpec_client_authentication,
-            default: 'Mandatory',
+            default: 'mandatory',
             description:  'Client authentication &quot;None&quot; means that server does not request and will not validate a client certificate. &quot;Mandatory&quot; means that server requests and validates client certificate. &quot;Optional&quot; means that server requests client certificate but proceeds even if client does not present it. Default is &quot;Mandatory&quot;.',
             required: true,
             type: 'string'

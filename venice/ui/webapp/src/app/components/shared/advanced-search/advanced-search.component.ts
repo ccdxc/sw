@@ -284,9 +284,9 @@ export class AdvancedSearchComponent implements OnInit {
    * @returns {SearchSearchRequest}
    */
   getSearchRequest(field, order, kind, aggregate = true, maxRecords = 8000): SearchSearchRequest {
-    let sortOrder = SearchSearchRequest_sort_order.Ascending;
+    let sortOrder = SearchSearchRequest_sort_order.ascending;
     if (order === -1) {
-      sortOrder = SearchSearchRequest_sort_order.Descending;
+      sortOrder = SearchSearchRequest_sort_order.descending;
     }
 
     let searchSearchRequest: SearchSearchRequest = new SearchSearchRequest(null, false);

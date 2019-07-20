@@ -285,7 +285,7 @@ func (m *ExportMgr) createSyslogWriters(ctx context.Context, syslogExportCfg *mo
 	targets []*monitoring.ExportConfig) (map[string]*syslogWriter, error) {
 	priority := syslog.LogUser // is a combination of facility and priority
 	if !utils.IsEmpty(syslogExportCfg.GetFacilityOverride()) {
-		priority = syslog.Priority(monitoring.SyslogFacility_value[syslogExportCfg.GetFacilityOverride()])
+		priority = syslog.Priority(monitoring.SyslogFacility_vvalue[syslogExportCfg.GetFacilityOverride()])
 	}
 
 	tag := "pen-events" // a.k.a prefix tag
@@ -297,14 +297,14 @@ func (m *ExportMgr) createSyslogWriters(ctx context.Context, syslogExportCfg *mo
 	for _, target := range targets {
 		tmp := strings.Split(target.GetTransport(), "/")                                     // e.g. transport = tcp/514
 		network, remoteAddr := tmp[0], fmt.Sprintf("%s:%s", target.GetDestination(), tmp[1]) // {tcp, udp, etc.}, <remote_addr>:<port>
-		writer, err := m.createSyslogWriter(ctx, monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[format]), network, remoteAddr, tag, priority)
+		writer, err := m.createSyslogWriter(ctx, monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_vvalue[format]), network, remoteAddr, tag, priority)
 		if err != nil {
 			return nil, err
 		}
 
 		writerKey := m.getWriterKey(*target)
 		writers[writerKey] = &syslogWriter{
-			format:     monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[format]),
+			format:     monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_vvalue[format]),
 			network:    network,
 			remoteAddr: remoteAddr,
 			tag:        tag,

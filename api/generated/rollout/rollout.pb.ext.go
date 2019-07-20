@@ -30,54 +30,112 @@ var _ listerwatcher.WatcherClient
 
 // RolloutPhase_Phases_normal is a map of normalized values for the enum
 var RolloutPhase_Phases_normal = map[string]string{
-	"COMPLETE":           "COMPLETE",
-	"DEPENDENCIES_CHECK": "DEPENDENCIES_CHECK",
-	"FAIL":               "FAIL",
-	"PRE_CHECK":          "PRE_CHECK",
-	"PROGRESSING":        "PROGRESSING",
-	"WAITING_FOR_TURN":   "WAITING_FOR_TURN",
-	"complete":           "COMPLETE",
-	"dependencies_check": "DEPENDENCIES_CHECK",
-	"fail":               "FAIL",
-	"pre_check":          "PRE_CHECK",
-	"progressing":        "PROGRESSING",
-	"waiting_for_turn":   "WAITING_FOR_TURN",
+	"complete":           "complete",
+	"dependencies-check": "dependencies-check",
+	"fail":               "fail",
+	"pre-check":          "pre-check",
+	"progressing":        "progressing",
+	"waiting-for-turn":   "waiting-for-turn",
+}
+
+var RolloutPhase_Phases_vname = map[int32]string{
+	0: "pre-check",
+	1: "dependencies-check",
+	2: "waiting-for-turn",
+	3: "progressing",
+	4: "complete",
+	5: "fail",
+}
+
+var RolloutPhase_Phases_vvalue = map[string]int32{
+	"pre-check":          0,
+	"dependencies-check": 1,
+	"waiting-for-turn":   2,
+	"progressing":        3,
+	"complete":           4,
+	"fail":               5,
+}
+
+func (x RolloutPhase_Phases) String() string {
+	return RolloutPhase_Phases_vname[int32(x)]
 }
 
 // RolloutSpec_StrategyType_normal is a map of normalized values for the enum
 var RolloutSpec_StrategyType_normal = map[string]string{
-	"EXPONENTIAL": "EXPONENTIAL",
-	"LINEAR":      "LINEAR",
-	"exponential": "EXPONENTIAL",
-	"linear":      "LINEAR",
+	"exponential": "exponential",
+	"linear":      "linear",
+}
+
+var RolloutSpec_StrategyType_vname = map[int32]string{
+	0: "linear",
+	1: "exponential",
+}
+
+var RolloutSpec_StrategyType_vvalue = map[string]int32{
+	"linear":      0,
+	"exponential": 1,
+}
+
+func (x RolloutSpec_StrategyType) String() string {
+	return RolloutSpec_StrategyType_vname[int32(x)]
 }
 
 // RolloutSpec_SmartNICUpgradeType_normal is a map of normalized values for the enum
 var RolloutSpec_SmartNICUpgradeType_normal = map[string]string{
-	"Disruptive":       "Disruptive",
-	"OnNextHostReboot": "OnNextHostReboot",
-	"disruptive":       "Disruptive",
-	"onnexthostreboot": "OnNextHostReboot",
+	"disruptive":     "disruptive",
+	"on-next-reboot": "on-next-reboot",
+}
+
+var RolloutSpec_SmartNICUpgradeType_vname = map[int32]string{
+	0: "disruptive",
+	1: "on-next-reboot",
+}
+
+var RolloutSpec_SmartNICUpgradeType_vvalue = map[string]int32{
+	"disruptive":     0,
+	"on-next-reboot": 1,
+}
+
+func (x RolloutSpec_SmartNICUpgradeType) String() string {
+	return RolloutSpec_SmartNICUpgradeType_vname[int32(x)]
 }
 
 // RolloutStatus_RolloutOperationalState_normal is a map of normalized values for the enum
 var RolloutStatus_RolloutOperationalState_normal = map[string]string{
-	"DEADLINE_EXCEEDED":    "DEADLINE_EXCEEDED",
-	"FAILURE":              "FAILURE",
-	"PRECHECK_IN_PROGRESS": "PRECHECK_IN_PROGRESS",
-	"PROGRESSING":          "PROGRESSING",
-	"SCHEDULED":            "SCHEDULED",
-	"SUCCESS":              "SUCCESS",
-	"SUSPENDED":            "SUSPENDED",
-	"SUSPEND_IN_PROGRESS":  "SUSPEND_IN_PROGRESS",
-	"deadline_exceeded":    "DEADLINE_EXCEEDED",
-	"failure":              "FAILURE",
-	"precheck_in_progress": "PRECHECK_IN_PROGRESS",
-	"progressing":          "PROGRESSING",
-	"scheduled":            "SCHEDULED",
-	"success":              "SUCCESS",
-	"suspend_in_progress":  "SUSPEND_IN_PROGRESS",
-	"suspended":            "SUSPENDED",
+	"deadline-exceeded":    "deadline-exceeded",
+	"failure":              "failure",
+	"precheck-in-progress": "precheck-in-progress",
+	"progressing":          "progressing",
+	"scheduled":            "scheduled",
+	"success":              "success",
+	"suspend-in-progress":  "suspend-in-progress",
+	"suspended":            "suspended",
+}
+
+var RolloutStatus_RolloutOperationalState_vname = map[int32]string{
+	0: "progressing",
+	1: "failure",
+	2: "success",
+	3: "scheduled",
+	4: "suspended",
+	5: "suspend-in-progress",
+	6: "deadline-exceeded",
+	7: "precheck-in-progress",
+}
+
+var RolloutStatus_RolloutOperationalState_vvalue = map[string]int32{
+	"progressing":          0,
+	"failure":              1,
+	"success":              2,
+	"scheduled":            3,
+	"suspended":            4,
+	"suspend-in-progress":  5,
+	"deadline-exceeded":    6,
+	"precheck-in-progress": 7,
+}
+
+func (x RolloutStatus_RolloutOperationalState) String() string {
+	return RolloutStatus_RolloutOperationalState_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -182,7 +240,7 @@ func (m *RolloutActionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.OperationalState = "PROGRESSING"
+		m.OperationalState = "progressing"
 	}
 	return ret
 }
@@ -209,7 +267,7 @@ func (m *RolloutPhase) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Phase = "PRE_CHECK"
+		m.Phase = "pre-check"
 	}
 	return ret
 }
@@ -237,8 +295,8 @@ func (m *RolloutSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.MaxParallel = 2
-		m.Strategy = "LINEAR"
-		m.UpgradeType = "Disruptive"
+		m.Strategy = "linear"
+		m.UpgradeType = "disruptive"
 	}
 	return ret
 }
@@ -283,7 +341,7 @@ func (m *RolloutStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.OperationalState = "PROGRESSING"
+		m.OperationalState = "progressing"
 	}
 	return ret
 }
@@ -524,9 +582,10 @@ func (m *RolloutSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *RolloutSpec) Normalize() {
 
-	for _, v := range m.OrderConstraints {
+	for k, v := range m.OrderConstraints {
 		if v != nil {
 			v.Normalize()
+			m.OrderConstraints[k] = v
 		}
 	}
 
@@ -590,23 +649,26 @@ func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 
 func (m *RolloutStatus) Normalize() {
 
-	for _, v := range m.ControllerNodesStatus {
+	for k, v := range m.ControllerNodesStatus {
 		if v != nil {
 			v.Normalize()
+			m.ControllerNodesStatus[k] = v
 		}
 	}
 
-	for _, v := range m.ControllerServicesStatus {
+	for k, v := range m.ControllerServicesStatus {
 		if v != nil {
 			v.Normalize()
+			m.ControllerServicesStatus[k] = v
 		}
 	}
 
 	m.OperationalState = RolloutStatus_RolloutOperationalState_normal[strings.ToLower(m.OperationalState)]
 
-	for _, v := range m.SmartNICsStatus {
+	for k, v := range m.SmartNICsStatus {
 		if v != nil {
 			v.Normalize()
+			m.SmartNICsStatus[k] = v
 		}
 	}
 
@@ -627,9 +689,9 @@ func init() {
 	validatorMapRollout["RolloutActionStatus"]["all"] = append(validatorMapRollout["RolloutActionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutActionStatus)
 
-		if _, ok := RolloutStatus_RolloutOperationalState_value[m.OperationalState]; !ok {
+		if _, ok := RolloutStatus_RolloutOperationalState_vvalue[m.OperationalState]; !ok {
 			vals := []string{}
-			for k1, _ := range RolloutStatus_RolloutOperationalState_value {
+			for k1, _ := range RolloutStatus_RolloutOperationalState_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"OperationalState", vals)
@@ -641,9 +703,9 @@ func init() {
 	validatorMapRollout["RolloutPhase"]["all"] = append(validatorMapRollout["RolloutPhase"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutPhase)
 
-		if _, ok := RolloutPhase_Phases_value[m.Phase]; !ok {
+		if _, ok := RolloutPhase_Phases_vvalue[m.Phase]; !ok {
 			vals := []string{}
-			for k1, _ := range RolloutPhase_Phases_value {
+			for k1, _ := range RolloutPhase_Phases_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Phase", vals)
@@ -667,9 +729,9 @@ func init() {
 	validatorMapRollout["RolloutSpec"]["all"] = append(validatorMapRollout["RolloutSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutSpec)
 
-		if _, ok := RolloutSpec_StrategyType_value[m.Strategy]; !ok {
+		if _, ok := RolloutSpec_StrategyType_vvalue[m.Strategy]; !ok {
 			vals := []string{}
-			for k1, _ := range RolloutSpec_StrategyType_value {
+			for k1, _ := range RolloutSpec_StrategyType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Strategy", vals)
@@ -680,9 +742,9 @@ func init() {
 	validatorMapRollout["RolloutSpec"]["all"] = append(validatorMapRollout["RolloutSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutSpec)
 
-		if _, ok := RolloutSpec_SmartNICUpgradeType_value[m.UpgradeType]; !ok {
+		if _, ok := RolloutSpec_SmartNICUpgradeType_vvalue[m.UpgradeType]; !ok {
 			vals := []string{}
-			for k1, _ := range RolloutSpec_SmartNICUpgradeType_value {
+			for k1, _ := range RolloutSpec_SmartNICUpgradeType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"UpgradeType", vals)
@@ -694,9 +756,9 @@ func init() {
 	validatorMapRollout["RolloutStatus"]["all"] = append(validatorMapRollout["RolloutStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutStatus)
 
-		if _, ok := RolloutStatus_RolloutOperationalState_value[m.OperationalState]; !ok {
+		if _, ok := RolloutStatus_RolloutOperationalState_vvalue[m.OperationalState]; !ok {
 			vals := []string{}
-			for k1, _ := range RolloutStatus_RolloutOperationalState_value {
+			for k1, _ := range RolloutStatus_RolloutOperationalState_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"OperationalState", vals)

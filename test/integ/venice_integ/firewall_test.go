@@ -4,6 +4,7 @@ package veniceinteg
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	. "gopkg.in/check.v1"
@@ -142,7 +143,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 		Spec: security.AppSpec{
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: security.ALG_ICMP.String(),
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "2",
@@ -335,7 +336,7 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "DNS",
+				Type: security.ALG_DNS.String(),
 				Dns: &security.Dns{
 					DropMultiQuestionPackets:   true,
 					DropLargeDomainNamePackets: true,
@@ -412,7 +413,7 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "FTP",
+				Type: security.ALG_FTP.String(),
 				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
@@ -481,7 +482,7 @@ func (it *veniceIntegSuite) TestTftpApp(c *C) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "TFTP",
+				Type: security.ALG_TFTP.String(),
 			},
 		},
 	}
@@ -547,7 +548,7 @@ func (it *veniceIntegSuite) TestRtspApp(c *C) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "RTSP",
+				Type: security.ALG_RTSP.String(),
 			},
 		},
 	}
@@ -614,7 +615,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "SunRPC",
+				Type: security.ALG_SunRPC.String(),
 				Sunrpc: []*security.Sunrpc{
 					{
 						ProgramID: pgmID,
@@ -640,7 +641,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "MSRPC",
+				Type: security.ALG_MSRPC.String(),
 				Msrpc: []*security.Msrpc{
 					{
 						ProgramUUID: pgmID,
@@ -732,7 +733,7 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 			},
 			Timeout: "5m",
 			ALG: &security.ALG{
-				Type: "FTP",
+				Type: security.ALG_FTP.String(),
 				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
@@ -770,7 +771,7 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 					FromIPAddresses: []string{"10.1.1.0/24"},
 					ToIPAddresses:   []string{"10.2.1.0/24"},
 					Apps:            []string{"ftp"},
-					Action:          "PERMIT",
+					Action:          security.SGRule_PERMIT.String(),
 				},
 				{
 					FromIPAddresses: []string{"10.1.1.0/24"},
@@ -781,7 +782,7 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 							Ports:    "8000",
 						},
 					},
-					Action: "PERMIT",
+					Action: security.SGRule_PERMIT.String(),
 				},
 			},
 		},
@@ -813,7 +814,7 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 
 			for _, veniceRule := range sgp.Spec.Rules {
 				for _, naplesRule := range nsgp.Spec.Rules {
-					if veniceRule.Action != naplesRule.Action {
+					if veniceRule.Action != strings.ToLower(naplesRule.Action) {
 						// FIXME: we need to validate rules more add unit tests around conversion routines
 						return false, naplesRule
 					}

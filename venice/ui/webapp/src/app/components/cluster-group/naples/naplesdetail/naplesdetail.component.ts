@@ -266,8 +266,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     const clusterAvgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': this.telemetryKind,
       name: null,
-      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+      function: Telemetry_queryMetricsQuerySpec_function.mean,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields

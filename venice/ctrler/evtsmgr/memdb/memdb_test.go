@@ -231,7 +231,7 @@ func TestGetAlerts(t *testing.T) {
 	objs := mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_RESOLVED}))
 	Assert(t, len(objs) == 0, "invalid number of alerts, expected: %v, got: %v", 0, len(objs))
 
-	a.Spec.State = "RESOLVED"
+	a.Spec.State = monitoring.AlertState_RESOLVED.String()
 	AssertOk(t, mDb.UpdateObject(a), "failed to update object to mem DB")
 	objs = mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_RESOLVED}))
 	Assert(t, len(objs) == 1, "invalid number of alerts, expected: %v, got: %v", 1, len(objs))

@@ -35,7 +35,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
         },
         'status': {
             enum: MonitoringTechSupportNodeResult_status,
-            default: 'Scheduled',
+            default: 'scheduled',
             required: true,
             type: 'string'
         },

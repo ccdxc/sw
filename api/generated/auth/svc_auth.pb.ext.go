@@ -443,9 +443,10 @@ func (m *AuthenticationPolicyList) Validate(ver, path string, ignoreStatus bool,
 
 func (m *AuthenticationPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -472,9 +473,10 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver, path string, igno
 
 func (m *AutoMsgAuthenticationPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -544,9 +546,10 @@ func (m *AutoMsgRoleBindingWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgRoleBindingWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -615,9 +618,10 @@ func (m *AutoMsgRoleWatchHelper) Validate(ver, path string, ignoreStatus bool, i
 
 func (m *AutoMsgRoleWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -674,9 +678,10 @@ func (m *AutoMsgUserPreferenceWatchHelper) Validate(ver, path string, ignoreStat
 
 func (m *AutoMsgUserPreferenceWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -733,9 +738,10 @@ func (m *AutoMsgUserWatchHelper) Validate(ver, path string, ignoreStatus bool, i
 
 func (m *AutoMsgUserWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -805,9 +811,10 @@ func (m *RoleBindingList) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *RoleBindingList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -834,9 +841,10 @@ func (m *RoleList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *RoleList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -863,9 +871,10 @@ func (m *UserList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *UserList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -892,9 +901,10 @@ func (m *UserPreferenceList) Validate(ver, path string, ignoreStatus bool, ignor
 
 func (m *UserPreferenceList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

@@ -30,22 +30,48 @@ var _ listerwatcher.WatcherClient
 
 // NetworkInterfaceStatus_IFStatus_normal is a map of normalized values for the enum
 var NetworkInterfaceStatus_IFStatus_normal = map[string]string{
-	"DOWN": "DOWN",
-	"UP":   "UP",
-	"down": "DOWN",
-	"up":   "UP",
+	"down": "down",
+	"up":   "up",
+}
+
+var NetworkInterfaceStatus_IFStatus_vname = map[int32]string{
+	0: "up",
+	1: "down",
+}
+
+var NetworkInterfaceStatus_IFStatus_vvalue = map[string]int32{
+	"up":   0,
+	"down": 1,
+}
+
+func (x NetworkInterfaceStatus_IFStatus) String() string {
+	return NetworkInterfaceStatus_IFStatus_vname[int32(x)]
 }
 
 // NetworkInterfaceStatus_IFType_normal is a map of normalized values for the enum
 var NetworkInterfaceStatus_IFType_normal = map[string]string{
-	"HOST_PF":     "HOST_PF",
-	"NONE":        "NONE",
-	"UPLINK_ETH":  "UPLINK_ETH",
-	"UPLINK_MGMT": "UPLINK_MGMT",
-	"host_pf":     "HOST_PF",
-	"none":        "NONE",
-	"uplink_eth":  "UPLINK_ETH",
-	"uplink_mgmt": "UPLINK_MGMT",
+	"host-pf":     "host-pf",
+	"none":        "none",
+	"uplink-eth":  "uplink-eth",
+	"uplink-mgmt": "uplink-mgmt",
+}
+
+var NetworkInterfaceStatus_IFType_vname = map[int32]string{
+	0: "none",
+	1: "host-pf",
+	3: "uplink-eth",
+	4: "uplink-mgmt",
+}
+
+var NetworkInterfaceStatus_IFType_vvalue = map[string]int32{
+	"none":        0,
+	"host-pf":     1,
+	"uplink-eth":  3,
+	"uplink-mgmt": 4,
+}
+
+func (x NetworkInterfaceStatus_IFType) String() string {
+	return NetworkInterfaceStatus_IFType_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -153,8 +179,8 @@ func (m *NetworkInterfaceStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.OperStatus = "UP"
-		m.Type = "NONE"
+		m.OperStatus = "up"
+		m.Type = "none"
 	}
 	return ret
 }
@@ -312,9 +338,9 @@ func init() {
 	validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NetworkInterfaceStatus)
 
-		if _, ok := NetworkInterfaceStatus_IFStatus_value[m.OperStatus]; !ok {
+		if _, ok := NetworkInterfaceStatus_IFStatus_vvalue[m.OperStatus]; !ok {
 			vals := []string{}
-			for k1, _ := range NetworkInterfaceStatus_IFStatus_value {
+			for k1, _ := range NetworkInterfaceStatus_IFStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"OperStatus", vals)
@@ -333,9 +359,9 @@ func init() {
 	validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NetworkInterfaceStatus)
 
-		if _, ok := NetworkInterfaceStatus_IFType_value[m.Type]; !ok {
+		if _, ok := NetworkInterfaceStatus_IFType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range NetworkInterfaceStatus_IFType_value {
+			for k1, _ := range NetworkInterfaceStatus_IFType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)

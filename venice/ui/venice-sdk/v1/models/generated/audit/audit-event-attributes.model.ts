@@ -53,13 +53,13 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'stage': {
             enum: AuditEventAttributes_stage,
-            default: 'RequestAuthorization',
+            default: 'requestauthorization',
             required: true,
             type: 'string'
         },
         'level': {
             enum: AuditEventAttributes_level,
-            default: 'Basic',
+            default: 'basic',
             required: true,
             type: 'string'
         },
@@ -82,7 +82,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
         },
         'outcome': {
             enum: AuditEventAttributes_outcome,
-            default: 'Success',
+            default: 'success',
             required: true,
             type: 'string'
         },

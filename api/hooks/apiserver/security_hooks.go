@@ -320,7 +320,7 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 	if app.Spec.ALG != nil && app.Spec.ALG.Type != "" {
 
 		switch app.Spec.ALG.Type {
-		case "ICMP":
+		case security.ALG_ICMP.String():
 			if (app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
@@ -347,7 +347,7 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 					ret = append(ret, fmt.Errorf("ICMP Code %v outside range", app.Spec.ALG.Icmp.Code))
 				}
 			}
-		case "DNS":
+		case security.ALG_DNS.String():
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
@@ -357,28 +357,28 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 			if !protocolNameValidate(appProtos, "udp", "mustMatchAll") {
 				ret = append(ret, fmt.Errorf("Protocol(s) %v is not allowed with DNS ALG", appProtos))
 			}
-		case "FTP":
+		case security.ALG_FTP.String():
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
 				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
-		case "SunRPC":
+		case security.ALG_SunRPC.String():
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
 				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
-		case "MSRPC":
+		case security.ALG_MSRPC.String():
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) {
 				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
-		case "TFTP":
+		case security.ALG_TFTP.String():
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||
@@ -386,7 +386,7 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 				(app.Spec.ALG.Msrpc != nil) {
 				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
-		case "RTSP":
+		case security.ALG_RTSP.String():
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||

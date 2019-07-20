@@ -75,17 +75,17 @@ message FwlogPolicyStatus {
 
 enum FwlogFilter {
     // ui-hint: No Logs
-    FIREWALL_ACTION_NONE = 0;
+    FIREWALL_ACTION_NONE = 0 [(venice.enumValueStr) = "none"];
     // ui-hint: Allow Logs
-    FIREWALL_ACTION_ALLOW = 1;
+    FIREWALL_ACTION_ALLOW = 1 [(venice.enumValueStr) = "allow"];
     // ui-hint: Deny Logs
-    FIREWALL_ACTION_DENY= 2;
+    FIREWALL_ACTION_DENY= 2 [(venice.enumValueStr) = "deny"];
     // ui-hint: Reject Logs
-    FIREWALL_ACTION_REJECT = 3;
+    FIREWALL_ACTION_REJECT = 3 [(venice.enumValueStr) = "reject"];
     // ui-hint: Implicit Deny Logs
-    FIREWALL_IMPLICIT_DENY = 4;
+    FIREWALL_IMPLICIT_DENY = 4 [(venice.enumValueStr) = "implicit-reject"];
     // ui-hint: All Logs
-    FIREWALL_ACTION_ALL = 5;
+    FIREWALL_ACTION_ALL = 5 [(venice.enumValueStr) = "all"];
 }
 
 // Venice collects fwlog irrespective of the export config
@@ -99,7 +99,7 @@ message FwlogPolicySpec {
     string Format                   = 3 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(MonitoringExportFormat)"];
 
     // filter firewall logs, FWLOG_ALL default
-    repeated string Filter          = 4 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)", (venice.default)="FIREWALL_ACTION_ALL"];
+    repeated string Filter          = 4 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)", (venice.default)="all"];
 
     // configuration to use for syslog format
     // default facility is set to "local4", can be overridden with FacilityOverride

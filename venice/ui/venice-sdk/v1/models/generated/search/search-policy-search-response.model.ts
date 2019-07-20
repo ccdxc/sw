@@ -22,7 +22,7 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'status': {
             enum: SearchPolicySearchResponse_status,
-            default: 'MATCH',
+            default: 'match',
             required: true,
             type: 'string'
         },

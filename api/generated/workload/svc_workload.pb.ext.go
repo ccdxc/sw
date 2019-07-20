@@ -205,9 +205,10 @@ func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus boo
 
 func (m *AutoMsgEndpointWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -277,9 +278,10 @@ func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus boo
 
 func (m *AutoMsgWorkloadWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -348,9 +350,10 @@ func (m *EndpointList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *EndpointList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -390,9 +393,10 @@ func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *WorkloadList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

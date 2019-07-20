@@ -30,20 +30,37 @@ var _ listerwatcher.WatcherClient
 
 // ALG_ALGType_normal is a map of normalized values for the enum
 var ALG_ALGType_normal = map[string]string{
-	"DNS":    "DNS",
-	"FTP":    "FTP",
-	"ICMP":   "ICMP",
-	"MSRPC":  "MSRPC",
-	"RTSP":   "RTSP",
-	"SunRPC": "SunRPC",
-	"TFTP":   "TFTP",
-	"dns":    "DNS",
-	"ftp":    "FTP",
-	"icmp":   "ICMP",
-	"msrpc":  "MSRPC",
-	"rtsp":   "RTSP",
-	"sunrpc": "SunRPC",
-	"tftp":   "TFTP",
+	"dns":    "dns",
+	"ftp":    "ftp",
+	"icmp":   "icmp",
+	"msrpc":  "msrpc",
+	"rtsp":   "rtsp",
+	"sunrpc": "sunrpc",
+	"tftp":   "tftp",
+}
+
+var ALG_ALGType_vname = map[int32]string{
+	0: "icmp",
+	1: "dns",
+	2: "ftp",
+	3: "sunrpc",
+	4: "msrpc",
+	5: "tftp",
+	6: "rtsp",
+}
+
+var ALG_ALGType_vvalue = map[string]int32{
+	"icmp":   0,
+	"dns":    1,
+	"ftp":    2,
+	"sunrpc": 3,
+	"msrpc":  4,
+	"tftp":   5,
+	"rtsp":   6,
+}
+
+func (x ALG_ALGType) String() string {
+	return ALG_ALGType_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -93,7 +110,7 @@ func (m *ALG) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = "ICMP"
+		m.Type = "icmp"
 	}
 	return ret
 }
@@ -325,15 +342,17 @@ func (m *ALG) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []e
 
 func (m *ALG) Normalize() {
 
-	for _, v := range m.Msrpc {
+	for k, v := range m.Msrpc {
 		if v != nil {
 			v.Normalize()
+			m.Msrpc[k] = v
 		}
 	}
 
-	for _, v := range m.Sunrpc {
+	for k, v := range m.Sunrpc {
 		if v != nil {
 			v.Normalize()
+			m.Sunrpc[k] = v
 		}
 	}
 
@@ -580,9 +599,9 @@ func init() {
 	validatorMapApp["ALG"]["all"] = append(validatorMapApp["ALG"]["all"], func(path string, i interface{}) error {
 		m := i.(*ALG)
 
-		if _, ok := ALG_ALGType_value[m.Type]; !ok {
+		if _, ok := ALG_ALGType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range ALG_ALGType_value {
+			for k1, _ := range ALG_ALGType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)

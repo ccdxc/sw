@@ -36,7 +36,7 @@ export class EventsService extends EventGenService {
       this.POLLING_INTERVAL);
   }
 
-  pollEvents(key: string, body: IApiListWatchOptions = { 'sort-order': ApiListWatchOptions_sort_order.None }) {
+  pollEvents(key: string, body: IApiListWatchOptions = { 'sort-order': ApiListWatchOptions_sort_order.none }) {
     const poll: PollingInstance = this.pollingUtility.initiatePolling(key, body, true, this.POLLING_INTERVAL, 0);
     return poll.handler;
   }

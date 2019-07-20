@@ -43,7 +43,7 @@ func (s *syslogExport) Export(alert *monitoring.Alert) int {
 	s.Lock()
 	defer s.Unlock()
 	for _, writer := range s.writers {
-		switch eventattrs.Severity(eventattrs.Severity_value[alert.Status.GetSeverity()]) {
+		switch eventattrs.Severity(eventattrs.Severity_vvalue[alert.Status.GetSeverity()]) {
 		case eventattrs.Severity_INFO:
 			err = writer.Info(sMsg)
 		case eventattrs.Severity_WARN:
@@ -73,14 +73,14 @@ func (s *syslogExport) Close() {
 
 // helper function to create syslog writer by connecting with the given syslog server config.
 func (s *syslogExport) createWriters(syslogExpConfig *monitoring.SyslogExport) ([]syslog.Writer, error) {
-	if _, ok := monitoring.MonitoringExportFormat_value[syslogExpConfig.GetFormat()]; !ok {
+	if _, ok := monitoring.MonitoringExportFormat_vvalue[syslogExpConfig.GetFormat()]; !ok {
 		return nil, fmt.Errorf("invalid syslog format: %v", syslogExpConfig.GetFormat())
 	}
 
 	priority := syslog.LogUser // is a combination of facility and priority
 	tag := "pen-events"        // a.k.a prefix tag
 	if !utils.IsEmpty(syslogExpConfig.GetConfig().GetFacilityOverride()) {
-		priority = syslog.Priority(monitoring.SyslogFacility_value[syslogExpConfig.GetConfig().GetFacilityOverride()])
+		priority = syslog.Priority(monitoring.SyslogFacility_vvalue[syslogExpConfig.GetConfig().GetFacilityOverride()])
 	}
 	if !utils.IsEmpty(syslogExpConfig.GetConfig().GetPrefix()) {
 		tag = syslogExpConfig.GetConfig().GetPrefix()
@@ -93,7 +93,7 @@ func (s *syslogExport) createWriters(syslogExpConfig *monitoring.SyslogExport) (
 		var writer syslog.Writer
 		network, remoteAddr := s.getSyslogServerInfo(target)
 
-		switch monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[syslogExpConfig.GetFormat()]) {
+		switch monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_vvalue[syslogExpConfig.GetFormat()]) {
 		case monitoring.MonitoringExportFormat_SYSLOG_BSD:
 			writer, err = syslog.NewBsd(network, remoteAddr, priority, tag)
 			if err != nil {

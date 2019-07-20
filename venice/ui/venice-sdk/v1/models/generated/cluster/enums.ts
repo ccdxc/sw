@@ -7,170 +7,170 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum ApiListWatchOptions_sort_order {
-    'None' = "None",
-    'ByName' = "ByName",
-    'ByNameReverse' = "ByNameReverse",
-    'ByVersion' = "ByVersion",
-    'ByVersionReverse' = "ByVersionReverse",
-    'ByCreationTime' = "ByCreationTime",
-    'ByCreationTimeReverse' = "ByCreationTimeReverse",
-    'ByModTime' = "ByModTime",
-    'ByModTimeReverse' = "ByModTimeReverse",
+    'none' = "none",
+    'by-name' = "by-name",
+    'by-name-reverse' = "by-name-reverse",
+    'by-version' = "by-version",
+    'by-version-reverse' = "by-version-reverse",
+    'by-creation-time' = "by-creation-time",
+    'by-creation-time-reverse' = "by-creation-time-reverse",
+    'by-mod-time' = "by-mod-time",
+    'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
 export enum ClusterClusterCondition_type {
-    'HEALTHY' = "HEALTHY",
+    'healthy' = "healthy",
 }
 
 export enum ClusterClusterCondition_status {
-    'UNKNOWN' = "UNKNOWN",
-    'TRUE' = "TRUE",
-    'FALSE' = "FALSE",
+    'unknown' = "unknown",
+    'true' = "true",
+    'false' = "false",
 }
 
 export enum ClusterMemInfo_type {
-    'UNKNOWN' = "UNKNOWN",
-    'HBM' = "HBM",
-    'DDR' = "DDR",
+    'unknown' = "unknown",
+    'hbm' = "hbm",
+    'ddr' = "ddr",
 }
 
 export enum ClusterNodeCondition_type {
-    'LEADER' = "LEADER",
-    'HEALTHY' = "HEALTHY",
+    'leader' = "leader",
+    'healthy' = "healthy",
 }
 
 export enum ClusterNodeCondition_status {
-    'UNKNOWN' = "UNKNOWN",
-    'TRUE' = "TRUE",
-    'FALSE' = "FALSE",
+    'unknown' = "unknown",
+    'true' = "true",
+    'false' = "false",
 }
 
 export enum ClusterNodeStatus_phase {
-    'UNKNOWN' = "UNKNOWN",
-    'PENDING' = "PENDING",
-    'JOINED' = "JOINED",
-    'FAILED' = "FAILED",
+    'unknown' = "unknown",
+    'pending' = "pending",
+    'joined' = "joined",
+    'failed' = "failed",
 }
 
 export enum ClusterQuorumMemberCondition_type {
-    'HEALTHY' = "HEALTHY",
+    'healthy' = "healthy",
 }
 
 export enum ClusterQuorumMemberCondition_status {
-    'UNKNOWN' = "UNKNOWN",
-    'TRUE' = "TRUE",
-    'FALSE' = "FALSE",
+    'unknown' = "unknown",
+    'true' = "true",
+    'false' = "false",
 }
 
 export enum ClusterSmartNICCondition_type {
-    'HEALTHY' = "HEALTHY",
-    'NIC_HEALTH_UNKNOWN' = "NIC_HEALTH_UNKNOWN",
+    'healthy' = "healthy",
+    'nic_health_unknown' = "nic_health_unknown",
 }
 
 export enum ClusterSmartNICCondition_status {
-    'UNKNOWN' = "UNKNOWN",
-    'TRUE' = "TRUE",
-    'FALSE' = "FALSE",
+    'unknown' = "unknown",
+    'true' = "true",
+    'false' = "false",
 }
 
 export enum ClusterSmartNICSpec_mgmt_mode {
-    'HOST' = "HOST",
-    'NETWORK' = "NETWORK",
+    'host' = "host",
+    'network' = "network",
 }
 
 export enum ClusterSmartNICSpec_network_mode {
-    'OOB' = "OOB",
-    'INBAND' = "INBAND",
+    'oob' = "oob",
+    'inband' = "inband",
 }
 
 export enum ClusterSmartNICStatus_admission_phase {
-    'UNKNOWN' = "UNKNOWN",
-    'REGISTERING' = "REGISTERING",
-    'REJECTED' = "REJECTED",
-    'PENDING' = "PENDING",
-    'ADMITTED' = "ADMITTED",
-    'DECOMMISSIONED' = "DECOMMISSIONED",
+    'unknown' = "unknown",
+    'registering' = "registering",
+    'rejected' = "rejected",
+    'pending' = "pending",
+    'admitted' = "admitted",
+    'decommissioned' = "decommissioned",
 }
 
 
 export enum ApiListWatchOptions_sort_order_uihint {
-    'ByCreationTime' = "By Creation Time",
-    'ByCreationTimeReverse' = "By Creation Time Reverse",
-    'ByModTime' = "By Modification Time",
-    'ByModTimeReverse' = "By Modification Time Reverse",
-    'ByName' = "By Name",
-    'ByNameReverse' = "By Name Reverse",
-    'ByVersion' = "By Version",
-    'ByVersionReverse' = "By Version Reverse",
-    'None' = "None",
+    'by-creation-time' = "By Creation Time",
+    'by-creation-time-reverse' = "By Creation Time Reverse",
+    'by-mod-time' = "By Modification Time",
+    'by-mod-time-reverse' = "By Modification Time Reverse",
+    'by-name' = "By Name",
+    'by-name-reverse' = "By Name Reverse",
+    'by-version' = "By Version",
+    'by-version-reverse' = "By Version Reverse",
+    'none' = "None",
 }
 
 export enum ClusterClusterCondition_type_uihint {
-    'HEALTHY' = "Healthy",
+    'healthy' = "Healthy",
 }
 
 export enum ClusterClusterCondition_status_uihint {
-    'FALSE' = "False",
-    'TRUE' = "True",
-    'UNKNOWN' = "Unknown",
+    'false' = "False",
+    'true' = "True",
+    'unknown' = "Unknown",
 }
 
 export enum ClusterNodeCondition_type_uihint {
-    'HEALTHY' = "Healthy",
-    'LEADER' = "Leader",
+    'healthy' = "Healthy",
+    'leader' = "Leader",
 }
 
 export enum ClusterNodeCondition_status_uihint {
-    'FALSE' = "False",
-    'TRUE' = "True",
-    'UNKNOWN' = "Unknown",
+    'false' = "False",
+    'true' = "True",
+    'unknown' = "Unknown",
 }
 
 export enum ClusterNodeStatus_phase_uihint {
-    'FAILED' = "Failed",
-    'JOINED' = "Joined",
-    'PENDING' = "Pending",
-    'UNKNOWN' = "Unknown",
+    'failed' = "Failed",
+    'joined' = "Joined",
+    'pending' = "Pending",
+    'unknown' = "Unknown",
 }
 
 export enum ClusterQuorumMemberCondition_type_uihint {
-    'HEALTHY' = "Healthy",
+    'healthy' = "Healthy",
 }
 
 export enum ClusterQuorumMemberCondition_status_uihint {
-    'FALSE' = "False",
-    'TRUE' = "True",
-    'UNKNOWN' = "Unknown",
+    'false' = "False",
+    'true' = "True",
+    'unknown' = "Unknown",
 }
 
 export enum ClusterSmartNICCondition_type_uihint {
-    'HEALTHY' = "Healthy",
-    'NIC_HEALTH_UNKNOWN' = "Not Reachable",
+    'healthy' = "Healthy",
+    'nic_health_unknown' = "Not Reachable",
 }
 
 export enum ClusterSmartNICCondition_status_uihint {
-    'FALSE' = "False",
-    'TRUE' = "True",
-    'UNKNOWN' = "Unknown",
+    'false' = "False",
+    'true' = "True",
+    'unknown' = "Unknown",
 }
 
 export enum ClusterSmartNICSpec_mgmt_mode_uihint {
-    'HOST' = "Host",
-    'NETWORK' = "Network",
+    'host' = "Host",
+    'network' = "Network",
 }
 
 export enum ClusterSmartNICSpec_network_mode_uihint {
-    'INBAND' = "Inband",
-    'OOB' = "Out of Band",
+    'inband' = "Inband",
+    'oob' = "Out of Band",
 }
 
 export enum ClusterSmartNICStatus_admission_phase_uihint {
-    'ADMITTED' = "Admitted",
-    'DECOMMISSIONED' = "Decommissioned",
-    'PENDING' = "Pending",
-    'REGISTERING' = "Registering",
-    'REJECTED' = "Rejected",
-    'UNKNOWN' = "Unknown",
+    'admitted' = "Admitted",
+    'decommissioned' = "Decommissioned",
+    'pending' = "Pending",
+    'registering' = "Registering",
+    'rejected' = "Rejected",
+    'unknown' = "Unknown",
 }
 
 

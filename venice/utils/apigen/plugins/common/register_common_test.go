@@ -606,8 +606,8 @@ func TestDefaulters(t *testing.T) {
 		"float_field":            {err: nil, found: true, ret: Defaults{Map: map[string]string{"all": "3.1415", "v3": "2.71828"}}},
 		"double_field":           {err: nil, found: true, ret: Defaults{Map: map[string]string{"all": "3000000000000.1415", "v3": "2000000000000.71828"}}},
 		"string_field":           {err: nil, found: true, ret: Defaults{Map: map[string]string{"all": "\"3000000000000.1415\"", "v3": "\"unknown value\""}}},
-		"str_enum_field":         {err: nil, found: true, ret: Defaults{Map: map[string]string{"all": "\"Value1\"", "v2": "\"Value3\"", "v3": "\"unknown value\""}}},
-		"str_enum_nodef_field":   {err: nil, found: true, ret: Defaults{Map: map[string]string{"all": "\"value1\"", "v3": "\"Value3\""}}},
+		"str_enum_field":         {err: nil, found: true, ret: Defaults{Map: map[string]string{"all": "\"Value1\"", "v2": "\"value3\"", "v3": "\"unknown value\""}}},
+		"str_enum_nodef_field":   {err: nil, found: true, ret: Defaults{Map: map[string]string{"all": "\"value1\"", "v3": "\"value3\""}}},
 		"bad_bool_field":         {err: testerr, found: true, ret: Defaults{}},
 		"bad_enum_field":         {err: testerr, found: true, ret: Defaults{}},
 		"bad_int32_field":        {err: testerr, found: true, ret: Defaults{}},
@@ -807,30 +807,30 @@ func TestFieldProfiles(t *testing.T) {
 	cases := map[string]FieldProfile{
 		"enum_field1": FieldProfile{
 			Enum: map[string][]string{
-				"all": []string{"Value1", "Value2"},
+				"all": []string{"value1", "value2"},
 			},
 			EnumHints: map[string]map[string]string{
 				"all": map[string]string{
-					"Value1": "hint1",
-					"Value2": "hint2",
+					"value1": "hint1",
+					"value2": "hint2",
 				},
 			},
 			Required: map[string]bool{"all": true},
 		},
 		"enum_field2": FieldProfile{
 			Enum: map[string][]string{
-				"all": []string{"Value3", "Value4"},
+				"all": []string{"value3", "value4"},
 			},
 			EnumHints: map[string]map[string]string{
 				"all": map[string]string{
-					"Value3": "hint3",
+					"value3": "hint3",
 				},
 			},
 			Required: map[string]bool{"all": true},
 		},
 		"enum_field3": FieldProfile{
 			Enum: map[string][]string{
-				"all": []string{"Value3", "Value4"},
+				"all": []string{"value3", "value4"},
 			},
 			Required: map[string]bool{"all": true},
 		},

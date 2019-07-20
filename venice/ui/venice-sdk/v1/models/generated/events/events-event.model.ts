@@ -54,7 +54,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         },
         'severity': {
             enum: EventsEvent_severity,
-            default: 'INFO',
+            default: 'info',
             required: false,
             type: 'string'
         },
@@ -69,7 +69,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         },
         'category': {
             enum: EventsEvent_category,
-            default: 'Cluster',
+            default: 'cluster',
             required: false,
             type: 'string'
         },

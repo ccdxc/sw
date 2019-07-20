@@ -29,13 +29,13 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterNodeCondition_type_uihint,
-            default: 'LEADER',
+            default: 'leader',
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterNodeCondition_status_uihint,
-            default: 'UNKNOWN',
+            default: 'unknown',
             required: true,
             type: 'string'
         },

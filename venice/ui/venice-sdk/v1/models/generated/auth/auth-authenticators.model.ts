@@ -28,7 +28,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,
-            default: 'LOCAL',
+            default: 'local',
             required: true,
             type: 'Array<string>'
         },

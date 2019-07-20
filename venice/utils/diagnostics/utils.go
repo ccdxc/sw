@@ -33,7 +33,7 @@ var supportedNaplesModules = map[string]bool{
 
 // GetLogFilter maps log level in module object to log filter
 func GetLogFilter(level string) log.FilterType {
-	logLevel := diagnostics.ModuleSpec_LoggingLevel(diagnostics.ModuleSpec_LoggingLevel_value[level])
+	logLevel := diagnostics.ModuleSpec_LoggingLevel(diagnostics.ModuleSpec_LoggingLevel_vvalue[level])
 	switch logLevel {
 	case diagnostics.ModuleSpec_Error:
 		return log.AllowErrorFilter

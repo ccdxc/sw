@@ -25,7 +25,7 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'validation-result': {
             enum: StagingBufferStatus_validation_result_uihint,
-            default: 'SUCCESS',
+            default: 'success',
             required: true,
             type: 'string'
         },

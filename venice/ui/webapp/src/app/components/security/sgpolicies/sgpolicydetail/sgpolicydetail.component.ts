@@ -575,8 +575,8 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     };
     const query: ITelemetry_queryMetricsQuerySpec = {
       'kind': 'RuleMetrics',
-      function: Telemetry_queryMetricsQuerySpec_function.NONE,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Descending,
+      function: Telemetry_queryMetricsQuerySpec_function.none,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.descending,
       'group-by-field': 'name',
       'start-time': 'now() - 2m' as any,
       'end-time': 'now()' as any,

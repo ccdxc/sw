@@ -53,9 +53,9 @@ message NetworkInterfaceStatus {
     }
     enum IFType {
         NONE              = 0;
-        HOST_PF           = 1;
-        UPLINK_ETH        = 3;
-        UPLINK_MGMT       = 4;
+        HOST_PF           = 1 [(venice.enumValueStr) = "host-pf"];
+        UPLINK_ETH        = 3 [(venice.enumValueStr) = "uplink-eth"];
+        UPLINK_MGMT       = 4 [(venice.enumValueStr) = "uplink-mgmt"];
         // TB Added for SR-IOV: HOST_VF
     }
 

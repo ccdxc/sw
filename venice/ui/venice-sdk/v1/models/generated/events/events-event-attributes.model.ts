@@ -34,7 +34,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'severity': {
             enum: EventsEventAttributes_severity,
-            default: 'INFO',
+            default: 'info',
             required: true,
             type: 'string'
         },
@@ -48,7 +48,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         },
         'category': {
             enum: EventsEventAttributes_category,
-            default: 'Cluster',
+            default: 'cluster',
             required: true,
             type: 'string'
         },

@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+
 	"testing"
 
 	"google.golang.org/grpc/metadata"
@@ -14,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	mocks2 "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -195,5 +197,19 @@ func TestClearAction(t *testing.T) {
 	}
 	if fov.Clears != 1 {
 		t.Fatalf("Commit not called from commitAction()")
+	}
+}
+
+func TestStagingRegistration(t *testing.T) {
+	srv := mocks2.NewFakeService()
+	meth := mocks2.NewFakeMethod(true)
+	srv.AddMethod("Buffer", meth)
+	srv.AddMethod("Commit", meth)
+	srv.AddMethod("Clear", meth)
+	logger := log.GetDefaultInstance()
+	registerStagingHooks(srv, logger)
+	fmeth := meth.(*mocks2.FakeMethod)
+	if fmeth.Pres != 2 || fmeth.Posts != 2 || fmeth.RWriters != 2 {
+		t.Fatalf("unexpected number of hooks registered [%+v]", fmeth)
 	}
 }

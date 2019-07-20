@@ -19,7 +19,7 @@ message CertificateSpec {
     enum UsageValues {
       Server = 0;
       Client = 1;
-      TrustRoot = 2;
+      TrustRoot = 2 [(venice.enumValueStr) = "trust-root"];
     }
 
     // Description of the purpose of this certificate

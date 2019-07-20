@@ -17,13 +17,13 @@ import "github.com/pensando/sw/api/meta.proto";
 //   i.e. all objects that depend on this node.
 enum QueryType {
     Dependencies = 0;
-    DependedBy = 1;
+    DependedBy = 1 [(venice.enumValueStr) = "depended-by"];;
 }
 
 enum ReferenceTypes {
-    NamedReference = 0;
-    WeakReference = 1;
-    SelectorReference = 2;
+    NamedReference = 0 [(venice.enumValueStr) = "named-reference"];
+    WeakReference = 1 [(venice.enumValueStr) = "weak-reference"];
+    SelectorReference = 2 [(venice.enumValueStr) = "selector-reference"];
 }
 
 // Object is a node in the dependency tree representing a config object with links to related

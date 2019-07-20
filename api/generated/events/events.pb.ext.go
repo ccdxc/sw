@@ -76,8 +76,8 @@ func (m *EventAttributes) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Category = "Cluster"
-		m.Severity = "INFO"
+		m.Category = "cluster"
+		m.Severity = "info"
 	}
 	return ret
 }
@@ -213,9 +213,10 @@ func (m *EventList) Validate(ver, path string, ignoreStatus bool, ignoreSpec boo
 
 func (m *EventList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -246,9 +247,9 @@ func init() {
 	validatorMapEvents["EventAttributes"]["all"] = append(validatorMapEvents["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
 
-		if _, ok := eventattrs.Category_value[m.Category]; !ok {
+		if _, ok := eventattrs.Category_vvalue[m.Category]; !ok {
 			vals := []string{}
-			for k1, _ := range eventattrs.Category_value {
+			for k1, _ := range eventattrs.Category_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Category", vals)
@@ -259,9 +260,9 @@ func init() {
 	validatorMapEvents["EventAttributes"]["all"] = append(validatorMapEvents["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
 
-		if _, ok := eventattrs.Severity_value[m.Severity]; !ok {
+		if _, ok := eventattrs.Severity_vvalue[m.Severity]; !ok {
 			vals := []string{}
-			for k1, _ := range eventattrs.Severity_value {
+			for k1, _ := range eventattrs.Severity_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)

@@ -3838,27 +3838,27 @@
         "sort-order": {
           "type": "string",
           "enum": [
-            "None",
-            "ByName",
-            "ByNameReverse",
-            "ByVersion",
-            "ByVersionReverse",
-            "ByCreationTime",
-            "ByCreationTimeReverse",
-            "ByModTime",
-            "ByModTimeReverse"
+            "none",
+            "by-name",
+            "by-name-reverse",
+            "by-version",
+            "by-version-reverse",
+            "by-creation-time",
+            "by-creation-time-reverse",
+            "by-mod-time",
+            "by-mod-time-reverse"
           ],
-          "default": "None",
+          "default": "none",
           "x-ui-hints": {
-            "ByCreationTime": "By Creation Time",
-            "ByCreationTimeReverse": "By Creation Time Reverse",
-            "ByModTime": "By Modification Time",
-            "ByModTimeReverse": "By Modification Time Reverse",
-            "ByName": "By Name",
-            "ByNameReverse": "By Name Reverse",
-            "ByVersion": "By Version",
-            "ByVersionReverse": "By Version Reverse",
-            "None": "None"
+            "by-creation-time": "By Creation Time",
+            "by-creation-time-reverse": "By Creation Time Reverse",
+            "by-mod-time": "By Modification Time",
+            "by-mod-time-reverse": "By Modification Time Reverse",
+            "by-name": "By Name",
+            "by-name-reverse": "By Name Reverse",
+            "by-version": "By Version",
+            "by-version-reverse": "By Version Reverse",
+            "none": "None"
           },
           "description": "order to sort List results in."
         }
@@ -4280,26 +4280,26 @@
         "type": {
           "type": "string",
           "enum": [
-            "HEALTHY"
+            "healthy"
           ],
-          "default": "HEALTHY",
+          "default": "healthy",
           "x-ui-hints": {
-            "HEALTHY": "Healthy"
+            "healthy": "Healthy"
           },
           "title": "Type indicates a certain NIC condition"
         },
         "status": {
           "type": "string",
           "enum": [
-            "UNKNOWN",
-            "TRUE",
-            "FALSE"
+            "unknown",
+            "true",
+            "false"
           ],
-          "default": "UNKNOWN",
+          "default": "unknown",
           "x-ui-hints": {
-            "FALSE": "False",
-            "TRUE": "True",
-            "UNKNOWN": "Unknown"
+            "false": "False",
+            "true": "True",
+            "unknown": "Unknown"
           },
           "title": "Condition Status"
         },
@@ -4510,11 +4510,11 @@
         "type": {
           "type": "string",
           "enum": [
-            "UNKNOWN",
-            "HBM",
-            "DDR"
+            "unknown",
+            "hbm",
+            "ddr"
           ],
-          "default": "UNKNOWN",
+          "default": "unknown",
           "title": "Type"
         },
         "size": {
@@ -4558,28 +4558,28 @@
         "type": {
           "type": "string",
           "enum": [
-            "LEADER",
-            "HEALTHY"
+            "leader",
+            "healthy"
           ],
-          "default": "LEADER",
+          "default": "leader",
           "x-ui-hints": {
-            "HEALTHY": "Healthy",
-            "LEADER": "Leader"
+            "healthy": "Healthy",
+            "leader": "Leader"
           },
           "title": "Type indicates a certain node condition"
         },
         "status": {
           "type": "string",
           "enum": [
-            "UNKNOWN",
-            "TRUE",
-            "FALSE"
+            "unknown",
+            "true",
+            "false"
           ],
-          "default": "UNKNOWN",
+          "default": "unknown",
           "x-ui-hints": {
-            "FALSE": "False",
-            "TRUE": "True",
-            "UNKNOWN": "Unknown"
+            "false": "False",
+            "true": "True",
+            "unknown": "Unknown"
           },
           "title": "Condition Status"
         },
@@ -4633,17 +4633,17 @@
         "phase": {
           "type": "string",
           "enum": [
-            "UNKNOWN",
-            "PENDING",
-            "JOINED",
-            "FAILED"
+            "unknown",
+            "pending",
+            "joined",
+            "failed"
           ],
-          "default": "UNKNOWN",
+          "default": "unknown",
           "x-ui-hints": {
-            "FAILED": "Failed",
-            "JOINED": "Joined",
-            "PENDING": "Pending",
-            "UNKNOWN": "Unknown"
+            "failed": "Failed",
+            "joined": "Joined",
+            "pending": "Pending",
+            "unknown": "Unknown"
           },
           "description": "Current lifecycle phase of the node."
         },
@@ -4694,26 +4694,26 @@
         "type": {
           "type": "string",
           "enum": [
-            "HEALTHY"
+            "healthy"
           ],
-          "default": "HEALTHY",
+          "default": "healthy",
           "x-ui-hints": {
-            "HEALTHY": "Healthy"
+            "healthy": "Healthy"
           },
           "title": "Type indicates a certain node condition"
         },
         "status": {
           "type": "string",
           "enum": [
-            "UNKNOWN",
-            "TRUE",
-            "FALSE"
+            "unknown",
+            "true",
+            "false"
           ],
-          "default": "UNKNOWN",
+          "default": "unknown",
           "x-ui-hints": {
-            "FALSE": "False",
-            "TRUE": "True",
-            "UNKNOWN": "Unknown"
+            "false": "False",
+            "true": "True",
+            "unknown": "Unknown"
           },
           "title": "Condition Status"
         },
@@ -4801,28 +4801,28 @@
         "type": {
           "type": "string",
           "enum": [
-            "HEALTHY",
-            "NIC_HEALTH_UNKNOWN"
+            "healthy",
+            "nic_health_unknown"
           ],
-          "default": "HEALTHY",
+          "default": "healthy",
           "x-ui-hints": {
-            "HEALTHY": "Healthy",
-            "NIC_HEALTH_UNKNOWN": "Not Reachable"
+            "healthy": "Healthy",
+            "nic_health_unknown": "Not Reachable"
           },
           "title": "Type indicates a certain NIC condition"
         },
         "status": {
           "type": "string",
           "enum": [
-            "UNKNOWN",
-            "TRUE",
-            "FALSE"
+            "unknown",
+            "true",
+            "false"
           ],
-          "default": "UNKNOWN",
+          "default": "unknown",
           "x-ui-hints": {
-            "FALSE": "False",
-            "TRUE": "True",
-            "UNKNOWN": "Unknown"
+            "false": "False",
+            "true": "True",
+            "unknown": "Unknown"
           },
           "title": "Condition Status"
         },
@@ -4929,26 +4929,26 @@
         "mgmt-mode": {
           "type": "string",
           "enum": [
-            "HOST",
-            "NETWORK"
+            "host",
+            "network"
           ],
-          "default": "HOST",
+          "default": "host",
           "x-ui-hints": {
-            "HOST": "Host",
-            "NETWORK": "Network"
+            "host": "Host",
+            "network": "Network"
           },
           "title": "MgmtMode defines the management mode of the SmartNIC"
         },
         "network-mode": {
           "type": "string",
           "enum": [
-            "OOB",
-            "INBAND"
+            "oob",
+            "inband"
           ],
-          "default": "OOB",
+          "default": "oob",
           "x-ui-hints": {
-            "INBAND": "Inband",
-            "OOB": "Out of Band"
+            "inband": "Inband",
+            "oob": "Out of Band"
           },
           "title": "MgmtMode defines the management mode of the SmartNIC"
         },
@@ -4978,21 +4978,21 @@
         "admission-phase": {
           "type": "string",
           "enum": [
-            "UNKNOWN",
-            "REGISTERING",
-            "REJECTED",
-            "PENDING",
-            "ADMITTED",
-            "DECOMMISSIONED"
+            "unknown",
+            "registering",
+            "rejected",
+            "pending",
+            "admitted",
+            "decommissioned"
           ],
-          "default": "UNKNOWN",
+          "default": "unknown",
           "x-ui-hints": {
-            "ADMITTED": "Admitted",
-            "DECOMMISSIONED": "Decommissioned",
-            "PENDING": "Pending",
-            "REGISTERING": "Registering",
-            "REJECTED": "Rejected",
-            "UNKNOWN": "Unknown"
+            "admitted": "Admitted",
+            "decommissioned": "Decommissioned",
+            "pending": "Pending",
+            "registering": "Registering",
+            "rejected": "Rejected",
+            "unknown": "Unknown"
           },
           "description": "Current admission phase of the SmartNIC.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
         },

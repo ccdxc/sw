@@ -239,18 +239,18 @@ func (s *PolicyState) closeSyslog(c *fwlogCollector) {
 
 // ValidateFwLogPolicy validates policy, called from api-server for pre-commit
 func ValidateFwLogPolicy(s *monitoring.FwlogPolicySpec) error {
-	if _, ok := monitoring.MonitoringExportFormat_value[s.Format]; !ok {
+	if _, ok := monitoring.MonitoringExportFormat_vvalue[s.Format]; !ok {
 		return fmt.Errorf("invalid format %v", s.Format)
 	}
 
 	for _, f := range s.Filter {
-		if _, ok := monitoring.FwlogFilter_value[f]; !ok {
+		if _, ok := monitoring.FwlogFilter_vvalue[f]; !ok {
 			return fmt.Errorf("invalid filter %v", f)
 		}
 	}
 
 	if s.Config != nil {
-		if _, ok := monitoring.SyslogFacility_value[s.Config.FacilityOverride]; !ok {
+		if _, ok := monitoring.SyslogFacility_vvalue[s.Config.FacilityOverride]; !ok {
 			return fmt.Errorf("invalid facility override %v", s.Config.FacilityOverride)
 		}
 
@@ -348,7 +348,7 @@ func (s *PolicyState) getFilter(actions []string) uint32 {
 
 		} else {
 			// set bit
-			filter |= 1 << uint32(monitoring.FwlogFilter_value[f])
+			filter |= 1 << uint32(monitoring.FwlogFilter_vvalue[f])
 		}
 	}
 
@@ -469,7 +469,7 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		}
 
 		if p.Spec.Config != nil {
-			fwcollector.facility = syslog.Priority(monitoring.SyslogFacility_value[p.Spec.Config.FacilityOverride])
+			fwcollector.facility = syslog.Priority(monitoring.SyslogFacility_vvalue[p.Spec.Config.FacilityOverride])
 		}
 
 		// we 'll keep the config & connect from the goroutine to avoid blocking
@@ -526,7 +526,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		}
 
 		if p.Spec.Config != nil {
-			newCollector[key].facility = syslog.Priority(monitoring.SyslogFacility_value[p.Spec.Config.FacilityOverride])
+			newCollector[key].facility = syslog.Priority(monitoring.SyslogFacility_vvalue[p.Spec.Config.FacilityOverride])
 		}
 	}
 

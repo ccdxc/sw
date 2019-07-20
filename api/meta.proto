@@ -90,14 +90,14 @@ message ObjectRef {
 message ListWatchOptions {
   enum SortOrders {
     None                  = 0; // ui-hint: None
-    ByName                = 1; // ui-hint: By Name
-    ByNameReverse         = 2; // ui-hint: By Name Reverse
-    ByVersion             = 3; // ui-hint: By Version
-    ByVersionReverse      = 4; // ui-hint: By Version Reverse
-    ByCreationTime        = 5; // ui-hint: By Creation Time
-    ByCreationTimeReverse = 6; // ui-hint: By Creation Time Reverse
-    ByModTime             = 7; // ui-hint: By Modification Time
-    ByModTimeReverse      = 8; // ui-hint: By Modification Time Reverse
+    ByName                = 1 [(venice.enumValueStr) = "by-name"]; // ui-hint: By Name
+    ByNameReverse         = 2 [(venice.enumValueStr) = "by-name-reverse"]; // ui-hint: By Name Reverse
+    ByVersion             = 3 [(venice.enumValueStr) = "by-version"]; // ui-hint: By Version
+    ByVersionReverse      = 4 [(venice.enumValueStr) = "by-version-reverse"]; // ui-hint: By Version Reverse
+    ByCreationTime        = 5 [(venice.enumValueStr) = "by-creation-time"]; // ui-hint: By Creation Time
+    ByCreationTimeReverse = 6 [(venice.enumValueStr) = "by-creation-time-reverse"]; // ui-hint: By Creation Time Reverse
+    ByModTime             = 7 [(venice.enumValueStr) = "by-mod-time"]; // ui-hint: By Modification Time
+    ByModTimeReverse      = 8 [(venice.enumValueStr) = "by-mod-time-reverse"]; // ui-hint: By Modification Time Reverse
   }
   ObjectMeta O                        = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];
   // LabelSelector to select on labels in list or watch results.
@@ -160,7 +160,7 @@ message Status {
 
 // Watch event types
 enum EventType {
-    CreateEvent   = 0;
-    UpdateEvent   = 1;
-    DeleteEvent   = 2;
+    CreateEvent   = 0 [(venice.enumValueStr) = "create-time"];
+    UpdateEvent   = 1 [(venice.enumValueStr) = "update-time"];
+    DeleteEvent   = 2 [(venice.enumValueStr) = "delete-event"];
 }

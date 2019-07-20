@@ -30,22 +30,48 @@ var _ listerwatcher.WatcherClient
 
 // AlertState_normal is a map of normalized values for the enum
 var AlertState_normal = map[string]string{
-	"ACKNOWLEDGED": "ACKNOWLEDGED",
-	"OPEN":         "OPEN",
-	"RESOLVED":     "RESOLVED",
-	"acknowledged": "ACKNOWLEDGED",
-	"open":         "OPEN",
-	"resolved":     "RESOLVED",
+	"acknowledged": "acknowledged",
+	"open":         "open",
+	"resolved":     "resolved",
+}
+
+var AlertState_vname = map[int32]string{
+	0: "open",
+	1: "resolved",
+	2: "acknowledged",
+}
+
+var AlertState_vvalue = map[string]int32{
+	"open":         0,
+	"resolved":     1,
+	"acknowledged": 2,
+}
+
+func (x AlertState) String() string {
+	return AlertState_vname[int32(x)]
 }
 
 // AlertSeverity_normal is a map of normalized values for the enum
 var AlertSeverity_normal = map[string]string{
-	"CRITICAL": "CRITICAL",
-	"INFO":     "INFO",
-	"WARN":     "WARN",
-	"critical": "CRITICAL",
-	"info":     "INFO",
-	"warn":     "WARN",
+	"critical": "critical",
+	"info":     "info",
+	"warn":     "warn",
+}
+
+var AlertSeverity_vname = map[int32]string{
+	0: "info",
+	1: "warn",
+	2: "critical",
+}
+
+var AlertSeverity_vvalue = map[string]int32{
+	"info":     0,
+	"warn":     1,
+	"critical": 2,
+}
+
+func (x AlertSeverity) String() string {
+	return AlertSeverity_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -235,7 +261,7 @@ func (m *AlertPolicySpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Enable = true
-		m.Severity = "INFO"
+		m.Severity = "info"
 	}
 	return ret
 }
@@ -325,7 +351,7 @@ func (m *AlertSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.State = "OPEN"
+		m.State = "open"
 	}
 	return ret
 }
@@ -352,7 +378,7 @@ func (m *AlertStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Severity = "INFO"
+		m.Severity = "info"
 	}
 	return ret
 }
@@ -463,7 +489,7 @@ func (m *SyslogExport) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Format = "SYSLOG_BSD"
+		m.Format = "syslog-bsd"
 	}
 	return ret
 }
@@ -861,9 +887,10 @@ func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *AlertPolicySpec) Normalize() {
 
-	for _, v := range m.Requirements {
+	for k, v := range m.Requirements {
 		if v != nil {
 			v.Normalize()
+			m.Requirements[k] = v
 		}
 	}
 
@@ -905,9 +932,10 @@ func (m *AlertReason) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *AlertReason) Normalize() {
 
-	for _, v := range m.MatchedRequirements {
+	for k, v := range m.MatchedRequirements {
 		if v != nil {
 			v.Normalize()
+			m.MatchedRequirements[k] = v
 		}
 	}
 
@@ -1072,9 +1100,10 @@ func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *SNMPExport) Normalize() {
 
-	for _, v := range m.SNMPTrapServers {
+	for k, v := range m.SNMPTrapServers {
 		if v != nil {
 			v.Normalize()
+			m.SNMPTrapServers[k] = v
 		}
 	}
 
@@ -1133,9 +1162,10 @@ func (m *SyslogExport) Normalize() {
 
 	m.Format = MonitoringExportFormat_normal[strings.ToLower(m.Format)]
 
-	for _, v := range m.Targets {
+	for k, v := range m.Targets {
 		if v != nil {
 			v.Normalize()
+			m.Targets[k] = v
 		}
 	}
 
@@ -1157,9 +1187,9 @@ func init() {
 	validatorMapAlerts["AlertPolicySpec"]["all"] = append(validatorMapAlerts["AlertPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertPolicySpec)
 
-		if _, ok := AlertSeverity_value[m.Severity]; !ok {
+		if _, ok := AlertSeverity_vvalue[m.Severity]; !ok {
 			vals := []string{}
-			for k1, _ := range AlertSeverity_value {
+			for k1, _ := range AlertSeverity_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
@@ -1171,9 +1201,9 @@ func init() {
 	validatorMapAlerts["AlertSpec"]["all"] = append(validatorMapAlerts["AlertSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertSpec)
 
-		if _, ok := AlertState_value[m.State]; !ok {
+		if _, ok := AlertState_vvalue[m.State]; !ok {
 			vals := []string{}
-			for k1, _ := range AlertState_value {
+			for k1, _ := range AlertState_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)
@@ -1185,9 +1215,9 @@ func init() {
 	validatorMapAlerts["AlertStatus"]["all"] = append(validatorMapAlerts["AlertStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertStatus)
 
-		if _, ok := AlertSeverity_value[m.Severity]; !ok {
+		if _, ok := AlertSeverity_vvalue[m.Severity]; !ok {
 			vals := []string{}
-			for k1, _ := range AlertSeverity_value {
+			for k1, _ := range AlertSeverity_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
@@ -1199,9 +1229,9 @@ func init() {
 	validatorMapAlerts["SyslogExport"]["all"] = append(validatorMapAlerts["SyslogExport"]["all"], func(path string, i interface{}) error {
 		m := i.(*SyslogExport)
 
-		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
+		if _, ok := MonitoringExportFormat_vvalue[m.Format]; !ok {
 			vals := []string{}
-			for k1, _ := range MonitoringExportFormat_value {
+			for k1, _ := range MonitoringExportFormat_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)

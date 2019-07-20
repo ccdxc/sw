@@ -29,13 +29,13 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterSmartNICCondition_type_uihint,
-            default: 'HEALTHY',
+            default: 'healthy',
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterSmartNICCondition_status_uihint,
-            default: 'UNKNOWN',
+            default: 'unknown',
             required: true,
             type: 'string'
         },

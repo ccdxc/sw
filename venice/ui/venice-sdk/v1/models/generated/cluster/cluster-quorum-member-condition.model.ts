@@ -24,13 +24,13 @@ export class ClusterQuorumMemberCondition extends BaseModel implements IClusterQ
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterQuorumMemberCondition_type_uihint,
-            default: 'HEALTHY',
+            default: 'healthy',
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterQuorumMemberCondition_status_uihint,
-            default: 'UNKNOWN',
+            default: 'unknown',
             required: true,
             type: 'string'
         },

@@ -71,7 +71,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
         },
         'function': {
             enum: Telemetry_queryMetricsQuerySpec_function,
-            default: 'NONE',
+            default: 'none',
             required: true,
             type: 'string'
         },
@@ -100,7 +100,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
         },
         'sort-order': {
             enum: Telemetry_queryMetricsQuerySpec_sort_order,
-            default: 'Ascending',
+            default: 'ascending',
             required: true,
             type: 'string'
         },

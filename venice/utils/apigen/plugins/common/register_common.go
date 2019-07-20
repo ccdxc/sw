@@ -261,9 +261,9 @@ func strEnumProfile(field *descriptor.Field, reg *descriptor.Registry, ver strin
 
 	for _, v := range enum.GetValue() {
 		if *v.Number == 0 {
-			prof.Default[ver] = *v.Name
+			prof.Default[ver] = GetVName(v)
 		}
-		prof.Enum[ver] = append(prof.Enum[ver], *v.Name)
+		prof.Enum[ver] = append(prof.Enum[ver], GetVName(v))
 	}
 	prof.Required[ver] = true
 	// Find the UI hints
@@ -334,7 +334,7 @@ func strEnumProfile(field *descriptor.Field, reg *descriptor.Registry, ver strin
 			}
 		}
 		if hint != "" {
-			prof.EnumHints[ver][v.GetName()] = hint
+			prof.EnumHints[ver][GetVName(v)] = hint
 		}
 	}
 
@@ -656,6 +656,9 @@ func GetEnumStr(file *descriptor.File, in []string, suffix string) (string, erro
 	if pkg != file.GoPkg.Name {
 		ret = pkg + "." + ret
 	}
+	if suffix == "" {
+		ret = strings.TrimSuffix(ret, "_")
+	}
 	glog.V(1).Infof("Ret:Working on enum string %s", ret)
 	return ret, nil
 }
@@ -705,7 +708,7 @@ func implicitDefaults(file *descriptor.File, f *descriptor.Field) (Defaults, boo
 
 			for _, v := range enum.GetValue() {
 				if *v.Number == 0 {
-					ret.Map[ver] = "\"" + *v.Name + "\""
+					ret.Map[ver] = "\"" + GetVName(v) + "\""
 					break
 				}
 			}
@@ -880,6 +883,16 @@ func GetLocation(sci *gogoproto.SourceCodeInfo, locs []int) (*gogoproto.SourceCo
 	return nil, errors.New("not found")
 }
 
+// GetVName returns the effective enum string value for use with string enums
+func GetVName(v *gogoproto.EnumValueDescriptorProto) string {
+	o, err := reg.GetExtension("venice.enumValueStr", v)
+	if err != nil {
+		// All enums are converted to lower case
+		return strings.ToLower(*v.Name)
+	}
+	return o.(string)
+}
+
 // RegisterOptionParsers registers all options parsers
 func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.fileGrpcDest", parseStringOptions)
@@ -916,4 +929,5 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.mutable", parseBoolOptions)
 	reg.RegisterOptionParser("venice.metricInfo", parseMetricInfo)
 	reg.RegisterOptionParser("venice.metricsField", parseMetricFieldInfo)
+	reg.RegisterOptionParser("venice.enumValueStr", parseStringOptions)
 }

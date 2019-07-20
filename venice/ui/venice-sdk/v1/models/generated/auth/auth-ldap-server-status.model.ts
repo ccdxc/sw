@@ -24,7 +24,7 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'result': {
             enum: AuthLdapServerStatus_result,
-            default: 'Connect_Success',
+            default: 'connect-success',
             required: true,
             type: 'string'
         },

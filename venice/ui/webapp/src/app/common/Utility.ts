@@ -1359,7 +1359,7 @@ export class Utility {
       case FieldsRequirement_operator.equals:
         return '=';
         break;
-      case FieldsRequirement_operator.notEquals:
+      case FieldsRequirement_operator.notequals:
         return '!=';
         break;
       case FieldsRequirement_operator.gt:
@@ -1377,7 +1377,7 @@ export class Utility {
       case FieldsRequirement_operator.in:
         return '=';
         break;
-      case FieldsRequirement_operator.notIn:
+      case FieldsRequirement_operator.notin:
         return '!=';
         break;
       default:
@@ -1605,9 +1605,9 @@ export class Utility {
     } else {
       // 2019-07-02 : conditions is technically an array, but backend only supplies one element in it, so this is fine
       for (const cond of nodes.status.conditions) {
-        if ((cond) && (cond.type === ClusterNodeCondition_type.HEALTHY) && (cond.status === ClusterNodeCondition_status.TRUE)) {
+        if ((cond) && (cond.type === ClusterNodeCondition_type.healthy) && (cond.status === ClusterNodeCondition_status.true)) {
           return NodeConditionValues.HEALTHY;
-        } else if ((cond) && (cond.type === ClusterNodeCondition_type.HEALTHY) && (cond.status === ClusterNodeCondition_status.FALSE)) {
+        } else if ((cond) && (cond.type === ClusterNodeCondition_type.healthy) && (cond.status === ClusterNodeCondition_status.false)) {
           return NodeConditionValues.UNHEALTHY;
         } else {
           return NodeConditionValues.UNKNOWN;
@@ -1617,19 +1617,19 @@ export class Utility {
   }
 
   public static getNaplesConditionObject(naples: Readonly<ClusterSmartNIC>): NaplesCondition {
-    if (!naples || naples.status['admission-phase'] !== ClusterSmartNICStatus_admission_phase.ADMITTED) {
+    if (!naples || naples.status['admission-phase'] !== ClusterSmartNICStatus_admission_phase.admitted) {
       return { isHealthy: false, condition: NaplesConditionValues.EMPTY };
     } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
       return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
     } else {
       for (const cond of naples.status.conditions) {
-        if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.FALSE)) {
+        if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.false)) {
           return { isHealthy: false, condition: NaplesConditionValues.UNHEALTHY };
         }
-        if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.TRUE)) {
+        if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.true)) {
           return { isHealthy: true, condition: NaplesConditionValues.HEALTHY };
         }
-        if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.UNKNOWN)) {
+        if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.unknown)) {
           return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
         }
       }

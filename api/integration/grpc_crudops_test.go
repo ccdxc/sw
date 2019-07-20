@@ -827,7 +827,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Validation expected to fail")
 		}
 		// Set the Enum to wrong case to validste case insensitiveness ChildrensLit
-		book1mod.Spec.Category = "childRensLit"
+		book1mod.Spec.Category = "childRens-lit"
 		_, err = apicl.BookstoreV1().Book().Update(ctx, &book1mod)
 		if err != nil {
 			t.Fatalf("Expected to succeed")
@@ -1261,7 +1261,7 @@ func TestFilters(t *testing.T) {
 			Spec: bookstore.BookSpec{
 				ISBNId:    "111-2-31-123456-0",
 				Author:    "foo",
-				Category:  "ChildrensLit",
+				Category:  bookstore.BookSpec_ChildrensLit.String(),
 				Publisher: "Kalahari",
 			},
 		}
@@ -1276,7 +1276,7 @@ func TestFilters(t *testing.T) {
 			Spec: bookstore.BookSpec{
 				ISBNId:    "111-2-31-123456-1",
 				Author:    "bar",
-				Category:  "ChildrensLit",
+				Category:  bookstore.BookSpec_ChildrensLit.String(),
 				Publisher: "Kalahari",
 			},
 		}
@@ -1291,7 +1291,7 @@ func TestFilters(t *testing.T) {
 			Spec: bookstore.BookSpec{
 				ISBNId:    "111-2-31-123456-2",
 				Author:    "foobar",
-				Category:  "ChildrensLit",
+				Category:  bookstore.BookSpec_ChildrensLit.String(),
 				Publisher: "Kalahari",
 			},
 		}
@@ -1314,7 +1314,7 @@ func TestFilters(t *testing.T) {
 		api.ListWatchOptions{FieldSelector: "spec.author=foo"},                                            // 8
 		api.ListWatchOptions{FieldSelector: "spec.author=New Author"},                                     // 9
 		api.ListWatchOptions{FieldSelector: "spec.author in (New Author,foo)"},                            // 10
-		api.ListWatchOptions{FieldSelector: "spec.author in (New Author,foo),spec.category=YoungAdult"},   // 11
+		api.ListWatchOptions{FieldSelector: "spec.author in (New Author,foo),spec.category=young-adult"},  // 11
 	}
 	var watchers []kvstore.Watcher
 	var rwatches [][]kvstore.WatchEvent
@@ -1424,7 +1424,7 @@ func TestFilters(t *testing.T) {
 	book5 := book4
 	book5.Status.Inventory = 4
 	book6 := book5
-	book6.Spec.Category = "YoungAdult"
+	book6.Spec.Category = bookstore.BookSpec_YoungAdult.String()
 
 	cases := []struct {
 		name      string
@@ -2802,7 +2802,7 @@ func TestReferences(t *testing.T) {
 			Spec: bookstore.BookSpec{
 				ISBNId:    "111-2-31-123456-0",
 				Author:    "foo",
-				Category:  "YoungAdult",
+				Category:  bookstore.BookSpec_YoungAdult.String(),
 				Publisher: "Sahara",
 			},
 		}
@@ -2818,7 +2818,7 @@ func TestReferences(t *testing.T) {
 			Spec: bookstore.BookSpec{
 				ISBNId:    "111-2-31-123456-1",
 				Author:    "foo",
-				Category:  "YoungAdult",
+				Category:  bookstore.BookSpec_YoungAdult.String(),
 				Publisher: "Sahara",
 			},
 		}
@@ -2834,7 +2834,7 @@ func TestReferences(t *testing.T) {
 			Spec: bookstore.BookSpec{
 				ISBNId:    "111-2-31-123456-2",
 				Author:    "foo",
-				Category:  "YoungAdult",
+				Category:  bookstore.BookSpec_YoungAdult.String(),
 				Publisher: "Kalahari",
 			},
 		}
@@ -3123,7 +3123,7 @@ func TestSorting(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		b := bookstore.Book{}
 		b.Name = genName(5)
-		b.Spec.Category = "ChildrensLit"
+		b.Spec.Category = bookstore.BookSpec_ChildrensLit.String()
 		_, err := apicl.BookstoreV1().Book().Create(ctx, &b)
 		if err != nil {
 			// Possible clash in generated names retry
@@ -3137,7 +3137,7 @@ func TestSorting(t *testing.T) {
 	// modify one item
 	b := bookstore.Book{}
 	b.Name = names[42]
-	b.Spec.Category = "ChildrensLit"
+	b.Spec.Category = bookstore.BookSpec_ChildrensLit.String()
 	_, err = apicl.BookstoreV1().Book().Update(ctx, &b)
 	if err != nil {
 		t.Fatalf("failed to update book [%v](%s)", names[42], err)
@@ -3289,7 +3289,7 @@ func TestConsistentUpdate(t *testing.T) {
 	}
 	b := bookstore.Book{}
 	b.Name = "ConsistentUpdateTest"
-	b.Spec.Category = "ChildrensLit"
+	b.Spec.Category = bookstore.BookSpec_ChildrensLit.String()
 	_, err = apicl.BookstoreV1().Book().Create(ctx, &b)
 	AssertOk(t, err, "failed to create book (%s)", err)
 	var wg sync.WaitGroup

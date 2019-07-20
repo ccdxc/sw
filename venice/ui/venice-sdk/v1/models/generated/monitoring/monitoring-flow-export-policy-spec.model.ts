@@ -52,7 +52,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
         },
         'format': {
             enum: MonitoringFlowExportPolicySpec_format,
-            default: 'Ipfix',
+            default: 'ipfix',
             required: true,
             type: 'string'
         },

@@ -81,11 +81,11 @@ describe('NaplesdetailComponent', () => {
     if (naples.status['admission-phase'] != null) {
       expect(fields[3].nativeElement.textContent).toContain(ClusterSmartNICStatus_admission_phase_uihint[naples.status['admission-phase']]);
       const icon = fields[3].query(By.css('.naplesdetail-phase-icon'));
-      if (naples.status['admission-phase'] !== 'ADMITTED') {
+      if (naples.status['admission-phase'] !== 'admitted') {
         expect(icon).toBeTruthy();
-        if (naples.status['admission-phase'] === 'PENDING') {
+        if (naples.status['admission-phase'] === 'pending') {
           expect(icon.nativeElement.textContent).toContain('notifications');
-        } else if (naples.status['admission-phase'] !== 'REJECTED') {
+        } else if (naples.status['admission-phase'] !== 'rejected') {
           expect(icon.nativeElement.textContent).toContain('error');
         }
       } else {
@@ -186,10 +186,10 @@ describe('NaplesdetailComponent', () => {
       'spec': {
         'admit': true,
         'id': 'naples1-host',
-        'mgmt-mode': 'NETWORK'
+        'mgmt-mode': 'network'
       },
       'status': {
-        'admission-phase': 'ADMITTED',
+        'admission-phase': 'admitted',
         'host': 'naples-host-1',
         'conditions': [
           {
@@ -219,7 +219,7 @@ describe('NaplesdetailComponent', () => {
       'spec': {},
       'status': {
         'host': 'naples-host-1',
-        'admission-phase': 'PENDING'
+        'admission-phase': 'pending'
       }
     });
 
@@ -238,7 +238,7 @@ describe('NaplesdetailComponent', () => {
       'spec': {},
       'status': {
         'host': 'naples-host-3',
-        'admission-phase': 'REJECTED'
+        'admission-phase': 'rejected'
       }
     });
 

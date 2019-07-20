@@ -31,30 +31,60 @@ var _ listerwatcher.WatcherClient
 
 // BookSpec_BookCategories_normal is a map of normalized values for the enum
 var BookSpec_BookCategories_normal = map[string]string{
-	"ChildrensLit": "ChildrensLit",
-	"Fiction":      "Fiction",
-	"NonFiction":   "NonFiction",
-	"YoungAdult":   "YoungAdult",
-	"childrenslit": "ChildrensLit",
-	"fiction":      "Fiction",
-	"nonfiction":   "NonFiction",
-	"youngadult":   "YoungAdult",
+	"childrens-lit": "childrens-lit",
+	"fiction":       "fiction",
+	"non-fiction":   "non-fiction",
+	"young-adult":   "young-adult",
+}
+
+var BookSpec_BookCategories_vname = map[int32]string{
+	0: "childrens-lit",
+	1: "young-adult",
+	2: "fiction",
+	3: "non-fiction",
+}
+
+var BookSpec_BookCategories_vvalue = map[string]int32{
+	"childrens-lit": 0,
+	"young-adult":   1,
+	"fiction":       2,
+	"non-fiction":   3,
+}
+
+func (x BookSpec_BookCategories) String() string {
+	return BookSpec_BookCategories_vname[int32(x)]
 }
 
 // OrderStatus_OrderStatus_normal is a map of normalized values for the enum
 var OrderStatus_OrderStatus_normal = map[string]string{
-	"COMPLETED":  "COMPLETED",
-	"CREATED":    "CREATED",
-	"DISCOUNTED": "DISCOUNTED",
-	"FILLED":     "FILLED",
-	"PROCESSING": "PROCESSING",
-	"SHIPPED":    "SHIPPED",
-	"completed":  "COMPLETED",
-	"created":    "CREATED",
-	"discounted": "DISCOUNTED",
-	"filled":     "FILLED",
-	"processing": "PROCESSING",
-	"shipped":    "SHIPPED",
+	"completed":  "completed",
+	"created":    "created",
+	"discounted": "discounted",
+	"filled":     "filled",
+	"processing": "processing",
+	"shipped":    "shipped",
+}
+
+var OrderStatus_OrderStatus_vname = map[int32]string{
+	0: "created",
+	1: "processing",
+	2: "filled",
+	3: "shipped",
+	4: "completed",
+	5: "discounted",
+}
+
+var OrderStatus_OrderStatus_vvalue = map[string]int32{
+	"created":    0,
+	"processing": 1,
+	"filled":     2,
+	"shipped":    3,
+	"completed":  4,
+	"discounted": 5,
+}
+
+func (x OrderStatus_OrderStatus) String() string {
+	return OrderStatus_OrderStatus_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -690,10 +720,10 @@ func (m *BookSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Category = "YoungAdult"
+		m.Category = "young-adult"
 
 	case "v1":
-		m.Category = "ChildrensLit"
+		m.Category = "childrens-lit"
 		m.IdProvider = "TestProvider"
 	}
 	return ret
@@ -1043,7 +1073,7 @@ func (m *OrderStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "CREATED"
+		m.Status = "created"
 	}
 	return ret
 }
@@ -1373,9 +1403,10 @@ func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool, i
 
 func (m *AutoMsgBookWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1444,9 +1475,10 @@ func (m *AutoMsgCouponWatchHelper) Validate(ver, path string, ignoreStatus bool,
 
 func (m *AutoMsgCouponWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1516,9 +1548,10 @@ func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus boo
 
 func (m *AutoMsgCustomerWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1600,9 +1633,10 @@ func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool, 
 
 func (m *AutoMsgOrderWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1671,9 +1705,10 @@ func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bo
 
 func (m *AutoMsgPublisherWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1730,9 +1765,10 @@ func (m *AutoMsgStoreWatchHelper) Validate(ver, path string, ignoreStatus bool, 
 
 func (m *AutoMsgStoreWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -1896,9 +1932,10 @@ func (m *BookList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *BookList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1974,9 +2011,10 @@ func (m *BookSpec) Normalize() {
 
 	m.Category = BookSpec_BookCategories_normal[strings.ToLower(m.Category)]
 
-	for _, v := range m.Editions {
+	for k, v := range m.Editions {
 		if v != nil {
 			v.Normalize()
+			m.Editions[k] = v
 		}
 	}
 
@@ -2032,9 +2070,10 @@ func (m *CouponList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *CouponList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -2155,9 +2194,10 @@ func (m *CustomerList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *CustomerList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -2409,9 +2449,10 @@ func (m *OrderList) Validate(ver, path string, ignoreStatus bool, ignoreSpec boo
 
 func (m *OrderList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -2451,9 +2492,10 @@ func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec boo
 
 func (m *OrderSpec) Normalize() {
 
-	for _, v := range m.Order {
+	for k, v := range m.Order {
 		if v != nil {
 			v.Normalize()
+			m.Order[k] = v
 		}
 	}
 
@@ -2506,9 +2548,10 @@ func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *OrderStatus) Normalize() {
 
-	for _, v := range m.Filled {
+	for k, v := range m.Filled {
 		if v != nil {
 			v.Normalize()
+			m.Filled[k] = v
 		}
 	}
 
@@ -2611,9 +2654,10 @@ func (m *PublisherList) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 
 func (m *PublisherList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -2744,9 +2788,10 @@ func (m *StoreList) Validate(ver, path string, ignoreStatus bool, ignoreSpec boo
 
 func (m *StoreList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -2915,9 +2960,9 @@ func init() {
 	validatorMapExample["BookSpec"]["all"] = append(validatorMapExample["BookSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*BookSpec)
 
-		if _, ok := BookSpec_BookCategories_value[m.Category]; !ok {
+		if _, ok := BookSpec_BookCategories_vvalue[m.Category]; !ok {
 			vals := []string{}
-			for k1, _ := range BookSpec_BookCategories_value {
+			for k1, _ := range BookSpec_BookCategories_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Category", vals)
@@ -2969,9 +3014,9 @@ func init() {
 	validatorMapExample["OrderStatus"]["all"] = append(validatorMapExample["OrderStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*OrderStatus)
 
-		if _, ok := OrderStatus_OrderStatus_value[m.Status]; !ok {
+		if _, ok := OrderStatus_OrderStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range OrderStatus_OrderStatus_value {
+			for k1, _ := range OrderStatus_OrderStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)

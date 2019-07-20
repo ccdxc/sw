@@ -442,9 +442,10 @@ func (m *AutoMsgLbPolicyWatchHelper) Validate(ver, path string, ignoreStatus boo
 
 func (m *AutoMsgLbPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -501,9 +502,10 @@ func (m *AutoMsgNetworkInterfaceWatchHelper) Validate(ver, path string, ignoreSt
 
 func (m *AutoMsgNetworkInterfaceWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -560,9 +562,10 @@ func (m *AutoMsgNetworkWatchHelper) Validate(ver, path string, ignoreStatus bool
 
 func (m *AutoMsgNetworkWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -619,9 +622,10 @@ func (m *AutoMsgServiceWatchHelper) Validate(ver, path string, ignoreStatus bool
 
 func (m *AutoMsgServiceWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -678,9 +682,10 @@ func (m *AutoMsgVirtualRouterWatchHelper) Validate(ver, path string, ignoreStatu
 
 func (m *AutoMsgVirtualRouterWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -737,9 +742,10 @@ func (m *LbPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *LbPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -766,9 +772,10 @@ func (m *NetworkInterfaceList) Validate(ver, path string, ignoreStatus bool, ign
 
 func (m *NetworkInterfaceList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -795,9 +802,10 @@ func (m *NetworkList) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *NetworkList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -824,9 +832,10 @@ func (m *ServiceList) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *ServiceList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -853,9 +862,10 @@ func (m *VirtualRouterList) Validate(ver, path string, ignoreStatus bool, ignore
 
 func (m *VirtualRouterList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

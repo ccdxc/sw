@@ -714,7 +714,7 @@ func TestCommitBuffer(t *testing.T) {
 	var buf *staging.Buffer
 	AssertEventually(t, func() (bool, interface{}) {
 		buf, err = tinfo.restcl.StagingV1().Buffer().Get(ctx, &api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant})
-		return err == nil && buf.Status.ValidationResult != "FAILED", err
+		return err == nil && buf.Status.ValidationResult != staging.BufferStatus_FAILED.String(), err
 	}, fmt.Sprintf("expected buffer validation to succeed: %#v", buf))
 	ca := staging.CommitAction{}
 	ca.Name = "TestBuffer"
@@ -759,7 +759,7 @@ func TestFailedOpsInCommitBuffer(t *testing.T) {
 	MustCreateUserWithCtx(ctx, stagecl, "testuser2", "weakpassword", globals.DefaultTenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		buf, err := tinfo.restcl.StagingV1().Buffer().Get(ctx, &api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant})
-		return err == nil && buf.Status.ValidationResult == "FAILED", buf
+		return err == nil && buf.Status.ValidationResult == staging.BufferStatus_FAILED.String(), buf
 	}, "GET of staging buffer should have FAILED validation status")
 	ca := staging.CommitAction{}
 	ca.Name = "TestBuffer"

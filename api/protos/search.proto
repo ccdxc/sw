@@ -316,7 +316,7 @@ message SearchRequest {
 
     // Query Mode 
     string Mode                 = 6 [(venice.check) = "StrEnum(SearchRequest.RequestMode)",
-                                    (venice.default) = "Full",
+                                    (venice.default) = "full",
                                     (gogoproto.jsontag) = "mode,omitempty"];
 
     // Search query contains the search requirements

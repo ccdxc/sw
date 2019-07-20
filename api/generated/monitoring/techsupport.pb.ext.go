@@ -30,16 +30,31 @@ var _ listerwatcher.WatcherClient
 
 // TechSupportJobStatus_normal is a map of normalized values for the enum
 var TechSupportJobStatus_normal = map[string]string{
-	"Completed": "Completed",
-	"Failed":    "Failed",
-	"Running":   "Running",
-	"Scheduled": "Scheduled",
-	"TimeOut":   "TimeOut",
-	"completed": "Completed",
-	"failed":    "Failed",
-	"running":   "Running",
-	"scheduled": "Scheduled",
-	"timeout":   "TimeOut",
+	"completed": "completed",
+	"failed":    "failed",
+	"running":   "running",
+	"scheduled": "scheduled",
+	"timeout":   "timeout",
+}
+
+var TechSupportJobStatus_vname = map[int32]string{
+	0: "scheduled",
+	1: "running",
+	2: "completed",
+	3: "failed",
+	4: "timeout",
+}
+
+var TechSupportJobStatus_vvalue = map[string]int32{
+	"scheduled": 0,
+	"running":   1,
+	"completed": 2,
+	"failed":    3,
+	"timeout":   4,
+}
+
+func (x TechSupportJobStatus) String() string {
+	return TechSupportJobStatus_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -77,7 +92,7 @@ func (m *TechSupportNodeResult) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "Scheduled"
+		m.Status = "scheduled"
 	}
 	return ret
 }
@@ -186,7 +201,7 @@ func (m *TechSupportRequestStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "Scheduled"
+		m.Status = "scheduled"
 	}
 	return ret
 }
@@ -414,15 +429,17 @@ func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool,
 
 func (m *TechSupportRequestStatus) Normalize() {
 
-	for _, v := range m.ControllerNodeResults {
+	for k, v := range m.ControllerNodeResults {
 		if v != nil {
 			v.Normalize()
+			m.ControllerNodeResults[k] = v
 		}
 	}
 
-	for _, v := range m.SmartNICNodeResults {
+	for k, v := range m.SmartNICNodeResults {
 		if v != nil {
 			v.Normalize()
+			m.SmartNICNodeResults[k] = v
 		}
 	}
 
@@ -444,9 +461,9 @@ func init() {
 	validatorMapTechsupport["TechSupportNodeResult"]["all"] = append(validatorMapTechsupport["TechSupportNodeResult"]["all"], func(path string, i interface{}) error {
 		m := i.(*TechSupportNodeResult)
 
-		if _, ok := TechSupportJobStatus_value[m.Status]; !ok {
+		if _, ok := TechSupportJobStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range TechSupportJobStatus_value {
+			for k1, _ := range TechSupportJobStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
@@ -458,9 +475,9 @@ func init() {
 	validatorMapTechsupport["TechSupportRequestStatus"]["all"] = append(validatorMapTechsupport["TechSupportRequestStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*TechSupportRequestStatus)
 
-		if _, ok := TechSupportJobStatus_value[m.Status]; !ok {
+		if _, ok := TechSupportJobStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range TechSupportJobStatus_value {
+			for k1, _ := range TechSupportJobStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)

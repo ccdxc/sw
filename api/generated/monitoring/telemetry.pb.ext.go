@@ -30,24 +30,51 @@ var _ listerwatcher.WatcherClient
 
 // FlowExportPolicySpec_Formats_normal is a map of normalized values for the enum
 var FlowExportPolicySpec_Formats_normal = map[string]string{
-	"Ipfix": "Ipfix",
-	"ipfix": "Ipfix",
+	"ipfix": "ipfix",
+}
+
+var FlowExportPolicySpec_Formats_vname = map[int32]string{
+	0: "ipfix",
+}
+
+var FlowExportPolicySpec_Formats_vvalue = map[string]int32{
+	"ipfix": 0,
+}
+
+func (x FlowExportPolicySpec_Formats) String() string {
+	return FlowExportPolicySpec_Formats_vname[int32(x)]
 }
 
 // FwlogFilter_normal is a map of normalized values for the enum
 var FwlogFilter_normal = map[string]string{
-	"FIREWALL_ACTION_ALL":    "FIREWALL_ACTION_ALL",
-	"FIREWALL_ACTION_ALLOW":  "FIREWALL_ACTION_ALLOW",
-	"FIREWALL_ACTION_DENY":   "FIREWALL_ACTION_DENY",
-	"FIREWALL_ACTION_NONE":   "FIREWALL_ACTION_NONE",
-	"FIREWALL_ACTION_REJECT": "FIREWALL_ACTION_REJECT",
-	"FIREWALL_IMPLICIT_DENY": "FIREWALL_IMPLICIT_DENY",
-	"firewall_action_all":    "FIREWALL_ACTION_ALL",
-	"firewall_action_allow":  "FIREWALL_ACTION_ALLOW",
-	"firewall_action_deny":   "FIREWALL_ACTION_DENY",
-	"firewall_action_none":   "FIREWALL_ACTION_NONE",
-	"firewall_action_reject": "FIREWALL_ACTION_REJECT",
-	"firewall_implicit_deny": "FIREWALL_IMPLICIT_DENY",
+	"all":             "all",
+	"allow":           "allow",
+	"deny":            "deny",
+	"implicit-reject": "implicit-reject",
+	"none":            "none",
+	"reject":          "reject",
+}
+
+var FwlogFilter_vname = map[int32]string{
+	0: "none",
+	1: "allow",
+	2: "deny",
+	3: "reject",
+	4: "implicit-reject",
+	5: "all",
+}
+
+var FwlogFilter_vvalue = map[string]int32{
+	"none":            0,
+	"allow":           1,
+	"deny":            2,
+	"reject":          3,
+	"implicit-reject": 4,
+	"all":             5,
+}
+
+func (x FwlogFilter) String() string {
+	return FwlogFilter_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -133,7 +160,7 @@ func (m *FlowExportPolicySpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Format = "Ipfix"
+		m.Format = "ipfix"
 		m.Interval = "10s"
 		m.TemplateInterval = "5m"
 	}
@@ -212,9 +239,9 @@ func (m *FwlogPolicySpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Filter {
-			m.Filter[k] = "FIREWALL_ACTION_ALL"
+			m.Filter[k] = "all"
 		}
-		m.Format = "SYSLOG_BSD"
+		m.Format = "syslog-bsd"
 	}
 	return ret
 }
@@ -441,16 +468,18 @@ func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool, ign
 
 func (m *FlowExportPolicySpec) Normalize() {
 
-	for _, v := range m.Exports {
+	for k, v := range m.Exports {
 		v.Normalize()
+		m.Exports[k] = v
 
 	}
 
 	m.Format = FlowExportPolicySpec_Formats_normal[strings.ToLower(m.Format)]
 
-	for _, v := range m.MatchRules {
+	for k, v := range m.MatchRules {
 		if v != nil {
 			v.Normalize()
+			m.MatchRules[k] = v
 		}
 	}
 
@@ -604,8 +633,9 @@ func (m *FwlogPolicySpec) Normalize() {
 
 	m.Format = MonitoringExportFormat_normal[strings.ToLower(m.Format)]
 
-	for _, v := range m.Targets {
+	for k, v := range m.Targets {
 		v.Normalize()
+		m.Targets[k] = v
 
 	}
 
@@ -757,9 +787,9 @@ func init() {
 	validatorMapTelemetry["FlowExportPolicySpec"]["all"] = append(validatorMapTelemetry["FlowExportPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FlowExportPolicySpec)
 
-		if _, ok := FlowExportPolicySpec_Formats_value[m.Format]; !ok {
+		if _, ok := FlowExportPolicySpec_Formats_vvalue[m.Format]; !ok {
 			vals := []string{}
-			for k1, _ := range FlowExportPolicySpec_Formats_value {
+			for k1, _ := range FlowExportPolicySpec_Formats_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)
@@ -796,9 +826,9 @@ func init() {
 		m := i.(*FwlogPolicySpec)
 
 		for k, v := range m.Filter {
-			if _, ok := FwlogFilter_value[v]; !ok {
+			if _, ok := FwlogFilter_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range FwlogFilter_value {
+				for k1, _ := range FwlogFilter_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Filter", k, vals)
@@ -810,9 +840,9 @@ func init() {
 	validatorMapTelemetry["FwlogPolicySpec"]["all"] = append(validatorMapTelemetry["FwlogPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogPolicySpec)
 
-		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
+		if _, ok := MonitoringExportFormat_vvalue[m.Format]; !ok {
 			vals := []string{}
-			for k1, _ := range MonitoringExportFormat_value {
+			for k1, _ := range MonitoringExportFormat_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)

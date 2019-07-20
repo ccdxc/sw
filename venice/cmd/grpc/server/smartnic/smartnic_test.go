@@ -1031,7 +1031,7 @@ func TestUpdateSmartNIC(t *testing.T) {
 	}
 	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Create(context.Background(), &nic)
 	AssertOk(t, err, "Failed to create nic object %s", nicName)
-	verifySmartNICObj(t, nicName, true, "UNKNOWN", "")
+	verifySmartNICObj(t, nicName, true, cmd.SmartNICStatus_UNKNOWN.String(), "")
 
 	// Verify update nic
 	nic = cmd.SmartNIC{
@@ -1126,7 +1126,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
-			AdmissionPhase: "UNKNOWN",
+			AdmissionPhase: cmd.SmartNICStatus_UNKNOWN.String(),
 			PrimaryMAC:     testMac,
 		},
 	}
@@ -1143,7 +1143,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
 		if cfg.Spec.Mode != proto.MgmtMode_NETWORK.String() {
-			log.Errorf("Failed to switch to managed mode")
+			log.Errorf("Failed to switch to managed mode[%v]", cfg.Spec.Mode)
 			return false, nil
 		}
 
@@ -1257,7 +1257,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 		},
 		Status: cmd.SmartNICStatus{
 			PrimaryMAC:     hostID,
-			AdmissionPhase: "UNKNOWN",
+			AdmissionPhase: cmd.SmartNICStatus_UNKNOWN.String(),
 		},
 	}
 

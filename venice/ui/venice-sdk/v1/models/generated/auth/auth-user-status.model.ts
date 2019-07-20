@@ -42,7 +42,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         },
         'authenticators': {
             enum: AuthUserStatus_authenticators_uihint,
-            default: 'LOCAL',
+            default: 'local',
             required: true,
             type: 'Array<string>'
         },

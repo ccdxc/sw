@@ -521,9 +521,10 @@ func (m *AppList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool)
 
 func (m *AppList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -550,9 +551,10 @@ func (m *AutoMsgAppWatchHelper) Validate(ver, path string, ignoreStatus bool, ig
 
 func (m *AutoMsgAppWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -609,9 +611,10 @@ func (m *AutoMsgCertificateWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgCertificateWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -668,9 +671,10 @@ func (m *AutoMsgFirewallProfileWatchHelper) Validate(ver, path string, ignoreSta
 
 func (m *AutoMsgFirewallProfileWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -740,9 +744,10 @@ func (m *AutoMsgSGPolicyWatchHelper) Validate(ver, path string, ignoreStatus boo
 
 func (m *AutoMsgSGPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -811,9 +816,10 @@ func (m *AutoMsgSecurityGroupWatchHelper) Validate(ver, path string, ignoreStatu
 
 func (m *AutoMsgSecurityGroupWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -870,9 +876,10 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Validate(ver, path string, i
 
 func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -929,9 +936,10 @@ func (m *CertificateList) Validate(ver, path string, ignoreStatus bool, ignoreSp
 
 func (m *CertificateList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -958,9 +966,10 @@ func (m *FirewallProfileList) Validate(ver, path string, ignoreStatus bool, igno
 
 func (m *FirewallProfileList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1000,9 +1009,10 @@ func (m *SGPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *SGPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1029,9 +1039,10 @@ func (m *SecurityGroupList) Validate(ver, path string, ignoreStatus bool, ignore
 
 func (m *SecurityGroupList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1058,9 +1069,10 @@ func (m *TrafficEncryptionPolicyList) Validate(ver, path string, ignoreStatus bo
 
 func (m *TrafficEncryptionPolicyList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

@@ -52,7 +52,7 @@ describe('NaplesComponent', () => {
         'ip-address': '0.0.0.0/0'
       },
       'primary-mac': '00ae.cd00.1142',
-      'admission-phase': 'PENDING',
+      'admission-phase': 'pending',
       'smartNicVersion': '1.0E',
     }
   };
@@ -75,7 +75,7 @@ describe('NaplesComponent', () => {
         'ip-address': '0.0.0.10'
       },
       'primary-mac': '00ae.cd00.1143',
-      'admission-phase': 'ADMITTED',
+      'admission-phase': 'admitted',
       'smartNicVersion': '1.0E',
     }
   };
@@ -98,7 +98,7 @@ describe('NaplesComponent', () => {
         'ip-address': '0.0.0.10'
       },
       'primary-mac': '00ae.cd00.1143',
-      'admission-phase': 'REJECTED',
+      'admission-phase': 'rejected',
       'smartNicVersion': '1.0E',
     }
   };

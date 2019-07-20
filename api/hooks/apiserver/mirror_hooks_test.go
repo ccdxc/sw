@@ -29,7 +29,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_PKTS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors:    []monitoring.MirrorCollector{},
 
 			MatchRules: []monitoring.MatchRule{
@@ -64,7 +64,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
 			StartConditions: monitoring.MirrorStartConditions{
 				// schedule *after* 10 sec - Fix it based on current time when creating a session
 				ScheduleTime: &api.Timestamp{
@@ -103,7 +103,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -130,7 +130,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_PKTS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -157,7 +157,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -190,7 +190,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -217,7 +217,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_PKTS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -246,7 +246,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -283,7 +283,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS", "NETWORK_POLICY_DROP"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String(), monitoring.MirrorSessionSpec_NETWORK_POLICY_DROP.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -320,7 +320,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    1024,
-			PacketFilters: []string{"ALL_PKTS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -350,7 +350,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_PKTS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -373,7 +373,7 @@ var testGoodMirrorSession = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_PKTS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "ERSPAN",
@@ -435,8 +435,9 @@ func TestMirrorSessions(t *testing.T) {
 		l.Infof("Session %v : Error %v", ms.Name, err)
 	}
 	ms := &testGoodMirrorSession[0]
+	ms.Normalize()
 	_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiintf.CreateOper, false, *ms)
 	if !ok && err != nil {
-		t.Errorf("Failed to create a good mirror session")
+		t.Errorf("Failed to create a good mirror session (%s)", err)
 	}
 }

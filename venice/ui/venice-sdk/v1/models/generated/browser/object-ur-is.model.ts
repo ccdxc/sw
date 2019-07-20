@@ -22,7 +22,7 @@ export class ObjectURIs extends BaseModel implements IObjectURIs {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'ref-type': {
             enum: ObjectURIs_ref_type,
-            default: 'NamedReference',
+            default: 'named-reference',
             required: true,
             type: 'string'
         },

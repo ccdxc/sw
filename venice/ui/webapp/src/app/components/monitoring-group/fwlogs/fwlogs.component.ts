@@ -41,7 +41,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   isTabComponent = false;
   disableTableWhenRowExpanded = false;
 
-  query: Telemetry_queryFwlogsQuerySpec = new Telemetry_queryFwlogsQuerySpec({ 'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order.Descending }, false);
+  query: Telemetry_queryFwlogsQuerySpec = new Telemetry_queryFwlogsQuerySpec({ 'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order.descending }, false);
   actionOptions = Utility.convertEnumToSelectItem(Telemetry_queryFwlogsQuerySpec.propInfo.actions.enum);
 
   exportFilename: string = 'Venice-fwlogs';
@@ -228,7 +228,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   }
 
   clearSearch() {
-    this.query = new Telemetry_queryFwlogsQuerySpec({ 'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order.Descending }, false);
+    this.query = new Telemetry_queryFwlogsQuerySpec({ 'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order.descending }, false);
     this.getFwlogs();  // after clear search criteria, we want to restore table records.
   }
 
@@ -359,9 +359,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     // Remove any invalid query toasters if there are any.
     this.controllerService.removeToaster('Fwlog Search');
 
-    let sortOrder = Telemetry_queryFwlogsQuerySpec_sort_order.Ascending;
+    let sortOrder = Telemetry_queryFwlogsQuerySpec_sort_order.ascending;
     if (order === -1) {
-      sortOrder = Telemetry_queryFwlogsQuerySpec_sort_order.Descending;
+      sortOrder = Telemetry_queryFwlogsQuerySpec_sort_order.descending;
     }
 
     const query = new Telemetry_queryFwlogsQuerySpec(null, false);

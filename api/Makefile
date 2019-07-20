@@ -22,7 +22,7 @@ bld_proto:
 	@protoc -I. -I../vendor -I${GOPATH}/src \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
-		--pensando_out=Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. *.proto
+		--pensando_out=custom_enumstr=true,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. *.proto
 	@goimports -local "github.com/pensando/sw" -l -w *.pb.go
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; make -C $${c} || exit 1; done
 
@@ -33,6 +33,7 @@ genapi:
 	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genapi.sh protos
 
 clean:
+	@rm *.pb.go *_schema.go
 	$(MAKE) -C mock clean
 	@rm -rf generated/*
 

@@ -7,62 +7,62 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum ApiListWatchOptions_sort_order {
-    'None' = "None",
-    'ByName' = "ByName",
-    'ByNameReverse' = "ByNameReverse",
-    'ByVersion' = "ByVersion",
-    'ByVersionReverse' = "ByVersionReverse",
-    'ByCreationTime' = "ByCreationTime",
-    'ByCreationTimeReverse' = "ByCreationTimeReverse",
-    'ByModTime' = "ByModTime",
-    'ByModTimeReverse' = "ByModTimeReverse",
+    'none' = "none",
+    'by-name' = "by-name",
+    'by-name-reverse' = "by-name-reverse",
+    'by-version' = "by-version",
+    'by-version-reverse' = "by-version-reverse",
+    'by-creation-time' = "by-creation-time",
+    'by-creation-time-reverse' = "by-creation-time-reverse",
+    'by-mod-time' = "by-mod-time",
+    'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
 export enum AuditEvent_stage {
-    'RequestAuthorization' = "RequestAuthorization",
-    'RequestProcessing' = "RequestProcessing",
+    'requestauthorization' = "requestauthorization",
+    'requestprocessing' = "requestprocessing",
 }
 
 export enum AuditEvent_level {
-    'Basic' = "Basic",
-    'Request' = "Request",
-    'Response' = "Response",
-    'RequestResponse' = "RequestResponse",
+    'basic' = "basic",
+    'request' = "request",
+    'response' = "response",
+    'request-response' = "request-response",
 }
 
 export enum AuditEvent_outcome {
-    'Success' = "Success",
-    'Failure' = "Failure",
+    'success' = "success",
+    'failure' = "failure",
 }
 
 export enum AuditEventAttributes_stage {
-    'RequestAuthorization' = "RequestAuthorization",
-    'RequestProcessing' = "RequestProcessing",
+    'requestauthorization' = "requestauthorization",
+    'requestprocessing' = "requestprocessing",
 }
 
 export enum AuditEventAttributes_level {
-    'Basic' = "Basic",
-    'Request' = "Request",
-    'Response' = "Response",
-    'RequestResponse' = "RequestResponse",
+    'basic' = "basic",
+    'request' = "request",
+    'response' = "response",
+    'request-response' = "request-response",
 }
 
 export enum AuditEventAttributes_outcome {
-    'Success' = "Success",
-    'Failure' = "Failure",
+    'success' = "success",
+    'failure' = "failure",
 }
 
 
 export enum ApiListWatchOptions_sort_order_uihint {
-    'ByCreationTime' = "By Creation Time",
-    'ByCreationTimeReverse' = "By Creation Time Reverse",
-    'ByModTime' = "By Modification Time",
-    'ByModTimeReverse' = "By Modification Time Reverse",
-    'ByName' = "By Name",
-    'ByNameReverse' = "By Name Reverse",
-    'ByVersion' = "By Version",
-    'ByVersionReverse' = "By Version Reverse",
-    'None' = "None",
+    'by-creation-time' = "By Creation Time",
+    'by-creation-time-reverse' = "By Creation Time Reverse",
+    'by-mod-time' = "By Modification Time",
+    'by-mod-time-reverse' = "By Modification Time Reverse",
+    'by-name' = "By Name",
+    'by-name-reverse' = "By Name Reverse",
+    'by-version' = "By Version",
+    'by-version-reverse' = "By Version Reverse",
+    'none' = "None",
 }
 
 

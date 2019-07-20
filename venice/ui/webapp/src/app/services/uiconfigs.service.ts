@@ -155,7 +155,7 @@ export class UIConfigsService {
         }
         const kind = permission.operation.resource.kind;
         const action = permission.operation.action;
-        if (action === AuthOperation_action.AllActions) {
+        if (action === AuthOperation_action['all-actions']) {
           Object.keys(AuthPermission_actions).forEach( (a) => {
             const key = _.toLower(cat) + _.toLower(kind) + '_' + _.toLower(a);
             this.uiPermissions[key] = permission.allowed;

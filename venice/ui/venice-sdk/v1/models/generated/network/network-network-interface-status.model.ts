@@ -37,13 +37,13 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         },
         'type': {
             enum: NetworkNetworkInterfaceStatus_type,
-            default: 'NONE',
+            default: 'none',
             required: true,
             type: 'string'
         },
         'oper-status': {
             enum: NetworkNetworkInterfaceStatus_oper_status,
-            default: 'UP',
+            default: 'up',
             required: true,
             type: 'string'
         },

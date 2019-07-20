@@ -39,7 +39,7 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
         },
         'type': {
             enum: AuthUserSpec_type_uihint,
-            default: 'Local',
+            default: 'local',
             required: true,
             type: 'string'
         },

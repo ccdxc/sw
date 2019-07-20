@@ -22,7 +22,7 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'state': {
             enum: MonitoringTroubleshootingSessionStatus_state_uihint,
-            default: 'TS_RUNNING',
+            default: 'running',
             required: true,
             type: 'string'
         },

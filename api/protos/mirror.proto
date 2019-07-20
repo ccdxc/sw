@@ -33,13 +33,13 @@ message MirrorSessionSpec {
     // Filter selected packets further - mirror only those packets that match atleast one of the PacketFilers
     enum MirrorPacketFilter {
         // ui-hint: All Packets
-        ALL_PKTS                = 0;
+        ALL_PKTS                = 0 [(venice.enumValueStr) = "all-packets"];
         // ui-hint: All Drops
-        ALL_DROPS               = 1;
+        ALL_DROPS               = 1 [(venice.enumValueStr) = "all-drops"];
         // ui-hint: Network Policy Drops
-        NETWORK_POLICY_DROP     = 2;
+        NETWORK_POLICY_DROP     = 2 [(venice.enumValueStr) = "network-policy-drop"];
         // ui-hint: Firewall Policy Drops
-        FIREWALL_POLICY_DROP    = 3;
+        FIREWALL_POLICY_DROP    = 3 [(venice.enumValueStr) = "firewall-policy-drop"];
     }
     repeated string PacketFilters           = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
 }
@@ -62,7 +62,7 @@ message MirrorExportConfig {
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
 message MirrorCollector {
     // Type of Collector
-    string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.default)="ERSPAN", (venice.check) = "StrEnum(PacketCollectorType)"];
+    string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.default)="erspan", (venice.check) = "StrEnum(PacketCollectorType)"];
 
     // When collector type is Venice, collector export information is not required
     MirrorExportConfig    ExportCfg   =2 [(gogoproto.nullable)=true, (gogoproto.jsontag) = "export-config,omitempty"];
@@ -111,7 +111,7 @@ enum MirrorSessionState {
     // ui-hint: Scheduled
     SCHEDULED               = 3;    // Waiting on start condition
     // ui-hint: Max Mirror Sessions Exceeded
-    ERR_NO_MIRROR_SESSION   = 4;
+    ERR_NO_MIRROR_SESSION   = 4 [(venice.enumValueStr) = "error-no-mirror-session"];
 }
 
 message MirrorSessionStatus {

@@ -40,7 +40,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
         },
         'action': {
             enum: SecuritySGRule_action_uihint,
-            default: 'PERMIT',
+            default: 'permit',
             required: true,
             type: 'string'
         },

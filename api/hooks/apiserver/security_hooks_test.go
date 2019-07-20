@@ -89,7 +89,7 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 					Protocol: "icmp",
 				},
 				{
-					Protocol: "ICMP",
+					Protocol: "icmp",
 				},
 			},
 			Action:        "PERMIT",
@@ -2273,7 +2273,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "FTP",
+				Type: "ftp",
 				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
@@ -2298,7 +2298,7 @@ func TestAppAlgConfig(t *testing.T) {
 	errs = s.validateApp(app, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create app with empty ALG. Error: %v", errs)
 
-	// ICMP ALG
+	// icmp ALG
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2313,7 +2313,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: "icmp",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
@@ -2323,9 +2323,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) == 0, "failed to create app with ICMP ALG config. Error: %v", errs)
+	Assert(t, len(errs) == 0, "failed to create app with icmp ALG config. Error: %v", errs)
 
-	// ICMP ALG
+	// icmp ALG
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2340,15 +2340,15 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: "icmp",
 			},
 		},
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) == 0, "failed to create app with ICMP ALG config without Specific Type. Error: %v", errs)
+	Assert(t, len(errs) == 0, "failed to create app with icmp ALG config without Specific Type. Error: %v", errs)
 
-	// DNS ALG
+	// dns ALG
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2363,7 +2363,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "DNS",
+				Type: "dns",
 				Dns: &security.Dns{
 					DropMultiQuestionPackets: true,
 				},
@@ -2372,7 +2372,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) == 0, "failed to create app with DNS ALG config. Error: %v", errs)
+	Assert(t, len(errs) == 0, "failed to create app with dns ALG config. Error: %v", errs)
 
 	// Sunrpc ALG
 	app = security.App{
@@ -2389,7 +2389,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "SunRPC",
+				Type: "sunrpc",
 				Sunrpc: []*security.Sunrpc{
 					&security.Sunrpc{
 						ProgramID: "1",
@@ -2418,7 +2418,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "MSRPC",
+				Type: "msrpc",
 				Msrpc: []*security.Msrpc{
 					&security.Msrpc{
 						ProgramUUID: "1",
@@ -2450,7 +2450,7 @@ func TestAppAlgConfig(t *testing.T) {
 	errs = s.validateApp(app, "v1", false, false)
 	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
 
-	// invalid ICMP type
+	// invalid icmp type
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2465,7 +2465,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: "icmp",
 				Icmp: &security.Icmp{
 					Type: "foo",
 					Code: "0",
@@ -2475,9 +2475,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "Invalid ICMP type must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "Invalid icmp type must fail.  Error: %v", errs)
 
-	// invalid ICMP type
+	// invalid icmp type
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2492,7 +2492,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: "icmp",
 				Icmp: &security.Icmp{
 					Type: "300",
 					Code: "0",
@@ -2502,9 +2502,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "Invalid ICMP type must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "Invalid icmp type must fail.  Error: %v", errs)
 
-	// invalid ICMP code
+	// invalid icmp code
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2519,7 +2519,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: "icmp",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "foo",
@@ -2529,9 +2529,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "Invalid ICMP code must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "Invalid icmp code must fail.  Error: %v", errs)
 
-	// invalid ICMP code
+	// invalid icmp code
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2546,7 +2546,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: "icmp",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "20",
@@ -2556,9 +2556,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "Invalid ICMP code must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "Invalid icmp code must fail.  Error: %v", errs)
 
-	// ICMP LG with Ftp config
+	// icmp LG with Ftp config
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2573,7 +2573,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "ICMP",
+				Type: "icmp",
 				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
@@ -2582,9 +2582,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "ICMP Alg with FTP config must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "icmp Alg with ftp config must fail.  Error: %v", errs)
 
-	// FTP ALG with Icmp config
+	// ftp ALG with Icmp config
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2599,7 +2599,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "FTP",
+				Type: "ftp",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
@@ -2609,9 +2609,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "FTP  with ICMP config must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "FTP  with icmp config must fail.  Error: %v", errs)
 
-	// DNS ALG with Icmp config
+	// dns ALG with Icmp config
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2626,7 +2626,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "DNS",
+				Type: "dns",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
@@ -2636,9 +2636,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "FTP  with ICMP config must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "ftp  with icmp config must fail.  Error: %v", errs)
 
-	// DNS ALG with TCP proto config
+	// dns ALG with TCP proto config
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2653,15 +2653,15 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "DNS",
+				Type: "dns",
 			},
 		},
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "TCP on DNS ALG must not be allowed. Error: %v", errs)
+	Assert(t, len(errs) != 0, "TCP on dns ALG must not be allowed. Error: %v", errs)
 
-	// SunRPC LG with Icmp config
+	// sunrpc LG with Icmp config
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2676,7 +2676,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "SunRPC",
+				Type: "sunrpc",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
@@ -2686,9 +2686,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "SunRPC  with ICMP config must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "sunrpc  with icmp config must fail.  Error: %v", errs)
 
-	// MSRPC LG with Icmp config
+	// msrpc LG with Icmp config
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2703,7 +2703,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "MSRPC",
+				Type: "msrpc",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
@@ -2713,9 +2713,9 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "MSRPC  with ICMP config must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "msrpc  with icmp config must fail.  Error: %v", errs)
 
-	// TFTP LG with Icmp config
+	// Tftp LG with Icmp config
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -2730,7 +2730,7 @@ func TestAppAlgConfig(t *testing.T) {
 				},
 			},
 			ALG: &security.ALG{
-				Type: "TFTP",
+				Type: "Tftp",
 				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
@@ -2740,7 +2740,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "TFTP  with ICMP config must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "tftp  with icmp config must fail.  Error: %v", errs)
 
 	// RSTP LG with Icmp config
 	app = security.App{
@@ -2767,5 +2767,5 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "RSTP  with ICMP config must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "RSTP  with icmp config must fail.  Error: %v", errs)
 }

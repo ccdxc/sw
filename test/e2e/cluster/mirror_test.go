@@ -28,7 +28,7 @@ var _ = Describe("MirrorSession Tests", func() {
 				},
 				Spec: monitoring.MirrorSessionSpec{
 					PacketSize:    128,
-					PacketFilters: []string{"ALL_PKTS"},
+					PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 					Collectors: []monitoring.MirrorCollector{
 						{
 							Type: "ERSPAN",

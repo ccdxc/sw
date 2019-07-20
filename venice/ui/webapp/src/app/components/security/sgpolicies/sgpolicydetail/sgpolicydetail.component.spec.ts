@@ -14,6 +14,7 @@ import { TestingUtility } from '@app/common/TestingUtility';
 import { Utility } from '@app/common/Utility';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { SharedModule } from '@app/components/shared/shared.module';
+import { SecuritySGRule_action_uihint } from '@sdk/v1/models/generated/security';
 /**-----
  Venice web-app imports
  ------------------*/
@@ -60,7 +61,7 @@ function setNewRuleData(component, fixture, numRules: number = 40) {
             'ports': '53'
           },
         ],
-        'action': 'PERMIT',
+        'action': 'permit',
         'from-ip-addresses': [
           '10.1.1.0'
         ],
@@ -139,7 +140,7 @@ describe('SgpolicydetailComponent', () => {
             break;
 
           case 'action':
-            expect(field.nativeElement.textContent.toUpperCase()).toContain(rowData.action);
+            expect(field.nativeElement.textContent).toContain(SecuritySGRule_action_uihint[rowData.action]);
             break;
           case 'protocolPort':
             expect(field.nativeElement.textContent).toContain(rowData.apps.join(', '));
@@ -287,7 +288,7 @@ describe('SgpolicydetailComponent', () => {
           'tcp/80',
           'udp/53'
         ],
-        'action': 'PERMIT',
+        'action': 'permit',
         'from-ip-addresses': [
           '172.0.0.1'
         ],
@@ -299,7 +300,7 @@ describe('SgpolicydetailComponent', () => {
         'apps': [
           'tcp/84',
         ],
-        'action': 'DENY',
+        'action': 'deny',
         'from-ip-addresses': [
           '10.1.1.2'
         ],
@@ -311,7 +312,7 @@ describe('SgpolicydetailComponent', () => {
         'apps': [
           'tcp/8080',
         ],
-        'action': 'PERMIT',
+        'action': 'permit',
         'from-ip-addresses': [
           '10.1.1.0'
         ],
@@ -326,7 +327,7 @@ describe('SgpolicydetailComponent', () => {
         'apps': [
           'tcp/84',
         ],
-        'action': 'DENY',
+        'action': 'deny',
         'from-ip-addresses': [
           '10.1.1.2'
         ],

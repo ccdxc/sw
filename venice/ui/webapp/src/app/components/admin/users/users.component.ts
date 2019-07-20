@@ -180,7 +180,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
   // TODO: A similar function is present in Utility.ts, need to remove one later for avoiding redundancy
   isAuthAdmin(): boolean {
-    return (this.uiconfigsService.isAuthorized(UIRolePermissions.authuser_allactions));
+    return (this.uiconfigsService.isAuthorized(UIRolePermissions['authrole_all-actions']));
   }
 
   // Local and External Admin can update all local users
@@ -189,7 +189,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   canCurrentUserUpdate(user: any|null): boolean {
     const currentUser = Utility.getInstance().getLoginUser();
     if (user != null && user.meta != null && user.spec != null && currentUser != null && currentUser.spec != null) {
-      if (user.spec.type === AuthUserSpec_type.Local && (this.isAuthAdmin() || user.meta.name === currentUser.meta.name)) {
+      if (user.spec.type === AuthUserSpec_type.local && (this.isAuthAdmin() || user.meta.name === currentUser.meta.name)) {
         return true;
       }
     }

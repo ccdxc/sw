@@ -24,7 +24,7 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'validity': {
             enum: SecurityCertificateStatus_validity,
-            default: 'Unknown',
+            default: 'unknown',
             description:  'Status of the certificate: &quot;valid&quot;, &quot;invalid&quot;, &quot;expired&quot; &quot;invalid&quot; means that the signature of the certificate does not match or there are inconsistencies in the trust chain.',
             required: true,
             type: 'string'

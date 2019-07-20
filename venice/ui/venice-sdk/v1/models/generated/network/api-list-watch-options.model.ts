@@ -122,7 +122,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
         },
         'sort-order': {
             enum: ApiListWatchOptions_sort_order_uihint,
-            default: 'None',
+            default: 'none',
             description:  'order to sort List results in.',
             required: true,
             type: 'string'

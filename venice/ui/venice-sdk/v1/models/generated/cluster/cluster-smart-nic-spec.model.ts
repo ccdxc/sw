@@ -46,13 +46,13 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         },
         'mgmt-mode': {
             enum: ClusterSmartNICSpec_mgmt_mode_uihint,
-            default: 'HOST',
+            default: 'host',
             required: true,
             type: 'string'
         },
         'network-mode': {
             enum: ClusterSmartNICSpec_network_mode_uihint,
-            default: 'OOB',
+            default: 'oob',
             required: true,
             type: 'string'
         },

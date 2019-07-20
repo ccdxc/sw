@@ -29,20 +29,45 @@ var _ listerwatcher.WatcherClient
 
 // QueryType_normal is a map of normalized values for the enum
 var QueryType_normal = map[string]string{
-	"DependedBy":   "DependedBy",
-	"Dependencies": "Dependencies",
-	"dependedby":   "DependedBy",
-	"dependencies": "Dependencies",
+	"depended-by":  "depended-by",
+	"dependencies": "dependencies",
+}
+
+var QueryType_vname = map[int32]string{
+	0: "dependencies",
+	1: "depended-by",
+}
+
+var QueryType_vvalue = map[string]int32{
+	"dependencies": 0,
+	"depended-by":  1,
+}
+
+func (x QueryType) String() string {
+	return QueryType_vname[int32(x)]
 }
 
 // ReferenceTypes_normal is a map of normalized values for the enum
 var ReferenceTypes_normal = map[string]string{
-	"NamedReference":    "NamedReference",
-	"SelectorReference": "SelectorReference",
-	"WeakReference":     "WeakReference",
-	"namedreference":    "NamedReference",
-	"selectorreference": "SelectorReference",
-	"weakreference":     "WeakReference",
+	"named-reference":    "named-reference",
+	"selector-reference": "selector-reference",
+	"weak-reference":     "weak-reference",
+}
+
+var ReferenceTypes_vname = map[int32]string{
+	0: "named-reference",
+	1: "weak-reference",
+	2: "selector-reference",
+}
+
+var ReferenceTypes_vvalue = map[string]int32{
+	"named-reference":    0,
+	"weak-reference":     1,
+	"selector-reference": 2,
+}
+
+func (x ReferenceTypes) String() string {
+	return ReferenceTypes_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -80,7 +105,7 @@ func (m *BrowseRequest) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.MaxDepth = 1
-		m.QueryType = "Dependencies"
+		m.QueryType = "dependencies"
 	}
 	return ret
 }
@@ -137,7 +162,7 @@ func (m *Object) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.QueryType = "Dependencies"
+		m.QueryType = "dependencies"
 	}
 	return ret
 }
@@ -220,8 +245,9 @@ func (m *BrowseResponse) Normalize() {
 
 	m.ObjectMeta.Normalize()
 
-	for _, v := range m.Objects {
+	for k, v := range m.Objects {
 		v.Normalize()
+		m.Objects[k] = v
 
 	}
 
@@ -262,8 +288,9 @@ func (m *Object) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) 
 
 func (m *Object) Normalize() {
 
-	for _, v := range m.Links {
+	for k, v := range m.Links {
 		v.Normalize()
+		m.Links[k] = v
 
 	}
 
@@ -300,9 +327,9 @@ func init() {
 	validatorMapBrowser["BrowseRequest"]["all"] = append(validatorMapBrowser["BrowseRequest"]["all"], func(path string, i interface{}) error {
 		m := i.(*BrowseRequest)
 
-		if _, ok := QueryType_value[m.QueryType]; !ok {
+		if _, ok := QueryType_vvalue[m.QueryType]; !ok {
 			vals := []string{}
-			for k1, _ := range QueryType_value {
+			for k1, _ := range QueryType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"QueryType", vals)
@@ -326,9 +353,9 @@ func init() {
 	validatorMapBrowser["Object"]["all"] = append(validatorMapBrowser["Object"]["all"], func(path string, i interface{}) error {
 		m := i.(*Object)
 
-		if _, ok := QueryType_value[m.QueryType]; !ok {
+		if _, ok := QueryType_vvalue[m.QueryType]; !ok {
 			vals := []string{}
-			for k1, _ := range QueryType_value {
+			for k1, _ := range QueryType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"QueryType", vals)
@@ -340,9 +367,9 @@ func init() {
 	validatorMapBrowser["Object_URIs"]["all"] = append(validatorMapBrowser["Object_URIs"]["all"], func(path string, i interface{}) error {
 		m := i.(*Object_URIs)
 
-		if _, ok := ReferenceTypes_value[m.RefType]; !ok {
+		if _, ok := ReferenceTypes_vvalue[m.RefType]; !ok {
 			vals := []string{}
-			for k1, _ := range ReferenceTypes_value {
+			for k1, _ := range ReferenceTypes_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"RefType", vals)

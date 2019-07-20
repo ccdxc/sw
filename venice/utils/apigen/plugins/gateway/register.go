@@ -1679,7 +1679,11 @@ func derefStr(in *string) string {
 }
 
 func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
-	return common.GetEnumStr(file, in, "value")
+	return common.GetEnumStr(file, in, "vvalue")
+}
+
+func getEnumStrVMap(file *descriptor.File, in []string) (string, error) {
+	return common.GetEnumStr(file, in, "vvalue")
 }
 
 func getEnumStrNormalMap(file *descriptor.File, in []string) (string, error) {
@@ -3032,17 +3036,63 @@ func isSrvBinStream(m *descriptor.Method) (bool, error) {
 	return bin.(bool), nil
 }
 
-func getNormalizedEnumName(e *descriptor.Enum) (name string, err error) {
+func getEnumName(e *descriptor.Enum) (name string, err error) {
 	for _, v := range e.Outers {
 		name = name + v + "_"
 	}
-	name = name + *e.Name + "_normal"
+	name = name + *e.Name
 	return name, nil
 }
+
+func getEnumVNameName(e *descriptor.Enum) (name string, err error) {
+	name, err = getEnumName(e)
+	if err != nil {
+		return
+	}
+	name = name + "_vname"
+	return name, nil
+}
+
+func getEnumVValueName(e *descriptor.Enum) (name string, err error) {
+	name, err = getEnumName(e)
+	if err != nil {
+		return
+	}
+	name = name + "_vvalue"
+	return name, nil
+}
+
+func getEnumVNameValues(e *descriptor.Enum) (values string, err error) {
+	for _, v := range e.Value {
+		n := common.GetVName(v)
+		idx := v.GetNumber()
+		values = values + fmt.Sprintf("%v:\"%v\",\n", idx, n)
+	}
+	return
+}
+
+func getEnumVValueValues(e *descriptor.Enum) (values string, err error) {
+	for _, v := range e.Value {
+		n := common.GetVName(v)
+		idx := v.GetNumber()
+		values = values + fmt.Sprintf("\"%v\":%v,\n", n, idx)
+	}
+	return
+}
+
+func getNormalizedEnumName(e *descriptor.Enum) (name string, err error) {
+	name, err = getEnumName(e)
+	if err != nil {
+		return
+	}
+	name = name + "_normal"
+	return name, nil
+}
+
 func getNormalizedEnum(e *descriptor.Enum) (values string, err error) {
 	ret := make(map[string]string)
 	for k := range e.Value {
-		val := *e.Value[k].Name
+		val := common.GetVName(e.Value[k])
 		ret[val] = val
 		if ret[val] != strings.ToLower(val) {
 			ret[strings.ToLower(val)] = val
@@ -3111,6 +3161,7 @@ func init() {
 	reg.RegisterFunc("getRequirementsManifest", getRequirementsManifest)
 	reg.RegisterFunc("derefStr", derefStr)
 	reg.RegisterFunc("getEnumStrMap", getEnumStrMap)
+	reg.RegisterFunc("getEnumStrVMap", getEnumStrVMap)
 	reg.RegisterFunc("getEnumStrNormalMap", getEnumStrNormalMap)
 	reg.RegisterFunc("getStorageTransformersManifest", getStorageTransformersManifest)
 	reg.RegisterFunc("isSpecStatusMessage", isSpecStatusMessage)
@@ -3153,6 +3204,7 @@ func init() {
 	reg.RegisterFunc("getJSONTagByName", getJSONTagByName)
 	reg.RegisterFunc("getMsgName", getMsgName)
 	reg.RegisterFunc("isSrvBinStream", isSrvBinStream)
+	reg.RegisterFunc("getEnumName", getEnumName)
 	reg.RegisterFunc("getNormalizedEnum", getNormalizedEnum)
 	reg.RegisterFunc("getNormalizedEnumName", getNormalizedEnumName)
 	reg.RegisterFunc("genFileMetricsJSON", genFileMetricsJSON)
@@ -3160,6 +3212,10 @@ func init() {
 	reg.RegisterFunc("getGenParamsPath", getGenParamsPath)
 	reg.RegisterFunc("genMetricsManifest", genMetricsManifest)
 	reg.RegisterFunc("getMsgMetricOptionsHdlr", getMsgMetricOptionsHdlr)
+	reg.RegisterFunc("getEnumVNameName", getEnumVNameName)
+	reg.RegisterFunc("getEnumVNameValues", getEnumVNameValues)
+	reg.RegisterFunc("getEnumVValueName", getEnumVValueName)
+	reg.RegisterFunc("getEnumVValueValues", getEnumVValueValues)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

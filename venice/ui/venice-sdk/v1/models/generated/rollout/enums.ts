@@ -7,100 +7,100 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum ApiListWatchOptions_sort_order {
-    'None' = "None",
-    'ByName' = "ByName",
-    'ByNameReverse' = "ByNameReverse",
-    'ByVersion' = "ByVersion",
-    'ByVersionReverse' = "ByVersionReverse",
-    'ByCreationTime' = "ByCreationTime",
-    'ByCreationTimeReverse' = "ByCreationTimeReverse",
-    'ByModTime' = "ByModTime",
-    'ByModTimeReverse' = "ByModTimeReverse",
+    'none' = "none",
+    'by-name' = "by-name",
+    'by-name-reverse' = "by-name-reverse",
+    'by-version' = "by-version",
+    'by-version-reverse' = "by-version-reverse",
+    'by-creation-time' = "by-creation-time",
+    'by-creation-time-reverse' = "by-creation-time-reverse",
+    'by-mod-time' = "by-mod-time",
+    'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
 export enum LabelsRequirement_operator {
     'equals' = "equals",
-    'notEquals' = "notEquals",
+    'notequals' = "notequals",
     'in' = "in",
-    'notIn' = "notIn",
+    'notin' = "notin",
 }
 
 export enum RolloutRolloutActionStatus_state {
-    'PROGRESSING' = "PROGRESSING",
-    'FAILURE' = "FAILURE",
-    'SUCCESS' = "SUCCESS",
-    'SCHEDULED' = "SCHEDULED",
-    'SUSPENDED' = "SUSPENDED",
-    'SUSPEND_IN_PROGRESS' = "SUSPEND_IN_PROGRESS",
-    'DEADLINE_EXCEEDED' = "DEADLINE_EXCEEDED",
-    'PRECHECK_IN_PROGRESS' = "PRECHECK_IN_PROGRESS",
+    'progressing' = "progressing",
+    'failure' = "failure",
+    'success' = "success",
+    'scheduled' = "scheduled",
+    'suspended' = "suspended",
+    'suspend-in-progress' = "suspend-in-progress",
+    'deadline-exceeded' = "deadline-exceeded",
+    'precheck-in-progress' = "precheck-in-progress",
 }
 
 export enum RolloutRolloutPhase_phase {
-    'PRE_CHECK' = "PRE_CHECK",
-    'DEPENDENCIES_CHECK' = "DEPENDENCIES_CHECK",
-    'WAITING_FOR_TURN' = "WAITING_FOR_TURN",
-    'PROGRESSING' = "PROGRESSING",
-    'COMPLETE' = "COMPLETE",
-    'FAIL' = "FAIL",
+    'pre-check' = "pre-check",
+    'dependencies-check' = "dependencies-check",
+    'waiting-for-turn' = "waiting-for-turn",
+    'progressing' = "progressing",
+    'complete' = "complete",
+    'fail' = "fail",
 }
 
 export enum RolloutRolloutSpec_strategy {
-    'LINEAR' = "LINEAR",
-    'EXPONENTIAL' = "EXPONENTIAL",
+    'linear' = "linear",
+    'exponential' = "exponential",
 }
 
 export enum RolloutRolloutSpec_upgrade_type {
-    'Disruptive' = "Disruptive",
-    'OnNextHostReboot' = "OnNextHostReboot",
+    'disruptive' = "disruptive",
+    'on-next-reboot' = "on-next-reboot",
 }
 
 export enum RolloutRolloutStatus_state {
-    'PROGRESSING' = "PROGRESSING",
-    'FAILURE' = "FAILURE",
-    'SUCCESS' = "SUCCESS",
-    'SCHEDULED' = "SCHEDULED",
-    'SUSPENDED' = "SUSPENDED",
-    'SUSPEND_IN_PROGRESS' = "SUSPEND_IN_PROGRESS",
-    'DEADLINE_EXCEEDED' = "DEADLINE_EXCEEDED",
-    'PRECHECK_IN_PROGRESS' = "PRECHECK_IN_PROGRESS",
+    'progressing' = "progressing",
+    'failure' = "failure",
+    'success' = "success",
+    'scheduled' = "scheduled",
+    'suspended' = "suspended",
+    'suspend-in-progress' = "suspend-in-progress",
+    'deadline-exceeded' = "deadline-exceeded",
+    'precheck-in-progress' = "precheck-in-progress",
 }
 
 
 export enum ApiListWatchOptions_sort_order_uihint {
-    'ByCreationTime' = "By Creation Time",
-    'ByCreationTimeReverse' = "By Creation Time Reverse",
-    'ByModTime' = "By Modification Time",
-    'ByModTimeReverse' = "By Modification Time Reverse",
-    'ByName' = "By Name",
-    'ByNameReverse' = "By Name Reverse",
-    'ByVersion' = "By Version",
-    'ByVersionReverse' = "By Version Reverse",
-    'None' = "None",
+    'by-creation-time' = "By Creation Time",
+    'by-creation-time-reverse' = "By Creation Time Reverse",
+    'by-mod-time' = "By Modification Time",
+    'by-mod-time-reverse' = "By Modification Time Reverse",
+    'by-name' = "By Name",
+    'by-name-reverse' = "By Name Reverse",
+    'by-version' = "By Version",
+    'by-version-reverse' = "By Version Reverse",
+    'none' = "None",
 }
 
 export enum LabelsRequirement_operator_uihint {
-    'notEquals' = "not equals",
-    'notIn' = "not in",
+    'notequals' = "not equals",
+    'notin' = "not in",
 }
 
 export enum RolloutRolloutPhase_phase_uihint {
-    'COMPLETE' = "Complete",
-    'DEPENDENCIES_CHECK' = "DependenciesCheck",
-    'FAIL' = "Fail",
-    'PRE_CHECK' = "PreCheck",
-    'PROGRESSING' = "Progressing",
-    'WAITING_FOR_TURN' = "WaitingForTurn",
+    'complete' = "Complete",
+    'dependencies-check' = "DependenciesCheck",
+    'fail' = "Fail",
+    'pre-check' = "PreCheck",
+    'progressing' = "Progressing",
+    'waiting-for-turn' = "WaitingForTurn",
 }
 
 export enum RolloutRolloutSpec_strategy_uihint {
-    'EXPONENTIAL' = "Exponential",
-    'LINEAR' = "Linear",
+    'exponential' = "Exponential",
+    'linear' = "Linear",
 }
 
 export enum RolloutRolloutSpec_upgrade_type_uihint {
-    'Disruptive' = "Disruptive",
-    'OnNextHostReboot' = "OnNextHostReboot",
+    'disruptive' = "Disruptive",
+    'on-next-reboot' = "OnNextHostReboot",
 }
 
 

@@ -1980,6 +1980,156 @@ func TestGetValidatorManifest(t *testing.T) {
 	common.ValidatorArgMap = scratchMap
 }
 
+func TestGetEumVMaps(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		enum_type:<
+			name:"Enum1"
+			value:<name:"value1" number:0 options:<[venice.enumValueStr]: "ModValue1"> >
+			value:<name:"Value2" number:1 >
+			value:<name:"VALUE3" number:2 options:<[venice.enumValueStr]: "mod-value-3"> >
+		>
+		message_type <
+			name: 'Nest1'
+			field <
+				name: 'embedded_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			enum_type:<
+			name:"EnumInner"
+			value:<name:"Nestvalue1" number:0 options:<[venice.enumValueStr]: "NestModValue1"> >
+			value:<name:"NestValue2" number:1 >
+			value:<name:"NestVALUE3" number:2 options:<[venice.enumValueStr]: "nest-mod-value-3"> >
+			>
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+
+	cases := []struct {
+		in  string
+		ok  bool
+		exp string
+	}{
+		{
+			in:  "TestMsg.TestEnum",
+			ok:  true,
+			exp: "TestMsg_TestEnum_vvalue",
+		},
+		{
+			in:  "TestEnum",
+			ok:  true,
+			exp: "TestEnum_vvalue",
+		},
+		{
+			in:  ".anotherproto.TestEnum",
+			ok:  true,
+			exp: "anotherproto.TestEnum_vvalue",
+		},
+	}
+	for _, c := range cases {
+		input := []string{c.in}
+		ret, err := getEnumStrVMap(file, input)
+		if (err == nil) != c.ok {
+			t.Errorf("expecting success [%v] got [%v]", c.ok, (err == nil))
+		}
+		if ret != c.exp {
+			t.Errorf("expecting result [%v] got [%v]", c.exp, ret)
+		}
+	}
+
+	expNames := map[string]string{
+		"Enum1":     "Enum1_vvalue",
+		"EnumInner": "Nest1_EnumInner_vvalue",
+	}
+	for _, e := range file.Enums {
+		exp, ok := expNames[*e.Name]
+		if !ok {
+			t.Fatalf("unexpected enum [%v]", *e.Name)
+		}
+		name, err := getEnumVValueName(e)
+		if err != nil {
+			t.Fatalf("Could not get getEnumVValueName(%s)", err)
+		}
+		if name != exp {
+			t.Fatalf("got [%v] expecting [%v]", name, exp)
+		}
+	}
+
+	expNames = map[string]string{
+		"Enum1":     "Enum1_vname",
+		"EnumInner": "Nest1_EnumInner_vname",
+	}
+	for _, e := range file.Enums {
+		exp, ok := expNames[*e.Name]
+		if !ok {
+			t.Fatalf("unexpected enum [%v]", *e.Name)
+		}
+		name, err := getEnumVNameName(e)
+		if err != nil {
+			t.Fatalf("Could not get getEnumVNameName(%s)", err)
+		}
+		if name != exp {
+			t.Fatalf("got [%v] expecting [%v]", name, exp)
+		}
+	}
+
+	expVals := map[string]string{
+		"EnumInner": "0:\"NestModValue1\",\n1:\"nestvalue2\",\n2:\"nest-mod-value-3\",\n",
+		"Enum1":     "0:\"ModValue1\",\n1:\"value2\",\n2:\"mod-value-3\",\n",
+	}
+	for _, e := range file.Enums {
+		exp, ok := expVals[*e.Name]
+		if !ok {
+			t.Fatalf("unexpected enum [%v]", *e.Name)
+		}
+		name, err := getEnumVNameValues(e)
+		if err != nil {
+			t.Fatalf("Could not get getEnumVNameName(%s)", err)
+		}
+		if name != exp {
+			t.Fatalf("got [%v] expecting [%v]", name, exp)
+		}
+	}
+	expVals = map[string]string{
+		"EnumInner": "\"NestModValue1\":0,\n\"nestvalue2\":1,\n\"nest-mod-value-3\":2,\n",
+		"Enum1":     "\"ModValue1\":0,\n\"value2\":1,\n\"mod-value-3\":2,\n",
+	}
+	for _, e := range file.Enums {
+		exp, ok := expVals[*e.Name]
+		if !ok {
+			t.Fatalf("unexpected enum [%v]", *e.Name)
+		}
+		name, err := getEnumVValueValues(e)
+		if err != nil {
+			t.Fatalf("Could not get getEnumVNameName(%s)", err)
+		}
+		if name != exp {
+			t.Fatalf("got [%v] expecting [%v]", name, exp)
+		}
+	}
+}
+
 func TestGetEumStrMap(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{
@@ -2012,17 +2162,17 @@ func TestGetEumStrMap(t *testing.T) {
 		{
 			in:  "TestMsg.TestEnum",
 			ok:  true,
-			exp: "TestMsg_TestEnum_value",
+			exp: "TestMsg_TestEnum_vvalue",
 		},
 		{
 			in:  "TestEnum",
 			ok:  true,
-			exp: "TestEnum_value",
+			exp: "TestEnum_vvalue",
 		},
 		{
 			in:  ".anotherproto.TestEnum",
 			ok:  true,
-			exp: "anotherproto.TestEnum_value",
+			exp: "anotherproto.TestEnum_vvalue",
 		},
 	}
 	for _, c := range cases {
@@ -2107,9 +2257,9 @@ func TestGetEumNormalizedMap(t *testing.T) {
 		syntax: 'proto3'
 		enum_type:<
 			name:"Enum1"
-			value:<name:"value1" number:0 >
+			value:<name:"value1" number:0 options:<[venice.enumValueStr]: "value1mod"> >
 			value:<name:"Value2" number:1 >
-			value:<name:"VALUE3" number:2 >
+			value:<name:"VALUE3" number:2 options:<[venice.enumValueStr]: "Value3-mod">>
 		>
 		`,
 	} {
@@ -2184,7 +2334,7 @@ func TestGetEumNormalizedMap(t *testing.T) {
 	}
 	values = strings.TrimSpace(values)
 	values = strings.Replace(values, " ", "", -1)
-	expVal := "\"VALUE3\":\"VALUE3\",\n\"Value2\":\"Value2\",\n\"value1\":\"value1\",\n\"value2\":\"Value2\",\n\"value3\":\"VALUE3\","
+	expVal := "\"Value3-mod\":\"Value3-mod\",\n\"value1mod\":\"value1mod\",\n\"value2\":\"value2\",\n\"value3-mod\":\"Value3-mod\","
 	if values != expVal {
 		t.Fatalf("got[%v]", values)
 	}

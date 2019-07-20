@@ -10,13 +10,13 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 enum ExportAuthType {
     // ui-hint: None
-    AUTHTYPE_NONE = 0;
+    AUTHTYPE_NONE = 0 [(venice.enumValueStr) = "none"];
     // ui-hint: Username/Password
-    AUTHTYPE_USERNAMEPASSWORD = 1;
+    AUTHTYPE_USERNAMEPASSWORD = 1 [(venice.enumValueStr) = "username-password"];
     // ui-hint: Token
-    AUTHTYPE_TOKEN = 2;
+    AUTHTYPE_TOKEN = 2[(venice.enumValueStr) = "token"];
     // ui-hint: Certs
-    AUTHTYPE_CERTS = 3;
+    AUTHTYPE_CERTS = 3[(venice.enumValueStr) = "certs"];
 }
 
 // ----------------------------- Export Config -----------------------------
@@ -70,89 +70,89 @@ message ExternalCred {
 enum SyslogFacility {
     // kernel messages
     // ui-hint: Kernel
-    LOG_KERN = 0;
+    LOG_KERN = 0 [(venice.enumValueStr) = "kernel"];
 
     // user-level messages
     // ui-hint: User
-    LOG_USER = 8;
+    LOG_USER = 8 [(venice.enumValueStr) = "user"];
 
     // mail system
     // ui-hint: Mail
-    LOG_MAIL = 16;
+    LOG_MAIL = 16 [(venice.enumValueStr) = "mail"];
 
     // system daemons
     // ui-hint: Daemon
-    LOG_DAEMON = 24;
+    LOG_DAEMON = 24 [(venice.enumValueStr) = "daemon"];
 
     // security/authorization messages
     // ui-hint: Auth
-    LOG_AUTH = 32;
+    LOG_AUTH = 32 [(venice.enumValueStr) = "auth"];
 
     // messages generated internally by syslogd
     // ui-hint: Syslog
-    LOG_SYSLOG = 40;
+    LOG_SYSLOG = 40 [(venice.enumValueStr) = "syslog"];
 
     // line printer subsystem
     // ui-hint: LPR
-    LOG_LPR	= 48;
+    LOG_LPR	= 48 [(venice.enumValueStr) = "lpr"];
 
     // network news subsystem
     // ui-hint: News
-    LOG_NEWS = 56;
+    LOG_NEWS = 56 [(venice.enumValueStr) = "news"];
 
     // UUCP subsystem
     // ui-hint: UUCP
-    LOG_UUCP = 64;
+    LOG_UUCP = 64 [(venice.enumValueStr) = "uucp"];
 
     // clock daemon
     // ui-hint: CRON
-    LOG_CRON = 72;
+    LOG_CRON = 72 [(venice.enumValueStr) = "cron"];
 
     // security/authorization messages (private)
     // ui-hint: Private Auth
-    LOG_AUTHPRIV = 80;
+    LOG_AUTHPRIV = 80 [(venice.enumValueStr) = "authpriv"];
 
     // ui-hint: FTP
-    LOG_FTP = 88;
+    LOG_FTP = 88 [(venice.enumValueStr) = "ftp"];
 
     /* other codes through 15 reserved for system use */
     // reserved for local use
     // ui-hint: local 0
-    LOG_LOCAL0 = 128;
+    LOG_LOCAL0 = 128 [(venice.enumValueStr) = "local0"];
 
     // reserved for local use
     // ui-hint: local 1
-    LOG_LOCAL1 = 136;
+    LOG_LOCAL1 = 136 [(venice.enumValueStr) = "local1"];
 
     // reserved for local use
     // ui-hint: local 2
-    LOG_LOCAL2 = 144;
+    LOG_LOCAL2 = 144 [(venice.enumValueStr) = "local2"];
 
     // reserved for local use
     // ui-hint: local 3
-    LOG_LOCAL3 = 152;
+    LOG_LOCAL3 = 152 [(venice.enumValueStr) = "local3"];
 
     // reserved for local use
     // ui-hint: local 4
-    LOG_LOCAL4 = 160;
+    LOG_LOCAL4 = 160 [(venice.enumValueStr) = "local4"];
 
     // reserved for local use
     // ui-hint: local 5
-    LOG_LOCAL5 = 168;
+    LOG_LOCAL5 = 168 [(venice.enumValueStr) = "local5"];
 
     // reserved for local use
     // ui-hint: local 6
-    LOG_LOCAL6 = 176;
+    LOG_LOCAL6 = 176 [(venice.enumValueStr) = "local6"];
 
     // reserved for local use
     // ui-hint: local 7
-    LOG_LOCAL7 = 184;
+    LOG_LOCAL7 = 184 [(venice.enumValueStr) = "local7"];
 }
 
 // syslog export configurations
 message  SyslogExportConfig {
     // override default facility with this in exported logs
-    string FacilityOverride = 1 [(gogoproto.jsontag) = "facility-override,omitempty", (venice.check) = "StrEnum(SyslogFacility)", (venice.default)="LOG_USER"];
+    string FacilityOverride = 1 [(gogoproto.jsontag) = "facility-override,omitempty", (venice.check) = "StrEnum(SyslogFacility)", (venice.default)="user"];
     // add prefix in exported logs
     string Prefix = 2 [(gogoproto.jsontag) = "prefix,omitempty"];
 }

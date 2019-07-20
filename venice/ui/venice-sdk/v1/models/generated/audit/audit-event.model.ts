@@ -70,13 +70,13 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
         },
         'stage': {
             enum: AuditEvent_stage,
-            default: 'RequestAuthorization',
+            default: 'requestauthorization',
             required: false,
             type: 'string'
         },
         'level': {
             enum: AuditEvent_level,
-            default: 'Basic',
+            default: 'basic',
             required: false,
             type: 'string'
         },
@@ -98,7 +98,7 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
         },
         'outcome': {
             enum: AuditEvent_outcome,
-            default: 'Success',
+            default: 'success',
             required: false,
             type: 'string'
         },

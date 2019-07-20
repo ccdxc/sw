@@ -5,6 +5,7 @@ import (
 	"text/template"
 
 	"github.com/gogo/protobuf/proto"
+	gogoproto "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	protoplugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/golang/glog"
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
@@ -84,6 +85,21 @@ func GetExtension(name string, in interface{}) (interface{}, error) {
 		i := in.(*descriptor.Field)
 		p := i.FieldDescriptorProto
 		opts := p.GetOptions()
+		if opts == nil {
+			return nil, errNotFound
+		}
+		return getext(opts, name)
+	case *descriptor.Enum:
+		i := in.(*descriptor.Enum)
+		p := i.EnumDescriptorProto
+		opts := p.GetOptions()
+		if opts == nil {
+			return nil, errNotFound
+		}
+		return getext(opts, name)
+	case *gogoproto.EnumValueDescriptorProto:
+		i := in.(*gogoproto.EnumValueDescriptorProto)
+		opts := i.GetOptions()
 		if opts == nil {
 			return nil, errNotFound
 		}

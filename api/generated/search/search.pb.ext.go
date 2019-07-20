@@ -28,26 +28,62 @@ var _ listerwatcher.WatcherClient
 
 // PolicySearchResponse_MatchStatus_normal is a map of normalized values for the enum
 var PolicySearchResponse_MatchStatus_normal = map[string]string{
-	"MATCH": "MATCH",
-	"MISS":  "MISS",
-	"match": "MATCH",
-	"miss":  "MISS",
+	"match": "match",
+	"miss":  "miss",
+}
+
+var PolicySearchResponse_MatchStatus_vname = map[int32]string{
+	0: "match",
+	1: "miss",
+}
+
+var PolicySearchResponse_MatchStatus_vvalue = map[string]int32{
+	"match": 0,
+	"miss":  1,
+}
+
+func (x PolicySearchResponse_MatchStatus) String() string {
+	return PolicySearchResponse_MatchStatus_vname[int32(x)]
 }
 
 // SearchRequest_RequestMode_normal is a map of normalized values for the enum
 var SearchRequest_RequestMode_normal = map[string]string{
-	"Full":    "Full",
-	"Preview": "Preview",
-	"full":    "Full",
-	"preview": "Preview",
+	"full":    "full",
+	"preview": "preview",
+}
+
+var SearchRequest_RequestMode_vname = map[int32]string{
+	0: "full",
+	1: "preview",
+}
+
+var SearchRequest_RequestMode_vvalue = map[string]int32{
+	"full":    0,
+	"preview": 1,
+}
+
+func (x SearchRequest_RequestMode) String() string {
+	return SearchRequest_RequestMode_vname[int32(x)]
 }
 
 // SearchRequest_SortOrderEnum_normal is a map of normalized values for the enum
 var SearchRequest_SortOrderEnum_normal = map[string]string{
-	"Ascending":  "Ascending",
-	"Descending": "Descending",
-	"ascending":  "Ascending",
-	"descending": "Descending",
+	"ascending":  "ascending",
+	"descending": "descending",
+}
+
+var SearchRequest_SortOrderEnum_vname = map[int32]string{
+	0: "ascending",
+	1: "descending",
+}
+
+var SearchRequest_SortOrderEnum_vvalue = map[string]int32{
+	"ascending":  0,
+	"descending": 1,
+}
+
+func (x SearchRequest_SortOrderEnum) String() string {
+	return SearchRequest_SortOrderEnum_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -330,7 +366,7 @@ func (m *PolicySearchResponse) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Status = "MATCH"
+		m.Status = "match"
 	}
 	return ret
 }
@@ -390,8 +426,8 @@ func (m *SearchRequest) Defaults(ver string) bool {
 	default:
 		m.Aggregate = true
 		m.MaxResults = 50
-		m.Mode = "Full"
-		m.SortOrder = "Ascending"
+		m.Mode = "full"
+		m.SortOrder = "ascending"
 	}
 	return ret
 }
@@ -624,9 +660,10 @@ func (m *PolicyMatchEntries) Validate(ver, path string, ignoreStatus bool, ignor
 
 func (m *PolicyMatchEntries) Normalize() {
 
-	for _, v := range m.Entries {
+	for k, v := range m.Entries {
 		if v != nil {
 			v.Normalize()
+			m.Entries[k] = v
 		}
 	}
 
@@ -734,9 +771,10 @@ func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool, ign
 
 func (m *PolicySearchResponse) Normalize() {
 
-	for _, v := range m.Results {
+	for k, v := range m.Results {
 		if v != nil {
 			v.Normalize()
+			m.Results[k] = v
 		}
 	}
 
@@ -812,9 +850,10 @@ func (m *SearchQuery) Normalize() {
 		m.Labels.Normalize()
 	}
 
-	for _, v := range m.Texts {
+	for k, v := range m.Texts {
 		if v != nil {
 			v.Normalize()
+			m.Texts[k] = v
 		}
 	}
 
@@ -944,9 +983,9 @@ func init() {
 	validatorMapSearch["PolicySearchResponse"]["all"] = append(validatorMapSearch["PolicySearchResponse"]["all"], func(path string, i interface{}) error {
 		m := i.(*PolicySearchResponse)
 
-		if _, ok := PolicySearchResponse_MatchStatus_value[m.Status]; !ok {
+		if _, ok := PolicySearchResponse_MatchStatus_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range PolicySearchResponse_MatchStatus_value {
+			for k1, _ := range PolicySearchResponse_MatchStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
@@ -1008,9 +1047,9 @@ func init() {
 	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchRequest)
 
-		if _, ok := SearchRequest_RequestMode_value[m.Mode]; !ok {
+		if _, ok := SearchRequest_RequestMode_vvalue[m.Mode]; !ok {
 			vals := []string{}
-			for k1, _ := range SearchRequest_RequestMode_value {
+			for k1, _ := range SearchRequest_RequestMode_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Mode", vals)
@@ -1045,9 +1084,9 @@ func init() {
 	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
 		m := i.(*SearchRequest)
 
-		if _, ok := SearchRequest_SortOrderEnum_value[m.SortOrder]; !ok {
+		if _, ok := SearchRequest_SortOrderEnum_vvalue[m.SortOrder]; !ok {
 			vals := []string{}
-			for k1, _ := range SearchRequest_SortOrderEnum_value {
+			for k1, _ := range SearchRequest_SortOrderEnum_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"SortOrder", vals)

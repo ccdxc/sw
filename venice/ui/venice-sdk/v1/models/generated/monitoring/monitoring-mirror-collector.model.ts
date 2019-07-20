@@ -22,7 +22,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
-            default: 'ERSPAN',
+            default: 'erspan',
             required: true,
             type: 'string'
         },

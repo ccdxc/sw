@@ -54,7 +54,7 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
         },
         'query-type': {
             enum: BrowserObject_query_type,
-            default: 'Dependencies',
+            default: 'dependencies',
             required: true,
             type: 'string'
         },

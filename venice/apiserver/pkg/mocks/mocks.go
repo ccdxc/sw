@@ -149,6 +149,7 @@ type FakeMethod struct {
 	Service      apisrv.Service
 	Pres         int
 	Posts        int
+	RWriters     int
 	MakeURIs     int
 	Skipkv       bool
 	Enabled      bool
@@ -170,13 +171,22 @@ func (m *FakeMethod) GetService() apisrv.Service { return m.Service }
 func (m *FakeMethod) WithRateLimiter() apisrv.Method { return m }
 
 // WithPreCommitHook is a mock method for testing
-func (m *FakeMethod) WithPreCommitHook(fn apisrv.PreCommitFunc) apisrv.Method { return m }
+func (m *FakeMethod) WithPreCommitHook(fn apisrv.PreCommitFunc) apisrv.Method {
+	m.Pres++
+	return m
+}
 
 // WithPostCommitHook is a mock method for testing
-func (m *FakeMethod) WithPostCommitHook(fn apisrv.PostCommitFunc) apisrv.Method { return m }
+func (m *FakeMethod) WithPostCommitHook(fn apisrv.PostCommitFunc) apisrv.Method {
+	m.Posts++
+	return m
+}
 
 // WithResponseWriter is a mock method for testing
-func (m *FakeMethod) WithResponseWriter(fn apisrv.ResponseWriterFunc) apisrv.Method { return m }
+func (m *FakeMethod) WithResponseWriter(fn apisrv.ResponseWriterFunc) apisrv.Method {
+	m.RWriters++
+	return m
+}
 
 // WithOper is a mock method for testing
 func (m *FakeMethod) WithOper(oper apiintf.APIOperType) apisrv.Method { return m }

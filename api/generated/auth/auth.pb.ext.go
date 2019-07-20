@@ -31,24 +31,51 @@ var _ listerwatcher.WatcherClient
 
 // Authenticators_AuthenticatorType_normal is a map of normalized values for the enum
 var Authenticators_AuthenticatorType_normal = map[string]string{
-	"LDAP":   "LDAP",
-	"LOCAL":  "LOCAL",
-	"RADIUS": "RADIUS",
-	"ldap":   "LDAP",
-	"local":  "LOCAL",
-	"radius": "RADIUS",
+	"ldap":   "ldap",
+	"local":  "local",
+	"radius": "radius",
+}
+
+var Authenticators_AuthenticatorType_vname = map[int32]string{
+	0: "local",
+	1: "ldap",
+	2: "radius",
+}
+
+var Authenticators_AuthenticatorType_vvalue = map[string]int32{
+	"local":  0,
+	"ldap":   1,
+	"radius": 2,
+}
+
+func (x Authenticators_AuthenticatorType) String() string {
+	return Authenticators_AuthenticatorType_vname[int32(x)]
 }
 
 // LdapServerStatus_LdapResult_normal is a map of normalized values for the enum
 var LdapServerStatus_LdapResult_normal = map[string]string{
-	"Bind_Failure":    "Bind_Failure",
-	"Bind_Success":    "Bind_Success",
-	"Connect_Failure": "Connect_Failure",
-	"Connect_Success": "Connect_Success",
-	"bind_failure":    "Bind_Failure",
-	"bind_success":    "Bind_Success",
-	"connect_failure": "Connect_Failure",
-	"connect_success": "Connect_Success",
+	"bind-failure":    "bind-failure",
+	"bind-success":    "bind-success",
+	"connect-failure": "connect-failure",
+	"connect-success": "connect-success",
+}
+
+var LdapServerStatus_LdapResult_vname = map[int32]string{
+	0: "connect-success",
+	1: "connect-failure",
+	2: "bind-success",
+	3: "bind-failure",
+}
+
+var LdapServerStatus_LdapResult_vvalue = map[string]int32{
+	"connect-success": 0,
+	"connect-failure": 1,
+	"bind-success":    2,
+	"bind-failure":    3,
+}
+
+func (x LdapServerStatus_LdapResult) String() string {
+	return LdapServerStatus_LdapResult_vname[int32(x)]
 }
 
 // Permission_ResrcKind_normal is a map of normalized values for the enum
@@ -69,48 +96,126 @@ var Permission_ResrcKind_normal = map[string]string{
 	"tokenauth":    "TokenAuth",
 }
 
+var Permission_ResrcKind_vname = map[int32]string{
+	0: "APIEndpoint",
+	1: "Search",
+	2: "Event",
+	3: "MetricsQuery",
+	4: "AuditEvent",
+	5: "FwlogsQuery",
+	6: "TokenAuth",
+}
+
+var Permission_ResrcKind_vvalue = map[string]int32{
+	"APIEndpoint":  0,
+	"Search":       1,
+	"Event":        2,
+	"MetricsQuery": 3,
+	"AuditEvent":   4,
+	"FwlogsQuery":  5,
+	"TokenAuth":    6,
+}
+
+func (x Permission_ResrcKind) String() string {
+	return Permission_ResrcKind_vname[int32(x)]
+}
+
 // Permission_ActionType_normal is a map of normalized values for the enum
 var Permission_ActionType_normal = map[string]string{
-	"AllActions": "AllActions",
-	"Clear":      "Clear",
-	"Commit":     "Commit",
-	"Create":     "Create",
-	"Delete":     "Delete",
-	"Read":       "Read",
-	"Update":     "Update",
-	"allactions": "AllActions",
-	"clear":      "Clear",
-	"commit":     "Commit",
-	"create":     "Create",
-	"delete":     "Delete",
-	"read":       "Read",
-	"update":     "Update",
+	"all-actions": "all-actions",
+	"clear":       "clear",
+	"commit":      "commit",
+	"create":      "create",
+	"delete":      "delete",
+	"read":        "read",
+	"update":      "update",
+}
+
+var Permission_ActionType_vname = map[int32]string{
+	0: "all-actions",
+	1: "create",
+	2: "read",
+	3: "update",
+	4: "delete",
+	5: "commit",
+	6: "clear",
+}
+
+var Permission_ActionType_vvalue = map[string]int32{
+	"all-actions": 0,
+	"create":      1,
+	"read":        2,
+	"update":      3,
+	"delete":      4,
+	"commit":      5,
+	"clear":       6,
+}
+
+func (x Permission_ActionType) String() string {
+	return Permission_ActionType_vname[int32(x)]
 }
 
 // Radius_AuthMethod_normal is a map of normalized values for the enum
 var Radius_AuthMethod_normal = map[string]string{
-	"EAP_TTLS_PAP":  "EAP_TTLS_PAP",
-	"PAP":           "PAP",
-	"PEAP_MSCHAPv2": "PEAP_MSCHAPv2",
-	"eap_ttls_pap":  "EAP_TTLS_PAP",
-	"pap":           "PAP",
-	"peap_mschapv2": "PEAP_MSCHAPv2",
+	"eap-ttls-pap":  "eap-ttls-pap",
+	"pap":           "pap",
+	"peap-mschapv2": "peap-mschapv2",
+}
+
+var Radius_AuthMethod_vname = map[int32]string{
+	0: "pap",
+	1: "peap-mschapv2",
+	2: "eap-ttls-pap",
+}
+
+var Radius_AuthMethod_vvalue = map[string]int32{
+	"pap":           0,
+	"peap-mschapv2": 1,
+	"eap-ttls-pap":  2,
+}
+
+func (x Radius_AuthMethod) String() string {
+	return Radius_AuthMethod_vname[int32(x)]
 }
 
 // RadiusServerStatus_RadiusResult_normal is a map of normalized values for the enum
 var RadiusServerStatus_RadiusResult_normal = map[string]string{
-	"Connect_Failure": "Connect_Failure",
-	"Connect_Success": "Connect_Success",
-	"connect_failure": "Connect_Failure",
-	"connect_success": "Connect_Success",
+	"connect-failure": "connect-failure",
+	"connect-success": "connect-success",
+}
+
+var RadiusServerStatus_RadiusResult_vname = map[int32]string{
+	0: "connect-success",
+	1: "connect-failure",
+}
+
+var RadiusServerStatus_RadiusResult_vvalue = map[string]int32{
+	"connect-success": 0,
+	"connect-failure": 1,
+}
+
+func (x RadiusServerStatus_RadiusResult) String() string {
+	return RadiusServerStatus_RadiusResult_vname[int32(x)]
 }
 
 // UserSpec_UserType_normal is a map of normalized values for the enum
 var UserSpec_UserType_normal = map[string]string{
-	"External": "External",
-	"Local":    "Local",
-	"external": "External",
-	"local":    "Local",
+	"external": "external",
+	"local":    "local",
+}
+
+var UserSpec_UserType_vname = map[int32]string{
+	0: "local",
+	1: "external",
+}
+
+var UserSpec_UserType_vvalue = map[string]int32{
+	"local":    0,
+	"external": 1,
+}
+
+func (x UserSpec_UserType) String() string {
+	return UserSpec_UserType_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -323,7 +428,7 @@ func (m *Authenticators) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.AuthenticatorOrder {
-			m.AuthenticatorOrder[k] = "LOCAL"
+			m.AuthenticatorOrder[k] = "local"
 		}
 	}
 	return ret
@@ -414,7 +519,7 @@ func (m *LdapServerStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Result = "Connect_Success"
+		m.Result = "connect-success"
 	}
 	return ret
 }
@@ -462,7 +567,7 @@ func (m *Operation) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Action = "AllActions"
+		m.Action = "all-actions"
 	}
 	return ret
 }
@@ -579,7 +684,7 @@ func (m *Permission) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Actions {
-			m.Actions[k] = "AllActions"
+			m.Actions[k] = "all-actions"
 		}
 		m.ResourceNamespace = "_All_"
 	}
@@ -636,7 +741,7 @@ func (m *RadiusServer) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.AuthMethod = "PAP"
+		m.AuthMethod = "pap"
 	}
 	return ret
 }
@@ -666,7 +771,7 @@ func (m *RadiusServerStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Result = "Connect_Success"
+		m.Result = "connect-success"
 	}
 	return ret
 }
@@ -1026,7 +1131,7 @@ func (m *UserSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = "Local"
+		m.Type = "local"
 	}
 	return ret
 }
@@ -1060,7 +1165,7 @@ func (m *UserStatus) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Authenticators {
-			m.Authenticators[k] = "LOCAL"
+			m.Authenticators[k] = "local"
 		}
 	}
 	return ret
@@ -1210,15 +1315,17 @@ func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus boo
 
 func (m *AuthenticationPolicyStatus) Normalize() {
 
-	for _, v := range m.LdapServers {
+	for k, v := range m.LdapServers {
 		if v != nil {
 			v.Normalize()
+			m.LdapServers[k] = v
 		}
 	}
 
-	for _, v := range m.RadiusServers {
+	for k, v := range m.RadiusServers {
 		if v != nil {
 			v.Normalize()
+			m.RadiusServers[k] = v
 		}
 	}
 
@@ -1518,9 +1625,10 @@ func (m *Radius) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) 
 
 func (m *Radius) Normalize() {
 
-	for _, v := range m.Servers {
+	for k, v := range m.Servers {
 		if v != nil {
 			v.Normalize()
+			m.Servers[k] = v
 		}
 	}
 
@@ -1843,8 +1951,9 @@ func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *RoleSpec) Normalize() {
 
-	for _, v := range m.Permissions {
+	for k, v := range m.Permissions {
 		v.Normalize()
+		m.Permissions[k] = v
 
 	}
 
@@ -1887,9 +1996,10 @@ func (m *SubjectAccessReviewRequest) Normalize() {
 
 	m.ObjectMeta.Normalize()
 
-	for _, v := range m.Operations {
+	for k, v := range m.Operations {
 		if v != nil {
 			v.Normalize()
+			m.Operations[k] = v
 		}
 	}
 
@@ -2157,9 +2267,10 @@ func (m *UserStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *UserStatus) Normalize() {
 
-	for _, v := range m.AccessReview {
+	for k, v := range m.AccessReview {
 		if v != nil {
 			v.Normalize()
+			m.AccessReview[k] = v
 		}
 	}
 
@@ -2365,9 +2476,9 @@ func init() {
 		m := i.(*Authenticators)
 
 		for k, v := range m.AuthenticatorOrder {
-			if _, ok := Authenticators_AuthenticatorType_value[v]; !ok {
+			if _, ok := Authenticators_AuthenticatorType_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range Authenticators_AuthenticatorType_value {
+				for k1, _ := range Authenticators_AuthenticatorType_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"AuthenticatorOrder", k, vals)
@@ -2380,9 +2491,9 @@ func init() {
 	validatorMapAuth["LdapServerStatus"]["all"] = append(validatorMapAuth["LdapServerStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*LdapServerStatus)
 
-		if _, ok := LdapServerStatus_LdapResult_value[m.Result]; !ok {
+		if _, ok := LdapServerStatus_LdapResult_vvalue[m.Result]; !ok {
 			vals := []string{}
-			for k1, _ := range LdapServerStatus_LdapResult_value {
+			for k1, _ := range LdapServerStatus_LdapResult_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Result", vals)
@@ -2394,9 +2505,9 @@ func init() {
 	validatorMapAuth["Operation"]["all"] = append(validatorMapAuth["Operation"]["all"], func(path string, i interface{}) error {
 		m := i.(*Operation)
 
-		if _, ok := Permission_ActionType_value[m.Action]; !ok {
+		if _, ok := Permission_ActionType_vvalue[m.Action]; !ok {
 			vals := []string{}
-			for k1, _ := range Permission_ActionType_value {
+			for k1, _ := range Permission_ActionType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Action", vals)
@@ -2434,9 +2545,9 @@ func init() {
 		m := i.(*Permission)
 
 		for k, v := range m.Actions {
-			if _, ok := Permission_ActionType_value[v]; !ok {
+			if _, ok := Permission_ActionType_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range Permission_ActionType_value {
+				for k1, _ := range Permission_ActionType_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Actions", k, vals)
@@ -2449,9 +2560,9 @@ func init() {
 	validatorMapAuth["RadiusServer"]["all"] = append(validatorMapAuth["RadiusServer"]["all"], func(path string, i interface{}) error {
 		m := i.(*RadiusServer)
 
-		if _, ok := Radius_AuthMethod_value[m.AuthMethod]; !ok {
+		if _, ok := Radius_AuthMethod_vvalue[m.AuthMethod]; !ok {
 			vals := []string{}
-			for k1, _ := range Radius_AuthMethod_value {
+			for k1, _ := range Radius_AuthMethod_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AuthMethod", vals)
@@ -2463,9 +2574,9 @@ func init() {
 	validatorMapAuth["RadiusServerStatus"]["all"] = append(validatorMapAuth["RadiusServerStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*RadiusServerStatus)
 
-		if _, ok := RadiusServerStatus_RadiusResult_value[m.Result]; !ok {
+		if _, ok := RadiusServerStatus_RadiusResult_vvalue[m.Result]; !ok {
 			vals := []string{}
-			for k1, _ := range RadiusServerStatus_RadiusResult_value {
+			for k1, _ := range RadiusServerStatus_RadiusResult_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Result", vals)
@@ -2488,9 +2599,9 @@ func init() {
 	validatorMapAuth["UserSpec"]["all"] = append(validatorMapAuth["UserSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*UserSpec)
 
-		if _, ok := UserSpec_UserType_value[m.Type]; !ok {
+		if _, ok := UserSpec_UserType_vvalue[m.Type]; !ok {
 			vals := []string{}
-			for k1, _ := range UserSpec_UserType_value {
+			for k1, _ := range UserSpec_UserType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
@@ -2503,9 +2614,9 @@ func init() {
 		m := i.(*UserStatus)
 
 		for k, v := range m.Authenticators {
-			if _, ok := Authenticators_AuthenticatorType_value[v]; !ok {
+			if _, ok := Authenticators_AuthenticatorType_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range Authenticators_AuthenticatorType_value {
+				for k1, _ := range Authenticators_AuthenticatorType_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Authenticators", k, vals)

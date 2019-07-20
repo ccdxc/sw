@@ -248,10 +248,10 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			desc: "Query with multiple directions",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs:  []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
-				Directions: []string{"from_uplink", "from_host"},
+				Directions: []string{"from-uplink", "from-host"},
 				SortOrder:  telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("direction" = 'from_uplink' OR "direction" = 'from_host') ORDER BY time DESC`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("direction" = 'from-uplink' OR "direction" = 'from-host') ORDER BY time DESC`,
 			pass: true,
 		},
 		{
@@ -342,13 +342,13 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 								Columns: []string{"time", "source", "destination", "action", "direction", "reporterID"},
 								Values: [][]interface{}{
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "allow", "from_host", "naples1",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "allow", "from-host", "naples1",
 									},
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "deny", "from_uplink", "naples2",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "deny", "from-uplink", "naples2",
 									},
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "reject", "from_uplink", "naples3",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "reject", "from-uplink", "naples3",
 									},
 								},
 							},
@@ -394,7 +394,7 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 							Src:        "10.1.1.1",
 							Dest:       "10.1.1.2",
 							Action:     "allow",
-							Direction:  "from_host",
+							Direction:  "from-host",
 							ReporterID: "naples1",
 							Time:       timestamp,
 						},
@@ -402,7 +402,7 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 							Src:        "10.1.1.1",
 							Dest:       "10.1.1.2",
 							Action:     "deny",
-							Direction:  "from_uplink",
+							Direction:  "from-uplink",
 							ReporterID: "naples2",
 							Time:       timestamp,
 						},
@@ -410,7 +410,7 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 							Src:        "10.1.1.1",
 							Dest:       "10.1.1.2",
 							Action:     "reject",
-							Direction:  "from_uplink",
+							Direction:  "from-uplink",
 							ReporterID: "naples3",
 							Time:       timestamp,
 						},
@@ -573,7 +573,7 @@ func TestFwlogs(t *testing.T) {
 						DestPorts:   []uint32{9000},
 						Protocols:   []string{"TCP"},
 						Actions:     []string{"deny"},
-						Directions:  []string{"from_host"},
+						Directions:  []string{"from-host"},
 						RuleIDs:     []string{"1234"},
 						ReporterIDs: []string{"naples1", "naples2"},
 						// Policy name will be ignored since
@@ -585,7 +585,7 @@ func TestFwlogs(t *testing.T) {
 					},
 				},
 			},
-			brokerQuery: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.1') AND ("destination" = '10.1.1.2') AND ("source-port" = '8000') AND ("destination-port" = '9000') AND ("protocol" = 'TCP') AND ("action" = 'deny') AND ("direction" = 'from_host') AND ("rule-id" = '1234') AND ("reporterID" = 'naples1' OR "reporterID" = 'naples2') AND time > '2018-11-09T23:15:17Z' AND time < '2018-11-09T23:20:17Z' ORDER BY time DESC`,
+			brokerQuery: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.1') AND ("destination" = '10.1.1.2') AND ("source-port" = '8000') AND ("destination-port" = '9000') AND ("protocol" = 'TCP') AND ("action" = 'deny') AND ("direction" = 'from-host') AND ("rule-id" = '1234') AND ("reporterID" = 'naples1' OR "reporterID" = 'naples2') AND time > '2018-11-09T23:15:17Z' AND time < '2018-11-09T23:20:17Z' ORDER BY time DESC`,
 			errMsg:      "",
 			clusterCheckResponse: &ClusterCheckResponse{
 				err: nil,
@@ -600,7 +600,7 @@ func TestFwlogs(t *testing.T) {
 								Columns: []string{"time", "source", "destination", "source-port", "destination-port", "protocol", "action", "direction", "rule-id", "reporterID"},
 								Values: [][]interface{}{
 									[]interface{}{
-										"2018-11-09T23:20:17Z", "10.1.1.1", "10.1.1.2", 8000, 9000, "TCP", "deny", "from_host", "1234", "naples1",
+										"2018-11-09T23:20:17Z", "10.1.1.1", "10.1.1.2", 8000, 9000, "TCP", "deny", "from-host", "1234", "naples1",
 									},
 								},
 							},
@@ -622,7 +622,7 @@ func TestFwlogs(t *testing.T) {
 								DestPort:   9000,
 								Protocol:   "TCP",
 								Action:     "deny",
-								Direction:  "from_host",
+								Direction:  "from-host",
 								RuleID:     "1234",
 								ReporterID: "naples1",
 								Time:       endTime,

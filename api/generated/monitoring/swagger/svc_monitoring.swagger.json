@@ -12745,27 +12745,27 @@
         "sort-order": {
           "type": "string",
           "enum": [
-            "None",
-            "ByName",
-            "ByNameReverse",
-            "ByVersion",
-            "ByVersionReverse",
-            "ByCreationTime",
-            "ByCreationTimeReverse",
-            "ByModTime",
-            "ByModTimeReverse"
+            "none",
+            "by-name",
+            "by-name-reverse",
+            "by-version",
+            "by-version-reverse",
+            "by-creation-time",
+            "by-creation-time-reverse",
+            "by-mod-time",
+            "by-mod-time-reverse"
           ],
-          "default": "None",
+          "default": "none",
           "x-ui-hints": {
-            "ByCreationTime": "By Creation Time",
-            "ByCreationTimeReverse": "By Creation Time Reverse",
-            "ByModTime": "By Modification Time",
-            "ByModTimeReverse": "By Modification Time Reverse",
-            "ByName": "By Name",
-            "ByNameReverse": "By Name Reverse",
-            "ByVersion": "By Version",
-            "ByVersionReverse": "By Version Reverse",
-            "None": "None"
+            "by-creation-time": "By Creation Time",
+            "by-creation-time-reverse": "By Creation Time Reverse",
+            "by-mod-time": "By Modification Time",
+            "by-mod-time-reverse": "By Modification Time Reverse",
+            "by-name": "By Name",
+            "by-name-reverse": "By Name Reverse",
+            "by-version": "By Version",
+            "by-version-reverse": "By Version Reverse",
+            "none": "None"
           },
           "description": "order to sort List results in."
         }
@@ -12967,9 +12967,9 @@
           "type": "string",
           "enum": [
             "equals",
-            "notEquals",
+            "notequals",
             "in",
-            "notIn",
+            "notin",
             "gt",
             "gte",
             "lt",
@@ -12981,8 +12981,8 @@
             "gte": "greater than or equals",
             "lt": "less than",
             "lte": "less than or equals",
-            "notEquals": "not equals",
-            "notIn": "not in"
+            "notequals": "not equals",
+            "notin": "not in"
           },
           "description": "Condition checked for the key."
         },
@@ -13038,14 +13038,14 @@
           "type": "string",
           "enum": [
             "equals",
-            "notEquals",
+            "notequals",
             "in",
-            "notIn"
+            "notin"
           ],
           "default": "equals",
           "x-ui-hints": {
-            "notEquals": "not equals",
-            "notIn": "not in"
+            "notequals": "not equals",
+            "notin": "not in"
           },
           "description": "Condition checked for the key."
         },
@@ -13244,11 +13244,11 @@
         "severity": {
           "type": "string",
           "enum": [
-            "INFO",
-            "WARN",
-            "CRITICAL"
+            "info",
+            "warn",
+            "critical"
           ],
-          "default": "INFO",
+          "default": "info",
           "title": "Severity to be set for an alert that gets triggered from this rule"
         },
         "message": {
@@ -13348,15 +13348,15 @@
         "state": {
           "type": "string",
           "enum": [
-            "OPEN",
-            "RESOLVED",
-            "ACKNOWLEDGED"
+            "open",
+            "resolved",
+            "acknowledged"
           ],
-          "default": "OPEN",
+          "default": "open",
           "x-ui-hints": {
-            "ACKNOWLEDGED": "Acknowledged",
-            "OPEN": "Open",
-            "RESOLVED": "Resolved"
+            "acknowledged": "Acknowledged",
+            "open": "Open",
+            "resolved": "Resolved"
           }
         }
       },
@@ -13371,11 +13371,11 @@
         "severity": {
           "type": "string",
           "enum": [
-            "INFO",
-            "WARN",
-            "CRITICAL"
+            "info",
+            "warn",
+            "critical"
           ],
-          "default": "INFO",
+          "default": "info",
           "title": "Severity of an alert"
         },
         "source": {
@@ -13455,10 +13455,10 @@
         "algo": {
           "type": "string",
           "enum": [
-            "MD5",
-            "SHA1"
+            "md5",
+            "sha1"
           ],
-          "default": "MD5"
+          "default": "md5"
         },
         "password": {
           "type": "string",
@@ -13763,13 +13763,13 @@
         "format": {
           "type": "string",
           "enum": [
-            "SYSLOG_BSD",
-            "SYSLOG_RFC5424"
+            "syslog-bsd",
+            "syslog-rfc5424"
           ],
-          "default": "SYSLOG_BSD",
+          "default": "syslog-bsd",
           "x-ui-hints": {
-            "SYSLOG_BSD": "BSD",
-            "SYSLOG_RFC5424": "RFC5424"
+            "syslog-bsd": "BSD",
+            "syslog-rfc5424": "RFC5424"
           },
           "title": "event export format, SYSLOG_BSD default"
         },
@@ -13830,17 +13830,17 @@
         "auth-type": {
           "type": "string",
           "enum": [
-            "AUTHTYPE_NONE",
-            "AUTHTYPE_USERNAMEPASSWORD",
-            "AUTHTYPE_TOKEN",
-            "AUTHTYPE_CERTS"
+            "none",
+            "username-password",
+            "token",
+            "certs"
           ],
-          "default": "AUTHTYPE_NONE",
+          "default": "none",
           "x-ui-hints": {
-            "AUTHTYPE_CERTS": "Certs",
-            "AUTHTYPE_NONE": "None",
-            "AUTHTYPE_TOKEN": "Token",
-            "AUTHTYPE_USERNAMEPASSWORD": "Username/Password"
+            "certs": "Certs",
+            "none": "None",
+            "token": "Token",
+            "username-password": "Username/Password"
           },
           "title": "AuthType is the authentication type used in this config"
         },
@@ -13946,9 +13946,9 @@
         "format": {
           "type": "string",
           "enum": [
-            "Ipfix"
+            "ipfix"
           ],
-          "default": "Ipfix"
+          "default": "ipfix"
         },
         "match-rules": {
           "type": "array",
@@ -14033,13 +14033,13 @@
         "format": {
           "type": "string",
           "enum": [
-            "SYSLOG_BSD",
-            "SYSLOG_RFC5424"
+            "syslog-bsd",
+            "syslog-rfc5424"
           ],
-          "default": "SYSLOG_BSD",
+          "default": "syslog-bsd",
           "x-ui-hints": {
-            "SYSLOG_BSD": "BSD",
-            "SYSLOG_RFC5424": "RFC5424"
+            "syslog-bsd": "BSD",
+            "syslog-rfc5424": "RFC5424"
           },
           "title": "fwlog format, SYSLOG_BSD default"
         },
@@ -14049,21 +14049,21 @@
             "type": "string"
           },
           "enum": [
-            "FIREWALL_ACTION_NONE",
-            "FIREWALL_ACTION_ALLOW",
-            "FIREWALL_ACTION_DENY",
-            "FIREWALL_ACTION_REJECT",
-            "FIREWALL_IMPLICIT_DENY",
-            "FIREWALL_ACTION_ALL"
+            "none",
+            "allow",
+            "deny",
+            "reject",
+            "implicit-reject",
+            "all"
           ],
-          "default": "FIREWALL_ACTION_ALL",
+          "default": "all",
           "x-ui-hints": {
-            "FIREWALL_ACTION_ALL": "All Logs",
-            "FIREWALL_ACTION_ALLOW": "Allow Logs",
-            "FIREWALL_ACTION_DENY": "Deny Logs",
-            "FIREWALL_ACTION_NONE": "No Logs",
-            "FIREWALL_ACTION_REJECT": "Reject Logs",
-            "FIREWALL_IMPLICIT_DENY": "Implicit Deny Logs"
+            "all": "All Logs",
+            "allow": "Allow Logs",
+            "deny": "Deny Logs",
+            "implicit-reject": "Implicit Deny Logs",
+            "none": "No Logs",
+            "reject": "Reject Logs"
           },
           "title": "filter firewall logs, FWLOG_ALL default"
         },
@@ -14127,9 +14127,9 @@
           "type": "string",
           "enum": [
             "equals",
-            "notEquals",
+            "notequals",
             "in",
-            "notIn",
+            "notin",
             "gt",
             "gte",
             "lt",
@@ -14141,8 +14141,8 @@
             "gte": "greater than or equals",
             "lt": "less than",
             "lte": "less than or equals",
-            "notEquals": "not equals",
-            "notIn": "not in"
+            "notequals": "not equals",
+            "notin": "not in"
           }
         },
         "values": {
@@ -14167,11 +14167,11 @@
         "type": {
           "type": "string",
           "enum": [
-            "ERSPAN"
+            "erspan"
           ],
-          "default": "ERSPAN",
+          "default": "erspan",
           "x-ui-hints": {
-            "ERSPAN": "ERSPAN"
+            "erspan": "ERSPAN"
           },
           "title": "Type of Collector"
         },
@@ -14275,17 +14275,17 @@
             "type": "string"
           },
           "enum": [
-            "ALL_PKTS",
-            "ALL_DROPS",
-            "NETWORK_POLICY_DROP",
-            "FIREWALL_POLICY_DROP"
+            "all-packets",
+            "all-drops",
+            "network-policy-drop",
+            "firewall-policy-drop"
           ],
-          "default": "ALL_PKTS",
+          "default": "all-packets",
           "x-ui-hints": {
-            "ALL_DROPS": "All Drops",
-            "ALL_PKTS": "All Packets",
-            "FIREWALL_POLICY_DROP": "Firewall Policy Drops",
-            "NETWORK_POLICY_DROP": "Network Policy Drops"
+            "all-drops": "All Drops",
+            "all-packets": "All Packets",
+            "firewall-policy-drop": "Firewall Policy Drops",
+            "network-policy-drop": "Network Policy Drops"
           }
         }
       },
@@ -14300,19 +14300,19 @@
         "oper-state": {
           "type": "string",
           "enum": [
-            "NONE",
-            "RUNNING",
-            "STOPPED",
-            "SCHEDULED",
-            "ERR_NO_MIRROR_SESSION"
+            "none",
+            "running",
+            "stopped",
+            "scheduled",
+            "error-no-mirror-session"
           ],
-          "default": "NONE",
+          "default": "none",
           "x-ui-hints": {
-            "ERR_NO_MIRROR_SESSION": "Max Mirror Sessions Exceeded",
-            "NONE": "None",
-            "RUNNING": "Running",
-            "SCHEDULED": "Scheduled",
-            "STOPPED": "Stopped"
+            "error-no-mirror-session": "Max Mirror Sessions Exceeded",
+            "none": "None",
+            "running": "Running",
+            "scheduled": "Scheduled",
+            "stopped": "Stopped"
           }
         },
         "started-at": {
@@ -14340,10 +14340,10 @@
         "algo": {
           "type": "string",
           "enum": [
-            "DES56",
-            "AES128"
+            "des56",
+            "aes128"
           ],
-          "default": "DES56"
+          "default": "des56"
         },
         "password": {
           "type": "string",
@@ -14382,10 +14382,10 @@
         "version": {
           "type": "string",
           "enum": [
-            "V2C",
-            "V3"
+            "v2c",
+            "v3"
           ],
-          "default": "V2C"
+          "default": "v2c"
         },
         "community-or-user": {
           "type": "string",
@@ -14482,13 +14482,13 @@
         "format": {
           "type": "string",
           "enum": [
-            "SYSLOG_BSD",
-            "SYSLOG_RFC5424"
+            "syslog-bsd",
+            "syslog-rfc5424"
           ],
-          "default": "SYSLOG_BSD",
+          "default": "syslog-bsd",
           "x-ui-hints": {
-            "SYSLOG_BSD": "BSD",
-            "SYSLOG_RFC5424": "RFC5424"
+            "syslog-bsd": "BSD",
+            "syslog-rfc5424": "RFC5424"
           },
           "title": "event export format, SYSLOG_BSD default"
         },
@@ -14515,49 +14515,49 @@
         "facility-override": {
           "type": "string",
           "enum": [
-            "LOG_KERN",
-            "LOG_USER",
-            "LOG_MAIL",
-            "LOG_DAEMON",
-            "LOG_AUTH",
-            "LOG_SYSLOG",
-            "LOG_LPR",
-            "LOG_NEWS",
-            "LOG_UUCP",
-            "LOG_CRON",
-            "LOG_AUTHPRIV",
-            "LOG_FTP",
-            "LOG_LOCAL0",
-            "LOG_LOCAL1",
-            "LOG_LOCAL2",
-            "LOG_LOCAL3",
-            "LOG_LOCAL4",
-            "LOG_LOCAL5",
-            "LOG_LOCAL6",
-            "LOG_LOCAL7"
+            "kernel",
+            "user",
+            "mail",
+            "daemon",
+            "auth",
+            "syslog",
+            "lpr",
+            "news",
+            "uucp",
+            "cron",
+            "authpriv",
+            "ftp",
+            "local0",
+            "local1",
+            "local2",
+            "local3",
+            "local4",
+            "local5",
+            "local6",
+            "local7"
           ],
-          "default": "LOG_USER",
+          "default": "user",
           "x-ui-hints": {
-            "LOG_AUTH": "Auth",
-            "LOG_AUTHPRIV": "Private Auth",
-            "LOG_CRON": "CRON",
-            "LOG_DAEMON": "Daemon",
-            "LOG_FTP": "FTP",
-            "LOG_KERN": "Kernel",
-            "LOG_LOCAL0": "local 0",
-            "LOG_LOCAL1": "local 1",
-            "LOG_LOCAL2": "local 2",
-            "LOG_LOCAL3": "local 3",
-            "LOG_LOCAL4": "local 4",
-            "LOG_LOCAL5": "local 5",
-            "LOG_LOCAL6": "local 6",
-            "LOG_LOCAL7": "local 7",
-            "LOG_LPR": "LPR",
-            "LOG_MAIL": "Mail",
-            "LOG_NEWS": "News",
-            "LOG_SYSLOG": "Syslog",
-            "LOG_USER": "User",
-            "LOG_UUCP": "UUCP"
+            "auth": "Auth",
+            "authpriv": "Private Auth",
+            "cron": "CRON",
+            "daemon": "Daemon",
+            "ftp": "FTP",
+            "kernel": "Kernel",
+            "local0": "local 0",
+            "local1": "local 1",
+            "local2": "local 2",
+            "local3": "local 3",
+            "local4": "local 4",
+            "local5": "local 5",
+            "local6": "local 6",
+            "local7": "local 7",
+            "lpr": "LPR",
+            "mail": "Mail",
+            "news": "News",
+            "syslog": "Syslog",
+            "user": "User",
+            "uucp": "UUCP"
           },
           "title": "override default facility with this in exported logs"
         },
@@ -14585,13 +14585,13 @@
         "status": {
           "type": "string",
           "enum": [
-            "Scheduled",
-            "Running",
-            "Completed",
-            "Failed",
-            "TimeOut"
+            "scheduled",
+            "running",
+            "completed",
+            "failed",
+            "timeout"
           ],
-          "default": "Scheduled"
+          "default": "scheduled"
         },
         "reason": {
           "type": "string"
@@ -14673,13 +14673,13 @@
         "status": {
           "type": "string",
           "enum": [
-            "Scheduled",
-            "Running",
-            "Completed",
-            "Failed",
-            "TimeOut"
+            "scheduled",
+            "running",
+            "completed",
+            "failed",
+            "timeout"
           ],
-          "default": "Scheduled"
+          "default": "scheduled"
         },
         "ctrlr-node-results": {
           "type": "object",
@@ -14782,15 +14782,15 @@
         "state": {
           "type": "string",
           "enum": [
-            "TS_RUNNING",
-            "TS_STOPPED",
-            "TS_SCHEDULED"
+            "running",
+            "stopped",
+            "scheduled"
           ],
-          "default": "TS_RUNNING",
+          "default": "running",
           "x-ui-hints": {
-            "TS_RUNNING": "Running",
-            "TS_SCHEDULED": "Scheduled",
-            "TS_STOPPED": "Stopped"
+            "running": "Running",
+            "scheduled": "Scheduled",
+            "stopped": "Stopped"
           }
         },
         "troubleshooting-results": {

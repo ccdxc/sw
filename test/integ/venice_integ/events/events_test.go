@@ -1239,7 +1239,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	// alert destination - 1: BSD style syslog export
 	alertDestBSDSyslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
 		&monitoring.SyslogExport{
-			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+			Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",
@@ -1254,7 +1254,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
 		&monitoring.SyslogExport{
-			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+			Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",
@@ -1408,7 +1408,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	// alert destination - 1: BSD style syslog export
 	alertDestBSDSyslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
 		&monitoring.SyslogExport{
-			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+			Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",
@@ -1427,7 +1427,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
 		&monitoring.SyslogExport{
-			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+			Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",
@@ -1603,7 +1603,7 @@ func TestEventsExport(t *testing.T) {
 
 	// add event policy - 1
 	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-1",
-		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+		monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 		[]*monitoring.ExportConfig{
 			{ // receivedMsgsAtUDPServer1
 				Destination: "127.0.0.1",
@@ -1620,7 +1620,7 @@ func TestEventsExport(t *testing.T) {
 
 	// add event policy - 2
 	eventPolicy2 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-2",
-		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+		monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 		[]*monitoring.ExportConfig{
 			{ // receivedMsgsAtTCPServer2
 				Destination: "127.0.0.1",
@@ -1628,7 +1628,7 @@ func TestEventsExport(t *testing.T) {
 			},
 		},
 		&monitoring.SyslogExportConfig{
-			FacilityOverride: monitoring.SyslogFacility_name[int32(monitoring.SyslogFacility_LOG_SYSLOG)],
+			FacilityOverride: monitoring.SyslogFacility_LOG_SYSLOG.String(),
 			Prefix:           CreateAlphabetString(5),
 		})
 	eventPolicy2, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy2)
@@ -1842,7 +1842,7 @@ func TestEventsExport(t *testing.T) {
 
 	// add event policy - 1
 	eventPolicy1 = policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-1",
-		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+		monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 		[]*monitoring.ExportConfig{
 			{ // receivedMsgsAtUDPServer1
 				Destination: "127.0.0.1",
@@ -2144,7 +2144,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	}
 	ti.logger.Infof("available port to run TCP server: %d", port)
 	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-6",
-		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+		monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 		[]*monitoring.ExportConfig{
 			{ // receivedMsgsAtTCPServer1
 				Destination: "127.0.0.1",
@@ -2261,7 +2261,7 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 
 	// add event policy - 1
 	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-1",
-		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+		monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 		[]*monitoring.ExportConfig{
 			{ // receivedMsgsAtTCPServer
 				Destination: "127.0.0.1",

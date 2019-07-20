@@ -30,24 +30,51 @@ var _ listerwatcher.WatcherClient
 
 // CertificateSpec_UsageValues_normal is a map of normalized values for the enum
 var CertificateSpec_UsageValues_normal = map[string]string{
-	"Client":    "Client",
-	"Server":    "Server",
-	"TrustRoot": "TrustRoot",
-	"client":    "Client",
-	"server":    "Server",
-	"trustroot": "TrustRoot",
+	"client":     "client",
+	"server":     "server",
+	"trust-root": "trust-root",
+}
+
+var CertificateSpec_UsageValues_vname = map[int32]string{
+	0: "server",
+	1: "client",
+	2: "trust-root",
+}
+
+var CertificateSpec_UsageValues_vvalue = map[string]int32{
+	"server":     0,
+	"client":     1,
+	"trust-root": 2,
+}
+
+func (x CertificateSpec_UsageValues) String() string {
+	return CertificateSpec_UsageValues_vname[int32(x)]
 }
 
 // CertificateStatus_ValidityValues_normal is a map of normalized values for the enum
 var CertificateStatus_ValidityValues_normal = map[string]string{
-	"Expired": "Expired",
-	"Invalid": "Invalid",
-	"Unknown": "Unknown",
-	"Valid":   "Valid",
-	"expired": "Expired",
-	"invalid": "Invalid",
-	"unknown": "Unknown",
-	"valid":   "Valid",
+	"expired": "expired",
+	"invalid": "invalid",
+	"unknown": "unknown",
+	"valid":   "valid",
+}
+
+var CertificateStatus_ValidityValues_vname = map[int32]string{
+	0: "unknown",
+	1: "valid",
+	2: "invalid",
+	3: "expired",
+}
+
+var CertificateStatus_ValidityValues_vvalue = map[string]int32{
+	"unknown": 0,
+	"valid":   1,
+	"invalid": 2,
+	"expired": 3,
+}
+
+func (x CertificateStatus_ValidityValues) String() string {
+	return CertificateStatus_ValidityValues_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -115,7 +142,7 @@ func (m *CertificateSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Usages {
-			m.Usages[k] = "Server"
+			m.Usages[k] = "server"
 		}
 	}
 	return ret
@@ -143,7 +170,7 @@ func (m *CertificateStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Validity = "Unknown"
+		m.Validity = "unknown"
 	}
 	return ret
 }
@@ -315,9 +342,9 @@ func init() {
 		m := i.(*CertificateSpec)
 
 		for k, v := range m.Usages {
-			if _, ok := CertificateSpec_UsageValues_value[v]; !ok {
+			if _, ok := CertificateSpec_UsageValues_vvalue[v]; !ok {
 				vals := []string{}
-				for k1, _ := range CertificateSpec_UsageValues_value {
+				for k1, _ := range CertificateSpec_UsageValues_vvalue {
 					vals = append(vals, k1)
 				}
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Usages", k, vals)
@@ -330,9 +357,9 @@ func init() {
 	validatorMapX509["CertificateStatus"]["all"] = append(validatorMapX509["CertificateStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*CertificateStatus)
 
-		if _, ok := CertificateStatus_ValidityValues_value[m.Validity]; !ok {
+		if _, ok := CertificateStatus_ValidityValues_vvalue[m.Validity]; !ok {
 			vals := []string{}
-			for k1, _ := range CertificateStatus_ValidityValues_value {
+			for k1, _ := range CertificateStatus_ValidityValues_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Validity", vals)

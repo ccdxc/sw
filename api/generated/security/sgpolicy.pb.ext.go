@@ -30,12 +30,25 @@ var _ listerwatcher.WatcherClient
 
 // SGRule_PolicyAction_normal is a map of normalized values for the enum
 var SGRule_PolicyAction_normal = map[string]string{
-	"DENY":   "DENY",
-	"PERMIT": "PERMIT",
-	"REJECT": "REJECT",
-	"deny":   "DENY",
-	"permit": "PERMIT",
-	"reject": "REJECT",
+	"deny":   "deny",
+	"permit": "permit",
+	"reject": "reject",
+}
+
+var SGRule_PolicyAction_vname = map[int32]string{
+	0: "permit",
+	1: "deny",
+	2: "reject",
+}
+
+var SGRule_PolicyAction_vvalue = map[string]int32{
+	"permit": 0,
+	"deny":   1,
+	"reject": 2,
+}
+
+func (x SGRule_PolicyAction) String() string {
+	return SGRule_PolicyAction_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -190,7 +203,7 @@ func (m *SGRule) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Action = "PERMIT"
+		m.Action = "permit"
 	}
 	return ret
 }
@@ -388,8 +401,9 @@ func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *SGPolicySpec) Normalize() {
 
-	for _, v := range m.Rules {
+	for k, v := range m.Rules {
 		v.Normalize()
+		m.Rules[k] = v
 
 	}
 
@@ -529,9 +543,9 @@ func init() {
 	validatorMapSgpolicy["SGRule"]["all"] = append(validatorMapSgpolicy["SGRule"]["all"], func(path string, i interface{}) error {
 		m := i.(*SGRule)
 
-		if _, ok := SGRule_PolicyAction_value[m.Action]; !ok {
+		if _, ok := SGRule_PolicyAction_vvalue[m.Action]; !ok {
 			vals := []string{}
-			for k1, _ := range SGRule_PolicyAction_value {
+			for k1, _ := range SGRule_PolicyAction_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Action", vals)

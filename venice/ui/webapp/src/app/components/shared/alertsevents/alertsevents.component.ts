@@ -89,7 +89,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // This are the events that will be displayed
   filteredEvents: IEventsEvent[] = [];
 
-  eventsPostBody: IApiListWatchOptions = { 'sort-order': ApiListWatchOptions_sort_order.None };
+  eventsPostBody: IApiListWatchOptions = { 'sort-order': ApiListWatchOptions_sort_order.none };
 
   // All columns are set as not sortable as it isn't currently supported
   // TODO: Support sorting columns
@@ -106,10 +106,10 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
   // Will hold mapping from severity types to counts
   eventNumbers: { [severity in EventsEvent_severity]: number } = {
-    'INFO': 0,
-    'WARN': 0,
-    'CRITICAL': 0,
-    'DEBUG': 0
+    'info': 0,
+    'warn': 0,
+    'critical': 0,
+    'debug': 0
   };
 
   eventsIcon: Icon = {
@@ -160,16 +160,16 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
   // Will hold mapping from severity types to counts
   alertNumbers: { [severity in MonitoringAlertStatus_severity]: number } = {
-    'INFO': 0,
-    'WARN': 0,
-    'CRITICAL': 0,
+    'info': 0,
+    'warn': 0,
+    'critical': 0,
   };
 
   // The current alert severity filter, set to null if it is on All.
   currentAlertSeverityFilter;
 
   // Alert State filters
-  selectedStateFilters = [MonitoringAlertSpec_state_uihint.OPEN];
+  selectedStateFilters = [MonitoringAlertSpec_state_uihint.open];
   possibleFilterStates = Object.values(MonitoringAlertSpec_state_uihint);
 
   showDebugEvents: boolean = false;
@@ -239,7 +239,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     if (this.selector != null) {
       this.eventsPostBody = {
         'field-selector': this.selector.eventSelector.selector,
-        'sort-order': ApiListWatchOptions_sort_order.None
+        'sort-order': ApiListWatchOptions_sort_order.none
       };
       this.alertQuery = {
         'field-selector': this.selector.alertSelector.selector
@@ -373,7 +373,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
       if (this.showDebugEvents) {
         this.filteredEvents = this.events;
       } else {
-        this.filteredEvents = this.events.filter(item => item.severity !== EventsEvent_severity.DEBUG);
+        this.filteredEvents = this.events.filter(item => item.severity !== EventsEvent_severity.debug);
       }
       this.eventsTotalCount = this.filteredEvents.length;
 
@@ -475,19 +475,19 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   resolveAlert(alert: MonitoringAlert) {
     const summary = 'Alert Resolved';
     const msg = 'Marked alert as resolved';
-    this.updateAlertState(alert, MonitoringAlertSpec_state.RESOLVED, summary, msg);
+    this.updateAlertState(alert, MonitoringAlertSpec_state.resolved, summary, msg);
   }
 
   acknowledgeAlert(alert) {
     const summary = 'Alert Acknowledged';
     const msg = 'Marked alert as acknowledged';
-    this.updateAlertState(alert, MonitoringAlertSpec_state.ACKNOWLEDGED, summary, msg);
+    this.updateAlertState(alert, MonitoringAlertSpec_state.acknowledged, summary, msg);
   }
 
   openAlert(alert) {
     const summary = 'Alert Opened';
     const msg = 'Marked alert as open';
-    this.updateAlertState(alert, MonitoringAlertSpec_state.OPEN, summary, msg);
+    this.updateAlertState(alert, MonitoringAlertSpec_state.open, summary, msg);
   }
 
   /**
@@ -535,7 +535,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   resolveSelectedAlerts() {
     const summary = 'Alerts Resolved';
     const msg = 'Marked selected alerts as resolved';
-    const newState = MonitoringAlertSpec_state.RESOLVED;
+    const newState = MonitoringAlertSpec_state.resolved;
     const observables = this.buildObservaleList(newState);
     this.updateAlertList(observables, summary, msg);
   }
@@ -546,7 +546,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   acknowledgeSelectedAlerts() {
     const summary = 'Alerts Acknowledged';
     const msg = 'Marked selected alerts as acknowledged';
-    const newState = MonitoringAlertSpec_state.ACKNOWLEDGED;
+    const newState = MonitoringAlertSpec_state.acknowledged;
     const observables = this.buildObservaleList(newState);
     this.updateAlertList(observables, summary, msg);
   }
@@ -557,7 +557,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   openSelectedAlerts() {
     const summary = 'Alerts Opened';
     const msg = 'Marked selected alerts as open';
-    const newState = MonitoringAlertSpec_state.OPEN;
+    const newState = MonitoringAlertSpec_state.open;
     const observables = this.buildObservaleList(newState);
     this.updateAlertList(observables, summary, msg);
   }
@@ -624,7 +624,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    */
   showBatchResolveIcon(): boolean {
     // we want selected alerts all NOT in RESOLVED state
-    return this.showBatchIconHelper(MonitoringAlertSpec_state.RESOLVED, true);
+    return this.showBatchIconHelper(MonitoringAlertSpec_state.resolved, true);
   }
 
   /**
@@ -632,7 +632,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    */
   showBatchAcknowLedgeIcon(): boolean {
     // we want selected alerts all NOT in ACKNOWLEDGED state
-    return this.showBatchIconHelper(MonitoringAlertSpec_state.ACKNOWLEDGED, true);
+    return this.showBatchIconHelper(MonitoringAlertSpec_state.acknowledged, true);
   }
 
   /**
@@ -640,6 +640,6 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    */
   showBatchOpenIcon(): boolean {
     // we want selected alerts all NOT in OPEN state
-    return this.showBatchIconHelper(MonitoringAlertSpec_state.OPEN, true);
+    return this.showBatchIconHelper(MonitoringAlertSpec_state.open, true);
   }
 }

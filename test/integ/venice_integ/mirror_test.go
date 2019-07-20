@@ -35,10 +35,10 @@ var testMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_PKTS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
-					Type: "ERSPAN",
+					Type: monitoring.PacketCollectorType_ERSPAN.String(),
 					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "111.1.1.1",
 					},
@@ -76,7 +76,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
 			StartConditions: monitoring.MirrorStartConditions{
 				// schedule *after* 10 sec - Fix it based on current time when creating a session
 				ScheduleTime: &api.Timestamp{
@@ -87,7 +87,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			},
 			Collectors: []monitoring.MirrorCollector{
 				{
-					Type: "ERSPAN",
+					Type: monitoring.PacketCollectorType_ERSPAN.String(),
 					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "111.1.1.1",
 					},

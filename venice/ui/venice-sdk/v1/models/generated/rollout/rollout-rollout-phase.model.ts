@@ -36,7 +36,7 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
         },
         'phase': {
             enum: RolloutRolloutPhase_phase_uihint,
-            default: 'PRE_CHECK',
+            default: 'pre-check',
             required: true,
             type: 'string'
         },

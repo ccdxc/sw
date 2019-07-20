@@ -33,7 +33,7 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
         },
         'auth-method': {
             enum: AuthRadiusServer_auth_method,
-            default: 'PAP',
+            default: 'pap',
             required: true,
             type: 'string'
         },

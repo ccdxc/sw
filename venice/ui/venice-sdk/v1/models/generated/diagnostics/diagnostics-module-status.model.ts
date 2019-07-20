@@ -44,7 +44,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
         },
         'category': {
             enum: DiagnosticsModuleStatus_category,
-            default: 'Venice',
+            default: 'venice',
             required: true,
             type: 'string'
         },

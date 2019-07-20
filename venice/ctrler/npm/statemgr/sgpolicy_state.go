@@ -32,6 +32,19 @@ func versionToInt(v string) int {
 	return i
 }
 
+// convertPolicyAction converts from Venice Action to netproto Action strings
+func convertPolicyAction(in string) string {
+	switch in {
+	case security.SGRule_PERMIT.String():
+		return netproto.PolicyRule_PERMIT.String()
+	case security.SGRule_DENY.String():
+		return netproto.PolicyRule_DENY.String()
+	case security.SGRule_REJECT.String():
+		return netproto.PolicyRule_REJECT.String()
+	}
+	return ""
+}
+
 // convertRules need not handle validation as the rules are already validate by the precommit api server hook
 func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto.PolicyRule) {
 	sgp.SGPolicy.Status.RuleStatus = make([]security.SGRuleStatus, len(sgp.SGPolicy.Spec.Rules))
@@ -41,7 +54,7 @@ func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto
 		if len(v.Apps) > 0 {
 			for _, app := range v.Apps {
 				a := netproto.PolicyRule{
-					Action: v.Action,
+					Action: convertPolicyAction(v.Action),
 					Src: &netproto.MatchSelector{
 						SecurityGroups: v.FromSecurityGroups,
 						Addresses:      v.FromIPAddresses,
@@ -58,7 +71,7 @@ func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto
 			}
 		} else {
 			a := netproto.PolicyRule{
-				Action: v.Action,
+				Action: convertPolicyAction(v.Action),
 				Src: &netproto.MatchSelector{
 					SecurityGroups: v.FromSecurityGroups,
 					Addresses:      v.FromIPAddresses,

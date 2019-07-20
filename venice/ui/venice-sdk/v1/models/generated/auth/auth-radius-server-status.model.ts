@@ -24,7 +24,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'result': {
             enum: AuthRadiusServerStatus_result,
-            default: 'Connect_Success',
+            default: 'connect-success',
             required: true,
             type: 'string'
         },

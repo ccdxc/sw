@@ -122,6 +122,7 @@ extend google.protobuf.MessageOptions {
   bool forceDoc = 51292;
 };
 
+// Venice Option extensions applicable to Fields
 extend google.protobuf.FieldOptions {
   // Relation definition between a field and an object.
   ObjectRln objRelation = 51300;
@@ -137,3 +138,8 @@ extend google.protobuf.FieldOptions {
 	// Default is mutable=true. Limited to scalar fields.
 	bool mutable = 51304;
 };
+
+// Venice Option extensions applicable to EnumValues
+extend google.protobuf.EnumValueOptions {
+  string enumValueStr = 51340;
+}

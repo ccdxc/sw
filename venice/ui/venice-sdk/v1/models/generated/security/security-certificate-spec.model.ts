@@ -39,7 +39,7 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
         },
         'usages': {
             enum: SecurityCertificateSpec_usages,
-            default: 'Server',
+            default: 'server',
             description:  'Usage can be &quot;client&quot;, &quot;server&quot; or &quot;trust-root&quot; in any combination. A &quot;server&quot; certificate is used by a server to authenticate itself to the client A &quot;client&quot; certificate is used by a client to authenticate itself to a server A &quot;trust-root&quot; certificate is self-signed and is only used to validate certificates presented by peers. &quot;client&quot; and &quot;server&quot; certificates are always accompanied by a private key, whereas &quot;trust-root&quot;-only certificates are not.',
             required: true,
             type: 'Array<string>'

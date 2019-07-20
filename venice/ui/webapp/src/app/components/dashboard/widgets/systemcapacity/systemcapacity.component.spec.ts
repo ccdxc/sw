@@ -76,10 +76,10 @@ describe('node cluster test', () => {
     },
     'status' : {
       'conditions' : [{
-        'status' : 'TRUE',
-        'type' : 'HEALTHY'
+        'status' : 'true',
+        'type' : 'healthy'
       }],
-      'phase' : 'JOINED',
+      'phase' : 'joined',
     }
   });
   const node2 = new ClusterNode({
@@ -89,10 +89,10 @@ describe('node cluster test', () => {
     },
     'status' : {
       'conditions' : [{
-        'status' : 'FALSE',
-        'type' : 'HEALTHY'
+        'status' : 'false',
+        'type' : 'healthy'
       }],
-      'phase' : 'JOINED',
+      'phase' : 'joined',
     }
   });
   const node3 = new ClusterNode({
@@ -102,10 +102,10 @@ describe('node cluster test', () => {
     },
     'status' : {
       'conditions' : [{
-        'status' : 'FALSE',
-        'type' : 'HEALTHY'
+        'status' : 'false',
+        'type' : 'healthy'
       }],
-      'phase' : 'JOINED',
+      'phase' : 'joined',
     }
   });
   const node4 = new ClusterNode({
@@ -115,10 +115,10 @@ describe('node cluster test', () => {
     },
     'status' : {
       'conditions' : [{
-        'status' : 'UNKNOWN',
-        'type' : 'HEALTHY'
+        'status' : 'unknown',
+        'type' : 'healthy'
       }],
-      'phase' : 'JOINED',
+      'phase' : 'joined',
     }
   });
 
@@ -129,10 +129,10 @@ describe('node cluster test', () => {
     },
     'status' : {
       'conditions' : [{
-        'status' : 'UNKNOWN',
-        'type' : 'HEALTHY'
+        'status' : 'unknown',
+        'type' : 'healthy'
       }],
-      'phase' : 'JOINED',
+      'phase' : 'joined',
     }
   });
 
@@ -181,7 +181,7 @@ describe('node cluster test', () => {
     expect(component.unknownnodes).toBe(1);
     expect(component.unhealthynodes).toBe(2);
     expect(component.healthynodes).toBe(1);
-    node3.status.conditions[0].status = ClusterNodeCondition_status.TRUE;
+    node3.status.conditions[0].status = ClusterNodeCondition_status.true;
     watchSubject.next({
       events: [
         {

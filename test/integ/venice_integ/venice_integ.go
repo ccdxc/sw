@@ -945,7 +945,7 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 			return false, snicList
 		}
 		for _, snic := range snicList {
-			if snic.Status.AdmissionPhase != "ADMITTED" {
+			if snic.Status.AdmissionPhase != cluster.SmartNICStatus_ADMITTED.String() {
 				return false, snicList
 			}
 		}

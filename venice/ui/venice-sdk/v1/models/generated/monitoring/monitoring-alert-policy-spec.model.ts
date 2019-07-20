@@ -52,7 +52,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
         },
         'severity': {
             enum: MonitoringAlertPolicySpec_severity,
-            default: 'INFO',
+            default: 'info',
             required: true,
             type: 'string'
         },

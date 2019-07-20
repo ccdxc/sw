@@ -522,9 +522,10 @@ func (m *AutoMsgClusterWatchHelper) Validate(ver, path string, ignoreStatus bool
 
 func (m *AutoMsgClusterWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -581,9 +582,10 @@ func (m *AutoMsgHostWatchHelper) Validate(ver, path string, ignoreStatus bool, i
 
 func (m *AutoMsgHostWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -640,9 +642,10 @@ func (m *AutoMsgNodeWatchHelper) Validate(ver, path string, ignoreStatus bool, i
 
 func (m *AutoMsgNodeWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -699,9 +702,10 @@ func (m *AutoMsgSmartNICWatchHelper) Validate(ver, path string, ignoreStatus boo
 
 func (m *AutoMsgSmartNICWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -758,9 +762,10 @@ func (m *AutoMsgTenantWatchHelper) Validate(ver, path string, ignoreStatus bool,
 
 func (m *AutoMsgTenantWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -817,9 +822,10 @@ func (m *AutoMsgVersionWatchHelper) Validate(ver, path string, ignoreStatus bool
 
 func (m *AutoMsgVersionWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -876,9 +882,10 @@ func (m *ClusterList) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *ClusterList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -905,9 +912,10 @@ func (m *HostList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *HostList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -934,9 +942,10 @@ func (m *NodeList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *NodeList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -963,9 +972,10 @@ func (m *SmartNICList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *SmartNICList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -992,9 +1002,10 @@ func (m *TenantList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *TenantList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 
@@ -1021,9 +1032,10 @@ func (m *VersionList) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 
 func (m *VersionList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

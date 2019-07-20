@@ -126,9 +126,10 @@ func (m *AutoMsgModuleWatchHelper) Validate(ver, path string, ignoreStatus bool,
 
 func (m *AutoMsgModuleWatchHelper) Normalize() {
 
-	for _, v := range m.Events {
+	for k, v := range m.Events {
 		if v != nil {
 			v.Normalize()
+			m.Events[k] = v
 		}
 	}
 
@@ -185,9 +186,10 @@ func (m *ModuleList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 
 func (m *ModuleList) Normalize() {
 
-	for _, v := range m.Items {
+	for k, v := range m.Items {
 		if v != nil {
 			v.Normalize()
+			m.Items[k] = v
 		}
 	}
 

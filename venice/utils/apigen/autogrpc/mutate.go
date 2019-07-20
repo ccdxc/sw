@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"reflect"
@@ -17,8 +18,12 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
-	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
-	common "github.com/pensando/sw/venice/utils/apigen/plugins/common"
+	"github.com/pensando/sw/venice/utils/apigen/annotations"
+	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
+)
+
+const (
+	customEnumStringParam = "custom_enumstr"
 )
 
 type codeInfo struct {
@@ -821,10 +826,57 @@ func addServiceWatcherMsg(f *descriptor.FileDescriptorProto, s *descriptor.Servi
 		"watch", true, false, "", nil)
 }
 
+func insertFileDefaults(params map[string]string, file *descriptor.FileDescriptorProto) error {
+	v, ok := params[customEnumStringParam]
+	if !ok {
+		return nil
+	}
+	if val, err := strconv.ParseBool(v); err != nil || !val {
+		return nil
+	}
+
+	// skip generating String function for Enums, since we will be generating those ourselves
+	enumStringOpt, err := getExtensionDesc(file.GetOptions(), "gogoproto.goproto_enum_stringer_all")
+	if err != nil {
+		glog.V(1).Infof("Get gogoproto.goproto_enum_stringer_all desc failed (%s)\n", err)
+		return fmt.Errorf("failed to the get extension Descriptor(%s)", err)
+	}
+	enableStringer := false
+	if file.GetOptions() == nil {
+		file.Options = &descriptor.FileOptions{}
+	}
+	err = proto.SetExtension(file.GetOptions(), enumStringOpt, &enableStringer)
+	if err != nil {
+		return fmt.Errorf("failed to set extension (%s)", err)
+	}
+	return nil
+}
+
+func parseReqParam(param string, pkgMap map[string]string) error {
+	if param == "" {
+		return nil
+	}
+	for _, p := range strings.Split(param, ",") {
+		spec := strings.SplitN(p, "=", 2)
+		if len(spec) == 2 {
+			name, value := spec[0], spec[1]
+			pkgMap[name] = value
+		}
+	}
+	return nil
+}
+
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
 func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 	msgMap := make(map[string]*descriptor.DescriptorProto)
 	pkgMap := make(map[string]string)
+	params := make(map[string]string)
+	if req.Parameter != nil {
+		err := parseReqParam(req.GetParameter(), params)
+		if err != nil {
+			glog.Fatalf("Error parsing flags: %v", err)
+		}
+	}
 
 	protoRe := regexp.MustCompile(`protos/([a-z]|[A-Z]|[0-9]|_|.)+.proto$`)
 	for _, f := range req.GetProtoFile() {
@@ -855,6 +907,11 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 				}
 			}
 
+			// Insert File level options
+			err := insertFileDefaults(params, f)
+			if err != nil {
+				glog.Fatalf("failed to insert file options(%s)", err)
+			}
 			crudMsgMap := make(map[string]bool)
 			glog.V(1).Infof("File is %s [%s]\n", *f.Name, *f.Package)
 			glog.V(1).Infof("Before Mutation file is %+v", f)

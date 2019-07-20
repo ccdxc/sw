@@ -342,8 +342,9 @@ func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 
 func (m *WorkloadSpec) Normalize() {
 
-	for _, v := range m.Interfaces {
+	for k, v := range m.Interfaces {
 		v.Normalize()
+		m.Interfaces[k] = v
 
 	}
 

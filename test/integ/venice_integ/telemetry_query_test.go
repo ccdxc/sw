@@ -35,7 +35,7 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 	apiGwAddr := "localhost:" + it.config.APIGatewayPort
 	username := "fwlogsUser"
 	roleName := "fwlogsRole"
-	resKind := "FwlogsQuery"
+	resKind := auth.Permission_FwlogsQuery.String()
 
 	adminCtx, err := it.loggedInCtx()
 	AssertOk(c, err, "Failed to get logged in context")
@@ -71,7 +71,7 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 					ResourceTenant: globals.DefaultTenant,
 					ResourceKind:   resKind,
 					Actions: []string{
-						"Read",
+						auth.Permission_Read.String(),
 					},
 				},
 			},
@@ -162,7 +162,7 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 					ResourceGroup: string(apiclient.GroupAuth),
 					ResourceKind:  string(auth.KindUser),
 					Actions: []string{
-						"Read",
+						auth.Permission_Read.String(),
 					},
 				},
 			},
