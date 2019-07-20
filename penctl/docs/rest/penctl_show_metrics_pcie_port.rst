@@ -3,7 +3,7 @@
 penctl show metrics pcie port
 -----------------------------
 
-
+Pcie Port Metrics information
 
 Synopsis
 ~~~~~~~~
@@ -12,10 +12,7 @@ Synopsis
 
 ---------------------------------
  Pcie Port Metrics information:
-
-
 Value Description:
-
 intr_total : total port intrs.
 intr_ltssmst_early : link train before linkup.
 intr_ltssmst : link train after  linkup.

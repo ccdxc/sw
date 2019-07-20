@@ -1,20 +1,24 @@
-## penctl show metrics pcie
+## penctl show metrics mac
 
-
+Show MacMetrics from Naples
 
 ### Synopsis
 
 
 
 ---------------------------------
- Metrics for pciemgr
+ Show MacMetrics From Naples 
 ---------------------------------
 
+
+```
+penctl show metrics mac [flags]
+```
 
 ### Options
 
 ```
-  -h, --help   help for pcie
+  -h, --help   help for mac
 ```
 
 ### Options inherited from parent commands
@@ -29,6 +33,4 @@
 
 ### SEE ALSO
 * [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
-* [penctl show metrics pcie pciemgr](penctl_show_metrics_pcie_pciemgr.md)	 - Pcie Mgr Metrics information
-* [penctl show metrics pcie port](penctl_show_metrics_pcie_port.md)	 - Pcie Port Metrics information
 

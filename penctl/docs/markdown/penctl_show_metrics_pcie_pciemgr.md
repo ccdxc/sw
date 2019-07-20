@@ -1,6 +1,6 @@
 ## penctl show metrics pcie pciemgr
 
-
+Pcie Mgr Metrics information
 
 ### Synopsis
 
@@ -8,6 +8,7 @@
 
 ---------------------------------
  Pcie Mgr Metrics information:
+Value Description:
 not_intr : notify total intrs.
 not_spurious : notify spurious intrs.
 not_cnt : notify total txns.
