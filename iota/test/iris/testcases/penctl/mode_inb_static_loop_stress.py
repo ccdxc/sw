@@ -13,8 +13,9 @@ def Trigger(tc):
     if len(tc.Nodes) > 0:
         n = tc.Nodes[0]
 
-        for i in range(0, 50):
+        for i in range(0, 6):
             ret = common.SetNaplesModeInband_Static(n, "1.1.1.1", "2.2.2.2/24")
+            time.sleep(10)
             mode = common.PenctlGetTransitionPhaseStatus(n)
             if mode != "VENICE_UNREACHABLE":
                 return api.types.status.FAILURE
