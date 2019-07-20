@@ -18,6 +18,7 @@ private:
     std::string  filename;
     IOWatcherPtr watcher;
     void         rotate();
+    void         stop();
 public:
     static std::shared_ptr<PipedIO> create(int fd, std::string filename);
     ~PipedIO();

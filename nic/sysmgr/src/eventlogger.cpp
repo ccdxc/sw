@@ -31,7 +31,6 @@ void EventLogger::LogServiceEvent(eventtypes::EventTypes event,
 
     key.set_name(name);
 
-    logger->debug("Logging {} server event {}", name, description);
     this->recorder->event(event, "SysmgrProcessStatus", key,
         description.c_str(), name.c_str());
 }
@@ -44,7 +43,6 @@ void EventLogger::LogSystemEvent(eventtypes::EventTypes event,
 
     key.set_name("default");
 
-    logger->debug("Logging system event {}", description);
     this->recorder->event(event, "SysmgrSystemStatus", key,
         description.c_str());
 }

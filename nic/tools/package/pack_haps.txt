@@ -23,6 +23,7 @@ nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/p4pd/capri_p4_table_map.js
 nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_txdma_table_map.json
 
 nic/build/aarch64/iris/bin/sysmgr                                   /nic/bin/
+nic/build/aarch64/iris/bin/canary                                   /nic/bin/
 nic/build/aarch64/iris/bin/coremgr                                  /nic/bin/
 nic/build/aarch64/iris/bin/delphi_hub                               /nic/bin/
 nic/build/aarch64/iris/bin/delphictl                                /nic/bin/
@@ -222,6 +223,7 @@ nic/tools/switch_rootfs.sh                                          /nic/tools/
 nic/tools/bringup_mgmt_ifs.sh                                       /nic/tools/
 nic/tools/firewall.sh                                               /nic/tools/
 nic/tools/clear_nic_config.sh                                       /nic/tools/
+nic/tools/timer_debug.sh                                            /nic/tools/
 nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /nic/tools/
 nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /etc/bash_completion.d/
 nic/tools/.bashrc                                                   /root/

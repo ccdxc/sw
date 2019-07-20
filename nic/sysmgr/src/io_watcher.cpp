@@ -21,8 +21,8 @@ IOWatcher::IOWatcher(int fd, IOReactorPtr reactor)
 {
     this->reactor = reactor;
     set_non_blocking(fd);
-    io.set<IOWatcher, &IOWatcher::io_callback>(this);
-    io.start(fd, ev::READ);
+    this->io.set<IOWatcher, &IOWatcher::io_callback>(this);
+    this->io.start(fd, ev::READ);
 }
 
 void IOWatcher::io_callback(ev::io &watcher, int revents)
@@ -32,7 +32,7 @@ void IOWatcher::io_callback(ev::io &watcher, int revents)
 
 void IOWatcher::stop()
 {
-    io.stop();
+    this->io.stop();
 }
 
 IOWatcher::~IOWatcher()

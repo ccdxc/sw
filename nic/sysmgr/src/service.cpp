@@ -196,6 +196,8 @@ void Service::on_child(pid_t pid)
     EventLogger::getInstance()->LogServiceEvent(eventtypes::NAPLES_SERVICE_STOPPED,
         "Service %s stopped", this->spec->name);
 
+    run_debug(this->pid);
+
     // SERVICE_CONFIG_STATE_OFF means we killed the process, don't worry about
     // copying stdout
     if (this->config_state == SERVICE_CONFIG_STATE_ON &&
@@ -235,6 +237,7 @@ void Service::on_timer()
     this->timer_watcher->stop();
 
     this->fault("Process timed-out");
+    run_debug(this->pid);
 }
 
 void Service::reset_dependencies()

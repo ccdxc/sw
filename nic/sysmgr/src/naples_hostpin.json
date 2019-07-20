@@ -1,5 +1,37 @@
 [
     {
+        "name": "canary0",
+        "command": "/nic/bin/canary /obfl/canary0.log",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0x1"
+    },
+    {
+        "name": "canary1",
+        "command": "/nic/bin/canary /obfl/canary1.log",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0x2"
+    },
+    {
+        "name": "canary2",
+        "command": "/nic/bin/canary /obfl/canary2.log",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0x4"
+    },
+    {
+        "name": "canary3",
+        "command": "/nic/bin/canary /obfl/canary3.log",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0x8"
+    },
+    {
         "name": "delphi",
         "command": "/nic/bin/delphi_hub",
         "dependencies": [],

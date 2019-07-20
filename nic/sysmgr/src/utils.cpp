@@ -116,6 +116,39 @@ void replace_fd(int from, int to)
     close(from);
 }
 
+void run_debug(pid_t crashed_pid)
+{
+    pid_t  pid;
+    int    fd;
+    time_t now;
+    char   timestr[256];
+    char   filename[512];
+
+    time(&now);
+    strftime(timestr, sizeof(timestr) - 1, "%Y%m%d%H%M%S", gmtime(&now));
+    snprintf(filename, sizeof(filename) - 1, "/data/timer_debug_%s_%u.log",
+        timestr, crashed_pid);
+
+    logger->info("Saving timer debug logs to {}", filename);
+    
+    pid = fork();
+    if (pid == -1)
+    {
+        logger->error("Fork failed: {}", strerror(errno));
+    }
+    else if (pid == 0)
+    {
+        ev_loop_fork(EV_DEFAULT);
+        ev_loop_destroy(EV_DEFAULT);
+
+        fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+        replace_fd(fd, 1);
+        replace_fd(fd, 2);
+
+        exec_command("/nic/tools/timer_debug.sh");
+    }
+}
+
 void exec_command(const std::string &command)
 {
     // split the command to an array of string(tokens)

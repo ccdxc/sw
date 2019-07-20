@@ -26,9 +26,27 @@ PipedIOPtr PipedIO::create(int fd, std::string filename)
 
 PipedIO::~PipedIO()
 {
-    this->watcher->stop();
-    close(this->out_fd);
-    close(this->in_fd);
+    this->stop();
+}
+
+void PipedIO::stop()
+{
+    logger->debug("Closing {}", this->filename);
+    if (this->watcher != nullptr)
+    {
+        this->watcher->stop();
+        this->watcher = nullptr;
+    }
+    if (this->out_fd != -1)
+    {
+        close(this->out_fd);
+        this->out_fd = -1;
+    }
+    if (this->in_fd != -1)
+    {
+        this->in_fd = -1;
+        close(this->in_fd);
+    }
 }
 
 void PipedIO::rotate()
@@ -36,6 +54,7 @@ void PipedIO::rotate()
     if (this->size >= MAX_LOG_SIZE)
     {
         std::string old = this->filename + ".1";
+        logger->debug("Rotating {}", this->filename);
         // remove the old "old" if it exist
         unlink(old.c_str());
         close(this->out_fd);
@@ -54,8 +73,22 @@ void PipedIO::on_io(int fd)
     while (true)
     {
         n = read(fd, buf, sizeof(buf));
-        if (n <= 0)
+        logger->debug("Read {} for {}", n, this->filename);
+        if (n == 0) /* socket closed */
         {
+            logger->debug("EOF for {}", this->filename);
+            this->stop();
+            return;
+        }
+        if (n == -1) /* error */
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                /* we are non-blocking so this is normal */
+            {
+                return;
+            }
+            logger->error("Errno: {}", errno);
+            this->stop();
             return;
         }
         this->size += n;

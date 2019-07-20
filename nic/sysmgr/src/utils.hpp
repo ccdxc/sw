@@ -35,5 +35,6 @@ extern void        cpulock(unsigned long cpu_affinity);
 extern std::string get_logname_for_process(std::string name, int pid,
                                            std::string suffix);
 extern std::string get_main_config_file();
+extern void        run_debug(pid_t crashed_pid);
 
 #endif // __UTILS_HPP__
