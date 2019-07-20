@@ -28,6 +28,8 @@ func UpgCtxGetPreUpgTableVersion(ctx *UpgCtx, meta CompVersion) (string, error) 
 		return ctx.PreUpgMeta.KernelVersion, nil
 	case PCIE:
 		return ctx.PreUpgMeta.PcieVersion, nil
+	case DEVCONF:
+		return ctx.PreUpgMeta.DevConfVersion, nil
 	}
 	return "", errors.New("Version not found")
 }
@@ -42,6 +44,8 @@ func UpgCtxGetPostUpgTableVersion(ctx *UpgCtx, meta CompVersion) (string, error)
 		return ctx.PostUpgMeta.KernelVersion, nil
 	case PCIE:
 		return ctx.PostUpgMeta.PcieVersion, nil
+	case DEVCONF:
+		return ctx.PostUpgMeta.DevConfVersion, nil
 	}
 	return "", errors.New("Version not found")
 }

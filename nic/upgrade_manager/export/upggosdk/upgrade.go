@@ -30,6 +30,8 @@ const (
 	KERNEL CompVersion = 1
 	//PCIE version
 	PCIE CompVersion = 2
+	//DEVCONF version
+	DEVCONF CompVersion = 3
 )
 
 type upgSdk struct {
@@ -90,6 +92,7 @@ type ImgMeta struct {
 	NicmgrVersion   string
 	KernelVersion   string
 	PcieVersion     string
+	DevConfVersion  string
 }
 
 //UpgCtx is the wrapper that holds all the information about the current upgrade

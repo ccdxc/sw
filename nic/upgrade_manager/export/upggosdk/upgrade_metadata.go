@@ -21,6 +21,7 @@ type preUpgImgMeta struct {
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
 			PcieVersion     string `json:"pcie_compat_version"`
+			DevConfVersion  string `json:"dev_conf_compat_version"`
 		} `json:"image"`
 	} `json:"uboot"`
 	Mainfwa struct {
@@ -32,6 +33,7 @@ type preUpgImgMeta struct {
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
 			PcieVersion     string `json:"pcie_compat_version"`
+			DevConfVersion  string `json:"dev_conf_compat_version"`
 		} `json:"kernel_fit"`
 		SystemImage struct {
 			BuildDate       string `json:"build_date"`
@@ -41,6 +43,7 @@ type preUpgImgMeta struct {
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
 			PcieVersion     string `json:"pcie_compat_version"`
+			DevConfVersion  string `json:"dev_conf_compat_version"`
 		} `json:"system_image"`
 	} `json:"mainfwa"`
 	Mainfwb struct {
@@ -52,6 +55,7 @@ type preUpgImgMeta struct {
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
 			PcieVersion     string `json:"pcie_compat_version"`
+			DevConfVersion  string `json:"dev_conf_compat_version"`
 		} `json:"kernel_fit"`
 		SystemImage struct {
 			BuildDate       string `json:"build_date"`
@@ -61,6 +65,7 @@ type preUpgImgMeta struct {
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
 			PcieVersion     string `json:"pcie_compat_version"`
+			DevConfVersion  string `json:"dev_conf_compat_version"`
 		} `json:"system_image"`
 	} `json:"mainfwb"`
 }
@@ -74,6 +79,7 @@ type postUpgImgMeta struct {
 	NicmgrVersion   string `json:"nicmgr_compat_version"`
 	KernelVersion   string `json:"kernel_compat_version"`
 	PcieVersion     string `json:"pcie_compat_version"`
+	DevConfVersion  string `json:"dev_conf_compat_version"`
 	Firmware        struct {
 		Boot struct {
 			Type  string `json:"type"`
@@ -150,6 +156,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 				upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Mainfwa.SystemImage.NicmgrVersion
 				upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Mainfwa.SystemImage.KernelVersion
 				upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Mainfwa.SystemImage.PcieVersion
+				upgCtx.PreUpgMeta.DevConfVersion = preImgMeta.Mainfwa.SystemImage.DevConfVersion
 				upgCtx.PreUpgMeta.BuildDate = preImgMeta.Mainfwa.SystemImage.BuildDate
 				upgCtx.PreUpgMeta.BaseVersion = preImgMeta.Mainfwa.SystemImage.BaseVersion
 				upgCtx.PreUpgMeta.SoftwareVersion = preImgMeta.Mainfwa.SystemImage.SoftwareVersion
@@ -157,6 +164,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 				upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Mainfwb.SystemImage.NicmgrVersion
 				upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Mainfwb.SystemImage.KernelVersion
 				upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Mainfwb.SystemImage.PcieVersion
+				upgCtx.PreUpgMeta.DevConfVersion = preImgMeta.Mainfwb.SystemImage.DevConfVersion
 				upgCtx.PreUpgMeta.BuildDate = preImgMeta.Mainfwb.SystemImage.BuildDate
 				upgCtx.PreUpgMeta.BaseVersion = preImgMeta.Mainfwb.SystemImage.BaseVersion
 				upgCtx.PreUpgMeta.SoftwareVersion = preImgMeta.Mainfwb.SystemImage.SoftwareVersion
@@ -189,6 +197,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		upgCtx.PostUpgMeta.NicmgrVersion = postImgMeta.NicmgrVersion
 		upgCtx.PostUpgMeta.KernelVersion = postImgMeta.KernelVersion
 		upgCtx.PostUpgMeta.PcieVersion = postImgMeta.PcieVersion
+		upgCtx.PostUpgMeta.DevConfVersion = postImgMeta.DevConfVersion
 		upgCtx.PostUpgMeta.BuildDate = postImgMeta.BuildDate
 		upgCtx.PostUpgMeta.BaseVersion = postImgMeta.BaseVersion
 		upgCtx.PostUpgMeta.SoftwareVersion = postImgMeta.SoftwareVersion

@@ -21,6 +21,9 @@ delphi::error UpgCtxApi::UpgCtxGetUpgTableVersion (ImageInfo& imgInfo, UpgMeta m
         case PCIEVER:
             version = imgInfo.pcieVersion;
             return delphi::error::OK();
+        case DEVCONFVER:
+            version = imgInfo.devConfVersion;
+            return delphi::error::OK();
     }
     return delphi::error("Meta not found");
 }

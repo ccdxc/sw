@@ -7,9 +7,11 @@
 
 #include "nic/upgrade_manager/include/c/upgrade_ctx.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade_handler.hpp"
+#include "nic/upgrade_manager/export/upgcsdk/upgrade_ctx_api.hpp"
 
 using upgrade::HdlrResp;
 using upgrade::UpgCtx;
+using upgrade::UpgCtxApi;
 
 namespace hal {
 namespace upgrade {

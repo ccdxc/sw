@@ -21,7 +21,10 @@ std::string empty_str("");
 HdlrResp
 upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 {
-    HAL_TRACE_DEBUG("[upgrade] Handling compat checks msg ...");
+    std::string preVer, postVer;
+    ::upgrade::UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, ::upgrade::DEVCONFVER, preVer);
+    ::upgrade::UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, ::upgrade::DEVCONFVER, postVer);
+    HAL_TRACE_DEBUG("[upgrade] Handling compat checks msg ... preVer {} postVer {}", preVer, postVer);
     return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 

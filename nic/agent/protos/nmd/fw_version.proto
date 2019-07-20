@@ -16,6 +16,7 @@ message ImageInfo {
     string NicmgrCompatVersion = 5[(gogoproto.jsontag) = "nicmgr_compat_version,omitempty"];
     string KernelCompatVersion = 6[(gogoproto.jsontag) = "kernel_compat_version,omitempty"];
     string PcieCompatVersion = 7[(gogoproto.jsontag) = "pcie_compat_version,omitempty"];
+    string DevConfCompatVersion = 8[(gogoproto.jsontag) = "dev_conf_compat_version,omitempty"];
 }
 
 message UbootFw {

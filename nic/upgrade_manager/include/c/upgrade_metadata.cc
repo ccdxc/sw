@@ -77,6 +77,9 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 } else if (!strcmp(sysimg.first.c_str(), "pcie_compat_version")) {
                     meta.pcieVersion = sysimg.second.get_value<string>();
                     UPG_LOG_DEBUG("running pcie version: {}", meta.pcieVersion);
+                } else if (!strcmp(sysimg.first.c_str(), "dev_conf_compat_version")) {
+                    meta.devConfVersion = sysimg.second.get_value<string>();
+                    UPG_LOG_DEBUG("running devconf version: {}", meta.devConfVersion);
                 } else if (!strcmp(sysimg.first.c_str(), "build_date")) {
                     meta.buildDate = sysimg.second.get_value<string>();
                     UPG_LOG_DEBUG("running build date: {}", meta.buildDate);
@@ -105,6 +108,9 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 } else if (!strcmp(item.first.c_str(), "pcie_compat_version")) {
                     meta.pcieVersion = item.second.get_value<string>();;
                     UPG_LOG_DEBUG("upgrade pcie version: {}", meta.pcieVersion);
+                } else if (!strcmp(item.first.c_str(), "dev_conf_compat_version")) {
+                    meta.devConfVersion = item.second.get_value<string>();
+                    UPG_LOG_DEBUG("running devconf version: {}", meta.devConfVersion);
                 } else if (!strcmp(item.first.c_str(), "build_date")) {
                     meta.buildDate = item.second.get_value<string>();
                     UPG_LOG_DEBUG("upgrade build date: {}", meta.buildDate);
