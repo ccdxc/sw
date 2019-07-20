@@ -354,11 +354,11 @@ class QpObject(base.ConfigObjectBase):
         if (GlobalOptions.dryrun): return
         # Congestion management will be enabled by the tests that need it
         self.sq.qstate.Read()
-        self.sq.qstate.congestion_mgmt_enable = 0
+        self.sq.qstate.data.congestion_mgmt_enable = 0
         self.sq.qstate.WriteWithDelay()
 
         self.rq.qstate.Read()
-        self.rq.qstate.congestion_mgmt_enable = 0
+        self.rq.qstate.data.congestion_mgmt_enable = 0
         self.rq.qstate.WriteWithDelay()
 
         if not self.svc == 3 and not self.remote:
