@@ -148,7 +148,7 @@ fi
 
 update_fwupgrade_state "PRESERVING FWUPGRADE STATE TO NEW FILESYSTEM"
 
-mount -t tmpfs tmpfs /new/mnt
+mount -t tmpfs -o size=20M tmpfs /new/mnt
 mkdir -p /new/mnt/upper /new/mnt/work
 mount -t overlay overlay -o lowerdir=/new,upperdir=/new/mnt/upper,workdir=/new/mnt/work /new/rw
 cp -a /var/run/fwupgrade.state /new/rw/var/run/.
