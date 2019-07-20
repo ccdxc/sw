@@ -420,7 +420,8 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 	var reason []string
 	for svc, instances := range c.servicesHealth.services {
 		if instances.desiredNumberScheduled != int32(len(instances.list)) {
-			reason = append(reason, fmt.Sprintf("Service %s failed to run desired number of instances", svc))
+			reason = append(reason, fmt.Sprintf("%s(%d/%d) running,", svc, len(instances.list),
+				instances.desiredNumberScheduled))
 		}
 	}
 	if len(reason) > 0 {
