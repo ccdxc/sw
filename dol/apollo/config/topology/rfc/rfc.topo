@@ -321,7 +321,7 @@ vpc:
               # policies with stateless rules
               - type : specific
                 policytype : stateless      # disjoint prefix but proto & l4 overlap
-                overlaptype : none
+                overlaptype : proto
                 direction  : bidir
                 rule:
                   - protocol: tcp

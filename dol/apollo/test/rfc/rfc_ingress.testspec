@@ -1,7 +1,7 @@
 # RFC Test Spec for ingress cases
 selectors:
     root: ref://store/templates/id=POLICY
-    maxlimits: 2
+    maxlimits: 5
     policy: filter://Direction=ingress
 
 packets:
