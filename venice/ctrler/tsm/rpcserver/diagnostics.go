@@ -20,6 +20,11 @@ type diagnosticsServer struct {
 }
 
 func (d *diagnosticsServer) WatchModule(options *api.ListWatchOptions, stream tsproto.DiagnosticsApi_WatchModuleServer) error {
+	moduleEventChannel := make(chan memdb.Event, memdb.WatchLen)
+	defer close(moduleEventChannel)
+	d.stateMgr.WatchObjects(statemgr.KindModule, moduleEventChannel)
+	defer d.stateMgr.StopWatchObjects(statemgr.KindModule, moduleEventChannel)
+
 	modules := d.stateMgr.ListModuleState()
 	for _, moduleState := range modules {
 		moduleState.Lock()
@@ -31,11 +36,6 @@ func (d *diagnosticsServer) WatchModule(options *api.ListWatchOptions, stream ts
 		moduleState.Unlock()
 		stream.Send(moduleCopy)
 	}
-
-	moduleEventChannel := make(chan memdb.Event, memdb.WatchLen)
-	defer close(moduleEventChannel)
-	d.stateMgr.WatchObjects(statemgr.KindModule, moduleEventChannel)
-	defer d.stateMgr.StopWatchObjects(statemgr.KindModule, moduleEventChannel)
 
 	// Receives notifications from StateMgr when a Module object is created/updated
 	ctx := stream.Context()

@@ -19,8 +19,8 @@ func TestWatchModule(t *testing.T) {
 	stateMgr, rpcServer, rpcClient := createRPCServerClient(t)
 	Assert(t, (stateMgr != nil) && (rpcServer != nil) && (rpcClient != nil), "Err creating rpc server")
 	defer stateMgr.Stop()
-	defer rpcClient.Close()
 	defer rpcServer.Stop()
+	defer rpcClient.Close()
 
 	const (
 		node1   = "node1"
