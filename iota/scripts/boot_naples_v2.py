@@ -468,6 +468,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /sysconfig/config1/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config1/*.conf", "#")
         self.SendlineExpect("rm -f /sysconfig/config0/clusterTrustRoots.pem", "#")
+        self.SendlineExpect("rm -f /sysconfig/config0/frequency.json", "#")
 
         self.SendlineExpect("rm -rf /data/log && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
