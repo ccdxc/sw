@@ -77,6 +77,7 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 		if err != nil {
 			return nil, errors.NewInternalError(err)
 		}
+		o.node.Status.Quorum = true
 	}
 
 	// Transport key is an asymmetric key that allows multiple CMD instances to securely agree on a
