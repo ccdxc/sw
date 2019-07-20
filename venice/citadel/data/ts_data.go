@@ -324,7 +324,6 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 // ExecuteQuery executes a query on the data node
 func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tproto.QueryResp, error) {
 	var resp tproto.QueryResp
-
 	dn.logger.Infof("%s Received ExecuteQuery req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
@@ -704,6 +703,8 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 
 // ExecuteAggQuery queries all shards and aggregates the response
 func (dn *DNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tproto.QueryResp, error) {
+	dn.queryMutex.Lock()
+	defer dn.queryMutex.Unlock()
 
 	if req.ClusterType != meta.ClusterTypeTstore {
 		return nil, fmt.Errorf("invalid cluster type %v", req.ClusterType)

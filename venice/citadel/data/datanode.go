@@ -78,6 +78,7 @@ type DNode struct {
 	kshards      sync.Map          // kstore shards
 	rpcClients   sync.Map          // rpc connections
 	logger       log.Logger
+	queryMutex   sync.Mutex // query lock
 
 	isStopped bool // is the datanode stopped?
 }
