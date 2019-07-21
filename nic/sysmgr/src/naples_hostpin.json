@@ -37,7 +37,7 @@
         "dependencies": [],
         "flags": [],
         "timeout": 0.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "pciemgrd",
@@ -49,7 +49,7 @@
             }],
         "flags": ["critical"],
         "timeout": 30.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "nicmgr",
@@ -81,7 +81,7 @@
             }],
         "flags": [],
         "timeout": 30.0,
-        "cpu-affinity": "0xB"
+        "cpu-affinity": "0x9"
     },
     {
         "name": "netagent",
@@ -97,7 +97,7 @@
             }],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "asicerrord",
@@ -113,7 +113,7 @@
             }],
         "flags": [],
         "timeout": 0.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "nmd",
@@ -142,7 +142,7 @@
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "tmagent",
@@ -158,7 +158,7 @@
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "nevtsproxy",
@@ -174,7 +174,7 @@
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "sysmond",
@@ -190,7 +190,7 @@
             }],
         "flags": [],
         "timeout": 30.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "upgrade",
@@ -207,7 +207,7 @@
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 30.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "pen-ntsa",
@@ -224,6 +224,6 @@
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x4"
+        "cpu-affinity": "0xC"
     }
 ]
