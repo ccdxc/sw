@@ -1,209 +1,209 @@
 {
- "Cluster": [
+ "cluster": [
   {
    "Name": "AUDITING_FAILED",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Writing of AuditEvent failed"
   },
   {
    "Name": "AUTO_GENERATED_TLS_CERT",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Auto generated certificate is being used for API Gateway TLS"
   },
   {
    "Name": "ELECTION_CANCELLED",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Leader election cancelled"
   },
   {
    "Name": "ELECTION_NOTIFICATION_FAILED",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Failed to send leader election notification"
   },
   {
    "Name": "ELECTION_STARTED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Leader election started in the cluster"
   },
   {
    "Name": "ELECTION_STOPPED",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Leader election stopped"
   },
   {
    "Name": "HOST_SMART_NIC_SPEC_CONFLICT",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "The system has detected a conflict between the SmartNIC specifications of different Host objects"
   },
   {
    "Name": "LEADER_CHANGED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Leader changed in the election"
   },
   {
    "Name": "LEADER_ELECTED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Leader elected for the cluster"
   },
   {
    "Name": "LEADER_LOST",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Node lost leadership during the election"
   },
   {
    "Name": "LOGIN_FAILED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "User login failed"
   },
   {
    "Name": "MODULE_CREATION_FAILED",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Module creation for diagnostics failed"
   },
   {
    "Name": "NIC_ADMITTED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "NIC admitted to the cluster"
   },
   {
    "Name": "NIC_HEALTHY",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "NIC health transitioned to 'true'"
   },
   {
    "Name": "NIC_REJECTED",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "A SmartNIC admission request was rejected"
   },
   {
    "Name": "NIC_UNHEALTHY",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "NIC health transitioned to 'false'"
   },
   {
    "Name": "NIC_UNREACHABLE",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "NIC is unreachable"
   },
   {
    "Name": "NODE_DISJOINED",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Node disjoined from the cluster"
   },
   {
    "Name": "NODE_HEALTHY",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Node is healthy"
   },
   {
    "Name": "NODE_JOINED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Node joined the cluster"
   },
   {
    "Name": "NODE_UNREACHABLE",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Node is unreachable"
   },
   {
    "Name": "QUORUM_MEMBER_ADD",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Added member to quorum"
   },
   {
    "Name": "QUORUM_MEMBER_HEALTHY",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Quorum member is now healthy"
   },
   {
    "Name": "QUORUM_MEMBER_REMOVE",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Removed member from quorum"
   },
   {
    "Name": "QUORUM_MEMBER_UNHEALTHY",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Quorum member is now unhealthy"
   },
   {
    "Name": "QUORUM_UNHEALTHY",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Quorum does not have enough healthy members"
   },
   {
    "Name": "UNSUPPORTED_QUORUM_SIZE",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Quorum size is below supported minimum"
   }
  ],
- "Network": [
+ "network": [
   {
    "Name": "LINK_DOWN",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Port link status is down"
   },
   {
    "Name": "LINK_UP",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Port is linked up"
   }
  ],
- "Rollout": [
+ "rollout": [
   {
    "Name": "ROLLOUT_FAILED",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Rollout failed"
   },
   {
    "Name": "ROLLOUT_STARTED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Rollout initiated"
   },
   {
    "Name": "ROLLOUT_SUCCESS",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Rollout successfully completed"
   },
   {
    "Name": "ROLLOUT_SUSPENDED",
-   "Severity": "INFO",
+   "Severity": "info",
    "Desc": "Rollout suspended"
   }
  ],
- "System": [
+ "system": [
   {
    "Name": "NAPLES_SERVICE_STOPPED",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Naples service stopped"
   },
   {
    "Name": "SERVICE_PENDING",
-   "Severity": "DEBUG",
+   "Severity": "debug",
    "Desc": "Service pending"
   },
   {
    "Name": "SERVICE_RUNNING",
-   "Severity": "DEBUG",
+   "Severity": "debug",
    "Desc": "Service running"
   },
   {
    "Name": "SERVICE_STARTED",
-   "Severity": "DEBUG",
+   "Severity": "debug",
    "Desc": "Service started"
   },
   {
    "Name": "SERVICE_STOPPED",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "Service stopped"
   },
   {
    "Name": "SERVICE_UNRESPONSIVE",
-   "Severity": "CRITICAL",
+   "Severity": "critical",
    "Desc": "Service unresponsive due to lack of system resources"
   },
   {
    "Name": "SYSTEM_COLDBOOT",
-   "Severity": "WARN",
+   "Severity": "warn",
    "Desc": "System cold booted"
   }
  ]

@@ -42,7 +42,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/gogoproto \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --pensando_out=Mattributes.proto=github.com/pensando/sw/events/generated/eventattrs,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor,Mgithub.com/pensando/sw/api/protos/events.proto=github.com/pensando/sw/api/generated/events,Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:${evtsdir}/generated/${pkg} \
+        --pensando_out=custom_enumstr=true,Mattributes.proto=github.com/pensando/sw/events/generated/eventattrs,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor,Mgithub.com/pensando/sw/api/protos/events.proto=github.com/pensando/sw/api/generated/events,Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:${evtsdir}/generated/${pkg} \
         ${protofile} || { echo "Event types generation failed" ; exit -1; }
 done
 

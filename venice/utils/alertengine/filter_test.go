@@ -60,7 +60,7 @@ func TestFilter(t *testing.T) {
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
 				{Requirement: &fields.Requirement{Key: "Count", Operator: "lt", Values: []string{"7"}}, ObservedValue: "5"},
-				{Requirement: &fields.Requirement{Key: "Severity", Operator: "equals", Values: []string{eventattrs.Severity_INFO.String()}}, ObservedValue: "INFO"},
+				{Requirement: &fields.Requirement{Key: "Severity", Operator: "equals", Values: []string{eventattrs.Severity_INFO.String()}}, ObservedValue: eventattrs.Severity_INFO.String()},
 			},
 		},
 		{

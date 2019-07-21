@@ -38,9 +38,9 @@ func init() {
 
     {{range $evtTypes -}}
     eventTypes[{{.EType}}] = &EventTypeAttributes{
-                                EType: "{{.EType}}",
-                                Severity:"{{.Severity}}",
-                                Category:"{{.Category}}",
+                                EType: {{.EType}}.String(),
+                                Severity: "{{.Severity}}",
+                                Category: "{{.Category}}",
                                 Desc: "{{.Desc}}"}
 
     {{end}}

@@ -45,7 +45,7 @@ var _ = Describe("cluster health tests", func() {
 		By(fmt.Sprintf("ts: %s (%s) output: %s", time.Now(), killCmd, killCmdOut))
 		Eventually(func() bool {
 			return checkClusterHealth(clusterIf, &obj, cmd.ConditionStatus_FALSE.String(),
-				fmt.Sprintf("Service %s failed to run desired number of instances", globals.EvtsMgr))
+				fmt.Sprintf("%s(%d/%d) running", globals.EvtsMgr, ts.tu.NumQuorumNodes-1, ts.tu.NumQuorumNodes))
 		}, 150, 2).Should(BeTrue(),
 			fmt.Sprintf("ts: %s Cluster status is expected to be un-healthy as %s is not running on %s",
 				time.Now(), globals.EvtsMgr, nodeIP))
@@ -94,6 +94,7 @@ func checkClusterHealth(clusterIf cmd.ClusterV1ClusterInterface, clusterObjMeta 
 	}
 	for _, cond := range cl.Status.Conditions {
 		if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
+			By(fmt.Sprintf("ts: %s cluster health status: %+v", time.Now(), cond))
 			return cond.Status == expectedHealthCondition && strings.Contains(cond.Reason, expectedReason)
 		}
 	}

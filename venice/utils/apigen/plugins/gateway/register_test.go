@@ -18,6 +18,7 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	_ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 	"github.com/pensando/sw/venice/utils/testutils"
@@ -2240,10 +2241,13 @@ func TestGetEventTypes(t *testing.T) {
 	testutils.AssertOk(t, err, "failed to get event types from the proto")
 
 	expectedResponse := []*EventType{
-		{EType: "TYPE1", Severity: "INFO", Category: "Cluster", Desc: "Type 1"},
-		{EType: "TYPE2", Severity: "INFO", Category: "Cluster", Desc: "Type 2"},
-		{EType: "TYPE3", Severity: "WARN", Category: "System", Desc: "Type 3"},
-		{EType: "TYPE4", Severity: "DEBUG", Category: "Network", Desc: "Type 4"},
+		{EType: "TYPE1", Severity: eventattrs.Severity_INFO.String(), Category: eventattrs.Category_Cluster.String(),
+			Desc: "Type 1"},
+		{EType: "TYPE2", Severity: eventattrs.Severity_INFO.String(), Category: eventattrs.Category_Cluster.String(), Desc: "Type 2"},
+		{EType: "TYPE3", Severity: eventattrs.Severity_WARN.String(), Category: eventattrs.Category_System.String(),
+			Desc: "Type 3"},
+		{EType: "TYPE4", Severity: eventattrs.Severity_DEBUG.String(), Category: eventattrs.Category_Network.String(),
+			Desc: "Type 4"},
 	}
 	testutils.Assert(t, reflect.DeepEqual(eTypes, expectedResponse), "plugin did not generate expected event types")
 }

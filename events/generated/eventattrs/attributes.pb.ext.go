@@ -40,11 +40,12 @@ var Category_normal = map[string]string{
 	"rollout": "Rollout",
 }
 
-// Severity_vvalue is a map from value to the venice name
+// Category_vname is a map from value to the venice name
 var Category_vname = map[int32]string{
 	0: "cluster",
 	1: "network",
 	2: "system",
+	3: "rollout",
 }
 
 // Category_vvalue is a map from venice name to the value
@@ -52,4 +53,13 @@ var Category_vvalue = map[string]int32{
 	"cluster": 0,
 	"network": 1,
 	"system":  2,
+	"rollout": 3,
+}
+
+func (x Severity) String() string {
+	return Severity_vname[int32(x)]
+}
+
+func (x Category) String() string {
+	return Category_vname[int32(x)]
 }

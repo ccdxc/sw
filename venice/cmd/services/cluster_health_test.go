@@ -121,6 +121,14 @@ func TestClusterHealth(t *testing.T) {
 						},
 					},
 				},
+				Status: v1.PodStatus{
+					Phase: v1.PodRunning,
+					Conditions: []v1.PodCondition{
+						{
+							Status: v1.ConditionTrue,
+						},
+					},
+				},
 			}
 		} else if module.Spec.Type == protos.ModuleSpec_Deployment {
 			name := CreateAlphabetString(5)
@@ -139,6 +147,14 @@ func TestClusterHealth(t *testing.T) {
 							Controller: &controller,
 							Kind:       protos.ModuleSpec_ReplicaSet.String(),
 							Name:       fmt.Sprintf("%s-%s", deployObj.Name, name),
+						},
+					},
+				},
+				Status: v1.PodStatus{
+					Phase: v1.PodRunning,
+					Conditions: []v1.PodCondition{
+						{
+							Status: v1.ConditionTrue,
 						},
 					},
 				},
@@ -162,7 +178,7 @@ func TestClusterHealth(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			return checkClusterHealth(configWatcher, cluster.ConditionStatus_FALSE.String(),
-				fmt.Sprintf("%s(0/1) running,", globals.APIGw))
+				fmt.Sprintf("%s(0/1) running", globals.APIGw))
 		}, fmt.Sprintf("%s stopped, expected the cluster to be unhealthy", globals.APIGw), "5s", "60s")
 
 	// add the pod back event and expect the status to change back to healthy
@@ -180,6 +196,7 @@ func checkClusterHealth(configWatcher *mock.CfgWatcherService, status, reason st
 	}
 
 	for _, cond := range c.Status.Conditions {
+		log.Infof("cluster health status: %v", cond)
 		return cond.Type == cluster.ClusterCondition_HEALTHY.String() &&
 			cond.Status == status && cond.Reason == reason, nil
 	}

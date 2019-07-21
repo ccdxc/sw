@@ -420,7 +420,7 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 	var reason []string
 	for svc, instances := range c.servicesHealth.services {
 		if instances.desiredNumberScheduled != int32(len(instances.list)) {
-			reason = append(reason, fmt.Sprintf("%s(%d/%d) running,", svc, len(instances.list),
+			reason = append(reason, fmt.Sprintf("%s(%d/%d) running", svc, len(instances.list),
 				instances.desiredNumberScheduled))
 		}
 	}
@@ -537,13 +537,26 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 		}
 	}
 
+	if refName == "" {
+		c.logger.Errorf("pod event %v, %+v has no owner references", eventType, pod)
+		return
+	}
+
 	if _, ok := c.servicesHealth.services[refName]; !ok { // pod event reached before the module(ds/deploy) event
 		c.servicesHealth.services[refName] = &instances{}
 	}
 
 	switch eventType {
 	case k8swatch.Added:
-		c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list, pod.GetName())
+		if c.isPodRunning(pod) {
+			for _, instanceName := range c.servicesHealth.services[refName].list {
+				if instanceName == pod.GetName() {
+					c.servicesHealth.Unlock()
+					return
+				}
+			}
+			c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list, pod.GetName())
+		}
 	case k8swatch.Modified:
 		for i, instanceName := range c.servicesHealth.services[refName].list {
 			if instanceName == pod.GetName() {

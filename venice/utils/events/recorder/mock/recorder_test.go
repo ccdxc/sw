@@ -35,9 +35,12 @@ func TestMockEvtsRecorder(t *testing.T) {
 
 	// check the events in the buffer
 	bufStr := buf.String()
-	Assert(t, strings.Contains(bufStr, "type=SERVICE_STARTED category=System severity=DEBUG message=\"dummy event w/o object ref.\""),
+	Assert(t, strings.Contains(bufStr,
+		"type=SERVICE_STARTED category=system severity=debug message=\"dummy event w/o object ref.\""),
 		"expected event not available in the buffer")
-	Assert(t, strings.Contains(bufStr, "type=SERVICE_STOPPED category=System severity=WARN message=\"dummy event with object ref.\" object-ref.tenant=default object-ref.namespace=default object-ref.kind=Node object-ref.name=test-1"),
+	Assert(t, strings.Contains(bufStr,
+		"type=SERVICE_STOPPED category=system severity=warn message=\"dummy event with object ref.\" object-ref."+
+			"tenant=default object-ref.namespace=default object-ref.kind=Node object-ref.name=test-1"),
 		"expected event not available in the buffer")
 
 }
@@ -66,8 +69,11 @@ func TestMockEvtsRecorderWithOverride(t *testing.T) {
 
 	// check the events in the buffer
 	bufStr := buf.String()
-	Assert(t, strings.Contains(bufStr, "type=SERVICE_STARTED category=System severity=DEBUG message=\"dummy event w/o object ref.\""),
+	Assert(t, strings.Contains(bufStr,
+		"type=SERVICE_STARTED category=system severity=debug message=\"dummy event w/o object ref.\""),
 		"expected event not available in the buffer")
-	Assert(t, strings.Contains(bufStr, "type=SERVICE_STOPPED category=System severity=WARN message=\"dummy event with object ref.\" object-ref.tenant=default object-ref.namespace=default object-ref.kind=Node object-ref.name=test-1"),
+	Assert(t, strings.Contains(bufStr,
+		"type=SERVICE_STOPPED category=system severity=warn message=\"dummy event with object ref.\" object-ref."+
+			"tenant=default object-ref.namespace=default object-ref.kind=Node object-ref.name=test-1"),
 		"expected event not available in the buffer")
 }
