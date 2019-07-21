@@ -128,6 +128,9 @@ func Search(ctx context.Context, apigw string, query *search.SearchRequest, resp
 	searchURL := fmt.Sprintf("https://%s/search/v1/query", apigw)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
+	defer restcl.CloseIdleConnections()
+
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
@@ -150,6 +153,9 @@ func GetAuditEvent(ctx context.Context, apiGwAddr, eventID string, resp *audit.E
 	auditURL := fmt.Sprintf("https://%s/audit/v1/events/%s", apiGwAddr, eventID)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
+	defer restcl.CloseIdleConnections()
+
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {

@@ -599,6 +599,9 @@ func (tu *TestUtils) DebugOnAPIGw(ctx context.Context, apiGwAddr string, req *di
 	debugURL := fmt.Sprintf("https://%s/configs/diagnostics/v1/modules/%s/Debug", apiGwAddr, req.Name)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
+	defer restcl.CloseIdleConnections()
+
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {

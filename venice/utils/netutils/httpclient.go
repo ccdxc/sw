@@ -38,8 +38,53 @@ func (hc *HTTPClient) WithContext(ctx context.Context) {
 
 // WithTLSConfig sets TLS config of the client
 func (hc *HTTPClient) WithTLSConfig(config *tls.Config) {
-	hc.c.Transport = &http.Transport{
-		TLSClientConfig: config,
+	if hc.c.Transport != nil {
+		if t, ok := hc.c.Transport.(*http.Transport); ok {
+			t.TLSClientConfig = config
+		}
+	} else {
+		// get from default transport
+		if t, ok := http.DefaultTransport.(*http.Transport); ok {
+			hc.c.Transport = &http.Transport{
+				Proxy:                 t.Proxy,
+				DialContext:           t.DialContext,
+				MaxIdleConns:          t.MaxIdleConns,
+				IdleConnTimeout:       t.IdleConnTimeout,
+				TLSHandshakeTimeout:   t.TLSHandshakeTimeout,
+				ExpectContinueTimeout: t.ExpectContinueTimeout,
+				TLSClientConfig:       config,
+			}
+		} else {
+			hc.c.Transport = &http.Transport{
+				TLSClientConfig: config,
+			}
+		}
+	}
+}
+
+// DisableKeepAlives makes each request open a separate connection and closes them aggeressively
+func (hc *HTTPClient) DisableKeepAlives() {
+	if hc.c.Transport != nil {
+		if t, ok := hc.c.Transport.(*http.Transport); ok {
+			t.DisableKeepAlives = true
+		}
+	} else {
+		// get from default transport
+		if t, ok := http.DefaultTransport.(*http.Transport); ok {
+			hc.c.Transport = &http.Transport{
+				Proxy:                 t.Proxy,
+				DialContext:           t.DialContext,
+				MaxIdleConns:          t.MaxIdleConns,
+				IdleConnTimeout:       t.IdleConnTimeout,
+				TLSHandshakeTimeout:   t.TLSHandshakeTimeout,
+				ExpectContinueTimeout: t.ExpectContinueTimeout,
+				DisableKeepAlives:     true,
+			}
+		} else {
+			hc.c.Transport = &http.Transport{
+				DisableKeepAlives: true,
+			}
+		}
 	}
 }
 

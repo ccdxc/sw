@@ -150,15 +150,15 @@ func TestSecretsTransformer(t *testing.T) {
 	}
 
 	testClients := []clientParams{
-		clientParams{
+		{
 			client: npmClient,
 			refObj: &fullCustomer,
 		},
-		clientParams{
+		{
 			client: apiGwClient,
 			refObj: &scrubbedCustomer,
 		},
-		clientParams{
+		{
 			client: restClient,
 			refObj: &scrubbedCustomer,
 		},

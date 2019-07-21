@@ -49,7 +49,7 @@ import (
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	tokenauthsvc "github.com/pensando/sw/venice/cmd/services/tokenauth"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
@@ -701,6 +701,8 @@ func checkReverseProxy(t *testing.T, nmd *nmdstate.NMD, admPhase string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting REST client: %v", err)
 	}
+	client.DisableKeepAlives()
+	defer client.CloseIdleConnections()
 	url := revProxyURL + "/api/v1/naples/"
 	if auth {
 		url = "https://" + url
@@ -717,8 +719,14 @@ func checkReverseProxy(t *testing.T, nmd *nmdstate.NMD, admPhase string) error {
 	}
 	if auth {
 		// make a call without client cert and check that it is rejected
+		client, err := getAgentRESTClient(t, auth)
+		if err != nil {
+			return fmt.Errorf("Error getting REST client: %v", err)
+		}
 		tlsConfig := &tls.Config{InsecureSkipVerify: true}
 		client.WithTLSConfig(tlsConfig)
+		client.DisableKeepAlives()
+		defer client.CloseIdleConnections()
 		resp, err := client.Req("GET", url, nil, &naplesCfg)
 		if err == nil || resp == http.StatusOK {
 			return fmt.Errorf("Proxy request did not fail without valid certificate, err: %v, resp: %v", err, resp)

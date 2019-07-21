@@ -1033,6 +1033,8 @@ func (tb *TestBed) ListEvents(listWatchOptions *api.ListWatchOptions) (evtsapi.E
 	httpClient := netutils.NewHTTPClient()
 	httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	httpClient.SetHeader("Authorization", authzHdr)
+	httpClient.DisableKeepAlives()
+	defer httpClient.CloseIdleConnections()
 
 	URL := fmt.Sprintf("https://%s/events/v1/events", tb.GetVeniceURL()[0])
 	_, err = httpClient.Req("GET", URL, *listWatchOptions, &resp)

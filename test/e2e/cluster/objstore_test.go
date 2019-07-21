@@ -209,12 +209,14 @@ func createBuffer(size int) []byte {
 
 func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 	restcl := netutils.NewHTTPClient()
+	defer restcl.CloseIdleConnections()
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
 		return nil, fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
 	uri := fmt.Sprintf("https://%s/objstore/v1/images/objects/%s", ts.tu.APIGwAddr, filename)
 	By(fmt.Sprintf("fetch stat for file [%s][%s]", filename, uri))
 	resp := &objstore.Object{}

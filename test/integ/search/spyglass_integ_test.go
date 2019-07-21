@@ -16,7 +16,7 @@ import (
 
 	ptypes "github.com/gogo/protobuf/types"
 	grpcruntime "github.com/pensando/grpc-gateway/runtime"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	grpccodes "google.golang.org/grpc/codes"
 
 	"github.com/pensando/sw/api"
@@ -36,7 +36,7 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
 	pcache "github.com/pensando/sw/venice/spyglass/cache"
@@ -343,7 +343,7 @@ func getPolicySearchURL() string {
 // restarts Api Server and checks indexer watch is restablished
 // Deletes objects and checks elastic entries are deleted
 // Kills elastic and new objects are created
-// Startsup elastic again and checks new objects were indexed
+// Startups elastic again and checks new objects were indexed
 // Checks indexer's buffer overflows
 // Test for deleted objects while spyglass is down
 func TestSpyglassErrorHandling(t *testing.T) {
@@ -504,6 +504,8 @@ func TestSpyglass(t *testing.T) {
 			restcl := netutils.NewHTTPClient()
 			restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 			restcl.SetHeader("Authorization", tInfo.authzHeader)
+			restcl.DisableKeepAlives()
+			defer restcl.CloseIdleConnections()
 			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(),
 				"", true, []string{"tesla"}), nil, &resp)
 			if err != nil {
@@ -2439,6 +2441,9 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 	httpClient := netutils.NewHTTPClient()
 	httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	httpClient.SetHeader("Authorization", tInfo.authzHeader)
+	httpClient.DisableKeepAlives()
+	defer httpClient.CloseIdleConnections()
+
 	// Execute the Query Testcases
 	for _, tc := range queryTestcases {
 
@@ -3148,6 +3153,9 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 					restcl := netutils.NewHTTPClient()
 					restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 					restcl.SetHeader("Authorization", tInfo.authzHeader)
+					restcl.DisableKeepAlives()
+					defer restcl.CloseIdleConnections()
+
 					start := time.Now().UTC()
 					_, err := restcl.Req(httpMethod, searchURL, &tc.request, &response)
 					t.Logf("@@@ PolicySearch response time: %+v\n", time.Since(start))
@@ -3634,6 +3642,9 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 						restcl := netutils.NewHTTPClient()
 						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 						restcl.SetHeader("Authorization", tc.authzHeader)
+						restcl.DisableKeepAlives()
+						defer restcl.CloseIdleConnections()
+
 						start := time.Now().UTC()
 						_, err = restcl.Req("GET", searchURL, nil, &resp)
 						t.Logf("@@@ Search response time: %+v\n", time.Since(start))
@@ -3655,6 +3666,9 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 						restcl := netutils.NewHTTPClient()
 						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
+						restcl.DisableKeepAlives()
+						defer restcl.CloseIdleConnections()
+
 						start := time.Now().UTC()
 						_, err = restcl.Req(httpMethod, searchURL, &tc.query, &resp)
 						t.Logf("@@@ Search response time: %+v\n", time.Since(start))

@@ -18,7 +18,7 @@ import (
 	"time"
 
 	es "github.com/olivere/elastic"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -41,6 +41,7 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
+
 	// import gateway services
 	_ "github.com/pensando/sw/api/generated/auth/gateway"
 	_ "github.com/pensando/sw/api/generated/events/gateway"
@@ -774,6 +775,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			httpClient := netutils.NewHTTPClient()
 			httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 			httpClient.SetHeader("Authorization", rr.authzHdr)
+			httpClient.DisableKeepAlives()
+			defer httpClient.CloseIdleConnections()
 
 			// both GET and POST should behave the same
 			for _, reqMethod := range []string{"GET", "POST"} {
@@ -817,6 +820,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			httpClient := netutils.NewHTTPClient()
 			httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 			httpClient.SetHeader("Authorization", authzHeader)
+			httpClient.DisableKeepAlives()
+			defer httpClient.CloseIdleConnections()
 
 			AssertEventually(t,
 				func() (bool, interface{}) {
@@ -1135,6 +1140,8 @@ func TestEventsAlertEngine(t *testing.T) {
 		httpClient := netutils.NewHTTPClient()
 		httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 		httpClient.SetHeader("Authorization", authzHeader)
+		httpClient.DisableKeepAlives()
+		defer httpClient.CloseIdleConnections()
 
 		// check alert policy before update
 		ap := &monitoring.AlertPolicy{}

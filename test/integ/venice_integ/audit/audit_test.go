@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	es "github.com/olivere/elastic"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -504,10 +504,13 @@ func getEvent(ctx context.Context, apiGwAddr, selfLink string, resp *auditapi.Ev
 	auditURL := fmt.Sprintf("https://%s%s", apiGwAddr, selfLink)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
+	defer restcl.CloseIdleConnections()
+
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return fmt.Errorf("no authorizaton header in context")
+		return fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
 	status, err := restcl.Req("GET", auditURL, &auditapi.EventRequest{}, resp)
