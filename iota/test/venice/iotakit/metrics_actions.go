@@ -75,6 +75,7 @@ func (act *ActionCtx) VerifyRuleStats(timestr string, spc *SGPolicyCollection, m
 			res, err := act.model.tb.QueryMetrics("RuleMetrics", rule.RuleHash, timestr, int32(len(act.model.naples)))
 			if err != nil {
 				log.Errorf("Error during metrics query %v", err)
+				continue
 			}
 
 			expCount := minCounts[idx]

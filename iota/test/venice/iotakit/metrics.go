@@ -120,7 +120,7 @@ func (tb *TestBed) QueryMetrics(kind, name, timestr string, count int32) (*telem
 				// Name: name,
 				StartTime:    stime,
 				GroupbyField: "reporterID",
-				SortOrder:    "Descending",
+				SortOrder:    "descending",
 				Pagination: &telemetry_query.PaginationSpec{
 					Count: count,
 				},
