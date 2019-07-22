@@ -1,0 +1,15 @@
+Patch to adapt to a change which Oracle UEK pulled into a 4.14.35 kernel.
+
+index e6374dfb57..51ae0ead81 100644
+--- a/drivers/rdma/drv/ionic/ionic_kcompat.h
++++ b/drivers/rdma/drv/ionic/ionic_kcompat.h
+@@ -162,6 +162,9 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
+ #define HAVE_AH_ATTR_CACHED_GID
+ #endif
+ 
++/* Hack for Oracle UEK 4.14.35-1902 */
++#define HAVE_PORT_ATTR_IP_GIDS
++
+ #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,19, /* RHEL */ 99,99, /* OFA */ 4_19b)
+ #define ud_wr(wr) ud_wr((struct ib_send_wr *)(wr))
+ #define rdma_wr(wr) rdma_wr((struct ib_send_wr *)(wr))

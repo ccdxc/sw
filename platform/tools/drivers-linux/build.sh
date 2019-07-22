@@ -4,18 +4,24 @@ DIR=$(dirname "$0")
 DIR=$(readlink -f "$DIR")
 
 #
-# prereqs for rdma-core
+# prereqs for rdma-core: run ./setup_libs.sh
 #
-
-# Ubuntu/Debian
-#apt-get install build-essential libtool automake autoconf cmake gcc libudev-dev libnl-3-dev libnl-route-3-dev ninja-build pkg-config valgrind
-
-# RedHat/Fedora
-#yum install libtool automake autoconf cmake gcc libnl3-devel libudev-devel make pkgconfig valgrind-devel
 
 #
 # build ionic.ko and ionic_rdma.ko
 #
+UNAME=$(uname -r)
+case $UNAME in
+    *.el7uek.*)
+        # Oracle Unbreakable Enterprise Kernel requires special handling
+        echo "Adapting to $UNAME..."
+        if ! grep -q IB_PORT_IP_BASED_GIDS /usr/src/kernels/$UNAME/include/rdma/ib_verbs.h ; then
+            patch -f -p1 < "$DIR/patches/ionic_rdma-uek-ip-gids.patch"
+        fi
+    ;;
+    *)
+    ;;
+esac
 
 make -j -C drivers || exit
 
