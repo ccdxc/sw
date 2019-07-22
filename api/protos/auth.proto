@@ -239,7 +239,7 @@ message Permission {
     // ActionType is an action on a resource that a permission allows
     enum ActionType {
         // Reserved keyword to imply all action types
-        AllActions = 0 [(venice.enumValueStr) = "all-actions"];; // ui-hint: All Actions
+        AllActions = 0 [(venice.enumValueStr) = "all-actions"]; // ui-hint: All Actions
         Create     = 1; // ui-hint: Create
         Read       = 2; // ui-hint: Read
         Update     = 3; // ui-hint: Update

@@ -6737,6 +6737,7 @@
           ],
           "default": "all-actions",
           "x-ui-hints": {
+            "all-actions": "All Actions",
             "clear": "Clear Config",
             "commit": "Commit Config",
             "create": "Create",
@@ -6857,6 +6858,7 @@
           ],
           "default": "all-actions",
           "x-ui-hints": {
+            "all-actions": "All Actions",
             "clear": "Clear Config",
             "commit": "Commit Config",
             "create": "Create",

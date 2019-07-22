@@ -91,6 +91,7 @@ export enum AuthAuthenticators_authenticator_order_uihint {
 }
 
 export enum AuthOperation_action_uihint {
+    'all-actions' = "All Actions",
     'clear' = "Clear Config",
     'commit' = "Commit Config",
     'create' = "Create",
@@ -100,6 +101,7 @@ export enum AuthOperation_action_uihint {
 }
 
 export enum AuthPermission_actions_uihint {
+    'all-actions' = "All Actions",
     'clear' = "Clear Config",
     'commit' = "Commit Config",
     'create' = "Create",
