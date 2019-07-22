@@ -221,6 +221,7 @@ func createSGPolicy(tenant, namespace, name string, rules []security.SGRule) *se
 // PolicyGenerator is a helper function that creates config/policy
 // objects in API-server
 func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount int64) {
+	var aggregateRules []security.SGRule
 
 	// Create Tenant objects
 	for _, tenant := range Tenants {
@@ -356,11 +357,6 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_DENY.String(),
 		},
 	}
-	sgp1 := createSGPolicy(globals.DefaultTenant, globals.DefaultNamespace, "sgp-1", rules1)
-	log.Infof("\nCreating SGP policy name: %s", sgp1.Name)
-	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp1); err != nil {
-		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp1.Name, err)
-	}
 
 	// Create SGPolicy object-2
 	rules2 := []security.SGRule{
@@ -386,11 +382,6 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_PERMIT.String(),
 		},
 	}
-	sgp2 := createSGPolicy(globals.DefaultTenant, globals.DefaultNamespace, "sgp-2", rules2)
-	log.Infof("\nCreating SGP policy name: %s", sgp2.Name)
-	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp2); err != nil {
-		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp2.Name, err)
-	}
 
 	// Create SGPolicy object-3 with 70k rules
 	proto := []string{"tcp", "udp"}
@@ -404,9 +395,16 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			ToIPAddresses:   []string{fmt.Sprintf("20.%d.%d.%d/32", (i/(256*256))%256, (i/256)%256, i%256)},
 		}
 	}
-	sgp3 := createSGPolicy(globals.DefaultTenant, globals.DefaultNamespace, "sgp-scale", rules3)
-	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp3); err != nil {
-		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp3.Name, err)
+
+	// Aggregate all rules for search
+	aggregateRules = append(aggregateRules, rules1...)
+	aggregateRules = append(aggregateRules, rules2...)
+	aggregateRules = append(aggregateRules, rules3...)
+
+	sgp1 := createSGPolicy(globals.DefaultTenant, globals.DefaultNamespace, "sgp-aggregate", aggregateRules)
+	log.Infof("\nCreating SGP policy name: %s", sgp1.Name)
+	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp1); err != nil {
+		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp1.Name, err)
 	}
 }
 

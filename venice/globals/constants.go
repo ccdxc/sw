@@ -229,6 +229,9 @@ const (
 	// NaplesPipeline
 	NaplesPipelineIris   = "iris"
 	NaplesPipelineApollo = "apollo"
+
+	// MaxAllowedSGPolicies tracks the maximum number of security policies allowed per VRF. TODO relax this for future releases
+	MaxAllowedSGPolicies = 1
 )
 
 var (

@@ -1,8 +1,15 @@
 package impl
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/pensando/sw/api/generated/apiclient"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/runtime"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
@@ -52,6 +59,124 @@ func TestSGPolicyCreateAtTenant(t *testing.T) {
 
 	errs := s.validateSGPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
+}
+
+func TestSGPolicyCreateWithPreCommitHook(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+
+	kvs, err := store.New(storecfg)
+	AssertOk(t, err, "Failed to create kv store. Err: %v", err)
+
+	_, _, err = s.enforceMaxSGPolicyPreCommitHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.CreateOper, false, sgp)
+	AssertOk(t, err, "Single SGPolicy create must succeed")
+}
+
+func TestMaxSGPolicyEnforcement(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	sgp1 := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy1",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{""}, Codec: runtime.NewJSONCodec(runtime.GetDefaultScheme())}
+	kv, err := store.New(config)
+	AssertOk(t, err, "Failed to create kv store. Err: %v", err)
+
+	ctx := context.TODO()
+	key := strings.TrimSuffix(sgp.MakeKey(string(apiclient.GroupSecurity)), "/")
+	fmt.Println("KEY: ", key)
+	err = kv.Create(ctx, key, &sgp)
+	AssertOk(t, err, fmt.Sprintf("Error creating object in KVStore"))
+
+	_, _, err = s.enforceMaxSGPolicyPreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
+	fmt.Println(err)
+	Assert(t, err != nil, "SGPolicy creates exceeding max allowed must fail")
 }
 
 func TestSGPolicyCreateAtSGs(t *testing.T) {

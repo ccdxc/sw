@@ -121,15 +121,16 @@ func (c *Cache) matchProtocolPort(query *search.PolicySearchRequest, entry *secu
 	}
 
 	for _, pp := range entry.ProtoPorts {
-		if (strings.ToLower(pp.Protocol) == strings.ToLower(query.Protocol)) &&
-			strings.Contains(strings.ToLower(pp.Ports), strings.ToLower(query.Port)) {
-			return true
-		} else if (query.Protocol == "" || strings.ToLower(query.Protocol) == "any") &&
-			strings.Contains(strings.ToLower(pp.Ports), strings.ToLower(query.Port)) {
-			return true
-		} else if (query.Port == "" || strings.ToLower(query.Port) == "any") &&
+		if (query.Port == "" || strings.ToLower(query.Port) == "any") &&
 			(strings.ToLower(pp.Protocol) == strings.ToLower(query.Protocol)) {
 			return true
+		} else if (strings.ToLower(pp.Protocol) == strings.ToLower(query.Protocol)) || query.Protocol == "" || strings.ToLower(query.Protocol) == "any" {
+			temp := strings.Split(pp.Ports, ",")
+			for _, p := range temp {
+				if strings.ToLower(p) == strings.ToLower(query.Port) {
+					return true
+				}
+			}
 		}
 	}
 	return false

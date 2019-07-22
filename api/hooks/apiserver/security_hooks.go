@@ -1,16 +1,20 @@
 package impl
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
 
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -99,6 +103,39 @@ func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus
 	}
 
 	return ret
+}
+
+// enforceMaxSGPolicyPreCommitHook ensures that SG Policies will not exceed globals.MaxAllowedSGPolicies
+func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	policy, ok := i.(security.SGPolicy)
+	if !ok {
+		return i, false, fmt.Errorf("invalid object type %T. Expecting SGPolicy", i)
+	}
+
+	if ctx == nil || kvs == nil {
+		return i, false, fmt.Errorf("enforceMaxSGPolicyPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
+	}
+
+	switch oper {
+	case apiintf.CreateOper:
+		var sgPolicies security.SGPolicyList
+		pol := security.SGPolicy{}
+		pol.Tenant = policy.Tenant
+		sgpKey := strings.TrimSuffix(pol.MakeKey(string(apiclient.GroupSecurity)), "/")
+
+		if err := kvs.List(ctx, sgpKey, &sgPolicies); err != nil {
+			return nil, false, fmt.Errorf("failed to list SGPolicies. Err: %v", err)
+		}
+
+		if len(sgPolicies.Items) == globals.MaxAllowedSGPolicies {
+			log.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
+			return nil, false, fmt.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
+		}
+		return i, true, nil
+	default:
+		return i, true, nil
+	}
+
 }
 
 // validateProtoPort will enforce a valid proto/port declaration.
@@ -408,6 +445,7 @@ func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
 	}
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("SGPolicy", apiintf.CreateOper).GetRequestType().WithValidate(r.validateSGPolicy)
+	svc.GetCrudService("SGPolicy", apiintf.CreateOper).WithPreCommitHook(r.enforceMaxSGPolicyPreCommitHook)
 	svc.GetCrudService("App", apiintf.CreateOper).GetRequestType().WithValidate(r.validateApp)
 }
 
