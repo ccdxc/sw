@@ -183,7 +183,7 @@
             <div class="global-button global-alert-info alertsevents-main-menu-number "
                  [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
                  (click)="onAlertNumberClick('info')" [matTooltip]="'Infomational Alerts'"
-                 *ngIf="alertNumbers.info>0 && alertNumbers.info !== alerts.length">
+                 *ngIf="(alertNumbers.info>0 && alertNumbers.info !== alerts.length)">
               {{ alertNumbers.info }}</div>
 
 
@@ -250,7 +250,7 @@
                           (click)="acknowledgeAlert(rowData)">
                   archive
                 </mat-icon>
-                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'OPEN'"
+                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'open'"
                           matTooltip="Mark Alert as Open"
                           class="global-table-action-icon alertsevents-open-icon"
                           (click)="openAlert(rowData)">

@@ -597,8 +597,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * @param reversed
    * this.showBatchIconHelper(MonitoringAlertSpec_state.RESOLVED, true);
    *      means that we want selected alerts all NOT in RESOLVED state
-   * this.showBatchIconHelper(MonitoringAlertSpec_state.OPEN, false);
-   *      means that we want selected alerts all in OPEN state
+   * this.showBatchIconHelper(MonitoringAlertSpec_state.open, false);
+   *      means that we want selected alerts all in open state
    */
   showBatchIconHelper(state: MonitoringAlertSpec_state, reversed: boolean = true): boolean {
     if (!this.alertUpdatable || !this.selectedAlerts || this.selectedAlerts.length === 0) {
@@ -639,7 +639,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * This api serves html template
    */
   showBatchOpenIcon(): boolean {
-    // we want selected alerts all NOT in OPEN state
+    // we want selected alerts all NOT in open state
     return this.showBatchIconHelper(MonitoringAlertSpec_state.open, true);
   }
 }

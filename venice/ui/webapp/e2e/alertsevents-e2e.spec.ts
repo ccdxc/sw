@@ -22,14 +22,14 @@ describe('venice-ui alertsevents', () => {
       },
       'spec': {
         'resource': 'Event',
-        'severity': 'CRITICAL', // must match the event.severity dropdown option text
+        'severity': 'critical', // must match the event.severity dropdown option text
         'message': '',
         'requirements': [
           {
             'key': 'severity',  // severity will bring up multi-select in field-selector.value part.
             'operator': 'equals',
             'values': [
-              'CRITICAL'  // has to match multi-select option text
+              'critical'  // has to match multi-select option text
             ]
           }
         ],
@@ -61,7 +61,7 @@ describe('venice-ui alertsevents', () => {
               'key': 'status.severity',
               'operator': 'in',
               'values': [
-                'CRITICAL'
+                'critical'
               ]
             }
           ]
@@ -134,7 +134,7 @@ describe('venice-ui alertsevents', () => {
     await alertseventsPage.updateventAlertPolicy(monitoringAlertPolicy);
     await browser.sleep(2000); // wait for web-socket to refresh data.
     const severityValueCSS = 'app-eventalertpolicies  app-neweventalertpolicy .neweventalertpolicy-container p-dropdown[formControlName="severity"] label';
-    const  targetValue =  'CRITICAL';
+    const  targetValue =  'critical';
     await alertseventsPage.verifyEventAlertPolicy(monitoringAlertPolicy, severityValueCSS, targetValue);
     await browser.sleep(5000);
   });

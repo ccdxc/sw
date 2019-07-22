@@ -20,10 +20,10 @@ import { Utility } from '@app/common/Utility';
           "self-link": "/configs/monitoring/v1/tenant/default/alerts/c79bf224-b136-4edc-a3c6-bed60fbf4e01"
         },
         "spec": {
-          "state": "OPEN"
+          "state": "open"
         },
         "status": {
-          "severity": "INFO",
+          "severity": "info",
           "source": {
             "component": "pen-cmd",
             "node-name": "node1"

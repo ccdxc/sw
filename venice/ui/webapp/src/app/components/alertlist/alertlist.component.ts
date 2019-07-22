@@ -24,15 +24,15 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
 
   // match MonitoringAlertStatus_severity
   alertnumber = {
-    TOTAL: 0,
-    CRITICAL: 0,
-    WARN: 0,
-    INFO: 0
+    total: 0,
+    critical: 0,
+    warn: 0,
+    info: 0
   };
 
   menuIndicatorCSS = {};
   alerts = [];
-  currentAlertFilterType = 'TOTAL';
+  currentAlertFilterType = 'total';
 
   constructor() { }
 
@@ -61,12 +61,12 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
 
   public computeAlertNumbers( ) {
     this.alertnumber = {
-      TOTAL: 0,
-      CRITICAL: 0,
-      WARN: 0,
-      INFO: 0
+      total: 0,
+      critical: 0,
+      warn: 0,
+      info: 0
     };
-    this.alertnumber.TOTAL = this.alerts.length;
+    this.alertnumber.total = this.alerts.length;
       this.alerts.forEach(alert => {
         this.alertnumber[alert.status.severity] += 1;
       });
@@ -74,7 +74,7 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
 
   isToShowThisAlert(alert): boolean {
     const alertType = this.currentAlertFilterType;
-    if (alertType === 'TOTAL') {
+    if (alertType === 'total') {
       return true;
     } else {
       return (alert.status.severity === alertType);

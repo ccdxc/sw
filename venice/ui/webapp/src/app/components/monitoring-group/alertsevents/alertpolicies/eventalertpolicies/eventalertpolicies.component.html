@@ -34,11 +34,11 @@
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'spec.severity'">
       <div fxLayout="row" fxLayoutAlign="start center">
-        <mat-icon *ngIf="rowData.spec.severity === 'CRITICAL'" fxFlex="nogrow"
+        <mat-icon *ngIf="rowData.spec.severity === 'critical'" fxFlex="nogrow"
                   class="eventalertpolicies-icon global-alert-critical-icon">error</mat-icon>
-        <mat-icon *ngIf="rowData.spec.severity === 'WARN'" fxFlex="nogrow"
+        <mat-icon *ngIf="rowData.spec.severity === 'warn'" fxFlex="nogrow"
                   class="eventalertpolicies-icon global-alert-warning-icon">error</mat-icon>
-        <mat-icon *ngIf="rowData.spec.severity === 'INFO'" fxFlex="nogrow"
+        <mat-icon *ngIf="rowData.spec.severity === 'info'" fxFlex="nogrow"
                   class="eventalertpolicies-icon global-alert-info-icon">notifications</mat-icon>
         <div fxFlex="nogrow" style="margin-left: 25px"> {{ severityEnum[rowData.spec.severity] }}
         </div>

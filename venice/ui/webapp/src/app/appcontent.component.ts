@@ -520,7 +520,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   }
 
   updateHighestSeverity() {
-    this.alertHighestSeverity = 'INFO';
+    this.alertHighestSeverity = 'info';
     let alert: MonitoringAlert;
     for (let i = 0 ; i < this.alerts.length ; i++) {
       alert = this.alerts[i];

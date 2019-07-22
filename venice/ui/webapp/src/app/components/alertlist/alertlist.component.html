@@ -1,21 +1,21 @@
-<div class="alertlist-widget" *ngIf="alertnumber.TOTAL>0">
+<div class="alertlist-widget" *ngIf="alertnumber.total>0">
   <div class="alertlist-header-div">
     <div class="alertlist-main-menu">
       <div class="alertlist-main-menu-number-front-group-div">
         <span class="alertlist-main-menu-label">Alerts</span>
         <span class="alertlist-main-menu-number alertlist-main-menu-number-total"
-              (click)="onAlertNumberClick($event, 'TOTAL')">{{alertnumber.TOTAL | number}}</span>
+              (click)="onAlertNumberClick($event, 'total')">{{alertnumber.total | number}}</span>
       </div>
       <div class="alertlist-main-menu-number-back-group-div">
         <span class="alertlist-main-menu-number alertlist-main-menu-number-critical"
-              (click)="onAlertNumberClick($event, 'CRITICAL')"
-              *ngIf="alertnumber.CRITICAL>0">{{alertnumber.CRITICAL}}</span>
+              (click)="onAlertNumberClick($event, 'critical')"
+              *ngIf="alertnumber.critical>0">{{alertnumber.critical}}</span>
         <span class="alertlist-main-menu-number alertlist-main-menu-number-warning"
-              (click)="onAlertNumberClick($event, 'WARN')"
-              *ngIf="alertnumber.WARN>0">{{alertnumber.WARN}}</span>
+              (click)="onAlertNumberClick($event, 'warn')"
+              *ngIf="alertnumber.warn>0">{{alertnumber.warn}}</span>
         <span class="alertlist-main-menu-number alertlist-main-menu-number-info"
-              (click)="onAlertNumberClick($event, 'INFO')"
-              *ngIf="alertnumber.INFO>0">{{alertnumber.INFO}}</span>
+              (click)="onAlertNumberClick($event, 'info')"
+              *ngIf="alertnumber.info>0">{{alertnumber.info}}</span>
       </div>
     </div>
     <div class="alertlist-menu-indicator" [ngStyle]="menuIndicatorCSS">
@@ -35,13 +35,13 @@
     </span>
   </div>
 </div>
-<div class="alertlist-widget" *ngIf="alertnumber.TOTAL==0">
+<div class="alertlist-widget" *ngIf="alertnumber.total==0">
   <div class="alertlist-header-div">
     <div class="alertlist-main-menu">
       <div class="alertlist-main-menu-number-front-group-div">
         <span class="alertlist-main-menu-label">Alerts</span>
         <span class="alertlist-main-menu-number alertlist-main-menu-number-total"
-              (click)="onAlertNumberClick($event, 'total')">{{alertnumber.TOTAL| number}}</span>
+              (click)="onAlertNumberClick($event, 'total')">{{alertnumber.total| number}}</span>
       </div>
     </div>
     <div class="alertlist-empty-items-div">

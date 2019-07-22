@@ -46,7 +46,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   static KINDOPTIONS = 'kindOptions';
   static ACTIONOPTIONS = 'actionOptions';
   static RESOURCE_TENANT = null;
-  static ACTIONOPTIONS_ALL = 'AllActions';
+  static ACTIONOPTIONS_ALL = 'all-actions';
   static _ALL_ = '_All_';
 
   newAuthRole: AuthRole;
