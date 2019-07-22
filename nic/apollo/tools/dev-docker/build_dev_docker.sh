@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Checkout the repository and submodules
-# Do pull-assets 
+# Do pull-assets
 # Goto docker container, and execute below from <sw> directory.
 
 DST='/sw/apollo_sw'
@@ -19,7 +19,7 @@ copy_files() {
     nicf+='nic/include/notify.hpp nic/include/edmaq.h nic/include/eth_common.h '
     nicf+='nic/include/adminq.h nic/include/nvme_dev_if.h nic/include/virtio_dev_if.h'
 
-    p4d='nic/p4/include nic/p4/common nic/p4/common-p4+ nic/asm/common-p4+/include/ nic/p4-hlir ' 
+    p4d='nic/p4/include nic/p4/common nic/p4/common-p4+ nic/asm/common-p4+/include/ nic/p4-hlir '
     p4d+='nic/include/hal_pd_error.hpp nic/p4/eth nic/asm/eth '
     p4d+='nic/p4/adminq nic/p4/edma nic/p4/notify nic/asm/adminq nic/asm/edma nic/asm/notify '
 
@@ -34,7 +34,7 @@ copy_files() {
 
     pack_apollo='nic/conf/init_bins nic/conf/catalog_hw.json nic/conf/serdes.json '
     pack_apollo+='nic/tools/sysupdate.sh nic/tools/apollo nic/tools/sysreset.sh nic/tools/fwupdate '
-    pack_apollo+='nic/conf/captrace platform/src/app/pciemgrd nic/hal/third-party/spdlog/include/ ' 
+    pack_apollo+='nic/conf/captrace platform/src/app/pciemgrd nic/hal/third-party/spdlog/include/ '
     pack_apollo+='platform/src/app/memtun nic/hal/third-party/judy '
     pack_apollo+='platform/src/lib/pciemgr_if platform/drivers  platform/src/lib/nicmgr '
     pack_apollo+='platform/src/lib/rdmamgr_apollo '
@@ -47,6 +47,7 @@ copy_files() {
         protobuf+='nic/hal/third-party/google nic/proto/hal/module_gogo.mk nic/hal/third-party/grpc '
         protobuf+='nic/third-party/gflags/include nic/hal/third-party/openssl/include '
         protobuf+='nic/third-party/libz/include nic/third-party/liblmdb/include '
+        protobuf+='bin/upx '
         mkdir -p $DST/proto_bin
         cp -r /usr/bin/proto* $DST/proto_bin
         cp -r /usr/local/go $DST/
