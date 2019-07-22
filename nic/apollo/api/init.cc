@@ -190,7 +190,7 @@ pds_init (pds_init_params_t *params)
     core::thread_nicmgr_spawn(&api::g_pds_state);
 
     // spin fte threads
-    core::thread_fte_spawn(&api::g_pds_state);
+    //core::thread_fte_spawn(&api::g_pds_state);
 
     // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);

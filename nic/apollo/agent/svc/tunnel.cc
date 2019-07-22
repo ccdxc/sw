@@ -10,7 +10,7 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 
-// Create Tunnel Object
+// create tunnel object
 Status
 TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
@@ -41,7 +41,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
     return Status::OK;
 }
 
-// Update Tunnel Object
+// update tunnel object
 Status
 TunnelSvcImpl::TunnelUpdate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
@@ -112,7 +112,8 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
         }
         auto response = proto_rsp->add_response();
         tep_api_spec_to_proto_spec(response->mutable_spec(), &info.spec);
-        tep_api_status_to_proto_status(response->mutable_status(), &info.status);
+        tep_api_status_to_proto_status(response->mutable_status(),
+                                       &info.status);
         tep_api_stats_to_proto_stats(response->mutable_stats(), &info.stats);
     }
     return Status::OK;
