@@ -29,7 +29,7 @@ import (
  *   1. Watcher - responsible for maintaining a watch to API Server and giving events to writers
  *   2. Writers - responsible for creating bulk elastic requests and writing them to elastic
  *
- * Watchers establish a watch on all API Groups. It maintiains in memeory a resource version count so that if the
+ * Watchers establish a watch on all API Groups. It maintains in memory a resource version count so that if the
  * connection is broken, it can pick up the watch from where it left off. If API server no longer supports the
  * resource version we have, it returns a 410 HTTP Gone. In this case, or if we get any other errors during watcher creation
  * for a prolonged period of time, we shutdown indexer. Spyglass should restart indexer, and
@@ -51,7 +51,7 @@ const (
 	indexBatchIntvl   = 5 * time.Second
 	indexRefreshIntvl = 60 * time.Second
 	maxWriters        = 8 // Max concurrent writers
-	indexMaxBuffer    = (maxWriters * indexBatchSize)
+	indexMaxBuffer    = maxWriters * indexBatchSize
 )
 
 // Option fills the optional params for Indexer
@@ -387,7 +387,7 @@ func (idr *Indexer) Bulk(index, docType string, IDs []string, objects []interfac
 
 	if len(IDs) != len(objects) {
 		idr.logger.Errorf("Arg mismatch, len of IDs and objects should match")
-		return errors.New("Args mismatch")
+		return errors.New("args mismatch")
 	}
 
 	// Add objects to the Bulk-Request slice
@@ -517,8 +517,8 @@ func (idr *Indexer) refreshIndices() {
 			case <-idr.ctx.Done():
 				idr.logger.Infof("Stopping refreshIndices(), indexer stopped")
 				idr.Lock()
-				defer idr.Unlock()
 				idr.refreshIndicesRunning = false
+				idr.Unlock()
 				return
 			}
 		}

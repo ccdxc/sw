@@ -390,14 +390,12 @@ var _ = Describe("Objstore Write and read test", func() {
 		Expect(err).Should(BeNil(), "failed to create objstore client")
 	})
 
-	It("Exercise objstore Upload/Download", testObjCUDOps(true))
+	It("Exercise objstore Upload/Download", func() {
+		Skip("Skip this test until we fix #VS-340")
+		testObjCUDOps(true)
+	})
 
 	It("Restart VOS backends and check CUD operations", func() {
-		//
-		// BeforeEach(func() {
-		//
-		// })
-
 		for nodeid < ts.tu.NumQuorumNodes {
 			// restart
 			By(fmt.Sprintf("Trying CUD ops on Object store after restart of node id [%d]", nodeid))

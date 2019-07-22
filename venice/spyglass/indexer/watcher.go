@@ -261,7 +261,7 @@ func (idr *Indexer) startWriter(id int) {
 		return
 	}
 
-	idr.logger.Debugf("Starting Writer: %d to Elasticsearch", id)
+	idr.logger.Debugf("Starting Writer: %d to elasticsearch", id)
 	idr.requests[id] = make([]*elastic.BulkRequest, 0, idr.batchSize)
 
 	failedBulkCount := 0
@@ -270,7 +270,7 @@ func (idr *Indexer) startWriter(id int) {
 
 		// If we fail to write for 5 min, we restart indexer
 		if failedBulkCount == bulkTimeout {
-			idr.doneCh <- fmt.Errorf("Elastic write failed for %d minutes", bulkTimeout)
+			idr.doneCh <- fmt.Errorf("elastic write failed for %d minutes", bulkTimeout)
 			// We should be shutting down now
 			return
 		}
