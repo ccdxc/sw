@@ -178,6 +178,7 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 			   IB_LINK_LAYER_ETHERNET)
 #else
 #define HAVE_IB_REGISTER_DEVICE_NAME
+#define HAVE_RDMA_DEV_SYSFS_GROUP
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99, /* OFA */ 5_0)

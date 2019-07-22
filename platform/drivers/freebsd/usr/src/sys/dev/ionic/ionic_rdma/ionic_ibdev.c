@@ -195,32 +195,34 @@ static void ionic_xxx_resid_skip(struct resid_bits *bits)
 	}
 }
 
-static ssize_t show_hca(struct device *device, struct device_attribute *attr,
-			char *buf)
+static ssize_t hca_type_show(struct device *device,
+			     struct device_attribute *attr,
+			     char *buf)
 {
 	struct ionic_ibdev *dev =
 		container_of(device, struct ionic_ibdev, ibdev.dev);
 	return sprintf(buf, "Pensando Naples %u\n",
 		       pci_get_device(dev->hwdev->bsddev));
 }
+static DEVICE_ATTR_RO(hca_type);
 
-static ssize_t show_rev(struct device *device, struct device_attribute *attr,
-			char *buf)
+static ssize_t hw_rev_show(struct device *device,
+			   struct device_attribute *attr,
+			   char *buf)
 {
 	struct ionic_ibdev *dev =
 		container_of(device, struct ionic_ibdev, ibdev.dev);
 	return sprintf(buf, "%x\n", dev->info->asic_rev);
 }
+static DEVICE_ATTR_RO(hw_rev);
 
-static ssize_t show_board(struct device *device, struct device_attribute *attr,
-			  char *buf)
+static ssize_t board_id_show(struct device *device,
+			     struct device_attribute *attr,
+			     char *buf)
 {
 	return sprintf(buf, "%.*s\n", 32, "Pensando Naples");
 }
-
-static DEVICE_ATTR(hw_rev,   S_IRUGO, show_rev,    NULL);
-static DEVICE_ATTR(hca_type, S_IRUGO, show_hca,    NULL);
-static DEVICE_ATTR(board_id, S_IRUGO, show_board,  NULL);
+static DEVICE_ATTR_RO(board_id);
 
 static struct device_attribute *ionic_dev_attributes[] = {
 	&dev_attr_hw_rev,
