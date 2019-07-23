@@ -180,7 +180,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     }
     if (nics != null) {
       Object.keys(nics).forEach((key) => {
-        if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.timeout) {
+        if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.failed) {
           reasonArray.push(nics[key].reason);
          }
      });
