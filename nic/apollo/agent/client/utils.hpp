@@ -101,42 +101,6 @@ using pds::NexthopResponse;
 using pds::NexthopSpec;
 
 static void
-pds_encap_to_proto_encap (types::Encap *encap_spec, pds_encap_t *encap)
-{
-    switch (encap->type) {
-    case PDS_ENCAP_TYPE_NONE:
-        encap_spec->set_type(types::ENCAP_TYPE_NONE);
-        break;
-
-    case PDS_ENCAP_TYPE_DOT1Q:
-        encap_spec->set_type(types::ENCAP_TYPE_DOT1Q);
-        encap_spec->mutable_value()->set_vlanid(encap->val.vlan_tag);
-        break;
-
-    case PDS_ENCAP_TYPE_QINQ:
-        encap_spec->set_type(types::ENCAP_TYPE_QINQ);
-        encap_spec->mutable_value()->mutable_qinqtag()->
-            set_ctag(encap->val.qinq_tag.c_tag);
-        encap_spec->mutable_value()->mutable_qinqtag()->
-            set_stag(encap->val.qinq_tag.s_tag);
-        break;
-
-    case PDS_ENCAP_TYPE_MPLSoUDP:
-        encap_spec->set_type(types::ENCAP_TYPE_MPLSoUDP);
-        encap_spec->mutable_value()->set_mplstag(encap->val.mpls_tag);
-        break;
-
-    case PDS_ENCAP_TYPE_VXLAN:
-        encap_spec->set_type(types::ENCAP_TYPE_VXLAN);
-        encap_spec->mutable_value()->set_vnid(encap->val.vnid);
-        break;
-
-    default:
-        break;
-    }
-}
-
-static void
 populate_route_table_request (RouteTableRequest *req,
                               pds_route_table_spec_t *rt)
 {

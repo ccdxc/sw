@@ -170,7 +170,7 @@ iprange_api_spec_to_proto_spec (types::AddressRange *out_iprange,
     return sdk::SDK_RET_OK;
 }
 
-static inline void
+static inline sdk_ret_t
 pds_encap_to_proto_encap (types::Encap *proto_encap,
                           const pds_encap_t *pds_encap)
 {
@@ -201,9 +201,12 @@ pds_encap_to_proto_encap (types::Encap *proto_encap,
         proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
         proto_encap->mutable_value()->set_vnid(pds_encap->val.vnid);
         break;
+
     default:
-        break;
+        return SDK_RET_INVALID_ARG;
     }
+
+    return SDK_RET_OK;
 }
 
 static inline pds_encap_t
