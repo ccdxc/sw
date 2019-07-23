@@ -130,18 +130,28 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 
 		// stop handling venice policy
-		s.tmagent.tpClient.Stop()
+		if s.tmagent.tpClient != nil {
+			s.tmagent.tpClient.Stop()
+		}
 
-		s.tmagent.tpState.Close()
+		if s.tmagent.tpState != nil {
+			s.tmagent.tpState.Close()
+		}
 
 		// stop node watcher
-		s.tmagent.nodewatcher.Close()
+		if s.tmagent.nodewatcher != nil {
+			s.tmagent.nodewatcher.Close()
+		}
 
 		// stop metrics
-		s.tmagent.restServer.StopMetrics()
+		if s.tmagent.restServer != nil {
+			s.tmagent.restServer.StopMetrics()
+		}
 
 		// shutdown tsdb
-		s.tmagent.tpState.TsdbCleanup()
+		if s.tmagent.tpState != nil {
+			s.tmagent.tpState.TsdbCleanup()
+		}
 
 		// create new instance
 		tpState, err := state.NewTpAgent(s.tmagent.ctx, globals.AgentRESTPort)

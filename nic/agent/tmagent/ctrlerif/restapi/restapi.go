@@ -216,8 +216,10 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 
 // StopMetrics stops reporting metrics
 func (s *RestServer) StopMetrics() {
-	s.metricsCancel()
-	s.wg.Wait()
+	if s.metricsCancel != nil {
+		s.metricsCancel()
+		s.wg.Wait()
+	}
 }
 
 // GetListenURL returns the listen URL of the http server
