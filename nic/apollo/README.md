@@ -27,6 +27,7 @@ with clang rules as much as possible.
 * nic/apollo/p4/ & nic/apollo/asm/ - datapath code
 * nic/apollo/vpp/ - VPP infra and plugins
 * nic/apollo/test/ - apollo gtests
+* nic/apollo/api/include/ - PDS HAL (i.e., apollo HAL) public header files
 * nic/apollo/api/ - apollo API implementation
 * nic/apollo/api/impl/apollo/ - apollo pipeline dependent code
 * nic/apollo/api/impl/artemis/ - artemis pipeline dependent code
@@ -61,6 +62,42 @@ MUST first be migrated to nic/sdk and then all pipelines can then link to SDK.
 
 ## How to define new API
 
-All API names and publicly exposed data structures must have pds_ as prefix,
+* All API names and publicly exposed data structures must have pds_ as prefix,
 please don't use any other prefix for APis to be consumed by (Pensando or
 non-Pensando) agents.
+
+* All user facing header files (inclduing Pensando PDS Agent) are located in
+  nic/apollo/api/include/. If you need to define new API or object, please
+  see if related header file already exists or not and reuse if there is one.
+  Usually new object warrants a new header file to keep it clean.
+
+* All the objects provide CRUD APIs in the following form:
+
+ ** pds_xxx_create()
+ ** pds_xxx_read()
+ ** pds_xxx_update()
+ ** pds_xxx_delete()
+
+  Some objects can provide subset of this based on what is allowed and what is
+  not, however, please don't provide any more APIs outside these four CRUD APIs.
+
+Once you define your objects and corresponding CRUD APIs in pds_xxx.hpp, next
+step is provide implementation in nic/apollo/api/ directory. For providing
+PI (Pipeline Independent) implementation, the following files must be defined:
+  * <obj>_api.cc ->
+  * <obj>.hpp -> this is the PI class instance corresponding to the object
+  * <obj>.cc ->
+  * <obj>_state.hpp ->
+  * <obj>_state.cc ->
+
+## Google tests (gtests)
+
+## DOL tests
+
+## IOTA tests
+
+## CLIs
+
+## p4ctl CLIs
+
+## Memory
