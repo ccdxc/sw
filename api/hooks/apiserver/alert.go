@@ -150,16 +150,17 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 	// update alert
 	curAlertObj := &monitoring.Alert{}
 	alertUpdFn := a.getAlertUpdFunc(&flags)
+	reqs := []apiintf.ConstUpdateItem{
+		{Key: key, Func: alertUpdFn, Into: curAlertObj},
+	}
 
 	apKey := (&monitoring.AlertPolicy{
 		ObjectMeta: api.ObjectMeta{Name: alert.Status.Reason.GetPolicyID(), Tenant: alert.GetTenant()},
 	}).MakeKey("monitoring")
-	curAlertPolicyObj := &monitoring.AlertPolicy{}
-
-	polUpdateFn := a.getAlertPolUpdFunc(&flags)
-	reqs := []apiintf.ConstUpdateItem{
-		{Key: key, Func: alertUpdFn, Into: curAlertObj},
-		{Key: apKey, Func: polUpdateFn, Into: curAlertPolicyObj},
+	if err := kv.Get(ctx, apKey, &monitoring.AlertPolicy{}); err == nil {
+		curAlertPolicyObj := &monitoring.AlertPolicy{}
+		polUpdateFn := a.getAlertPolUpdFunc(&flags)
+		reqs = append(reqs, apiintf.ConstUpdateItem{Key: apKey, Func: polUpdateFn, Into: curAlertPolicyObj})
 	}
 	rq, err := apiutils.GetRequirements(ctx)
 	if err != nil {
