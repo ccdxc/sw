@@ -55,8 +55,8 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
         UPG_LOG_DEBUG("All UpgAppResp objects got deleted");
         upgMgr_->DeleteUpgMgrResp();
         if (exists("/nic/tools/fwupdate")) {
-            cmd = "rm -rf /data/post-upgrade-logs.tar.gz";
             UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
+            cmd = "rm -rf /data/post-upgrade-logs.tar.gz";
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to delete old logs post-upgrade");
             }
@@ -64,9 +64,12 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to save logs post-upgrade");
             }
-            cmd = "NAPLES_URL=http://localhost /nic/bin/penctl system tech-support -b naples-disruptive-upgrade-tech-support --tmpdir /data --odir /data";
+            UPG_LOG_INFO("Going to collect tech-support");
+            cmd = "NAPLES_URL=http://localhost /nic/bin/penctl system tech-support -b naples-disruptive-upgrade-tech-support --tmpdir /data --odir /data &";
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to create penctl tech-support");
+            } else {
+                UPG_LOG_INFO("Created penctl tech-support");
             }
         }
         if (ctx.upgFailed) {
@@ -99,6 +102,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
             }
         }
     }
+    UPG_LOG_DEBUG("Returning from OnUpgAppRespDelete");
 
     return delphi::error::OK();
 }
