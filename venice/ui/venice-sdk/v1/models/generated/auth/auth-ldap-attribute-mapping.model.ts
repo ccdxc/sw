@@ -20,15 +20,21 @@ export interface IAuthLdapAttributeMapping {
 
 
 export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttributeMapping {
+    /** The name that the server uses for the UserID Attribute. */
     'user': string = null;
     'user-object-class': string = null;
+    /** The tenant the server will use for authentication. */
     'tenant': string = null;
+    /** The name that the server uses for the Group Member Attribute. By default, the attribute is set to member for standard schema, and sgMember for updated schema. */
     'group': string = null;
     'group-object-class': string = null;
+    /** The name of the attribute for storing the users’ e-mail address. This attribute is primarily used for linked Authentication Server Users. It can also be used to identify users by their e-mail address in certificate authentication. */
     'email': string = null;
+    /** The name that the server uses for the Name attribute. */
     'fullname': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'user': {
+            description:  'The name that the server uses for the UserID Attribute.',
             required: false,
             type: 'string'
         },
@@ -37,10 +43,12 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
             type: 'string'
         },
         'tenant': {
+            description:  'The tenant the server will use for authentication.',
             required: false,
             type: 'string'
         },
         'group': {
+            description:  'The name that the server uses for the Group Member Attribute. By default, the attribute is set to member for standard schema, and sgMember for updated schema.',
             required: false,
             type: 'string'
         },
@@ -49,10 +57,12 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
             type: 'string'
         },
         'email': {
+            description:  'The name of the attribute for storing the users’ e-mail address. This attribute is primarily used for linked Authentication Server Users. It can also be used to identify users by their e-mail address in certificate authentication.',
             required: false,
             type: 'string'
         },
         'fullname': {
+            description:  'The name that the server uses for the Name attribute.',
             required: false,
             type: 'string'
         },

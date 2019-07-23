@@ -67,7 +67,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.13
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.27
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.28
 DIND_CONTAINER ?= pens-dind:v0.3
 E2E_CONTAINER ?= pens-e2e:v0.4
 TARGETS ?= ws-tools pull-assets gen build
@@ -575,7 +575,7 @@ ui-link-framework:
 
 ui-venice-sdk:
 	cd venice/ui/venice-sdk && yarn add file:pensando-swagger-ts-generator-1.1.29.tgz --offline
-	cd venice/ui/venice-sdk && node swaggerGen.js
+	cd venice/ui/venice-sdk && yarn run build && yarn run gen
 
 ui:
 	yarn -v;

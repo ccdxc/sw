@@ -40,7 +40,7 @@
               <button [disableRipple]="true" mat-button>DOCS</button>
             </a>
             <ng-container *ngIf="!isUINavigationBlocked">
-              <app-helpoverlay *ngIf="false" fxFlex="none"></app-helpoverlay>
+              <app-helpoverlay *ngIf="true" fxFlex="none"></app-helpoverlay>
               <!-- Commenting out for August release -->
               <!-- <button mat-button>Save</button> -->
               <button *roleGuard="'monitoringAlert_read'" mat-icon-button

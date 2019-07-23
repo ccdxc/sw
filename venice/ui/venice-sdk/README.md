@@ -2,9 +2,9 @@
 
 Venice-sdk contains the UI generated code from the Venice objects and services. Pensando-swagger-ts-generator.tgz contains the code generator, which parse the venice swagger files to generate this code.
 
-To run the autogen, after running npm install run 
+To run the autogen, after running yarn install
 ```
-node swaggerGen.js
+yarn run build && yarn run gen
 ```
 or if you don't have node installed from sw/ run
 ```

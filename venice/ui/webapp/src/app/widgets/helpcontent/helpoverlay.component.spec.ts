@@ -17,6 +17,7 @@ import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 @Component({
   template: `<div id="testcontainer">component help</div>
@@ -69,6 +70,7 @@ describe('HelpoverlayComponent', () => {
         PortalModule,
         MaterialdesignModule,
         RouterTestingModule,
+        HttpClientTestingModule,
       ],
       providers: [
         ControllerService,
@@ -77,7 +79,8 @@ describe('HelpoverlayComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         MessageService,
-        Overlay
+        Overlay,
+
       ],
     }).overrideModule(BrowserDynamicTestingModule, { set: { entryComponents: [DummyHelpComponent] } });
   });
@@ -96,30 +99,35 @@ describe('HelpoverlayComponent', () => {
     // Should start with default text
     const helpButton = fixture.debugElement.query(By.css('button'));
     tu.sendClick(helpButton);
-    let defaultHelpContent = fixture.debugElement.query(By.css('.helpoverlay-content h1'));
+    const defaultHelpContent = fixture.debugElement.query(By.css('.helpoverlay-content h1'));
     expect(defaultHelpContent).toBeTruthy();
-    expect(defaultHelpContent.nativeElement.textContent).toContain('default help');
+    expect(defaultHelpContent.nativeElement.textContent).toContain('No help content is available');
 
-    // Should load component text
-    dummyComponent.setHelpTextComponent();
+    // Set text by url
+    const httpMock: HttpTestingController = TestBed.get(HttpTestingController);
+    component.replaceHelpContentByURL('test', 'new' as any);
+    const req = httpMock.expectOne('test');
+    expect(req.request.method).toBe('GET');
+    req.flush('<div>help by url</div>');
     fixture.detectChanges();
-    let helpContent = fixture.debugElement.query(By.css('.helpoverlay-content div'));
-    expect(helpContent).toBeTruthy();
-    expect(helpContent.nativeElement.textContent).toContain('component help');
+    expect(component.loadedHTML).toContain('help by url');
+    const helpContent = fixture.debugElement.query(By.css('.helpoverlay-content div'));
+    expect(helpContent.nativeElement.textContent).toContain('help by url');
 
-    // Should load template text
-    dummyComponent.setHelpTextTemplate();
-    fixture.detectChanges();
-    helpContent = fixture.debugElement.query(By.css('.helpoverlay-content div'));
-    expect(helpContent).toBeTruthy();
-    expect(helpContent.nativeElement.textContent).toContain('template help');
+    // Loading help text by the api isn't currently supported.
+    // // Should load component text
+    // dummyComponent.setHelpTextComponent();
+    // fixture.detectChanges();
+    // let helpContent = fixture.debugElement.query(By.css('.helpoverlay-content div'));
+    // expect(helpContent).toBeTruthy();
+    // expect(helpContent.nativeElement.textContent).toContain('component help');
 
-    // Should go back to default text
-    dummyComponent.removeHelpText();
-    fixture.detectChanges();
-    defaultHelpContent = fixture.debugElement.query(By.css('.helpoverlay-content h1'));
-    expect(defaultHelpContent).toBeTruthy();
-    expect(defaultHelpContent.nativeElement.textContent).toContain('default help');
+    // // Should load template text
+    // dummyComponent.setHelpTextTemplate();
+    // fixture.detectChanges();
+    // expect(helpContent).toBeTruthy();
+    // expect(helpContent.nativeElement.textContent).toContain('template help');
+
   });
 
 });

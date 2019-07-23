@@ -22,8 +22,11 @@ export interface IAuthLdap {
 
 export class AuthLdap extends BaseModel implements IAuthLdap {
     'enabled': boolean = null;
+    /** The LDAP base DN to be used in a user search. */
     'base-dn': string = null;
+    /** The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server. */
     'bind-dn': string = null;
+    /** The password for the LDAP database account specified in the Root DN field. */
     'bind-password': string = null;
     'attribute-mapping': AuthLdapAttributeMapping = null;
     'servers': Array<AuthLdapServer> = null;
@@ -33,14 +36,17 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
             type: 'boolean'
         },
         'base-dn': {
+            description:  'The LDAP base DN to be used in a user search.',
             required: false,
             type: 'string'
         },
         'bind-dn': {
+            description:  'The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.',
             required: false,
             type: 'string'
         },
         'bind-password': {
+            description:  'The password for the LDAP database account specified in the Root DN field.',
             required: false,
             type: 'string'
         },

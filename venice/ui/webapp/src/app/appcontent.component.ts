@@ -229,9 +229,10 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     // Once actual help data is in place
     // this should be removed.
     // TODO: Remove setting help template
-    this._controllerService.setHelpOverlayData({
-      template: this.helpTemplate
-    });
+    // this._controllerService.setHelpOverlayData({
+    //   // template: this.helpTemplate
+    //   id: 'authpolicy'
+    // });
   }
 
   redirectHome() {

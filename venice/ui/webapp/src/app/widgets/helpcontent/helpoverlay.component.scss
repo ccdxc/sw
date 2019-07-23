@@ -16,6 +16,15 @@
 .helpoverlay-content {
   background-color: white;
   padding: 15px;
+  overflow: scroll;
+
+  img {
+    max-width: 100% !important;
+  }
+}
+
+.helpoverlay-history-buttons {
+  cursor: pointer;
 }
 
 .helpoverlay-close {

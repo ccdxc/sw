@@ -87,12 +87,16 @@ message Authenticators {
 }
 
 message Ldap {
+    // Whether LDAP is enabled or not
     bool Enabled                          = 1 [(gogoproto.jsontag) = "enabled"];
+    // The LDAP base DN to be used in a user search.
     string BaseDN                         = 2 [(gogoproto.jsontag) = "base-dn,omitempty"];
+    // The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.
     string BindDN                         = 3 [(gogoproto.jsontag) = "bind-dn,omitempty"];
+    // The password for the LDAP database account specified in the Root DN field.
     string BindPassword                   = 4 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "bind-password,omitempty"];
+    // Defines how attributes in the LDAP directory are mapped to user properties
     LdapAttributeMapping AttributeMapping = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attribute-mapping,omitempty"];
-
     // Servers is a list that lets you configure multiple LDAP servers for high availability
     repeated LdapServer Servers           = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];
 }
@@ -119,18 +123,23 @@ message TLSOptions {
 }
 
 message LdapAttributeMapping {
+    // The name that the server uses for the UserID Attribute.
     string User             = 1 [(gogoproto.jsontag) = "user,omitempty"];
 
     // UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
     string UserObjectClass  = 2 [(gogoproto.jsontag) = "user-object-class,omitempty"];
 
+    // The tenant the server will use for authentication.
     string Tenant           = 3 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // The name that the server uses for the Group Member Attribute. By default, the attribute is set to member for standard schema, and sgMember for updated schema.
     string Group            = 4 [(gogoproto.jsontag) = "group,omitempty"];
 
     // GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search
     string GroupObjectClass = 5 [(gogoproto.jsontag) = "group-object-class,omitempty"];
 
+    // The name of the attribute for storing the users’ e-mail address. This attribute is primarily used for linked Authentication Server Users. It can also be used to identify users by their e-mail address in certificate authentication.
     string Email            = 6 [(gogoproto.jsontag) = "email,omitempty"];
+    // The name that the server uses for the Name attribute.
     string Fullname         = 7 [(gogoproto.jsontag) = "fullname,omitempty"];
 }
 

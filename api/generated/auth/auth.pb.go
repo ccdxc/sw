@@ -432,15 +432,15 @@ func (m *Authenticators) GetRadius() *Radius {
 
 //
 type Ldap struct {
-	//
+	// Whether LDAP is enabled or not
 	Enabled bool `protobuf:"varint,1,opt,name=Enabled,json=enabled,proto3" json:"enabled"`
-	//
+	// The LDAP base DN to be used in a user search.
 	BaseDN string `protobuf:"bytes,2,opt,name=BaseDN,json=base-dn,omitempty,proto3" json:"base-dn,omitempty"`
-	//
+	// The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.
 	BindDN string `protobuf:"bytes,3,opt,name=BindDN,json=bind-dn,omitempty,proto3" json:"bind-dn,omitempty"`
-	//
+	// The password for the LDAP database account specified in the Root DN field.
 	BindPassword string `protobuf:"bytes,4,opt,name=BindPassword,json=bind-password,omitempty,proto3" json:"bind-password,omitempty"`
-	//
+	// Defines how attributes in the LDAP directory are mapped to user properties
 	AttributeMapping *LdapAttributeMapping `protobuf:"bytes,5,opt,name=AttributeMapping,json=attribute-mapping,omitempty" json:"attribute-mapping,omitempty"`
 	// Servers is a list that lets you configure multiple LDAP servers for high availability
 	Servers []*LdapServer `protobuf:"bytes,6,rep,name=Servers,json=servers,omitempty" json:"servers,omitempty"`
@@ -495,19 +495,19 @@ func (m *Ldap) GetServers() []*LdapServer {
 
 //
 type LdapAttributeMapping struct {
-	//
+	// The name that the server uses for the UserID Attribute.
 	User string `protobuf:"bytes,1,opt,name=User,json=user,omitempty,proto3" json:"user,omitempty"`
 	// UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
 	UserObjectClass string `protobuf:"bytes,2,opt,name=UserObjectClass,json=user-object-class,omitempty,proto3" json:"user-object-class,omitempty"`
-	//
+	// The tenant the server will use for authentication.
 	Tenant string `protobuf:"bytes,3,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
-	//
+	// The name that the server uses for the Group Member Attribute. By default, the attribute is set to member for standard schema, and sgMember for updated schema.
 	Group string `protobuf:"bytes,4,opt,name=Group,json=group,omitempty,proto3" json:"group,omitempty"`
 	// GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search
 	GroupObjectClass string `protobuf:"bytes,5,opt,name=GroupObjectClass,json=group-object-class,omitempty,proto3" json:"group-object-class,omitempty"`
-	//
+	// The name of the attribute for storing the users’ e-mail address. This attribute is primarily used for linked Authentication Server Users. It can also be used to identify users by their e-mail address in certificate authentication.
 	Email string `protobuf:"bytes,6,opt,name=Email,json=email,omitempty,proto3" json:"email,omitempty"`
-	//
+	// The name that the server uses for the Name attribute.
 	Fullname string `protobuf:"bytes,7,opt,name=Fullname,json=fullname,omitempty,proto3" json:"fullname,omitempty"`
 }
 

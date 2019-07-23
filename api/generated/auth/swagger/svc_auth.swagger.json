@@ -156,6 +156,7 @@
           },
           {
             "name": "ldap.enabled",
+            "description": "Whether LDAP is enabled or not.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -163,24 +164,28 @@
           },
           {
             "name": "ldap.base-dn",
+            "description": "The LDAP base DN to be used in a user search.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "ldap.bind-dn",
+            "description": "The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "ldap.bind-password",
+            "description": "The password for the LDAP database account specified in the Root DN field.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "attribute-mapping.user",
+            "description": "The name that the server uses for the UserID Attribute.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -194,12 +199,14 @@
           },
           {
             "name": "attribute-mapping.tenant",
+            "description": "The tenant the server will use for authentication.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "attribute-mapping.group",
+            "description": "The name that the server uses for the Group Member Attribute. By default, the attribute is set to member for standard schema, and sgMember for updated schema.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -213,12 +220,14 @@
           },
           {
             "name": "attribute-mapping.email",
+            "description": "The name of the attribute for storing the users’ e-mail address. This attribute is primarily used for linked Authentication Server Users. It can also be used to identify users by their e-mail address in certificate authentication.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "attribute-mapping.fullname",
+            "description": "The name that the server uses for the Name attribute.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6617,19 +6626,24 @@
       "properties": {
         "enabled": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "title": "Whether LDAP is enabled or not"
         },
         "base-dn": {
-          "type": "string"
+          "type": "string",
+          "description": "The LDAP base DN to be used in a user search."
         },
         "bind-dn": {
-          "type": "string"
+          "type": "string",
+          "description": "The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server."
         },
         "bind-password": {
-          "type": "string"
+          "type": "string",
+          "description": "The password for the LDAP database account specified in the Root DN field."
         },
         "attribute-mapping": {
-          "$ref": "#/definitions/authLdapAttributeMapping"
+          "$ref": "#/definitions/authLdapAttributeMapping",
+          "title": "Defines how attributes in the LDAP directory are mapped to user properties"
         },
         "servers": {
           "type": "array",
@@ -6644,27 +6658,32 @@
       "type": "object",
       "properties": {
         "user": {
-          "type": "string"
+          "type": "string",
+          "description": "The name that the server uses for the UserID Attribute."
         },
         "user-object-class": {
           "type": "string",
           "title": "UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search"
         },
         "tenant": {
-          "type": "string"
+          "type": "string",
+          "description": "The tenant the server will use for authentication."
         },
         "group": {
-          "type": "string"
+          "type": "string",
+          "description": "The name that the server uses for the Group Member Attribute. By default, the attribute is set to member for standard schema, and sgMember for updated schema."
         },
         "group-object-class": {
           "type": "string",
           "title": "GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search"
         },
         "email": {
-          "type": "string"
+          "type": "string",
+          "description": "The name of the attribute for storing the users’ e-mail address. This attribute is primarily used for linked Authentication Server Users. It can also be used to identify users by their e-mail address in certificate authentication."
         },
         "fullname": {
-          "type": "string"
+          "type": "string",
+          "description": "The name that the server uses for the Name attribute."
         }
       }
     },

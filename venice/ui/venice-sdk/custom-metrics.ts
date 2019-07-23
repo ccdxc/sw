@@ -1,4 +1,4 @@
-metrics  = [
+export const customMetrics  = [
   {
     name: 'Node',
     objectKind: 'Node',
@@ -338,7 +338,3 @@ metrics  = [
     ]
   }
 ];
-
-module.exports = {
-  metrics: metrics
-}

@@ -106,7 +106,7 @@ import { LoginModule } from './components/login/login.module';
     ToasterComponent,
     MissingpageComponent,
     HelpoverlayComponent,
-    BgfileuploadComponent
+    BgfileuploadComponent,
   ],
   entryComponents: [
     BaseComponent,

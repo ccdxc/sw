@@ -5,6 +5,12 @@
 <ng-template cdkPortal #HelpShell="cdkPortal">
   <div class="helpoverlay" fxFlex fxLayout="column" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
     <div fxFlex="40px" fxLayout="row" fxLayoutAlign="start center" class="helpoverlay-header">
+      <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="backClick()"
+                [ngClass]="isBackButtonDisabled() ? 'global-button-disabled' : ''">chevron_left
+      </mat-icon>
+      <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="forwardClick()"
+                [ngClass]="isForwardButtonDisabled() ? 'global-button-disabled' : ''">chevron_right
+      </mat-icon>
       <div fxFlex="nogrow">Help</div>
       <div fxFlex></div>
       <mat-icon fxFlex="nogrow" (click)="closeHelp()" class="helpoverlay-close">close</mat-icon>
@@ -17,12 +23,12 @@
 
 <ng-template cdkPortal #DefaultHelp="cdkPortal">
   <h1>
-    Pensando default help text
+    No help content is available for this page.
   </h1>
-  <div>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-    labore et dolore magna aliqua. Est pellentesque elit ullamcorper dignissim cras tincidunt
-    lobortis feugiat vivamus. Nulla facilisi morbi tempus iaculis urna id. Quisque egestas diam in
-    arcu cursus euismod. Sit amet nisl purus in mollis nunc sed.
+</ng-template>
+
+<ng-template cdkPortal #DefaultURLHelp="cdkPortal">
+  <div (click)="hrefClicked($event)">
+    <div [innerHTML]="loadedHTML"></div>
   </div>
 </ng-template>
