@@ -23,6 +23,7 @@
 #include "nic/apollo/agent/svc/meter.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/svc/nh.hpp"
+#include "nic/apollo/agent/svc/lif.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
@@ -47,6 +48,7 @@ svc_reg (void)
     BatchSvcImpl          batch_svc;
     DeviceSvcImpl         device_svc;
     VPCSvcImpl            vpc_svc;
+    IfSvcImpl             if_svc;
     SubnetSvcImpl         subnet_svc;
     TunnelSvcImpl         tunnel_svc;
     RouteSvcImpl          route_svc;
@@ -80,6 +82,7 @@ svc_reg (void)
     server_builder->RegisterService(&session_svc);
     server_builder->RegisterService(&tunnel_svc);
     server_builder->RegisterService(&route_svc);
+    server_builder->RegisterService(&if_svc);
     server_builder->RegisterService(&policy_svc);
     server_builder->RegisterService(&vnic_svc);
     server_builder->RegisterService(&mapping_svc);

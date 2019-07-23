@@ -15,6 +15,7 @@ service IfSvc {
   rpc InterfaceUpdate (InterfaceRequest) returns (InterfaceResponse) {}
   rpc InterfaceDelete (InterfaceDeleteRequest) returns (InterfaceDeleteResponse) {}
   rpc InterfaceGet (InterfaceGetRequest) returns (InterfaceGetResponse) {}
+  rpc LifGet (LifGetRequest) returns (LifGetResponse) {}
 }
 
 // types of interfaces
@@ -82,11 +83,11 @@ message InterfaceStats {
 
 // interface Object
 message Interface {
-  meta.TypeMeta  TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta   ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  InterfaceSpec   Spec    = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  InterfaceStatus Status  = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  InterfaceStats  Stats   = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  InterfaceSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  InterfaceStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  InterfaceStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // interface create and update request
@@ -119,4 +120,33 @@ message InterfaceDeleteRequest {
 // interface delete response
 message InterfaceDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1; // API status code
+}
+
+message LifSpec {
+  uint32        LifId             = 1;
+  uint32        PinnedInterfaceId = 2;
+  types.LifType Type              = 3;
+}
+
+message LifStatus {
+}
+
+message LifStats {
+}
+
+message Lif {
+  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  LifSpec         Spec     = 3;
+  LifStatus       Status   = 4;
+  LifStats        Stats    = 5;
+}
+
+message LifGetRequest {
+  repeated uint32 LifId = 1;
+}
+
+message LifGetResponse {
+  types.ApiStatus ApiStatus = 1; // API status code
+  repeated Lif    Response  = 2;
 }

@@ -27,6 +27,7 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_lif.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
@@ -47,7 +48,20 @@
 #include "nic/apollo/agent/svc/mirror.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
+#include "nic/apollo/agent/svc/lif.hpp"
 #include "gen/proto/types.pb.h"
+
+// populate proto buf from lif api spec
+static inline void
+lif_api_spec_to_proto (void *entry, void *ctxt)
+{
+    auto proto_spec = ((pds::LifGetResponse *)ctxt)->add_response()->mutable_spec();
+    pds_lif_spec_t *api_spec = (pds_lif_spec_t *)entry;
+
+    proto_spec->set_lifid(api_spec->key);
+    proto_spec->set_pinnedinterfaceid(api_spec->pinned_ifidx);
+    proto_spec->set_type(types::LifType(api_spec->type));
+}
 
 // populate proto buf spec from meter API spec
 static inline void

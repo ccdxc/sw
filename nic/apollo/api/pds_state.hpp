@@ -25,6 +25,7 @@
 #include "nic/apollo/api/mirror_state.hpp"
 #include "nic/apollo/api/meter_state.hpp"
 #include "nic/apollo/api/tag_state.hpp"
+#include "nic/apollo/api/lif_state.hpp"
 #include "nic/apollo/api/service_state.hpp"
 #include "nic/apollo/api/vpc_peer_state.hpp"
 #include "nic/apollo/api/nexthop_state.hpp"
@@ -88,6 +89,7 @@ public:
     }
     meter_state *meter_db(void) { return &meter_db_; }
     tag_state *tag_db(void) { return &tag_db_; }
+    lif_state *lif_db(void) { return &lif_db_; }
     svc_mapping_state *svc_mapping_db(void) { return &svc_mapping_db_; }
     vpc_peer_state *vpc_peer_db(void) { return &vpc_peer_db_; }
     nexthop_state *nexthop_db(void) { return &nexthop_db_; }
@@ -116,6 +118,7 @@ private:
     mirror_session_state    mirror_session_db_;
     meter_state             meter_db_;
     tag_state               tag_db_;
+    lif_state               lif_db_;
     svc_mapping_state       svc_mapping_db_;
     vpc_peer_state          vpc_peer_db_;
     nexthop_state           nexthop_db_;
@@ -199,6 +202,12 @@ static inline tag_state *
 tag_db (void)
 {
     return api::g_pds_state.tag_db();
+}
+
+static inline lif_state *
+lif_db (void)
+{
+    return api::g_pds_state.lif_db();
 }
 
 static inline svc_mapping_state *

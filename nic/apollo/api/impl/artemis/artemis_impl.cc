@@ -948,6 +948,8 @@ artemis_impl::pipeline_init(void) {
     ret = sdk::asic::pd::asicpd_deparser_init();
     SDK_ASSERT(ret == SDK_RET_OK);
     g_pds_impl_state.init(&api::g_pds_state);
+    api::g_pds_state.lif_db()->impl_state_set(g_pds_impl_state.lif_impl_db());
+
     ret = init_service_lif(p4pd_cfg.cfg_path);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();

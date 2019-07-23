@@ -15,21 +15,13 @@
 #include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/api/include/pds_lif.hpp"
 
 namespace api {
 namespace impl {
 
 // forward declaration
 class lif_impl_state;
-
-typedef struct pds_lif_spec_s {
-    ///< key for the lif
-    pds_lif_key_t    key;
-    ///< if index of the pinned port/lif
-    pds_ifindex_t    pinned_ifidx;
-    ///< type of lif
-    lif_type_t       type;
-} pds_lif_spec_t;
 
 /// \defgroup PDS_LIF_IMPL - lif entry datapath implementation
 /// \ingroup PDS_LIF

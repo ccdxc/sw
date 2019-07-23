@@ -579,10 +579,26 @@ func ifIndexToChildPort(ifIndex uint32) uint32 {
 	return ifIndex & IfChildPortMask
 }
 
+func ifIndexToIfType(ifindex uint32) string {
+	ifType := (ifindex >> IfTypeShift) & IfTypeMask
+	switch ifType {
+	case 0:
+		return "None"
+	case 1:
+		return "Eth"
+	case 2:
+		return "EthPC"
+	case 3:
+		return "Tunnel"
+	}
+	return "None"
+}
+
 func ifIndexToPortIdStr(ifIndex uint32) string {
 	slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
 	parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
-	return "Eth" + slotStr + "/" + parentPortStr
+	ifTypeStr := ifIndexToIfType(ifIndex)
+	return ifTypeStr + slotStr + "/" + parentPortStr
 }
 
 func printPortStats(resp *pds.Port) {

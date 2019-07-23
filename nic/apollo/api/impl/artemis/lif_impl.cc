@@ -43,6 +43,15 @@ lif_impl::destroy(lif_impl *impl) {
 lif_impl::lif_impl(pds_lif_spec_t *spec) {
     memcpy(&key_, &spec->key, sizeof(key_));
     pinned_if_idx_ = spec->pinned_ifidx;
+    type_ = spec->type;
+}
+
+lif_type_t lif_impl::type (void) {
+    return type_;
+}
+
+pds_lif_key_t lif_impl::key (void) {
+    return key_;
 }
 
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
