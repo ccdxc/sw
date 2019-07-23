@@ -169,12 +169,14 @@ void Service::on_service_heartbeat(std::string name)
 
 void Service::fault(std::string reason)
 {
+    reason = reason + " - " + this->spec->name;
+
     if (this->config_state == SERVICE_CONFIG_STATE_OFF) {
         logger->info("Service {} shutdown on purpose, not setting fault",
             this->spec->name);
         return;
     }
-    logger->info("System in fault mode ({}/{})", this->spec->name, reason);
+    logger->info("System in fault mode ({})", reason);
     if (this->spec->flags & PANIC_ON_FAILURE) {
         logger->info("{} is critical. Triggering watchdog", this->spec->name);
         FaultLoop::getInstance()->set_fault(reason);
@@ -183,7 +185,6 @@ void Service::fault(std::string reason)
     obj->set_state(::sysmgr::Fault);
     obj->set_reason(reason);
     delphi_sdk->QueueUpdate(obj);
-
 }
 
 void Service::on_child(pid_t pid)

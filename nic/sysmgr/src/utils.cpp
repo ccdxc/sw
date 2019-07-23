@@ -120,17 +120,8 @@ void run_debug(pid_t crashed_pid)
 {
     pid_t  pid;
     int    fd;
-    time_t now;
-    char   timestr[256];
-    char   filename[512];
+    char   cmd[256];
 
-    time(&now);
-    strftime(timestr, sizeof(timestr) - 1, "%Y%m%d%H%M%S", gmtime(&now));
-    snprintf(filename, sizeof(filename) - 1, "/data/timer_debug_%s_%u.log",
-        timestr, crashed_pid);
-
-    logger->info("Saving timer debug logs to {}", filename);
-    
     pid = fork();
     if (pid == -1)
     {
@@ -141,11 +132,13 @@ void run_debug(pid_t crashed_pid)
         ev_loop_fork(EV_DEFAULT);
         ev_loop_destroy(EV_DEFAULT);
 
-        fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+        // Ignore the stdout and stderr of the script
+        fd = open("/dev/null", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
         replace_fd(fd, 1);
         replace_fd(fd, 2);
-
-        exec_command("/nic/tools/timer_debug.sh");
+        
+        snprintf(cmd, sizeof(cmd), "/nic/tools/sysmgr_debug.sh %u", crashed_pid);
+        exec_command(cmd);
     }
 }
 
