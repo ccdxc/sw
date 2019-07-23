@@ -133,7 +133,7 @@ message ClusterStatus {
     repeated ClusterCondition Conditions    = 7 [(gogoproto.nullable) = false,
                                                  (gogoproto.jsontag) = "conditions,omitempty"];
     // Quorum represents the current state of the quorum, including registered members and health
-    QuorumStatus Quorum                     = 4 [(gogoproto.jsontag) = "quorum"];
+    QuorumStatus QuorumStatus               = 4 [(gogoproto.jsontag) = "quorum-status"];
 }
 
 // ClusterCondition describes the state of a cluster at a certain point.

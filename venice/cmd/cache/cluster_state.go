@@ -58,7 +58,7 @@ func (sm *Statemgr) UpdateClusterStatus(clusterObj *cluster.Cluster) error {
 		updObj, err := sm.APIClient().Cluster().Get(ctx, &clusterObj.ObjectMeta)
 		if err == nil {
 			// only override leader and quorum status because health is owned by cluster health monitor
-			updObj.Status.Quorum = clusterObj.Status.Quorum
+			updObj.Status.QuorumStatus = clusterObj.Status.QuorumStatus
 			updObj.Status.Leader = clusterObj.Status.Leader
 			updObj.Status.LastLeaderTransitionTime = clusterObj.Status.LastLeaderTransitionTime
 			clusterObj = updObj

@@ -15,7 +15,7 @@ export interface IClusterClusterStatus {
     'last-leader-transition-time'?: Date;
     'auth-bootstrapped'?: boolean;
     'conditions'?: Array<IClusterClusterCondition>;
-    'quorum'?: IClusterQuorumStatus;
+    'quorum-status'?: IClusterQuorumStatus;
 }
 
 
@@ -25,7 +25,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     'last-leader-transition-time': Date = null;
     'auth-bootstrapped': boolean = null;
     'conditions': Array<ClusterClusterCondition> = null;
-    'quorum': ClusterQuorumStatus = null;
+    'quorum-status': ClusterQuorumStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'leader': {
             description:  'Leader contains the node name of the cluster leader.',
@@ -44,7 +44,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             required: false,
             type: 'object'
         },
-        'quorum': {
+        'quorum-status': {
             required: false,
             type: 'object'
         },
@@ -73,7 +73,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['conditions'] = new Array<ClusterClusterCondition>();
-        this['quorum'] = new ClusterQuorumStatus();
+        this['quorum-status'] = new ClusterQuorumStatus();
         this.setValues(values, setDefaults);
     }
 
@@ -109,9 +109,9 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             this['conditions'] = [];
         }
         if (values) {
-            this['quorum'].setValues(values['quorum'], fillDefaults);
+            this['quorum-status'].setValues(values['quorum-status'], fillDefaults);
         } else {
-            this['quorum'].setValues(null, fillDefaults);
+            this['quorum-status'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -124,7 +124,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
                 'last-leader-transition-time': CustomFormControl(new FormControl(this['last-leader-transition-time']), ClusterClusterStatus.propInfo['last-leader-transition-time']),
                 'auth-bootstrapped': CustomFormControl(new FormControl(this['auth-bootstrapped']), ClusterClusterStatus.propInfo['auth-bootstrapped']),
                 'conditions': new FormArray([]),
-                'quorum': CustomFormGroup(this['quorum'].$formGroup, ClusterClusterStatus.propInfo['quorum'].required),
+                'quorum-status': CustomFormGroup(this['quorum-status'].$formGroup, ClusterClusterStatus.propInfo['quorum-status'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterClusterCondition>('conditions', this['conditions'], ClusterClusterCondition);
@@ -134,8 +134,8 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('quorum') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('quorum').get(field);
+            Object.keys((this._formGroup.get('quorum-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('quorum-status').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -152,7 +152,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             this._formGroup.controls['last-leader-transition-time'].setValue(this['last-leader-transition-time']);
             this._formGroup.controls['auth-bootstrapped'].setValue(this['auth-bootstrapped']);
             this.fillModelArray<ClusterClusterCondition>(this, 'conditions', this['conditions'], ClusterClusterCondition);
-            this['quorum'].setFormGroupValuesToBeModelValues();
+            this['quorum-status'].setFormGroupValuesToBeModelValues();
         }
     }
 }

@@ -69,7 +69,7 @@ var typesMapCluster = map[string]*api.Struct{
 			"auto-admit-nics":      api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
 			"certs":                api.CLIInfo{Path: "Spec.Certs", Skip: false, Insert: "", Help: ""},
 			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"id":                   api.CLIInfo{Path: "Status.Quorum.Members[].ID", Skip: false, Insert: "", Help: ""},
+			"id":                   api.CLIInfo{Path: "Status.QuorumStatus.Members[].ID", Skip: false, Insert: "", Help: ""},
 			"key":                  api.CLIInfo{Path: "Spec.Key", Skip: false, Insert: "", Help: ""},
 			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":               api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
@@ -83,10 +83,10 @@ var typesMapCluster = map[string]*api.Struct{
 			"reason":               api.CLIInfo{Path: "Status.Conditions[].Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"status":               api.CLIInfo{Path: "Status.Quorum.Members[].Conditions[].Status", Skip: false, Insert: "", Help: ""},
+			"status":               api.CLIInfo{Path: "Status.QuorumStatus.Members[].Conditions[].Status", Skip: false, Insert: "", Help: ""},
 			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"term":                 api.CLIInfo{Path: "Status.Quorum.Members[].Term", Skip: false, Insert: "", Help: ""},
-			"type":                 api.CLIInfo{Path: "Status.Quorum.Members[].Conditions[].Type", Skip: false, Insert: "", Help: ""},
+			"term":                 api.CLIInfo{Path: "Status.QuorumStatus.Members[].Term", Skip: false, Insert: "", Help: ""},
+			"type":                 api.CLIInfo{Path: "Status.QuorumStatus.Members[].Conditions[].Type", Skip: false, Insert: "", Help: ""},
 			"uuid":                 api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"virtual-ip":           api.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
 		},
@@ -164,7 +164,7 @@ var typesMapCluster = map[string]*api.Struct{
 
 			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{ID: "conditions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.ClusterCondition"},
 
-			"Quorum": api.Field{Name: "Quorum", CLITag: api.CLIInfo{ID: "quorum", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "quorum", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.QuorumStatus"},
+			"QuorumStatus": api.Field{Name: "QuorumStatus", CLITag: api.CLIInfo{ID: "quorum-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "quorum-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.QuorumStatus"},
 		},
 	},
 	"cluster.DockerInfo": &api.Struct{

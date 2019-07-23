@@ -94,7 +94,7 @@ func TestQuorumStatus(t *testing.T) {
 	clusterObj := &cmd.Cluster{}
 	update := updateQuorumStatus(q, clusterObj)
 	Assert(t, update, "updateQuorumStatus did not return true as expected")
-	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.Quorum), "Error validating quorum status")
+	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.QuorumStatus), "Error validating quorum status")
 
 	// call updateQuorumStatus again, there should be no changes
 	refClusterObj := ref.DeepCopy(clusterObj).(*cmd.Cluster)
@@ -108,7 +108,7 @@ func TestQuorumStatus(t *testing.T) {
 		AssertOk(t, err, "Error setting health")
 		update = updateQuorumStatus(q, clusterObj)
 		Assert(t, update, "updateQuorumStatus did not return true as expected")
-		AssertOk(t, validateQuorumStatus(q, clusterObj.Status.Quorum), "Error validating quorum status")
+		AssertOk(t, validateQuorumStatus(q, clusterObj.Status.QuorumStatus), "Error validating quorum status")
 	}
 	update = updateQuorumStatus(q, clusterObj)
 	Assert(t, !update, "updateQuorumStatus did not return false as expected")
@@ -124,7 +124,7 @@ func TestQuorumStatus(t *testing.T) {
 	AssertOk(t, err, "Error setting health")
 	update = updateQuorumStatus(q, clusterObj)
 	Assert(t, update, "updateQuorumStatus did not return true as expected")
-	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.Quorum), "Error validating quorum status")
+	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.QuorumStatus), "Error validating quorum status")
 
 	// Check expected events
 	ev = mr.GetEvents()
@@ -135,7 +135,7 @@ func TestQuorumStatus(t *testing.T) {
 	q.Remove(3)
 	update = updateQuorumStatus(q, clusterObj)
 	Assert(t, update, "updateQuorumStatus did not return true as expected")
-	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.Quorum), "Error validating quorum status")
+	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.QuorumStatus), "Error validating quorum status")
 
 	// Add back 3 and two new ones
 	for _, i := range []uint64{3, 6, 9} {
@@ -143,7 +143,7 @@ func TestQuorumStatus(t *testing.T) {
 		AssertOk(t, err, "Error adding quorum member %d", i)
 		update = updateQuorumStatus(q, clusterObj)
 		Assert(t, update, "updateQuorumStatus did not return true as expected")
-		AssertOk(t, validateQuorumStatus(q, clusterObj.Status.Quorum), "Error validating quorum status")
+		AssertOk(t, validateQuorumStatus(q, clusterObj.Status.QuorumStatus), "Error validating quorum status")
 	}
 	update = updateQuorumStatus(q, clusterObj)
 	Assert(t, !update, "updateQuorumStatus did not return false as expected")
@@ -162,7 +162,7 @@ func TestQuorumStatus(t *testing.T) {
 	}
 	update = updateQuorumStatus(q, clusterObj)
 	Assert(t, update, "updateQuorumStatus did not return true as expected")
-	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.Quorum), "Error validating quorum status")
+	AssertOk(t, validateQuorumStatus(q, clusterObj.Status.QuorumStatus), "Error validating quorum status")
 	update = updateQuorumStatus(q, clusterObj)
 	Assert(t, !update, "updateQuorumStatus did not return false as expected")
 
@@ -172,7 +172,7 @@ func TestQuorumStatus(t *testing.T) {
 		AssertOk(t, err, "Error adding quorum member %d", i)
 		update = updateQuorumStatus(q, clusterObj)
 		Assert(t, update, "updateQuorumStatus did not return true as expected")
-		AssertOk(t, validateQuorumStatus(q, clusterObj.Status.Quorum), "Error validating quorum status")
+		AssertOk(t, validateQuorumStatus(q, clusterObj.Status.QuorumStatus), "Error validating quorum status")
 	}
 	update = updateQuorumStatus(q, clusterObj)
 	Assert(t, !update, "updateQuorumStatus did not return false as expected")

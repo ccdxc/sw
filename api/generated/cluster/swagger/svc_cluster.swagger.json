@@ -4401,7 +4401,7 @@
           },
           "title": "List of current cluster conditions"
         },
-        "quorum": {
+        "quorum-status": {
           "$ref": "#/definitions/clusterQuorumStatus",
           "title": "Quorum represents the current state of the quorum, including registered members and health"
         }

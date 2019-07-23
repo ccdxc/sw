@@ -199,8 +199,8 @@ func updateQuorumStatus(quorum quorum.Interface, clusterObj *cmd.Cluster) bool {
 		return false
 	}
 
-	if clusterObj.Status.Quorum == nil {
-		clusterObj.Status.Quorum = newQuorumStatus
+	if clusterObj.Status.QuorumStatus == nil {
+		clusterObj.Status.QuorumStatus = newQuorumStatus
 		for _, member := range newQuorumStatus.Members {
 			for _, cond := range member.Conditions {
 				cond.LastTransitionTime = &api.Timestamp{Timestamp: *gogotypes.TimestampNow()}
@@ -208,7 +208,7 @@ func updateQuorumStatus(quorum quorum.Interface, clusterObj *cmd.Cluster) bool {
 		}
 		update = true
 	}
-	oldQuorumStatus := clusterObj.Status.Quorum
+	oldQuorumStatus := clusterObj.Status.QuorumStatus
 
 	oldNumHealthyMembers := getNumHealthyQuorumMembers(oldQuorumStatus)
 	newNumHealthyMembers := getNumHealthyQuorumMembers(newQuorumStatus)
@@ -232,7 +232,7 @@ func updateQuorumStatus(quorum quorum.Interface, clusterObj *cmd.Cluster) bool {
 			}
 		}
 		if !found {
-			deleteQuorumMember(oldMember.Name, clusterObj.Status.Quorum)
+			deleteQuorumMember(oldMember.Name, clusterObj.Status.QuorumStatus)
 			update = true
 		}
 	}
@@ -247,8 +247,8 @@ func updateQuorumStatus(quorum quorum.Interface, clusterObj *cmd.Cluster) bool {
 			}
 		}
 		if !found {
-			addQuorumMember(newMember, clusterObj.Status.Quorum)
-			healthCond := getQuorumMemberCondition(newMember.Name, cmd.QuorumMemberCondition_HEALTHY, clusterObj.Status.Quorum)
+			addQuorumMember(newMember, clusterObj.Status.QuorumStatus)
+			healthCond := getQuorumMemberCondition(newMember.Name, cmd.QuorumMemberCondition_HEALTHY, clusterObj.Status.QuorumStatus)
 			if healthCond != nil {
 				generateQuorumEvent(newMember.Name, healthCond, clusterObj)
 			}
@@ -264,7 +264,7 @@ func updateQuorumStatus(quorum quorum.Interface, clusterObj *cmd.Cluster) bool {
 		if newCond != nil && (oldCond == nil || oldCond.Status != newCond.Status) {
 			update = true
 			newCond.LastTransitionTime = &api.Timestamp{Timestamp: *gogotypes.TimestampNow()}
-			err := updateQuorumMemberCondition(m.Name, cmd.QuorumMemberCondition_HEALTHY, clusterObj.Status.Quorum, newCond)
+			err := updateQuorumMemberCondition(m.Name, cmd.QuorumMemberCondition_HEALTHY, clusterObj.Status.QuorumStatus, newCond)
 			if err != nil {
 				log.Errorf("Error updating health condition %+v for member %s: %v", newCond, m.Name, err)
 			}
