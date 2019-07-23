@@ -416,7 +416,7 @@ var _ = Describe("API Crud tests", func() {
 			},
 			Spec: network.NetworkSpec{
 				Type:        "vlan",
-				IPv4Subnet:  "255.255.255.0",
+				IPv4Subnet:  "10.1.1.1/24",
 				IPv4Gateway: "10.1.1.1",
 			},
 		}
