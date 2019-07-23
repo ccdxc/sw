@@ -34,6 +34,10 @@ parser.add_argument('--cimc-ip', dest='cimc_ip', required = True,
                     default=None, help='CIMC IP Address.')
 parser.add_argument('--os', dest='os', required = True,
                     default="", help='Node OS (Freebsd or Linux).')
+parser.add_argument('--server', dest='server', default='ucs',
+                    choices=["ucs", "hpe"],
+                    help='Node Server type')
+
 # Optional parameters
 parser.add_argument('--console-username', dest='console_username',
                     default="admin", help='Console Server Username.')
@@ -328,6 +332,9 @@ class NaplesManagement(EntityManagement):
         super().__init__(ipaddr = None, username = username, password = password)
         return
 
+    def SetHost(self, host):
+        self.host = host
+
     @_exceptionWrapper(_errCodes.NAPLES_TELNET_CLEARLINE_FAILED, "Failed to clear line")
     def __clearline(self):
         try:
@@ -366,14 +373,25 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_REBOOT_FAILED, "Failed to login to naples")
     def RebootGoldFw(self):
         self.InitForUpgrade(goldfw = True)
-        self.SendlineExpect("reboot", "capri-gold login:")
+        if not self.host.PciSensitive():
+            self.SendlineExpect("reboot", "capri-gold login:")
+        else:
+            self.host.Reboot()
+            self.host.WaitForSsh()
+            self.SendlineExpect("", "capri-gold login:")
+
         self.__login()
         time.sleep(60)
         self.__read_ip()
         self.WaitForSsh()
 
     def Reboot(self):
-        self.SendlineExpect("reboot", ["capri login:", "capri-gold login:"], timeout = 120)
+        if not self.host.PciSensitive():
+            self.SendlineExpect("reboot", ["capri login:", "capri-gold login:"], timeout = 120)
+        else:
+            self.host.Reboot()
+            self.host.WaitForSsh()
+            self.SendlineExpect("", ["capri login:", "capri-gold login:"], timeout = 120)
         self.__login()
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
@@ -498,12 +516,16 @@ class NaplesManagement(EntityManagement):
         return
 
 class HostManagement(EntityManagement):
-    def __init__(self, ipaddr):
+    def __init__(self, ipaddr, server):
         super().__init__(ipaddr, GlobalOptions.host_username, GlobalOptions.host_password)
         self.naples = None
+        self.server = server
 
     def SetNaples(self, naples):
         self.naples = naples
+
+    def PciSensitive(self):
+        return self.server == "hpe"
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FAILED, "Host Init Failed")
     def Init(self, driver_pkg = None, cleanup = True):
@@ -582,9 +604,10 @@ class HostManagement(EntityManagement):
     def UnloadDriver(self):
         pass
 
+
 class EsxHostManagement(HostManagement):
-    def __init__(self, ipaddr):
-        HostManagement.__init__(self, ipaddr)
+    def __init__(self, ipaddr, server):
+        HostManagement.__init__(self, ipaddr, server)
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_COPY_FAILED, "ESX ctrl vm copy failed")
     def ctrl_vm_copyin(self, src_filename, entity_dir, naples_dir = None):
@@ -853,13 +876,13 @@ def Main():
     naples = NaplesManagement(username='root', password='pen123')
 
     global host
-    host = HostManagement(GlobalOptions.host_ip)
     if GlobalOptions.os == 'esx':
-        host = EsxHostManagement(GlobalOptions.host_ip)
+        host = EsxHostManagement(GlobalOptions.host_ip, GlobalOptions.server)
     else:
-        host = HostManagement(GlobalOptions.host_ip)
+        host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server)
 
     host.SetNaples(naples)
+    naples.SetHost(host)
 
     # Reset the setup:
     # If the previous run left it in bad state, we may not get ssh or console.

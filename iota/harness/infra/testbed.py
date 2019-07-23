@@ -225,6 +225,7 @@ class _Testbed:
                 cmd.extend(["--gold-drivers-old-pkg", old_gold_driver])
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
+                cmd.extend(["--server", "%s" % getattr(instance, "NodeServer", "ucs")])
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:
                     logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                     Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
