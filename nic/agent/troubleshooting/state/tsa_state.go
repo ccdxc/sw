@@ -390,7 +390,7 @@ func buildIPAddrProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddress {
 func buildVeniceCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_LocalSpanIf {
 	var mirrorCollectors []*halproto.MirrorSessionSpec_LocalSpanIf
 	for _, mirrorCollector := range mirrorSession.Spec.Collectors {
-		if mirrorCollector.Type == "VENICE" {
+		if mirrorCollector.Type == "venice" {
 			mirrorDestObj := &halproto.MirrorSessionSpec_LocalSpanIf{}
 			//TODO
 			mirrorCollectors = append(mirrorCollectors, mirrorDestObj)
@@ -402,7 +402,7 @@ func buildVeniceCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSe
 func buildErspanCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_ErspanSpec {
 	var mirrorCollectors []*halproto.MirrorSessionSpec_ErspanSpec
 	for _, mirrorCollector := range mirrorSession.Spec.Collectors {
-		if mirrorCollector.Type == "ERSPAN" {
+		if mirrorCollector.Type == "erspan" {
 			//mirrorCollector.ExportCfg.Transport -- Does this info from ctrler need to be used ??
 			destIPDetails := utils.BuildIPAddrDetails(mirrorCollector.ExportCfg.Destination)
 			mirrorDestObj := &halproto.MirrorSessionSpec_ErspanSpec{
