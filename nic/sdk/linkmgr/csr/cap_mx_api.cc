@@ -1441,3 +1441,19 @@ cap_mx_base_r_pcs_status2_clear (int chip_id, int inst_id, int mac_ch)
     cap_mx_apb_write(chip_id, inst_id, addr, 0x0);
     return 0;
 }
+
+int
+cap_mx_send_remote_faults (int chip_id, int inst_id, int mac_ch,
+                           bool send)
+{
+   int addr = (mac_ch == 1) ? 0x591 : (mac_ch == 2) ? 0x691 : (mac_ch == 3) ? 0x791 : 0x491;
+   int data = cap_mx_apb_read(chip_id, inst_id, addr);
+
+   if (send) {
+       data = data | (1 << 2);
+   } else {
+       data = data & ~(1 << 2);
+   }
+   cap_mx_apb_write(chip_id, inst_id, addr, data);
+   return 0;
+}

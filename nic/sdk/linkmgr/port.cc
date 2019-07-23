@@ -205,6 +205,13 @@ port::port_mac_faults_get(void)
     return mac_fns()->mac_faults_get(this->mac_id(), this->mac_ch());
 }
 
+sdk_ret_t
+port::port_mac_send_remote_faults(bool send) {
+    mac_fns()->mac_send_remote_faults(
+                this->mac_id(), this->mac_ch(), send);
+    return SDK_RET_OK;
+}
+
 bool
 port::port_mac_sync_get(void)
 {
@@ -745,85 +752,132 @@ port::port_link_sm_an_process(void)
 }
 
 bool
+port::port_serdes_eye_check(void) {
+    uint32_t lane = 0;
+    uint32_t values[2 * MAX_SERDES_EYE_HEIGHTS];
+
+    memset(values, 0, sizeof(uint32_t) * 2 * MAX_SERDES_EYE_HEIGHTS);
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        if (serdes_fns()->serdes_eye_check(port_sbus_addr(lane), values) != 0) {
+            return false;
+        }
+        SDK_LINKMGR_TRACE_DEBUG("port: %u, %3x %3x %3x %3x %3x %3x %3x %3x",
+                                port_num(),
+                                values[0], values[1], values[2], values[3],
+                                values[4], values[5], values[6], values[7]);
+        for (int i = 0; i < (2*MAX_SERDES_EYE_HEIGHTS); ++i) {
+            if (values[i] == 0 || values[i] == 1 ||
+                values[i] == 2 || values[i] >= 0xff) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+dfe_ret_t
 port::port_link_sm_dfe_process(void)
 {
     bool dfe_complete = false;
-    bool ret          = true;
+    dfe_ret_t ret     = DFE_DONE;
     int  timeout      = 40; //msecs
+    bool retry_sm     = false;
 
-    switch(this->link_dfe_sm_) {
-        case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
+    while (true) {
+        retry_sm = false;
 
-            // transition to start ical
-            set_port_link_dfe_sm(
-                    port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL);
+        switch(this->link_dfe_sm_) {
+            case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
 
-        case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
+                // transition to start ical
+                set_port_link_dfe_sm(
+                        port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL);
 
-            SDK_PORT_SM_DEBUG(this, "start ICAL");
+            case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
 
-            port_serdes_ical_start();
+                SDK_PORT_SM_DEBUG(this, "start ICAL");
 
-            // transition to wait for ical complete
-            set_port_link_dfe_sm(
-                    port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL);
+                port_serdes_ical_start();
 
-        case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
+                // transition to wait for ical complete
+                set_port_link_dfe_sm(
+                        port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL);
 
-            SDK_PORT_SM_DEBUG(this, "wait ICAL");
+            case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
 
-            dfe_complete = port_serdes_dfe_complete();
+                SDK_PORT_SM_DEBUG(this, "wait ICAL");
 
-            if(dfe_complete == false) {
-                this->bringup_timer_val_ += timeout;
+                dfe_complete = port_serdes_dfe_complete();
 
-                this->link_bring_up_timer_ =
-                    sdk::lib::timer_schedule(
-                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                        false);
+                if(dfe_complete == false) {
+                    this->bringup_timer_val_ += timeout;
 
-                ret = false;
+                    this->link_bring_up_timer_ =
+                        sdk::lib::timer_schedule(
+                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
+                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                            false);
+
+                    ret = DFE_WAIT;
+                    break;
+                }
+
+                if (port_serdes_eye_check() == false) {
+                    // transition to start ical
+                    set_port_link_dfe_sm(
+                            port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL);
+                    set_num_dfe_retries(num_dfe_retries() + 1);
+                    if (num_dfe_retries() < 5) {
+                        retry_sm = true;
+                        break;
+                    } else {
+                        ret = DFE_RESET;
+                        break;
+                    }
+                }
+
+                // transition to pcal one shot
+                set_port_link_dfe_sm(
+                        port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL);
+
+            case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
+
+                SDK_PORT_SM_DEBUG(this, "start PCAL");
+
+                port_serdes_pcal_start();
+
+                // transition to wait for pcal complete
+                set_port_link_dfe_sm(
+                        port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL);
+
+            case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
+
+                SDK_PORT_SM_DEBUG(this, "wait PCAL");
+
+                dfe_complete = port_serdes_dfe_complete();
+
+                if(dfe_complete == false) {
+                    timeout = 100; // 100 msec for pCal
+
+                    this->bringup_timer_val_ += timeout;
+
+                    this->link_bring_up_timer_ =
+                        sdk::lib::timer_schedule(
+                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
+                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                            false);
+
+                    ret = DFE_WAIT;
+                    break;
+                }
+
+            default:
                 break;
-            }
+        }
 
-            // transition to pcal one shot
-            set_port_link_dfe_sm(
-                    port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL);
-
-        case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
-
-            SDK_PORT_SM_DEBUG(this, "start PCAL");
-
-            port_serdes_pcal_start();
-
-            // transition to wait for pcal complete
-            set_port_link_dfe_sm(
-                    port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL);
-
-        case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
-
-            SDK_PORT_SM_DEBUG(this, "wait PCAL");
-
-            dfe_complete = port_serdes_dfe_complete();
-
-            if(dfe_complete == false) {
-                timeout = 100; // 100 msec for pCal
-
-                this->bringup_timer_val_ += timeout;
-
-                this->link_bring_up_timer_ =
-                    sdk::lib::timer_schedule(
-                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                        false);
-
-                ret = false;
-                break;
-            }
-
-        default:
+        if (retry_sm == false) {
             break;
+        }
     }
 
     return ret;
@@ -839,6 +893,7 @@ port::port_link_sm_process(void)
     bool mac_sync   = true;
     bool retry_sm   = false;
     an_ret_t an_ret = AN_DONE;
+    dfe_ret_t dfe_ret = DFE_DONE;
     int  training_fail_count = 0;
 
     while (true) {
@@ -872,6 +927,9 @@ port::port_link_sm_process(void)
 
                 // reset MAC no-faults counter
                 set_num_mac_nofaults(0);
+
+                // reset dfe retry count
+                set_num_dfe_retries(0);
 
                 // disable and clear mac interrupts
                 port_mac_intr_en(false);
@@ -999,6 +1057,9 @@ port::port_link_sm_process(void)
                 port_mac_enable(true);
                 port_mac_soft_reset(false);
 
+                // send MAC remote faults
+                port_mac_send_remote_faults(true);
+
                 if (auto_neg_enable() == true) {
                     // Restart AN if link training failed.
                     if (port_serdes_an_link_train_check() == false) {
@@ -1026,8 +1087,9 @@ port::port_link_sm_process(void)
                         break;
                     }
 
-                    // transition to wait MAC sync for AN
-                    this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
+                    // transition to clear MAC remote faults for AN
+                    this->set_port_link_sm(
+                        port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS);
                     retry_sm = true;
                     break;
                 }
@@ -1062,12 +1124,30 @@ port::port_link_sm_process(void)
             case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
 
                 if (port_dfe_tuning_enabled()) {
-                    if (port_link_sm_dfe_process() == false) {
+                    dfe_ret = port_link_sm_dfe_process();
+                    if (dfe_ret == DFE_WAIT) {
                         // DFE tuning is pending
                         // Timer would have been already started. So just break.
                         break;
+                    } else if (dfe_ret == DFE_RESET) {
+                        retry_sm = true;
+                        set_num_dfe_retries(0);
+                        port_link_sm_reset();
+                        this->set_port_link_sm(
+                                port_link_sm_t::PORT_LINK_SM_ENABLED);
+                        break;
                     }
                 }
+
+                // transition to clear MAC remote faults
+                this->set_port_link_sm(
+                        port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS);
+
+            case port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS:
+                SDK_PORT_SM_DEBUG(this, "Clear MAC remote faults");
+
+                // clear MAC remote faults
+                port_mac_send_remote_faults(false);
 
                 // transition to wait for mac sync
                 this->set_port_link_sm(

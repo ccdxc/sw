@@ -239,6 +239,8 @@ sdk_port_link_sm_to_port_link_sm_spec (port_link_sm_t link_sm)
     case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
         return ::port::PORT_LINK_SM_DFE_PCAL_CONTINUOUS;
 
+    case port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS:
+        return ::port::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS;
 
     case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
         return ::port::PORT_LINK_SM_WAIT_MAC_SYNC;

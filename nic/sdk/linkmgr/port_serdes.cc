@@ -97,6 +97,15 @@ serdes_spico_reset_default (uint32_t sbus_addr)
 }
 
 int
+serdes_eye_check_default(uint32_t sbus_addr, uint32_t *values)
+{
+    for (int i = 0; i < (2*MAX_SERDES_EYE_HEIGHTS); ++i) {
+        values[i] = 0x7f; // some valid value
+    }
+    return 0;
+}
+
+int
 serdes_eye_get_default(uint32_t sbus_addr, int eye_type)
 {
     return 0;
@@ -455,9 +464,9 @@ serdes_signal_detect_hw (uint32_t sbus_addr)
 
     avago_serdes_get_rx_data(aapl, sbus_addr, data);
 
-    SDK_LINKMGR_TRACE_DEBUG("Rx Data: 0x%lx 0x%lx 0x%lx 0x%lx",
-                            data[0], data[1], data[2], data[3]);
-
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, Rx Data: 0x%lx 0x%lx 0x%lx 0x%lx",
+                            sbus_addr, data[0], data[1], data[2], data[3]);
+#if 0
     // TODO workaround
     FILE *d_fp = fopen("/aapl_enable_ei", "r");
     if (d_fp) {
@@ -484,6 +493,7 @@ serdes_signal_detect_hw (uint32_t sbus_addr)
 
         fclose(d_fp);
     }
+#endif
 
     if (data[0] == 0xfffff || data[0] == 0x0 ||
         data[1] == 0xfffff || data[1] == 0x0 ||
@@ -602,6 +612,27 @@ int
 serdes_dfe_status_hw(uint32_t sbus_addr)
 {
     return avago_serdes_dfe_wait_timeout(aapl, sbus_addr, 0);
+}
+
+int serdes_eye_check_hw (uint32_t sbus_addr, uint32_t *values)
+{
+    Avago_serdes_dfe_state_t *dfe = avago_serdes_dfe_state_construct(aapl);
+
+    avago_serdes_get_dfe_state_ext(
+                        aapl, sbus_addr, dfe, AVAGO_DFE_MODE_DATALEV);
+    for (int i = 0; i < (2*MAX_SERDES_EYE_HEIGHTS); i+=2) {
+        values[i/2] = (dfe->dataLEV[i+1] - dfe->dataLEV[i]) & 0xfff;
+    }
+
+    avago_serdes_get_dfe_state_ext(
+                        aapl, sbus_addr, dfe, AVAGO_DFE_MODE_TESTLEV);
+    for (int i = 0; i < (2*MAX_SERDES_EYE_HEIGHTS); i+=2) {
+        values[MAX_SERDES_EYE_HEIGHTS + i/2] =
+                        (dfe->testLEV[i+1] - dfe->testLEV[i]) & 0xfff;
+    }
+
+    avago_serdes_dfe_state_destruct(aapl, dfe);
+    return 0;
 }
 
 int
@@ -1261,6 +1292,7 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_default;
     serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_default;
     serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_default;
+    serdes_fn->serdes_eye_check     = &serdes_eye_check_default;
 
     serdes_fn->serdes_an_core_status = &serdes_an_core_status_default;
 
@@ -1280,6 +1312,7 @@ port_serdes_fn_init(platform_type_t platform_type,
         serdes_fn->serdes_sbus_reset    = &serdes_sbus_reset_hw;
         serdes_fn->serdes_spico_reset   = &serdes_spico_reset_hw;
         serdes_fn->serdes_eye_get       = &serdes_eye_get_hw;
+        serdes_fn->serdes_eye_check     = &serdes_eye_check_hw;
         serdes_fn->serdes_ical_start    = &serdes_ical_start_hw;
 
         // skip PCAL for HW since ICAL mode does both ICAL and PCAL

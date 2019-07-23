@@ -3,6 +3,8 @@
 #ifndef __SDK_PORT_SERDES_HPP__
 #define __SDK_PORT_SERDES_HPP__
 
+#define MAX_SERDES_EYE_HEIGHTS 4
+
 namespace sdk {
 namespace linkmgr {
 
@@ -51,6 +53,7 @@ typedef struct serdes_fn_s_ {
 
     int (*serdes_an_fec_enable_read)   (uint32_t sbus_addr);
     int (*serdes_an_rsfec_enable_read) (uint32_t sbus_addr);
+    int (*serdes_eye_check)        (uint32_t sbus_addr, uint32_t *values);
 } serdes_fn_t;
 
 extern serdes_fn_t serdes_fns;

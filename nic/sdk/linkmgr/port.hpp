@@ -20,6 +20,12 @@ typedef enum an_ret_e {
     AN_DONE,
 } an_ret_t;
 
+typedef enum dfe_ret_e {
+    DFE_RESET,
+    DFE_WAIT,
+    DFE_DONE,
+} dfe_ret_t;
+
 class port {
 public:
     port_oper_status_t oper_status(void) const {
@@ -188,10 +194,13 @@ public:
     uint32_t num_mac_nofaults(void) { return this->num_mac_nofaults_; }
     void set_num_mac_nofaults(uint32_t faults) { this->num_mac_nofaults_ = faults; }
 
+    uint32_t num_dfe_retries(void) { return this->num_dfe_retries_; }
+    void set_num_dfe_retries(uint32_t faults) { this->num_dfe_retries_ = faults; }
+
     sdk_ret_t port_enable(void);
     sdk_ret_t port_disable(void);
     sdk_ret_t port_link_sm_process(void);
-    bool      port_link_sm_dfe_process(void);
+    dfe_ret_t port_link_sm_dfe_process(void);
     an_ret_t  port_link_sm_an_process(void);
     bool      port_dfe_tuning_enabled(void);
     bool      port_link_status(void);
@@ -269,6 +278,9 @@ public:
     // mac pause src addr
     sdk_ret_t port_mac_set_pause_src_addr(uint8_t *mac_addr);
 
+    // send/clear sending remote faults
+    sdk_ret_t port_mac_send_remote_faults(bool send);
+
     // ----------------------------------------------------
     // serdes methods
     // ----------------------------------------------------
@@ -302,6 +314,7 @@ public:
     int port_serdes_ical_start(void);
     int port_serdes_pcal_start(void);
     int port_serdes_pcal_continuous_start(void);
+    bool port_serdes_eye_check(void);
 
     // ----------------------------------------------------
     // static methods
@@ -360,6 +373,7 @@ private:
     port_loopback_mode_t  loopback_mode_;             // port loopback mode - MAC/PHY
     uint32_t              mac_faults_;                // number of times MAC faults detected
     uint32_t              num_mac_nofaults_;          // number of times no MAC faults were detected (applicable for 10G/25G-no-fec)
+    uint32_t              num_dfe_retries_;           // number of times ical is retried in one pass of SM
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);

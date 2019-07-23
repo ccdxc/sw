@@ -729,6 +729,14 @@ mac_deinit_hw (uint32_t mac_inst, uint32_t mac_ch)
     return 0;
 }
 
+static int
+mac_send_remote_faults_hw (uint32_t mac_inst, uint32_t mac_ch,
+                           bool send)
+{
+    cap_mx_send_remote_faults(0, mac_inst, mac_ch, send);
+    return 0;
+}
+
 //----------------------------------------------------------------------------
 // MGMT MAC methods
 //----------------------------------------------------------------------------
@@ -1029,6 +1037,13 @@ mac_deinit_default (uint32_t mac_inst, uint32_t mac_ch)
     return 0;
 }
 
+static int
+mac_send_remote_faults_default (uint32_t mac_inst, uint32_t mac_ch,
+                                bool send)
+{
+    return 0;
+}
+
 sdk_ret_t
 port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
@@ -1049,6 +1064,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_stats_get      = &mac_stats_get_default;
     mac_fn->mac_pause_src_addr = &mac_pause_src_addr_default;
     mac_fn->mac_deinit         = &mac_deinit_default;
+    mac_fn->mac_send_remote_faults = &mac_send_remote_faults_default;
 
     mac_mgmt_fn->mac_cfg            = &mac_cfg_default;
     mac_mgmt_fn->mac_enable         = &mac_enable_default;
@@ -1063,6 +1079,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_mgmt_fn->mac_stats_get      = &mac_stats_get_default;
     mac_mgmt_fn->mac_pause_src_addr = &mac_pause_src_addr_default;
     mac_mgmt_fn->mac_deinit         = &mac_deinit_default;
+    mac_mgmt_fn->mac_send_remote_faults = &mac_send_remote_faults_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
@@ -1111,6 +1128,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_stats_get      = &mac_stats_get_hw;
         mac_fn->mac_pause_src_addr = &mac_pause_src_addr_hw;
         mac_fn->mac_deinit         = &mac_deinit_hw;
+        mac_fn->mac_send_remote_faults = &mac_send_remote_faults_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
