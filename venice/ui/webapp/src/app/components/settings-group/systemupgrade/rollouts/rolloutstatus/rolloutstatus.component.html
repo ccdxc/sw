@@ -64,7 +64,7 @@
             {{selectedRollout?.spec["max-parallel"] }}</div>
         </div>
         <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label">Abort If Number Of NIC Failure:
+          <div class="rolloutstatus-summary-panel-content-label">Abort If Number Of DSC Failures:
           </div>
           <div class="rolloutstatus-summary-panel-content-value">
             {{selectedRollout?.spec["max-nic-failures-before-abort"] }}</div>
@@ -72,7 +72,7 @@
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label"> Upgrade NICs by Label?:
+          <div class="rolloutstatus-summary-panel-content-label"> Upgrade DSCs by Label?:
           </div>
           <div class="rolloutstatus-summary-panel-content-value">
             {{selectedRollout?.spec["smartnic-must-match-constraint"]? 'true': 'false' }}</div>
@@ -110,16 +110,20 @@
         </div>
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
-        <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label">Start Time:</div>
-          <div class="rolloutstatus-summary-panel-content-value">
-            {{selectedRollout?.status["start-time"] | PrettyDate }}</div>
-        </div>
-        <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label">End Time:</div>
-          <div class="rolloutstatus-summary-panel-content-value">
-            {{selectedRollout?.status["end-time"] | PrettyDate }}</div>
-        </div>
+        <ng-container *ngIf="selectedRollout?.status['start-time']">
+          <div fxFlex="50" fxLayout="row">
+            <div class="rolloutstatus-summary-panel-content-label">Start Time:</div>
+            <div class="rolloutstatus-summary-panel-content-value">
+              {{selectedRollout?.status["start-time"] | PrettyDate }}</div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="selectedRollout?.status['end-time']">
+          <div fxFlex="50" fxLayout="row">
+            <div class="rolloutstatus-summary-panel-content-label">End Time:</div>
+            <div class="rolloutstatus-summary-panel-content-value">
+              {{selectedRollout?.status["end-time"] | PrettyDate }}</div>
+          </div>
+        </ng-container>
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">

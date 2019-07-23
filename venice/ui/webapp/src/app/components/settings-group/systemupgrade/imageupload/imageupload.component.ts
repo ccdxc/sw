@@ -15,6 +15,8 @@ import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollou
 import { RolloutImageLabel } from '@app/components/settings-group/systemupgrade/rollouts/';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { RolloutService } from '@app/services/generated/rollout.service';
+import { RolloutRollout } from '@sdk/v1/models/generated/rollout';
 
 /**
  * This component let user upload Venice rollout images and manage existing images.
@@ -78,8 +80,14 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
 
   exportFilename: string = 'Venice-images';
 
-  constructor(protected controllerService: ControllerService, private objstoreService: ObjstoreService,
+  rolloutsEventUtility: HttpEventUtility<RolloutRollout>;
+  rollouts: ReadonlyArray<RolloutRollout>;
+  activeImageVersions: string[] = [];
+
+  constructor(protected controllerService: ControllerService,
+    private objstoreService: ObjstoreService,
     protected cdr: ChangeDetectorRef,
+    private rolloutService: RolloutService
   ) {
     super(controllerService, cdr);
   }
@@ -318,11 +326,10 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
    */
   showDeleteButton(object: IObjstoreObject): boolean {
     // VS-484. We don't want to delete an image that is lined to a pending rollout;
-    const rollout = Utility.getInstance().getCurrentRollout();
-    if (!rollout) {
+    if (this.activeImageVersions.includes(object.meta.name)) {
       return true;
     } else {
-      return (rollout.spec.version !== this.getBundlerTarVersion(object));
+      return false;
     }
   }
 
@@ -382,5 +389,28 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   isThereBackgroudFileUpload(): boolean {
     const backgroundFileUpload = BackgroundProcessManager.getInstance().getBackgroundVeniceImageFileUpload();
     return !!(backgroundFileUpload);
+  }
+
+  getRollouts() {
+    this.rolloutsEventUtility = new HttpEventUtility<RolloutRollout>(RolloutRollout, true);
+    this.rollouts = this.rolloutsEventUtility.array as ReadonlyArray<RolloutRollout>;
+    const subscription = this.rolloutService.WatchRollout().subscribe(
+      response => {
+        this.rolloutsEventUtility.processEvents(response);
+        this.setDefaultToolbar();
+        this.splitRollouts();
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get Rollouts info')
+    );
+    this.subscriptions.push(subscription);
+  }
+
+  splitRollouts() {
+    this.activeImageVersions.length = 0;
+    for  (let i = 0; i < this.rollouts.length; i++) {
+      if ( !RolloutUtil.isRolloutInactive(this.rollouts[i]) ) {
+        this.activeImageVersions.push(this.rollouts[i].spec.version);
+      }
+    }
   }
 }

@@ -19,6 +19,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { AuthService } from '@app/services/auth.service';
 import { ImageuploadComponent } from './imageupload.component';
+import { RolloutService } from '@app/services/generated/rollout.service';
 
 describe('ImageuploadComponent', () => {
   let component: ImageuploadComponent;
@@ -47,7 +48,8 @@ describe('ImageuploadComponent', () => {
         ObjstoreService,
         AuthService,
         AuthServiceGen,
-        UIConfigsService
+        UIConfigsService,
+        RolloutService
       ]
     });
     });

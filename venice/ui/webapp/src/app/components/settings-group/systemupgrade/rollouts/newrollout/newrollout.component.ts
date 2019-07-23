@@ -396,8 +396,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       }
       if (duplicate) {
         this._controllerService.invokeConfirm({
-          header: 'Multiple orders matching some NICs.',
-          message: 'The earliest order in the sequence will take preference for each of these NICs. Do you want to make some changes?',
+          header: 'Multiple orders matching some DSCs.',
+          message: 'The earliest order in the sequence will take preference for each of these DSCs. Do you want to make some changes?',
           acceptLabel: 'Yes',
           rejectLabel: 'No',
           reject: () => {

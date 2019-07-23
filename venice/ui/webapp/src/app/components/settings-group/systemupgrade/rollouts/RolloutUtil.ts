@@ -68,4 +68,13 @@ export class RolloutUtil {
     }
     return false;
   }
+
+  public static isRolloutInactive(rollout: RolloutRollout) {
+    const state = rollout.status.state;
+    if ([RolloutRolloutStatus_state.failure, RolloutRolloutStatus_state.success, RolloutRolloutStatus_state.suspended, RolloutRolloutStatus_state['deadline-exceeded']].includes(state)) {
+      return true;
+    }
+    return false;
+  }
+
 }

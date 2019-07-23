@@ -62,7 +62,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     },
     {field: 'spec.strategy', header: 'Strategy', class: '', sortable: true, width: 10},
     {field: 'spec.upgrade-type', header: 'Upgrade Type', class: '', sortable: true, width: 10},
-    {field: 'status.prev-version', header: 'Prev Version', class: '', sortable: true, width: 15},
+    {field: 'status.prev-version', header: 'Prev Version', class: '', sortable: true},
     {field: 'status.state', header: 'State', class: '', sortable: true, width: 20},
   ];
 
@@ -196,7 +196,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   isToBuildCreateButton(): boolean {
     const isBuild = true;
     for  (let i = 0; i < this.dataObjects.length; i++) {
-      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.progressing) {
+      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.progressing || this.dataObjects[i].status.state === RolloutRolloutStatus_state['precheck-in-progress'] || this.dataObjects[i].status.state === RolloutRolloutStatus_state['suspend-in-progress']) {
         return false;
       }
     }

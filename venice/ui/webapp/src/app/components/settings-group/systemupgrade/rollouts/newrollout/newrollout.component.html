@@ -78,7 +78,7 @@
 
               <div fxFlex="auto" class="newrollout-maxnode-div" fxLayout="row"
                    *ngIf="isToShowNodeDiv()">
-                <div fxFlex="nogrow" class="newrollout-text">Max NICs In Parallel:</div>
+                <div fxFlex="nogrow" class="newrollout-text">Max DSCs In Parallel:</div>
                 <input fxFlex="200px" formControlName="max-parallel" appErrorTooltip
                        class="newrollout-input-common"
                        matspellcheck="false" type="number" pInputText
@@ -89,12 +89,12 @@
                    *ngIf="isToShowNicDiv()">
 
                 <div fxFlex="auto" class="newrollout-maxnic-div" fxLayout="row">
-                  <div fxFlex="nogrow" class="newrollout-text">Max Allowed NICs Failure :</div>
+                  <div fxFlex="nogrow" class="newrollout-text">Max Allowed DSCs Failure :</div>
                   <input fxFlex="200px" formControlName="max-nic-failures-before-abort"
                          appErrorTooltip
                          class="newrollout-input-common" matspellcheck="false" type="number"
                          pInputText
-                         placeholder="Max NIC Failures Allowed." min='1' max='2000'>
+                         placeholder="Max DSC Failures Allowed." min='1' max='2000'>
 
                 </div>
 
@@ -104,12 +104,12 @@
                   <mat-slide-toggle formControlName="smartnic-must-match-constraint" fxFlex='30px'
                                     class="newrollout-toggle newrollout-fieldtitle"
                                     (change)="onNICsConstraintsChange($event)"></mat-slide-toggle>
-                  <div fxFlex="nogrow" class="newrollout-text">Upgrade NICs by labels</div>
+                  <div fxFlex="nogrow" class="newrollout-text">Upgrade DSCs by labels</div>
                 </div>
                 <div *ngIf="!enableUpgradeByLabel()" fxFlex="auto"
                      class="newrollout-NicConstraints-div" fxLayout="row">
-                  <div fxFlex="nogrow" class="newrollout-text">Cannot upgrade NICs by labels. No
-                    NICs with labels found.</div>
+                  <div fxFlex="nogrow" class="newrollout-text">Cannot upgrade DSCs by labels. No
+                    DSCs with labels found.</div>
                 </div>
                 <div xFlex="auto" class="newrollout-NicOrder-div" fxLayout="column"
                      *ngIf="isToShowNicOrderDiv()" formArrayName="order-constraints">
