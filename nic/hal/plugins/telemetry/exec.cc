@@ -229,6 +229,7 @@ telemetry_exec (fte::ctx_t &ctx)
 {
     hal_ret_t   ret = HAL_RET_OK;
     sfw_info_t  *sfw_info = NULL;
+    fte::flow_update_t  ipfix_upd = {type: fte::FLOWUPD_ACTION};
     
     hal::session_t *session = ctx.session();
     HAL_TRACE_VERBOSE("telemetry plugin exec, event {}", ctx.pipeline_event());
@@ -238,13 +239,21 @@ telemetry_exec (fte::ctx_t &ctx)
             (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
         HAL_TRACE_DEBUG("Processing IPFIX flow");
         sfw_info = sfw::sfw_feature_state(ctx);
-        // Skip firewall processing for IPFIX flows
+        // IPFIX flows are always allowed
         sfw_info->skip_sfw = true;
+        ipfix_upd.action = session::FLOW_ACTION_ALLOW;
+
         /* Skip rflow for IPFIX pkts */
         ctx.set_valid_rflow(false);
         ctx.set_is_ipfix_flow(true);
         ctx.register_completion_handler(telemetry_completion_hdlr);
         telemetry_pick_dest_if(ctx);
+        ret = ctx.update_flow(ipfix_upd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error updating flow policy action!");
+            ctx.set_feature_status(ret);
+            return fte::PIPELINE_END;
+        }
         // No need to evaluate telemetry rules for IPFIX flows
         return fte::PIPELINE_CONTINUE;
     }
