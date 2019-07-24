@@ -320,6 +320,7 @@ in_progress_spec:
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
         CAPRI_RESET_TABLE_0_ARG()
 
+        phvwr     CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_msg_psn), d.spec_msg_psn, \
                   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
 
@@ -550,12 +551,16 @@ fence:
     tblwr       SPEC_SQ_C_INDEX, SQ_C_INDEX
 
     // Setup to-stage info.
-    phvwr       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr 
+    phvwrpair   CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
+                CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
+    phvwrpair   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
+                CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
     phvwrpair   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                 CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
     phvwr       CAPRI_PHV_FIELD(TO_S1_FENCE_P, wqe_addr), d.curr_wqe_ptr
     phvwrpair   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
                 CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
+    phvwr       CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
 
     // Set up s2s info.
     CAPRI_RESET_TABLE_0_ARG()
@@ -572,7 +577,8 @@ fence:
     // are complete reads and so set the adjust to zero
     seq       c1, SPEC_SQ_C_INDEX, SQ_C_INDEX
     cmov      r1, c1, d.read_req_adjust, 0
-    phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), r1
+    phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, spec_enable), d.spec_enable, \
+              CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), r1
 
     // Invoke sqcb1 to fetch rrq_cindex
     add         r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
