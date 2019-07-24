@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "pal_cpld.h"
 #include "pal_locks.h"
+#include "pal.h"
 
 #ifdef __x86_64__
 int pal_is_qsfp_port_psnt(int port_no)
@@ -665,13 +666,6 @@ pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency)
        default:
            return CPLD_FAIL;
     }
-}
-
-static void
-initialize_cpld(void)
-{
-    cpld_rev = cpld_reg_rd(CPLD_REGISTER_REVISION);
-    cpld_id = cpld_reg_rd(CPLD_REGISTER_ID);
 }
 
 void
