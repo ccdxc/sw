@@ -34,8 +34,8 @@ public:
     void SuccessHandler(UpgCtx& upgCtx);
     HdlrResp FailedHandler(UpgCtx& upgCtx);
     void AbortHandler(UpgCtx& upgCtx);
-    static void check_device_reset(void *obj);
-    static void check_device_quiesced(void *obj);
+    static void upg_timer_func(void *obj);
+
 private:
 };
 } // namespace nicmgr

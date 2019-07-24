@@ -351,24 +351,23 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
             {
                 std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A);
 
+                for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
+                    devices[eth_devices[idx]->GetName()] = eth_devices[idx];
+                }
+
                 if (upgrade_mode == FW_MODE_NORMAL_BOOT) {
-                    for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
-                        devices[eth_devices[idx]->GetName()] = eth_devices[idx];
-                        //Create PCIe device for only PF
-                        if (!idx) {
-                            // Create the device
-                            if (eth_devices[idx]->GetType() == ETH_HOST_MGMT || eth_devices[idx]->GetType() == ETH_HOST) {
-                                if (!eth_devices[idx]->CreateHostDevice()) {
-                                    NIC_LOG_ERR("{}: CreateHostDevice() failed", eth_devices[idx]->GetName());
-                                    return NULL;
-                                }
-                            }
-                            else {
-                                NIC_LOG_DEBUG("{}: Skipped creating host device", eth_devices[idx]->GetName());
-                            }
+                    // Create the host device
+                    if (eth_devices[0]->GetType() == ETH_HOST_MGMT || eth_devices[0]->GetType() == ETH_HOST) {
+                        if (!eth_devices[0]->CreateHostDevice()) {
+                            NIC_LOG_ERR("{}: CreateHostDevice() failed", eth_devices[0]->GetName());
+                            return NULL;
                         }
                     }
+                    else {
+                        NIC_LOG_DEBUG("{}: Skipped creating host device", eth_devices[0]->GetName());
+                    }
                 }
+
                 return (Device *)eth_devices[0];
             }
 #ifdef IRIS

@@ -186,8 +186,11 @@ static void ionic_unmap_bars(struct ionic *ionic)
 	unsigned int i;
 
 	for (i = 0; i < IONIC_BARS_MAX; i++)
-		if (bars[i].vaddr)
+		if (bars[i].vaddr) {
+			dev_info(dev, "Unmapping BAR %d @%p, bus_addr: %llx, \n", i, bars[i].vaddr, bars[i].bus_addr);
 			devm_iounmap(dev, bars[i].vaddr);
+			devm_release_mem_region(dev, bars[i].bus_addr, bars[i].len);
+		}
 }
 
 void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)

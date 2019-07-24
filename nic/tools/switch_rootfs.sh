@@ -174,7 +174,7 @@ mount --move --no-mtab /proc /new/rw/proc
 cd /new/rw
 mkdir -p old
 
-echo "PERFORMING PIVOT_ROOT TO NEW FS" >> /new/rw/var/run/fwupgrade.state
+echo "`date` PERFORMING PIVOT_ROOT TO NEW FS" >> /new/rw/var/run/fwupgrade.state
 
 pivot_root . old
 

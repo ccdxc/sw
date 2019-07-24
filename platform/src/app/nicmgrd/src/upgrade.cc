@@ -18,8 +18,12 @@ extern DeviceManager *devmgr;
 extern char* nicmgr_upgrade_state_file;
 extern char* nicmgr_rollback_state_file;
 
-evutil_timer dev_reset_timer;
-evutil_timer dev_quiesce_timer;
+evutil_timer ServiceTimer;
+UpgradeEvent UpgEvent;
+UpgradeState ExpectedState;
+uint32_t ServiceTimeout;
+bool MoveToNextState;
+bool SendAppResp;
 
 namespace nicmgr {
 
@@ -68,19 +72,6 @@ nicmgr_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx) {
     return resp;
 }
 
-void
-nicmgr_upg_hndlr::check_device_quiesced(void *obj)
-{
-    //Check whether all device are in reset or not
-    if (devmgr->GetUpgradeState() == DEVICES_QUIESCED_STATE) {
-        NIC_FUNC_DEBUG("All devices are in Quiesced state");
-        g_nicmgr_svc->upgsdk()->SendAppRespSuccess();
-        evutil_timer_stop(EV_DEFAULT_ &dev_quiesce_timer);
-    }
-
-    return;
-}
-
 // Bring link-down
 HdlrResp
 nicmgr_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
@@ -94,7 +85,12 @@ nicmgr_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
     }
 
     NIC_FUNC_DEBUG("Starting timer thread to check whether all devices are quiesced or not ...");
-    evutil_timer_start(EV_DEFAULT_ &dev_quiesce_timer, nicmgr_upg_hndlr::check_device_quiesced, this, 0.0, 0.1);
+
+    ExpectedState = DEVICES_QUIESCED_STATE;
+    ServiceTimeout = 600; //60 seconds
+    MoveToNextState = false;
+    SendAppResp = true;
+    evutil_timer_start(EV_DEFAULT_ &ServiceTimer, nicmgr_upg_hndlr::upg_timer_func, this, 0.0, 0.1);
 
     return resp;
 }
@@ -153,10 +149,31 @@ nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
     }
     unlink(nicmgr_upgrade_state_file); 
 
-    // If fw upgrade failed after compat_check then we will rollback to running fw
-    if (UpgCtxApi::UpgCtxGetUpgState(upgCtx)!= CompatCheck) {
-        writefile(nicmgr_rollback_state_file, "in progress", 12);
+    if (UpgCtxApi::UpgCtxGetUpgState(upgCtx) == CompatCheck) {
+        NIC_FUNC_DEBUG("FW upgrade failed during compat check");
+        return resp;
     }
+
+    // If fw upgrade failed after compat_check then we will rollback to running fw
+    writefile(nicmgr_rollback_state_file, "in progress", 11);
+    resp.resp = INPROGRESS;
+
+    // we will run through all the state machine for nicmgr upgrade if somehow upgrade failed
+    NIC_FUNC_DEBUG("Sending LinkDown event to eth drivers");
+
+    if (devmgr->HandleUpgradeEvent(UPG_EVENT_QUIESCE)) {
+        NIC_FUNC_DEBUG("UPG_EVENT_QUIESCE event Failed! Cannot continue upgrade FSM");
+        resp.resp = FAIL;
+        return resp;
+    }
+
+    NIC_FUNC_DEBUG("Waiting for LinkDown event response from eth drivers");
+
+    ExpectedState = DEVICES_QUIESCED_STATE;
+    ServiceTimeout = 600; //60 seconds
+    MoveToNextState = true;
+    SendAppResp = false;
+    evutil_timer_start(EV_DEFAULT_ &ServiceTimer, nicmgr_upg_hndlr::upg_timer_func, this, 0.0, 0.1);
 
     return resp;
 }
@@ -261,19 +278,82 @@ nicmgr_upg_hndlr::PostLinkUpHandler(UpgCtx& upgCtx) {
     return resp;
 }
 
-void
-nicmgr_upg_hndlr::check_device_reset(void *obj)
+string UpgStateToStr(UpgradeState state)
 {
-    //Check whether all device are in reset or not
-    if (devmgr->GetUpgradeState() == DEVICES_RESET_STATE) {
-        NIC_FUNC_DEBUG("All devices are in reset state");
-        if (writefile(nicmgr_upgrade_state_file, "in progress", 12) != -1) {
-            g_nicmgr_svc->upgsdk()->SendAppRespSuccess();
-            evutil_timer_stop(EV_DEFAULT_ &dev_reset_timer);
-        }
+    switch (state) {
+        case (DEVICES_ACTIVE_STATE):
+            return "DEVICES_ACTIVE_STATE";
+        case (DEVICES_QUIESCED_STATE):
+            return "DEVICES_QUIESCED_STATE";
+        case (DEVICES_RESET_STATE):
+            return "DEVICES_RESET_STATE";
+        default:
+            return "UNKNOWN_STATE";
+    }
+}
+
+void
+nicmgr_upg_hndlr::upg_timer_func(void *obj)
+{
+    static uint32_t max_retry = 0;
+    int ret = 0;
+
+    if ((devmgr->GetUpgradeState() < ExpectedState) && (++max_retry < ServiceTimeout)) {
+        return;
+    }
+    else {
+        if (max_retry < ServiceTimeout)
+            NIC_FUNC_DEBUG("All devices are in {} state after {} retry", UpgStateToStr(devmgr->GetUpgradeState()), max_retry);
+        else
+            NIC_LOG_ERR("Timeout occurred while waiting for all devices to go in {} state", ExpectedState);
     }
 
-    return;
+    if (MoveToNextState) {
+
+        if (ExpectedState == DEVICES_QUIESCED_STATE) {
+            UpgEvent = UPG_EVENT_DEVICE_RESET;
+            ExpectedState = DEVICES_RESET_STATE;
+            devmgr->HandleUpgradeEvent(UpgEvent);
+            MoveToNextState = false;
+            SendAppResp = true;
+            max_retry = 0;
+
+        }
+        else if (ExpectedState == DEVICES_ACTIVE_STATE) {
+            UpgEvent = UPG_EVENT_QUIESCE;
+            ExpectedState = DEVICES_QUIESCED_STATE;
+            devmgr->HandleUpgradeEvent(UpgEvent);
+            MoveToNextState = true;
+            SendAppResp = false;
+            max_retry = 0;
+        }
+        else {
+            NIC_LOG_ERR("Undefined device's next state from current state: {}", UpgStateToStr(devmgr->GetUpgradeState()));
+        }
+
+        NIC_FUNC_DEBUG("Moving upgrade state machine to next level {}", UpgStateToStr(ExpectedState));
+        return;
+    }
+
+    if (SendAppResp) {
+        if (ExpectedState == DEVICES_RESET_STATE) {
+            ret = writefile(nicmgr_upgrade_state_file, "in progress", 11);
+            if (ret == -1)
+                return;
+        }
+
+        NIC_FUNC_DEBUG("Sending App Response to upgrade manager");
+
+        if (max_retry >= ServiceTimeout) {
+            g_nicmgr_svc->upgsdk()->SendAppRespFail("Timeout occurred");
+        }
+        else {
+            g_nicmgr_svc->upgsdk()->SendAppRespSuccess();
+        }
+        evutil_timer_stop(EV_DEFAULT_ &ServiceTimer);
+
+        return;
+    }
 }
 
 HdlrResp
@@ -287,7 +367,11 @@ nicmgr_upg_hndlr::HostDownHandler(UpgCtx& upgCtx) {
     }
 
     NIC_FUNC_DEBUG("Starting timer thread to check whether all devices are in reset or not ...");
-    evutil_timer_start(EV_DEFAULT_ &dev_reset_timer, nicmgr_upg_hndlr::check_device_reset, this, 0.0, 0.1);
+    ExpectedState = DEVICES_RESET_STATE;
+    ServiceTimeout = 600; //60 seconds
+    MoveToNextState = false;
+    SendAppResp = true;
+    evutil_timer_start(EV_DEFAULT_ &ServiceTimer, nicmgr_upg_hndlr::upg_timer_func, this, 0.0, 0.1);
 
     return resp;
 }

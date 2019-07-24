@@ -103,7 +103,6 @@ struct platform_device *mnet_get_platform_device(struct mnet_dev_t *mnet,
 	return pdev;
 }
 
-
 static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
@@ -176,9 +175,10 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		ret = copy_from_user(iface_name, argp, MNIC_NAME_LEN) ?
 				-EFAULT : 0;
-
 		if (ret)
 			break;
+
+		dev_info(mnet_device, "Removing mnic device: %s \n", iface_name);
 
 		list_for_each_entry(mnet, &mnet_list, node) {
 			/* find the mnet device which is bound to this interface */
@@ -200,13 +200,16 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			else
 				ret = ionic_remove(mnet->mnic_pdev);
 			if (ret) {
-				dev_dbg(mnet_device, "ionic_remove failed to remove %s "
+				dev_err(mnet_device, "ionic_remove failed to remove %s "
 						"interface\n", mnet->mnic_pdev->name);
 				break;
 			}
 
 			/* Mark mnet as free since we are detached from mnic */
 			mnet->busy = 0;
+
+			dev_info(mnet_device, "mnic device :%s removed successfully!\n",
+                    iface_name);
 		}
 
 		break;
@@ -219,7 +222,6 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 	return ret;
 }
-
 
 static int mnet_probe(struct platform_device *pfdev)
 {
