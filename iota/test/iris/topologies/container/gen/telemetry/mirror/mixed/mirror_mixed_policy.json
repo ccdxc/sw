@@ -120,11 +120,10 @@
                 "collectors": [
                     {
                         "export-config": {
-                            "destination": "192.168.100.101", 
-                            "transport": "TCP/8000"
+                            "destination": "192.168.100.101"
                         }, 
                         "pcap-dir-name": "", 
-                        "type": "ERSPAN"
+                        "type": "erspan"
                     }
                 ], 
                 "stop-condition": {}

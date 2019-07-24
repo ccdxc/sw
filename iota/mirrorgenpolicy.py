@@ -25,7 +25,7 @@ mirrorpolicy_template = {
         "stop-condition": {},
         "collectors": [
           {
-             "type": "ERSPAN",
+             "type": "erspan",
              "export-config": {
               "destination": "192.168.100.101"
             },
