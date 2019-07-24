@@ -275,17 +275,18 @@ acc_ring_t::post_push(uint32_t push_amount)
             if (push_pd_idx == curr_pd_idx) {
                 curr_push_type = ACC_RING_PUSH_INVALID;
             }
-            break;
         }
+        break;
 
-        /*
-         * Fall through!!!
-         */
+    case ACC_RING_PUSH_SEQUENCER:
+    case ACC_RING_PUSH_HW_DIRECT:
+    case ACC_RING_PUSH_HW_INDIRECT_BATCH:
+        OFFL_FUNC_DEBUG("{} non-batch or indirect work already pushed "
+                        "for push_type {}", ring_name, curr_push_type);
+        curr_push_type = ACC_RING_PUSH_INVALID;
+        break;
 
     default:
-        OFFL_FUNC_INFO("{} nothing to do for curr_push_type {}",
-                       ring_name, curr_push_type);
-        curr_push_type = ACC_RING_PUSH_INVALID;
         break;
     }
 }

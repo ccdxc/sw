@@ -26,7 +26,7 @@ typedef union {
                         pk_busy     : 1,
                         intr_status : 1,
                         unused      : 14;
-} __attribute__((__packed__)) status_t;
+} __attribute__((__packed__)) barco_asym_status_t;
 
 #define CRYPTO_ASYM_DMA_DESC_ALIGNMENT          \
         (sizeof(barco_dma_desc_t) < 32 ? 32 : sizeof(barco_dma_desc_t))
@@ -37,7 +37,7 @@ typedef union {
  * full word status_t bits
  */
 #define CRYPTO_ASYM_STATUS_PPX_NOT_ON_CURVE     (1 << 4)
-#define CRYPTO_ASYM_STATUS_PPX_AT_INFINITYE     (1 << 5)
+#define CRYPTO_ASYM_STATUS_PPX_AT_INFINITE      (1 << 5)
 #define CRYPTO_ASYM_STATUS_COUPLE_NOT_VALID     (1 << 6)
 #define CRYPTO_ASYM_STATUS_PARAM_N_NOT_VALID    (1 << 7)
 #define CRYPTO_ASYM_STATUS_NOT_IMPLEMENTED      (1 << 8)
@@ -50,6 +50,21 @@ typedef union {
 #define CRYPTO_ASYM_STATUS_UNUSED1              (1 << 15)
 #define CRYPTO_ASYM_STATUS_PK_BUSY              (1 << 16)
 #define CRYPTO_ASYM_STATUS_INTR                 (1 << 17)
+
+class status_t
+{
+public:
+    status_t(dp_mem_type_t mem_type);
+    ~status_t();
+
+    void init(void);
+    bool busy_check(void);
+    bool success_check(bool failure_expected=false);
+    uint64_t pa(void) { return asym_status->pa(); }
+
+private:
+    dp_mem_t                    *asym_status;
+};
 
 /*
  * SW key index type (negative means invalid)
@@ -127,7 +142,8 @@ public:
     dma_desc_pool_pre_push_params_t() :
          desc_idx_(CRYPTO_ASYM_DMA_DESC_IDX_INVALID),
          next_idx_(CRYPTO_ASYM_DMA_DESC_IDX_INVALID),
-         data_(nullptr)
+         data_(nullptr),
+         double_size_(false)
     {
     }
 
@@ -149,16 +165,23 @@ public:
         data_ = data;
         return *this;
     }
+    dma_desc_pool_pre_push_params_t&
+    double_size(bool double_size)
+    {
+        double_size_ = double_size;
+        return *this;
+    }
 
     dma_desc_idx_t desc_idx(void) { return desc_idx_; }
     dma_desc_idx_t next_idx(void) { return next_idx_; }
     dp_mem_t *data(void) { return data_; }
+    bool double_size(void) { return double_size_; }
 
 private:
     dma_desc_idx_t              desc_idx_;
     dma_desc_idx_t              next_idx_;
     dp_mem_t                    *data_;
-
+    bool                        double_size_;
 };
 
 /*
@@ -277,8 +300,10 @@ public:
          key_param_list_(0),
          cmd_size_(0),
          swap_bytes_(false),
-         cmd_rsa_sig_gen_(false),
-         cmd_rsa_sig_verify_(false)
+         cmd_rsa_sign_(false),
+         cmd_rsa_verify_(false),
+         cmd_rsa_encrypt_(false),
+         cmd_rsa_decrypt_(false)
     {
     }
 
@@ -301,30 +326,46 @@ public:
         return *this;
     }
     key_desc_pre_push_params_t&
-    cmd_rsa_sig_gen(bool cmd_rsa_sig_gen)
+    cmd_rsa_sign(bool cmd_rsa_sign)
     {
-        cmd_rsa_sig_gen_ = cmd_rsa_sig_gen;
+        cmd_rsa_sign_ = cmd_rsa_sign;
         return *this;
     }
     key_desc_pre_push_params_t&
-    cmd_rsa_sig_verify(bool cmd_rsa_sig_verify)
+    cmd_rsa_verify(bool cmd_rsa_verify)
     {
-        cmd_rsa_sig_verify_ = cmd_rsa_sig_verify;
+        cmd_rsa_verify_ = cmd_rsa_verify;
+        return *this;
+    }
+    key_desc_pre_push_params_t&
+    cmd_rsa_encrypt(bool cmd_rsa_encrypt)
+    {
+        cmd_rsa_encrypt_ = cmd_rsa_encrypt;
+        return *this;
+    }
+    key_desc_pre_push_params_t&
+    cmd_rsa_decrypt(bool cmd_rsa_decrypt)
+    {
+        cmd_rsa_decrypt_ = cmd_rsa_decrypt;
         return *this;
     }
 
     uint64_t key_param_list(void) { return key_param_list_; }
     uint32_t cmd_size(void) { return cmd_size_; }
     bool swap_bytes(void) { return swap_bytes_; }
-    bool cmd_rsa_sig_gen(void) { return cmd_rsa_sig_gen_; }
-    bool cmd_rsa_sig_verify(void) { return cmd_rsa_sig_verify_; }
+    bool cmd_rsa_sign(void) { return cmd_rsa_sign_; }
+    bool cmd_rsa_verify(void) { return cmd_rsa_verify_; }
+    bool cmd_rsa_encrypt(void) { return cmd_rsa_encrypt_; }
+    bool cmd_rsa_decrypt(void) { return cmd_rsa_decrypt_; }
 
 private:
     uint64_t                    key_param_list_;
     uint32_t                    cmd_size_;
     bool                        swap_bytes_;
-    bool                        cmd_rsa_sig_gen_;
-    bool                        cmd_rsa_sig_verify_;
+    bool                        cmd_rsa_sign_;
+    bool                        cmd_rsa_verify_;
+    bool                        cmd_rsa_encrypt_;
+    bool                        cmd_rsa_decrypt_;
 };
 
 /*

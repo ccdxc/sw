@@ -1,5 +1,6 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <unistd.h>
 #include <thread>
 #include <ctime>
 #include <iostream>
@@ -308,6 +309,7 @@ public:
             }
 
             // Wait for State change or deadline
+            usleep(10000);
             channel->WaitForStateChange(state, gpr_time_from_seconds(1, GPR_TIMESPAN));
         }
 

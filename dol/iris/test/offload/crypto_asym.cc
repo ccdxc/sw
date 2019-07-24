@@ -86,6 +86,14 @@ dma_desc_pool_t::pre_push(dma_desc_pool_pre_push_params_t& pre_params)
     dma_desc->rsvd0 = true;
     dma_desc->length = pre_params.data()->content_size_get();
 
+    /*
+     * double_size means the caller data consist of 2 contiguous
+     * chunks in memory.
+     */
+    if (pre_params.double_size()) {
+        dma_desc->length *= 2;
+    }
+
     dma_desc->stop = !dma_desc_idx_is_valid(pre_params.next_idx());
     dma_desc->realign = dma_desc->stop; // always set on last descriptor
 
@@ -96,9 +104,9 @@ dma_desc_pool_t::pre_push(dma_desc_pool_pre_push_params_t& pre_params)
         dma_desc_vec->line_set(pre_params.desc_idx());
     }
 
-    OFFL_FUNC_DEBUG("dma_desc {} addr {:#x} data_addr {:#x} next_desc {:#x}",
+    OFFL_FUNC_DEBUG("dma_desc {} addr {:#x} data_addr {:#x} next_desc {:#x} length {}",
                     pre_params.desc_idx(), dma_desc_vec->pa(), 
-                    dma_desc->address, dma_desc->next << 2);
+                    dma_desc->address, dma_desc->next << 2, dma_desc->length);
     dma_desc_vec->write_thru();
     return dma_desc_vec->pa();
 }
@@ -127,9 +135,10 @@ req_desc_t::pre_push(req_desc_pre_push_params_t& pre_params)
     req_desc.opage_tag_wr_en  = pre_params.opaque_tag_en();
 
     OFFL_FUNC_DEBUG("req_desc input_list {:#x} output_list {:#x} "
-                    "status_addr {:#x} key_idx {}",
+                    "status_addr {:#x} key_idx {} opa_tag_value {}",
                     req_desc.input_list_addr, req_desc.output_list_addr,
-                    req_desc.status_addr, req_desc.key_descr_idx);
+                    req_desc.status_addr, req_desc.key_descr_idx,
+                    req_desc.opaque_tag_value);
     return true;
 }
 
@@ -155,10 +164,14 @@ key_desc_t::pre_push(key_desc_pre_push_params_t& pre_params)
     /*
      * Only one of the following is expected to be true
      */
-    if (pre_params.cmd_rsa_sig_gen()) {
+    if (pre_params.cmd_rsa_sign()) {
         key_desc.command_reg |= CAPRI_BARCO_ASYM_CMD_RSA_SIG_GEN;
-    } else if (pre_params.cmd_rsa_sig_verify()) {
+    } else if (pre_params.cmd_rsa_verify()) {
         key_desc.command_reg |= CAPRI_BARCO_ASYM_CMD_RSA_SIG_VERIFY;
+    } else if (pre_params.cmd_rsa_encrypt()) {
+        key_desc.command_reg |= CAPRI_BARCO_ASYM_CMD_RSA_ENCRYPT;
+    } else if (pre_params.cmd_rsa_decrypt()) {
+        key_desc.command_reg |= CAPRI_BARCO_ASYM_CMD_RSA_DECRYPT;
     } else {
         OFFL_FUNC_ERR("failed to set command_reg");
         return false;
@@ -175,6 +188,103 @@ void *
 key_desc_t::push(void)
 {
     return &key_desc;
+}
+
+
+/*
+ * Asym status
+ */
+status_t::status_t(dp_mem_type_t mem_type)
+{
+    asym_status = new dp_mem_t(1, sizeof(barco_asym_status_t),
+                               DP_MEM_ALIGN_NONE, mem_type);
+    init();
+}
+
+status_t::~status_t()
+{
+    if (asym_status) {
+        delete asym_status;
+    }
+}
+
+void
+status_t::init(void)
+{
+    barco_asym_status_t *status;
+    uint32_t            all_ones = ~0;
+
+    /*
+     * Initialize status for later polling
+     */
+    asym_status->clear();
+    status = (barco_asym_status_t *)asym_status->read();
+    status->pk_busy = true;
+    status->err_flags = all_ones;
+    asym_status->write_thru();
+}
+
+
+bool
+status_t::busy_check(void)
+{
+    barco_asym_status_t *status =
+               (barco_asym_status_t *)asym_status->read_thru();
+    return status->pk_busy;
+}
+
+
+bool
+status_t::success_check(bool failure_expected)
+{
+    barco_asym_status_t *status =
+               (barco_asym_status_t *)asym_status->read_thru();
+
+    if (status->err_flags) {
+
+        if (status->full_word & CRYPTO_ASYM_STATUS_PPX_NOT_ON_CURVE) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "point Px not on defined EC");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_PPX_AT_INFINITE) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "point Px is at infinity");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_COUPLE_NOT_VALID) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                     "couple x, y is not valid (not smaller than prime)");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_PARAM_N_NOT_VALID) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "parameter n is not valid");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_NOT_IMPLEMENTED) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "commnand is not valid");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_SIG_NOT_VALID) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "signature is not valid");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_PARAM_AB_NOT_VALID) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "parameters A and B are not valid");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_NOT_INVERTIBLE) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "modular inversion operand not invertible");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_COMPOSITE) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                                  "random number under test is composite");
+        }
+        if (status->full_word & CRYPTO_ASYM_STATUS_NOT_QUAD_RESIDUE) {
+            OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                     "modular square root operand not a quadratic residue");
+        }
+        return false;
+    }
+    return true;
 }
 
 } // namespace crypto_asym

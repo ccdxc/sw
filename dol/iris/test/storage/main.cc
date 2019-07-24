@@ -310,6 +310,22 @@ void sig_handler(int sig) {
   exit(1);
 }
 
+/*
+ * Return certain flags for use by utils module so it does not
+ * have to link in tests.cc
+ */
+uint64_t
+poll_interval(void)
+{
+    return FLAGS_poll_interval;
+}
+
+uint64_t
+long_poll_interval(void)
+{
+    return FLAGS_long_poll_interval;
+}
+
 int common_setup() {
   // Initialize hal interface
   hal_if::init_hal_if();

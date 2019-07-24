@@ -91,6 +91,15 @@ do { \
     } \
 } while (0)
 
+#define OFFL_LOG_ERR_OR_DEBUG(failure_expected, args...) \
+do { \
+    if (failure_expected) { \
+        OFFL_LOG_DEBUG(args); \
+    } else { \
+        OFFL_LOG_ERR(args); \
+    } \
+} while (0)
+
 #define OFFL_LOG_TRACE(args...) \
 do { \
     if (offl::logger::logger()) { \
@@ -131,6 +140,15 @@ do { \
 do { \
     if (offl::logger::logger()) { \
         offl::logger::logger()->debug("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+    } \
+} while (0)
+
+#define OFFL_FUNC_ERR_OR_DEBUG(failure_expected, args...) \
+do { \
+    if (failure_expected) { \
+        OFFL_FUNC_DEBUG(args); \
+    } else { \
+        OFFL_FUNC_ERR(args); \
     } \
 } while (0)
 

@@ -64,11 +64,12 @@ void init_hal_if() {
       }
 
       // Wait for State change or deadline
+      usleep(10000);
       hal_channel->WaitForStateChange(state,
                                gpr_time_from_seconds(1, GPR_TIMESPAN));
   }
   if (state == GRPC_CHANNEL_READY) {
-      OFFL_FUNC_INFO("HAL channel became ready state in {} seconds",
+      OFFL_FUNC_INFO("HAL channel became ready in {} seconds",
                      (int)elapsed);
   } else {
       OFFL_FUNC_INFO("HAL channel never reached ready state after {} seconds",

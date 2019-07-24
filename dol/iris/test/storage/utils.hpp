@@ -14,6 +14,9 @@ const static uint32_t kMinHostMemAllocSize = 64;
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
+extern uint64_t poll_interval(void);
+extern uint64_t long_poll_interval(void);
+
 namespace utils {
 
 extern const uint32_t kUtilsPageSize;
@@ -40,9 +43,10 @@ uint32_t roundup_to_pow_2(uint32_t x);
  */
 class Poller {
 public:
-  Poller() : timeout(60) { }
+  Poller() : timeout(long_poll_interval()) { }
   Poller(int timeout, bool fast_poll=true) : timeout(timeout), fast_poll(fast_poll) { }
-  int operator()(std::function<int(void)> poll_func);
+  int operator()(std::function<int(void)> poll_func,
+                 bool failure_expected=false);
 private:
   int timeout; //Default overall timeout
   bool fast_poll = true;

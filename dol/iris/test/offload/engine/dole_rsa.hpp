@@ -18,9 +18,9 @@ public:
 
     rsa_ex_data_t() :
         key_idx_(CRYPTO_ASYM_KEY_IDX_INVALID),
-        n_(nullptr),
-        d_e_(nullptr),
-        user_ctx_(nullptr)
+        digest_padded_(nullptr),
+        caller_ctx_(nullptr),
+        wait_for_completion_(false)
     {
     }
 
@@ -31,34 +31,34 @@ public:
         return *this;
     }
     rsa_ex_data_t&
-    n(dp_mem_t *n)
+    digest_padded(dp_mem_t *digest_padded)
     {
-        n_ = n;
+        digest_padded_ = digest_padded;
         return *this;
     }
     rsa_ex_data_t&
-    d_e(dp_mem_t *d_e)
+    caller_ctx(void *caller_ctx)
     {
-        d_e_ = d_e;
+        caller_ctx_ = caller_ctx;
         return *this;
     }
     rsa_ex_data_t&
-    user_ctx(void *user_ctx)
+    wait_for_completion(bool wait_for_completion)
     {
-        user_ctx_ = user_ctx;
+        wait_for_completion_ = wait_for_completion;
         return *this;
     }
 
     crypto_asym::key_idx_t key_idx(void) { return key_idx_; }
-    dp_mem_t *n(void) { return n_; }
-    dp_mem_t *d_e(void) { return d_e_; }
-    void *user_ctx(void) { return user_ctx_; }
+    dp_mem_t *digest_padded(void) { return digest_padded_; }
+    void *caller_ctx(void) { return caller_ctx_; }
+    bool wait_for_completion(void) { return wait_for_completion_; }
 
 private:
     crypto_asym::key_idx_t      key_idx_;
-    dp_mem_t                    *n_;            // RSA modulus
-    dp_mem_t                    *d_e_;          // RSA public or private exponent
-    void                        *user_ctx_;
+    dp_mem_t                    *digest_padded_;
+    void                        *caller_ctx_;
+    bool                        wait_for_completion_;
 };
 
 RSA_METHOD *rsa_methods_get(void);

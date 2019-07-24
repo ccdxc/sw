@@ -11,13 +11,18 @@ static const map<string,const dole_evp_md_t*> hash_algo_map = {
     {"SHA256",      EVP_sha256()},
     {"SHA384",      EVP_sha384()},
     {"SHA512",      EVP_sha512()},
+
+#ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
+    {"SHA512224",   EVP_sha512_224()},
+    {"SHA512256",   EVP_sha512_256()},
+#endif
 };
 
 /*
  * Interface to DOL OpenSSL engine
  */
 ENGINE  *dole;
-BIO     *dole_bio;
+BIO     *dole_if_bio;
 
 bool
 init(const char *engine_path)
@@ -32,7 +37,12 @@ init(const char *engine_path)
     }
 
     SSL_library_init();
-    dole_bio = BIO_new_fp(stdout, BIO_NOCLOSE);
+
+    /*
+     * Basic I/O is used to interface with, among other things,
+     * Openssl ERR_print facilities.
+     */
+    dole_if_bio = BIO_new_fp(stdout, BIO_NOCLOSE);
 
     ENGINE_load_dynamic();
     ENGINE_load_builtin_engines();
@@ -85,6 +95,45 @@ hash_algo_find(const string& hash_algo)
     return nullptr;
 }
 
-} // namespace dole_if
 
+/*
+ * Pad a message (could also be a modulus n, or e, or d, etc.) 
+ * to the desired tolen.
+ */
+bool
+msg_optional_pad(dp_mem_t *msg,
+                 uint32_t tolen)
+{
+    BIGNUM      *bn = NULL;
+    bool        success = false;
+
+    assert(msg->content_size_get() && (msg->line_size_get() >= tolen));
+
+    if (msg->content_size_get() != tolen) {
+        bn = BN_bin2bn(msg->read(), msg->content_size_get(), NULL);
+        if (!bn) {
+            OFFL_FUNC_ERR("failed BN_bin2bn");
+            goto error;
+        }
+
+        tolen = BN_bn2binpad(bn, msg->read(), tolen);
+        if (tolen <= 0) {
+            OFFL_FUNC_ERR("failed BN_bin2bn");
+            goto error;
+        }
+
+        msg->content_size_set(tolen);
+        msg->write_thru();
+    }
+
+    success = true;
+
+error:
+    if (bn) {
+        BN_clear_free(bn);
+    }
+    return success;
+}
+
+} // namespace dole_if
 

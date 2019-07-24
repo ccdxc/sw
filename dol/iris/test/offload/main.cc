@@ -47,9 +47,13 @@ DEFINE_uint64(nvme_scale_iters, 64,
               "Number of iterations for NVME scale testing (0 = infinite)");
 bool run_nicmgr_tests;
 bool run_pdma_tests;
-bool run_rsa_testvectors = true;
+bool run_rsa_testvectors;
+bool run_ecdsa_testvectors;
 uint32_t run_acc_scale_tests_map;
 
+/*
+ * test case ID (legacy usage from storage)
+ */
 size_t tcid;
 
 class test_entry_t
@@ -65,18 +69,37 @@ public:
     {
     }
 
-    const string&                 test_name;
-    std::function<bool(void *)>   test_fn;
-    void                          *test_param;
-    bool                          test_success;
+    const string&               test_name;
+    std::function<bool(void *)> test_fn;
+    void                        *test_param;
+    bool                        test_success;
 };
 
 /*
  * RSA testvectors
  */
-const static vector<string>     rsa_testvectors = {
-    "rsa-testvectors/SigGen15_186-3.txt",
-    //"rsa-testvectors/SigGen931_186-3.txt",
+typedef struct {
+    string                      testvec_fname;
+    crypto_rsa::rsa_key_create_type_t key_create_type;
+    int                         pad_mode;
+} rsa_vector_entry_t;
+
+const static vector<rsa_vector_entry_t> rsa_testvectors =
+{
+    {"rsa-testvectors/SigGen15_186-3.txt",
+     crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PADDING},
+
+#ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
+    {"rsa-testvectors/SigGen15_186-3_TruncatedSHAs.txt",
+     crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PADDING},
+#endif
+    //{"rsa-testvectors/SigGen931_186-3.txt",
+    // crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_X931_PADDING},
+
+    // For signature verification, we want to produce the ciphered output
+    // so the encryption method is used.
+    {"rsa-testvectors/SigVer15_186-3.rsp",
+      crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
 };
 
 /*
@@ -97,6 +120,22 @@ sig_handler(int sig)
     fprintf(stderr, "Error: signal %d:\n", sig);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     exit(1);
+}
+
+/*
+ * Return certain flags for use by utils module so it does not
+ * have to link in tests.cc
+ */
+uint64_t
+poll_interval(void)
+{
+    return FLAGS_poll_interval;
+}
+
+uint64_t
+long_poll_interval(void)
+{
+    return FLAGS_long_poll_interval;
 }
 
 int
@@ -131,32 +170,76 @@ common_setup(void)
     return 0;
 }
 
+/*
+ * Driver for RSA testvectors
+ */
 static bool
-rsa_testvectors_drive(void *test_param)
+rsa_testvectors_run(void *test_param)
 {
-    vector<string>                            *testvectors;
-    offload_base_params_t base_params;
-    crypto_rsa::rsa_testvec_params_t          testvec_params;
-    crypto_rsa::rsa_testvec_pre_push_params_t pre_params;
-    crypto_rsa::rsa_testvec_push_params_t     push_params;
-    crypto_rsa::rsa_testvec_t                 *rsa_testvec;
-    uint32_t                                  failure_count;
+    vector<rsa_vector_entry_t>  *testvectors = 
+                      static_cast<vector<rsa_vector_entry_t> *>(test_param);
+    uint32_t        failure_count;
 
-    testvectors = static_cast<vector<string> *>(test_param);
+    /*
+     * Run the vectors with the specified mem_type
+     */
+    auto testvectors_run = [](const rsa_vector_entry_t& entry,
+                              dp_mem_type_t mem_type) -> bool
+    {
+        crypto_rsa::rsa_testvec_params_t          testvec_params;
+        crypto_rsa::rsa_testvec_pre_push_params_t pre_params;
+        crypto_rsa::rsa_testvec_push_params_t     push_params;
+        crypto_rsa::rsa_testvec_t                 *rsa_testvec;
+        offload_base_params_t                     base_params;
+        bool                                      success;
+
+        testvec_params.key_create_type(entry.key_create_type).
+                       pad_mode(entry.pad_mode).
+                       d_mem_type(mem_type).
+                       e_mem_type(mem_type).
+                       n_mem_type(mem_type).
+                       msg_mem_type(mem_type).
+                       sig_mem_type(mem_type).
+                       dma_desc_mem_type(mem_type).
+                       status_mem_type(mem_type);
+        OFFL_LOG_INFO("Running RSA vector {} with mem_type {}",
+                      entry.testvec_fname, mem_type);
+        rsa_testvec = new crypto_rsa::rsa_testvec_t(
+                          testvec_params.base_params(base_params));
+        success = rsa_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
+                                                   testvec_fname(entry.testvec_fname));;
+        if (success) {
+            success = rsa_testvec->push(push_params.rsa_ring(crypto_asym::asym_ring));
+        }
+        if (success) {
+            success = rsa_testvec->post_push();
+        }
+        if (success) {
+            success = rsa_testvec->full_verify();
+        }
+        rsa_testvec->rsp_file_output(mem_type == DP_MEM_TYPE_HBM ?
+                                     "hbm" : "host");
+        delete rsa_testvec;
+        return success;
+    };
+
     failure_count = 0;
     for (uint32_t i = 0; i < testvectors->size(); i++) {
-        const string& vec_name(testvectors->at(i));
+        const rsa_vector_entry_t& entry = testvectors->at(i);
 
-        OFFL_LOG_INFO("Running RSA vector {}", vec_name);
-        rsa_testvec = new crypto_rsa::rsa_testvec_t(testvec_params.base_params(base_params));
-        rsa_testvec->pre_push(pre_params.testvec_fname(FLAGS_script_dir + "/" +
-                                                       vec_name));
-        rsa_testvec->push(push_params.rsa_ring(crypto_asym::asym_ring));
-        rsa_testvec->post_push();
-        if (!rsa_testvec->full_verify()) {
+        /*
+         * 1st run with HBM
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HBM)) {
             failure_count++;
         }
-        delete rsa_testvec;
+
+        /*
+         * 2nd run with host mem
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HOST_MEM)) {
+            failure_count++;
+        }
     }
 
     return failure_count == 0;
@@ -177,9 +260,19 @@ main(int argc,
 
     std::cout << "Input - hal_port: "        << FLAGS_hal_port 
               << "\nInput - hal_ip: "        << FLAGS_hal_ip 
-              << "\nScripts dir: "           << FLAGS_script_dir 
+              << "\nTest group:     "        << FLAGS_test_group
+              << "\nScripts dir:    "        << FLAGS_script_dir 
               << "\nOpenssl engine path: "   << FLAGS_engine_path
               << std::endl;
+
+    if (FLAGS_test_group == "") {
+        run_rsa_testvectors = true;
+        run_ecdsa_testvectors = true;
+    } else if (FLAGS_test_group == "rsa") {
+        run_rsa_testvectors = true;
+    } else if (FLAGS_test_group == "ecdsa") {
+        run_ecdsa_testvectors = true;
+    }
 
     if (common_setup() < 0)  {
         OFFL_FUNC_ERR("Failed common setup");
@@ -187,7 +280,7 @@ main(int argc,
     }
 
     if (run_rsa_testvectors) {
-        test_suite.push_back(test_entry_t("RSA", &rsa_testvectors_drive,
+        test_suite.push_back(test_entry_t("FIPS RSA", &rsa_testvectors_run,
                                           (void *)&rsa_testvectors));
     }
 
@@ -196,7 +289,7 @@ main(int argc,
 
     overall_success = true;
     for (tcid = 0; tcid < test_suite.size(); tcid++) {
-        auto test_entry = test_suite.at(tcid);
+        test_entry_t& test_entry = test_suite.at(tcid);
 
         gettimeofday(&start, NULL);
         OFFL_LOG_INFO(" Starting test #: {} name: {}", tcid, test_entry.test_name);
@@ -209,6 +302,19 @@ main(int argc,
         overall_success &= test_entry.test_success;
     }
 
+    OFFL_LOG_INFO("");
+    OFFL_LOG_INFO("Consolidated Test Report");
+    OFFL_LOG_INFO("--------------------------------------------------------------");
+    OFFL_LOG_INFO("Number\t\tName\t\t\t\tResult\n");
+    OFFL_LOG_INFO("--------------------------------------------------------------");
+
+    for (size_t i = 0; i < test_suite.size(); i++) {
+        test_entry_t& test_entry = test_suite.at(i);
+        OFFL_LOG_INFO("{}\t\t{}\t\t\t{}", i+1, test_entry.test_name,
+                      test_entry.test_success ? "Success" : "Failure");
+    }
+
+    OFFL_LOG_INFO("");
     OFFL_LOG_INFO("Overall Report: {}",
                   overall_success ? "SUCCESS" : "FAILURE");
 

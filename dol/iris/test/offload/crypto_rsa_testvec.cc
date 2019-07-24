@@ -1,22 +1,21 @@
 #include "crypto_rsa_testvec.hpp"
+#include "testvec_output.hpp"
 #include "crypto_rsa.hpp"
 
 namespace crypto_rsa {
 
 #define FOR_EACH_KEY_REPR(key_repr)                                     \
     for (uint32_t k = 0; k < key_repr_vec.size(); k++) {                \
-        shared_ptr<rsa_key_repr_t> key_repr(key_repr_vec.at(k));
+        auto key_repr = key_repr_vec.at(k);
 
 #define END_FOR_EACH_KEY_REPR(key_repr)                                 \
-        key_repr.reset();                                               \
     }
 
 #define FOR_EACH_MSG_REPR(key_repr, msg_repr)                           \
     for (uint32_t m = 0; m < key_repr->msg_repr_vec.size(); m++) {      \
-        shared_ptr<rsa_msg_repr_t> msg_repr(key_repr->msg_repr_vec.at(m));
+        auto msg_repr = key_repr->msg_repr_vec.at(m);
         
 #define END_FOR_EACH_MSG_REPR(key_repr, msg_repr)                       \
-        msg_repr.reset();                                               \
     }
 
 
@@ -59,106 +58,168 @@ rsa_testvec_t::~rsa_testvec_t()
 bool
 rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
 {
-    vector<testvec_parse_token_t>   token_vec;
-    parser_token_mask_t             mod_mask;
-    parser_token_mask_t             end_mask;
-    parser_token_mask_t             msg_mask;
-    parser_token_mask_t             done_mask;
-    u_long                          modulus_bits_len;
-    u_long                          modulus_bytes_len;
-    bool                            success = false;
+    shared_ptr<rsa_key_repr_t>  key_repr;
+    shared_ptr<rsa_msg_repr_t>  msg_repr;
+    testvec_parse_params_t      params;
+    string                      result;
+    parser_token_id_t           token_id;
+    u_long                      mod_bits_len = 0;
+    u_long                      mod_bytes_len = 0;
 
     OFFL_FUNC_INFO("test vector file {}", pre_params.testvec_fname());
+    this->pre_params = pre_params;
     hw_started = false;
     test_success = false;
 
-    testvec_parser = new testvec_parser_t(pre_params.testvec_fname());
+    testvec_parser = new testvec_parser_t(pre_params.scripts_dir(),
+                                          pre_params.testvec_fname());
     while (!testvec_parser->eof()) {
 
-        /*
-         * First, find modulus length.
-         * Note: testvec_parser would strip all white spaces (including
-         * brackets) from a line prior to parsing, so tokens should
-         * exclude such characters.
-         */
-        token_vec.clear();
-        token_vec.push_back(testvec_parse_token_t("mod=",
-                                    &testvec_parser_t::line_parse_ulong,
-                                    &modulus_bits_len));
-        mod_mask.assign(testvec_parser->parse(token_vec, true));
-        if (mod_mask.empty() || (modulus_bits_len == 0)) {
-            OFFL_FUNC_ERR("failed to find modulus length");
-            goto done;
-        }
+        token_id = testvec_parser->parse(params.skip_unconsumed_line(true));
+        switch (token_id) {
 
-        /*
-         * Parse for e/n/d which are expected to also be at the front
-         * of the test vector file
-         */
-        modulus_bytes_len = (modulus_bits_len + BITS_PER_BYTE - 1) /
-                            BITS_PER_BYTE;
-        shared_ptr<rsa_key_repr_t> key_repr = 
-                   make_shared<rsa_key_repr_t>(*this, modulus_bytes_len);
+        case PARSE_TOKEN_ID_EOF:
+        case PARSE_TOKEN_ID_N:
 
-        token_vec.clear();
-        token_vec.push_back(testvec_parse_token_t("n=",
-                                    &testvec_parser_t::line_parse_hex_bn,
-                                    key_repr->n));
-        token_vec.push_back(testvec_parse_token_t("e=",
-                                    &testvec_parser_t::line_parse_hex_bn,
-                                    key_repr->e));
-        token_vec.push_back(testvec_parse_token_t("d=",
-                                    &testvec_parser_t::line_parse_hex_bn,
-                                    key_repr->d));
-        done_mask.fill(3);
-        end_mask.assign(testvec_parser->parse(token_vec));
-        if (!end_mask.eq(done_mask)) {
-            key_repr.reset();
-            OFFL_FUNC_ERR("failed to find one of e/n/d");
-            goto done;
-        }
-
-        /*
-         * Now parse the messages
-         */
-        done_mask.fill(3);
-        while (true) {
-            shared_ptr<rsa_msg_repr_t> msg_repr = 
-                       make_shared<rsa_msg_repr_t>(*this, modulus_bytes_len);
-            token_vec.clear();
-            token_vec.push_back(testvec_parse_token_t("SHAAlg=",
-                                        &testvec_parser_t::line_parse_string,
-                                        &msg_repr->sha_algo));
-            token_vec.push_back(testvec_parse_token_t("Msg=",
-                                        &testvec_parser_t::line_parse_hex_bn,
-                                        msg_repr->msg));
-            token_vec.push_back(testvec_parse_token_t("S=",
-                                        &testvec_parser_t::line_parse_hex_bn,
-                                        msg_repr->sig_expected));
-            msg_mask.assign(testvec_parser->parse(token_vec));
-            if (!msg_mask.eq(done_mask)) {
-                msg_repr.reset();
-                if (msg_mask.empty()) {
-                     break;
+            /*
+             * EOF or a new n section terminates the current key representative
+             * and msg representative.
+             */
+            if (key_repr.use_count()) {
+                if (msg_repr.use_count()) {
+                    key_repr->msg_repr_vec.push_back(move(msg_repr));
+                    msg_repr.reset();
                 }
-                OFFL_FUNC_ERR("failed to find one of SHAAlg/Msg/S");
-                goto done;
+
+                OFFL_FUNC_INFO("mod_bytes_len {} with {} msg representative vectors",
+                               mod_bytes_len, key_repr->msg_repr_vec.size());
+                key_repr_vec.push_back(move(key_repr));
+                key_repr.reset();
+            }
+            if (token_id == PARSE_TOKEN_ID_EOF) {
+                break;
             }
 
-            key_repr->msg_repr_vec.push_back(move(msg_repr));
-        }
+            if (mod_bytes_len == 0) {
+                OFFL_FUNC_ERR("modulus N found without length");
+                goto error;
+            }
 
-        OFFL_FUNC_INFO("modulus_bytes_len {} with {} msg representative vectors",
-                       modulus_bytes_len, key_repr->msg_repr_vec.size());
-        key_repr_vec.push_back(move(key_repr));
+            key_repr = make_shared<rsa_key_repr_t>(*this, mod_bytes_len);
+            if (!testvec_parser->line_parse_hex_bn(key_repr->n)) {
+                key_repr->failed_parse_token = token_id;
+            }
+            break;
+
+        case PARSE_TOKEN_ID_MODULUS:
+            if (!testvec_parser->line_parse_ulong(&mod_bits_len)) {
+                key_repr->failed_parse_token = token_id;
+            }
+            if (mod_bits_len == 0) {
+                OFFL_FUNC_ERR("modulus length cannot be zero");
+                goto error;
+            }
+            mod_bytes_len = (mod_bits_len + BITS_PER_BYTE - 1) / BITS_PER_BYTE;
+            break;
+
+        case PARSE_TOKEN_ID_E:
+            if (rsa_key_create_type_is_sign(testvec_params.key_create_type())) {
+                if (!key_repr.use_count()) {
+                    OFFL_FUNC_ERR("out of place e for SigGen vector");
+                    goto error;
+                }
+                if (!testvec_parser->line_parse_hex_bn(key_repr->e)) {
+                    key_repr->failed_parse_token = token_id;
+                }
+
+            } else {
+                if (!msg_repr.use_count()) {
+                    OFFL_FUNC_ERR("out of place e for SigVer vector");
+                    goto error;
+                }
+                if (!testvec_parser->line_parse_hex_bn(msg_repr->e)) {
+                    msg_repr->failed_parse_token = token_id;
+                }
+            }
+            break;
+
+        case PARSE_TOKEN_ID_D:
+            if (!key_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place d");
+                goto error;
+            }
+            if (!testvec_parser->line_parse_hex_bn(key_repr->d)) {
+                key_repr->failed_parse_token = token_id;
+            }
+            break;
+
+        case PARSE_TOKEN_ID_SHA_ALGO:
+
+            /*
+             * Each SHAAlg section begins a new msg representative
+             */
+            if (!key_repr.use_count()) {
+                OFFL_FUNC_ERR("SHAAlg found without a key representative");
+                goto error;
+            }
+            if (msg_repr.use_count()) {
+                key_repr->msg_repr_vec.push_back(move(msg_repr));
+                msg_repr.reset();
+            }
+
+            msg_repr = make_shared<rsa_msg_repr_t>(*this, mod_bytes_len);
+            if (!testvec_parser->line_parse_string(&msg_repr->sha_algo)) {
+                msg_repr->failed_parse_token = token_id;
+            }
+            break;
+
+        case PARSE_TOKEN_ID_S:
+            if (!msg_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place S");
+                goto error;
+            }
+            if (!testvec_parser->line_parse_hex_bn(msg_repr->sig_expected)) {
+                msg_repr->failed_parse_token = token_id;
+            }
+            break;
+
+        case PARSE_TOKEN_ID_MSG:
+            if (!msg_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place Msg");
+                goto error;
+            }
+            if (!testvec_parser->line_parse_hex_bn(msg_repr->msg_expected)) {
+                msg_repr->failed_parse_token = token_id;
+            }
+            break;
+
+        case PARSE_TOKEN_ID_RESULT:
+            if (!msg_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place Result");
+                goto error;
+            }
+            result.clear();
+            testvec_parser->line_parse_string(&result);
+            msg_repr->failure_expected = result == "F";
+            break;
+
+        default:
+
+            /*
+             * Nothing to do as we already instructed parser to skip over
+             * unconsumed line.
+             */
+            break;
+        }
     }
 
     OFFL_FUNC_INFO("with {} key representative vectors", key_repr_vec.size());
-    success = true;
+    return true;
 
-done:
-    return success;
+error:
+    return false;
 }
+
 
 /*
  * Initiate the test
@@ -167,8 +228,8 @@ bool
 rsa_testvec_t::push(rsa_testvec_push_params_t& push_params)
 {
     rsa_params_t                rsa_params;
-    rsa_sig_pre_push_params_t   sig_pre_params;
-    rsa_sig_push_params_t       sig_push_params;
+    rsa_pre_push_params_t       rsa_pre_params;
+    rsa_push_params_t           rsa_push_params;
 
     this->push_params = push_params;
     if (key_repr_vec.empty()) {
@@ -178,41 +239,71 @@ rsa_testvec_t::push(rsa_testvec_push_params_t& push_params)
 
     hw_started = true;
     rsa_params.base_params(testvec_params.base_params()).
+               dma_desc_mem_type(testvec_params.dma_desc_mem_type()).
+               msg_digest_mem_type(testvec_params.msg_mem_type()).
+               status_mem_type(testvec_params.status_mem_type()).
                acc_ring(push_params.rsa_ring()).
                push_type(push_params.push_type()).
                seq_qid(push_params.seq_qid());
 
     FOR_EACH_KEY_REPR(key_repr) {
-        sig_pre_params.key_create_type(RSA_KEY_CREATE_PRIV_SIG_GEN).
-                        n(key_repr->n).
-                        d(key_repr->d).
-                        e(key_repr->e);
+        rsa_pre_params.key_create_type(testvec_params.key_create_type()).
+                       pad_mode(testvec_params.pad_mode()).
+                       d(key_repr->d).
+                       e(key_repr->e).
+                       n(key_repr->n);
+
         rsa_params.key_idx(CRYPTO_ASYM_KEY_IDX_INVALID).
                    key_idx_shared(false);
         FOR_EACH_MSG_REPR(key_repr, msg_repr) {
+            msg_repr->push_failure = false;
+
+            /*
+             * If there were parse errors, skip this representative.
+             */
+            if ((key_repr->failed_parse_token != PARSE_TOKEN_ID_VOID) ||
+                (msg_repr->failed_parse_token != PARSE_TOKEN_ID_VOID)) {
+
+                OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected, "Parser error"
+                                       " on key token {} or msg token {}",
+                                       key_repr->failed_parse_token,
+                                       msg_repr->failed_parse_token);
+                msg_repr->push_failure = true;
+                continue;
+            }
+            if (!rsa_key_create_type_is_sign(testvec_params.key_create_type())) {
+                rsa_pre_params.e(msg_repr->e);
+            }
 
             if (!msg_repr->crypto_rsa) {
                 msg_repr->crypto_rsa = new rsa_t(rsa_params);
             }
-            sig_pre_params.msg(msg_repr->msg).
+            rsa_pre_params.msg(msg_repr->msg_expected).
                            hash_algo(msg_repr->sha_algo);
-            if (!msg_repr->crypto_rsa->pre_push(sig_pre_params)) {
+            if (!msg_repr->crypto_rsa->pre_push(rsa_pre_params)) {
                 OFFL_FUNC_ERR("failed crypto_rsa pre_push");
-                return false;
-            }
+                msg_repr->push_failure = true;
 
-            sig_push_params.sig_expected(msg_repr->sig_expected).
-                            sig_actual(msg_repr->sig_actual);
-            if (!msg_repr->crypto_rsa->push(sig_push_params)) {
-                OFFL_FUNC_ERR("failed crypto_rsa push");
-                return false;
+            } else {
+                rsa_push_params.msg_expected(msg_repr->msg_expected).
+                                msg_actual(msg_repr->msg_actual).
+                                sig_expected(msg_repr->sig_expected).
+                                sig_actual(msg_repr->sig_actual).
+                                failure_expected(msg_repr->failure_expected);
+                if (!msg_repr->crypto_rsa->push(rsa_push_params)) {
+                    OFFL_FUNC_ERR("failed crypto_rsa push");
+                    msg_repr->push_failure = true;
+                }
             }
 
             /*
-             * All msg_repr's of the same key_repr share the same key
+             * For ssigning, all msg_repr's of the same key_repr share
+             * the same key
              */
-            rsa_params.key_idx(msg_repr->crypto_rsa->key_idx_get()).
-                       key_idx_shared(true);
+            if (rsa_key_create_type_is_sign(testvec_params.key_create_type())) {
+                rsa_params.key_idx(msg_repr->crypto_rsa->key_idx_get()).
+                           key_idx_shared(true);
+            }
 
         } END_FOR_EACH_MSG_REPR(key_repr, msg_repr)
 
@@ -233,20 +324,33 @@ rsa_testvec_t::post_push(void)
 
 
 /*
- * Test result verification (fast and non-blocking)
- *
+ * Check status for completion and whether there were errors.
  */
 bool 
-rsa_testvec_t::fast_verify(void)
+rsa_testvec_t::completion_check(void)
 {
     num_test_failures = 0;
     if (hw_started) {
         FOR_EACH_KEY_REPR(key_repr) {
             FOR_EACH_MSG_REPR(key_repr, msg_repr) {
 
-              if (!msg_repr->crypto_rsa->fast_verify()) {
-                  num_test_failures++;
-              }
+                /*
+                 * if push already failed, don't check completion
+                 */
+                msg_repr->compl_failure = false;
+                if (msg_repr->push_failure) {
+                    if (!msg_repr->failure_expected) {
+                       num_test_failures++;
+                    }
+                    continue;
+                }
+
+                if (!msg_repr->crypto_rsa->completion_check()) {
+                    msg_repr->compl_failure = true;
+                    if (!msg_repr->failure_expected) {
+                        num_test_failures++;
+                    }
+                }
 
             } END_FOR_EACH_MSG_REPR(key_repr, msg_repr)
         } END_FOR_EACH_KEY_REPR(key_repr)
@@ -261,7 +365,7 @@ rsa_testvec_t::fast_verify(void)
 
 
 /*
- * Test result verification (full and possibly blocking)
+ * Test result full verification
  */
 bool 
 rsa_testvec_t::full_verify(void)
@@ -271,8 +375,22 @@ rsa_testvec_t::full_verify(void)
         FOR_EACH_KEY_REPR(key_repr) {
             FOR_EACH_MSG_REPR(key_repr, msg_repr) {
 
+                /*
+                 * if push already failed, don't bother with verify
+                 */
+                msg_repr->verify_failure = false;
+                if (msg_repr->push_failure) {
+                    if (!msg_repr->failure_expected) {
+                        num_test_failures++;
+                    }
+                    continue;
+                }
+
                 if (!msg_repr->crypto_rsa->full_verify()) {
-                    num_test_failures++;
+                    msg_repr->verify_failure = true;
+                    if (!msg_repr->failure_expected) {
+                        num_test_failures++;
+                    }
                 }
 
             } END_FOR_EACH_MSG_REPR(key_repr, msg_repr)
@@ -284,6 +402,66 @@ rsa_testvec_t::full_verify(void)
     }
     test_success = hw_started && (num_test_failures == 0);
     return test_success;
+}
+
+
+/*
+ * Generate testvector response output file
+ */
+void 
+rsa_testvec_t::rsp_file_output(const string& mem_type_str)
+{
+    testvec_output_t    *rsp_output;
+    uint32_t            mod_bits_len;
+    uint32_t            new_bits_len;
+    bool                failure;
+
+    rsp_output = new testvec_output_t(pre_params.scripts_dir(),
+                                      pre_params.testvec_fname(),
+                                      mem_type_str);
+    if (hw_started) {
+        mod_bits_len = 0;
+        FOR_EACH_KEY_REPR(key_repr) {
+
+            new_bits_len = key_repr->n->content_size_get() * BITS_PER_BYTE;
+            if (rsa_key_create_type_is_sign(testvec_params.key_create_type()) ||
+                (new_bits_len != mod_bits_len)) {
+
+                rsp_output->dec(PARSE_STR_MODULUS_PREFIX, new_bits_len,
+                                PARSE_STR_MODULUS_SUFFIX);
+            }
+            mod_bits_len = new_bits_len;
+
+            rsp_output->hex_bn(PARSE_STR_N_PREFIX, key_repr->n,
+                               PARSE_STR_N_SUFFIX);
+            if (rsa_key_create_type_is_sign(testvec_params.key_create_type())) {
+                rsp_output->hex_bn(PARSE_STR_E_PREFIX, key_repr->e);
+                rsp_output->hex_bn(PARSE_STR_D_PREFIX, key_repr->d,
+                                   PARSE_STR_D_SUFFIX);
+            }
+            FOR_EACH_MSG_REPR(key_repr, msg_repr) {
+
+                failure = msg_repr->push_failure        ||
+                          msg_repr->compl_failure       ||
+                          msg_repr->verify_failure;
+                rsp_output->str(PARSE_STR_SHA_ALGO_PREFIX, msg_repr->sha_algo);
+                if (rsa_key_create_type_is_sign(testvec_params.key_create_type())) {
+                    rsp_output->hex_bn(PARSE_STR_MSG_PREFIX, msg_repr->msg_expected);
+                    rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->sig_actual,
+                                       PARSE_STR_S_SUFFIX);
+                } else {
+                    rsp_output->hex_bn(PARSE_STR_E_PREFIX, msg_repr->e);
+                    rsp_output->hex_bn(PARSE_STR_MSG_PREFIX, msg_repr->msg_expected);
+                    rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->sig_expected);
+                    rsp_output->str(PARSE_STR_RESULT_PREFIX, failure ? "F" : "P",
+                                    PARSE_STR_RESULT_SUFFIX);
+                }
+
+            } END_FOR_EACH_MSG_REPR(key_repr, msg_repr)
+        } END_FOR_EACH_KEY_REPR(key_repr)
+    }
+
+    delete rsp_output;
 }
 
 } // namespace crypto_rsa

@@ -141,7 +141,8 @@ verification_time_advance(void)
 }
 
 int 
-Poller::operator()(std::function<int(void)> poll_func)
+Poller::operator()(std::function<int(void)> poll_func,
+                   bool failure_expected)
 {
     std::time_t start = std::time(nullptr);
     std::time_t end;
@@ -160,7 +161,8 @@ Poller::operator()(std::function<int(void)> poll_func)
         end = std::time(nullptr);
     } while(end - start < timeout);
 
-    OFFL_LOG_ERR("Polling timeout {} exceeded - Giving up!", timeout);
+    OFFL_LOG_ERR_OR_DEBUG(failure_expected,
+                          "Polling timeout {} exceeded - Giving up!", timeout);
     return -1;
 }
 }  // namespace utils

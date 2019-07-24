@@ -4,6 +4,7 @@ MODULE_TARGET   = offload_test.gtest
 MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/testvec_parser.cc \
+                  ${MODULE_SRC_DIR}/testvec_output.cc \
                   ${MODULE_SRC_DIR}/crypto_rsa_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_rsa.cc \
                   ${MODULE_SRC_DIR}/crypto_asym.cc \
