@@ -65,7 +65,7 @@
             }],
         "flags": [],
         "timeout": 30.0,
-        "cpu-affinity": "0x9"
+        "cpu-affinity": "0xD"
     },
     {
         "name": "hal",
@@ -81,7 +81,7 @@
             }],
         "flags": [],
         "timeout": 30.0,
-        "cpu-affinity": "0x9"
+        "cpu-affinity": "0xD"
     },
     {
         "name": "netagent",

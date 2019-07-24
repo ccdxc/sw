@@ -1643,7 +1643,7 @@ nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("policy handle {}", hal_handle);
 
-    ret = acl::acl_commit(app_ctx->acl_ctx_clone);
+    /*ret = acl::acl_commit(app_ctx->acl_ctx_clone);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
         goto end;
@@ -1657,7 +1657,7 @@ nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
     acl::print_ref_count(app_ctx->acl_ctx_clone);
 
-    acl::acl_dump(app_ctx->acl_ctx_clone, 0x01, [] (acl_rule_t *rule) { PRINT_RULE_FIELDS(rule); });
+    acl::acl_dump(app_ctx->acl_ctx_clone, 0x01, [] (acl_rule_t *rule) { PRINT_RULE_FIELDS(rule); });*/
 
     // free the rules in the config db
     nwsec_policy_rules_free(policy);
@@ -1737,6 +1737,20 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+
+    ret = acl::acl_commit(app_ctx.acl_ctx_clone);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
+        goto end;
+    }
+    acl::acl_deref(app_ctx.acl_ctx_clone);
+    
+    hal_handle_cfg_db_lock(true, false);
+    if (app_ctx.acl_ctx) {
+        HAL_TRACE_DEBUG("deleted acl");
+        acl_deref(app_ctx.acl_ctx);
+    }
+    hal_handle_cfg_db_lock(true, true);
     ret = hal_handle_upd_obj(policy->hal_handle, &cfg_ctxt,
                              nwsec_policy_update_upd_cb,
                              nwsec_policy_update_commit_cb,

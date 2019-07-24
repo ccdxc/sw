@@ -3,6 +3,8 @@
 counter=300
 int_mnic_up=0
 oob_mnic_up=0
+inb_mnic0_up=0
+inb_mnic1_up=0
 
 echo "Waiting for mgmt interfaces(int_mnic0 and oob_mnic0) to show up"
 
@@ -30,7 +32,27 @@ do
         fi
     fi
 
-    if [ $int_mnic_up -eq 1 ] && [ $oob_mnic_up -eq 1 ]; then
+    if [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ] ; then
+        irq_number=`find /proc/irq  -name *inb_mnic0* | awk -F/ '{ print $4 }'`
+        if [[ ! -z $irq_number ]]; then
+            echo d > /proc/irq/$irq_number/smp_affinity
+            inb_mnic0_up=1
+        else 
+            sleep 1
+        fi
+    fi
+
+    if [ -d "/sys/class/net/inb_mnic1" ] && [ $inb_mnic1_up -eq 0 ] ; then
+        irq_number=`find /proc/irq  -name *inb_mnic1* | awk -F/ '{ print $4 }'`
+        if [[ ! -z $irq_number ]]; then
+            echo d > /proc/irq/$irq_number/smp_affinity
+            inb_mnic1_up=1
+        else 
+            sleep 1
+        fi
+    fi
+
+    if [ $int_mnic_up -eq 1 ] && [ $oob_mnic_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ]; then
         break
     fi
 

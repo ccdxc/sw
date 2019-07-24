@@ -168,7 +168,8 @@ is_virtaddr_cpu_rx_dpr_page (cpupkt_hw_id_t page_addr, int tg_cpu_id, cpupkt_hw_
      * directly.
      */
     HAL_TRACE_VERBOSE("CPU-RX-DPR virt-obj-base-addr {:p} size {} KB",
-		    meta->virt_obj_base_addr[0], (meta->num_slots * meta->obj_size)/1024);
+		              meta->virt_obj_base_addr[0], 
+                      (meta->num_slots * meta->obj_size)/1024);
     if (page_addr >= (uint64_t)meta->virt_obj_base_addr[0] &&
 	page_addr <= ((uint64_t) meta->virt_obj_base_addr[0] + (meta->num_slots * meta->obj_size))) {
 
@@ -1627,7 +1628,7 @@ cpupkt_program_send_queue (cpupkt_ctxt_t* ctxt, types::WRingType type,
 	    return HAL_RET_HW_FAIL;
 	}
 	HAL_TRACE_VERBOSE("Programming send queue: addr: {:#x} value: {:#x}",
-			qinst_info->pc_index_addr, descr_addr);
+			          qinst_info->pc_index_addr, descr_addr);
     }
 
     return HAL_RET_OK;
@@ -1737,7 +1738,9 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
 	       is_virtaddr_cpu_rx_dpr_page((cpupkt_hw_id_t) data, queue_id, &phy_page_addr));
 
     HAL_TRACE_VERBOSE("Doing {} Tx of packet on LIF/Qtype/ID/ring {}/{}/{}/{}",
-		    no_copy ? "zero-copy" : "", dest_lif, qtype, qid, ring_number);
+		              no_copy ? "zero-copy" : "", 
+                      dest_lif, 
+                      qtype, qid, ring_number);
 
     if (no_copy) {
 
