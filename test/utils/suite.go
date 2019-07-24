@@ -412,7 +412,7 @@ func (tu *TestUtils) Init() {
 	gomega.Eventually(func() int {
 		instList := tu.resolver.Lookup(globals.Citadel)
 		return len(instList.Items)
-	}, 60, 10).Should(gomega.BeNumerically(">=", tu.NumQuorumNodes), "Resolver should have Citadel entries")
+	}, 180, 10).Should(gomega.BeNumerically(">=", tu.NumQuorumNodes), "Resolver should have Citadel entries")
 
 	gomega.Eventually(func() int {
 		instList := tu.resolver.Lookup(globals.ElasticSearch)
