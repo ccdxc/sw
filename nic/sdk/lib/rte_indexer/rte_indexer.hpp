@@ -32,8 +32,7 @@ public:
 private:
     rte_indexer();
     ~rte_indexer();
-    bool init(uint32_t size, bool thread_safe = true, bool skip_zero = false);
-    bool is_present_in_curr_slab(uint32_t pos);
+    bool init_(uint32_t size, bool thread_safe = true, bool skip_zero = false);
 
 private:
     uint64_t        curr_slab_;      // current slab value

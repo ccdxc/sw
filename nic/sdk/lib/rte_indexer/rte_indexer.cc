@@ -17,8 +17,7 @@ namespace lib {
 // factory method to instantiate the class
 //---------------------------------------------------------------------------
 rte_indexer *
-rte_indexer::factory(uint32_t size, bool thread_safe, bool skip_zero)
-{
+rte_indexer::factory(uint32_t size, bool thread_safe, bool skip_zero) {
     void        *mem   = NULL;
     rte_indexer *indxr = NULL;
 
@@ -27,7 +26,7 @@ rte_indexer::factory(uint32_t size, bool thread_safe, bool skip_zero)
         return NULL;
     }
     indxr = new (mem) rte_indexer();
-    if (indxr->init(size, thread_safe, skip_zero) == false) {
+    if (indxr->init_(size, thread_safe, skip_zero) == false) {
         SDK_TRACE_ERR("Failed to initialize rte_indexer of size: %d\n", size);
         indxr->~rte_indexer();
         if (mem)
@@ -40,16 +39,14 @@ rte_indexer::factory(uint32_t size, bool thread_safe, bool skip_zero)
 //---------------------------------------------------------------------------
 // constructor
 //---------------------------------------------------------------------------
-rte_indexer::rte_indexer()
-{
+rte_indexer::rte_indexer() {
 
 }
 
 //---------------------------------------------------------------------------
 // destructor
 //---------------------------------------------------------------------------
-rte_indexer::~rte_indexer()
-{
+rte_indexer::~rte_indexer() {
     if (thread_safe_) {
         SDK_SPINLOCK_DESTROY(&slock_);
     }
@@ -60,8 +57,7 @@ rte_indexer::~rte_indexer()
 // method to free & delete the object
 //---------------------------------------------------------------------------
 void
-rte_indexer::destroy(rte_indexer *indxr)
-{
+rte_indexer::destroy(rte_indexer *indxr) {
     if (indxr) {
         indxr->~rte_indexer();
         SDK_FREE(SDK_MEM_ALLOC_LIB_INDEXER, indxr);
@@ -72,8 +68,7 @@ rte_indexer::destroy(rte_indexer *indxr)
 // rte indexer initialization
 //---------------------------------------------------------------------------
 bool
-rte_indexer::init(uint32_t size, bool thread_safe, bool skip_zero)
-{
+rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
     uint32_t sz;
     uint32_t indx = 0;
     rte_bitmap *indxr = NULL;
@@ -126,8 +121,7 @@ rte_indexer::init(uint32_t size, bool thread_safe, bool skip_zero)
 // find first free bit, set it the bit and return SUCCESS with the index
 //---------------------------------------------------------------------------
 sdk_ret_t
-rte_indexer::alloc(uint32_t *index, uint32_t block_size)
-{
+rte_indexer::alloc(uint32_t *index, uint32_t block_size) {
     uint32_t offset2;
     uint32_t  pos = 0, next_pos = 0;
     sdk_ret_t rs = SDK_RET_OK;
@@ -182,8 +176,7 @@ end:
 // if the indexed is already claimed and in use, return
 //---------------------------------------------------------------------------
 sdk_ret_t
-rte_indexer::alloc(uint32_t index, uint32_t block_size)
-{
+rte_indexer::alloc(uint32_t index, uint32_t block_size) {
     uint32_t offset2;
     uint64_t sel_word = 0;
     sdk_ret_t rs = SDK_RET_OK;
@@ -224,8 +217,7 @@ end:
 // frees the given index, if its in use or else no-op
 //---------------------------------------------------------------------------
 sdk_ret_t
-rte_indexer::free(uint32_t index)
-{
+rte_indexer::free(uint32_t index) {
     uint32_t offset2 = 0;
     sdk_ret_t rs = SDK_RET_OK;
 
@@ -264,10 +256,9 @@ end:
 // return true if index is already allocated
 //---------------------------------------------------------------------------
 bool
-rte_indexer::is_index_allocated(uint32_t index)
-{
-    uint64_t    sel_word   = 0;
-    bool        is_alloced = false;
+rte_indexer::is_index_allocated(uint32_t index) {
+    uint64_t sel_word   = 0;
+    bool     is_alloced = false;
 
     sel_word = rte_bitmap_get(INDEXER, index);
     if (!sel_word) {
@@ -281,17 +272,15 @@ rte_indexer::is_index_allocated(uint32_t index)
 // return number of indices allocate so far
 //---------------------------------------------------------------------------
 uint64_t
-rte_indexer::compute_num_indices_allocated(void)
-{
-	uint32_t	usage = 0;
+rte_indexer::compute_num_indices_allocated(void) {
+	uint32_t usage = 0;
 
 	for (uint32_t i = 0; i < size_; i++) {
-		if (is_index_allocated(i) && !(skip_zero_ && i == 0)) {
+        if (is_index_allocated(i) && !(skip_zero_ && i == 0)) {
             // Don't count 0 if skip_zero is set
-			usage++;
-		}
-	}
-
+            usage++;
+        }
+    }
     SDK_TRACE_DEBUG("Usage internal : %d Usage computed: %d", usage_, usage);
     SDK_ASSERT(usage_ == usage);
 	return usage;
@@ -301,8 +290,7 @@ rte_indexer::compute_num_indices_allocated(void)
 // return number of indices allocate so far
 //---------------------------------------------------------------------------
 uint64_t
-rte_indexer::num_indices_allocated(void)
-{
+rte_indexer::num_indices_allocated(void) {
     return usage_;
 }
 
