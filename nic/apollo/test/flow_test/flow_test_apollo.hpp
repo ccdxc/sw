@@ -58,7 +58,7 @@ flow_key2str(void *key) {
     sprintf(str, "T:%d SA:%s DA:%s DP:%d SP:%d P:%d VN:%d",
             k->key_metadata_ktype, srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->vnic_metadata_local_vnic_tag);
+            k->key_metadata_proto, k->key_metadata_lkp_id);
 #else
 #endif
     return str;
@@ -82,7 +82,7 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (d_fp) {
         fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d %d, flow_role %d, ktype %d, local_vnic_tag %d\n",
+                "nexthop_group_index %d %d, flow_role %d, ktype %d, lkp_id %d\n",
                 entry->proto,
                 entry->session_index,
                 src_ip_str,
@@ -93,7 +93,7 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
                 entry->nexthop_group_index_sbit7_ebit9,
                 entry->flow_role,
                 entry->ktype,
-                entry->local_vnic_tag);
+                entry->lkp_id);
         fflush(d_fp);
     }
 }
@@ -107,7 +107,7 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (d_fp) {
         fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d %d, flow_role %d, local_vnic_tag %d\n",
+                "nexthop_group_index %d %d, flow_role %d, lkp_id %d\n",
                 entry->proto,
                 entry->session_index,
                 src_ip_str,
@@ -117,7 +117,7 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
                 entry->nexthop_group_index_sbit0_ebit6,
                 entry->nexthop_group_index_sbit7_ebit9,
                 entry->flow_role,
-                entry->local_vnic_tag);
+                entry->lkp_id);
         fflush(d_fp);
     }
 }
@@ -470,7 +470,7 @@ public:
                           uint16_t sport, uint16_t dport) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
         v6entry.ktype = 2;
-        v6entry.local_vnic_tag = vpc - 1;
+        v6entry.lkp_id = vpc - 1;
         v6entry.sport = sport;
         v6entry.dport = dport;
         v6entry.proto = proto;
@@ -496,7 +496,7 @@ public:
                           ipv4_addr_t v4_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.local_vnic_tag = vpc - 1;
+        v4entry.lkp_id = vpc - 1;
         v4entry.sport = sport;
         v4entry.dport = dport;
         v4entry.proto = proto;

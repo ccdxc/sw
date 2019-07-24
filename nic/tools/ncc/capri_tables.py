@@ -2447,11 +2447,12 @@ class capri_table:
                                            fix_km_prof.bit_loc1 <= km_kend) \
                                        else False
                 for b in ibytes_in_k:
-                    ncc_assert(b in fix_km_prof.k_byte_sel)
+                    if not is_shared_km:
+                        ncc_assert(b in fix_km_prof.k_byte_sel)
+                        fix_km_prof.k_byte_sel.remove(b)
+                        fix_km_prof.i2_byte_sel.append(b)
                     rm_index = fix_km_prof.byte_sel.index(b)
                     fix_km_prof.byte_sel.remove(b)
-                    fix_km_prof.k_byte_sel.remove(b)
-                    fix_km_prof.i2_byte_sel.append(b)
                     fix_km_prof.byte_sel.insert(km_kend, b)
                     moved_bits += 8
                     k_end -= 1

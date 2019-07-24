@@ -73,13 +73,13 @@ action flow_hash(entry_valid, session_index, nexthop_group_index, flow_role,
 @pragma hbm_table
 table flow {
     reads {
-        vnic_metadata.local_vnic_tag    : exact;
-        key_metadata.ktype              : exact;
-        key_metadata.src                : exact;
-        key_metadata.dst                : exact;
-        key_metadata.proto              : exact;
-        key_metadata.sport              : exact;
-        key_metadata.dport              : exact;
+        key_metadata.lkp_id : exact;
+        key_metadata.ktype  : exact;
+        key_metadata.src    : exact;
+        key_metadata.dst    : exact;
+        key_metadata.proto  : exact;
+        key_metadata.sport  : exact;
+        key_metadata.dport  : exact;
     }
     actions {
         flow_hash;
@@ -163,12 +163,12 @@ action ipv4_flow_hash(entry_valid, session_index, nexthop_group_index,
 @pragma hbm_table
 table ipv4_flow {
     reads {
-        vnic_metadata.local_vnic_tag    : exact;
-        key_metadata.ipv4_src           : exact;
-        key_metadata.ipv4_dst           : exact;
-        key_metadata.proto              : exact;
-        key_metadata.sport              : exact;
-        key_metadata.dport              : exact;
+        key_metadata.lkp_id     : exact;
+        key_metadata.ipv4_src   : exact;
+        key_metadata.ipv4_dst   : exact;
+        key_metadata.proto      : exact;
+        key_metadata.sport      : exact;
+        key_metadata.dport      : exact;
     }
     actions {
         ipv4_flow_hash;

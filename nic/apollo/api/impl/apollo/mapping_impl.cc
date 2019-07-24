@@ -36,7 +36,7 @@ namespace impl {
 // TODO: IP address type (i.e., v4 or v6 bit) is not part of the key
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vnic_hw_id, ip, rev)       \
 {                                                                            \
-    (key)->vnic_metadata_local_vnic_tag = vnic_hw_id;                        \
+    (key)->key_metadata_lkp_id = vnic_hw_id;                                 \
     if ((ip)->af == IP_AF_IPV6) {                                            \
         if (rev) {                                                           \
             sdk::lib::memrev((key)->control_metadata_mapping_lkp_addr,       \
@@ -282,7 +282,7 @@ mapping_impl::build(pds_mapping_key_t *key) {
         if (ret != SDK_RET_OK) {
             goto error;
         }
-        local_ip_mapping_key.vnic_metadata_local_vnic_tag = vnic_hw_id;
+        local_ip_mapping_key.key_metadata_lkp_id = vnic_hw_id;
         memcpy(local_ip_mapping_key.control_metadata_mapping_lkp_addr,
                nat_data.nat_action.nat_ip, IP6_ADDR8_LEN);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,

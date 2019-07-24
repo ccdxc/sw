@@ -75,8 +75,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             clib_net_to_host_u32(ip40->dst_address.as_u32);
         local_params0->entry4.proto =
             remote_params0->entry4.proto = ip40->protocol;
-        local_params0->entry4.local_vnic_tag =
-                remote_params0->entry4.local_vnic_tag =
+        local_params0->entry4.lkp_id =
+                remote_params0->entry4.lkp_id =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP)
@@ -115,8 +115,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                      ip60->dst_address.as_u8, sizeof(ip6_address_t));
         local_params0->entry6.proto =
                      remote_params0->entry6.proto = ip60->protocol;
-        local_params0->entry6.local_vnic_tag =
-                remote_params0->entry6.local_vnic_tag =
+        local_params0->entry6.lkp_id =
+                remote_params0->entry6.lkp_id =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
         if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP)
@@ -238,7 +238,7 @@ pds_flow4_key2str (void *key)
     sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->vnic_metadata_local_vnic_tag);
+            k->key_metadata_proto, k->key_metadata_lkp_id);
     return str;
 }
 
@@ -255,7 +255,7 @@ pds_flow6_key2str (void *key)
     sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->vnic_metadata_local_vnic_tag);
+            k->key_metadata_proto, k->key_metadata_lkp_id);
     return str;
 }
 

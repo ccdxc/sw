@@ -122,7 +122,7 @@ action local_ip_mapping_info(entry_valid,
 @pragma hbm_table
 table local_ip_mapping {
     reads {
-        vnic_metadata.local_vnic_tag        : exact;
+        key_metadata.lkp_id                 : exact;
         control_metadata.mapping_lkp_addr   : exact;
     }
     actions {

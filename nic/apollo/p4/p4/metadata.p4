@@ -10,6 +10,7 @@ header_type capri_deparser_len_t {
 header_type key_metadata_t {
     fields {
         ktype               : 2;
+        lkp_id              : 16;
         src                 : 128;
         dst                 : 128;
         proto               : 8;
@@ -54,6 +55,7 @@ header_type control_metadata_t {
         mirror_session                      : 8;
         tunneled_packet                     : 1;
         fastpath                            : 1;
+        mode                                : 2;
     }
 }
 

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* VNIC mapping table (by VLAN)                                               */
 /******************************************************************************/
-action local_vnic_info_common(dir, src_mac, local_vnic_tag, vpc_id,
+action local_vnic_info_common(dir, mode, src_mac, local_vnic_tag, vpc_id,
                               epoch1_valid, epoch1, skip_src_dst_check1,
                               lpm_v4addr1, lpm_v6addr1, sacl_v4addr1,
                               sacl_v6addr1, resource_group1, overlay_mac1,
@@ -56,6 +56,12 @@ action local_vnic_info_common(dir, src_mac, local_vnic_tag, vpc_id,
     modify_field(scratch_metadata.vpc_id, vpc_id);
     modify_field(vnic_metadata.local_vnic_tag, scratch_metadata.local_vnic_tag);
     modify_field(vnic_metadata.vpc_id, scratch_metadata.vpc_id);
+    modify_field(control_metadata.mode, mode);
+    if (mode == APOLLO_MODE_DEFAULT) {
+        modify_field(key_metadata.lkp_id, scratch_metadata.local_vnic_tag);
+    } else {
+        modify_field(key_metadata.lkp_id, scratch_metadata.vpc_id);
+    }
 
     if (dir == TX_FROM_HOST) {
         if (src_mac != scratch_metadata.overlay_mac) {
@@ -66,7 +72,7 @@ action local_vnic_info_common(dir, src_mac, local_vnic_tag, vpc_id,
     }
 }
 
-action local_vnic_info_tx(local_vnic_tag, vpc_id,
+action local_vnic_info_tx(mode, local_vnic_tag, vpc_id,
                           epoch1_valid, epoch1, skip_src_dst_check1,
                           lpm_v4addr1, lpm_v6addr1, sacl_v4addr1, sacl_v6addr1,
                           resource_group1, overlay_mac1,
@@ -91,7 +97,7 @@ action local_vnic_info_tx(local_vnic_tag, vpc_id,
         modify_field(control_metadata.mirror_session, mirror_session);
     }
 
-    local_vnic_info_common(TX_FROM_HOST, ethernet_1.srcAddr, local_vnic_tag,
+    local_vnic_info_common(TX_FROM_HOST, mode, ethernet_1.srcAddr, local_vnic_tag,
                            vpc_id, epoch1_valid, epoch1, skip_src_dst_check1,
                            lpm_v4addr1, lpm_v6addr1, sacl_v4addr1, sacl_v6addr1,
                            resource_group1, overlay_mac1,
@@ -100,7 +106,7 @@ action local_vnic_info_tx(local_vnic_tag, vpc_id,
                            resource_group2, overlay_mac2);
 }
 
-action local_vnic_info_rx(local_vnic_tag, vpc_id,
+action local_vnic_info_rx(mode, local_vnic_tag, vpc_id,
                           epoch1_valid, epoch1, skip_src_dst_check1,
                           lpm_v4addr1, lpm_v6addr1, sacl_v4addr1, sacl_v6addr1,
                           resource_group1,
@@ -122,7 +128,7 @@ action local_vnic_info_rx(local_vnic_tag, vpc_id,
 
     modify_field(vnic_metadata.src_slot_id, mpls_src.label);
     modify_field(control_metadata.tunneled_packet, TRUE);
-    local_vnic_info_common(RX_FROM_SWITCH, 0, local_vnic_tag, vpc_id,
+    local_vnic_info_common(RX_FROM_SWITCH, mode, 0, local_vnic_tag, vpc_id,
                            epoch1_valid, epoch1, skip_src_dst_check1,
                            lpm_v4addr1, lpm_v6addr1,
                            sacl_v4addr1, sacl_v6addr1, resource_group1, 0,
@@ -134,7 +140,9 @@ action local_vnic_info_rx(local_vnic_tag, vpc_id,
 @pragma stage 0
 table local_vnic_by_vlan_tx {
     reads {
-        ctag_1.vid : ternary;
+        capri_intrinsic.lif : ternary;
+        ctag_1.vid          : ternary;
+        ethernet_1.srcAddr  : ternary;
     }
     actions {
         local_vnic_info_tx;

@@ -18,6 +18,10 @@ local_vnic_info_tx:
     phvwr.c1        p.control_metadata_p4i_drop_reason[P4I_DROP_SRC_MAC_ZERO], 1
     phvwr           p.vnic_metadata_local_vnic_tag, DATA.local_vnic_tag
     phvwr           p.vnic_metadata_vpc_id, DATA.vpc_id
+    seq             c1, DATA.mode, APOLLO_MODE_DEFAULT
+    cmov            r1, c1, DATA.local_vnic_tag, DATA.vpc_id
+    phvwr           p.key_metadata_lkp_id, r1
+    phvwr           p.control_metadata_mode, DATA.mode
     seq             c1, DATA.mirror_en, TRUE
     phvwr.c1        p.control_metadata_mirror_session, DATA.mirror_session
 

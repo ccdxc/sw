@@ -20,6 +20,10 @@ local_vnic_info_rx:
                                                     mpls_src_label_sbit16_ebit19}
     phvwr           p.vnic_metadata_local_vnic_tag, DATA.local_vnic_tag
     phvwr           p.vnic_metadata_vpc_id, DATA.vpc_id
+    seq             c1, DATA.mode, APOLLO_MODE_DEFAULT
+    cmov            r1, c1, DATA.local_vnic_tag, DATA.vpc_id
+    phvwr           p.key_metadata_lkp_id, r1
+    phvwr           p.control_metadata_mode, DATA.mode
     phvwr           p.control_metadata_tunneled_packet, TRUE
     /* c2 will be set if using epoch1, else will be reset */
     seq             c1, k.service_header_valid, TRUE
@@ -34,8 +38,8 @@ __use_epoch1:
 
     phvwr           p.vnic_metadata_skip_src_dst_check, DATA.skip_src_dst_check1
     phvwr           p.policer_metadata_resource_group, DATA.resource_group1
-    add             r1, DATA.lpm_v4addr1_sbit10_ebit33, \
-                        DATA.lpm_v4addr1_sbit0_ebit9, 24
+    add             r1, DATA.lpm_v4addr1_sbit8_ebit33, \
+                        DATA.lpm_v4addr1_sbit0_ebit7, 26
     phvwr           p.p4_to_txdma_header_lpm_addr, r1
     phvwr           p.control_metadata_lpm_v6addr, DATA.lpm_v6addr1
     phvwr           p.p4_to_rxdma_header_sacl_base_addr, DATA.sacl_v4addr1

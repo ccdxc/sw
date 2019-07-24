@@ -52,6 +52,9 @@ using namespace sdk::platform::capri;
 #define JSTATSBASE      "session_stats"
 #define JP4_PRGM        "p4_program"
 
+#define UDP_SPORT_OFFSET    34
+#define UDP_SPORT_SIZE      2
+
 typedef struct __attribute__((__packed__)) lifqstate_ {
     uint64_t pc : 8;
     uint64_t rsvd : 8;
@@ -496,6 +499,18 @@ sort_mpu_programs (std::vector<std::string> &programs)
     sort(programs.begin(), programs.end(), sort_compare);
 }
 
+static bool
+is_equal_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2)
+{
+    if (pkt1.size() != pkt2.size()) {
+       return false;
+    }
+
+    return (std::equal(pkt1.begin(), pkt1.begin() + UDP_SPORT_OFFSET, pkt2.begin()) &&
+            std::equal(pkt1.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE, pkt1.end(),
+                       pkt1.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE));
+}
+
 static void
 init_service_lif ()
 {
@@ -835,7 +850,7 @@ mappings_init (void)
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
+    key.key_metadata_lkp_id = g_local_vnic_tag;
     memcpy(key.control_metadata_mapping_lkp_addr, &g_layer1_sip, 4);
     data.action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
     mapping_info->entry_valid = true;
@@ -854,7 +869,7 @@ flow_tx_hash_init ()
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
+    key.key_metadata_lkp_id = g_local_vnic_tag;
     key.key_metadata_ipv4_src = g_layer1_sip;
     key.key_metadata_ipv4_dst = g_layer1_dip;
     key.key_metadata_proto = g_layer1_proto;
@@ -867,7 +882,7 @@ flow_tx_hash_init ()
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
+    key.key_metadata_lkp_id = g_local_vnic_tag;
     key.key_metadata_ipv4_src = g_layer1_sip;
     key.key_metadata_ipv4_dst = g_layer1_dip4;
     key.key_metadata_proto = g_layer1_proto;
@@ -904,7 +919,7 @@ flow_rx_hash_init ()
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
+    key.key_metadata_lkp_id = g_local_vnic_tag;
     key.key_metadata_ipv4_src = g_layer1_dip;
     key.key_metadata_ipv4_dst = g_layer1_sip;
     key.key_metadata_proto = g_layer1_proto;
@@ -1512,7 +1527,7 @@ TEST_F(apollo_test, test1)
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);
@@ -1550,7 +1565,7 @@ TEST_F(apollo_test, test1)
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);
@@ -1617,7 +1632,7 @@ TEST_F(apollo_test, test1)
                 EXPECT_TRUE(opkt == mpkt);
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);
@@ -1636,7 +1651,7 @@ TEST_F(apollo_test, test1)
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);
