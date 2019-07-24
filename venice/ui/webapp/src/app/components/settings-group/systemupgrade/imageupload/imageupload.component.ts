@@ -221,6 +221,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     } else {
       this.dataObjects = []; // it possible that server has no rolloutImage.
     }
+    this.getRollouts();
   }
 
   onBeforeSend($event) {
@@ -323,13 +324,16 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   /**
    * This api servers html template.
    * @param object
+   * object JSON is
+   * "{"kind":"Object","meta":{"name":"Bundle/0.14.0-E-5_img/metadata.json","generation-id":"","labels":{"Releasedata":"","Version":"0.14.0-E-5"},"creation-time":"1970-01-01T00:00:00Z","mod-time":"2019-07-23T19:29:46Z"},"spec":{"content-type":"application/octet-stream"},"status":{"size":932,"digest":"262ee56098e9ab1a0498ad129feff5e1-1"}}"
    */
   showDeleteButton(object: IObjstoreObject): boolean {
     // VS-484. We don't want to delete an image that is lined to a pending rollout;
-    if (this.activeImageVersions.includes(object.meta.name)) {
-      return true;
-    } else {
+    const version =  this.getBundlerTarVersion(object); //  get Version  => "0.14.0-E-5"
+    if (this.activeImageVersions.includes(version)) {
       return false;
+    } else {
+      return true;
     }
   }
 
@@ -409,7 +413,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     this.activeImageVersions.length = 0;
     for  (let i = 0; i < this.rollouts.length; i++) {
       if ( !RolloutUtil.isRolloutInactive(this.rollouts[i]) ) {
-        this.activeImageVersions.push(this.rollouts[i].spec.version);
+        this.activeImageVersions.push(this.rollouts[i].spec.version); //  version is like  "0.14.0-E-5"
       }
     }
   }
