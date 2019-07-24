@@ -83,7 +83,7 @@ int ionic_dev_setup(struct ionic *ionic)
 	idev->phy_db_pages = bar->bus_addr;
 
 	timer_setup(&ionic->watchdog_timer, ionic_watchdog_cb, 0);
-	ionic->watchdog_period = 2 * HZ;
+	ionic->watchdog_period = IONIC_WATCHDOG_SECS * HZ;
 	mod_timer(&ionic->watchdog_timer,
 		  round_jiffies(jiffies + ionic->watchdog_period));
 
@@ -135,9 +135,9 @@ int ionic_heartbeat_check(struct ionic *ionic)
 	if (ionic->pfdev)
 		return 0;
 
-	/* wait at least one second before testing again */
+	/* wait a little more than one second before testing again */
 	hb_time = jiffies;
-	if (time_before(hb_time, (idev->last_hb_time + HZ)))
+	if (time_before(hb_time, (idev->last_hb_time + ionic->watchdog_period)))
 		return 0;
 
 	/* firmware is useful only if fw_status is non-zero */

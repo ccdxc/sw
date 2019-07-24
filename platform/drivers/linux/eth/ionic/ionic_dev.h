@@ -17,6 +17,7 @@
 #define IONIC_MIN_TXRX_DESC		16
 #define IONIC_DEF_TXRX_DESC		4096
 #define IONIC_LIFS_MAX			1024
+#define IONIC_WATCHDOG_SECS		5
 
 struct ionic_dev_bar {
 	void __iomem *vaddr;
