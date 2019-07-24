@@ -315,7 +315,7 @@ func updateStorageInfo() *cmd.StorageInfo {
 		return nil
 	}
 
-	fmt.Printf("\nGot size : %s", string(size))
+	log.Infof("Got size : %s", string(size))
 	sizeBytes := strings.TrimSuffix(string(size), "\n")
 	if err != nil {
 		return nil
