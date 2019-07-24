@@ -69,7 +69,7 @@ TEST_F(ftp_test, ftp_session)
     tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
     tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
     tcp.mss(200);
-    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp, true);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(ctx_.session(), session);
 

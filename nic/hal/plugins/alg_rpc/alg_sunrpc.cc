@@ -763,7 +763,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * would lead to opening up pinholes for FTP data sessions.
              */
             uint8_t buff = ctx.is_flow_swapped()?1:0;
-            if ((ctx.pkt_len() > payload_offset) &&
+            if (ctx.payload_len() &&
                 (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1]))
                 l4_sess->tcpbuf[buff]->insert_segment(ctx, rpc_info->callback);
         } else {
@@ -771,8 +771,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * Parse Control session data && process Expected flows
              */
             uint8_t *pkt = ctx.pkt();
-            rpc_info->callback(&ctx, &pkt[payload_offset],
-                                  (ctx.pkt_len()-payload_offset));
+            rpc_info->callback(&ctx, &pkt[payload_offset], ctx.payload_len());
         }
     }
 

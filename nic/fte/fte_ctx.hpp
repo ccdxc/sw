@@ -744,6 +744,7 @@ public:
     void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }
     bool is_flow_swapped(void) { return is_flow_swapped_; }
+    uint16_t payload_len(void) { return payload_len_; }
 
     // protected methods accessed by gtest
 protected:
@@ -823,6 +824,7 @@ private:
     hal::flow_pgm_attrs_t iflow_attrs_list[MAX_STAGES];
     hal::flow_pgm_attrs_t rflow_attrs_list[MAX_STAGES];
     bool                  is_flow_swapped_;
+    uint16_t              payload_len_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

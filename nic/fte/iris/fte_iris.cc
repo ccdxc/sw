@@ -98,6 +98,7 @@ ctx_t::extract_flow_key()
         key_.sip.v4_addr = ntohl(iphdr->saddr);
         key_.dip.v4_addr = ntohl(iphdr->daddr);
         key_.proto = (types::IPProtocol) iphdr->protocol;
+        payload_len_ = (ntohs(iphdr->tot_len) + cpu_rxhdr_->l3_offset)- cpu_rxhdr_->payload_offset;
         break;
 
     case hal::FLOW_KEY_LOOKUP_TYPE_IPV6:
@@ -106,6 +107,7 @@ ctx_t::extract_flow_key()
         memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
         memcpy(key_.dip.v6_addr.addr8, iphdr6->daddr, sizeof(key_.dip.v6_addr.addr8));
         key_.proto = (types::IPProtocol) iphdr6->nexthdr;
+        payload_len_ = (ntohs(iphdr6->payload_len) + cpu_rxhdr_->l3_offset) - cpu_rxhdr_->payload_offset;
         break;
 
     default:

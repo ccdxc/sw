@@ -517,7 +517,7 @@ static inline ip_addr_t ep_ip(hal::ep_t *ep) {
 hal_ret_t
 fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
                               hal_handle_t src_ifh, hal_handle_t src_l2segh,
-                              std::vector<Tins::EthernetII> &pkts)
+                              std::vector<Tins::EthernetII> &pkts, bool add_padding)
 {
     hal::pd::pd_if_get_hw_lif_id_args_t lif_args;
     hal::if_t *sif = hal::find_if_by_handle(src_ifh);
@@ -580,6 +580,11 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
 
     std::vector<uint8_t> buffer = pkts[0].serialize();
     buff_size = buffer.size();
+    if (add_padding) {
+        buff_size += 4;
+        buffer.resize(buff_size, 0);
+    }
+
     for (auto pkt: pkts) {
         //uint8_t *buffer = (uint8_t *)malloc(buff_size);
         //vector<uint8_t> raw = pkt.serialize();
@@ -593,17 +598,17 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
 hal_ret_t
 fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
                               hal_handle_t src_ifh, hal_handle_t src_l2segh,
-                              Tins::EthernetII &eth)
+                              Tins::EthernetII &eth, bool add_padding)
 {
     ::vector<Tins::EthernetII> pkts = {eth};
-    return inject_eth_pkt(lifq, src_ifh, src_l2segh, pkts);
+    return inject_eth_pkt(lifq, src_ifh, src_l2segh, pkts, add_padding);
 }
 
 
 hal_ret_t
 fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
                                hal_handle_t deph, hal_handle_t seph,
-                               Tins::PDU &l4pdu)
+                               Tins::PDU &l4pdu, bool add_padding)
 {
     hal::ep_t *sep = hal::find_ep_by_handle(seph);
     EXPECT_NE(sep, nullptr);
@@ -626,7 +631,7 @@ fte_base_test::inject_ipv4_pkt(const fte::lifqid_t &lifq,
                  Tins::IPv4Address(htonl(sip.addr.v4_addr))) /
         l4pdu;
 
-    return inject_eth_pkt(lifq, sep->if_handle, sep->l2seg_handle, eth);
+    return inject_eth_pkt(lifq, sep->if_handle, sep->l2seg_handle, eth, add_padding);
 }
 
 static

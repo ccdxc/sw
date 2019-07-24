@@ -471,7 +471,6 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
 static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     alg_utils::l4_alg_status_t *l4_sess = alg_utils::alg_status(ctx.feature_session_state());
     SDK_ASSERT(l4_sess);
-    uint32_t   payload_offset = ctx.cpu_rxhdr()->payload_offset;
 
     // cleanup the session if it is an abort
     if (status == false) {
@@ -483,7 +482,7 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         HAL_TRACE_DEBUG("RTSP Completion handler iscontrol session: {}", l4_sess->isCtrl);
         if (l4_sess->isCtrl == true) {
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped() &&
-                (ctx.pkt_len() == payload_offset)) {
+                !ctx.payload_len()) {
                 // Set up TCP buffer for RFLOW
                 l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
@@ -494,7 +493,7 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
              * would lead to opening up pinholes for RTSP data sessions.
              */
             uint8_t buff = ctx.is_flow_swapped()?1:0;
-            if ((ctx.pkt_len() > payload_offset) &&
+            if (ctx.payload_len() &&
                 (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1]))
                 l4_sess->tcpbuf[buff]->insert_segment(ctx, process_control_message);
         } else {

@@ -65,7 +65,6 @@ void tcp_buffer_t::free ()
 hal_ret_t
 tcp_buffer_t::insert_segment (fte::ctx_t &ctx, data_handler_t handler)
 {
-    uint32_t payload_len = (ctx.pkt_len() - ctx.cpu_rxhdr()->payload_offset);
     uint32_t seq = htonl(ctx.cpu_rxhdr()->tcp_seq_num);
     uint8_t  *pkt = ctx.pkt();
 
@@ -73,8 +72,8 @@ tcp_buffer_t::insert_segment (fte::ctx_t &ctx, data_handler_t handler)
     data_handler_ = handler;
     HAL_TRACE_DEBUG("Packet len: {} payload offset: {} data handler: {}", ctx.pkt_len(),
                                 ctx.cpu_rxhdr()->payload_offset, (void *)data_handler_);
-    HAL_TRACE_DEBUG("seq: {} curr_seq: {} payload_len: {}", seq, cur_seq_, payload_len);
-    return insert_segment(seq, &pkt[ctx.cpu_rxhdr()->payload_offset], payload_len);
+    HAL_TRACE_DEBUG("seq: {} curr_seq: {} payload_len: {}", seq, cur_seq_, ctx.payload_len());
+    return insert_segment(seq, &pkt[ctx.cpu_rxhdr()->payload_offset], ctx.payload_len());
 }
 
 //------------------------------------------------------------------------

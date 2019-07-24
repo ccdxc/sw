@@ -110,13 +110,13 @@ public:
 
     static hal_ret_t inject_eth_pkt(const fte::lifqid_t &lifq,
                                     hal_handle_t src_ifh, hal_handle_t src_l2segh,
-                                    Tins::EthernetII &eth);
+                                    Tins::EthernetII &eth, bool add_padding=false);
     static hal_ret_t inject_eth_pkt(const fte::lifqid_t &lifq,
                                     hal_handle_t src_ifh, hal_handle_t src_l2segh,
-                                    std::vector<Tins::EthernetII> &pkts);
+                                    std::vector<Tins::EthernetII> &pkts, bool add_padding=false);
     static hal_ret_t inject_ipv4_pkt(const fte::lifqid_t &lifq,
                                      hal_handle_t dep, hal_handle_t sep,
-                                     Tins::PDU &l4pdu);
+                                     Tins::PDU &l4pdu, bool add_padding=false);
     static void set_logging_disable(bool val) { ipc_logging_disable_ = val; }
  
     static void run_service(hal_handle_t ep_h, std::string cmd);

@@ -784,7 +784,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP)) {
             ftp_info = (ftp_info_t *)l4_sess->info;
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped() && 
-                (ctx.pkt_len() == payload_offset)) {
+                !ctx.payload_len()) {
                 // Set up TCP buffer for RFLOW only when we see handshake
                 // If due to load we miss the handshake then there is no point
                 // to process the packets.
@@ -801,7 +801,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
                  * would lead to opening up pinholes for FTP data sessions.
                  */
                 uint8_t buff = ctx.is_flow_swapped()?1:0;
-                if ((ctx.pkt_len() > payload_offset) &&
+                if (ctx.payload_len() &&
                     (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1]))
                     l4_sess->tcpbuf[buff]->insert_segment(ctx, ftp_info->callback);
             } else if (!ctx.existing_session()) {
