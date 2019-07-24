@@ -492,6 +492,15 @@ static inline void xa_destroy(struct xarray *xa)
 #define HAVE_IB_UMEM_GET_UDATA
 #endif
 
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,2, /* RHEL */ 99,99, /* OFA */ 5_0)
+#else /* 5.2 and later */
+#define HAVE_IB_ALLOC_AH_OBJ
+#define HAVE_IB_DESTROY_AH_VOID
+#define HAVE_IB_ALLOC_SRQ_OBJ
+#define HAVE_IB_DESTROY_SRQ_VOID
+#define HAVE_IB_API_UDATA
+#endif
+
 /* other compat for not yet upstream changes */
 
 /**

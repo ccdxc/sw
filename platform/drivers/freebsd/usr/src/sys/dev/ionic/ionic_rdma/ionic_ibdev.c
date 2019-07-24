@@ -2029,9 +2029,9 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_ah *ah;
+	struct ionic_ctx *ctx = to_ionic_ctx_uobj(pd->ibpd.uobject);
 	struct ionic_ah_resp resp = {0};
 	int rc;
 
@@ -2104,8 +2104,10 @@ static int ionic_destroy_ah(struct ib_ah *ibah)
 	int rc;
 
 	rc = ionic_destroy_ah_cmd(dev, ah->ahid);
-	if (rc)
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "destroy_ah error %d\n", rc);
 		return rc;
+	}
 
 	ionic_put_ahid(dev, ah->ahid);
 	kfree(ah);
@@ -2672,7 +2674,7 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 		if (rc)
 			goto err_q;
 
-		cq->umem = ib_umem_get(&ctx->ibctx, req.cq.addr, req.cq.size,
+		cq->umem = ib_umem_get(ibctx, req.cq.addr, req.cq.size,
 				       IB_ACCESS_LOCAL_WRITE, 0);
 		if (IS_ERR(cq->umem)) {
 			rc = PTR_ERR(cq->umem);
@@ -2761,7 +2763,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	struct ionic_tbl_buf buf = {0};
 	int rc;
 
-	cq = __ionic_create_cq(dev, &buf, attr, ibctx, udata);
+	cq = __ionic_create_cq(dev, &buf, attr, &ctx->ibctx, udata);
 	if (IS_ERR(cq)) {
 		rc = PTR_ERR(cq);
 		goto err_cq;
@@ -5678,8 +5680,10 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	int rc;
 
 	rc = ionic_destroy_qp_cmd(dev, qp->qpid);
-	if (rc)
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "destroy_srq error %d\n", rc);
 		return rc;
+	}
 
 	ionic_dbgfs_rm_qp(qp);
 
@@ -5695,7 +5699,6 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 
 	ionic_qp_rq_destroy(dev, ctx, qp);
 	ionic_put_srqid(dev, qp->qpid);
-
 	kfree(qp);
 
 	return 0;

@@ -20,9 +20,7 @@ static void ionic_umem_show(struct seq_file *s, const char *w,
 	seq_printf(s, "%sumem.page_size:\t%d\n", w, umem->page_size);
 #endif
 	seq_printf(s, "%sumem.writable:\t%d\n", w, umem->writable);
-	seq_printf(s, "%sumem.hugetlb:\t%d\n", w, umem->hugetlb);
 	seq_printf(s, "%sumem.nmap:\t%d\n", w, umem->nmap);
-	seq_printf(s, "%sumem.npages:\t%d\n", w, umem->npages);
 
 	seq_printf(s, "%sumem.offset():\t%#x\n", w, ib_umem_offset(umem));
 	seq_printf(s, "%sumem.start():\t%#lx\n", w, ib_umem_start(umem));

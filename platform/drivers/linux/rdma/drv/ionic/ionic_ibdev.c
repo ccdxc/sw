@@ -20,6 +20,10 @@
 #include "ionic_ibdev.h"
 #include "ionic_ibdebug.h"
 
+#ifdef HAVE_IB_API_UDATA
+#include <rdma/uverbs_ioctl.h>
+#endif
+
 MODULE_AUTHOR("Pensando Systems, Inc");
 MODULE_DESCRIPTION("Pensando RoCE HCA driver");
 MODULE_LICENSE("Dual BSD/GPL");
@@ -1506,8 +1510,13 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 						struct ib_udata *udata)
 #endif
 {
-	struct ionic_ibdev *dev;
+#ifdef HAVE_IB_ALLOC_UCTX_OBJ
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibctx->device);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
+#else
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_ctx *ctx;
+#endif
 	struct ionic_ctx_req req;
 	struct ionic_ctx_resp resp = {0};
 	phys_addr_t db_phys = 0;
@@ -1520,11 +1529,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	if (rc)
 		goto err_ctx;
 
-#ifdef HAVE_IB_ALLOC_UCTX_OBJ
-	dev = to_ionic_ibdev(ibctx->device);
-	ctx = to_ionic_ctx(ibctx);
-#else
-	dev = to_ionic_ibdev(ibdev);
+#ifndef HAVE_IB_ALLOC_UCTX_OBJ
 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
 	if (!ctx) {
 		rc = -ENOMEM;
@@ -1673,24 +1678,29 @@ out:
 }
 
 #ifdef HAVE_IB_ALLOC_PD_OBJ
+#ifdef HAVE_IB_API_UDATA
+static int ionic_alloc_pd(struct ib_pd *ibpd, struct ib_udata *udata)
+#else
 static int ionic_alloc_pd(struct ib_pd *ibpd,
 			  struct ib_ucontext *ibctx,
 			  struct ib_udata *udata)
+#endif
 #else
 static struct ib_pd *ionic_alloc_pd(struct ib_device *ibdev,
 				    struct ib_ucontext *ibctx,
 				    struct ib_udata *udata)
 #endif
 {
-	struct ionic_ibdev *dev;
+#ifdef HAVE_IB_ALLOC_PD_OBJ
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
+	struct ionic_pd *pd = to_ionic_pd(ibpd);
+#else
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_pd *pd;
+#endif
 	int rc;
 
-#ifdef HAVE_IB_ALLOC_PD_OBJ
-	dev = to_ionic_ibdev(ibpd->device);
-	pd = to_ionic_pd(ibpd);
-#else
-	dev = to_ionic_ibdev(ibdev);
+#ifndef HAVE_IB_ALLOC_PD_OBJ
 	pd = kzalloc(sizeof(*pd), GFP_KERNEL);
 	if (!pd) {
 		rc = -ENOMEM;
@@ -1719,7 +1729,11 @@ err_pd:
 }
 
 #ifdef HAVE_IB_DEALLOC_PD_VOID
+#ifdef HAVE_IB_API_UDATA
+static void ionic_dealloc_pd(struct ib_pd *ibpd, struct ib_udata *udata)
+#else
 static void ionic_dealloc_pd(struct ib_pd *ibpd)
+#endif
 #else
 static int ionic_dealloc_pd(struct ib_pd *ibpd)
 #endif
@@ -2119,10 +2133,17 @@ static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid, u32 flags)
 
 #ifdef HAVE_CREATE_AH_UDATA
 #ifdef HAVE_CREATE_AH_FLAGS
+#ifdef HAVE_IB_ALLOC_AH_OBJ
+static int ionic_create_ah(struct ib_ah *ibah,
+			   struct rdma_ah_attr *attr,
+			   u32 flags,
+			   struct ib_udata *udata)
+#else
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr,
 				     u32 flags,
 				     struct ib_udata *udata)
+#endif
 #else
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr,
@@ -2133,12 +2154,19 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr)
 #endif
 {
+#ifdef HAVE_IB_ALLOC_AH_OBJ
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibah->device);
+	struct ionic_pd *pd = to_ionic_pd(ibah->pd);
+	struct ionic_ah *ah = to_ionic_ah(ibah);
+#else
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_ah *ah;
+#endif
+	struct ionic_ctx *ctx = to_ionic_ctx_uobj(pd->ibpd.uobject);
+#ifdef HAVE_CREATE_AH_UDATA
 	struct ionic_ah_resp resp = {0};
-	gfp_t gfp = GFP_ATOMIC;
+#endif
 	int rc;
 #ifndef HAVE_CREATE_AH_FLAGS
 	u32 flags = 0;
@@ -2153,14 +2181,15 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 		goto err_ah;
 #endif
 
-	if (flags & RDMA_CREATE_AH_SLEEPABLE)
-		gfp = GFP_KERNEL;
-
-	ah = kzalloc(sizeof(*ah), gfp);
+#ifndef HAVE_IB_ALLOC_AH_OBJ
+	ah = kzalloc(sizeof(*ah),
+		     (flags & RDMA_CREATE_AH_SLEEPABLE) ?
+		     GFP_KERNEL : GFP_ATOMIC);
 	if (!ah) {
 		rc = -ENOMEM;
 		goto err_ah;
 	}
+#endif
 
 	rc = ionic_get_ahid(dev, &ah->ahid);
 	if (rc)
@@ -2170,17 +2199,21 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	if (rc)
 		goto err_cmd;
 
+#ifdef HAVE_CREATE_AH_UDATA
 	if (ctx) {
 		resp.ahid = ah->ahid;
 
-#ifdef HAVE_CREATE_AH_UDATA
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 		if (rc)
 			goto err_resp;
-#endif
 	}
+#endif
 
+#ifdef HAVE_IB_ALLOC_AH_OBJ
+	return 0;
+#else
 	return &ah->ibah;
+#endif
 
 #ifdef HAVE_CREATE_AH_UDATA
 err_resp:
@@ -2188,10 +2221,16 @@ err_resp:
 #endif
 err_cmd:
 	ionic_put_ahid(dev, ah->ahid);
+#ifdef HAVE_IB_ALLOC_AH_OBJ
+err_ahid:
+err_ah:
+	return rc;
+#else
 err_ahid:
 	kfree(ah);
 err_ah:
 	return ERR_PTR(rc);
+#endif
 }
 
 static int ionic_query_ah(struct ib_ah *ibah,
@@ -2209,7 +2248,11 @@ static int ionic_query_ah(struct ib_ah *ibah,
 }
 
 #ifdef HAVE_CREATE_AH_FLAGS
+#ifdef HAVE_IB_DESTROY_AH_VOID
+static void ionic_destroy_ah(struct ib_ah *ibah, u32 flags)
+#else
 static int ionic_destroy_ah(struct ib_ah *ibah, u32 flags)
+#endif
 #else
 static int ionic_destroy_ah(struct ib_ah *ibah)
 #endif
@@ -2222,13 +2265,23 @@ static int ionic_destroy_ah(struct ib_ah *ibah)
 #endif
 
 	rc = ionic_destroy_ah_cmd(dev, ah->ahid, flags);
-	if (rc)
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "destroy_ah error %d\n", rc);
+#ifdef HAVE_IB_DESTROY_AH_VOID
+		return;
+#else
 		return rc;
+#endif
+	}
 
 	ionic_put_ahid(dev, ah->ahid);
+#ifndef HAVE_IB_ALLOC_AH_OBJ
 	kfree(ah);
+#endif
 
+#ifndef HAVE_IB_DESTROY_AH_VOID
 	return 0;
+#endif
 }
 
 static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
@@ -2477,7 +2530,11 @@ err_umem:
 	return rc;
 }
 
+#ifdef HAVE_IB_API_UDATA
+static int ionic_dereg_mr(struct ib_mr *ibmr, struct ib_udata *udata)
+#else
 static int ionic_dereg_mr(struct ib_mr *ibmr)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
@@ -2508,9 +2565,16 @@ out:
 	return 0;
 }
 
+#ifdef HAVE_IB_API_UDATA
+static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
+				    enum ib_mr_type type,
+				    u32 max_sg,
+				    struct ib_udata *udata)
+#else
 static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 				    enum ib_mr_type type,
 				    u32 max_sg)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
@@ -2814,7 +2878,7 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 		cq->umem = ib_umem_get(udata, req.cq.addr, req.cq.size,
 				       IB_ACCESS_LOCAL_WRITE, 0);
 #else
-		cq->umem = ib_umem_get(&ctx->ibctx, req.cq.addr, req.cq.size,
+		cq->umem = ib_umem_get(ibctx, req.cq.addr, req.cq.size,
 				       IB_ACCESS_LOCAL_WRITE, 0);
 #endif
 		if (IS_ERR(cq->umem)) {
@@ -2893,18 +2957,29 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	kfree(cq);
 }
 
+#ifdef HAVE_IB_API_UDATA
+static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
+				     const struct ib_cq_init_attr *attr,
+				     struct ib_udata *udata)
+#else
 static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 				     const struct ib_cq_init_attr *attr,
 				     struct ib_ucontext *ibctx,
 				     struct ib_udata *udata)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+#ifdef HAVE_IB_API_UDATA
+	struct ionic_ctx *ctx =
+		rdma_udata_to_drv_context(udata, struct ionic_ctx, ibctx);
+#else
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
+#endif
 	struct ionic_cq *cq;
 	struct ionic_tbl_buf buf = {0};
 	int rc;
 
-	cq = __ionic_create_cq(dev, &buf, attr, ibctx, udata);
+	cq = __ionic_create_cq(dev, &buf, attr, &ctx->ibctx, udata);
 	if (IS_ERR(cq)) {
 		rc = PTR_ERR(cq);
 		goto err_cq;
@@ -2925,7 +3000,11 @@ err_cq:
 	return ERR_PTR(rc);
 }
 
+#ifdef HAVE_IB_API_UDATA
+static int ionic_destroy_cq(struct ib_cq *ibcq, struct ib_udata *udata)
+#else
 static int ionic_destroy_cq(struct ib_cq *ibcq)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
@@ -4893,7 +4972,11 @@ err_cmd:
 	return rc;
 }
 
+#ifdef HAVE_IB_API_UDATA
+static int ionic_destroy_qp(struct ib_qp *ibqp, struct ib_udata *udata)
+#else
 static int ionic_destroy_qp(struct ib_qp *ibqp)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
@@ -5747,13 +5830,26 @@ static int ionic_post_recv(struct ib_qp *ibqp,
 #endif
 }
 
+#ifdef HAVE_IB_ALLOC_SRQ_OBJ
+static int ionic_create_srq(struct ib_srq *ibsrq,
+			    struct ib_srq_init_attr *attr,
+			    struct ib_udata *udata)
+#else
 static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 				       struct ib_srq_init_attr *attr,
 				       struct ib_udata *udata)
+#endif
 {
+#ifdef HAVE_IB_ALLOC_SRQ_OBJ
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibsrq->device);
+	struct ionic_ctx *ctx =
+		rdma_udata_to_drv_context(udata, struct ionic_ctx, ibctx);
+	struct ionic_qp *qp = to_ionic_srq(ibsrq);
+#else
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
 	struct ionic_qp *qp;
+#endif
 	struct ionic_cq *cq;
 	struct ionic_srq_req req;
 	struct ionic_srq_resp resp = {0};
@@ -5773,11 +5869,13 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	if (rc)
 		goto err_srq;
 
+#ifndef HAVE_IB_ALLOC_SRQ_OBJ
 	qp = kzalloc(sizeof(*qp), GFP_KERNEL);
 	if (!qp) {
 		rc = -ENOSYS;
 		goto err_srq;
 	}
+#endif
 
 	qp->state = IB_QPS_INIT;
 
@@ -5835,7 +5933,11 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 
 	ionic_dbgfs_add_qp(dev, qp);
 
+#ifdef HAVE_IB_ALLOC_SRQ_OBJ
+	return 0;
+#else
 	return &qp->ibsrq;
+#endif
 
 err_resp:
 	ionic_destroy_qp_cmd(dev, qp->qpid);
@@ -5844,10 +5946,16 @@ err_cmd:
 	ionic_qp_rq_destroy(dev, ctx, qp);
 err_rq:
 	ionic_put_srqid(dev, qp->qpid);
+#ifdef HAVE_IB_ALLOC_SRQ_OBJ
+err_srqid:
+err_srq:
+	return rc;
+#else
 err_srqid:
 	kfree(qp);
 err_srq:
 	return ERR_PTR(rc);
+#endif
 }
 
 static int ionic_modify_srq(struct ib_srq *ibsrq, struct ib_srq_attr *attr,
@@ -5862,7 +5970,15 @@ static int ionic_query_srq(struct ib_srq *ibsrq,
 	return -ENOSYS;
 }
 
+#ifdef HAVE_IB_DESTROY_SRQ_VOID
+#ifdef HAVE_IB_API_UDATA
+static void ionic_destroy_srq(struct ib_srq *ibsrq, struct ib_udata *udata)
+#else
+static void ionic_destroy_srq(struct ib_srq *ibsrq)
+#endif
+#else
 static int ionic_destroy_srq(struct ib_srq *ibsrq)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibsrq->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibsrq->uobject);
@@ -5872,8 +5988,14 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	int rc;
 
 	rc = ionic_destroy_qp_cmd(dev, qp->qpid);
-	if (rc)
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "destroy_srq error %d\n", rc);
+#ifdef HAVE_IB_DESTROY_SRQ_VOID
+		return;
+#else
 		return rc;
+#endif
+	}
 
 	ionic_dbgfs_rm_qp(qp);
 
@@ -5893,10 +6015,12 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 
 	ionic_qp_rq_destroy(dev, ctx, qp);
 	ionic_put_srqid(dev, qp->qpid);
-
+#ifndef HAVE_IB_ALLOC_SRQ_OBJ
 	kfree(qp);
-
+#endif
+#ifndef HAVE_IB_DESTROY_SRQ_VOID
 	return 0;
+#endif
 }
 
 #ifdef HAVE_CONST_IB_WR
@@ -6882,6 +7006,12 @@ static const struct ib_device_ops ionic_dev_ops = {
 #endif
 #ifdef HAVE_IB_ALLOC_PD_OBJ
 	INIT_RDMA_OBJ_SIZE(ib_pd, ionic_pd, ibpd),
+#endif
+#ifdef HAVE_IB_ALLOC_AH_OBJ
+	INIT_RDMA_OBJ_SIZE(ib_ah, ionic_ah, ibah),
+#endif
+#ifdef HAVE_IB_ALLOC_SRQ_OBJ
+	INIT_RDMA_OBJ_SIZE(ib_srq, ionic_qp, ibsrq),
 #endif
 };
 
