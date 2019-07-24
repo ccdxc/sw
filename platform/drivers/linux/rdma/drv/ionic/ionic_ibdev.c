@@ -258,11 +258,31 @@ static int ionic_validate_qdesc_zero(struct ionic_qdesc *q)
 
 static int ionic_verbs_status_to_rc(u32 status)
 {
-	/* TODO */
-	if (status)
-		return -EIO;
-
-	return 0;
+	switch (status) {
+	case IONIC_RC_SUCCESS:	return 0;
+	case IONIC_RC_EPERM:	return -EPERM;
+	case IONIC_RC_ENOENT:	return -ENOENT;
+	case IONIC_RC_EINTR:	return -EINTR;
+	case IONIC_RC_EAGAIN:	return -EAGAIN;
+	case IONIC_RC_ENOMEM:	return -ENOMEM;
+	case IONIC_RC_EFAULT:	return -EFAULT;
+	case IONIC_RC_EBUSY:	return -EBUSY;
+	case IONIC_RC_EEXIST:	return -EEXIST;
+	case IONIC_RC_ENOSPC:	return -ENOSPC;
+	case IONIC_RC_ERANGE:	return -ERANGE;
+	case IONIC_RC_BAD_ADDR: return -EFAULT;
+	case IONIC_RC_DEV_CMD:	return -ENOTTY;
+	case IONIC_RC_ENOSUPP:	return -ENODEV;
+	case IONIC_RC_ERDMA:	return -EPROTO;
+	case IONIC_RC_EINVAL:
+	case IONIC_RC_EVERSION:
+	case IONIC_RC_EOPCODE:
+	case IONIC_RC_EQID:
+	case IONIC_RC_EQTYPE:	return -EINVAL;
+	case IONIC_RC_EIO:
+	case IONIC_RC_ERROR:
+	default:		return -EIO;
+	}
 }
 
 static int ionic_get_pdid(struct ionic_ibdev *dev, u32 *pdid)
@@ -6351,13 +6371,7 @@ static int ionic_rdma_devcmd(struct ionic_ibdev *dev,
 
 	wait_for_completion(&admin->work);
 
-	if (0 /* XXX did the queue fail? */) {
-		rc = -EIO;
-		goto err_cmd;
-	}
-
 	rc = ionic_verbs_status_to_rc(admin->comp.comp.status);
-
 err_cmd:
 	return rc;
 }
