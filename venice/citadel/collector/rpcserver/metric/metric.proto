@@ -26,10 +26,11 @@ message LineBundle {
 // Field is one of (uint64, float64, string, bool)
 message Field {
 	oneof f {
-		int64 Int64 = 1;
-		double Float64 = 2;
-		string String = 3;
-		bool Bool = 4;
+		int64 Int64    = 1;
+		uint64 Uint64  = 2;
+		double Float64 = 3;
+		string String  = 4;
+		bool Bool      = 5;
 	}
 }
 

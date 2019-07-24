@@ -19,7 +19,7 @@ type metricsTranslatorFns struct{}
 // KeyToMeta converts network key to meta
 func (n *metricsTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
 	if str, ok := key.(uint64); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: strconv.FormatUint(str, 10)}
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "lif" + strconv.FormatUint(str, 10)}
 	}
 	return nil
 }

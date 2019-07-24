@@ -71,6 +71,9 @@ func NewBroker(cfg *meta.ClusterConfig, nodeUUID string, logger log.Logger) (*Br
 		return nil, err
 	}
 
+	// TODO: enable by default in build
+	models.EnableUintSupport()
+
 	// create the broker instance
 	broker := Broker{
 		nodeUUID:    nodeUUID,

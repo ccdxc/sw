@@ -215,6 +215,8 @@ func readFields(f map[string]*metric.Field) map[string]interface{} {
 		switch v.F.(type) {
 		case *metric.Field_Int64:
 			out[k] = v.GetInt64()
+		case *metric.Field_Uint64:
+			out[k] = v.GetUint64()
 		case *metric.Field_Float64:
 			out[k] = v.GetFloat64()
 		case *metric.Field_String_:

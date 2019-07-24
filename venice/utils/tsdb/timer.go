@@ -284,8 +284,8 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 			v := field.(bool)
 			mfs[key] = &metric.Field{F: &metric.Field_Bool{Bool: v}}
 		case metrics.Counter:
-			v := int64(field.(metrics.Counter))
-			mfs[key] = &metric.Field{F: &metric.Field_Int64{Int64: v}}
+			v := uint64(field.(metrics.Counter))
+			mfs[key] = &metric.Field{F: &metric.Field_Uint64{Uint64: v}}
 		case metrics.Gauge:
 			v := float64(field.(metrics.Gauge))
 			mfs[key] = &metric.Field{F: &metric.Field_Float64{Float64: v}}
