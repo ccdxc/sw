@@ -21,6 +21,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'LOGIN_FAILED',
     'MODULE_CREATION_FAILED',
     'NIC_ADMITTED',
+    'NIC_DEADMITTED',
+    'NIC_DECOMMISSIONED',
     'NIC_HEALTHY',
     'NIC_REJECTED',
     'NIC_UNHEALTHY',
@@ -122,6 +124,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NIC_ADMITTED",
       "Severity": EventsEvent_severity.info,
       "Desc": "NIC admitted to the cluster",
+  },
+  'NIC_DEADMITTED' : {
+      "Name": "NIC_DEADMITTED",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "NIC de-admitted from the cluster",
+  },
+  'NIC_DECOMMISSIONED' : {
+      "Name": "NIC_DECOMMISSIONED",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "NIC decommissioned from the cluster",
   },
   'NIC_HEALTHY' : {
       "Name": "NIC_HEALTHY",
