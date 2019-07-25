@@ -118,8 +118,8 @@ func (it *veniceIntegSuite) TestFwlog(c *C) {
 	}
 
 	direction := map[string]bool{
-		"from_uplink": true,
-		"from_host":   true,
+		"from-uplink": true,
+		"from-host":   true,
 	}
 
 	actionList := [][]string{

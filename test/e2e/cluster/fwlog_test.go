@@ -171,7 +171,7 @@ var _ = Describe("fwlog policy tests", func() {
 					}
 				}
 				return nil
-			}, 120, 2).Should(BeNil(), "failed to find fwlog policy")
+			}, 180, 2).Should(BeNil(), "failed to find fwlog policy")
 
 			By("Update fwlog Policy")
 			for i := range testFwSpecList {

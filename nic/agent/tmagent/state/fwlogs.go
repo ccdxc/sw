@@ -19,6 +19,8 @@ import (
 // FwlogIpcShm is the path to fw logs in shared memory
 const FwlogIpcShm = "/fwlog_ipc_shm"
 
+var flowDirectionName map[uint32]string
+
 // TsdbInit initilaizes tsdb and fwlog object
 func (s *PolicyState) TsdbInit(nodeUUID string, rc resolver.Interface) error {
 	opts := &tsdb.Opts{
@@ -59,6 +61,14 @@ func (s *PolicyState) FwlogInit(path string) error {
 	s.shm = shm
 	log.Infof("allocated shared memory: %v", shm)
 
+	flowDirectionName = make(map[uint32]string, len(halproto.FlowDirection_name))
+	// create mapping
+	//    FLOW_DIRECTION_FROM_HOST -> from-host
+	//    FLOW_DIRECTION_TO_HOST -> to-host
+	for k, d := range halproto.FlowDirection_name {
+		flowDirectionName[uint32(k)] = strings.ToLower(strings.Replace(strings.TrimPrefix(d, "FLOW_DIRECTION_"), "_", "-", 1))
+	}
+
 	for ix := 0; ix < instCount; ix++ {
 		ipc := shm.IPCInstance()
 		log.Infof("IPC[%d] %s", ix, ipc)
@@ -83,7 +93,7 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	sPort := fmt.Sprintf("%v", ev.GetSport())
 	ipProt := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetIpProt().String(), "IPPROTO_"))
 	action := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(ev.GetFwaction().String(), "SECURITY_RULE_ACTION_")))
-	dir := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(halproto.FlowDirection_name[int32(ev.GetDirection())], "FLOW_DIRECTION_")))
+	dir := flowDirectionName[ev.GetDirection()]
 	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
 	sessionID := fmt.Sprintf("%v", ev.GetSessionId())
 	state := strings.ToLower(strings.Replace(halproto.FlowLogEventType_name[int32(ev.GetFlowaction())], "LOG_EVENT_TYPE_", "", 1))
