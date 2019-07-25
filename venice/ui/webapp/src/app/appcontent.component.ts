@@ -273,7 +273,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           if (Utility.getInstance().getMaintenanceMode()) {
             setTimeout(() => {
               this.getVersion();  // Watch ends during rollout, try again so new updates can be shown on UI
-            }, 10000);
+            }, 3000);
           } else {
           this._controllerService.webSocketErrorToaster('Failed to get Cluster Version', error);
           }
@@ -282,7 +282,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           setTimeout(() => {
             this.version = new ClusterVersion();
             this.getVersion();
-          }, 10000);
+          }, 3000);
         }
       );
       this.subscriptions.push(this.versionSubscription);
@@ -591,7 +591,10 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
           const alertMsg = (diff === 1) ? diff + ' new alert arrived' : diff + 'new alerts arrived';
-          this._controllerService.invokeInfoToaster('Alert', alertMsg);
+          // User has no wa to see alerts if we are in maintenance mode
+          if (!Utility.getInstance().getMaintenanceMode()) {
+            this._controllerService.invokeInfoToaster('Alert', alertMsg);
+          }
         }
         if (this.startingAlertCount == null) {
           this.alertNumbers = this.alerts.length;

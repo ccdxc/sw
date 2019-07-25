@@ -304,8 +304,8 @@ export class MetricsUtility {
       'group-by-field': 'reporterID',
       // We only look at the last 5 min bucket so that the max node reporting is never
       // lower than current
-      'start-time': new Date(Utility.roundDownTime(5).getTime() - 1000 * 50 * 5).toISOString() as any,
-      'end-time': Utility.roundDownTime(5).toISOString() as any
+      'start-time': 'now() - 5m' as any,
+      'end-time': 'now()' as any,
     };
     return new Telemetry_queryMetricsQuerySpec(maxNodeQuery);
   }
@@ -313,16 +313,11 @@ export class MetricsUtility {
   public static maxObjQueryPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
     const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.maxObjQuery(kind, selector);
     const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.maxObjQueryUpdate,
+      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
       mergeFunction: MetricsUtility.maxObjQueryMerge
     };
 
     return { query: query, pollingOptions: pollOptions };
-  }
-
-  public static maxObjQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
-    queryBody['start-time'] = new Date(Utility.roundDownTime(5).getTime() - 1000 * 50 * 5).toISOString() as any,
-      queryBody['end-time'] = Utility.roundDownTime(5).toISOString() as any;
   }
 
   public static maxObjQueryMerge(currData: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult) {
@@ -631,7 +626,7 @@ export class MetricsUtility {
     }
     data.values.forEach((item) => {
       let val = item[yFieldIndex];
-      if (toRound) {
+      if (val != null && toRound) {
         val = Math.round(val);
       }
       retData.push({ t: item[0], y:  val });
