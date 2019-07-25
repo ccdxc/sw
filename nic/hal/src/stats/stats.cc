@@ -20,6 +20,7 @@ static thread_local void *t_stats_timer;
 #define HAL_STATS_COLLECTION_INTVL            (1 * TIME_MSECS_PER_SEC)
 #define HAL_STATS_START_INTVL                 (120 * TIME_MSECS_PER_SEC)    // 2 minutes
 
+#if 0
 static void
 hal_update_drop_stats (SystemResponse *rsp) {
     delphi::objects::dropmetrics_t        dm;
@@ -107,6 +108,7 @@ hal_update_drop_stats (SystemResponse *rsp) {
     }
     delphi::objects::EgressDropMetrics::Publish(0, &edm);
 }
+#endif
 
 //------------------------------------------------------------------------------
 // callback invoked by the HAL periodic thread for stats collection
@@ -115,10 +117,12 @@ static void
 stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     hal_ret_t ret;
+    SystemResponse                      rsp;
+#if 0
     pd::pd_system_args_t                pd_system_args;
     pd::pd_system_drop_stats_get_args_t drop_args;
-    SystemResponse                      rsp;
     pd::pd_func_args_t                  pd_func_args;
+#endif
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, NULL);
     if (ret != HAL_RET_OK) {
@@ -148,6 +152,7 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 #endif
 }
 
+#if 0
 static void
 hal_global_stats_init (void)
 {
@@ -155,6 +160,7 @@ hal_global_stats_init (void)
     delphi::objects::DropMetrics::CreateTable();
     delphi::objects::EgressDropMetrics::CreateTable();
 }
+#endif
 
 static void
 stats_timer_start (void *timer, uint32_t timer_id, void *ctxt)

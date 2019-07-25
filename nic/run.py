@@ -349,8 +349,9 @@ def run_hal(args):
     '''
 
     FNULL = open(os.devnull, 'w')
+    FOUT  = open(nic_dir + "/hal_stdout.log", 'w')
     print (bin_dir + '/hal', jsonfile)
-    p = Popen([bin_dir+'/hal', "--config", jsonfile], preexec_fn=demote, stdout=FNULL, stderr=FNULL)
+    p = Popen([bin_dir+'/hal', "--config", jsonfile], preexec_fn=demote, stdout=FOUT, stderr=FNULL)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"

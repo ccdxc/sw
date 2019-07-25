@@ -14,6 +14,7 @@ nic/build/x86_64/iris/lib/libblock_list.so                          /nic/lib/
 nic/build/x86_64/iris/lib/libbm_allocator.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libcap*.so                                /nic/lib/
 nic/build/x86_64/iris/lib/libcatalog.so                             /nic/lib/
+nic/build/x86_64/iris/lib/libdevice.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libcfg_plugin*.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libcommon_cc.so                           /nic/lib/
 nic/build/x86_64/iris/lib/libcore.so                                /nic/lib/

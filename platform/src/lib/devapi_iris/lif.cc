@@ -716,7 +716,7 @@ devapi_lif::update_recbcast(bool receive_broadcast)
         return SDK_RET_OK;
     }
 
-    NIC_LOG_DEBUG("devapi_lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("devapi_lif: {}. Bcast. flag change {} -> {}",
                     get_id(), info_.receive_broadcast,
                     receive_broadcast);
 
@@ -822,7 +822,7 @@ devapi_lif::update_vlanins(bool vlan_insert_en)
         return SDK_RET_OK;
     }
 
-    NIC_LOG_DEBUG("devapi_lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("devapi_lif: {}. Vlan Insert flag change {} -> {}",
                   get_id(), info_.vlan_insert_en,
                   vlan_insert_en);
 

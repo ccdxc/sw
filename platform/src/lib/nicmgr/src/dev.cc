@@ -21,6 +21,7 @@
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/misc/include/maclib.h"
 #include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 
 #include "logger.hpp"
 
@@ -118,6 +119,42 @@ string
 DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
 {
 #if !defined(APOLLO) && !defined(ARTEMIS)
+
+    sdk::lib::device *device = NULL;
+    sdk::lib::dev_forwarding_mode_t fwd_mode;
+    sdk::lib::dev_feature_profile_t feature_profile; 
+
+    cout << "Parsing Device conf file: " << filename << endl;
+    device = sdk::lib::device::factory(filename);
+
+    fwd_mode = device->get_forwarding_mode();
+    feature_profile = device->get_feature_profile();
+
+    printf("forwarding mode: %s, feature_profile: %d\n",
+           FWD_MODE_TYPES_str(*fw_mode), 
+           feature_profile);
+
+    if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
+        fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH) {
+        *fw_mode = sdk::platform::FWD_MODE_SMART;
+        return string("/platform/etc/nicmgrd/eth_smart.json");
+    } else if (fwd_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
+        *fw_mode = sdk::platform::FWD_MODE_CLASSIC;
+        if (feature_profile == sdk::lib::FEATURE_PROFILE_CLASSIC_DEFAULT) {
+            return string("/platform/etc/nicmgrd/device.json");
+        } else if (feature_profile == sdk::lib::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
+            return string("/platform/etc/nicmgrd/eth_scale.json");
+        } else {
+            return string("/platform/etc/nicmgrd/device.json");
+        }
+    } else {
+        cout << "Unknown mode, returning classic default" << endl;
+        *fw_mode = sdk::platform::FWD_MODE_CLASSIC;
+        return string("/platform/etc/nicmgrd/device.json");
+    }
+
+
+#if 0
     boost::property_tree::ptree spec;
     std::string forwarding_mode;
 
@@ -154,6 +191,7 @@ DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
         cout << "Unknown mode, returning classic default" << endl;
         return string("/platform/etc/nicmgrd/device.json");
     }
+#endif
 #endif
     return string("");
 }

@@ -11,6 +11,7 @@
 #include "lib/periodic/periodic.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 
 uint64_t g_mgmt_if_mac;
 
@@ -607,7 +608,7 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
 
     return ret;
 }
-
+#if 0
 static void
 hal_device_cfg_init_defaults (device_cfg_t *device_cfg)
 {
@@ -615,6 +616,7 @@ hal_device_cfg_init_defaults (device_cfg_t *device_cfg)
     device_cfg->feature_profile = HAL_FEATURE_PROFILE_CLASSIC_DEFAULT;
     device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
 }
+#endif
 
 static inline hal_forwarding_mode_t
 parse_forwarding_mode (std::string forwarding_mode)
@@ -647,10 +649,13 @@ hal_ret_t
 hal_device_cfg_init (hal_cfg_t *hal_cfg)
 {
     device_cfg_t *device_cfg = &hal_cfg->device_cfg;
+    sdk::lib::device *device = NULL;
+#if 0
     ptree prop_tree;
     std::string forwarding_mode;
     std::string feature_profile;
     std::string port_admin_state;
+#endif
     std::string device_cfg_fname;
 
     if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
@@ -660,7 +665,19 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
         device_cfg_fname = hal_cfg->cfg_path + "/" + std::string(DEVICE_CFG);
     }
 
+    device = sdk::lib::device::factory(device_cfg_fname);
+    SDK_ASSERT_TRACE_RETURN(device != NULL, HAL_RET_ERR, "Device conf file error");
 
+    device_cfg->forwarding_mode = (hal::hal_forwarding_mode_t)device->get_forwarding_mode();
+    device_cfg->feature_profile = (hal::hal_feature_profile_t)device->get_feature_profile();
+    device_cfg->admin_state = device->get_port_admin_state() ? 
+        port_admin_state_t::PORT_ADMIN_STATE_DOWN : port_admin_state_t::PORT_ADMIN_STATE_UP;
+    g_mgmt_if_mac = device->get_mgmt_if_mac();
+
+    
+    
+
+#if 0
     hal_device_cfg_init_defaults(device_cfg);
     if (access(device_cfg_fname.c_str(), R_OK) < 0) {
         HAL_TRACE_DEBUG("Device config: {} not found",
@@ -685,8 +702,11 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
     }
 
 end:
-    printf("Hal forwarding mode: %s\n",
-           FORWARDING_MODES_str(device_cfg->forwarding_mode));
+#endif
+    printf("Hal forwarding mode: %s, feature_profile: %d, port_admin_state: %d\n",
+           FORWARDING_MODES_str(device_cfg->forwarding_mode),
+           device_cfg->feature_profile,
+           (int)device_cfg->admin_state);
     return HAL_RET_OK;
 }
 

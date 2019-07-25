@@ -130,6 +130,7 @@ do {                                                       \
             inline const char *_name ## _str() {return _desc; }
 #define _SDK_ENUM_CASE(_name, _val, _desc) case _name: return os << #_desc;
 #define _SDK_ENUM_CASE_STR(_name, _val, _desc) case _name: return #_name;
+#define _SDK_MAP_ENTRY(_name, _val, _desc) {_desc, _name},
 
 #define SDK_DEFINE_ENUM(_type, _entries)                                \
     typedef enum { _entries(_SDK_ENUM_FIELD) } _type;                   \
@@ -149,6 +150,16 @@ do {                                                       \
         }                                                               \
         return "uknown";                                                \
     }
+
+#define SDK_DEFINE_MAP(_typ, _entries)                                  \
+    std::map<std::string, _typ> _entries##_map =                        \
+    {                                                                   \
+        _entries(_SDK_MAP_ENTRY)                                        \
+    };
+
+#define SDK_DEFINE_MAP_EXTERN(_typ, _entries)                           \
+    extern std::map<std::string, _typ> _entries##_map;
+
 
 //------------------------------------------------------------------------------
 // atomic operations
