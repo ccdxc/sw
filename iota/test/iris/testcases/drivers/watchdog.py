@@ -30,6 +30,14 @@ def Setup(tc):
     tc.stg3 = {}
     tc.stg4 = {}
 
+    tc.host_intf = {}
+    for node in tc.nodes:
+        tc.host_intf[node] = []
+        for intf in api.GetNaplesHostInterfaces(node):
+            tc.host_intf[node].append(intf)
+        for intf in host.GetHostInternalMgmtInterfaces(node):
+            tc.host_intf[node].append(intf)
+
     return api.types.status.SUCCESS
 
 def enable_txq_timeout(req, n, i):
@@ -60,13 +68,18 @@ def set_wdog_error(req, n, err):
     return api.Trigger_AddHostCommand(req, n, \
             "sysctl hw.ionic.wdog_error_trigger=%d" % err)
 
+def get_intf_names(tc, hostname):
+    return tc.host_intf[hostname]
+
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     # Read the reset counters, enable all watchdogs
     for n in tc.nodes:
-        for i in api.GetNaplesHostInterfaces(n):
-            api.Logger.info("Enable all watchdogs on %s" % i)
+        ifs = get_intf_names(tc, n)
+        api.Logger.info("Enable all watchdogs on %s %s" % \
+                        (n, ifs))
+        for i in ifs:
             enable_txq_timeout(req, n, i)
             enable_fw_hb_interval(req, n, i)
             enable_cmd_hb_interval(req, n, i)
@@ -85,7 +98,7 @@ def Trigger(tc):
 
     # Read the updated reset counters
     for n in tc.nodes:
-        for i in api.GetNaplesHostInterfaces(n):
+        for i in get_intf_names(tc, n):
             tc.stg2[(n,i)] = get_lifresets(req, n, i)
 
     # Force a LIF reset with AdminQ NOP heartbeat
@@ -96,7 +109,7 @@ def Trigger(tc):
 
     # Read the updated reset counters
     for n in tc.nodes:
-        for i in api.GetNaplesHostInterfaces(n):
+        for i in get_intf_names(tc, n):
             tc.stg3[(n,i)] = get_lifresets(req, n, i)
 
     # Force a FW heartbeat timeout
@@ -134,12 +147,12 @@ def Verify(tc):
     api.Logger.info("Stage 1: Verifying TxQ watchdog LIF reset")
     for n in tc.nodes:
         any_incr = False
-        for i in api.GetNaplesHostInterfaces(n):
+        for i in get_intf_names(tc, n):
             if compare_counters(n, i, tc.stg1[(n,i)], tc.stg2[(n,i)]):
                 any_incr = True
         if not any_incr:
             api.Logger.warn("%s No TxQ watchdog activity found" % n)
-            for i in api.GetNaplesHostInterfaces(n):
+            for i in get_intf_names(tc, n):
                 api.Logger.warn("%s: %s" % (i, tc.stg2[(n,i)].stdout))
             return api.types.status.FAILURE
         api.Logger.info("%s LIF reset confirmed" % n)
@@ -148,12 +161,12 @@ def Verify(tc):
     api.Logger.info("Stage 2: Verifying AdminQ heartbeat LIF reset")
     for n in tc.nodes:
         any_incr = False
-        for i in api.GetNaplesHostInterfaces(n):
+        for i in get_intf_names(tc, n):
             if compare_counters(n, i, tc.stg2[(n,i)], tc.stg3[(n,i)]):
                 any_incr = True
         if not any_incr:
             api.Logger.warn("%s No AdminQ heartbeat activity found" % n)
-            for i in api.GetNaplesHostInterfaces(n):
+            for i in get_intf_names(tc, n):
                 api.Logger.warn("%s: %s" % (i, tc.stg3[(n,i)].stdout))
             return api.types.status.FAILURE
         api.Logger.info("%s LIF reset confirmed" % n)
