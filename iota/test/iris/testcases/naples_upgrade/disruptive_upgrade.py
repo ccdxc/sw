@@ -194,7 +194,7 @@ def Verify(tc):
 
         if wait_and_verify_fuz(tc) != api.types.status.SUCCESS:
             return api.types.status.FAILURE
-        return api.types.status.SUCCESS
+    return api.types.status.SUCCESS
 
 def Teardown(tc):
     for n in tc.Nodes:
