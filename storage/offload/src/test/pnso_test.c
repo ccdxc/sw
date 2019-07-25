@@ -1170,7 +1170,7 @@ static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_re
 		goto done;
 
 	worker_ctx = batch_get_worker_ctx(batch_ctx);
-	if (!worker_ctx || !worker_queue_enqueue_safe(worker_ctx->complete_q, batch_ctx))
+	if (!worker_ctx || !worker_queue_enqueue(worker_ctx->complete_q, batch_ctx))
 		PNSO_LOG_ERROR("Failed to enqueue batch_ctx to complete_q!\n");	
 done:
 	osal_atomic_fetch_sub(&g_testcase_active_refcnt, 1);
@@ -2478,7 +2478,7 @@ static int worker_loop(void *param)
 
 		/* Process next work item, or retry previous */
 		if (!submit_batch_ctx) {
-			submit_batch_ctx = worker_queue_dequeue_safe(ctx->submit_q);
+			submit_batch_ctx = worker_queue_dequeue(ctx->submit_q);
 		} else {
 			submit_batch_ctx->stats.io_stats[0].retries++;
 		}
@@ -3083,7 +3083,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 
 		/* Batch completion */
 		if (worker_ctx->pending_batch_count &&
-		    (batch_ctx = worker_queue_dequeue_safe(worker_ctx->complete_q))) {
+		    (batch_ctx = worker_queue_dequeue(worker_ctx->complete_q))) {
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
 			last_active_ts = cur_ts;
@@ -3136,7 +3136,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 				init_batch_context(batch_ctx, worker_ctx, batch_submit_count,
 						   req_submit_count, cur_batch_depth);
 
-				if (worker_queue_enqueue_safe(worker_ctx->submit_q, batch_ctx)) {
+				if (worker_queue_enqueue(worker_ctx->submit_q, batch_ctx)) {
 					batch_submit_count++;
 					req_submit_count += cur_batch_depth;
 					last_active_ts = cur_ts;
