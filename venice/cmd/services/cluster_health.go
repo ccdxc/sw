@@ -419,7 +419,8 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 
 	var reason []string
 	for svc, instances := range c.servicesHealth.services {
-		if instances.desiredNumberScheduled != int32(len(instances.list)) {
+		// TODO: This check needs to be put properly. For now we err on the healthy side. Refer to VS-675
+		if instances.desiredNumberScheduled > int32(len(instances.list)) {
 			reason = append(reason, fmt.Sprintf("%s(%d/%d) running", svc, len(instances.list),
 				instances.desiredNumberScheduled))
 		}
@@ -517,7 +518,7 @@ func (c *ClusterHealthMonitor) processDeploymentEvent(eventType k8swatch.EventTy
 func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod *v1.Pod) {
 	c.servicesHealth.Lock()
 
-	c.logger.Debugf("pod watcher received %v, %+v", eventType, pod)
+	c.logger.Infof("pod watcher received event:%v, name:%s running:%s", eventType, pod.Name, c.isPodRunning(pod))
 
 	var refName string // reference/owner (ds or deploy)
 	for _, ref := range pod.GetOwnerReferences() {

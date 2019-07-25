@@ -62,6 +62,11 @@ var _ = Describe("cluster health tests", func() {
 		if ts.tu.NumQuorumNodes < 2 {
 			Skip(fmt.Sprintf("Skipping: %d quorum nodes found, need >= 2", ts.tu.NumQuorumNodes))
 		}
+		// when cmd is paused on master, leadership changes and a new leader is elected which
+		//	starts off its own k8s server. However the k8s services also continue to run on old master
+		//	since the cmd (which is the only one to shut them down) is paused. Hence the network
+		//	will have 2 instances of k8s apiserver which can cause various problems
+		Skip("Enable after fixing the tests/code")
 
 		// pause cmd on one of the nodes and check cluster health
 		nodeIP := ts.tu.VeniceNodeIPs[0]
