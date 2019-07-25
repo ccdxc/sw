@@ -90,7 +90,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
                     if ((ret = system (cmd.c_str())) != 0) {
                         UPG_LOG_INFO("Unable to delete naples-netagent.db");
                     }
-                    cmd = "/nic/tools/reload_mnic_drv.sh";
+                    cmd = "/nic/tools/rollback_cleanup.sh";
                     if ((ret = system (cmd.c_str())) != 0) {
                         UPG_LOG_INFO("Unable to reload mnic driver");
                     }
