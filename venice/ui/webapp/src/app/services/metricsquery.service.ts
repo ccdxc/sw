@@ -93,7 +93,6 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
         if (poll == null) {
           return;
         }
-        this.processData(respBody);
         const currVal: ITelemetry_queryMetricsQueryResponse = poll.handler.value;
         const resValue: ITelemetry_queryMetricsQueryResponse = _.cloneDeep(currVal);
         resValue.tenant = respBody.tenant;
@@ -141,7 +140,7 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
   }
 
   // If a query requests data for a slice of time where there are
-  // no entries, DB returns null values. We fitler these values out.
+  // no entries, DB returns null values. This function fitlers these values out.
   processData(data: ITelemetry_queryMetricsQueryResponse) {
     data.results.forEach((r) => {
       if (r.series == null) {

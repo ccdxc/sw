@@ -1,4 +1,4 @@
-import { MetricTransform, TransformDataset, TransformNames, TransformMetricData } from './types';
+import { MetricTransform, TransformNames, TransformMetricData } from './types';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 
 /**
@@ -20,7 +20,9 @@ export class RoundCountersTransform extends MetricTransform<{}> {
           console.error('roundcounter transform: field ' + f + ' missing in cols ' + s.columns.toString());
         }
         s.values.forEach( val => {
-          val[index] = Math.round(val[index]);
+          if (val[index] != null) {
+            val[index] = Math.round(val[index]);
+          }
         });
       });
     });

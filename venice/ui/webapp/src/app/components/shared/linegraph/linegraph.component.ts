@@ -44,7 +44,7 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
   chartsInitialized: boolean = false;
 
   public static percentFormatter(val: number): string {
-    if (!val) {
+    if (val == null) {
       return '';
     }
     return val.toFixed(0) + '%';
@@ -194,6 +194,7 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
       datasets: [
         {
           data: data,
+          spanGaps: true,
           backgroundColor: gradientFill,
           borderColor: color,
           borderWidth: 2,

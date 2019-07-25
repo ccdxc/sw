@@ -134,7 +134,7 @@ export class DataSource {
 
   // Unique id is used to differentiate datasets that are exactly the same,
   // but come from two different data sources
-  id: string = Utility.s4();
+  id: string = Utility.s4() + '-' + Utility.s4() ;
 
   // List of transforms registered
   transforms: MetricTransform<any>[] = [];

@@ -294,7 +294,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     const merge = (currData, newData) => {
       // since we round down to get the last 5 min bucket, there's a chance
       // that we can back null data, since no new metrics have been reported.
-      // Data should have been filtered in metricsquery services's processData
       if (!MetricsUtility.resultHasData(newData)) {
         // no new data, keep old value
         return currData;

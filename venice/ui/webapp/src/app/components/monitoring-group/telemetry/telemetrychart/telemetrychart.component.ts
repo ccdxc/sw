@@ -483,9 +483,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // Create a map of which datasets are currently hidden, so that we can keep it.
     const hiddenDatasets = {};
     this.lineData.datasets.forEach( (dataset, index) => {
-
       if (!this.chartContainer.chart.isDatasetVisible(index)) {
-        const key = sourceFieldKey(dataset.sourceID, dataset.sourceMeasurement, dataset.sourceField);
+        const key = sourceFieldKey(dataset.sourceID, dataset.sourceMeasurement, dataset.sourceField) + dataset.label;
         hiddenDatasets[key] = true;
       }
     });
@@ -513,7 +512,6 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         source.fields.forEach( (field) => {
           const fieldIndex = MetricsUtility.findFieldIndex(s.columns, field);
           const data = MetricsUtility.transformToChartjsTimeSeries(s, field);
-          const key = sourceFieldKey(source.id, source.measurement, field);
           const dataset: ChartDataSets = {
             data: data,
             pointRadius: 0,
@@ -521,9 +519,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
             fill: false,
             sourceID: source.id,
             sourceField: field,
+            spanGaps: true,
             sourceMeasurement: source.measurement,
-            // If the dataset is currently being hidden, we continue to hide it
-            hidden: hiddenDatasets[key] != null ? true : false,
           };
           const opt: TransformDataset = {
             dataset: dataset,
@@ -554,6 +551,12 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         graphOptions: newGraphOptions,
         oldGraphOptions: this.graphOptions,
       });
+    });
+
+    // Hide any lines that are already hidden
+    resDataSets.forEach( (dataset, index) => {
+      const key = sourceFieldKey(dataset.sourceID, dataset.sourceMeasurement, dataset.sourceField) + dataset.label;
+      dataset.hidden = hiddenDatasets[key] != null ? hiddenDatasets[key] : false;
     });
 
     this.graphOptions = newGraphOptions;
