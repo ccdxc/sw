@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyicon" [header]="selectedId">
+<app-pagebody [icon]="bodyicon" [header]="selectedObj?.spec.id">
   <div fxFlex="none" fxLayout="column">
     <div fxFlex fxLayout="row wrap" class="naplesdetail-card-container">
       <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
@@ -21,7 +21,9 @@
   </div>
   <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex
        class="naplesdetail-alertsevents-container">
-    <app-shared-alertsevents [selector]="alertseventsSelector"></app-shared-alertsevents>
+    <!-- If selectedObj does not exist, we don't want fetch alerts/events -->
+    <app-shared-alertsevents [selector]="alertseventsSelector" *ngIf="selectedObj">
+    </app-shared-alertsevents>
   </div>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
   <!-- Missing screen overlay displays when the policy does not exist-->

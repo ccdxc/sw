@@ -108,12 +108,18 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       this.selectedId = id;
       this.initializeData();
       this.getNaplesDetails();
-      this._controllerService.setToolbarData({
-        buttons: [],
-        breadcrumb: [
-          { label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' },
-          { label: id, url: Utility.getBaseUIUrl() + 'cluster/naples/' + id }]
-      });
+      this.setNapleDetailToolbar(id); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
+    });
+  }
+
+  setNapleDetailToolbar(id: string) {
+    const nicName = (this.selectedObj) ? this.selectedObj.spec.id : id;
+    this._controllerService.setToolbarData({
+      buttons: [],
+      breadcrumb: [
+        { label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' },
+        { label: nicName, url: Utility.getBaseUIUrl() + 'cluster/naples/' + id }
+      ]
     });
   }
 
@@ -197,6 +203,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             }
           };
           this.startMetricPolls();
+          this.setNapleDetailToolbar(this.selectedId); // VS-668. We have to wait for the Naple object.
         } else if (this.objList.length === 0) {
           // Must have received a delete event.
           this.showDeletionScreen = true;
