@@ -336,16 +336,12 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_SUCCESS);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     if (state == LIF_STATE_CREATED) {
 
         state = LIF_STATE_INITING;
 
-        DEVAPI_CHECK
         rs = dev_api->lif_create(&hal_lif_info_);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
@@ -356,7 +352,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         cosA = 1;
         cosB = 0;
-        DEVAPI_CHECK
         dev_api->qos_get_txtc_cos(spec->qos_group, spec->uplink_port_num, &cosB);
         if (cosB < 0) {
             NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
@@ -367,7 +362,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         ctl_cosA = 1;
         ctl_cosB = 0;
-        DEVAPI_CHECK
         dev_api->qos_get_txtc_cos("CONTROL", spec->uplink_port_num, &ctl_cosB);
         if (ctl_cosB < 0) {
             NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
@@ -551,10 +545,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_SUCCESS);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     state = LIF_STATE_RESETTING;
 
@@ -562,7 +553,6 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     // to avoid name collisions during re-addition of the lifs
     // TODO: Lif delete has to be called here instead of just
     // doing an update
-    DEVAPI_CHECK
     dev_api->lif_upd_name(hal_lif_info_.lif_id,
                           std::to_string(hal_lif_info_.lif_id));
     dev_api->lif_reset(hal_lif_info_.lif_id);
@@ -662,8 +652,10 @@ EthLif::CmdHandler(void *req, void *req_data,
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
     status_code_t status = IONIC_RC_SUCCESS;
 
-    NIC_LOG_DEBUG("{}: Handling cmd: {}", hal_lif_info_.name,
-        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
+    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+        NIC_LOG_DEBUG("{}: Handling cmd: {}", hal_lif_info_.name,
+            opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
+    }
 
     switch ((cmd_opcode_t)cmd->cmd.opcode) {
 
@@ -731,8 +723,11 @@ EthLif::CmdHandler(void *req, void *req_data,
 
     comp->comp.status = status;
     comp->comp.rsvd = 0xff;
-    NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", hal_lif_info_.name,
-        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
+
+    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+        NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", hal_lif_info_.name,
+            opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
+    }
 
     return (status);
 }
@@ -1511,10 +1506,7 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     comp->status = 0;
     comp->features = (
@@ -1532,7 +1524,6 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
     bool vlan_strip = cmd->features & comp->features & ETH_HW_VLAN_RX_STRIP;
     bool vlan_insert = cmd->features & comp->features & ETH_HW_VLAN_TX_TAG;
 
-    DEVAPI_CHECK
     ret = dev_api->lif_upd_vlan_offload(hal_lif_info_.lif_id,
                                         vlan_strip, vlan_insert);
     if (ret != SDK_RET_OK) {
@@ -1565,10 +1556,7 @@ EthLif::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     switch (cmd->attr) {
         case IONIC_LIF_ATTR_STATE:
@@ -1606,10 +1594,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     switch (cmd->attr) {
         case IONIC_LIF_ATTR_STATE:
@@ -1787,19 +1772,12 @@ EthLif::_CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     bool broadcast = cmd->rx_mode & RX_MODE_F_BROADCAST;
     bool all_multicast = cmd->rx_mode & RX_MODE_F_ALLMULTI;
     bool promiscuous = cmd->rx_mode & RX_MODE_F_PROMISC;
-#if 0
-    ret = lif->UpdateReceiveMode(broadcast, all_multicast, promiscuous);
-    if (ret != HAL_IRISC_RET_SUCCESS) {
-#endif
-    DEVAPI_CHECK
+
     ret = dev_api->lif_upd_rx_mode(hal_lif_info_.lif_id,
                                    broadcast, all_multicast, promiscuous);
     if (ret != SDK_RET_OK) {
@@ -1827,10 +1805,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     if (cmd->match == RX_FILTER_MATCH_MAC) {
 
@@ -1840,10 +1815,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_MAC mac {}",
             hal_lif_info_.name, macaddr2str(mac_addr));
 
-        // ret = lif->AddMac(mac_addr);
-        DEVAPI_CHECK
         ret = dev_api->lif_add_mac(hal_lif_info_.lif_id, mac_addr);
-
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Mac:{} ret: {}",
                          hal_lif_info_.name, macaddr2str(mac_addr), ret);
@@ -1864,8 +1836,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
 
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_VLAN vlan {}",
                       hal_lif_info_.name, vlan);
-        // ret = lif->AddVlan(vlan);
-        DEVAPI_CHECK
+
         ret = dev_api->lif_add_vlan(hal_lif_info_.lif_id, vlan);
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Vlan:{}. ret: {}", hal_lif_info_.name, vlan, ret);
@@ -1889,8 +1860,6 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
                       hal_lif_info_.name, macaddr2str(mac_addr), vlan);
 
-        // ret = lif->AddMacVlan(mac_addr, vlan);
-        DEVAPI_CHECK
         ret = dev_api->lif_add_macvlan(hal_lif_info_.lif_id,
                                        mac_addr, vlan);
         if (ret != SDK_RET_OK) {
@@ -1932,24 +1901,19 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     if (mac_addrs.find(cmd->filter_id) != mac_addrs.end()) {
         mac_addr = mac_addrs[cmd->filter_id];
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC mac {}",
                       hal_lif_info_.name,
                       macaddr2str(mac_addr));
-        DEVAPI_CHECK
         ret = dev_api->lif_del_mac(hal_lif_info_.lif_id, mac_addr);
         mac_addrs.erase(cmd->filter_id);
     } else if (vlans.find(cmd->filter_id) != vlans.end()) {
         vlan = vlans[cmd->filter_id];
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_VLAN vlan {}",
                      hal_lif_info_.name, vlan);
-        DEVAPI_CHECK
         ret = dev_api->lif_del_vlan(hal_lif_info_.lif_id, vlan);
         vlans.erase(cmd->filter_id);
     } else if (mac_vlans.find(cmd->filter_id) != mac_vlans.end()) {
@@ -1958,7 +1922,6 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         vlan = std::get<1>(mac_vlan);
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
                      hal_lif_info_.name, macaddr2str(mac_addr), vlan);
-        DEVAPI_CHECK
         ret = dev_api->lif_del_macvlan(hal_lif_info_.lif_id, mac_addr, vlan);
         mac_vlans.erase(cmd->filter_id);
     } else {
@@ -2333,10 +2296,8 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
 void
 EthLif::HalEventHandler(bool status)
 {
-    hal_status = status;
-
     if (!status) {
-        return;
+        dev_api = NULL;
     }
 }
 
@@ -2346,11 +2307,6 @@ EthLif::LinkEventHandler(port_status_t *evd)
     if (spec->uplink_port_num != evd->id) {
         // NIC_LOG_WARN("{}: Uplink port number not matching status_port: {}. up_port: {}",
         //              hal_lif_info_.name, evd->id, spec->uplink_port_num);
-        return;
-    }
-
-    if (!dev_api) {
-        NIC_LOG_WARN("{}: devapi not initialized", hal_lif_info_.name);
         return;
     }
 

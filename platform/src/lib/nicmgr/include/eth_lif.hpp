@@ -133,7 +133,6 @@ private:
     // HAL Info
     devapi *dev_api;
     lif_info_t hal_lif_info_;
-    bool hal_status;
     // LIF Info
     eth_lif_res_t *res;
     uint8_t cosA, cosB, ctl_cosA, ctl_cosB;

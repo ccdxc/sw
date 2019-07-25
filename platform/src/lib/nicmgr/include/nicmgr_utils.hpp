@@ -19,8 +19,8 @@
 
 #define DEVAPI_CHECK                                                    \
     if (!dev_api) {                                                     \
-        NIC_LOG_ERR("{}: Uninitialized devapi", hal_lif_info_.name);    \
-        return (IONIC_RC_ERROR);                                        \
+        NIC_LOG_ERR("{}: Uninitialized devapi", name);    \
+        return (IONIC_RC_EAGAIN);                                        \
     }
 
 

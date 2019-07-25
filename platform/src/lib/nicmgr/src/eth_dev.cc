@@ -827,8 +827,10 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
     status_code_t status = IONIC_RC_SUCCESS;
 
-    NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
-        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
+    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+        NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
+            opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
+    }
 
     switch ((cmd_opcode_t)cmd->cmd.opcode) {
 
@@ -912,8 +914,10 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 
     comp->comp.status = status;
 
-    NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", spec->name,
-        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
+    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+        NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", spec->name,
+            opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
+    }
 
     return (status);
 }
@@ -1020,6 +1024,8 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
+    DEVAPI_CHECK
+
     if (spec->uplink_port_num == 0) {
         port_config->speed = IONIC_SPEED_1G;
         port_config->mtu = 1500;
@@ -1048,6 +1054,8 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
         return (IONIC_RC_SUCCESS);
     }
+
+    DEVAPI_CHECK
 
     ret = dev_api->port_set_config(spec->uplink_port_num, (port_config_t *)cfg);
     if (ret != SDK_RET_OK) {
@@ -1115,6 +1123,8 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
         return (IONIC_RC_SUCCESS);
     }
+
+    DEVAPI_CHECK
 
     ret = dev_api->port_get_config(spec->uplink_port_num, &cfg);
     if (ret != SDK_RET_OK) {
@@ -1187,6 +1197,8 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_SUCCESS);
     }
 
+    DEVAPI_CHECK
+
     ret = dev_api->port_get_config(spec->uplink_port_num, &cfg);
     if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to get port config", spec->name);
@@ -1250,6 +1262,8 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
     qos_class_info_t info = {0};
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
+    DEVAPI_CHECK
 
     memset(ident, 0, sizeof(devcmd->data));
 
@@ -1322,6 +1336,8 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {} qos group {}", spec->name, opcode_to_str(cmd->opcode),
         qos_class_to_str(cmd->group));
 
+    DEVAPI_CHECK
+
     info.group = cmd->group;
 
     info.mtu = cfg->mtu;
@@ -1373,6 +1389,8 @@ Eth::_CmdQosReset(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {} {}", spec->name, opcode_to_str(cmd->opcode),
         qos_class_to_str(cmd->group));
+
+    DEVAPI_CHECK
 
     rs = dev_api->qos_class_delete(cmd->group);
     if (rs != SDK_RET_OK) {
@@ -1464,10 +1482,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode),
         cmd->index);
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     if (spec->enable_rdma && cmd->index > 0) {
         NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
@@ -1557,10 +1572,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode),
         cmd->index);
 
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return (IONIC_RC_EAGAIN);
-    }
+    DEVAPI_CHECK
 
     if (spec->enable_rdma && cmd->index > 0) {
         NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
@@ -1731,19 +1743,15 @@ Eth::PortStatusUpdate(void *obj)
 void
 Eth::HalEventHandler(bool status)
 {
-    hal_status = status;
-
-    if (!hal_status) {
-        return;
-    }
-
-    // Create the MNIC devices
-    if (spec->eth_type == ETH_MNIC_OOB_MGMT ||
-        spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
-        spec->eth_type == ETH_MNIC_INBAND_MGMT ||
-        spec->eth_type == ETH_MNIC_CPU) {
-        if (!CreateLocalDevice()) {
-            NIC_LOG_ERR("{}: Failed to create device", spec->name);
+    if (status) {
+        // Create the MNIC devices
+        if (spec->eth_type == ETH_MNIC_OOB_MGMT ||
+            spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
+            spec->eth_type == ETH_MNIC_INBAND_MGMT ||
+            spec->eth_type == ETH_MNIC_CPU) {
+            if (!CreateLocalDevice()) {
+                NIC_LOG_ERR("{}: Failed to create device", spec->name);
+            }
         }
     }
 
@@ -1756,12 +1764,6 @@ Eth::HalEventHandler(bool status)
 void
 Eth::LinkEventHandler(port_status_t *evd)
 {
-    if (!hal_status) {
-        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
-        return;
-    }
-
-    // TODO: Check if device is initialized
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
         eth_lif->LinkEventHandler(evd);
