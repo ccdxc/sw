@@ -62,7 +62,7 @@ struct batch_info {
 	struct per_core_resource *bi_pcr;
 
 	completion_cb_t	bi_req_cb;	/* caller supplied call-back */
-	atomic64_t bi_req_cb_ctx;	/* caller supplied cb context */
+	void *bi_req_cb_ctx;		/* caller supplied cb context */
 
 	uint32_t bi_polled_idx;		/* last chain polled successfully */
 	uint32_t bi_num_entries;	/* total # of requests */

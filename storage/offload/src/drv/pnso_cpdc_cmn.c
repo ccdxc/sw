@@ -946,6 +946,7 @@ void
 cpdc_update_bof_interrupt_params(struct service_info *svc_info)
 {
 	struct cpdc_desc *desc, *bof_desc;
+	uint32_t bof_index;
 
 	if (!(svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL))
 		return;
@@ -957,10 +958,11 @@ cpdc_update_bof_interrupt_params(struct service_info *svc_info)
 	if (!desc)
 		return;
 
-	bof_desc = &desc[svc_info->si_num_tags];
-	OSAL_LOG_DEBUG("update hash/chksum bof/desc. desc: 0x" PRIx64 " bof_desc: 0x" PRIx64 " num_tags: %d",
+	bof_index = (svc_info->si_num_tags * 2) - 1;
+	bof_desc = &desc[bof_index];
+	OSAL_LOG_DEBUG("update hash/chksum bof/desc. desc: 0x" PRIx64 " bof_desc: 0x" PRIx64 " bof_index: %d num_tags: %d",
 			(uint64_t) desc, (uint64_t) bof_desc,
-			svc_info->si_num_tags);
+			bof_index, svc_info->si_num_tags);
 
 	bof_desc->u.cd_bits.cc_otag_on = desc->u.cd_bits.cc_otag_on;
 	bof_desc->u.cd_bits.cc_db_on = desc->u.cd_bits.cc_db_on;

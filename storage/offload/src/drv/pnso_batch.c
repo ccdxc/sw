@@ -78,8 +78,7 @@ pprint_batch_info(struct batch_info *batch_info)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb",
 			(uint64_t) batch_info->bi_req_cb);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb_ctx",
-			(uint64_t) atomic64_read((atomic64_t *)
-					&batch_info->bi_req_cb_ctx));
+			(uint64_t) batch_info->bi_req_cb_ctx);
 }
 
 static void __attribute__((unused))
@@ -612,7 +611,8 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 
 	/* save caller's cb and context ahead of destroy */
 	cb = batch_info->bi_req_cb;
-	cb_ctx = (void *) atomic64_xchg(&batch_info->bi_req_cb_ctx, 0);
+	cb_ctx = batch_info->bi_req_cb_ctx;
+	batch_info->bi_req_cb_ctx = NULL;
 
 	if (!skip_destroy)
 		deinit_batch(batch_info);
@@ -729,8 +729,7 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 		batch_info->bi_sw_latency_start = req_params->rp_sw_latency_ts;
 
 		batch_info->bi_req_cb = req_params->rp_cb;
-		atomic64_set(&batch_info->bi_req_cb_ctx,
-			     (uint64_t) req_params->rp_cb_ctx);
+		batch_info->bi_req_cb_ctx = req_params->rp_cb_ctx;
 
 		poll_ctx = batch_to_poll_ctx(batch_info);
 		if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL) {

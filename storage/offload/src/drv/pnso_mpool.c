@@ -508,9 +508,14 @@ _mpool_get_object(struct mem_pool *mpool)
 		err = EFAULT;
 		index = mpool_get_obj_id(mpool, object);
 		if (index < mpool->mp_config.mpc_num_objects) {
+#ifdef NDEBUG
+			mem_stack->mps_inuse_objects_bmp[BIT_WORD(index)] |= BIT_MASK(index);
+			err = PNSO_OK;
+#else
 			if (__test_and_set_bit(index,
 				mem_stack->mps_inuse_objects_bmp) == 0)
 				err = PNSO_OK;
+#endif
 		}
 
 		if (err) {
@@ -563,8 +568,13 @@ _mpool_put_object(struct mem_pool *mpool, void *object)
 	if (mem_stack->mps_inuse_objects_bmp) {
 		index = mpool_get_obj_id(mpool, object);
 		if (index < mpool->mp_config.mpc_num_objects) {
+#ifdef NDEBUG
+			mem_stack->mps_inuse_objects_bmp[BIT_WORD(index)] &= ~BIT_MASK(index);
+			err = PNSO_OK;
+#else
 			if (__test_and_clear_bit(index, mem_stack->mps_inuse_objects_bmp) == 0)
 				err = EINVAL;
+#endif
 		} else {
 			err = EFAULT;
 		}

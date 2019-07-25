@@ -430,7 +430,7 @@ compress_write_result(struct service_info *svc_info)
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
 	struct pnso_compression_header *cp_hdr = NULL;
-	uint32_t datain_len, chksum_len, hdr_version;
+	uint32_t len, hdr_version;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -474,56 +474,56 @@ compress_write_result(struct service_info *svc_info)
 	}
 
 	if (chn_service_is_cp_hdr_insert_applic(svc_info)) {
+		cp_hdr = get_cp_header(svc_info);
+		if (!cp_hdr) {
+			OSAL_LOG_DEBUG("skip cp header checks");
+			goto done;
+		}
 
-	cp_hdr = get_cp_header(svc_info);
-	if (!cp_hdr) {
-		OSAL_LOG_DEBUG("skip cp header checks");
-		goto done;
-	}
+		/*
+		 * When a chksum field is present in cp_hdr, overwrite it with
+		 * integ_data from the status desc (due to a HW constraint).
+		 * Note that in chaining case, even though P4+ chainer (if requested)
+		 * would also have done the copy, it might have done so only to the
+		 * intermediate RMEM destination buffer rather than to the host.
+		 * Hence, we ensure that the host buffer overwrite happens here.
+		 */
+		if (cpdc_cp_hdr_chksum_info_get(svc_info, &len)) {
+			if (len) {
+				if (cpdc_desc_is_integ_data_wr_required(cp_desc))
+					cp_hdr->chksum = (uint32_t)
+						status_desc->csd_integrity_data;
+			} else
+				cp_hdr->chksum = 0;
+		}
 
-	/*
-	 * When a chksum field is present in cp_hdr, overwrite it with
-	 * integ_data from the status desc (due to a HW constraint).
-	 * Note that in chaining case, even though P4+ chainer (if requested)
-	 * would also have done the copy, it might have done so only to the
-	 * intermediate RMEM destination buffer rather than to the host.
-	 * Hence, we ensure that the host buffer overwrite happens here.
-	 */
-	if (cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_len)) {
-		if (chksum_len) {
-			if (cpdc_desc_is_integ_data_wr_required(cp_desc)) {
-				cp_hdr->chksum = 
-				   (uint32_t)status_desc->csd_integrity_data;
-			}
-		} else
-			cp_hdr->chksum = 0;
-	}
-
-	hdr_version = cpdc_cp_hdr_version_info_get(svc_info);
-	if (cpdc_cp_hdr_version_wr_required(hdr_version))
-		cp_hdr->version = hdr_version;
+		hdr_version = cpdc_cp_hdr_version_info_get(svc_info);
+		if (cpdc_cp_hdr_version_wr_required(hdr_version))
+			cp_hdr->version = hdr_version;
 
 #ifdef SIMPLE_CP_HDR_UPDATE_VERIFY
-	verify_cp_header_update(svc_info, cp_hdr);
+		verify_cp_header_update(svc_info, cp_hdr);
 #endif
 
-	datain_len = cp_desc->cd_datain_len == 0 ?
-		MAX_CPDC_SRC_BUF_LEN : cp_desc->cd_datain_len;
-	if ((cp_hdr->data_len == 0) || (cp_hdr->data_len > datain_len)) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid data len! datain_len: %u hdr_len: %u err: %d",
-				datain_len, cp_hdr->data_len, err);
-		goto out;
-	}
+#ifndef NDEBUG
+		len = cp_desc->cd_datain_len == 0 ?
+			MAX_CPDC_SRC_BUF_LEN : cp_desc->cd_datain_len;
+		if ((cp_hdr->data_len == 0) || (cp_hdr->data_len > len)) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("invalid data len! len: %u hdr_len: %u err: %d",
+					len, cp_hdr->data_len, err);
+			goto out;
+		}
 
-	if (status_desc->csd_output_data_len != (cp_hdr->data_len +
-			 sizeof(struct pnso_compression_header))) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("output data len mismatch! output_data_len: %u hdr_len: %u err: %d",
-				status_desc->csd_output_data_len,
-				cp_hdr->data_len, err);
-		goto out;
-	}
+		if (status_desc->csd_output_data_len != (cp_hdr->data_len +
+				 sizeof(struct pnso_compression_header))) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("output data len mismatch! output_data_len: %u hdr_len: %u err: %d",
+					status_desc->csd_output_data_len,
+					cp_hdr->data_len, err);
+			goto out;
+		}
+#endif
 	}
 
 	svc_status->u.dst.data_len =

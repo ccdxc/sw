@@ -200,8 +200,7 @@ pprint_chain(const struct service_chain *chain)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb",
 			(uint64_t) chain->sc_req_cb);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb_ctx",
-			(uint64_t) atomic64_read((atomic64_t *)
-					&chain->sc_req_cb_ctx));
+			(uint64_t) chain->sc_req_cb_ctx);
 }
 
 struct service_chain *
@@ -334,8 +333,7 @@ chn_pprint_suspect_chain(const struct service_chain *chain)
 	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "request cb",
 			(uint64_t) chain->sc_req_cb);
 	OSAL_LOG_NOTICE("%30s: 0x" PRIx64, "request cb context",
-			(uint64_t) atomic64_read((atomic64_t *)
-					&chain->sc_req_cb_ctx));
+			(uint64_t) chain->sc_req_cb_ctx);
 
 	i = 0;
 	sc_entry = chain->sc_entry;
@@ -547,7 +545,8 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 
 	/* save caller's cb and context ahead of destroy */
 	cb = chain->sc_req_cb;
-	cb_ctx = (void *) atomic64_xchg(&chain->sc_req_cb_ctx, 0);
+	cb_ctx = chain->sc_req_cb_ctx;
+	chain->sc_req_cb_ctx = NULL;
 
 	if (!skip_destroy)
 		chn_destroy_chain(chain);
@@ -1188,8 +1187,7 @@ chn_create_chain(struct request_params *req_params,
 		chain->sc_sw_latency_start = req_params->rp_sw_latency_ts;
 
 		chain->sc_req_cb = req_params->rp_cb;
-		atomic64_set(&chain->sc_req_cb_ctx,
-				(uint64_t) req_params->rp_cb_ctx);
+		chain->sc_req_cb_ctx = req_params->rp_cb_ctx;
 
 		poll_ctx = chain_to_poll_ctx(chain);
 		if (chain->sc_flags & CHAIN_CFLAG_MODE_POLL) {
@@ -1319,7 +1317,7 @@ chn_notify_caller(struct service_chain *chain)
 	void *cb_ctx;
 
 	if (chain->sc_req_cb) {
-		cb_ctx = (void *) atomic64_xchg(&chain->sc_req_cb_ctx, 0);
+		cb_ctx = chain->sc_req_cb_ctx;
 		if (cb_ctx)
 			chain->sc_req_cb(cb_ctx, chain->sc_res);
 	}

@@ -2574,7 +2574,7 @@ found:
 	q = &track->queues[free_id];
 	OSAL_ASSERT(q->qpos == free_id);
 	q->ref_count = 1;
-	set_bit(free_id, track->bmp);
+	track->bmp[BIT_WORD(free_id)] |= BIT_MASK(free_id);
 	track->next_free_id = free_id + 1;
 	spin_unlock(&track->lock);
 	return q;
@@ -2639,7 +2639,7 @@ sonic_put_seq_statusq(struct queue *q)
 		spin_lock(&track->lock);
 		OSAL_ASSERT(q->ref_count);
 		if (--q->ref_count == 0)
-			clear_bit(q->qpos, track->bmp);
+			track->bmp[BIT_WORD(q->qpos)] &= ~BIT_MASK(q->qpos);
 		spin_unlock(&track->lock);
 	}
 }

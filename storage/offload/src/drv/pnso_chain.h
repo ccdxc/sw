@@ -305,7 +305,7 @@ struct service_chain {
 	struct batch_info *sc_batch_info;	/* backpointer to  batch info */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
-	atomic64_t sc_req_cb_ctx;		/* caller supplied cb context */
+	void *sc_req_cb_ctx;		/* caller supplied cb context */
 };
 
 pnso_error_t chn_create_chain(struct request_params *req_params,
