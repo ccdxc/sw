@@ -243,6 +243,8 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
         api.Trigger_AddHostCommand(req, node, "%s ionic" % command)
     elif whichdriver == "rdma":
         api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
+    elif whichdriver == "ionic_fw":
+        api.Trigger_AddHostCommand(req, node, "%s ionic_fw" % command)
     else:
         api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
         api.Trigger_AddHostCommand(req, node, "%s ionic" % command)

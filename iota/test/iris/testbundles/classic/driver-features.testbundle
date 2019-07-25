@@ -166,3 +166,9 @@ testcases:
         disable : False
         iterators :
         args    :
+
+    -   name    : DriverFwUpdate
+        testcase: testcases.drivers.driverfwupdate
+        disable : False
+        iterators :
+        args      :
