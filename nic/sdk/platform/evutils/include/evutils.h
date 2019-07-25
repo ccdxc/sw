@@ -115,6 +115,26 @@ void evutil_add_check(EV_P_ evutil_check *evu_check,
                      evutil_cb_t *cb, void *arg);
 void evutil_remove_check(EV_P_ evutil_check *evu_check);
 
+/*
+ * Stat polling: Runs as soon as a file is touched
+ */
+typedef struct {
+    ev_stat ev_stat;
+    char* file;
+    evutil_cb_t *create_modify_cb;
+    void *create_modify_cbarg;
+    evutil_cb_t *delete_cb;
+    void *delete_cbarg;
+} evutil_stat;
+
+void
+evutil_stat_start(EV_P_ evutil_stat* evu_stat,
+                  char* file,
+                  evutil_cb_t *create_modify_cb,
+                  void *create_modify_cbarg,
+                  evutil_cb_t *delete_cb,
+                  void *delete_cbarg);
+
 #ifdef __cplusplus
 }
 #endif
