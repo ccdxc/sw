@@ -118,6 +118,14 @@ enum EventTypes {
                                            (severity)   = WARN,
                                            (desc)       = "The system has detected a conflict between the SmartNIC specifications of different Host objects"];
 
+    NIC_DEADMITTED                  = 106 [(category)   = Cluster,
+                                          (severity)   = INFO,
+                                          (desc)       = "NIC de-admitted from the cluster"];
+
+    NIC_DECOMMISSIONED              = 107 [(category)   = Cluster,
+                                          (severity)   = INFO,
+                                          (desc)       = "NIC decommissioned from the cluster"];
+
     // ----------------------------- API Gateway events ---------------------- //
     AUTO_GENERATED_TLS_CERT         = 200 [(category) = Cluster,
                                            (severity) = WARN,

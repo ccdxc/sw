@@ -66,6 +66,16 @@
    "Desc": "NIC admitted to the cluster"
   },
   {
+   "Name": "NIC_DEADMITTED",
+   "Severity": "info",
+   "Desc": "NIC de-admitted from the cluster"
+  },
+  {
+   "Name": "NIC_DECOMMISSIONED",
+   "Severity": "info",
+   "Desc": "NIC decommissioned from the cluster"
+  },
+  {
    "Name": "NIC_HEALTHY",
    "Severity": "info",
    "Desc": "NIC health transitioned to 'true'"

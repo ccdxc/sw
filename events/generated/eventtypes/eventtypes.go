@@ -177,6 +177,18 @@ func init() {
 		Category: "cluster",
 		Desc:     "The system has detected a conflict between the SmartNIC specifications of different Host objects"}
 
+	eventTypes[NIC_DEADMITTED] = &EventTypeAttributes{
+		EType:    NIC_DEADMITTED.String(),
+		Severity: "info",
+		Category: "cluster",
+		Desc:     "NIC de-admitted from the cluster"}
+
+	eventTypes[NIC_DECOMMISSIONED] = &EventTypeAttributes{
+		EType:    NIC_DECOMMISSIONED.String(),
+		Severity: "info",
+		Category: "cluster",
+		Desc:     "NIC decommissioned from the cluster"}
+
 	eventTypes[AUTO_GENERATED_TLS_CERT] = &EventTypeAttributes{
 		EType:    AUTO_GENERATED_TLS_CERT.String(),
 		Severity: "warn",
