@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -100,6 +101,18 @@ func checkClusterHealth(clusterIf cmd.ClusterV1ClusterInterface, clusterObjMeta 
 	for _, cond := range cl.Status.Conditions {
 		if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
 			By(fmt.Sprintf("ts: %s cluster health status: %+v", time.Now(), cond))
+			if expectedHealthCondition == cmd.ConditionStatus_TRUE.String() && cond.Status != cmd.ConditionStatus_TRUE.String() {
+				// kubectl get pods on the failed services
+				tmp := regexp.MustCompile(`[a-z]+\-[a-z]+`).FindAll([]byte(cond.Reason), -1)
+				var svcsStr []string
+				for _, svc := range tmp {
+					svcsStr = append(svcsStr, string(svc))
+				}
+				if len(svcsStr) != 0 {
+					getPodsCmd := fmt.Sprintf("kubectl get pods -o wide | grep '%s'", strings.Join(svcsStr, "\\|"))
+					By(fmt.Sprintf("ts: %s %s:\n %s", time.Now().String(), getPodsCmd, ts.tu.LocalCommandOutput(getPodsCmd)))
+				}
+			}
 			return cond.Status == expectedHealthCondition && strings.Contains(cond.Reason, expectedReason)
 		}
 	}

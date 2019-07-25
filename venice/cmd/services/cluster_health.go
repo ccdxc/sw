@@ -598,16 +598,22 @@ func (c *ClusterHealthMonitor) isPodRunning(pod *v1.Pod) bool {
 				return false
 			}
 		}
+		return true
 	}
 
-	return true
+	return false
 }
 
 // stops k8s service related watchers
 func (c *ClusterHealthMonitor) stopServiceWatchers() {
 	c.daemonSetWatcher.Stop()
+	c.daemonSetWatcher = nil
+
 	c.deploymentWatcher.Stop()
+	c.deploymentWatcher = nil
+
 	c.podWatcher.Stop()
+	c.podWatcher = nil
 }
 
 // restarts the k8s service watchers
@@ -620,6 +626,7 @@ func (c *ClusterHealthMonitor) restartServiceWatchers() {
 // restarts node watcher
 func (c *ClusterHealthMonitor) restartNodeWatcher() {
 	c.nodeWatcher.Stop()
+	c.nodeWatcher = nil
 	c.wg.Add(1)
 	go c.startNodeWatcher()
 }

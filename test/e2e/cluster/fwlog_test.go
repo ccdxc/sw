@@ -9,21 +9,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
-
 	"github.com/jeromer/syslogparser"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/venice/ctrler/tpm"
-	"github.com/pensando/sw/venice/utils/syslog"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
+	testutils "github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/syslog"
 )
 
 var _ = Describe("fwlog policy tests", func() {
@@ -140,7 +139,7 @@ var _ = Describe("fwlog policy tests", func() {
 			}
 
 			// use token api to get NAPLES access credentials
-			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			nodeAuthFile, err := testutils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
 			Expect(err).ShouldNot(HaveOccurred())
 			defer os.Remove(nodeAuthFile)
 
@@ -205,16 +204,20 @@ var _ = Describe("fwlog policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
-					var naplesPol []monitoring.FwlogPolicy
-					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
-						By(fmt.Sprintf("received fwlog policy from naples: %v, %+v", naples, st))
-						return err
+					if !utils.IsEmpty(st) {
+						var naplesPol []monitoring.FwlogPolicy
+						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
+							By(fmt.Sprintf("received fwlog policy from naples: %v, %+v", naples, st))
+							return err
+						}
+
+						if len(naplesPol) != len(testFwSpecList) {
+							By(fmt.Sprintf("received fwlog policy from naples: %v, %v", naples, naplesPol))
+							return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
+						}
 					}
 
-					if len(naplesPol) != len(testFwSpecList) {
-						By(fmt.Sprintf("received fwlog policy from naples: %v, %v", naples, naplesPol))
-						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
-					}
+					return fmt.Errorf("failed to get fwlog policy from naples")
 				}
 				return nil
 			}, 120, 2).Should(BeNil(), "failed to find fwlog policy")
@@ -269,7 +272,7 @@ var _ = Describe("fwlog policy tests", func() {
 			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 
 			// use token api to get NAPLES access credentials
-			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			nodeAuthFile, err := testutils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
 			Expect(err).ShouldNot(HaveOccurred())
 			defer os.Remove(nodeAuthFile)
 

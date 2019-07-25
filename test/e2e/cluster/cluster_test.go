@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -294,12 +295,26 @@ func validateCluster() {
 		}
 		for _, cond := range cl.Status.Conditions {
 			if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
-				By(fmt.Sprintf("ts: %s cluster health status: %v, reason: %v", time.Now().String(), cond.Status,
-					cond.Reason))
+				if cond.Status != cmd.ConditionStatus_TRUE.String() {
+					By(fmt.Sprintf("ts: %s cluster health status: %v, reason: %v", time.Now().String(), cond.Status, cond.Reason))
+
+					// kubectl get pods on the failed services
+					tmp := regexp.MustCompile(`[a-z]+\-[a-z]+`).FindAll([]byte(cond.Reason), -1)
+					var svcsStr []string
+					for _, svc := range tmp {
+						svcsStr = append(svcsStr, string(svc))
+					}
+					if len(svcsStr) != 0 {
+						getPodsCmd := fmt.Sprintf("kubectl get pods -o wide | grep '%s'", strings.Join(svcsStr, "\\|"))
+						By(fmt.Sprintf("ts: %s %s:\n %s", time.Now().String(), getPodsCmd, ts.tu.LocalCommandOutput(getPodsCmd)))
+					}
+				}
+
 				return cond.Status == cmd.ConditionStatus_TRUE.String()
 			}
 		}
 		By(fmt.Sprintf("ts: %s cluster health status: %v", time.Now().String(), cl.Status.Conditions))
+		By(fmt.Sprintf("ts: %s kubectl get pods -o wide: %s", time.Now().String(), ts.tu.LocalCommandOutput("kubectl get pods -o wide")))
 		return false
 	}, 60, 5).Should(BeTrue(), "cluster should be in healthy state")
 	By(fmt.Sprintf("ts: %s Cluster is Healthy", time.Now().String()))
