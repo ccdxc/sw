@@ -476,7 +476,6 @@ batch_start_grpc (int epoch)
     return SDK_RET_OK;
 }
 
-
 sdk_ret_t
 batch_commit_grpc (void)
 {
@@ -491,6 +490,7 @@ batch_commit_grpc (void)
         printf("%s: Batch commit failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
+
     return SDK_RET_OK;
 }
 
@@ -508,6 +508,7 @@ batch_abort_grpc (void)
         printf("%s: Batch abort failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
+
     return SDK_RET_OK;
 }
 

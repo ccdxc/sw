@@ -184,6 +184,13 @@ jobd/apollo/pds_scale_test_mock: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh > /dev/null
 	${NICDIR}/apollo/test/scale/runtestapp.sh
 
+.PHONY: jobd/apollo/pds_scale_test_mock_no_batch
+jobd/apollo/pds_scale_test_mock_no_batch: ${JOBD_PREREQS}
+	export BATCHING_DISABLED=1
+	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
+	${NICDIR}/apollo/test/scale/runtestapp.sh
+	unset BATCHING_DISABLED
+
 .PHONY: jobd/apollo/aarch64/container
 jobd/apollo/aarch64/container:${JOBD_PREREQS}
 	# With Agent

@@ -50,6 +50,12 @@ protected:
     }
 };
 
+static inline bool pds_batching_enabled()
+{
+    if (getenv("BATCHING_DISABLED"))
+        return FALSE;
+    return TRUE;
+}
 
 /// \brief Scale test
 TEST_F(scale_test, scale_test_create)
@@ -57,9 +63,11 @@ TEST_F(scale_test, scale_test_create)
     sdk_ret_t rv;
     pds_batch_params_t batch_params = {0};
 
-    batch_params.epoch = 1;
-    rv = pds_batch_start(&batch_params);
-    ASSERT_TRUE(rv == SDK_RET_OK);
+    if (pds_batching_enabled()) {
+        batch_params.epoch = 1;
+        rv = pds_batch_start(&batch_params);
+        ASSERT_TRUE(rv == SDK_RET_OK);
+    }
     rv = create_objects();
     ASSERT_TRUE(rv == SDK_RET_OK);
     rv = pds_batch_commit();

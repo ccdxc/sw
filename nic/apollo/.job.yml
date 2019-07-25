@@ -80,6 +80,15 @@ targets:
     build-dependencies:
     - build-apollo-x86
 
+  apollo/pds_scale_test_mock_no_batch:
+    commands: ["make", "PIPELINE=apollo", "jobd/apollo/pds_scale_test_mock_no_batch"]
+    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apollo-x86
+
   apollo/aarch64_container:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/aarch64/container"]
     owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
