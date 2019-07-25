@@ -163,24 +163,30 @@ var roFSM = [][]fsmNode{
 	fsmstPreCheckingSmartNIC: {
 		fsmEvAllSmartNICPreUpgOK:      {nextSt: fsmstWaitForSchedule, actFn: fsmAcWaitForSchedule},
 		fsmEvSomeSmartNICPreUpgFail:   {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
-		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstPreCheckingSmartNIC}, // TODO
-		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstPreCheckingSmartNIC}, // TODO
+		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstPreCheckingSmartNIC},
+		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstPreCheckingSmartNIC},
 		fsmEvSuspend:                  {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 	fsmstWaitForSchedule: {
-		fsmEvScheduleNow: {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
-		fsmEvSuspend:     {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvScheduleNow:              {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
+		fsmEvSuspend:                  {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstWaitForSchedule},
+		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstWaitForSchedule},
 	},
 	fsmstRollingOutVenice: {
-		fsmEvOneVeniceUpgSuccess: {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
-		fsmEvAllVeniceUpgOK:      {nextSt: fsmstRollingOutService, actFn: fsmAcIssueServiceRollout},
-		fsmEvVeniceBypass:        {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
-		fsmEvOneVeniceUpgFail:    {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
-		fsmEvSuspend:             {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvOneVeniceUpgSuccess:      {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
+		fsmEvAllVeniceUpgOK:           {nextSt: fsmstRollingOutService, actFn: fsmAcIssueServiceRollout},
+		fsmEvVeniceBypass:             {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
+		fsmEvOneVeniceUpgFail:         {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
+		fsmEvSuspend:                  {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstRollingOutVenice},
+		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstRollingOutVenice},
 	},
 	fsmstRollingOutService: {
-		fsmEvServiceUpgOK: {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
-		fsmEvSuspend:      {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvServiceUpgOK:             {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
+		fsmEvSuspend:                  {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstRollingOutService},
+		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstRollingOutService},
 	},
 	fsmstRollingoutOutSmartNIC: {
 		fsmEvSuccess:               {nextSt: fsmstRolloutSuccess, actFn: fsmAcRolloutSuccess},
@@ -199,6 +205,10 @@ func (ros *RolloutState) runFSM() {
 			return
 		case evt := <-ros.eventChan:
 			log.Infof("In State %s got Event %s", ros.currentState, evt)
+			if ros.fsm[ros.currentState][evt].nextSt == fsmstInvalid {
+				log.Infof("Unexpected Event %s in State %s . No action taken", evt, ros.currentState)
+				continue
+			}
 			nstate := ros.fsm[ros.currentState][evt].nextSt
 			action := ros.fsm[ros.currentState][evt].actFn
 			if action != nil {

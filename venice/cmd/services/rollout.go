@@ -138,7 +138,7 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 			cmdVersion := utils.GetGitVersion()
 			log.Infof("Rollout from %+v to bundleVersion %+v and veniceVersion %+v : %+v", env.GitVersion, opSpec.Version, veniceVersion, cmdVersion)
 			if env.GitVersion != cmdVersion[veniceVersion] {
-				log.Infof("Performing Rollout to version %+v", utils.GetGitVersion())
+				log.Infof("Performing Rollout from version %+v", utils.GetGitVersion())
 				st = r.doOP(opSpec.Op, opSpec.Version)
 			} else {
 				log.Info("CMD cameup fine. Setting the  veniceRolloutStatus to Success")
@@ -232,7 +232,24 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 	var opStatus []rolloutproto.ServiceOpStatus
 	needtoUpdateStatus := false
 
+	versionIf := env.CfgWatcherService.APIClient().Version()
+	clusterVersion, err := versionIf.Get(context.Background(), &api.ObjectMeta{Name: globals.DefaultVersionName})
+	if err != nil {
+		log.Infof("Failed to get ClusterVersion from apiserver %+v. continuing..", err)
+		clusterVersion = &cluster.Version{}
+	}
+
 	for _, opSpec := range ro.Spec.Ops {
+		if clusterVersion.Status.BuildVersion == opSpec.Version {
+			opStatus = append(opStatus, rolloutproto.ServiceOpStatus{
+				Op:       opSpec.Op,
+				Version:  opSpec.Version,
+				OpStatus: "success",
+			})
+			needtoUpdateStatus = true
+			continue
+		}
+
 		key := serviceStatusKey{
 			op:      opSpec.Op,
 			version: opSpec.Version,
@@ -259,24 +276,24 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 		r.serviceStatusWriter.WriteServiceStatus(context.TODO(), &s)
 	}
 
-	clusterVersion := &cluster.Version{
-		TypeMeta: api.TypeMeta{
-			Kind:       "Version",
-			APIVersion: "v1",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.DefaultVersionName,
-		},
-		Spec: cluster.VersionSpec{},
-		Status: cluster.VersionStatus{
-			BuildVersion: env.GitVersion,
-			VCSCommit:    env.GitCommit,
-			BuildDate:    env.BuildDate,
-		},
-	}
-
 	log.Infof(" Cluster version Info %v", clusterVersion)
-	if env.CfgWatcherService != nil {
+	if env.CfgWatcherService != nil && clusterVersion.Status.BuildVersion != env.GitVersion {
+		clusterVersion = &cluster.Version{
+			TypeMeta: api.TypeMeta{
+				Kind:       "Version",
+				APIVersion: "v1",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: globals.DefaultVersionName,
+			},
+			Spec: cluster.VersionSpec{},
+			Status: cluster.VersionStatus{
+				BuildVersion: env.GitVersion,
+				VCSCommit:    env.GitCommit,
+				BuildDate:    env.BuildDate,
+			},
+		}
+
 		versionIf := env.CfgWatcherService.APIClient().Version()
 		_, err := versionIf.UpdateStatus(context.Background(), clusterVersion)
 		if err != nil {
