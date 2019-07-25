@@ -63,7 +63,7 @@ MUST first be migrated to nic/sdk and then all pipelines can then link to SDK.
 ## How to define new API
 
 * All API names and publicly exposed data structures must have pds_ as prefix,
-please don't use any other prefix for APis to be consumed by (Pensando or
+please don't use any other prefix for APIs to be consumed by (Pensando or
 non-Pensando) agents.
 
 * All user facing header files (inclduing Pensando PDS Agent) are located in
@@ -93,6 +93,44 @@ PI (Pipeline Independent) implementation, the following files must be defined:
 ## Google tests (gtests)
 
 ## DOL tests
+Usage -
+To run the dol tests, run this command in a dev container from nic directory.
+
+apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
+
+pipeline - apollo/artemis/iris
+topo - specify one of the topologies from dol/<pipeline>/config/topology/
+feature - specify one of the features from dol/<pipeline>/<feature>
+
+Dir layout -
+dol/<pipeline>/config - all the object generation and creation logic is
+present here
+dol/<pipeline>/config/topology - topology files
+dol/<pipeline>/test/<feature> - testspec files and mlist which are processed
+while testing packets
+dol/<pipeline>/test/callbacks - utility functions to fill the fields in packets
+dynamically from objects
+
+Code Structure -
+Objects
+All the objects needed for the test are generated and created via agent prior to
+packet tests. Based on the testspec files, packets are generated. Depending on
+the test that is running the values from the packet fields are picked from the
+created objects.
+
+Store
+This is the db where the objects are stored. The store is iterated for the
+objects.
+
+Templates
+
+mlist files
+
+Testspec
+
+Filters -
+Filters and iterators can be specified in mlist and testspecs to select the
+desired objects for the packet tests.
 
 ## IOTA tests
 
