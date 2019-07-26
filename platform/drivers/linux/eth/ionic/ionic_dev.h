@@ -228,7 +228,7 @@ static inline void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 	intr->index = index;
 }
 
-void ionic_init_devinfo(struct ionic_dev *idev);
+void ionic_init_devinfo(struct ionic *ionic);
 int ionic_dev_setup(struct ionic *ionic);
 void ionic_dev_teardown(struct ionic *ionic);
 

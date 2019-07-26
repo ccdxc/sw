@@ -450,8 +450,17 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 	decode_txq_desc_cmd(le64_to_cpu(desc->cmd),
 			    &opcode, &flags, &nsge, &addr);
 
-	dma_unmap_page(dev, (dma_addr_t)addr,
-		       le16_to_cpu(desc->len), DMA_TO_DEVICE);
+	/* use unmap_single only if either this is not TSO,
+	 * or this is first descriptor of a TSO
+	 */
+	if (opcode != IONIC_TXQ_DESC_OPCODE_TSO ||
+	    flags & IONIC_TXQ_DESC_FLAG_TSO_SOT)
+		dma_unmap_single(dev, (dma_addr_t)addr,
+				 le16_to_cpu(desc->len), DMA_TO_DEVICE);
+	else
+		dma_unmap_page(dev, (dma_addr_t)addr,
+			       le16_to_cpu(desc->len), DMA_TO_DEVICE);
+
 	for (i = 0; i < nsge; i++, elem++)
 		dma_unmap_page(dev, (dma_addr_t)le64_to_cpu(elem->addr),
 			       le16_to_cpu(elem->len), DMA_TO_DEVICE);
@@ -814,6 +823,7 @@ static int ionic_tx(struct queue *q, struct sk_buff *skb)
 	struct tx_stats *stats = q_to_tx_stats(q);
 	int err;
 
+	/* set up the initial descriptor */
 	if (skb->ip_summed == CHECKSUM_PARTIAL)
 		err = ionic_tx_calc_csum(q, skb);
 	else
@@ -821,6 +831,7 @@ static int ionic_tx(struct queue *q, struct sk_buff *skb)
 	if (err)
 		return err;
 
+	/* add frags */
 	err = ionic_tx_skb_frags(q, skb);
 	if (err)
 		return err;

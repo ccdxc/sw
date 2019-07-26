@@ -21,8 +21,10 @@ static void ionic_watchdog_cb(struct timer_list *t)
 	ionic_heartbeat_check(ionic);
 }
 
-void ionic_init_devinfo(struct ionic_dev *idev)
+void ionic_init_devinfo(struct ionic *ionic)
 {
+	struct ionic_dev *idev = &ionic->idev;
+
 	idev->dev_info.asic_type = ioread8(&idev->dev_info_regs->asic_type);
 	idev->dev_info.asic_rev = ioread8(&idev->dev_info_regs->asic_rev);
 
@@ -36,6 +38,8 @@ void ionic_init_devinfo(struct ionic_dev *idev)
 
 	idev->dev_info.fw_version[IONIC_DEVINFO_FWVERS_BUFLEN] = 0;
 	idev->dev_info.serial_num[IONIC_DEVINFO_SERIAL_BUFLEN] = 0;
+
+	dev_dbg(ionic->dev, "fw_version %s\n", idev->dev_info.fw_version);
 }
 
 int ionic_dev_setup(struct ionic *ionic)
@@ -70,7 +74,7 @@ int ionic_dev_setup(struct ionic *ionic)
 		return -EFAULT;
 	}
 
-	ionic_init_devinfo(idev);
+	ionic_init_devinfo(ionic);
 
 	/* BAR1: doorbells */
 	bar++;

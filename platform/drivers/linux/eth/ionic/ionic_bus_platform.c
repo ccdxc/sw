@@ -142,7 +142,7 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 	if (sig != IONIC_DEV_INFO_SIGNATURE)
 		return -EFAULT;
 
-	ionic_init_devinfo(idev);
+	ionic_init_devinfo(ionic);
 
 	idev->db_pages = ionic->bars[DOORBELL_BAR].vaddr;
 	idev->phy_db_pages = ionic->bars[DOORBELL_BAR].bus_addr;
