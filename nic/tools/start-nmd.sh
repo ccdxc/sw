@@ -39,6 +39,7 @@ done
 echo ""
 
 if [ $int_mnic_up -eq 1 ]; then
+    ifconfig int_mnic0 169.254.0.1 netmask 255.255.255.0
     echo "Brought up int_mnic0(169.254.0.1) interface for Naples management"
 else
     echo "int_mnic0 (mgmt) interface didn't show up for 5 minutes!!!"

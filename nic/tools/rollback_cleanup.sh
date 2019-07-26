@@ -2,7 +2,7 @@
 
 #Reload mnic drivers
 /nic/tools/reload_mnic_drv.sh &> /var/log/pensando/reload_mnic_drv.log
-[[ $? -ne 0 ]] exit 1
+[[ $? -ne 0 ]] && exit 1
 
 #Add something here for more clean up
 #
