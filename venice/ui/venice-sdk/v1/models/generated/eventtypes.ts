@@ -138,7 +138,7 @@ export const eventTypes: { [name: string]: EventType } = {
   'NIC_HEALTHY' : {
       "Name": "NIC_HEALTHY",
       "Severity": EventsEvent_severity.info,
-      "Desc": "NIC health transitioned to &#x27;true&#x27;",
+      "Desc": "NIC is healthy",
   },
   'NIC_REJECTED' : {
       "Name": "NIC_REJECTED",
@@ -147,8 +147,8 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'NIC_UNHEALTHY' : {
       "Name": "NIC_UNHEALTHY",
-      "Severity": EventsEvent_severity.warn,
-      "Desc": "NIC health transitioned to &#x27;false&#x27;",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "NIC is unhealthy",
   },
   'NIC_UNREACHABLE' : {
       "Name": "NIC_UNREACHABLE",

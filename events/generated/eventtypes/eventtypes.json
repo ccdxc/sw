@@ -78,7 +78,7 @@
   {
    "Name": "NIC_HEALTHY",
    "Severity": "info",
-   "Desc": "NIC health transitioned to 'true'"
+   "Desc": "NIC is healthy"
   },
   {
    "Name": "NIC_REJECTED",
@@ -87,8 +87,8 @@
   },
   {
    "Name": "NIC_UNHEALTHY",
-   "Severity": "warn",
-   "Desc": "NIC health transitioned to 'false'"
+   "Severity": "critical",
+   "Desc": "NIC is unhealthy"
   },
   {
    "Name": "NIC_UNREACHABLE",

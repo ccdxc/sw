@@ -108,11 +108,11 @@ enum EventTypes {
 
     NIC_HEALTHY                     = 103 [(category)   = Cluster,
                                             (severity)  = INFO,
-                                            (desc)      = "NIC health transitioned to 'true'"];
+                                            (desc)      = "NIC is healthy"];
 
     NIC_UNHEALTHY                   = 104 [(category)   = Cluster,
-                                           (severity)   = WARN,
-                                           (desc)       = "NIC health transitioned to 'false'"];
+                                           (severity)   = CRITICAL,
+                                           (desc)       = "NIC is unhealthy"];
 
     HOST_SMART_NIC_SPEC_CONFLICT    = 105 [(category)   = Cluster,
                                            (severity)   = WARN,

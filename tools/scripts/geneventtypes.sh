@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 get_package_name() {
     while read -r line || [[ -n "$line" ]];

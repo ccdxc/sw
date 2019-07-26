@@ -163,13 +163,13 @@ func init() {
 		EType:    NIC_HEALTHY.String(),
 		Severity: "info",
 		Category: "cluster",
-		Desc:     "NIC health transitioned to 'true'"}
+		Desc:     "NIC is healthy"}
 
 	eventTypes[NIC_UNHEALTHY] = &EventTypeAttributes{
 		EType:    NIC_UNHEALTHY.String(),
-		Severity: "warn",
+		Severity: "critical",
 		Category: "cluster",
-		Desc:     "NIC health transitioned to 'false'"}
+		Desc:     "NIC is unhealthy"}
 
 	eventTypes[HOST_SMART_NIC_SPEC_CONFLICT] = &EventTypeAttributes{
 		EType:    HOST_SMART_NIC_SPEC_CONFLICT.String(),
