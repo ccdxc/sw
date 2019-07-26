@@ -352,6 +352,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 	w.janitorVerMu.Lock()
 	tracker.version = w.janitorVer
 	w.janitorVerMu.Unlock()
+	tracker.lastUpd = time.Now()
 	tracker.Unlock()
 	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver, "peer", peer)
 	var opts api.ListWatchOptions
@@ -398,8 +399,17 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 				}
 			}
 			for _, obj := range objs {
-				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path, "peer", peer)
+				ver, err := w.versioner.GetVersion(obj)
+				if err != nil {
+					// This should never happen. Recovery is undefined, hence panic.
+					panic("could not retrieve object version")
+				}
+				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path, "peer", peer, "ResVersion", ver)
 				cb(tracker.ctx, kvstore.Created, obj, nil)
+				tracker.Lock()
+				tracker.version = ver
+				tracker.lastUpd = time.Now()
+				tracker.Unlock()
 			}
 		}
 		startVer = maxver + 1
@@ -531,7 +541,7 @@ func (w *watchEventQ) janitorFn() {
 		}
 		peer := ctxutils.GetContextID(v.ctx)
 		if ver != 0 && ver < tailver && time.Since(lastupd) > (w.config.EvictInterval) {
-			w.log.Errorf("Watcher [%s] idle for %dmsecs, evicting", peer, time.Since(lastupd).Nanoseconds()/int64(time.Millisecond))
+			w.log.Errorf("Watcher [%s] idle for %v, evicting", peer, time.Since(lastupd))
 			w.stats.clientEvictions.Add(1)
 			v.cancel()
 		}
