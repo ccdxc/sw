@@ -12,6 +12,7 @@
 #include "c_if.h"
 #include "lib_model_client.h"
 #include "crypto_rsa_testvec.hpp"
+#include "crypto_ecdsa_testvec.hpp"
 #include "crypto_asym.hpp"
 
 DEFINE_uint64(hal_port, 50054, "TCP port of the HAL's gRPC server");
@@ -69,7 +70,7 @@ public:
     {
     }
 
-    const string&               test_name;
+    const string                test_name;
     std::function<bool(void *)> test_fn;
     void                        *test_param;
     bool                        test_success;
@@ -89,17 +90,47 @@ const static vector<rsa_vector_entry_t> rsa_testvectors =
     {"rsa-testvectors/SigGen15_186-3.txt",
      crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PADDING},
 
-#ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
-    {"rsa-testvectors/SigGen15_186-3_TruncatedSHAs.txt",
-     crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PADDING},
-#endif
-    //{"rsa-testvectors/SigGen931_186-3.txt",
-    // crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_X931_PADDING},
-
     // For signature verification, we want to produce the ciphered output
     // so the encryption method is used.
     {"rsa-testvectors/SigVer15_186-3.rsp",
       crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
+
+    //{"rsa-testvectors/SigGen931_186-3.txt",
+    // crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_X931_PADDING},
+
+#ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
+    {"rsa-testvectors/SigGen15_186-3_TruncatedSHAs.txt",
+     crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PADDING},
+    {"rsa-testvectors/SigVer15_186-3_TruncatedSHAs.rsp",
+     crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
+#endif
+};
+
+/*
+ * ECDSA testvectors
+ */
+typedef struct {
+    string                      testvec_fname;
+    crypto_ecdsa::ecdsa_key_create_type_t key_create_type;
+} ecdsa_vector_entry_t;
+
+const static vector<ecdsa_vector_entry_t> ecdsa_testvectors =
+{
+    {"ecdsa-testvectors/SigGen.txt",
+     crypto_ecdsa::ECDSA_KEY_CREATE_SIGN},
+
+    // For signature verification, we want to produce the ciphered output
+    // so the encryption method is used.
+    {"ecdsa-testvectors/SigVer.rsp",
+      crypto_ecdsa::ECDSA_KEY_CREATE_ENCRYPT},
+
+#ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
+    {"ecdsa-testvectors/SigGen_TruncatedSHAs.txt",
+     crypto_ecdsa::ECDSA_KEY_CREATE_SIGN},
+    {"ecdsa-testvectors/SigVer_TruncatedSHAs.rsp",
+     crypto_ecdsa::ECDSA_KEY_CREATE_ENCRYPT},
+#endif
+
 };
 
 /*
@@ -245,6 +276,80 @@ rsa_testvectors_run(void *test_param)
     return failure_count == 0;
 }
 
+/*
+ * Driver for ECDSA testvectors
+ */
+static bool
+ecdsa_testvectors_run(void *test_param)
+{
+    vector<ecdsa_vector_entry_t>  *testvectors = 
+                      static_cast<vector<ecdsa_vector_entry_t> *>(test_param);
+    uint32_t        failure_count;
+
+    /*
+     * Run the vectors with the specified mem_type
+     */
+    auto testvectors_run = [](const ecdsa_vector_entry_t& entry,
+                              dp_mem_type_t mem_type) -> bool
+    {
+        crypto_ecdsa::ecdsa_testvec_params_t          testvec_params;
+        crypto_ecdsa::ecdsa_testvec_pre_push_params_t pre_params;
+        crypto_ecdsa::ecdsa_testvec_push_params_t     push_params;
+        crypto_ecdsa::ecdsa_testvec_t                 *ecdsa_testvec;
+        offload_base_params_t                     base_params;
+        bool                                      success;
+
+        testvec_params.key_create_type(entry.key_create_type).
+                       q_mem_type(mem_type).
+                       d_mem_type(mem_type).
+                       k_mem_type(mem_type).
+                       msg_mem_type(mem_type).
+                       sig_mem_type(mem_type).
+                       dma_desc_mem_type(mem_type).
+                       status_mem_type(mem_type);
+        OFFL_LOG_INFO("Running ECDSA vector {} with mem_type {}",
+                      entry.testvec_fname, mem_type);
+        ecdsa_testvec = new crypto_ecdsa::ecdsa_testvec_t(
+                          testvec_params.base_params(base_params));
+        success = ecdsa_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
+                                                     testvec_fname(entry.testvec_fname));;
+        if (success) {
+            success = ecdsa_testvec->push(push_params.ecdsa_ring(crypto_asym::asym_ring));
+        }
+        if (success) {
+            success = ecdsa_testvec->post_push();
+        }
+        if (success) {
+            success = ecdsa_testvec->full_verify();
+        }
+        ecdsa_testvec->rsp_file_output(mem_type == DP_MEM_TYPE_HBM ?
+                                     "hbm" : "host");
+        delete ecdsa_testvec;
+        return success;
+    };
+
+    failure_count = 0;
+    for (uint32_t i = 0; i < testvectors->size(); i++) {
+        const ecdsa_vector_entry_t& entry = testvectors->at(i);
+
+        /*
+         * 1st run with HBM
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HBM)) {
+            failure_count++;
+        }
+
+        /*
+         * 2nd run with host mem
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HOST_MEM)) {
+            failure_count++;
+        }
+    }
+
+    return failure_count == 0;
+}
+
 int
 main(int argc,
      char **argv)
@@ -282,6 +387,10 @@ main(int argc,
     if (run_rsa_testvectors) {
         test_suite.push_back(test_entry_t("FIPS RSA", &rsa_testvectors_run,
                                           (void *)&rsa_testvectors));
+    }
+    if (run_ecdsa_testvectors) {
+        test_suite.push_back(test_entry_t("FIPS ECDSA", &ecdsa_testvectors_run,
+                                          (void *)&ecdsa_testvectors));
     }
 
     OFFL_LOG_INFO("Formed test suite with {} cases", test_suite.size());

@@ -25,7 +25,8 @@ public:
 
     void dec(const string& prefix,
              u_long val,
-             const string& suffix="");
+             const string& suffix="",
+             bool eol=true);
     void str(const string& prefix,
              const string& val,
              const string& suffix="");

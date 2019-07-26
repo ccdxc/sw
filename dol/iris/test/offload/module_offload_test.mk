@@ -7,6 +7,8 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/testvec_parser.cc \
                   ${MODULE_SRC_DIR}/testvec_output.cc \
                   ${MODULE_SRC_DIR}/crypto_rsa_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_rsa.cc \
+                  ${MODULE_SRC_DIR}/crypto_ecdsa_testvec.cc \
+                  ${MODULE_SRC_DIR}/crypto_ecdsa.cc \
                   ${MODULE_SRC_DIR}/crypto_asym.cc \
                   ${MODULE_SRC_DIR}/dole_if.cc \
                   ${MODULE_SRC_DIR}/dole_if_rsa.cc \

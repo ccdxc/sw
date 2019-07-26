@@ -2,38 +2,14 @@
 
 namespace tests {
 
-const static map<string, parser_token_id_t>   token_str_id_map =
-{
-    {PARSE_TOKEN_STR_RESULT,    PARSE_TOKEN_ID_RESULT},
-    {PARSE_TOKEN_STR_MODULUS,   PARSE_TOKEN_ID_MODULUS},
-    {PARSE_TOKEN_STR_N,         PARSE_TOKEN_ID_N},
-    {PARSE_TOKEN_STR_D,         PARSE_TOKEN_ID_D},
-    {PARSE_TOKEN_STR_E,         PARSE_TOKEN_ID_E},
-    {PARSE_TOKEN_STR_SHA_ALGO,  PARSE_TOKEN_ID_SHA_ALGO},
-    {PARSE_TOKEN_STR_MSG,       PARSE_TOKEN_ID_MSG},
-    {PARSE_TOKEN_STR_S,         PARSE_TOKEN_ID_S},
-    {PARSE_TOKEN_STR_SALT_VAL,  PARSE_TOKEN_ID_SALT_VAL},
-    {PARSE_TOKEN_STR_PRANDOM,   PARSE_TOKEN_ID_PRANDOM},
-    {PARSE_TOKEN_STR_QRANDOM,   PARSE_TOKEN_ID_QRANDOM},
-    {PARSE_TOKEN_STR_Qx,        PARSE_TOKEN_ID_Qx},
-    {PARSE_TOKEN_STR_Qy,        PARSE_TOKEN_ID_Qy},
-    {PARSE_TOKEN_STR_K,         PARSE_TOKEN_ID_K},
-    {PARSE_TOKEN_STR_R,         PARSE_TOKEN_ID_R},
-};
-
-static inline parser_token_id_t
-token_id_find(const string &token)
-{
-    auto iter = token_str_id_map.find(token);
-    if (iter != token_str_id_map.end()) {
-        return iter->second;
-    }
-    return PARSE_TOKEN_ID_UNKNOWN;
-}
-
 testvec_parser_t::testvec_parser_t(const string& scripts_dir,
-                                   const string& testvec_fname) :
-    line_consumed(true)
+                                   const string& testvec_fname,
+                                   token_parser_t& token_parser,
+                                   const map<string,parser_token_id_t>& token2id_map) :
+    token_parser(token_parser),
+    token2id_map(token2id_map),
+    line_consumed_(true),
+    token_consumed_(true)
 {
     string      full_fname;
 
@@ -56,68 +32,8 @@ testvec_parser_t::~testvec_parser_t()
     }
 }
 
-/*
- * Method #1 of parsing:
- *
- * Parse from the current line for as many lines as there are
- * matches in the argument token_vec.
- */
-parser_token_mask_t
-testvec_parser_t::parse(vector<testvec_parse_token_t>& token_vec,
-                        testvec_parse_params_t params)
-{
-    parser_token_mask_t token_mask;
-    bool                success;
-    parser_token_mask_t done_mask(token_vec.size());
-
-    while (get_line()) {
-
-        //OFFL_FUNC_DEBUG("line {}", line);
-        for (uint32_t i = 0; i < token_vec.size(); i++) {
-            auto entry = token_vec.at(i);
-
-            if (line.compare(0, entry.token.length(), entry.token) == 0) {
-                line_consumed = true;
-                line = line.substr(entry.token.length(), string::npos);
-
-                success = (this->*entry.line_parse_fn)(entry.dst);
-                if (!success) {
-                    OFFL_FUNC_ERR("failed to parse token {}", entry.token);
-                    goto done;
-                }
-
-                token_mask.set_bit(i);
-                break;
-            }
-        }
-
-        if (line_consumed) {
-            if (token_mask.eq(done_mask)) {
-                break;
-            }
-        } else {
-
-            /*
-             * For unconsumed line, leave this parse invocation to let the
-             * caller retry with a new set of tokens, unless we're told to
-             * just skip the line.
-             */
-            if (!params.skip_unconsumed_line()) {
-                break;
-            }
-
-            OFFL_FUNC_DEBUG("skipping line {}", line);
-            line_consumed = true;
-        }
-    }
-
-done:
-    return token_mask;
-}
 
 /*
- * Method #2 of parsing:
- *
  * Parser runs free and returns the token type ID it sees at the current line,
  * which gives flexibility in how the caller wants to deal with any tokens
  * it gets at a given time.
@@ -128,23 +44,25 @@ testvec_parser_t::parse(testvec_parse_params_t params)
     parser_token_id_t   token_id;
     string              token;
 
-    while (get_line()) {
-        token = token_isolate();
+    while (line_get()) {
+        token = next_token_get();
+        if (token.empty()) {
+            line_consume_set();
+            token_consume_set();
+            continue;
+        }
+
         token_id = token_id_find(token);
         if (token_id == PARSE_TOKEN_ID_UNKNOWN) {
-            if (params.skip_unconsumed_line()) {
-                OFFL_FUNC_DEBUG("skipping line {}", line);
-                line_consumed = true;
+            if (params.skip_unknown_token()) {
+                OFFL_FUNC_DEBUG("skipping token {}", token);
+                token_consume_set();
                 continue;
             }
             return PARSE_TOKEN_ID_UNKNOWN;
         }
 
-        /*
-         * Move cursor past the token
-         */
-        line = line.substr(token.length(), string::npos);
-        line_consumed = true;
+        token_consume_set();
         return token_id;
     }
 
@@ -159,13 +77,168 @@ testvec_parser_t::eof(void)
 }
 
 /*
- * For testvector parsing, white spaces include all the usual suspects
- * plus the square brackets (e.g., used by [mod = xyz]). 
+ * Get a new line and automatically strip whitespaces and discard
+ * empty/comment lines.
+ */
+bool
+testvec_parser_t::line_get(void)
+{
+    if (file.is_open()) {
+        if (!line_consumed()) {
+            return true;
+        }
+
+        while (getline(file, line)) {
+            token_parser(line);
+
+            /*
+             * Discard empty or comment line
+             */
+            if (!token_parser.line_empty() && !token_parser.line_is_comment()) {
+                line_consume_clr();
+                return true;
+            }
+        }
+
+        file.close();
+    }
+
+    return false;
+}
+
+
+/*
+ * Get the next token from the current line.
+ */
+const string&
+testvec_parser_t::next_token_get(void)
+{
+    if (token_consumed()) {
+        next_token = token_parser.next_token_get();
+        token_consume_clr();
+    }
+    return next_token;
+}
+
+
+/*
+ * Parse hex big number.
+ */
+bool
+testvec_parser_t::parse_hex_bn(dp_mem_t *bn)
+{
+    string      token;
+    size_t      bn_len;
+    int         ret;
+
+    bn_len = bn->line_size_get();
+    assert(bn_len);
+
+    token = next_token_get();
+    token_consume_set();
+
+    if (!token.empty()) {
+
+        /*
+         * fips_parse_hex_bn() needs a little assistance to correctly parsed
+         * an odd length hex string. Here we prepend a "0".
+         */
+        if (token.size() & 1) {
+            token.assign("0" + token);
+        }
+        ret = fips_parse_hex_bn(token.c_str(), (char *)bn->read(), &bn_len);
+        if (ret == 0) {
+            bn->content_size_set(bn_len);
+            bn->write_thru();
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/*
+ * Parse small number (can be dec/hex/octal).
+ */
+bool
+testvec_parser_t::parse_ulong(u_long *n)
+{
+    const string&   token = next_token_get();
+    const char      *sptr;
+    char            *eptr;
+
+    token_consume_set();
+
+    sptr = token.c_str();
+    *n = strtoul(sptr, &eptr, 0);
+    return (*n != 0) || (sptr != eptr);
+}
+
+/*
+ * Parse string
+ */
+bool
+testvec_parser_t::parse_string(string *str)
+{
+    str->assign(next_token_get());
+    token_consume_set();
+    return !str->empty();
+}
+
+
+/*
+ * Line parser
  */
 void
-testvec_parser_t::line_whitespaces_strip(void)
+token_parser_t::operator()(const string& arg_line)
 {
-    string      whitespaces(" []\f\t\v\r\n");
+     line.assign(arg_line);
+     whitespaces_strip();
+     //OFFL_FUNC_DEBUG("line {}", line);
+
+     token.clear();
+     curr_pos = 0;
+}
+
+const string&
+token_parser_t::next_token_get(void)
+{
+    size_t      matched_pos;
+
+    token.clear();
+
+    /*
+     * next token begins at curr_pos until the 1st delimiter found,
+     * or until end of line.
+     */
+    while (curr_pos < line.size()) {
+        matched_pos = line.find_first_of(delims, curr_pos);
+        if (matched_pos == string::npos) {
+            token.assign(line.substr(curr_pos));
+            curr_pos = line.size();
+            break;
+        }
+
+        token.assign(line.substr(curr_pos, matched_pos - curr_pos));
+        curr_pos = matched_pos + 1;
+        if (!token.empty()) {
+            break;
+        }
+    }
+
+    /*
+     * An empty token on return means end of line
+     */
+    //OFFL_FUNC_DEBUG("token {}", token);
+    return token;
+}
+
+/*
+ * Strip all whitespaces from line to make parsing easier.
+ */
+void
+token_parser_t::whitespaces_strip(void)
+{
     string      stripped_line;
     size_t      matched_pos;
     size_t      pos = 0;
@@ -187,128 +260,6 @@ testvec_parser_t::line_whitespaces_strip(void)
     line.assign(stripped_line);
 }
 
-/*
- * Parse for a token (a sequence of characters terminated by
- * well known delimiters).
- */
-string
-testvec_parser_t::token_isolate(void)
-{
-    string      delimiters("=");
-    string      token;
-    size_t      matched_pos;
-
-    /*
-     * Line has already been stripped of whitespaces so token now
-     * should be at the beginning of the line.
-     */
-    matched_pos = line.find_first_of(delimiters);
-    if (matched_pos != string::npos) {
-
-        /*
-         * Isolate the token and also keep its delimiter
-         */
-        token.assign(line.substr(0, matched_pos + 1));
-    }
-    return token;
-}
-
-/*
- * Get a new line and automatically strip whitespaces and discard
- * empty/comment lines.
- */
-bool
-testvec_parser_t::get_line(void)
-{
-    if (file.is_open()) {
-        if (!line_consumed) {
-            return true;
-        }
-
-        while (getline(file, line)) {
-            line_whitespaces_strip();
-
-            /*
-             * Discard empty or comment line
-             */
-            if (!line.empty() && (line.front() != '#')) {
-                line_consumed = false;
-                return true;
-            }
-        }
-
-        file.close();
-    }
-
-    return false;
-}
-
-/*
- * Parse hex big number.
- */
-bool
-testvec_parser_t::line_parse_hex_bn(dp_mem_t *bn)
-{
-    size_t      bn_len;
-    int         ret;
-
-    bn_len = bn->line_size_get();
-    assert(bn_len);
-
-    /*
-     * fips_parse_hex_bn() needs a little assistance to correctly parsed
-     * an odd length hex string. Here we prepend a "0".
-     */
-    if (line.size() & 1) {
-        line.assign("0" + line);
-    }
-    ret = fips_parse_hex_bn(line.c_str(), (char *)bn->read(), &bn_len);
-    if (ret == 0) {
-        bn->content_size_set(bn_len);
-        bn->write_thru();
-        return true;
-    }
-    return false;
-}
-
-bool
-testvec_parser_t::line_parse_hex_bn(void *dst)
-{
-    return line_parse_hex_bn(static_cast<dp_mem_t *>(dst));
-}
-
-/*
- * Parse small number (can be dec/hex/octal).
- */
-bool
-testvec_parser_t::line_parse_ulong(u_long *n)
-{
-    char        *endptr;
-
-    *n = strtoul(line.c_str(), &endptr, 0);
-    return (*n != 0) || (line.c_str() != endptr);
-}
-
-bool
-testvec_parser_t::line_parse_ulong(void *dst)
-{
-    return line_parse_ulong((u_long *)dst);
-}
-
-/*
- * Parse string
- */
-bool
-testvec_parser_t::line_parse_string(string *str)
-{
-    str->assign(line);
-    return !str->empty();
-}
-
-bool
-testvec_parser_t::line_parse_string(void *dst)
-{
-    return line_parse_string(static_cast<string *>(dst));
-}
 
 } // namespace tests
+

@@ -2,6 +2,38 @@
 #include "testvec_output.hpp"
 #include "crypto_rsa.hpp"
 
+/*
+ * The following string tokens assume the parser has stripped off
+ * all whitespaces (including the [] characters) prior to parsing.
+ */
+#define PARSE_TOKEN_STR_RESULT          "Result"
+#define PARSE_TOKEN_STR_MODULUS         "mod"
+#define PARSE_TOKEN_STR_N               "n"
+#define PARSE_TOKEN_STR_D               "d"
+#define PARSE_TOKEN_STR_E               "e"
+#define PARSE_TOKEN_STR_SHA_ALGO        "SHAAlg"
+#define PARSE_TOKEN_STR_MSG             "Msg"
+#define PARSE_TOKEN_STR_S               "S"
+#define PARSE_TOKEN_STR_SALT_VAL        "SaltVal="
+
+/*
+ * Unstripped versions
+ */
+#define PARSE_STR_RESULT_PREFIX         "Result = "
+#define PARSE_STR_RESULT_SUFFIX         "\n"
+#define PARSE_STR_MODULUS_PREFIX        "[mod = "
+#define PARSE_STR_MODULUS_SUFFIX        "]\n"
+#define PARSE_STR_N_PREFIX              "n = "
+#define PARSE_STR_N_SUFFIX              "\n"
+#define PARSE_STR_D_PREFIX              "d = "
+#define PARSE_STR_D_SUFFIX              "\n"
+#define PARSE_STR_E_PREFIX              "e = "
+#define PARSE_STR_SHA_ALGO_PREFIX       "SHAAlg = "
+#define PARSE_STR_MSG_PREFIX            "Msg = "
+#define PARSE_STR_S_PREFIX              "S = "
+#define PARSE_STR_S_SUFFIX              "\n"
+#define PARSE_STR_SALT_VAL_PREFIX       "SaltVal = "
+
 namespace crypto_rsa {
 
 #define FOR_EACH_KEY_REPR(key_repr)                                     \
@@ -18,6 +50,31 @@ namespace crypto_rsa {
 #define END_FOR_EACH_MSG_REPR(key_repr, msg_repr)                       \
     }
 
+
+enum {
+    PARSE_TOKEN_ID_RESULT       = PARSE_TOKEN_ID_USER,
+    PARSE_TOKEN_ID_MODULUS,
+    PARSE_TOKEN_ID_N,
+    PARSE_TOKEN_ID_D,
+    PARSE_TOKEN_ID_E,
+    PARSE_TOKEN_ID_SHA_ALGO,
+    PARSE_TOKEN_ID_MSG,
+    PARSE_TOKEN_ID_S,
+    PARSE_TOKEN_ID_SALT_VAL,
+};
+
+const static map<string,parser_token_id_t>      token2id_map =
+{
+    {PARSE_TOKEN_STR_RESULT,    PARSE_TOKEN_ID_RESULT},
+    {PARSE_TOKEN_STR_MODULUS,   PARSE_TOKEN_ID_MODULUS},
+    {PARSE_TOKEN_STR_N,         PARSE_TOKEN_ID_N},
+    {PARSE_TOKEN_STR_D,         PARSE_TOKEN_ID_D},
+    {PARSE_TOKEN_STR_E,         PARSE_TOKEN_ID_E},
+    {PARSE_TOKEN_STR_SHA_ALGO,  PARSE_TOKEN_ID_SHA_ALGO},
+    {PARSE_TOKEN_STR_MSG,       PARSE_TOKEN_ID_MSG},
+    {PARSE_TOKEN_STR_S,         PARSE_TOKEN_ID_S},
+    {PARSE_TOKEN_STR_SALT_VAL,  PARSE_TOKEN_ID_SALT_VAL},
+};
 
 /*
  * Constructor
@@ -63,6 +120,7 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
     testvec_parse_params_t      params;
     string                      result;
     parser_token_id_t           token_id;
+    token_parser_t              token_parser;
     u_long                      mod_bits_len = 0;
     u_long                      mod_bytes_len = 0;
 
@@ -71,11 +129,18 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
     hw_started = false;
     test_success = false;
 
+    /*
+     * For ease of parsing, consider brackets as whitespaces;
+     * and "=" as token delimiter
+     */
+    token_parser.extra_whitespaces_add("[]");
+    token_parser.extra_delims_add("=");
     testvec_parser = new testvec_parser_t(pre_params.scripts_dir(),
-                                          pre_params.testvec_fname());
+                                          pre_params.testvec_fname(),
+                                          token_parser, token2id_map);
     while (!testvec_parser->eof()) {
 
-        token_id = testvec_parser->parse(params.skip_unconsumed_line(true));
+        token_id = testvec_parser->parse(params.skip_unknown_token(true));
         switch (token_id) {
 
         case PARSE_TOKEN_ID_EOF:
@@ -106,13 +171,13 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
             }
 
             key_repr = make_shared<rsa_key_repr_t>(*this, mod_bytes_len);
-            if (!testvec_parser->line_parse_hex_bn(key_repr->n)) {
+            if (!testvec_parser->parse_hex_bn(key_repr->n)) {
                 key_repr->failed_parse_token = token_id;
             }
             break;
 
         case PARSE_TOKEN_ID_MODULUS:
-            if (!testvec_parser->line_parse_ulong(&mod_bits_len)) {
+            if (!testvec_parser->parse_ulong(&mod_bits_len)) {
                 key_repr->failed_parse_token = token_id;
             }
             if (mod_bits_len == 0) {
@@ -128,7 +193,7 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
                     OFFL_FUNC_ERR("out of place e for SigGen vector");
                     goto error;
                 }
-                if (!testvec_parser->line_parse_hex_bn(key_repr->e)) {
+                if (!testvec_parser->parse_hex_bn(key_repr->e)) {
                     key_repr->failed_parse_token = token_id;
                 }
 
@@ -137,7 +202,7 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
                     OFFL_FUNC_ERR("out of place e for SigVer vector");
                     goto error;
                 }
-                if (!testvec_parser->line_parse_hex_bn(msg_repr->e)) {
+                if (!testvec_parser->parse_hex_bn(msg_repr->e)) {
                     msg_repr->failed_parse_token = token_id;
                 }
             }
@@ -148,7 +213,7 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place d");
                 goto error;
             }
-            if (!testvec_parser->line_parse_hex_bn(key_repr->d)) {
+            if (!testvec_parser->parse_hex_bn(key_repr->d)) {
                 key_repr->failed_parse_token = token_id;
             }
             break;
@@ -168,7 +233,7 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
             }
 
             msg_repr = make_shared<rsa_msg_repr_t>(*this, mod_bytes_len);
-            if (!testvec_parser->line_parse_string(&msg_repr->sha_algo)) {
+            if (!testvec_parser->parse_string(&msg_repr->sha_algo)) {
                 msg_repr->failed_parse_token = token_id;
             }
             break;
@@ -178,7 +243,7 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place S");
                 goto error;
             }
-            if (!testvec_parser->line_parse_hex_bn(msg_repr->sig_expected)) {
+            if (!testvec_parser->parse_hex_bn(msg_repr->sig_expected)) {
                 msg_repr->failed_parse_token = token_id;
             }
             break;
@@ -188,7 +253,7 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place Msg");
                 goto error;
             }
-            if (!testvec_parser->line_parse_hex_bn(msg_repr->msg_expected)) {
+            if (!testvec_parser->parse_hex_bn(msg_repr->msg_expected)) {
                 msg_repr->failed_parse_token = token_id;
             }
             break;
@@ -199,15 +264,16 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
                 goto error;
             }
             result.clear();
-            testvec_parser->line_parse_string(&result);
-            msg_repr->failure_expected = result == "F";
+            testvec_parser->parse_string(&result);
+            msg_repr->failure_expected = !result.empty() &&
+                                         (result.front() == 'F');
             break;
 
         default:
 
             /*
              * Nothing to do as we already instructed parser to skip over
-             * unconsumed line.
+             * unknown token
              */
             break;
         }

@@ -3,15 +3,15 @@
 
 namespace tests {
 
-const static string     dole_rsp_subdir_name = "dole_rsp";
+const static string     engine_rsp_subdir_name = "engine_rsp";
 
 testvec_output_t::testvec_output_t(const string& scripts_dir,
                                    const string& testvec_fname,
                                    const string& mem_type_str) :
     fp(nullptr)
 {
-    string      dole_rsp_fulldir;
-    string      dole_rsp_subdir;
+    string      engine_rsp_fulldir;
+    string      engine_rsp_subdir;
     string      fname_only;
     string      output_fname;
     struct stat dir_stat;
@@ -23,22 +23,22 @@ testvec_output_t::testvec_output_t(const string& scripts_dir,
     fname_only = testvec_fname;
     find_pos = testvec_fname.find_last_of("/");
     if (find_pos != string::npos) {
-        dole_rsp_subdir = testvec_fname.substr(0, find_pos + 1);
+        engine_rsp_subdir = testvec_fname.substr(0, find_pos + 1);
         fname_only = testvec_fname.substr(find_pos + 1, string::npos);
     }
-    dole_rsp_subdir = dole_rsp_subdir + dole_rsp_subdir_name;
+    engine_rsp_subdir = engine_rsp_subdir + engine_rsp_subdir_name;
 
     /*
      * Create response directory if necessary
      */
-    dole_rsp_fulldir = scripts_dir.empty() ? 
-                       "./" + dole_rsp_subdir :
-                       scripts_dir + "/" + dole_rsp_subdir;
-    if (stat(dole_rsp_fulldir.c_str(), &dir_stat)) {
-        if (mkdir(dole_rsp_fulldir.c_str(),
+    engine_rsp_fulldir = scripts_dir.empty() ? 
+                       "./" + engine_rsp_subdir :
+                       scripts_dir + "/" + engine_rsp_subdir;
+    if (stat(engine_rsp_fulldir.c_str(), &dir_stat)) {
+        if (mkdir(engine_rsp_fulldir.c_str(),
                   S_IRWXU | S_IRWXG | S_IRWXO)) {
             OFFL_FUNC_ERR("failed to create directory {}",
-                          dole_rsp_fulldir);
+                          engine_rsp_fulldir);
             assert(0);
         }
     }
@@ -59,7 +59,7 @@ testvec_output_t::testvec_output_t(const string& scripts_dir,
     output_fname = mem_type_str.empty() ?
                    output_fname + ".rsp" :
                    output_fname + "-" + mem_type_str + ".rsp";
-    output_fname = dole_rsp_fulldir + "/" + output_fname;
+    output_fname = engine_rsp_fulldir + "/" + output_fname;
     OFFL_FUNC_INFO("creating {}", output_fname);
 
     fp = fopen(output_fname.c_str(), "w");
@@ -80,10 +80,15 @@ testvec_output_t::~testvec_output_t()
 void
 testvec_output_t::dec(const string& prefix,
                       u_long val,
-                      const string& suffix)
+                      const string& suffix,
+                      bool eol)
 {
     if (fp) {
-        fprintf(fp, "%s%lu%s\n", prefix.c_str(), val, suffix.c_str());
+        if (eol) {
+            fprintf(fp, "%s%lu%s\n", prefix.c_str(), val, suffix.c_str());
+        } else {
+            fprintf(fp, "%s%lu%s", prefix.c_str(), val, suffix.c_str());
+        }
     }
 }
 
