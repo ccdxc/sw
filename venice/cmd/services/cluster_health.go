@@ -518,7 +518,8 @@ func (c *ClusterHealthMonitor) processDeploymentEvent(eventType k8swatch.EventTy
 func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod *v1.Pod) {
 	c.servicesHealth.Lock()
 
-	c.logger.Infof("pod watcher received event:%v, name:%s running:%s", eventType, pod.Name, c.isPodRunning(pod))
+	c.logger.Infof("pod watcher received event:%v, name: %s running: %v, pod conditions: %+v",
+		eventType, pod.Name, c.isPodRunning(pod), pod.Status.Conditions)
 
 	var refName string // reference/owner (ds or deploy)
 	for _, ref := range pod.GetOwnerReferences() {
