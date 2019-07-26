@@ -11,6 +11,10 @@ def Main(step):
     uuidMap = api.GetNaplesNodeUuidMap()
     nodes = api.GetNaplesHostnames()
     for n in nodes:
+        # Touch a file to indicate to NMD that the current mode is emulation
+        cmd = "touch /data/iota-emulation"
+        api.Trigger_AddNaplesCommand(req, n, cmd)
+
         if common.PenctlGetModeStatus(n) != "NETWORK" or common.PenctlGetTransitionPhaseStatus(n) != "VENICE_REGISTRATION_DONE":
             api.Logger.info("Host [{}] is in HOST mode. Initiating mode change.".format(n))
             ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "2.2.2.2/24")
@@ -102,6 +106,10 @@ def Main(step):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     for n in nodes:
         cmd = "curl localhost:8888/api/system/info/"
+        api.Trigger_AddNaplesCommand(req, n, cmd)
+
+        # Delete the iota-emulation file created earlied for NMD. Mode change would have passed by now if it had to.
+        cmd = "rm -f /data/iota-emulation"
         api.Trigger_AddNaplesCommand(req, n, cmd)
 
     resp = api.Trigger(req)

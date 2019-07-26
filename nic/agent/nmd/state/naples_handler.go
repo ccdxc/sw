@@ -5,6 +5,7 @@ package state
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -143,9 +144,13 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		log.Errorf("Invalid mode %v specified.", cfg.Spec.Mode)
 		return errBadRequest(fmt.Errorf("invalid mode %v specified", cfg.Spec.Mode))
 	}
+	isEmulation := false
+	if _, err := os.Stat(globals.IotaEmulation); err == nil {
+		log.Infof("NMD running in Emulation mode as a real Venice controller is not available. Remove %v file if this was not desired.", globals.IotaEmulation)
+		isEmulation = true
+	}
 
-	// TODO : For now always push controllers to Delphi. Once we have Venice in ESX sanities, we must revert to only pushing controllers after admission.
-	if err := n.persistState(true); err != nil {
+	if err := n.persistState(isEmulation); err != nil {
 		return errInternalServer(err)
 	}
 

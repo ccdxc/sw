@@ -47,6 +47,9 @@ const (
 
 	// NmdBackupDBPath is where nmd defaults to writing its db file. This needs to be in non tmpfs partition
 	NmdBackupDBPath = "/sysconfig/config1/nmd.db"
+
+	// IotaEmulation is the which is used to indicate to NMD that it is running in Emulation mode without a real Venice Controller
+	IotaEmulation = "/data/iota-emulation"
 )
 
 var (
