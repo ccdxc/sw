@@ -2441,7 +2441,7 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
-        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing",
+        HAL_TRACE_VERBOSE("Cant find the session for handle {} -- bailing",
                                                          session_handle);
         return;
     }
@@ -2573,7 +2573,7 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
-        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing",
+        HAL_TRACE_VERBOSE("Cant find the session for handle {} -- bailing",
                                                          session_handle);
         return;
     }
@@ -2662,7 +2662,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
-        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing", session_handle);
+        HAL_TRACE_VERBOSE("Cant find the session for handle {} -- bailing", session_handle);
         return;
     }
 
@@ -3020,7 +3020,7 @@ session_send_tcp_fin (void *data) {
 
     session = hal::find_session_by_handle(tcpfin->session_handle);
     if (session == NULL) {
-        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing",
+        HAL_TRACE_VERBOSE("Cant find the session for handle {} -- bailing",
                       tcpfin->session_handle);
         return;
     }

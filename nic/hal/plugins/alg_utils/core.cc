@@ -336,16 +336,21 @@ cleanup:
     HAL_TRACE_DEBUG("Cleaning up expected flow with key: {}", exp_flow->entry.key);
     SDK_SPINLOCK_LOCK(&app_sess->slock);
     alg_state->cleanup_exp_flow(exp_flow);
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
+
     // If this is the last hanging expected flow
-    // along with the control session. Lets go ahead
-    // and cleanup
+    // along with the control session and we have
+    // marked the flow for deletion then lets cleanup
     if (sdk::lib::dllist_empty(&app_sess->exp_flow_lhead) &&
         sdk::lib::dllist_count(&app_sess->l4_sess_lhead) == 1) {
-            SDK_SPINLOCK_UNLOCK(&app_sess->slock);
-            alg_state->cleanup_app_session(app_sess);
-            goto end;
+        l4_alg_status_t   *ctrl_l4_sess = alg_state->get_ctrl_l4sess(app_sess);
+        if (ctrl_l4_sess != NULL && ctrl_l4_sess->isCtrl == true &&
+            ctrl_l4_sess->entry.deleting == true) {
+            hal::session_t *session = hal::find_session_by_handle(ctrl_l4_sess->sess_hdl);
+            if (session != NULL) 
+                fte::session_delete_async(session);
+        }
     }
-    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
 end:
    HAL_FREE(hal::HAL_MEM_ALLOC_ALG, timer_ctxt);

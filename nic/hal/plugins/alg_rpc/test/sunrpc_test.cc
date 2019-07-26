@@ -205,8 +205,7 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
     g_rpc_state->alloc_and_init_app_sess(app_sess_key, &app_sess);
 
     g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-    l4_sess->isCtrl = true;
-    ASSERT_EQ(dllist_count(&app_sess->l4_sess_lhead), 1);
+    ASSERT_EQ(dllist_count(&app_sess->l4_sess_lhead), 2);
 
     l4_alg_status_t *exp_flow_old = NULL, *exp_flow_new = NULL;
     exp_flow_key.dport = 22347;

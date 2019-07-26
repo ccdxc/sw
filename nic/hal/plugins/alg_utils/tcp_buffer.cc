@@ -134,6 +134,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
 
         // We hit the max. Return
         if (size > MAX_BUFF_SIZE) {
+            cur_slab_ = 0;
             HAL_TRACE_ERR("Max buffer size hit -- bailing");
             return HAL_RET_OOB;
         }
@@ -156,6 +157,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
 
         // We hit the max. Return
         if (new_buff_sz > MAX_BUFF_SIZE) {
+            cur_slab_ = old_slab;
             HAL_TRACE_ERR("Payload exceeds the max buff size");
             return HAL_RET_OOB;
         }
