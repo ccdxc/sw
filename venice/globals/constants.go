@@ -201,6 +201,7 @@ const (
 	SpyglassMaxResults = 8192
 
 	EvtsMgrRPCPort    = "9010" // Events manager
+	EvtsMgrRESTPort   = "9022" // Events manager REST port for pprof
 	EvtsProxyRPCPort  = "9012" // Events proxy
 	EvtsProxyRESTPort = "9016" // REST server running at NAPLES events proxy
 

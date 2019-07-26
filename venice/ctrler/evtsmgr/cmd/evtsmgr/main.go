@@ -3,11 +3,16 @@
 package main
 
 import (
+	"expvar"
 	"flag"
 	"fmt"
+	"net/http"
+	"net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/gorilla/mux"
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/events/generated/eventtypes"
@@ -108,6 +113,23 @@ func main() {
 	if err != nil {
 		log.Fatalf("error creating events manager instance: %v", err)
 	}
+
+	// run a REST server for pprof
+	router := mux.NewRouter()
+	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/", pprof.Index)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/profile", pprof.Profile)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/trace", pprof.Trace)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+
+	go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", globals.EvtsProxyRESTPort), router)
 
 	logger.Infof("%s is running {%+v}", globals.EvtsMgr, emgr)
 	recorder.Event(eventtypes.SERVICE_RUNNING,
