@@ -180,33 +180,7 @@ func getLogs(subDir string, url string) error {
 	return nil
 }
 
-func showTechCmdHandler(cmd *cobra.Command, args []string) error {
-	jsonFormat = false
-	timeStr := time.Now().Format(time.UnixDate)
-	timeStr = strings.Replace(timeStr, " ", "-", -1)
-
-	destDir = "/tmp"
-	if cmd.Flags().Changed("tmpdir") {
-		destDir = tmpDir
-	} else if val, ok := os.LookupEnv("TMPDIR"); ok {
-		destDir = val
-		if verbose {
-			fmt.Printf("$TMPDIR set to %s\n", val)
-		}
-	}
-
-	destDir = destDir + "/NaplesTechSupport-" + timeStr + "/"
-	fmt.Println("Collecting tech-support from Naples")
-
-	if _, err := os.Stat(destDir); os.IsNotExist(err) {
-		os.MkdirAll(destDir, os.ModePerm)
-	}
-
-	fmt.Printf("Executing commands:\n")
-	//Execute cmds pointed to by YML file
-	cmdDestDir := destDir + "/cmd_out/"
-	createDestDir(cmdDestDir)
-
+func execTechSupportCmds(cmdToExecute string, cmdDestDir string) error {
 	var naplesCmds NaplesCmds
 	err := yaml.UnmarshalStrict([]byte(cmdToExecute), &naplesCmds)
 	if err != nil {
@@ -243,6 +217,56 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			w.Flush()
 		}
 	}
+	return nil
+}
+
+func createTechSupportTarBall(destDir string, tarFile string, tarcmd *exec.Cmd) error {
+	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
+	tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
+	var tarout bytes.Buffer
+	tarcmd.Stdout = &tarout
+	err := tarcmd.Run()
+	if err != nil {
+		return err
+	}
+	fmt.Println(tarFile + ".tar.gz generated")
+
+	fmt.Println("removing " + destDir)
+	rmdestdircmd := exec.Command("rm", "-rf", destDir)
+	rmdestdircmd.Stdin = strings.NewReader("rm -rf " + destDir)
+	var rmout bytes.Buffer
+	rmdestdircmd.Stdout = &rmout
+	return rmdestdircmd.Run()
+}
+
+func showTechCmdHandler(cmd *cobra.Command, args []string) error {
+	jsonFormat = false
+	timeStr := time.Now().Format(time.UnixDate)
+	timeStr = strings.Replace(timeStr, " ", "-", -1)
+
+	destDir = "/tmp"
+	if cmd.Flags().Changed("tmpdir") {
+		destDir = tmpDir
+	} else if val, ok := os.LookupEnv("TMPDIR"); ok {
+		destDir = val
+		if verbose {
+			fmt.Printf("$TMPDIR set to %s\n", val)
+		}
+	}
+
+	destDir = destDir + "/NaplesTechSupport-" + timeStr + "/"
+	fmt.Println("Collecting tech-support from Naples")
+
+	if _, err := os.Stat(destDir); os.IsNotExist(err) {
+		os.MkdirAll(destDir, os.ModePerm)
+	}
+
+	fmt.Printf("Executing commands:\n")
+	//Execute cmds pointed to by YML file
+	cmdDestDir := destDir + "/cmd_out/"
+	createDestDir(cmdDestDir)
+
+	execTechSupportCmds(cmdToExecute, cmdDestDir)
 	fmt.Printf("Commands executed\n")
 
 	file = destDir + "/penctl.ver"
@@ -265,27 +289,8 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 
 	if isNaplesReachableOverLocalHost() == nil {
 		fmt.Println("penctl running tar locally on naples")
-		fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
 		tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir, "/data/", "/var/log/", "/update/", "/var/lib/pensando/events/", "/obfl/")
-		tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
-		var tarout bytes.Buffer
-		tarcmd.Stdout = &tarout
-		err = tarcmd.Run()
-		if err != nil {
-			return err
-		}
-		fmt.Println(tarFile + ".tar.gz generated")
-
-		fmt.Println("removing " + destDir)
-		rmdestdircmd := exec.Command("rm", "-rf", destDir)
-		rmdestdircmd.Stdin = strings.NewReader("rm -rf " + destDir)
-		var rmout bytes.Buffer
-		rmdestdircmd.Stdout = &rmout
-		err = rmdestdircmd.Run()
-		if err != nil {
-			return err
-		}
-		return nil
+		return createTechSupportTarBall(destDir, tarFile, tarcmd)
 	}
 
 	fmt.Printf("Fetching data directory")
@@ -388,23 +393,5 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
 	tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir)
-	tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
-	var tarout bytes.Buffer
-	tarcmd.Stdout = &tarout
-	err = tarcmd.Run()
-	if err != nil {
-		return err
-	}
-	fmt.Println(tarFile + ".tar.gz generated")
-
-	rmdestdircmd := exec.Command("rm", "-rf", destDir)
-	rmdestdircmd.Stdin = strings.NewReader("rm -rf " + destDir)
-	var rmout bytes.Buffer
-	rmdestdircmd.Stdout = &rmout
-	err = rmdestdircmd.Run()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return createTechSupportTarBall(destDir, tarFile, tarcmd)
 }
