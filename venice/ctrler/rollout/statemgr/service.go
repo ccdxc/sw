@@ -125,6 +125,7 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 
 	var message, reason string
 	var phase roproto.RolloutPhase_Phases
+	var updateStatus = false
 
 	sros.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
@@ -136,6 +137,7 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 			continue
 		}
 		evt := fsmEvInvalid
+		updateStatus = true
 		if s.OpStatus == "success" {
 			if s.Op == protos.ServiceOp_ServiceRunVersion {
 				evt = fsmEvServiceUpgOK
@@ -153,8 +155,12 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 			sros.ros.eventChan <- evt
 		}
 	}
-	sros.Statemgr.memDB.UpdateObject(sros)
+	if updateStatus {
+		sros.Statemgr.memDB.UpdateObject(sros)
+	}
 	sros.Mutex.Unlock()
-	sros.ros.setServicePhase(sros.Name, reason, message, phase)
+	if updateStatus {
+		sros.ros.setServicePhase(sros.Name, reason, message, phase)
+	}
 
 }

@@ -133,6 +133,7 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 
 	var message, reason string
 	var phase rollout.RolloutPhase_Phases
+	var updateStatus = false
 
 	vros.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
@@ -144,6 +145,7 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 			continue
 		}
 		evt := fsmEvInvalid
+		updateStatus = true
 		if s.OpStatus == "success" {
 			switch s.Op {
 			case protos.VeniceOp_VenicePreCheck:
@@ -173,9 +175,13 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 			reason = s.OpStatus
 		}
 	}
-	vros.Statemgr.memDB.UpdateObject(vros)
+	if updateStatus {
+		vros.Statemgr.memDB.UpdateObject(vros)
+	}
 	vros.Mutex.Unlock()
-	vros.ros.setVenicePhase(vros.Name, reason, message, phase)
+	if updateStatus {
+		vros.ros.setVenicePhase(vros.Name, reason, message, phase)
+	}
 
 	return nil
 }

@@ -487,9 +487,11 @@ func (ros *RolloutState) setServicePhase(name, reason, message string, phase rop
 
 	switch phase {
 	case roproto.RolloutPhase_PROGRESSING:
-		startTime := api.Timestamp{}
-		startTime.SetTime(time.Now())
-		ros.Status.ControllerServicesStatus[index].StartTime = &startTime
+		if ros.Status.ControllerServicesStatus[index].StartTime == nil {
+			startTime := api.Timestamp{}
+			startTime.SetTime(time.Now())
+			ros.Status.ControllerServicesStatus[index].StartTime = &startTime
+		}
 
 	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
 		if ros.Status.ControllerServicesStatus[index].StartTime != nil {
