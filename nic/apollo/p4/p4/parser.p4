@@ -47,7 +47,7 @@ header p4plus_to_p4_s1_t p4plus_to_p4;
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 
 @pragma synthetic_header
-@pragma pa_field_union ingress p4_to_arm.local_vnic_tag             vnic_metadata.local_vnic_tag
+@pragma pa_field_union ingress p4_to_arm.local_vnic_tag             key_metadata.lkp_id
 @pragma pa_field_union ingress p4_to_arm.l2_1_offset                offset_metadata.l2_1
 @pragma pa_field_union ingress p4_to_arm.l2_2_offset                offset_metadata.l2_2
 @pragma pa_field_union ingress p4_to_arm.l3_1_offset                offset_metadata.l3_1

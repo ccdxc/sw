@@ -1,9 +1,9 @@
 /******************************************************************************/
 /* Local IP mapping                                                           */
 /******************************************************************************/
-@pragma capi appdatafields vpc_id vpc_id_valid xlate_index ip_type
+@pragma capi appdatafields vpc_id vpc_id_valid xlate_index ip_type local_vnic_tag
 @pragma capi hwfields_access_api
-action local_ip_mapping_info(entry_valid,
+action local_ip_mapping_info(entry_valid, local_vnic_tag,
                              vpc_id, vpc_id_valid, xlate_index, ip_type,
                              hash1, hint1, hash2, hint2, hash3, hint3,
                              hash4, hint4, hash5, hint5, hash6, hint6,
@@ -19,6 +19,9 @@ action local_ip_mapping_info(entry_valid,
             if ((mpls_dst.valid == TRUE) and (ip_type == IP_TYPE_PUBLIC)) {
                 modify_field(p4i_apollo_i2e.dnat_required, TRUE);
             }
+        }
+        if (local_vnic_tag != 0) {
+            modify_field(vnic_metadata.local_vnic_tag, local_vnic_tag);
         }
         modify_field(service_header.local_ip_mapping_done, TRUE);
         modify_field(p4i_apollo_i2e.xlate_index, xlate_index);

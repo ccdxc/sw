@@ -17,9 +17,7 @@ local_ip_mapping_info:
     bcf         [c1], local_ip_mapping_hit
 
     // Check hash1 and hint1
-    add         r3, d.local_ip_mapping_info_d.hash1_sbit4_ebit13, \
-                    d.local_ip_mapping_info_d.hash1_sbit0_ebit3, 10
-    seq         c1, r1[31:18], r3
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash1
     sne         c2, d.local_ip_mapping_info_d.hint1, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint1
@@ -80,14 +78,19 @@ local_ip_mapping_miss:
     phvwr.c1    p.capri_intrinsic_drop, TRUE
 
 local_ip_mapping_hit:
+    sne         c1, d.local_ip_mapping_info_d.local_vnic_tag, r0
+    phvwr.c1    p.vnic_metadata_local_vnic_tag, \
+                    d.local_ip_mapping_info_d.local_vnic_tag
     seq         c1, d.local_ip_mapping_info_d.vpc_id_valid, TRUE
     phvwr.c1    p.vnic_metadata_vpc_id, d.local_ip_mapping_info_d.vpc_id
     seq         c2, k.control_metadata_direction, RX_FROM_SWITCH
     seq.c2      c2, k.mpls_dst_valid, TRUE
     seq.c2      c2, d.local_ip_mapping_info_d.ip_type, IP_TYPE_PUBLIC
     phvwr.c2    p.p4i_apollo_i2e_dnat_required, TRUE
-    phvwr.e     p.service_header_local_ip_mapping_done, TRUE
-    phvwr       p.p4i_apollo_i2e_xlate_index, d.local_ip_mapping_info_d.xlate_index
+    phvwr       p.service_header_local_ip_mapping_done, TRUE
+    add.e       r3, d.local_ip_mapping_info_d.xlate_index_sbit6_ebit16, \
+                    d.local_ip_mapping_info_d.xlate_index_sbit0_ebit5,  11
+    phvwr.f     p.p4i_apollo_i2e_xlate_index, r3
 
 local_ip_mapping_hash_hit:
     phvwr.e     p.service_header_local_ip_mapping_ohash, r2
