@@ -215,9 +215,9 @@ var _ = Describe("fwlog policy tests", func() {
 							By(fmt.Sprintf("received fwlog policy from naples: %v, %v", naples, naplesPol))
 							return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
 						}
+					} else {
+						return fmt.Errorf("failed to get fwlog policy from naples %s . got (%s)", naples, st)
 					}
-
-					return fmt.Errorf("failed to get fwlog policy from naples")
 				}
 				return nil
 			}, 120, 2).Should(BeNil(), "failed to find fwlog policy")
