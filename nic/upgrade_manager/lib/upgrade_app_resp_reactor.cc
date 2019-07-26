@@ -94,6 +94,8 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
                     if ((ret = system (cmd.c_str())) != 0) {
                         UPG_LOG_INFO("Unable to reload mnic driver");
                     }
+                    UPG_LOG_DEBUG("Calling respawn_processes");
+                    UPG_OBFL_TRACE("Calling respawn_processes");
                     ctx.sysMgr->respawn_processes();
                 }
             } else {

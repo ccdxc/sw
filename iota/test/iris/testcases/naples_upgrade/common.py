@@ -33,7 +33,7 @@ def startTestUpgApp(node, param):
                        }
                    ],
                    "flags": ["save_stdout_on_crash"],
-                   "timeout": 30.0
+                   "timeout": 3000.0
                }
            ]
     # Write JSON file

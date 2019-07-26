@@ -206,7 +206,7 @@
             }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "timeout": 30.0,
+        "timeout": 240.0,
         "cpu-affinity": "0xF"
     },
     {
