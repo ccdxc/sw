@@ -16,6 +16,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
@@ -310,6 +311,7 @@ func (n *NMD) setRegistrationErrorStatus(reason string) {
 // AdmitNaples performs NAPLES admission
 func (n *NMD) AdmitNaples() {
 	log.Info("Starting Managed Mode")
+	currentVeniceIdx := 0
 
 	n.modeChange.Lock()
 
@@ -352,10 +354,25 @@ func (n *NMD) AdmitNaples() {
 				n.config.Status.AdmissionPhase = msg.AdmissionResponse.Phase
 				n.config.Status.AdmissionPhaseReason = msg.AdmissionResponse.Reason
 			} else {
-				if 2*n.nicRegInterval <= 15 {
+				if 2*n.nicRegInterval <= 16 {
 					n.nicRegInterval = 2 * n.nicRegInterval
 				} else {
 					n.nicRegInterval = globals.NicRegIntvl
+
+					// PS-1770 fix : Try to connect to other Venice node if the current Venice node fails to reply.
+					log.Errorf("%v venice IP failed to respond within 16s.", n.config.Status.Controllers[currentVeniceIdx])
+					currentVeniceIdx = (currentVeniceIdx + 1) % len(n.config.Status.Controllers)
+					log.Infof("Trying the next venice IP, if any, from the list. %v", n.config.Status.Controllers[currentVeniceIdx])
+					registrationURL := fmt.Sprintf("%s:%s", n.config.Status.Controllers[currentVeniceIdx], globals.CMDSmartNICRegistrationPort)
+
+					n.remoteCertsURL = fmt.Sprintf("%s:%s", n.config.Status.Controllers[currentVeniceIdx], globals.CMDAuthCertAPIPort)
+
+					cmdAPI, err := cmdif.NewCmdClient(n, registrationURL, n.resolverClient)
+					if err != nil {
+						log.Errorf("Failed to instantiate CMD Client. Err: %v", err)
+						return
+					}
+					n.cmd = cmdAPI
 				}
 			}
 			n.SetSmartNIC(nicObj)
