@@ -972,13 +972,13 @@ def Main():
     # Initialize the Node, this is needed in all cases.
     host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = False)
 
-    if naples.IsSSHUP():
+    #if naples.IsSSHUP():
         # Connect to serial console too
         #naples.Connect()
-        naples.InstallMainFirmware()
-    else:
+        #naples.InstallMainFirmware()
+    #else:
         # Update MainFwB also to same image - TEMP CHANGE
-        host.InstallMainFirmware(mount_data = False, copy_fw = False)
+        # host.InstallMainFirmware(mount_data = False, copy_fw = False)
 
 
 if __name__ == '__main__':
