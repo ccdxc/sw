@@ -137,7 +137,7 @@ describe('AppcontentComponent', () => {
       alerts.push(alert);
     }
     // Get will return all 20
-    // Watch will return in two batches of 10
+    // Watch will return in three batches, 10, 5, 5
     // We then send a new alert to watch, which should trigger a notification
     const controllerService = TestBed.get(ControllerService);
     const toasterSpy = spyOn(controllerService, 'invokeInfoToaster');
@@ -156,7 +156,11 @@ describe('AppcontentComponent', () => {
     fixture.detectChanges();
     expect(toasterSpy).toHaveBeenCalledTimes(0);
 
-    watchSubject.next(TestingUtility.createWatchEvents(alerts.slice(10)));
+    watchSubject.next(TestingUtility.createWatchEvents(alerts.slice(10, 15)));
+    fixture.detectChanges();
+    expect(toasterSpy).toHaveBeenCalledTimes(0);
+
+    watchSubject.next(TestingUtility.createWatchEvents(alerts.slice(15)));
     fixture.detectChanges();
     expect(toasterSpy).toHaveBeenCalledTimes(0);
 

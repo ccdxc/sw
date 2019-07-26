@@ -600,7 +600,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           this.alertNumbers = this.alerts.length;
         } else {
           this.alertNumbers = Math.max(this.startingAlertCount, this.alerts.length);
-          if (this.alertNumbers === this.startingAlertCount) {
+          if (this.alerts.length === this.startingAlertCount) {
             // Have received all alerts that exist
             // no longer rely on startingAlertCount since we may receive delete events
             this.startingAlertCount = null;
