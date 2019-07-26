@@ -1711,6 +1711,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     }
 
     nwsec_policy_make_clone(policy, (nwsec_policy_t **)&dhl_entry.cloned_obj);
+    hal_handle_cfg_db_lock(true, false);
     policy_clone = (nwsec_policy_t *)dhl_entry.cloned_obj;
     ret = extract_policy_from_spec(spec, (nwsec_policy_t *)dhl_entry.cloned_obj);
     if (ret != HAL_RET_OK) {
@@ -1745,7 +1746,6 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     }
     acl::acl_deref(app_ctx.acl_ctx_clone);
     
-    hal_handle_cfg_db_lock(true, false);
     if (app_ctx.acl_ctx) {
         HAL_TRACE_DEBUG("deleted acl");
         acl_deref(app_ctx.acl_ctx);
