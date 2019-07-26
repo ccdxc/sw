@@ -119,17 +119,47 @@ the test that is running the values from the packet fields are picked from the
 created objects.
 
 Store
-This is the db where the objects are stored. The store is iterated for the
-objects.
+This is the db available for storing any kinds of objects. Objects that are
+created in dol during config phase or objects that are created later are
+stored in this db for future use. The db is iterated over and read during
+testcase execution for packet generation.
 
 Templates
+If an object has to be iterated for a testspec, first a template has to be
+defined corresponding to that object. This object can later be specified as
+a root in the selectors section in the testspec.
 
 mlist files
+A feature is a collection of related testcases. There are sub features under
+a feature. An mlist file or a module list file has to be specified for each
+sub feature.
+
+Few details such as name of this module, feature, package which
+this module is  part of etc., are specified.
+
+A list of modules is specified in this file. Each module is a testcase.
+For each module, the testspec for that module and the iterate filters are
+specified.
 
 Testspec
+Each module or testcase has to specify a testspec file. The testspec file
+contains the selection criteria if any for the objects and the packet formats
+to be tested.
+
+Selection criteria are specified under selectors section in the file.
+root, maxlimits and filters for each kind of objects from store.py
+are used.
+
+Elaborate packet formats are defined next. The values for the fields in the
+packets can either be hardcoded or gleaned from the objects in the store.
+The filters specified in the selectors above are used for iterating the
+objects and selecting the desired ones.
+
+Input packet and the expected packet along with their port numbers are
+specified next.
 
 Filters -
-Filters and iterators can be specified in mlist and testspecs to select the
+Filters and iterators are specified in mlist and testspecs to select the
 desired objects for the packet tests.
 
 ## IOTA tests
