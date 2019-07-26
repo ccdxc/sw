@@ -131,9 +131,6 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 
 	if (is_master_lif(q->lif))
 		skb_record_rx_queue(skb, q->index);
-	else
-		macvlan_count_rx(netdev_priv(netdev), skb->len + ETH_HLEN, true,
-				 false);
 
 	if (netdev->features & NETIF_F_RXHASH) {
 		switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
