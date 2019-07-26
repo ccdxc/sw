@@ -38,7 +38,6 @@ type ctrlerCtx struct {
 	apisrvURL   string                        // API server URL
 	logger      log.Logger                    // logger
 	resolver    resolver.Interface            // name resolver
-	balancer    balancer.Balancer             // grpc load balancer
 	stoped      bool                          // stop the watchers
 	watchers    map[string]kvstore.Watcher    // watchers
 	watchCancel map[string]context.CancelFunc // stop watcher
@@ -121,7 +120,6 @@ func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, r
 		apisrvURL:   apisrvURL,
 		logger:      logger.WithContext("submodule", name+"-Watcher"),
 		resolver:    resolver,
-		balancer:    balancer.New(resolver),
 		stoped:      false,
 		watchers:    make(map[string]kvstore.Watcher),
 		watchCancel: make(map[string]context.CancelFunc),
@@ -172,7 +170,7 @@ func (ct *ctrlerCtx) apiClient() (apiclient.Services, error) {
 
 	for i := 0; i < 10; i++ {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err == nil {
 			ct.Lock()
 			ct.apicl = apicl
