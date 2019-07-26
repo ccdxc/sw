@@ -45,6 +45,10 @@ type alertUpdateFlags struct {
 
 func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc {
 	return func(oldObj runtime.Object) (runtime.Object, error) {
+		// zero out to avoid inconsistent counters during consistent_update retries
+		flags.incrementOpenAlerts = 0
+		flags.incrementAckAlerts = 0
+
 		alertObj, ok := oldObj.(*monitoring.Alert)
 		if !ok {
 			return oldObj, errInternalError
