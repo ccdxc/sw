@@ -41,9 +41,19 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
+
+			policy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "icmp", "PERMIT")
+			Expect(policy.Commit()).ShouldNot(HaveOccurred())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+			}).Should(Succeed())
 
 			Eventually(func() error {
 				return ts.model.Action().PingPairs(workloadPairs)
@@ -61,10 +71,19 @@ var _ = Describe("fwlog tests", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
+			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
 
-			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultSGPolicy(), "tcp")
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
+
+			policy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "PERMIT")
+			Expect(policy.Commit()).ShouldNot(HaveOccurred())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+			}).Should(Succeed())
 
 			Eventually(func() error {
 				return ts.model.Action().TCPSession(workloadPairs, 8000)
@@ -91,6 +110,11 @@ var _ = Describe("fwlog tests", func() {
 			// allow policy
 			policy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+			}).Should(Succeed())
 
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
