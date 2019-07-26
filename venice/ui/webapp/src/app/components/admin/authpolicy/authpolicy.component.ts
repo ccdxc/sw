@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
-import { LDAPCheckResponse, LDAPCheckType } from '@app/components/admin/authpolicy/.';
+import { LDAPCheckResponse, LDAPCheckType, LdapSave, RadiusSave } from '@app/components/admin/authpolicy/.';
 import { AuthPolicyUtil } from '@app/components/admin/authpolicy/AuthPolicyUtil';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
@@ -50,6 +50,14 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   enableUpdateSecretButton: boolean = false;
   authOrder = ['LOCAL', 'LDAP', 'RADIUS'];
   authPolicy: AuthAuthenticationPolicy = new AuthAuthenticationPolicy({ spec: { authenticators: { 'authenticator-order': ['LOCAL', 'LDAP'] } } });
+
+  // these variables are for knowing if we are still in Create Mode or not
+  inRadiusCreateMode: boolean = false;
+  inLDAPCreateMode: boolean = false;
+
+  // these variables are for knowing if policy has error or not during saving
+  ldapHasError: boolean = false;
+  radiusHasError: boolean = false;
 
   // these variables will pass to LDAPComponent
   _ldapConnCheckResponse: LDAPCheckResponse = null;
@@ -119,6 +127,9 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     });
   }
 
+  /**
+   * Responsible for getting current authentication policy object
+   */
   getAuthenticationPolicy() {
     this._authService.GetAuthenticationPolicy().subscribe(
       response => {
@@ -155,6 +166,11 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     );
   }
 
+  /**
+   * This function handles changing order of policies
+   * @param newRank
+   * @param oldRank
+   */
   swapRanks(newRank, oldRank) {
     // Since ranks should only ever be moving one up or one down
     // We swap the items
@@ -181,6 +197,11 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     return error;
   }
 
+  /**
+   * This function calls LdapConnectionCheck() API.
+   * Later it takes appropriate actions as per the response of that API call.
+   * @param ldap
+   */
   onCheckLDAPServerConnect(ldap: AuthLdap) {
     this.authPolicy.spec.authenticators.ldap = ldap;
     this._authService.LdapConnectionCheck(this.authPolicy.getFormGroupValues()).subscribe(
@@ -207,6 +228,11 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     this._controllerService.invokeRESTErrorToaster('Test LDAP ' + type + ' failed', error);
   }
 
+  /**
+   * This function calls LdapBindCheck() API.
+   * Later it takes appropriate actions as per the response of that API call.
+   * @param ldap
+   */
   onCheckLDAPBindConnect(ldap: AuthLdap) {
     this.authPolicy.spec.authenticators.ldap = ldap;
     this._authService.LdapBindCheck(this.authPolicy.getFormGroupValues()).subscribe(
@@ -234,56 +260,112 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
 
   /**
    * This API serves html template
-   * @param isNewLDAP
+   * @param ldap
    *
-   * Even through we passes in "isNewLDAP" parameter, (isNewLDAP is for creating auth-policy), it is not likely isNewLDAP will be true.
+   * Even through we passes in "ldap" parameter, (ldap is for creating auth-policy), it is not likely ldap will be true.
    * If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
    */
-  onInvokeSaveLDAP(isNewLDAP: boolean) {
-    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+  onInvokeSaveLDAP(ldap: LdapSave) {
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues(), ldap.onSuccess, AuthAuthenticators_authenticator_order.ldap);
   }
 
   /**
    * This API serves html template
-   * @param isNewLDAP
+   * @param radius
    *
    * This is similar to onInvokeSaveLDAP(..) API
    */
-  onInvokeSaveRadius(isNewRadius: boolean) {
-    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+  onInvokeSaveRadius(radius: RadiusSave) {
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues(), radius.onSuccess, AuthAuthenticators_authenticator_order.radius);
   }
 
-  saveAuthenticationPolicy(authAuthenticationPolicy: IAuthAuthenticationPolicy) {
+  /**
+   * saveAuthenticationPolicy() calls the UpdateAuthenticationPolicy API for saving the policies
+   * Once the response is received, appropriate actions are performed for the type of response
+   *
+   * @param authAuthenticationPolicy This parameter stores the authenticators data that needs to be saved
+   * @param onSaveSuccess This is a function which is called on save success
+   * @param authTypePolicy This parameter tells which policy is getting updated
+   */
+  saveAuthenticationPolicy(authAuthenticationPolicy: IAuthAuthenticationPolicy, onSaveSuccess: Function | null = null, authTypePolicy: string = null) {
     let handler: Observable<{ body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number }>;
     // If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
     handler = this._authService.UpdateAuthenticationPolicy(authAuthenticationPolicy);
     handler.subscribe(
       (response) => {
+        this.authPolicy = new AuthAuthenticationPolicy(authAuthenticationPolicy);
         this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated Authentication policy.');
+        if (onSaveSuccess != null) {
+          onSaveSuccess();
+        }
+        switch (authTypePolicy) {
+          case AuthAuthenticators_authenticator_order.ldap: { this.inLDAPCreateMode = false;
+            this.ldapHasError = false;
+                                                            break; }
+          case AuthAuthenticators_authenticator_order.radius: {this.inRadiusCreateMode = false;
+            this.radiusHasError = false;
+                                                    break; }
+        }
         // per back-end, changing auth-policy does not require user to re-login
       },
-      this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
+      (error) => {
+        this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
+        switch (authTypePolicy) {
+          case AuthAuthenticators_authenticator_order.ldap: { this.ldapHasError = true;
+                                                            break; }
+          case AuthAuthenticators_authenticator_order.radius: {this.radiusHasError = true;
+                                                    break; }
+        }
+      }
     );
   }
 
-  onInvokeCreateLDAP(ldap: AuthLdap) {
-    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.ldap);
-    this.authPolicy.spec.authenticators.ldap = ldap;
-    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+  /**
+   * This function invokes creation of LDAP Policy
+   * @param ldap This parameter contains the createData and onSuccess fields
+   * createData stores the LDAP policy data
+   * onSuccess is a function which is executed if saving is successful without any errors
+   */
+  onInvokeCreateLDAP(ldap: LdapSave) {
+    if (!this.ldapHasError) {
+      this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.ldap);
+      this.inLDAPCreateMode = true;
+    } // During addition of faulty policy, this helps in avoiding pushing in authenticator-order twice or more
+    this.authPolicy.spec.authenticators.ldap = ldap.createData;
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues(), ldap.onSuccess, AuthAuthenticators_authenticator_order.ldap);
   }
 
-  onInvokeCreateRadius(radius: AuthRadius) {
-    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.radius);
-    this.authPolicy.spec.authenticators.radius = radius;
-    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+  /**
+   * This function invokes creation of Radius Policy
+   * @param radius This parameter contains the createData and onSuccess fields
+   * createData stores the Radius policy data
+   * onSuccess is a function which is executed if saving is successful without any errors
+   */
+  onInvokeCreateRadius(radius: RadiusSave) {
+    if (!this.radiusHasError) {
+      this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.radius);
+      this.inRadiusCreateMode = true;
+    } // During addition of faulty policy, this helps in avoiding pushing in authenticator-order twice or more
+    this.authPolicy.spec.authenticators.radius = radius.createData;
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues(), radius.onSuccess, AuthAuthenticators_authenticator_order.radius);
   }
 
+  /**
+   * Deletes radius policy
+   * @param radius
+   */
   onInvokeRemoveRadius(radius: AuthRadius) {
     this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.radius);
+    this.inRadiusCreateMode = true;
   }
 
+  /**
+   * Deletes ldap policy
+   * @param ldap
+   */
   onInvokeRemoveLDAP(ldap: AuthLdap) {
     this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.ldap);
+    this.inLDAPCreateMode = true;
   }
 
   _onInvokeRemoveConfigHelper(type: any) {

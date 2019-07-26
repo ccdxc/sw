@@ -22,16 +22,18 @@
           <ng-container *ngFor="let authType of authPolicy.spec.authenticators['authenticator-order']; let index = index"
                         [ngSwitch]="authType">
             <ng-container *ngSwitchCase="authTypes.ldap">
-              <app-ldap fxFlex="nogrow" fxLayout="column"
-                        [LDAPData]="authPolicy.spec.authenticators.ldap" [currentRank]="index"
-                        [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length"
-                        (changeAuthRank)="swapRanks($event, index)"
-                        (invokeSaveLDAP)="onInvokeSaveLDAP($event)"
-                        (invokeCheckLDAPServerConnect)="onCheckLDAPServerConnect($event)"
-                        (invokeCheckLDAPBindConnect)="onCheckLDAPBindConnect($event)"
-                        [ldapConnCheckResponse]="_ldapConnCheckResponse"
-                        [ldapBindCheckResponse]="_ldapBindCheckResponse"
-                        (invokeRemoveLDAP)="onInvokeRemoveLDAP($event)"></app-ldap>
+              <ng-container *ngIf="!inLDAPCreateMode">
+                <app-ldap fxFlex="nogrow" fxLayout="column"
+                          [LDAPData]="authPolicy.spec.authenticators.ldap" [currentRank]="index"
+                          [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length"
+                          (changeAuthRank)="swapRanks($event, index)"
+                          (invokeSaveLDAP)="onInvokeSaveLDAP($event)"
+                          (invokeCheckLDAPServerConnect)="onCheckLDAPServerConnect($event)"
+                          (invokeCheckLDAPBindConnect)="onCheckLDAPBindConnect($event)"
+                          [ldapConnCheckResponse]="_ldapConnCheckResponse"
+                          [ldapBindCheckResponse]="_ldapBindCheckResponse"
+                          (invokeRemoveLDAP)="onInvokeRemoveLDAP($event)"></app-ldap>
+              </ng-container>
             </ng-container>
             <ng-container *ngSwitchCase="authTypes.local">
               <app-local fxFlex="nogrow" fxLayout="column"
@@ -40,12 +42,15 @@
                          (changeAuthRank)="swapRanks($event, index)"></app-local>
             </ng-container>
             <ng-container *ngSwitchCase="authTypes.radius">
-              <app-radius fxFlex="nogrow" fxLayout="column"
-                          [radiusData]="authPolicy.spec.authenticators.radius" [currentRank]="index"
-                          [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length"
-                          (changeAuthRank)="swapRanks($event, index)"
-                          (invokeSaveRadius)="onInvokeSaveRadius($event)"
-                          (invokeRemoveRadius)="onInvokeRemoveRadius($event)"></app-radius>
+              <ng-container *ngIf="!inRadiusCreateMode">
+                <app-radius fxFlex="nogrow" fxLayout="column"
+                            [radiusData]="authPolicy.spec.authenticators.radius"
+                            [currentRank]="index"
+                            [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length"
+                            (changeAuthRank)="swapRanks($event, index)"
+                            (invokeSaveRadius)="onInvokeSaveRadius($event)"
+                            (invokeRemoveRadius)="onInvokeRemoveRadius($event)"></app-radius>
+              </ng-container>
             </ng-container>
           </ng-container>
           <ng-container *ngIf="authPolicy.spec.authenticators['authenticator-order'].length != 3">
@@ -55,8 +60,9 @@
                           *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes(authTypes.local)">
               <app-local fxFlex="nogrow" fxLayout="column"></app-local>
             </ng-container>
+            <!-- inLDAPCreateMode condition will avoid deletion of new ldap object during input of faulty spec -->
             <ng-container
-                          *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes(authTypes.ldap)">
+                          *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes(authTypes.ldap) || inLDAPCreateMode">
               <app-ldap fxFlex="nogrow" fxLayout="column"
                         (invokeSaveLDAP)="onInvokeSaveLDAP($event)"
                         (invokeCheckLDAPServerConnect)="onCheckLDAPServerConnect($event)"
@@ -65,8 +71,9 @@
                         [ldapBindCheckResponse]="_ldapBindCheckResponse"
                         (invokeCreateLDAP)="onInvokeCreateLDAP($event)"></app-ldap>
             </ng-container>
+            <!-- inRadiusCreateMode condition will avoid deletion of new radius object during input of faulty spec -->
             <ng-container
-                          *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes(authTypes.radius)">
+                          *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes(authTypes.radius) || inRadiusCreateMode">
               <app-radius fxFlex="nogrow" fxLayout="column"
                           (invokeCreateRadius)="onInvokeCreateRadius($event)"></app-radius>
             </ng-container>

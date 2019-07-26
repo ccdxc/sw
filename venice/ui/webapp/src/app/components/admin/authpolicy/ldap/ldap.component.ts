@@ -7,7 +7,7 @@ import { required } from '@sdk/v1/utils/validators';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material';
 
-import { LDAPCheckResponse, LDAPCheckType, CheckResponseError } from '@app/components/admin/authpolicy/.';
+import { LDAPCheckResponse, LDAPCheckType, LdapSave, CheckResponseError } from '@app/components/admin/authpolicy/.';
 import { AuthPolicyUtil } from '@app/components/admin/authpolicy/AuthPolicyUtil';
 import { Utility } from '@app/common/Utility';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -36,6 +36,7 @@ import { ControllerService } from '@app/services/controller.service';
   },
   animations: [Animations]
 })
+
 export class LdapComponent extends AuthpolicybaseComponent implements OnInit, OnChanges, AfterContentInit {
   isHover: boolean = false;
   LDAPEditMode: boolean = false;
@@ -49,8 +50,8 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   @Input() ldapConnCheckResponse: LDAPCheckResponse = null;
   @Output() invokeCheckLDAPServerConnect: EventEmitter<AuthLdap> = new EventEmitter();
   @Output() invokeCheckLDAPBindConnect: EventEmitter<AuthLdap> = new EventEmitter();
-  @Output() invokeSaveLDAP: EventEmitter<Boolean> = new EventEmitter();
-  @Output() invokeCreateLDAP: EventEmitter<AuthLdap> = new EventEmitter();
+  @Output() invokeSaveLDAP: EventEmitter<LdapSave> = new EventEmitter();
+  @Output() invokeCreateLDAP: EventEmitter<LdapSave> = new EventEmitter();
   @Output() invokeRemoveLDAP: EventEmitter<AuthLdap> = new EventEmitter();
 
   @Input() parentAuthPolicy: AuthAuthenticationPolicy = null;
@@ -83,6 +84,9 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.setLDAPValidationRules();
   }
 
+  /**
+   * This function is responsible for setting Required Validation on form fields
+   */
   private setLDAPValidationRules() {
     // TODO: Changing auth.proto LDAP validation rule has ripple effects on go-test, we set validator in UI 2019-01-24
     this.LDAPObject.$formGroup.get(['bind-dn']).setValidators(required);
@@ -138,6 +142,10 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     }
   }
 
+  /**
+   * Helps in toggling between edit and view mode.
+   * Calls the setLDAPValidationRules() whenever the view switches to edit mode.
+   */
   toggleEdit() {
     this.setLDAPEditMode(!this.LDAPEditMode);
     if (this.LDAPEditMode) {
@@ -146,6 +154,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
       if (this.LDAPObject.servers.length === 0) {
         this.addServer();
       }
+      this.setLDAPValidationRules();
       const servers = this.LDAPObject.$formGroup.get('servers') as FormArray;
       // Each server, we register the verify toggle, and check for diasbling fields
       servers.controls.forEach((server, index) => {
@@ -157,6 +166,9 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.setLDAPEnableControl();
   }
 
+  /**
+   * Responsible for deleting selected LDAP policy
+   */
   onDeleteLDAP() {
     this._controllerService.invokeConfirm({
       header: Utility.generateDeleteConfirmMsg('Config', 'LDAP'),
@@ -181,8 +193,12 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.setLDAPEnableControl();
   }
 
-  // For all servers, if start-tls is disabled, we disable the other tls fields
-  // if verify serve is disabled, we disable server-name and trusted-cert fields are disabled
+  /**
+   * This function controls the disabling and enabling of TLS fields.
+   * For all servers:
+   * 1. if start-tls is disabled, the other tls fields are disabled.
+   * 2. if verify serve is disabled, server-name and trusted-cert fields are disabled.
+   */
   checkServerTlsDisabling(server: AbstractControl, index: number) {
     const tlsOptions = server.get('tls-options');
     if (!tlsOptions.value['start-tls']) {
@@ -241,6 +257,11 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     }
   }
 
+  /**
+   * Using this function, user returns back to view mode.
+   * If this is called during creation, then all data is deleted i.e. form group gets reset.
+   * Else the previous data that was there before this editing is preserved
+   */
   cancelEdit() {
     this.setLDAPEditMode(false); // restore LDAPEditMode to false
     if (this.inCreateMode) {
@@ -254,26 +275,43 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.inCreateMode = false;
   }
 
+  /**
+   * This function can be only called when all form validation rules are met
+   * during creation or updation. Emits LDAP data to the parent component,
+   * responsible for REST calls, to save the object.
+   */
   saveLDAP() {
     this.updateLDAPData();
+    let ldapSave: LdapSave;
     if (this.inCreateMode) {
       if (this.isAllInputsValid(this.LDAPObject)) {
-        this.setLDAPEditMode(false);
-        this.invokeCreateLDAP.emit(this.LDAPData);
+        ldapSave =  { createData: this.LDAPData,
+          onSuccess: (resp) => {this.setLDAPEditMode(false); },
+        };
+        this.invokeCreateLDAP.emit(ldapSave);
       } else {
         this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
       }
     } else {
       // POST DATA
-      this.setLDAPEditMode(false);
-      this.invokeSaveLDAP.emit(true); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
+      ldapSave =  {
+        onSuccess: (resp) => {this.setLDAPEditMode(false); },
+      };
+      this.invokeSaveLDAP.emit(ldapSave); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
     }
   }
 
+  /**
+   * @param authLDAP
+   * Checks whether the form group data satisfies the validation rules
+   */
   isAllInputsValid(authLDAP: AuthLdap): boolean {
     return (!Utility.getAllFormgroupErrors(authLDAP.$formGroup));
   }
 
+  /**
+   * This function sets new form for creation of the LDAP policy
+   */
   createLDAP() {
     this.LDAPData = new AuthLdap();
     this.toggleEdit();

@@ -3,6 +3,7 @@ import { required } from '@sdk/v1/utils/validators';
 import { AuthpolicybaseComponent } from '@app/components/admin/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
 import { IAuthRadius, AuthRadius, AuthRadiusServer } from '@sdk/v1/models/generated/auth';
+import { RadiusSave } from '@app/components/admin/authpolicy/.';
 import { FormArray, AbstractControl } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
@@ -40,8 +41,8 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
 
   @Input() radiusData: AuthRadius;
-  @Output() invokeSaveRadius: EventEmitter<Boolean> = new EventEmitter();
-  @Output() invokeCreateRadius: EventEmitter<AuthRadius> = new EventEmitter();
+  @Output() invokeSaveRadius: EventEmitter<RadiusSave> = new EventEmitter();
+  @Output() invokeCreateRadius: EventEmitter<RadiusSave> = new EventEmitter();
   @Output() invokeRemoveRadius: EventEmitter<AuthRadius> = new EventEmitter();
 
   constructor(protected _controllerService: ControllerService, private cd: ChangeDetectorRef,
@@ -67,7 +68,11 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     this.setRadiusValidationRules();
   }
 
+  /**
+   * This function is responsible for setting Required Validation on form fields
+   */
   private setRadiusValidationRules() {
+    this.radiusObject.$formGroup.get(['nas-id']).setValidators(required);
     const servers: FormArray = this.radiusObject.$formGroup.get('servers') as FormArray;
     if (servers.length > 0) {
       const controls = servers.controls;
@@ -103,6 +108,9 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     }
   }
 
+  /**
+   * Responsible for deleting selected Radius Policy
+   */
   onDeleteRadius() {
     this._controllerService.invokeConfirm({
       header: Utility.generateDeleteConfirmMsg('Config', 'RADIUS'),
@@ -154,6 +162,11 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     }
   }
 
+  /**
+   * Using this function, user returns back to view mode.
+   * If this is called during creation, then all data is deleted i.e. form group gets reset.
+   * Else the previous data that was there before this editing is preserved
+   */
   cancelEdit() {
     this.setRadiusEditMode(false);
     if (this.inCreateMode) {
@@ -166,21 +179,35 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     this.inCreateMode = false;
   }
 
+  /**
+   * This function can be only called when all form validation rules are met
+   * during creation or updation. Emits Radius data to the parent component,
+   * responsible for REST calls, to save the object.
+   */
   saveRadius() {
     if (!this.isAllInputsValid(this.radiusObject)) {
-      this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
+      this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are required');
       return;
     }
     this.updateRadiusData();
+    let radiusSave: RadiusSave;
     if (this.inCreateMode) {
-      this.invokeCreateRadius.emit(this.radiusData);
+      radiusSave =  { createData: this.radiusData,
+        onSuccess: (resp) => {this.setRadiusEditMode(false); },
+      };
+      this.invokeCreateRadius.emit(radiusSave);
     } else {
       // POST DATA
-      this.invokeSaveRadius.emit(false); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.
+      radiusSave =  {
+        onSuccess: (resp) => {this.setRadiusEditMode(false); },
+      };
+      this.invokeSaveRadius.emit(radiusSave); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.
     }
-    this.setRadiusEditMode(false);
   }
 
+  /**
+   * This function sets new form for creation of the Radius policy
+   */
   createRadius() {
     this.radiusData = new AuthRadius();
     this.toggleEdit();
