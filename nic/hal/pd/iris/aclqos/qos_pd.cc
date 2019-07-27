@@ -5,6 +5,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -16,16 +17,6 @@ namespace pd {
 
 //TODO: Move this to HAL slabs.
 pd_qos_dscp_cos_map_t dscp_cos_txdma_iq_map[64];
-
-typedef struct pd_qos_iq_s {
-    bool valid;
-    tm_q_t iq;
-} __PACK__ pd_qos_iq_t;
-
-typedef struct pd_qos_oq_s {
-    bool valid;
-    tm_q_t oq;
-} __PACK__ pd_qos_oq_t;
 
 typedef struct pd_qos_q_alloc_params_s {
     uint32_t         cnt_uplink_iq;
@@ -1113,16 +1104,16 @@ qos_class_pd_deprogram_hw (pd_qos_class_t *pd_qos_class)
 
 static void
 qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
-                             pd_qos_iq_t iqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_IQS],
-                             pd_qos_oq_t oqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_OQS])
+                             capri_queue_t iqs[TM_NUM_PORTS][CAPRI_TM_MAX_IQS],
+                             capri_queue_t oqs[TM_NUM_PORTS][CAPRI_TM_MAX_OQS])
 {
     uint32_t iq_idx = 0;
     uint32_t oq_idx = 0;
     uint32_t port;
-    pd_qos_iq_t *input_queue;
-    pd_qos_oq_t *output_queue;
-    uint32_t iq_cnt = HAL_PD_QOS_MAX_IQS;
-    uint32_t oq_cnt = HAL_PD_QOS_MAX_OQS;
+    capri_queue_t *input_queue;
+    capri_queue_t *output_queue;
+    uint32_t iq_cnt = CAPRI_TM_MAX_IQS;
+    uint32_t oq_cnt = CAPRI_TM_MAX_OQS;
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         iq_idx = 0;
@@ -1131,14 +1122,14 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
             SDK_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
             input_queue->valid = true;
-            input_queue->iq = qos_class_pd->uplink.iq;
+            input_queue->queue = qos_class_pd->uplink.iq;
         }
 
         if (capri_tm_q_valid(qos_class_pd->dest_oq)) {
             SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
-            output_queue->oq = qos_class_pd->dest_oq;
+            output_queue->queue = qos_class_pd->dest_oq;
         }
     }
     for (port = TM_DMA_PORT_BEGIN; port <= TM_DMA_PORT_END; port++) {
@@ -1149,7 +1140,7 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
                 SDK_ASSERT(iq_idx < iq_cnt);
                 input_queue = &iqs[port][iq_idx++];
                 input_queue->valid = true;
-                input_queue->iq = qos_class_pd->txdma[i].iq;
+                input_queue->queue = qos_class_pd->txdma[i].iq;
             }
         }
 
@@ -1157,7 +1148,7 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
             SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
-            output_queue->oq = qos_class_pd->dest_oq;
+            output_queue->queue = qos_class_pd->dest_oq;
         }
     }
 
@@ -1170,12 +1161,12 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
             SDK_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
             input_queue->valid = true;
-            input_queue->iq = qos_class_pd->p4_ig_q[i];
+            input_queue->queue = qos_class_pd->p4_ig_q[i];
 
             SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
-            output_queue->oq = qos_class_pd->p4_ig_q[i];
+            output_queue->queue = qos_class_pd->p4_ig_q[i];
         }
     }
 
@@ -1188,12 +1179,12 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
             SDK_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
             input_queue->valid = true;
-            input_queue->iq = qos_class_pd->p4_eg_q[i];
+            input_queue->queue = qos_class_pd->p4_eg_q[i];
 
             SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
-            output_queue->oq = qos_class_pd->p4_eg_q[i];
+            output_queue->queue = qos_class_pd->p4_eg_q[i];
         }
     }
 }
@@ -1201,8 +1192,8 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
 static void
 qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
 {
-    pd_qos_iq_t              iqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_IQS] = {};
-    pd_qos_oq_t              oqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_OQS] = {};
+    capri_queue_t iqs[TM_NUM_PORTS][CAPRI_TM_MAX_IQS] = {};
+    capri_queue_t oqs[TM_NUM_PORTS][CAPRI_TM_MAX_OQS] = {};
 
     qos_class_pd_get_all_queues(qos_class_pd,
                                 iqs, oqs);
@@ -1210,7 +1201,7 @@ qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
     for (unsigned port = 0; port < SDK_ARRAY_SIZE(iqs); port++) {
         for (unsigned i = 0; i < SDK_ARRAY_SIZE(iqs[0]); i++) {
             if (iqs[port][i].valid) {
-                capri_tm_reset_iq_stats(port, iqs[port][i].iq);
+                capri_tm_reset_iq_stats(port, iqs[port][i].queue);
             }
         }
     }
@@ -1476,8 +1467,8 @@ end:
 static void
 qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *epd_status)
 {
-    pd_qos_iq_t              iqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_IQS] = {};
-    pd_qos_oq_t              oqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_OQS] = {};
+    capri_queue_t iqs[TM_NUM_PORTS][CAPRI_TM_MAX_IQS] = {};
+    capri_queue_t oqs[TM_NUM_PORTS][CAPRI_TM_MAX_OQS] = {};
 
     qos_class_pd_get_all_queues(qos_class_pd,
                                 iqs, oqs);
@@ -1488,12 +1479,12 @@ qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *e
                                                 port_status->mutable_packet_buffer_port());
         for (unsigned i = 0; i < SDK_ARRAY_SIZE(iqs[0]); i++) {
             if (iqs[port][i].valid) {
-                port_status->add_input_queues(iqs[port][i].iq);
+                port_status->add_input_queues(iqs[port][i].queue);
             }
         }
         for (unsigned i = 0; i < SDK_ARRAY_SIZE(oqs[0]); i++) {
             if (oqs[port][i].valid) {
-                port_status->add_output_queues(oqs[port][i].oq);
+                port_status->add_output_queues(oqs[port][i].queue);
             }
         }
     }
@@ -1504,63 +1495,32 @@ qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *e
     }
 }
 
-static hal_ret_t
-qos_class_pd_populate_qos_queue_stats (tm_port_t port,
-                                       pd_qos_iq_t iqs[HAL_PD_QOS_MAX_IQS],
-                                       pd_qos_oq_t oqs[HAL_PD_QOS_MAX_OQS],
-                                       qos::QosClassQueueStats *q_stats)
+void
+qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
+                                      sdk::platform::capri::capri_queue_stats_t *qos_queue_stats)
 {
-    hal_ret_t                first_err_ret = HAL_RET_OK;
-    hal_ret_t                ret = HAL_RET_OK;
-    sdk_ret_t                sdk_ret;
-    tm_iq_stats_t            iq_stats;
-    tm_oq_stats_t            oq_stats;
-
-    for (unsigned i = 0; i < HAL_PD_QOS_MAX_IQS; i++) {
-        if (iqs[i].valid) {
-            sdk_ret = capri_tm_get_iq_stats(port, iqs[i].iq, &iq_stats);
-            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to get iq stats for port {} queue {} ret {}",
-                              port, iqs[i].iq, ret);
-                // Continue
-                if (first_err_ret == HAL_RET_OK) {
-                    first_err_ret = ret;
-                }
-            }
-
+    for (unsigned i = 0; i < CAPRI_TM_MAX_IQS; i++) {
+        if (qos_queue_stats->iq_stats[i].iq.valid) {
             auto input_stats = q_stats->add_input_queue_stats();
-            input_stats->set_input_queue_idx(iqs[i].iq);
-            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_in(iq_stats.oflow.good_pkts_in);
-            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_out(iq_stats.oflow.good_pkts_out);
-            input_stats->mutable_oflow_fifo_stats()->set_errored_pkts_in(iq_stats.oflow.errored_pkts_in);
-            input_stats->mutable_oflow_fifo_stats()->set_fifo_depth(iq_stats.oflow.fifo_depth);
-            input_stats->mutable_oflow_fifo_stats()->set_max_fifo_depth(iq_stats.oflow.max_fifo_depth);
-            input_stats->set_buffer_occupancy(iq_stats.buffer_occupancy);
-            input_stats->set_peak_occupancy(iq_stats.peak_occupancy);
-            input_stats->set_port_monitor(iq_stats.port_monitor);
+            auto iq_stats = &qos_queue_stats->iq_stats[i].stats;
+            input_stats->set_input_queue_idx(qos_queue_stats->iq_stats[i].iq.queue);
+            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_in(iq_stats->oflow.good_pkts_in);
+            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_out(iq_stats->oflow.good_pkts_out);
+            input_stats->mutable_oflow_fifo_stats()->set_errored_pkts_in(iq_stats->oflow.errored_pkts_in);
+            input_stats->mutable_oflow_fifo_stats()->set_fifo_depth(iq_stats->oflow.fifo_depth);
+            input_stats->mutable_oflow_fifo_stats()->set_max_fifo_depth(iq_stats->oflow.max_fifo_depth);
+            input_stats->set_buffer_occupancy(iq_stats->buffer_occupancy);
+            input_stats->set_peak_occupancy(iq_stats->peak_occupancy);
+            input_stats->set_port_monitor(iq_stats->port_monitor);
         }
-    }
-
-    for (unsigned i = 0; i < HAL_PD_QOS_MAX_OQS; i++) {
-        if (oqs[i].valid) {
-            sdk_ret = capri_tm_get_oq_stats(port, oqs[i].oq, &oq_stats);
-            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to get oq stats for port {} queue {} ret {}",
-                              port, oqs[i].oq, ret);
-                // Continue
-                if (first_err_ret == HAL_RET_OK) {
-                    first_err_ret = ret;
-                }
-            }
+        if (qos_queue_stats->oq_stats[i].oq.valid) {
             auto output_stats = q_stats->add_output_queue_stats();
-            output_stats->set_output_queue_idx(oqs[i].oq);
-            output_stats->set_queue_depth(oq_stats.queue_depth);
-            output_stats->set_port_monitor(oq_stats.port_monitor);
+            auto oq_stats = &qos_queue_stats->oq_stats[i].stats;
+            output_stats->set_output_queue_idx(qos_queue_stats->oq_stats[i].oq.queue);
+            output_stats->set_queue_depth(oq_stats->queue_depth);
+            output_stats->set_port_monitor(oq_stats->port_monitor);
         }
     }
-    return first_err_ret;
 }
 
 static hal_ret_t
@@ -1568,8 +1528,10 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
 {
     hal_ret_t                first_err_ret = HAL_RET_OK;
     hal_ret_t                ret = HAL_RET_OK;
-    pd_qos_iq_t              iqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_IQS] = {};
-    pd_qos_oq_t              oqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_OQS] = {};
+    sdk_ret_t                sdk_ret = SDK_RET_OK;
+    capri_queue_t            iqs[TM_NUM_PORTS][CAPRI_TM_MAX_IQS] = {};
+    capri_queue_t            oqs[TM_NUM_PORTS][CAPRI_TM_MAX_OQS] = {};
+    capri_queue_stats_t      queue_stats = {0};
 
     qos_class_pd_get_all_queues(qos_class_pd,
                                 iqs, oqs);
@@ -1582,37 +1544,15 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
         qos_class_pd_port_to_packet_buffer_port(port,
                                                 port_stats->mutable_packet_buffer_port());
         auto q_stats = port_stats->mutable_qos_queue_stats();
-        ret = qos_class_pd_populate_qos_queue_stats(port, iqs[port], 
-                                                    oqs[port], q_stats);
+        sdk_ret = capri_populate_queue_stats(
+                        port, iqs[port], oqs[port], &queue_stats);
+        qos_class_queue_stats_to_proto_stats(q_stats, &queue_stats);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (first_err_ret == HAL_RET_OK) {
             first_err_ret = ret;
         }
     }
     return first_err_ret;
-}
-
-hal_ret_t
-qos_class_pd_get_queue_stats (tm_port_t port,
-                              qos::QosClassQueueStats *q_stats)
-{
-    pd_qos_iq_t iqs[HAL_PD_QOS_MAX_IQS] = {};
-    pd_qos_oq_t oqs[HAL_PD_QOS_MAX_OQS] = {};
-    uint32_t    num_iqs = 0, num_oqs = 0;
-
-    num_iqs = capri_tm_get_num_iqs_for_port(port);
-    num_oqs = capri_tm_get_num_oqs_for_port(port);
-
-    for (unsigned i = 0; i < num_iqs; i++) {
-        iqs[i].valid = true;
-        iqs[i].iq = i;
-    }
-
-    for (unsigned i = 0; i < num_oqs; i++) {
-        oqs[i].valid = true;
-        oqs[i].oq = i;
-    }
-
-    return qos_class_pd_populate_qos_queue_stats(port, iqs, oqs, q_stats);
 }
 
 // ----------------------------------------------------------------------------
@@ -1629,36 +1569,6 @@ pd_qos_class_get (pd_func_args_t *pd_func_args)
 
     qos_class_pd_populate_status(qos_class_pd, rsp->mutable_status()->mutable_epd_status());
     qos_class_pd_populate_stats(qos_class_pd, rsp->mutable_stats());
-
-    return ret;
-}
-
-// ----------------------------------------------------------------------------
-// pd qos_class thresholds get
-// ----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_class_thresholds_get (pd_func_args_t *pd_func_args)
-{
-    hal_ret_t           ret = HAL_RET_OK;
-    pd_qos_class_thresholds_get_args_t *args = pd_func_args->pd_qos_class_thresholds_get;
-    QosClassThresholdsGetResponse *rsp = args->rsp;
-
-    for (uint32_t port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        auto port_occupancy = rsp->add_port_occupancy();
-        port_occupancy->set_port_num(port);
-        for (uint32_t i = 0; i < 8; i ++) {
-            auto occupancy = port_occupancy->add_occupancy();
-            occupancy->set_queue_idx(i);
-            occupancy->set_occupancy(capri_tm_get_port_occupancy(port, i));
-        }
-    }
-
-    for (uint32_t i = 0; i < 32; i ++) {
-        auto threshold = rsp->add_thresholds();
-        threshold->set_hbm_context(i);
-        threshold->set_xon_threshold(capri_tm_get_xon_threshold(i));
-        threshold->set_xoff_threshold(capri_tm_get_xoff_threshold(i));
-    }
 
     return ret;
 }

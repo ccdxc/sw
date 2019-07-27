@@ -7,6 +7,7 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "gen/proto/qos.pb.h"
@@ -592,21 +593,34 @@ hal_ret_t
 qos_class_thresholds_get (qos::QosClassThresholdsGetRequest& req,
                           qos::QosClassThresholdsGetResponseMsg *rsp)
 {
+    sdk_ret_t sdk_ret = SDK_RET_OK;
     auto response = rsp->add_response();
-    pd::pd_qos_class_thresholds_get_args_t args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    hal_ret_t                   ret    = HAL_RET_OK;
+    sdk::platform::capri::capri_thresholds_t thresholds = {0};
 
-    args.rsp = response;
-    pd_func_args.pd_qos_class_thresholds_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = sdk::platform::capri::capri_thresholds_get(&thresholds);
+    if (sdk_ret != SDK_RET_OK) {
         response->set_api_status(types::API_STATUS_ERR);
-        HAL_TRACE_ERR("Unable to do PD get for qos class threshold. ret : {}", ret);
-    } else {
-        response->set_api_status(types::API_STATUS_OK);
+        HAL_TRACE_ERR("Unable to do PD get for qos class threshold. ret : {}", hal_sdk_ret_to_hal_ret(sdk_ret));
     }
-    return ret;
+
+    for (uint32_t port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        auto port_occupancy = response->add_port_occupancy();
+        port_occupancy->set_port_num(port);
+        for (uint32_t i = 0; i < CAPRI_QUEUES_PER_PORT; i ++) {
+            auto occupancy = port_occupancy->add_occupancy();
+            occupancy->set_queue_idx(i);
+            occupancy->set_occupancy(thresholds.occupancy[port].queue_occupancy[i]);
+        }
+    }
+    for (uint32_t i = 0; i < CAPRI_TM_MAX_HBM_ETH_CONTEXTS; i ++) {
+        auto threshold = response->add_thresholds();
+        threshold->set_hbm_context(i);
+        threshold->set_xon_threshold(thresholds.threshold[i].xon_threshold);
+        threshold->set_xoff_threshold(thresholds.threshold[i].xoff_threshold);
+    }
+    response->set_api_status(types::API_STATUS_OK);
+
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 hal_ret_t

@@ -245,7 +245,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_GET, pd_qos_class_get);
-    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, pd_qos_class_thresholds_get);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE,
                    pd_qos_class_periodic_stats_update);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE,

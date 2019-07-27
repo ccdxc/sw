@@ -1681,10 +1681,6 @@ typedef struct pd_qos_class_get_args_s {
     QosClassGetResponse *rsp;
 } __PACK__ pd_qos_class_get_args_t;
 
-typedef struct pd_qos_class_thresholds_get_args_s {
-    QosClassThresholdsGetResponse *rsp;
-} __PACK__ pd_qos_class_thresholds_get_args_t;
-
 typedef struct pd_qos_class_periodic_stats_update_args_s {
 } __PACK__ pd_qos_class_periodic_stats_update_args_t;
 
@@ -3755,7 +3751,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_qos_class_mem_free);
         PD_UNION_ARGS_FIELD(pd_qos_class_make_clone);
         PD_UNION_ARGS_FIELD(pd_qos_class_get);
-        PD_UNION_ARGS_FIELD(pd_qos_class_thresholds_get);
         PD_UNION_ARGS_FIELD(pd_qos_class_periodic_stats_update);
         PD_UNION_ARGS_FIELD(pd_qos_class_set_global_pause_type);
 
@@ -4238,7 +4233,6 @@ PD_FUNCP_TYPEDEF(pd_qos_class_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_mem_free);
 PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
 PD_FUNCP_TYPEDEF(pd_qos_class_get);
-PD_FUNCP_TYPEDEF(pd_qos_class_thresholds_get);
 PD_FUNCP_TYPEDEF(pd_qos_class_periodic_stats_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_set_global_pause_type);
 

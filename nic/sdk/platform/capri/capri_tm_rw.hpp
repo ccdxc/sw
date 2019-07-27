@@ -44,6 +44,9 @@ using sdk::lib::indexer;
 #define CAPRI_TM_BUS_WIDTH             512
 #define CAPRI_TM_MAX_QUEUES            32
 
+#define CAPRI_TM_MAX_IQS               32
+#define CAPRI_TM_MAX_OQS               32
+
 #define CAPRI_TM_BUFFER_ISLAND_0_CELL_COUNT 8192
 #define CAPRI_TM_BUFFER_ISLAND_1_CELL_COUNT 5120
 

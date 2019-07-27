@@ -7,6 +7,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_tm_utils.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include <memory>
 #include <map>
@@ -225,9 +226,9 @@ qos_is_user_defined_class (qos_group_t qos_group) {
     return false;
 }
 
-hal_ret_t
-qos_class_pd_get_queue_stats (tm_port_t port,
-                              qos::QosClassQueueStats *q_stats);
+void
+qos_class_queue_stats_to_proto_stats(qos::QosClassQueueStats *q_stats,
+                                     sdk::platform::capri::capri_queue_stats_t *qos_queue_stats);
 
 }   // namespace pd
 }   // namespace hal

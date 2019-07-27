@@ -7,6 +7,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_tm_utils.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
@@ -774,6 +775,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
     unsigned               port;
     // TODO: Hook up the reset flag to API call
     bool                   reset = false;
+    capri_queue_stats_t    qos_queue_stats = {0};
 
     HAL_TRACE_DEBUG("Querying PB stats");
     pb_stats = rsp->mutable_stats()->mutable_packet_buffer_stats();
@@ -822,8 +824,11 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::CONTROL_FIFO_FULL_DROP);
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(5)->set_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
 
-        ret = qos_class_pd_get_queue_stats(port,
-                                           port_stats->mutable_qos_queue_stats());
+        sdk_ret = capri_queue_stats_get(port, &qos_queue_stats);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        auto q_stats = port_stats->mutable_qos_queue_stats();
+        qos_class_queue_stats_to_proto_stats(q_stats, &qos_queue_stats);
+
         if (first_err_ret == HAL_RET_OK) {
             first_err_ret = ret;
         }
