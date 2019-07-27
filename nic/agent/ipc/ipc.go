@@ -153,9 +153,12 @@ func (ipc *IPC) processIPC(h func(*ipcproto.FWEvent, time.Time)) {
 		return
 	}
 
-	ts := time.Now()
+	ts := time.Now().UnixNano()
 	for ix := 0; ix < avail; ix++ {
-		ipc.processMsg(ro, ts, h)
+		// timestamp is not set for fwlog events from HAL
+		// generate different timestamps for each event
+		// TODO: revisit
+		ipc.processMsg(ro, time.Unix(0, ts+int64(ix)), h)
 		ro = (ro + 1) % ipc.numBufs
 	}
 
