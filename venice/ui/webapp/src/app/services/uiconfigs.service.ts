@@ -105,7 +105,7 @@ export class UIConfigsService {
         UIRolePermissions.monitoringflowexportpolicy_read,
       ],
     },
-    '/monitoring/techsupport': {
+    '/admin/techsupport': {
       required: [
         UIRolePermissions.monitoringtechsupportrequest_read,
       ],

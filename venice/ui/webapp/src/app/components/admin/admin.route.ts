@@ -24,7 +24,16 @@ const routes: Routes = [
         loadChildren: '@app/components/admin/users/users.module#UsersModule'
       }
     ]
-  }
+  },
+  {
+    path: 'techsupport',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/techsupport/techsupport.module#TechsupportModule'
+      }
+    ]
+  },
 ];
 
 @NgModule({

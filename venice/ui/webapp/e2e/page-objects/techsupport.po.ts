@@ -8,13 +8,13 @@ export class TechSupport {
     }
 
     navigateTo() {
-        return browser.get('/#/monitoring/techsupport');
+        return browser.get('/#/admin/techsupport');
     }
 
     async verifyPage() {
         const EC = protractor.ExpectedConditions;
         const techsupportPageComponent = element(by.css('app-techsupport'));
-        const urlEC = EC.urlContains('/monitoring/techsupport');
+        const urlEC = EC.urlContains('/admin/techsupport');
         const componentEC = EC.presenceOf(techsupportPageComponent);
         await browser.wait(EC.and(urlEC, componentEC));
     }

@@ -159,14 +159,6 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: UIRolePermissions.monitoringflowexportpolicy_read,
         link: ['/monitoring', 'flowexport']
-      },
-      {
-        label: 'Tech Support',
-        icon: {
-          cssClass: 'app-l-side-nav-monitoring-techsupport'
-        },
-        roleGuard: UIRolePermissions.monitoringtechsupportrequest_read,
-        link: ['/monitoring', 'techsupport']
       }
     ]
   },
@@ -211,6 +203,14 @@ export const sideNavMenu: SideNavItem[] = [
         //   ]
         // },
         link: ['/admin', 'users']
+      },
+      {
+        label: 'Tech Support',
+        icon: {
+          cssClass: 'app-l-side-nav-monitoring-techsupport'
+        },
+        roleGuard: UIRolePermissions.monitoringtechsupportrequest_read,
+        link: ['/admin', 'techsupport']
       }
     ]
   },

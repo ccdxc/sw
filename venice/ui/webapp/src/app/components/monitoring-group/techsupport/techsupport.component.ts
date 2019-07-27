@@ -85,7 +85,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     }
     this.controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Tech Supports', url: Utility.getBaseUIUrl() + 'monitoring/techsupport' }]
+      breadcrumb: [{ label: 'Tech Supports', url: Utility.getBaseUIUrl() + 'admin/techsupport' }]
     });
   }
 
