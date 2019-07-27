@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
@@ -42,7 +43,8 @@ func NewFwEventGen(ctx context.Context, num int, vrf uint64) chan *halproto.FWEv
 				Fwaction:   halproto.SecurityAction(fwActionKey()),
 				Direction:  uint32(rand.Int31n(2) + 1),
 				RuleId:     uint64(rand.Int63n(5000)),
-				SessionId:  uint64(rand.Int63n(5000)),
+				Timestamp:  time.Now().UnixNano(),
+				SessionId:  uint64(i + 1),
 			}
 
 			// set vrf
