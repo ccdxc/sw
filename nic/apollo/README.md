@@ -164,6 +164,39 @@ desired objects for the packet tests.
 
 ## IOTA tests
 
+* Usage -
+To run the IOTA tests, run this command in a dev container from nic directory.
+
+./iota.py --testbed testbeds/tb69.json --testsuite apollo --pipeline apollo
+
+pipeline - apollo/iris
+testbed - testbed json files from /vol/jenkins/iota/dev-testbeds/
+testsuite - testsuites from iota/<pipeline>/testsuites/<testsuite-name>
+
+* Dir layout -
+iota/harness/ - IOTA infra
+iota/logs/ - Logs stored based on nodes & testcases
+iota/scripts/ - IOTA scripts for node management
+iota/test/<pipeline>/config - all the object generation and creation logic is
+present here
+iota/test/<pipeline>/config/topology - topology files
+iota/test/<pipeline>/testbundles/<feature>/ - feature specific testbundle files
+iota/test/<pipeline>/testcases/<feature>/ - feature specific testcase files
+iota/test/<pipeline>/utils/ - utility files specific to pipelines
+iota/test/<pipeline>/verif/ - verification steps specific to pipelines
+iota/test/utils/ - utility files which can be used across pipelines
+iota/test/verif/ - verification steps which can be used across pipelines
+
+* Logs -
+iota/iota-detailed.log - Detailed log of the recent run
+iota/logs/<pipeline>/nodes/<node-name>/ - Logs specific to nodes of testbed
+iota/logs/<pipeline>/tcdata/<testcase>/ - Logs specific to testcases
+
+Testcases should use appropriate logging levels as per "loglevel" types
+defined in iota/harness/infra/types.py
+Please use api.Logger.debug() / verbose() for traces as the other debug levels
+sends it to console as well
+
 ## CLIs
 
 ## p4ctl CLIs
