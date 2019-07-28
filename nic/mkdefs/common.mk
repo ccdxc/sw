@@ -105,6 +105,7 @@ export NIC_apollo_P4PD_SOLIBS := p4pd_apollo p4pd_apollo_rxdma p4pd_apollo_txdma
 export NIC_artemis_P4PD_SOLIBS := p4pd_artemis p4pd_artemis_rxdma p4pd_artemis_txdma
 export NIC_l2switch_P4PD_SOLIBS := p4pd_l2switch
 export NIC_elektra_P4PD_SOLIBS := p4pd_elektra
+export NIC_phoebus_P4PD_SOLIBS := p4pd_phoebus
 export NIC_hello_P4PD_SOLIBS := p4pd_hello
 export NIC_apollo_PDSAPI_IMPL_SOLIBS := lpmitree_apollo rfc_apollo sensor trace memhash pdsapi_capri_impl
 export NIC_artemis_PDSAPI_IMPL_SOLIBS := lpmitree_artemis rfc_artemis sensor trace memhash pdsapi_capri_impl
@@ -223,8 +224,9 @@ apollo_DEFS     := -DAPOLLO
 artemis_DEFS    := -DARTEMIS
 l2switch_DEFS   := -DL2SWITCH
 elektra_DEFS    := -DELEKTRA
+phoebus_DEFS    := -DPHOEBUS
 hello_DEFS      := -DHELLO
 
 export PIPLINES_8G := apollo artemis
-export PIPELINES_ALL := iris gft apollo artemis l2switch elektra hello
+export PIPELINES_ALL := iris gft apollo artemis l2switch elektra phoebus hello
 
