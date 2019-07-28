@@ -9,6 +9,12 @@ const (
 	// NaplesOOBInterface is the out of band interface
 	NaplesOOBInterface = "oob_mnic0"
 
+	// NaplesINB0Interface is inband interface 0
+	NaplesINB0Interface = "inb_mnic0"
+
+	// NaplesINB1Interface is inband interface 1
+	NaplesINB1Interface = "inb_mnic1"
+
 	// NaplesMockInterface is a dummy interface used for tests
 	NaplesMockInterface = "mock"
 

@@ -1,6 +1,7 @@
 package ipif
 
 import (
+	"context"
 	"net"
 	"sync"
 	"time"
@@ -20,6 +21,7 @@ type IPClientIf interface {
 	DoNTPSync() error
 	GetIPClientIntf() string
 	GetDHCPState() string
+	StopDHCPConfig()
 }
 
 // IPClient helps to set the IP address of the management interfaces
@@ -54,4 +56,6 @@ type DHCPState struct {
 	LeaseDuration time.Duration
 	AckPacket     dhcp4.Packet
 	CurState      string
+	DhcpCtx       context.Context
+	DhcpCancel    context.CancelFunc
 }

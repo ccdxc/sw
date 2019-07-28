@@ -46,3 +46,7 @@ func (c *IPClient) GetIPClientIntf() string {
 func (c *IPClient) GetDHCPState() string {
 	return "none"
 }
+
+// StopDHCPConfig cancels any active DHCP goroutines
+func (c *IPClient) StopDHCPConfig() {
+}

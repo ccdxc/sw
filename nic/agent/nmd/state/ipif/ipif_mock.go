@@ -47,3 +47,7 @@ func (c *MockIPClient) GetIPClientIntf() string {
 func (c *MockIPClient) GetDHCPState() string {
 	return "none"
 }
+
+// StopDHCPConfig cancels any active DHCP goroutines
+func (c *MockIPClient) StopDHCPConfig() {
+}

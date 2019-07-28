@@ -3,6 +3,7 @@
 package ipif
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
@@ -27,6 +28,7 @@ func NewIPClient(nmd api.NmdAPI, intf string) (*IPClient, error) {
 		nmd:       nmd,
 		VeniceIPs: make(map[string]bool),
 	}
+
 	link, err := netlink.LinkByName(intf)
 	if err != nil {
 		log.Errorf("Failed to look up interface %v during static config. Err: %v", intf, err)
@@ -106,17 +108,28 @@ func (c *IPClient) DoDHCPConfig() error {
 	}
 	// Start the control loop and keep polling for err
 	c.dhcpState.Client = client
+	c.dhcpState.DhcpCtx, c.dhcpState.DhcpCancel = context.WithCancel(context.Background())
 
-	if err := c.startDHCP(client); err != nil {
-		log.Errorf("Failed to start dhcp client. Err: %v", err)
-		pktSock.Close()
-		return err
+	go c.startDHCPLoop(c.dhcpState.DhcpCtx, client)
+
+	return nil
+}
+
+// StopDHCPConfig cancels any active DHCP goroutines
+func (c *IPClient) StopDHCPConfig() error {
+	c.dhcpState.Lock()
+	defer c.dhcpState.Unlock()
+	log.Info("Inside Stop DHCPConfig")
+
+	if c.dhcpState.DhcpCancel != nil {
+		log.Infof("Stopping DHCP Config")
+		c.dhcpState.DhcpCancel()
 	}
 
 	return nil
 }
 
-func (c *IPClient) startDHCP(client *dhcp.Client) (err error) {
+func (c *IPClient) startDHCP(dhcpCtx context.Context, client *dhcp.Client) (err error) {
 	disc := client.DiscoverPacket()
 	disc.AddOption(PensandoDHCPRequestOption.Code, PensandoDHCPRequestOption.Value)
 
@@ -154,11 +167,11 @@ func (c *IPClient) startDHCP(client *dhcp.Client) (err error) {
 		return
 	}
 
-	return c.dhcpState.updateDHCPState(ack, c.intf)
+	return c.dhcpState.updateDHCPState(dhcpCtx, ack, c.intf)
 
 }
 
-func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (err error) {
+func (d *DHCPState) updateDHCPState(dhcpCtx context.Context, ack dhcp4.Packet, mgmtLink netlink.Link) (err error) {
 	d.Lock()
 	defer d.Unlock()
 
@@ -201,7 +214,7 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	d.LeaseDuration, err = time.ParseDuration(fmt.Sprintf("%ds", binary.BigEndian.Uint32(opts[dhcp4.OptionIPAddressLeaseTime])))
 	// Start renewal routine
 	// Kick off a renewal process.
-	go d.startRenewLoop(d.AckPacket, mgmtLink)
+	go d.startRenewLoop(dhcpCtx, d.AckPacket, mgmtLink)
 	// Set NMDIPConfig here and then call static assignments
 	log.Infof("YIADDR: %s", d.IPNet.IP.String())
 	log.Infof("YIMASK: %s", d.IPNet.Mask.String())
@@ -229,22 +242,51 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	return
 }
 
-func (d *DHCPState) startRenewLoop(ackPacket dhcp4.Packet, mgmtLink netlink.Link) {
+func (c *IPClient) startDHCPLoop(ctx context.Context, client *dhcp.Client) {
+	log.Info("Starting DHCP Loop")
+	offerIntv := time.Second
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("Stopping DHCP retry loop")
+			return
+		case <-time.After(offerIntv):
+			log.Infof("Retrying DHCP after %v seconds.", offerIntv)
+			err := c.startDHCP(ctx, client)
+			if err != nil {
+				log.Errorf("Failed to complete DHCP request. Err : %v", err)
+				offerIntv = 2 * offerIntv
+				// Grow retry interval till 120 mins
+				if offerIntv > 120*time.Second {
+					offerIntv = 1
+				}
+			} else {
+				log.Infof("Successfully got offer from DHCP exiting DHCP retry loop")
+				return
+			}
+		}
+	}
+}
+
+func (d *DHCPState) startRenewLoop(ctx context.Context, ackPacket dhcp4.Packet, mgmtLink netlink.Link) {
 	log.Infof("Starting DHCP renewal loop for interface: %v", mgmtLink.Attrs().Name)
 	defer func() {
 		if err := recover(); err != nil {
 			log.Errorf("Renewal control loop exited. Err: %v", err)
 			log.Infof("Restarting renew loop...")
-			d.startRenewLoop(d.AckPacket, mgmtLink)
+			d.startRenewLoop(ctx, d.AckPacket, mgmtLink)
 		}
 	}()
 	ticker := time.NewTicker(d.LeaseDuration)
 	for {
 		select {
+		case <-ctx.Done():
+			log.Infof("Exiting renew loop.")
+			return
 		case <-ticker.C:
 			d := d
 			_, newAck, _ := d.Client.Renew(ackPacket)
-			if err := d.updateDHCPState(newAck, mgmtLink); err != nil {
+			if err := d.updateDHCPState(ctx, newAck, mgmtLink); err != nil {
 				log.Errorf("Failed to update DHCP State. Err: %v", err)
 			}
 		}

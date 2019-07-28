@@ -99,6 +99,8 @@ func TestDHCPSpecControllers(t *testing.T) {
 	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
 	AssertOk(t, err, "IPClient creates must succeed")
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
+
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -137,6 +139,7 @@ func TestDHCPValidVendorAttributes241Code(t *testing.T) {
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -178,6 +181,7 @@ func TestDHCPValidVendorAttributes241CodeMultiple(t *testing.T) {
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -221,6 +225,7 @@ func TestDHCPValidVendorAttributes(t *testing.T) {
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -262,6 +267,7 @@ func TestDHCPRenewal(t *testing.T) {
 	mockNMD.Naples.Spec.Controllers = []string{}
 
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -308,6 +314,7 @@ func TestDHCPEmptyVendorAttributes(t *testing.T) {
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -345,6 +352,7 @@ func TestDHCPMalformedVendorAttributesOption43And60(t *testing.T) {
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -382,6 +390,7 @@ func TestDHCPMalformedVendorAttributes(t *testing.T) {
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -417,8 +426,7 @@ func TestDHCPTimedout(t *testing.T) {
 	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
 	AssertOk(t, err, "IPClient creates must succeed")
 	err = ipClient.DoDHCPConfig()
-	// Check DHCP Config should fail
-	Assert(t, err != nil, "DHCP Config must fail")
+	time.Sleep(15 * time.Second)
 	AssertEquals(t, ipClient.dhcpState.CurState, dhcpTimedout.String(), "DHCP should timeout when there is no dhcp server configured")
 }
 
@@ -458,6 +466,7 @@ func TestRenewalLoopPanics(t *testing.T) {
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
 	err = ipClient.DoDHCPConfig()
+	time.Sleep(5 * time.Second)
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
 
@@ -483,6 +492,9 @@ func TestRenewalLoopPanics(t *testing.T) {
 	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
 	d.conn.Close()
 	time.Sleep(leaseDuration)
+
+	err = ipClient.StopDHCPConfig()
+	AssertOk(t, err, "Stopping of DHCP Config failed")
 }
 
 //++++++++++++++++++++++++++++ Test Utility Functions ++++++++++++++++++++++++++++++++++++++++

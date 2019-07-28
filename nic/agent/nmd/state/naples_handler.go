@@ -14,6 +14,8 @@ import (
 
 	"github.com/gogo/protobuf/types"
 
+	"github.com/vishvananda/netlink"
+
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
@@ -102,12 +104,54 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 	return nil
 }
 
+func linkDown(intf string) error {
+	log.Infof("Bringing link %v down.", intf)
+
+	link, err := netlink.LinkByName(intf)
+	if err != nil {
+		log.Errorf("Failed to lookup interface %v. Err : %v", intf, err)
+		return nil
+	}
+
+	return netlink.LinkSetDown(link)
+}
+
+func bringAllLinksDown() error {
+	log.Infof("Bringing all links down.")
+	err := linkDown(ipif.NaplesInbandInterface)
+	if err != nil {
+		log.Errorf("Failed to bring down %v. Err : %v", ipif.NaplesInbandInterface, err)
+	}
+
+	err = linkDown(ipif.NaplesOOBInterface)
+	if err != nil {
+		log.Errorf("Failed to bring down %v. Err : %v", ipif.NaplesOOBInterface, err)
+	}
+
+	err = linkDown(ipif.NaplesINB0Interface)
+	if err != nil {
+		log.Errorf("Failed to bring down %v. Err : %v", ipif.NaplesINB0Interface, err)
+	}
+
+	err = linkDown(ipif.NaplesINB1Interface)
+	if err != nil {
+		log.Errorf("Failed to bring down %v. Err : %v", ipif.NaplesINB1Interface, err)
+	}
+
+	return nil
+}
+
 // UpdateNaplesConfig updates a local Naples Config object
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	oldCfg, _ := json.Marshal(n.config)
 	newCfg, _ := json.Marshal(cfg)
 	log.Infof("NAPLES Update: Old: %s", string(oldCfg))
 	log.Infof("NAPLES Update: New: %s", string(newCfg))
+
+	// Ensure all links are brought down before performing any mode change operation
+	if err := bringAllLinksDown(); err != nil {
+		log.Errorf("Failed to bring all links down. Err:%v", err)
+	}
 
 	// Perform Mode Validations
 	switch cfg.Spec.Mode {
@@ -276,6 +320,10 @@ func (n *NMD) handleHostModeTransition() error {
 
 func (n *NMD) reconcileIPClient() error {
 	var mgmtIntf string
+	if n.IPClient != nil {
+		log.Infof("Calling Stop DHCPConfig from inside reconcile")
+		n.IPClient.StopDHCPConfig()
+	}
 
 	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
 		mgmtIntf = ipif.NaplesInbandInterface
@@ -651,6 +699,12 @@ func (n *NMD) StopManagedMode() error {
 	// cancel tsdb connection
 	if n.tsdbCancel != nil {
 		n.tsdbCancel()
+	}
+
+	// Stop DHCP Config if any active
+	if n.IPClient != nil {
+		log.Infof("Calling StopDHCPConfig")
+		n.IPClient.StopDHCPConfig()
 	}
 
 	// Wait for goroutines launched in managed mode
