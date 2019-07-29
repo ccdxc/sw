@@ -218,7 +218,8 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
 
 void
 capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
-                                   char *tablename, int stage, int pipe)
+                                   char *tablename, int stage, int pipe,
+                                   bool hw_init)
 {
     mem_addr_t va, start_offset;
     uint64_t size;
@@ -268,8 +269,10 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
         p4pd_global_hbm_table_address_set(tableid, start_offset, va, cache);
     }
 
-    if (sdk::asic::is_slave_init())
+    // TODO remove slave check once VPP's invocation is fixed
+    if ((hw_init == false) || sdk::asic::is_slave_init()) {
         return;
+    }
 
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
@@ -1585,7 +1588,9 @@ capri_hbm_table_entry_write (uint32_t tableid,
         addr  = tbl_info->base_mem_pa + entry_start_addr;
         sdk::asic::asic_mem_write(addr, hwentry, (entry_size >> 3));
     } else {
-        SDK_ASSERT(0);
+        // if base_mem_va/base_mem_pa is not set, get hbm addr from tablename
+        addr = get_mem_addr(tbl_info->tablename) + entry_start_addr;
+        sdk::asic::asic_mem_write(addr, hwentry, (entry_size >> 3));
     }
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
     return CAPRI_OK;

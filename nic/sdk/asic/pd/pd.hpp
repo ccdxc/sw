@@ -130,7 +130,7 @@ sdk_ret_t asicpd_program_table_mpu_pc(void);
 sdk_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 sdk_ret_t asicpd_program_table_mpu_pc(void);
 sdk_ret_t asicpd_deparser_init(void);
-sdk_ret_t asicpd_program_hbm_table_base_addr(void);
+sdk_ret_t asicpd_program_hbm_table_base_addr(bool hw_init = true);
 uint8_t asicpd_get_action_pc(uint32_t tableid, uint8_t actionid);
 uint8_t asicpd_get_action_id(uint32_t tableid, uint8_t actionpc);
 int asicpd_table_entry_write(uint32_t tableid, uint32_t index,

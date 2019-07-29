@@ -20,6 +20,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/impl_utils.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
@@ -895,38 +896,10 @@ artemis_impl::p4plus_table_init_(void) {
 
 sdk_ret_t
 artemis_impl::pipeline_init(void) {
-    p4pd_error_t    p4pd_ret;
-    sdk_ret_t       ret;
-    p4pd_cfg_t p4pd_cfg = {
-        .table_map_cfg_file  = "artemis/capri_p4_table_map.json",
-        .p4pd_pgm_name       = "artemis_p4",
-        .p4pd_rxdma_pgm_name = "artemis_rxdma",
-        .p4pd_txdma_pgm_name = "artemis_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_rxdma_cfg = {
-        .table_map_cfg_file  = "artemis/capri_rxdma_table_map.json",
-        .p4pd_pgm_name       = "artemis_p4",
-        .p4pd_rxdma_pgm_name = "artemis_rxdma",
-        .p4pd_txdma_pgm_name = "artemis_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_txdma_cfg = {
-        .table_map_cfg_file  = "artemis/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = "artemis_p4",
-        .p4pd_rxdma_pgm_name = "artemis_rxdma",
-        .p4pd_txdma_pgm_name = "artemis_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
+    sdk_ret_t  ret;
+    p4pd_cfg_t p4pd_cfg;
 
-    p4pd_ret = p4pd_init(&p4pd_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-    p4pd_ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-    p4pd_ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
-    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
+    ret = pipeline_p4_hbm_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // skip the remaining if it is a slave initialization

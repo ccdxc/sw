@@ -478,24 +478,12 @@ class ${table}():
 //::        #endif
 
     def modify_entry(self, ctx):
-
         index = ctx['index']
-        rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
-        size    = new_intp()
 
-        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
+        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, None, None)
         if ret < 0:
             print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
             return;
-
-        for i in range (0, intp_value(size)):
-            ret = ${pddict['cli-name']}.${api_prefix}_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
-            if ret < 0:
-                print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
-                return;
-
-        delete_intp(size)
-        ${pddict['cli-name']}.free_debug_response_msg(rsp_msg)
 
         print('Entry was read successfully at index %d' % (index))
 
@@ -523,7 +511,6 @@ class ${table}():
 //::        #endif
 
             ret = ${pddict['cli-name']}.${api_prefix}_entry_write(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p)
-
             if ret < 0:
                 raise RuntimeError('${api_prefix}_entry_write() returned %d!' % (ret))
 

@@ -11,37 +11,16 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/apollo/api/impl/artemis/impl_utils.hpp"
 
 static bool pd_inited = 0;
 int
 cli_init (char *ptr)
 {
     pal_ret_t    pal_ret;
-    p4pd_error_t p4pd_ret;
     capri_cfg_t  capri_cfg;
     catalog      *catalog;
-
-    p4pd_cfg_t p4pd_cfg = {
-        .table_map_cfg_file  = "artemis/capri_p4_table_map.json",
-        .p4pd_pgm_name       = "artemis_p4",
-        .p4pd_rxdma_pgm_name = "artemis_rxdma",
-        .p4pd_txdma_pgm_name = "artemis_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_rxdma_cfg = {
-        .table_map_cfg_file  = "artemis/capri_rxdma_table_map.json",
-        .p4pd_pgm_name       = "artemis_p4",
-        .p4pd_rxdma_pgm_name = "artemis_rxdma",
-        .p4pd_txdma_pgm_name = "artemis_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_txdma_cfg = {
-        .table_map_cfg_file  = "artemis/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = "artemis_p4",
-        .p4pd_rxdma_pgm_name = "artemis_rxdma",
-        .p4pd_txdma_pgm_name = "artemis_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
+    p4pd_cfg_t   p4pd_cfg;
 
     // initialize PAL
     pal_ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
@@ -60,16 +39,7 @@ cli_init (char *ptr)
     // csr init is done inside capri_state_pd_init
     sdk::platform::capri::capri_state_pd_init(&capri_cfg);
 
-    // do artemis specific initialization
-    p4pd_ret = p4pd_init(&p4pd_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
-    p4pd_ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
-    p4pd_ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
+    api::impl::pipeline_p4_hbm_init(&p4pd_cfg, false);
     pd_inited = 1;
     return 0;
 }

@@ -274,7 +274,7 @@ asicpd_deparser_init (void)
 }
 
 sdk_ret_t
-asicpd_program_hbm_table_base_addr (void)
+asicpd_program_hbm_table_base_addr (bool hw_init)
 {
     p4pd_table_properties_t       tbl_ctx;
     p4pd_pipeline_t               pipe;
@@ -290,12 +290,14 @@ asicpd_program_hbm_table_base_addr (void)
         }
         capri_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
                                           tbl_ctx.tablename,
-                                          tbl_ctx.stage, pipe);
+                                          tbl_ctx.stage, pipe,
+                                          hw_init);
         if (tbl_ctx.table_thread_count > 1) {
             for (int j = 1; j < tbl_ctx.table_thread_count; j++) {
                 capri_program_hbm_table_base_addr(-1, tbl_ctx.thread_table_id[j],
                                                   tbl_ctx.tablename,
-                                                  tbl_ctx.stage, pipe);
+                                                  tbl_ctx.stage, pipe,
+                                                  hw_init);
             }
         }
     }
@@ -308,7 +310,8 @@ asicpd_program_hbm_table_base_addr (void)
         }
         capri_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
                                           tbl_ctx.tablename,
-                                          tbl_ctx.stage, P4_PIPELINE_RXDMA);
+                                          tbl_ctx.stage, P4_PIPELINE_RXDMA,
+                                          hw_init);
     }
 
     for (uint32_t i = p4pd_txdma_tableid_min_get();
@@ -319,7 +322,8 @@ asicpd_program_hbm_table_base_addr (void)
         }
         capri_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
                                           tbl_ctx.tablename,
-                                          tbl_ctx.stage, P4_PIPELINE_TXDMA);
+                                          tbl_ctx.stage, P4_PIPELINE_TXDMA,
+                                          hw_init);
     }
 
     return SDK_RET_OK;
