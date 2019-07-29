@@ -657,12 +657,12 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_INIT_FAILED, "Ctrl VM init failed")
     def __esx_host_init(self):
+        self.WaitForSsh(port=443)
+        time.sleep(30)
         if self.naples.IsSSHUP():
             print ("Naples OOB is up, skipping ctrl vm initialization.")
             return
         outFile = "/tmp/esx_" +  GlobalOptions.host_ip + ".json"
-        self.WaitForSsh(port=443)
-        time.sleep(30)
         esx_startup_cmd = ["timeout", "2400"]
         esx_startup_cmd.extend([GlobalOptions.esx_script])
         esx_startup_cmd.extend(["--esx-host", GlobalOptions.host_ip])
