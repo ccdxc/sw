@@ -145,6 +145,9 @@ curl -i -XPOST 'http://localhost:7086/write?db=mydb' --data-binary 'cpu_load_sho
 # Query
 curl -sG 'http://localhost:7086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT * FROM cpu_load_short" | python -mjson.tool
 
+# Query with parameters
+curl -sG 'http://localhost:7086/query' --data-urlencode "db=default" --data-urlencode "q=SELECT * FROM  objStats WHERE "reporterID" = 'nmd_00ae.cd00.0540'"
+
 # Information about the cluster
 curl -s http://node1:7086/info | python -mjson.tool
 
