@@ -410,7 +410,7 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vla
 		clearSwitchPortConfig(n3k, ds.GetPorts())
 
 		speed := getSpeed(ds.GetSpeed())
-		vlanRange := strconv.Itoa(int(switchPortID)) + "-" + strconv.Itoa(int(switchPortID+constants.VlansPerTestBed-1))
+		vlanRange := strconv.Itoa(int(vlans[0])) + "-" + strconv.Itoa(int(vlans[len(vlans)-1]))
 		if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(switchPortID), vlanRange, speed); err != nil {
 			return nil, errors.Wrap(err, "Configuring switch failed")
 

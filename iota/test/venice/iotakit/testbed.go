@@ -755,11 +755,6 @@ func (tb *TestBed) initNodeState() error {
 		}
 	}
 
-	// allocate some Vlans
-	for i := 0; i < tb.Topo.NumVlans; i++ {
-		tb.allocatedVlans = append(tb.allocatedVlans, uint32(baseVlan+i))
-	}
-
 	return nil
 }
 
@@ -1069,6 +1064,24 @@ func (tb *TestBed) setupTestBed() error {
 
 		log.Debugf("Got InitTestBed resp: %+v", resp)
 		tb.initTestbedResp = resp
+	} else {
+		resp, err := client.GetTestBed(context.Background(), testBedMsg)
+		if err != nil {
+			log.Errorf("Error during GetTestBed(). Err: %v", err)
+			return fmt.Errorf("Error during init testbed")
+		}
+		if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			log.Errorf("Error during GetTestBed(). ApiResponse: %+v Err: %v", resp.ApiResponse, err)
+			return fmt.Errorf("Error during init testbed")
+		}
+
+		log.Debugf("Got GetTestBed resp: %+v", resp)
+		tb.initTestbedResp = resp
+	}
+
+	//Copy the vlans from the testbed
+	for _, vlan := range tb.initTestbedResp.AllocatedVlans {
+		tb.allocatedVlans = append(tb.allocatedVlans, vlan)
 	}
 
 	// Build Topology Object after parsing warmd.json

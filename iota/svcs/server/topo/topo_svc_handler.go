@@ -288,6 +288,19 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	return ts.TestBedInfo, nil
 }
 
+// GetTestBed gets testbed state
+func (ts *TopologyService) GetTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
+
+	if ts.TestBedInfo == nil {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Testbed not initialized")
+		return req, nil
+
+	}
+
+	return ts.TestBedInfo, nil
+}
+
 func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientConfig, reboot bool, nodes []*iota.TestBedNode) error {
 	pool, ctx := errgroup.WithContext(ctx)
 
@@ -442,10 +455,9 @@ func (ts *TopologyService) CleanNodes(ctx context.Context, req *iota.TestNodesMs
 		_, ok := ts.ProvisionedNodes[n.GetNodeName()]
 		if ok {
 			delete(ts.ProvisionedNodes, n.GetNodeName())
-		       log.Infof("TOPO SVC | Clean Nodes , cleaning up node %v", n.GetNodeName())
+			log.Infof("TOPO SVC | Clean Nodes , cleaning up node %v", n.GetNodeName())
 		}
 	}
-
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 

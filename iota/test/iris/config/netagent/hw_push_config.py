@@ -114,7 +114,7 @@ def __add_config_worklads(req, target_node = None):
         if api.GetNicMode() == 'hostpin':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
             wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
-            if api.GetNicType(wl_msg.node_name) == 'pensando':
+            if api.GetNicType(wl_msg.node_name) in ['pensando', 'naples']:
                 wl_msg.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
             else:
                 wl_msg.encap_vlan = wl_msg.uplink_vlan

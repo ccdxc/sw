@@ -49,7 +49,7 @@ iota-test:
 iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd heimdall iota-test
 
 iota-tarball: iota
-	tar -zcf iota.tgz bin protos && cp iota.tgz ../ 
+	tar -zcf iota.tgz bin images protos && cp iota.tgz ../ 
 
 heimdall:
 	make -C $(NICDIR) heimdall.gobin

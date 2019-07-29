@@ -22,6 +22,9 @@ service TopologyApi {
     // InitTestBed Allocate Data VLANs, copy over built artifacts and starts IOTA Agent on all the nodes
     rpc InitTestBed (TestBedMsg) returns (TestBedMsg) {};
 
+    // GetTestBed get the information about the testbed (maily to get allocated vlans)
+    rpc GetTestBed (TestBedMsg) returns (TestBedMsg) {};
+
     // CleanUpTestBed will ensure that any state left behind from the previous run is appropriately cleaned up.
     rpc CleanUpTestBed(TestBedMsg) returns (TestBedMsg) {};
 

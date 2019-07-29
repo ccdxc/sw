@@ -348,7 +348,7 @@ def GetMgmtIPAddress(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetMgmtIPAddress(node_name)
 
 def IsNaplesNode(node_name):
-    return  GetNicType(node_name) == 'pensando'
+    return  GetNicType(node_name) in ['pensando', 'naples']
 
 def IsConfigOnly():
     return store.GetTestbed().GetCurrentTestsuite().IsConfigOnly()

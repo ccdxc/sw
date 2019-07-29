@@ -75,7 +75,7 @@ class Workload:
         self.skip_node_push = False
 
     def IsNaples(self):
-        return GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(self.node_name) == 'pensando'
+        return GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(self.node_name) in ['pensando', 'naples']
 
     def SkipNodePush(self):
         return self.skip_node_push

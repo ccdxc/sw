@@ -8,16 +8,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/goexpect"
+	expect "github.com/pensando/goexpect"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
 var (
-	exitTimeout   = 500 * time.Millisecond
-	promptRegex   = regexp.MustCompile("# ")
-	configRegex   = regexp.MustCompile(`\(config\)\# `)
-	configIfRegex = regexp.MustCompile(`\(config-if\)\# `)
+	exitTimeout     = 500 * time.Millisecond
+	promptRegex     = regexp.MustCompile("# ")
+	configRegex     = regexp.MustCompile(`\(config\)\# `)
+	configIfRegex   = regexp.MustCompile(`\(config-if\)\# `)
+	configVlanRegex = regexp.MustCompile(`\(config-vlan\)\# `)
 )
 
 type writerProxy struct {
@@ -106,6 +107,48 @@ func ConfigInterface(n3k *ConnectCtx, port string, commands []string, timeout ti
 			return buf.String(), err
 		}
 	}
+
+	return buf.String(), nil
+}
+
+// ConfigVlan configures vlan on the interface
+func ConfigVlan(n3k *ConnectCtx, vlanRange string, timeout time.Duration) (string, error) {
+	buf := &bytes.Buffer{}
+	exp, err := spawnExp(n3k, buf)
+	if err != nil {
+		return "", errors.Wrapf(err, "while spawn goexpect")
+	}
+
+	defer exp.Close()
+	_, _, err = exp.Expect(promptRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if err = exp.Send("conf\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if err := confVlanCmd(exp, fmt.Sprintf("vlan %s\n", vlanRange), timeout); err != nil {
+		return buf.String(), err
+	}
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
 
 	return buf.String(), nil
 }
@@ -229,6 +272,14 @@ func confIfCmd(exp expect.Expecter, cmd string, timeout time.Duration) error {
 		return err
 	}
 	_, _, err := exp.Expect(configIfRegex, timeout)
+	return err
+}
+
+func confVlanCmd(exp expect.Expecter, cmd string, timeout time.Duration) error {
+	if err := exp.Send(cmd); err != nil {
+		return err
+	}
+	_, _, err := exp.Expect(configVlanRegex, timeout)
 	return err
 }
 

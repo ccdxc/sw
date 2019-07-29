@@ -144,6 +144,8 @@ class _Testbed:
                         switch_ctx.speed = topo_pb2.DataSwitch.Speed_auto
                     #Testbed ID is the last one.
                     msg.testbed_id = getattr(instance, "ID", 0)
+                    Logger.info("Testbed ID used %s" % str(msg.testbed_id))
+
         return msg
 
     def __cleanup_testbed(self):
@@ -308,6 +310,7 @@ class _Testbed:
         for instance,node in zip(self.__tbspec.Instances, resp.nodes):
             if getattr(instance, 'NodeOs', None) == "esx":
                 instance.esx_ctrl_vm_ip = node.esx_ctrl_node_ip_address
+        Logger.info("Testbed allocated vlans {}".format(resp.allocated_vlans))
         if resp.allocated_vlans:
             tbvlans = []
             for vlan in resp.allocated_vlans:
@@ -345,7 +348,7 @@ class _Testbed:
         return self.__vlan_allocator.Alloc()
 
     def ResetVlanAlloc(self):
-        self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
+        self.__vlan_allocator.Reset()
 
     def GetVlanCount(self):
         return self.__vlan_allocator.Count()

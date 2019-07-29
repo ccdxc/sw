@@ -177,6 +177,7 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *Host) (*WorkloadCollection, error) {
 	nwMap := make(map[uint32]uint32)
 
 	for i := 0; i < defaultNumNetworks; i++ {
+		log.Infof("Allocated vlan %v\n", sm.tb.allocatedVlans)
 		nwMap[sm.tb.allocatedVlans[i]] = 0
 	}
 
@@ -251,17 +252,6 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 	if err != nil {
 		return fmt.Errorf("Error associating hosts: %s", err)
 	}
-	// create some networks
-	/*for i := 0; i < defaultNumNetworks; i++ {
-		vlanID := sm.tb.allocatedVlans[i]
-		err := sm.createNetwork(vlanID, fmt.Sprintf("192.168.%d.0/24", i+2))
-		if err != nil {
-			log.Errorf("Error creating network: vlan %v. Err: %v", vlanID, err)
-			return err
-		}
-	}
-
-	//snc := sm.Networks() */
 
 	hosts, err := sm.ListRealHosts()
 	if err != nil {
@@ -512,7 +502,8 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 				w.veniceWorkload.Spec.Interfaces[0].ExternalVlan = wireVlan
 			} else {
 				if len(tbVlans) == 0 {
-					return errors.New("Not enough vlans in the testbed for the config")
+					continue
+					//return errors.New("Not enough vlans in the testbed for the config")
 				}
 				nwMap[w.veniceWorkload.Spec.Interfaces[0].ExternalVlan] = tbVlans[0]
 				tbVlans = tbVlans[1:]

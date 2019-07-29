@@ -32,6 +32,13 @@ func (ts *StubTopologyService) InitTestBed(ctx context.Context, req *iota.TestBe
 	return req, nil
 }
 
+// GetTestBed get testbed info
+func (ts *StubTopologyService) GetTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | InitTestBed. Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
 // CleanUpTestBed cleans up a testbed
 func (ts *StubTopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | CleanUpTestBed. Received Request Msg: %v", req)

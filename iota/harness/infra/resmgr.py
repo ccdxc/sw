@@ -136,20 +136,29 @@ class TestbedVlanAllocator(object):
             self.__pool = iter(range(self.__start, self.__start + self.__count))
             return next(self.__pool)
 
+    def Reset(self):
+        self.__pool = iter(range(self.__start, self.__start + self.__count))
+        return
+
     def Count(self):
         return self.__count
 
 class TestbedVlanManager(object):
     def __init__(self, vlans):
         self.__vlans = vlans
-        self.__pool = iter(self.__vlans)
-        self.__count = len(vlans)
+        self.__pool = None
+        self.__count = 0
+        self.Reset()
 
     def Alloc(self):
         return next(self.__pool)
 
     def Count(self):
         return self.__count
+
+    def Reset(self):
+        self.__pool = iter(self.__vlans)
+        self.__count = len(self.__vlans)
 
 
 TESTBED_NUM_PORTS = 32000

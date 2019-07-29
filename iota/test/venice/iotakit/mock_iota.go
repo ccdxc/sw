@@ -87,6 +87,12 @@ func (ms *mockIotaServer) InitTestBed(ctx context.Context, req *iota.TestBedMsg)
 	return req, nil
 }
 
+func (ms *mockIotaServer) GetTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
+	log.Debugf("GetTestBed(): Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
 func (ms *mockIotaServer) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Debugf("CleanUpTestBed(): Received Request Msg: %v", req)
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK

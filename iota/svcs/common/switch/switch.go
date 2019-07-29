@@ -132,6 +132,18 @@ func (sw *nexus3k) SetNativeVlan(port string, vlan int) error {
 	return err
 }
 
+func (sw *nexus3k) ConfigureVlans(vlans string) error {
+
+	out, err := n3k.ConfigVlan(sw.ctx, vlans, 10*time.Second)
+	log.Println("-------------------output-------------------")
+	log.Println(out)
+	if err != nil {
+		log.Println("-------------------ERROR-------------------")
+	}
+
+	return err
+}
+
 func (sw *nexus3k) SetSpeed(port string, speed PortSpeed) error {
 
 	cmds := []string{
@@ -190,11 +202,17 @@ func (sw *nexus3k) UnsetNativeVlan(port string) error {
 
 func (sw *nexus3k) SetTrunkVlanRange(port string, vlanRange string) error {
 
+	//first create vlans
+	err := sw.ConfigureVlans(vlanRange)
+	if err != nil {
+		return err
+	}
+
 	cmds := []string{
 		"vlan " + vlanRange,
 	}
 
-	err := sw.runConfigCommands(port, cmds)
+	err = sw.runConfigCommands(port, cmds)
 	if err != nil {
 		return err
 	}
