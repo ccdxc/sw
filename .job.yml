@@ -88,7 +88,7 @@ references:
   - iota/test/venice/hwtest/hwregression
   - nic/utils/ftlite
 
-# in the current jobd infra this is a map. Hence the later entry overwrites earlier ones if there are duplicates..
+# dependencies section is deprecated, because it doesn't support 1-many dependencies. use dir_dependencies instead 
 dependencies:
   test: platform
   nic: iota/test/venice/hwtest
@@ -119,8 +119,6 @@ dir_dependencies:
     - nic/apollo
   nic/debug_cli/apollo:
     - nic/apollo
-  nic/agent:
-    - api
   venice:
     - api
     - test/ci_targets/e2e
@@ -136,4 +134,5 @@ dir_dependencies:
   events:
     - venice/ui
   nic/agent:
+    - api
     - test/ci_targets/e2e
