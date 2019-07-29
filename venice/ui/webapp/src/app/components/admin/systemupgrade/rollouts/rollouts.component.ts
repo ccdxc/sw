@@ -14,7 +14,7 @@ import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil.ts';
+import { RolloutUtil } from '@app/components/admin/systemupgrade/rollouts/RolloutUtil.ts';
 
 /**
  * This component let user manage Venice Rollouts.
@@ -157,7 +157,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
    */
   buildToolbarData(): ToolbarData {
     const toolbarData: ToolbarData = {
-      breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade'}],
+      breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'admin/upgrade'}],
       buttons: []
     };
     if (this.isToBuildCreateButton() && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_create)) {
@@ -220,7 +220,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   }
 
   invokeUploadImageUI() {
-    this.router.navigateByUrl('settings/upgrade/imageuload');
+    this.router.navigateByUrl('admin/upgrade/imageupload');
   }
 
   // Row expansion toggle

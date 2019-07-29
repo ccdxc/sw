@@ -60,9 +60,10 @@
                 <span>Sign out</span>
               </button>
             </mat-menu>
+            <!-- Currently hidden because no functionality to display in it -->
             <ng-container *ngIf="!isUINavigationBlocked">
               <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')"
-                      class="hidden-sm-down">
+                      class="hidden-sm-down settings-hidden-for-now">
                 <mat-icon>settings</mat-icon>
               </button>
             </ng-container>
@@ -235,11 +236,6 @@
             </button>
             -->
         <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
-        <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])"
-                class="app-shell-button-sideNav-settings" *roleGuard="'rolloutrollout_read'">
-          <mat-icon>cloud_upload</mat-icon>
-          System Upgrade
-        </button>
       </div>
     </div>
   </ng-container>

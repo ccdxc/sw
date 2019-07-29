@@ -6,7 +6,7 @@ import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { AppcontentComponent } from '@app/appcontent.component';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
-import { RolloutstatusComponent } from './components/settings-group/systemupgrade/rollouts/rolloutstatus/rolloutstatus.component';
+import { RolloutstatusComponent } from './components/admin/systemupgrade/rollouts/rolloutstatus/rolloutstatus.component';
 import { LoginComponent } from './components/login/login.component';
 
 

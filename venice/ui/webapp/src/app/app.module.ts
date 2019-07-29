@@ -77,7 +77,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PortalModule } from '@angular/cdk/portal';
 import { BgfileuploadComponent } from './widgets/bgfileupload/bgfileupload.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
-import { RolloutsModule } from './components/settings-group/systemupgrade/rollouts/rollouts.module';
+import { RolloutsModule } from './components/admin/systemupgrade/rollouts/rollouts.module';
 import { LoginModule } from './components/login/login.module';
 
 /**

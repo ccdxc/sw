@@ -1019,7 +1019,7 @@ export class Utility {
       case 'RoleBinding':
         return 'admin/users';
       case 'Rollout':
-        return 'settings/upgrade/rollouts';
+        return 'admin/upgrade/rollouts';
       case 'EventPolicy':
         return 'monitoring/alertsevents/eventpolicy';
       default:

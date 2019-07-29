@@ -10,15 +10,6 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'upgrade',
-    children: [
-      {
-        path: '',
-        loadChildren: '@app/components/settings-group/systemupgrade/systemupgrade.module#SystemupgradeModule'
-      }
-    ]
-  },
-  {
     path: 'settings',
     component: SettingsComponent,
   },

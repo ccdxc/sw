@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
-import { RolloutsComponent } from '@app/components/settings-group/systemupgrade/rollouts/rollouts.component';
-import { RolloutstatusComponent } from '@app/components/settings-group/systemupgrade/rollouts/rolloutstatus/rolloutstatus.component';
+import { RolloutsComponent } from '@app/components/admin/systemupgrade/rollouts/rollouts.component';
+import { RolloutstatusComponent } from '@app/components/admin/systemupgrade/rollouts/rolloutstatus/rolloutstatus.component';
 
 const routes: Routes = [
   {

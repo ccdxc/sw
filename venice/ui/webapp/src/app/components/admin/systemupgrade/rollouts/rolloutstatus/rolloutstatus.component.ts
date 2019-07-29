@@ -114,8 +114,8 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   setDefaultToolbar(id: string) {
     const toolbarData: ToolbarData = {
       breadcrumb: [
-        { label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts' },
-        { label: id, url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts/' + id }],
+        { label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'admin/upgrade/rollouts' },
+        { label: id, url: Utility.getBaseUIUrl() + 'admin/upgrade/rollouts/' + id }],
       buttons: []
     };
     this._controllerService.setToolbarData(toolbarData);

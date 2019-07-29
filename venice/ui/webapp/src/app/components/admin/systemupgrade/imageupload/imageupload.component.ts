@@ -11,8 +11,8 @@ import { Utility } from '@app/common/Utility';
 import { BackgroundProcessManager } from '@app/common/BackgroundProcessManager';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AUTH_KEY } from '@app/core';
-import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil';
-import { RolloutImageLabel } from '@app/components/settings-group/systemupgrade/rollouts/';
+import { RolloutUtil } from '@app/components/admin/systemupgrade/rollouts/RolloutUtil';
+import { RolloutImageLabel } from '@app/components/admin/systemupgrade/rollouts/';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { RolloutService } from '@app/services/generated/rollout.service';
@@ -96,7 +96,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     return this.constructor.name;
   }
   setDefaultToolbar(): void {
-    const breadcrumb = [{ label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade' }, { label: 'Images', url: '' }];
+    const breadcrumb = [{ label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'admin/upgrade' }, { label: 'Images', url: '' }];
     const buttons = [];
 
     buttons.push(

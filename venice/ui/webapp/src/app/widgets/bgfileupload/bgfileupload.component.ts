@@ -119,7 +119,7 @@ export class BgfileuploadComponent implements OnInit {
   }
 
   redirectOnClick() {
-    window.location.href = Utility.getBaseUIUrl() + '/settings/upgrade/imageuload';
+    window.location.href = Utility.getBaseUIUrl() + '/admin/upgrade/imageupload';
 
   }
 }

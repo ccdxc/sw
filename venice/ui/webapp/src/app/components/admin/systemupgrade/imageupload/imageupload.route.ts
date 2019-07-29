@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
-import { ImageuploadComponent } from '@app/components/settings-group/systemupgrade/imageupload/imageupload.component';
+import { ImageuploadComponent } from '@app/components/admin/systemupgrade/imageupload/imageupload.component';
 
 
 const routes: Routes = [

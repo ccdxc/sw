@@ -205,13 +205,21 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/admin', 'users']
       },
       {
+        label: 'System Upgrade',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'cloud_upload',
+        },
+        link: ['/admin', 'upgrade']
+      },
+      {
         label: 'Tech Support',
         icon: {
           cssClass: 'app-l-side-nav-monitoring-techsupport'
         },
         roleGuard: UIRolePermissions.monitoringtechsupportrequest_read,
         link: ['/admin', 'techsupport']
-      }
+      },
     ]
   },
 ];

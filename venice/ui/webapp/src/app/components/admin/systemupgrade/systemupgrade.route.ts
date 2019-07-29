@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { SystemupgradeComponent } from '@app/components/settings-group/systemupgrade/systemupgrade.component';
+import { SystemupgradeComponent } from '@app/components/admin/systemupgrade/systemupgrade.component';
 
 
 const routes: Routes = [
@@ -10,11 +10,11 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'imageuload',
+    path: 'imageupload',
     children: [
       {
         path: '',
-        loadChildren: '@app/components/settings-group/systemupgrade/imageupload/imageupload.module#ImageuploadModule'
+        loadChildren: '@app/components/admin/systemupgrade/imageupload/imageupload.module#ImageuploadModule'
       }
     ]
   },
@@ -23,7 +23,7 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        loadChildren: '@app/components/settings-group/systemupgrade/rollouts/rollouts.module#RolloutsModule'
+        loadChildren: '@app/components/admin/systemupgrade/rollouts/rollouts.module#RolloutsModule'
       }
     ]
   }
