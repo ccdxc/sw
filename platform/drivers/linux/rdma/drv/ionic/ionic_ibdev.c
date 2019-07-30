@@ -490,6 +490,14 @@ static bool ionic_put_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 	return true;
 }
 
+static inline u64 ionic_pgtbl_dma(struct ionic_tbl_buf *buf)
+{
+	if (buf->tbl_pages == 1 && buf->tbl_buf)
+		return buf->tbl_buf[0];
+	else
+		return cpu_to_le64(buf->tbl_dma);
+}
+
 static int ionic_pgtbl_page(struct ionic_tbl_buf *buf, u64 dma)
 {
 	if (unlikely(buf->tbl_pages == buf->tbl_limit))
@@ -505,13 +513,17 @@ static int ionic_pgtbl_page(struct ionic_tbl_buf *buf, u64 dma)
 	return 0;
 }
 
-static void ionic_pgtbl_contiguous(struct ionic_tbl_buf *buf, u64 offset)
+static void ionic_pgtbl_chk_contiguous(struct ionic_tbl_buf *buf, u64 offset)
 {
+	if (buf->tbl_pages != 1)
+		return;
+
+	/* treat single page as contiguous, no page size or offset */
 	buf->page_size_log2 = 0;
 
 	if (buf->tbl_buf) {
-		offset += le64_to_cpu(buf->tbl_buf[buf->tbl_pages]);
-		buf->tbl_buf[buf->tbl_pages] = cpu_to_le64(offset);
+		offset += le64_to_cpu(buf->tbl_buf[0]);
+		buf->tbl_buf[0] = cpu_to_le64(offset);
 	} else {
 		buf->tbl_dma += offset;
 	}
@@ -546,9 +558,7 @@ static int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem)
 
 	buf->page_size_log2 = page_shift;
 
-	/* treat single page as contiguous, no page size or offset */
-	if (buf->tbl_pages == 1)
-		ionic_pgtbl_contiguous(buf, ib_umem_offset(umem));
+	ionic_pgtbl_chk_contiguous(buf, ib_umem_offset(umem));
 
 out:
 	return rc;
@@ -2320,7 +2330,7 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 				.page_size_log2 = mr->buf.page_size_log2,
 				.tbl_index = cpu_to_le32(mr->res.tbl_pos),
 				.map_count = cpu_to_le32(mr->buf.tbl_pages),
-				.dma_addr = cpu_to_le64(mr->buf.tbl_dma),
+				.dma_addr = ionic_pgtbl_dma(&mr->buf),
 			}
 		}
 	};
@@ -2681,9 +2691,7 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 
 	mr->buf.page_size_log2 = order_base_2(ibmr->page_size);
 
-	/* treat single page as contiguous, no page size or offset */
-	if (mr->buf.tbl_pages == 1)
-		ionic_pgtbl_contiguous(&mr->buf, page_off);
+	ionic_pgtbl_chk_contiguous(&mr->buf, page_off);
 
 	if (mr->buf.tbl_buf)
 		dma_sync_single_for_device(dev->hwdev, mr->buf.tbl_dma,
@@ -2772,7 +2780,7 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev,
 				.page_size_log2 = buf->page_size_log2,
 				.tbl_index = cpu_to_le32(cq->res.tbl_pos),
 				.map_count = cpu_to_le32(buf->tbl_pages),
-				.dma_addr = cpu_to_le64(buf->tbl_dma),
+				.dma_addr = ionic_pgtbl_dma(buf),
 			}
 		}
 	};
@@ -3749,7 +3757,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		wr.wqe.qp.sq_tbl_index_xrcd_id =
 			cpu_to_le32(qp->sq_res.tbl_pos);
 		wr.wqe.qp.sq_map_count = cpu_to_le32(sq_buf->tbl_pages);
-		wr.wqe.qp.sq_dma_addr = cpu_to_le64(sq_buf->tbl_dma);
+		wr.wqe.qp.sq_dma_addr = ionic_pgtbl_dma(sq_buf);
 	} else if (attr->xrcd) {
 		wr.wqe.qp.sq_tbl_index_xrcd_id = 0; /* TODO */
 	}
@@ -3762,7 +3770,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		wr.wqe.qp.rq_tbl_index_srq_id =
 			cpu_to_le32(qp->rq_res.tbl_pos);
 		wr.wqe.qp.rq_map_count = cpu_to_le32(rq_buf->tbl_pages);
-		wr.wqe.qp.rq_dma_addr = cpu_to_le64(rq_buf->tbl_dma);
+		wr.wqe.qp.rq_dma_addr = ionic_pgtbl_dma(rq_buf);
 	} else if (attr->srq) {
 		wr.wqe.qp.rq_tbl_index_srq_id =
 			cpu_to_le32(to_ionic_srq(attr->srq)->qpid);
@@ -5426,10 +5434,7 @@ static int ionic_prep_reg(struct ionic_qp *qp,
 	wqe->reg_mr.offset =
 		cpu_to_be64(mr->ibmr.iova & (mr->ibmr.page_size - 1));
 
-	if (mr->buf.tbl_pages == 1 && mr->buf.tbl_buf)
-		wqe->reg_mr.dma_addr = mr->buf.tbl_buf[0];
-	else
-		wqe->reg_mr.dma_addr = cpu_to_le64(mr->buf.tbl_dma);
+	wqe->reg_mr.dma_addr = ionic_pgtbl_dma(&mr->buf);
 
 	wqe->reg_mr.map_count = cpu_to_be32(mr->buf.tbl_pages);
 	wqe->reg_mr.flags = cpu_to_be16(flags);

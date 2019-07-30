@@ -580,8 +580,7 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 
 	ionic_tbl_res_add(ctx, parent, &mr->res);
 
-	if (mr->buf.tbl_buf)
-		ionic_tbl_buf_add(ctx, parent, &mr->buf);
+	ionic_tbl_buf_add(ctx, parent, &mr->buf);
 
 	if (mr->umem)
 		ionic_umem_add(ctx, parent, mr->umem);
