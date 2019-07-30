@@ -121,6 +121,10 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     this._controllerService.setToolbarData(toolbarData);
   }
 
+  removeStopRolloutToolbarButton() {
+    this.setDefaultToolbar(this.selectedRolloutId);
+  }
+
   addToolbarButton() {
     const toolbarData: ToolbarData = this._controllerService.getToolbarData();
     if (this.selectedRollout && RolloutUtil.isRolloutPending(this.selectedRollout) ) {
@@ -250,7 +254,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
           this.showMissingScreen = false;
           // Set sgpolicyrules
           this.selectedRollout = this.rollouts[0];
-          this.addToolbarButton();
+          this.addToolbarButton();  // If we can watch the rollout, we check to see if we want the [stop-rollout] button appear.
           this.selectedRolloutNicNodeTypes = RolloutUtil.getRolloutNaplesVeniceType(this.selectedRollout);
           this.labelSelectorsStrings = RolloutUtil.formatRolloutNaplesCriteria(this.selectedRollout);
         } else {
@@ -270,8 +274,11 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
         } else {
         this._controllerService.webSocketErrorToaster('Failed to get Rollout', error);
         }
+        // If we can not watch the  running rollout object, just hide the stop-rollout toolbar button. // VS-656
+        this.removeStopRolloutToolbarButton();
       },
       () => {
+        this.removeStopRolloutToolbarButton(); // VS-656.
         setTimeout(() => {
           this.watchRolloutDetail();
         }, 3000);
