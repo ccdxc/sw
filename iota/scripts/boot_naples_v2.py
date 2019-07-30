@@ -806,7 +806,8 @@ def NaplesOnlySetup():
     naples = NaplesManagement(username='root', password='pen123')
 
     global host
-    host = HostManagement(GlobalOptions.host_ip)
+    host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server)
+    naples.SetHost(host)
 
     def doNaplesReboot():
         naples.Connect()
