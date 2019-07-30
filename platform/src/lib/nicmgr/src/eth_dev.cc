@@ -479,6 +479,7 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
         eth_spec->rdma_pid_count = val.get<uint64_t>("rdma.pid_count");
         eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
         eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
+        eth_spec->pref_count = val.get<uint64_t>("rdma.pref_count");
         eth_spec->ah_count = val.get<uint64_t>("rdma.ah_count");
         eth_spec->barmap_size = 1;
     }

@@ -86,6 +86,8 @@ aq:
     // copy to stage 1
     add r2, r0, offsetof(struct phv_, to_stage_1_to_stage_data)    
     CAPRI_SET_FIELD(r2, AQ_RX_TO_S1_T, rqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.rqcb_base_addr_hi)
+    CAPRI_SET_FIELD(r2, AQ_RX_TO_S1_T, prefetch_pool_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.prefetch_pool_base_addr_page_id)
+    CAPRI_SET_FIELD(r2, AQ_RX_TO_S1_T, log_num_prefetch_pool_entries, d.u.rx_stage0_load_rdma_params_d.log_num_prefetch_pool_entries)
     // copy to stage 3
     add r2, r0, offsetof(struct phv_, to_stage_3_to_stage_data)    
     CAPRI_SET_FIELD(r2, AQ_RX_TO_S3_T, sqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.sqcb_base_addr_hi)

@@ -29,7 +29,7 @@ struct key_entry_aligned_t d;
 #define TO_S4_P  to_s4_dcqcn_info
 #define TO_S5_P  to_s5_rqcb1_wb_info
 #define TO_S7_P  to_s7_stats_info
-#define INFO_RKEY_COOKIE_P t2_s2s_rsqrkey_to_rkey_cookie_info
+#define INFO_RKEY_COOKIE_P t3_s2s_rsqrkey_to_rkey_cookie_info
 
 #define K_XFER_VA CAPRI_KEY_RANGE(IN_P, transfer_va_sbit0_ebit7, transfer_va_sbit48_ebit63)
 #define K_XFER_BYTES CAPRI_KEY_RANGE(IN_P, transfer_bytes_sbit0_ebit7, transfer_bytes_sbit8_ebit15)
@@ -104,7 +104,7 @@ cookie_check:
 
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, d.mr_l_key)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqrkey_mr_cookie_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqrkey_mr_cookie_process, KEY_ADDR)
 
 skip_mr_cookie_check:
     // my_pt_base_addr = (void *)

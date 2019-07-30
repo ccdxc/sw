@@ -58,13 +58,19 @@
 #define tx_table_s1_t0_action3  resp_tx_rqcb2_bt_process
 
 #define tx_table_s1_t1_action   resp_tx_dcqcn_config_load_process
+#define tx_table_s1_t2_action   resp_tx_setup_checkout_process
 
 #define tx_table_s2_t0_action   resp_tx_rsqwqe_process
 #define tx_table_s2_t0_action1  resp_tx_rsqwqe_bt_process
 
+#define tx_table_s2_t2_action   resp_tx_pre_checkout_process
+
 #define tx_table_s3_t0_action resp_tx_rsqrkey_process
 
 #define tx_table_s3_t1_action   resp_tx_rqcb0_bt_write_back_process
+
+#define tx_table_s3_t2_action   resp_tx_checkout_process
+#define tx_table_s3_t2_action1  resp_tx_rqprefetch_mpu_only_process
 
 #define tx_table_s4_t0_action   resp_tx_rsqptseg_process
 #define tx_table_s4_t0_action1  resp_tx_dcqcn_rate_process
@@ -72,9 +78,15 @@
 
 #define tx_table_s4_t1_action   resp_tx_dcqcn_enforce_process
 
-#define tx_table_s4_t2_action   resp_tx_rsqrkey_mr_cookie_process
+#define tx_table_s4_t2_action   resp_tx_rqprefetch_process
+
+#define tx_table_s4_t3_action   resp_tx_rsqrkey_mr_cookie_process
 
 #define tx_table_s5_t1_action   resp_tx_rqcb0_write_back_process
+
+#define tx_table_s5_t2_action   resp_tx_rqpt_mpu_only_process
+
+#define tx_table_s6_t2_action   resp_tx_rqpt_process
 
 #define tx_table_s7_t3_action   resp_tx_stats_process
 
@@ -266,6 +278,28 @@ header_type resp_tx_to_stage_bt_info_t {
     }
 }
 
+header_type resp_tx_to_stage_precheckout_info_t {
+    fields {
+        pref_cb_addr                     :   22;
+        rsvd                             :  106;
+    }
+}
+
+header_type resp_tx_prefetch_info_t {
+    fields {
+        pt_base_addr                     :   32;
+        rq_pindex                        :   16;
+        log_rq_page_size                 :    5;
+        log_wqe_size                     :    5;
+        log_num_wqes                     :    5;
+        cmd_eop                          :    1;
+        pref_cb_or_base_addr             :   32;
+        pref_buff_index                  :   16;
+        check_in                         :    1;
+        rsvd                             :   47;
+    }
+}
+
 header_type resp_tx_bt_info_t {
     fields {
         read_or_atomic                   :    1;
@@ -347,6 +381,21 @@ header_type resp_tx_rqcb2_to_rsqwqe_info_t {
     }
 }
 
+header_type resp_tx_to_stage_rqpt_info_t {                                                                                                                                
+    fields {
+        prefetch_base_addr               :   32;
+        page_offset                      :   16;
+        pref_pindex_pre                  :   16;
+        pref_pindex_post                 :   16;
+        transfer_num_wqes                :   16;
+        page_seg_offset                  :    3;
+        log_wqe_size                     :    5;
+        cmd_eop                          :    1;
+        invoke_stats                     :    1;
+        pad                              :   22;
+    }
+}
+
 header_type resp_tx_s0_info_t {
     fields {
         rsvd                             :  128;
@@ -368,7 +417,8 @@ header_type resp_tx_to_stage_stats_info_t {
         lif_error_id_vld                 :    1;
         lif_error_id                     :    4;
         flush_rq                         :    1;
-        rsvd                             :    2;
+        incr_prefetch_cnt                :    1;
+        prefetch_only                    :    1;
         qp_err_disabled                  :    1;
         qp_err_dis_rsvd_rkey_err         :    1;
         qp_err_dis_rkey_state_err        :    1;
@@ -417,6 +467,11 @@ metadata resp_tx_to_stage_bt_info_t to_s1_bt_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_bt_info_t to_s1_bt_info_scr;
 
+@pragma pa_header_union ingress to_stage_1
+metadata resp_tx_to_stage_precheckout_info_t to_s1_precheckout_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_precheckout_info_t to_s1_precheckout_info_scr;
+
 @pragma pa_header_union ingress to_stage_2
 metadata resp_tx_to_stage_dcqcn_info_t to_s2_dcqcn_info;
 @pragma scratch_metadata
@@ -451,6 +506,11 @@ metadata resp_tx_to_stage_dcqcn_rate_timer_t to_s4_dcqcn_rate_timer_info_scr;
 metadata resp_tx_to_stage_rqcb1_wb_info_t to_s5_rqcb1_wb_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_rqcb1_wb_info_t to_s5_rqcb1_wb_info_scr;
+
+@pragma pa_header_union ingress to_stage_6
+metadata resp_tx_to_stage_rqpt_info_t to_s6_rqpt_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_rqpt_info_t to_s6_rqpt_info_scr;
 
 @pragma pa_header_union ingress to_stage_7
 metadata resp_tx_to_stage_stats_info_t to_s7_stats_info;
@@ -515,9 +575,14 @@ metadata resp_tx_bt_info_t t0_s2s_bt_info;
 metadata resp_tx_bt_info_t t0_s2s_bt_info_scr;
 
 @pragma pa_header_union ingress common_t2_s2s
-metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t2_s2s_rsqrkey_to_rkey_cookie_info;
+metadata resp_tx_prefetch_info_t t2_s2s_prefetch_info;
 @pragma scratch_metadata
-metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t2_s2s_rsqrkey_to_rkey_cookie_info_scr;
+metadata resp_tx_prefetch_info_t t2_s2s_prefetch_info_scr;
+
+@pragma pa_header_union ingress common_t3_s2s
+metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t3_s2s_rsqrkey_to_rkey_cookie_info;
+@pragma scratch_metadata
+metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t3_s2s_rsqrkey_to_rkey_cookie_info_scr;
 
 @pragma pa_header_union ingress common_t3_s2s
 metadata resp_tx_stats_info_t t3_s2s_stats_info;
@@ -735,6 +800,122 @@ action resp_tx_rqcb_process () {
     // stage to stage
 
 }
+
+action resp_tx_setup_checkout_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s1_precheckout_info_scr.pref_cb_addr, to_s1_precheckout_info.pref_cb_addr);
+    modify_field(to_s1_precheckout_info_scr.rsvd, to_s1_precheckout_info.rsvd);
+
+    // stage to stage
+    modify_field(t2_s2s_prefetch_info_scr.pt_base_addr, t2_s2s_prefetch_info.pt_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.rq_pindex, t2_s2s_prefetch_info.rq_pindex);
+    modify_field(t2_s2s_prefetch_info_scr.log_rq_page_size, t2_s2s_prefetch_info.log_rq_page_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
+    modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
+    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
+    modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
+}
+
+action resp_tx_pre_checkout_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t2_s2s_prefetch_info_scr.pt_base_addr, t2_s2s_prefetch_info.pt_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.rq_pindex, t2_s2s_prefetch_info.rq_pindex);
+    modify_field(t2_s2s_prefetch_info_scr.log_rq_page_size, t2_s2s_prefetch_info.log_rq_page_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
+    modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
+    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
+    modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
+}
+
+action resp_tx_checkout_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t2_s2s_prefetch_info_scr.pt_base_addr, t2_s2s_prefetch_info.pt_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.rq_pindex, t2_s2s_prefetch_info.rq_pindex);
+    modify_field(t2_s2s_prefetch_info_scr.log_rq_page_size, t2_s2s_prefetch_info.log_rq_page_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
+    modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
+    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
+    modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
+}
+
+action resp_tx_rqprefetch_mpu_only_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+}
+
+action resp_tx_rqprefetch_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t2_s2s_prefetch_info_scr.pt_base_addr, t2_s2s_prefetch_info.pt_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.rq_pindex, t2_s2s_prefetch_info.rq_pindex);
+    modify_field(t2_s2s_prefetch_info_scr.log_rq_page_size, t2_s2s_prefetch_info.log_rq_page_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
+    modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
+    modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
+    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
+    modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
+}
+
+action resp_tx_rqpt_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s6_rqpt_info_scr.prefetch_base_addr, to_s6_rqpt_info.prefetch_base_addr);
+    modify_field(to_s6_rqpt_info_scr.page_offset, to_s6_rqpt_info.page_offset);
+    modify_field(to_s6_rqpt_info_scr.pref_pindex_pre, to_s6_rqpt_info.pref_pindex_pre);
+    modify_field(to_s6_rqpt_info_scr.pref_pindex_post, to_s6_rqpt_info.pref_pindex_post);
+    modify_field(to_s6_rqpt_info_scr.transfer_num_wqes, to_s6_rqpt_info.transfer_num_wqes);
+    modify_field(to_s6_rqpt_info_scr.page_seg_offset, to_s6_rqpt_info.page_seg_offset);
+    modify_field(to_s6_rqpt_info_scr.log_wqe_size, to_s6_rqpt_info.log_wqe_size);
+    modify_field(to_s6_rqpt_info_scr.cmd_eop, to_s6_rqpt_info.cmd_eop);
+    modify_field(to_s6_rqpt_info_scr.invoke_stats, to_s6_rqpt_info.invoke_stats);
+    modify_field(to_s6_rqpt_info_scr.pad, to_s6_rqpt_info.pad);
+
+    // stage to stage
+}
+
+action resp_tx_rqpt_mpu_only_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+}
+
 action resp_tx_rsq_backtrack_adjust_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -795,8 +976,8 @@ action resp_tx_rsqrkey_mr_cookie_process () {
     // to stage
 
     // stage to stage
-    modify_field(t2_s2s_rsqrkey_to_rkey_cookie_info_scr.mw_cookie, t2_s2s_rsqrkey_to_rkey_cookie_info.mw_cookie);
-    modify_field(t2_s2s_rsqrkey_to_rkey_cookie_info_scr.pad, t2_s2s_rsqrkey_to_rkey_cookie_info.pad);
+    modify_field(t3_s2s_rsqrkey_to_rkey_cookie_info_scr.mw_cookie, t3_s2s_rsqrkey_to_rkey_cookie_info.mw_cookie);
+    modify_field(t3_s2s_rsqrkey_to_rkey_cookie_info_scr.pad, t3_s2s_rsqrkey_to_rkey_cookie_info.pad);
 }
 
 action resp_tx_rsqwqe_process () {
@@ -851,7 +1032,8 @@ action resp_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
     modify_field(to_s7_stats_info_scr.flush_rq, to_s7_stats_info.flush_rq);
-    modify_field(to_s7_stats_info_scr.rsvd, to_s7_stats_info.rsvd);
+    modify_field(to_s7_stats_info_scr.incr_prefetch_cnt, to_s7_stats_info.incr_prefetch_cnt);
+    modify_field(to_s7_stats_info_scr.prefetch_only, to_s7_stats_info.prefetch_only);
     modify_field(to_s7_stats_info_scr.qp_err_disabled, to_s7_stats_info.qp_err_disabled);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rsvd_rkey_err, to_s7_stats_info.qp_err_dis_rsvd_rkey_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rkey_state_err, to_s7_stats_info.qp_err_dis_rkey_state_err);

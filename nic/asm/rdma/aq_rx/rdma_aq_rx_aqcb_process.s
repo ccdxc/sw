@@ -184,10 +184,9 @@ create_qp:
     CAPRI_RESET_TABLE_3_ARG() 
     phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_id), K_CQP_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_tbl_index), k.{rdma_aq_feedback_cqp_rq_tbl_index_sbit0_ebit7,rdma_aq_feedback_cqp_rq_tbl_index_sbit8_ebit31}
 
-    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_map_count), K_CQP_RQ_MAP_COUNT
-    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_dma_addr), K_CQP_RQ_DMA_ADDR
-    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_cmb), K_CQP_RQ_CMB
-    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_spec), K_CQP_RQ_SPEC
+    phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_map_count), K_CQP_RQ_MAP_COUNT, CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_dma_addr), K_CQP_RQ_DMA_ADDR
+    phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_cmb), K_CQP_RQ_CMB, CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_spec), K_CQP_RQ_SPEC
+    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, log_wqe_size), K_CQP_RQ_STRIDE_LOG2[4:0]
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_wqe_process, r0) 
 

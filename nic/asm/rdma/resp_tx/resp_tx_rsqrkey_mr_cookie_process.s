@@ -4,12 +4,12 @@
 #include "common_phv.h"
 
 struct resp_tx_phv_t p;
-struct resp_tx_s4_t2_k k;
+struct resp_tx_s4_t3_k k;
 struct key_entry_aligned_t d;
 
 #define GLOBAL_FLAGS r6
 
-#define IN_P         t2_s2s_rsqrkey_to_rkey_cookie_info
+#define IN_P         t3_s2s_rsqrkey_to_rkey_cookie_info
 #define TO_S5_P      to_s5_rqcb1_wb_info
 #define TO_S7_P      to_s7_stats_info
 

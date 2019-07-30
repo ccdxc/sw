@@ -292,7 +292,7 @@ class RdmaSQCB0state(Packet):
         LEShortField("sqd_cindex", 0),
         ByteField("sqcb0_rsvd1", 0),
 
-	XByteField("phy_base_addr_8", 0),
+        XByteField("phy_base_addr_8", 0),
         XIntField("pt_base_addr/sq_hbm_base_addr/phy_base_addr_32", 0),
         XIntField("sqcb0_header_template_addr/q_key", 0),
         IntField("pd", 0),
@@ -633,7 +633,7 @@ class RdmaRQCB1state(Packet):
         XIntField("rsq_base_addr/q_key", 0),
     
         XByteField("phy_base_addr_8", 0),
-        XIntField("pt_base_addr/rq_hbm_base_addr/phy_base_addr_32", 0),
+        XIntField("pt_or_rq_hbm_or_prefetch_base_addr", 0),
         
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
@@ -649,7 +649,7 @@ class RdmaRQCB1state(Packet):
         BitField("nak_prune", 0, 1),
         BitField("priv_oper_enable", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("rqcb1_rsvd0", 0, 1),
+        BitField("rx_prefetch_en", 0, 1),
 
         X3BytesField("cq_id", 0),
 
@@ -718,7 +718,17 @@ class RdmaRQCB2state(Packet):
 
         IntField("pd", 0),
 
-        BitField("rqcb2_pad", 0, 240),
+        LEShortField("proxy_cindex", 0),
+        LEShortField("pref_pindex", 0),
+        LEShortField("pref_proxy_cindex", 0),
+        XIntField("prefetch_base_addr", 0),
+        BitField("log_num_pref_wqes", 0, 5),
+        BitField("rqcb2_rsvd3", 0, 3),
+
+        ShortField("pref_buff_index", 0),
+        BitField("checkout_done", 0, 1),
+        BitField("pref_init_done", 0, 1),
+        BitField("rqcb2_pad", 0, 134),
     ]
 
 class RdmaRQCB3state(Packet):
@@ -754,6 +764,7 @@ class RdmaRespTxStats(Packet):
         ShortField("tx_num_atomic_resp_msgs", 0),
         ShortField("tx_num_pkts_in_cur_msg", 0),
         ShortField("tx_max_pkts_in_any_msg", 0),
+        ShortField("tx_num_prefetch", 0),
 
         IntField("tx_num_rnrs", 0),
         IntField("tx_num_seq_errs", 0),
@@ -769,7 +780,7 @@ class RdmaRespTxStats(Packet):
         BitField("qp_err_dis_type2a_mw_qp_mismatch", 0, 1),
         BitField("qp_err_dis_resp_rx", 0, 1),
 
-        BitField("rqcb4", 0, 160),
+        BitField("rqcb4", 0, 144),
     ]
 
 class RdmaRespRxStats(Packet):
@@ -800,9 +811,9 @@ class RdmaRespRxStats(Packet):
         BitField("qp_err_dis_last_pkt_len_err", 0, 1),
         BitField("qp_err_dis_pmtu_err", 0, 1),
         BitField("qp_err_dis_opcode_err", 0, 1),
-        BitField("qp_err_dis_access_err", 0, 1),
         BitField("qp_err_dis_wr_only_zero_len_err", 0, 1),
         BitField("qp_err_dis_unaligned_atomic_va_err", 0, 1),
+        BitField("qp_err_dis_access_err", 0, 1),
         BitField("qp_err_dis_dma_len_err", 0, 1),
         BitField("qp_err_dis_insuff_sge_err", 0, 1),
         BitField("qp_err_dis_max_sge_err", 0, 1),
@@ -1964,4 +1975,3 @@ elif args.rsq is not None:
 elif args.rrq is not None:
     print("ERROR: This option is not yet supported. Try with --offline")
     exit()
-    

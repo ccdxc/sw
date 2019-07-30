@@ -5,6 +5,7 @@
 #include "req_tx_args.h"
 #include "resp_tx_args.h"
 #include "aq_tx_args.h"
+#include "resp_tx_args.h"
     
 struct tx_stage0_lif_params_table_k k;
 struct tx_stage0_lif_params_table_d d;
@@ -15,12 +16,13 @@ struct phv_ p;
 #define AQ_TX_TO_S1_T struct aq_tx_to_stage_wqe_info_t
 #define AQ_TX_TO_S2_T struct aq_tx_to_stage_wqe2_info_t
 #define AQ_TX_TO_S3_T struct aq_tx_to_stage_sqcb_info_t
-    
+#define RESP_TX_T2_S2S_T struct resp_tx_rqcb_to_precheckout_info_t
+   
 %%
 
 tx_stage0_load_rdma_params:
 
-    add r4, r0, k.p4_txdma_intr_qtype //BD slot
+    add r4, r0, k.p4_txdma_intr_qtype
     sllv r5, 1, r4
     and r5, r5, d.u.tx_stage0_lif_rdma_params_d.rdma_en_qtype_mask
     seq c1, r5, r0
@@ -37,6 +39,11 @@ tx_stage0_load_rdma_params:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_pt_entries)    // BD Slot
 
 rq:
+    // prefetch related work
+    add r2, r0, offsetof(struct phv_, common_t2_s2s_s2s_data)
+    sll r1, d.u.tx_stage0_lif_rdma_params_d.prefetch_pool_base_addr_page_id, (HBM_PAGE_SIZE_SHIFT - PT_BASE_ADDR_SHIFT)
+    CAPRI_SET_FIELD(r2, RESP_TX_T2_S2S_T, pref_cb_or_base_addr, r1)
+
     // r3 = PT table size
     add r3, CAPRI_LOG_SIZEOF_U64, d.u.tx_stage0_lif_rdma_params_d.log_num_pt_entries
     sllv r3, 1, r3

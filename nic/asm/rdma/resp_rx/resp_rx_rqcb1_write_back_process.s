@@ -77,6 +77,13 @@ resp_rx_rqcb1_write_back_process:
     bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak_or_dup), 1, check_ack_nak
     tblmincri.c1    PROXY_RQ_C_INDEX, d.log_num_wqes, 1 // BD Slot
 
+    bbeq            d.prefetch_en, 0, skip_prefetch_update
+    // memwr prefetch proxy cindex in rqcb2
+    RQCB2_ADDR_GET(RQCB2_ADDR) // BD Slot
+    add.c1          r3, RQCB2_ADDR, FIELD_OFFSET(rqcb2_t, pref_proxy_cindex)
+    memwr.hx.c1     r3, SPEC_RQ_C_INDEX
+
+skip_prefetch_update:
     // increment msn for successful atomic/read/last/only msgs
     setcf           c1, [c7 | c6 | c5 | c4 | c3]
     tblmincri.c1    d.msn, 24, 1

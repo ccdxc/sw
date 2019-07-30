@@ -10,17 +10,20 @@
 
 #define RESP_TX_MAX_DMA_CMDS            16
 #define RESP_TX_DMA_CMD_START           0
-#define RESP_TX_DMA_CMD_INTRINSIC       0
-#define RESP_TX_DMA_CMD_TXDMA_INTRINSIC 1
-#define RESP_TX_DMA_CMD_COMMON_P4PLUS   2
-#define RESP_TX_DMA_CMD_HDR_TEMPLATE    3
-#define RESP_TX_DMA_CMD_BTH             4
-#define RESP_TX_DMA_CMD_AETH            5
-#define RESP_TX_DMA_CMD_CNP_RSVD        5 // CNP packets do not have AETH header. Re-using index.
-#define RESP_TX_DMA_CMD_ATOMICAETH      6 
-#define RESP_TX_DMA_CMD_ACK_ICRC        6
-#define RESP_TX_DMA_CMD_PYLD_BASE       6 // consumes 3 DMA commands
-#define RESP_TX_DMA_CMD_RDMA_ERR_FEEDBACK   10
+#define RESP_TX_DMA_CMD_RQ_PREFETCH_WQE_RD          0
+#define RESP_TX_DMA_CMD_RQ_PREFETCH_WQE_TO_HBM      1
+#define RESP_TX_DMA_CMD_SET_PROXY_PINDEX            2
+#define RESP_TX_DMA_CMD_INTRINSIC       3
+#define RESP_TX_DMA_CMD_TXDMA_INTRINSIC 4
+#define RESP_TX_DMA_CMD_COMMON_P4PLUS   5
+#define RESP_TX_DMA_CMD_HDR_TEMPLATE    6
+#define RESP_TX_DMA_CMD_BTH             7
+#define RESP_TX_DMA_CMD_AETH            8
+#define RESP_TX_DMA_CMD_CNP_RSVD        8 // CNP packets do not have AETH header. Re-using index.
+#define RESP_TX_DMA_CMD_ATOMICAETH      9 
+#define RESP_TX_DMA_CMD_ACK_ICRC        9
+#define RESP_TX_DMA_CMD_PYLD_BASE       9 // consumes 3 DMA commands
+#define RESP_TX_DMA_CMD_RDMA_ERR_FEEDBACK   13
 #define RESP_TX_DMA_CMD_PAD_ICRC       (RESP_TX_MAX_DMA_CMDS - 2)
 #define RESP_TX_DMA_CMD_UDP_OPTIONS    (RESP_TX_MAX_DMA_CMDS - 1)
 
@@ -59,7 +62,10 @@ struct resp_tx_phv_t {
     struct phv_intr_p4_t p4_intr;                   // 5B
     struct phv_intr_rxdma_t p4_intr_rxdma;          // 10B
     struct p4_to_p4plus_roce_header_t p4_to_p4plus; // 20B
-    struct rdma_feedback_t rdma_feedback;           // 11B
+    union {
+        struct rdma_feedback_t rdma_feedback;       // 11B
+        struct rq_prefetch_info_t rq_prefetch;      // 2B
+    }; // rqpt is loaded after writeback
     rsvd2    : 8;                                   // 1B
 
 

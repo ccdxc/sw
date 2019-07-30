@@ -8,6 +8,10 @@
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 #include "nic/sdk/lib/bm_allocator/bm_allocator.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "nic/sdk/lib/pal/pal.hpp"
+
+#define READ_MEM        sdk::lib::pal_mem_read
+#define WRITE_MEM       sdk::lib::pal_mem_write
 
 namespace iris {
 
@@ -77,7 +81,8 @@ public:
 
     sdk_ret_t lif_init(uint32_t lif, uint32_t max_keys,
                        uint32_t max_ahs, uint32_t max_ptes,
-                       uint64_t mem_bar_addr, uint32_t mem_bar_size);
+                       uint64_t mem_bar_addr, uint32_t mem_bar_size,
+                       uint32_t max_pref);
     uint64_t rdma_mem_bar_alloc(uint32_t size);
     int rdma_mem_bar_reserve(uint64_t addr, uint32_t size);
     uint64_t rdma_get_pt_base_addr (uint32_t lif);

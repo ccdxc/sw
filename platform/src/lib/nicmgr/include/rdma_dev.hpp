@@ -324,6 +324,25 @@ typedef struct rsqwqe_s {
     } op;
 } PACKED rsqwqe_t;
 
+#define MAX_RQ_PREF_ACTIVE_QPS 1024
+
+typedef struct rq_pref_cb_s {
+    uint16_t p_index;
+    uint16_t c_index;
+    uint32_t rsvd0;
+    uint64_t rsvd1;
+    uint64_t rsvd2;
+    uint64_t rsvd3;
+    uint64_t rsvd4;
+    uint64_t rsvd5;
+    uint64_t rsvd6;
+    uint64_t rsvd7;
+} PACKED rq_pref_cb_t;
+
+typedef struct rq_pref_ring_s {
+    uint16_t val;
+} PACKED rq_pref_ring_t;
+
 #define MAX_CQ_RINGS 3
 #define MAX_CQ_HOST_RINGS 3
 

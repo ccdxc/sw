@@ -1592,6 +1592,10 @@ struct resp_bt_info_t {
     len: 32;
 };
 
+struct rq_prefetch_info_t {
+    proxy_pindex: 16;
+};
+
 struct resp_rx_send_fml_t {
     spec_psn: 24;
     rsvd:      8;

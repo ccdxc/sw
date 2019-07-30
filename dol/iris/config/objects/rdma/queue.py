@@ -125,7 +125,8 @@ class RdmaRQstate(Packet):
         BitField("spec_color", 0, 1),
         BitField("drain_in_progress", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("rsvd", 0, 5),
+        BitField("prefetch_en", 0, 1),
+        BitField("rsvd", 0, 4),
 
         XIntField("header_template_addr", 0),
 
@@ -171,7 +172,7 @@ class RdmaRQstate(Packet):
         BitField("nak_prune", 0, 1),
         BitField("priv_oper_enable", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("rqcb1_rsvd0", 0, 1),
+        BitField("rx_prefetch_en", 0, 1),
     
         X3BytesField("cq_id", 0),
 
@@ -265,6 +266,7 @@ class RdmaRQstate(Packet):
         ShortField("tx_num_atomic_resp_msgs", 0),
         ShortField("tx_num_pkts_in_cur_msg", 0),
         ShortField("tx_max_pkts_in_any_msg", 0),
+        ShortField("tx_num_prefetch", 0),
         IntField("tx_num_rnrs", 0),
         IntField("tx_num_seq_errs", 0),
         X3BytesField("tx_last_psn", 0),
@@ -279,7 +281,7 @@ class RdmaRQstate(Packet):
         BitField("tx_qp_err_dis_type2a_mw_qp_mismatch", 0, 1),
         BitField("tx_qp_err_dis_resp_rx", 0, 1),
 
-        BitField("rqcb4", 0, 160),
+        BitField("rqcb4", 0, 144),
 
         #RQCB5 - RESP_RX stats
         LongField("num_bytes", 0),

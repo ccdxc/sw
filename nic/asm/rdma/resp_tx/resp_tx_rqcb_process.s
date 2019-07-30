@@ -9,12 +9,15 @@ struct rqcb0_t d;
 struct rdma_stage0_table_k k;
 
 #define RQCB_TO_RQCB2_P t0_s2s_rqcb_to_rqcb2_info
+#define TO_S1_P to_s1_prefetch_info
 #define TO_S3_P to_s3_dcqcn_info
 #define TO_S4_P to_s4_dcqcn_info
 #define TO_S4_RATE_TIMER_P to_s4_dcqcn_rate_timer_info
 #define TO_S5_P to_s5_rqcb1_wb_info
+#define TO_S6_P to_s6_rqpt_info
 #define BT_TO_S_INFO_P to_s1_bt_info
 #define RQCB_TO_DCQCN_CFG_P t1_s2s_dcqcn_config_info
+#define RQCB_TO_PREF_P t2_s2s_prefetch_info
 
 #define RSQWQE_P            r1
 #define RQCB2_P             r2
@@ -29,6 +32,7 @@ struct rdma_stage0_table_k k;
     .param      resp_tx_dcqcn_timer_process
     .param      resp_tx_dcqcn_config_load_process
     .param      resp_tx_bt_mpu_only_process
+    .param      resp_tx_setup_checkout_process
 
 resp_tx_rqcb_process:
 
@@ -38,7 +42,9 @@ resp_tx_rqcb_process:
 
     seq             c2, d.state, QP_STATE_ERR
     bcf             [c1 | c2], state_fail
-    nop             //BD Slot
+
+    seq             c3, d.prefetch_en, 1 // BD Slot
+    // c3: prefetch_en
 
     .brbegin
     brpri           r7[MAX_RQ_RINGS-1:0], [DCQCN_TIMER_PRI, DCQCN_RATE_COMPUTE_PRI, BT_PRI, ACK_NAK_PRI, RSQ_PRI, RQ_PRI]
@@ -55,7 +61,11 @@ resp_tx_rqcb_process:
         //proxy_c_index would track the real c_index
     
         tblwr           RQ_C_INDEX, RQ_P_INDEX
-        add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
+        // if prefetch is enabled, skip memwr of proxy pindex
+        // in prefetch case, proxy pindex will be written using DMA
+        // after WQE's are actually prefetched
+        bcf             [c3], skip_memwr
+        add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES // BD Slot
         add             r2, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
         // we do not need to load RQCB1 to populate this value.
         // we can use memwr
@@ -64,7 +74,17 @@ resp_tx_rqcb_process:
         // update using tblwr, memwr or DMA.
         memwr.hx        r2, RQ_P_INDEX
         phvwr.e         p.common.p4_intr_global_drop, 1
-        nop             //Exit Slot
+        nop // Exit Slot
+
+skip_memwr:
+        CAPRI_SET_FIELD2(TO_S6_P, invoke_stats, 1)
+
+        seq             c2, d.serv_type, RDMA_SERV_TYPE_UD
+        bcf             [!c2], prefetch
+        CAPRI_SET_FIELD2(RQCB_TO_PREF_P, cmd_eop, 1) // BD Slot
+
+        phvwr.e         p.common.p4_intr_global_drop, 1
+        nop // Exit Slot
 
     .brcase         RSQ_RING_ID
         // reset sched_eval_done
@@ -112,10 +132,7 @@ resp_tx_rqcb_process:
         tblmincri       d.spec_read_rsp_psn, 24, 1
 
         add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
-        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb2_process, RQCB2_P)
-
-        nop.e
-        nop
+        CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb2_process, RQCB2_P)
 
     .brcase         ACK_NAK_RING_ID
         // reset sched_eval_done
@@ -140,8 +157,12 @@ resp_tx_rqcb_process:
         add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_ack_process, RQCB2_P)
     
+        seq             c2, d.serv_type, RDMA_SERV_TYPE_UD
+        bcf             [!c2 & c3], prefetch
+        nop // BD Slot
+
         nop.e
-        nop
+        nop // Exit Slot
 
     .brcase         BT_RING_ID
         // reset sched_eval_done
@@ -220,9 +241,9 @@ bt_in_progress:
         add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_rate_process, DCQCNCB_ADDR)
         CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_config_load_process, r0)
-    
-        phvwr.e     p.common.p4_intr_global_drop, 1
-        nop //Exit Slot
+
+        phvwr.e         p.common.p4_intr_global_drop, 1
+        nop // Exit Slot
 
     .brcase         DCQCN_TIMER_RING_ID
         // reset sched_eval_done
@@ -251,7 +272,22 @@ bt_in_progress:
         nop         //Exit Slot
 
     .brend
-    
+
+prefetch:
+    add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
+
+    phvwrpair       CAPRI_PHV_FIELD(RQCB_TO_PREF_P, log_rq_page_size), d.log_rq_page_size, \
+                    CAPRI_PHV_FIELD(RQCB_TO_PREF_P, log_wqe_size), d.log_wqe_size
+
+    add             r1, r0, RQ_P_INDEX
+    phvwrpair       CAPRI_PHV_FIELD(RQCB_TO_PREF_P, pt_base_addr), d.pt_base_addr, \
+                    CAPRI_PHV_FIELD(RQCB_TO_PREF_P, rq_pindex), r1
+
+    CAPRI_SET_FIELD2(RQCB_TO_PREF_P, log_num_wqes, d.log_num_wqes)
+
+    // load setup_checkout_process
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_setup_checkout_process, RQCB2_P) // Exit Slot
+   
 start_drain:
     tblwr       d.drain_in_progress, 1 
     // load an mpu only program as marker phv

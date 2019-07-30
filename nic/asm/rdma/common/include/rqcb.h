@@ -42,6 +42,11 @@
 
 #define SPEC_RQ_C_INDEX d.{spec_cindex}.hx
 
+// rqcb2 fields related to prefetch
+#define RQ_PROXY_C_INDEX d.{proxy_cindex}.hx
+#define PREF_P_INDEX d.{pref_pindex}.hx
+#define PREF_PROXY_C_INDEX d.{pref_proxy_cindex}.hx
+
 #define RSQ_C_INDEX_OFFSET          FIELD_OFFSET(rqcb0_t, ring1.cindex)
 #define RQCB0_CURR_READ_RSP_PSN     FIELD_OFFSET(rqcb0_t, curr_read_rsp_psn)
 
@@ -84,7 +89,8 @@ struct rqcb0_t {
     spec_color: 1;              //Rw by S0
     drain_in_progress: 1;       //Rw by S0
     skip_pt: 1;
-    rsvd: 5;
+    prefetch_en: 1;             //Rw by S0
+    rsvd: 4;
 
     header_template_addr: 32;   //Ronly
 
@@ -130,6 +136,10 @@ struct rqcb1_t {
            pad2 : 8;
            hbm_rq_base_addr: 32;   //Ronly
         };
+        struct {
+           pad3 : 8;
+           prefetch_base_addr: 32; //Ronly
+        };
         phy_base_addr             : 40;            
     };
 
@@ -147,7 +157,7 @@ struct rqcb1_t {
     nak_prune: 1;           //rw by S0
     priv_oper_enable: 1;    //Ronly
     skip_pt :1;
-    rsvd0: 1;
+    prefetch_en: 1;         //Ronly
 
     cq_id: 24;              //Ronly
 
@@ -224,7 +234,18 @@ struct rqcb2_t {
     // protection domain - moved from rqcb0_t    
     pd: 32; //4B
 
-    pad: 240;   //30B
+    // RQ prefetch related fields
+    proxy_cindex: 16;
+    pref_pindex: 16;
+    pref_proxy_cindex: 16;
+    prefetch_base_addr: 32; //Ronly
+    log_num_pref_wqes: 5;
+    rsvd3       : 3;
+    pref_buff_index: 16;
+    checkout_done: 1;
+    pref_init_done: 1;
+
+    pad: 134;   //17B
 };
 
 // Multi-packet write fields used in resp_rx
@@ -256,6 +277,7 @@ struct rqcb4_t {
     num_atomic_resp_msgs: 16;
     num_pkts_in_cur_msg: 16;
     max_pkts_in_any_msg: 16;
+    num_prefetch: 16;
 
     num_rnrs: 32;
     num_seq_errs: 32;
@@ -275,7 +297,7 @@ struct rqcb4_t {
     // resp_rx err
     qp_err_dis_resp_rx                  :    1;
 
-    pad: 160;
+    pad: 144;
 };
 
 // resp_rx stats
@@ -356,6 +378,17 @@ struct rqcb_t {
     struct rqcb3_t rqcb3;
     struct rqcb4_t rqcb4;
     struct rqcb5_t rqcb5;
+};
+
+struct pref_cb_t {
+    p_index: 16;
+    c_index: 16;
+    pad: 480; // 60B
+};
+
+struct pref_ring_t {
+    val: 16;
+    rsvd: 496; // 62B
 };
 
 #endif // __RQCB_H

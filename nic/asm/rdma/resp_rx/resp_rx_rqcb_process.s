@@ -965,13 +965,14 @@ rc_checkout:
 
     seq         c1, d.rq_in_hbm, 1
     seq         c2, d.skip_pt, 1
-    bcf         [!c1 & !c2], pt_process
+    seq         c3, d.prefetch_en, 1
+    bcf         [!c1 & !c2 & !c3], pt_process
     
     // flush the last tblwr in this path
     tblmincri.c7.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1 // BD Slot
 
     sll         r2, r1, d.log_wqe_size
-    add.c1      r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
+    add.!c2     r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
     add.c2      r2, r2, d.phy_base_addr, PHY_BASE_ADDR_SHIFT
     or.c2       r2, r2, 1, 63
     or.c2       r2, r2, CAPRI_RXDMA_INTRINSIC_LIF, 52

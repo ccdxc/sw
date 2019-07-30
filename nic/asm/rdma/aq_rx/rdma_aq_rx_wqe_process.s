@@ -11,10 +11,14 @@ struct aq_rx_s1_t3_k k;
 #define IN_TO_S_P to_s1_info
 
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
+#define K_PREFETCH_BASE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, prefetch_pool_base_addr_page_id_sbit0_ebit15, prefetch_pool_base_addr_page_id_sbit16_ebit21)
+#define K_LOG_PREFETCH_ENTRIES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_prefetch_pool_entries_sbit0_ebit1, log_num_prefetch_pool_entries_sbit2_ebit4)
 
 #define K_RQ_MAP_COUNT CAPRI_KEY_FIELD(IN_P, rq_map_count)
 #define K_RQ_CMB CAPRI_KEY_FIELD(IN_P, rq_cmb)
 #define K_RQ_SPEC CAPRI_KEY_FIELD(IN_P, rq_spec)
+#define K_RQ_ID CAPRI_KEY_FIELD(IN_P, rq_id)
+#define K_LOG_WQE_SIZE CAPRI_KEY_FIELD(IN_P, log_wqe_size)
 
 %%
 
@@ -67,7 +71,20 @@ qp_skip_rq_cmb:
     phvwr       p.rqcb1.skip_pt, 1
     
 qp_no_skip_dma_pt: 
+    add         r1, K_PREFETCH_BASE_ADDR, r0
+    beq         r1, r0, skip_prefetch_en
+    add         r1, r0, r1, HBM_PAGE_SIZE_SHIFT   // BD Slot
 
+    sll         r3, K_RQ_ID, K_LOG_PREFETCH_ENTRIES
+    add         r1, r1, r3
+    sub         r2, K_LOG_PREFETCH_ENTRIES, K_LOG_WQE_SIZE
+
+    phvwr       p.rqcb0.prefetch_en, 1
+    phvwr       p.rqcb1.prefetch_en, 1
+    phvwrpair   p.rqcb1.prefetch_base_addr, r1, p.rqcb1.log_num_wqes, r2
+    phvwrpair   p.rqcb2.prefetch_base_addr, r1, p.rqcb2.log_num_pref_wqes, r2
+
+skip_prefetch_en:
     phvwr       p.rqcb1.spec_en, K_RQ_SPEC
     // setup DMA for SQCB
     DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CREATE_QP_CB)        

@@ -3,7 +3,9 @@
 
 struct aq_rx_to_stage_wqe_t {
     rqcb_base_addr_hi                :   24;
-    pad                              :  104;
+    prefetch_pool_base_addr_page_id  :   22;
+    log_num_prefetch_pool_entries    :    5;
+    pad                              :   77;
 };
 
 struct aq_rx_to_stage_sqcb1_t {

@@ -136,7 +136,8 @@ header_type aq_rx_aqcb_to_wqe_info_t {
         rq_dma_addr                      :  64;
         rq_cmb                           :   1;
         rq_spec                          :   1;
-        pad                              :   6;
+        log_wqe_size                     :   5;
+        pad                              :   1;
     }
 }
 
@@ -150,7 +151,9 @@ header_type aq_rx_cqcb_to_eq_info_t {
 header_type aq_rx_to_stage_wqe_t {
     fields {
         rqcb_base_addr_hi                :   24;
-        pad                              :  104;
+        prefetch_pool_base_addr_page_id  :   22;
+        log_num_prefetch_pool_entries    :    5;
+        pad                              :   77;
     }
 }
 
@@ -546,6 +549,8 @@ action rdma_aq_rx_aqwqe_process () {
 
     // to stage
     modify_field(to_s1_info_scr.rqcb_base_addr_hi, to_s1_info.rqcb_base_addr_hi);
+    modify_field(to_s1_info_scr.prefetch_pool_base_addr_page_id, to_s1_info.prefetch_pool_base_addr_page_id);
+    modify_field(to_s1_info_scr.log_num_prefetch_pool_entries, to_s1_info.log_num_prefetch_pool_entries);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
 
     // stage to stage
@@ -555,6 +560,7 @@ action rdma_aq_rx_aqwqe_process () {
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_dma_addr, t3_s2s_aqcb_to_wqe_info.rq_dma_addr);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_cmb, t3_s2s_aqcb_to_wqe_info.rq_cmb);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_spec, t3_s2s_aqcb_to_wqe_info.rq_spec);
+    modify_field(t3_s2s_aqcb_to_wqe_info_scr.log_wqe_size, t3_s2s_aqcb_to_wqe_info.log_wqe_size);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.pad, t3_s2s_aqcb_to_wqe_info.pad);
 
 }

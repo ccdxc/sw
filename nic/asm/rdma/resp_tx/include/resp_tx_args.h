@@ -7,6 +7,19 @@ struct resp_tx_rqcb_to_dcqcn_config_t {
     pad                           :122;
 };
 
+struct resp_tx_rqcb_to_precheckout_info_t {
+    pt_base_addr                     :   32;
+    rq_pindex                        :   16;
+    log_rq_page_size                 :    5;
+    log_wqe_size                     :    5;
+    log_num_wqes                     :    5;
+    cmd_eop                          :    1;
+    pref_cb_or_base_addr             :   32;
+    pref_buff_index                  :   16;
+    check_in                         :    1;
+    rsvd                             :   47;
+};
+
 #if 0
 #include "capri.h"
 #include "common_phv.h"
