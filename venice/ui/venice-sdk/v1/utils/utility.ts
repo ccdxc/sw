@@ -1,4 +1,4 @@
-import { BaseModel } from "../models/generated/cluster/base-model";
+import { BaseModel } from "../models/generated/basemodel/base-model";
 import * as _ from 'lodash';
 
   // Walks the object and if a nested object has only null or defaults, it is

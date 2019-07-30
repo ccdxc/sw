@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
-import { BaseModel, PropInfoItem } from './base-model';
+import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { Telemetry_queryFwlogsQuerySpec_actions,  Telemetry_queryFwlogsQuerySpec_actions_uihint  } from './enums';
 import { Telemetry_queryFwlogsQuerySpec_directions,  Telemetry_queryFwlogsQuerySpec_directions_uihint  } from './enums';

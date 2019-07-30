@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
-import { BaseModel, PropInfoItem } from './base-model';
+import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { NetworkTLSServerPolicySpec, INetworkTLSServerPolicySpec } from './network-tls-server-policy-spec.model';
 import { NetworkTLSClientPolicySpec, INetworkTLSClientPolicySpec } from './network-tls-client-policy-spec.model';

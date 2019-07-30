@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { BaseModel, PropInfoItem } from '../generated/telemetry_query/base-model';
+import { BaseModel, PropInfoItem } from '../generated/basemodel/base-model';
 
 
 export interface ITelemetry_queryMetricsResultSeries {
