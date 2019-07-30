@@ -407,6 +407,11 @@ func (n *NMD) AdmitNaples() {
 				} else {
 					n.nicRegInterval = globals.NicRegIntvl
 
+					if len(n.config.Status.Controllers) == 0 {
+						log.Errorf("Controllers not passed or cleared. Exiting admission.")
+						return
+					}
+
 					// PS-1770 fix : Try to connect to other Venice node if the current Venice node fails to reply.
 					log.Errorf("%v venice IP failed to respond within 16s.", n.config.Status.Controllers[currentVeniceIdx])
 					currentVeniceIdx = (currentVeniceIdx + 1) % len(n.config.Status.Controllers)
