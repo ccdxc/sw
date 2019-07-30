@@ -53,9 +53,13 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 	defer controllerNodeWatcher.Stop()
 
+	smartNICOpts := api.ListWatchOptions{
+		FieldChangeSelector: []string{"ObjectMeta.Labels", "Status.AdmissionPhase"},
+	}
+
 	// Do not watch for changes in Status.Phase, as NICs that are
 	// not admitted should not have any active connection to Venice.
-	smartNICNodeWatcher, err := apicl.ClusterV1().SmartNIC().Watch(ctx1, &nodeOpts)
+	smartNICNodeWatcher, err := apicl.ClusterV1().SmartNIC().Watch(ctx1, &smartNICOpts)
 	if err != nil {
 		log.Errorf("Failed to start SmartNIC nodes watch (%s)\n", err)
 		return

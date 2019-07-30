@@ -195,8 +195,10 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 			log.Infof("No state found for object %s, cannot close context.", tsr.GetObjectMeta().Name)
 		}
 
+		err = r.stateMgr.UpdateTechSupportObject(tsr)
 		// If we are executing these lines, tsr is guaranteed to be of techsupport kind.
 		state.(*statemgr.TechSupportRequestState).CancelFunc()
+		return err
 	}
 
 exit:

@@ -202,6 +202,7 @@ func (ag *TSMClient) isWatching() bool {
 }
 
 func (ag *TSMClient) sendUpdate(work *tsproto.TechSupportRequest, status tsproto.TechSupportRequestStatus_ActionStatus) {
+	log.Infof("Sending update [%v] to Venice for techsupport.", status.String())
 	update := &tsproto.TechSupportRequest{
 		TypeMeta: api.TypeMeta{
 			Kind: kindTechSupportRequest,

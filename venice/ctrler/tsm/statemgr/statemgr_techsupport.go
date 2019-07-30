@@ -157,7 +157,6 @@ func initTechSupportRequestStatus(tsr *monitoring.TechSupportRequest) {
 }
 
 func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
-	tsr, _ := obj.(*monitoring.TechSupportRequest)
 	state, err := sm.GetTechSupportObjectState(obj)
 
 	if err != nil {
@@ -168,10 +167,12 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 	select {
 	case <-state.(*TechSupportRequestState).Context.Done():
 		// Recheck in memdb to ensure the object is still there
-		if _, err := sm.GetTechSupportObjectState(obj); err != nil {
+		state, err = sm.GetTechSupportObjectState(obj)
+		if err != nil {
 			return
 		}
 
+		tsr := state.(*TechSupportRequestState).TechSupportRequest
 		isTimeout := func(results map[string]*monitoring.TechSupportNodeResult) bool {
 			isTo := false
 			for _, s := range results {
@@ -185,7 +186,7 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 		}
 
 		state.Lock()
-		if isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.SmartNICNodeResults) {
+		if tsr.Status.Status != monitoring.TechSupportJobStatus_Completed.String() && (isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.SmartNICNodeResults)) {
 			tsr.Status.Status = monitoring.TechSupportJobStatus_TimeOut.String()
 			sm.writer.WriteTechSupportRequest(tsr)
 		}
@@ -193,6 +194,38 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 		return
 	}
 
+}
+
+func (sm *Statemgr) getNodesAndAdmittedSmartNICs(tsr *monitoring.TechSupportRequest) []string {
+	names := []string{}
+	smartNICStateList := sm.ListTechSupportObjectState(KindSmartNICNode) // list of objects known to Statemgr
+
+	for _, nodeName := range tsr.Spec.NodeSelector.Names {
+		log.Infof("Checking node : %v", nodeName)
+		_, err := sm.FindTechSupportObject(nodeName, "", KindControllerNode)
+		if err == nil {
+			names = append(names, nodeName)
+			continue
+		}
+
+		for _, nodeState := range smartNICStateList {
+			nodeState.Lock()
+			if nodeState.(*SmartNICNodeState).SmartNIC.Spec.ID == nodeName {
+				if nodeState.(*SmartNICNodeState).SmartNIC.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+					names = append(names, nodeName)
+					log.Infof("Found SmartNIC %v in the techsupport DB.", nodeName)
+				} else {
+					log.Errorf("SmartNIC %v is not Admitted into the cluster. Its state is %v. Cannot collect Techsupport for it. Skipping.", nodeName, nodeState.(*SmartNICNodeState).SmartNIC.Status.AdmissionPhase)
+				}
+
+				nodeState.Unlock()
+				break
+			}
+			nodeState.Unlock()
+		}
+	}
+
+	return names
 }
 
 // handleTechSupportEvent is the handler invoked by stateMgr when it receives TechSupport object
@@ -218,6 +251,9 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 			if tsr.Status.InstanceID == "" {
 				tsr.Status.InstanceID = uuid.NewV4().String()
 				tsr.Status.Status = monitoring.TechSupportJobStatus_Scheduled.String()
+
+				// If InstanceID is empty, this is the first time this API is called. We need to ensure we only select the nodes which has been admitted into the cluster
+				tsr.Spec.NodeSelector.Names = sm.getNodesAndAdmittedSmartNICs(tsr)
 				update = true
 			}
 		}
@@ -230,7 +266,7 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 			state = sm.newTechSupportObjectState(obj)
 			state.Lock()
 			defer state.Unlock()
-			err = sm.memDB.AddObject(state)
+			sm.memDB.AddObject(state)
 			if obj.GetObjectKind() == KindTechSupportRequest {
 				go sm.startTechsupportTimer(obj)
 			}

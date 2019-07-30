@@ -314,6 +314,8 @@ func TestTechSupportRPCs(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
+	makeTechSupportControllerNodeObject(agentName1, map[string]string{"color": "green"})
+
 	tsr1 := &monitoring.TechSupportRequest{
 		ObjectMeta: api.ObjectMeta{
 			Name: reqName1,
@@ -331,6 +333,35 @@ func TestTechSupportRPCs(t *testing.T) {
 
 	// create TS API client
 	tsRPCClient := tsproto.NewTechSupportApiClient(rpcClient.ClientConn)
+
+	ag1 := &cluster.Node{
+		ObjectMeta: api.ObjectMeta{
+			Name: agentName1,
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: statemgr.KindControllerNode,
+			//Kind: statemgr.KindSmartNICNode,
+		},
+	}
+	evt0 := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: ag1,
+	}
+	stateMgr.TechSupportWatcher <- evt0
+
+	ag2 := &cluster.Node{
+		ObjectMeta: api.ObjectMeta{
+			Name: agentName2,
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: statemgr.KindControllerNode,
+		},
+	}
+	evt0 = kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: ag2,
+	}
+	stateMgr.TechSupportWatcher <- evt0
 
 	// create one request before the agent starts watching
 	evt1 := kvstore.WatchEvent{
