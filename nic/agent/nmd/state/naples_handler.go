@@ -408,7 +408,7 @@ func (n *NMD) AdmitNaples() {
 					n.nicRegInterval = globals.NicRegIntvl
 
 					if len(n.config.Status.Controllers) == 0 {
-						log.Errorf("Controllers not passed or cleared. Exiting admission.")
+						log.Error("Controllers not passed or cleared. Exiting admission.")
 						return
 					}
 
