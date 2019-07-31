@@ -56,9 +56,10 @@
             {{selectedRollout?.spec["upgrade-type"] }}</div>
         </div>
       </div>
-      <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
+      <!-- If rollout does not involve Naples, we don't want to display rollout NIC configures -->
+      <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
         <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label"> Max Node Updated In Parallel:
+          <div class="rolloutstatus-summary-panel-content-label"> Max DSC Updated In Parallel:
           </div>
           <div class="rolloutstatus-summary-panel-content-value">
             {{selectedRollout?.spec["max-parallel"] }}</div>
@@ -70,7 +71,7 @@
             {{selectedRollout?.spec["max-nic-failures-before-abort"] }}</div>
         </div>
       </div>
-      <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
+      <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label"> Upgrade DSCs by Label?:
           </div>

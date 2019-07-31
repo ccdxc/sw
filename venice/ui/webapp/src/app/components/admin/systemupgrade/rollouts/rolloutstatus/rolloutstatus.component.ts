@@ -128,7 +128,8 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   addToolbarButton() {
     const toolbarData: ToolbarData = this._controllerService.getToolbarData();
     if (this.selectedRollout && RolloutUtil.isRolloutPending(this.selectedRollout) ) {
-      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete)) {  // VS-328.  We just want to add stop-button once.
+      const isSuspendInProgress = this.selectedRollout.status.state === RolloutRolloutStatus_state['suspend-in-progress']; // check it rollout is in 'suspend-in-progress' stage
+      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete) && !isSuspendInProgress) {  // VS-328.  We just want to add stop-button once.
         toolbarData.buttons.push(
           {
             cssClass: 'global-button-primary rolloutstatus-toolbar-button',
@@ -201,7 +202,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     const sub = this.rolloutService.StopRollout(rollout).subscribe(
       (response) => {
         this._controllerService.invokeSuccessToaster('Success', 'Rollout ' + this.selectedRollout.meta.name + ' was suspended!');
-        // TODO:  What should UI do when rollout is suspeced.
+        this.removeStopRolloutToolbarButton();  // If stop rollout is successful, hide stop-rollout button
       },
       this._controllerService.restErrorHandler('Failed to suspend rollout')
     );

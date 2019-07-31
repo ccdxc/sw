@@ -171,11 +171,22 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
     if (Utility.isEmpty(this.newTechsupport.$formGroup.get(['meta', 'name']).value)) {
       return 'global-button-disabled';
     }
-    if (this.newTechsupport.$formGroup.valid) {
+    if (this.isAllInputsValidated()) {
       return '';
     } else {
       return 'global-button-disabled';
     }
+  }
+
+  isAllInputsValidated(): boolean {
+    if (!this.newTechsupport.$formGroup.valid) {
+      return false;
+    }
+    // we want user picks nodes or naples
+    if (this.selectedNodes.length === 0 && this.targetNaples.length  === 0) {
+      return false;
+    }
+    return true;
   }
 
   isTechSupportRequestNameValid(existingTechSupportRequest: MonitoringTechSupportRequest[]): ValidatorFn {

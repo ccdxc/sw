@@ -77,12 +77,12 @@
 
 
               <div fxFlex="auto" class="newrollout-maxnode-div" fxLayout="row"
-                   *ngIf="isToShowNodeDiv()">
-                <div fxFlex="nogrow" class="newrollout-text">Max DSCs In Parallel:</div>
+                   *ngIf="isToShowNicDiv()">
+                <div fxFlex="nogrow" class="newrollout-text">Max DSC In Parallel:</div>
                 <input fxFlex="200px" formControlName="max-parallel" appErrorTooltip
                        class="newrollout-input-common"
                        matspellcheck="false" type="number" pInputText
-                       placeholder="Max nodes to upgrade" min='1' max='10'>
+                       placeholder="Max DSC to upgrade" min='1' max='10'>
               </div>
               <div fxFlex></div>
               <div fxFlex="auto" fxLayout="column" class="newrollout-nic-div"
