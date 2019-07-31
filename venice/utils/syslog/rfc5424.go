@@ -59,25 +59,20 @@ func RFCWithContext(ctx context.Context) ROption {
 }
 
 // NewRfc5424 creates instance to write syslog in RFC5424 format
-func NewRfc5424(network, raddr string, facility Priority, hostName, appName string, opts ...ROption) (Writer, error) {
+func NewRfc5424(network, raddr string, facility Priority, hostname, appName string, opts ...ROption) (Writer, error) {
 	if appName == "" {
 		appName = "-"
 	}
 
-	if hostName == "" {
-		hostName = func() string {
-			if h, err := os.Hostname(); err == nil {
-				return h
-			}
-			return "-"
-		}()
+	if hostname == "" {
+		hostname = utils.GetHostname()
 	}
 
 	w := &rfc5424{
 		version:  1,
 		facility: syslog.Priority(facility),
 		appName:  appName,
-		hostname: hostName,
+		hostname: hostname,
 		procID:   os.Getpid(),
 		getTime:  func() string { return time.Now().Format(time.RFC3339) },
 		network:  network,

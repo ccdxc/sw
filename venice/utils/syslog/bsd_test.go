@@ -13,12 +13,12 @@ import (
 )
 
 func TestSyslogBsd(t *testing.T) {
-	_, err := NewBsd("invalid", "", LogLocal0, "tag1")
+	_, err := NewBsd("invalid", "", LogLocal0, t.Name(), "tag1")
 	Assert(t, err != nil && strings.Contains(err.Error(), "network invalid"), "expected network invalid error")
-	_, err = NewBsd("tcp", "invalid", LogLocal0, "tag1")
+	_, err = NewBsd("tcp", "invalid", LogLocal0, t.Name(), "tag1")
 	Assert(t, err != nil && strings.Contains(err.Error(), "address invalid"), "expected address invalid error")
 
-	s, err := NewBsd("", "", LogLocal0, "tag1")
+	s, err := NewBsd("", "", LogLocal0, t.Name(), "tag1")
 	AssertOk(t, err, "failed to create new syslog")
 	AssertOk(t, s.Info(&Message{Msg: "BSD style syslog"}), "failed to send syslog message")
 	s.Close()
@@ -30,7 +30,7 @@ func TestSyslogBsdWithTCPServer(t *testing.T) {
 	AssertOk(t, err, "failed to start TCP server")
 	defer listener.Close()
 
-	s, err := NewBsd("tcp", listener.Addr().String(), LogLocal0, "tag1")
+	s, err := NewBsd("tcp", listener.Addr().String(), LogLocal0, t.Name(), "tag1")
 	AssertOk(t, err, "failed to create new syslog")
 	defer s.Close()
 
@@ -43,7 +43,7 @@ func TestSyslogBsdWithUDPServer(t *testing.T) {
 	AssertOk(t, err, "failed to start UDP server")
 	defer pConn.Close()
 
-	s, err := NewBsd("udp", pConn.LocalAddr().String(), LogLocal0, "tag1")
+	s, err := NewBsd("udp", pConn.LocalAddr().String(), LogLocal0, t.Name(), "tag1")
 	AssertOk(t, err, "failed to create new syslog")
 	defer s.Close()
 

@@ -29,6 +29,7 @@ import (
 
 // Manager represents the event policy manager
 type Manager struct {
+	hostname  string // user friendly hostname
 	evtsProxy *evtsproxy.EventsProxy
 	expMgr    *ExportMgr
 	store     emstore.Emstore
@@ -46,14 +47,15 @@ func WithStore(store emstore.Emstore) MOption {
 }
 
 // NewManager creates a new policy manager with the given params
-func NewManager(proxy *evtsproxy.EventsProxy, logger log.Logger, opts ...MOption) (*Manager, error) {
-	expMgr, err := NewExportManager(proxy, logger)
+func NewManager(hostname string, proxy *evtsproxy.EventsProxy, logger log.Logger, opts ...MOption) (*Manager, error) {
+	expMgr, err := NewExportManager(hostname, proxy, logger)
 	if err != nil {
 		logger.Errorf("failed to create policy manager, err: %v", err)
 		return nil, err
 	}
 
 	m := &Manager{
+		hostname:  hostname,
 		evtsProxy: proxy,
 		expMgr:    expMgr,
 		logger:    logger,

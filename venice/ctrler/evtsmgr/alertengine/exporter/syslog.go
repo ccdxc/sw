@@ -95,7 +95,7 @@ func (s *syslogExport) createWriters(syslogExpConfig *monitoring.SyslogExport) (
 
 		switch monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_vvalue[syslogExpConfig.GetFormat()]) {
 		case monitoring.MonitoringExportFormat_SYSLOG_BSD:
-			writer, err = syslog.NewBsd(network, remoteAddr, priority, tag)
+			writer, err = syslog.NewBsd(network, remoteAddr, priority, utils.GetHostname(), tag)
 			if err != nil {
 				s.logger.Errorf("failed to create syslog BSD writer, err: %v", err)
 				return nil, err

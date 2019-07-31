@@ -38,7 +38,7 @@ type PolicyState struct {
 	netAgentURL     string
 	fwLogCollectors sync.Map
 	fwTable         tsdb.Obj
-	hostName        string
+	hostname        string
 	appName         string
 	shm             *ipc.SharedMem
 	ipc             []*ipc.IPC
@@ -83,7 +83,7 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		emstore:         s,
 		netAgentURL:     "http://127.0.0.1:" + agentPort,
 		fwLogCollectors: sync.Map{},
-		hostName:        utils.GetHostname(),
+		hostname:        utils.GetHostname(),
 		appName:         globals.Tmagent,
 	}
 
@@ -209,7 +209,7 @@ func (s *PolicyState) newSyslog(c *fwlogCollector) error {
 
 	switch c.format {
 	case monitoring.MonitoringExportFormat_SYSLOG_BSD.String():
-		fd, err := syslog.NewBsd(strings.ToLower(c.proto), fmt.Sprintf("%s:%s", c.destination, c.port), facility|priority, s.hostName)
+		fd, err := syslog.NewBsd(strings.ToLower(c.proto), fmt.Sprintf("%s:%s", c.destination, c.port), facility|priority, s.hostname, s.hostname)
 		if err != nil {
 			return err
 		}
@@ -217,7 +217,7 @@ func (s *PolicyState) newSyslog(c *fwlogCollector) error {
 		log.Infof("connected to syslog %v %v://%v:%v", c.format, c.proto, c.destination, c.port)
 
 	case monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String():
-		fd, err := syslog.NewRfc5424(strings.ToLower(c.proto), fmt.Sprintf("%s:%s", c.destination, c.port), facility, s.hostName, s.appName)
+		fd, err := syslog.NewRfc5424(strings.ToLower(c.proto), fmt.Sprintf("%s:%s", c.destination, c.port), facility, s.hostname, s.appName)
 		if err != nil {
 			return err
 		}
@@ -489,8 +489,8 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 // UpdateHostName updates hostname; all the syslog message will carry this updated hostname in the syslog message.
 func (s *PolicyState) UpdateHostName(hostname string) {
-	if s.hostName != hostname {
-		s.hostName = hostname
+	if s.hostname != hostname {
+		s.hostname = hostname
 	}
 }
 

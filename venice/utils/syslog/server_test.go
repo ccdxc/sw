@@ -16,7 +16,7 @@ func TestBSDServer(t *testing.T) {
 
 	for _, proto := range []string{"udp", "tcp"} {
 		addr, ch, err := Server(ctx, "127.0.0.1:", monitoring.MonitoringExportFormat_SYSLOG_BSD.String(), proto)
-		w, err := NewBsd(proto, addr, LogLocal0, "tag1")
+		w, err := NewBsd(proto, addr, LogLocal0, t.Name(), "tag1")
 		AssertOk(t, err, "failed to create BSD client for "+proto)
 		m := &Message{
 			MsgID: t.Name(),

@@ -7,16 +7,19 @@ import (
 	"net"
 
 	syslog "github.com/RackSec/srslog"
+
+	"github.com/pensando/sw/venice/utils"
 )
 
 // TODO: handle connection failure
 
 // BSD format syslog writer
 type bsd struct {
-	sw      *syslog.Writer
-	network string // "tcp", "tcp4" (IPv4-only), "tcp6" (IPv6-only), "udp", "udp4" (IPv4-only), "udp6" (IPv6-only), "ip", "ip4" (IPv4-only), "ip6" (IPv6-only), "unix", "unixgram" and "unixpacket".
-	raddr   string // remote addr to connect to
-	ctx     context.Context
+	sw       *syslog.Writer
+	network  string // "tcp", "tcp4" (IPv4-only), "tcp6" (IPv6-only), "udp", "udp4" (IPv4-only), "udp6" (IPv6-only), "ip", "ip4" (IPv4-only), "ip6" (IPv6-only), "unix", "unixgram" and "unixpacket".
+	raddr    string // remote addr to connect to
+	hostname string // hostname to record the syslog message with
+	ctx      context.Context
 }
 
 // BOption fills the optional params for bsd syslog writer
@@ -30,8 +33,12 @@ func BSDWithContext(ctx context.Context) BOption {
 }
 
 // NewBsd is a wrapper around bsd syslog
-func NewBsd(network, raddr string, priority Priority, tag string, opts ...BOption) (Writer, error) {
-	b := &bsd{network: network, raddr: raddr}
+func NewBsd(network, raddr string, priority Priority, hostname, tag string, opts ...BOption) (Writer, error) {
+	if hostname == "" {
+		hostname = utils.GetHostname()
+	}
+
+	b := &bsd{network: network, raddr: raddr, hostname: hostname}
 
 	// add custom options
 	for _, o := range opts {
@@ -53,6 +60,7 @@ func NewBsd(network, raddr string, priority Priority, tag string, opts ...BOptio
 		return nil, err
 	}
 	sw.SetFormatter(syslog.RFC3164Formatter)
+	sw.SetHostname(hostname)
 	b.sw = sw
 
 	return b, nil
@@ -128,7 +136,6 @@ func (w *bsd) Warning(msg *Message) error {
 		}
 		message = fmt.Sprintf("%s - %s", msg.Msg, string(m))
 	}
-
 	return w.sw.Warning(message)
 }
 

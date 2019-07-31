@@ -50,6 +50,7 @@ func TestSyslogEventsExporter(t *testing.T) {
 	writer1, err := syslog.NewBsd("udp",
 		fmt.Sprintf("127.0.0.1:%s", tmp1[len(tmp1)-1]),
 		syslog.LogUser,
+		t.Name(),
 		"pen-events")
 	AssertOk(t, err, "failed to create syslog BSD writer, err: %v", err)
 

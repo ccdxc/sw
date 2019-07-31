@@ -22,6 +22,7 @@ import (
 // based on the CRUD operations on event policies.
 type ExportMgr struct {
 	sync.RWMutex
+	hostname   string
 	evtsProxy  *evtsproxy.EventsProxy
 	logger     log.Logger
 	exporters  map[string]map[exporters.Type]interface{}
@@ -50,9 +51,10 @@ type syslogWriter struct {
 }
 
 // NewExportManager creates a new export manager with given params
-func NewExportManager(proxy *evtsproxy.EventsProxy, logger log.Logger) (*ExportMgr, error) {
+func NewExportManager(hostname string, proxy *evtsproxy.EventsProxy, logger log.Logger) (*ExportMgr, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	m := &ExportMgr{
+		hostname:   hostname,
 		evtsProxy:  proxy,
 		logger:     logger,
 		exporters:  make(map[string]map[exporters.Type]interface{}),
@@ -322,12 +324,12 @@ func (m *ExportMgr) createSyslogWriter(ctx context.Context, format monitoring.Mo
 
 	switch format {
 	case monitoring.MonitoringExportFormat_SYSLOG_BSD:
-		writer, err = syslog.NewBsd(network, remoteAddr, priority, tag, syslog.BSDWithContext(ctx))
+		writer, err = syslog.NewBsd(network, remoteAddr, priority, m.hostname, tag, syslog.BSDWithContext(ctx))
 		if err != nil {
 			m.logger.Errorf("failed to create syslog BSD writer for config {%s/%s} (will try reconnecting in few secs), err: %v", remoteAddr, network, err)
 		}
 	case monitoring.MonitoringExportFormat_SYSLOG_RFC5424:
-		writer, err = syslog.NewRfc5424(network, remoteAddr, priority, utils.GetHostname(), tag, syslog.RFCWithContext(ctx))
+		writer, err = syslog.NewRfc5424(network, remoteAddr, priority, m.hostname, tag, syslog.RFCWithContext(ctx))
 		if err != nil {
 			m.logger.Errorf("failed to create syslog RFC5424 writer {%s/%s} (will try reconnecting in few secs), err: %v", remoteAddr, network, err)
 		}

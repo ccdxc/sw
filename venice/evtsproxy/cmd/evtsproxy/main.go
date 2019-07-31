@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/events/policy"
@@ -110,7 +111,7 @@ func createEvtsProxy(listenURL string, resolverClient resolver.Interface, dedupI
 	}
 
 	// start events policy manager
-	policyMgr, err := policy.NewManager(eps, logger)
+	policyMgr, err := policy.NewManager(utils.GetHostname(), eps, logger)
 	if err != nil {
 		log.Fatalf("failed to create event policy manager, err: %v", err)
 	}
