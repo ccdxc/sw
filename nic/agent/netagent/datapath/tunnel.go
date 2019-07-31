@@ -56,7 +56,7 @@ func (hd *Datapath) CreateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error 
 			log.Errorf("Error creating tunnel interface. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}

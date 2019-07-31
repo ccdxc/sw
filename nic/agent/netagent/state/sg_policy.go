@@ -103,7 +103,10 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 		}
 	}
 
-	sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if sgp.Status.SGPolicyID == 0 {
+		sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate security group policy id. {%+v}", err)

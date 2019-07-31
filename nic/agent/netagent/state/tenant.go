@@ -34,12 +34,15 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	tenantID, err := na.Store.GetNextID(types.TenantID)
-	if err != nil {
-		log.Errorf("Could not allocate tenant id. {%+v}", err)
-		return err
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if tn.Status.TenantID == 0 {
+		tenantID, err := na.Store.GetNextID(types.TenantID)
+		if err != nil {
+			log.Errorf("Could not allocate tenant id. {%+v}", err)
+			return err
+		}
+		tn.Status.TenantID = tenantID
 	}
-	tn.Status.TenantID = tenantID
 
 	// save it in db
 	key := na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)

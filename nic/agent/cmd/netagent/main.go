@@ -6,6 +6,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"path"
 	"path/filepath"
 	"runtime/debug"
 	"time"
@@ -37,7 +39,7 @@ func main() {
 	// command line flags
 	var (
 		hostIf          = flag.String("hostif", "lo", "Host facing interface")
-		agentDbPath     = flag.String("agentdb", "/tmp/naples-netagent.db", "Agent Database file")
+		agentDbPath     = flag.String("agentdb", globals.NetAgentDBPath, "Agent Database file")
 		npmURL          = flag.String("npm", globals.Npm, "NPM RPC server URL")
 		disableTSA      = flag.Bool("disabletsa", false, " Disable Telemetry and Troubleshooting agents")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
@@ -67,6 +69,10 @@ func main() {
 	}
 	var err error
 	var hostIfMAC string
+
+	if _, err := os.Stat(globals.NetAgentDBPath); os.IsNotExist(err) {
+		os.MkdirAll(path.Dir(globals.NetAgentDBPath), 0664)
+	}
 
 	// Initialize logger config
 	log.SetConfig(logConfig)

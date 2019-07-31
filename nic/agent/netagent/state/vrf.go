@@ -41,8 +41,11 @@ func (na *Nagent) CreateVrf(vrf *netproto.Vrf) error {
 		return err
 	}
 
-	vrf.Status.VrfID, err = na.Store.GetNextID(types.VrfID)
-	vrf.Status.VrfID += types.VrfOffset
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if vrf.Status.VrfID == 0 {
+		vrf.Status.VrfID, err = na.Store.GetNextID(types.VrfID)
+		vrf.Status.VrfID += types.VrfOffset
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate vrf id. {%+v}", err)

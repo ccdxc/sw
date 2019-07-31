@@ -5,12 +5,10 @@ package state
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -43,13 +41,16 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 		return err
 	}
 
-	intfID, err := na.Store.GetNextID(types.InterfaceID)
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if intf.Status.InterfaceID == 0 {
+		intfID, err := na.Store.GetNextID(types.InterfaceID)
 
-	if err != nil {
-		log.Errorf("Could not allocate interface id. {%+v}", err)
-		return err
+		if err != nil {
+			log.Errorf("Could not allocate interface id. {%+v}", err)
+			return err
+		}
+		intf.Status.InterfaceID = intfID + types.UplinkOffset
 	}
-	intf.Status.InterfaceID = intfID + types.UplinkOffset
 
 	// Perform interface associations, currently only ENIC interfaces supported as
 	switch intf.Spec.Type {
@@ -351,20 +352,11 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 
 	if err := na.Datapath.CreatePort(ports...); err != nil {
 		log.Errorf("Failed to create Ports in Datapath. Err: %v", err)
-		if strings.Contains(err.Error(), halproto.ApiStatus_API_STATUS_EXISTS_ALREADY.String()) {
-			return nil
-		}
 		return fmt.Errorf("failed to create Ports in Datapath. Err: %v", err)
 	}
 
-	for _, p := range ports {
+	for id, p := range ports {
 		var uplinkType string
-		id, err := na.Store.GetNextID(types.InterfaceID)
-		if err != nil {
-			log.Errorf("Could not allocate IDs for uplinks. %v", err)
-			return fmt.Errorf("could not allocate IDs for uplinks. %v", err)
-		}
-		id += uint64(types.UplinkOffset)
 		if p.Spec.Type == "TYPE_MANAGEMENT" {
 			uplinkType = "UPLINK_MGMT"
 		} else {
@@ -377,21 +369,21 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
-				Name:      fmt.Sprintf("uplink%d", id),
+				Name:      fmt.Sprintf("uplink%d", uint64(id)+types.UplinkOffset+1),
 			},
 			Spec: netproto.InterfaceSpec{
 				Type:        uplinkType,
 				AdminStatus: "UP",
 			},
 			Status: netproto.InterfaceStatus{
-				InterfaceID:  id,
+				InterfaceID:  uint64(id) + types.UplinkOffset + 1, // This will keep uplink IDs consistent across config replays
 				UplinkPortID: uint32(p.Status.PortID),
 			},
 		}
 		key := na.Solver.ObjectKey(uplink.ObjectMeta, uplink.TypeMeta)
 
 		// save the interface into state stores
-		err = na.saveInterface(uplink)
+		err := na.saveInterface(uplink)
 		if err != nil {
 			log.Errorf("Error storing uplink %+v to state store. Err: %v", uplink.ObjectMeta, err)
 		}
@@ -402,6 +394,7 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 		uplinks = append(uplinks, uplink)
 	}
 
+	fmt.Println("NBALERION: ", uplinks)
 	if err := na.Datapath.CreateInterface(uplinks...); err != nil {
 		log.Errorf("Failed to create Uplinks in Datapath. Err: %v", err)
 		return fmt.Errorf("failed to create uplinks in Datapath. Err: %v", err)

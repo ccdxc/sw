@@ -61,7 +61,10 @@ func (na *Nagent) CreateIPSecSADecrypt(ipSecSADecrypt *netproto.IPSecSADecrypt) 
 		return fmt.Errorf("ipsec sa decrypt protocol should be ESP")
 	}
 
-	ipSecSADecrypt.Status.IPSecSADecryptID, err = na.Store.GetNextID(types.IPSecSADecryptID)
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if ipSecSADecrypt.Status.IPSecSADecryptID == 0 {
+		ipSecSADecrypt.Status.IPSecSADecryptID, err = na.Store.GetNextID(types.IPSecSADecryptID)
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate IPSec decrypt SA id. {%+v}", err)

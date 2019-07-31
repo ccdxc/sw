@@ -72,48 +72,9 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 		}
 	} else {
 		// update netagent state. This is a temporary fix till we decide on flash perf implications of a full config replay
-		c, _ := gogoproto.TimestampProto(time.Now())
-
-		tn := netproto.Tenant{
-			TypeMeta: api.TypeMeta{Kind: "Tenant"},
-			ObjectMeta: api.ObjectMeta{
-				Name: "default",
-				CreationTime: api.Timestamp{
-					Timestamp: *c,
-				},
-				ModTime: api.Timestamp{
-					Timestamp: *c,
-				},
-			},
-			Status: netproto.TenantStatus{
-				TenantID: 1,
-			},
+		if err := na.replayConfigs(); err != nil {
+			log.Errorf("Failed to replay configs from boltDB. Err: %v", err)
 		}
-
-		defVrf := netproto.Vrf{
-			TypeMeta: api.TypeMeta{Kind: "Vrf"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      "default",
-				CreationTime: api.Timestamp{
-					Timestamp: *c,
-				},
-				ModTime: api.Timestamp{
-					Timestamp: *c,
-				},
-			},
-			Spec: netproto.VrfSpec{
-				VrfType: "CUSTOMER",
-			},
-			Status: netproto.VrfStatus{
-				VrfID: types.VrfOffset + 1,
-			},
-		}
-		na.Lock()
-		na.TenantDB[na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)] = &tn
-		na.VrfDB[na.Solver.ObjectKey(defVrf.ObjectMeta, defVrf.TypeMeta)] = &defVrf
-		na.Unlock()
 	}
 
 	err = na.GetUUID()
@@ -284,5 +245,114 @@ func (na *Nagent) PurgeConfigs() error {
 		}
 	}
 
+	return nil
+}
+
+// replay configs replays the persisted configs from bolt DB
+func (na *Nagent) replayConfigs() error {
+
+	// Replay Tenant Object
+	if objs, err := na.Store.List(&netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+	}); err == nil {
+		for _, o := range objs {
+			tenant := o.(*netproto.Tenant)
+			if err := na.CreateTenant(tenant); err != nil {
+				log.Errorf("Failed to recreate tenant objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate tenant objects. Err: %v", err)
+			}
+		}
+	}
+
+	// Replay Namespace Object
+	if objs, err := na.Store.List(&netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+	}); err == nil {
+		for _, o := range objs {
+			namespace := o.(*netproto.Namespace)
+			if err := na.CreateNamespace(namespace); err != nil {
+				log.Errorf("Failed to recreate namespace objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate namespace objects. Err: %v", err)
+			}
+		}
+	}
+
+	// Replay Vrf Object
+	if objs, err := na.Store.List(&netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+	}); err == nil {
+		for _, o := range objs {
+			vrf := o.(*netproto.Vrf)
+			if err := na.CreateVrf(vrf); err != nil {
+				log.Errorf("Failed to recreate vrf objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate vrf objects. Err: %v", err)
+			}
+		}
+	}
+
+	// Replay Network Object
+	if objs, err := na.Store.List(&netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+	}); err == nil {
+		for _, o := range objs {
+			network := o.(*netproto.Network)
+			if err := na.CreateNetwork(network); err != nil {
+				log.Errorf("Failed to recreate network objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate network objects. Err: %v", err)
+			}
+		}
+	}
+
+	// Replay Endpoint Object
+	if objs, err := na.Store.List(&netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+	}); err == nil {
+		for _, o := range objs {
+			endpoint := o.(*netproto.Endpoint)
+			if err := na.CreateEndpoint(endpoint); err != nil {
+				log.Errorf("Failed to recreate endpoint objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate endpoint objects. Err: %v", err)
+			}
+		}
+	}
+
+	// Replay Tunnel Object
+	if objs, err := na.Store.List(&netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+	}); err == nil {
+		for _, o := range objs {
+			tunnel := o.(*netproto.Tunnel)
+			if err := na.CreateTunnel(tunnel); err != nil {
+				log.Errorf("Failed to recreate tunnel objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate tunnel objects. Err: %v", err)
+			}
+		}
+	}
+
+	// Replay App Object
+	if objs, err := na.Store.List(&netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+	}); err == nil {
+		for _, o := range objs {
+			app := o.(*netproto.App)
+			if err := na.CreateApp(app); err != nil {
+				log.Errorf("Failed to recreate app objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate app objects. Err: %v", err)
+			}
+		}
+	}
+
+	// Replay SGPolicy Object
+	if objs, err := na.Store.List(&netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	}); err == nil {
+		for _, o := range objs {
+			sgPolicy := o.(*netproto.SGPolicy)
+			if err := na.CreateSGPolicy(sgPolicy); err != nil {
+				log.Errorf("Failed to recreate sgPolicy objects. Err: %v", err)
+				return fmt.Errorf("failed to recreate sgPolicy objects. Err: %v", err)
+			}
+		}
+	}
 	return nil
 }
