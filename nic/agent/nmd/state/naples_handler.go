@@ -116,6 +116,40 @@ func linkDown(intf string) error {
 	return netlink.LinkSetDown(link)
 }
 
+func linkUp(intf string) error {
+	log.Infof("Bringing link %v down.", intf)
+
+	link, err := netlink.LinkByName(intf)
+	if err != nil {
+		log.Errorf("Failed to lookup interface %v. Err : %v", intf, err)
+		return nil
+	}
+
+	return netlink.LinkSetUp(link)
+}
+
+func bringInbandUp() error {
+	err := linkUp(ipif.NaplesInbandInterface)
+	if err != nil {
+		log.Errorf("Failed to bring %v up. Err : %v", ipif.NaplesInbandInterface, err)
+		return err
+	}
+
+	err = linkUp(ipif.NaplesINB0Interface)
+	if err != nil {
+		log.Errorf("Failed to bring %v up. Err : %v", ipif.NaplesINB0Interface, err)
+		return err
+	}
+
+	err = linkUp(ipif.NaplesINB1Interface)
+	if err != nil {
+		log.Errorf("Failed to bring %v up. Err : %v", ipif.NaplesINB1Interface, err)
+		return err
+	}
+
+	return nil
+}
+
 func bringAllLinksDown() error {
 	log.Infof("Bringing all links down.")
 	err := linkDown(ipif.NaplesInbandInterface)
@@ -327,8 +361,21 @@ func (n *NMD) reconcileIPClient() error {
 
 	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
 		mgmtIntf = ipif.NaplesInbandInterface
+
+		err := bringInbandUp()
+		if err != nil {
+			log.Error("Failed to bring INBAND interface up.")
+			return err
+		}
+
 	} else {
 		mgmtIntf = ipif.NaplesOOBInterface
+
+		err := linkUp(ipif.NaplesOOBInterface)
+		if err != nil {
+			log.Error("Failed to bring OOB interface up.")
+			return err
+		}
 	}
 
 	// Check if we need to reconcile
