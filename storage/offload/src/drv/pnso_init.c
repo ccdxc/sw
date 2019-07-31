@@ -225,9 +225,9 @@ pnso_deinit(void)
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
 		if (pcr->core_id >= 0) {
 			pas_show_stats(&pcr->api_stats);
-			//cpdc_pprint_mpools(pcr);
-			sonic_pprint_seq_bmps(pcr);
-			sonic_pprint_pcr_ev_list(pcr);
+			//cpdc_report_mpools(pcr);
+			sonic_report_seq_bmps(pcr);
+			sonic_report_pcr_ev_list(pcr);
 		}
 		pc_res_deinit(pcr);
 	}

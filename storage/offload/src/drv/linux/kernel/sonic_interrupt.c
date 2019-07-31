@@ -675,7 +675,7 @@ err_evl:
 	return rc;
 }
 
-void sonic_pprint_ev_list(struct sonic_event_list *evl)
+void sonic_report_ev_list(struct sonic_event_list *evl)
 {
 	if (!evl)
 		return;
@@ -705,8 +705,8 @@ void sonic_pprint_ev_list(struct sonic_event_list *evl)
 		      (unsigned long long) evl->work_data.timestamp);
 }
 
-void sonic_pprint_pcr_ev_list(struct per_core_resource *pcr)
+void sonic_report_pcr_ev_list(struct per_core_resource *pcr)
 {
 	if (pcr)
-		sonic_pprint_ev_list(pcr->evl);
+		sonic_report_ev_list(pcr->evl);
 }

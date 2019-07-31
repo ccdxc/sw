@@ -2502,7 +2502,7 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 }
 
 static void
-sonic_pprint_queue_tracking(struct queue_tracking *track,
+sonic_report_queue_tracking(struct queue_tracking *track,
 		 const char *name)
 {
 	int count = 0;
@@ -2523,13 +2523,13 @@ sonic_pprint_queue_tracking(struct queue_tracking *track,
 }
 
 void
-sonic_pprint_seq_bmps(struct per_core_resource *pcr)
+sonic_report_seq_bmps(struct per_core_resource *pcr)
 {
-	sonic_pprint_queue_tracking(&pcr->cpdc_statusq_track, "CPDC STATUS");
-	sonic_pprint_queue_tracking(&pcr->crypto_statusq_track, "Crypto STATUS");
+	sonic_report_queue_tracking(&pcr->cpdc_statusq_track, "CPDC STATUS");
+	sonic_report_queue_tracking(&pcr->crypto_statusq_track, "Crypto STATUS");
 }
 
-void sonic_pprint_ev_lists(void)
+void sonic_report_ev_lists(void)
 {
 	struct lif *lif = sonic_get_lif();
 	struct per_core_resource *res;
@@ -2539,10 +2539,10 @@ void sonic_pprint_ev_lists(void)
 		return;
 
 	LIF_FOR_EACH_PC_RES(lif, i, res) {
-		sonic_pprint_ev_list(res->evl);
+		sonic_report_ev_list(res->evl);
 	}
 }
-//EXPORT_SYMBOL(sonic_pprint_ev_lists);
+//EXPORT_SYMBOL(sonic_report_ev_lists);
 
 static inline struct queue *
 sonic_find_statusq(struct queue_tracking *track,

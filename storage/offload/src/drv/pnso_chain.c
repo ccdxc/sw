@@ -299,8 +299,8 @@ report_suspect_service(const struct service_info *svc_info,
 	}
 }
 
-void
-chn_pprint_suspect_chain(const struct service_chain *chain)
+static void
+report_suspect_chain(const struct service_chain *chain)
 {
 	struct chain_entry *sc_entry;
 	struct service_info *svc_info;
@@ -365,8 +365,8 @@ chn_pprint_suspect_chain(const struct service_chain *chain)
 			(uint64_t) chain->sc_last_entry);
 }
 
-void
-chn_pprint_suspect_chain_ex(const struct service_chain *chain)
+static void
+report_suspect_chain_ex(const struct service_chain *chain)
 {
 	struct chain_entry *sc_entry;
 	struct service_info *svc_info;
@@ -401,12 +401,15 @@ chn_pprint_suspect_chain_ex(const struct service_chain *chain)
 
 void 
 chn_report_suspect_chain(const struct service_chain *chain,
-		pprint_suspect_chain_fn_t pprint_fn)
+		bool report_internal)
 {
-	if (!chain || !is_chain_suspect(chain) || !pprint_fn)
+	if (!chain || !is_chain_suspect(chain))
 		return;
 
-	pprint_fn(chain);
+	if (report_internal)
+		report_suspect_chain(chain);
+	else
+		report_suspect_chain_ex(chain);
 }
 
 pnso_error_t
@@ -511,9 +514,8 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 
 	if (is_timeout) {
 		if (pnso_lif_reset_ctl_pending()) {
-			chn_report_suspect_chain(chain, chn_pprint_suspect_chain);
-
-			chn_report_suspect_chain(chain, chn_pprint_suspect_chain_ex);
+			chn_report_suspect_chain(chain, true);
+			chn_report_suspect_chain(chain, false);
 		}
 
 		err = ETIMEDOUT;

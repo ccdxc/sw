@@ -1052,7 +1052,7 @@ out:
 }
 
 void
-cpdc_pprint_mpools(struct per_core_resource *pcr)
+cpdc_report_mpools(struct per_core_resource *pcr)
 {
        MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC]);
        MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);

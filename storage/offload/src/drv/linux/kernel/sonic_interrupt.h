@@ -77,6 +77,6 @@ void sonic_destroy_ev_list(struct per_core_resource *pc_res);
 void sonic_disable_ev_list(struct per_core_resource *pc_res);
 void sonic_flush_ev_list(struct per_core_resource *pc_res);
 irqreturn_t sonic_async_ev_isr(int irq, void *evlptr);
-void sonic_pprint_ev_list(struct sonic_event_list *evl);
+void sonic_report_ev_list(struct sonic_event_list *evl);
 
 #endif /* SONIC_INTERRUPT_H */

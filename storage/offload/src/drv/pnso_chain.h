@@ -345,14 +345,8 @@ pnso_error_t chn_poller(struct service_chain *chain, uint16_t gen_id,
 void chn_poll_timeout_all(struct per_core_resource *pcr);
 pnso_error_t pnso_chain_poller(void *poll_ctx);
 
-typedef void (*pprint_suspect_chain_fn_t) (const struct service_chain *chain);
-
-void chn_pprint_suspect_chain(const struct service_chain *chain);
-
-void chn_pprint_suspect_chain_ex(const struct service_chain *chain);
-
 void chn_report_suspect_chain(const struct service_chain *chain,
-		pprint_suspect_chain_fn_t pprint_fn);
+		bool report_internal);
 
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)
