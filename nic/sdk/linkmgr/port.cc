@@ -683,7 +683,7 @@ an_ret_t
 port::port_link_sm_an_process(void)
 {
     bool an_good = false;
-    int  timeout = 100; //msecs
+    int  timeout = MIN_PORT_TIMER_INTERVAL;
     an_ret_t an_ret = AN_DONE;
 
     switch(this->link_an_sm_) {
@@ -716,8 +716,16 @@ port::port_link_sm_an_process(void)
             usleep(100);
         }
 
-        // 100 msecs
+        // If AN HCD doesn't resolve:
+        //   If retry count < MAX_PORT_AN_HCD_RETRIES:
+        //     start bringup timer and return with AN_WAIT
+        //  Else return with AN_RESET
         if(an_good == false) {
+            set_num_an_hcd_retries(num_an_hcd_retries() + 1);
+            if (num_an_hcd_retries() == MAX_PORT_AN_HCD_RETRIES) {
+                an_ret = AN_RESET;
+                break;
+            }
             this->bringup_timer_val_ += timeout;
             this->link_bring_up_timer_ =
                 sdk::lib::timer_schedule(
@@ -738,16 +746,9 @@ port::port_link_sm_an_process(void)
 
         port_serdes_an_hcd_cfg();
 
-        /*
-        if (port_serdes_an_link_train_check() == false) {
-            an_ret = AN_RESET;
-        }
-        */
-
     default:
         break;
     }
-
     return an_ret;
 }
 
@@ -780,7 +781,7 @@ port::port_link_sm_dfe_process(void)
 {
     bool dfe_complete = false;
     dfe_ret_t ret     = DFE_DONE;
-    int  timeout      = 40; //msecs
+    int  timeout      = MIN_PORT_TIMER_INTERVAL;
     bool retry_sm     = false;
 
     while (true) {
@@ -822,12 +823,16 @@ port::port_link_sm_dfe_process(void)
                     break;
                 }
 
+                // If eye check fails
+                //   if count < MAX_PORT_SERDES_DFE_RETRIES
+                //     retry ICAL
+                //   else
+                //     return with DFE_RESET
                 if (port_serdes_eye_check() == false) {
-                    // transition to start ical
                     set_port_link_dfe_sm(
                             port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL);
                     set_num_dfe_retries(num_dfe_retries() + 1);
-                    if (num_dfe_retries() < 5) {
+                    if (num_dfe_retries() < MAX_PORT_SERDES_DFE_RETRIES) {
                         retry_sm = true;
                         break;
                     } else {
@@ -857,10 +862,8 @@ port::port_link_sm_dfe_process(void)
                 dfe_complete = port_serdes_dfe_complete();
 
                 if(dfe_complete == false) {
-                    timeout = 100; // 100 msec for pCal
-
+                    timeout = MIN_PORT_TIMER_INTERVAL;
                     this->bringup_timer_val_ += timeout;
-
                     this->link_bring_up_timer_ =
                         sdk::lib::timer_schedule(
                             SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
@@ -886,7 +889,7 @@ port::port_link_sm_dfe_process(void)
 sdk_ret_t
 port::port_link_sm_process(void)
 {
-    int timeout     = 500; // msecs
+    int  timeout    = 500; // msecs
     bool sig_detect = false;
     bool serdes_rdy = false;
     bool mac_faults = true;
@@ -894,7 +897,6 @@ port::port_link_sm_process(void)
     bool retry_sm   = false;
     an_ret_t an_ret = AN_DONE;
     dfe_ret_t dfe_ret = DFE_DONE;
-    int  training_fail_count = 0;
 
     while (true) {
         retry_sm = false;
@@ -914,46 +916,22 @@ port::port_link_sm_process(void)
                     this->link_debounce_timer_ = NULL;
                 }
 
+                // reset MAC
+                port_mac_state_reset();
+
+                // reset SERDES
+                port_serdes_state_reset();
+
+                // reset counters
+                port_link_sm_counters_reset();
+
+                // reset state
+
                 // remove from link poll timer if present
                 port_link_poll_timer_delete(this);
 
-                this->bringup_timer_val_ = 0;
-
                 // set operational status as down
                 this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_DOWN);
-
-                // reset MAC faults counter
-                set_mac_faults(0);
-
-                // reset MAC no-faults counter
-                set_num_mac_nofaults(0);
-
-                // reset dfe retry count
-                set_num_dfe_retries(0);
-
-                // disable and clear mac interrupts
-                port_mac_intr_en(false);
-                port_mac_intr_clr();
-
-                // disable serdes
-                port_serdes_output_enable(false);
-
-                // TODO check with Avago?
-                // soft spico reset
-                port_serdes_reset(true);
-
-                // disable and put mac in reset
-                port_mac_soft_reset(true);
-                port_mac_enable(false);
-
-                // reset number of link bringup retries
-                set_num_retries(0);
-
-                // reset MAC global programming since serdes config
-                // is changed to run AN
-                if (auto_neg_enable() == true) {
-                    port_deinit();
-                }
 
                 SDK_PORT_SM_DEBUG(this, "Disabled");
 
@@ -972,31 +950,17 @@ port::port_link_sm_process(void)
                     an_ret = port_link_sm_an_process();
 
                     if (an_ret == AN_RESET) {
-                        // Link training failed. Restart AN.
-
-                        if (++training_fail_count == MAX_LINK_TRAIN_FAIL_COUNT) {
-                            // TODO no need to increment timeout since state is
-                            // reset to ENABLED?
-                            this->bringup_timer_val_ += timeout;
-
-                            this->link_bring_up_timer_ =
-                                sdk::lib::timer_schedule(
-                                    SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                                    (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                                    false);
-                        } else {
-                            retry_sm = true;
-                        }
-
-                        // reset all SM states
-                        port_link_sm_reset();
-
-                        this->set_port_link_sm(
-                                port_link_sm_t::PORT_LINK_SM_ENABLED);
-
+                        // AN HCD resolution failed. Restart AN
+                        retry_sm = true;
+                        set_num_an_hcd_retries(0);
+                        // skip the serdes reset since it is done during AN_INIT
+                        port_link_sm_retry_enabled(false);
                         break;
                     } else if (an_ret == AN_WAIT) {
                         // Timers started by AN SM. Just exit.
+                        break;
+                    } else if (an_ret == AN_SKIP) {
+                        // only for debugging
                         break;
                     } else {
                         // AN SM configures serdes
@@ -1053,37 +1017,20 @@ port::port_link_sm_process(void)
                 // put port in flush
                 port_flush_set(true);
 
+                // send MAC remote faults
+                port_mac_send_remote_faults(true);
+
                 // bring MAC out of reset and enable
                 port_mac_enable(true);
                 port_mac_soft_reset(false);
 
-                // send MAC remote faults
-                port_mac_send_remote_faults(true);
-
                 if (auto_neg_enable() == true) {
                     // Restart AN if link training failed.
                     if (port_serdes_an_link_train_check() == false) {
-                        if (++training_fail_count ==
-                                            MAX_LINK_TRAIN_FAIL_COUNT) {
-                            // TODO no need to increment timeout since state
-                            // is reset to ENABLED?
-                            this->bringup_timer_val_ += timeout;
-
-                            this->link_bring_up_timer_ =
-                                sdk::lib::timer_schedule(
-                                SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                                (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                                false);
-                        } else {
-                            retry_sm = true;
-                        }
-
-                        // reset all SM states
-                        port_link_sm_reset();
-
-                        this->set_port_link_sm(
-                                port_link_sm_t::PORT_LINK_SM_ENABLED);
-
+                        retry_sm = true;
+                        set_num_an_hcd_retries(0);
+                        // skip the serdes reset since it is done during AN_INIT
+                        port_link_sm_retry_enabled(false);
                         break;
                     }
 
@@ -1132,9 +1079,7 @@ port::port_link_sm_process(void)
                     } else if (dfe_ret == DFE_RESET) {
                         retry_sm = true;
                         set_num_dfe_retries(0);
-                        port_link_sm_reset();
-                        this->set_port_link_sm(
-                                port_link_sm_t::PORT_LINK_SM_ENABLED);
+                        port_link_sm_retry_enabled(false);
                         break;
                     }
                 }
@@ -1159,6 +1104,14 @@ port::port_link_sm_process(void)
                 mac_sync = port_mac_sync_get();
 
                 if(mac_sync == false) {
+                    set_num_mac_sync_retries(num_mac_sync_retries() + 1);
+                    if (num_mac_sync_retries() >= MAX_PORT_MAC_SYNC_RETRIES) {
+                        retry_sm = true;
+                        set_num_mac_sync_retries(0);
+                        port_link_sm_retry_enabled();
+                        break;
+                    }
+
                     this->bringup_timer_val_ += timeout;
 
                     this->link_bring_up_timer_ =
@@ -1189,9 +1142,9 @@ port::port_link_sm_process(void)
                     // if MAC errors are detected, reset the MAC no-faults counter
                     set_num_mac_nofaults(0);
 
-                    if (this->mac_faults() < 3) {
+                    if (this->mac_faults() < MAX_PORT_MAC_FAULTS_CHECK) {
                         SDK_PORT_SM_DEBUG(this, "MAC faults detected");
-                        timeout = 100;
+                        timeout = MIN_PORT_TIMER_INTERVAL;
                         this->bringup_timer_val_ += timeout;
                         this->link_bring_up_timer_ =
                             sdk::lib::timer_schedule(
@@ -1204,11 +1157,7 @@ port::port_link_sm_process(void)
                                             "MAC faults persistent, retry SM");
                         retry_sm = true;
                         set_mac_faults(0);
-                        port_link_sm_reset();
-
-                        // start the bringup from enabled state
-                        this->set_port_link_sm(
-                                port_link_sm_t::PORT_LINK_SM_ENABLED);
+                        port_link_sm_retry_enabled();
                         break;
                     }
                 } else if (fec_type() == port_fec_type_t::PORT_FEC_TYPE_NONE) {
@@ -1220,9 +1169,9 @@ port::port_link_sm_process(void)
                     if (port_speed() == port_speed_t::PORT_SPEED_10G ||
                         port_speed() == port_speed_t::PORT_SPEED_25G) {
                         set_num_mac_nofaults(num_mac_nofaults() + 1);
-                        if (num_mac_nofaults() < 3) {
+                        if (num_mac_nofaults() < MAX_PORT_MAC_NOFAULTS_CHECK) {
                             SDK_PORT_SM_DEBUG(this, "MAC faults check retry");
-                            timeout = 100;
+                            timeout = MIN_PORT_TIMER_INTERVAL;
                             this->bringup_timer_val_ += timeout;
                             this->link_bring_up_timer_ =
                                 sdk::lib::timer_schedule(
@@ -1396,6 +1345,76 @@ port::port_deinit (void)
 sdk_ret_t
 port::port_mac_set_pause_src_addr(uint8_t *mac_addr) {
     mac_fns()->mac_pause_src_addr(mac_id(), mac_ch(), mac_addr);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_state_reset(void)
+{
+    // disable and clear mac interrupts
+    port_mac_intr_en(false);
+    port_mac_intr_clr();
+
+    // disable and put mac in reset
+    port_mac_soft_reset(true);
+    port_mac_enable(false);
+
+    // clear MAC remote faults
+    port_mac_send_remote_faults(false);
+
+    // reset MAC global programming since serdes config
+    // is changed to run AN
+    if (auto_neg_enable() == true) {
+        port_deinit();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_serdes_state_reset(void)
+{
+    // disable serdes
+    port_serdes_output_enable(false);
+
+    // soft spico reset
+    port_serdes_reset(true);
+    return SDK_RET_OK;
+}
+
+void
+port::port_link_sm_counters_reset(void)
+{
+    // reset bringup timer
+    this->bringup_timer_val_ = 0;
+
+    // reset MAC faults counter
+    set_mac_faults(0);
+
+    // reset MAC no-faults counter
+    set_num_mac_nofaults(0);
+
+    // reset number of MAC sync retries
+    set_num_mac_sync_retries(0);
+
+    // reset AN HCD retry counter
+    set_num_an_hcd_retries(0);
+
+    // reset dfe retry count
+    set_num_dfe_retries(0);
+
+    // reset number of link bringup retries
+    set_num_retries(0);
+}
+
+sdk_ret_t
+port::port_link_sm_retry_enabled(bool serdes_reset)
+{
+    // reset all SM states
+    port_link_sm_reset();
+    if (serdes_reset == true) {
+        port_serdes_state_reset();
+    }
+    this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
     return SDK_RET_OK;
 }
 

@@ -11,6 +11,13 @@
 #include "port_mac.hpp"
 #include "port_serdes.hpp"
 
+#define MAX_PORT_AN_HCD_RETRIES     10
+#define MAX_PORT_MAC_SYNC_RETRIES   4
+#define MAX_PORT_SERDES_DFE_RETRIES 5
+#define MAX_PORT_MAC_FAULTS_CHECK   3
+#define MAX_PORT_MAC_NOFAULTS_CHECK 3
+#define MIN_PORT_TIMER_INTERVAL     TWHEEL_DEFAULT_SLICE_DURATION   // msecs
+
 namespace sdk {
 namespace linkmgr {
 
@@ -18,6 +25,7 @@ typedef enum an_ret_e {
     AN_RESET,
     AN_WAIT,
     AN_DONE,
+    AN_SKIP,
 } an_ret_t;
 
 typedef enum dfe_ret_e {
@@ -195,7 +203,17 @@ public:
     void set_num_mac_nofaults(uint32_t faults) { this->num_mac_nofaults_ = faults; }
 
     uint32_t num_dfe_retries(void) { return this->num_dfe_retries_; }
-    void set_num_dfe_retries(uint32_t faults) { this->num_dfe_retries_ = faults; }
+    void set_num_dfe_retries(uint32_t num_dfe) { this->num_dfe_retries_ = num_dfe; }
+
+    uint32_t num_an_hcd_retries(void) { return this->num_an_hcd_retries_; }
+    void set_num_an_hcd_retries(uint32_t num_an_hcd) {
+        this->num_an_hcd_retries_ = num_an_hcd;
+    }
+
+    uint32_t num_mac_sync_retries(void) { return this->num_mac_sync_retries_; }
+    void set_num_mac_sync_retries(uint32_t num_mac_sync) {
+        this->num_mac_sync_retries_ = num_mac_sync;
+    }
 
     sdk_ret_t port_enable(void);
     sdk_ret_t port_disable(void);
@@ -374,6 +392,8 @@ private:
     uint32_t              mac_faults_;                // number of times MAC faults detected
     uint32_t              num_mac_nofaults_;          // number of times no MAC faults were detected (applicable for 10G/25G-no-fec)
     uint32_t              num_dfe_retries_;           // number of times ical is retried in one pass of SM
+    uint32_t              num_an_hcd_retries_;        // number of times AN HCD was retried in one pass of SM
+    uint32_t              num_mac_sync_retries_;      // number of times MAC sync is retried in one pass of SM
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);
@@ -395,6 +415,11 @@ private:
 
     mac_fn_t*    mac_fns(void)    { return this->mac_fns_; }     // mac functions
     serdes_fn_t* serdes_fns(void) { return this->serdes_fns_; }  // serdes functions
+
+    sdk_ret_t port_mac_state_reset(void);
+    sdk_ret_t port_serdes_state_reset(void);
+    void port_link_sm_counters_reset(void);
+    sdk_ret_t port_link_sm_retry_enabled(bool serdes_reset = true);
 };
 
 }    // namespace linkmgr
