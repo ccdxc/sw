@@ -310,11 +310,17 @@ testcases:
     #=======================================
     # Init spec = 16
     #=======================================
+    -   name    : Build_Rdma
+        testcase: testcases.rdma.build_rdma
+        args    :
+            type: remote_only
+
     -   name    : Insmod_Rdma_Spec
         testcase: testcases.rdma.insmod_rdma
         args    :
             type: remote_only
             spec: '16'
+            reload: '5'
 
     -   name    : Show_Gid
         testcase: testcases.rdma.show_gid
@@ -382,5 +388,4 @@ testcases:
         testcase: testcases.rdma.rmmod_rdma
         args    :
             type: remote_only
-            spec: '16'
-
+            reload: '5'
