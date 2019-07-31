@@ -416,18 +416,14 @@ func (em *EventsManager) processVersion(eventType kvstore.WatchEventType, versio
 	}
 
 	switch eventType {
-	case kvstore.Created:
+	case kvstore.Created, kvstore.Updated:
 		if !utils.IsEmpty(version.Status.RolloutBuildVersion) {
-			em.alertEngine.SetMaintenanceMode()
+			em.alertEngine.SetMaintenanceMode(true)
+			return nil
 		}
-	case kvstore.Updated:
-		if !utils.IsEmpty(version.Status.RolloutBuildVersion) {
-			em.alertEngine.SetMaintenanceMode()
-		} else {
-			em.alertEngine.UnsetMaintenanceMode()
-		}
+		em.alertEngine.SetMaintenanceMode(false)
 	case kvstore.Deleted:
-		em.alertEngine.UnsetMaintenanceMode()
+		em.alertEngine.SetMaintenanceMode(false)
 	default:
 		em.logger.Errorf("invalid version watch event, type %s version %+v", eventType, version)
 		return fmt.Errorf("invalid version watch event")

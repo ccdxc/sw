@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pensando/sw/venice/globals"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
-
-	"github.com/pensando/sw/venice/utils/imagestore"
-
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/installer"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/cmd/utils"
 	rolloutproto "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/imagestore"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

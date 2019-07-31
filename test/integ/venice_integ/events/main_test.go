@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -159,12 +160,29 @@ func (t *tInfo) setup(tst *testing.T) error {
 		return err
 	}
 	t.apicl = apicl
+
+	// create version object  - alert engine needs it
+	if _, err := apicl.ClusterV1().Version().Create(context.Background(), &cluster.Version{
+		TypeMeta: api.TypeMeta{
+			Kind: "Version",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: t.testName,
+		},
+	}); err != nil {
+		t.logger.Errorf("failed to create version object, err: %v", err)
+		return err
+	}
+
 	return nil
 }
 
 // teardown stops all the services that were started during setup
 func (t *tInfo) teardown() {
 	t.recorders.close()
+
+	t.apicl.ClusterV1().Version().Delete(context.Background(), &api.ObjectMeta{Name: t.testName})
+	t.apicl.Close()
 
 	if t.esClient != nil {
 		t.esClient.Close()

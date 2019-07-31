@@ -81,7 +81,7 @@ type alertEngineImpl struct {
 	cancelFunc      context.CancelFunc      // context to cancel goroutines
 	wg              sync.WaitGroup          // for start routine
 	running         bool                    // indicates if alert engine is running or not
-	maintenanceMode bool                    // indicates if the maintenance mode is on or not
+	maintenanceMode *bool                   // indicates if the maintenance mode is on or not
 }
 
 // NewAlertEngine creates the new events alert engine.
@@ -109,7 +109,7 @@ func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, logger log.Lo
 // And, it creates an alert whenever the event matches any policy.
 func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
 	a.RLock()
-	if !a.running {
+	if !a.running || a.maintenanceMode == nil {
 		a.logger.Errorf("alert engine not running, could not process events")
 		a.RUnlock()
 		return
@@ -118,7 +118,7 @@ func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
 
 	for _, evt := range eventList.GetItems() {
 		a.RLock()
-		if a.maintenanceMode {
+		if a.maintenanceMode != nil && *a.maintenanceMode {
 			if evt.GetCategory() != eventattrs.Category_Rollout.String() {
 				// skip processing all events that don't belong to rollout category
 				// as a result, only rollout alerts will be triggered in the maintenance mode
@@ -202,21 +202,19 @@ func (a *alertEngineImpl) Stop() {
 }
 
 // SetMaintenanceMode sets the maintenance mode flag
-func (a *alertEngineImpl) SetMaintenanceMode() {
+func (a *alertEngineImpl) SetMaintenanceMode(flag bool) {
 	a.Lock()
 	defer a.Unlock()
-	a.maintenanceMode = true
-	a.logger.Infof("entering maintenance mode, only upgrade/rollout events will be processed")
-}
-
-// UnsetMaintenanceMode un sets the maintenance mode flag if it is set already
-func (a *alertEngineImpl) UnsetMaintenanceMode() {
-	a.Lock()
-	defer a.Unlock()
-	if a.maintenanceMode {
-		a.maintenanceMode = false
-		a.logger.Infof("leaving maintenance mode")
+	if flag {
+		if a.maintenanceMode == nil || (a.maintenanceMode != nil && !*a.maintenanceMode) {
+			a.logger.Infof("entering maintenance mode, only upgrade/rollout events will be processed")
+		}
+	} else {
+		if a.maintenanceMode != nil && *a.maintenanceMode {
+			a.logger.Infof("leaving maintenance mode")
+		}
 	}
+	a.maintenanceMode = &flag
 }
 
 // runPolicy helper function to run the given policy against event. Also, it updates
