@@ -24,7 +24,7 @@ void UpgReqReact::SetStateMachine(delphi::objects::UpgReqPtr req) {
     ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
     ctx.haltStateMachine = false;
-    if (GetState() == UpgStatePostRestart) {
+    if (GetState() >= UpgStatePostRestart) {
         ctx.postRestart = true;
     }
     if (!GetUpgCtxFromMeta(ctx)) {

@@ -53,6 +53,7 @@ bool UpgPreStateHandler::PreCompatCheckHandler(UpgCtx &ctx) {
 }
 
 bool UpgPreStateHandler::PrePostRestartHandler(UpgCtx &ctx) {
+    ctx.postRestart = true;
     UPG_LOG_DEBUG("UpgPreStateHandler PrePostRestart returning");
     return true;
 }
