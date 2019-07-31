@@ -9,6 +9,8 @@ RDMA="$TOP/platform/src/third-party/rdma"
 : ${SONIC_DRIVERS_SRC:="$TOP/storage/offload"}
 : ${PERFTEST_SRC:="$RDMA/perftest"}
 : ${QPERF_SRC:="$RDMA/qperf"}
+: ${KRPING_SRC:="$RDMA/krping/freebsd/krping"}
+: ${KRPING_COMPAT_SRC:="$RDMA/krping/freebsd/krping_compat"}
 
 # Products generated
 : ${GEN_DIR:="$TOP/platform/gen/drivers-freebsd"}
@@ -114,6 +116,20 @@ rsync -r --delete --delete-excluded \
   --exclude="src/qperf" \
   --exclude="src/qperf.1" \
   "$QPERF_SRC/" "$GEN_DIR/qperf"
+
+# Copy krping sources to gen dir
+rsync -r --delete --delete-excluded \
+  --exclude=".git/" \
+  --exclude="*.o" \
+  --exclude="*.ko" \
+  "$KRPING_SRC/" "$GEN_DIR/krping"
+
+# Copy krping_compat sources to gen dir
+rsync -r --delete --delete-excluded \
+  --exclude=".git/" \
+  --exclude="*.o" \
+  --exclude="*.ko" \
+  "$KRPING_COMPAT_SRC/" "$GEN_DIR/krping_compat"
 
 # Set version string
 if [ -n "$SW_VERSION" ] ; then

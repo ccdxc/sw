@@ -280,7 +280,8 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            server_inv: ['yes']
+            compat: ['yes', 'no']
+            server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
             size: [64,128,256,512,700,801,1024,2048,4096,8192,16384,32768,65536,131072]
             count: [1000,1501]
@@ -291,6 +292,7 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
+            compat: ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes', 'no']
             size: [4096]

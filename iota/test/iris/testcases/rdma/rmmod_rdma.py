@@ -24,10 +24,8 @@ def Trigger(tc):
     for n in tc.nodes:
         if tc.os == host.OS_TYPE_LINUX:
             api.Trigger_AddHostCommand(req, n, "rmmod ionic_rdma")
-            api.Trigger_AddHostCommand(req, n, "rmmod rdma_krping")
         else:
             api.Trigger_AddHostCommand(req, n, "kldunload ionic_rdma")
-            api.Trigger_AddHostCommand(req, n, "kldunload krping")
             #Reset spec config if its already configured
             if hasattr(tc.args, 'spec'):
                 api.Trigger_AddHostCommand(req, n, "kenv -u compat.linuxkpi.ionic_rdma_spec")

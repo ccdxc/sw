@@ -17,6 +17,9 @@ def Setup(tc):
 
     tc.iota_path = api.GetTestsuiteAttr("driver_path")
 
+    tc.nodes = api.GetNaplesHostnames()
+    tc.os = api.GetNodeOs(tc.nodes[0])
+
     pairs = api.GetRemoteWorkloadPairs()
     # get workloads from each node
     tc.w = []
@@ -30,8 +33,20 @@ def Setup(tc):
         tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_device'))
         tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_gid'))
 
-        # skip, until rdma_krping is installed on Mellanox sanity/regression servers
         if not tc.w[i].IsNaples():
+            api.Logger.info("IGNORED: mlx side is hitting local prot err")
+            return api.types.status.IGNORED
+
+    if getattr(tc.iterators, 'compat', None) == 'yes':
+        for n in tc.nodes:
+            if tc.os == host.OS_TYPE_LINUX:
+                api.Logger.info("IGNORED: krping_compat is not ported to Linux")
+                return api.types.status.IGNORED
+        if getattr(tc.iterators, 'fr', None) == 'yes':
+            api.Logger.info("IGNORED: krping_compat fr: uses deprecated fast-reg-mr, not supported")
+            return api.types.status.IGNORED
+        if getattr(tc.iterators, 'server_inv', None) == 'yes':
+            api.Logger.info("IGNORED: krping_compat server_inv: err if not used with fast-reg-mr, not supported")
             return api.types.status.IGNORED
 
     return api.types.status.SUCCESS
@@ -53,6 +68,27 @@ def Trigger(tc):
 
     api.Logger.info("Starting krping_rdma test from %s" % (tc.cmd_descr))
 
+    # load krping or krping_compat on both nodes
+    if getattr(tc.iterators, 'compat', None) == 'yes':
+        for n in tc.nodes:
+            assert(tc.os != host.OS_TYPE_LINUX)
+            api.Trigger_AddHostCommand(req, n,
+                    "(kldstat | grep -w krping_compat >/dev/null) || " +
+                    "kldload {path}/krping_compat/krping_compat.ko"
+                    .format(path=tc.iota_path))
+    else:
+        for n in tc.nodes:
+            if tc.os == host.OS_TYPE_LINUX:
+                api.Trigger_AddHostCommand(req, n,
+                        "(lsmod | grep -w rdma_krping >/dev/null) || " +
+                        "insmod {path}/krping/rdma_krping.ko"
+                        .format(path=tc.iota_path))
+            else:
+                api.Trigger_AddHostCommand(req, n,
+                        "(kldstat | grep -w krping_compat >/dev/null) || " +
+                        "kldload {path}/krping/krping.ko"
+                        .format(path=tc.iota_path))
+
     # cmd for server
     if api.GetNodeOs(w1.node_name) == host.OS_TYPE_LINUX:
         krpfile = " /proc/krping "
@@ -61,10 +97,10 @@ def Trigger(tc):
 
     #parse different options
     options = ""
-    if hasattr(tc.iterators, 'server_inv') and (tc.iterators.server_inv == 'yes'):
+    if getattr(tc.iterators, 'server_inv', None) == 'yes':
         options = options + "server_inv,"
 
-    if hasattr(tc.iterators, 'local_dma_lkey') and (tc.iterators.local_dma_lkey == 'yes'):
+    if getattr(tc.iterators, 'local_dma_lkey', None) == 'yes':
         options = options + "local_dma_lkey,"
         
     if hasattr(tc.iterators, 'txdepth'):
@@ -137,6 +173,18 @@ def Trigger(tc):
                                w2.node_name,
                                w2.workload_name,
                                cmd)
+
+    # unload krping or krping_compat on both nodes
+    if getattr(tc.iterators, 'compat', None) == 'yes':
+        for n in tc.nodes:
+            assert(tc.os != host.OS_TYPE_LINUX)
+            api.Trigger_AddHostCommand(req, n, "kldunload krping_compat")
+    else:
+        for n in tc.nodes:
+            if tc.os == host.OS_TYPE_LINUX:
+                api.Trigger_AddHostCommand(req, n, "rmmod rdma_krping")
+            else:
+                api.Trigger_AddHostCommand(req, n, "kldunload krping")
 
     # trigger the request
     trig_resp = api.Trigger(req)

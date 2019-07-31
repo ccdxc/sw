@@ -60,8 +60,6 @@ def Trigger(tc):
                                    timeout = 180)
             api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
             api.Trigger_AddHostCommand(req, n, "modprobe rdma_ucm")
-            api.Trigger_AddHostCommand(req, n, "(lsmod | grep rdma_krping >/dev/null) || insmod drivers-linux/krping/rdma_krping.ko",
-                                       rundir = 'rdma-drivers')
             cmd = "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko"
             # Configure SGE spec if 'spec' argument if provided
             if hasattr(tc.args, 'spec'): 
@@ -82,9 +80,6 @@ def Trigger(tc):
                 api.Trigger_AddHostCommand(req, n, cmd, rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-freebsd && kldload sys/modules/ionic_rdma/ionic_rdma.ko",
                                        rundir = 'rdma-drivers')
-            api.Trigger_AddHostCommand(req, n, "kldload krping",
-                                       rundir = 'rdma-drivers')
-
             api.Trigger_AddHostCommand(req, n, "cp -r drivers-freebsd %s" % api.GetHostToolsDir(),
                                        rundir = 'rdma-drivers')
 

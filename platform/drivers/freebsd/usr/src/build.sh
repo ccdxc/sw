@@ -50,6 +50,10 @@ fi
 make_ext sys/modules/ionic
 make_ext sys/modules/ionic_rdma
 
+# krping and krping_compat
+make_ext krping
+make_ext krping_compat
+
 # Proceed building user space RDMA only if OFED was enabled
 [ -e /usr/include/infiniband/verbs.h ] || exit 0
 make_ext contrib/ofed/libionic
