@@ -31,6 +31,17 @@
     (api_params)->handle = (hdl);                                            \
 }
 
+#define PDS_IMPL_FILL_TABLE_API_PARAMS(api_params, key_, mask_,              \
+                                       data, action, hdl)                    \
+{                                                                            \
+    memset((api_params), 0, sizeof(*(api_params)));                          \
+    (api_params)->key = (key_);                                              \
+    (api_params)->mask = (mask_);                                            \
+    (api_params)->appdata = (data);                                          \
+    (api_params)->action_id = (action);                                      \
+    (api_params)->handle = (hdl);                                            \
+}
+
 namespace api {
 namespace impl {
 

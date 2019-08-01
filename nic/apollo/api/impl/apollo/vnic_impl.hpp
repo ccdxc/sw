@@ -138,7 +138,6 @@ private:
     /// \brief constructor
     vnic_impl() {
         hw_id_ = 0xFFFF;
-        vnic_by_slot_hash_idx_ = 0xFFFF;
     }
 
     /// \brief destructor
@@ -221,8 +220,7 @@ private:
     // P4 datapath specific state
     uint16_t hw_id_;                           ///< hardware id
     handle_t local_vnic_by_vlan_tx_handle_;
-    // TODO: if we have remove(key) API, we don't need to store this
-    uint32_t    vnic_by_slot_hash_idx_;
+    handle_t local_vnic_by_slot_rx_handle_;
 };
 
 /// \@}

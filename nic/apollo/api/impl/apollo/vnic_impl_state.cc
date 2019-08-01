@@ -23,6 +23,7 @@ namespace impl {
 vnic_impl_state::vnic_impl_state(pds_state *state) {
     p4pd_table_properties_t       tinfo, oflow_tinfo;
     sdk_table_factory_params_t    table_params;
+    sdk_table_factory_params_t    slhparams;
 
     // allocate indexer for vnic hw id allocation
     vnic_idxr_ = indexer::factory(PDS_MAX_VNIC);
@@ -36,18 +37,10 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     SDK_ASSERT(local_vnic_by_vlan_tx_tbl_ != NULL);
 
     // LOCAL_VNIC_BY_SLOT_RX hash + otcam table
-    p4pd_table_properties_get(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, &tinfo);
-    p4pd_table_properties_get(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX_OTCAM,
-                              &oflow_tinfo);
-    local_vnic_by_slot_rx_tbl_ =
-        sdk_hash::factory(tinfo.tablename, P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
-                          P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX_OTCAM,
-                          tinfo.tabledepth,
-                          oflow_tinfo.tabledepth,
-                          tinfo.key_struct_size,
-                          tinfo.actiondata_struct_size,
-                          static_cast<sdk_hash::HashPoly>(tinfo.hash_type),
-                          true, NULL);
+    slhparams.table_id = P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX;
+    slhparams.key2str = NULL;
+    slhparams.appdata2str = NULL;
+    local_vnic_by_slot_rx_tbl_ = slhash::factory(&slhparams);
     SDK_ASSERT(local_vnic_by_slot_rx_tbl_ != NULL);
 
     // EGRESS_LOCAL_VNIC_INFO index table
@@ -62,7 +55,7 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
 vnic_impl_state::~vnic_impl_state() {
     indexer::destroy(vnic_idxr_);
     sltcam::destroy(local_vnic_by_vlan_tx_tbl_);
-    sdk_hash::destroy(local_vnic_by_slot_rx_tbl_);
+    slhash::destroy(local_vnic_by_slot_rx_tbl_);
     directmap::destroy(egress_local_vnic_info_tbl_);
 }
 
@@ -70,7 +63,7 @@ sdk_ret_t
 vnic_impl_state::table_transaction_begin(void) {
     //vnic_idxr_->txn_start();
     local_vnic_by_vlan_tx_tbl_->txn_start();
-    //local_vnic_by_slot_rx_tbl_->txn_start();
+    local_vnic_by_slot_rx_tbl_->txn_start();
     //egress_local_vnic_info_tbl_->txn_start();
     return SDK_RET_OK;
 }
@@ -79,7 +72,7 @@ sdk_ret_t
 vnic_impl_state::table_transaction_end(void) {
     //vnic_idxr_->txn_end();
     local_vnic_by_vlan_tx_tbl_->txn_end();
-    //local_vnic_by_slot_rx_tbl_->txn_end();
+    local_vnic_by_slot_rx_tbl_->txn_end();
     //egress_local_vnic_info_tbl_->txn_end();
     return SDK_RET_OK;
 }

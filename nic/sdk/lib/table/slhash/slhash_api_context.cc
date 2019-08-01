@@ -147,6 +147,9 @@ slhctx::outhandle() {
 
 int
 slhctx::keycompare() {
+    if (inhandle().valid()) {
+        return 0;
+    }
     return memcmp(params->key, swkey, props->swkey_len);
 }
 

@@ -18,6 +18,7 @@
 #include "nic/apollo/api/impl/apollo/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/apollo/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
@@ -51,9 +52,11 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     sdk_table_api_params_t tparams = { 0 };
+    sdk_table_api_params_t api_params = { 0 };;
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
     local_vnic_by_vlan_tx_swkey_t local_vnic_by_vlan_tx_key = { 0 };
     local_vnic_by_vlan_tx_swkey_mask_t local_vnic_by_vlan_tx_mask = { 0 };
+    local_vnic_by_slot_rx_swkey_t local_vnic_by_slot_rx_key = {0};
 
     // allocate hw id for this vnic
     if (vnic_impl_db()->vnic_idxr()->alloc(&idx) !=
@@ -89,8 +92,20 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         return ret;
     }
 
-    // TODO: sdk_hash table doesn't have reserve()/release() APIs, reserve an
-    //       index when that is available
+    if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        local_vnic_by_slot_rx_key.mpls_dst_label = spec->fabric_encap.val.mpls_tag;
+    } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        local_vnic_by_slot_rx_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
+    }
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_vnic_by_slot_rx_key,
+                                   NULL, NULL, 0, sdk::table::handle_t::null());
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->reserve(&api_params);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in LOCAL_VNIC_BY_VLAN_TX "
+                      "table for vnic %u, err %u", spec->key.id, ret);
+        return ret;
+    }
+    local_vnic_by_slot_rx_handle_ = api_params.handle;
     return SDK_RET_OK;
 }
 
@@ -100,10 +115,9 @@ vnic_impl::release_resources(api_base *api_obj) {
     sdk_table_api_params_t api_params = { 0 };
 
     if (hw_id_ != 0xFFFF) {
-        // TODO: uncomment the below once sdk_hash moves to standard API model
-        //if (vnic_by_slot_hash_idx_ != SDK_TABLE_HANDLE_INVALID) {
-            //vnic_impl_db()->local_vnic_by_slot_rx_tbl()->release(vnic_by_slot_hash_idx_);
-        //}
+        api_params.handle = local_vnic_by_slot_rx_handle_;
+        vnic_impl_db()->local_vnic_by_slot_rx_tbl()->release(&api_params);
+
         api_params.handle = local_vnic_by_vlan_tx_handle_;
         vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->release(&api_params);
         vnic_impl_db()->egress_local_vnic_info_tbl()->release(hw_id_);
@@ -116,15 +130,22 @@ vnic_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 vnic_impl::nuke_resources(api_base *api_obj) {
     sdk_table_api_params_t api_params = { 0 };
+    sdk_table_api_params_t slot_api_params = { 0 };
     local_vnic_by_vlan_tx_swkey_t vnic_by_vlan_key = { 0 };
     local_vnic_by_vlan_tx_swkey_mask_t vnic_by_vlan_mask = { 0 };
+    local_vnic_by_slot_rx_swkey_t local_vnic_by_slot_rx_key = { 0 };
     vnic_entry *vnic = (vnic_entry *)api_obj;
 
     if (hw_id_ != 0xFFFF) {
-        // TODO: uncomment the below once sdk_hash moves to standard API model
-        // if (vnic_by_slot_hash_idx_ != SDK_TABLE_HANDLE_INVALID) {
-        if (vnic_by_slot_hash_idx_ != 0xFFFF) {
-            vnic_impl_db()->local_vnic_by_slot_rx_tbl()->remove(vnic_by_slot_hash_idx_);
+        if (local_vnic_by_slot_rx_handle_ != SDK_TABLE_HANDLE_INVALID) {
+            if (vnic->fabric_encap().type == PDS_ENCAP_TYPE_MPLSoUDP) {
+                local_vnic_by_slot_rx_key.mpls_dst_label = vnic->fabric_encap().val.mpls_tag;
+            } else if (vnic->fabric_encap().type == PDS_ENCAP_TYPE_VXLAN) {
+                local_vnic_by_slot_rx_key.vxlan_1_vni = vnic->fabric_encap().val.vnid;
+            }
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&slot_api_params, &local_vnic_by_slot_rx_key,
+                                           NULL, NULL, 0, local_vnic_by_slot_rx_handle_);
+            vnic_impl_db()->local_vnic_by_slot_rx_tbl()->remove(&slot_api_params);
         }
         vnic_by_vlan_key.ctag_1_vid = vnic->vnic_encap().val.vlan_tag;
         vnic_by_vlan_mask.ctag_1_vid_mask = ~0;
@@ -136,6 +157,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         vnic_impl_db()->egress_local_vnic_info_tbl()->remove(hw_id_);
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
+    this->release_resources(api_obj);
     return SDK_RET_OK;
 }
 
@@ -370,6 +392,7 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
     mem_addr_t                            addr;
     local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
     local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
+    sdk_table_api_params_t                api_params = { 0 };
 
     if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
         vnic_by_slot_key.mpls_dst_label = spec->fabric_encap.val.mpls_tag;
@@ -404,9 +427,11 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1_valid = true;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = PDS_EPOCH_INVALID;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2_valid = false;
-    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
-                                                              &vnic_by_slot_data,
-                                                              (uint32_t *)&vnic_by_slot_hash_idx_);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vnic_by_slot_key,
+                                   NULL, &vnic_by_slot_data,
+                                   LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID,
+                                   local_vnic_by_slot_rx_handle_);
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
                       "epoch %u, vnic %s , err %u", epoch,
@@ -474,6 +499,7 @@ sdk_ret_t
 vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     sdk_ret_t                                 ret;
     sdk_table_api_params_t                    api_params = { 0 };
+    sdk_table_api_params_t                    slot_api_params = { 0 };
     local_vnic_by_vlan_tx_swkey_t             vnic_by_vlan_key = { 0 };
     local_vnic_by_vlan_tx_swkey_mask_t        vnic_by_vlan_mask = { 0 };
     local_vnic_by_vlan_tx_actiondata_t        vnic_by_vlan_data;
@@ -517,11 +543,13 @@ vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     if (vnic->fabric_encap().type == PDS_ENCAP_TYPE_MPLSoUDP) {
         vnic_by_slot_key.mpls_dst_label = vnic->fabric_encap().val.mpls_tag;
     } else if (vnic->fabric_encap().type == PDS_ENCAP_TYPE_VXLAN) {
-        vnic_by_slot_key.vxlan_1_vni = vnic->fabric_encap().val.vnid;;
+        vnic_by_slot_key.vxlan_1_vni = vnic->fabric_encap().val.vnid;
     }
-    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve(vnic_by_slot_hash_idx_,
-                                                                &vnic_by_slot_key,
-                                                                &vnic_by_slot_data);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&slot_api_params, &vnic_by_slot_key,
+                                   NULL, &vnic_by_slot_data,
+                                   LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID,
+                                   local_vnic_by_slot_rx_handle_);
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->get(&slot_api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to find entry in LOCAL_VNIC_BY_SLOT_RX table for "
                       "vnic %u, hw id %u, key = (mpls tag %u, vni %u), err %u",
@@ -539,8 +567,7 @@ vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
         vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = epoch;
         //vnic_by_slot_data.local_vnic_by_slot_rx_info.valid2 = FALSE;
     }
-    ret =  vnic_impl_db()->local_vnic_by_slot_rx_tbl()->update(vnic_by_slot_hash_idx_,
-                                                               &vnic_by_slot_data);
+    ret =  vnic_impl_db()->local_vnic_by_slot_rx_tbl()->update(&slot_api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to deactivate LOCAL_VNIC_BY_SLOT_RX table for "
                       "vnic %u, hw id %u, key = (mpls tag %u, "
@@ -591,6 +618,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     policy *egr_v4_policy, *egr_v6_policy;
     vnic_entry *vnic = (vnic_entry *)api_obj;
     sdk_table_api_params_t api_params = { 0 };
+    sdk_table_api_params_t slot_api_params = { 0 };
     route_table *v4_route_table, *v6_route_table;
     local_vnic_by_vlan_tx_swkey_t vnic_by_vlan_key = { 0 };
     local_vnic_by_slot_rx_swkey_t vnic_by_slot_key = { 0 };
@@ -674,10 +702,16 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     }
 
     // now, read LOCAL_VNIC_BY_SLOT_RX table, this is to get encap type
-    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve(
-                                            vnic_by_slot_hash_idx_,
-                                            &vnic_by_slot_key,
-                                            &vnic_by_slot_data);
+    if (vnic->fabric_encap().type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        vnic_by_slot_key.mpls_dst_label = vnic->fabric_encap().val.mpls_tag;
+    } else if (vnic->fabric_encap().type == PDS_ENCAP_TYPE_VXLAN) {
+        vnic_by_slot_key.vxlan_1_vni = vnic->fabric_encap().val.vnid;
+    }
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&slot_api_params, &vnic_by_slot_key,
+                                   NULL, &vnic_by_slot_data,
+                                   LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID,
+                                   local_vnic_by_slot_rx_handle_);
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->get(&slot_api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_SLOT_RX table for "
                       "vnic %u, err %u", vnic->key().id, ret);
@@ -698,8 +732,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     }
     // NOTE: ideally we should update portion of data that has min. epoch number
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
-    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->update(vnic_by_slot_hash_idx_,
-                                                              &vnic_by_slot_data);
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->update(&slot_api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
                       "epoch %u, vnic %s , err %u", epoch,
@@ -762,6 +795,7 @@ vnic_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     sdk_table_api_params_t api_params = { 0 };
+    sdk_table_api_params_t slot_api_params = { 0 };
     vnic_tx_stats_actiondata_t vnic_tx_stats_data;
     vnic_rx_stats_actiondata_t vnic_rx_stats_data;
     local_vnic_by_vlan_tx_swkey_t vnic_by_vlan_key = { 0 };
@@ -813,10 +847,11 @@ vnic_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         return ret;
     }
     // read LOCAL_VNIC_BY_SLOT_RX table, this is to get encap type
-    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve(
-                                            vnic_by_slot_hash_idx_,
-                                            &vnic_by_slot_key,
-                                            &vnic_by_slot_data);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&slot_api_params, &vnic_by_slot_key,
+                                   NULL, &vnic_by_slot_data,
+                                   LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID,
+                                   local_vnic_by_slot_rx_handle_);
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->get(&slot_api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_SLOT_RX table for "
                       "vnic %u, err %u", vkey->id, ret);

@@ -36,7 +36,6 @@ __label__ done;
         if (!buckets_[ctx.index].isreserved()) {
             return sdk::SDK_RET_ENTRY_NOT_FOUND;
         }
-        return SDK_RET_OK;
     } else {
         // Calculate the hash
         ret = ctx.calchash();
@@ -60,6 +59,13 @@ done:
 
 sdk_ret_t
 table::insert(slhctx &ctx) {
+    if (ctx.inhandle().valid()) {
+        if (ctx.inhandle().svalid()) {
+            //Secondary index is valid for this handle,
+            //then entry should be inserted in TCAM
+            return sdk::SDK_RET_COLLISION;
+        }
+    }
     // index must be valid by now
     SDK_ASSERT(ctx.index_valid);
     auto &bkt = buckets_[ctx.index];
