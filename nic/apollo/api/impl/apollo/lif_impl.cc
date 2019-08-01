@@ -12,6 +12,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -99,11 +100,12 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 sdk_ret_t
 lif_impl::program_filters(lif_info_t *lif_params) {
-    sdk_ret_t ret;
-    nacl_swkey_t key = { 0 };
-    nacl_swkey_mask_t mask = { 0 };
-    nacl_actiondata_t data =  { 0 };
-    uint32_t idx;
+    sdk_ret_t              ret;
+    nacl_swkey_t           key = { 0 };
+    nacl_swkey_mask_t      mask = { 0 };
+    nacl_actiondata_t      data =  { 0 };
+    sdk_table_api_params_t tparams = { 0 };
+    uint32_t               idx;
 
     // ARM -> uplink
     key.capri_intrinsic_lif = key_;
@@ -111,8 +113,11 @@ lif_impl::program_filters(lif_info_t *lif_params) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
-        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
@@ -122,6 +127,7 @@ lif_impl::program_filters(lif_info_t *lif_params) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    memset(&tparams, 0, sizeof(tparams));
 
     // uplink -> ARM
     key.capri_intrinsic_lif =
@@ -132,7 +138,10 @@ lif_impl::program_filters(lif_info_t *lif_params) {
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
     data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
@@ -142,11 +151,12 @@ lif_impl::program_filters(lif_info_t *lif_params) {
 
 sdk_ret_t
 lif_impl::program_inband_filters(lif_info_t *lif_params) {
-    sdk_ret_t ret;
-    nacl_swkey_t key = { 0 };
-    nacl_swkey_mask_t mask = { 0 };
-    nacl_actiondata_t data =  { 0 };
-    uint32_t idx;
+    sdk_ret_t              ret;
+    nacl_swkey_t           key = { 0 };
+    nacl_swkey_mask_t      mask = { 0 };
+    nacl_actiondata_t      data =  { 0 };
+    sdk_table_api_params_t tparams = { 0 };
+    uint32_t               idx;
 
     // ARM -> uplink (untag packets)
     key.capri_intrinsic_lif = key_;
@@ -158,8 +168,11 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
-        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
@@ -169,6 +182,7 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    memset(&tparams, 0, sizeof(tparams));
 
     // uplink -> ARM (untag packets)
     key.capri_intrinsic_lif =
@@ -183,7 +197,10 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
     data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
@@ -193,11 +210,12 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
 
 sdk_ret_t
 lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
-    sdk_ret_t ret;
-    nacl_swkey_t key = { 0 };
-    nacl_swkey_mask_t mask = { 0 };
-    nacl_actiondata_t data =  { 0 };
-    uint32_t idx;
+    sdk_ret_t              ret;
+    nacl_swkey_t           key = { 0 };
+    nacl_swkey_mask_t      mask = { 0 };
+    nacl_actiondata_t      data =  { 0 };
+    sdk_table_api_params_t tparams = { 0 };
+    uint32_t               idx;
 
     // Flow Miss -> CPU
     key.predicate_header_redirect_to_arm = 1;
@@ -209,7 +227,10 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
     data.action_u.nacl_nacl_redirect.qtype = 0;
     data.action_u.nacl_nacl_redirect.qid = 0;
     data.action_u.nacl_nacl_redirect.vlan_strip = 0;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
@@ -289,6 +310,7 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
     uint32_t idx;
     lif_impl *host_mgmt_lif = NULL, *mnic_int_mgmt_lif = NULL;
     lif_internal_mgmt_ctx_t cb_ctx = {0};
+    sdk_table_api_params_t  tparams = { 0 };
 
     if (lif_params->type == sdk::platform::LIF_TYPE_HOST_MANAGEMENT) {
         host_mgmt_lif = this;
@@ -312,7 +334,10 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = mnic_int_mgmt_lif->key();
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed NACL entry for host_mgmt -> mnic_int_mgmt "
                       "err %u", ret);
@@ -321,6 +346,7 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    memset(&tparams, 0, sizeof(tparams));
 
     // program mnic_int_mgmt -> host_mgmt
     key.capri_intrinsic_lif = mnic_int_mgmt_lif->key();
@@ -329,7 +355,10 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = host_mgmt_lif->key();
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed NACL entry for mnic_int_mgmt -> host_mgmt"
                       "err %u", ret);

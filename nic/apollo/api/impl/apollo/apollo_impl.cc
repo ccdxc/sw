@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
@@ -160,25 +161,29 @@ apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
 void
 apollo_impl::destroy(apollo_impl *impl) {
     int i;
+    sdk_table_api_params_t       tparams = { 0 };
 
     // Remove key native table entries
     for (i = 0; i < MAX_KEY_NATIVE_TBL_ENTRIES; i++) {
-        apollo_impl_db()->key_native_tbl()->remove(
-            apollo_impl_db()->key_native_tbl_idx_[i]);
+        tparams.handle = apollo_impl_db()->key_native_tbl_hdls_[i];
+        apollo_impl_db()->key_native_tbl()->remove(&tparams);
     }
     // Remove key tunneled table entries
     for (i = 0; i < MAX_KEY_TUNNELED_TBL_ENTRIES; i++) {
-        apollo_impl_db()->key_tunneled_tbl()->remove(
-            apollo_impl_db()->key_tunneled_tbl_idx_[i]);
+        tparams.handle = apollo_impl_db()->key_tunneled_tbl_hdls_[i];
+        apollo_impl_db()->key_tunneled_tbl()->remove(&tparams);
     }
     // Remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
-        apollo_impl_db()->egress_drop_stats_tbl()->remove(i);
+        tparams.handle = apollo_impl_db()->egress_drop_stats_tbl_hdls_[i];
+        apollo_impl_db()->egress_drop_stats_tbl()->remove(&tparams);
     }
     for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
-        apollo_impl_db()->ingress_drop_stats_tbl()->remove(i);
+        tparams.handle = apollo_impl_db()->ingress_drop_stats_tbl_hdls_[i];
+        apollo_impl_db()->ingress_drop_stats_tbl()->remove(&tparams);
     }
-    api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
+    //api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
+    apollo_impl_db()->~apollo_impl_state();
     p4pd_cleanup();
 }
 
@@ -223,6 +228,7 @@ apollo_impl::key_native_init_(void) {
     key_native_swkey_t         key;
     key_native_swkey_mask_t    mask;
     key_native_actiondata_t    data;
+    sdk_table_api_params_t     tparams = { 0 };
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -240,13 +246,18 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_native_tbl()->insert(
-        &key, &mask, &data, &apollo_impl_db()->key_native_tbl_idx_[idx++]);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   KEY_NATIVE_NATIVE_IPV4_PACKET_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    apollo_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
 
     // entry for native IPv6 packets
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    memset(&tparams, 0, sizeof(tparams));
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 1;
     key.ethernet_2_valid = 0;
@@ -258,13 +269,18 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_native_tbl()->insert(
-        &key, &mask, &data, &apollo_impl_db()->key_native_tbl_idx_[idx++]);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   KEY_NATIVE_NATIVE_IPV6_PACKET_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    apollo_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
 
     // entry for native non-IP packets
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    memset(&tparams, 0, sizeof(tparams));
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 0;
@@ -276,8 +292,12 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_native_tbl()->insert(
-        &key, &mask, &data, &apollo_impl_db()->key_native_tbl_idx_[idx++]);
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   KEY_NATIVE_NATIVE_NONIP_PACKET_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    apollo_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
 
     // check overflow
     SDK_ASSERT(idx <= MAX_KEY_NATIVE_TBL_ENTRIES);
@@ -288,6 +308,7 @@ sdk_ret_t
 apollo_impl::key_tunneled_init_(void) {
     sdk_ret_t                    ret;
     uint32_t                     idx = 0;
+    sdk_table_api_params_t       tparams = { 0 };
     key_tunneled_swkey_t         key;
     key_tunneled_swkey_mask_t    mask;
     key_tunneled_actiondata_t    data;
@@ -308,8 +329,14 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0x0;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(
-        &key, &mask, &data, &apollo_impl_db()->key_tunneled_tbl_idx_[idx++]);
+    memset(&tparams, 0, sizeof(tparams));
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    apollo_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
+
     // entry for tunneled (inner) IPv6 packets
     key.ipv4_1_valid = 1;
     key.ipv6_1_valid = 0;
@@ -322,8 +349,13 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0x0;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(
-        &key, &mask, &data, &apollo_impl_db()->key_tunneled_tbl_idx_[idx++]);
+    memset(&tparams, 0, sizeof(tparams));
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   KEY_TUNNELED_TUNNELED_IPV6_PACKET_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    apollo_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
 
     // entry for tunneled (inner) non-IP packets
     key.ipv4_1_valid = 1;
@@ -337,10 +369,14 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(
-        &key, &mask, &data, &apollo_impl_db()->key_tunneled_tbl_idx_[idx++]);
+    memset(&tparams, 0, sizeof(tparams));
+    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   KEY_TUNNELED_TUNNELED_NONIP_PACKET_ID,
+                                   sdk::table::handle_t::null());
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    apollo_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
 
-    // check max
     SDK_ASSERT(idx <= MAX_KEY_TUNNELED_TBL_ENTRIES);
     return ret;
 }
@@ -371,20 +407,23 @@ apollo_impl::ingress_to_rxdma_init_(void) {
 
 sdk_ret_t
 apollo_impl::egress_drop_stats_init_(void) {
-    sdk_ret_t                      ret;
-    p4e_drop_stats_swkey_t         key = { 0 };
-    p4e_drop_stats_swkey_mask_t    key_mask = { 0 };
-    p4e_drop_stats_actiondata_t    data = { 0 };
+    sdk_ret_t                    ret;
+    p4e_drop_stats_swkey_t       key = { 0 };
+    p4e_drop_stats_swkey_mask_t  key_mask = { 0 };
+    p4e_drop_stats_actiondata_t  data = { 0 };
+    sdk_table_api_params_t       tparams = { 0 };
 
     for (uint32_t i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
+        memset(&tparams, 0, sizeof(tparams));
         key.control_metadata_p4e_drop_reason = ((uint32_t)1 << i);
         key_mask.control_metadata_p4e_drop_reason_mask =
             key.control_metadata_p4e_drop_reason;
         data.action_id = P4E_DROP_STATS_P4E_DROP_STATS_ID;
-        ret =
-            apollo_impl_db()->egress_drop_stats_tbl()->insert_withid(&key,
-                                                                     &key_mask,
-                                                                     &data, i);
+        PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
+                                       P4E_DROP_STATS_P4E_DROP_STATS_ID,
+                                       sdk::table::handle_t::null());
+        ret = apollo_impl_db()->egress_drop_stats_tbl()->insert(&tparams);
+        apollo_impl_db()->egress_drop_stats_tbl_hdls_[i] = tparams.handle;
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return ret;
@@ -392,20 +431,23 @@ apollo_impl::egress_drop_stats_init_(void) {
 
 sdk_ret_t
 apollo_impl::ingress_drop_stats_init_(void) {
-    sdk_ret_t                      ret;
-    p4i_drop_stats_swkey_t         key = { 0 };
-    p4i_drop_stats_swkey_mask_t    key_mask = { 0 };
-    p4i_drop_stats_actiondata_t    data = { 0 };
+    sdk_ret_t                    ret;
+    p4i_drop_stats_swkey_t       key = { 0 };
+    p4i_drop_stats_swkey_mask_t  key_mask = { 0 };
+    p4i_drop_stats_actiondata_t  data = { 0 };
+    sdk_table_api_params_t       tparams = { 0 };
 
     for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
+        memset(&tparams, 0, sizeof(tparams));
         key.control_metadata_p4i_drop_reason = ((uint32_t)1 << i);
         key_mask.control_metadata_p4i_drop_reason_mask =
             key.control_metadata_p4i_drop_reason;
         data.action_id = P4I_DROP_STATS_P4I_DROP_STATS_ID;
-        ret =
-            apollo_impl_db()->ingress_drop_stats_tbl()->insert_withid(&key,
-                                                                     &key_mask,
-                                                                     &data, i);
+        PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
+                                       P4I_DROP_STATS_P4I_DROP_STATS_ID,
+                                       sdk::table::handle_t::null());
+        ret = apollo_impl_db()->ingress_drop_stats_tbl()->insert(&tparams);
+        apollo_impl_db()->ingress_drop_stats_tbl_hdls_[i] = tparams.handle;
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return ret;
@@ -527,26 +569,22 @@ apollo_impl::dump_egress_drop_stats_(FILE *fp) {
 
 void
 apollo_impl::dump_ingress_drop_stats_(FILE *fp) {
-    sdk_ret_t                      ret;
-    uint64_t                       pkts;
-    tcam                           *table;
-    p4i_drop_stats_swkey_t         key = { 0 };
-    p4i_drop_stats_swkey_mask_t    key_mask = { 0 };
-    p4i_drop_stats_actiondata_t    data = { 0 };
+    sdk_ret_t                         ret;
+    uint64_t                          pkts;
+    sltcam                            *table;
+    sdk::table::sdk_table_api_stats_t api_stats = { 0 };
+    sdk::table::sdk_table_stats_t     table_stats = { 0 };
 
     table = apollo_impl_db()->ingress_drop_stats_tbl();
-    for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
-        ret = table->retrieve_from_hw(i, &key, &key_mask, &data);
-        if (ret == SDK_RET_OK) {
-            memcpy(&pkts,
-                   data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts,
-                   sizeof(data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts));
-            fprintf(fp,
-                    "    drop reason : 0x%x, drop mask : 0x%x, pkts : %lu\n",
-                    key.control_metadata_p4i_drop_reason,
-                    key_mask.control_metadata_p4i_drop_reason_mask, pkts);
-        }
-    }
+    ret = table->stats_get(&api_stats, &table_stats);
+    fprintf(fp, "insert_fail %u, get_fail %u, remove_fail %u, \
+            release_fail %u, reserve_fail %u \n", api_stats.insert_fail,
+            api_stats.get_fail, api_stats.remove_fail, api_stats.release_fail,
+            api_stats.reserve_fail);
+    fprintf(fp, "entries %u, collisions %u, insert %u, remove %u \
+            read %u, write %u\n", table_stats.entries, table_stats.collisions,
+            table_stats.insert, table_stats.remove, table_stats.read,
+            table_stats.write);
     fprintf(fp, "\n");
 }
 

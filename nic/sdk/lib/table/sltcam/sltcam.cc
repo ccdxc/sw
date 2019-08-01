@@ -73,7 +73,7 @@ sltcam::init_(sdk::table::sdk_table_factory_params_t *params) {
         SLTCAM_TRACE_ERR("Failed to create indexer_");
         return sdk::SDK_RET_OOM;
     }
-  
+
     ret = txn_.init(props_.table_size);
     if (ret != sdk::SDK_RET_OK) {
         return ret;
@@ -245,7 +245,7 @@ __label__ done;
 
     // Release this handle
     txn_.release(ctx);
-   
+
 handle_set:
     // Save the handle
     params->handle.pindex(ctx->tcam_index);
@@ -284,7 +284,7 @@ __label__ done;
 
     // Copy the params to sw fields
     ctx->copyin();
-    
+
     // Write to HW
     ret = write_(ctx);
     if (ret != sdk::SDK_RET_OK) {
@@ -316,11 +316,14 @@ __label__ done;
     }
 
     // Find the tcam_index, if handle is not provided.
-    ret = find_(ctx);
-    if (ret != sdk::SDK_RET_OK) {
-        SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
+    if (ctx->params->handle.valid() == false) {
+        ret = find_(ctx);
+        if (ret != sdk::SDK_RET_OK) {
+            SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
+        }
     }
 
+    ctx->dbslot_valid = true;
     // Remove the entry from the DB
     ret = db_.remove(ctx);
     if (ret != sdk::SDK_RET_OK) {
@@ -483,13 +486,13 @@ sltcam::release(sdk::table::sdk_table_api_params_t *params) {
     auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_RELEASE,
                                  params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
- 
+
     // Release this entry from the transaction
     auto ret = txn_.release(ctx);
     if (ret != sdk::SDK_RET_OK) {
         SLTCAM_TRACE_ERR_GOTO(done, "txn release, r:%d", ret);
     }
-   
+
     // Free the entry
     ret = dealloc_(ctx);
     if (ret != sdk::SDK_RET_OK) {

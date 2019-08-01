@@ -39,14 +39,14 @@ rte_indexer::factory(uint32_t size, bool thread_safe, bool skip_zero) {
 //---------------------------------------------------------------------------
 // constructor
 //---------------------------------------------------------------------------
-rte_indexer::rte_indexer() {
+rte_indexer::rte_indexer(void) {
 
 }
 
 //---------------------------------------------------------------------------
 // destructor
 //---------------------------------------------------------------------------
-rte_indexer::~rte_indexer() {
+rte_indexer::~rte_indexer(void) {
     if (thread_safe_) {
         SDK_SPINLOCK_DESTROY(&slock_);
     }
@@ -273,9 +273,9 @@ rte_indexer::is_index_allocated(uint32_t index) {
 //---------------------------------------------------------------------------
 uint64_t
 rte_indexer::compute_num_indices_allocated(void) {
-	uint32_t usage = 0;
+    uint32_t usage = 0;
 
-	for (uint32_t i = 0; i < size_; i++) {
+    for (uint32_t i = 0; i < size_; i++) {
         if (is_index_allocated(i) && !(skip_zero_ && i == 0)) {
             // Don't count 0 if skip_zero is set
             usage++;
@@ -283,7 +283,7 @@ rte_indexer::compute_num_indices_allocated(void) {
     }
     SDK_TRACE_DEBUG("Usage internal : %d Usage computed: %d", usage_, usage);
     SDK_ASSERT(usage_ == usage);
-	return usage;
+    return usage;
 }
 
 //---------------------------------------------------------------------------

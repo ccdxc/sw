@@ -31,6 +31,8 @@ vpc_feeder::iter_next(int width) {
     ip_prefix_ip_next(&pfx, &ipaddr);
     memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
     key.id += width;
+    if (artemis())
+        fabric_encap.val.vnid += width;
     cur_iter_pos++;
 }
 

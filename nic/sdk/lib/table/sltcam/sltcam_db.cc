@@ -13,7 +13,7 @@ namespace sltcam_internal {
 sdk_ret_t
 db::init(uint32_t max_elems) {
     max_elems_ = max_elems;
-    elems_ = (elem *)SDK_CALLOC(SDK_MEM_ALLOC_SLTCAM_TREE_NODES, 
+    elems_ = (elem *)SDK_CALLOC(SDK_MEM_ALLOC_SLTCAM_TREE_NODES,
                                 max_elems * sizeof(elem));
     if (elems_ == NULL) {
         return sdk::SDK_RET_OOM;
@@ -30,7 +30,7 @@ __label__ done, notfound;
     uint32_t lo = 0;
     uint32_t hi = count_ ? count_-1 : 0;
     sdk::sdk_ret_t ret = sdk::SDK_RET_ERR;
-    
+
     ctx->dbslot_valid = true;
     ctx->dbslot = MID(lo,hi); // Start from middle
     while(lo <= hi && elem_get_(ctx->dbslot)->valid()) {
@@ -98,7 +98,7 @@ db::grow_(sltctx *ctx) {
 sdk_ret_t
 db::shrink_(sltctx *ctx) {
     if (isempty()) {
-        return sdk::SDK_RET_OK;
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     SDK_ASSERT(ctx->dbslot_valid);
     SLTCAM_TRACE_VERBOSE("dbslot:%d count_:%d", ctx->dbslot, count_);
@@ -127,7 +127,9 @@ db::remove(sltctx *ctx) {
     // Delete the data
     elem_get_(ctx->dbslot)->clear();
     // Shrink the DB
-    SDK_ASSERT(shrink_(ctx) == sdk::SDK_RET_OK);
+    sdk_ret_t ret = shrink_(ctx);
+    if (ret != sdk::SDK_RET_OK)
+        return ret;
     // Decrement the count
     SDK_ASSERT(count_);
     count_--;
