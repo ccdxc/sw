@@ -88,24 +88,18 @@ references:
   - iota/test/venice/hwtest/hwregression
   - nic/utils/ftlite
 
-# dependencies section is deprecated, because it doesn't support 1-many dependencies. use dir_dependencies instead 
-dependencies:
-  test: platform
-  nic: iota/test/venice/hwtest
-  platform: iota/test/venice/hwtest
-  iota: iota/test/venice/hwtest
-  dol: iota/test/venice/hwtest 
-  dol/test/networking : nic
-  storage/offload: storage/offload/linux-build-test
-  vendor: venice
-  nic/agent: api
-
 dir_dependencies:
   platform:
     - nic/apollo
+    - iota/test/venice/hwtest
   vendor:
     - api
     - venice
+    - test/ci_targets/e2e
+  nic:
+    - iota/test/venice/hwtest
+  nic/agent:
+    - api
     - test/ci_targets/e2e
   nic/sdk:
     - nic/apollo
@@ -113,10 +107,14 @@ dir_dependencies:
     - nic/apollo
   nic/conf/artemis:
     - nic/apollo
+  dol:
+    - iota/test/venice/hwtest
   dol/apollo:
     - nic/apollo
   dol/artemis:
     - nic/apollo
+  dol/test/networking: 
+    - nic
   nic/debug_cli/apollo:
     - nic/apollo
   venice:
@@ -126,6 +124,7 @@ dir_dependencies:
   test:
     - api
     - test/ci_targets/e2e
+    - platform
   api:
     - test/ci_targets/e2e
     - venice/ui
@@ -133,6 +132,7 @@ dir_dependencies:
     - venice/ui
   events:
     - venice/ui
-  nic/agent:
-    - api
-    - test/ci_targets/e2e
+  iota:
+    - iota/test/venice/hwtest
+  storage/offload: 
+    - storage/offload/linux-build-test
