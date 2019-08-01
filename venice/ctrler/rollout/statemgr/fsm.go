@@ -400,6 +400,10 @@ func fsmAcIssueServiceRollout(ros *RolloutState) {
 	log.Infof("fsmAcIssueServiceRollout.. returning from fsmAcIssueServiceRollout")
 }
 func fsmAcRolloutSmartNICs(ros *RolloutState) {
+	err := ros.writer.SetRolloutBuildVersion("")
+	if err != nil {
+		log.Errorf("Failed to set cluster.Version %s", err)
+	}
 	ros.stopRolloutTimer()
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout is SUSPENDED. Returning without smartNIC Rollout.")

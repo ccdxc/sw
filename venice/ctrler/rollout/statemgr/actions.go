@@ -386,6 +386,8 @@ Loop:
 				ros.setSmartNICPhase(snicState.Name, "", "", phase)
 
 				// Wait for response from  the NIC
+				timer := time.NewTimer(preUpgradeTimeout)
+				defer timer.Stop()
 			WaitLoop:
 				for {
 					select {
@@ -415,7 +417,7 @@ Loop:
 						} else {
 							log.Debugf("Got status for smartnic %s in context of %s", snRolloutState.Name, snicState.Name)
 						}
-					case <-time.After(preUpgradeTimeout):
+					case <-timer.C:
 						log.Debugf("Timeout waiting for status update of smartNIC %s", snicState.Name)
 						snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
 						if err == nil {
