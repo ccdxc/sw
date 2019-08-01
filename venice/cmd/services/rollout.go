@@ -285,9 +285,10 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 			},
 			Spec: cluster.VersionSpec{},
 			Status: cluster.VersionStatus{
-				BuildVersion: env.GitVersion,
-				VCSCommit:    env.GitCommit,
-				BuildDate:    env.BuildDate,
+				BuildVersion:        env.GitVersion,
+				VCSCommit:           env.GitCommit,
+				BuildDate:           env.BuildDate,
+				RolloutBuildVersion: clusterVersion.Status.RolloutBuildVersion,
 			},
 		}
 
