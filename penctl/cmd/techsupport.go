@@ -180,6 +180,26 @@ func getLogs(subDir string, url string) error {
 	return nil
 }
 
+func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
+	cmd := exec.Command(req.Executable, parts...)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, req.Env)
+
+	if verbose {
+		fmt.Printf("Upgrade Cmd Execute Request: %+v env: [%s]", req, os.Environ())
+	}
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
+	}
+	return string(stdoutStderr), nil
+}
+
+func execCmd(req *nmd.NaplesCmdExecute) (string, error) {
+	parts := strings.Fields(req.Opts)
+	return executeCmd(req, parts)
+}
+
 func execTechSupportCmds(cmdToExecute string, cmdDestDir string) error {
 	var naplesCmds NaplesCmds
 	err := yaml.UnmarshalStrict([]byte(cmdToExecute), &naplesCmds)
@@ -198,7 +218,15 @@ func execTechSupportCmds(cmdToExecute string, cmdDestDir string) error {
 			Executable: cmd[0],
 			Opts:       opts,
 		}
-		resp, err := restGetWithBody(v, "cmd/v1/naples/")
+		var resp []byte
+		if isNaplesReachableOverLocalHost() == nil {
+			fmt.Println("Executing cmd locally")
+			var ret string
+			ret, err = execCmd(v)
+			resp = []byte(ret)
+		} else {
+			resp, err = restGetWithBody(v, "cmd/v1/naples/")
+		}
 		if err != nil {
 			fmt.Println(err)
 		}
