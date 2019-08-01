@@ -131,8 +131,11 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 				MacStr:            p.Agent.Nmd.GetNaplesConfig().Status.Fru.MacStr,
 			},
 		}
-		file, _ := json.MarshalIndent(naplesStatus, "", " ")
-		_ = ioutil.WriteFile("/data/naplesStatus.json", file, 0644)
+		file, _ := json.MarshalIndent(naplesStatus, "", "\t")
+		s := "\n"
+		file = append(file, s...)
+		_ = ioutil.WriteFile("/sysconfig/config0/naplesStatus.json", file, 0644)
+		_ = ioutil.WriteFile("/sysconfig/config1/naplesStatus.json", file, 0644)
 	}
 
 	naplesStatus := delphiProto.NaplesStatus{
@@ -154,8 +157,11 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 			MacStr:            p.Agent.Nmd.GetNaplesConfig().Status.Fru.MacStr,
 		},
 	}
-	file, _ := json.MarshalIndent(naplesStatus, "", " ")
-	_ = ioutil.WriteFile("/data/naplesStatus.json", file, 0644)
+	file, _ := json.MarshalIndent(naplesStatus, "", "\t")
+	s := "\n"
+	file = append(file, s...)
+	_ = ioutil.WriteFile("/sysconfig/config0/naplesStatus.json", file, 0644)
+	_ = ioutil.WriteFile("/sysconfig/config1/naplesStatus.json", file, 0644)
 
 	return nil
 }

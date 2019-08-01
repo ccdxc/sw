@@ -4,4 +4,5 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsnetagent.so
 MODULE_PIPELINE = apollo artemis
 MODULE_INCS     := ${MODULE_SRC_DIR}
+MODULE_SOLIBS   = venice
 include ${MKDEFS}/post.mk

@@ -10,7 +10,7 @@
 
 #include <pthread.h>
 #include "include/sdk/base.hpp"
-#include "nic/sdk/lib/utils/port_utils.hpp"
+#include "nic/sdk/lib/venice/venice.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/netagent/netagent.hpp"
@@ -25,7 +25,7 @@ namespace netagent {
 void *
 netagentapi::netagent_thread_start(void *ctxt) {
     EV_P;
-    char config_file[] = "/data/naplesStatus.json";
+    char config_file[] = "/sysconfig/config0/naplesStatus.json";
 
     SDK_THREAD_INIT(ctxt);
     EV_A = evutil_create_loop();
@@ -59,6 +59,8 @@ netagentapi::netagent_thread_start(void *ctxt) {
 void
 netagentapi::netagent_handle_create_modify_venice_coordinates(void *ctxt) {
     PDS_TRACE_DEBUG("venice co-ordinates changed!!");
+    sdk::lib::venice* ven = sdk::lib::venice::factory();
+    PDS_TRACE_DEBUG("venice co-ordinates are {}", ven);
 }
 
 void
