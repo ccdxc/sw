@@ -87,6 +87,9 @@ Cmds:
    cmd: ps
    outputfile: ps.out
  -
+   cmd: df
+   outputfile: df.out
+ -
    cmd: delphictl db get UpgReq
    outputfile: upgreq.out
  -
