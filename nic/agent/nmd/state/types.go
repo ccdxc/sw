@@ -72,8 +72,6 @@ type NMD struct {
 	// Rollout related stuff
 	completedOps map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
 	ro           nmd.NaplesRollout
-	pendingOps   []roprotos.SmartNICOpSpec // the ops that will be executed after the current op is completed
-	opStatus     []roprotos.SmartNICOpStatus
 	objectMeta   api.ObjectMeta
 	profiles     []*nmd.NaplesProfile
 	revProxy     *revproxy.ReverseProxyRouter
