@@ -16,6 +16,12 @@ insmod /nic/bin/mnet_uio_pdrv_genirq.ko &> /var/log/pensando/mnet_uio_pdrv_genir
 insmod /nic/bin/mnet.ko &> /var/log/pensando/mnet_load.log
 [[ $? -ne 0 ]] && echo "Aborting sysinit, failed to load mnet driver!" && exit 1
 
+# Set core file pattern
+CORE_MIN_DISK=512
+[[ "$IMAGE_TYPE" = "diag" ]] && CORE_MIN_DISK=1
+mkdir -p /data/core
+echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys/kernel/core_pattern
+
 # start agent
 
 if [[ -f $NIC_DIR/tools/start-agent.sh ]]; then

@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = coremgr.bin
-MODULE_PIPELINE = iris
+MODULE_PIPELINE = iris apollo
 MODULE_PREREQS  = libev.export
 MODULE_LDLIBS   = z
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp)
