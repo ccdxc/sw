@@ -1,21 +1,24 @@
-import {ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
-import {ControllerService} from '@app/services/controller.service';
-import {Utility} from '@common/Utility';
-import {ClusterService} from '@app/services/generated/cluster.service';
-import {ClusterHost, IClusterHost} from '@sdk/v1/models/generated/cluster/cluster-host.model';
-import {HttpEventUtility} from '@common/HttpEventUtility';
-import {Subscription} from 'rxjs';
-import { TablevieweditAbstract} from '@components/shared/tableviewedit/tableviewedit.component';
-import {Observable} from 'rxjs';
-import {ClusterSmartNIC, IApiStatus} from '@sdk/v1/models/generated/cluster';
-import {Icon} from '@app/models/frontend/shared/icon.interface';
+import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { TableCol } from '@app/components/shared/tableviewedit';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { ControllerService } from '@app/services/controller.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { HttpEventUtility } from '@common/HttpEventUtility';
+import { Utility } from '@common/Utility';
+import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
+import { ClusterSmartNIC, IApiStatus } from '@sdk/v1/models/generated/cluster';
+import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
+import { Observable, Subscription } from 'rxjs';
+import { Animations } from '@app/animations';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-hosts',
   encapsulation: ViewEncapsulation.None,
   templateUrl: './hosts.component.html',
-  styleUrls: ['./hosts.component.scss']
+  styleUrls: ['./hosts.component.scss'],
+  animations: [Animations]
 })
 export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterHost> implements OnInit {
 
@@ -48,13 +51,14 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     {field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 20},
     {field: 'meta.mod-time', header: 'Modification Time', class: 'hosts-column-date', sortable: true, width: '180px'},
     {field: 'meta.creation-time', header: 'Creation Time', class: 'hosts-column-date', sortable: true, width: '180px'},
-    {field: 'spec.smart-nics', header: 'Smart Nics', class: 'hosts-column-smart-nics', sortable: false},
+    {field: 'spec.smart-nics', header: 'DSC', class: 'hosts-column-smart-nics', sortable: false},
   ];
 
   exportFilename: string = 'Venice-hosts';
 
   constructor(private clusterService: ClusterService,
               protected cdr: ChangeDetectorRef,
+              protected uiconfigsService: UIConfigsService,
               protected controllerService: ControllerService) {
     super(controllerService, cdr);
   }
@@ -96,8 +100,19 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   }
 
   setDefaultToolbar() {
+
+    let buttons = [];
+
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.clusterhost_create)) {
+      buttons = [{
+        cssClass: 'global-button-primary host-button newhost-button-ADD',
+        text: 'ADD HOST',
+        callback: () => { this.createNewObject(); }
+      }];
+    }
+
     this.controllerService.setToolbarData({
-      buttons: [],
+      buttons: buttons,
       breadcrumb: [{label: 'Hosts', url: Utility.getBaseUIUrl() + 'cluster/hosts'}]
     });
   }

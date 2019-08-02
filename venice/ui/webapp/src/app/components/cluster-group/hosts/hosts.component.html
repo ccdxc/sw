@@ -12,6 +12,9 @@
                      [expandedRowData]="expandedRowData"
                      [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [expandTemplate]="expandTemplate"
+                     [createTemplate]="createTemplate"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 </ng-template>
@@ -20,6 +23,12 @@
 <ng-template #captionTemplate let-count="count">
   <app-tableheader title="Hosts" [total]="dataObjects.length" [icon]="headerIcon" width="250px">
   </app-tableheader>
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-newhost (formClose)="creationFormClose()"
+               fxFlex="none" [existingObjects]='dataObjects'>
+  </app-newhost>
 </ng-template>
 
 <!-- TABLE BODY -->
@@ -62,4 +71,9 @@
               (click)="onDeleteRecord($event, rowData)">delete
     </mat-icon>
   </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <app-newhost [style.width]="'100%'" [hostData]="rowData" [isInline]="true"
+               (formClose)="closeRowExpand()" fxFlex="none"></app-newhost>
 </ng-template>

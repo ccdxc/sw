@@ -1,0 +1,110 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newhost-container {
+  background: white;
+
+  &:hover {
+    background: white;
+  }
+}
+
+.newhost-name,
+.newhost-NAPLES-name,
+.newhost-mac-address {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newhost-input {
+  width: 155px;
+}
+
+.newhost-content {
+  background: white;
+  min-height: 130px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
+}
+
+.newhost-text,
+.newhost-NAPLE-name-text,
+.newhost-Macaddress-text {
+  margin-top: 2*$vertical-gutter;
+  margin-left: $horizontal-gutter;
+  height: 30px;
+  @include primary-font();
+}
+
+.newhost-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newhost-value {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newhost-font {
+  @include primary-font();
+}
+
+.newhost-divider {
+  border-bottom: 1px solid #dddddd;
+}
+
+.newhost-filter {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newhost-save,
+.newhost-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.newhost-buttoncontainer {
+  margin-top: 1.5 * $vertical-gutter;
+}
+
+.newhost-NAPLESName-text,
+.newhost-Macaddress-text {
+  margin-top: 2*$vertical-gutter;
+  margin-left: 7*$horizontal-gutter;
+  height: 30px;
+  @include primary-font();
+}
+
+.newhost-NAPLES-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newhost-radio-button-row {
+  margin: $vertical-gutter $horizontal-gutter;
+  @include global-mat-radio(12px);
+}
+
+.newhost-save,
+.newhost-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  border-width: 0px;
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+.newhost-buttoncontainer {
+  margin-top: 1.5 * $vertical-gutter;
+}

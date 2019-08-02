@@ -1572,6 +1572,9 @@ export class Utility {
   }
 
   public static isNameAlreadyExist(name: string, modelobjects: any[]): boolean {
+    if (!modelobjects) {
+      return false;
+    }
     for (let i = 0; i < modelobjects.length; i++) {
       const tsrObj = modelobjects[i];
       if (tsrObj.meta.name === name) {

@@ -26,6 +26,7 @@ import {DebugElement} from '@angular/core';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { NewhostComponent } from './newhost/newhost.component';
 
 describe('HostsComponent', () => {
   let component: HostsComponent;
@@ -164,7 +165,7 @@ describe('HostsComponent', () => {
 
   configureTestSuite(() => {
      TestBed.configureTestingModule({
-      declarations: [HostsComponent, RouterLinkStubDirective],
+      declarations: [HostsComponent, NewhostComponent, RouterLinkStubDirective],
       imports: [
         FormsModule,
         ReactiveFormsModule,
@@ -217,7 +218,7 @@ describe('HostsComponent', () => {
           component.processSmartNics(rowData)[0]['text']
         );  // only works if we for one entry case
       }
-    });
+    }, 'edit delete ');
   });
 
   it('should have correct router links', () => {

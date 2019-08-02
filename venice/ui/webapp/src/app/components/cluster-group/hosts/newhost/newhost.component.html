@@ -1,0 +1,91 @@
+<div fxFlex="auto" fxLayout="column">
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newhost-container">
+    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
+         fxLayoutAlign="start stretch" class="newhost-content">
+      <div fxFlex fxLayout="column" [formGroup]="newHost.$formGroup">
+        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newhost-row">
+          <div fxFlex="nogrow" class="newhost-text">NAME:</div>
+          <input fxFlex="300px" formControlName="name" class="newhost-name" appErrorTooltip
+                 spellcheck="false" type="text" pInputText placeholder="Unique Host Name...">
+        </div>
+        <div fxFlex="25px"></div>
+
+        <div formGroupName="spec">
+          <div formArrayName="smart-nics">
+            <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
+                 *ngFor="let smartNICID of smartNICIDs; let index = index; let first = first"
+                 [formGroupName]="index">
+              <div fxFlex="nogrow" class="newhost-text">ADD NAPLES BY:</div>
+              <ng-container *ngTemplateOutlet="newHostCreation; context:{index:index}">
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+
+      <div *ngIf="isInline" class="newhost-buttoncontainer" fxFlex="nogrow"
+           fxLayout="row wrap" fxLayoutAlign="start start">
+        <div fxFlex="nogrow">
+          <button [disabled]="!isValidForm()" (click)="saveHost()"
+                  class="global-button-primary newhost-save">SAVE</button>
+        </div>
+        <div fxFlex="nogrow">
+          <button (click)="cancelHost()"
+                  class="global-button-neutral newhost-cancel">CANCEL</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #newHostCreation let-index="index">
+
+  <div fxflex="nogrow" fxlayout="column" class="newhost-sNI-choose"
+       [formGroup]="newHostForm.get(['spec','smart-nics', index])">
+    <div class="newhost-radio-button-row">
+
+      <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
+                       fxLayoutGap="10px" (change)="onRadioButtonChange($event)"
+                       [value]="radioValue">
+
+        <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class=""
+                          *ngFor="let smartNICIDOption of smartNICIDOptions"
+                          [value]="smartNICIDOption">
+          {{smartNICIDOption}}
+        </mat-radio-button>
+
+      </mat-radio-group>
+
+    </div>
+
+    <div fxFlex="auto" fxLayout="row" [ngSwitch]="radioValue">
+
+      <ng-container *ngSwitchCase="'id'">
+        <div fxFlex="nogrow" fxLayout="row" class="newhost-input-row">
+          <div fxFlex="nogrow" class="newhost-NAPLESName-text">NAPLES NAME:</div>
+
+          <input fxFlex="300px" class="newhost-NAPLES-name" formControlName="id" appErrorTooltip
+                 spellcheck="false" type="text" pInputText placeholder="Enter ID...">
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'mac-address'">
+        <div fxFlex="nogrow" fxLayout="row" class="newhost-input-row">
+          <div fxFlex="nogrow" class="newhost-Macaddress-text">MAC-ADDRESS:</div>
+
+          <input fxFlex="300px" class="newhost-mac-address" formControlName="mac-address"
+                 appErrorTooltip
+                 spellcheck="false" type="text" pInputText placeholder="Enter Mac-Address...">
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="''">
+      </ng-container>
+    </div>
+  </div>
+
+
+</ng-template>
