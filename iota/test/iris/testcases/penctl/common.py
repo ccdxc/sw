@@ -547,6 +547,9 @@ def DeleteNMDDb(n):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/nmd.db")
     api.Trigger_AddNaplesCommand(req, n, "rm -f /sysconfig/config0/clusterTrustRoots.pem")
+    api.Logger.info("Deleting NetAgent DB.")
+    api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/pen-netagent.db")
+
     resp = api.Trigger(req)
 
 def ResetNMDState(n):
@@ -557,6 +560,8 @@ def ResetNMDState(n):
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/app-start.conf")
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/device.conf")
     api.Trigger_AddNaplesCommand(req, n, "rm -f /sysconfig/config0/clusterTrustRoots.pem")
+    api.Logger.info("Deleting NetAgent DB.")
+    api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/pen-netagent.db")
     resp = api.Trigger(req)
 
 def GetNaplesFruJson(n):
