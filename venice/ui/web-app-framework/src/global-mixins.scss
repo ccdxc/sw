@@ -159,9 +159,7 @@
   $fontColor: currentColor;
 
   // Hiding Primeng's menu header
-  .ui-multiselect-header {
-    display: none !important;
-  }
+  
 
   // Setting background color of the selection view label
   .ui-multiselect-label {
@@ -186,6 +184,11 @@
     .ui-multiselect-item label {
       font-weight: 400 !important;
     }
+    .ui-inputtext {
+      padding: 3px 10px 3px 17px !important;
+    }
+
+
     // Removing the blue shadow highlighting that primeng adds
     .ui-state-focus {
       box-shadow: none !important;

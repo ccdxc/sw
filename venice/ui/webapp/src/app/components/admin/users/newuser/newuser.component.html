@@ -55,7 +55,9 @@
         <p-multiSelect class="newuser-rolebinding" fxFlex="200px"
                        styleClass="newuser-rolebinding-select" dataKey="meta.name"
                        [options]="rolebindingOptions"
-                       (onChange)="onRolebindingChange($event)"></p-multiSelect>
+                       (onChange)="onRolebindingChange($event)"
+                       [filter]="false"
+                       [showToggleAll]="false"></p-multiSelect>
       </div>
 
     </div>

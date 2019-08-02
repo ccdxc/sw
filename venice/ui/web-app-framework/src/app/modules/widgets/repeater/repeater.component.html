@@ -42,8 +42,8 @@
                           [styleClass]="styleClass" 
                           (onChange)="emitValues()" 
                           [maxSelectedLabels]="1" 
-                          [showToggleAll]="false" 
-                          [filter]="false" 
+                          [showToggleAll]="enableMultiSelectAll" 
+                          [filter]="enableMultiSelectFilter" 
                           [formControlName]="valueFormName" 
                           [options]="keyToValues[repeater.formGroup.value[keyFormName]]"
                           appendTo="body">

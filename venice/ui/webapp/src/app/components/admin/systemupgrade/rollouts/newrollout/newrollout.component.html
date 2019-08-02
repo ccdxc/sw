@@ -170,7 +170,9 @@
                                           [buildKeyPlaceholder]="buildKeyPlaceholder"
                                           [buildValuePlaceholder]="buildValuePlaceholder"
                                           [formArray]="order.controls.requirements"
-                                          (repeaterValues)="repeaterValueChange(index)">
+                                          (repeaterValues)="repeaterValueChange(index)"
+                                          [enableMultiSelectFilter]="true"
+                                          [enableMultiSelectAll]="true">
                             </app-repeater>
                           </div>
                         </div>

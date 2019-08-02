@@ -35,6 +35,7 @@
           <p-multiSelect #logOptions class="newfwlogpolicy-filter" fxFlex="300px"
                          formControlName="filter" appendTo="body" styleClass="newfwlogpolicy-font"
                          [filter]="false"
+                         [showToggleAll]="false"
                          defaultLabel="All Logs"
                          [options]="filterOptions"
                          (onChange)="onLogOptionChange($event)"></p-multiSelect>

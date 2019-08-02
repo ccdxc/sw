@@ -189,6 +189,7 @@
         <p-multiSelect #logOptions class="fwlogs-multiselect"
                        formControlName="actions" appendTo="body" styleClass="fwlogs-font"
                        [filter]="false"
+                       [showToggleAll]="false"
                        defaultLabel="All"
                        [options]="actionOptions"
                        (onChange)="onActionChange($event)">

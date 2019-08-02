@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, SimpleChanges, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges, OnChanges, ViewEncapsulation, ViewChild } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup } from '@angular/forms';
-import { SelectItem } from 'primeng/primeng';
+import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { RepeaterData, RepeaterItem, ValueType } from './index';
 import { Animations } from '../../../animations';
 import * as _ from 'lodash';
@@ -43,6 +43,8 @@ import * as _ from 'lodash';
 })
 export class RepeaterComponent implements OnInit, OnChanges {
   // The data for filling the reactive dropdown options
+
+  public static ALL_OPTIONS: SelectItem = {label : 'All', value : 'All'};
   @Input() data: RepeaterData[] = [];
 
   // names to use when looking up and setting values in the repeaters
@@ -67,7 +69,8 @@ export class RepeaterComponent implements OnInit, OnChanges {
   @Input() customValueOnKeydown: (any, RepeaterItem?) => void;
   @Input() customKeyOnBlur: (any, RepeaterItem?) => void;
   @Input() customKeyOnKeydown: (any, RepeaterItem?) => void;
-
+  @Input() enableMultiSelectAll: boolean = false;
+  @Input() enableMultiSelectFilter: boolean = false;
   // Determine if we want to generate valueLabelToValueMap in buildValuePlaceholder
   @Input() valueLabelToValueMap: {};
 
@@ -78,10 +81,10 @@ export class RepeaterComponent implements OnInit, OnChanges {
   repeaterList: RepeaterItem[] = [];
   keyOptions: SelectItem[]; // Holds all key options
 
-  keyToOperator: { [key: string]: SelectItem[] };
+  keyToOperator: { [key: string]: SelectItem[]};
   keyToValues: { [key: string]: SelectItem[] };
   keyToValueType: { [key: string]: ValueType };
-  keyToValueHintText: { [key: string]: string };
+  keyToValueHintText: { [key: string]: string};  
 
 
   valueOnBlur($event: any, repeaterItem: RepeaterItem) {
@@ -90,8 +93,8 @@ export class RepeaterComponent implements OnInit, OnChanges {
     }
   }
 
-  valueOnKeydown($event, repeaterItem: RepeaterItem){
-    if(this.customValueOnKeydown){
+  valueOnKeydown($event, repeaterItem: RepeaterItem) {
+    if(this.customValueOnKeydown) {
       this.customValueOnKeydown($event, repeaterItem);
     }
   }
@@ -103,7 +106,7 @@ export class RepeaterComponent implements OnInit, OnChanges {
   }
 
   keyOnKeydown($event, repeaterItem: RepeaterItem){
-    if(this.customKeyOnKeydown){
+    if(this.customKeyOnKeydown) {
       this.customKeyOnKeydown($event, repeaterItem);
     }
   }
