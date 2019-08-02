@@ -18,6 +18,7 @@ const fwlogIpcShm = "/fwlog_ipc_shm"
 
 var numEntries = flag.Int("num", 1000, "Number of firewall entries")
 var rateps = flag.Int("rate", 100, "Rate per second")
+var metrics = flag.Bool("metrics", false, "Initialize metrics")
 
 func main() {
 	flag.Parse()
@@ -29,6 +30,10 @@ func main() {
 	if *numEntries < *rateps {
 		fmt.Printf("num entries(%d) cant be less than rate(%d)\n", *numEntries, *rateps)
 		os.Exit(1)
+	}
+
+	if *metrics {
+		metricsInit()
 	}
 
 	fmt.Printf("Generating %d fwlog entries at rate %d per second\n", *numEntries, *rateps)

@@ -2,7 +2,8 @@ TPADIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restap
 TMAGENTDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restapi/tmagent
 SRC := $(shell ls *.proto)
 DEST := $(SRC:%.proto=%.pb.go)
-NICFILES := ${TPADIR}/tpm_api.go ${TPADIR}/tpm_api_test.go ${TMAGENTDIR}/tpm_api.go ${TMAGENTDIR}/tpm_api_test.go 
+NICFILES := ${TPADIR}/tpm_api.go ${TPADIR}/tpm_api_test.go ${TMAGENTDIR}/tpm_api.go ${TMAGENTDIR}/tpm_api_test.go
+METRICSGENDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/tests/fwloggen
 
 TMPLATEDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent
 APIROUTES := $(shell grep "Add.*MetricsAPIRoutes[ ]*(.*)" ../generated/restapi/tmagent/*.go | cut -d ' ' -f4 | sed -e 's/Add//' | sed -e 's/APIRoutes.*$$//g')
@@ -66,6 +67,13 @@ gen-tmagent:
 	sed -i.bak_ -e '/^$$/d' ${TMAGENTDIR}/${SRCFILE}
 	rm -f ${TMAGENTDIR}/*.bak_
 	goimports -local "github.com/pensando/sw" -w ${TMAGENTDIR}/*.go
+	protoc -I/usr/local/include -I. -I/tmp \
+            -I../../../../vendor -I${GOPATH}/src \
+    	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party \
+    	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+    	--grpc-gateway_out=templates=${TMPLATEDIR}/metricsgen.yml,log_dir=${TMAGENTDIR}/tmp,logtostderr=false,v=7:${METRICSGENDIR} ${PROTOFILE}
+	goimports -local "github.com/pensando/sw" -w ${METRICSGENDIR}/*.go
+
 
 clean:
 	rm -f *.pb.go

@@ -1,0 +1,5 @@
+ basepath: "github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent"
+ templates:
+   - template: "metricsgen.tmpl"
+     outputpath: "metricsgen.go"
+     once: true
