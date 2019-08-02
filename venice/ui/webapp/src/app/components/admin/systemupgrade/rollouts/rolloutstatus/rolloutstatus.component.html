@@ -94,7 +94,10 @@
                        [hideToggle]="false">
     <mat-expansion-panel-header class="rolloutstatus-expansionpanel-header">
       <mat-panel-title class="rolloutstatus-summary-panel-header">
-        Status ({{selectedRollout?.status.state}})
+        Status ({{selectedRollout?.status.state}}) <span
+              class="rolloutstatus-summary-panel-header-failurereason"
+              *ngIf="selectedRollout?.status.state==='failure'"
+              (click)=onFailureReasonClick($event)>reasons</span>
       </mat-panel-title>
     </mat-expansion-panel-header>
     <div class="rolloutstatus-summary-panel-content">

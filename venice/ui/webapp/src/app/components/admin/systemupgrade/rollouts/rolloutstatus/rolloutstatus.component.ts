@@ -13,7 +13,7 @@ import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { Utility } from '@common/Utility';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { RolloutRollout, RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
+import { RolloutRollout, RolloutRolloutStatus_state, IRolloutRolloutPhase } from '@sdk/v1/models/generated/rollout';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { RolloutUtil } from '../RolloutUtil';
 import { EnumRolloutOptions } from '../';
@@ -128,8 +128,9 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   addToolbarButton() {
     const toolbarData: ToolbarData = this._controllerService.getToolbarData();
     if (this.selectedRollout && RolloutUtil.isRolloutPending(this.selectedRollout) ) {
-      const isSuspendInProgress = this.selectedRollout.status.state === RolloutRolloutStatus_state['suspend-in-progress']; // check it rollout is in 'suspend-in-progress' stage
-      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete) && !isSuspendInProgress) {  // VS-328.  We just want to add stop-button once.
+      const isSuspendInProgressOrSuspended = (this.selectedRollout.status.state === RolloutRolloutStatus_state['suspend-in-progress']
+          || this.selectedRollout.status.state === RolloutRolloutStatus_state.suspended); // check it rollout is in 'suspend-in-progress' or 'suspended' states.
+      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete) && !isSuspendInProgressOrSuspended) {  // VS-328.  We just want to add stop-button once.
         toolbarData.buttons.push(
           {
             cssClass: 'global-button-primary rolloutstatus-toolbar-button',
@@ -349,6 +350,68 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
 
   getRolloutVeniceNaplesType(): string {
     return EnumRolloutOptions[this.selectedRolloutNicNodeTypes];
+  }
+
+  /**
+   * This API serves HTML template
+   * In html, we let user to click 'failure reasons' link to show rollout failure reasons.
+   * @param $event
+   */
+  onFailureReasonClick($event) {
+    const reasons = this.getRolloutFailureReasons();
+    const delimiter  = '<br/>';
+    const msg = reasons.join(delimiter);
+    this._controllerService.invokeConfirm({
+      header: 'Rollout [' + this.selectedRollout.meta.name + '] Failed',
+      message: 'Reasons: ' + delimiter + msg,
+      acceptLabel: 'Close',
+      acceptVisible: true,
+      rejectVisible: false,
+      accept: () => {
+        // When a primeng alert is created, it tries to "focus" on a button, not adding a button returns an error.
+        // So we create a button but hide it later.
+      }
+      });
+  }
+
+  /**
+   * Loop through rollout.status .. to collect failure reasons.
+   */
+  getRolloutFailureReasons(): string[] {
+    if (this.selectedRollout.status.state === RolloutRolloutStatus_state.failure ) {
+      const controllerNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['controller-nodes-status']);
+      const nicsNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['smartnics-status']);
+      let reasons = [];
+      if (controllerNodesReasons.length > 0 || nicsNodesReasons.length > 0 ) {
+        reasons = reasons.concat(controllerNodesReasons);
+        reasons = reasons.concat(nicsNodesReasons);
+      }
+      return reasons;
+    }
+    return [];
+  }
+
+  /**
+   * helper function
+   * @param nodes
+   */
+  getNodesFailureReasons (nodes: IRolloutRolloutPhase[]): any[] {
+    const reasons = [];
+    for (let i = 0 ; i < nodes.length; i ++ ) {
+      const node = nodes[i];
+      const reason =  this.getStatusReasonHelper(node);
+      if (reason ) {
+        reasons.push(reason);
+      }
+    }
+    return reasons;
+  }
+
+  getStatusReasonHelper(node: IRolloutRolloutPhase ): string {
+    if (node.reason === RolloutRolloutStatus_state.failure ) {
+      return node.name + ' - ' + node.message;
+    }
+    return null;
   }
 
 }

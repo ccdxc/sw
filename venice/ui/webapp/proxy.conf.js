@@ -1,9 +1,9 @@
 // const URL = "10.7.100.108:10001"
-// const URL = "10.7.100.21:10001"
+ const URL = "10.7.100.21:10001"
 // const URL = "192.168.71.124:10001" // Ubuntu Box
 // const URL = "10.8.101.146"  // Vipin's setup
 // const URL = "10.7.100.53:10001"; // Jay
-const URL = "10.7.100.44:10001"; // Rishabh's vm
+// const URL = "10.7.100.44:10001"; // Rishabh's vm
 // const URL = "10.7.100.24:10001";  // Barun
 // const URL = "192.168.78.211";  // sys-test team (admin, Systest-1$
 // const URL = "192.168.78.198"   // india test team server with LDAP.  admin/Systest-1$ as admin access, sunil/N0isystem$ as LSDAP external user
