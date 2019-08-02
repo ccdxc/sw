@@ -14,9 +14,10 @@ def Setup(infra, module):
     logger.info("Iterator Selectors")
 
     if iterelem:
-        if 'base' in iterelem.rdmasession.__dict__:
-            logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
-            module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
+        if 'rdmasession' in iterelem.__dict__:
+            if 'base' in iterelem.rdmasession.__dict__:
+                logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
+                module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
     return
 
 def Teardown(infra, module):
@@ -35,6 +36,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
 
+    SetIterPrivOperEnable(tc)
+
     # DO NOT ARM CQ and Set EQ's CI=PI for EQ enablement
     #rs.lqp.sq_cq.qstate.ArmCq()
     #rs.lqp.eq.qstate.reset_cindex(0)
@@ -42,7 +45,6 @@ def TestCaseSetup(tc):
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
-
     return
 
 def TestCaseTrigger(tc):
@@ -147,5 +149,10 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
+    rs = tc.config.rdmasession
+
+    #Disable Privileged operations on this QP
+    rs.lqp.sq.qstate.reset_priv()
+
     logger.info("RDMA TestCaseTeardown() Implementation.")
     return

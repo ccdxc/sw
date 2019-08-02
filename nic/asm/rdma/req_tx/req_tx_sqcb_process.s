@@ -35,6 +35,7 @@ struct req_tx_s0_t0_k k;
 #define TO_S6_BT_P to_s6_bt_info
 
 
+
 %%
     .param    req_tx_sqpt_process
     .param    req_tx_dummy_sqpt_process

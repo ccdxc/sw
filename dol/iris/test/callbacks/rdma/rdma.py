@@ -70,7 +70,7 @@ def GetPktMsn (tc, pkt, args):
 def GetCQMsn (tc, pkt, args):
     return (tc.pvtdata.sq_pre_qstate.ssn + int(args.sq_wqe_num))
 
-def GetWQEColor (tc, pkt, args):
+def GetWQEColor (tc, pkt, args = None):
     return (tc.pvtdata.sq_pre_qstate.color)
 
 def GetLastSuccessMsn (tc, pkt, args):
@@ -423,10 +423,32 @@ def GetNewSlab(testcase, buffers):
     return testcase.config.rdmasession.lqp.pd.ep.GetNewSlab()
 
 def GetMrSlabLkey(testcase, descriptor, args):
+    if 'iterelem' in testcase.pvtdata.__dict__ :
+        if testcase.pvtdata.iterelem is not None:
+            if 'rsvd_lkey' in testcase.pvtdata.iterelem.__dict__:
+                if (testcase.pvtdata.iterelem.rsvd_lkey == True):
+                    return 0
     if args == None: return None
     slab_id = testcase.buffers.Get(args.id).slab_id
     if slab_id == None: return None
     return testcase.config.rdmasession.lqp.pd.mrs.Get('MR-' + slab_id.GID()).lkey
+
+def GetMrSlabAddr(testcase, descriptor, args):
+    if args == None: return None
+    buffer = testcase.buffers.Get(args.id)
+    if buffer is None: return None
+    if 'iterelem' in testcase.pvtdata.__dict__ :
+        if testcase.pvtdata.iterelem is not None:
+            if (testcase.pvtdata.iterelem.rsvd_lkey == True):
+                return buffer.phy_address
+    return buffer.address
+
+def GetFenceConfig(testcase, descriptor):
+    if 'iterelem' in testcase.pvtdata.__dict__ :
+        if testcase.pvtdata.iterelem is not None:
+            if 'fence' in testcase.pvtdata.iterelem.__dict__:
+                return testcase.pvtdata.iterelem.fence
+    return 0
 
 def GetMrSlabRkey(testcase, descriptor, args):
     if args == None: return None

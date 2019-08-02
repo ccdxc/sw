@@ -123,12 +123,30 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_POLL
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inline_poll
+        spec    : req_tx_send_only_inline_poll.testspec
+        ignore  : False
+        rtl     : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
         package : test.rdma
         module  : req_tx_send_only
         spec    : req_tx_send_only.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SEND_ONLY_RSVD_LKEY
@@ -215,15 +233,6 @@ modules:
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
  
-    - module:
-        name    : RDMA_TX_SEND_ONLY_INLINE_POLL
-        enable  : True
-        package : test.rdma
-        module  : req_tx_send_only_inline_poll
-        spec    : req_tx_send_only_inline_poll.testspec
-        ignore  : False
-        rtl     : False
-
     - module:
         name    : RDMA_TX_SEND_ONLY_IMM
         enable  : True

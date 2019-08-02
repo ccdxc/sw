@@ -575,3 +575,13 @@ def ValidateAdminAsyncEQChecks(tc, num_wqes=1):
         return False
 
     return True
+
+def SetIterPrivOperEnable(tc):
+    rs = tc.config.rdmasession
+    tc.pvtdata.iterelem = tc.module.iterator.Get()
+    if tc.pvtdata.iterelem is not None:
+        if 'rsvd_lkey' in tc.pvtdata.iterelem.__dict__:
+            if (tc.pvtdata.iterelem.rsvd_lkey == True):
+                #Enable Privileged operations on this QP
+                 rs.lqp.sq.qstate.set_priv()
+    return
