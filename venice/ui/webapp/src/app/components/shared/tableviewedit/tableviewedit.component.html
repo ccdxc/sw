@@ -21,7 +21,7 @@
              [compareSelectionBy]="compareSelectionBy"
              #primengTable
              class="global-primeng-table-lazyload" [responsive]="true"
-             [loading]="tableLoading" [resizableColumns]="true" rowExpandMode="single">
+             [loading]="tableLoading" [resizableColumns]="false" rowExpandMode="single">
 
       <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
         <ng-container *ngTemplateOutlet="captionTemplate; context {count: displayedItemCount}">
@@ -29,15 +29,27 @@
       </ng-template>
 
       <ng-template pTemplate="header" let-columns>
-        <tr fxLayout="row">
-          <ng-container *ngFor="let col of cols; let last = last">
+        <tr fxLayout="row" #headerRow>
+          <ng-container
+                        *ngFor="let col of cols; let index = index; let first = first; let last = last">
             <ng-container *roleGuard="col.roleGuard ? col.roleGuard : '' ">
               <th
+                  [ngStyle]="{ 'padding-left': (first?'0.5em':'0'), 'padding-right' : (last?'0.5em':'0'), 'pointer-events': (pressed?'none':'inherit') }"
                   [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
                   [fxFlex]="col.width"
                   [colSpan]="last && actionTemplate != null ? 2 : 1">
-                <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
-                </app-sorticon>
+                <div fxFlex="grow" fxLayout="row">
+                  <div *ngIf="!first" class="tableviewedit-resizer"
+                       (mousedown)="onMouseDown($event, index-1)"
+                       (click)="$event.stopPropagation()">
+                  </div>
+                  <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
+                  </app-sorticon>
+                  <div fxFlex></div>
+                  <div *ngIf="!last" class="tableviewedit-resizer"
+                       (mousedown)="onMouseDown($event, index)" (click)="$event.stopPropagation()">
+                  </div>
+                </div>
               </th>
             </ng-container>
           </ng-container>

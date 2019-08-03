@@ -5,6 +5,7 @@ export interface TableCol {
   sortable?: boolean;
   class?: string;
   width?: number | string;
+  minColumnWidth?: number;
   exportable?: boolean;
   disableSearch?: boolean;
   kind?: string;

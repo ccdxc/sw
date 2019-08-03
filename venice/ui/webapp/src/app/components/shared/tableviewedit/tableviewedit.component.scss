@@ -10,6 +10,12 @@
   z-index: 10;
 }
 
+.tableviewedit-resizer {
+  width: .5em;
+  cursor: col-resize;
+  border: solid 1px transparent;
+}
+
 .tableviewedit-tablecontainer {
   position: relative;
   height: 100%;

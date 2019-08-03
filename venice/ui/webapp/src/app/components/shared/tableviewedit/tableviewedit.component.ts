@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation, Renderer2 } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
@@ -52,7 +52,10 @@ import { TableUtility } from './tableutility';
   animations: [Animations]
 })
 export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
+  public static MIN_COLUMN_WIDTH: number = 16; // 16px
+
   @ViewChild('primengTable') table: Table;
+  @ViewChild('headerRow') headerRow: any;
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
 
   @Input() creatingMode: boolean = false;
@@ -83,9 +86,21 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
 
   @Output() rowExpandAnimationComplete: EventEmitter<any> = new EventEmitter();
 
+  actionWidthPx: number = 50;
   actionWidth: number = 5;
-
   displayedItemCount: number = null;
+  pressed: boolean = false;
+  headerIndex: number = -1;
+  startX: any;
+  mouseMovelistener: () => void;
+  mouseUpListener: () => void;
+  headerRowHandler: any;
+  leftCellWidth: any;
+  rightCellWidth: any;
+  ongoingResize: boolean = false;
+
+  constructor(protected renderer: Renderer2) {
+  }
 
   ngOnInit() {
   }
@@ -98,10 +113,27 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     // Pushing into the next change detection cycle
     setTimeout(() => {
+      this.updateWidthPercentages();
       this.displayedItemCount = this.lazyRenderWrapper.getCurrentDataLength();
     }, 0);
   }
 
+  updateWidthPercentages() {
+    const tableWidth = $(this.headerRow.nativeElement).innerWidth();
+    if (tableWidth !== 0) {
+      this.actionWidth = this.actionWidthPx / tableWidth; // now converted to percentage
+      let sum = 0;
+      if (tableWidth !== 0) {
+        const children = this.headerRow.nativeElement.children;
+        for (let i = 0; i < children.length - 1; i++) {
+          const newWidth = ($(children[i]).outerWidth() * 100) / tableWidth;
+          this.cols[i].width = newWidth;
+          sum += newWidth;
+        }
+        this.cols[children.length - 1].width = 100 - sum;
+      }
+    }
+  }
 
   checkIfSelected(rowData: any): string {
     if (this.expandedRowData == null) {
@@ -116,6 +148,82 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
     return '';
   }
 
+  /**
+   * Column Resizing:
+   * Ref : https://medium.com/@rohit22173/creating-re-sizable-columns-in-angular2-d22fbcbe39c9
+   *
+   * Each table header has a small div at each end (except first and last col) that can be clicked and dragged to resize the adjacent columns.
+   *
+   * When user clicks on this div we save the indices of the columns being resized.
+   * We also store the original width of the two columns and the mouse positions initially.
+   *
+   * Listeners are created to watch mousemove and mouseup.
+   *
+   * Mousemove:
+   * When the mouse moves we note the displacement from the original position and update the column fxFlex (width) percentage in the table.
+   *
+   * Mouseup:
+   * When the user release the click, we should stop the resizing, hence we reset the pressed flag and stop watching mousemove and mouseup.
+  */
+
+  onMouseDown(event, index) {
+    this.pressed = true;
+    this.headerIndex = index;
+    this.startX = event.x;
+    this.initResizableColumns();
+    this.headerRowHandler = $(event.target).parent().parent().parent();
+    const children = this.headerRowHandler.children();
+    this.leftCellWidth = $(children[this.headerIndex]).outerWidth();
+    this.rightCellWidth = $(children[this.headerIndex + 1]).outerWidth();
+  }
+
+  getNumber(num: number | string ): number {
+    return typeof num === 'number' ? num : null;
+  }
+
+  setNewWidths(displacement) {
+    const tableWidth = $(this.headerRowHandler).width();
+
+    const leftMinWidth = (this.cols[this.headerIndex].minColumnWidth) ? this.cols[this.headerIndex].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
+    let rightMinWidth = (this.cols[this.headerIndex].minColumnWidth) ? this.cols[this.headerIndex + 1].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
+
+    // If last two columns are being resized, we need to worry about actionWidth
+    if (this.headerIndex === this.cols.length - 2) {
+      rightMinWidth += this.actionWidthPx;
+    }
+
+    if ( (displacement < 0 && this.leftCellWidth + displacement > leftMinWidth) || (displacement > 0 && this.rightCellWidth - displacement > rightMinWidth) ) {
+      let sum = 0;
+      // Incase width is defined using strings, we convert it to percentages first.
+      if (typeof this.cols[this.headerIndex].width === 'string' || typeof this.cols[this.headerIndex + 1].width === 'string') {
+        this.updateWidthPercentages();
+      }
+      sum = this.getNumber(this.cols[this.headerIndex].width) + this.getNumber(this.cols[this.headerIndex + 1].width);
+      this.cols[this.headerIndex].width = (this.leftCellWidth + displacement) * 100 / tableWidth;
+      this.cols[this.headerIndex + 1].width = sum - this.getNumber(this.cols[this.headerIndex].width);
+      // Rouding results in the widths not adding up to 100%, which causes issues.
+      // Hence we maintain the sum of width-percentages of the two columns.
+    }
+  }
+
+  initResizableColumns() {
+    this.mouseMovelistener = this.renderer.listen('body', 'mousemove', (event) => {
+      if (this.pressed) {
+          const displacement = event.x - this.startX;
+          this.setNewWidths(displacement);
+      }
+    });
+
+    this.mouseUpListener = this.renderer.listen('body', 'mouseup', (event) => {
+    if (this.pressed) {
+        this.pressed = false;
+    }
+    if (this.mouseMovelistener) {
+      this.mouseMovelistener(); // Stop listening to mousemove when user releases click.
+    }
+    this.mouseUpListener(); // Stop listening to mouseup when user releases click.
+    });
+  }
 }
 
 export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDestroy, OnChanges, TabcontentInterface {
@@ -177,7 +285,6 @@ export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDes
     }
     this.postNgInit();
   }
-
 
   // Hook to add logic to the initialization for classes extending this component
   postNgInit() { }
