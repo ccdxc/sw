@@ -350,6 +350,8 @@ static void ionic_link_status_check(struct lif *lif)
 	if (link_up == netif_carrier_ok(netdev))
 		return;
 
+	ionic_port_identify(lif->ionic);
+
 	if (link_up) {
 		netdev_info(netdev, "Link up - %d Gbps\n",
 			    le32_to_cpu(lif->info->status.link_speed) / 1000);

@@ -226,8 +226,11 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 			 idev->port_info->status.xcvr.pid);
 		break;
 	case XCVR_PID_UNKNOWN:
-		if (ionic_is_mnic(lif->ionic))
+		if (ionic_is_mnic(lif->ionic)) {
+			ethtool_link_ksettings_add_link_mode(ks, supported,
+							     1000baseT_Full);
 			break;
+		}
 		/* fall through */
 	default:
 		dev_dbg(lif->ionic->dev, "unknown xcvr type pid=%d / 0x%x\n",
@@ -245,41 +248,47 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_NONE);
 #endif
 
-	if (ionic_is_mnic(lif->ionic)) {
-		ethtool_link_ksettings_add_link_mode(ks, supported, Backplane);
-	} else {
-		ethtool_link_ksettings_add_link_mode(ks, supported, FIBRE);
-
-		if (ionic_is_pf(lif->ionic))
-			ethtool_link_ksettings_add_link_mode(ks, supported,
-							     Autoneg);
-	}
-
 	bitmap_copy(ks->link_modes.advertising, ks->link_modes.supported,
 		    __ETHTOOL_LINK_MODE_MASK_NBITS);
+
+	if (ionic_is_mnic(lif->ionic))
+		ethtool_link_ksettings_add_link_mode(ks, supported, Backplane);
+	else
+		ethtool_link_ksettings_add_link_mode(ks, supported, FIBRE);
 
 	ethtool_link_ksettings_add_link_mode(ks, supported, Pause);
 	if (idev->port_info->config.pause_type)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, Pause);
 
-	if (idev->port_info->status.xcvr.phy == PHY_TYPE_COPPER ||
-	    copper_seen) {
+	if (idev->port_info->status.xcvr.phy == PHY_TYPE_COPPER || copper_seen)
 		ks->base.port = PORT_DA;
-	} else if (idev->port_info->status.xcvr.phy == PHY_TYPE_FIBER) {
+	else if (idev->port_info->status.xcvr.phy == PHY_TYPE_FIBER)
 		ks->base.port = PORT_FIBRE;
-	} else {
+	else if (ionic_is_mnic(lif->ionic))
 		ks->base.port = PORT_OTHER;
-	}
-
-	ks->base.speed = le32_to_cpu(lif->info->status.link_speed);
-
-	if (idev->port_info->config.an_enable)
-		ks->base.autoneg = AUTONEG_ENABLE;
-
-	if (le16_to_cpu(lif->info->status.link_status))
-		ks->base.duplex = DUPLEX_FULL;
 	else
-		ks->base.duplex = DUPLEX_UNKNOWN;
+		ks->base.port = PORT_NONE;
+
+	if (ks->base.port != PORT_NONE) {
+		ks->base.speed = le32_to_cpu(lif->info->status.link_speed);
+
+		if (le16_to_cpu(lif->info->status.link_status))
+			ks->base.duplex = DUPLEX_FULL;
+		else
+			ks->base.duplex = DUPLEX_UNKNOWN;
+
+		if (ionic_is_pf(lif->ionic) && !ionic_is_mnic(lif->ionic)) {
+			ethtool_link_ksettings_add_link_mode(ks, supported,
+							     Autoneg);
+
+			if (idev->port_info->config.an_enable) {
+				ethtool_link_ksettings_add_link_mode(ks,
+								     advertising,
+								     Autoneg);
+				ks->base.autoneg = AUTONEG_ENABLE;
+			}
+		}
+	}
 
 	return 0;
 }
