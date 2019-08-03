@@ -32,6 +32,8 @@ import { LabeleditorComponent } from './labeleditor/labeleditor.component';
 import { AdvancedSearchComponent } from './advanced-search/advanced-search.component';
 import { TimeRangeComponent } from './timerange/timerange.component';
 import { UIChartComponent } from './primeng-chart/chart';
+import { OrderedlistComponent } from './orderedlist/orderedlist.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   imports: [
@@ -42,7 +44,8 @@ import { UIChartComponent } from './primeng-chart/chart';
     FormsModule,
     ReactiveFormsModule,
     FormsModule,
-    WidgetsModule
+    WidgetsModule,
+    DragDropModule
   ],
   declarations: [PagebodyComponent,
     SpinnerComponent,
@@ -69,7 +72,8 @@ import { UIChartComponent } from './primeng-chart/chart';
     LabeleditorComponent,
     AdvancedSearchComponent,
     TimeRangeComponent,
-    UIChartComponent
+    UIChartComponent,
+    OrderedlistComponent
   ],
   exports: [
     PagebodyComponent,
@@ -97,7 +101,8 @@ import { UIChartComponent } from './primeng-chart/chart';
     AdvancedSearchComponent,
     LabeleditorComponent,
     TimeRangeComponent,
-    UIChartComponent
+    UIChartComponent,
+    OrderedlistComponent
   ],
 })
 export class SharedModule { }

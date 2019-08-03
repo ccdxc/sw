@@ -5,6 +5,7 @@
       <div fxFlex="nogrow" class="repeater-selector repeater-key">
           <p-dropdown [styleClass]="styleClass" *ngIf="!isToUseInputField(repeater)" 
                       (onChange)="keyDropdownChange(repeater)" 
+                      [panelStyleClass]="panelStyleClass"
                       [formControlName]="keyFormName" 
                       [options]="keyOptions"
                       [filter]="keyDropdownFilter"
@@ -22,7 +23,8 @@
       </div>
       <!-- Operator -->
       <div fxFlex="nogrow" class="repeater-selector repeater-operator">
-          <p-dropdown [styleClass]="styleClass" 
+          <p-dropdown [styleClass]="styleClass"
+                      [panelStyleClass]="panelStyleClass"
                       (onChange)="emitValues()" 
                       [formControlName]="operatorFormName" 
                       [options]="keyToOperator[repeater.formGroup.value[keyFormName]]"
@@ -33,6 +35,7 @@
       <div fxFlex="nogrow" class="repeater-selector repeater-value">
           <p-dropdown *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] == 'singleSelect'"  
                       [styleClass]="styleClass" 
+                      [panelStyleClass]="panelStyleClass"
                       (onChange)="emitValues()" 
                       [formControlName]="valueFormName" 
                       [options]="keyToValues[repeater.formGroup.value[keyFormName]]"
@@ -40,6 +43,7 @@
           </p-dropdown>
           <p-multiSelect *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] =='multiSelect'"
                           [styleClass]="styleClass" 
+                          [panelStyleClass]="panelStyleClass"
                           (onChange)="emitValues()" 
                           [maxSelectedLabels]="1" 
                           [showToggleAll]="enableMultiSelectAll" 

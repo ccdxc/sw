@@ -31,20 +31,6 @@ $vertical-gutter: 5px;
   }
 }
 
-.newrollout-order-label {
-  border-radius: 14px;
-  border: solid 2px #dddddd;
-  background-color: #ffffff;
-  padding-left: 18px;
-  padding-top: 14px;
-  padding-bottom: 13px;
-  padding-right: 18px;
-}
-
-.newrollout-order-disabledarrow {
-  color: #cccccc;
-}
-
 .newrollout-order-matchcount {
   min-width: 24px;
   height: 24px;
@@ -59,10 +45,8 @@ $vertical-gutter: 5px;
 .newrollout-order-header {
   @include primary-font(16px);
   min-height: 25px;
-}
-
-.newrollout-order-index {
-  @include primary-font(20px);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .newrollout-order-buttons {
@@ -214,4 +198,8 @@ $vertical-gutter: 5px;
 //VS-492  firefox issue with input.type=number. Ensure not breaking other browsers
 .newrollout .newrollout-row input.ui-inputtext:not(.ui-dropdown-filter) {
   padding: 0px 10px;
+}
+
+.newrollout-order-template.newrollout-hide-primeng-panel .newrollout-select-panel {
+  display: none;
 }

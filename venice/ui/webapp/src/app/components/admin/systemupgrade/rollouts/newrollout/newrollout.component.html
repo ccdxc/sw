@@ -111,76 +111,14 @@
                   <div fxFlex="nogrow" class="newrollout-text">Cannot upgrade DSCs by labels. No
                     DSCs with labels found.</div>
                 </div>
-                <div xFlex="auto" class="newrollout-NicOrder-div" fxLayout="column"
+                <div fxFlex="auto" class="newrollout-NicOrder-div" fxLayout="column"
                      *ngIf="isToShowNicOrderDiv()" formArrayName="order-constraints">
-                  <div *ngFor="let order of controlAsFormArray(newRollout.$formGroup.get(['spec','order-constraints'])).controls; let index = index; let first = first; let last = last"
-                       [formGroupName]="index">
-                    <div class="newrollout-order" fxLayout="column" fxFlex="auto">
-                      <div fxLayout="row">
-                        <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="center center">
-                          <mat-icon [ngClass]="first?'newrollout-order-disabledarrow':'newrollout-order-buttons'"
-                                    (click)="moveOrder(index, -1)">arrow_drop_up</mat-icon>
-                          <div class="newrollout-order-index">{{index+1}}</div>
-                          <mat-icon [ngClass]="last?'newrollout-order-disabledarrow':'newrollout-order-buttons'"
-                                    (click)="moveOrder(index, 1)">arrow_drop_down</mat-icon>
-                        </div>
-                        <div class="newrollout-order-label" fxFlex="auto" fxLayout="column"
-                             fxLayoutAlign="center none" (click)="toggleOrderState(index)">
-                          <div class="newrollout-order-header" fxLayout="row"
-                               fxLayoutAlign="none center">
-                            <div fxLayout="row" fxLayoutAlign="none center">
-                              <b>Order</b>
-                            </div>
-                            <div *ngIf="!orders[index].editable">
-                              : {{this.orders[index].orderSummary}}
-                            </div>
-                            <div fxFlex fxLayoutAlign="end center">
-                              <div>
-                                <mat-icon class="newrollout-order-buttons newrollout-order-hoverbuttons"
-                                          *ngIf="!orders[index].editable" [matTooltip]="'Edit'"
-                                          (click)="makeOrderEditable(index, $event)"
-                                          fxFlex="nogrow">edit
-                                </mat-icon>
-                                <mat-icon class="newrollout-order-buttons newrollout-order-hoverbuttons"
-                                          [matTooltip]="'Delete'"
-                                          (click)="deleteOrder(index)"
-                                          fxFlex="nogrow">delete
-                                </mat-icon>
-                                <mat-icon class="global-alert-warning-icon"
-                                          *ngIf="orders[index].incomplete"
-                                          [matTooltip]="'Empty Order'"
-                                          fxFlex="nogrow">error
-                                </mat-icon>
-                                <mat-icon class="global-alert-info-icon"
-                                          *ngIf="orders[index].duplicatesWith.length>0"
-                                          [matTooltip]="duplicateMatchTooltip(index)"
-                                          fxFlex="nogrow">notifications
-                                </mat-icon>
-                              </div>
-                              <div fxFlex="5px"></div>
-                              <div>
-                                <span class="newrollout-order-matchcount"
-                                      [matTooltip]="'Matched Naples'">{{orders[index].matchedSmartNICs.length}}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div *ngIf="orders[index].editable"
-                               (click)="$event.stopPropagation();">
-                            <app-repeater #repeaters [data]="orderConstraintslabelData"
-                                          [buildKeyPlaceholder]="buildKeyPlaceholder"
-                                          [buildValuePlaceholder]="buildValuePlaceholder"
-                                          [formArray]="order.controls.requirements"
-                                          (repeaterValues)="repeaterValueChange(index)"
-                                          [enableMultiSelectFilter]="true"
-                                          [enableMultiSelectAll]="true">
-                            </app-repeater>
-                          </div>
-                        </div>
-                      </div>
-                      <!-- #linespace -->
-                      <div fxFlex="10px"></div>
-                    </div>
-                  </div>
+                  <app-orderedlist [dataArray]="orders"
+                                   (itemClick)="toggleOrderState($event)" [template]="orderTemplate"
+                                   (orderChange)="onOrderChange()">
+                  </app-orderedlist>
+                  <!-- #linespace -->
+                  <div fxFlex="10px"></div>
                   <button (click)="addOrder()"
                           class="global-button-primary newrollout-addneworder newrollout-addneworder-clear">Add
                     Order</button>
@@ -212,5 +150,66 @@
     <div fxFlex="30px"></div>
     <div fxFlex="auto" class="newrollout-divider"></div>
     <div fxFlex="30px"></div>
+  </div>
+</ng-template>
+
+<ng-template #orderTemplate let-data="data" let-index="index" let-inEdit="inEdit">
+  <div fxFlex="auto" fxLayout="column"
+       fxLayoutAlign="center none" class="newrollout-order-template"
+       [ngClass]="{'newrollout-hide-primeng-panel': !orders[index].inEdit}">
+    <div class="newrollout-order-header" fxLayout="row"
+         fxLayoutAlign="none center">
+      <div fxLayout="row" fxLayoutAlign="none center">
+        <b>Order</b>
+      </div>
+      <div *ngIf="!orders[index].inEdit" [@fastSlideInOutHorizontal]>
+        : {{orders[index].orderSummary}}
+      </div>
+      <div fxFlex fxLayoutAlign="end center">
+        <div>
+          <mat-icon class="newrollout-order-buttons newrollout-order-hoverbuttons"
+                    *ngIf="!orders[index].inEdit" [matTooltip]="'Edit'"
+                    (click)="makeOrderEditable(index, $event)"
+                    fxFlex="nogrow">edit
+          </mat-icon>
+          <mat-icon class="newrollout-order-buttons newrollout-order-hoverbuttons"
+                    [matTooltip]="'Delete'"
+                    (click)="deleteOrder(index)"
+                    fxFlex="nogrow">delete
+          </mat-icon>
+          <mat-icon class="global-alert-warning-icon"
+                    *ngIf="orders[index].incomplete"
+                    [matTooltip]="'Empty Order'"
+                    fxFlex="nogrow">error
+          </mat-icon>
+          <mat-icon class="global-alert-info-icon"
+                    *ngIf="orders[index].duplicatesWith.length>0"
+                    [matTooltip]="duplicateMatchTooltip(index)"
+                    fxFlex="nogrow">notifications
+          </mat-icon>
+        </div>
+        <div fxFlex="5px"></div>
+        <div>
+          <span class="newrollout-order-matchcount"
+                [matTooltip]="'Matched Naples'">{{orders[index].matchedSmartNICs.length}}</span>
+        </div>
+      </div>
+    </div>
+    <div [@.disabled]="!repeaterAnimationEnabled">
+      <!-- Not using the default slideInOut as animation has issues with drag/drop
+        After dragging and dropping an element into a different spot, angular seems to be adding an element and removing it instantly. This causes an entrance animation to play when a deletion animation should be playing instead -->
+      <div *ngIf="orders[index].inEdit" [@slideInOutLeave]
+           (click)="$event.stopPropagation();">
+        <app-repeater #repeaters [data]="orderConstraintslabelData"
+                      [buildKeyPlaceholder]="buildKeyPlaceholder"
+                      [buildValuePlaceholder]="buildValuePlaceholder"
+                      [panelStyleClass]="'newrollout-select-panel'"
+                      [formArray]="data.controls.requirements"
+                      [enableMultiSelectFilter]="true"
+                      [enableMultiSelectAll]="true"
+                      (repeaterValues)="repeaterValueChange(index)">
+        </app-repeater>
+      </div>
+    </div>
   </div>
 </ng-template>

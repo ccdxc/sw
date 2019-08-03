@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation, EventEmitter, Input, Output, OnChanges, SimpleChanges, ViewChildren, QueryList, ChangeDetectorRef } from '@angular/core';
-import { FormArray, ValidatorFn } from '@angular/forms';
+import { FormArray, ValidatorFn, FormGroup } from '@angular/forms';
 import { BaseComponent } from '@components/base/base.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { ControllerService } from '@app/services/controller.service';
@@ -7,7 +7,7 @@ import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec } from '@sdk/v1/models/generated/rollout';
 import { IObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
-import { RepeaterComponent, RepeaterData, ValueType, RepeaterItem } from 'web-app-framework';
+import { RepeaterData, ValueType, RepeaterItem } from 'web-app-framework';
 import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
@@ -24,9 +24,11 @@ import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 
 export class RolloutOrder {
+  id: string;
+  data: FormGroup;
   orderSummary: string = '';
   matchedSmartNICs: string[] = [];
-  editable: boolean = false;
+  inEdit: boolean = false;
   duplicatesWith: number[] = [];
   incomplete: boolean = true;
 }
@@ -108,6 +110,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   naplesRuleMap: { [rule: string]: Set<string> } = {};
   duplicateMatchMap: { [nicid: string]: number[] } = {};
 
+  repeaterAnimationEnabled: boolean = true;
+
   constructor(private rolloutService: RolloutService,
     private objstoreService: ObjstoreService,
     protected _searchService: SearchService,
@@ -120,6 +124,16 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  onOrderChange() {
+    this.buildDuplicationMap();
+    // We disable animation while the re-order animation happens
+    // to prevent app-repeater from stuttering
+    this.repeaterAnimationEnabled = false;
+    setTimeout(() => {
+    this.repeaterAnimationEnabled = true;
+    }, 500);
   }
 
 
@@ -261,6 +275,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     return count;
   }
 
+  getOrderConstraints() {
+    return this.orders.map(x => x.data);
+  }
+
   isAllInputsValidated(): boolean {
     if (this.newRollout.$formGroup['smartnic-must-match-constraint'] && this.countMatchedNICs() !== 0) {
       return false;
@@ -269,9 +287,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       return false;
     }
     if (this.newRollout.$formGroup.get(['spec', 'smartnic-must-match-constraint']).value) {
-      const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+
+      const orders = this.getOrderConstraints();
       for ( let ix = 0; ix < orders.length; ix++) {
-        const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(orders.at(ix).value);
+        const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(orders[ix].value);
         if  (repeaterSearchExpression.length === 0) {
           return false;
         } else {
@@ -464,9 +483,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   private setSpecOrderConstrains(rollout: IRolloutRollout) {
     if (rollout.spec['smartnic-must-match-constraint']) {
       const orderConstraints = [];
-      const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
+      const orders = this.getOrderConstraints();
       for ( let ix = 0; ix < orders.length; ix++) {
-        const labelsSelectorCriteria = this.convertFormArrayToSearchExpression(orders.at(ix).value); // Some Naples will be updated.
+        const labelsSelectorCriteria = this.convertFormArrayToSearchExpression(orders[ix].value); // Some Naples will be updated.
         const requirements = labelsSelectorCriteria;
         const obj = { 'requirements' : requirements};
         orderConstraints.push(obj);
@@ -615,25 +634,23 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   // adds new HTML element with labelselectors
   // automatically collapses all open orders
   addOrder() {
-    const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
-    const norder = new LabelsSelector();
-    orders.push(norder.$formGroup);
-    this.orders.push(new RolloutOrder());
-    this.makeOrderEditable(orders.length - 1, null);
-    this.orders[orders.length - 1].incomplete = true;
+    const newOrder = new RolloutOrder();
+    newOrder.id = Utility.s4();
+    newOrder.data = new LabelsSelector().$formGroup;
+    this.orders.push(newOrder);
+    this.makeOrderEditable(this.orders.length - 1, null);
+    this.orders[this.orders.length - 1].incomplete = true;
   }
 
-  // removes order HTML element and also from formarray
+  // removes order
   deleteOrder(index) {
-    const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
-    orders.removeAt(index);
     this.orders.splice(index, 1);
   }
 
   // toggle order state between saved and editable
   // Make a saved order editable will make all other orders closed.
   toggleOrderState(index) {
-    if (this.orders[index].editable) {
+    if (this.orders[index].inEdit && this.orders.length > 1) {
       this.makeOrderSaved(index);
     } else {
       this.makeOrderEditable(index, null);
@@ -644,10 +661,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   // If we create a new order or edit an existing one, previously open order is automatically saved.
   makeOrderEditable(index, event) {
     for (let i = 0; i < this.orders.length; i++) {
-      if (i !== index) {
+      if (i !== index && this.orders[i].inEdit) {
         this.makeOrderSaved(i);
-      } else {
-        this.orders[index].editable = true;
+      } else if (i === index) {
+        this.orders[index].inEdit = true;
       }
     }
     if (event) {
@@ -658,7 +675,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   // "save" simply hides the label selectors
   // save updates the order summary string and the matchedNIC count.
   makeOrderSaved(index) {
-    this.orders[index].editable = false;
+    this.orders[index].inEdit = false;
     this.matchNICs(index);
     this.setOrderSummary(index);
     this.buildDuplicationMap();
@@ -666,33 +683,22 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
   // saved orders show a summary of the label selectors contained inside.
   setOrderSummary(index) {
-    const data = this.newRollout.$formGroup.get(['spec', 'order-constraints']).value[index].requirements;
+    const data = this.orders[index].data.value.requirements;
     const reqs = Utility.formatRepeaterData(data);
     const stringForm = Utility.stringifyRepeaterData(reqs).join('    ');
     this.orders[index].orderSummary = stringForm;
   }
 
   moveOrder(index, direction) {
-    const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
     const newIndex = index + direction;
 
-    if (newIndex < 0 || newIndex >= orders.controls.length) {
+    if (newIndex < 0 || newIndex >= this.orders.length) {
       return;
     }
 
-    const tempC = orders.controls[index];
-    orders.controls[index] = orders.controls[newIndex];
-    orders.controls[newIndex] = tempC;
-
-    const tempV = orders.value[index];
-    orders.value[index] = orders.value[newIndex];
-    orders.value[newIndex] = tempV;
-
-    const tempO = this.orders[index];
+    const tempC = this.orders[index];
     this.orders[index] = this.orders[newIndex];
-    this.orders[newIndex] = tempO;
-
-    this.cd.detectChanges();
+    this.orders[newIndex] = tempC;
   }
 
   repeaterValueChange(index) {
@@ -700,8 +706,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.matchNICs(index);
       this.setOrderSummary(index);
       this.buildDuplicationMap();
-      const orders = this.newRollout.$formGroup.get(['spec', 'order-constraints']) as FormArray;
-      const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(orders.at(index).value);
+      const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(this.orders[index].data.value);
       if ( repeaterSearchExpression.length > 0 ) {
         this.orders[index].incomplete = false;
         for (let i = 0; i < repeaterSearchExpression.length; i++) {
@@ -716,7 +721,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   matchNICs(index) {
-    const repeaterValues = this.newRollout.$formGroup.get(['spec', 'order-constraints']).value[index].requirements;
+    const repeaterValues = this.orders[index].data.value.requirements;
     const matchRules = [];
     for (let ix = 0; ix < repeaterValues.length; ix++) {
       matchRules.push([repeaterValues[ix].keyFormControl, repeaterValues[ix].operatorFormControl, repeaterValues[ix].valueFormControl]);

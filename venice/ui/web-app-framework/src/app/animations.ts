@@ -45,12 +45,38 @@ export const Animations = [
   ]),
   trigger('fastSlideInOut', [
     transition(':enter', [
-      style({ height: '0px', visibility: 'hidden', overflow: 'hidden' }),
-      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ height: '*', visibility: 'visible' })),
+      style({ 
+        height: '0px', 
+        'margin-top': '0px', 
+        'margin-bottom': '0px', 
+        visibility: 'hidden', 
+        overflow: 'hidden' 
+      }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ 
+        height: '*', 
+        'margin-top': '*',
+        'margin-bottom': '*',
+        'padding-top': '*',
+        'padding-bottom': '*',
+        visibility: 'visible'
+      })),
     ]),
     transition(':leave', [
-      style({ height: '*', visibility: 'visible', overflow: 'hidden' }),
-      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ height: '0px', visibility: 'hidden' })),
+      style({ 
+        height: '*', 
+        'margin-top': '*',
+        'margin-bottom': '*',
+        visibility: 'visible', 
+        overflow: 'hidden'
+       }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ 
+        height: '0px', 
+        'margin-top': '0px', 
+        'margin-bottom': '0px', 
+        'padding-top': '0px',
+        'padding-bottom': '0px',
+        visibility: 'hidden' 
+      })),
     ]),
   ]),
 ];

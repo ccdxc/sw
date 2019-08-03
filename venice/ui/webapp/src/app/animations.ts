@@ -35,22 +35,99 @@ export const Animations = [
   // For sliding creation panels in and out
   trigger('slideInOut', [
     transition(':enter', [
-      style({ height: '0px', visibility: 'hidden', overflow: 'hidden' }),
-      animate(EXPANSION_PANEL_ANIMATION_TIMING, style({ height: '*', visibility: 'visible' })),
+      style({
+        height: '0px',
+        'margin-top': '0px',
+        'margin-bottom': '0px',
+        'padding-top': '0px',
+        'padding-bottom': '0px',
+        visibility: 'hidden',
+        overflow: 'hidden'
+      }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING, style({
+          height: '*',
+          'margin-top': '*',
+          'margin-bottom': '*',
+          'padding-top': '*',
+          'padding-bottom': '*',
+          visibility: 'visible'
+        })),
     ]),
     transition(':leave', [
-      style({ height: '*', visibility: 'visible', overflow: 'hidden' }),
-      animate(EXPANSION_PANEL_ANIMATION_TIMING, style({ height: '0px', visibility: 'hidden' })),
+      style({
+          height: '*',
+          'margin-top': '*',
+          'margin-bottom': '*',
+          'padding-top': '*',
+          'padding-bottom': '*',
+          visibility: 'visible',
+          overflow: 'hidden'
+         }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING, style({
+        height: '0px',
+        'margin-top': '0px',
+        'margin-bottom': '0px',
+        'padding-top': '0px',
+        'padding-bottom': '0px',
+        visibility: 'hidden'
+      })),
     ]),
   ]),
   trigger('fastSlideInOut', [
     transition(':enter', [
-      style({ height: '0px', visibility: 'hidden', overflow: 'hidden' }),
-      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ height: '*', visibility: 'visible' })),
+      style({
+        height: '0px',
+        'margin-top': '0px',
+        'margin-bottom': '0px',
+        visibility: 'hidden',
+        overflow: 'hidden'
+      }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({
+        height: '*',
+        'margin-top': '*',
+        'margin-bottom': '*',
+        'padding-top': '*',
+        'padding-bottom': '*',
+        visibility: 'visible'
+      })),
     ]),
     transition(':leave', [
-      style({ height: '*', visibility: 'visible', overflow: 'hidden' }),
-      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ height: '0px', visibility: 'hidden' })),
+      style({
+        height: '*',
+        'margin-top': '*',
+        'margin-bottom': '*',
+        visibility: 'visible',
+        overflow: 'hidden'
+       }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({
+        height: '0px',
+        'margin-top': '0px',
+        'margin-bottom': '0px',
+        'padding-top': '0px',
+        'padding-bottom': '0px',
+        visibility: 'hidden'
+      })),
+    ]),
+  ]),
+  trigger('slideInOutLeave', [
+    transition(':leave', [
+      style({
+          height: '*',
+          'margin-top': '*',
+          'margin-bottom': '*',
+          'padding-top': '*',
+          'padding-bottom': '*',
+          visibility: 'visible',
+          overflow: 'hidden'
+         }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING, style({
+        height: '0px',
+        'margin-top': '0px',
+        'margin-bottom': '0px',
+        'padding-top': '0px',
+        'padding-bottom': '0px',
+        visibility: 'hidden'
+      })),
     ]),
   ]),
   trigger('slideInOutHorizontal', [
@@ -61,6 +138,16 @@ export const Animations = [
     transition(':leave', [
       style({ width: '*', visibility: 'visible', overflow: 'hidden' }),
       animate(EXPANSION_PANEL_ANIMATION_TIMING, style({ width: '0px', visibility: 'hidden' })),
+    ]),
+  ]),
+  trigger('fastSlideInOutHorizontal', [
+    transition(':enter', [
+      style({ width: '0px', visibility: 'hidden', overflow: 'hidden' }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ width: '*', visibility: 'visible' })),
+    ]),
+    transition(':leave', [
+      style({ width: '*', visibility: 'visible', overflow: 'hidden' }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ width: '0px', visibility: 'hidden' })),
     ]),
   ]),
 ];

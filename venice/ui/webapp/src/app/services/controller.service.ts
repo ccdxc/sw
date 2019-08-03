@@ -139,6 +139,8 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('un-pin', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/dashboard/ico-unpinned.svg'));
     this.matIconRegistry.addSvgIcon('auth-pol', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/admin/ico-auth-pol.svg'));
 
+    this.matIconRegistry.addSvgIcon('drag_indicator', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/baseline-drag_indicator-24px.svg'));
+
   }
 
   /**

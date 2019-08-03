@@ -64,6 +64,7 @@ export class RepeaterComponent implements OnInit, OnChanges {
   @Input() buildValuePlaceholder: (repeater: RepeaterItem, keyFormName: string) => string = null;
 
   @Input() styleClass: string;
+  @Input() panelStyleClass: string;
 
   @Input() customValueOnBlur: (any, RepeaterItem?) => void;
   @Input() customValueOnKeydown: (any, RepeaterItem?) => void;
