@@ -229,11 +229,11 @@ done:
 // FTL_MAKE_AFTYPE(main_table) iterate_: Iterate entries from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
-    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(ctx, force_hwread);
+FTL_MAKE_AFTYPE(main_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table iterate r:%d", ret);
 
-    ret = hint_table_->iterate_(ctx, force_hwread);
+    ret = hint_table_->iterate_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "hint table iterate r:%d", ret);
 done:
     return SDK_RET_OK;

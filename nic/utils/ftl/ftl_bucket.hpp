@@ -37,7 +37,7 @@ private:
     sdk_ret_t delink_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t defragment_(FTL_MAKE_AFTYPE(apictx) *ectx,
                           FTL_MAKE_AFTYPE(apictx) *tctx);
-    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread=FALSE);
+    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx);
 
     bool is_locked_() {
         return (locked_ ? true : false);

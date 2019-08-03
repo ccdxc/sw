@@ -325,121 +325,23 @@ get_return:
     return ret;
 }
 
-static inline void
-ftl_get_hw_entry_count_iter_cb (sdk_table_api_params_t *params)
-{
-    FTL_MAKE_AFTYPE(entry_t) *hwentry =
-            (FTL_MAKE_AFTYPE(entry_t) *) params->entry;
-
-    if (hwentry->entry_valid) {
-        hw_entry_count_++;
-    }
-}
-
-static inline sdk_ret_t
-ftl_get_hw_entry_count (FTL_AFPFX() *table)
-{
-    sdk_ret_t ret = SDK_RET_OK;
-    sdk_table_api_params_t params = {0};
-
-    params.itercb = ftl_get_hw_entry_count_iter_cb;
-    ret = table->iterate(&params, TRUE);
-    if (ret != SDK_RET_OK) {
-        FTL_TRACE_ERR("get_hw_enttry_count iterate failed. ret:%d", ret);
-    }
-    FTL_TRACE_VERBOSE("ftl_get_hw_entry_count %u\n", hw_entry_count_);
-
-    return ret;
-}
-
 //---------------------------------------------------------------------------
 // ftl Get Stats from ftl table
 // As stats are maintained per thread, needs to call from each thread.
 //---------------------------------------------------------------------------
 sdk_ret_t
 FTL_AFPFX()::stats_get(sdk_table_api_stats_t *api_stats,
-                       sdk_table_stats_t *table_stats, bool force_hwread) {
+                       sdk_table_stats_t *table_stats) {
     FTL_API_BEGIN_();
-    // reset hw_entry_count_
-    hw_entry_count_ = 0;
     api_stats_.get(api_stats);
-    if (force_hwread) {
-        ftl_get_hw_entry_count(this);
-    }
-    tstats_.set_entries(hw_entry_count_);
     tstats_.get(table_stats);
     FTL_API_END_(SDK_RET_OK);
 
     return SDK_RET_OK;
 }
 
-static inline void
-ftl_dump_hw_entry_iter_cb (sdk_table_api_params_t *params)
-{
-    FTL_MAKE_AFTYPE(entry_t) *hwentry =
-            (FTL_MAKE_AFTYPE(entry_t) *)params->entry;
-    FILE *fp = (FILE *)params->cbdata;
-
-    if (hwentry->entry_valid) {
-        hw_entry_count_++;
-        hwentry->tofile(fp, hw_entry_count_);
-    }
-}
-
-static inline void
-ftl_dump_hw_entry_header (FILE *fp)
-{
-    fprintf(fp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
-    fprintf(fp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "-----", "-----", "-----", "-------", "-------", "-----", "----");
-    return;
-}
-
-//---------------------------------------------------------------------------
-// ftl Dump all HW entries to file
-//---------------------------------------------------------------------------
-int
-FTL_AFPFX()::hwentries_dump(char *fname) {
-    sdk_ret_t ret;
-    sdk_table_api_params_t params = {0};
-    FILE *logfp = fopen(fname, "a");
-    int retcode = -1;
-
-    FTL_API_BEGIN("dump_hwentries");
-    if (logfp == NULL) {
-        FTL_TRACE_ERR("dump_hwentries failed to open %s", fname);
-        goto dump_hwentries_return;
-    }
-    params.itercb = ftl_dump_hw_entry_iter_cb;
-    params.cbdata = logfp;
-    // reset hw_entry_count_
-    hw_entry_count_ = 0;
-    ftl_dump_hw_entry_header(logfp);
-    ret = iterate(&params, TRUE);
-    if (ret != SDK_RET_OK) {
-        FTL_TRACE_ERR("dump_hwentries iterate failed. ret:%d", ret);
-    } else {
-        retcode = hw_entry_count_;
-    }
-    fclose(logfp);
-
-dump_hwentries_return:
-    FTL_API_END("dump_hwentries", retcode);
-    return retcode;
-}
-
-//---------------------------------------------------------------------------
-// ftl Dump Stats from ftl table
-// As stats are maintained per thread, needs to call from each thread.
-//---------------------------------------------------------------------------
-void
-FTL_AFPFX()::stats_dump(void) {
-    api_stats_.dump();
-    tstats_.dump();
-}
 sdk_ret_t
-FTL_AFPFX()::iterate(sdk_table_api_params_t *params, bool force_hwread) {
+FTL_AFPFX()::iterate(sdk_table_api_params_t *params) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -449,7 +351,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_ITERATE, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->iterate_(apictx_, force_hwread);
+    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->iterate_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "iterate r:%d", ret);
 
 done:
@@ -473,11 +375,21 @@ __label__ done;
     FTL_RET_CHECK_AND_GOTO(ret, done, "clear r:%d", ret);
     
     if (clear_thread_local_state) {
-        api_stats_.clear();
-        tstats_.clear();
+        (void)clear_stats();
     }
 
 done:
     FTL_API_END_(ret);
     return ret;
+}
+
+sdk_ret_t
+FTL_AFPFX()::clear_stats(void) {
+    FTL_API_BEGIN_();
+
+    api_stats_.clear();
+    tstats_.clear();
+
+    FTL_API_END_(SDK_RET_OK);
+    return SDK_RET_OK;
 }

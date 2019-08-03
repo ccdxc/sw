@@ -8,21 +8,18 @@
 #include <gen/p4gen/artemis/include/p4pd.h>
 #include <stddef.h>
 
-#if 0
-always_inline void
-clib_memrev2 (u8 *dst1, u8* dst2, u8 *src, int size)
+always_inline int
+pds_p4_cpu_node_get_advance_offset (vlib_buffer_t *b)
 {
-    for (src = src + (size - 1); size > 0; size--) {
-        *dst1++ = *dst2++ = *src--;
-    }
+    return (ARTEMIS_P4_TO_ARM_HDR_SZ +
+            (vnet_buffer(b)->l3_hdr_offset - vnet_buffer (b)->l2_hdr_offset));
 }
-#endif
 
 always_inline int
 pds_session_get_advance_offset (void)
 {
-    return (ARTEMIS_P4_TO_ARM_HDR_SZ
-            - offsetof(p4_rx_cpu_hdr_t, ses_info) - ARTEMIS_PREDICATE_HDR_SZ);
+    return (ARTEMIS_P4_TO_ARM_HDR_SZ -
+            offsetof(p4_rx_cpu_hdr_t, ses_info) - ARTEMIS_PREDICATE_HDR_SZ);
 }
 
 always_inline void
@@ -56,6 +53,43 @@ pds_flow_prog_get_next_offset(vlib_buffer_t *p0)
 {
     return (ARTEMIS_P4_TO_ARM_HDR_SZ - offsetof(p4_rx_cpu_hdr_t, ses_info) +
                (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
+}
+
+void
+pds_flow_prog_populate_trace (vlib_buffer_t *CLIB_UNUSED(b0),
+                              flow_prog_trace_t *t0,
+                              void *data, u8 is_ip4)
+{
+    if (is_ip4) {
+       ip4_header_t *ip40 = data;
+
+        ip46_address_set_ip4(&t0->isrc, &ip40->src_address);
+        ip46_address_set_ip4(&t0->rdst, &ip40->src_address);
+
+        ip46_address_set_ip4(&t0->idst, &ip40->dst_address);
+        ip46_address_set_ip4(&t0->rsrc, &ip40->dst_address);
+
+        t0->iprotocol = t0->rprotocol = ip40->protocol;
+    } else {
+        ip6_header_t *ip60 = data;
+
+        ip46_address_set_ip6(&t0->isrc, &ip60->src_address);
+        ip46_address_set_ip6(&t0->rdst, &ip60->src_address);
+
+        ip46_address_set_ip6(&t0->idst, &ip60->dst_address);
+        ip46_address_set_ip6(&t0->rsrc, &ip60->dst_address);
+
+        t0->iprotocol = t0->rprotocol = ip60->protocol;
+    }
+    if (PREDICT_TRUE(((t0->iprotocol == IP_PROTOCOL_TCP)
+                    || (t0->iprotocol == IP_PROTOCOL_UDP)))) {
+        udp_header_t *udp0 = (udp_header_t *) (((u8 *) data) +
+                             (vnet_buffer (b0)->l4_hdr_offset -
+                             vnet_buffer (b0)->l3_hdr_offset));
+        t0->isrc_port = t0->rdst_port = udp0->src_port;
+        t0->idst_port = t0->rsrc_port = udp0->dst_port;
+    }
+    return;
 }
 
 always_inline void
@@ -183,18 +217,13 @@ pds_flow_program_hw_ip4 (pds_flow_params_t *key,
                 pds_session_id_dealloc(key[i].entry4.session_index);
             }
             if (i % 2) {
-#if 0
-                /*TODO - Delete is resulting in crash, so comment for now */
                 /* Remove last entry as local flow succeeded
                  * but remote entry failed */
-                pds_session_id_dealloc(key[i].entry4.session_index);
-                /*TODO - Delete is resulting in crash, so comment for now */
                 if (PREDICT_FALSE(0 != ftlv4_remove(table,
                                                     &key[i-1].entry4,
                                                     key[i-1].hash))) {
                     counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
                 }
-#endif
             } else {
                 /* Skip remote flow entry as local entry failed */
                 i++;
@@ -202,6 +231,7 @@ pds_flow_program_hw_ip4 (pds_flow_params_t *key,
         }
     }
 }
+
 always_inline void
 pds_flow_program_hw_ip6 (pds_flow_params_t *key,
                          int size, u16 *next, u32 *counter)
@@ -224,18 +254,13 @@ pds_flow_program_hw_ip6 (pds_flow_params_t *key,
                 pds_session_id_dealloc(key[i].entry6.session_index);
             }
             if (i % 2) {
-#if 0
-                /*TODO - Delete is resulting in crash, so comment for now */
                 /* Remove last entry as local flow succeeded
                  * but remote entry failed */
-                pds_session_id_dealloc(key[i].entry6.session_index);
-                /*TODO - Delete is resulting in crash, so comment for now */
                 if (PREDICT_FALSE(0 != ftlv6_remove(table,
                                                     &key[i-1].entry6,
                                                     key[i-1].hash))) {
                     counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
                 }
-#endif
             } else {
                 /* Skip remote flow entry as local entry failed */
                 i++;

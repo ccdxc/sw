@@ -40,7 +40,7 @@ public:
         //SDK_SPINLOCK_DESTROY(&slock_);
     }
 
-    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread=FALSE);
+    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t clear_(FTL_MAKE_AFTYPE(apictx) *ctx);
 };
 
@@ -63,7 +63,7 @@ private:
     sdk_ret_t remove_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t find_(FTL_MAKE_AFTYPE(apictx) *ctx,
                     FTL_MAKE_AFTYPE(apictx) **retctx);
-    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread=FALSE);
+    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t clear_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t defragment_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t tail_(FTL_MAKE_AFTYPE(apictx) *ctx,
@@ -98,7 +98,7 @@ private:
     sdk_ret_t get_with_handle_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t find_(FTL_MAKE_AFTYPE(apictx) *ctx,
                     FTL_MAKE_AFTYPE(apictx) **retctx);
-    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread=FALSE);
+    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx);
     sdk_ret_t clear_(FTL_MAKE_AFTYPE(apictx) *ctx);
     void lock_(FTL_MAKE_AFTYPE(apictx) *ctx);
     void unlock_(FTL_MAKE_AFTYPE(apictx) *ctx);

@@ -176,6 +176,10 @@ typedef struct sdk_table_api_params_ {
     // [Input]
     // Callback data for table iteration
     void *cbdata;
+    // [Input]
+    // Set this to true to force reading h/w state without checking s/w state,
+    // valid for HASH tables only.
+    bool force_hwread;
 } sdk_table_api_params_t;
 
 typedef struct sdk_table_api_stats_ {

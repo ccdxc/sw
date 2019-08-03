@@ -347,10 +347,10 @@ done:
 // ftl_hint_table iterate_: Iterate entries from hint table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(hint_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
+FTL_MAKE_AFTYPE(hint_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     // Initialize the context
     auto hctx = ctxnew_(ctx);
-    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(hctx, force_hwread);
+    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(hctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "hint table iterate r:%d", ret);
 done:
     return SDK_RET_OK;

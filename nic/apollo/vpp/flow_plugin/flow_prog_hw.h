@@ -38,10 +38,15 @@ void ftlv4_delete(ftlv4 *obj);
 
 int ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail);
 
-void ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len, bool force_hwread);
+void ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len);
 
 int ftlv4_clear(ftlv4 *obj, bool clear_global_state,
                 bool clear_thread_local_state);
+
+uint64_t ftlv4_get_flow_count(ftlv4 *obj);
+
+void ftlv4_dump_stats_summary(ftlv4 **obj_arr, uint32_t obj_count,
+                              char *buf, int max_len);
 
 ftlv6 * ftlv6_create(void *key2str,
                      void *appdata2str,
@@ -55,10 +60,15 @@ void ftlv6_delete(ftlv6 *obj);
 
 int ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail);
 
-void ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len, bool force_hwread);
+void ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len);
 
 int ftlv6_clear(ftlv6 *obj, bool clear_global_state,
                 bool clear_thread_local_state);
+
+uint64_t ftlv6_get_flow_count(ftlv6 *obj);
+
+void ftlv6_dump_stats_summary(ftlv6 **obj_arr, uint32_t obj_count,
+                              char *buf, int max_len);
 
 #ifdef __cplusplus
 }

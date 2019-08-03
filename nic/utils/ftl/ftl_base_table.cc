@@ -32,13 +32,13 @@ FTL_MAKE_AFTYPE(base_table)::destroy_(FTL_MAKE_AFTYPE(base_table) *table) {
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(base_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
+FTL_MAKE_AFTYPE(base_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     uint32_t i = (ctx->is_main()) ? 0 : 1;
 
     ctx->table_id = table_id_;
     for ( ; i < table_size_; i++) {
         ctx->table_index = i;
-        buckets_[i].iterate_(ctx, force_hwread);
+        buckets_[i].iterate_(ctx);
     }
     return SDK_RET_OK;
 }

@@ -44,17 +44,26 @@ public:
             entry_valid);
     }
 
-    void tofile(FILE *fp, int count) {
-        char srcstr[INET6_ADDRSTRLEN], dststr[INET6_ADDRSTRLEN];
-        uint32_t sip, dip;
+    static void keyheader2str(char *buff, uint32_t len) {
+        char *cur = buff;
+        cur += snprintf(cur, len, "%16s\t%16s\t%5s\t%5s\t%3s\t%4s\t%8s\n",
+                        "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic", "Session");
+        snprintf(cur, buff + len - cur, "%16s\t%16s\t%5s\t%5s\t%3s\t%4s\t%8s\n",
+                 "-----", "-----", "-----", "-------", "-------", "-----", "----");
+        return;
+    }
 
-        sip = htonl(src);
-        dip = htonl(dst);
-        inet_ntop(AF_INET, &sip, srcstr, INET_ADDRSTRLEN);
-        inet_ntop(AF_INET, &dip, dststr, INET_ADDRSTRLEN);
-        fprintf(fp, "%8d\t%16s\t%16s\t%5u\t%5u\t%3u\t%4u\n", count,
-                srcstr, dststr, sport, dport,
-                proto, lkp_id);
+    void key2str(char *buff, uint32_t len) {
+         char srcstr[INET6_ADDRSTRLEN], dststr[INET6_ADDRSTRLEN];
+         uint32_t sip, dip;
+
+         sip = htonl(src);
+         dip = htonl(dst);
+         inet_ntop(AF_INET, &sip, srcstr, INET_ADDRSTRLEN);
+         inet_ntop(AF_INET, &dip, dststr, INET_ADDRSTRLEN);
+         snprintf(buff, len, "%16s\t%16s\t%5u\t%5u\t%3u\t%4u\t%8u\n",
+                 srcstr, dststr, sport, dport,
+                 proto, lkp_id, session_index);
     }
 
     void clear_hints() {

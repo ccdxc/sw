@@ -42,6 +42,8 @@ typedef char* (*appdata2str_t)(void *data);
 
 extern "C" {
 
+#define FTL_ENTRY_STR_MAX   2048
+
 p4pd_table_properties_t g_session_tbl_ctx;
 
 int
@@ -162,8 +164,7 @@ ftl_print_stats(sdk_table_api_stats_t *api_stats,
                     "Get %u, Get_fail %u\n"
                     "Reserve %u, reserve_fail %u\n"
                     "Release %u, Release_fail %u\n"
-                    "Tbl_insert %u, Tbl_remove %u, Tbl_read %u, Tbl_write %u\n"
-                    "Current HW Entries %u\n",
+                    "Tbl_insert %u, Tbl_remove %u, Tbl_read %u, Tbl_write %u\n",
                     api_stats->insert,
                     api_stats->insert_duplicate,
                     api_stats->insert_fail,
@@ -180,11 +181,47 @@ ftl_print_stats(sdk_table_api_stats_t *api_stats,
                     api_stats->release,
                     api_stats->release_fail,
                     table_stats->insert, table_stats->remove,
-                    table_stats->read, table_stats->write, table_stats->entries);
-    for (int i= 0; i < 8; i++) {
+                    table_stats->read, table_stats->write);
+    for (int i= 0; i < SDK_TABLE_MAX_RECIRC; i++) {
         cur += snprintf(cur, buf + max_len - cur,
                         "Tbl_lvl %u, Tbl_insert %u, Tbl_remove %u\n",
                         i, table_stats->insert_lvl[i], table_stats->remove_lvl[i]);
+    }
+}
+
+void
+ftl_aggregate_api_stats(sdk_table_api_stats_t *api_stat1,
+                        sdk_table_api_stats_t *api_stat2)
+{
+    api_stat1->insert += api_stat2->insert;
+    api_stat1->insert_duplicate += api_stat2->insert_duplicate;
+    api_stat1->insert_fail += api_stat2->insert_fail;
+    api_stat1->insert_recirc_fail += api_stat2->insert_recirc_fail;
+    api_stat1->remove += api_stat2->remove;
+    api_stat1->remove_not_found += api_stat2->remove_not_found;
+    api_stat1->remove_fail += api_stat2->remove_fail;
+    api_stat1->update += api_stat2->update;
+    api_stat1->update_fail += api_stat2->update_fail;
+    api_stat1->get += api_stat2->get;
+    api_stat1->get_fail += api_stat2->get_fail;
+    api_stat1->reserve += api_stat2->reserve;
+    api_stat1->reserve_fail += api_stat2->reserve_fail;
+    api_stat1->release += api_stat2->release;
+    api_stat1->release_fail += api_stat2->release_fail;
+    return;
+}
+
+void
+ftl_aggregate_table_stats(sdk_table_stats_t *table_stat1,
+                          sdk_table_stats_t *table_stat2)
+{
+    table_stat1->insert += table_stat2->insert;
+    table_stat1->remove += table_stat2->remove;
+    table_stat1->read += table_stat2->read;
+    table_stat1->write += table_stat2->write;
+    for (int i= 0; i < SDK_TABLE_MAX_RECIRC; i++) {
+        table_stat1->insert_lvl[i] += table_stat2->insert_lvl[i];
+        table_stat1->remove_lvl[i] += table_stat2->remove_lvl[i];
     }
 }
 
@@ -261,10 +298,13 @@ ftlv4_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 {
     ftlv4_entry_t *hwentry =  (ftlv4_entry_t *) params->entry;
     FILE *fp = (FILE *)params->cbdata;
+    char buf[FTL_ENTRY_STR_MAX];
 
     if (hwentry->entry_valid) {
         ftlv4_entry_count++;
-        hwentry->tofile(fp, ftlv4_entry_count);
+        buf[FTL_ENTRY_STR_MAX - 1] = 0;
+        hwentry->key2str(buf, FTL_ENTRY_STR_MAX - 1);
+        fprintf(fp, "%s", buf);
     }
 }
 
@@ -275,11 +315,15 @@ ftlv4_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
     FILE *fp = (FILE *)params->cbdata;
     uint8_t *entry;
     uint32_t size;
+    char buf[FTL_ENTRY_STR_MAX];
 
     if (hwentry->entry_valid) {
-        ftlv4_dump_hw_entry_iter_cb(params);
+        ftlv4_entry_count++;
+        buf[FTL_ENTRY_STR_MAX - 1] = 0;
+        hwentry->tostr(buf, FTL_ENTRY_STR_MAX - 1);
+        fprintf(fp, "%s", buf);
         session_get_addr(hwentry->session_index, &entry, &size);
-        fprintf(fp, "Session Id - %u\nSession data:\n", hwentry->session_index);
+        fprintf(fp, " Session data: ");
         for (uint32_t i = 0; i < size; i++) {
             fprintf(fp, "%x", entry[i]);
         }
@@ -290,36 +334,40 @@ ftlv4_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
 int
 ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail)
 {
-    if (!detail) {
-        return obj->hwentries_dump(logfile);
-    }
     sdk_ret_t ret;
     sdk_table_api_params_t params = {0};
     FILE *logfp = fopen(logfile, "a");
     int retcode = -1;
+    char buf[FTL_ENTRY_STR_MAX];
 
     if (logfp == NULL) {
         goto end;
     }
-    params.itercb = ftlv4_dump_hw_entry_detail_iter_cb;
+
+    buf[FTL_ENTRY_STR_MAX - 1] = 0;
+
+    params.itercb = detail ?
+                    ftlv4_dump_hw_entry_detail_iter_cb :
+                    ftlv4_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
+    params.force_hwread = true;
     ftlv4_entry_count = 0;
 
-    fprintf(logfp, "*******FTLv4 Table:*******\n");
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "-----", "-----", "-----", "-------", "-------", "-----", "----");
-    ret = obj->iterate(&params, TRUE);
+    if (!detail) {
+        ftlv4_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
+        fprintf(logfp, "%s", buf);
+    }
+
+    ret = obj->iterate(&params);
     if (ret != SDK_RET_OK) {
         retcode = -1;
     } else {
         retcode = ftlv4_entry_count;
     }
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "-----", "-----", "-----", "-------", "-------", "-----", "----");
+
+    if (!detail) {
+        fprintf(logfp, "\n%s", buf);
+    }
     fclose(logfp);
 
 end:
@@ -327,12 +375,67 @@ end:
 }
 
 void
-ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len, bool force_hwread)
+ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len)
 {
     sdk_table_api_stats_t api_stats;
     sdk_table_stats_t table_stats;
 
-    obj->stats_get(&api_stats, &table_stats, force_hwread);
+    obj->stats_get(&api_stats, &table_stats);
+    ftl_print_stats(&api_stats, &table_stats, buf, max_len);
+}
+
+static void
+ftlv4_hw_entry_count_cb(sdk_table_api_params_t *params)
+{
+    ftlv4_entry_t *hwentry =  (ftlv4_entry_t *) params->entry;
+
+    if (hwentry->entry_valid) {
+        uint64_t *count = (uint64_t *)params->cbdata;
+        (*count)++;
+    }
+}
+
+uint64_t
+ftlv4_get_flow_count(ftlv4 *obj)
+{
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    uint64_t count = 0;
+
+    params.itercb = ftlv4_hw_entry_count_cb;
+    params.cbdata = &count;
+    params.force_hwread = true;
+
+    ret = obj->iterate(&params);
+    if (ret != SDK_RET_OK) {
+        count = ~0L;
+    }
+
+    return count;
+}
+
+void
+ftlv4_dump_stats_summary(ftlv4 **obj_arr, uint32_t obj_count,
+                         char *buf, int max_len)
+{
+    sdk_table_api_stats_t api_stats, api_tmp_stats;
+    sdk_table_stats_t table_stats, table_tmp_stats;
+    ftlv4 *obj = NULL;
+
+    if (!obj_count || !obj_arr || !obj_arr[0]) {
+        return;
+    }
+
+    obj = obj_arr[0];
+    obj->stats_get(&api_stats, &table_stats);
+
+    for (uint32_t j = 1; j < obj_count; j++) {
+        obj = obj_arr[j];
+        obj->stats_get(&api_tmp_stats, &table_tmp_stats);
+
+        ftl_aggregate_api_stats(&api_stats, &api_tmp_stats);
+        ftl_aggregate_table_stats(&table_stats, &table_tmp_stats);
+    }
     ftl_print_stats(&api_stats, &table_stats, buf, max_len);
 }
 
@@ -409,10 +512,13 @@ ftlv6_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 {
     ftlv6_entry_t *hwentry =  (ftlv6_entry_t *) params->entry;
     FILE *fp = (FILE *)params->cbdata;
+    char buf[FTL_ENTRY_STR_MAX];
 
     if (hwentry->entry_valid) {
         ftlv6_entry_count++;
-        hwentry->tofile(fp, ftlv6_entry_count);
+        buf[FTL_ENTRY_STR_MAX - 1] = 0;
+        hwentry->key2str(buf, FTL_ENTRY_STR_MAX - 1);
+        fprintf(fp, "%s", buf);
     }
 }
 
@@ -423,11 +529,15 @@ ftlv6_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
     FILE *fp = (FILE *)params->cbdata;
     uint8_t *entry;
     uint32_t size;
+    char buf[FTL_ENTRY_STR_MAX];
 
     if (hwentry->entry_valid) {
-        ftlv6_dump_hw_entry_iter_cb(params);
+        ftlv6_entry_count++;
+        buf[FTL_ENTRY_STR_MAX - 1] = 0;
+        hwentry->tostr(buf, FTL_ENTRY_STR_MAX - 1);
+        fprintf(fp, "%s", buf);
         session_get_addr(hwentry->session_index, &entry, &size);
-        fprintf(fp, "Session Id - %u\nSession data:\n", hwentry->session_index);
+        fprintf(fp, " Session data: ");
         for (uint32_t i = 0; i < size; i++) {
             fprintf(fp, "%x", entry[i]);
         }
@@ -438,49 +548,104 @@ ftlv6_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
 int
 ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail)
 {
-    if (!detail) {
-        return obj->hwentries_dump(logfile);
-    }
     sdk_ret_t ret;
     sdk_table_api_params_t params = {0};
     FILE *logfp = fopen(logfile, "a");
     int retcode = -1;
+    char buf[FTL_ENTRY_STR_MAX];
 
     if (logfp == NULL) {
         goto end;
     }
-    params.itercb = ftlv6_dump_hw_entry_detail_iter_cb;
+
+    buf[FTL_ENTRY_STR_MAX - 1] = 0;
+
+    params.itercb = detail ?
+                    ftlv6_dump_hw_entry_detail_iter_cb :
+                    ftlv6_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
+    params.force_hwread = true;
     ftlv6_entry_count = 0;
 
-    fprintf(logfp, "*******FTLv6 Table:*******\n");
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "-----", "-----", "-----", "-------", "-------", "-----", "----");
-    ret = obj->iterate(&params, TRUE);
+    ftlv6_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
+    fprintf(logfp, "%s", buf);
+
+    ret = obj->iterate(&params);
     if (ret != SDK_RET_OK) {
         retcode = -1;
     } else {
         retcode = ftlv6_entry_count;
     }
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
-    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
-            "-----", "-----", "-----", "-------", "-------", "-----", "----");
+
+    fprintf(logfp, "\n%s", buf);
     fclose(logfp);
 
 end:
     return retcode;
 }
 
+static void
+ftlv6_hw_entry_count_cb(sdk_table_api_params_t *params)
+{
+    ftlv6_entry_t *hwentry =  (ftlv6_entry_t *) params->entry;
+
+    if (hwentry->entry_valid) {
+        uint64_t *count = (uint64_t *)params->cbdata;
+        (*count)++;
+    }
+}
+
+uint64_t
+ftlv6_get_flow_count(ftlv6 *obj)
+{
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    uint64_t count = 0;
+
+    params.itercb = ftlv6_hw_entry_count_cb;
+    params.cbdata = &count;
+    params.force_hwread = true;
+
+    ret = obj->iterate(&params);
+    if (ret != SDK_RET_OK) {
+        count = ~0L;
+    }
+
+    return count;
+}
+
 void
-ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len, bool force_hwread)
+ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len)
 {
     sdk_table_api_stats_t api_stats;
     sdk_table_stats_t table_stats;
 
-    obj->stats_get(&api_stats, &table_stats, force_hwread);
+    obj->stats_get(&api_stats, &table_stats);
+    ftl_print_stats(&api_stats, &table_stats, buf, max_len);
+}
+
+void
+ftlv6_dump_stats_summary(ftlv6 **obj_arr, uint32_t obj_count,
+                         char *buf, int max_len)
+{
+    sdk_table_api_stats_t api_stats, api_tmp_stats;
+    sdk_table_stats_t table_stats, table_tmp_stats;
+    ftlv6 *obj = NULL;
+
+    if (!obj_count || !obj_arr || !obj_arr[0]) {
+        return;
+    }
+
+    obj = obj_arr[0];
+    obj->stats_get(&api_stats, &table_stats);
+
+    for (uint32_t j = 1; j < obj_count; j++) {
+        obj = obj_arr[j];
+        obj->stats_get(&api_tmp_stats, &table_tmp_stats);
+
+        ftl_aggregate_api_stats(&api_stats, &api_tmp_stats);
+        ftl_aggregate_table_stats(&table_stats, &table_tmp_stats);
+    }
     ftl_print_stats(&api_stats, &table_stats, buf, max_len);
 }
 

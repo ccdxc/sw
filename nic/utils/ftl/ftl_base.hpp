@@ -41,12 +41,10 @@ public:
     sdk_ret_t remove(sdk_table_api_params_t *params);
     sdk_ret_t get(sdk_table_api_params_t *params);
     sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
-                        sdk_table_stats_t *table_stats,
-                        bool force_hwread=FALSE);
-    sdk_ret_t iterate(sdk_table_api_params_t *params, bool force_hwread=FALSE);
+                        sdk_table_stats_t *table_stats);
+    sdk_ret_t iterate(sdk_table_api_params_t *params);
     sdk_ret_t clear(bool clear_global_state, bool clear_thread_local_state);
-    void stats_dump(void);
-    int hwentries_dump(char *fname);
+    sdk_ret_t clear_stats(void);
 };
 
 }   // namespace table

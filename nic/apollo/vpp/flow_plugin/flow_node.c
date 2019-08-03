@@ -469,12 +469,18 @@ format_pds_flow_prog_trace (u8 * s, va_list * args)
     CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
     flow_prog_trace_t *t = va_arg (*args, flow_prog_trace_t *);
 
-    s = format (s, "src[%U], dst[%U], IP_Proto[%U], src_port[%d], "
-            "dst_port[%d]", format_ip46_address, &t->src, IP46_TYPE_ANY,
-            format_ip46_address, &t->dst, IP46_TYPE_ANY,
-            format_ip_protocol, t->protocol,
-            clib_net_to_host_u16(t->src_port),
-            clib_net_to_host_u16(t->dst_port));
+    s = format (s, "iFlow: src[%U], dst[%U], IP_Proto[%U], src_port[%d], "
+            "dst_port[%d]\n", format_ip46_address, &t->isrc, IP46_TYPE_ANY,
+            format_ip46_address, &t->idst, IP46_TYPE_ANY,
+            format_ip_protocol, t->iprotocol,
+            clib_net_to_host_u16(t->isrc_port),
+            clib_net_to_host_u16(t->idst_port));
+    s = format (s, "rFlow: src[%U], dst[%U], IP_Proto[%U], src_port[%d], "
+                "dst_port[%d]", format_ip46_address, &t->rsrc, IP46_TYPE_ANY,
+                format_ip46_address, &t->rdst, IP46_TYPE_ANY,
+                format_ip_protocol, t->rprotocol,
+                clib_net_to_host_u16(t->rsrc_port),
+                clib_net_to_host_u16(t->rdst_port));
     return s;
 }
 
@@ -495,6 +501,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
         flow_prog_trace_t *t0, *t1;
         udp_header_t *udp0, *udp1;
         int offset0, offset1;
+        void *data0, *data1;
 
         /* Prefetch next iteration. */
         vlib_prefetch_buffer_with_index (vm, from[2], LOAD);
@@ -508,82 +515,18 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
 
         offset0 = pds_flow_prog_get_next_offset(b0);
         offset1 = pds_flow_prog_get_next_offset(b1);
+        data0 = vlib_buffer_get_current(b0) - offset0;
+        data1 = vlib_buffer_get_current(b1) - offset1;
 
         if (b0->flags & VLIB_BUFFER_IS_TRACED)
         {
             t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-            if (is_ip4) {
-                ip4_header_t *ip40;
-
-                ip40 = vlib_buffer_get_current(b0);
-                ip40 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        offset0);
-                ip46_address_set_ip4(&t0->src, &ip40->src_address);
-                ip46_address_set_ip4(&t0->dst, &ip40->dst_address);
-                t0->protocol = ip40->protocol;
-                if (PREDICT_TRUE(((t0->protocol == IP_PROTOCOL_TCP)
-                        || (t0->protocol == IP_PROTOCOL_UDP)))) {
-                    udp0 = (udp_header_t *) (((u8 *) ip40) +
-                            (vnet_buffer (b0)->l4_hdr_offset -
-                                    vnet_buffer (b0)->l3_hdr_offset));
-                    t0->src_port = udp0->src_port;
-                    t0->dst_port = udp0->dst_port;
-                }
-            } else {
-
-                ip6_header_t *ip60;
-
-                ip60 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        offset0);
-                ip46_address_set_ip6(&t0->src, &ip60->src_address);
-                ip46_address_set_ip6(&t0->dst, &ip60->dst_address);
-                t0->protocol = ip60->protocol;
-                if (PREDICT_TRUE(((t0->protocol == IP_PROTOCOL_TCP)
-                        || (t0->protocol == IP_PROTOCOL_UDP)))) {
-                    udp0 = (udp_header_t *) (((u8 *) ip60) +
-                            (vnet_buffer (b0)->l4_hdr_offset -
-                                    vnet_buffer (b0)->l3_hdr_offset));
-                    t0->src_port = udp0->src_port;
-                    t0->dst_port = udp0->dst_port;
-                }
-            }
+            pds_flow_prog_populate_trace(b0, t0, data0, is_ip4);
         }
         if (b1->flags & VLIB_BUFFER_IS_TRACED)
         {
             t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
-            if (is_ip4) {
-                ip4_header_t *ip41;
-
-                ip41 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b1)) +
-                        offset1);
-                ip46_address_set_ip4(&t1->src, &ip41->src_address);
-                ip46_address_set_ip4(&t1->dst, &ip41->dst_address);
-                t1->protocol = ip41->protocol;
-                if (PREDICT_TRUE(((t1->protocol == IP_PROTOCOL_TCP)
-                        || (t1->protocol == IP_PROTOCOL_UDP)))) {
-                    udp1 = (udp_header_t *) (((u8 *) ip41) +
-                            (vnet_buffer (b1)->l4_hdr_offset -
-                                    vnet_buffer (b1)->l3_hdr_offset));
-                    t1->src_port = udp1->src_port;
-                    t1->dst_port = udp1->dst_port;
-                }
-            } else {
-                ip6_header_t *ip61;
-
-                ip61 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b1)) +
-                        offset1);
-                ip46_address_set_ip6(&t1->src, &ip61->src_address);
-                ip46_address_set_ip6(&t1->dst, &ip61->dst_address);
-                t1->protocol = ip61->protocol;
-                if (PREDICT_TRUE(((t1->protocol == IP_PROTOCOL_TCP)
-                        || (t1->protocol == IP_PROTOCOL_UDP)))) {
-                    udp1 = (udp_header_t *) (((u8 *) ip61) +
-                            (vnet_buffer (b1)->l4_hdr_offset -
-                                    vnet_buffer (b1)->l3_hdr_offset));
-                    t1->src_port = udp1->src_port;
-                    t1->dst_port = udp1->dst_port;
-                }
-            }
+            pds_flow_prog_populate_trace(b1, t1, data1, is_ip4);
         }
         from += 2;
         n_left -= 2;
@@ -596,48 +539,18 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
         flow_prog_trace_t *t0;
         udp_header_t *udp0;
         int offset0;
+        void *data0;
 
         bi0 = from[0];
 
         b0 = vlib_get_buffer (vm, bi0);
         offset0 = pds_flow_prog_get_next_offset(b0);
+        data0 = vlib_buffer_get_current(b0) - offset0;
 
         if (b0->flags & VLIB_BUFFER_IS_TRACED)
         {
             t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-            if (is_ip4) {
-                ip4_header_t *ip40;
-
-                ip40 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        offset0);
-                ip46_address_set_ip4(&t0->src, &ip40->src_address);
-                ip46_address_set_ip4(&t0->dst, &ip40->dst_address);
-                t0->protocol = ip40->protocol;
-                if (PREDICT_TRUE(((t0->protocol == IP_PROTOCOL_TCP)
-                        || (t0->protocol == IP_PROTOCOL_UDP)))) {
-                    udp0 = (udp_header_t *) (((u8 *) ip40) +
-                            (vnet_buffer (b0)->l4_hdr_offset -
-                                    vnet_buffer (b0)->l3_hdr_offset));
-                    t0->src_port = udp0->src_port;
-                    t0->dst_port = udp0->dst_port;
-                }
-            } else {
-                ip6_header_t *ip60;
-
-                ip60 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        offset0);
-                ip46_address_set_ip6(&t0->src, &ip60->src_address);
-                ip46_address_set_ip6(&t0->dst, &ip60->dst_address);
-                t0->protocol = ip60->protocol;
-                if (PREDICT_TRUE(((t0->protocol == IP_PROTOCOL_TCP)
-                        || (t0->protocol == IP_PROTOCOL_UDP)))) {
-                    udp0 = (udp_header_t *) (((u8 *) ip60) +
-                            (vnet_buffer (b0)->l4_hdr_offset -
-                                    vnet_buffer (b0)->l3_hdr_offset));
-                    t0->src_port = udp0->src_port;
-                    t0->dst_port = udp0->dst_port;
-                }
-            }
+            pds_flow_prog_populate_trace(b0, t0, data0, is_ip4);
         }
         from += 1;
         n_left -= 1;
@@ -690,8 +603,8 @@ pds_flow_prog (vlib_main_t * vm,
             pds_flow_extract_prog_args_x1(b[1], params, &size, session_id1, is_ip4);
             offset0 = pds_flow_prog_get_next_offset(b[0]);
             offset1 = pds_flow_prog_get_next_offset(b[1]);
-            vlib_buffer_advance(b[0], (-offset0));
-            vlib_buffer_advance(b[1], (-offset1));
+            vlib_buffer_advance(b[0], offset0);
+            vlib_buffer_advance(b[1], offset1);
 
             b += 2;
             n_left_from -= 2;
@@ -704,7 +617,7 @@ pds_flow_prog (vlib_main_t * vm,
             session_id0 = pds_session_id_alloc();
             pds_flow_extract_prog_args_x1(b[0], params, &size, session_id0, is_ip4);
             offset0 = pds_flow_prog_get_next_offset(b[0]);
-            vlib_buffer_advance(b[0], (-offset0));
+            vlib_buffer_advance(b[0], offset0);
 
             b += 1;
             n_left_from -= 1;
@@ -737,7 +650,7 @@ pds_ip6_flow_prog (vlib_main_t * vm,
                    vlib_node_runtime_t * node,
                    vlib_frame_t * from_frame)
 {
-    return pds_flow_prog(vm, node, from_frame, 1);
+    return pds_flow_prog(vm, node, from_frame, 0);
 }
 
 static char * flow_prog_error_strings[] = {
@@ -797,7 +710,7 @@ pds_tunnel_ip6_flow_prog (vlib_main_t * vm,
                           vlib_node_runtime_t * node,
                           vlib_frame_t * from_frame)
 {
-    return pds_flow_prog(vm, node, from_frame, 1);
+    return pds_flow_prog(vm, node, from_frame, 0);
 }
 
 VLIB_REGISTER_NODE (pds_tun_ip6_flow_prog_node) = {
@@ -975,11 +888,8 @@ pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
     vnet_buffer (p1)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr1->local_vnic_tag);
 
-    /* Move to IPv4/IPv6 header */
-    vlib_buffer_advance(p0, (VPP_P4_TO_ARM_HDR_SZ +
-        (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
-    vlib_buffer_advance(p1, (VPP_P4_TO_ARM_HDR_SZ +
-        (vnet_buffer(p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset)));
+    vlib_buffer_advance(p0, pds_p4_cpu_node_get_advance_offset(p0));
+    vlib_buffer_advance(p1, pds_p4_cpu_node_get_advance_offset(p1));
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
     if ((flags0 == flags1)) {
@@ -1058,9 +968,7 @@ pds_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u32 *next, u32 *counter)
 
     vnet_buffer (p)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr->local_vnic_tag);
 
-    /* Move to IPv4/IPv6 header */
-    vlib_buffer_advance(p, (VPP_P4_TO_ARM_HDR_SZ + 
-        (vnet_buffer (p)->l3_hdr_offset - vnet_buffer (p)->l2_hdr_offset)));
+    vlib_buffer_advance(p, pds_p4_cpu_node_get_advance_offset(p));
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
     if ((flags == VPP_CPU_FLAGS_IPV4_1_VALID)) {

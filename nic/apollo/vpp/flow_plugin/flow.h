@@ -11,7 +11,8 @@
 #include <nic/p4/common/defines.h>
 #include "flow_prog_hw.h"
 
-#define MAX_SESSION_INDEX (8 * 1024 * 1024)
+//Session ID is 23 bits and ID 0 is reserved, so Max sessions are (8 * 1024 * 1024) - 2.
+#define MAX_SESSION_INDEX (8388606)
 
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
 
@@ -38,6 +39,7 @@
         _(FLOW_SUCCESS, "Flow programming success" )                \
         _(FLOW_FAILED, "Flow programming failed")                   \
         _(FLOW_DELETE_FAILED, "Flow delete failed")                 \
+        _(SESSION_ID_ALLOC_FAILED, "Session ID alloc failed")       \
 
 #define foreach_fwd_flow_next                                       \
         _(INTF_OUT, "interface-tx" )                                \
@@ -124,9 +126,9 @@ typedef struct fwd_flow_trace_s {
 } fwd_flow_trace_t;
 
 typedef struct flow_prog_trace_s {
-    ip46_address_t src, dst;
-    u16 src_port, dst_port;
-    u8 protocol;
+    ip46_address_t isrc, idst, rsrc, rdst;
+    u16 isrc_port, idst_port, rsrc_port, rdst_port;
+    u8 iprotocol, rprotocol;
 } flow_prog_trace_t;
 
 typedef struct p4cpu_hdr_lookup_trace_s {
@@ -291,7 +293,7 @@ always_inline void pds_session_id_dealloc(u32 ses_id)
     pds_flow_main_t *fm = &pds_flow_main;
             
     pds_flow_prog_lock();
-    pool_put_index(fm->session_index_pool, (ses_id + 1));
+    pool_put_index(fm->session_index_pool, (ses_id - 1));
     pds_flow_prog_unlock();
     return;
 }
@@ -299,16 +301,14 @@ always_inline void pds_session_id_dealloc(u32 ses_id)
 always_inline void pds_session_id_flush(void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-    pds_flow_session_id_thr_local_pool_t *thr_local_pool =
-        fm->session_id_thr_local_pool;
     pds_flow_hw_ctx_t *ctx;
 
     pds_flow_prog_lock();
     pool_flush(ctx, fm->session_index_pool,
           ({
           }));
-    for (u32 i = 0; i < vec_len(thr_local_pool); i++) {
-        thr_local_pool[i].pool_count = -1;
+    for (u32 i = 0; i < vec_len(fm->session_id_thr_local_pool); i++) {
+        fm->session_id_thr_local_pool[i].pool_count = -1;
     }
     pds_flow_prog_unlock();
     return;

@@ -66,7 +66,8 @@ typedef CLIB_PACKED(struct p4_rx_cpu_hdr_s {
 
     uint8_t  assist_info[256];
 
-    session_info_hint_t ses_info;
+    uint8_t  ses_info[64];          //session_info_hint_t
+
 }) p4_rx_cpu_hdr_t;
 
 // Meta sent to P4 for tx packet
