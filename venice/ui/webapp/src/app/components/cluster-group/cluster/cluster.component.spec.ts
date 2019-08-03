@@ -10,6 +10,7 @@ import { Component, DebugElement } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatIconRegistry } from '@angular/material';
 
+
 /**-----
  Venice UI -  imports
  ------------------*/
@@ -36,6 +37,7 @@ import {CertificateComponent} from '@components/cluster-group/cluster/certificat
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { AuthService } from '@app/services/auth.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { ClusterupdateComponent } from './clusterupdate/clusterupdate.component';
 
 @Component({
   template: ''
@@ -51,7 +53,8 @@ describe('ClusterComponent', () => {
       declarations: [
         ClusterComponent,
         DummyComponent,
-        CertificateComponent
+        CertificateComponent,
+        ClusterupdateComponent
       ],
       imports: [
         RouterTestingModule.withRoutes([

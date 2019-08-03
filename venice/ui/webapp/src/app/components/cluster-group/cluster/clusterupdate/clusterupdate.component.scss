@@ -1,0 +1,68 @@
+@import 'src/global-mixins';
+
+body {
+  @include primary-font()
+}
+
+.clusterupdate-ip-title,
+.clusterupdate-quorum-title {
+  font-size: 15px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.clusterupdate-prime-override {
+
+  .ui-multiselect-filter-container .ui-inputtext {
+    padding: 2px !important;
+  }
+
+  .ui-multiselect-filter-icon {
+    padding-bottom: 1.5px !important;
+  }
+
+  .ui-dropdown-filter {
+    padding: 2px !important;
+  }
+
+  .ui-multiselect-label {
+    margin-bottom: 0px !important;
+  }
+
+  .ui-multiselect-item label {
+    margin-bottom: 0px !important;
+  }
+}
+
+.clusterupdate-leftmargin {
+  margin-left: 10px;
+}
+
+.clusterupdate-heading {
+  margin-top: -24px;
+  margin-left: -24px;
+  margin-right: -24px;
+}
+
+
+.clusterupdate-multiselect {
+  width: 200px !important;
+  padding: 0px !important;
+}
+
+.clusterupdate-input {
+  width: 250px;
+  height: 31px;
+  padding: 6px !important;
+  border-top: 0px;
+  border-left: 0px;
+  border-right: 0px;
+}
+
+.clusterupdate-button {
+  padding: 5px 10px;
+}
+
+.clusterupdate-toggle {
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgba(139, 195, 74, 0.5), rgb(139, 195, 74));
+}

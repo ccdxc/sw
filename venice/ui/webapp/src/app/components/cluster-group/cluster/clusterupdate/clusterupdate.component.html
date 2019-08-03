@@ -1,0 +1,87 @@
+<div fxFlex="auto" fxLayout="column" class="clusterupdate-outer">
+  <app-modalheader modal-header title="Edit Cluster Details" [icon]="editicon"
+                   class="clusterupdate-heading"
+                   subtitle="Update the quorum nodes, NTP servers, virtual IP, and auto admit NICs"
+                   (cancelClick)="onNoClick()">
+  </app-modalheader>
+  <div fxFlex="80%" fxLayout="row" [formGroup]="form">
+    <div fxFlex="nogrow" fxLayout="column" class="clusterupdate-leftmargin">
+      <div fxFlex formGroupName="spec" fxLayout="column">
+        <div class="clusterupdate-quorum-title">Quorum Nodes:</div>
+        <p-multiSelect formControlName="quorum-nodes"
+                       class="clusterupdate-multiselect"
+                       styleClass="clusterupdate-prime-override"
+                       [options]="nodeOptions"
+                       placeholder="Choose nodes.." (onChange)="updateQuorumNodes()">
+        </p-multiSelect>
+        <div fxFlex="15px"></div>
+        <div style="overflow-x:hidden; overflow-y:auto; height: 80px;">
+          <div *ngFor="let node of quorumnodes ; let index = index ">
+            <div fxFlex fxLayout="row">
+              <div>{{node}}</div>
+              <div fxFlex="10px"></div>
+              <mat-icon [matTooltip]="'Remove this node from quorum nodes list'"
+                        fxFlex="nogrow" (click)="onDeleteQuorum(node,index)">
+                delete
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div fxFlex fxLayout="column">
+        <div class="clusterupdate-quorum-title">NTP Servers:</div>
+        <div fxFlex="nogrow" fxLayout="row">
+          <input
+                 spellcheck="false" placeholder="Enter NTP Server" pInputText
+                 class="clusterupdate-input" [formControl]="addNTP">
+          <div fxFlex="7px"></div>
+          <button (click)="addtoNTPServers()" class="global-button-primary"
+                  [ngClass]="determineAddButtonClass()">ADD</button>
+        </div>
+        <div fxFlex="15px"></div>
+        <div style="overflow-x:hidden; overflow-y:auto; height: 80px;">
+          <div *ngFor="let server of ntp ; let index = index">
+            <div fxFlex fxLayout="row">
+              <div>{{server}}</div>
+              <div fxFlex="10px"></div>
+              <mat-icon [matTooltip]="'Remove this server from NTP servers list'"
+                        fxFlex="nogrow" (click)="onDeleteNTPServer(server,index)">
+                delete
+              </mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div fxFlex="150px"></div>
+    <div fxLayout="column" formGroupName="spec">
+      <div fxFlex="nogrow">
+        <div class="clusterupdate-ip-title">Virtual IP:</div>
+        <input
+               spellcheck="false" formControlName="virtual-ip" placeholder="Edit Virtual IP.."
+               pInputText class="clusterupdate-input">
+      </div>
+      <div fxFlex="20px"></div>
+      <div fxFlex="nogrow" fxLayout="column">
+        <div class="cluterupdate-quorum-title">Auto Admit NICs: </div>
+        <div fxFlex="10px"></div>
+        <mat-slide-toggle checked="false" formControlName="auto-admit-nics"
+                          class="clusterupdate-toggle">
+        </mat-slide-toggle>
+      </div>
+    </div>
+  </div>
+  <div fxFlex="10px"></div>
+  <div fxFlex="nogrow"
+       fxLayout="row" fxLayoutAlign="end start">
+    <div fxFlex="nogrow">
+      <button (click)="saveChanges()" [ngClass]="validateInputs()"
+              class="global-button-primary clusterupdate-button ">COMMIT CHANGES</button>
+    </div>
+    <div fxFlex="10px"></div>
+    <div fxFlex="nogrow">
+      <button (click)="onNoClick()"
+              class="global-button-neutral clusterupdate-button">CANCEL</button>
+    </div>
+  </div>
+</div>

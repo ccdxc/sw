@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { MatDialog } from '@angular/material';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
@@ -16,6 +17,7 @@ import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/
 import {Animations} from '@app/animations';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ClusterupdateComponent } from './clusterupdate/clusterupdate.component';
 
 @Component({
   selector: 'app-cluster',
@@ -74,7 +76,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   avgData: ITelemetry_queryMetricsQueryResult;
   avgDayData: ITelemetry_queryMetricsQueryResult;
   maxObjData: ITelemetry_queryMetricsQueryResult;
-
+  dialogRef: any;
   telemetryKind: string = 'Node';
 
   constructor(
@@ -82,6 +84,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     protected uiconfigService: UIConfigsService,
     protected _controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
+    protected dialog: MatDialog,
   ) {
     super(_controllerService, uiconfigService);
   }
@@ -182,6 +185,21 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     );
     this.subscriptions.push(sub);
   }
+
+
+
+  showUpdateCluster() {
+    this.dialogRef = this.dialog.open(ClusterupdateComponent, {
+      width: '800px',
+      height: '500px',
+      hasBackdrop : true,
+      data : {
+        nodes : this.nodes,
+        cluster : this.cluster
+      }
+    });
+  }
+
 
   timeSeriesQuery(): MetricsPollingQuery {
     return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind);
