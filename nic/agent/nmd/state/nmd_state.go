@@ -1332,8 +1332,10 @@ func (n *NMD) UpdateCurrentManagementMode() {
 func (n *NMD) PersistDeviceSpec(fwdMode string, featureProfile device.FeatureProfile, defaultPortAdmin string, mgmtIfMAC uint64) (err error) {
 	log.Infof("Setting forwarding mode to : %v", fwdMode)
 	log.Infof("Setting default port admin to : %v", defaultPortAdmin)
+	mode, _ := device.ForwardingMode_value[fwdMode]
 	deviceSpec := device.SystemSpec{
-		FwdMode:        fwdMode,
+		// FwdMode:        fwdMode,
+		FwdMode:        device.ForwardingMode(mode),
 		FeatureProfile: featureProfile,
 		PortAdminState: defaultPortAdmin,
 		MgmtIfMac:      mgmtIfMAC,
