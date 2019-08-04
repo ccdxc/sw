@@ -63,11 +63,7 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	if err != nil {
 		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
 	}
-
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if nb.Status.NatBindingID == 0 {
-		nb.Status.NatBindingID, err = na.Store.GetNextID(types.NatBindingID)
-	}
+	nb.Status.NatBindingID, err = na.Store.GetNextID(types.NatBindingID)
 
 	if err != nil {
 		log.Errorf("Could not allocate nat binding id. {%+v}", err)

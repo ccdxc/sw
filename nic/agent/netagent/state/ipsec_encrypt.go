@@ -56,10 +56,7 @@ func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) 
 		return fmt.Errorf("ipsec sa encrypt protocol should be ESP")
 	}
 
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if ipSecSAEncrypt.Status.IPSecSAEncryptID == 0 {
-		ipSecSAEncrypt.Status.IPSecSAEncryptID, err = na.Store.GetNextID(types.IPSecSAEncryptID)
-	}
+	ipSecSAEncrypt.Status.IPSecSAEncryptID, err = na.Store.GetNextID(types.IPSecSAEncryptID)
 
 	if err != nil {
 		log.Errorf("Could not allocate IPSec encrypt SA id. {%+v}", err)

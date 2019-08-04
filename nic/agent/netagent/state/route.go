@@ -45,11 +45,7 @@ func (na *Nagent) CreateRoute(rt *netproto.Route) error {
 		return err
 	}
 
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if rt.Status.RouteID == 0 {
-		rt.Status.RouteID, err = na.Store.GetNextID(types.RouteID)
-	}
-
+	rt.Status.RouteID, err = na.Store.GetNextID(types.RouteID)
 	if err != nil {
 		log.Errorf("Could not allocate route id. {%+v}", err)
 		return err

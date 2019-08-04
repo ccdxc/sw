@@ -49,10 +49,7 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	for _, rule := range np.Spec.Rules {
-		// Allocate ID only on first object creates and use existing ones during config replay
-		if rule.ID == 0 {
-			rule.ID, err = na.Store.GetNextID(types.NatRuleID)
-		}
+		rule.ID, err = na.Store.GetNextID(types.NatRuleID)
 		natPool, err := na.findNatPool(np.ObjectMeta, rule.NatPool)
 		if err != nil {
 			log.Errorf("could not find nat pool for the rule. Rule: {%v}. Err: %v", rule, err)
@@ -74,10 +71,7 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 		}
 	}
 
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if np.Status.NatPolicyID == 0 {
-		np.Status.NatPolicyID, err = na.Store.GetNextID(types.NatPolicyID)
-	}
+	np.Status.NatPolicyID, err = na.Store.GetNextID(types.NatPolicyID)
 
 	if err != nil {
 		log.Errorf("Could not allocate nat policy id. {%+v}", err)

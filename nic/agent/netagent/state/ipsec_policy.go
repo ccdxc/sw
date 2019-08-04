@@ -103,10 +103,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 		}
 	}
 
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if ipSec.Status.IPSecPolicyID == 0 {
-		ipSec.Status.IPSecPolicyID, err = na.Store.GetNextID(types.IPSecPolicyID)
-	}
+	ipSec.Status.IPSecPolicyID, err = na.Store.GetNextID(types.IPSecPolicyID)
 
 	if err != nil {
 		log.Errorf("Could not allocate IPSec policy id. {%+v}", err)

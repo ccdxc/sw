@@ -142,7 +142,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			log.Errorf("Error creating interface. Err: %v", err)
 			return nil, err
 		}
-		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return nil, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
@@ -171,7 +171,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			log.Errorf("Error creating endpoint. Err: %v", err)
 			return nil, err
 		}
-		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return nil, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
@@ -486,7 +486,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 			log.Errorf("Error creating endpoint. Err: %v", err)
 			return err
 		}
-		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}

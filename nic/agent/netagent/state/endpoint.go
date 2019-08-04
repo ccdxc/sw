@@ -146,20 +146,18 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 			return err
 		}
 
-		// Allocate ID only on first object creates and use existing ones during config replay
-		if ep.Status.EnicID == 0 {
-			enicID, err := na.Store.GetNextID(types.InterfaceID)
-			if err != nil {
-				log.Errorf("Could not allocate enic for the local EP. %v", err)
-				return err
-			}
-			// Ensure the ID is non-overlapping with existing hw interfaces. Allcate IDs from 10000 onwards.
-			// Since HAL has some predefined interfaces which overlaps at 1K interfaces
-			enicID = enicID + types.EnicOffset
-			// save the enic id in the ep status for deletions
-			ep.Status.EnicID = enicID
+		// Allocate an ENIC ID. ToDo capture the allocated enic ID in status to ensure that this can be deleted in the datapath
+		enicID, err := na.Store.GetNextID(types.InterfaceID)
+		if err != nil {
+			log.Errorf("Could not allocate enic for the local EP. %v", err)
+			return err
 		}
-		_, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, ep.Status.EnicID, vrf)
+		// Ensure the ID is non-overlapping with existing hw interfaces. Allcate IDs from 10000 onwards.
+		// Since HAL has some predefined interfaces which overlaps at 1K interfaces
+		enicID = enicID + types.EnicOffset
+		// save the enic id in the ep status for deletions
+		ep.Status.EnicID = enicID
+		_, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, vrf)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err

@@ -126,13 +126,23 @@ func NewNMD(pipeline Pipeline,
 		ObjectMeta: api.ObjectMeta{
 			Name: fru.MacStr,
 		},
-		InProgressOp: roprotos.SmartNICOpSpec{
-			Op: roprotos.SmartNICOp_SmartNICNoOp,
+		Status: nmd.RolloutStatus{
+			InProgressOp: &roprotos.SmartNICOpSpec{
+				Op: roprotos.SmartNICOp_SmartNICNoOp,
+			},
+		},
+	}
+	tempRO := nmd.NaplesRollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "NaplesRollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: fru.MacStr,
 		},
 	}
 
 	usePersisted := false
-	roObj, err := emdb.Read(&ro)
+	roObj, err := emdb.Read(&tempRO) // this function also modifies the parameter object. hence passing temp object
 
 	if roObj != nil && err == nil { // Rollout object found in DB
 		usePersisted = true

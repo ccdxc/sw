@@ -45,11 +45,7 @@ func (na *Nagent) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
 		return err
 	}
 
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if tcp.Status.TCPProxyPolicyID == 0 {
-		tcp.Status.TCPProxyPolicyID, err = na.Store.GetNextID(types.TCPProxyPolicyID)
-	}
-
+	tcp.Status.TCPProxyPolicyID, err = na.Store.GetNextID(types.TCPProxyPolicyID)
 	if err != nil {
 		log.Errorf("Could not allocate tcp proxy policy id. {%+v}", err)
 		return err

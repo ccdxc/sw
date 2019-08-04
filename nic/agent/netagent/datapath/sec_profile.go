@@ -230,7 +230,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, att
 			log.Errorf("Error creating security profile. Err: %v", err)
 			return err
 		}
-		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}

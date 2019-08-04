@@ -103,7 +103,13 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 				log.Errorf("Error creating network. Err: %v", err)
 				return err
 			}
-			if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+			switch resp.Response[0].ApiStatus {
+			case halproto.ApiStatus_API_STATUS_EXISTS_ALREADY:
+				log.Infof("HAL L3 Network exists. Reusing the key.")
+				break
+			case halproto.ApiStatus_API_STATUS_OK:
+				break
+			default:
 				log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 				return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			}

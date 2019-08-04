@@ -92,7 +92,7 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error
 			log.Errorf("Error creating nat pool. Err: %v", err)
 			return err
 		}
-		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
@@ -318,7 +318,7 @@ func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 			log.Errorf("Error creating nat pool. Err: %v", err)
 			return err
 		}
-		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
@@ -529,7 +529,7 @@ func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPo
 			log.Errorf("Error creating nat pool. Err: %v", err)
 			return nb, err
 		}
-		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return nb, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}

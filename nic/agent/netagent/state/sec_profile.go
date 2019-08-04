@@ -58,11 +58,8 @@ func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error
 		attachmentVrfs = append(attachmentVrfs, defaultVrf)
 	}
 
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if profile.Status.SecurityProfileID == 0 {
-		profile.Status.SecurityProfileID, err = na.Store.GetNextID(types.SecurityProfileID)
-		profile.Status.SecurityProfileID += types.SecurityProfileOffset
-	}
+	profile.Status.SecurityProfileID, err = na.Store.GetNextID(types.SecurityProfileID)
+	profile.Status.SecurityProfileID += types.SecurityProfileOffset
 
 	if err != nil {
 		log.Errorf("Could not allocate security profile id. {%+v}", err)

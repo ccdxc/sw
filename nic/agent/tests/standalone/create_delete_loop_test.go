@@ -2,7 +2,6 @@ package standalone
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -18,11 +17,9 @@ import (
 
 var _ = Describe("Agent create delete loop tests", func() {
 	Context("When objets are created and deleted in a loop", func() {
-		agentDB, _ := ioutil.TempFile("/tmp", "")
 		var (
 			lis            netutils.TestListenAddr
 			lisErr         = lis.GetAvailablePort()
-			agentDBName    = agentDB.Name()
 			agentArgs      []string
 			agentBuildArgs []string
 			tenantURL      = fmt.Sprintf("http://%s/api/tenants/", lis.ListenURL.String())
@@ -88,7 +85,7 @@ var _ = Describe("Agent create delete loop tests", func() {
 				Fail(fmt.Sprintf("could not build agent binary, Out: %v Err: %v", out, err))
 			}
 
-			agentArgs = []string{"-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String(), "-agentdb", agentDBName}
+			agentArgs = []string{"-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String()}
 
 			fmt.Println("Agent CLI: ", agentArgs)
 			// start as the agent binary needs to run in the background
@@ -225,7 +222,7 @@ var _ = Describe("Agent create delete loop tests", func() {
 
 		AfterEach(func() {
 			exec.Command("pkill", "netagent").Run()
-			os.Remove(agentDBName)
+			os.Remove("/tmp/naples-netagent.db")
 		})
 	})
 })

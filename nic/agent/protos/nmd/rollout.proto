@@ -22,10 +22,12 @@ message NaplesRollout {
                             (gogoproto.nullable) = false,
                             (gogoproto.jsontag) = "meta,omitempty"];
 
-    repeated protos.SmartNICOpSpec PendingOps = 3 [(gogoproto.nullable) = false, 
-                                                   (gogoproto.jsontag) = "pending,omitempty"];
-    repeated protos.SmartNICOpStatus OpStatus = 4 [(gogoproto.nullable) = false,
-                                                   (gogoproto.jsontag) = "completed,omitempty"];
-    protos.SmartNICOpSpec InProgressOp = 5 [(gogoproto.nullable) = false,
-                                            (gogoproto.jsontag) = "inprogress,omitempty"];
+    // Rollout Status contains the current rollout state of the NIC
+    RolloutStatus Status = 3 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// NaplesStatus contains current status of a Naples I/O subsystem
+message RolloutStatus {
+   protos.SmartNICOpSpec InProgressOp = 1 [(gogoproto.jsontag) = "inprogress,omitempty"];
 }

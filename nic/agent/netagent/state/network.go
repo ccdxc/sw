@@ -61,15 +61,12 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
-	// Allocate ID only on first object creates and use existing ones during config replay
-	if nt.Status.NetworkID == 0 {
-		networkID, err := na.Store.GetNextID(types.NetworkID)
-		if err != nil {
-			log.Errorf("Could not allocate network id. {%+v}", err)
-			return err
-		}
-		nt.Status.NetworkID = networkID + types.NetworkOffset
+	networkID, err := na.Store.GetNextID(types.NetworkID)
+	if err != nil {
+		log.Errorf("Could not allocate network id. {%+v}", err)
+		return err
 	}
+	nt.Status.NetworkID = networkID + types.NetworkOffset
 
 	uplinks := na.getUplinks()
 
