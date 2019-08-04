@@ -67,4 +67,4 @@ fi
 # Temporary dhclient
 ifconfig bond0 down
 kill -9 $(pidof dhclient)
-exec env NAPLES_PIPELINE=apollo /nic/bin/nmd
+exec env TMPDIR=/data NAPLES_PIPELINE=apollo /nic/bin/nmd

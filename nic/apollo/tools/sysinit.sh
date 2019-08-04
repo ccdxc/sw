@@ -40,4 +40,10 @@ if [[ ! -r /var/run/fwupdate.cache ]]; then
     /nic/tools/fwupdate -C
 fi
 
+if [[ -f $NIC_DIR/tools/start-nmd.sh ]]; then
+    echo "Launching nmd..."
+    $NIC_DIR/tools/start-nmd.sh
+    [[ $? -ne 0 ]] && echo "Failed to start nmd!"
+fi
+
 echo "System initialization done ..."
