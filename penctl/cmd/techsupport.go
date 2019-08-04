@@ -338,8 +338,10 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	for _, file := range retS {
 		fmt.Println(file)
-		if strings.HasSuffix(file, "/") || strings.Contains(file, "naples-disruptive-upgrade-tech-support") {
-			continue
+		if !strings.Contains(file, "naples-disruptive-upgrade-tech-support") {
+			if strings.HasSuffix(file, "/") || strings.Contains(file, "tar") {
+				continue
+			}
 		}
 		fmt.Printf(".")
 		copyFileToDest(dataDestDir, "data/", file)
@@ -360,7 +362,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	for _, file = range retS {
-		if strings.HasSuffix(file, "/") {
+		if strings.HasSuffix(file, "/") || strings.Contains(file, "tar") {
 			continue
 		}
 		fmt.Printf(".")

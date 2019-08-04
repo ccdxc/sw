@@ -147,8 +147,9 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 	var mgmtIP string
 
 	var transitionPhase delphiProto.NaplesStatus_Transition
+	naplesConfig := p.DelSrv.Agent.Nmd.GetNaplesConfig()
 
-	switch p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.TransitionPhase {
+	switch naplesConfig.Status.TransitionPhase {
 	case delphiProto.NaplesStatus_DHCP_SENT.String():
 		transitionPhase = delphiProto.NaplesStatus_DHCP_SENT
 	case delphiProto.NaplesStatus_DHCP_DONE.String():
@@ -170,16 +171,16 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 	}
 
 	// For static case write only the IP in mgmt IP and not the subnet
-	if ip, _, err := net.ParseCIDR(p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.IPConfig.IPAddress); err == nil {
+	if ip, _, err := net.ParseCIDR(naplesConfig.Status.IPConfig.IPAddress); err == nil {
 		mgmtIP = ip.String()
 	} else {
-		mgmtIP = p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.IPConfig.IPAddress
+		mgmtIP = naplesConfig.Status.IPConfig.IPAddress
 	}
 
 	// Set up appropriate mode
 	var naplesMode delphiProto.NaplesStatus_Mode
 
-	switch p.DelSrv.Agent.Nmd.GetNaplesConfig().Spec.NetworkMode {
+	switch naplesConfig.Spec.NetworkMode {
 	case nmd.NetworkMode_INBAND.String():
 		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
 	case nmd.NetworkMode_OOB.String():
@@ -188,18 +189,18 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
 		naplesStatus := delphiProto.NaplesStatus{
 			NaplesMode:   naplesMode,
-			ID:           p.DelSrv.Agent.Nmd.GetNaplesConfig().Spec.ID,
-			SmartNicName: p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.SmartNicName,
+			ID:           naplesConfig.Spec.ID,
+			SmartNicName: naplesConfig.Status.SmartNicName,
 			Fru: &delphiProto.NaplesFru{
-				ManufacturingDate: p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.ManufacturingDate,
-				Manufacturer:      p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.Manufacturer,
-				ProductName:       p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.ProductName,
-				SerialNum:         p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.SerialNum,
-				PartNum:           p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.PartNum,
-				BoardId:           p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.BoardId,
-				EngChangeLevel:    p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.EngChangeLevel,
-				NumMacAddr:        p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.NumMacAddr,
-				MacStr:            p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.MacStr,
+				ManufacturingDate: naplesConfig.Status.Fru.ManufacturingDate,
+				Manufacturer:      naplesConfig.Status.Fru.Manufacturer,
+				ProductName:       naplesConfig.Status.Fru.ProductName,
+				SerialNum:         naplesConfig.Status.Fru.SerialNum,
+				PartNum:           naplesConfig.Status.Fru.PartNum,
+				BoardId:           naplesConfig.Status.Fru.BoardId,
+				EngChangeLevel:    naplesConfig.Status.Fru.EngChangeLevel,
+				NumMacAddr:        naplesConfig.Status.Fru.NumMacAddr,
+				MacStr:            naplesConfig.Status.Fru.MacStr,
 			},
 		}
 		if err := n.DelphiClient.SetObject(&naplesStatus); err != nil {
@@ -209,22 +210,22 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 	}
 
 	naplesStatus := delphiProto.NaplesStatus{
-		Controllers:     p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Controllers,
+		Controllers:     naplesConfig.Status.Controllers,
 		NaplesMode:      naplesMode,
 		TransitionPhase: transitionPhase,
 		MgmtIP:          mgmtIP,
-		ID:              p.DelSrv.Agent.Nmd.GetNaplesConfig().Spec.ID,
-		SmartNicName:    p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.SmartNicName,
+		ID:              naplesConfig.Spec.ID,
+		SmartNicName:    naplesConfig.Status.SmartNicName,
 		Fru: &delphiProto.NaplesFru{
-			ManufacturingDate: p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.ManufacturingDate,
-			Manufacturer:      p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.Manufacturer,
-			ProductName:       p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.ProductName,
-			SerialNum:         p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.SerialNum,
-			PartNum:           p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.PartNum,
-			BoardId:           p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.BoardId,
-			EngChangeLevel:    p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.EngChangeLevel,
-			NumMacAddr:        p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.NumMacAddr,
-			MacStr:            p.DelSrv.Agent.Nmd.GetNaplesConfig().Status.Fru.MacStr,
+			ManufacturingDate: naplesConfig.Status.Fru.ManufacturingDate,
+			Manufacturer:      naplesConfig.Status.Fru.Manufacturer,
+			ProductName:       naplesConfig.Status.Fru.ProductName,
+			SerialNum:         naplesConfig.Status.Fru.SerialNum,
+			PartNum:           naplesConfig.Status.Fru.PartNum,
+			BoardId:           naplesConfig.Status.Fru.BoardId,
+			EngChangeLevel:    naplesConfig.Status.Fru.EngChangeLevel,
+			NumMacAddr:        naplesConfig.Status.Fru.NumMacAddr,
+			MacStr:            naplesConfig.Status.Fru.MacStr,
 		},
 	}
 
