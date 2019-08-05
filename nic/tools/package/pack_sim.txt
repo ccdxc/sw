@@ -7,6 +7,7 @@ nic/build/x86_64/iris/bin/sysmgr                                    /nic/bin/
 nic/build/x86_64/iris/bin/upgrade                                   /nic/bin/
 nic/build/x86_64/iris/bin/penctl                                    /nic/bin/
 nic/build/x86_64/iris/bin/fwloggen                                  /nic/bin/
+nic/build/x86_64/iris/bin/gen_events                                /nic/bin/
 
 nic/build/x86_64/iris/lib/libpacket_parser.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libipc.so                                 /nic/lib/
