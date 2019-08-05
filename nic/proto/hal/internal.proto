@@ -1076,6 +1076,10 @@ enum CryptoApiHashType {
     CRYPTOAPI_HASHTYPE_HMAC_SHA256 = 12 [(gogoproto.enumvalue_customname) = "HMAC_SHA256"];
     CRYPTOAPI_HASHTYPE_HMAC_SHA384 = 13 [(gogoproto.enumvalue_customname) = "HMAC_SHA384"];
     CRYPTOAPI_HASHTYPE_HMAC_SHA512 = 14 [(gogoproto.enumvalue_customname) = "HMAC_SHA512"];
+    CRYPTOAPI_HASHTYPE_SHA3_224 = 15 [(gogoproto.enumvalue_customname) = "SHA3_224"];
+    CRYPTOAPI_HASHTYPE_SHA3_256 = 16 [(gogoproto.enumvalue_customname) = "SHA3_256"];
+    CRYPTOAPI_HASHTYPE_SHA3_384 = 17 [(gogoproto.enumvalue_customname) = "SHA3_384"];
+    CRYPTOAPI_HASHTYPE_SHA3_512 = 18 [(gogoproto.enumvalue_customname) = "SHA3_512"];
 }
 
 enum CryptoApiType {

@@ -201,6 +201,11 @@
             "size": "512K"
         },
         {
+            "_comment": "512K x 10",
+            "name": "crypto-hbm-mem-big",
+            "size": "5120K"
+        },
+        {
             "name": "ipsec-descriptor-tx",
             "size": "2048K"
         },

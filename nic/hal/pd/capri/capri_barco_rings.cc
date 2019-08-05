@@ -740,6 +740,12 @@ hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
+    /* FIXME: This should be done prior to per ring initialization */
+    mpns.cfg_mp_ctl.clk_en(1);
+    mpns.cfg_mp_ctl.sw_rst(0);
+    mpns.cfg_mp_ctl.write();
+
+
     /* Reset MPP0 ring */
     mpns.dhs_crypto_ctl.mpp0_soft_rst.fld(0xffffffff);
     mpns.dhs_crypto_ctl.mpp0_soft_rst.write();
@@ -786,8 +792,6 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
         return FALSE;
     }
     else {
-        HAL_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}", barco_ring->ring_name,
-			curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
             ret = TRUE;

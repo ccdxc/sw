@@ -14,6 +14,52 @@
 namespace hal {
 namespace pd {
 
+static inline hal_ret_t sha3_validate_digest_len(unsigned short digest_len)
+{
+    if ((digest_len != 28) &&
+            (digest_len != 32) &&
+            (digest_len != 48) &&
+            (digest_len != 64)) {
+        return HAL_RET_INVALID_ARG;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t sha3_pad_gen(int data_len, int digest_len, char *sha3_pad, int *sha3_pad_len)
+{
+    int         r = 0, q = 0;
+    char        *pad_offset = sha3_pad;
+    hal_ret_t   ret = HAL_RET_OK;
+
+    ret = sha3_validate_digest_len(digest_len);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /* compute r */
+    r = 1600 - (2 * (digest_len * 8));
+    /* compute q */
+    q = (r/8) - data_len % (r/8);
+
+    if (q == 1) {
+        *pad_offset = 0x86;
+    }
+    else if (q == 2) {
+        *pad_offset = 0x06;
+        pad_offset++;
+        *pad_offset = 0x80;
+    }
+    else {
+        *pad_offset = 0x06;
+        pad_offset++;
+        bzero(pad_offset, q-2);
+        pad_offset += (q-2);
+        *pad_offset = 0x80;
+    }
+    *sha3_pad_len = q;
+    return HAL_RET_OK;
+}
+
 hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
 						unsigned char *key, int key_len,
 						unsigned char *data, int data_len,
@@ -29,6 +75,9 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
     uint32_t                    req_tag = 0;
     int32_t                     hmac_key_descr_idx = -1;
     pd_func_args_t pd_func_args = {0};
+#define     SHA3_PAD_MAX_SZ 144
+    char                        sha3_pad[SHA3_PAD_MAX_SZ];
+    int                         sha3_pad_len = 0;
 
 
     HAL_TRACE_DEBUG("Running {}-{} test:\n",
@@ -52,7 +101,7 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
 		    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		    ilist_msg_descr_addr);
 
-    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512KB,
 				NULL, &ilist_mem_addr);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for ilist content",
@@ -115,13 +164,48 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
 
     /* Copy the data input to the ilist memory */
     curr_ptr = ilist_mem_addr;
-
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)data, data_len)) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write data bytes into ilist memory @ {:x}",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		      (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
+    }
+
+    /* SHA3 needs software padding since the H/W does not support it */
+    switch (hash_type) {
+        case CRYPTOAPI_HASHTYPE_SHA3_224:
+        case CRYPTOAPI_HASHTYPE_SHA3_256:
+        case CRYPTOAPI_HASHTYPE_SHA3_384:
+        case CRYPTOAPI_HASHTYPE_SHA3_512:
+            ret = sha3_pad_gen(data_len, digest_len, sha3_pad, &sha3_pad_len);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("SYM Hash {}-{}: Failed to generate pad",
+                        CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
+                goto cleanup;
+            }
+            //CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"SHA3 Pad:", (char *)sha3_pad, sha3_pad_len);
+
+            curr_ptr = ilist_mem_addr + data_len;
+            data_len += sha3_pad_len;
+
+            if (data_len > (512* 1024)) {
+                HAL_TRACE_ERR("SYM Hash {}-{}: Total input length ({} - including SHA3 pad) exceeds buffer size {}",
+                        CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify", data_len, (512 * 1024));
+                goto cleanup;
+            }
+
+            if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)sha3_pad, sha3_pad_len)) {
+                HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write SHA3 pad bytes into ilist memory @ {:x}",
+                        CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
+                        (uint64_t) curr_ptr);
+                ret = HAL_RET_INVALID_ARG;
+                goto cleanup;
+            }
+            break;
+        default:
+            /* Do nothing */
+            break;
     }
 
     /* Setup Input list SYM MSG descriptor */
@@ -221,6 +305,22 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA512_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA512_Verify_HMAC;
       break;
+    case CRYPTOAPI_HASHTYPE_SHA3_224:
+      sym_req_descr.command = generate ?
+    CAPRI_BARCO_SYM_COMMAND_SHA3_224_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA3_224_Verify_Hash;
+      break;
+    case CRYPTOAPI_HASHTYPE_SHA3_256:
+      sym_req_descr.command = generate ?
+    CAPRI_BARCO_SYM_COMMAND_SHA3_256_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA3_256_Verify_Hash;
+      break;
+    case CRYPTOAPI_HASHTYPE_SHA3_384:
+      sym_req_descr.command = generate ?
+    CAPRI_BARCO_SYM_COMMAND_SHA3_384_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA3_384_Verify_Hash;
+      break;
+    case CRYPTOAPI_HASHTYPE_SHA3_512:
+      sym_req_descr.command = generate ?
+    CAPRI_BARCO_SYM_COMMAND_SHA3_512_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA3_512_Verify_Hash;
+      break;
     case CRYPTOAPI_HASHTYPE_HMAC_MD5:
     case CRYPTOAPI_HASHTYPE_SHA512_224:
     case CRYPTOAPI_HASHTYPE_SHA512_256:
@@ -263,23 +363,24 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
     /* Copy out the results */
     if (generate) {
         if (sdk::asic::asic_mem_read(auth_tag_mem_addr, (uint8_t*)digest, digest_len)) {
-	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read output digest at Auth-tag addr @ {:x}",
-			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-			  (uint64_t) auth_tag_mem_addr);
-	    ret = HAL_RET_INVALID_ARG;
-	    goto cleanup;
-	}
+            HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read output digest at Auth-tag addr @ {:x}",
+                    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
+                    (uint64_t) auth_tag_mem_addr);
+            ret = HAL_RET_INVALID_ARG;
+            goto cleanup;
+        }
+        //CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Digest:", (char *)digest, digest_len);
     } else {
         if (sdk::asic::asic_mem_read(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
-	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read status at Status addr @ {:x}",
-			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-			  (uint64_t) status_addr);
-	    ret = HAL_RET_INVALID_ARG;
-	    goto cleanup;
-	}
-	HAL_TRACE_DEBUG("SYM Hash {}-{}:  Verify - got STATUS {:x}-{} from barco",
-			CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-			status, barco_symm_err_status_str(status));
+            HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read status at Status addr @ {:x}",
+                    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
+                    (uint64_t) status_addr);
+            ret = HAL_RET_INVALID_ARG;
+            goto cleanup;
+        }
+        HAL_TRACE_DEBUG("SYM Hash {}-{}:  Verify - got STATUS {:x}-{} from barco",
+                CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
+                status, barco_symm_err_status_str(status));
     }
 
 cleanup:
@@ -303,7 +404,7 @@ cleanup:
     }
 
     if (ilist_mem_addr) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512KB, ilist_mem_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for ilist content:{:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",

@@ -29,6 +29,11 @@ namespace hal {
 #define CRYPTO_SHA384_DIGEST_LEN 48
 #define CRYPTO_SHA512_DIGEST_LEN 64
 
+#define CRYPTO_SHA3_224_DIGEST_LEN  28
+#define CRYPTO_SHA3_256_DIGEST_LEN  32
+#define CRYPTO_SHA3_384_DIGEST_LEN  48
+#define CRYPTO_SHA3_512_DIGEST_LEN  64
+
 enum CryptoApiHashType {
   CRYPTOAPI_HASHTYPE_NONE = 0,
   CRYPTOAPI_HASHTYPE_MD5 = 1,
@@ -44,7 +49,11 @@ enum CryptoApiHashType {
   CRYPTOAPI_HASHTYPE_HMAC_SHA224 = 11,
   CRYPTOAPI_HASHTYPE_HMAC_SHA256 = 12,
   CRYPTOAPI_HASHTYPE_HMAC_SHA384 = 13,
-  CRYPTOAPI_HASHTYPE_HMAC_SHA512 = 14
+  CRYPTOAPI_HASHTYPE_HMAC_SHA512 = 14,
+  CRYPTOAPI_HASHTYPE_SHA3_224 = 15,
+  CRYPTOAPI_HASHTYPE_SHA3_256 = 16,
+  CRYPTOAPI_HASHTYPE_SHA3_384 = 17,
+  CRYPTOAPI_HASHTYPE_SHA3_512 = 18,
 };
 
 static inline const char *
@@ -81,6 +90,14 @@ CryptoApiHashType_Name(CryptoApiHashType value)
          return("HMAC-SHA384");
      case CRYPTOAPI_HASHTYPE_HMAC_SHA512:
          return("HMAC-SHA512");
+     case CRYPTOAPI_HASHTYPE_SHA3_224:
+         return("SHA3-224");
+     case CRYPTOAPI_HASHTYPE_SHA3_256:
+         return("SHA3-256");
+     case CRYPTOAPI_HASHTYPE_SHA3_384:
+         return("SHA3-384");
+     case CRYPTOAPI_HASHTYPE_SHA3_512:
+         return("SHA3-512");
      default:
        return("Unknown");
   }

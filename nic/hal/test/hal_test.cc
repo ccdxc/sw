@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <stdio.h>
 #include <grpc++/grpc++.h>
 #include "gen/proto/types.grpc.pb.h"
 #include "gen/proto/vrf.grpc.pb.h"
@@ -32,6 +33,7 @@
 #include <arpa/inet.h>
 #include <google/protobuf/util/json_util.h>
 #include "nic/hal/test/fips_rsa_testvec_parser.h"
+#include "nic/hal/test/fips_sha3_testvec_parser.h"
 #include <sys/stat.h>
 
 
@@ -2640,19 +2642,6 @@ public:
         return 0;
     }
 
-    int fips_testvec_hex_output(FILE *f, const char *label, char *buf, uint16_t len)
-    {
-        int         idx = 0;
-
-        fprintf(f, "%s = ", label);
-
-        for (idx = 0; idx < len; idx++) {
-            fprintf(f, "%02hhx", buf[idx]);
-        }
-        fprintf(f, "\n");
-        return 0;
-    }
-
     int fips_testvec_rsa_modulus_output(FILE *f, uint16_t modulus_len)
     {
         fprintf(f, "[mod = %d]\n", modulus_len);
@@ -2699,9 +2688,9 @@ public:
             }
             fips_testvec_rsa_modulus_output(ofile, (*it).modulus_len);
             fprintf(ofile, "\n");
-            fips_testvec_hex_output(ofile, "n", (*it).n, (*it).modulus_len/8);
+            rsa_testvec_parser.fips_testvec_hex_output(ofile, "n", (*it).n, (*it).modulus_len/8);
             fprintf(ofile, "\n");
-            fips_testvec_hex_output(ofile, "e", (*it).e, (*it).modulus_len/8);
+            rsa_testvec_parser.fips_testvec_hex_output(ofile, "e", (*it).e, (*it).modulus_len/8);
             fprintf(ofile, "\n");
 
             for (entry_idx = 0; entry_idx < (*it).entry_count; entry_idx++) {
@@ -2735,13 +2724,129 @@ public:
                         << std::endl;
                 }
                 else {
-                    fips_testvec_hex_output(ofile, "Msg", (*it).entries[entry_idx].msg, (*it).entries[entry_idx].msg_len);
-                    fips_testvec_hex_output(ofile, "S", s, (*it).modulus_len/8);
+                    rsa_testvec_parser.fips_testvec_hex_output(ofile, "Msg", (*it).entries[entry_idx].msg, (*it).entries[entry_idx].msg_len);
+                    rsa_testvec_parser.fips_testvec_hex_output(ofile, "S", s, (*it).modulus_len/8);
                     fprintf(ofile, "\n");
                 }
             }
         }
         return 0;
+    }
+    
+    int sha3_hash_gen(int digest_len, char *msg, int msg_len, char *hash)
+    {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(internal::SYMMAPI_HASH_GENERATE);
+        switch(digest_len) {
+            case 28:
+                req->mutable_hash_generate()->set_hashtype(internal::CRYPTOAPI_HASHTYPE_SHA3_224);
+                break;
+            case 32:
+                req->mutable_hash_generate()->set_hashtype(internal::CRYPTOAPI_HASHTYPE_SHA3_256);
+                break;
+            case 48:
+                req->mutable_hash_generate()->set_hashtype(internal::CRYPTOAPI_HASHTYPE_SHA3_384);
+                break;
+            case 64:
+                req->mutable_hash_generate()->set_hashtype(internal::CRYPTOAPI_HASHTYPE_SHA3_512);
+                break;
+            default:
+                std::cout << "Invalid digest length:" << digest_len << std::endl;
+                return -1;
+        }
+        req->mutable_hash_generate()->set_digest_len(digest_len);
+        req->mutable_hash_generate()->mutable_data()->assign(msg, msg_len);
+        req->mutable_hash_generate()->set_data_len(msg_len);
+
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok() && (rsp_msg.response(0).api_status() == types::API_STATUS_OK)) {
+            memcpy(hash, rsp_msg.response(0).hash_generate().digest().c_str(), digest_len);
+        }
+        else {
+            std::cout << "SHA3 HashGen failed" << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+    int fips_sha3_hash_gen(std::string fips_testvec_filename)
+    {
+        int     ret = 0;
+        std::vector<fips_sha3_group_t> groups;
+
+        fips_testvec_sha3_parser testvec_sha3_parser(fips_testvec_filename.c_str());
+        groups = testvec_sha3_parser.fips_sha3_groups_get();
+
+        for (std::vector<fips_sha3_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
+            for (int idx = 0; idx < (*it).entry_count; idx++) {
+                ret = sha3_hash_gen((*it).digest_len,
+                        (*it).entries[idx].msg,
+                        (*it).entries[idx].msg_len,
+                        (*it).entries[idx].digest);
+                if (ret) {
+                    std::cout << "Failed to generate digest for entry " << idx 
+                        << std::endl;
+                }
+            }
+        }
+        for (std::vector<fips_sha3_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
+            testvec_sha3_parser.print_group_testvec(stdout, *it);
+        }
+        return 0;
+    }
+
+
+    int fips_sha3_monte_group_hash_gen(fips_sha3_monte_group_t &group)
+    {
+        int                 ret = 0; 
+        uint32_t            idx = 0;
+        uint16_t            entry_idx = 0;
+        char                digest[64];
+
+        memcpy(digest, group.seed, group.digest_len);
+
+        for (idx = 1; idx <= 100000; idx++) {
+            ret = sha3_hash_gen(group.digest_len,
+                    digest,
+                    group.digest_len,
+                    digest);
+            if (ret) {
+                std::cout << "Failed to generate digest for iteration " << idx 
+                    << std::endl;
+                return ret;
+            }
+            if ((idx % 1000) == 0) {
+                memcpy(group.entries[entry_idx].digest, digest, group.digest_len);
+                entry_idx++;
+            }
+        }
+        return ret;
+    }
+
+    int fips_sha3_monte_hash_gen(std::string fips_testvec_filename)
+    {
+        int     ret = 0;
+        std::vector<fips_sha3_monte_group_t> groups;
+
+        fips_testvec_sha3_monte_parser testvec_sha3_monte_parser(fips_testvec_filename.c_str());
+        groups = testvec_sha3_monte_parser.fips_sha3_groups_get();
+
+        for (std::vector<fips_sha3_monte_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
+            ret = fips_sha3_monte_group_hash_gen((*it));
+            if (ret) {
+                return ret;
+            }
+        }
+        for (std::vector<fips_sha3_monte_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
+            testvec_sha3_monte_parser.print_group_testvec(stdout, (*it));
+        }
+        return ret;
     }
 
 private:
@@ -3537,6 +3642,22 @@ main (int argc, char** argv)
             }
             fips_tests = true;
         }
+        else if (!strcmp(argv[1], "fips-sha3-hashgen")) {
+            if (argc != 3) {
+                std::cout << "Usage: hal_test fips-sha3-hashgen <fips-testvector-file>"
+                          << std::endl;
+                return -1;
+            }
+            fips_tests = true;
+        }
+        else if (!strcmp(argv[1], "fips-sha3-monte-hashgen")) {
+            if (argc != 3) {
+                std::cout << "Usage: hal_test fips-sha3-monte-hashgen <fips-testvector-file>"
+                          << std::endl;
+                return -1;
+            }
+            fips_tests = true;
+        }
     } else {
         std::cout << "Usage: <pgm> [<options>] config" << std::endl;
         return 0;
@@ -3768,6 +3889,14 @@ main (int argc, char** argv)
     } else if (fips_tests == true) {
         if (!strcmp(argv[1], "fips-rsa-siggen15")) {
             hclient.fips_rsa_siggen15(script_dir_ + std::string(argv[2]));
+            return 0;
+        }
+        else if (!strcmp(argv[1], "fips-sha3-hashgen")) {
+            hclient.fips_sha3_hash_gen(script_dir_ + std::string(argv[2]));
+            return 0;
+        }
+        else if (!strcmp(argv[1], "fips-sha3-monte-hashgen")) {
+            hclient.fips_sha3_monte_hash_gen(script_dir_ + std::string(argv[2]));
             return 0;
         }
     } else if (config == false) {

@@ -28,7 +28,7 @@ typedef struct capri_barco_resources_s {
     char                        allocator_name[32];
     char                        hbm_region_name[32];
     uint32_t                    obj_count;
-    uint16_t                    obj_size;
+    uint32_t                    obj_size;
     uint16_t                    obj_alignment;
     uint64_t                    hbm_region;
     uint32_t                    hbm_region_size;
@@ -41,6 +41,7 @@ typedef enum capri_barco_res_type_e {
     CRYPTO_BARCO_RES_HBM_MEM_512B,
     CRYPTO_BARCO_RES_ASYM_KEY_DESCR,
     CRYPTO_BARCO_RES_SYM_MSG_DESCR,
+    CRYPTO_BARCO_RES_HBM_MEM_512KB,
     CRYPTO_BARCO_RES_MAX
 } capri_barco_res_type_t;
 
@@ -48,6 +49,7 @@ typedef enum capri_barco_res_type_e {
 #define CRYPTO_ASYM_DMA_DESCR_COUNT_MAX 1024
 #define CRYPTO_SYM_MSG_DESCR_COUNT_MAX  1024
 #define CRYPTO_HBM_MEM_COUNT_MAX        1024
+#define CRYPTO_HBM_MEM_BIG_COUNT_MAX    10
 #define CRYPTO_ASYM_KEY_DESCR_COUNT_MAX (64 * 1024)
 #define CRYPTO_BARCO_RES_HBM_MEM_512B_SIZE 512
 

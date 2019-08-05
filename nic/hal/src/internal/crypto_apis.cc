@@ -924,6 +924,18 @@ hal_ret_t crypto_symm_api_hash_request(internal::CryptoApiRequest &req,
     case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
         exp_digest_len = CRYPTO_SHA512_DIGEST_LEN;
         break;
+    case internal::CRYPTOAPI_HASHTYPE_SHA3_224:
+        exp_digest_len = CRYPTO_SHA3_224_DIGEST_LEN;
+        break;
+    case internal::CRYPTOAPI_HASHTYPE_SHA3_256:
+        exp_digest_len = CRYPTO_SHA3_256_DIGEST_LEN;
+        break;
+    case internal::CRYPTOAPI_HASHTYPE_SHA3_384:
+        exp_digest_len = CRYPTO_SHA3_384_DIGEST_LEN;
+        break;
+    case internal::CRYPTOAPI_HASHTYPE_SHA3_512:
+        exp_digest_len = CRYPTO_SHA3_512_DIGEST_LEN;
+        break;
     default:
         HAL_TRACE_ERR("Unsupported Hash type: {}",
 		      CryptoApiHashType_Name(hashtype));

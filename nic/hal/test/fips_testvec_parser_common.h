@@ -69,7 +69,7 @@ class fips_common_parser {
         }
 
 #define INT_STR_MAX_SZ  32
-        int fips_parse_dec_int(const char *ascii_in, uint16_t *int_out)
+        int fips_parse_dec_int(const char *ascii_in, uint32_t *int_out)
         {
             char            int_str[INT_STR_MAX_SZ];
             uint16_t        int_str_ptr = 0, pend_len = (INT_STR_MAX_SZ - 1);
@@ -81,15 +81,26 @@ class fips_common_parser {
                 int_str_ptr++;
                 ascii_in++;
             }
-            if (*ascii_in != ']') {
-                *int_out = 0;
-                return -1;
-            }
             int_str[int_str_ptr] = '\0';
 
             *int_out = atoi((const char*)int_str);
             return 0;
         }
+
+    public:
+        int fips_testvec_hex_output(FILE *f, const char *label, char *buf, uint16_t len)
+        {
+            int         idx = 0;
+
+            fprintf(f, "%s = ", label);
+
+            for (idx = 0; idx < len; idx++) {
+                fprintf(f, "%02hhx", buf[idx]);
+            }
+            fprintf(f, "\n");
+            return 0;
+        }
+
 
 };
 

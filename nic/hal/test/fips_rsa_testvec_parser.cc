@@ -22,7 +22,7 @@ fips_rsa_siggen15_testvec_parser::fips_rsa_siggen15_testvec_parser(const char *t
     char            line[FIPS_TESTVEC_LINE_SZ_MAX];
     FILE*           fp;
     size_t          bn_len, sha_algo_len;
-    uint16_t        modulus_len;
+    uint32_t        modulus_len;
     int             ret = 0;
     fips_rsa_siggen15_group_t   group;
 
@@ -152,7 +152,7 @@ fips_rsa_sigver15_testvec_parser::fips_rsa_sigver15_testvec_parser(const char *t
     char            line[FIPS_TESTVEC_LINE_SZ_MAX];
     FILE*           fp;
     size_t          bn_len, sha_algo_len;
-    uint16_t        modulus_len, modulus_group_idx = 0, modulus_group_entry_idx = 0;
+    uint32_t        modulus_len, modulus_group_idx = 0, modulus_group_entry_idx = 0;
     int             ret = 0;
     fips_rsa_sigver15_group_t   group;
 

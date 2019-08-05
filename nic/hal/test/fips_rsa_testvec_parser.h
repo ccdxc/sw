@@ -22,7 +22,7 @@ using namespace std;
     RSA Common Helpers
 ******************************************************************************/
 
-class fips_rsa_testvec_parser: protected fips_common_parser
+class fips_rsa_testvec_parser: public fips_common_parser
 {
 
     protected:
@@ -67,7 +67,7 @@ typedef struct fips_rsa_siggen15_group_s {
 } fips_rsa_siggen15_group_t;
 
 
-class fips_rsa_siggen15_testvec_parser: private fips_rsa_testvec_parser
+class fips_rsa_siggen15_testvec_parser: public fips_rsa_testvec_parser
 {
 
     private:
@@ -107,7 +107,7 @@ typedef struct fips_rsa_sigver15_group_s {
 } fips_rsa_sigver15_group_t;
 
 
-class fips_rsa_sigver15_testvec_parser: private fips_rsa_testvec_parser
+class fips_rsa_sigver15_testvec_parser: public fips_rsa_testvec_parser
 {
 
     private:

@@ -54,6 +54,7 @@
 #define CAPRI_HBM_REG_BARCO_RING_DC_HOT  "brq-ring-dc-hot"
 #define CAPRI_HBM_REG_CRYPTO_SYM_MSG_DESCR "crypto-sym-msg-descr"
 #define CAPRI_HBM_REG_CRYPTO_HBM_MEM     "crypto-hbm-mem"
+#define CAPRI_HBM_REG_CRYPTO_HBM_MEM_BIG  "crypto-hbm-mem-big"
 #define CAPRI_BARCO_KEY_DESC             "key-desc-array"
 #define CAPRI_BARCO_KEY_MEM              "key-mem"
 #define CAPRI_HBM_REG_ASYM_KEY_DESCR     "crypto-asym-key-desc-array"

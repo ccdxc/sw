@@ -53,6 +53,17 @@ capri_barco_resources_t capri_barco_resources[] = {
         0,
         NULL
     },
+    /* 3 - CRYPTO_BARCO_RES_HBM_MEM_512KB */
+    {
+        "Crypto 512KB HBM Mem Blocks",
+        CAPRI_HBM_REG_CRYPTO_HBM_MEM_BIG,
+        CRYPTO_HBM_MEM_BIG_COUNT_MAX,
+        (512 * 1024),
+        4,
+        0,
+        0,
+        NULL
+    },
 };
 
 #if 0
@@ -239,6 +250,11 @@ hal_ret_t capri_barco_res_allocator_init(void)
      barco_indexers[CRYPTO_BARCO_RES_SYM_MSG_DESCR] =
          sdk::lib::indexer::factory(CRYPTO_SYM_MSG_DESCR_COUNT_MAX);
      SDK_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_SYM_MSG_DESCR] != NULL,
+                       HAL_RET_OOM);
+
+     barco_indexers[CRYPTO_BARCO_RES_HBM_MEM_512KB] =
+         sdk::lib::indexer::factory(CRYPTO_HBM_MEM_BIG_COUNT_MAX);
+     SDK_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_HBM_MEM_512KB] != NULL,
                        HAL_RET_OOM);
 
     for (idx = CRYPTO_BARCO_RES_MIN; idx < CRYPTO_BARCO_RES_MAX; idx++) {
