@@ -1,7 +1,9 @@
 package service
 
 import (
+	"fmt"
 	"sync"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -12,7 +14,8 @@ import (
 )
 
 const (
-	outCount = 32
+	outCount       = 32
+	defSendTimeout = 6 * time.Second
 )
 
 // RPCHandler handles all service gRPC calls.
@@ -93,16 +96,41 @@ func (s *RPCHandler) WatchServiceInstances(req *api.Empty, server protos.Service
 		}
 	}
 	// Watch for new instances.
+	callCh := make(chan error, 1)
+	var mu sync.Mutex
 	for {
 		select {
 		case in := <-ch:
 			out := &protos.ServiceInstanceEventList{
 				Items: []*protos.ServiceInstanceEvent{in},
 			}
-			if err := server.Send(out); err != nil {
-				log.Errorf("Error sending service instance event %v, %v", out, err)
-				return err
+			// The goroutine makes the Send() an action with a timeout. Use of the mutex is needed
+			// to avoid sending on a closed channel.
+			go func() {
+				err1 := server.Send(out)
+				mu.Lock()
+				select {
+				case callCh <- err1:
+				default:
+				}
+				mu.Unlock()
+			}()
+			select {
+			case err := <-callCh:
+				if err != nil {
+					log.Errorf("Error sending service instance event %v, %v", out, err)
+					return err
+				}
+			case <-time.After(defSendTimeout):
+				log.Errorf("Timeout sending service instance event %v", out)
+				// do not leak the Go routine and the channel. Close the channel so the go routine can exit.
+				mu.Lock()
+				close(callCh)
+				callCh = nil
+				mu.Unlock()
+				return fmt.Errorf("timeout sending event")
 			}
+
 		case <-server.Context().Done():
 			return nil
 		}
