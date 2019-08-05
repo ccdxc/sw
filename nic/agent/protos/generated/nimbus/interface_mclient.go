@@ -24,6 +24,7 @@ type InterfaceReactor interface {
 	ListInterface() []*netproto.Interface                           // lists all Interfaces
 	UpdateInterface(interfaceObj *netproto.Interface) error         // updates an Interface
 	DeleteInterface(interfaceObj, ns, name string) error            // deletes an Interface
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchInterfaces runs Interface watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "Interface")
 	interfaceRPCClient := netproto.NewInterfaceApiClient(client.rpcClient.ClientConn)
-	stream, err := interfaceRPCClient.WatchInterfaces(ctx, &api.ObjectMeta{})
+	stream, err := interfaceRPCClient.WatchInterfaces(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Interface. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 	}
 
 	// get a list of objects
-	objList, err := interfaceRPCClient.ListInterfaces(ctx, &api.ObjectMeta{})
+	objList, err := interfaceRPCClient.ListInterfaces(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting Interface list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := interfaceRPCClient.ListInterfaces(ctx, &api.ObjectMeta{})
+			objList, err := interfaceRPCClient.ListInterfaces(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting Interface list. Err: %v", err)
 				return

@@ -24,6 +24,7 @@ type SecurityGroupReactor interface {
 	ListSecurityGroup() []*netproto.SecurityGroup                           // lists all SecurityGroups
 	UpdateSecurityGroup(securitygroupObj *netproto.SecurityGroup) error     // updates an SecurityGroup
 	DeleteSecurityGroup(securitygroupObj, ns, name string) error            // deletes an SecurityGroup
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchSecurityGroups runs SecurityGroup watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "SecurityGroup")
 	securitygroupRPCClient := netproto.NewSecurityGroupApiClient(client.rpcClient.ClientConn)
-	stream, err := securitygroupRPCClient.WatchSecurityGroups(ctx, &api.ObjectMeta{})
+	stream, err := securitygroupRPCClient.WatchSecurityGroups(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching SecurityGroup. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 	}
 
 	// get a list of objects
-	objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &api.ObjectMeta{})
+	objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting SecurityGroup list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &api.ObjectMeta{})
+			objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting SecurityGroup list. Err: %v", err)
 				return

@@ -54,6 +54,7 @@ type SecurityGroupStatusReactor interface {
 	OnSecurityGroupDeleteReq(nodeID string, objinfo *netproto.SecurityGroup) error
 	OnSecurityGroupOperUpdate(nodeID string, objinfo *netproto.SecurityGroup) error
 	OnSecurityGroupOperDelete(nodeID string, objinfo *netproto.SecurityGroup) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // SecurityGroupTopic is the SecurityGroup topic on message bus
@@ -174,6 +175,12 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 	eh.server.memDB.WatchObjects("SecurityGroup", watchChan)
 	defer eh.server.memDB.StopWatchObjects("SecurityGroup", watchChan)
 
+	filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("SecurityGroup", ometa)
+	}
 	// get a list of all SecurityGroups
 	objlist, err := eh.ListSecurityGroups(context.Background(), ometa)
 	if err != nil {
@@ -195,10 +202,14 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 			EventType:     api.EventType_CreateEvent,
 			SecurityGroup: *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -234,12 +245,15 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 				EventType:     etype,
 				SecurityGroup: *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
-				return err
+			if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

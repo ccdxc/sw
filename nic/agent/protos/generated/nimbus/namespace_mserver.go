@@ -54,6 +54,7 @@ type NamespaceStatusReactor interface {
 	OnNamespaceDeleteReq(nodeID string, objinfo *netproto.Namespace) error
 	OnNamespaceOperUpdate(nodeID string, objinfo *netproto.Namespace) error
 	OnNamespaceOperDelete(nodeID string, objinfo *netproto.Namespace) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // NamespaceTopic is the Namespace topic on message bus
@@ -174,6 +175,12 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 	eh.server.memDB.WatchObjects("Namespace", watchChan)
 	defer eh.server.memDB.StopWatchObjects("Namespace", watchChan)
 
+	filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("Namespace", ometa)
+	}
 	// get a list of all Namespaces
 	objlist, err := eh.ListNamespaces(context.Background(), ometa)
 	if err != nil {
@@ -195,10 +202,14 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 			EventType: api.EventType_CreateEvent,
 			Namespace: *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending Namespace to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending Namespace to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -234,12 +245,15 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 				EventType: etype,
 				Namespace: *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Namespace to stream. Err: %v", err)
-				return err
+			if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending Namespace to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

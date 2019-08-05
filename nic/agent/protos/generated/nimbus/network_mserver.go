@@ -54,6 +54,7 @@ type NetworkStatusReactor interface {
 	OnNetworkDeleteReq(nodeID string, objinfo *netproto.Network) error
 	OnNetworkOperUpdate(nodeID string, objinfo *netproto.Network) error
 	OnNetworkOperDelete(nodeID string, objinfo *netproto.Network) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // NetworkTopic is the Network topic on message bus
@@ -174,6 +175,12 @@ func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.Net
 	eh.server.memDB.WatchObjects("Network", watchChan)
 	defer eh.server.memDB.StopWatchObjects("Network", watchChan)
 
+	filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("Network", ometa)
+	}
 	// get a list of all Networks
 	objlist, err := eh.ListNetworks(context.Background(), ometa)
 	if err != nil {
@@ -195,10 +202,14 @@ func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.Net
 			EventType: api.EventType_CreateEvent,
 			Network:   *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending Network to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending Network to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -234,12 +245,15 @@ func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.Net
 				EventType: etype,
 				Network:   *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Network to stream. Err: %v", err)
-				return err
+			if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending Network to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

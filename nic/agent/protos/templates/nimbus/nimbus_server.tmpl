@@ -60,6 +60,7 @@ type {{$crudObject}}StatusReactor interface {
 	On{{$crudObject}}DeleteReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
 	On{{$crudObject}}OperUpdate(nodeID string, objinfo *netproto.{{$crudObject}}) error
 	On{{$crudObject}}OperDelete(nodeID string, objinfo *netproto.{{$crudObject}}) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // {{$crudObject}}Topic is the {{$crudObject}} topic on message bus
@@ -180,6 +181,12 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
 	eh.server.memDB.WatchObjects("{{$crudObject}}", watchChan)
 	defer eh.server.memDB.StopWatchObjects("{{$crudObject}}", watchChan)
 
+     filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if  eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("{{$crudObject}}", ometa)
+	}
 	// get a list of all {{$crudObject}}s
 	objlist, err := eh.List{{$crudObject}}s(context.Background(), ometa)
 	if err != nil {
@@ -201,10 +208,14 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
 			EventType: api.EventType_CreateEvent,
 			{{$crudObject}}:  *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -240,12 +251,15 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
 				EventType: etype,
 				{{$crudObject}}:  *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
-				return err
+            if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

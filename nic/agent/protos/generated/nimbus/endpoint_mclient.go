@@ -24,6 +24,7 @@ type EndpointReactor interface {
 	ListEndpoint() []*netproto.Endpoint                           // lists all Endpoints
 	UpdateEndpoint(endpointObj *netproto.Endpoint) error          // updates an Endpoint
 	DeleteEndpoint(endpointObj, ns, name string) error            // deletes an Endpoint
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchEndpoints runs Endpoint watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "Endpoint")
 	endpointRPCClient := netproto.NewEndpointApiClient(client.rpcClient.ClientConn)
-	stream, err := endpointRPCClient.WatchEndpoints(ctx, &api.ObjectMeta{})
+	stream, err := endpointRPCClient.WatchEndpoints(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Endpoint. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 	}
 
 	// get a list of objects
-	objList, err := endpointRPCClient.ListEndpoints(ctx, &api.ObjectMeta{})
+	objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting Endpoint list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := endpointRPCClient.ListEndpoints(ctx, &api.ObjectMeta{})
+			objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting Endpoint list. Err: %v", err)
 				return

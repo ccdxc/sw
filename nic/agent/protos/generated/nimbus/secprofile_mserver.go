@@ -54,6 +54,7 @@ type SecurityProfileStatusReactor interface {
 	OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // SecurityProfileTopic is the SecurityProfile topic on message bus
@@ -174,6 +175,12 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 	eh.server.memDB.WatchObjects("SecurityProfile", watchChan)
 	defer eh.server.memDB.StopWatchObjects("SecurityProfile", watchChan)
 
+	filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("SecurityProfile", ometa)
+	}
 	// get a list of all SecurityProfiles
 	objlist, err := eh.ListSecurityProfiles(context.Background(), ometa)
 	if err != nil {
@@ -195,10 +202,14 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 			EventType:       api.EventType_CreateEvent,
 			SecurityProfile: *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -234,12 +245,15 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 				EventType:       etype,
 				SecurityProfile: *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
-				return err
+			if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

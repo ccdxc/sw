@@ -1304,6 +1304,30 @@ func TestAgentCrudEvents(t *testing.T) {
 	stateMgr.OnInterfaceDeleteReq("test-node", &netIf)
 }
 
+func TestWatchFilter(t *testing.T) {
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	ometa := api.ObjectMeta{
+		Name: "0000.0000.0001",
+	}
+	filterFn1 := stateMgr.GetWatchFilter("Network", &ometa)
+	filterFn2 := stateMgr.GetWatchFilter("Endpoint", &ometa)
+
+	obj1 := netproto.Network{}
+	obj1.Name = "xyz"
+	obj2 := netproto.Endpoint{}
+	Assert(t, filterFn1(api.EventType_CreateEvent, &obj1), "expecting filter to pass")
+	Assert(t, filterFn2(api.EventType_CreateEvent, &obj2), "expecting filter to pass")
+	obj2.Spec.NodeUUID = "0000.0000.0001"
+	Assert(t, filterFn2(api.EventType_CreateEvent, &obj2), "expecting filter to pass")
+	obj2.Spec.NodeUUID = "0000.0000.0002"
+	Assert(t, filterFn2(api.EventType_CreateEvent, &obj2) == false, "expecting filter to fail")
+}
+
 func TestMain(m *testing.M) {
 	// init tsdb client
 	tsdbOpts := &tsdb.Opts{

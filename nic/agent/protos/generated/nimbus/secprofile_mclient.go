@@ -24,6 +24,7 @@ type SecurityProfileReactor interface {
 	ListSecurityProfile() []*netproto.SecurityProfile                           // lists all SecurityProfiles
 	UpdateSecurityProfile(securityprofileObj *netproto.SecurityProfile) error   // updates an SecurityProfile
 	DeleteSecurityProfile(securityprofileObj, ns, name string) error            // deletes an SecurityProfile
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchSecurityProfiles runs SecurityProfile watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "SecurityProfile")
 	securityprofileRPCClient := netproto.NewSecurityProfileApiClient(client.rpcClient.ClientConn)
-	stream, err := securityprofileRPCClient.WatchSecurityProfiles(ctx, &api.ObjectMeta{})
+	stream, err := securityprofileRPCClient.WatchSecurityProfiles(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching SecurityProfile. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 	}
 
 	// get a list of objects
-	objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &api.ObjectMeta{})
+	objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting SecurityProfile list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &api.ObjectMeta{})
+			objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting SecurityProfile list. Err: %v", err)
 				return

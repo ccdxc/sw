@@ -3,8 +3,11 @@
 package statemgr
 
 import (
+	"net"
 	"strings"
 	"time"
+
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
@@ -252,5 +255,30 @@ func agentObjectMeta(vmeta api.ObjectMeta) api.ObjectMeta {
 		Name:            vmeta.Name,
 		GenerationID:    vmeta.GenerationID,
 		ResourceVersion: vmeta.ResourceVersion,
+	}
+}
+
+// GetWatchFilter returns a filter function to filter Watch Events
+func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool {
+	switch kind {
+	case "Endpoint":
+		objMac, err := net.ParseMAC(ometa.Name)
+		name := objMac.String()
+		if err != nil {
+			sm.logger.Infof("object meta does not have a valid mac - returning default func [%+v]", ometa)
+			return func(api.EventType, memdb.Object) bool {
+				return true
+			}
+		}
+		return func(evType api.EventType, obj memdb.Object) bool {
+			ep := obj.(*netproto.Endpoint)
+			if inmac, err := net.ParseMAC(ep.Spec.NodeUUID); err == nil {
+				return inmac.String() == name
+			}
+			return true
+		}
+	}
+	return func(api.EventType, memdb.Object) bool {
+		return true
 	}
 }

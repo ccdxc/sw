@@ -72,3 +72,4 @@ delphi-gen: ${DELPHI_SRC}
 	goimports -w ../generated/delphi/netproto/delphi/*.go
 gen-clean:
 	rm -f ${DEST}
+	rm -f ${NIMBUS_DEST}

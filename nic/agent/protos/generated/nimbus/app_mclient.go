@@ -24,6 +24,7 @@ type AppReactor interface {
 	ListApp() []*netproto.App                           // lists all Apps
 	UpdateApp(appObj *netproto.App) error               // updates an App
 	DeleteApp(appObj, ns, name string) error            // deletes an App
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchApps runs App watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "App")
 	appRPCClient := netproto.NewAppApiClient(client.rpcClient.ClientConn)
-	stream, err := appRPCClient.WatchApps(ctx, &api.ObjectMeta{})
+	stream, err := appRPCClient.WatchApps(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching App. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 	}
 
 	// get a list of objects
-	objList, err := appRPCClient.ListApps(ctx, &api.ObjectMeta{})
+	objList, err := appRPCClient.ListApps(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting App list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := appRPCClient.ListApps(ctx, &api.ObjectMeta{})
+			objList, err := appRPCClient.ListApps(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting App list. Err: %v", err)
 				return

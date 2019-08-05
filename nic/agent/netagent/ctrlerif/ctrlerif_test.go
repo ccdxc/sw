@@ -754,6 +754,11 @@ func (ag *fakeAgent) PurgeConfigs() error {
 	return nil
 }
 
+// GetWatchOptions gets watch options to be used when establishing a watch
+func (ag *fakeAgent) GetWatchOptions(cts context.Context, kind string) api.ObjectMeta {
+	return api.ObjectMeta{}
+}
+
 type fakeRPCServer struct {
 	sync.Mutex
 	grpcServer  *rpckit.RPCServer

@@ -36,6 +36,7 @@ type {{$crudObject}}Reactor interface {
 	List{{$crudObject}}() []*netproto.{{$crudObject}}                           // lists all {{$crudObject}}s
 	Update{{$crudObject}}({{lower $crudObject}}Obj *netproto.{{$crudObject}}) error                  // updates an {{$crudObject}}
 	Delete{{$crudObject}}({{lower $crudObject}}Obj, ns, name string) error               // deletes an {{$crudObject}}
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // Watch{{$crudObject}}s runs {{$crudObject}} watcher loop
@@ -52,8 +53,9 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "{{$crudObject}}")
 	{{lower $crudObject}}RPCClient := netproto.New{{$crudObject}}ApiClient(client.rpcClient.ClientConn)
-	stream, err := {{lower $crudObject}}RPCClient.Watch{{$crudObject}}s(ctx, &api.ObjectMeta{})
+	stream, err := {{lower $crudObject}}RPCClient.Watch{{$crudObject}}s(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching {{$crudObject}}. Err: %v", err)
 		return
@@ -67,7 +69,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 	}
 
 	// get a list of objects
-	objList, err := {{lower $crudObject}}RPCClient.List{{$crudObject}}s(ctx, &api.ObjectMeta{})
+	objList, err := {{lower $crudObject}}RPCClient.List{{$crudObject}}s(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting {{$crudObject}} list. Err: %v", err)
 		return
@@ -100,7 +102,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := {{lower $crudObject}}RPCClient.List{{$crudObject}}s(ctx, &api.ObjectMeta{})
+			objList, err := {{lower $crudObject}}RPCClient.List{{$crudObject}}s(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting {{$crudObject}} list. Err: %v", err)
 				return

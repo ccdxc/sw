@@ -24,6 +24,7 @@ type NetworkReactor interface {
 	ListNetwork() []*netproto.Network                           // lists all Networks
 	UpdateNetwork(networkObj *netproto.Network) error           // updates an Network
 	DeleteNetwork(networkObj, ns, name string) error            // deletes an Network
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchNetworks runs Network watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "Network")
 	networkRPCClient := netproto.NewNetworkApiClient(client.rpcClient.ClientConn)
-	stream, err := networkRPCClient.WatchNetworks(ctx, &api.ObjectMeta{})
+	stream, err := networkRPCClient.WatchNetworks(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Network. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 	}
 
 	// get a list of objects
-	objList, err := networkRPCClient.ListNetworks(ctx, &api.ObjectMeta{})
+	objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting Network list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := networkRPCClient.ListNetworks(ctx, &api.ObjectMeta{})
+			objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting Network list. Err: %v", err)
 				return

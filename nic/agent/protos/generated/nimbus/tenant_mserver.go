@@ -54,6 +54,7 @@ type TenantStatusReactor interface {
 	OnTenantDeleteReq(nodeID string, objinfo *netproto.Tenant) error
 	OnTenantOperUpdate(nodeID string, objinfo *netproto.Tenant) error
 	OnTenantOperDelete(nodeID string, objinfo *netproto.Tenant) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // TenantTopic is the Tenant topic on message bus
@@ -174,6 +175,12 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 	eh.server.memDB.WatchObjects("Tenant", watchChan)
 	defer eh.server.memDB.StopWatchObjects("Tenant", watchChan)
 
+	filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("Tenant", ometa)
+	}
 	// get a list of all Tenants
 	objlist, err := eh.ListTenants(context.Background(), ometa)
 	if err != nil {
@@ -195,10 +202,14 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 			EventType: api.EventType_CreateEvent,
 			Tenant:    *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending Tenant to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending Tenant to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -234,12 +245,15 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 				EventType: etype,
 				Tenant:    *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Tenant to stream. Err: %v", err)
-				return err
+			if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending Tenant to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

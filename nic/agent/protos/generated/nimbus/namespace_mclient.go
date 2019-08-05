@@ -24,6 +24,7 @@ type NamespaceReactor interface {
 	ListNamespace() []*netproto.Namespace                           // lists all Namespaces
 	UpdateNamespace(namespaceObj *netproto.Namespace) error         // updates an Namespace
 	DeleteNamespace(namespaceObj, ns, name string) error            // deletes an Namespace
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchNamespaces runs Namespace watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "Namespace")
 	namespaceRPCClient := netproto.NewNamespaceApiClient(client.rpcClient.ClientConn)
-	stream, err := namespaceRPCClient.WatchNamespaces(ctx, &api.ObjectMeta{})
+	stream, err := namespaceRPCClient.WatchNamespaces(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Namespace. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 	}
 
 	// get a list of objects
-	objList, err := namespaceRPCClient.ListNamespaces(ctx, &api.ObjectMeta{})
+	objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting Namespace list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := namespaceRPCClient.ListNamespaces(ctx, &api.ObjectMeta{})
+			objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting Namespace list. Err: %v", err)
 				return

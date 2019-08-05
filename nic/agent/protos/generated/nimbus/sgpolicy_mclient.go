@@ -24,6 +24,7 @@ type SGPolicyReactor interface {
 	ListSGPolicy() []*netproto.SGPolicy                           // lists all SGPolicys
 	UpdateSGPolicy(sgpolicyObj *netproto.SGPolicy) error          // updates an SGPolicy
 	DeleteSGPolicy(sgpolicyObj, ns, name string) error            // deletes an SGPolicy
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchSGPolicys runs SGPolicy watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "SGPolicy")
 	sgpolicyRPCClient := netproto.NewSGPolicyApiClient(client.rpcClient.ClientConn)
-	stream, err := sgpolicyRPCClient.WatchSGPolicys(ctx, &api.ObjectMeta{})
+	stream, err := sgpolicyRPCClient.WatchSGPolicys(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching SGPolicy. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 	}
 
 	// get a list of objects
-	objList, err := sgpolicyRPCClient.ListSGPolicys(ctx, &api.ObjectMeta{})
+	objList, err := sgpolicyRPCClient.ListSGPolicys(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting SGPolicy list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := sgpolicyRPCClient.ListSGPolicys(ctx, &api.ObjectMeta{})
+			objList, err := sgpolicyRPCClient.ListSGPolicys(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting SGPolicy list. Err: %v", err)
 				return

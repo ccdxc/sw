@@ -54,6 +54,7 @@ type SGPolicyStatusReactor interface {
 	OnSGPolicyDeleteReq(nodeID string, objinfo *netproto.SGPolicy) error
 	OnSGPolicyOperUpdate(nodeID string, objinfo *netproto.SGPolicy) error
 	OnSGPolicyOperDelete(nodeID string, objinfo *netproto.SGPolicy) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // SGPolicyTopic is the SGPolicy topic on message bus
@@ -174,6 +175,12 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 	eh.server.memDB.WatchObjects("SGPolicy", watchChan)
 	defer eh.server.memDB.StopWatchObjects("SGPolicy", watchChan)
 
+	filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("SGPolicy", ometa)
+	}
 	// get a list of all SGPolicys
 	objlist, err := eh.ListSGPolicys(context.Background(), ometa)
 	if err != nil {
@@ -195,10 +202,14 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 			EventType: api.EventType_CreateEvent,
 			SGPolicy:  *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -234,12 +245,15 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 				EventType: etype,
 				SGPolicy:  *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
-				return err
+			if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

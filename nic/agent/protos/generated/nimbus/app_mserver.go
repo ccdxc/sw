@@ -54,6 +54,7 @@ type AppStatusReactor interface {
 	OnAppDeleteReq(nodeID string, objinfo *netproto.App) error
 	OnAppOperUpdate(nodeID string, objinfo *netproto.App) error
 	OnAppOperDelete(nodeID string, objinfo *netproto.App) error
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
 }
 
 // AppTopic is the App topic on message bus
@@ -174,6 +175,12 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 	eh.server.memDB.WatchObjects("App", watchChan)
 	defer eh.server.memDB.StopWatchObjects("App", watchChan)
 
+	filterFn := func(api.EventType, memdb.Object) bool {
+		return true
+	}
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("App", ometa)
+	}
 	// get a list of all Apps
 	objlist, err := eh.ListApps(context.Background(), ometa)
 	if err != nil {
@@ -195,10 +202,14 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 			EventType: api.EventType_CreateEvent,
 			App:       *obj,
 		}
-		err = stream.Send(&watchEvt)
-		if err != nil {
-			log.Errorf("Error sending App to stream. Err: %v", err)
-			return err
+		if filterFn(api.EventType_CreateEvent, obj) {
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending App to stream. Err: %v", err)
+				return err
+			}
+		} else {
+			log.Infof("Endpoint [%v] filtered from sending", obj)
 		}
 	}
 
@@ -234,12 +245,15 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 				EventType: etype,
 				App:       *obj,
 			}
-
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending App to stream. Err: %v", err)
-				return err
+			if filterFn(etype, obj) {
+				// streaming send
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending App to stream. Err: %v", err)
+					return err
+				}
+			} else {
+				log.Infof("Endpoint [%v] filtered from sending", obj)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

@@ -24,6 +24,7 @@ type TenantReactor interface {
 	ListTenant() []*netproto.Tenant                           // lists all Tenants
 	UpdateTenant(tenantObj *netproto.Tenant) error            // updates an Tenant
 	DeleteTenant(tenantObj, ns, name string) error            // deletes an Tenant
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
 // WatchTenants runs Tenant watcher loop
@@ -40,8 +41,9 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 	}
 
 	// start the watch
+	ometa := reactor.GetWatchOptions(ctx, "Tenant")
 	tenantRPCClient := netproto.NewTenantApiClient(client.rpcClient.ClientConn)
-	stream, err := tenantRPCClient.WatchTenants(ctx, &api.ObjectMeta{})
+	stream, err := tenantRPCClient.WatchTenants(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Tenant. Err: %v", err)
 		return
@@ -55,7 +57,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 	}
 
 	// get a list of objects
-	objList, err := tenantRPCClient.ListTenants(ctx, &api.ObjectMeta{})
+	objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error getting Tenant list. Err: %v", err)
 		return
@@ -87,7 +89,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := tenantRPCClient.ListTenants(ctx, &api.ObjectMeta{})
+			objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
 			if err != nil {
 				log.Errorf("Error getting Tenant list. Err: %v", err)
 				return
