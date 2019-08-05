@@ -110,10 +110,6 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 		}
 	}
 
-	// start watching alert policies and alerts; update the results in mem DB
-	em.wg.Add(1)
-	go em.watchAPIServerEvents(ctx, resolverClient)
-
 	// create elastic client
 	if em.esClient == nil {
 		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
@@ -149,6 +145,11 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating RPC server")
 	}
+
+	// start watching alert policies and alerts; update the results in mem DB
+	em.wg.Add(1)
+	go em.watchAPIServerEvents(ctx, resolverClient)
+
 	return em, nil
 }
 
@@ -411,9 +412,6 @@ func (em *EventsManager) processEventPolicy(eventType kvstore.WatchEventType, ev
 // helper to process version object
 func (em *EventsManager) processVersion(eventType kvstore.WatchEventType, version *cluster.Version) error {
 	em.logger.Infof("processing version watch event: {%s} {%#v} ", eventType, version)
-	if em.alertEngine == nil {
-		return nil // nothing to be done
-	}
 
 	switch eventType {
 	case kvstore.Created, kvstore.Updated:
