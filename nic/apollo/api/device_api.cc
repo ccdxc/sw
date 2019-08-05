@@ -7,6 +7,7 @@
 /// This module implements Device API
 ///
 //----------------------------------------------------------------------------
+
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"

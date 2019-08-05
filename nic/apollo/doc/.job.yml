@@ -1,0 +1,19 @@
+---
+version: 2.0
+targets:
+  apollo/docgen:
+    commands: ["/sw/nic/apollo/tools/gendoc.sh"]
+    owners: ["email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+rebase: true
+logfiles:
+  - /usr/src/github.com/pensando/sw/nic/apollo/doc/gen/pdsdoc.tar.gz

@@ -87,6 +87,7 @@ references:
   - iota/test/venice/hwtest
   - iota/test/venice/hwtest/hwregression
   - nic/utils/ftlite
+  - nic/apollo/doc
 
 dir_dependencies:
   platform:
@@ -136,3 +137,5 @@ dir_dependencies:
     - iota/test/venice/hwtest
   storage/offload: 
     - storage/offload/linux-build-test
+  nic/apollo:
+    - nic/apollo/doc

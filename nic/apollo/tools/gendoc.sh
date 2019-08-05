@@ -30,10 +30,15 @@ create_doc() {
             echo "Error in $type pdf generation"
             exit 1
         fi
-        cp  $OUTDIR/latex/refman.pdf $NICDIR/conf/gen/pds_$type.pdf
+        cp  $OUTDIR/latex/refman.pdf $NICDIR/apollo/doc/gen/pds_$type.pdf
     fi
 }
 
+mkdir -p $NICDIR/apollo/doc/gen
+rm -rf $NICDIR/apollo/doc/gen/*
 create_doc 'api'
 create_doc 'test'
+cd $NICDIR/apollo/doc/gen
+tar -zcf pdsdoc.tar.gz pds*
+cd -
 exit 0
