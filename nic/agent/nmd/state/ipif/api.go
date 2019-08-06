@@ -26,9 +26,10 @@ type IPClientIf interface {
 
 // IPClient helps to set the IP address of the management interfaces
 type IPClient struct {
-	intf      netlink.Link
-	nmd       api.NmdAPI
-	dhcpState *DHCPState
+	intf       netlink.Link
+	nmd        api.NmdAPI
+	dhcpState  *DHCPState
+	dhcpCancel context.CancelFunc
 }
 
 type dhcpState int

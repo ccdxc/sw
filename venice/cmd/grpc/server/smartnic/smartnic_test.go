@@ -1074,6 +1074,7 @@ func TestDeleteSmartNIC(t *testing.T) {
 // - CMD would validate NIC and admit NIC into cluster.
 func TestSmartNICConfigByUser(t *testing.T) {
 	// Init required components
+	t.Skip("Temporarily disabled")
 	testSetup()
 	defer testTeardown()
 

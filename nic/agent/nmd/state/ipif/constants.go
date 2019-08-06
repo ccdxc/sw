@@ -1,6 +1,10 @@
 package ipif
 
-import "github.com/krolaw/dhcp4"
+import (
+	"time"
+
+	"github.com/krolaw/dhcp4"
+)
 
 const (
 	//NaplesInbandInterface is the inband interface
@@ -26,6 +30,9 @@ const (
 
 	// IPv4OctetSize parses 4 bytes form vendor specific options as IP Addresses
 	IPv4OctetSize = 4
+
+	// AdmissionRetryDuration captures time to wait between dhcp and admission retry attempts
+	AdmissionRetryDuration = time.Minute * 1
 )
 
 var (

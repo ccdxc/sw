@@ -199,6 +199,15 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		if err := n.handleHostModeTransition(); err != nil {
 			return errInternalServer(err)
 		}
+		isEmulation := false
+		if _, err := os.Stat(globals.IotaEmulation); err == nil {
+			log.Infof("NMD running in Emulation mode as a real Venice controller is not available. Remove %v file if this was not desired.", globals.IotaEmulation)
+			isEmulation = true
+		}
+
+		if err := n.persistState(isEmulation); err != nil {
+			return errInternalServer(err)
+		}
 
 	case nmd.MgmtMode_NETWORK.String():
 		if err := isNetworkModeValid(cfg.Spec); err != nil {
@@ -222,15 +231,6 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	default:
 		log.Errorf("Invalid mode %v specified.", cfg.Spec.Mode)
 		return errBadRequest(fmt.Errorf("invalid mode %v specified", cfg.Spec.Mode))
-	}
-	isEmulation := false
-	if _, err := os.Stat(globals.IotaEmulation); err == nil {
-		log.Infof("NMD running in Emulation mode as a real Venice controller is not available. Remove %v file if this was not desired.", globals.IotaEmulation)
-		isEmulation = true
-	}
-
-	if err := n.persistState(isEmulation); err != nil {
-		return errInternalServer(err)
 	}
 
 	return nil
@@ -262,6 +262,7 @@ func (n *NMD) persistState(updateDelphi bool) (err error) {
 
 func (n *NMD) handleNetworkModeTransition() error {
 	log.Info("Handling network mode transition")
+
 	spec := n.config.Spec
 	n.stateMachine = NewNMDStateMachine()
 	if err := n.reconcileIPClient(); err != nil {
@@ -293,19 +294,9 @@ func (n *NMD) handleNetworkModeTransition() error {
 			n.config.Status.IPConfig = &cmd.IPConfig{}
 			return fmt.Errorf("dynamic mode transition event failed. Err: %v", err)
 		}
-
 	}
 
-	if err := n.stateMachine.FSM.Event("doNTP", n); err != nil {
-		log.Errorf("NTP Sync mode transition event failed. Err: %v", err)
-		return fmt.Errorf("NTP Sync mode transition event failed. Err: %v", err)
-	}
-
-	err := n.stateMachine.FSM.Event("doAdmission", n)
-	if err != nil {
-		log.Errorf("Naples Admission mode transition event failed. Err: %v", err)
-		return fmt.Errorf("NAPLES Admission mode transition event failed. Err: %v", err)
-	}
+	go n.runAdmissionControlLoop()
 
 	return nil
 }
@@ -352,13 +343,72 @@ func (n *NMD) handleHostModeTransition() error {
 	return nil
 }
 
-func (n *NMD) reconcileIPClient() error {
-	var mgmtIntf string
-	if n.IPClient != nil {
-		log.Infof("Calling Stop DHCPConfig from inside reconcile")
-		n.IPClient.StopDHCPConfig()
+// runAdmissionControlLoop is a wrapper to perform NAPLES admission and persist state
+func (n *NMD) runAdmissionControlLoop() {
+	log.Info("Started admission control loop and persisting config")
+	isEmulation := false
+	if _, err := os.Stat(globals.IotaEmulation); err == nil {
+		log.Infof("NMD running in Emulation mode as a real Venice controller is not available. Remove %v file if this was not desired.", globals.IotaEmulation)
+		isEmulation = true
 	}
 
+	if err := n.persistState(isEmulation); err != nil {
+		log.Errorf("Failed to persist config during admission control loop. Err: %v", errInternalServer(err))
+	}
+
+	spec := n.config.Spec
+	if spec.IPConfig != nil && len(spec.IPConfig.IPAddress) != 0 {
+		log.Info("Performing singleton static admission")
+		if err := n.triggerAdmissionEvents(); err != nil {
+			log.Errorf("Failed to trigger admission events for static IPConfig: %v", err)
+		}
+		return
+	}
+	ticker := time.NewTicker(ipif.AdmissionRetryDuration)
+
+	// We have valid controllers. Start Admission
+	if len(n.config.Status.Controllers) > 0 {
+		n.IPClient.StopDHCPConfig()
+		if err := n.triggerAdmissionEvents(); err == nil {
+			return
+		}
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			if len(n.config.Status.Controllers) > 0 {
+				n.IPClient.StopDHCPConfig()
+				if err := n.triggerAdmissionEvents(); err != nil {
+					log.Errorf("Failed to trigger admission events for DHCP IPConfig: %v", err)
+				} else {
+					log.Info("Successfully triggered admission events")
+					return
+				}
+			} else {
+				log.Info("Waiting for atleast one controller")
+			}
+		}
+	}
+}
+
+// triggerAdmissionEvents triggers Admission, NTP and state persistence.
+func (n *NMD) triggerAdmissionEvents() error {
+	if err := n.stateMachine.FSM.Event("doNTP", n); err != nil {
+		log.Errorf("NTP Sync mode transition event failed. Err: %v", err)
+		return fmt.Errorf("NTP Sync mode transition event failed. Err: %v", err)
+	}
+
+	err := n.stateMachine.FSM.Event("doAdmission", n)
+	if err != nil {
+		log.Errorf("Naples Admission mode transition event failed. Err: %v", err)
+		return fmt.Errorf("NAPLES Admission mode transition event failed. Err: %v", err)
+	}
+	return nil
+}
+
+func (n *NMD) reconcileIPClient() error {
+	var mgmtIntf string
 	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
 		mgmtIntf = ipif.NaplesInbandInterface
 
@@ -751,12 +801,6 @@ func (n *NMD) StopManagedMode() error {
 	// cancel tsdb connection
 	if n.tsdbCancel != nil {
 		n.tsdbCancel()
-	}
-
-	// Stop DHCP Config if any active
-	if n.IPClient != nil {
-		log.Infof("Calling StopDHCPConfig")
-		n.IPClient.StopDHCPConfig()
 	}
 
 	// Wait for goroutines launched in managed mode

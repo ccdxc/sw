@@ -108,7 +108,8 @@ func TestDHCPSpecControllers(t *testing.T) {
 	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
 
 	// Ensure dhcp state is missing vendor attributes
-	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must be done as the vendor options are specified via spec")
+	curState := ipClient.dhcpState.CurState
+	AssertEquals(t, dhcpDone.String(), curState, "DHCP State must be done as the vendor options are specified via spec")
 
 	// Ensure that there are no VeniceIPs
 	AssertEquals(t, true, ipClient.dhcpState.VeniceIPs["1.1.1.1"], " dhcp venice IPs must match static controllers")
@@ -430,6 +431,24 @@ func TestDHCPTimedout(t *testing.T) {
 	AssertEquals(t, ipClient.dhcpState.CurState, dhcpTimedout.String(), "DHCP should timeout when there is no dhcp server configured")
 }
 
+func TestDHCPRetries(t *testing.T) {
+	var d dhcpSrv
+	mockNMD := mock.CreateMockNMD(t.Name())
+	err := d.setup(noDHCP)
+	AssertOk(t, err, "Setup Failed")
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	AssertOk(t, err, "IPClient creates must succeed")
+	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Minute)
+	AssertEquals(t, ipClient.dhcpState.CurState, dhcpTimedout.String(), "DHCP should timeout when there is no dhcp server configured")
+	d.tearDown()
+
+	err = d.setup(configureValidVendorAttrs)
+	AssertOk(t, err, "Setup Failed")
+	time.Sleep(2 * time.Minute)
+	d.tearDown()
+}
+
 func TestInvalidInterface(t *testing.T) {
 	mockNMD := mock.CreateMockNMD(t.Name())
 	_, err := NewIPClient(mockNMD, "Some Invalid Interface")
@@ -493,8 +512,7 @@ func TestRenewalLoopPanics(t *testing.T) {
 	d.conn.Close()
 	time.Sleep(leaseDuration)
 
-	err = ipClient.StopDHCPConfig()
-	AssertOk(t, err, "Stopping of DHCP Config failed")
+	ipClient.StopDHCPConfig()
 }
 
 //++++++++++++++++++++++++++++ Test Utility Functions ++++++++++++++++++++++++++++++++++++++++
