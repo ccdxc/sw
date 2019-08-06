@@ -961,7 +961,7 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 		return "", nil
 	} else if req.Executable == "penrmpubkey" {
 		req.Executable = "rm"
-		req.Opts = "-rf /update/" + req.Opts
+		req.Opts = "-rf /update/*"
 		parts = strings.Fields(req.Opts)
 	} else if req.Executable == "penrmsshdfiles" {
 		req.Executable = "rm"
@@ -969,7 +969,7 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 		parts = strings.Fields(req.Opts)
 	} else if req.Executable == "penrmfirmware" {
 		req.Executable = "rm"
-		req.Opts = "-rf /update/" + req.Opts
+		req.Opts = "-rf /update/*"
 		parts = strings.Fields(req.Opts)
 	} else if req.Executable == "penrmauthkeys" {
 		req.Executable = "rm"
