@@ -122,22 +122,6 @@ static u16 ionic_eq_work_budget = 1000;
 module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
 MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 
-static bool ionic_sqcmb_inline = true;
-module_param_named(sqcmb_inline, ionic_sqcmb_inline, bool, 0644);
-MODULE_PARM_DESC(sqcmb_inline, "Only alloc sq cmb for inline data capability.");
-
-static int ionic_sqcmb_order = 0; /* XXX needs tuning */
-module_param_named(sqcmb_order, ionic_sqcmb_order, int, 0644);
-MODULE_PARM_DESC(sqcmb_order, "Only alloc sq cmb less than order.");
-
-static bool ionic_rqcmb_sqcmb = true;
-module_param_named(rqcmb_sqcmb, ionic_rqcmb_sqcmb, bool, 0644);
-MODULE_PARM_DESC(rqcmb_sqcmb, "Only alloc rq cmb if sq is cmb.");
-
-static int ionic_rqcmb_order = 0; /* XXX needs tuning */
-module_param_named(rqcmb_order, ionic_rqcmb_order, int, 0644);
-MODULE_PARM_DESC(rqcmb_order, "Only alloc rq cmb less than order.");
-
 static int ionic_max_pd = 1024;
 module_param_named(max_pd, ionic_max_pd, int, 0444);
 MODULE_PARM_DESC(max_pd, "Max number of PDs.");
@@ -2193,8 +2177,8 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_ah *ah;
 #endif
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(pd->ibpd.uobject);
 #ifdef HAVE_CREATE_AH_UDATA
+	struct ionic_ctx *ctx = to_ionic_ctx_uobj(pd->ibpd.uobject);
 	struct ionic_ah_resp resp = {0};
 #endif
 	int rc;
@@ -3975,20 +3959,20 @@ static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,
 	int rc;
 
 	if (!qp->has_sq)
-		goto err_cmb;
+		goto not_in_cmb;
 
 	if (ionic_sqcmb_inline && !cap_inline)
-		goto err_cmb;
+		goto not_in_cmb;
 
 	qp->sq_cmb_order = order_base_2(qp->sq.size / PAGE_SIZE);
 
 	if (qp->sq_cmb_order >= ionic_sqcmb_order)
-		goto err_cmb;
+		goto not_in_cmb;
 
 	rc = ionic_api_get_cmb(dev->lif, &qp->sq_cmb_pgid,
 			       &qp->sq_cmb_addr, qp->sq_cmb_order);
 	if (rc)
-		goto err_cmb;
+		goto not_in_cmb;
 
 	qp->sq_cmb_ptr = ioremap_wc(qp->sq_cmb_addr, qp->sq.size);
 	if (!qp->sq_cmb_ptr)
@@ -4007,7 +3991,7 @@ static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,
 
 err_map:
 	ionic_api_put_cmb(dev->lif, qp->sq_cmb_pgid, qp->sq_cmb_order);
-err_cmb:
+not_in_cmb:
 	qp->sq_is_cmb = false;
 	qp->sq_cmb_ptr = NULL;
 	qp->sq_cmb_order = IONIC_RES_INVALID;
@@ -4193,20 +4177,17 @@ static void ionic_qp_rq_init_cmb(struct ionic_ibdev *dev,
 	int rc;
 
 	if (!qp->has_rq)
-		goto err_cmb;
-
-	if (ionic_rqcmb_sqcmb && !qp->sq_is_cmb)
-		goto err_cmb;
+		goto not_in_cmb;
 
 	qp->rq_cmb_order = order_base_2(qp->rq.size / PAGE_SIZE);
 
 	if (qp->rq_cmb_order >= ionic_rqcmb_order)
-		goto err_cmb;
+		goto not_in_cmb;
 
 	rc = ionic_api_get_cmb(dev->lif, &qp->rq_cmb_pgid,
 			       &qp->rq_cmb_addr, qp->rq_cmb_order);
 	if (rc)
-		goto err_cmb;
+		goto not_in_cmb;
 
 	qp->rq_cmb_ptr = ioremap_wc(qp->rq_cmb_addr, qp->rq.size);
 	if (!qp->rq_cmb_ptr)
@@ -4225,7 +4206,7 @@ static void ionic_qp_rq_init_cmb(struct ionic_ibdev *dev,
 
 err_map:
 	ionic_api_put_cmb(dev->lif, qp->rq_cmb_pgid, qp->rq_cmb_order);
-err_cmb:
+not_in_cmb:
 	qp->rq_is_cmb = false;
 	qp->rq_cmb_ptr = NULL;
 	qp->rq_cmb_order = IONIC_RES_INVALID;

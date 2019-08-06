@@ -36,6 +36,21 @@
 #include "ionic_ibdebug.h"
 #include "ionic_ibdev.h"
 
+static SYSCTL_NODE(_hw, OID_AUTO, ionic_rdma, CTLFLAG_RD, 0,
+                   "Pensando RDMA parameters");
+
+int ionic_sqcmb_order = 5; /* 32 pages */
+SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, sqcmb_order, CTLFLAG_RWTUN,
+    &ionic_sqcmb_order, 0, "Only alloc SQ in CMB if less than order");
+
+bool ionic_sqcmb_inline = false;
+SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, sqcmb_inline, CTLFLAG_RWTUN,
+    &ionic_sqcmb_inline, 0, "Only alloc SQ in CMB when using inline data");
+
+int ionic_rqcmb_order = 5; /* 32 pages */
+SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, rqcmb_order, CTLFLAG_RWTUN,
+    &ionic_rqcmb_order, 0, "Only alloc RQ in CMB if less than order");
+
 static struct sysctl_oid *ionic_node(struct sysctl_ctx_list *ctx,
 				     struct sysctl_oid_list *parent,
 				     const char *name, const char *descr)

@@ -524,4 +524,9 @@ int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
 
 void ionic_ibdev_reset(struct ionic_ibdev *dev);
 
+/* Global config knobs */
+extern int ionic_sqcmb_order;
+extern bool ionic_sqcmb_inline;
+extern int ionic_rqcmb_order;
+
 #endif /* IONIC_IBDEV_H */
