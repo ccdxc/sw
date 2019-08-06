@@ -18,11 +18,15 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
+import { IMonitoringFwlogPolicy, MonitoringEventPolicySpec_format, MonitoringFwlogPolicySpec_filter, MonitoringFwlogPolicySpec_format, MonitoringSyslogExportConfig_facility_override, MonitoringFwlogPolicy } from '@sdk/v1/models/generated/monitoring';
+import { TestingUtility } from '@app/common/TestingUtility';
+import * as _ from 'lodash';
 
 
 describe('NewfwlogpolicyComponent', () => {
   let component: NewfwlogpolicyComponent;
   let fixture: ComponentFixture<NewfwlogpolicyComponent>;
+  let tu: TestingUtility;
 
   configureTestSuite(() => {
     TestBed.configureTestingModule({
@@ -53,11 +57,78 @@ describe('NewfwlogpolicyComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewfwlogpolicyComponent);
+    tu = new TestingUtility(fixture);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    const service = TestBed.get(MonitoringService);
+    const spy = spyOn(service, 'AddFwlogPolicy');
+    fixture.detectChanges();
+
+    const policy: IMonitoringFwlogPolicy = {
+      meta: {
+        name: 'policy1'
+      },
+      spec: {
+        filter: [MonitoringFwlogPolicySpec_filter.all],
+        format: MonitoringFwlogPolicySpec_format['syslog-rfc5424'],
+        targets: [
+          {
+            destination: '1.1.1.1',
+            transport: 'tcp/90'
+          }
+        ],
+        config: {
+          prefix: 'prefix',
+          'facility-override': MonitoringSyslogExportConfig_facility_override.local0,
+        }
+      }
+    };
+
+    tu.setInput('.newfwlogpolicy-name', policy.meta.name);
+    tu.setSyslogData(policy.spec as any);
+    component.saveObject();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+    const recVal = spy.calls.mostRecent().args[0];
+    const expVal = new MonitoringFwlogPolicy(policy).getModelValues();
+    expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + recVal + ' , expected: ' + expVal);
+  });
+
+  it('should update', () => {
+    component.isInline = true;
+    const policy: IMonitoringFwlogPolicy = {
+      meta: {
+        name: 'policy1'
+      },
+      spec: {
+        filter: [MonitoringFwlogPolicySpec_filter.all],
+        format: MonitoringFwlogPolicySpec_format['syslog-rfc5424'],
+        targets: [
+          {
+            destination: '1.1.1.1',
+            transport: 'tcp/90'
+          }
+        ],
+        config: {
+          prefix: 'prefix',
+          'facility-override': MonitoringSyslogExportConfig_facility_override.local0,
+        }
+      }
+    };
+    component.objectData = policy;
+    const service = TestBed.get(MonitoringService);
+    const spy = spyOn(service, 'UpdateFwlogPolicy');
+    fixture.detectChanges();
+
+    policy.spec.targets[0].destination = '2.2.2.2';
+
+    tu.setSyslogData(policy.spec as any);
+    tu.sendClick(tu.getElemByCss('.global-button-primary.newfwlogpolicy-save'));
+    expect(spy).toHaveBeenCalled();
+    const recVal = spy.calls.mostRecent().args[1];
+    const expVal = new MonitoringFwlogPolicy(policy).getModelValues();
+    expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
   });
 });

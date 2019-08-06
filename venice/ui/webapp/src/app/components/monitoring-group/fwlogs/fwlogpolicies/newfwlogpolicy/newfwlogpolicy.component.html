@@ -3,7 +3,7 @@
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
          fxLayoutAlign="start stretch" class="newfwlogpolicy-content">
-      <div fxFlex fxLayout="column" [formGroup]="newPolicy.$formGroup">
+      <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
         <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newfwlogpolicy-row">
           <input fxFlex="300px" formControlName="name" class="newfwlogpolicy-name" appErrorTooltip
                  spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
@@ -12,7 +12,7 @@
         <!-- Commented out because VRF is not exposed in the UI for now. -->
         <!-- <div fxFlex="25px"></div> -->
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-        <!-- <div fxFlex="noshrink" fxLayout="row" [formGroup]="newPolicy.$formGroup.get(['spec'])">
+        <!-- <div fxFlex="noshrink" fxLayout="row" [formGroup]="newObject.$formGroup.get(['spec'])">
           <div fxFlex="nogrow" fxLayout="column">
             <div class="newfwlogpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
                  fxLayoutAlign="start center">
@@ -49,7 +49,7 @@
 
         <div fxFlex="noshrink" fxLayout="row">
           <app-syslog #syslogComponent
-                      [syslogExport]="newPolicy.$formGroup.get(['spec']).value"
+                      [syslogExport]="newObject.$formGroup.get(['spec']).value"
                       targetTransport="<TCP/UDP>/<port>"
                       [maxTargets]="maxTargets"
                       fxFlex="nogrow" fxLayout="column"></app-syslog>
@@ -58,10 +58,10 @@
       <div *ngIf="isInline" class="newfwlogpolicy-buttoncontainer" fxFlex="nogrow"
            fxLayout="row wrap" fxLayoutAlign="start start">
         <div fxFlex="nogrow">
-          <span (click)="savePolicy()" class="global-button-primary newfwlogpolicy-save">SAVE</span>
+          <span (click)="saveObject()" class="global-button-primary newfwlogpolicy-save">SAVE</span>
         </div>
         <div fxFlex="nogrow">
-          <span (click)="cancelPolicy()"
+          <span (click)="cancelObject()"
                 class="global-button-neutral newfwlogpolicy-cancel">CANCEL</span>
         </div>
       </div>

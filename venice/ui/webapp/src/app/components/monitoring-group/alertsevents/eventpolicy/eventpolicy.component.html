@@ -49,6 +49,6 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-neweventpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
+  <app-neweventpolicy [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
   </app-neweventpolicy>
 </ng-template>

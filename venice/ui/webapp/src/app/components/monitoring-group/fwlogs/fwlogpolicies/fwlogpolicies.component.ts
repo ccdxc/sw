@@ -24,7 +24,6 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   public static MAX_TARGETS_PER_POLICY = 2;
   public static MAX_TOTAL_TARGETS = 8;
   @ViewChild('policiesTable') policytable: Table;
-  subscriptions = [];
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
@@ -73,7 +72,6 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   postNgInit() {
     this.getFwlogPolicies();
     this.maxNewTargets = this.computeTargets();
-
   }
 
   ngDoCheck() {
@@ -139,7 +137,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   }
 
   generateDeleteConfirmMsg(object: IMonitoringFwlogPolicy) {
-    return 'Are you sure to delete firewall log policy : ' + object.meta.name;
+    return 'Are you sure you want to delete firewall log policy ' + object.meta.name;
   }
 
   generateDeleteSuccessMsg(object: MonitoringFwlogPolicy) {

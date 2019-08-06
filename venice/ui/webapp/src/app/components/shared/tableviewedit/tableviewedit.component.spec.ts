@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ChangeDetectorRef, Component, Input } from '@angular/core';
-import {  ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
 import { MatIconRegistry } from '@angular/material';
 import { By } from '@angular/platform-browser';
@@ -15,7 +15,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { BehaviorSubject } from 'rxjs';
-import { TablevieweditHTMLComponent, TablevieweditAbstract } from './tableviewedit.component';
+import { TablevieweditHTMLComponent, TablevieweditAbstract, CreationForm } from './tableviewedit.component';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { SorticonComponent } from '../sorticon/sorticon.component';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -25,6 +25,9 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { AuthService } from '@app/services/auth.service';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
+import { ApiObjectMeta, IApiObjectMeta } from '@sdk/v1/models/generated/auth';
+import { FormGroup } from '@angular/forms';
 
 export class TestTablevieweditRBAC {
   fixture: ComponentFixture<any>;
@@ -189,6 +192,8 @@ class DummyComponent extends TablevieweditAbstract<IDummyObj, DummyObj> {
     super(controllerService, cdr);
   }
 
+  postNgInit() { }
+
   getClassName() {
     return this.constructor.name;
   }
@@ -213,6 +218,87 @@ class DummyComponent extends TablevieweditAbstract<IDummyObj, DummyObj> {
     return 'delete msg ' + object.name;
   }
 }
+
+interface IDummyCreateObj {
+  meta: IApiObjectMeta;
+}
+
+class DummyCreateObj extends BaseModel implements IDummyCreateObj {
+  'meta': ApiObjectMeta = null;
+
+  constructor() {
+    super();
+    this['meta'] = new ApiObjectMeta();
+  }
+
+  getPropInfo() {
+    return null;
+  }
+
+  protected getFormGroup(): FormGroup {
+    if (!this._formGroup) {
+        this._formGroup = new FormGroup({
+            'meta': this['meta'].$formGroup,
+        });
+        // We force recalculation of controls under a form group
+        Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+            const control = this._formGroup.get('meta').get(field);
+            control.updateValueAndValidity();
+        });
+    }
+    return this._formGroup;
+  }
+}
+
+@Component({
+  template: `
+    <div>Hello</div>
+            `
+})
+class DummyCreateComponent extends CreationForm<IDummyCreateObj, DummyCreateObj> {
+  constructor(protected controllerService: ControllerService,
+    protected cdr: ChangeDetectorRef) {
+    super(controllerService, DummyCreateObj);
+  }
+
+  getClassName() {
+    return this.constructor.name;
+  }
+
+  // Empty Hook
+  postNgInit() {}
+
+  // Empty Hook
+  isFormValid() {
+    return true;
+  }
+
+  // Will be mocked in test
+  setInlineToolbar() {
+    this.controllerService.setToolbarData({});
+  }
+
+  createObject(object) {
+    return new BehaviorSubject<any>(
+     object
+    ).asObservable();
+  }
+
+  updateObject(object) {
+    return new BehaviorSubject<any>(
+     object
+    ).asObservable();
+  }
+
+  generateCreateSuccessMsg(object) {
+    return 'create msg ' + object.name;
+  }
+
+  generateUpdateSuccessMsg(object) {
+    return 'update msg ' + object.name;
+  }
+}
+
 
 describe('TablevieweditComponent', () => {
   let component: DummyComponent;
@@ -274,6 +360,7 @@ describe('TablevieweditComponent', () => {
      TestBed.configureTestingModule({
       declarations: [
         DummyComponent,
+        DummyCreateComponent,
         TablevieweditHTMLComponent,
         LazyrenderComponent,
         SorticonComponent,
@@ -300,15 +387,12 @@ describe('TablevieweditComponent', () => {
         UIConfigsService
       ]
     });
-      });
+  });
 
-  beforeEach(() => {
+  it('should create tableviewedit', fakeAsync(() => {
     fixture = TestBed.createComponent(DummyComponent);
     component = fixture.componentInstance;
     component.dataObjects = initialData;
-  });
-
-  it('should create', fakeAsync(() => {
     const toolbarSpy = spyOn(component, 'setDefaultToolbar');
 
     fixture.detectChanges();
@@ -395,7 +479,6 @@ describe('TablevieweditComponent', () => {
     // delete an object and check for confirm messages
 
     const confirmSpy = spyOn(TestBed.get(ConfirmationService), 'confirm');
-    // const confirmSpy = spyOn(window, 'confirm').and.returnValue(true);
     const toasterSpy = spyOn(TestBed.get(ControllerService), 'invokeSuccessToaster');
     component.onDeleteRecord(null, newItems[0]);
     expect(confirmSpy).toHaveBeenCalled();
@@ -411,4 +494,50 @@ describe('TablevieweditComponent', () => {
     tick(2000);
 
   }));
+
+  it('creation form create', () => {
+    const createFixture = TestBed.createComponent(DummyCreateComponent);
+    const createComponent = createFixture.componentInstance;
+    const postNgInitSpy = spyOn(createComponent, 'postNgInit');
+    const toolbarSpy = spyOn(createComponent, 'setInlineToolbar');
+    createFixture.detectChanges();
+    expect(createComponent.newObject).toBeTruthy();
+    expect(postNgInitSpy).toHaveBeenCalled();
+    expect(toolbarSpy).toHaveBeenCalled();
+
+    const toasterSpy = spyOn(TestBed.get(ControllerService), 'invokeSuccessToaster');
+    const createSpy = spyOn(createComponent, 'createObject').and.callThrough();
+    createComponent.newObject.$formGroup.get('meta.name').setValue('policy1');
+    createComponent.saveObject();
+    createFixture.detectChanges();
+
+    expect(createSpy).toHaveBeenCalled();
+    expect(toasterSpy).toHaveBeenCalled();
+    expect(toasterSpy).toHaveBeenCalledWith('Create Successful', createComponent.generateCreateSuccessMsg(createComponent.newObject));
+
+  });
+
+  it('creation form update', () => {
+    const createFixture = TestBed.createComponent(DummyCreateComponent);
+    const createComponent = createFixture.componentInstance;
+    createComponent.isInline = true;
+    createComponent.objectData = { meta: { name: 'policy1'}};
+    const postNgInitSpy = spyOn(createComponent, 'postNgInit');
+    const toolbarSpy = spyOn(createComponent, 'setInlineToolbar');
+    createFixture.detectChanges();
+    expect(createComponent.newObject).toBeTruthy();
+    expect(postNgInitSpy).toHaveBeenCalled();
+    expect(toolbarSpy).toHaveBeenCalledTimes(0);
+
+    const toasterSpy = spyOn(TestBed.get(ControllerService), 'invokeSuccessToaster');
+    const createSpy = spyOn(createComponent, 'updateObject').and.callThrough();
+    createComponent.newObject.$formGroup.get('meta.name').setValue('policy1');
+    createComponent.saveObject();
+    createFixture.detectChanges();
+
+    expect(createSpy).toHaveBeenCalled();
+    expect(toasterSpy).toHaveBeenCalled();
+    expect(toasterSpy).toHaveBeenCalledWith('Update Successful', createComponent.generateUpdateSuccessMsg(createComponent.objectData));
+
+  });
 });

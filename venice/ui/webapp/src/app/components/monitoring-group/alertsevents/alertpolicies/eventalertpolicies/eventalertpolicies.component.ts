@@ -57,6 +57,9 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
     super(controllerService, cdr);
   }
 
+  // Hook for overriding
+  postNgInit() { }
+
   getClassName(): string {
     return this.constructor.name;
   }

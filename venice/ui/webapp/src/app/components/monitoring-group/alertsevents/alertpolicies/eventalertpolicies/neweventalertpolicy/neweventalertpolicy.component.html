@@ -4,7 +4,7 @@
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
          fxLayoutAlign="start stretch" class="neweventalertpolicy-content"
-         [formGroup]="newPolicy.$formGroup">
+         [formGroup]="newObject.$formGroup">
 
       <ng-container formGroupName="spec">
         <mat-slide-toggle formControlName="enable" fxFlex='nogrow'
@@ -26,7 +26,7 @@
               <div fxFlex="nogrow" class="neweventalertpolicy-text">IF EVENT:</div>
               <app-fieldselector #fieldSelector
                                  kind="Event"
-                                 [formArray]="newPolicy.$formGroup.get(['spec', 'requirements'])"
+                                 [formArray]="newObject.$formGroup.get(['spec', 'requirements'])"
                                  keyFormName="key"
                                  operatorFormName="operator"
                                  valueFormName="values">
@@ -46,13 +46,13 @@
                               [options]="alertOptions"></p-dropdown>
                   <div fxFlex="30px" fxLayout="row" fxLayoutAlign="center center">
                     <mat-icon fxFlex="none"
-                              *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'critical'"
+                              *ngIf="newObject.$formGroup.value.spec.severity?.toLowerCase() === 'critical'"
                               class="global-alert-critical-icon">error</mat-icon>
                     <mat-icon fxFlex="none"
-                              *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'warn'"
+                              *ngIf="newObject.$formGroup.value.spec.severity?.toLowerCase() === 'warn'"
                               class="global-alert-warning-icon">error</mat-icon>
                     <mat-icon fxFlex="none"
-                              *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'info'"
+                              *ngIf="newObject.$formGroup.value.spec.severity?.toLowerCase() === 'info'"
                               class="global-alert-info-icon">notifications</mat-icon>
                   </div>
                   <div fxFlex></div>
@@ -79,11 +79,11 @@
       <div *ngIf="isInline" class="neweventalertpolicy-buttoncontainer" fxFlex="nogrow"
            fxLayout="row wrap" fxLayoutAlign="start start">
         <div fxFlex="65px" fxLayout="row">
-          <div fxFlex="65px" (click)="savePolicy()"
+          <div fxFlex="65px" (click)="saveObject()"
                class="global-button-primary neweventalertpolicy-save">SAVE</div>
         </div>
         <div fxFlex="65px" fxLayout="row">
-          <div fxFlex="65px" (click)="cancelPolicy()"
+          <div fxFlex="65px" (click)="cancelObject()"
                class="global-button-neutral neweventalertpolicy-cancel">CANCEL</div>
         </div>
       </div>

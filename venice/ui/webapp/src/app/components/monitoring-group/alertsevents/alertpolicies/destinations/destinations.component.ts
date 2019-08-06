@@ -50,6 +50,8 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
     super(controllerService, cdr);
   }
 
+  postNgInit() { }
+
   getClassName(): string {
     return this.constructor.name;
   }

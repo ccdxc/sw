@@ -19,10 +19,14 @@ import { SharedModule } from '@app/components/shared/shared.module';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
+import { IMonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertPolicySpec_severity, MonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
+import { TestingUtility } from '@app/common/TestingUtility';
+import * as _ from 'lodash';
 
 describe('NeweventalertpolicyComponent', () => {
   let component: NeweventalertpolicyComponent;
   let fixture: ComponentFixture<NeweventalertpolicyComponent>;
+  let tu: TestingUtility;
 
   configureTestSuite(() => {
      TestBed.configureTestingModule({
@@ -54,11 +58,80 @@ describe('NeweventalertpolicyComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NeweventalertpolicyComponent);
+    tu = new TestingUtility(fixture);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    const service = TestBed.get(MonitoringService);
+    const spy = spyOn(service, 'AddAlertPolicy');
+    fixture.detectChanges();
+
+    const policy: IMonitoringAlertPolicy = {
+      meta: {
+        name: 'policy1'
+      },
+      spec: {
+        enable: true,
+        resource: 'Event',
+        requirements: [
+          {
+            key: 'meta.name',
+            operator: FieldsRequirement_operator.in,
+            values: ['test1', 'test2']
+          }
+        ],
+        severity: MonitoringAlertPolicySpec_severity.critical,
+      }
+    };
+
+    tu.setInput('.neweventalertpolicy-name', policy.meta.name);
+    tu.setRepeater(policy.spec.requirements);
+    tu.setDropdown('.neweventalertpolicy-severity', policy.spec.severity);
+    component.saveObject();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+    const recVal = spy.calls.mostRecent().args[0];
+    const expVal = new MonitoringAlertPolicy(policy).getModelValues();
+    expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
+  });
+
+  it('should update', () => {
+    component.isInline = true;
+    const policy: IMonitoringAlertPolicy = {
+      meta: {
+        name: 'policy1'
+      },
+      spec: {
+        enable: true,
+        resource: 'Event',
+        requirements: [
+          {
+            key: 'meta.name',
+            operator: FieldsRequirement_operator.in,
+            values: ['test1', 'test2']
+          }
+        ],
+        severity: MonitoringAlertPolicySpec_severity.critical,
+      }
+    };
+    component.objectData = policy;
+    const service = TestBed.get(MonitoringService);
+    const spy = spyOn(service, 'UpdateAlertPolicy');
+    fixture.detectChanges();
+
+    policy.spec.requirements[0].values = ['test3'];
+    tu.setRepeater(policy.spec.requirements);
+
+    tu.sendClick(tu.getElemByCss('.global-button-primary.neweventalertpolicy-save'));
+    expect(spy).toHaveBeenCalled();
+    const recVal = spy.calls.mostRecent().args[1];
+    const expVal = new MonitoringAlertPolicy(policy).getModelValues();
+    expect(_.isEqual(recVal.meta, expVal.meta)).toBeTruthy('Received: ' + JSON.stringify(recVal.meta) + ' , expected: ' + JSON.stringify(expVal.meta));
+    expect(_.isEqual(recVal.status, expVal.status)).toBeTruthy('Received: ' + JSON.stringify(recVal.status) + ' , expected: ' + JSON.stringify(expVal.status));
+    expect(_.isEqual(recVal.spec.requirements, expVal.spec.requirements)).toBeTruthy('Received: ' + JSON.stringify(recVal.spec.requirements) + ' , expected: ' + JSON.stringify(expVal.spec.requirements));
+
+    expect(_.isEqual(recVal.spec, expVal.spec)).toBeTruthy('Received: ' + JSON.stringify(recVal.spec) + ' , expected: ' + JSON.stringify(expVal.spec));
+    expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
   });
 });

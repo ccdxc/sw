@@ -12,6 +12,8 @@ import { LazyLoadEvent } from 'primeng/primeng';
 import { TableCol, RowClickEvent } from '.';
 import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
+import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
+import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
 
 
 /**
@@ -286,8 +288,11 @@ export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDes
     this.postNgInit();
   }
 
-  // Hook to add logic to the initialization for classes extending this component
-  postNgInit() { }
+
+  // Hook to add extra logic during component initialization
+  // Defining as abstract to enforce the idea that ngOnInit shouldn't be overriden unless
+  // it's really needed.
+  abstract postNgInit(): void;
 
   isRowExpanded() {
     return this.expandedRowData != null;
@@ -442,4 +447,163 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
       }
     });
   }
+}
+
+export abstract class CreationForm<I, T extends BaseModel> implements OnInit, OnDestroy, AfterViewInit {
+  subscriptions: Subscription[] = [];
+  newObject: T;
+
+  @Input() isInline: boolean = false;
+  @Input() objectData: I;
+  @Output() formClose: EventEmitter<any> = new EventEmitter();
+
+  oldButtons: ToolbarButton[] = [];
+
+  abstract getClassName(): string;
+  // Hook to add extra logic during component initialization
+  // Defining as abstract to enforce the idea that ngOnInit shouldn't be overriden unless
+  // it's really needed.
+  abstract postNgInit(): void;
+  abstract setInlineToolbar(): void;
+
+  abstract createObject(object: I): Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
+  abstract updateObject(newObject: I, oldObject: I): Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
+  abstract generateCreateSuccessMsg(object: I): string;
+  abstract generateUpdateSuccessMsg(object: I): string;
+  abstract isFormValid(): boolean;
+
+  constructor(protected controllerService: ControllerService, protected objConstructor: any) {
+  }
+
+
+  ngOnInit() {
+    this.controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': this.getClassName(), 'state':
+        Eventtypes.COMPONENT_INIT
+    });
+    if (this.objectData != null) {
+      this.newObject = new this.objConstructor(this.objectData);
+    } else {
+      this.newObject = new this.objConstructor();
+    }
+    this.setDefaultValidation();
+    this.postNgInit();
+  }
+
+  setDefaultValidation() {
+    if (this.isInline) {
+      // disable name field
+      this.newObject.$formGroup.get(['meta', 'name']).disable();
+    }
+    this.setCustomValidation();
+  }
+
+  // hook for overriding
+  setCustomValidation() { }
+
+  ngAfterViewInit() {
+    this.replaceToolbar();
+  }
+
+  replaceToolbar() {
+    if (!this.isInline) {
+      // If it is not inline, we change the toolbar buttons, and save the old one
+      // so that we can set it back when we are done
+      const currToolbar = this.controllerService.getToolbarData();
+      this.oldButtons = currToolbar.buttons;
+      this.setInlineToolbar();
+    }
+  }
+
+  computeButtonClass() {
+    if (this.newObject.$formGroup.get('meta.name').status === 'VALID' && this.isFormValid()) {
+      return '';
+    } else {
+      return 'global-button-disabled';
+    }
+  }
+
+  // Function should be overriden if some values don't reside in the formGroup
+  getObjectValues(): I {
+    return this.newObject.getFormGroupValues();
+  }
+
+  saveObject() {
+    // Submit to server
+    const policy: I = this.getObjectValues();
+    let handler: Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
+
+    if (this.isInline) {
+      // the name is gone when we call getFormGroupValues
+      // This is beacuse we disabled it in the form group to stop the user from editing it.
+      // When you disable an angular control, in doesn't show up when you get the value of the group
+      (<any>policy).meta.name = (<any> this.objectData).meta.name;
+      handler = this.updateObject(policy, this.objectData);
+    } else {
+      handler = this.createObject(policy);
+    }
+
+    if (handler == null) {
+      return;
+    }
+
+    handler.subscribe(
+      (response) => {
+        if (this.isInline) {
+          this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, this.generateUpdateSuccessMsg(policy));
+          this.onSaveSuccess(false);
+        } else {
+          this.controllerService.invokeSuccessToaster(Utility.CREATE_SUCCESS_SUMMARY, this.generateCreateSuccessMsg(policy));
+          this.onSaveSuccess(true);
+        }
+        this.cancelObject();
+      },
+      (error) => {
+        if (this.isInline) {
+          this.controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
+          this.onSaveFailure(false);
+        } else {
+          this.controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
+          this.onSaveFailure(true);
+        }
+      }
+    );
+  }
+
+  // Hook for overriding
+  onSaveSuccess(isCreate: boolean) { }
+
+  // Hook for overriding
+  onSaveFailure(isCreate: boolean) { }
+
+  cancelObject() {
+    if (!this.isInline) {
+      // Need to reset the toolbar that we changed
+      this.setPreviousToolbar();
+    }
+    this.formClose.emit();
+  }
+
+  /**
+   * Sets the previously saved toolbar buttons
+   * They should have been saved in the ngOnInit when we are inline.
+   */
+  setPreviousToolbar() {
+    if (this.oldButtons != null) {
+      const currToolbar = this.controllerService.getToolbarData();
+      currToolbar.buttons = this.oldButtons;
+      this.controllerService.setToolbarData(currToolbar);
+    }
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
+    this.controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
+      'component': this.getClassName(), 'state':
+        Eventtypes.COMPONENT_DESTROY
+    });
+  }
+
 }

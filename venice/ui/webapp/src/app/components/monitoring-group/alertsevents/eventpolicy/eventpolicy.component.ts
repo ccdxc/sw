@@ -65,7 +65,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
     this.getEventPolicy();
   }
 
-  getClassName() {
+  getClassName(): string {
     return this.constructor.name;
   }
 

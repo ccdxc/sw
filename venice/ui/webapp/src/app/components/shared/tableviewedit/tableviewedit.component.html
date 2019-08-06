@@ -1,6 +1,6 @@
 <div fxFlex="auto" fxLayout="column" class="tableviewedit-widget">
   <div [@slideInOut] *ngIf="creatingMode" fxFlex="none" fxLayout="column">
-    <ng-container table *ngTemplateOutlet="createTemplate"></ng-container>
+    <ng-container *ngTemplateOutlet="createTemplate"></ng-container>
     <div fxFlex="0px" class="tableviewedit-creation-border"></div>
   </div>
   <div fxFlex class="tableviewedit-tablecontainer">

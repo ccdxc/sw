@@ -60,7 +60,8 @@
       </div>
       <div fxFlex="nogrow" fxLayout="column" class="syslog-fieldtitle-prefix-value">
         <div fxFlex="30px" fxLayout="row" class="syslog-value">
-          <input appErrorTooltip formControlName="prefix" fxFlex="nogrow" class="syslog-input"
+          <input appErrorTooltip formControlName="prefix" fxFlex="nogrow"
+                 class="syslog-input syslog-prefix"
                  spellcheck="false" type="text" pInputText
                  placeholder="">
         </div>
@@ -100,12 +101,14 @@
       <div fxFlex="10px"></div>
       <div fxFlex="30px" class="syslog-fieldtitle"></div>
       <div fxFlex="30px" fxLayout="row" class="syslog-value">
-        <input formControlName="destination" appErrorTooltip fxFlex="nogrow" class="syslog-input"
+        <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
+               class="syslog-input syslog-destination"
                spellcheck="false" type="text" pInputText
                placeholder="IP address/URL...">
       </div>
       <div fxFlex="30px" fxLayout="row" class="syslog-value">
-        <input formControlName="transport" appErrorTooltip fxFlex="nogrow" class="syslog-input"
+        <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
+               class="syslog-input syslog-transport"
                spellcheck="false" type="text" pInputText
                [placeholder]="targetTransport">
       </div>

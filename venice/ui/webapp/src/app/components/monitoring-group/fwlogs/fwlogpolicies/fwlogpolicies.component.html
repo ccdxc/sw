@@ -21,7 +21,7 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newfwlogpolicy [@slideInOut] (formClose)="creationFormClose()" [maxTargets]="maxNewTargets"
+  <app-newfwlogpolicy (formClose)="creationFormClose()" [maxTargets]="maxNewTargets"
                       fxFlex="none">
   </app-newfwlogpolicy>
 </ng-template>
@@ -44,6 +44,6 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newfwlogpolicy [style.width]="'100%'" [@slideInOut] [policyData]="rowData" [isInline]="true"
+  <app-newfwlogpolicy [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
                       (formClose)="closeRowExpand()" fxFlex="none"></app-newfwlogpolicy>
 </ng-template>

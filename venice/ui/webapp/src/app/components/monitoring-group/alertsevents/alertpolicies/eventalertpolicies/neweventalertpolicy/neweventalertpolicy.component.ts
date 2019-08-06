@@ -1,15 +1,13 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
-import { BaseComponent } from '@app/components/base/base.component';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem } from 'primeng/primeng';
-import { Observable } from 'rxjs';
-import { required } from '@sdk/v1/utils/validators';
+import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 
 @Component({
   selector: 'app-neweventalertpolicy',
@@ -18,14 +16,10 @@ import { required } from '@sdk/v1/utils/validators';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None,
 })
-export class NeweventalertpolicyComponent extends BaseComponent implements OnInit, AfterViewInit {
+export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertPolicy, MonitoringAlertPolicy> implements OnInit, AfterViewInit {
   @ViewChild('fieldSelector') fieldSelector: FieldselectorComponent;
-  newPolicy: MonitoringAlertPolicy;
 
-  @Input() isInline: boolean = false;
-  @Input() policyData: IMonitoringAlertPolicy;
   @Input() destinations: IMonitoringAlertDestination[] = [];
-  @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   alertOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringAlertPolicySpec.propInfo['severity'].enum);
 
@@ -33,27 +27,18 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
 
   oldButtons: ToolbarButton[] = [];
 
-  constructor(protected _controllerService: ControllerService,
+  constructor(protected controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
   ) {
-    super(_controllerService);
+    super(controllerService, MonitoringAlertPolicy);
   }
 
-  ngOnInit() {
-    if (this.policyData != null) {
-      this.newPolicy = new MonitoringAlertPolicy(this.policyData);
-    } else {
-      this.newPolicy = new MonitoringAlertPolicy();
-      // Remove once Sanjay adds better defaults to the swagger
-      this.newPolicy.spec.enable = true;
+  postNgInit() {
+    if (this.objectData == null) {
+      this.newObject.spec.enable = true;
     }
 
-    if (this.isInline) {
-      // disable name field
-      this.newPolicy.$formGroup.get(['meta', 'name']).disable();
-    }
-    this.newPolicy.$formGroup.get(['spec', 'resource']).setValue('Event');
-
+    this.newObject.$formGroup.get(['spec', 'resource']).setValue('Event');
 
     this.destinations.forEach((destination) => {
       this.destinationOptions.push({
@@ -63,89 +48,54 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
     });
   }
 
-  ngAfterViewInit() {
-    if (!this.isInline) {
-      // If it is not inline, we change the toolbar buttons, and save the old one
-      // so that we can set it back when we are done
-      const currToolbar = this._controllerService.getToolbarData();
-      this.oldButtons = currToolbar.buttons;
-      currToolbar.buttons = [
-        {
-          cssClass: 'global-button-primary eventalertpolicies-button eventalertpolicies-button-eventalertpolicy-SAVE',
-          text: 'CREATE ALERT POLICY',
-          callback: () => { this.savePolicy(); },
-          computeClass: () => this.computeButtonClass()
-        },
-        {
-          cssClass: 'global-button-neutral eventalertpolicies-button eventalertpolicies-button-eventalertpolicy-CANCEL',
-          text: 'CANCEL',
-          callback: () => { this.cancelPolicy(); }
-        },
-      ];
-
-      this._controllerService.setToolbarData(currToolbar);
-    }
+  getClassName(): string {
+    return this.constructor.name;
   }
 
-  computeButtonClass() {
-    if (this.newPolicy.$formGroup.get('meta.name').status === 'VALID') {
-      return '';
-    } else {
-      return 'global-button-disabled';
-    }
+  // Empty Hook
+  isFormValid(): boolean {
+    return true;
   }
 
-  /**
-   * Sets the previously saved toolbar buttons
-   * They should have been saved in the ngOnInit when we are inline.
-   */
-  setPreviousToolbar() {
-    if (this.oldButtons != null) {
-      const currToolbar = this._controllerService.getToolbarData();
-      currToolbar.buttons = this.oldButtons;
-      this._controllerService.setToolbarData(currToolbar);
-    }
-  }
-
-  savePolicy() {
-    // Submit to server
-    const policy: IMonitoringAlertPolicy = this.newPolicy.getFormGroupValues();
-    let handler: Observable<{ body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number }>;
-
-    policy.spec.requirements = this.fieldSelector.getValues();
-    if (this.isInline) {
-      // Using this.newPolicy to get name, as the name is gone when we call getFormGroupValues
-      // This is beacuse we disabled it in the form group to stop the user from editing it.
-      // When you disable an angular control, in doesn't show up when you get the value of the group
-      handler = this._monitoringService.UpdateAlertPolicy(this.newPolicy.meta.name, policy);
-    } else {
-      handler = this._monitoringService.AddAlertPolicy(policy);
-    }
-
-    handler.subscribe(
-      (response) => {
-        if (this.isInline) {
-          this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated policy ' + this.newPolicy.meta.name);
-        } else {
-          this._controllerService.invokeSuccessToaster(Utility.CREATE_SUCCESS_SUMMARY, 'Created policy ' + policy.meta.name);
-        }
-        this.cancelPolicy();
+  setInlineToolbar() {
+    const currToolbar = this.controllerService.getToolbarData();
+    currToolbar.buttons = [
+      {
+        cssClass: 'global-button-primary eventalertpolicies-button eventalertpolicies-button-eventalertpolicy-SAVE',
+        text: 'CREATE ALERT POLICY',
+        callback: () => { this.saveObject(); },
+        computeClass: () => this.computeButtonClass()
       },
-      (error) => {
-        if (this.isInline) {
-          this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
-        } else {
-          this._controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
-        }
-      }
-    );
+      {
+        cssClass: 'global-button-neutral eventalertpolicies-button eventalertpolicies-button-eventalertpolicy-CANCEL',
+        text: 'CANCEL',
+        callback: () => { this.cancelObject(); }
+      },
+    ];
+
+    this.controllerService.setToolbarData(currToolbar);
   }
 
-  cancelPolicy() {
-    if (!this.isInline) {
-      // Need to reset the toolbar that we changed
-      this.setPreviousToolbar();
-    }
-    this.formClose.emit();
+  getObjectValues(): IMonitoringAlertPolicy {
+    const obj = this.newObject.getFormGroupValues();
+    obj.spec.requirements = this.fieldSelector.getValues();
+    return obj;
   }
+
+  createObject(object: IMonitoringAlertPolicy) {
+    return this._monitoringService.AddAlertPolicy(object);
+  }
+
+  updateObject(newObject: IMonitoringAlertPolicy, oldObject: IMonitoringAlertPolicy) {
+    return this._monitoringService.UpdateAlertPolicy(oldObject.meta.name, newObject, null, oldObject);
+  }
+
+  generateCreateSuccessMsg(object: IMonitoringAlertPolicy) {
+    return 'Created policy ' + object.meta.name;
+  }
+
+  generateUpdateSuccessMsg(object: IMonitoringAlertPolicy) {
+    return 'Updated policy ' + object.meta.name;
+  }
+
 }

@@ -9,6 +9,7 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { BehaviorSubject } from 'rxjs';
 import { ControllerService } from '@app/services/controller.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { IMonitoringSyslogExport, MonitoringSyslogExportConfig_facility_override_uihint, MonitoringEventPolicySpec_format_uihint, IFieldsRequirement } from '@sdk/v1/models/generated/monitoring';
 
 export class TestingUtility {
   fixture: ComponentFixture<any>;
@@ -80,6 +81,7 @@ export class TestingUtility {
     const formattedModTime = new PrettyDatePipe('en-US').transform(time);
     return timeDebugElem.nativeElement.textContent.indexOf(formattedModTime) >= 0;
   }
+
 
   /**
    * Verifies the data in the table matches the passed in data.
@@ -173,6 +175,77 @@ export class TestingUtility {
     return TestingUtility.isDateDisplayCorrect(time, timeDebugElem);
   }
 
+  getElemByCss(css: string) {
+    return this.fixture.debugElement.query(By.css(css));
+  }
+
+  getElemsByCss(css: string) {
+    return this.fixture.debugElement.queryAll(By.css(css));
+  }
+
+  setDropdown(dropdownCss, label, dropdownOptionCSS: string = null) {
+    const arrowCss = dropdownCss + ' .ui-dropdown-trigger > span';
+    const arrowElem = this.getElemByCss(arrowCss);
+    expect(arrowElem).toBeTruthy('Arrow elem was not found: ' + arrowCss);
+    this.sendClick(arrowElem);
+    const opCSS = (dropdownOptionCSS) ? dropdownOptionCSS : '.ng-trigger.ng-trigger-overlayAnimation.ui-dropdown-panel.ui-widget .ui-dropdown-items-wrapper .ui-dropdown-item > span';
+    const options = this.getElemsByCss(opCSS);
+    const selectedElem = options.find( (elem) => {
+      return elem.nativeElement.textContent.includes(label);
+    });
+    expect(selectedElem).toBeTruthy('Could not find the given option: ' + label);
+    this.sendClick(selectedElem);
+  }
+
+  setInput(elemCss, text) {
+    this.setText(this.getElemByCss(elemCss), text);
+  }
+
+  setRadioButton(radioGroupCss, label) {
+    const options = this.getElemsByCss(radioGroupCss + ' .mat-radio-label-content');
+    const selectedElem = options.find((elem) => {
+      return elem.nativeElement.textContent.includes(label);
+    });
+    expect(selectedElem).toBeTruthy('Could not find the given option: ' + label);
+    this.sendClick(selectedElem);
+  }
+
+  setSyslogData(data: IMonitoringSyslogExport) {
+    this.setDropdown('.syslog-override', MonitoringSyslogExportConfig_facility_override_uihint[data.config['facility-override']]);
+    this.setInput('.syslog-prefix', data.config.prefix);
+    this.setRadioButton('.syslog-format', MonitoringEventPolicySpec_format_uihint[data.format]);
+    if (data.targets.length > 1) {
+      fail('currently only supports adding one syslog target');
+    } else if (data.targets.length === 1) {
+      this.setInput('.syslog-destination', data.targets[0].destination);
+      this.setInput('.syslog-transport', data.targets[0].transport);
+    }
+  }
+
+  setRepeater(data: IFieldsRequirement[]) {
+    if (data.length === 0) {
+      return;
+    } else if (data.length > 1) {
+      fail('currently only one requirement supported');
+    }
+    this.setDropdown('.repeater-key p-dropdown', data[0].key);
+    let operator: any = data[0].operator;
+    if (operator === 'in') {
+      operator = 'equals';
+    } else if (operator === 'notIn') {
+      operator = 'not equals';
+    }
+    this.setDropdown('.repeater-operator p-dropdown', operator);
+    if (this.getElemByCss('.repeater-input-value')) {
+      this.setInput('.repeater-input-value', data[0].values.join(', '));
+    } else if (this.getElemByCss('.repeater-value p-dropdown')) {
+      this.setDropdown('.repeater-value p-dropdown', data[0].operator);
+    } else if (this.getElemByCss('.repeater-value p-multiSelect')) {
+      fail('setting multiselect is unimplemented');
+    } else {
+      fail('did not find repeater value element');
+    }
+  }
 
   /**
    * Verifies the data in the table matches the passed in data.

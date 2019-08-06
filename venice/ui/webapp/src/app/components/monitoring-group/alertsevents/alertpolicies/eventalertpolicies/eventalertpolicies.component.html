@@ -67,6 +67,6 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-neweventalertpolicy [policyData]="rowData" [destinations]="destinations" [isInline]="true"
+  <app-neweventalertpolicy [objectData]="rowData" [destinations]="destinations" [isInline]="true"
                            (formClose)="closeRowExpand()"></app-neweventalertpolicy>
 </ng-template>

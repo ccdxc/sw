@@ -52,7 +52,7 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newflowexportpolicy [policyData]="rowData" [isInline]="true" [maxTargets]="maxNewTargets"
+  <app-newflowexportpolicy [objectData]="rowData" [isInline]="true" [maxTargets]="maxNewTargets"
                            (formClose)="closeRowExpand()">
   </app-newflowexportpolicy>
 </ng-template>
