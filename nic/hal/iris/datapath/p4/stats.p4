@@ -320,6 +320,27 @@ table flow_stats {
     size : FLOW_TABLE_SIZE;
 }
 
+/*****************************************************************************/
+/* Stats for NACL                                                            */
+/*****************************************************************************/
+action nacl_stats(stats_packets) {
+    add(scratch_metadata.nacl_stats_packets, stats_packets, 1);
+}
+
+@pragma stage 5
+@pragma table_write
+table nacl_stats {
+    reads {
+        control_metadata.nacl_stats_idx : exact;
+    }
+    actions {
+        nop;
+        nacl_stats;
+    }
+    default_action : nop;
+    size : NACL_TABLE_SIZE;
+}
+
 control process_stats {
     if (capri_intrinsic.drop == TRUE) {
         apply(drop_stats);
@@ -329,6 +350,7 @@ control process_stats {
         apply(flow_stats);
     }
     apply(ingress_tx_stats);
+    apply(nacl_stats);
 }
 
 /*****************************************************************************/

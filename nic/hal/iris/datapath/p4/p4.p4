@@ -121,6 +121,7 @@ header_type control_metadata_t {
         src_app_id                     : 8;
         record_route_dst_ip            : 32;
         record_route_inner_dst_ip      : 32;
+        nacl_stats_idx                 : 9;
     }
 }
 
@@ -178,6 +179,7 @@ header_type scratch_metadata_t {
         ttl                        : 8;
         drop_stats_packets         : 40;
         drop_stats_pad             : 79;
+        nacl_stats_packets         : 8;
 
         src_lif_check_en           : 1;
         vlan_strip                 : 1;
