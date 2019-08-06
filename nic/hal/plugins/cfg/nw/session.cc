@@ -1965,18 +1965,19 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
      * incremented the packet count and we should rely on that.
      */
     if ((ctx->aged_flow == SESSION_AGED_IFLOW &&
-        (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+        (session_state.iflow_state.state <= session::FLOW_TCP_STATE_FIN_RCVD) &&
          session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) ||
         (ctx->aged_flow == SESSION_AGED_BOTH &&
-        (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
-         session_state.iflow_state.packets <= (ctx->session_state.iflow_state.packets + 1))) {
+        (session_state.iflow_state.state <= session::FLOW_TCP_STATE_FIN_RCVD) &&
+         session_state.iflow_state.packets <= (ctx->session_state.iflow_state.packets + 1))) { 
         ret = SESSION_AGED_IFLOW;
     }
+
     if ((ctx->aged_flow == SESSION_AGED_RFLOW &&
-        (session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+        (session_state.rflow_state.state <= session::FLOW_TCP_STATE_FIN_RCVD) &&
          session_state.rflow_state.packets < (ctx->session_state.rflow_state.packets + 1)) ||
         (ctx->aged_flow == SESSION_AGED_BOTH &&
-        (session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+        (session_state.rflow_state.state <= session::FLOW_TCP_STATE_FIN_RCVD) &&
          session_state.rflow_state.packets <= (ctx->session_state.rflow_state.packets + 1))) {
         if (ret == SESSION_AGED_IFLOW)
             ret = SESSION_AGED_BOTH;
@@ -2203,7 +2204,8 @@ session_age_cb (void *entry, void *ctxt)
          *  and proceed to delete the session
          */
         if ((session->iflow->config.key.proto == IPPROTO_TCP) &&
-            (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED)) {
+            (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED ||
+             session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED)) {
             tklectx = (tcptkle_timer_ctx_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
                                                      sizeof(tcptkle_timer_ctx_t));
             SDK_ASSERT_RETURN((tklectx != NULL), false);
@@ -2220,12 +2222,13 @@ session_age_cb (void *entry, void *ctxt)
                 return true;
         } else {
             /*
-             * Dont delete UDP sessions if one flow ages and other remains
+             * Dont delete UDP/ICMP sessions if one flow ages and other remains
              * For TCP, the only reason why we get here is because we want to
              * cleanup for cases where we could have missed TCP Close in FTE
              * so let it cleanup
              */
-            if (session->rflow != NULL && retval != SESSION_AGED_BOTH) {
+            if ((session->iflow->config.key.proto != IPPROTO_TCP) &&
+                 session->rflow != NULL && retval != SESSION_AGED_BOTH) {
                 return false;
             }
 #if SESSION_AGE_DEBUG
@@ -2396,8 +2399,10 @@ session_init (hal_cfg_t *hal_cfg)
              sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
              SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
 
-             if (!fte)
+             if (!fte) {
                  g_session_stats = (session_stats_t *)vaddr;
+                 bzero(g_session_stats, sizeof(session_stats_t));
+             }
 
              start_addr += 1 << HAL_SESSION_STATS_SHIFT;
         }

@@ -2070,6 +2070,19 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Cleanup update app ctxt
+//------------------------------------------------------------------------------
+static void inline
+l2seg_update_app_ctxt_cleanup (l2seg_update_app_ctxt_t *app_ctxt)
+{
+    if (app_ctxt) {
+        hal_cleanup_handle_block_list(&app_ctxt->add_nwlist);
+        hal_cleanup_handle_block_list(&app_ctxt->del_nwlist);
+        hal_cleanup_handle_block_list(&app_ctxt->aggr_nwlist);        
+    }
+}
+
 
 //------------------------------------------------------------------------------
 // process a L2 segment update request
@@ -2127,6 +2140,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     ret = l2seg_check_update(spec, l2seg, &app_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("l2seg check update Failed, ret : {}", ret);
+        l2seg_update_app_ctxt_cleanup(&app_ctxt);
         goto end;
     }
 
@@ -2134,6 +2148,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         HAL_TRACE_ERR("no change in l2seg update: noop");
         // Its a no-op. We can just return HAL_RET_OK
         // ret = HAL_RET_INVALID_OP;
+        l2seg_update_app_ctxt_cleanup(&app_ctxt);
         l2seg_clone = l2seg;
         goto end;
     }

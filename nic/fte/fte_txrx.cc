@@ -293,6 +293,7 @@ inst_t::inst_t(uint8_t fte_id) :
         HAL_TRACE_VERBOSE("Pal ret: {}", pal_ret);
         SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
         stats_.fte_hbm_stats = (fte_hbm_stats_t *)vaddr;
+        bzero(stats_.fte_hbm_stats, sizeof(fte_hbm_stats_t));
     }
 }
 
