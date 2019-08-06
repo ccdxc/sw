@@ -22,8 +22,8 @@
 #include "dol/iris/test/storage/nvme_dp_tests.hpp"
 #include "dol/iris/test/storage/compression_test.hpp"
 #include "dol/iris/test/storage/acc_scale_tests.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "nic/sdk/platform/utils/qstate_mgr.hpp"
+#include "nic/sdk/platform/capri/capri_state.hpp"
 
 namespace queues {
 void queues_shutdown();
@@ -327,22 +327,32 @@ long_poll_interval(void)
 }
 
 int common_setup() {
+#ifdef __x86_64__
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
+                sdk::lib::PAL_RET_OK);
+    // Initialize host memory
+    int ret;
+    if(FLAGS_combined) {
+      ret = init_host_mem_bhalf();
+    } else {
+      ret = init_host_mem();
+    }
+    if (ret < 0) {
+      OFFL_FUNC_ERR("Host mem init failed (is model running?)");
+      return -1;
+    }
+    OFFL_FUNC_INFO("Host mem initialized\n");
+
+#elif 0 //__aarch64__
+#if !defined(APOLLO) && !defined(ARTEMIS)
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
+                sdk::lib::PAL_RET_OK);
+#endif
+#endif
+
   // Initialize hal interface
   hal_if::init_hal_if();
   OFFL_FUNC_INFO("HAL client initialized\n");
-
-  // Initialize host memory
-  int ret;
-  if(FLAGS_combined) {
-    ret = init_host_mem_bhalf();
-  } else {
-    ret = init_host_mem();
-  }
-  if (ret < 0) {
-    OFFL_FUNC_ERR("Host mem init failed (is model running?)");
-    return -1;
-  }
-  OFFL_FUNC_INFO("Host mem initialized\n");
 
   // Initialize storage hbm memory
   if (utils::hbm_buf_init() < 0) {
@@ -611,7 +621,7 @@ int main(int argc, char**argv) {
   tests::test_generic_eos_ignore();
 
   // Indicate to model that config is done
-  config_done();
+  CONFIG_DONE();
 
   printf("Forming test suite based on configuration\n");
   // Add unit tests
@@ -778,12 +788,12 @@ int main(int argc, char**argv) {
     gettimeofday(&start, NULL);
     printf(" Starting test #: %d name: %s \n", (int) tcid, test_suite[tcid].test_name.c_str());
 
-    testcase_begin(tcid, 0);
+    TESTCASE_BEGIN(tcid, 0);
     if (test_suite[tcid].test_fn() < 0)
       test_suite[tcid].test_succeded = false;
     else
       test_suite[tcid].test_succeded = true;
-    testcase_end(tcid, 0);
+    TESTCASE_END(tcid, 0);
 
     gettimeofday(&end, NULL);
     printf(" Finished test #: %d name: %s status %d time %d \n", (int) tcid, test_suite[tcid].test_name.c_str(),

@@ -14,8 +14,6 @@
 #include "dol/iris/test/storage/compression.hpp"
 #include "dol/iris/test/storage/ssd.hpp"
 #include "dol/iris/test/storage/nicmgr_if.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 
 // NOTE CAREFULLY: BEGIN: When adding queues please ensure, calc_total_queues() 
@@ -570,21 +568,21 @@ int resources_init() {
   // R2N/PVM SQ etc.  // This is needed as a dummy for the P4+ program to write 
   // the pndx to a valid host address. The SSD emulation layer implements this 
   // for the E2E cases.
-  pndx_data_va = alloc_host_mem(kMinHostMemAllocSize);
+  pndx_data_va = ALLOC_HOST_MEM(kMinHostMemAllocSize);
   if (pndx_data_va == nullptr) {
     printf("Unable to allocate host memory for p_ndx\n");
     return -1;
   }
   memset(pndx_data_va, 0, kMinHostMemAllocSize);
-  pndx_data_pa = host_mem_v2p(pndx_data_va);
+  pndx_data_pa = HOST_MEM_V2P(pndx_data_va);
 
-  cndx_data_va = alloc_host_mem(kMinHostMemAllocSize);
+  cndx_data_va = ALLOC_HOST_MEM(kMinHostMemAllocSize);
   if (cndx_data_va == nullptr) {
     printf("Unable to allocate host memory for c_ndx\n");
     return -1;
   }
   memset(cndx_data_va, 0, kMinHostMemAllocSize);
-  cndx_data_pa = host_mem_v2p(cndx_data_va);
+  cndx_data_pa = HOST_MEM_V2P(cndx_data_va);
 
 
   return 0;
@@ -1650,7 +1648,7 @@ void queues_shutdown() {
   storage_test::NvmeSsd *ssd_ptr = nvme_e2e_ssd.release();
   delete ssd_ptr;
   nicmgr_if::nicmgr_if_fini();
-  exit_simulation();
+  EXIT_SIMULATION();
 }
 
 }  // namespace queues

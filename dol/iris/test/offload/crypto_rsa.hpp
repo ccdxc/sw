@@ -8,7 +8,8 @@
 #include "crypto_asym.hpp"
 #include "capri_barco_crypto.hpp"
 #include "capri_barco_rings.hpp"
-#include "dole_if.hpp"
+#include "pse_intf.h"
+#include "eng_if.hpp"
 
 using namespace dp_mem;
 using namespace tests;
@@ -470,12 +471,20 @@ private:
     crypto_asym::status_t       *status;
     dp_mem_t                    *digest;
     dp_mem_t                    *digest_padded;
-    const dole_if::dole_evp_md_t *evp_md;
+    const eng_if::eng_evp_md_t  *evp_md;
     crypto_asym::key_idx_t      key_idx;
 
     bool                        hw_started;
     bool                        test_success;
 };
+
+
+/*
+ * Access methods for PSE Openssl engine
+ */
+extern "C" {
+extern const PSE_RSA_OFFLOAD_METHOD pse_rsa_offload_method;
+}
 
 } // namespace crypto_rsa
 

@@ -75,15 +75,15 @@ rsa_t::~rsa_t()
 
 
 /*
- * Generate a private key (if necessary) then invoke DOLE to hash the
- * argument msg to create a digest before submitting it to DOLE for
- * signature generation. Note that the latter will cause DOLE to
+ * Generate a private key (if necessary) then invoke engine i/f to hash the
+ * argument msg to create a digest before submitting it to engine i/f for
+ * signature generation. Note that the latter will cause engine i/f to
  * proceed to invoking rsa_t::push(rsa_push_params_t) below.
  */
 bool
 rsa_t::pre_push(rsa_pre_push_params_t& pre_params)
 {
-    dole_if::rsa_digest_params_t  digest_params;
+    eng_if::digest_params_t     digest_params;
 
     this->pre_params = pre_params;
     hw_started = false;
@@ -95,10 +95,9 @@ rsa_t::pre_push(rsa_pre_push_params_t& pre_params)
         }
     }
 
-    evp_md = dole_if::rsa_digest(
-                          digest_params.hash_algo(pre_params.hash_algo()).
-                                        msg(pre_params.msg()).
-                                        digest(digest));
+    evp_md = eng_if::digest_gen(digest_params.hash_algo(pre_params.hash_algo()).
+                                              msg(pre_params.msg()).
+                                              digest(digest));
     if (!evp_md) {
         OFFL_FUNC_ERR("failed msg_digest push");
         return false;
@@ -110,15 +109,15 @@ rsa_t::pre_push(rsa_pre_push_params_t& pre_params)
 
 
 /*
- * Invoke DOLE to generate a signature. 
- * Note DOLE will then proceed to invoking 
+ * Invoke engine i/f to generate a signature. 
+ * Note engine i/f will then proceed to invoking 
  * rsa_t::push() with HW params down below.
  */
 bool
 rsa_t::push(rsa_push_params_t& push_params)
 {
-    dole_if::rsa_sign_params_t          sign_params;
-    dole_if::rsa_verify_params_t        verify_params;
+    eng_if::rsa_sign_params_t           sign_params;
+    eng_if::rsa_verify_params_t         verify_params;
     bool                                success = false;
 
     this->push_params = push_params;
@@ -127,17 +126,18 @@ rsa_t::push(rsa_push_params_t& push_params)
     switch (pre_params.key_create_type()) {
 
     case RSA_KEY_CREATE_SIGN:
-        success = dole_if::rsa_sign(
-                           sign_params.md(evp_md).
-                                       pad_mode(pre_params.pad_mode()).
-                                       key_idx(key_idx).
-                                       n(pre_params.n()).
-                                       d_e(pre_params.e()).
-                                       digest(digest).
-                                       digest_padded(digest_padded).
-                                       sig_actual(push_params.sig_actual()).
-                                       rsa(this).
-                                       failure_expected(push_params.failure_expected()));
+        success = eng_if::rsa_sign(
+                          sign_params.md(evp_md).
+                                      pad_mode(pre_params.pad_mode()).
+                                      key_idx(key_idx).
+                                      n(pre_params.n()).
+                                      d_e(pre_params.e()).
+                                      digest(digest).
+                                      digest_padded(digest_padded).
+                                      sig_actual(push_params.sig_actual()).
+                                      rsa(this).
+                                      failure_expected(push_params.failure_expected()).
+                                      wait_for_completion(false));
         break;
 
     case RSA_KEY_CREATE_VERIFY:
@@ -148,18 +148,18 @@ rsa_t::push(rsa_push_params_t& push_params)
          * to ensure it is contiguous with sig_expected (as both sig_expected
          * and sig_actual come from the same sig_vec)
          */
-        success = dole_if::rsa_verify(
-                           verify_params.md(evp_md).
-                                         pad_mode(pre_params.pad_mode()).
-                                         key_idx(key_idx).
-                                         n(pre_params.n()).
-                                         d_e(pre_params.e()).
-                                         sig_expected(push_params.sig_expected()).
-                                         digest(digest).
-                                         digest_padded(push_params.sig_actual()).
-                                         rsa(this).
-                                         failure_expected(push_params.failure_expected()).
-                                         wait_for_completion(true));
+        success = eng_if::rsa_verify(
+                          verify_params.md(evp_md).
+                                        pad_mode(pre_params.pad_mode()).
+                                        key_idx(key_idx).
+                                        n(pre_params.n()).
+                                        d_e(pre_params.e()).
+                                        sig_expected(push_params.sig_expected()).
+                                        digest(digest).
+                                        digest_padded(push_params.sig_actual()).
+                                        rsa(this).
+                                        failure_expected(push_params.failure_expected()).
+                                        wait_for_completion(true));
         break;
 
     default:
@@ -177,7 +177,7 @@ rsa_t::push(rsa_push_params_t& push_params)
 
 
 /*
- * Invoked from DOLE to send a request to HW to generate a signature
+ * Invoked from engine i/f to send a request to HW to generate a signature
  * given a (padded) message digest.
  */
 bool
@@ -215,7 +215,7 @@ rsa_t::push(rsa_hw_sign_params_t& hw_sign_params)
 
 
 /*
- * Invoked from DOLE to send a request to HW to do public key encryption
+ * Invoked from engine i/f to send a request to HW to do public key encryption
  * (for possible signature verification).
  */
 bool
@@ -253,7 +253,7 @@ rsa_t::push(rsa_hw_enc_params_t& hw_enc_params)
 
 
 /*
- * Invoked from DOLE to send a request to HW to do private key decryption
+ * Invoked from engine i/f to send a request to HW to do private key decryption
  */
 bool
 rsa_t::push(rsa_hw_dec_params_t& hw_dec_params)
@@ -289,7 +289,7 @@ rsa_t::push(rsa_hw_dec_params_t& hw_dec_params)
 }
 
 /*
- * Invoked from DOLE to send a request to HW to verify a signature.
+ * Invoked from engine i/f to send a request to HW to verify a signature.
  * Only works with signatures for digest messages that were not 
  * Openssl encoded and padded. Otherwise, caller should use the 
  * push() method with rsa_hw_enc_params_t above.
@@ -356,8 +356,12 @@ rsa_t::completion_check(void)
         return 0;
     };
 
+#ifdef __x86_64__
     utils::Poller poll(failure_expected ? poll_interval() / 10 :
                                           long_poll_interval());
+#else
+    utils::Poller poll;
+#endif
     test_success = false;
     if (poll(status_busy_check, failure_expected)) {
         OFFL_FUNC_ERR_OR_DEBUG(failure_expected,
@@ -402,8 +406,8 @@ rsa_t::key_create(rsa_pre_push_params_t& pre_params)
     uint32_t                                asym_key_idx;
 
 
-    if (!dole_if::msg_optional_pad(pre_params.n(),
-                                   pre_params.n()->line_size_get())) {
+    if (!eng_if::dp_mem_pad_in_place(pre_params.n(),
+                                     pre_params.n()->line_size_get())) {
         OFFL_FUNC_ERR("failed to pad modulus n");
         return false;
     }
@@ -436,7 +440,7 @@ rsa_t::key_create(rsa_pre_push_params_t& pre_params)
         break;
     }
 
-    if (!dole_if::msg_optional_pad(d_e, d_e->line_size_get())) {
+    if (!eng_if::dp_mem_pad_in_place(d_e, d_e->line_size_get())) {
         OFFL_FUNC_ERR("failed to pad d_e");
         return false;
     }
@@ -547,4 +551,104 @@ rsa_t::test_params_report(void)
     OFFL_LOG_DEBUG("   Result {}", push_params.failure_expected() ? "F" : "P");
 }
 
+
+/*
+ * Access methods for PSE Openssl engine
+ */
+extern "C" {
+
+static int
+sign(void *ctx,
+     const PSE_RSA_SIGN_PARAM *param)
+{
+    rsa_t                   *crypto_rsa = static_cast<rsa_t *>(ctx);
+    dp_mem_t                *hash_input;
+    dp_mem_t                *sig_output;
+    rsa_hw_sign_params_t    sign_params;
+    bool                    success;
+
+    hash_input = static_cast<dp_mem_t *>((void *)param->hash_input);
+    sig_output = static_cast<dp_mem_t *>((void *)param->sig_output);
+
+    success = crypto_rsa->push(sign_params.hash_input(hash_input).
+                                           sig_output(sig_output));
+    if (success) {
+        if (param->wait_for_completion) {
+            crypto_rsa->post_push();
+            success = crypto_rsa->completion_check();
+        }
+    }
+
+    return success ? sig_output->content_size_get() : -1;
+}
+
+static int
+encrypt(void *ctx,
+        const PSE_RSA_ENCRYPT_PARAM *param)
+{
+    rsa_t                   *crypto_rsa = static_cast<rsa_t *>(ctx);
+    dp_mem_t                *plain_input;
+    dp_mem_t                *ciphered_output;
+    rsa_hw_enc_params_t     enc_params;
+    bool                    success;
+
+    plain_input = static_cast<dp_mem_t *>((void *)param->plain_input);
+    ciphered_output = static_cast<dp_mem_t *>((void *)param->ciphered_output);
+
+    success = crypto_rsa->push(enc_params.plain_input(plain_input).
+                                          ciphered_output(ciphered_output));
+    if (success) {
+        if (param->wait_for_completion) {
+            crypto_rsa->post_push();
+            success = crypto_rsa->completion_check();
+            if (success) {
+                ciphered_output->read_thru();
+            }
+        }
+    }
+
+    return success ? 1 : -1;
+}
+
+static int
+decrypt(void *ctx,
+        const PSE_RSA_DECRYPT_PARAM *param)
+{
+    rsa_t                   *crypto_rsa = static_cast<rsa_t *>(ctx);
+    dp_mem_t                *ciphered_input;
+    dp_mem_t                *plain_output;
+    rsa_hw_dec_params_t     dec_params;
+    bool                    success;
+
+    ciphered_input = static_cast<dp_mem_t *>((void *)param->ciphered_input);
+    plain_output = static_cast<dp_mem_t *>((void *)param->plain_output);
+
+    success = crypto_rsa->push(dec_params.ciphered_input(ciphered_input).
+                                          plain_output(plain_output));
+    if (success) {
+        if (param->wait_for_completion) {
+            crypto_rsa->post_push();
+            success = crypto_rsa->completion_check();
+            if (success) {
+                plain_output->read_thru();
+            }
+        }
+    }
+
+    return success ? 1 : -1;
+}
+
+const PSE_RSA_OFFLOAD_METHOD pse_rsa_offload_method =
+{
+    .sign       = sign,
+    .encrypt    = encrypt,
+    .decrypt    = decrypt,
+    .mem_method = &pse_mem_method,
+};
+
+} // extern "C"
+
+
 } // namespace crypto_rsa
+
+

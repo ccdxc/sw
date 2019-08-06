@@ -1,10 +1,9 @@
 #include <assert.h>
 
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/queues.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/rdma.hpp"
 #include "dol/iris/test/storage/qstate_if.hpp"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace nvme_dp {
 

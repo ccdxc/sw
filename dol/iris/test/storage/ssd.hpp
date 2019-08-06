@@ -4,8 +4,7 @@
 
 #include <byteswap.h>
 #include "dol/iris/test/storage/ssd_core.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "pal_compat.hpp"
 
 namespace storage_test {
 
@@ -13,29 +12,29 @@ class NvmeSsd : public NvmeSsdCore {
  public:
   NvmeSsd() { Ctor(); }
   ~NvmeSsd() { Dtor(); }
-  virtual void *DMAMemAlloc(uint32_t size) { return alloc_host_mem(size); }
-  virtual void DMAMemFree(void *ptr) { free_host_mem(ptr); }
-  virtual uint64_t DMAMemV2P(void *ptr) { return host_mem_v2p(ptr); }
-  virtual void *DMAMemP2V(uint64_t addr) { return host_mem_p2v(addr); }
+  virtual void *DMAMemAlloc(uint32_t size) { return ALLOC_HOST_MEM(size); }
+  virtual void DMAMemFree(void *ptr) { FREE_HOST_MEM(ptr); }
+  virtual uint64_t DMAMemV2P(void *ptr) { return HOST_MEM_V2P(ptr); }
+  virtual void *DMAMemP2V(uint64_t addr) { return HOST_MEM_P2V(addr); }
   virtual void DMAMemCopyP2V(uint64_t src, void *dst, uint32_t size) {
     if (src & (1ull << 63)) {
       memcpy(dst, DMAMemP2V(src), size);
     } else {
-      read_mem(src, (uint8_t *)dst, size);
+      READ_MEM(src, (uint8_t *)dst, size, 0);
     }
   }
   virtual void DMAMemCopyV2P(void *src, uint64_t dst, uint32_t size) {
     if (dst & (1ull << 63)) {
       memcpy(DMAMemP2V(dst), src, size);
     } else {
-      write_mem(dst, (uint8_t *)src, size);
+      WRITE_MEM(dst, (uint8_t *)src, size, 0);
     }
   }
   virtual void RaiseInterrupt(uint16_t index) { 
     if (intr_enabled_) {
       uint64_t db_data_ndx =  (db_data_ & 0xFFFFFFFFFFFF0000ULL) | index;
       //printf("Calling DB %lx %lx\n", db_addr_, db_data_ndx);
-      step_doorbell(db_addr_, db_data_ndx);
+      WRITE_DB64(db_addr_, db_data_ndx);
     }
   }
 

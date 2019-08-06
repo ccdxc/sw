@@ -766,6 +766,17 @@ pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
 }
 
 extern "C" int
+pd_tls_asym_ecdsa_p256_sig_gen_param(void *ctx,
+                                         const PSE_EC_SIGN_PARAM *param)
+{
+    return pd_tls_asym_ecdsa_p256_sig_gen(param->key_idx, NULL, NULL, NULL,
+                                          NULL, NULL, NULL, NULL,
+                                          param->k_random, param->hash_input,
+                                          param->r_output, param->s_output,
+                                          param->async, param->caller_unique_id);
+}
+
+extern "C" int
 pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
                                    uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
                                    uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h,
@@ -795,6 +806,13 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         return -1;
     }
     return 1;
+}
+
+extern "C" int
+pd_tls_asym_ecdsa_p256_sig_verify_param(void *ctx,
+                                        const PSE_EC_VERIFY_PARAM *param)
+{
+    return 0;
 }
 
 extern "C" int
@@ -843,6 +861,16 @@ pd_tls_asym_rsa_encrypt(uint16_t key_size, uint8_t *n, uint8_t *e, uint8_t *m,  
 }
 
 extern "C" int
+pd_tls_asym_rsa_encrypt_param(void *ctx,
+                              const PSE_RSA_ENCRYPT_PARAM *param)
+{
+    return pd_tls_asym_rsa_encrypt(param->key_size, param->n,
+                                   param->e, param->plain_input,
+                                   param->ciphered_output, param->async,
+                                   param->caller_unique_id);
+}
+
+extern "C" int
 pd_tls_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx, uint8_t *n, uint8_t *d,
                           uint8_t *h,  uint8_t *s,
                           bool async, const uint8_t *unique_key)
@@ -865,6 +893,16 @@ pd_tls_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx, uint8_t *n, uint8_t 
         return -1;
     }
     return 1;
+}
+
+extern "C" int
+pd_tls_asym_rsa_sig_gen_param(void *ctx,
+                              const PSE_RSA_SIGN_PARAM *param)
+{
+    return pd_tls_asym_rsa_sig_gen(param->key_size, param->key_idx,
+                                   param->n, param->d, param->hash_input,
+                                   param->sig_output,  param->async,
+                                   param->caller_unique_id);
 }
 
 extern "C" int
@@ -892,6 +930,16 @@ pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *
         return -1;
     }
     return 1;
+}
+
+extern "C" int
+pd_tls_asym_rsa_decrypt_param(void *ctx,
+                              const PSE_RSA_DECRYPT_PARAM *param)
+{
+    return pd_tls_asym_rsa2k_crt_decrypt(param->key_idx, param->p, param->q,
+                                         param->dp, param->dq, param->qinv,
+                                         param->ciphered_input, param->plain_output,
+                                         param->async, param->caller_unique_id);
 }
 
 }    // namespace pd

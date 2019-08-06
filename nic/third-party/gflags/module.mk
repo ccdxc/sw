@@ -2,5 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = gflags.export
+MODULE_ARCH   = x86_64 aarch64
 MODULE_PIPELINE = iris gft
 include ${MKDEFS}/post.mk

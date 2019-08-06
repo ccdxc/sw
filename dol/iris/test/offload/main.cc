@@ -9,8 +9,8 @@
 #include "utils.hpp"
 #include "tests.hpp"
 #include "logger.hpp"
-#include "c_if.h"
-#include "lib_model_client.h"
+#include "nic/sdk/platform/utils/qstate_mgr.hpp"
+#include "nic/sdk/platform/capri/capri_state.hpp"
 #include "crypto_rsa_testvec.hpp"
 #include "crypto_ecdsa_testvec.hpp"
 #include "crypto_asym.hpp"
@@ -21,12 +21,21 @@ DEFINE_string(test_group, "", "Test group to run");
 DEFINE_uint64(poll_interval, 60, "Polling interval in seconds");
 DEFINE_uint64(long_poll_interval, 300,
               "Polling interval for longer running tests in seconds");
+#ifdef __x86_64__
 DEFINE_string(script_dir, "/sw/nic/third-party/nist-cavp",
               "Script directory path)");
-DEFINE_string(engine_path, "/sw/nic/build/x86_64/iris/lib/libdol_engine.so",
+DEFINE_string(engine_path, "/sw/nic/build/x86_64/iris/lib/libtls_pse.so",
               "SSL engine library full path");
 DEFINE_string(nicmgr_config_file, "/sw/platform/src/app/nicmgrd/etc/accel.json",
               "nicmgr json configuration filename (full path)");
+#else
+DEFINE_string(script_dir, "/data/third-party/nist-cavp",
+              "Script directory path)");
+DEFINE_string(engine_path, "/nic/lib/libtls_pse.so",
+              "SSL engine library full path");
+DEFINE_string(nicmgr_config_file, "/platform/etc/nicmgrd/accel.json",
+              "nicmgr json configuration filename (full path)");
+#endif
 
 /*
  * Satisfy extern requirements for sstorage libs
@@ -121,14 +130,14 @@ const static vector<ecdsa_vector_entry_t> ecdsa_testvectors =
 
     // For signature verification, we want to produce the ciphered output
     // so the encryption method is used.
-    {"ecdsa-testvectors/SigVer.rsp",
-      crypto_ecdsa::ECDSA_KEY_CREATE_ENCRYPT},
+    //{"ecdsa-testvectors/SigVer.rsp",
+    //  crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
 
 #ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
     {"ecdsa-testvectors/SigGen_TruncatedSHAs.txt",
      crypto_ecdsa::ECDSA_KEY_CREATE_SIGN},
     {"ecdsa-testvectors/SigVer_TruncatedSHAs.rsp",
-     crypto_ecdsa::ECDSA_KEY_CREATE_ENCRYPT},
+     crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
 #endif
 
 };
@@ -169,18 +178,44 @@ long_poll_interval(void)
     return FLAGS_long_poll_interval;
 }
 
+static int
+sdk_trace_cb (sdk_trace_level_e trace_level,
+              const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    OFFL_LOG_DEBUG("{}", logbuf);
+    va_end(args);
+    return 0;
+}
+
 int
 common_setup(void)
 {
-    // Initialize hal interface
-    hal_if::init_hal_if();
-    OFFL_FUNC_INFO("HAL client initialized");
+    sdk::lib::logger::init(sdk_trace_cb);
 
+#ifdef __x86_64__
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
+                sdk::lib::PAL_RET_OK);
     if (init_host_mem() < 0) {
         OFFL_FUNC_ERR("Host mem init failed (is model running?)");
         return -1;
     }
     OFFL_FUNC_INFO("Host mem initialized");
+
+#elif 0 //__aarch64__
+#if !defined(APOLLO) && !defined(ARTEMIS)
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
+                sdk::lib::PAL_RET_OK);
+#endif
+#endif
+
+    // Initialize hal interface
+    hal_if::init_hal_if();
+    OFFL_FUNC_INFO("HAL client initialized");
 
     // Initialize storage hbm memory
     if (utils::hbm_buf_init() < 0) {
@@ -189,12 +224,15 @@ common_setup(void)
     }
     OFFL_FUNC_INFO("HBM buf initialized");
 
+#ifdef __x86_64__
+
     // Initialize model client
     if (lib_model_connect() < 0) {
         OFFL_FUNC_ERR("Failed to connect with model (is model running?)");
         return -1;
     }
     OFFL_FUNC_INFO("Model client initialized");
+#endif
 
     crypto_asym::init(FLAGS_engine_path.c_str());
     tests::test_generic_eos_ignore();
@@ -265,12 +303,15 @@ rsa_testvectors_run(void *test_param)
             failure_count++;
         }
 
+#ifdef __x86_64__
+
         /*
          * 2nd run with host mem
          */
         if (!testvectors_run(entry, DP_MEM_TYPE_HOST_MEM)) {
             failure_count++;
         }
+#endif
     }
 
     return failure_count == 0;
@@ -339,12 +380,15 @@ ecdsa_testvectors_run(void *test_param)
             failure_count++;
         }
 
+#ifdef __x86_64__
+
         /*
          * 2nd run with host mem
          */
         if (!testvectors_run(entry, DP_MEM_TYPE_HOST_MEM)) {
             failure_count++;
         }
+#endif
     }
 
     return failure_count == 0;
@@ -384,6 +428,11 @@ main(int argc,
         return 1;
     }
 
+    /*
+     * Indicate to model that config is done
+     */
+    CONFIG_DONE();
+
     if (run_rsa_testvectors) {
         test_suite.push_back(test_entry_t("FIPS RSA", &rsa_testvectors_run,
                                           (void *)&rsa_testvectors));
@@ -403,7 +452,10 @@ main(int argc,
         gettimeofday(&start, NULL);
         OFFL_LOG_INFO(" Starting test #: {} name: {}", tcid, test_entry.test_name);
 
+        TESTCASE_BEGIN(tcid, 0);
         test_entry.test_success = test_entry.test_fn(test_entry.test_param);
+        TESTCASE_END(tcid, 0);
+
         gettimeofday(&end, NULL);
         OFFL_LOG_INFO(" Finished test #: {} name: {} status {} time {}",
                       tcid, test_entry.test_name, test_entry.test_success,
@@ -426,6 +478,8 @@ main(int argc,
     OFFL_LOG_INFO("");
     OFFL_LOG_INFO("Overall Report: {}",
                   overall_success ? "SUCCESS" : "FAILURE");
+
+    EXIT_SIMULATION();
 
     if (offl::logger::logger()) {
         offl::logger::logger()->flush();

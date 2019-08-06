@@ -24,9 +24,10 @@
  */
 #define PARSE_STR_RESULT_PREFIX         "Result = "
 #define PARSE_STR_RESULT_SUFFIX         "\n"
-#define PARSE_STR_P_PREFIX              "[P-"
-#define PARSE_STR_P_SUFFIX              ","
-#define PARSE_STR_B_PREFIX              "[B-"
+#define PARSE_STR_CURVE_PREFIX          "["
+#define PARSE_STR_CURVE_SUFFIX           ","
+#define PARSE_STR_P_PREFIX              "P-"
+#define PARSE_STR_B_PREFIX              "B-"
 #define PARSE_STR_B_SUFFIX              ","
 #define PARSE_STR_D_PREFIX              "d = "
 #define PARSE_STR_SHA_PREFIX            "SHA-"
@@ -37,7 +38,7 @@
 #define PARSE_STR_Qx_PREFIX             "Qx = "
 #define PARSE_STR_Qy_PREFIX             "Qy = "
 #define PARSE_STR_k_PREFIX              "k = "
-#define PARSE_STR_K_PREFIX              "[K-"
+#define PARSE_STR_K_PREFIX              "K-"
 #define PARSE_STR_K_SUFFIX              ","
 #define PARSE_STR_R_PREFIX              "R = "
 
@@ -130,12 +131,14 @@ ecdsa_testvec_t::pre_push(ecdsa_testvec_pre_push_params_t& pre_params)
 {
     shared_ptr<ecdsa_curve_repr_t> curve_repr;
     shared_ptr<ecdsa_msg_repr_t>  msg_repr;
+    const char                  *curve_prefix;
     testvec_parse_params_t      params;
     string                      result;
     parser_token_id_t           token_id;
     token_parser_t              token_parser;
     u_long                      P_bits_len = 0;
     u_long                      P_bytes_len = 0;
+    u_long                      P_expanded_len = 0;
 
     OFFL_FUNC_INFO("test vector file {}", pre_params.testvec_fname());
     this->pre_params = pre_params;
@@ -151,18 +154,27 @@ ecdsa_testvec_t::pre_push(ecdsa_testvec_pre_push_params_t& pre_params)
     testvec_parser = new testvec_parser_t(pre_params.scripts_dir(),
                                           pre_params.testvec_fname(),
                                           token_parser, token2id_map);
+    curve_prefix = PARSE_STR_P_PREFIX;
     while (!testvec_parser->eof()) {
 
         token_id = testvec_parser->parse(params.skip_unknown_token(true));
         switch (token_id) {
 
         case PARSE_TOKEN_ID_EOF:
-        case PARSE_TOKEN_ID_P:
         case PARSE_TOKEN_ID_B:
+            curve_prefix = PARSE_STR_B_PREFIX;
+            goto new_curve;
+
         case PARSE_TOKEN_ID_K:
+            curve_prefix = PARSE_STR_K_PREFIX;
+            goto new_curve;
+
+        case PARSE_TOKEN_ID_P:
+
+        new_curve:
 
             /*
-             * EOF or a new P section terminates the current curve representative
+             * EOF or a new P/B/K section terminates the current curve representative
              * and msg representative.
              */
             if (curve_repr.use_count()) {
@@ -189,7 +201,13 @@ ecdsa_testvec_t::pre_push(ecdsa_testvec_pre_push_params_t& pre_params)
                 goto error;
             }
             P_bytes_len = (P_bits_len + BITS_PER_BYTE - 1) / BITS_PER_BYTE;
-            curve_repr = make_shared<ecdsa_curve_repr_t>(*this, P_bytes_len);
+            P_expanded_len = ecdsa_expanded_len(P_bytes_len);
+            curve_repr = make_shared<ecdsa_curve_repr_t>(*this, P_bytes_len,
+                                                         P_expanded_len);
+            /*
+             * Create Openssl friendly curve name string
+             */
+            curve_repr->curve_name.assign(curve_prefix + to_string(P_bits_len));
             break;
 
         case PARSE_TOKEN_ID_SHA:
@@ -203,9 +221,9 @@ ecdsa_testvec_t::pre_push(ecdsa_testvec_pre_push_params_t& pre_params)
             }
 
             /*
-             * Create Openssl friendly sha_algo string
+             * Create Openssl friendly hash_algo string
              */
-            curve_repr->sha_algo.assign(PARSE_TOKEN_STR_SHA + curve_repr->sha);
+            curve_repr->hash_algo.assign(PARSE_TOKEN_STR_SHA + curve_repr->sha);
             break;
 
         case PARSE_TOKEN_ID_MSG:
@@ -226,7 +244,8 @@ ecdsa_testvec_t::pre_push(ecdsa_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("Msg found without P length");
                 goto error;
             }
-            msg_repr = make_shared<ecdsa_msg_repr_t>(*this, P_bytes_len);
+            msg_repr = make_shared<ecdsa_msg_repr_t>(*this, P_bytes_len,
+                                                     P_expanded_len);
             if (!testvec_parser->parse_hex_bn(msg_repr->msg)) {
                 msg_repr->failed_parse_token = token_id;
             }
@@ -242,12 +261,22 @@ ecdsa_testvec_t::pre_push(ecdsa_testvec_pre_push_params_t& pre_params)
             }
             break;
 
+        case PARSE_TOKEN_ID_R:
+            if (!curve_repr.use_count() || !msg_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place R");
+                goto error;
+            }
+            if (!testvec_parser->parse_hex_bn(msg_repr->r_expected)) {
+                msg_repr->failed_parse_token = token_id;
+            }
+            break;
+
         case PARSE_TOKEN_ID_S:
             if (!curve_repr.use_count() || !msg_repr.use_count()) {
                 OFFL_FUNC_ERR("out of place S");
                 goto error;
             }
-            if (!testvec_parser->parse_hex_bn(msg_repr->s)) {
+            if (!testvec_parser->parse_hex_bn(msg_repr->s_expected)) {
                 msg_repr->failed_parse_token = token_id;
             }
             break;
@@ -278,16 +307,6 @@ ecdsa_testvec_t::pre_push(ecdsa_testvec_pre_push_params_t& pre_params)
                 goto error;
             }
             if (!testvec_parser->parse_hex_bn(msg_repr->k)) {
-                msg_repr->failed_parse_token = token_id;
-            }
-            break;
-
-        case PARSE_TOKEN_ID_R:
-            if (!curve_repr.use_count() || !msg_repr.use_count()) {
-                OFFL_FUNC_ERR("out of place R");
-                goto error;
-            }
-            if (!testvec_parser->parse_hex_bn(msg_repr->r)) {
                 msg_repr->failed_parse_token = token_id;
             }
             break;
@@ -328,7 +347,106 @@ error:
 bool 
 ecdsa_testvec_t::push(ecdsa_testvec_push_params_t& push_params)
 {
+    eng_if::ec_domain_params_t  domain;
+    ecdsa_params_t              params;
+    ecdsa_pre_push_params_t     pre_params;
+    ecdsa_push_params_t         ecdsa_push_params;
+    bool                        curve_domain_failure;
+
     this->push_params = push_params;
+    if (curve_repr_vec.empty()) {
+        OFFL_FUNC_INFO("nothing to do as curve representative vector is empty");
+        return true;
+    }
+
+    hw_started = true;
+    params.base_params(testvec_params.base_params()).
+           dma_desc_mem_type(testvec_params.dma_desc_mem_type()).
+           msg_digest_mem_type(testvec_params.msg_mem_type()).
+           status_mem_type(testvec_params.status_mem_type()).
+           acc_ring(push_params.ecdsa_ring()).
+           push_type(push_params.push_type()).
+           seq_qid(push_params.seq_qid());
+
+    FOR_EACH_CURVE_REPR(curve_repr) {
+
+        /*
+         * Obtain curve domain parameters
+         */
+        curve_domain_failure = 
+              !eng_if::ec_domain_params_gen(
+                          domain.curve_name(curve_repr->curve_name).
+                                 p(curve_repr->p).
+                                 n(curve_repr->n).
+                                 xg(curve_repr->xg).
+                                 yg(curve_repr->yg).
+                                 a(curve_repr->a).
+                                 b(curve_repr->b));
+        /*
+         * Domain parameters takes a DMA descriptor, where 
+         * p, n, xg, yg, a, b are contiguous fragments of domain_vec.
+         */
+        curve_repr->domain_vec->content_size_set(
+                                crypto_asym::ECDSA_NUM_KEY_DOMAIN_FIELDS *
+                                curve_repr->p->content_size_get());
+        pre_params.key_create_type(testvec_params.key_create_type()).
+                   curve_nid(domain.curve_nid()).
+                   domain_vec(curve_repr->domain_vec).
+                   hash_algo(curve_repr->hash_algo);
+
+        FOR_EACH_MSG_REPR(curve_repr, msg_repr) {
+            msg_repr->push_failure = curve_domain_failure;
+            if (curve_domain_failure) {
+                OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected,
+                                       "failed curve domain parameters for curve {}",
+                                       curve_repr->curve_name);
+                continue;
+            }
+
+            /*
+             * If there were parse errors, skip this representative.
+             */
+            if ((curve_repr->failed_parse_token != PARSE_TOKEN_ID_VOID) ||
+                (msg_repr->failed_parse_token != PARSE_TOKEN_ID_VOID)) {
+
+                OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected, "Parser error"
+                                       " on curve token {} or msg token {}",
+                                       curve_repr->failed_parse_token,
+                                       msg_repr->failed_parse_token);
+                msg_repr->push_failure = true;
+                continue;
+            }
+            if (!msg_repr->crypto_ecdsa) {
+                msg_repr->crypto_ecdsa = 
+                    new ecdsa_t(params.P_bytes_len(curve_repr->P_bytes_len).
+                                       P_expanded_len(curve_repr->P_expanded_len));
+            }
+
+            pre_params.d(msg_repr->d).
+                       msg(msg_repr->msg);
+            if (!msg_repr->crypto_ecdsa->pre_push(pre_params)) {
+                OFFL_FUNC_ERR("failed crypto_ecdsa pre_push");
+                msg_repr->push_failure = true;
+
+            } else {
+                ecdsa_push_params.k_random(msg_repr->k).
+                                  sig_expected_vec(msg_repr->sig_expected_vec).
+                                  r_expected(msg_repr->r_expected).
+                                  s_expected(msg_repr->s_expected).
+                                  sig_actual_vec(msg_repr->sig_actual_vec).
+                                  r_actual(msg_repr->r_actual).
+                                  s_actual(msg_repr->s_actual).
+                                  failure_expected(msg_repr->failure_expected);
+                if (!msg_repr->crypto_ecdsa->push(ecdsa_push_params)) {
+                    OFFL_FUNC_ERR("failed crypto_ecdsa push");
+                    msg_repr->push_failure = true;
+                }
+            }
+
+        } END_FOR_EACH_MSG_REPR(curve_repr, msg_repr)
+
+    } END_FOR_EACH_CURVE_REPR(curve_repr)
+
     return true;
 }
 
@@ -349,7 +467,38 @@ ecdsa_testvec_t::post_push(void)
 bool 
 ecdsa_testvec_t::completion_check(void)
 {
-    return true;
+    num_test_failures = 0;
+    if (hw_started) {
+        FOR_EACH_CURVE_REPR(curve_repr) {
+            FOR_EACH_MSG_REPR(curve_repr, msg_repr) {
+
+                /*
+                 * if push already failed, don't check completion
+                 */
+                msg_repr->compl_failure = false;
+                if (msg_repr->push_failure) {
+                    if (!msg_repr->failure_expected) {
+                       num_test_failures++;
+                    }
+                    continue;
+                }
+
+                if (!msg_repr->crypto_ecdsa->completion_check()) {
+                    msg_repr->compl_failure = true;
+                    if (!msg_repr->failure_expected) {
+                        num_test_failures++;
+                    }
+                }
+
+            } END_FOR_EACH_MSG_REPR(curve_repr, msg_repr)
+        } END_FOR_EACH_CURVE_REPR(key_repr)
+    }
+
+    if (num_test_failures) {
+        OFFL_FUNC_INFO("ecdsa_testvec_t num_test_failures {}", num_test_failures);
+    }
+    test_success = hw_started && (num_test_failures == 0);
+    return test_success;
 }
 
 
@@ -359,7 +508,38 @@ ecdsa_testvec_t::completion_check(void)
 bool 
 ecdsa_testvec_t::full_verify(void)
 {
-    return true;
+    num_test_failures = 0;
+    if (hw_started) {
+        FOR_EACH_CURVE_REPR(curve_repr) {
+            FOR_EACH_MSG_REPR(curve_repr, msg_repr) {
+
+                /*
+                 * if push already failed, don't bother with verify
+                 */
+                msg_repr->verify_failure = false;
+                if (msg_repr->push_failure) {
+                    if (!msg_repr->failure_expected) {
+                        num_test_failures++;
+                    }
+                    continue;
+                }
+
+                if (!msg_repr->crypto_ecdsa->full_verify()) {
+                    msg_repr->verify_failure = true;
+                    if (!msg_repr->failure_expected) {
+                        num_test_failures++;
+                    }
+                }
+
+            } END_FOR_EACH_MSG_REPR(curve_repr, msg_repr)
+        } END_FOR_EACH_CURVE_REPR(key_repr)
+    }
+
+    if (num_test_failures) {
+        OFFL_FUNC_INFO("ecdsa_testvec_t num_test_failures {}", num_test_failures);
+    }
+    test_success = hw_started && (num_test_failures == 0);
+    return test_success;
 }
 
 
@@ -370,18 +550,16 @@ void
 ecdsa_testvec_t::rsp_file_output(const string& mem_type_str)
 {
     testvec_output_t    *rsp_output;
-    uint32_t            P_bits_len;
     bool                failure;
 
     rsp_output = new testvec_output_t(pre_params.scripts_dir(),
                                       pre_params.testvec_fname(),
                                       mem_type_str);
-    if (true /*hw_started*/) {
+    if (hw_started) {
         FOR_EACH_CURVE_REPR(curve_repr) {
 
-            P_bits_len = curve_repr->P_bytes_len * BITS_PER_BYTE;
-            rsp_output->dec(PARSE_STR_P_PREFIX, P_bits_len,
-                            PARSE_STR_P_SUFFIX, false);
+            rsp_output->str(PARSE_STR_CURVE_PREFIX, curve_repr->curve_name,
+                            PARSE_STR_CURVE_SUFFIX, false);
             rsp_output->str(PARSE_STR_SHA_PREFIX, curve_repr->sha,
                             PARSE_STR_SHA_SUFFIX);
             FOR_EACH_MSG_REPR(curve_repr, msg_repr) {
@@ -399,12 +577,12 @@ ecdsa_testvec_t::rsp_file_output(const string& mem_type_str)
                           msg_repr->compl_failure       ||
                           msg_repr->verify_failure;
                 if (ecdsa_key_create_type_is_sign(testvec_params.key_create_type())) {
-                    rsp_output->hex_bn(PARSE_STR_R_PREFIX, msg_repr->r);
-                    rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->s,
+                    rsp_output->hex_bn(PARSE_STR_R_PREFIX, msg_repr->r_actual);
+                    rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->s_actual,
                                        PARSE_STR_S_SUFFIX);
                 } else {
-                    rsp_output->hex_bn(PARSE_STR_R_PREFIX, msg_repr->r);
-                    rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->s);
+                    rsp_output->hex_bn(PARSE_STR_R_PREFIX, msg_repr->r_expected);
+                    rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->s_expected);
                     rsp_output->str(PARSE_STR_RESULT_PREFIX, failure ? "F" : "P",
                                     PARSE_STR_RESULT_SUFFIX);
                 }

@@ -7,6 +7,7 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/nicmgr_if.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/hal/third-party/grpc/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \
+		  ${TOPDIR}/nic/hal/tls/engine \
                   ${TOPDIR}/nic//move_planner/lib \
                   ${TOPDIR}/platform/src/lib/nicmgr/include \
                   ${TOPDIR}/platform/include/common \

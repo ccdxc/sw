@@ -3,9 +3,8 @@
 #include <stdio.h>
 #include <byteswap.h>
 #include <stddef.h>
-#include "dol/iris/test/storage/utils.hpp"
-#include "nic/utils/host_mem/c_if.h"
 #include "dol/iris/test/storage/r2n.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 
 namespace r2n {
 

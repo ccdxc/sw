@@ -9,14 +9,13 @@
 #include <ctime>
 #include <netinet/in.h>
 
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/qstate_if.hpp"
 #include "dol/iris/test/storage/nvme.hpp"
 #include "dol/iris/test/storage/queues.hpp"
 #include "dol/iris/test/storage/tests.hpp"
 #include "dol/iris/test/storage/rdma.hpp"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 
 DECLARE_uint64(nvme_scale_iters);
@@ -294,7 +293,7 @@ int nvme_dp_write_perf(int num_iter) {
   uint16_t nvme_cq = queues::get_host_nvme_cq(3);
 
   // Marker for requests - start
-  testcase_begin(tcid, perf_marker);
+  TESTCASE_BEGIN(tcid, perf_marker);
 
   // Iterate
   for (i = 0; i < num_iter; i++) {
@@ -316,13 +315,13 @@ int nvme_dp_write_perf(int num_iter) {
   }
 
   // Marker for requests - end
-  testcase_end(tcid, perf_marker++);
+  TESTCASE_END(tcid, perf_marker++);
 
   // Send the NVME admin command
   test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index[i-1]);
 
   // Marker for responses - start
-  testcase_begin(tcid, perf_marker);
+  TESTCASE_BEGIN(tcid, perf_marker);
 
   // Poll and check all previous entries status. Match against all other entries as
   // there is no guarantee of ordering.
@@ -347,7 +346,7 @@ int nvme_dp_write_perf(int num_iter) {
   }
 
   // Marker for responses - end
-  testcase_end(tcid, perf_marker++);
+  TESTCASE_END(tcid, perf_marker++);
 
   return rc;
 }
@@ -381,7 +380,7 @@ int nvme_dp_read_perf(int num_iter) {
   uint16_t nvme_cq = queues::get_host_nvme_cq(3);
 
   // Marker for requests - start
-  testcase_begin(tcid, perf_marker);
+  TESTCASE_BEGIN(tcid, perf_marker);
 
   // Iterate
   for (i = 0; i < num_iter; i++) {
@@ -403,13 +402,13 @@ int nvme_dp_read_perf(int num_iter) {
   }
 
   // Marker for requests - end
-  testcase_end(tcid, perf_marker++);
+  TESTCASE_END(tcid, perf_marker++);
 
   // Send the NVME admin command
   test_ring_nvme_doorbell(queues::get_nvme_lif(), SQ_TYPE, nvme_sq, 0, cmd_index[i-1]);
 
   // Marker for responses - start
-  testcase_begin(tcid, perf_marker);
+  TESTCASE_BEGIN(tcid, perf_marker);
 
   // Poll and check all previous entries status. Match against all other entries as
   // there is no guarantee of ordering.
@@ -434,7 +433,7 @@ int nvme_dp_read_perf(int num_iter) {
   }
 
   // Marker for responses - end
-  testcase_end(tcid, perf_marker++);
+  TESTCASE_END(tcid, perf_marker++);
 
   return rc;
 }

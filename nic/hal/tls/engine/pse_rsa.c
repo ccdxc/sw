@@ -70,7 +70,7 @@ PSE_RSA_EX_DATA* pse_rsa_get_ex_data(RSA *rsa)
 }
 
 static int 
-pse_rsa_set_ex_data(RSA *rsa, uint32_t sig_gen_key_id, uint32_t decrypt_key_id)
+pse_rsa_set_ex_data(RSA *rsa, PSE_KEY* key, void *caller_ctx)
 {
     PSE_RSA_EX_DATA *ex_data = PSE_MALLOC(sizeof(PSE_RSA_EX_DATA));
     if(!ex_data) {
@@ -78,8 +78,10 @@ pse_rsa_set_ex_data(RSA *rsa, uint32_t sig_gen_key_id, uint32_t decrypt_key_id)
         return -1;
     }
 
-    ex_data->sig_gen_key_id = sig_gen_key_id;
-    ex_data->decrypt_key_id = decrypt_key_id;
+    ex_data->sig_gen_key_id = key->u.rsa_key.sign_key_id;
+    ex_data->decrypt_key_id = key->u.rsa_key.decrypt_key_id;
+    ex_data->offload = key->u.rsa_key.offload;
+    ex_data->caller_ctx = caller_ctx;
     RSA_set_ex_data(rsa, pse_rsa_ex_data_index, ex_data);
     return 1;
 }
@@ -195,35 +197,80 @@ int pse_rsa_pub_dec(int flen, const unsigned char *from,
     const BIGNUM *n = NULL, *e = NULL;
     pse_buffer_t bn, be;
     unsigned char* buf = NULL;
+    uint8_t *output;
+    PSE_RSA_EX_DATA *ex_data;
+    const PSE_RSA_OFFLOAD_METHOD *offload_method;
+    const PSE_OFFLOAD_MEM_METHOD *mem_method = NULL;
+    PSE_RSA_ENCRYPT_PARAM param;
 
     INFO("Inside");
 
     rsa_len = RSA_size(rsa);
+    pse_buffer_init(&bn);
+    pse_buffer_init(&be);
 
-    if ((ctx = BN_CTX_new()) == NULL) {
-        WARN("Failed to allocate BN ctx");
+    ex_data = pse_rsa_get_ex_data(rsa);
+    if (!ex_data) {
+        WARN("Failed to get rsa ex data");
         goto cleanup;
     }
 
-    buf = PSE_MALLOC(rsa_len);
-    if(!buf) {
-        WARN("Failed to allocate output buffer");
+    offload_method = ex_data->offload.offload_method;
+    if (!offload_method) {
+        WARN("Failed to get rsa offload_method");
         goto cleanup;
     }
 
-    BN_CTX_start(ctx);
-    n = BN_CTX_get(ctx);
-    e = BN_CTX_get(ctx);
-     
-    RSA_get0_key(rsa, &n, &e, NULL);
-    pse_BN_to_buffer_pad(n, &bn, rsa_len);
-    pse_BN_to_buffer_pad(e, &be, rsa_len);
-    LOG_BUFFER("bn", bn);
-    LOG_BUFFER("be", be);
+    pse_rsa_encrypt_param_init(&param);
+    if (ex_data->offload.digest_padded_mem) {
+        mem_method = offload_method->mem_method;
+        if (!mem_method) {
+            WARN("Failed to get rsa offload mem_method");
+            goto cleanup;
+        }
+        param.plain_input = (uint8_t *)from;  // sig_expected
+        param.ciphered_output = (uint8_t *)ex_data->offload.digest_padded_mem;
+        param.wait_for_completion = ex_data->offload.wait_for_completion;
+        if (mem_method->line_size_get(ex_data->offload.digest_padded_mem) < rsa_len) {
+            WARN("digest_padded_mem size too small");
+            goto cleanup;
+        }
+        mem_method->content_size_set(ex_data->offload.digest_padded_mem, rsa_len);
+        output = mem_method->read(ex_data->offload.digest_padded_mem);
 
+    } else {
+        if ((ctx = BN_CTX_new()) == NULL) {
+            WARN("Failed to allocate BN ctx");
+            goto cleanup;
+        }
 
-    r = pd_tls_asym_rsa_encrypt(rsa_len, bn.data, be.data, (uint8_t *)from, buf,
-                          true, (const uint8_t *)engine_pse_id);
+        buf = PSE_MALLOC(rsa_len);
+        if(!buf) {
+            WARN("Failed to allocate output buffer");
+            goto cleanup;
+        }
+
+        BN_CTX_start(ctx);
+        n = BN_CTX_get(ctx);
+        e = BN_CTX_get(ctx);
+         
+        RSA_get0_key(rsa, &n, &e, NULL);
+        pse_BN_to_buffer_pad(n, &bn, rsa_len);
+        pse_BN_to_buffer_pad(e, &be, rsa_len);
+        LOG_BUFFER("bn", bn);
+        LOG_BUFFER("be", be);
+
+        param.key_size = rsa_len;
+        param.n = bn.data;
+        param.e = be.data;
+        param.plain_input = (uint8_t *)from;
+        param.ciphered_output = buf;
+        param.async = true;
+        param.caller_unique_id = (const uint8_t *)engine_pse_id;
+        output = buf;
+    }
+
+    r = offload_method->encrypt(ex_data->caller_ctx, &param);
     if (r != 1) {
         WARN("Failed to perform public key encrypt");
         goto cleanup;
@@ -231,20 +278,25 @@ int pse_rsa_pub_dec(int flen, const unsigned char *from,
 
     switch (padding) {
         case RSA_PKCS1_PADDING:
-            r = RSA_padding_check_PKCS1_type_1(to, rsa_len, buf, rsa_len, rsa_len);
+            r = RSA_padding_check_PKCS1_type_1(to, rsa_len, output, rsa_len, rsa_len);
             break;
         case RSA_X931_PADDING:
-            r = RSA_padding_check_X931(to, rsa_len, buf, rsa_len, rsa_len);
+            r = RSA_padding_check_X931(to, rsa_len, output, rsa_len, rsa_len);
             break;
         case RSA_NO_PADDING:
-            memcpy(to, buf, (r = rsa_len));
+            memcpy(to, output, (r = rsa_len));
             break;
         default:
             RSAerr(RSA_F_RSA_OSSL_PUBLIC_DECRYPT, RSA_R_UNKNOWN_PADDING_TYPE);
             goto cleanup;
     }
-    if (r < 0)
-        RSAerr(RSA_F_RSA_OSSL_PUBLIC_DECRYPT, RSA_R_PADDING_CHECK_FAILED);
+    if (r < 0) {
+        /*
+         * RSA padding_check functions above would have already recorded
+         * any errors so no need to do more here.
+         */
+        //RSAerr(RSA_F_RSA_OSSL_PUBLIC_DECRYPT, RSA_R_PADDING_CHECK_FAILED);
+    }
 
 
 cleanup:
@@ -254,7 +306,9 @@ cleanup:
         BN_CTX_end(ctx);
         BN_CTX_free(ctx);
     }
-    PSE_FREE(buf);
+    if(buf) {
+        PSE_FREE(buf);
+    }
     return r;
 }
 
@@ -267,10 +321,16 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
     INFO("Inside");
     int ret = 0, rsa_len = 0;
     unsigned char* buf = NULL;
+    uint8_t *hash_input;
     pse_buffer_t bn;
     const BIGNUM *n = NULL, *e = NULL, *d = NULL;
     BN_CTX *ctx = NULL;
+    const PSE_RSA_OFFLOAD_METHOD *offload_method;
+    const PSE_OFFLOAD_MEM_METHOD *mem_method = NULL;
+    PSE_RSA_SIGN_PARAM param;
+    bool dump_buf = true;
 
+    pse_buffer_init(&bn);
     if(!from || !to || !rsa) {
         WARN("Invalid args");
         goto cleanup;
@@ -282,24 +342,46 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
         goto cleanup;
     }
 
-    rsa_len = RSA_size(rsa);
-    buf = PSE_MALLOC(rsa_len);
-    if(!buf) {
-        WARN("Failed to allocate input buffer");
+    offload_method = ex_data->offload.offload_method;
+    if (!offload_method) {
+        WARN("Failed to get rsa offload_method");
         goto cleanup;
     }
+
+    rsa_len = RSA_size(rsa);
+    if (ex_data->offload.digest_padded_mem) {
+        mem_method = offload_method->mem_method;
+        if (!mem_method) {
+            WARN("Failed to get rsa offload mem_method");
+            goto cleanup;
+        }
+        dump_buf = false;
+        if (mem_method->line_size_get(ex_data->offload.digest_padded_mem) < rsa_len) {
+            WARN("digest_padded_mem size too small");
+            goto cleanup;
+        }
+        hash_input = mem_method->read(ex_data->offload.digest_padded_mem);
+
+    } else {
+        buf = PSE_MALLOC(rsa_len);
+        if(!buf) {
+            WARN("Failed to allocate input buffer");
+            goto cleanup;
+        }
+        hash_input = buf;
+    }
     INFO("flen %d, rsa_len = %d, padding %d, key_idx: %d", 
-                    flen, rsa_len, padding, ex_data->sig_gen_key_id);
+         flen, rsa_len, padding, ex_data->sig_gen_key_id);
 
     switch (padding) {
     case RSA_PKCS1_PADDING:
-        ret = RSA_padding_add_PKCS1_type_1(buf, rsa_len, from, flen);
+        ret = RSA_padding_add_PKCS1_type_1(hash_input, rsa_len, from, flen);
         break;
     case RSA_X931_PADDING:
-        ret = RSA_padding_add_X931(buf, rsa_len, from, flen);
+        ret = RSA_padding_add_X931(hash_input, rsa_len, from, flen);
         break;
     case RSA_NO_PADDING:
-        ret = RSA_padding_add_none(buf, rsa_len, from, flen);
+        ret = RSA_padding_add_none(hash_input, rsa_len, from, flen);
         break;
     case RSA_SSLV23_PADDING:
     default:
@@ -311,39 +393,60 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
         goto cleanup;
     }
 
-    INFO("buf:");
-    HEX_DUMP(buf, rsa_len);
-
-    // Get n and d
-    if ((ctx = BN_CTX_new()) == NULL) {
-        WARN("Failed to allocate BN ctx");
-        goto cleanup;
+    if (dump_buf) {
+        INFO("buf:");
+        HEX_DUMP(hash_input, rsa_len);
     }
-    
-    BN_CTX_start(ctx);
-    n = BN_CTX_get(ctx);
-    e = BN_CTX_get(ctx);
-    d = BN_CTX_get(ctx);
-     
-    RSA_get0_key(rsa, &n, &e, &d);
-    pse_BN_to_buffer_pad(n, &bn, rsa_len);
-    LOG_BUFFER("bn", bn);
+
+    pse_rsa_sign_param_init(&param);
+    if (ex_data->offload.digest_padded_mem) {
+        mem_method->content_size_set(ex_data->offload.digest_padded_mem, rsa_len);
+        mem_method->write_thru(ex_data->offload.digest_padded_mem);
+
+        param.hash_input = (uint8_t *)ex_data->offload.digest_padded_mem;
+        param.sig_output = to;  // sig_actual
+        param.wait_for_completion = ex_data->offload.wait_for_completion;
+
+    } else {
+
+        // Get n and d
+        if ((ctx = BN_CTX_new()) == NULL) {
+            WARN("Failed to allocate BN ctx");
+            goto cleanup;
+        }
+        
+        BN_CTX_start(ctx);
+        n = BN_CTX_get(ctx);
+        e = BN_CTX_get(ctx);
+        d = BN_CTX_get(ctx);
+         
+        RSA_get0_key(rsa, &n, &e, &d);
+        pse_BN_to_buffer_pad(n, &bn, rsa_len);
+        LOG_BUFFER("bn", bn);
+
+        param.key_size = rsa_len;
+        param.key_idx = ex_data->sig_gen_key_id;
+        param.n = bn.data;
+        param.hash_input = hash_input;
+        param.sig_output = to;
+        param.async = true;
+        param.caller_unique_id = (const uint8_t *)engine_pse_id;
+    }
  
 #ifndef NO_PEN_HW_OFFLOAD
-    ret = pd_tls_asym_rsa_sig_gen(rsa_len,
-                                    ex_data->sig_gen_key_id,
-                                    bn.data,
-                                    NULL,
-                                    buf,
-                                    to,
-                                    true,
-                                    (const uint8_t *)engine_pse_id);
+    ret = offload_method->sign(ex_data->caller_ctx, &param);
 #else 
+    if (ex_data->offload.digest_padded_mem) {
+        WARN("digest_padded_mem usage implies HW offload is required");
+        goto cleanup;
+    }
     ret = RSA_meth_get_priv_enc(RSA_PKCS1_OpenSSL())(flen, from, to, rsa, padding);
 #endif
 
-    INFO("to:");
-    HEX_DUMP(to, rsa_len);
+    if (dump_buf) {
+        INFO("to:");
+        HEX_DUMP(to, rsa_len);
+    }
     ret = rsa_len;
 
 cleanup:
@@ -455,6 +558,10 @@ static RSA* pse_get_rsa(PSE_KEY* key)
     
     RSA_set0_key(rsa, rsa_n, rsa_e, NULL);
     
+    /*
+     * RSA_set_method() can cause a premature invocation to pse_rsa_free()
+     * so make sure to do it before setting any ex_data with RSA_set_ex_data().
+     */
     RSA_set_method(rsa, pse_get_RSA_methods()); 
 
     return rsa;
@@ -491,9 +598,7 @@ pse_rsa_get_evp_key(ENGINE* engine, PSE_KEY* key,
     }
     
     EVP_PKEY_set1_RSA(pkey, rsa);
-    pse_rsa_set_ex_data(rsa,
-                        key->u.rsa_key.sign_key_id,
-                        key->u.rsa_key.decrypt_key_id);
+    pse_rsa_set_ex_data(rsa, key, callback_data);
 
     return pkey;
 

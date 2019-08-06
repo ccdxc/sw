@@ -1,5 +1,5 @@
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 #include "nic/sdk/storage/storage_seq_common.h"
 #include "dp_mem.hpp"
 

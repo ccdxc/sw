@@ -84,10 +84,9 @@ testvec_output_t::dec(const string& prefix,
                       bool eol)
 {
     if (fp) {
+        fprintf(fp, "%s%lu%s", prefix.c_str(), val, suffix.c_str());
         if (eol) {
-            fprintf(fp, "%s%lu%s\n", prefix.c_str(), val, suffix.c_str());
-        } else {
-            fprintf(fp, "%s%lu%s", prefix.c_str(), val, suffix.c_str());
+            fprintf(fp, "\n");
         }
     }
 }
@@ -95,10 +94,14 @@ testvec_output_t::dec(const string& prefix,
 void
 testvec_output_t::str(const string& prefix,
                       const string& val,
-                      const string& suffix)
+                      const string& suffix,
+                      bool eol)
 {
     if (fp) {
-        fprintf(fp, "%s%s%s\n", prefix.c_str(), val.c_str(), suffix.c_str());
+        fprintf(fp, "%s%s%s", prefix.c_str(), val.c_str(), suffix.c_str());
+        if (eol) {
+            fprintf(fp, "\n");
+        }
     }
 }
 

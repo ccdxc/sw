@@ -20,8 +20,6 @@
 #include "gen/proto/session.grpc.pb.h"
 #include "gen/proto/rdma.grpc.pb.h"
 #include "gen/proto/nwsec.grpc.pb.h"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "third-party/asic/capri/design/common/cap_addr_define.h"
 #include "third-party/asic/capri/model/cap_txs/cap_txs_csr_define.h"
 
@@ -509,7 +507,7 @@ void CreateInitiatorCQ() {
 void CreateTargetCQ() {
   printf("eos_ignore_addr target CQ 0x%lx len %u\n", target_cq_va->pa(),
          roce_cq_mem_reg_size);
-  eos_ignore_addr(target_cq_va->pa(), roce_cq_mem_reg_size);
+  EOS_IGNORE_ADDR(target_cq_va->pa(), roce_cq_mem_reg_size);
   CreateCQ(1, target_cq_va->pa(), roce_cq_mem_reg_size, true);
 }
 
@@ -1068,7 +1066,7 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
     match_addr &= 0x7FFFFFFFFFFFFFFFULL;
     // Register the address to match fully
     printf("Registering address %lx \n", match_addr);
-    register_mem_addr(match_addr);
+    REGISTER_MEM_ADDR(match_addr);
   }
 
   // Get the HBM buffer for the write back data for the read command
@@ -1258,7 +1256,7 @@ int set_rtl_qstate_cmp_ignore(int src_lif, int src_qtype, int src_qid) {
   // This would lead to EOS miscompares on RDMA qstate. The call below
   // sets ignore range for CB up to 4KB in length.
   printf("eos_ignore_addr RDMA qstate 0x%lx size %u\n", qaddr, kRDMAQStateSize);
-  eos_ignore_addr(qaddr, kRDMAQStateSize);
+  EOS_IGNORE_ADDR(qaddr, kRDMAQStateSize);
 	return 0;
 }
 

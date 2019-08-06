@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <strings.h>
 #include <stdio.h>
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "dol/iris/test/storage/utils.hpp"
+#include "pal_compat.hpp"
 #include "nic/sdk/storage/storage_seq_common.h"
 #include "pd_client.hpp"
 
@@ -504,7 +504,7 @@ int update_xlate_entry(int lif, int qtype, int qid, uint64_t hbm_addr, char *pgm
   utils::write_bit_fields(data, 42, 24, qid);
   utils::write_bit_fields(data, 66, 34, qaddr);
 
-  write_mem(hbm_addr, data, 64);
+  WRITE_MEM(hbm_addr, data, 64, 0);
 
   return 0;
 }

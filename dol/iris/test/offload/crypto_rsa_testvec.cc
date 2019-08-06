@@ -363,7 +363,7 @@ rsa_testvec_t::push(rsa_testvec_push_params_t& push_params)
             }
 
             /*
-             * For ssigning, all msg_repr's of the same key_repr share
+             * For signing, all msg_repr's of the same key_repr share
              * the same key
              */
             if (rsa_key_create_type_is_sign(testvec_params.key_create_type())) {

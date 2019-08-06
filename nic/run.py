@@ -517,6 +517,7 @@ def run_hal_test_fips(port, args):
     wait_for_hal()
     bin_dir = nic_dir + "/build/x86_64/iris/bin"
     script_dir = nic_dir + "/third-party/nist-cavp"
+    os.environ["ENGINE_LOG_DIR"] = nic_dir
     cmd = ['./hal_test', '--hal_port', str(port), '--script_dir', script_dir]
 
     #pass additional arguments to hal_test
@@ -533,6 +534,7 @@ def run_offload_test(port, args):
     wait_for_hal()
     bin_dir = nic_dir + "/../nic/build/x86_64/iris/bin"
     script_dir = nic_dir + "/third-party/nist-cavp"
+    os.environ["ENGINE_LOG_DIR"] = nic_dir
     if args.rtl:
         if args.offload_test:
             cmd = ['./offload_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.offload_test, '--poll_interval', '3600', '--long_poll_interval', '3600']

@@ -11,7 +11,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   storage_chksum_decomp_chain storage_decrypt_decomp_chain \
                   storage_utils storage_r2n storage_ssd_core \
                   storage_encrypt_only storage_nvme_dp \
-                  host_mem storage_qstate_if model_client \
+                  host_mem storage_qstate_if pal model_client \
                   p4pd_pack_storage_seq \
                   sdkplatformutils shmmgr logger \
                   nicmgr mnet \
@@ -35,6 +35,7 @@ MODULE_PIPELINE = iris
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/hal/third-party/grpc/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \
+		  ${TOPDIR}/nic/hal/tls/engine \
                   ${TOPDIR}/platform/src/lib/nicmgr/include \
                   ${TOPDIR}/platform/include/common \
                   ${TOPDIR}/platform/src/lib/pciemgr/include \

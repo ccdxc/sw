@@ -5,6 +5,7 @@
 #include <openssl/engine.h>
 #include "nic/include/base.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/pd/pd_api_c.h"
 #include "nic/hal/tls/engine/pse_intf.h"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
@@ -20,9 +21,22 @@ namespace pd {
 static ENGINE       *engine = NULL;
 BIO                 *bio = NULL;
 
+const static PSE_RSA_OFFLOAD_METHOD     offload_method =
+{
+    .sign               = pd_tls_asym_rsa_sig_gen_param,
+    .encrypt            = pd_tls_asym_rsa_encrypt_param,
+    .decrypt            = pd_tls_asym_rsa_decrypt_param,
+    .mem_method         = NULL,
+};
+
 static hal_ret_t init_ssl(void)
 {
     SSL_library_init();
+
+    /*
+     * Basic I/O is used to interface with, among other things,
+     * Openssl ERR_print facilities.
+     */
     bio = BIO_new_fp(stdout, BIO_NOCLOSE);
     return HAL_RET_OK;
 }
@@ -180,6 +194,7 @@ EVP_PKEY *rsa_setup_key(ENGINE *engine, uint16_t key_size, int32_t key_idx, uint
     pse_key.u.rsa_key.rsa_e.len = key_size;
     pse_key.u.rsa_key.rsa_e.data = e;
 
+    pse_key.u.rsa_key.offload.offload_method = &offload_method;
 
     pkey = ENGINE_load_private_key(engine,
                                    (const char *)&pse_key,

@@ -4,7 +4,9 @@
 #include <openssl/ossl_typ.h>
 
 typedef struct pse_ec_ex_data_s {
-    uint32_t    hw_key_index;    
+    int32_t     hw_key_index;    
+    PSE_EC_KEY_OFFLOAD offload;
+    void        *caller_ctx;
 } PSE_EC_EX_DATA;
 
 EC_KEY_METHOD* pse_get_EC_methods(void);

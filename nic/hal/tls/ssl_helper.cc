@@ -5,6 +5,7 @@
 #include <iomanip>
 #include "nic/hal/tls/ssl_helper.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/pd/pd_api_c.h"
 #include <openssl/engine.h>
 
 #define WHERE_INFO(ssl, w, flag, msg) { \
@@ -12,6 +13,21 @@
         HAL_TRACE_DEBUG("\t{} - {} - {}", msg, SSL_state_string(ssl), SSL_state_string_long(ssl)); \
     }\
 }
+
+const static PSE_RSA_OFFLOAD_METHOD     rsa_offload_method =
+{
+    .sign               = pd_tls_asym_rsa_sig_gen_param,
+    .encrypt            = pd_tls_asym_rsa_encrypt_param,
+    .decrypt            = pd_tls_asym_rsa_decrypt_param,
+    .mem_method         = NULL,
+};
+
+const static PSE_EC_OFFLOAD_METHOD     ec_offload_method =
+{
+    .sign               = pd_tls_asym_ecdsa_p256_sig_gen_param,
+    .verify             = pd_tls_asym_ecdsa_p256_sig_verify_param,
+    .mem_method         = NULL,
+};
 
 // INFO CALLBACK
 void ssl_info_callback(const SSL* ssl, int where, int ret)
@@ -84,6 +100,8 @@ SSLConnection::get_pse_key_rsa(PSE_KEY &pse_key,
     pse_key.u.rsa_key.rsa_e.len = cert.pub_key.u.rsa_params.e_len;
     pse_key.u.rsa_key.rsa_e.data = (uint8_t *)cert.pub_key.u.rsa_params.e;
 
+    pse_key.u.rsa_key.offload.offload_method = &rsa_offload_method;
+
     HAL_TRACE_DEBUG("Received  n {}, e: {}",
                     pse_key.u.rsa_key.rsa_n.len,
                     pse_key.u.rsa_key.rsa_e.len);
@@ -113,6 +131,7 @@ SSLConnection::get_pse_key(PSE_KEY &pse_key,
         pse_key.u.ec_key.key_id = tls_flow_cfg->u.ecdsa_keys.sign_key_id;
         pse_key.u.ec_key.group = cert->pub_key.u.ec_params.group;
         pse_key.u.ec_key.point = cert->pub_key.u.ec_params.point;
+        pse_key.u.ec_key.offload.offload_method = &ec_offload_method;
         break;
 
     default:

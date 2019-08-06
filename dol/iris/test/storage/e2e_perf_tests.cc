@@ -10,16 +10,14 @@
 #include <ctime>
 #include <netinet/in.h>
 
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/qstate_if.hpp"
 #include "dol/iris/test/storage/nvme.hpp"
 #include "dol/iris/test/storage/queues.hpp"
 #include "dol/iris/test/storage/r2n.hpp"
 #include "dol/iris/test/storage/rdma.hpp"
 #include "dol/iris/test/storage/xts.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "dol/iris/test/storage/tests.hpp"
 
 extern dp_mem_t *initiator_rcv_buf_va;
@@ -54,7 +52,7 @@ int test_run_perf_rdma_e2e_write() {
   }
   
   int iter = 1;
-  testcase_begin(tcid, iter);
+  TESTCASE_BEGIN(tcid, iter);
   reset_slba();
   for(uint32_t i = 0; i < num_iter; i++) {
     // Get the SLBA to write to and read from
@@ -62,7 +60,7 @@ int test_run_perf_rdma_e2e_write() {
 
     if(i == num_iter - 1) { 
       rdma_ring_db = true;
-      testcase_end(tcid, iter++);
+      TESTCASE_END(tcid, iter++);
     } else {
       rdma_ring_db = false;
     }
@@ -81,7 +79,7 @@ int test_run_perf_rdma_e2e_write() {
   };
   Poller poll(FLAGS_long_poll_interval);
   rc = poll(func1);
-  testcase_begin(tcid, iter);
+  TESTCASE_BEGIN(tcid, iter);
 
   if (rc < 0)
     printf("Failure in retriving status \n");
@@ -100,7 +98,7 @@ int test_run_perf_rdma_e2e_write() {
   };
   Poller poll(FLAGS_long_poll_interval);
   rc = poll(func2);
-  testcase_end(tcid, iter);
+  TESTCASE_END(tcid, iter);
 
   if (rc < 0)
     printf("Failure in retriving status \n");

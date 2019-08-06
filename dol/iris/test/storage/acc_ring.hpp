@@ -9,6 +9,7 @@
 
 #include "logger.hpp"
 #include "dp_mem.hpp"
+#include "pal_compat.hpp"
 
 using namespace dp_mem;
 

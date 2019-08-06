@@ -29,7 +29,8 @@ public:
              bool eol=true);
     void str(const string& prefix,
              const string& val,
-             const string& suffix="");
+             const string& suffix="",
+             bool eol=true);
     void hex_bn(const string& prefix,
                 dp_mem_t *val,
                 const string& suffix="");

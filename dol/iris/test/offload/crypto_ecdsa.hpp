@@ -8,7 +8,7 @@
 #include "crypto_asym.hpp"
 #include "capri_barco_crypto.hpp"
 #include "capri_barco_rings.hpp"
-#include "dole_if.hpp"
+#include "eng_if.hpp"
 
 using namespace dp_mem;
 using namespace tests;
@@ -28,8 +28,6 @@ typedef enum {
     ECDSA_KEY_CREATE_VOID,
     ECDSA_KEY_CREATE_SIGN,
     ECDSA_KEY_CREATE_VERIFY,
-    ECDSA_KEY_CREATE_ENCRYPT,
-    ECDSA_KEY_CREATE_DECRYPT,
 } ecdsa_key_create_type_t;
 
 static inline bool
@@ -44,16 +42,25 @@ ecdsa_key_create_type_is_verify(ecdsa_key_create_type_t create_type)
     return create_type == ECDSA_KEY_CREATE_VERIFY;
 }
 
-static inline bool
-ecdsa_key_create_type_is_encrypt(ecdsa_key_create_type_t create_type)
+/*
+ * HW expects expanded length for certain curve P sizes
+ */
+static inline uint32_t
+ecdsa_expanded_len(uint32_t P_bytes_len)
 {
-    return create_type == ECDSA_KEY_CREATE_ENCRYPT;
-}
+    /*
+     * Anything less than P-256 is to be expanded to P-256
+     */
+#define ECDSA_P_(bits_len)  ((bits_len) / BITS_PER_BYTE)
 
-static inline bool
-ecdsa_key_create_type_is_decrypt(ecdsa_key_create_type_t create_type)
-{
-    return create_type == ECDSA_KEY_CREATE_DECRYPT;
+    if (P_bytes_len <= ECDSA_P_(256)) {
+        return ECDSA_P_(256);
+    }
+
+    /*
+     * After that, expand to multiples of P-512
+     */
+    return ((P_bytes_len + (ECDSA_P_(512) - 1)) / ECDSA_P_(512)) * ECDSA_P_(512);
 }
 
 /*
@@ -64,17 +71,29 @@ class ecdsa_params_t
 public:
 
     ecdsa_params_t() :
+        P_bytes_len_(0),
+        P_expanded_len_(0),
         dma_desc_mem_type_(DP_MEM_TYPE_HBM),
         status_mem_type_(DP_MEM_TYPE_HBM),
         msg_digest_mem_type_(DP_MEM_TYPE_HBM),
         acc_ring_(nullptr),
         push_type_(ACC_RING_PUSH_HW_DIRECT),
-        seq_qid_(0),
-        key_idx_(CRYPTO_ASYM_KEY_IDX_INVALID),
-        key_idx_shared_(false)
+        seq_qid_(0)
     {
     }
 
+    ecdsa_params_t&
+    P_bytes_len(u_long P_bytes_len)
+    {
+        P_bytes_len_ = P_bytes_len;
+        return *this;
+    }
+    ecdsa_params_t&
+    P_expanded_len(u_long P_expanded_len)
+    {
+        P_expanded_len_ = P_expanded_len;
+        return *this;
+    }
     ecdsa_params_t&
     dma_desc_mem_type(dp_mem_type_t dma_desc_mem_type)
     {
@@ -112,43 +131,31 @@ public:
         return *this;
     }
     ecdsa_params_t&
-    key_idx(crypto_asym::key_idx_t key_idx)
-    {
-        key_idx_ = key_idx;
-        return *this;
-    }
-    ecdsa_params_t&
-    key_idx_shared(bool key_idx_shared)
-    {
-        key_idx_shared_ = key_idx_shared;
-        return *this;
-    }
-    ecdsa_params_t&
     base_params(offload_base_params_t& base_params)
     {
         base_params_ = base_params;
         return *this;
     }
 
+    u_long P_bytes_len(void) { return P_bytes_len_; }
+    u_long P_expanded_len(void) { return P_expanded_len_; }
     dp_mem_type_t dma_desc_mem_type(void) { return dma_desc_mem_type_; }
     dp_mem_type_t status_mem_type(void) { return status_mem_type_; }
     dp_mem_type_t msg_digest_mem_type(void) { return msg_digest_mem_type_; }
     acc_ring_t *acc_ring(void) { return acc_ring_; }
     acc_ring_push_t push_type(void) { return push_type_; }
     uint32_t seq_qid(void) { return seq_qid_; }
-    crypto_asym::key_idx_t key_idx(void) { return key_idx_; }
-    bool key_idx_shared(void) { return key_idx_shared_; }
     offload_base_params_t& base_params(void) { return base_params_; }
 
 private:
+    u_long                      P_bytes_len_;
+    u_long                      P_expanded_len_;
     dp_mem_type_t               dma_desc_mem_type_;
     dp_mem_type_t               status_mem_type_;
     dp_mem_type_t               msg_digest_mem_type_;
     acc_ring_t                  *acc_ring_;
     acc_ring_push_t             push_type_;
     uint32_t                    seq_qid_;
-    crypto_asym::key_idx_t      key_idx_;       // key_idx if already created
-    bool                        key_idx_shared_;
     offload_base_params_t       base_params_;
 };
 
@@ -161,13 +168,25 @@ public:
 
     ecdsa_pre_push_params_t() :
         key_create_type_(ECDSA_KEY_CREATE_VOID),
-        n_(nullptr),
+        curve_nid_(NID_undef),
+        domain_vec_(nullptr),
         d_(nullptr),
-        e_(nullptr),
         msg_(nullptr)
     {
     }
 
+    ecdsa_pre_push_params_t&
+    curve_nid(int curve_nid)
+    {
+        curve_nid_ = curve_nid;
+        return *this;
+    }
+    ecdsa_pre_push_params_t&
+    domain_vec(dp_mem_t *domain_vec)
+    {
+        domain_vec_ = domain_vec;
+        return *this;
+    }
     ecdsa_pre_push_params_t&
     key_create_type(ecdsa_key_create_type_t key_create_type)
     {
@@ -175,21 +194,9 @@ public:
         return *this;
     }
     ecdsa_pre_push_params_t&
-    n(dp_mem_t *n)
-    {
-        n_ = n;
-        return *this;
-    }
-    ecdsa_pre_push_params_t&
     d(dp_mem_t *d)
     {
         d_ = d;
-        return *this;
-    }
-    ecdsa_pre_push_params_t&
-    e(dp_mem_t *e)
-    {
-        e_ = e;
         return *this;
     }
     ecdsa_pre_push_params_t&
@@ -206,17 +213,17 @@ public:
     }
 
     ecdsa_key_create_type_t key_create_type(void) { return key_create_type_; }
-    dp_mem_t *n(void) { return n_; }
+    int curve_nid(void) { return curve_nid_; }
+    dp_mem_t *domain_vec(void) { return domain_vec_; }
     dp_mem_t *d(void) { return d_; }
-    dp_mem_t *e(void) { return e_; }
     dp_mem_t *msg(void) { return msg_; }
     const string& hash_algo(void) { return hash_algo_; }
 
 private:
     ecdsa_key_create_type_t     key_create_type_;
-    dp_mem_t                    *n_;            // ECDSA modulus
-    dp_mem_t                    *d_;            // ECDSA private exponent
-    dp_mem_t                    *e_;            // ECDSA public exponent
+    int                         curve_nid_;
+    dp_mem_t                    *domain_vec_;
+    dp_mem_t                    *d_;            // ECDSA private key
     dp_mem_t                    *msg_;
     string                      hash_algo_;
 };
@@ -229,36 +236,57 @@ class ecdsa_push_params_t
 public:
 
     ecdsa_push_params_t() :
-        msg_expected_(nullptr),
-        msg_actual_(nullptr),
-        sig_expected_(nullptr),
-        sig_actual_(nullptr),
+        k_random_(nullptr),
+        sig_expected_vec_(nullptr),
+        r_expected_(nullptr),
+        s_expected_(nullptr),
+        sig_actual_vec_(nullptr),
+        r_actual_(nullptr),
+        s_actual_(nullptr),
         failure_expected_(false)
     {
     }
 
     ecdsa_push_params_t&
-    msg_expected(dp_mem_t *msg_expected)
+    k_random(dp_mem_t *k_random)
     {
-        msg_expected_ = msg_expected;
+        k_random_ = k_random;
         return *this;
     }
     ecdsa_push_params_t&
-    msg_actual(dp_mem_t *msg_actual)
+    sig_expected_vec(dp_mem_t *sig_expected_vec)
     {
-        msg_actual_ = msg_actual;
+        sig_expected_vec_ = sig_expected_vec;
         return *this;
     }
     ecdsa_push_params_t&
-    sig_expected(dp_mem_t *sig_expected)
+    r_expected(dp_mem_t *r_expected)
     {
-        sig_expected_ = sig_expected;
+        r_expected_ = r_expected;
         return *this;
     }
     ecdsa_push_params_t&
-    sig_actual(dp_mem_t *sig_actual)
+    s_expected(dp_mem_t *s_expected)
     {
-        sig_actual_ = sig_actual;
+        s_expected_ = s_expected;
+        return *this;
+    }
+    ecdsa_push_params_t&
+    sig_actual_vec(dp_mem_t *sig_actual_vec)
+    {
+        sig_actual_vec_ = sig_actual_vec;
+        return *this;
+    }
+    ecdsa_push_params_t&
+    r_actual(dp_mem_t *r_actual)
+    {
+        r_actual_ = r_actual;
+        return *this;
+    }
+    ecdsa_push_params_t&
+    s_actual(dp_mem_t *s_actual)
+    {
+        s_actual_ = s_actual;
         return *this;
     }
     ecdsa_push_params_t&
@@ -268,17 +296,23 @@ public:
         return *this;
     }
 
-    dp_mem_t *msg_expected(void) { return msg_expected_; }
-    dp_mem_t *msg_actual(void) { return msg_actual_; }
-    dp_mem_t *sig_expected(void) { return sig_expected_; }
-    dp_mem_t *sig_actual(void) { return sig_actual_; }
+    dp_mem_t *k_random(void) { return k_random_; }
+    dp_mem_t *sig_expected_vec(void) { return sig_expected_vec_; }
+    dp_mem_t *r_expected(void) { return r_expected_; }
+    dp_mem_t *s_expected(void) { return s_expected_; }
+    dp_mem_t *sig_actual_vec(void) { return sig_actual_vec_; }
+    dp_mem_t *r_actual(void) { return r_actual_; }
+    dp_mem_t *s_actual(void) { return s_actual_; }
     bool failure_expected(void) { return failure_expected_; }
 
 private:
-    dp_mem_t                    *msg_expected_;
-    dp_mem_t                    *msg_actual_;
-    dp_mem_t                    *sig_expected_;
-    dp_mem_t                    *sig_actual_;
+    dp_mem_t                    *k_random_;
+    dp_mem_t                    *sig_expected_vec_;
+    dp_mem_t                    *r_expected_;
+    dp_mem_t                    *s_expected_;
+    dp_mem_t                    *sig_actual_vec_;
+    dp_mem_t                    *r_actual_;
+    dp_mem_t                    *s_actual_;
     bool                        failure_expected_;
 };
 
@@ -291,11 +325,18 @@ class ecdsa_hw_sign_params_t
 public:
 
     ecdsa_hw_sign_params_t() :
+        k_random_(nullptr),
         hash_input_(nullptr),
-        sig_output_(nullptr)
+        sig_output_vec_(nullptr)
     {
     }
 
+    ecdsa_hw_sign_params_t&
+    k_random(dp_mem_t *k_random)
+    {
+        k_random_ = k_random;
+        return *this;
+    }
     ecdsa_hw_sign_params_t&
     hash_input(dp_mem_t *hash_input)
     {
@@ -303,18 +344,20 @@ public:
         return *this;
     }
     ecdsa_hw_sign_params_t&
-    sig_output(dp_mem_t *sig_output)
+    sig_output_vec(dp_mem_t *sig_output_vec)
     {
-        sig_output_ = sig_output;
+        sig_output_vec_ = sig_output_vec;
         return *this;
     }
 
+    dp_mem_t *k_random(void) { return k_random_; }
     dp_mem_t *hash_input(void) { return hash_input_; }
-    dp_mem_t *sig_output(void) { return sig_output_; }
+    dp_mem_t *sig_output_vec(void) { return sig_output_vec_; }
 
 private:
+    dp_mem_t                    *k_random_;
     dp_mem_t                    *hash_input_;
-    dp_mem_t                    *sig_output_;
+    dp_mem_t                    *sig_output_vec_;
 };
 
 /*
@@ -352,74 +395,6 @@ private:
 };
 
 /*
- * ECDSA hardware encryption push params
- */
-class ecdsa_hw_enc_params_t
-{
-public:
-
-    ecdsa_hw_enc_params_t() :
-        plain_input_(nullptr),
-        ciphered_output_(nullptr)
-    {
-    }
-
-    ecdsa_hw_enc_params_t&
-    plain_input(dp_mem_t *plain_input)
-    {
-        plain_input_ = plain_input;
-        return *this;
-    }
-    ecdsa_hw_enc_params_t&
-    ciphered_output(dp_mem_t *ciphered_output)
-    {
-        ciphered_output_ = ciphered_output;
-        return *this;
-    }
-
-    dp_mem_t *plain_input(void) { return plain_input_; }
-    dp_mem_t *ciphered_output(void) { return ciphered_output_; }
-
-private:
-    dp_mem_t                    *plain_input_;
-    dp_mem_t                    *ciphered_output_;
-};
-
-/*
- * ECDSA hardware decryption push params
- */
-class ecdsa_hw_dec_params_t
-{
-public:
-
-    ecdsa_hw_dec_params_t() :
-        ciphered_input_(nullptr),
-        plain_output_(nullptr)
-    {
-    }
-
-    ecdsa_hw_dec_params_t&
-    ciphered_input(dp_mem_t *ciphered_input)
-    {
-        ciphered_input_ = ciphered_input;
-        return *this;
-    }
-    ecdsa_hw_dec_params_t&
-    plain_output(dp_mem_t *plain_output)
-    {
-        plain_output_ = plain_output;
-        return *this;
-    }
-
-    dp_mem_t *ciphered_input(void) { return ciphered_input_; }
-    dp_mem_t *plain_output(void) { return plain_output_; }
-
-private:
-    dp_mem_t                    *ciphered_input_;
-    dp_mem_t                    *plain_output_;
-};
-
-/*
  * ECDSA Crypto
  */
 class ecdsa_t {
@@ -432,8 +407,6 @@ public:
     bool push(ecdsa_push_params_t& push_params);
     bool push(ecdsa_hw_sign_params_t& hw_sign_params);
     bool push(ecdsa_hw_verify_params_t& hw_verify_params);
-    bool push(ecdsa_hw_enc_params_t& hw_enc_params);
-    bool push(ecdsa_hw_dec_params_t& hw_dec_params);
     bool post_push(void);
     bool completion_check(void);
     bool full_verify(void);
@@ -454,19 +427,23 @@ private:
     ecdsa_push_params_t         push_params;
     ecdsa_hw_sign_params_t      hw_sign_params;
     ecdsa_hw_verify_params_t    hw_verify_params;
-    ecdsa_hw_enc_params_t       hw_enc_params;
-    ecdsa_hw_dec_params_t       hw_dec_params;
 
     crypto_asym::dma_desc_pool_t *dma_desc_pool;
     crypto_asym::status_t       *status;
     dp_mem_t                    *digest;
-    dp_mem_t                    *digest_padded;
-    const dole_if::dole_evp_md_t *evp_md;
+    const eng_if::eng_evp_md_t  *evp_md;
     crypto_asym::key_idx_t      key_idx;
 
     bool                        hw_started;
     bool                        test_success;
 };
+
+/*
+ * Access methods for PSE Openssl engine
+ */
+extern "C" {
+extern const PSE_EC_OFFLOAD_METHOD pse_ec_offload_method;
+}
 
 } // namespace crypto_ecdsa
 

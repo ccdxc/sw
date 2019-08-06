@@ -12,6 +12,14 @@ using namespace dp_mem;
 
 namespace crypto_asym {
 
+/*
+ * Number of paramaters fields required for HW programming:
+ */
+enum {
+    ECDSA_NUM_SIG_FIELDS                = 2,    // r, s
+    ECDSA_NUM_KEY_DOMAIN_FIELDS         = 6,    // p, n, xg, yg, a, b
+};
+
 extern acc_ring_t *asym_ring;
 
 typedef hal::pd::barco_asym_dma_descriptor_t    barco_dma_desc_t;
@@ -349,6 +357,18 @@ public:
         cmd_rsa_decrypt_ = cmd_rsa_decrypt;
         return *this;
     }
+    key_desc_pre_push_params_t&
+    cmd_ecdsa_sign(bool cmd_ecdsa_sign)
+    {
+        cmd_ecdsa_sign_ = cmd_ecdsa_sign;
+        return *this;
+    }
+    key_desc_pre_push_params_t&
+    cmd_ecdsa_verify(bool cmd_ecdsa_verify)
+    {
+        cmd_ecdsa_verify_ = cmd_ecdsa_verify;
+        return *this;
+    }
 
     uint64_t key_param_list(void) { return key_param_list_; }
     uint32_t cmd_size(void) { return cmd_size_; }
@@ -357,6 +377,8 @@ public:
     bool cmd_rsa_verify(void) { return cmd_rsa_verify_; }
     bool cmd_rsa_encrypt(void) { return cmd_rsa_encrypt_; }
     bool cmd_rsa_decrypt(void) { return cmd_rsa_decrypt_; }
+    bool cmd_ecdsa_sign(void) { return cmd_ecdsa_sign_; }
+    bool cmd_ecdsa_verify(void) { return cmd_ecdsa_verify_; }
 
 private:
     uint64_t                    key_param_list_;
@@ -366,6 +388,8 @@ private:
     bool                        cmd_rsa_verify_;
     bool                        cmd_rsa_encrypt_;
     bool                        cmd_rsa_decrypt_;
+    bool                        cmd_ecdsa_sign_;
+    bool                        cmd_ecdsa_verify_;
 };
 
 /*

@@ -1,7 +1,7 @@
 #include <math.h>
 #include "tests.hpp"
-#include "utils.hpp"
 #include "hal_if.hpp"
+#include "utils.hpp"
 #include "nicmgr_if.hpp"
 #include "qstate_if.hpp"
 #include "logger.hpp"

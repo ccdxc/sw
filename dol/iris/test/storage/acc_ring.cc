@@ -10,9 +10,8 @@
 #include "acc_ring.hpp"
 #include "queues.hpp"
 #include "tests.hpp"
+#include "utils.hpp"
 #include "storage_seq_p4pd.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace tests {
 
@@ -44,7 +43,8 @@ acc_ring_t::acc_ring_t(const char *ring_name,
     shadow_pd_idx_mem = shadow_pd_idx_pa ?
                          new dp_mem_t((uint8_t *)shadow_pd_idx_pa, 1, pi_size) :
                          new dp_mem_t(1, pi_size);
-    ring_base_mem = (uint8_t *)alloc_page_aligned_host_mem(desc_size * ring_size);
+#ifdef __x86_64__
+    ring_base_mem = (uint8_t *)ALLOC_PAGE_ALIGNED_HOST_MEM(desc_size * ring_size);
     assert(ring_base_mem != nullptr);
 
     /*
@@ -58,21 +58,36 @@ acc_ring_t::acc_ring_t(const char *ring_name,
      * by the DOL caller itself.
      */
     if (!ring_base_mem_pa) {
-        ring_base_mem_pa = host_mem_v2p((void *)ring_base_mem);
+        ring_base_mem_pa = HOST_MEM_V2P((void *)ring_base_mem);
     }
+#else
+    assert(ring_base_mem_pa);
+    ring_base_mem = new (std::nothrow) uint8_t[desc_size * ring_size];
+    assert(ring_base_mem != nullptr);
+#endif
+
+    /*
+     * On (Naples) HW itself, this test program can be launched multiple
+     * times so it'd need to reacquire the up-to-date value of the PI.
+     */
+    curr_pd_idx = READ_REG32(cfg_ring_pd_idx) % ring_size;
+    prev_pd_idx = curr_pd_idx;
+    *((uint32_t *)shadow_pd_idx_mem->read()) = curr_pd_idx;
+    shadow_pd_idx_mem->write_thru();
 
     /*
      * Ring memory is concurrently updated by multiple P4+ instances in RTL
      * which will be different from how standalone model would update it.
      * Hence, so turn off EOS comparison on the ring to prevent false alarms.
      */
-    eos_ignore_addr(ring_base_mem_pa, desc_size * ring_size);
+    EOS_IGNORE_ADDR(ring_base_mem_pa, desc_size * ring_size);
     if (ring_opaque_tag_pa) {
-        eos_ignore_addr(ring_opaque_tag_pa, opaque_data_size);
+        EOS_IGNORE_ADDR(ring_opaque_tag_pa, opaque_data_size);
     }
 
-    OFFL_FUNC_INFO("{} ring_base_mem_pa {:#x} ring_opaque_tag_pa {:#x}",
-                   ring_name, ring_base_mem_pa, ring_opaque_tag_pa);
+    OFFL_FUNC_INFO("{} ring_base_mem_pa {:#x} ring_opaque_tag_pa {:#x} "
+                   "curr_pd_idx {}", ring_name, ring_base_mem_pa,
+                   ring_opaque_tag_pa, curr_pd_idx);
 }
 
 /*
@@ -157,8 +172,8 @@ acc_ring_t::push(const void *src_desc,
     case ACC_RING_PUSH_HW_DIRECT:
     case ACC_RING_PUSH_HW_DIRECT_BATCH:
     case ACC_RING_PUSH_HW_INDIRECT_BATCH:
-        write_mem(ring_base_mem_pa + (curr_pd_idx * desc_size),
-                  (uint8_t *)src_desc, desc_size);
+        WRITE_MEM(ring_base_mem_pa + (curr_pd_idx * desc_size),
+                  (uint8_t *)src_desc, desc_size, 0);
         curr_pd_idx = (curr_pd_idx + 1) % ring_size;
 
         /*
@@ -168,7 +183,7 @@ acc_ring_t::push(const void *src_desc,
         *((uint32_t *)shadow_pd_idx_mem->read()) = curr_pd_idx;
         shadow_pd_idx_mem->write_thru();
         if (push_type == ACC_RING_PUSH_HW_DIRECT) {
-            write_reg(cfg_ring_pd_idx, curr_pd_idx);
+            WRITE_REG32(cfg_ring_pd_idx, curr_pd_idx);
         }
 
         if ((push_type == ACC_RING_PUSH_HW_DIRECT) ||
@@ -270,7 +285,7 @@ acc_ring_t::post_push(uint32_t push_amount)
                 push_amount = std::min(curr_amount, push_amount);
                 push_pd_idx = (prev_pd_idx + push_amount) % ring_size;
             }
-            write_reg(cfg_ring_pd_idx, push_pd_idx);
+            WRITE_REG32(cfg_ring_pd_idx, push_pd_idx);
             prev_pd_idx = push_pd_idx;
             if (push_pd_idx == curr_pd_idx) {
                 curr_push_type = ACC_RING_PUSH_INVALID;
@@ -323,7 +338,7 @@ acc_ring_t::seq_desc_fill(dp_mem_t *seq_desc_container,
 
     seq_desc_container->clear();
     seq_desc = (queues::seq_desc_t *)seq_desc_container->read();
-    seq_desc->acc_desc_addr = htonll(host_mem_v2p(cache_desc));
+    seq_desc->acc_desc_addr = htonll(HOST_MEM_V2P(cache_desc));
     seq_desc->acc_pndx_addr = htonll(cfg_ring_pd_idx);
     seq_desc->acc_pndx_shadow_addr = htonll(shadow_pd_idx_mem->pa());
     seq_desc->acc_ring_addr = htonll(ring_base_mem_pa);

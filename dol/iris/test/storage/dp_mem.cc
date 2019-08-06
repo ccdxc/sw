@@ -1,8 +1,6 @@
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/dp_mem.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace dp_mem {
 
@@ -109,13 +107,16 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
 
         case DP_MEM_TYPE_HOST_MEM:
 
+#ifdef __x86_64__
+
             /*
              * cache is the same as the requested host mem
              */
             cache = mem_align == DP_MEM_ALIGN_NONE ? 
-                    (uint8_t *)alloc_host_mem(total_size) :
-                    (uint8_t *)alloc_spec_aligned_host_mem(total_size,
+                    (uint8_t *)ALLOC_HOST_MEM(total_size) :
+                    (uint8_t *)ALLOC_SPEC_ALIGNED_HOST_MEM(total_size,
                                                            spec_align_size);
+#endif
             if (!cache) {
                 OFFL_FUNC_ERR("unable to allocate host memory size {}",
                               total_size);
@@ -226,7 +227,11 @@ dp_mem_t::~dp_mem_t()
          */
         if (cache && !mem_caller_supplied) {
             if (is_mem_type_host_mem()) {
-                free_host_mem(cache);
+#ifdef __x86_64__
+                FREE_HOST_MEM(cache);
+#else
+                assert(!cache);
+#endif
             } else {
                 delete[] cache;
             }
@@ -405,7 +410,7 @@ dp_mem_t::read_thru(void)
          * reads as necessary
          */
         if (line_size <= DP_HBM_WRITE_READ_UPPER_LIMIT) {
-            read_mem(hbm_line_addr(), cache_line_addr(), line_size);
+            READ_MEM(hbm_line_addr(), cache_line_addr(), line_size, 0);
             return read();
         }
 
@@ -415,7 +420,7 @@ dp_mem_t::read_thru(void)
         while (total_read_size) {
             curr_read_size = total_read_size > DP_HBM_WRITE_READ_UPPER_LIMIT ?
                              DP_HBM_WRITE_READ_UPPER_LIMIT : total_read_size;
-            read_mem(curr_read_addr, curr_cache_addr, curr_read_size);
+            READ_MEM(curr_read_addr, curr_cache_addr, curr_read_size, 0);
             curr_cache_addr += curr_read_size;
             curr_read_addr += curr_read_size;
             total_read_size -= curr_read_size;
@@ -467,7 +472,7 @@ dp_mem_t::write_thru(void)
          * writes as necessary
          */
         if (line_size <= DP_HBM_WRITE_READ_UPPER_LIMIT) {
-            write_mem(hbm_line_addr(), cache_line_addr(), line_size);
+            WRITE_MEM(hbm_line_addr(), cache_line_addr(), line_size, 0);
             return;
         }
 
@@ -477,7 +482,7 @@ dp_mem_t::write_thru(void)
         while (total_write_size) {
             curr_write_size = total_write_size > DP_HBM_WRITE_READ_UPPER_LIMIT ? 
                               DP_HBM_WRITE_READ_UPPER_LIMIT : total_write_size;
-            write_mem(curr_write_addr, curr_cache_addr, curr_write_size);
+            WRITE_MEM(curr_write_addr, curr_cache_addr, curr_write_size, 0);
             curr_cache_addr += curr_write_size;
             curr_write_addr += curr_write_size;
             total_write_size -= curr_write_size;
@@ -496,7 +501,7 @@ dp_mem_t::pa(void)
         return hbm_line_addr();
     }
 
-    return host_mem_v2p(cache_line_addr());
+    return HOST_MEM_V2P(cache_line_addr());
 }
 
 
@@ -581,5 +586,66 @@ dp_mem_t::cache_line_addr(void)
 {
     return &cache[curr_line * line_size];
 }
+
+
+/*
+ * Access methods for PSE Openssl engine
+ */
+extern "C" {
+
+static uint32_t
+line_size_get(PSE_OFFLOAD_MEM *mem)
+{
+    dp_mem_t *m =  static_cast<dp_mem_t *>((void *)mem);
+    return m->line_size_get();
+}
+
+static void
+content_size_set(PSE_OFFLOAD_MEM *mem,
+                 uint32_t size)
+{
+    dp_mem_t *m =  static_cast<dp_mem_t *>((void *)mem);
+    m->content_size_set(size);
+}
+
+static uint32_t
+content_size_get(PSE_OFFLOAD_MEM *mem)
+{
+    dp_mem_t *m =  static_cast<dp_mem_t *>((void *)mem);
+    return m->content_size_get();
+}
+
+static uint8_t *
+read(PSE_OFFLOAD_MEM *mem)
+{
+    dp_mem_t *m =  static_cast<dp_mem_t *>((void *)mem);
+    return m->read();
+}
+
+static uint8_t *
+read_thru(PSE_OFFLOAD_MEM *mem)
+{
+    dp_mem_t *m =  static_cast<dp_mem_t *>((void *)mem);
+    return m->read_thru();
+}
+
+static void
+write_thru(PSE_OFFLOAD_MEM *mem)
+{
+    dp_mem_t *m =  static_cast<dp_mem_t *>((void *)mem);
+    m->write_thru();
+}
+
+const PSE_OFFLOAD_MEM_METHOD pse_mem_method =
+{
+    .line_size_get      = line_size_get,
+    .content_size_set   = content_size_set,
+    .content_size_get   = content_size_get,
+    .read               = read,
+    .read_thru          = read_thru,
+    .write_thru         = write_thru,
+};
+
+} // extern "C"
 
 } // namespace dp_mem

@@ -230,17 +230,37 @@ class ecdsa_curve_repr_t {
 
 public:
     ecdsa_curve_repr_t(ecdsa_testvec_t& ecdsa_testvec,
-                       u_long P_bytes_len) :
+                       u_long P_bytes_len,
+                       u_long P_expanded_len) :
         ecdsa_testvec(ecdsa_testvec),
         P_bytes_len(P_bytes_len),
+        P_expanded_len(P_expanded_len),
         failed_parse_token(PARSE_TOKEN_ID_VOID)
     {
+        /*
+         * Normally we'd allocate a dp_mem vector here to achieve memory 
+         * contiguity but if the underlying mem_type is HBM, the corresponding
+         * allocation library may pad out the length and defeat contiguity.
+         * Hence, we have to resort to allocating size multiples so that
+         * contiguity can still be obtained with fragment_find().
+         */
+        domain_vec = new dp_mem_t(1, P_expanded_len *
+                                     crypto_asym::ECDSA_NUM_KEY_DOMAIN_FIELDS,
+                         DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.d_mem_type(),
+                         0, DP_MEM_ALLOC_NO_FILL);
+        p  = domain_vec->fragment_find(P_expanded_len * 0, P_expanded_len);
+        n  = domain_vec->fragment_find(P_expanded_len * 1, P_expanded_len);
+        xg = domain_vec->fragment_find(P_expanded_len * 2, P_expanded_len);
+        yg = domain_vec->fragment_find(P_expanded_len * 3, P_expanded_len);
+        a  = domain_vec->fragment_find(P_expanded_len * 4, P_expanded_len);
+        b  = domain_vec->fragment_find(P_expanded_len * 5, P_expanded_len);
     }
 
     ~ecdsa_curve_repr_t()
     {
         if (ecdsa_testvec.testvec_params.base_params().destructor_free_buffers()) {
             if (ecdsa_testvec.test_success || !ecdsa_testvec.hw_started) {
+                if (domain_vec) delete domain_vec;
             }
         }
     }
@@ -250,9 +270,24 @@ public:
 private:
     ecdsa_testvec_t&            ecdsa_testvec;
     u_long                      P_bytes_len;    // size of the finite field
+    u_long                      P_expanded_len; // required HW expanded size
+    string                      curve_name;
     string                      sha;
-    string                      sha_algo;
+    string                      hash_algo;
     parser_token_id_t           failed_parse_token;
+
+    // Generated domain parameters from curve_name;
+    // These are fragments of domain_vec to ensure contiguity.
+    // Note that HW also expects the key params to consist of
+    // these 7 items (p,n,xg,yg,a,b,da) in one contiguous chunk.
+    dp_mem_t                    *domain_vec;
+    dp_mem_t                    *p;
+    dp_mem_t                    *n;
+    dp_mem_t                    *xg;
+    dp_mem_t                    *yg;
+    dp_mem_t                    *a;
+    dp_mem_t                    *b;
+
     vector<shared_ptr<ecdsa_msg_repr_t>> msg_repr_vec;
 };
 
@@ -263,7 +298,8 @@ class ecdsa_msg_repr_t {
 
 public:
     ecdsa_msg_repr_t(ecdsa_testvec_t& ecdsa_testvec,
-                   u_long P_bytes_len) :
+                     u_long P_bytes_len,
+                     u_long P_expanded_len) :
         ecdsa_testvec(ecdsa_testvec),
         crypto_ecdsa(nullptr),
         failed_parse_token(PARSE_TOKEN_ID_VOID),
@@ -272,29 +308,36 @@ public:
         compl_failure(false),
         verify_failure(false)
     {
-        assert(P_bytes_len);
+        assert(P_expanded_len);
 
-        qx = new dp_mem_t(1, P_bytes_len,
+        qx = new dp_mem_t(1, P_expanded_len,
                           DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.q_mem_type(),
                           0, DP_MEM_ALLOC_NO_FILL);
-        qy = new dp_mem_t(1, P_bytes_len,
+        qy = new dp_mem_t(1, P_expanded_len,
                           DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.q_mem_type(),
                           0, DP_MEM_ALLOC_NO_FILL);
-        k = new dp_mem_t(1, P_bytes_len,
+        k = new dp_mem_t(1, P_expanded_len,
                          DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.k_mem_type(),
                          0, DP_MEM_ALLOC_NO_FILL);
-        r = new dp_mem_t(1, P_bytes_len,
-                         DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.sig_mem_type(),
-                         0, DP_MEM_ALLOC_NO_FILL);
-        s = new dp_mem_t(1, P_bytes_len,
-                         DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.sig_mem_type(),
-                         0, DP_MEM_ALLOC_NO_FILL);
-        d = new dp_mem_t(1, P_bytes_len,
+        sig_expected_vec = new dp_mem_t(1, P_expanded_len *
+                                           crypto_asym::ECDSA_NUM_SIG_FIELDS,
+                           DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.sig_mem_type(),
+                           0, DP_MEM_ALLOC_NO_FILL);
+        r_expected = sig_expected_vec->fragment_find(P_expanded_len * 0, P_expanded_len);
+        s_expected = sig_expected_vec->fragment_find(P_expanded_len * 1, P_expanded_len);
+
+        d = new dp_mem_t(1, P_expanded_len,
                          DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.d_mem_type(),
                          0, DP_MEM_ALLOC_NO_FILL);
         msg = new dp_mem_t(1, CRYPTO_ECDSA_MSG_ACTUAL_SIZE_MAX,
                          DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.msg_mem_type(),
                          0, DP_MEM_ALLOC_NO_FILL);
+        sig_actual_vec = new dp_mem_t(1, P_expanded_len *
+                                         crypto_asym::ECDSA_NUM_SIG_FIELDS,
+                         DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.sig_mem_type(),
+                         0, DP_MEM_ALLOC_FILL_ZERO);
+        r_actual = sig_actual_vec->fragment_find(P_expanded_len * 0, P_expanded_len);
+        s_actual = sig_actual_vec->fragment_find(P_expanded_len * 1, P_expanded_len);
     }
 
     ~ecdsa_msg_repr_t()
@@ -302,10 +345,10 @@ public:
         if (ecdsa_testvec.testvec_params.base_params().destructor_free_buffers()) {
             if (ecdsa_testvec.test_success || !ecdsa_testvec.hw_started) {
                 if (crypto_ecdsa) delete crypto_ecdsa;
+                if (sig_actual_vec) delete sig_actual_vec;
+                if (sig_expected_vec) delete sig_expected_vec;
                 if (msg) delete msg;
                 if (d) delete d;
-                if (s) delete s;
-                if (r) delete r;
                 if (k) delete k;
                 if (qy) delete qy;
                 if (qx) delete qx;
@@ -317,13 +360,19 @@ public:
 
 private:
     ecdsa_testvec_t&            ecdsa_testvec;
-    dp_mem_t                    *qx;            // curve point x
-    dp_mem_t                    *qy;            // curve point y
+    dp_mem_t                    *qx;            // (qx, qy) form the public key
+    dp_mem_t                    *qy;
     dp_mem_t                    *k;             // fresh random value
-    dp_mem_t                    *r;             // 1st half of signature (size specified by P)
-    dp_mem_t                    *s;             // 2nd half of signature (size specified by P)
+    dp_mem_t                    *sig_expected_vec;
+    dp_mem_t                    *r_expected;    // fragment of sig_expected_vec
+    dp_mem_t                    *s_expected;    // fragment of sig_expected_vec
     dp_mem_t                    *d;             // ECDSA private exponent
     dp_mem_t                    *msg;
+
+    dp_mem_t                    *sig_actual_vec;
+    dp_mem_t                    *r_actual;      // fragment of sig_actual_vec
+    dp_mem_t                    *s_actual;      // fragment of sig_actual_vec
+
     ecdsa_t                     *crypto_ecdsa;
     parser_token_id_t           failed_parse_token;
     uint32_t                    failure_expected: 1,

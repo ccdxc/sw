@@ -1,5 +1,5 @@
 #include "crypto_asym.hpp"
-#include "dole_if.hpp"
+#include "eng_if.hpp"
 #include "hal_if.hpp"
 
 namespace crypto_asym {
@@ -11,8 +11,8 @@ init(const char *engine_path)
 {
     hal::barco_ring_meta_config_t   meta;
 
-    if (!dole_if::init(engine_path)) {
-        OFFL_FUNC_ERR("failed dole_if init");
+    if (!eng_if::init(engine_path)) {
+        OFFL_FUNC_ERR("failed eng_if init");
         return false;
     }
 
@@ -172,6 +172,10 @@ key_desc_t::pre_push(key_desc_pre_push_params_t& pre_params)
         key_desc.command_reg |= CAPRI_BARCO_ASYM_CMD_RSA_ENCRYPT;
     } else if (pre_params.cmd_rsa_decrypt()) {
         key_desc.command_reg |= CAPRI_BARCO_ASYM_CMD_RSA_DECRYPT;
+    } else if (pre_params.cmd_ecdsa_sign()) {
+        key_desc.command_reg |= CAPRI_BARCO_ASYM_ECDSA_SIG_GEN;
+    } else if (pre_params.cmd_ecdsa_verify()) {
+        key_desc.command_reg |= CAPRI_BARCO_ASYM_ECDSA_SIG_VERIFY;
     } else {
         OFFL_FUNC_ERR("failed to set command_reg");
         return false;

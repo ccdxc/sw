@@ -24,8 +24,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <byteswap.h>
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "gflags/gflags.h"
 
 namespace tests {
@@ -582,8 +580,8 @@ queue_mem_pa_get(uint64_t reg_addr)
 {
     uint32_t lo_val, hi_val;
 
-    read_reg(reg_addr, lo_val);
-    read_reg(reg_addr + 4, hi_val);
+    lo_val = READ_REG32(reg_addr);
+    hi_val = READ_REG32(reg_addr + 4);
     return ((uint64_t)hi_val << 32) | lo_val;
 }
 
@@ -777,15 +775,15 @@ compression_init()
   uint32_t dc_hot_ring_size = kMaxSubqEntries;
   uint32_t lo_reg, hi_reg;
 
-  read_reg(cp_cfg_glob, lo_reg);
+  lo_reg = READ_REG32(cp_cfg_glob);
   if (comp_inited_by_hal) {
       kCPVersion = lo_reg & 0xffff;
       printf("Comp version is 0x%x\n", kCPVersion);
 
-      read_reg(cp_cfg_dist, lo_reg);
+      lo_reg = READ_REG32(cp_cfg_dist);
       cp_ring_size = (lo_reg >> 2) & 0xfff;
       cp_hot_ring_size = (lo_reg >> 14) & 0xfff;
-      read_reg(dc_cfg_dist, lo_reg);
+      lo_reg = READ_REG32(dc_cfg_dist);
       dc_ring_size = (lo_reg >> 2) & 0xfff;
       dc_hot_ring_size = (lo_reg >> 14) & 0xfff;
       if (!cp_ring_size) cp_ring_size = kMaxSubqEntries;
@@ -811,50 +809,50 @@ compression_init()
   if (!comp_inited_by_hal) {
 
       // Write cp queue base.
-      write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
-      write_reg(cp_cfg_q_base, cp_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
-      write_reg(cp_cfg_q_base + 4, (cp_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
+      WRITE_REG32(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
+      WRITE_REG32(cp_cfg_q_base, cp_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
+      WRITE_REG32(cp_cfg_q_base + 4, (cp_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
-      write_reg(cp_cfg_hotq_base, cp_hot_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
-      write_reg(cp_cfg_hotq_base + 4, (cp_hot_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
+      WRITE_REG32(cp_cfg_hotq_base, cp_hot_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
+      WRITE_REG32(cp_cfg_hotq_base + 4, (cp_hot_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
       // Write dc queue base.
-      read_reg(dc_cfg_glob, lo_reg);
-      write_reg(dc_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
-      write_reg(dc_cfg_q_base, dc_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
-      write_reg(dc_cfg_q_base + 4, (dc_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
+      lo_reg = READ_REG32(dc_cfg_glob);
+      WRITE_REG32(dc_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
+      WRITE_REG32(dc_cfg_q_base, dc_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
+      WRITE_REG32(dc_cfg_q_base + 4, (dc_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
-      write_reg(dc_cfg_hotq_base, dc_hot_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
-      write_reg(dc_cfg_hotq_base + 4, (dc_hot_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
+      WRITE_REG32(dc_cfg_hotq_base, dc_hot_ring->ring_base_mem_pa_get() & 0xFFFFFFFFu);
+      WRITE_REG32(dc_cfg_hotq_base + 4, (dc_hot_ring->ring_base_mem_pa_get() >> 32) & 0xFFFFFFFFu);
 
       // Enable all 16 cp engines.
-      read_reg(cp_cfg_ueng, lo_reg);
-      read_reg(cp_cfg_ueng+4, hi_reg);
+      lo_reg = READ_REG32(cp_cfg_ueng);
+      hi_reg = READ_REG32(cp_cfg_ueng+4);
       lo_reg |= 0xFFFF;
       hi_reg &= ~(1u << (54 - 32));
       hi_reg &= ~(1u << (53 - 32));
       hi_reg |= (1u << (36 - 32)) |
                 (1u << (55 - 32));
-      write_reg(cp_cfg_ueng, lo_reg);
-      write_reg(cp_cfg_ueng+4, hi_reg);
+      WRITE_REG32(cp_cfg_ueng, lo_reg);
+      WRITE_REG32(cp_cfg_ueng+4, hi_reg);
       // Enable both DC engines.
-      read_reg(dc_cfg_ueng, lo_reg);
-      read_reg(dc_cfg_ueng+4, hi_reg);
+      lo_reg = READ_REG32(dc_cfg_ueng);
+      hi_reg = READ_REG32(dc_cfg_ueng+4);
       lo_reg |= 0x3;
       hi_reg &= ~(1u << (54 - 32));
       hi_reg &= ~(1u << (53 - 32));
       hi_reg |= (1u << (36 - 32)) |
                 (1u << (55 - 32));
-      write_reg(dc_cfg_ueng, lo_reg);
-      write_reg(dc_cfg_ueng+4, hi_reg);
+      WRITE_REG32(dc_cfg_ueng, lo_reg);
+      WRITE_REG32(dc_cfg_ueng+4, hi_reg);
 
       // Enable cold/warm queue.
-      read_reg(cp_cfg_dist, lo_reg);
+      lo_reg = READ_REG32(cp_cfg_dist);
       lo_reg |= 1;
-      write_reg(cp_cfg_dist, lo_reg);
-      read_reg(dc_cfg_dist, lo_reg);
+      WRITE_REG32(cp_cfg_dist, lo_reg);
+      lo_reg = READ_REG32(dc_cfg_dist);
       lo_reg |= 1;
-      write_reg(dc_cfg_dist, lo_reg);
+      WRITE_REG32(dc_cfg_dist, lo_reg);
   }
 
   printf("Compression init done\n");

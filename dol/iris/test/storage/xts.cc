@@ -3,16 +3,15 @@
 #include <math.h>
 #include <unistd.h>
 
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/tests.hpp"
 #include "dol/iris/test/storage/xts.hpp"
 #include "dol/iris/test/storage/qstate_if.hpp"
 #include "dol/iris/test/storage/queues.hpp"
 #include "dol/iris/test/storage/dp_mem.hpp"
 #include "dol/iris/test/storage/storage_seq_p4pd.hpp"
-#include "nic/utils/host_mem/c_if.h"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "pal_compat.hpp"
 
 uint32_t key128_desc_idx = 0;
 uint32_t key256_desc_idx = 0;
@@ -141,13 +140,13 @@ int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
   uint32_t data_size = 0;
   for(uint32_t i = 0; i < num_aols; i++) {
     data_size += out_aol[i]->l0;
-    assert((uint64_t)out_buf == (uint64_t)host_mem_p2v(out_aol[i]->a0));
+    assert((uint64_t)out_buf == (uint64_t)HOST_MEM_P2V(out_aol[i]->a0));
     if(out_aol[i]->a1) {
-      assert((uint64_t)out_buf == (uint64_t)host_mem_p2v(out_aol[i]->a1));
+      assert((uint64_t)out_buf == (uint64_t)HOST_MEM_P2V(out_aol[i]->a1));
       data_size += out_aol[i]->l1;
     }
     if(out_aol[i]->a2) {
-      assert((uint64_t)out_buf == (uint64_t)host_mem_p2v(out_aol[i]->a2));
+      assert((uint64_t)out_buf == (uint64_t)HOST_MEM_P2V(out_aol[i]->a2));
       data_size += out_aol[i]->l2;
     }
   }
@@ -291,7 +290,7 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_inter
 
   uint32_t opaque_tag = 0;
   auto func = [opaque_tag_addr, &opaque_tag, exp_opaque_tag] () {
-    if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
+    if(READ_MEM(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag), 0)) {
       printf("Reading opaque tag hbm mem failed \n");
       return -1;
     }
@@ -331,13 +330,13 @@ void XtsCtx::init(uint32_t size, bool chain) {
         ((int*)src_buf)[i] = rand();
       }
     }
-    src_buf_phy = (void*)host_mem_v2p(src_buf);
+    src_buf_phy = (void*)HOST_MEM_V2P(src_buf);
   } else {
     src_buf_phy = src_buf;
   }
   if(!is_dst_hbm_buf) {
     memset(dst_buf, 0, size);
-    dst_buf_phy = (void*)host_mem_v2p(dst_buf);
+    dst_buf_phy = (void*)HOST_MEM_V2P(dst_buf);
   } else {
     dst_buf_phy = dst_buf;
   }
@@ -402,10 +401,10 @@ XtsCtx::~XtsCtx() {
   // TODO: This seems to be crashing - needs investigation
   //if(status && !caller_status_en) delete status;
   //if(xts_db && !caller_xts_db_en) delete xts_db;
-  //if(iv) free_host_mem(iv);
+  //if(iv) FREE_HOST_MEM(iv);
   /*for(uint32_t i = 0; i < num_aols; i++) {
-    if(in_aol[i]) free_host_mem(in_aol[i]);
-    if(out_aol[i]) free_host_mem(out_aol[i]);
+    if(in_aol[i]) FREE_HOST_MEM(in_aol[i]);
+    if(out_aol[i]) FREE_HOST_MEM(out_aol[i]);
   }*/
 }
 
@@ -472,23 +471,23 @@ XtsCtx::desc_prefill_seq_xts(xts::xts_desc_t *xts_desc) {
 
   if (!iv) {
     uint32_t alloc_size = ((kMinHostMemAllocSize < IV_SIZE) ? kMinHostMemAllocSize : IV_SIZE);
-    iv = (unsigned char*)alloc_host_mem(alloc_size);
+    iv = (unsigned char*)ALLOC_HOST_MEM(alloc_size);
     memset(iv, 0, alloc_size);
     memcpy(iv, iv_src, IV_SIZE);
   }
 
   // Fill the XTS ring descriptor
   memset(xts_desc, 0, sizeof(*xts_desc));
-  xts_desc->iv_addr = host_mem_v2p(iv);
+  xts_desc->iv_addr = HOST_MEM_V2P(iv);
   if(is_gcm) {
     if(!decr_en) {
       assert(NULL == auth_tag_addr);
-      auth_tag_addr = alloc_host_mem(kMinHostMemAllocSize);
+      auth_tag_addr = ALLOC_HOST_MEM(kMinHostMemAllocSize);
       memset(auth_tag_addr, 0, kMinHostMemAllocSize);
-      xts_desc->auth_tag = host_mem_v2p(auth_tag_addr);
+      xts_desc->auth_tag = HOST_MEM_V2P(auth_tag_addr);
     } else {
       assert(NULL != auth_tag_addr);
-      xts_desc->auth_tag = host_mem_v2p(auth_tag_addr);
+      xts_desc->auth_tag = HOST_MEM_V2P(auth_tag_addr);
     }
   }
   xts_desc->opaque_tag_en = opa_tag_en;
@@ -694,9 +693,9 @@ int XtsCtx::test_seq_xts() {
   memset(out_aol, 0x0, sizeof(out_aol));
   for(uint32_t i = 0; i < num_aols; i++) {
     // AOLs need to be aligned at 512-bit boundary. For now page aligning them
-    in_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
+    in_aol[i] = (xts::xts_aol_t*)ALLOC_PAGE_ALIGNED_HOST_MEM(sizeof(xts::xts_aol_t));
     memset(in_aol[i], 0x0, sizeof(xts::xts_aol_t));
-    out_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
+    out_aol[i] = (xts::xts_aol_t*)ALLOC_PAGE_ALIGNED_HOST_MEM(sizeof(xts::xts_aol_t));
     memset(out_aol[i], 0x0, sizeof(xts::xts_aol_t));
   }
   uint32_t in_data_size, out_data_size;
@@ -743,8 +742,8 @@ int XtsCtx::test_seq_xts() {
         out_pending_size, out_sub_aol_data_size);
 
     if(i + 1 < num_aols) {
-      in_aol[i]->next = (uint64_t) host_mem_v2p(in_aol[i+1]);
-       out_aol[i]->next = (uint64_t) host_mem_v2p(out_aol[i+1]);
+      in_aol[i]->next = (uint64_t) HOST_MEM_V2P(in_aol[i+1]);
+       out_aol[i]->next = (uint64_t) HOST_MEM_V2P(out_aol[i+1]);
     }
   }
 
@@ -755,8 +754,8 @@ int XtsCtx::test_seq_xts() {
 
   // Fill the XTS ring descriptor
   desc_prefill_seq_xts(&xts_desc);
-  xts_desc.in_aol = host_mem_v2p(in_aol[0]);
-  xts_desc.out_aol = host_mem_v2p(out_aol[0]);
+  xts_desc.in_aol = HOST_MEM_V2P(in_aol[0]);
+  xts_desc.out_aol = HOST_MEM_V2P(out_aol[0]);
   xts_desc.cmd = cmd;
 
   desc_write_seq_xts(&xts_desc);
@@ -1051,9 +1050,9 @@ int xts_multi_blk_128req() {
 int xts_multi_blk() {
   int rv;
   char *in_buff[kMaxReqs], *stg_buff[kMaxReqs], *out_buff[kMaxReqs];
-  char* in_buffer = (char *)alloc_host_mem(kBufSize);
-  char* stg_buffer = (char *)alloc_host_mem(kBufSize);
-  char* out_buffer = (char *)alloc_host_mem(kBufSize);
+  char* in_buffer = (char *)ALLOC_HOST_MEM(kBufSize);
+  char* stg_buffer = (char *)ALLOC_HOST_MEM(kBufSize);
+  char* out_buffer = (char *)ALLOC_HOST_MEM(kBufSize);
   uint32_t i;
 
   for(uint32_t i = 0; i < kTotalReqs; i++) {
@@ -1070,7 +1069,7 @@ int xts_multi_blk() {
   uint32_t pending_encr_reqs = kTotalReqs -kInitReqs,  pending_decr_reqs = kTotalReqs;
 
   int iter = 1;
-  testcase_begin(tcid, iter);
+  TESTCASE_BEGIN(tcid, iter);
   //Queue initial set of requests
   for(i = 0; i < kInitReqs; i++) {
     rv = ctx[i].xts_ctx1.test_seq_xts();
@@ -1086,7 +1085,7 @@ int xts_multi_blk() {
         printf("pending %u comp %u\n", pending_encr_reqs, encr_reqs_comp);
         goto done;
       }
-      testcase_end(tcid, iter++);
+      TESTCASE_END(tcid, iter++);
       encr_reqs_comp = exp_encr_opaque_tag;
       exp_encr_opaque_tag += kBatchSize;
     }
@@ -1111,14 +1110,14 @@ int xts_multi_blk() {
         printf("pending %u comp %u\n", pending_decr_reqs, decr_reqs_comp);
         goto done;
       }
-      testcase_end(tcid, iter++);
+      TESTCASE_END(tcid, iter++);
       decr_reqs_comp = exp_decr_opaque_tag;
     }
 
     //Queue next batch size of decr
     if(pending_decr_reqs >= kBatchSize) {
       uint32_t i;
-      testcase_begin(tcid, iter);
+      TESTCASE_BEGIN(tcid, iter);
       for(i = kTotalReqs - pending_decr_reqs;
           i < kTotalReqs - pending_decr_reqs + kBatchSize;
           i++) {
@@ -1143,9 +1142,9 @@ int xts_multi_blk() {
 
 done:
   delete[] ctx;
-  free_host_mem(in_buffer);
-  free_host_mem(stg_buffer);
-  free_host_mem(out_buffer);
+  FREE_HOST_MEM(in_buffer);
+  FREE_HOST_MEM(stg_buffer);
+  FREE_HOST_MEM(out_buffer);
 
   return rv;
 }
@@ -1854,7 +1853,7 @@ int fill_ctx(XtsCtx* ctx1, XtsCtx* ctx2, XtsCtx* ctx3, XtsCtx* ctx4,
     ctx1[i].is_dst_hbm_buf = true;
     if(is_hbm_buf) {
       memset(scratch, i, sizeof(scratch));
-      write_mem((uint64_t)ctx1[i].src_buf, scratch, kDefaultBufSize);
+      WRITE_MEM((uint64_t)ctx1[i].src_buf, scratch, kDefaultBufSize, 0);
     }
 
     ctx2[i].src_buf = (void*)(stg1_buffer + i*kDefaultBufSize);
@@ -1886,8 +1885,8 @@ int e2e_verify_hbm_buf(XtsCtx& xts_ctx1, XtsCtx& xts_ctx2) {
   memset(src_buf_cp, 0, kDefaultBufSize);
   memset(dst_buf_cp, 0, kDefaultBufSize);
 
-  read_mem((uint64_t)xts_ctx1.src_buf, src_buf_cp, kDefaultBufSize);
-  read_mem((uint64_t)xts_ctx2.dst_buf, dst_buf_cp, kDefaultBufSize);
+  READ_MEM((uint64_t)xts_ctx1.src_buf, src_buf_cp, kDefaultBufSize, 0);
+  READ_MEM((uint64_t)xts_ctx2.dst_buf, dst_buf_cp, kDefaultBufSize, 0);
 
   rv = memcmp(src_buf_cp, dst_buf_cp, kDefaultBufSize);
   if(0 != rv) {
@@ -1919,7 +1918,7 @@ int get_opaque_tag(uint32_t& opaque_tag, bool decr_en, bool is_gcm=false) {
     else if(decr_en && is_gcm) gcm_decr_tag_addr = opaque_tag_addr;
   }
 
-  if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
+  if(READ_MEM(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag), 0)) {
     printf("Reading opaque tag hbm mem failed \n");
     return -1;
   }
@@ -1933,8 +1932,8 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     rv = utils::hbm_addr_alloc(kBufSize, &in_buffer);
     if(0 == rv) rv = utils::hbm_addr_alloc(kBufSize, &out_buffer);
   } else {
-    in_buffer = (uint64_t)alloc_host_mem(kBufSize);
-    out_buffer = (uint64_t)alloc_host_mem(kBufSize);
+    in_buffer = (uint64_t)ALLOC_HOST_MEM(kBufSize);
+    out_buffer = (uint64_t)ALLOC_HOST_MEM(kBufSize);
   }
   uint64_t stg1_buffer, stg2_buffer, stg3_buffer;
   if(0 == rv) rv = utils::hbm_addr_alloc(kBufSize, &stg1_buffer);
@@ -1964,20 +1963,20 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
   }
 
   uint32_t xts_encr_tag_addr = 0, xts_decr_tag_addr = 0, gcm_encr_tag_addr = 0;
-  read_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, xts_encr_tag_addr);
-  read_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, xts_decr_tag_addr);
-  read_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, gcm_encr_tag_addr);
+  xts_encr_tag_addr = READ_REG32(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR);
+  xts_decr_tag_addr = READ_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR);
+  gcm_encr_tag_addr = READ_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR);
 
-  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX);
-  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W1_ADDR, 0);
-  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX);
-  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W1_ADDR, 0);
-  write_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX);
-  write_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W1_ADDR, 0);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W1_ADDR, 0);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W1_ADDR, 0);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W1_ADDR, 0);
   int iter = 1;
   //Queue initial set of requests
   uint32_t pindex = 0;
-  read_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX, pindex);
+  pindex = READ_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX);
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
       ctx1[i].opaque_tag = (pindex+i+1) % (kXtsQueueSize-1);
@@ -1985,7 +1984,7 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     }
     if(0 == rv) rv = ctx1[i].test_seq_xts();
   }
-  read_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX, pindex);
+  pindex = READ_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX);
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
       ctx2[i].opaque_tag = (pindex+i+1) % (kXtsQueueSize-1);
@@ -1993,7 +1992,7 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     }
     if(0 == rv) rv = ctx2[i].test_seq_xts();
   }
-  read_reg(CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX, pindex);
+  pindex = READ_REG32(CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX);
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
       ctx3[i].opaque_tag = (pindex+i+1) % (kXtsQueueSize-1);
@@ -2007,14 +2006,14 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
   }
   if(0 != rv) goto done;
 
-  testcase_begin(tcid, iter);
+  TESTCASE_BEGIN(tcid, iter);
   ctx1[0].acc_ring->post_push();
 
   rv = verify_opaque_tag(kTotalReqs, true, FLAGS_long_poll_interval, true);
   if(0 != rv) {
     goto done;
   }
-  testcase_begin(tcid, iter);
+  TESTCASE_END(tcid, iter);
 
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(is_hbm_buf) rv = e2e_verify_hbm_buf(ctx1[i], ctx4[i]);
@@ -2027,12 +2026,12 @@ done:
   delete[] ctx2;
   delete[] ctx3;
   delete[] ctx4;
-  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, xts_encr_tag_addr);
-  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, xts_decr_tag_addr);
-  write_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, gcm_encr_tag_addr);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, xts_encr_tag_addr);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, xts_decr_tag_addr);
+  WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, gcm_encr_tag_addr);
   if(!is_hbm_buf) {
-    free_host_mem((void*)in_buffer);
-    free_host_mem((void*)out_buffer);
+    FREE_HOST_MEM((void*)in_buffer);
+    FREE_HOST_MEM((void*)out_buffer);
   }
 
   return rv;
@@ -2045,8 +2044,8 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
     rv = utils::hbm_addr_alloc(kBufSize, &in_buffer);
     if(0 == rv) rv = utils::hbm_addr_alloc(kBufSize, &out_buffer);
   } else {
-    in_buffer = (uint64_t)alloc_host_mem(kBufSize);
-    out_buffer = (uint64_t)alloc_host_mem(kBufSize);
+    in_buffer = (uint64_t)ALLOC_HOST_MEM(kBufSize);
+    out_buffer = (uint64_t)ALLOC_HOST_MEM(kBufSize);
   }
   uint64_t stg1_buffer, stg2_buffer, stg3_buffer;
   if(0 == rv) rv = utils::hbm_addr_alloc(kBufSize, &stg1_buffer);
@@ -2083,7 +2082,7 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
   }
   if(0 != rv) goto done;
 
-  testcase_begin(tcid, iter);
+  TESTCASE_BEGIN(tcid, iter);
   ctx1[0].acc_ring->post_push();
 
   while(1) {
@@ -2138,7 +2137,7 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
   if(0 != rv) {
     goto done;
   }
-  testcase_end(tcid, iter);
+  TESTCASE_END(tcid, iter);
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(is_hbm_buf) rv = e2e_verify_hbm_buf(ctx1[i], ctx4[i]);
     else rv = e2e_verify(ctx1[i], ctx4[i]);
@@ -2151,8 +2150,8 @@ done:
   delete[] ctx3;
   delete[] ctx4;
   if(!is_hbm_buf) {
-    free_host_mem((void*)in_buffer);
-    free_host_mem((void*)out_buffer);
+    FREE_HOST_MEM((void*)in_buffer);
+    FREE_HOST_MEM((void*)out_buffer);
   }
 
   return rv;

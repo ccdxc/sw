@@ -9,8 +9,8 @@
 #include <ctime>
 #include <netinet/in.h>
 
-#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
+#include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/qstate_if.hpp"
 #include "dol/iris/test/storage/nvme.hpp"
 #include "dol/iris/test/storage/queues.hpp"
@@ -18,7 +18,7 @@
 #include "dol/iris/test/storage/rdma.hpp"
 #include "dol/iris/test/storage/xts.hpp"
 #include "dol/iris/test/storage/tests.hpp"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "pal_compat.hpp"
 
 
 const static uint32_t  kR2nWqeSize           = 64;
@@ -218,7 +218,7 @@ test_generic_eos_ignore(void)
     if (hal_if::alloc_hbm_address("flow_stats", &hbm_addr, &hbm_size) == 0) {
         hbm_size *= 1024;
         printf("eos_ignore_addr flow_stats region 0x%lx len %u\n", hbm_addr, hbm_size);
-        eos_ignore_addr(hbm_addr, hbm_size);
+        EOS_IGNORE_ADDR(hbm_addr, hbm_size);
     }
 }
 
@@ -233,7 +233,7 @@ void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
   if (!suppress_log) {
       printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
   }
-  step_doorbell(db_addr, db_data);
+  WRITE_DB64(db_addr, db_data);
 }
 
 void test_ring_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
@@ -244,7 +244,7 @@ void test_ring_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
   queues::get_nvme_doorbell(lif, qtype, qid, ring, index, &db_addr, &db_data);
 
   printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
-  step_doorbell(db_addr, db_data);
+  WRITE_DB64(db_addr, db_data);
 }
 
 int send_and_check(dp_mem_t *send_cmd, dp_mem_t *recv_cmd, uint32_t size,
@@ -2694,8 +2694,8 @@ test_csr_64bit_get(uint64_t reg_addr)
 {
     uint32_t lo_val, hi_val;
 
-    read_reg(reg_addr, lo_val);
-    read_reg(reg_addr + 4, hi_val);
+    lo_val = READ_REG32(reg_addr);
+    hi_val = READ_REG32(reg_addr + 4);
     return ((uint64_t)hi_val << 32) | lo_val;
 }
 
@@ -2703,8 +2703,8 @@ test_csr_64bit_get(uint64_t reg_addr)
 void
 test_csr_64bit_set(uint64_t reg_addr, uint64_t val64)
 {
-    write_reg(reg_addr, val64 & 0xffffffff);
-    write_reg(reg_addr + 4, val64 >> 32);
+    WRITE_REG32(reg_addr, val64 & 0xffffffff);
+    WRITE_REG32(reg_addr + 4, val64 >> 32);
 }
 
 // Read 32-bit value from CSR
@@ -2713,7 +2713,7 @@ test_csr_32bit_get(uint64_t reg_addr)
 {
     uint32_t lo_val;
 
-    read_reg(reg_addr, lo_val);
+    lo_val = READ_REG32(reg_addr);
     return lo_val;
 }
 
@@ -2721,7 +2721,7 @@ test_csr_32bit_get(uint64_t reg_addr)
 void
 test_csr_32bit_set(uint64_t reg_addr, uint32_t val32)
 {
-    write_reg(reg_addr, val32);
+    WRITE_REG32(reg_addr, val32);
 }
 
 }  // namespace tests

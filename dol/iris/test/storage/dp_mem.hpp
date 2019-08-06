@@ -3,6 +3,8 @@
 
 #include <utility>
 #include <unordered_map>
+#include "pse_intf.h"
+#include "pal_compat.hpp"
 
 #ifndef BITS_PER_BYTE
 #define BITS_PER_BYTE       8
@@ -151,6 +153,13 @@ private:
 
     bool            mem_caller_supplied : 1;
 };
+
+/*
+ * Access methods for PSE Openssl engine
+ */
+extern "C" {
+extern const PSE_OFFLOAD_MEM_METHOD pse_mem_method;
+}
 
 }  // namespace dp_mem
 
