@@ -13,7 +13,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { SearchPolicySearchRequest, ISearchPolicyMatchEntry } from '@sdk/v1/models/generated/search';
+import { SearchPolicySearchRequest, ISearchPolicyMatchEntry, SearchPolicySearchResponse_status } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
@@ -442,7 +442,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       (data) => {
         // const body = data.body as ISearchPolicySearchResponse;
         const body = data.body as any;
-        if (body.status === 'MATCH') {
+        if (body.status ===  SearchPolicySearchResponse_status.match) {
           if (this.selectedPolicy == null || body.results[this.selectedPolicy.meta.name] == null) {
             this.searchErrorMessage = 'No Matching Rule';
             this.searchPolicyInvoked = true;
