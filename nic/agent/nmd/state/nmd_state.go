@@ -126,10 +126,8 @@ func NewNMD(pipeline Pipeline,
 		ObjectMeta: api.ObjectMeta{
 			Name: fru.MacStr,
 		},
-		Status: nmd.RolloutStatus{
-			InProgressOp: &roprotos.SmartNICOpSpec{
-				Op: roprotos.SmartNICOp_SmartNICNoOp,
-			},
+		InProgressOp: roprotos.SmartNICOpSpec{
+			Op: roprotos.SmartNICOp_SmartNICNoOp,
 		},
 	}
 	tempRO := nmd.NaplesRollout{
