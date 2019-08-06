@@ -465,16 +465,16 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
 		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {
-			ros.issueSmartNICOpExponential(s, op)
+			ros.issueSmartNICOpExponential(s, op, nil)
 		} else {
-			ros.issueSmartNICOpLinear(s, op)
+			ros.issueSmartNICOpLinear(s, op, nil)
 		}
 	}
 
 	log.Infof("completed smartNIC Rollout Preupgrade")
 }
 
-func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, op protos.SmartNICOp) {
+func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, op protos.SmartNICOp, snStatusList map[string]string) {
 	sm := ros.Statemgr
 
 	numParallel := ros.Spec.MaxParallel
@@ -490,7 +490,11 @@ func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, op pro
 	}
 	// give work to worker threads and wait for all of them to complete
 	for _, sn := range snStates {
-		log.Debugf("Adding %v to work", sn)
+		if snStatusList != nil && snStatusList[sn.Name] == "" {
+			log.Infof("No status found for %v. skipping.", sn.Name)
+			continue
+		}
+		log.Infof("Adding %s to work %v", sn.Name, sn)
 		workCh <- sn
 	}
 	close(workCh)
@@ -505,7 +509,7 @@ func min(a, b int) int {
 	return b
 }
 
-func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, op protos.SmartNICOp) {
+func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, op protos.SmartNICOp, snStatusList map[string]string) {
 	sm := ros.Statemgr
 
 	numParallel := int(ros.Spec.MaxParallel) // if numParallel is 0 then unlimited parallelism
@@ -523,7 +527,12 @@ func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, o
 		for i := 0; i < numJobs; i++ {
 			sm.smartNICWG.Add(1)
 			go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, op)
-			log.Debugf("Adding %v to work", snStates[curIndex])
+			if snStatusList != nil && snStatusList[snStates[curIndex].Name] == "" {
+				log.Infof("No status found for %v. skipping.", snStates[curIndex].Name)
+				curIndex++
+				continue
+			}
+			log.Debugf("Adding %s to work %v", snStates[curIndex].Name, snStates[curIndex])
 			workCh <- snStates[curIndex]
 			curIndex++
 		}
@@ -605,6 +614,12 @@ func (ros *RolloutState) computeProgressDelta() {
 func (ros *RolloutState) doUpdateSmartNICs() {
 	sm := ros.Statemgr
 	log.Infof("starting smartNIC Rollout")
+	snStatusList := make(map[string]string)
+
+	for _, snicStatus := range ros.Status.SmartNICsStatus {
+		log.Infof("Adding smartNIC Status to the List %s", snicStatus.Name)
+		snStatusList[snicStatus.Name] = snicStatus.Name
+	}
 
 	var op protos.SmartNICOp
 	switch ros.Spec.UpgradeType {
@@ -626,9 +641,9 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
 		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {
-			ros.issueSmartNICOpExponential(s, op)
+			ros.issueSmartNICOpExponential(s, op, snStatusList)
 		} else {
-			ros.issueSmartNICOpLinear(s, op)
+			ros.issueSmartNICOpLinear(s, op, snStatusList)
 		}
 	}
 	log.Infof("completed smartNIC Rollout")
