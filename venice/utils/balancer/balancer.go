@@ -73,12 +73,12 @@ func (b *balancer) Start(target string, config grpc.BalancerConfig) error {
 	b.resolver.Register(b)
 	b.resetTime = time.Now()
 	b.monitorExit = nil
-	b.Unlock()
 	// Send the current state
 	b.Add(1)
 	go b.notifyServiceInstances()
 	b.Add(1)
 	go b.monitor()
+	b.Unlock()
 	return nil
 }
 
@@ -144,8 +144,8 @@ func (b *balancer) monitor() {
 				b.resetTime = time.Now()
 			}
 			monitorCh := b.monitorCh
-			b.Unlock()
 			b.Add(1)
+			b.Unlock()
 			b.notifyServiceInstances()
 			// add some jitter, to prevent all balancers from getting synchronized in their retries.
 			// We are not recalculating ofset from time we were woken up. We do not need to be so precise.
@@ -264,8 +264,8 @@ func (b *balancer) OnNotifyResolver(event types.ServiceInstanceEvent) error {
 		b.Unlock()
 		return nil
 	}
-	b.Unlock()
 	b.Add(1)
+	b.Unlock()
 	b.notifyServiceInstances()
 	return nil
 }
