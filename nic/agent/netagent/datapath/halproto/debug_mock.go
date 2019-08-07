@@ -843,6 +843,24 @@ func (mr *MockDebugClientMockRecorder) MemoryTrim(ctx, in interface{}, opts ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryTrim", reflect.TypeOf((*MockDebugClient)(nil).MemoryTrim), varargs...)
 }
 
+// QueueCreditsGet mocks base method
+func (m *MockDebugClient) QueueCreditsGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*QueueCreditsGetResponse, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QueueCreditsGet", varargs...)
+	ret0, _ := ret[0].(*QueueCreditsGetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueueCreditsGet indicates an expected call of QueueCreditsGet
+func (mr *MockDebugClientMockRecorder) QueueCreditsGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueueCreditsGet", reflect.TypeOf((*MockDebugClient)(nil).QueueCreditsGet), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -1280,4 +1298,17 @@ func (m *MockDebugServer) MemoryTrim(arg0 context.Context, arg1 *Empty) (*Empty,
 // MemoryTrim indicates an expected call of MemoryTrim
 func (mr *MockDebugServerMockRecorder) MemoryTrim(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryTrim", reflect.TypeOf((*MockDebugServer)(nil).MemoryTrim), arg0, arg1)
+}
+
+// QueueCreditsGet mocks base method
+func (m *MockDebugServer) QueueCreditsGet(arg0 context.Context, arg1 *Empty) (*QueueCreditsGetResponse, error) {
+	ret := m.ctrl.Call(m, "QueueCreditsGet", arg0, arg1)
+	ret0, _ := ret[0].(*QueueCreditsGetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueueCreditsGet indicates an expected call of QueueCreditsGet
+func (mr *MockDebugServerMockRecorder) QueueCreditsGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueueCreditsGet", reflect.TypeOf((*MockDebugServer)(nil).QueueCreditsGet), arg0, arg1)
 }

@@ -236,6 +236,9 @@ It has these top-level messages:
 	PacketBufferRequestMsg
 	PacketBufferResponse
 	PacketBufferResponseMsg
+	QueueCredit
+	PortQueueCredit
+	QueueCreditsGetResponse
 	ICMPMsg
 	DoSService
 	DoSSessionLimits

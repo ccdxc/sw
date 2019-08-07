@@ -29,6 +29,7 @@ service DebugSvc {
   rpc FteStatsGet (types.Empty) returns (FteStatsGetResponse) {}
   rpc FteStatsClear (FteStatsClearRequest) returns (FteStatsClearResponse) {}
   rpc MemoryTrim (types.Empty) returns (types.Empty) {}
+  rpc QueueCreditsGet (types.Empty) returns (QueueCreditsGetResponse) {}
 }
 
 enum TraceLevel {
@@ -383,4 +384,19 @@ message FteStatsClearRequest {
 
 message FteStatsClearResponse {
   types.ApiStatus ApiStatus  = 1;
+}
+
+message QueueCredit {
+  uint32 Queue  = 1;
+  uint32 Credit = 2;
+}
+
+message PortQueueCredit {
+  uint32               Port        = 1;
+  repeated QueueCredit QueueCredit = 2;
+}
+
+message QueueCreditsGetResponse {
+  types.ApiStatus          ApiStatus       = 1;
+  repeated PortQueueCredit PortQueueCredit = 2;
 }

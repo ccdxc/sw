@@ -4,6 +4,7 @@
 
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/agent/core/state.hpp"
@@ -308,5 +309,14 @@ DebugSvcImpl::SessionStatsGet(ServerContext *context, const pds::SessionStatsGet
         rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 
+    return Status::OK;
+}
+
+Status
+DebugSvcImpl::QueueCreditsGet(ServerContext *context, const Empty *req,
+                              pds::QueueCreditsGetResponse *rsp) {
+    sdk_ret_t ret;
+    ret = sdk::asic::pd::queue_credits_get(queue_credits_proto_fill, rsp);
+    rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }

@@ -76,29 +76,36 @@ var systemStatsShowCmd = &cobra.Command{
 	Run:   systemStatsShowCmdHandler,
 }
 
-var systesPbStatsShowCmd = &cobra.Command{
+var systemPbStatsShowCmd = &cobra.Command{
 	Use:   "pb",
 	Short: "show system statistics pb",
 	Long:  "show system statistics pb",
 	Run:   systemPbStatsShowCmdHandler,
 }
 
-var systesPbQueueStatsShowCmd = &cobra.Command{
+var systemPbQueueStatsShowCmd = &cobra.Command{
 	Use:   "queue",
 	Short: "show system statistics pb queue",
 	Long:  "show system statistics pb queue",
 	Run:   systemPbQueueStatsShowCmdHandler,
 }
 
+var systemQueueCreditsShowCmd = &cobra.Command{
+	Use:   "queue-credits",
+	Short: "show system statistics pb queue-credits",
+	Long:  "show system statistics pb queue-credits",
+	Run:   systemQueueCreditsShowCmdHandler,
+}
+
 /*
-var systesPbIQStatsShowCmd = &cobra.Command{
+var systemPbIQStatsShowCmd = &cobra.Command{
 	Use:   "iq",
 	Short: "show system statistics pb iq",
 	Long:  "show system statistics pb iq",
 	Run:   systemPbIQStatsShowCmdHandler,
 }
 
-var systesPbOQStatsShowCmd = &cobra.Command{
+var systemPbOQStatsShowCmd = &cobra.Command{
 	Use:   "oq",
 	Short: "show system statistics pb oq",
 	Long:  "show system statistics pb oq",
@@ -106,7 +113,7 @@ var systesPbOQStatsShowCmd = &cobra.Command{
 }
 */
 
-var systesPbDetailStatsShowCmd = &cobra.Command{
+var systemPbDetailStatsShowCmd = &cobra.Command{
 	Use:   "detail",
 	Short: "show system statistics pb detail",
 	Long:  "show system statistics pb detail",
@@ -173,11 +180,63 @@ func init() {
 	queueStatsCmd.PersistentFlags().Uint32Var(&portNum, "port", 0, "Port number")
 
 	// PB Stats
-	systemStatsShowCmd.AddCommand(systesPbStatsShowCmd)
-	systesPbStatsShowCmd.AddCommand(systesPbDetailStatsShowCmd)
-	systesPbStatsShowCmd.AddCommand(systesPbQueueStatsShowCmd)
-	// systesPbStatsShowCmd.AddCommand(systesPbIQStatsShowCmd)
-	// systesPbStatsShowCmd.AddCommand(systesPbOQStatsShowCmd)
+	systemStatsShowCmd.AddCommand(systemPbStatsShowCmd)
+	systemPbStatsShowCmd.AddCommand(systemPbDetailStatsShowCmd)
+	systemPbStatsShowCmd.AddCommand(systemPbQueueStatsShowCmd)
+	systemPbStatsShowCmd.AddCommand(systemQueueCreditsShowCmd)
+	// systemPbStatsShowCmd.AddCommand(systemPbIQStatsShowCmd)
+	// systemPbStatsShowCmd.AddCommand(systemPbOQStatsShowCmd)
+}
+
+func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewDebugClient(c)
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.QueueCreditsGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting system queue credits failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return
+	}
+
+	qosQueueStatsHeaderPrint()
+
+	qVal := [16]uint32{}
+	qVal2 := [16]uint32{}
+	var str string
+
+	for _, portCredit := range resp.GetPortQueueCredit() {
+		fmt.Printf("%-5d|", portCredit.GetPort())
+		for _, queueCredit := range portCredit.GetQueueCredit() {
+			qIndex := queueCredit.GetQueue()
+			if qIndex < 16 {
+				qVal[qIndex] = queueCredit.GetCredit()
+			} else {
+				qVal2[qIndex-16] = queueCredit.GetCredit()
+			}
+		}
+		str = fmt.Sprintf("%-6v\n", qVal)
+		str = strings.Replace(str, "[", "", -1)
+		str = strings.Replace(str, "]", "", -1)
+		fmt.Printf("%s\n", str)
+		fmt.Printf("     |")
+		str = fmt.Sprintf("%-6v\n", qVal2)
+		str = strings.Replace(str, "[", "", -1)
+		str = strings.Replace(str, "]", "", -1)
+		fmt.Printf("%s\n", str)
+	}
 }
 
 func systemFeatProfileShowCmdHandler(cmd *cobra.Command, args []string) {

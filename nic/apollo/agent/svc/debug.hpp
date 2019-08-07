@@ -30,6 +30,7 @@ using pds::SessionStatsGetResponse;
 using pds::FteStatsGetResponse;
 using pds::FteStatsClearRequest;
 using pds::FteStatsGetResponse;
+using pds::QueueCreditsGetResponse;
 
 class DebugSvcImpl final : public DebugSvc::Service {
 public:
@@ -64,6 +65,8 @@ public:
                          pds::FteStatsClearResponse *rsp) override;
     Status MemoryTrim(ServerContext *context, const Empty *req,
                       Empty *rsp) override;
+    Status QueueCreditsGet(ServerContext *context, const Empty *req,
+                           QueueCreditsGetResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

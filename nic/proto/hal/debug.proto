@@ -62,6 +62,7 @@ service Debug {
   rpc XcvrValidCheckDisable (types.Empty) returns (types.Empty) {}
 
   rpc MemoryTrim (types.Empty) returns (types.Empty) {}
+  rpc QueueCreditsGet (types.Empty) returns (QueueCreditsGetResponse) {}
 }
 
 
@@ -720,4 +721,19 @@ message PacketBufferResponse {
 
 message PacketBufferResponseMsg {
   repeated PacketBufferResponse response = 1;
+}
+
+message QueueCredit {
+  uint32 Queue  = 1;
+  uint32 Credit = 2;
+}
+
+message PortQueueCredit {
+  uint32               Port        = 1;
+  repeated QueueCredit QueueCredit = 2;
+}
+
+message QueueCreditsGetResponse {
+  types.ApiStatus          ApiStatus       = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  repeated PortQueueCredit PortQueueCredit = 2;
 }

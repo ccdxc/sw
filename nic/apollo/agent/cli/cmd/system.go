@@ -36,6 +36,13 @@ var systemShowCmd = &cobra.Command{
 	Run:   systemShowCmdHandler,
 }
 
+var systemQueueCreditsShowCmd = &cobra.Command{
+	Use:   "queue-credits",
+	Short: "show system packet-buffer-stats queue-credits",
+	Long:  "show system packet-buffer-stats queue-credits",
+	Run:   systemQueueCreditsShowCmdHandler,
+}
+
 var traceDebugCmd = &cobra.Command{
 	Use:   "trace",
 	Short: "set debug trace level",
@@ -102,6 +109,77 @@ func init() {
 	systemShowCmd.AddCommand(llcShowCmd)
 	systemShowCmd.AddCommand(tableShowCmd)
 	systemShowCmd.AddCommand(pbShowCmd)
+
+	pbShowCmd.AddCommand(systemQueueCreditsShowCmd)
+}
+
+func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	resp, err := client.QueueCreditsGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Queue credits get failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return
+	}
+
+	queueCreditsHeaderPrint()
+
+	qVal := [16]uint32{}
+	qVal2 := [16]uint32{}
+	var str string
+
+	for _, portCredit := range resp.GetPortQueueCredit() {
+		fmt.Printf("%-5d|", portCredit.GetPort())
+		for _, queueCredit := range portCredit.GetQueueCredit() {
+			qIndex := queueCredit.GetQueue()
+			if qIndex < 16 {
+				qVal[qIndex] = queueCredit.GetCredit()
+			} else {
+				qVal2[qIndex-16] = queueCredit.GetCredit()
+			}
+		}
+		str = fmt.Sprintf("%-6v\n", qVal)
+		str = strings.Replace(str, "[", "", -1)
+		str = strings.Replace(str, "]", "", -1)
+		fmt.Printf("%s\n", str)
+		fmt.Printf("     |")
+		str = fmt.Sprintf("%-6v\n", qVal2)
+		str = strings.Replace(str, "[", "", -1)
+		str = strings.Replace(str, "]", "", -1)
+		fmt.Printf("%s\n", str)
+	}
+
+}
+
+func queueCreditsHeaderPrint() {
+	hdrLine := strings.Repeat("-", 115)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d\n"+
+		"%-6s%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d\n",
+		"     |", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+		"     |", 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31)
+	fmt.Println(hdrLine)
 }
 
 func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {

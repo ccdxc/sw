@@ -13,6 +13,7 @@
 #include "lib/catalog/catalog.hpp"
 #include "platform/capri/capri_p4.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
+#include "asic/pd/pd.hpp"
 
 namespace sdk {
 namespace platform {
@@ -68,6 +69,9 @@ capri_populate_queue_stats(tm_port_t port,
                            capri_queue_t iqs[CAPRI_TM_MAX_IQS],
                            capri_queue_t oqs[CAPRI_TM_MAX_OQS],
                            capri_queue_stats_t *stats);
+
+sdk_ret_t
+capri_queue_credits_get(sdk::asic::pd::queue_credits_get_cb_t cb, void *ctxt);
 
 }    // namespace capri
 }    // namespace platform

@@ -14,10 +14,15 @@
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_tm_utils.hpp"
 #include "platform/capri/capri_state.hpp"
+#include "asic/pd/pd.hpp"
 
 namespace sdk {
 namespace platform {
 namespace capri {
+
+using sdk::asic::pd::queue_credits_get_cb_t;
+using sdk::asic::pd::port_queue_credit_t;
+using sdk::asic::pd::queue_credit_t;
 
 // ----------------------------------------------------------------------------
 // capri thresholds get
@@ -111,6 +116,29 @@ capri_queue_stats_get (tm_port_t port,
     }
 
     return capri_populate_queue_stats(port, iqs, oqs, stats);
+}
+
+sdk_ret_t
+capri_queue_credits_get (queue_credits_get_cb_t cb,
+                         void *ctxt)
+{
+    tm_port_t port;
+    port_queue_credit_t credits = {0};
+    uint32_t oq;
+
+    for (port = TM_P4_PORT_BEGIN; port <= TM_P4_PORT_END; port++) {
+        credits.num_queues = capri_tm_get_num_oqs_for_port(port);
+        credits.queues = (sdk::asic::pd::queue_credit_t *)SDK_CALLOC(
+                         SDK_MEM_ALLOC_INFRA, sizeof(queue_credit_t) * credits.num_queues);
+        for (oq = 0; oq < credits.num_queues; oq++) {
+            credits.queues[oq].oq = oq;
+            capri_tm_get_current_credits(port, oq, &credits.queues[oq].credit);
+        }
+        cb(port, &credits, ctxt);
+        SDK_FREE(SDK_MEM_ALLOC_INFRA, credits.queues);
+    }
+
+    return SDK_RET_OK;
 }
 
 } // namespace capri

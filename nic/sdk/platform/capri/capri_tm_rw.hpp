@@ -421,6 +421,11 @@ sdk_ret_t capri_tm_set_span_threshold(uint32_t span_threshold);
 // set the reserved min for uplink ports
 sdk_ret_t capri_tm_set_reserved_min(uint32_t reserved_min);
 
+sdk_ret_t
+capri_tm_get_current_credits(tm_port_t tm_port,
+                             tm_q_t oq,
+                             uint32_t *val);
+
 }    // namespace capri
 }    // namespace platform
 }    // namespace sdk

@@ -51,6 +51,25 @@
 #include "nic/apollo/agent/svc/lif.hpp"
 #include "gen/proto/types.pb.h"
 
+using sdk::asic::pd::port_queue_credit_t;
+using sdk::asic::pd::queue_credit_t;
+
+static inline void
+queue_credits_proto_fill(uint32_t port_num,
+                         port_queue_credit_t *credit,
+                         void *ctxt)
+{
+    QueueCreditsGetResponse *proto = (QueueCreditsGetResponse *)ctxt;
+    auto port_credit = proto->add_portqueuecredit();
+    port_credit->set_port(port_num);
+
+    for (uint32_t j = 0; j < credit->num_queues; j++) {
+        auto queue_credit = port_credit->add_queuecredit();
+        queue_credit->set_queue(credit->queues[j].oq);
+        queue_credit->set_credit(credit->queues[j].credit);
+    }
+}
+
 // populate proto buf from lif api spec
 static inline void
 lif_api_spec_to_proto (void *entry, void *ctxt)

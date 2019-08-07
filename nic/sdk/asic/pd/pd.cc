@@ -6,6 +6,7 @@
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_qstate.hpp"
 #include "platform/capri/capri_mon.hpp"
+#include "platform/capri/capri_tm_utils.hpp"
 #include "platform/capri/capri_sw_phv.hpp"
 #include "asic/pd/pd.hpp"
 #include "lib/utils/time_profile.hpp"
@@ -766,6 +767,12 @@ sdk_ret_t
 asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
                    asicpd_sw_phv_state_t *state) {
     return (sdk_ret_t)capri_sw_phv_get(type, prof_num, state);
+}
+
+sdk_ret_t
+queue_credits_get (queue_credits_get_cb_t cb, void *ctxt)
+{
+    return sdk::platform::capri::capri_queue_credits_get(cb, ctxt);
 }
 
 }    // namespace pd

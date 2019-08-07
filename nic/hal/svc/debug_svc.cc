@@ -10,6 +10,8 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
+#include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/hal/src/debug/snake.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/linkmgr/linkmgr_debug.hpp"
@@ -20,6 +22,9 @@
 #include <tuple>
 using std::vector;
 using std::tuple;
+
+using sdk::asic::pd::port_queue_credit_t;
+using sdk::asic::pd::queue_credit_t;
 
 extern uint32_t read_reg_base(uint32_t chip, uint64_t addr);
 extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t data);
@@ -615,5 +620,32 @@ DebugServiceImpl::MemoryTrim(ServerContext *context,
     HAL_TRACE_DEBUG("Received memory trim");
 
     malloc_trim(0);
+    return Status::OK;
+}
+
+void
+queue_credits_proto_fill(uint32_t port_num,
+                         port_queue_credit_t *credit,
+                         void *ctxt)
+{
+    QueueCreditsGetResponse *proto = (QueueCreditsGetResponse *)ctxt;
+    auto port_credit = proto->add_portqueuecredit();
+    port_credit->set_port(port_num);
+
+    for (uint32_t j = 0; j < credit->num_queues; j++) {
+        auto queue_credit = port_credit->add_queuecredit();
+        queue_credit->set_queue(credit->queues[j].oq);
+        queue_credit->set_credit(credit->queues[j].credit);
+    }
+}
+
+Status
+DebugServiceImpl::QueueCreditsGet(ServerContext *context,
+                                  const Empty *req,
+                                  QueueCreditsGetResponse *rsp_msg)
+{
+    HAL_TRACE_DEBUG("Received queue credits get");
+    sdk::asic::pd::queue_credits_get(queue_credits_proto_fill, rsp_msg);
+    rsp_msg->set_apistatus(types::API_STATUS_OK);
     return Status::OK;
 }

@@ -188,6 +188,23 @@ sdk_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
 sdk_ret_t asicpd_sw_phv_get(asicpd_swphv_type_t type, uint8_t prof_num,
                             asicpd_sw_phv_state_t *state);
 
+typedef struct queue_credit_s {
+    uint32_t oq;
+    uint32_t credit;
+} queue_credit_t;
+
+typedef struct port_queue_credit_s {
+    uint32_t num_queues;
+    queue_credit_t *queues;
+} port_queue_credit_t;
+
+typedef void (*queue_credits_get_cb_t)(uint32_t port_num,
+                                       port_queue_credit_t *credit,
+                                       void *ctxt);
+
+sdk_ret_t
+queue_credits_get (queue_credits_get_cb_t cb, void *ctxt);
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk
@@ -200,6 +217,5 @@ using sdk::asic::pd::lif_qstate_t;
 using sdk::asic::pd::lif_qtype_info_t;
 using sdk::asic::pd::kNumQTypes;
 using sdk::asic::pd::kAllocUnit;
-
 
 #endif    // __SDK_ASIC_PD_HPP__

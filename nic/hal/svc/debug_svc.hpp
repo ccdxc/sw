@@ -79,6 +79,7 @@ using debug::PacketBufferSpec;
 using debug::PacketBufferRequestMsg;
 using debug::PacketBufferResponse;
 using debug::PacketBufferResponseMsg;
+using debug::QueueCreditsGetResponse;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -172,6 +173,9 @@ public:
     Status MemoryTrim(ServerContext *context,
                       const Empty *req,
                       Empty *rsp_msg) override;
+    Status QueueCreditsGet(ServerContext *context,
+                           const Empty *req,
+                           QueueCreditsGetResponse *rsp_msg) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__
