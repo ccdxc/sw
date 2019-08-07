@@ -105,6 +105,7 @@ std::string    aacs_server_ip  (void);
 serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                uint32_t port_speed,
                                uint32_t cable_type);
+uint32_t       logical_port_to_tm_port(uint32_t logical_port);
 }    // namespace linkmgr
 }    // namespace sdk
 

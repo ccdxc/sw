@@ -737,6 +737,13 @@ mac_send_remote_faults_hw (uint32_t mac_inst, uint32_t mac_ch,
     return 0;
 }
 
+static int
+mac_tx_drain_hw (uint32_t mac_inst, uint32_t mac_ch, bool drain)
+{
+    cap_mx_tx_drain(0, mac_inst, mac_ch, drain);
+    return 0;
+}
+
 //----------------------------------------------------------------------------
 // MGMT MAC methods
 //----------------------------------------------------------------------------
@@ -918,6 +925,13 @@ mac_mgmt_deinit_hw (uint32_t mac_inst, uint32_t mac_ch)
     return 0;
 }
 
+static int
+mac_mgmt_tx_drain_hw (uint32_t mac_inst, uint32_t mac_ch, bool drain)
+{
+    cap_bx_tx_drain(0, 0, mac_ch, drain);
+    return 0;
+}
+
 //----------------------------------------------------------------------------
 // Mock methods
 //----------------------------------------------------------------------------
@@ -1044,6 +1058,12 @@ mac_send_remote_faults_default (uint32_t mac_inst, uint32_t mac_ch,
     return 0;
 }
 
+static int
+mac_tx_drain_default (uint32_t mac_inst, uint32_t mac_ch, bool drain)
+{
+    return 0;
+}
+
 sdk_ret_t
 port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
@@ -1065,6 +1085,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_pause_src_addr = &mac_pause_src_addr_default;
     mac_fn->mac_deinit         = &mac_deinit_default;
     mac_fn->mac_send_remote_faults = &mac_send_remote_faults_default;
+    mac_fn->mac_tx_drain       = &mac_tx_drain_default;
 
     mac_mgmt_fn->mac_cfg            = &mac_cfg_default;
     mac_mgmt_fn->mac_enable         = &mac_enable_default;
@@ -1080,6 +1101,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_mgmt_fn->mac_pause_src_addr = &mac_pause_src_addr_default;
     mac_mgmt_fn->mac_deinit         = &mac_deinit_default;
     mac_mgmt_fn->mac_send_remote_faults = &mac_send_remote_faults_default;
+    mac_mgmt_fn->mac_tx_drain       = &mac_tx_drain_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
@@ -1101,6 +1123,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_stats_get      = &mac_stats_get_hw;
         mac_fn->mac_pause_src_addr = &mac_pause_src_addr_hw;
         mac_fn->mac_deinit         = &mac_deinit_hw;
+        mac_fn->mac_tx_drain       = &mac_tx_drain_hw;
 
         mac_mgmt_fn->mac_cfg          = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable       = &mac_mgmt_enable_hw;
@@ -1111,6 +1134,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_flush_set    = &mac_mgmt_flush_set_hw;
         mac_mgmt_fn->mac_stats_get    = &mac_mgmt_stats_get_hw;
         mac_mgmt_fn->mac_deinit       = &mac_mgmt_deinit_hw;
+        mac_mgmt_fn->mac_tx_drain     = &mac_mgmt_tx_drain_hw;
         break;
 
     case platform_type_t::PLATFORM_TYPE_ZEBU:
@@ -1129,6 +1153,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_pause_src_addr = &mac_pause_src_addr_hw;
         mac_fn->mac_deinit         = &mac_deinit_hw;
         mac_fn->mac_send_remote_faults = &mac_send_remote_faults_hw;
+        mac_fn->mac_tx_drain       = &mac_tx_drain_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
@@ -1139,6 +1164,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
         mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
         mac_mgmt_fn->mac_deinit      = &mac_mgmt_deinit_hw;
+        mac_mgmt_fn->mac_tx_drain    = &mac_mgmt_tx_drain_hw;
         break;
 
     default:

@@ -236,6 +236,7 @@ public:
 
     sdk_ret_t port_flush_set(bool);
     sdk_ret_t port_deinit (void);
+    sdk_ret_t port_pb_enable(bool enable);
 
     // ----------------------------------------------------
     // mac methods
@@ -298,6 +299,9 @@ public:
 
     // send/clear sending remote faults
     sdk_ret_t port_mac_send_remote_faults(bool send);
+
+    // mac TX drain
+    sdk_ret_t port_mac_tx_drain(bool drain);
 
     // ----------------------------------------------------
     // serdes methods

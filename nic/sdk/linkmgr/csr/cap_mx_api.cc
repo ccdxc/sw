@@ -1442,18 +1442,49 @@ cap_mx_base_r_pcs_status2_clear (int chip_id, int inst_id, int mac_ch)
     return 0;
 }
 
-int
-cap_mx_send_remote_faults (int chip_id, int inst_id, int mac_ch,
-                           bool send)
+// reads addr, set/reset bit and writes back
+static int
+cap_mx_set_bit (int chip_id, int inst_id, int addr, int bit, bool set)
 {
-   int addr = (mac_ch == 1) ? 0x591 : (mac_ch == 2) ? 0x691 : (mac_ch == 3) ? 0x791 : 0x491;
    int data = cap_mx_apb_read(chip_id, inst_id, addr);
 
-   if (send) {
-       data = data | (1 << 2);
+   if (set) {
+       data = data | (1 << bit);
    } else {
-       data = data & ~(1 << 2);
+       data = data & ~(1 << bit);
    }
    cap_mx_apb_write(chip_id, inst_id, addr, data);
    return 0;
 }
+
+int
+cap_mx_send_remote_faults (int chip_id, int inst_id, int mac_ch,
+                           bool send)
+{
+   int addr = 0;
+
+    // MAC txdebug config  bit 2
+   addr = (mac_ch == 1) ? 0x591 : (mac_ch == 2) ? 0x691 : (mac_ch == 3) ? 0x791 : 0x491;
+   cap_mx_set_bit(chip_id, inst_id, addr, 2, send);
+   return 0;
+}
+
+int
+cap_mx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
+{
+   int addr = 0;
+
+    // MAC control bit 5
+   addr = (mac_ch == 1) ? 0x500 : (mac_ch == 2) ? 0x600 : (mac_ch == 3) ? 0x700 : 0x400;
+   cap_mx_set_bit(chip_id, inst_id, addr, 5, drain);
+
+    // MAC transmit config  bit 15
+   addr = (mac_ch == 1) ? 0x501 : (mac_ch == 2) ? 0x601 : (mac_ch == 3) ? 0x701 : 0x401;
+   cap_mx_set_bit(chip_id, inst_id, addr, 15, drain);
+
+    // MAC txdebug config  bit 6
+   addr = (mac_ch == 1) ? 0x591 : (mac_ch == 2) ? 0x691 : (mac_ch == 3) ? 0x791 : 0x491;
+   cap_mx_set_bit(chip_id, inst_id, addr, 6, drain);
+   return 0;
+}
+

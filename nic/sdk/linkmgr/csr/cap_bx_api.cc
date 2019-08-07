@@ -423,3 +423,10 @@ void cap_bx_bist_chk(int chip_id, int inst_id) {
      PLOG_API_MSG("PASSED: BX[" << inst_id << "]", ": cap_bx_bist_chk\n");
   }
 }
+
+int
+cap_bx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
+{
+    return 0;
+}
+

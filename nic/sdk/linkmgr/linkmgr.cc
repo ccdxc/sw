@@ -9,6 +9,7 @@
 #include "linkmgr_internal.hpp"
 #include "port.hpp"
 #include "timer_cb.hpp"
+#include "linkmgr_periodic.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -124,6 +125,12 @@ uint8_t
 num_sbus_rings(void)
 {
     return g_linkmgr_cfg.catalog->num_sbus_rings();
+}
+
+uint32_t
+logical_port_to_tm_port (uint32_t logical_port)
+{
+    return g_linkmgr_cfg.catalog->logical_port_to_tm_port(logical_port);
 }
 
 bool
@@ -374,7 +381,7 @@ xcvr_poll_timer_wrapper (linkmgr_entry_data_t *data)
 
     // Reschedule the xcvr timer
     xcvr_poll_timer_handle =
-        sdk::lib::timer_schedule(
+        sdk::linkmgr::timer_schedule(
             SDK_TIMER_ID_XCVR_POLL, XCVR_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
             false);
@@ -400,7 +407,7 @@ port_link_poll_timer (linkmgr_entry_data_t *data)
 
     // reschedule the poll timer
     port_link_poll_timer_handle =
-        sdk::lib::timer_schedule(
+        sdk::linkmgr::timer_schedule(
             SDK_TIMER_ID_LINK_POLL, LINKMGR_LINK_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
             false);
@@ -490,6 +497,20 @@ linkmgr_event_loop (void* ctxt)
     }
 }
 
+//------------------------------------------------------------------------------
+// starting point for the periodic thread loop
+//------------------------------------------------------------------------------
+static void *
+linkmgr_periodic_thread_start (void *ctxt)
+{
+    // initialize timer wheel
+    sdk::linkmgr::periodic_thread_init(ctxt);
+
+    // run main loop
+    sdk::linkmgr::periodic_thread_run(ctxt);
+    return NULL;
+}
+
 static sdk_ret_t
 thread_init (linkmgr_cfg_t *cfg)
 {
@@ -502,14 +523,31 @@ thread_init (linkmgr_cfg_t *cfg)
         return SDK_RET_ERR;
     }
 
+    // create the linkmgr periodic thread
+    thread_id = LINKMGR_THREAD_ID_PERIODIC;
+    g_linkmgr_threads[thread_id] =
+        sdk::lib::thread::factory(std::string("link-timer").c_str(),
+                                  thread_id,
+                                  sdk::lib::THREAD_ROLE_CONTROL,
+                                  0x0 /* use all control cores */,
+                                  linkmgr_periodic_thread_start,
+                                  sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                                  sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                                  true);
+    SDK_ASSERT_TRACE_RETURN((g_linkmgr_threads[thread_id] != NULL), SDK_RET_ERR,
+                             "SDK linkmgr periodic thread create failure");
+
+    // start the linkmgr periodic thread
+    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
+
     // wait until the periodic thread is ready
-    while (!sdk::lib::periodic_thread_is_running()) {
+    while (!sdk::linkmgr::periodic_thread_is_running()) {
         pthread_yield();
     }
 
     // start the poll timer
     port_link_poll_timer_handle =
-        sdk::lib::timer_schedule(
+        sdk::linkmgr::timer_schedule(
             SDK_TIMER_ID_LINK_POLL, LINKMGR_LINK_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
             false);
@@ -568,7 +606,7 @@ xcvr_poll_init (linkmgr_cfg_t *cfg)
     sdk::platform::xcvr_init(cfg->xcvr_event_cb);
 
     xcvr_poll_timer_handle =
-        sdk::lib::timer_schedule(
+        sdk::linkmgr::timer_schedule(
             SDK_TIMER_ID_XCVR_POLL, XCVR_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
             false);

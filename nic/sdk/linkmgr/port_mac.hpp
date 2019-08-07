@@ -50,6 +50,8 @@ typedef struct mac_fn_s_ {
     int  (*mac_deinit)(uint32_t mac_inst, uint32_t mac_ch);
     int  (*mac_send_remote_faults)(uint32_t mac_inst, uint32_t mac_ch,
                                    bool send);
+    int  (*mac_tx_drain)(uint32_t mac_inst, uint32_t mac_ch,
+                         bool drain);
 } mac_fn_t;
 
 extern mac_fn_t mac_fns;

@@ -5,14 +5,8 @@ MODULE_TARGET = linkmgr_delphi_test.gtest
 MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris gft
 MODULE_SRCS   = ${MODULE_SRC_DIR}/linkmgr_delphi_test.cc
-MODULE_SOLIBS = pal sdkfru linkmgr_test_utils bm_allocator linkmgrdelphi \
-                hal_lib agent_api block_list \
-                list shmmgr slab ht timerfd periodic halproto delphisdk \
-                linkmgr_src sdklinkmgr haltrace \
-                linkmgr_libsrc sdklinkmgrcsr \
-                haldelphiutils linkmgrproto \
-                logger thread twheel sdkpal catalog utils trace
-MODULE_LDLIBS = ${NIC_HAL_ALL_LDLIBS}
+MODULE_SOLIBS = ${NIC_HAL_GTEST_SOLIBS} linkmgr_test_utils linkmgr_src
+MODULE_LDLIBS = ${NIC_HAL_GTEST_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic
 MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 include ${MKDEFS}/post.mk

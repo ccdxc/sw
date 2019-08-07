@@ -11,6 +11,8 @@
 #include "platform/drivers/xcvr.hpp"
 #include "platform/fru/fru.hpp"
 #include "lib/pal/pal.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
+#include "linkmgr_periodic.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -473,7 +475,8 @@ port::port_serdes_an_start (void)
     // Configure Tx/Rx slip, Rx termination, Tx EQ for 25G serdes.
     // This is to avoid setting these values if negotiated speed
     // is 25G for each serdes
-    for (uint32_t lane = 0; lane < num_lanes_; ++lane) {
+    // Do not configure lane 0 since AN is run on that lane
+    for (uint32_t lane = 1; lane < num_lanes_; ++lane) {
         sbus_addr = port_sbus_addr(lane);
 
         serdes_info = serdes_info_get(
@@ -560,6 +563,7 @@ port::port_serdes_an_hcd_cfg (void)
     int           fec_enable   = 0;
     int           rsfec_enable = 0;
     serdes_info_t *serdes_info = NULL;
+    uint32_t      num_lanes    = 0;
 
     an_hcd       = serdes_fns()->serdes_an_hcd_read(port_sbus_addr(0));
     fec_enable   = serdes_fns()->serdes_an_fec_enable_read(port_sbus_addr(0));
@@ -575,7 +579,7 @@ port::port_serdes_an_hcd_cfg (void)
         return -1;
     }
 
-    // skip the settings for 25G serdes since its already set
+    // skip the settings on lanes 1-3 for 25G serdes since its already set
     // before AN start
     switch(an_hcd) {
     case 0x08: /* 100GBASE-KR4 */
@@ -587,21 +591,25 @@ port::port_serdes_an_hcd_cfg (void)
         break;
     }
 
-    if (skip == false) {
-        port_speed_t serdes_speed =
-                        port_speed_to_serdes_speed(this->port_speed_);
+    if (skip == true) {
+        num_lanes = 1;
+    } else {
+        num_lanes = num_lanes_;
+    }
 
-        for (lane = 0; lane < num_lanes_; ++lane) {
-            sbus_addr = port_sbus_addr(lane);
+    port_speed_t serdes_speed =
+                    port_speed_to_serdes_speed(this->port_speed_);
 
-            serdes_info = serdes_info_get(
-                                    sbus_addr,
-                                    static_cast<uint32_t>(serdes_speed),
-                                    cable_type());
+    for (lane = 0; lane < num_lanes; ++lane) {
+        sbus_addr = port_sbus_addr(lane);
 
-            // configure Tx/Rx slip, Rx termination, Tx EQ
-            serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
-        }
+        serdes_info = serdes_info_get(
+                                sbus_addr,
+                                static_cast<uint32_t>(serdes_speed),
+                                cable_type());
+
+        // configure Tx/Rx slip, Rx termination, Tx EQ
+        serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
     }
 
     // configure divider, width, start link training
@@ -722,13 +730,13 @@ port::port_link_sm_an_process(void)
         //  Else return with AN_RESET
         if(an_good == false) {
             set_num_an_hcd_retries(num_an_hcd_retries() + 1);
-            if (num_an_hcd_retries() == MAX_PORT_AN_HCD_RETRIES) {
+            if (num_an_hcd_retries() >= MAX_PORT_AN_HCD_RETRIES) {
                 an_ret = AN_RESET;
                 break;
             }
             this->bringup_timer_val_ += timeout;
             this->link_bring_up_timer_ =
-                sdk::lib::timer_schedule(
+                sdk::linkmgr::timer_schedule(
                         SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
@@ -814,7 +822,7 @@ port::port_link_sm_dfe_process(void)
                     this->bringup_timer_val_ += timeout;
 
                     this->link_bring_up_timer_ =
-                        sdk::lib::timer_schedule(
+                        sdk::linkmgr::timer_schedule(
                             SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
@@ -865,7 +873,7 @@ port::port_link_sm_dfe_process(void)
                     timeout = MIN_PORT_TIMER_INTERVAL;
                     this->bringup_timer_val_ += timeout;
                     this->link_bring_up_timer_ =
-                        sdk::lib::timer_schedule(
+                        sdk::linkmgr::timer_schedule(
                             SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
@@ -904,15 +912,21 @@ port::port_link_sm_process(void)
         switch (this->link_sm_) {
             case port_link_sm_t::PORT_LINK_SM_DISABLED:
 
+                // Enable MAC TX drain
+                port_mac_tx_drain(true);
+
+                // TODO Disable and drain PB
+                port_pb_enable(false);
+
                 // reset timers
 
                 if (this->link_bring_up_timer_ != NULL) {
-                    sdk::lib::timer_delete(this->link_bring_up_timer_);
+                    sdk::linkmgr::timer_delete(this->link_bring_up_timer_);
                     this->link_bring_up_timer_ = NULL;
                 }
 
                 if (this->link_debounce_timer_ != NULL) {
-                    sdk::lib::timer_delete(this->link_debounce_timer_);
+                    sdk::linkmgr::timer_delete(this->link_debounce_timer_);
                     this->link_debounce_timer_ = NULL;
                 }
 
@@ -997,7 +1011,7 @@ port::port_link_sm_process(void)
                     this->bringup_timer_val_ += timeout;
 
                     this->link_bring_up_timer_ =
-                        sdk::lib::timer_schedule(
+                        sdk::linkmgr::timer_schedule(
                             SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
@@ -1013,6 +1027,9 @@ port::port_link_sm_process(void)
 
                 // configure the mac
                 port_mac_cfg();
+
+                // Disable MAC TX drain
+                port_mac_tx_drain(false);
 
                 // put port in flush
                 port_flush_set(true);
@@ -1058,7 +1075,7 @@ port::port_link_sm_process(void)
                     this->bringup_timer_val_ += timeout;
 
                     this->link_bring_up_timer_ =
-                        sdk::lib::timer_schedule(
+                        sdk::linkmgr::timer_schedule(
                                 SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                 (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                 false);
@@ -1115,7 +1132,7 @@ port::port_link_sm_process(void)
                     this->bringup_timer_val_ += timeout;
 
                     this->link_bring_up_timer_ =
-                        sdk::lib::timer_schedule(
+                        sdk::linkmgr::timer_schedule(
                             SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
@@ -1147,7 +1164,7 @@ port::port_link_sm_process(void)
                         timeout = MIN_PORT_TIMER_INTERVAL;
                         this->bringup_timer_val_ += timeout;
                         this->link_bring_up_timer_ =
-                            sdk::lib::timer_schedule(
+                            sdk::linkmgr::timer_schedule(
                                 SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                 (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                 false);
@@ -1174,7 +1191,7 @@ port::port_link_sm_process(void)
                             timeout = MIN_PORT_TIMER_INTERVAL;
                             this->bringup_timer_val_ += timeout;
                             this->link_bring_up_timer_ =
-                                sdk::lib::timer_schedule(
+                                sdk::linkmgr::timer_schedule(
                                     SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                     (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                     false);
@@ -1194,6 +1211,9 @@ port::port_link_sm_process(void)
                 }
 
                 SDK_PORT_SM_TRACE(this, "Link UP");
+
+                // TODO Enable PB
+                port_pb_enable(true);
 
                 // enable mac interrupts
                 port_mac_intr_en(true);
@@ -1310,7 +1330,7 @@ port::port_link_dn_handler(void)
     // start the debounce timer
     if (this->debounce_time_ != 0) {
         this->link_debounce_timer_ =
-            sdk::lib::timer_schedule(
+            sdk::linkmgr::timer_schedule(
                 SDK_TIMER_ID_LINK_DEBOUNCE, this->debounce_time_, this,
                 (sdk::lib::twheel_cb_t)link_debounce_timer_cb,
                 false);
@@ -1415,6 +1435,21 @@ port::port_link_sm_retry_enabled(bool serdes_reset)
         port_serdes_state_reset();
     }
     this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_pb_enable(bool enable) {
+    uint32_t tm_port = logical_port_to_tm_port(port_num());
+
+    // TODO remove capri reference
+    sdk::platform::capri::capri_tm_enable_disable_uplink_port(tm_port, enable);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_tx_drain(bool drain) {
+    mac_fns()->mac_tx_drain(mac_id(), mac_ch(), drain);
     return SDK_RET_OK;
 }
 

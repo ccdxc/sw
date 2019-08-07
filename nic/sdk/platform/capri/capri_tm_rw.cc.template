@@ -38,6 +38,8 @@ static cpp_int_helper cpp_helper;
 
 qos_profile_t qos_profile = {true, true, 9216, 8, 25, 27, 16, 2, {0, 24}};
 
+static pthread_mutex_t tm_mutex;
+
 typedef struct capri_tm_cfg_profile_s {
     uint32_t num_qs[NUM_TM_PORT_TYPES];
     uint32_t jumbo_mtu[NUM_TM_PORT_TYPES];
@@ -1258,6 +1260,46 @@ capri_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq,
     }
 }
 
+static sdk_ret_t
+capri_tm_sop_eop_check (tm_port_t port)
+{
+    uint32_t tries         = 0;
+    uint32_t max_tries     = 1000;
+    uint32_t sop_count_in  = 0;
+    uint32_t eop_count_in  = 0;
+    uint32_t sop_count_out = 0;
+    uint32_t eop_count_out = 0;
+    cap_top_csr_t &cap0    = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    while (tries < max_tries) {
+        pbc_csr.cnt_flits[port].read();
+        sop_count_in = pbc_csr.cnt_flits[port].sop_in().convert_to<uint32_t>();
+        eop_count_in = pbc_csr.cnt_flits[port].eop_in().convert_to<uint32_t>();
+        sop_count_out = pbc_csr.cnt_flits[port].sop_out().convert_to<uint32_t>();
+        eop_count_out = pbc_csr.cnt_flits[port].eop_out().convert_to<uint32_t>();
+        if ((sop_count_in == eop_count_in) &&
+            (sop_count_out == eop_count_out)) {
+            SDK_TRACE_DEBUG("Port %u sop eop match after %u tries. "
+                            "sop_in %u, eop_in %u, sop_out %u, eop_out %u",
+                            port, tries,
+                            sop_count_in, eop_count_in,
+                            sop_count_out, eop_count_out);
+            break;
+        }
+        usleep(1000);
+        tries++;
+    }
+    if (tries == max_tries) {
+        SDK_TRACE_ERR("Port %u sop eop doesn't match after %u tries. "
+                      "sop_in %u, eop_in %u, sop_out %u, eop_out %u",
+                      port, tries,
+                      sop_count_in, eop_count_in,
+                      sop_count_out, eop_count_out);
+        return sdk::SDK_RET_RETRY;
+    }
+    return sdk::SDK_RET_OK;
+}
 
 static sdk_ret_t
 capri_tm_drain_uplink_port (tm_port_t port)
@@ -1308,11 +1350,20 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
         return sdk::SDK_RET_INVALID_ARG;
     }
 
+    // Mutex lock is to avoid sequencing b/w linkmgr-ctrl thread and periodic
+    // thread for now during link-down event.
+    // Ideally PB registers must be programmed by HAL cfg threads.
+    // For GS, since QOS changes are not supported, the only PB registers
+    // which are programmed after initial bootup are the ones below.
+    // This is invoked only during upgrade and link-down events.
+    pthread_mutex_lock(&tm_mutex);
+
     if (enable) {
         /* Make sure the contexts are free */
         ret = capri_tm_drain_uplink_port(port);
         if (ret != sdk::SDK_RET_OK) {
             SDK_TRACE_ERR("Port %u is not fully drained. Retry later", port);
+            pthread_mutex_unlock(&tm_mutex);
             return sdk::SDK_RET_RETRY;
         }
     }
@@ -1345,12 +1396,13 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
 //::    #endif
 //:: #endfor
         default:
+            pthread_mutex_unlock(&tm_mutex);
             return sdk::SDK_RET_ERR;
     }
     SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     /* If we're disabling the port, we need to wait until all HBM contexts are
-     * free
+     * free and sop/eop counts to match
      */
     if (!enable) {
         ret = capri_tm_drain_uplink_port(port);
@@ -1359,7 +1411,17 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
             // Ignore the return status and continue
             ret = sdk::SDK_RET_OK;
         }
+
+        // wait for the sop and eop counters to match
+        ret = capri_tm_sop_eop_check(port);
+        if (ret != sdk::SDK_RET_OK) {
+            SDK_TRACE_ERR("Port %u is not fully drained", port);
+            // Ignore the return status and continue
+            ret = sdk::SDK_RET_OK;
+        }
     }
+
+    pthread_mutex_unlock(&tm_mutex);
 
     SDK_TRACE_DEBUG("%s uplink port %u",
                     enable ? "Enable" : "Disable", port);
@@ -4032,6 +4094,8 @@ capri_tm_init (sdk::lib::catalog* catalog)
     capri_tm_asic_profile_t asic_profile;
 
     populate_asic_profile(&asic_profile);
+
+    pthread_mutex_init(&tm_mutex, NULL);
 
     ret = capri_tm_init_qos_profile(tm_cfg_profile, catalog);
     if (ret != SDK_RET_OK) {

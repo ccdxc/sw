@@ -859,6 +859,9 @@ serdes_an_init_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
         goto cleanup;
     }
 
+    // disable serdes output
+    serdes_output_enable_hw(sbus_addr, false);
+
     // Reset TxPRBSGEN
     int_code = 0x2;
     int_data = 0x1ff;
@@ -908,6 +911,9 @@ serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info,
     }
 
     config->disable_link_inhibit_timer = 0x1;
+
+    // ignore nonce check since nonce pattern is not set
+    config->ignore_nonce_match = 1;
 
     if (user_cap == 0) {
         config->user_cap    = 0x4   | // 10G  KR
