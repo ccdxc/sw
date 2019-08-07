@@ -54,6 +54,7 @@ func main() {
 
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	// Create a dummy channel to wait forever
 	waitCh := make(chan bool)

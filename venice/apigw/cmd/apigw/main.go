@@ -104,6 +104,7 @@ func main() {
 		// Add ApiGw specific context data
 		pl = pl.WithContext("host", *host+*httpaddr)
 	}
+	defer pl.Close()
 	grpclog.SetLoggerV2(pl)
 
 	// create events recorder

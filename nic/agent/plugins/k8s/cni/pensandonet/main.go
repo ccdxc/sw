@@ -39,7 +39,8 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	versionInfo := version.PluginSupports("0.1.0")
 

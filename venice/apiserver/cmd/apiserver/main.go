@@ -65,6 +65,7 @@ func main() {
 		}
 		pl = log.SetConfig(logConfig)
 	}
+	defer pl.Close()
 	grpclog.SetLoggerV2(pl)
 
 	kvstoreTLSConfig, err := etcd.GetEtcdClientCredentials()

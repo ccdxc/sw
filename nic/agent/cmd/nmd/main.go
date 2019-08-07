@@ -50,10 +50,10 @@ func main() {
 			MaxAge:     7,
 		},
 	}
-	log.SetConfig(logConfig)
 
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	// set Garbage collection ratio and periodically free OS memory
 	debug.SetGCPercent(20)

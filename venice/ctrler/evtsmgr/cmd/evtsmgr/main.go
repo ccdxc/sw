@@ -83,6 +83,7 @@ func main() {
 	}
 
 	logger := log.SetConfig(config)
+	defer logger.Close()
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{

@@ -50,6 +50,7 @@ func main() {
 
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 	log.SetTraceDebug()
 
 	// create a dummy channel to wait forever

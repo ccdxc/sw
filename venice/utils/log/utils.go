@@ -68,9 +68,13 @@ func newKitLogLogger(config *Config) kitlog.Logger {
 	}
 
 	// Init File io writer if enabled
-	var fileWr io.Writer
 	if config.LogToFile {
-		fileWr = &lumberjack.Logger{
+		if config.fileWriter != nil {
+			config.fileWriter.Close()
+			config.fileWriter = nil
+		}
+
+		config.fileWriter = &lumberjack.Logger{
 			Filename:   config.FileCfg.Filename,
 			MaxSize:    config.FileCfg.MaxSize,
 			MaxBackups: config.FileCfg.MaxBackups,
@@ -81,12 +85,12 @@ func newKitLogLogger(config *Config) kitlog.Logger {
 	// Choose io writers based on config
 	var wr io.Writer
 	if config.LogToStdout && config.LogToFile {
-		mw := io.MultiWriter(stdoutWr, fileWr)
+		mw := io.MultiWriter(stdoutWr, config.fileWriter)
 		wr = kitlog.NewSyncWriter(mw)
 	} else if config.LogToStdout {
 		wr = kitlog.NewSyncWriter(stdoutWr)
 	} else if config.LogToFile {
-		wr = kitlog.NewSyncWriter(fileWr)
+		wr = kitlog.NewSyncWriter(config.fileWriter)
 	} else {
 		wr = kitlog.NewSyncWriter(ioutil.Discard)
 	}

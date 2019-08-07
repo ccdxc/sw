@@ -95,6 +95,8 @@ func main() {
 		config.FileCfg = log.FileConfig{Filename: *out, MaxSize: 10000000, MaxBackups: 3}
 	}
 	l := log.SetConfig(config)
+	defer l.Close()
+
 	url := *grpcaddr
 
 	var apicl apiclient.Services

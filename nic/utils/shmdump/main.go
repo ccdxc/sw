@@ -41,6 +41,7 @@ func main() {
 		},
 	}
 	logger := log.SetConfig(config)
+	defer logger.Close()
 
 	if utils.IsEmpty(*filepath) {
 		log.Fatal("empty file")

@@ -43,7 +43,8 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 	log.Info("Log configuration set.")
 	controllers := strings.Split(*resolverURL, ",")
 

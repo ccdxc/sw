@@ -58,6 +58,7 @@ func main() {
 	}
 
 	logger := log.SetConfig(config)
+	defer logger.Close()
 
 	// create events proxy
 	eps, pMgr, pWatcher := createEvtsProxy(*listenURL, nil, *dedupInterval, *batchInterval,

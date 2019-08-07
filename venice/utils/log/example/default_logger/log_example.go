@@ -41,7 +41,8 @@ func main() {
 		},
 	}
 
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	for i := 1; i <= 5; i++ {
 		log.InfoLog("obj", strconv.Itoa(i), "data", getRandomString())

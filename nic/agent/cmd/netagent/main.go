@@ -69,7 +69,8 @@ func main() {
 	var hostIfMAC string
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)

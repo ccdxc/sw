@@ -83,6 +83,7 @@ func main() {
 
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	log.Infof("=== %s is starting", globals.Citadel)
 

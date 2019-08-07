@@ -226,6 +226,7 @@ func main() {
 
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{Component: globals.Tmagent}, logger)

@@ -63,6 +63,8 @@ func main() {
 
 	// Initialize logger config
 	env.Logger = log.SetConfig(logConfig)
+	defer env.Logger.Close()
+
 	env.GitVersion = GitVersion
 	env.GitCommit = GitCommit
 	env.BuildDate = BuildDate

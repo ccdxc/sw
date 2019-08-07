@@ -51,7 +51,8 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	log.Infof("resolver-urls %+v", nsURLs)
 	log.Infof("cluster-nodes %v", *clusterNodes)

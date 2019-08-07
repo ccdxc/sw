@@ -185,6 +185,7 @@ func main() {
 	}
 
 	logger := log.SetConfig(lConfig)
+	defer logger.Close()
 
 	// start event services based to the mode
 	es := &evtServices{

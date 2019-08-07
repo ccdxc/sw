@@ -54,6 +54,9 @@ type Logger interface {
 	// ResetFilter resets log level for an existing logger unlike SetFilter which adds to existing filters
 	ResetFilter(f FilterType) Logger
 
+	// closes the logger by closing the underlying file handler if any
+	Close()
+
 	V(l int) bool
 }
 
@@ -156,6 +159,9 @@ type Config struct {
 	// FileCfg contains config params for
 	// logging to file with log rotation
 	FileCfg FileConfig
+
+	// file writer
+	fileWriter io.WriteCloser
 }
 
 type kitLogger struct {

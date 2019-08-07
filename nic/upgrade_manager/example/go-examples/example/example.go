@@ -189,7 +189,8 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
+	defer logger.Close()
 
 	s1 := &service{
 		name: "Example go Service",

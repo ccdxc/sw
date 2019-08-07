@@ -64,8 +64,11 @@ func (l *kitLogger) SetFilter(filter FilterType) Logger {
 }
 
 func (l *kitLogger) ResetFilter(filter FilterType) Logger {
-	l.config.Filter = filter
-	l.logger = newKitLogLogger(&l.config)
+	if l.config.Filter != filter {
+		l.Close()
+		l.config.Filter = filter
+		l.logger = newKitLogLogger(&l.config)
+	}
 	return l
 }
 
@@ -200,4 +203,12 @@ func (l *kitLogger) Audit(ctx context.Context, keyvals ...interface{}) error {
 
 func (l *kitLogger) V(m int) bool {
 	return true
+}
+
+// Close closes the underlying file descriptor
+func (l *kitLogger) Close() {
+	if l.config.fileWriter != nil {
+		l.config.fileWriter.Close()
+		l.config.fileWriter = nil
+	}
 }
