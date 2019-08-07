@@ -37,6 +37,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect ;
 
   dataObjects: ReadonlyArray<Telemetry_queryFwlog> = [];
+  loading: boolean = false;
 
   isTabComponent = false;
   disableTableWhenRowExpanded = false;
@@ -335,10 +336,12 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
             } else {
               this.dataObjects = [];
             }
+            this.loading = false;
           },
           (error) => {
             this.dataObjects = [];
             this.controllerService.invokeRESTErrorToaster('Fwlog Search Failed', error);
+            this.loading = false;
           }
         );
         this.subscriptions.push(this.searchSubscription);
@@ -428,6 +431,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
         Utility.TrimDefaultsAndEmptyFields(query)
       ],
     };
+    this.loading = true;
     // Get request
     this.fwlogsQueryObserver.next(queryList);
   }
