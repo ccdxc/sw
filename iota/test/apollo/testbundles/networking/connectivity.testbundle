@@ -8,31 +8,43 @@ testcases:
     -   name    : Ping_Local_Workloads
         testcase: testcases.networking.ping
         stress  : True
-        ignore  : True
         args    :
             type: local_only
         iterators :
             type    : nested
-            pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
             ipaf    : [ ipv4, ipv6 ]
+            pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
 
     -   name    : Ping_Remote_Workloads
         testcase: testcases.networking.ping
         stress  : True
-        ignore  : True
         args    :
             type: remote_only
         iterators :
             type    : nested
-            pktsize : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
             ipaf    : [ ipv4, ipv6 ]
+            pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
+
+    -   name    : Iperf_Local_Workloads
+        testcase: testcases.networking.iperf
+        stress  : True
+        ignore  : True
+        args    :
+            type: local_only
+        iterators:
+            type    : nested
+            ipaf    : [ ipv4, ipv6 ]
+            proto   : [ tcp, udp ]
+            pktsize : [ 128, 256, 512, 1024 ]
 
     -   name    : Iperf_Remote_Workloads
         testcase: testcases.networking.iperf
         stress  : True
-        iterators:
-            type      : nested
-            proto     : [ tcp ]
-            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+        ignore  : True
         args    :
             type: remote_only
+        iterators:
+            type    : nested
+            ipaf    : [ ipv4, ipv6 ]
+            proto   : [ tcp, udp ]
+            pktsize : [ 128, 256, 512, 1024 ]
