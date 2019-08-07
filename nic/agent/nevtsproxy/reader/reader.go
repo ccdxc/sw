@@ -54,34 +54,29 @@ func NewReader(nodeName, dir string, pollDelay time.Duration, evtsDispatcher eve
 // Start starts the file watcher to watch shm create events
 func (r *Reader) Start() error {
 	var err error
-	var fileWatcher *fsnotify.Watcher
 
-	for i := 0; i < retryCount; i++ {
-		if fileWatcher, err = fsnotify.NewWatcher(); err != nil {
-			r.logger.Debugf("failed to create file watcher, err: %v, retrying...", err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
+	// start file watcher
+	r.fileWatcher, err = fsnotify.NewWatcher()
+	if err != nil {
+		r.logger.Errorf("failed to create file watcher, err: %v", err)
+		return err
+	}
 
-		if err = fileWatcher.Add(r.dir); err != nil {
-			r.logger.Debugf("failed to add {%s} to the file watcher, err: %v, retrying...", r.dir, err)
-			fileWatcher.Close()
-			time.Sleep(1 * time.Second)
-			continue
-		}
-
-		r.fileWatcher = fileWatcher
+	// add shm. events directory to the watcher
+	if err := r.fileWatcher.Add(r.dir); err != nil {
+		r.logger.Errorf("failed to add {%s} to the file watcher, err: %v", r.dir, err)
+		r.fileWatcher.Close()
+		return err
 	}
 
 	// start reader on the existing "*.events" files
 	r.startReaderOnExistingFiles()
 
+	// watch *.events files and create shm readers
 	r.wg.Add(1)
-	if r.fileWatcher != nil {
-		go r.watchFileEvents()
-	}
+	go r.watchFileEvents()
 
-	return err
+	return nil
 }
 
 // Stop stops the reader by stopping the file watcher and all the events readers that were spun

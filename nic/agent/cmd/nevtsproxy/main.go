@@ -363,7 +363,7 @@ func (e *evtServices) start(mode string) {
 	e.shmReader = reader.NewReader(e.nodeName, shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher(), e.logger)
 	e.wg.Add(1)
 	go func() {
-		e.wg.Done()
+		defer e.wg.Done()
 		for {
 			select {
 			case <-e.ctx.Done():

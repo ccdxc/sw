@@ -105,6 +105,7 @@ func getFileSize(path string) int {
 		log.Errorf("failed to open shm to get size, err: %v", err)
 		return 0
 	}
+	defer f.Close()
 
 	fs, err := f.Stat()
 	if err != nil {
