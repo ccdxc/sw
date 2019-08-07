@@ -1256,7 +1256,7 @@ def parse_dmesg():
 def show_slice(parse, bin_str, start_offset, num_bytes):
     parse(bin_str[start_offset: start_offset + num_bytes]).show()
 
-def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
+def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes, aqid = 1):
     if HOST != '':
         options = USER + '@' + HOST + ' " '
         prefix = REMOTE_CMD_FMT.format(
@@ -1268,7 +1268,7 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
 
     cmd_str = prefix + CTRL_FMT.format(
             lif = lif_id, pci = pcie_id,
-            tbl = tbl_type, idx = tbl_index) + suffix
+            tbl = tbl_type, idx = tbl_index, aqid = aqid) + suffix
 
     #print cmd_str
     if os.system(cmd_str):
@@ -1277,7 +1277,7 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
     #time.sleep(1)
 
     cmd2_str = prefix + DATA_FMT.format(
-            lif = lif_id, pci = pcie_id,
+            lif = lif_id, pci = pcie_id, aqid = aqid,
             out = DUMP_DATA) + suffix
 
     #print cmd2_str
@@ -1472,11 +1472,11 @@ if args.host is not None:
 setHostOS()
 
 if HOST_OS == 'FreeBSD':
-    CTRL_FMT='sysctl dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_ctrl=\'' + CMD_FMT + '\' > /dev/null'
-    DATA_FMT='sysctl -bn dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_data > {out}'
+    CTRL_FMT='sysctl dev.ionic.{lif}.rdma_dbg.aq.{aqid}.dbg_wr_ctrl=\'' + CMD_FMT + '\' > /dev/null'
+    DATA_FMT='sysctl -bn dev.ionic.{lif}.rdma_dbg.aq.{aqid}.dbg_wr_data > {out}'
 else:
-    CTRL_FMT='echo -n \'' + CMD_FMT + '\' > /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_ctrl'
-    DATA_FMT='xxd -r /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_data > {out}'
+    CTRL_FMT='echo -n \'' + CMD_FMT + '\' > /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/{aqid}/dbg_wr_ctrl'
+    DATA_FMT='xxd -r /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/{aqid}/dbg_wr_data > {out}'
 
 # Error checks
 
@@ -1855,7 +1855,7 @@ if args.dmesg is False and args.dmesg_file is None :
             pcie_id, tmp = pcie_id.split(pcie_id[-1])
             pcie_id = pcie_id.rstrip()
             #print "derived " + pcie_id + " as pcie id for device " + args.DEVNAME
-        
+
 if args.cqcb is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_CQ, args.cqcb, 0, 64)
     cqcb = RdmaCQstate(bin_str)
@@ -1865,13 +1865,11 @@ elif args.eqcb is not None:
     eqcb = RdmaEQstate(bin_str)
     eqcb.show()
 elif args.aqcb0 is not None:
-    #for now qid is ignored for aqcb dump.
-    #qstate is dumped for the aq on which this rdmactl command is issued.
-    bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 0, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 0, 64, aqid=args.aqcb0)
     aqcb0 = RdmaAQCB0state(bin_str)
     aqcb0.show()
 elif args.aqcb1 is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 64, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 64, 64, aqid=args.aqcb1)
     aqcb1 = RdmaAQCB1state(bin_str)
     aqcb1.show()
 elif args.aq_debug_enable is not None:
