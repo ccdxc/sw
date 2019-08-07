@@ -139,21 +139,16 @@ func NewNMD(pipeline Pipeline,
 		},
 	}
 
-	usePersisted := false
 	roObj, err := emdb.Read(&tempRO) // this function also modifies the parameter object. hence passing temp object
 
 	if roObj != nil && err == nil { // Rollout object found in DB
-		usePersisted = true
 
 		// Even if find the rollout object in DB, if upgrade manager does not think rollout is in progress
 		//	we will never get a response. In such a case clear our internal state
 		if _, err := os.Stat("/update/upgrade_halt_state_machine"); os.IsNotExist(err) {
-			log.Infof("Found Rollout object out of sync with upgrade manager. Clearing it.")
-			usePersisted = false
+			log.Infof("Found Rollout object out of sync with upgrade manager.")
 		}
-	}
 
-	if usePersisted {
 		// Use the persisted config moving forward
 		ro = *roObj.(*nmd.NaplesRollout)
 		log.Infof("Using persisted Rollout values. %v", ro)

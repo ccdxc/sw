@@ -33,7 +33,8 @@ func (n *NMD) CreateUpdateSmartNICRollout(sro *protos.SmartNICRollout) error {
 func (n *NMD) DeleteSmartNICRollout(sro *protos.SmartNICRollout) error {
 	n.Lock()
 	defer n.Unlock()
-
+	n.ro.ObjectMeta.Tenant = ""
+	n.ro.OpStatus = []protos.SmartNICOpStatus{}
 	n.updateOps([]protos.SmartNICOpSpec{})
 	n.updateRolloutStatus(protos.SmartNICOpSpec{Op: protos.SmartNICOp_SmartNICNoOp})
 	return nil
