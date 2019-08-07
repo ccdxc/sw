@@ -3,6 +3,7 @@ import enum
 import pdb
 import ipaddress
 
+import copy
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -47,6 +48,12 @@ class DeviceObject(base.ConfigObjectBase):
         grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
         grpcmsg.Request.MACAddr = self.MACAddr.getnum()
         return grpcmsg
+
+    def Update(self):
+        self.old = copy.deepcopy(self)
+        self.IPAddr = next(resmgr.TepIpAddressAllocator)
+        self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
+        self.IP = str(self.IPAddr) # For testspec
 
     def IsEncapTypeMPLS(self):
         if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
@@ -95,6 +102,27 @@ class DeviceObjectClient:
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
         api.client.Create(api.ObjectTypes.SWITCH, msgs)
         tunnel.client.CreateObjects()
+        return
+
+    def ModifyObjects(self):
+        for obj in self.__objs:
+            obj.Show()
+            obj.Update()
+            obj.Show()
+        return
+
+    def UpdateObjects(self):
+        #self.Show()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        api.client.Update(api.ObjectTypes.SWITCH, msgs)
+        #tunnel.client.CreateObjects()
+        return
+
+    def DeleteObjects(self):
+        #self.Show()
+        #msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        api.client.Delete(api.ObjectTypes.SWITCH, msgs)
+        #tunnel.client.CreateObjects()
         return
 
 client = DeviceObjectClient()

@@ -12,7 +12,6 @@ import infra.common.timeprofiler as timeprofiler
 
 import apollo.config.agent.api as agentapi
 import apollo.config.resmgr as resmgr
-import apollo.config.agent.api as agentapi
 
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device

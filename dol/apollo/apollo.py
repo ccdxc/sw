@@ -18,9 +18,10 @@ APOLLO_TEST_PATH = "apollo/test/"
 APOLLO_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/apollo/gen/proto/'
 sys.path.insert(0, APOLLO_PROTO_PATH)
 import apollo.config.generator    as generator
+import apollo.config.updater      as updater
 
 def InitConfig():
-    logger.info("Initializing APOLLO Config Templates and Specs")    
+    logger.info("Initializing APOLLO Config Templates and Specs")
     config.Init(Store, APOLLO_CONFIG_TEMPLATE_PATH, None, None)
     return
 
@@ -29,12 +30,34 @@ def InitEngine():
     return
 
 def GenerateConfig():
-    generator.Main()
+    # TestCreate will do this
+    #generator.Main()
     return
+
+def TestCreate():
+    generator.Main()
+    return engine.main()
+
+def TestUpdate():
+    updater.Main()
+    return engine.main()
+
+def TestDelete():
+    #deleter.Main()
+    return engine.main()
 
 def Init():
     objects.CallbackField.SetPackagePath("apollo.test.callbacks")
     return
 
 def Main():
-    return engine.main()
+    status = 0
+    for c in GlobalOptions.cud:
+        if c == 'C':
+            status = status | TestCreate()
+        if c == 'U':
+            status = status | TestUpdate()
+        if c == 'D':
+            status = status | TestDelete()
+
+    return status
