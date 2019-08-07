@@ -67,7 +67,17 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 		for _, s := range snics {
 			log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
 			if s.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
-				curbin = append(curbin, s)
+				var found = true
+				for _, condition := range s.Status.Conditions {
+					log.Infof("Condition Status %+v Type %v", condition.Status, condition.Type)
+					if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_UNKNOWN.String() {
+						found = false
+						break
+					}
+				}
+				if found {
+					curbin = append(curbin, s)
+				}
 			}
 		}
 		if len(curbin) > 0 {
