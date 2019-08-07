@@ -19,6 +19,7 @@ def TestCaseSetup(tc):
 
     #Enable Privileged operations on this QP
     rs.lqp.sq.qstate.set_priv()
+    SetIterPrivOperEnable(tc)
 
     return
 

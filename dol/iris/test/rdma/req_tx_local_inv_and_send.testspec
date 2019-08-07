@@ -46,6 +46,7 @@ descriptors:
         fields:
             op_type : 9  # OP_TYPE_LOCAL_INV
             wrid    : ref://testcase/pvtdata/wrid
+            fence : callback://rdma/rdma/GetFenceConfig
 
             local_inv:
                 l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
@@ -69,6 +70,7 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 6
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                 len: 64

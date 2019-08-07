@@ -29,6 +29,8 @@ def TestCaseSetup(tc):
 
     tc.pvtdata.wrid = 0x1234
 
+    SetIterPrivOperEnable(tc)
+
     # Get new key object for FRPMR.
     tc.pvtdata.key  = rs.lqp.pd.GetNewKey()
     tc.pvtdata.l_key = tc.pvtdata.key.lkey

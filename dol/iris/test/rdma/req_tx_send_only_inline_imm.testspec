@@ -82,6 +82,7 @@ descriptors:
             op_type : 2  # OP_TYPE_SEND_WITH_IMM
             wrid    : 6
             inline_data_vld : 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                 imm_data    : ref://testcase/pvtdata/imm_data

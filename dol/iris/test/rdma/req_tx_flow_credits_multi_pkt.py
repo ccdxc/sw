@@ -159,7 +159,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that c_index is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', 1):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', ring0_mask,  1):
             return False
 
         # verify that ssn is incremented by 1

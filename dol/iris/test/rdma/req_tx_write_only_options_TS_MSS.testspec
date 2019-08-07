@@ -94,6 +94,7 @@ descriptors:
             op_type : 4  # OP_TYPE_WRITE
             wrid    : 20
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             write   :
                   va     : ref://testcase/pvtdata/va
@@ -101,7 +102,7 @@ descriptors:
                   r_key  : ref://testcase/pvtdata/r_key
                
             sges:
-                - va  : ref://testcase/buffers/id=BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=BUF
                   len : ref://testcase/buffers/id=BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 

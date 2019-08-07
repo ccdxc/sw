@@ -41,6 +41,8 @@ def TestCaseSetup(tc):
     else:
         tc.pvtdata.mw_va = tc.pvtdata.slab.address + 511
 
+    SetIterPrivOperEnable(tc)
+
     return  
 
 def TestCaseTrigger(tc):
@@ -129,4 +131,5 @@ def TestCaseTeardown(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
     kt_entry.data = tc.pvtdata.mw_kt_entry.data
     kt_entry.WriteWithDelay()
+    rs.lqp.sq.qstate.reset_priv() 
     return

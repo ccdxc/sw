@@ -155,6 +155,9 @@ modules:
         module  : req_tx_send_only_rsvd_lkey
         spec    : req_tx_send_only_rsvd_lkey.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
         name    : RDMA_TX_SEND_ONLY_EQ
@@ -175,6 +178,15 @@ modules:
         rtl     : False
         selectors:
             maxrdmasessions: 1
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SEND_ONLY_2SGES
@@ -183,6 +195,15 @@ modules:
         module  : req_tx_send_only_2sges
         spec    : req_tx_send_only_2sges.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SEND_ONLY_2SGES_RSVD_LKEY
@@ -191,6 +212,9 @@ modules:
         module  : req_tx_send_only_2sges_rsvd_lkey
         spec    : req_tx_send_only_2sges_rsvd_lkey.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     #enable the feature on the QP, but do not use RESERVED_LKEY in SGEs
     - module:
@@ -200,6 +224,9 @@ modules:
         module  : req_tx_send_only_2sges_rsvd_lkey
         spec    : req_tx_send_only_2sges_no_rsvd_lkey.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
         name    : RDMA_TX_SEND_ONLY_2SGES_MIX1
@@ -208,6 +235,9 @@ modules:
         module  : req_tx_send_only_2sges_rsvd_lkey
         spec    : req_tx_send_only_2sges_mix1.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
         name    : RDMA_TX_SEND_ONLY_2SGES_MIX2
@@ -216,6 +246,9 @@ modules:
         module  : req_tx_send_only_2sges_rsvd_lkey
         spec    : req_tx_send_only_2sges_mix2.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
  
     - module:
         name    : RDMA_TX_SEND_FIRST_LAST_2SGES
@@ -224,6 +257,15 @@ modules:
         module  : req_tx_send_first_last_2sges
         spec    : req_tx_send_first_last_2sges.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
  
     - module:
         name    : RDMA_TX_SEND_ONLY_INLINE
@@ -232,6 +274,9 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
  
     - module:
         name    : RDMA_TX_SEND_ONLY_IMM
@@ -240,6 +285,15 @@ modules:
         module  : req_tx_send_only_imm
         spec    : req_tx_send_only_imm.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SEND_ONLY_INLINE_IMM
@@ -248,6 +302,9 @@ modules:
         module  : req_tx_send_only_imm
         spec    : req_tx_send_only_inline_imm.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
        name    : RDMA_TX_SEND_ONLY_INV
@@ -256,6 +313,15 @@ modules:
        module  : req_tx_send_only_inv
        spec    : req_tx_send_only_inv.testspec
        ignore  : False
+       iterate :
+           - fence     : 0
+             rsvd_lkey : False
+           - fence     : 0
+             rsvd_lkey : True
+           - fence     : 1
+             rsvd_lkey : False
+           - fence     : 1
+             rsvd_lkey : True
 
     - module:
        name    : RDMA_TX_SEND_ONLY_INLINE_INV
@@ -264,6 +330,10 @@ modules:
        module  : req_tx_send_only_inv
        spec    : req_tx_send_only_inline_inv.testspec
        ignore  : False
+       iterate :
+            - fence     : 0
+            - fence     : 1
+
 
     - module:
        name    : RDMA_TX_SEND_FIRST_MID_LAST_INV
@@ -272,6 +342,15 @@ modules:
        module  : req_tx_send_first_mid_last_inv
        spec    : req_tx_send_first_mid_last_inv.testspec
        ignore  : False
+       iterate :
+           - fence     : 0
+             rsvd_lkey : False
+           - fence     : 0
+             rsvd_lkey : True
+           - fence     : 1
+             rsvd_lkey : False
+           - fence     : 1
+             rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_WRITE_ONLY_OPTIONS_TS_MSS
@@ -280,6 +359,15 @@ modules:
         module  : req_tx_write_only_options_TS_MSS
         spec    : req_tx_write_only_options_TS_MSS.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
  
     - module:
         name    : RDMA_TX_WRITE_ONLY
@@ -334,6 +422,15 @@ modules:
         module  : req_tx_send_first_mid_last
         spec    : req_tx_send_first_mid_last.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
  
     - module:
         name    : RDMA_TX_SEND_FIRST_MID_LAST_IMM
@@ -342,6 +439,15 @@ modules:
         module  : req_tx_send_first_mid_last_imm
         spec    : req_tx_send_first_mid_last_imm.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_REQ_RX_READ_ONLY
@@ -350,6 +456,15 @@ modules:
         module  : req_rx_read_only
         spec    : req_rx_read_only.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_REQ_RX_READ_ONLY_RSVD_LKEY
@@ -366,6 +481,15 @@ modules:
         module  : req_rx_read_fml
         spec    : req_rx_read_fml.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SEND_FENCE_WQE
@@ -374,6 +498,9 @@ modules:
         module  : req_tx_send_fence_wqe
         spec    : req_tx_send_fence_wqe.testspec
         ignore  : False
+        iterate :
+              - rsvd_lkey : False
+              - rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_WRITE_FENCE_WQE
@@ -390,6 +517,15 @@ modules:
         module  : req_tx_sq_drain
         spec    : req_tx_sq_drain.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SQ_DRAIN_CQ_EQ_ASYNC_EQ
@@ -406,6 +542,15 @@ modules:
         module  : req_tx_sq_drain_bktrack
         spec    : req_tx_sq_drain_bktrack.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_REQ_RX_ATOMIC_CMPSWAP
@@ -414,6 +559,16 @@ modules:
         module  : req_rx_atomic_cmpswap
         spec    : req_rx_atomic_cmpswap.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
+
 
     - module:
         name    : RDMA_REQ_RX_ATOMIC_FETCH_N_ADD
@@ -422,6 +577,16 @@ modules:
         module  : req_rx_atomic_fetchadd
         spec    : req_rx_atomic_fetchadd.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
+
 
     # DO NOT add any new testcases between RNR and the prev ATOMIC_FETCH_N_ADD testcase
     # since RNR does backtrack and might lead to unexpected behavior if previous msgs are 
@@ -437,6 +602,15 @@ modules:
         rtl     : False
         selectors:
             maxrdmasessions: 1
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_UD_SEND_ONLY
@@ -445,6 +619,15 @@ modules:
         module  : req_tx_ud_send_only
         spec    : req_tx_ud_send_only.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_UD_SEND_ONLY_IMM
@@ -477,6 +660,9 @@ modules:
         module  : req_tx_local_inv_and_send
         spec    : req_tx_local_inv_and_send.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
         name    : RDMA_TX_LOCAL_INV_TWICE
@@ -505,6 +691,9 @@ modules:
         module  : req_tx_read_and_local_inv_fence
         spec    : req_tx_read_and_local_inv_fence.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
         name    : RDMA_TX_LI_LOCAL_INV_FENCE
@@ -521,6 +710,15 @@ modules:
         module  : req_tx_nak_seq_err
         spec    : req_tx_nak_seq_err.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_NAK_INV_REQ
@@ -561,6 +759,15 @@ modules:
         module  : req_tx_sq_bktrack_wqe_multi_pass
         spec    : req_tx_sq_bktrack_wqe_multi_pass.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SQ_BKTRACK_READ_WQE
@@ -601,6 +808,9 @@ modules:
         module  : req_tx_bind_mw_type1
         spec    : req_tx_bind_mw_type1.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
         name    : RDMA_TX_BIND_MW_TYPE2
@@ -609,6 +819,9 @@ modules:
         module  : req_tx_bind_mw_type2
         spec    : req_tx_bind_mw_type2.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
     - module:
         name    : RDMA_TX_BIND_MW_TYPE1_2
@@ -617,6 +830,10 @@ modules:
         module  : req_tx_bind_mw_type1_2
         spec    : req_tx_bind_mw_type1_2.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
+
 
     - module:
         name    : RDMA_TX_BIND_MW_ZBVA_TYPE2
@@ -625,6 +842,10 @@ modules:
         module  : req_tx_bind_mw_zbva_type2
         spec    : req_tx_bind_mw_zbva_type2.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
+
 
     - module:
         name    : RDMA_TX_BIND_MW_TYPE1_MISMATCH_ERR
@@ -633,6 +854,10 @@ modules:
         module  : req_tx_bind_mw_type1_mismatch_err
         spec    : req_tx_bind_mw_type1_mismatch_err.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
+
 
     - module:
         name    : RDMA_TX_BIND_MW_TYPE2_MISMATCH_ERR
@@ -745,6 +970,15 @@ modules:
         module  : req_tx_sq_bktrack_npgs
         spec    : req_tx_sq_bktrack_npgs.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
 
     - module:
         name    : RDMA_TX_SQ_BKTRACK_FRPMR
@@ -1460,6 +1694,9 @@ modules:
         module  : req_tx_fast_register_phy_mr
         spec    : req_tx_fast_register_phy_mr.testspec
         ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
 # Max Recirc Tests
     - module:

@@ -26,6 +26,7 @@ descriptors:
         fields:
             op_type : 10  # OP_TYPE_BIND_MW
             wrid    : ref://testcase/pvtdata/wrid
+            fence : callback://rdma/rdma/GetFenceConfig
 
             bind_mw:
                 va            : ref://testcase/pvtdata/mw_va

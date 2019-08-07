@@ -82,6 +82,7 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : ref://testcase/pvtdata/wrid
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             ud_send:
                 len       : ref://testcase/buffers/id=BUF/size
@@ -90,7 +91,7 @@ descriptors:
                 ah_handle: ref://testcase/pvtdata/ah_handle
                 
             sges:
-                - va  : ref://testcase/buffers/id=BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=BUF
                   len : ref://testcase/buffers/id=BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 

@@ -23,6 +23,7 @@ def TestCaseSetup(tc):
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
+    SetIterPrivOperEnable(tc)
     return
 
 def TestCaseStepTrigger(tc, step):
@@ -192,4 +193,7 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession 
+    #Disable Privileged operations on this QP 
+    rs.lqp.sq.qstate.reset_priv() 
     return

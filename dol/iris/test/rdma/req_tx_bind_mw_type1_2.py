@@ -30,6 +30,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
     tc.pvtdata.mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key))
     tc.pvtdata.user_key = 114
+    SetIterPrivOperEnable(tc)
+
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
@@ -128,4 +130,6 @@ def TestCaseTeardown(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
     kt_entry.data = tc.pvtdata.mw_kt_entry.data
     kt_entry.WriteWithDelay()
+    #Disable Privileged operations on this QP 
+    rs.lqp.sq.qstate.reset_priv() 
     return

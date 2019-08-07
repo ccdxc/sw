@@ -32,6 +32,8 @@ def TestCaseSetup(tc):
     # Read EQ pre state
     rs.lqp.eq.qstate.Read()
     tc.pvtdata.async_eq_pre_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
+    SetIterPrivOperEnable(tc)
+
     return
 
 def TestCaseTrigger(tc):
@@ -231,7 +233,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index4', 1):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index4', ring4_mask, 1):
             return False
 
         # verify that c_index of rrq is not incremented
@@ -267,7 +269,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that c_index of rrq is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index4', 1):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index4', ring4_mask, 1):
             return False
 
         # verify rexmit_psn is incremented to that of tx_psn
@@ -306,4 +308,7 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession 
+    #Disable Privileged operations on this QP 
+    rs.lqp.sq.qstate.reset_priv() 
     return

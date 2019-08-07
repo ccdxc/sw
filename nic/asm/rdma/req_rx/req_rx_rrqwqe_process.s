@@ -26,6 +26,7 @@ struct req_rx_s1_t0_k k;
 #define K_AETH_MSN      CAPRI_KEY_FIELD(IN_TO_S_P, aeth_msn)
 #define K_BTH_PSN  CAPRI_KEY_FIELD(IN_TO_S_P, bth_psn)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
+#define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 
 #define TO_S1_RECIRC_P to_s1_recirc_info
 #define TO_S2_P to_s2_rrqsge_info
@@ -41,6 +42,7 @@ struct req_rx_s1_t0_k k;
     .param    req_rx_cqcb_process
     .param    req_rx_rrqwqe_base_sge_process
     .param    req_rx_rrqwqe_base_sge_opt_process
+    .param    req_rx_rrqlkey_rsvd_lkey_process
 
 .align
 req_rx_rrqwqe_process:
@@ -277,6 +279,10 @@ atomic:
     add            r2, d.atomic.sge.l_key, r0
     KEY_ENTRY_ADDR_GET(r3, r3, r2)
 
+    seq            c6, r2, RDMA_RESERVED_LKEY_ID
+    phvwr.c6       CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, rsvd_key_err), 1
+    crestore.c6    [c6], K_PRIV_OPER_ENABLE, 0x1
+
     CAPRI_RESET_TABLE_0_ARG()
     phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, sge_va), d.atomic.sge.va, \
               CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, sge_bytes), d.atomic.sge.len[15:0]
@@ -288,7 +294,7 @@ atomic:
     phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, is_atomic), 1, \
               CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, bubble_one_stage), 1
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_rrqlkey_process, r3)
+    CAPRI_NEXT_TABLE0_READ_PC_C(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_rrqlkey_rsvd_lkey_process, req_rx_rrqlkey_process, r3, c6)
 
     // Hardcode table id 2 for write_back process
     // to keep it consistent with read process where

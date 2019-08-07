@@ -118,12 +118,13 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 6
             num_sges: 1
+            fence   : callback://rdma/rdma/GetFenceConfig
 
             send    :
                  len   : ref://testcase/packets/id=BASE_PKT/size
                
             sges:
-                - va  : ref://testcase/buffers/id=BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=BUF
                   len : ref://testcase/buffers/id=BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 

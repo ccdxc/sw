@@ -20,7 +20,7 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
     tc.pvtdata.wrid = 0x0807
-
+    SetIterPrivOperEnable(tc)
     return
 
 def TestCasePreTrigger(tc):
@@ -161,6 +161,7 @@ def TestCaseTeardown(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_l_key)
     kt_entry.data = tc.pvtdata.mr_kt_entry.data
     kt_entry.WriteWithDelay()
-
+    #Disable Privileged operations on this QP 
+    rs.lqp.sq.qstate.reset_priv() 
     ResetErrQState(tc)
     return

@@ -161,7 +161,7 @@ atomic:
     nop            // Branch Delay Slot
 
     b              check_psn
-    nop            // Branch Delay Slot
+    phvwr          CAPRI_PHV_FIELD(TO_S1_P, priv_oper_enable), d.sqcb1_priv_oper_enable
 
 read:
     ARE_ALL_FLAGS_SET(c1, r1, REQ_RX_FLAG_READ_RESP)

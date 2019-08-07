@@ -108,7 +108,7 @@ buffers:
         id      : HOST_MEM
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/pvtdata/slab_1
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : 8
@@ -131,6 +131,7 @@ descriptors:
             op_type : 6  # OP_TYPE_CMP_N_SWAP
             wrid    : 6543
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             atomic    :
                 va      : ref://testcase/pvtdata/va
@@ -139,9 +140,9 @@ descriptors:
                 cmpdt   : ref://testcase/pvtdata/cmp_data
 
             sges:
-                - va  : ref://testcase/buffers/id=HOST_MEM/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=HOST_MEM
                   len : ref://testcase/buffers/id=HOST_MEM/size
-                  l_key: ref://testcase/pvtdata/mr_slab_1/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=HOST_MEM
 
 
     - descriptor:

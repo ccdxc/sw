@@ -225,6 +225,7 @@ descriptors:
             op_type : 3  # OP_TYPE_READ
             wrid    : 0x12304453
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             read    :
                 va    : ref://testcase/pvtdata/va

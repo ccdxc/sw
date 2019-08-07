@@ -140,7 +140,7 @@ buffers:
         id      : HOST_MEM
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetNewSlab
            offset  : 0
            segments:
                - size    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/size
@@ -164,6 +164,7 @@ descriptors:
             op_type : 3  # OP_TYPE_READ
             wrid    : 6
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             read    :
                 va    : ref://testcase/pvtdata/va
@@ -171,9 +172,9 @@ descriptors:
                 r_key : ref://testcase/pvtdata/r_key
 
             sges:
-                - va  : ref://testcase/buffers/id=HOST_MEM/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=HOST_MEM
                   len : ref://testcase/buffers/id=HOST_MEM/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=HOST_MEM
 
     - descriptor:
         id      : EXP_SQ_WQE

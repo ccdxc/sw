@@ -426,7 +426,7 @@ descriptors:
                 r_key : ref://testcase/pvtdata/r_key
 
             sges:
-                - va  : ref://testcase/buffers/id=READ_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=READ_BUF
                   len : ref://testcase/buffers/id=READ_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=READ_BUF
 
@@ -471,7 +471,7 @@ descriptors:
                 len: 2112
 
             sges:
-                - va  : ref://testcase/buffers/id=SEND_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=SEND_BUF
                   len : ref://testcase/buffers/id=SEND_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF
 

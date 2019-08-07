@@ -14,9 +14,10 @@ def Setup(infra, module):
     logger.info("Iterator Selectors")
 
     if iterelem:
-        if 'base' in iterelem.rdmasession.__dict__:
-            logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
-            module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
+        if 'rdmasession' in iterelem.__dict__: 
+            if 'base' in iterelem.rdmasession.__dict__:
+                logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
+                module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
     return
 
 def Teardown(infra, module):
@@ -37,6 +38,8 @@ def TestCaseSetup(tc):
 
     #Enable Privileged operations on this QP
     rs.lqp.sq.qstate.set_priv()
+
+    SetIterPrivOperEnable(tc)
 
     # DO NOT ARM CQ and Set EQ's CI=PI for EQ enablement
     #rs.lqp.sq_cq.qstate.ArmCq()

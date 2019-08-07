@@ -27,6 +27,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.mr = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab.GID())
     tc.pvtdata.l_key = tc.pvtdata.mr.lkey
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType2MW().rkey
+    SetIterPrivOperEnable(tc)
 
     tc.pvtdata.mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
     tc.pvtdata.mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key & 0xFFFFFF))
@@ -123,4 +124,6 @@ def TestCaseTeardown(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
     kt_entry.data = tc.pvtdata.mw_kt_entry.data
     kt_entry.WriteWithDelay()
+    #Disable Privileged operations on this QP 
+    rs.lqp.sq.qstate.reset_priv() 
     return

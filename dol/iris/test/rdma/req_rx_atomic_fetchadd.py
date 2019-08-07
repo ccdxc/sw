@@ -29,7 +29,7 @@ def TestCaseSetup(tc):
 
     tc.pvtdata.slab_1 = rs.lqp.pd.ep.GetNewSlab()  
     tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())                           
-
+    SetIterPrivOperEnable(tc)
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
@@ -154,4 +154,11 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
 
     return True
+
+def TestCaseTeardown(tc):
+    logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    #Disable Privileged operations on this QP 
+    rs.lqp.sq.qstate.reset_priv()
+    return
 

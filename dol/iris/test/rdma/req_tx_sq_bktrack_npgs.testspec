@@ -164,12 +164,13 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 6
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                 len   : ref://testcase/buffers/id=SEND_BUF/size
 
             sges:
-                - va  : ref://testcase/buffers/id=SEND_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=SEND_BUF
                   len : ref://testcase/buffers/id=SEND_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF
 
@@ -191,6 +192,7 @@ descriptors:
         fields:
             op_type : 8  # OP_TYPE_FRPMR
             wrid    : ref://testcase/pvtdata/wrid
+            fence : callback://rdma/rdma/GetFenceConfig
 
             frpmr:
                 base_va         : callback://rdma/rdma/GetSlabAddr/id=FRPMR_BUF
@@ -223,6 +225,7 @@ descriptors:
         fields:
             op_type : 10  # OP_TYPE_BIND_MW
             wrid    : ref://testcase/pvtdata/wrid
+            fence : callback://rdma/rdma/GetFenceConfig
 
             bind_mw:
                 va            : ref://testcase/pvtdata/mw1_va
@@ -253,6 +256,7 @@ descriptors:
         fields:
             op_type : 9  # OP_TYPE_LOCAL_INV
             wrid    : ref://testcase/pvtdata/wrid
+            fence : callback://rdma/rdma/GetFenceConfig
 
             local_inv:
                 l_key: ref://testcase/pvtdata/li_lkey
@@ -275,6 +279,7 @@ descriptors:
         fields:
             op_type : 10  # OP_TYPE_BIND_MW
             wrid    : ref://testcase/pvtdata/wrid
+            fence : callback://rdma/rdma/GetFenceConfig
 
             bind_mw:
                 va            : ref://testcase/pvtdata/mw2_va

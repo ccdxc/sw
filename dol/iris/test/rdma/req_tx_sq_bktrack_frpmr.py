@@ -56,6 +56,11 @@ def TestCaseStepTrigger(tc, step):
         # Decrement cindex and sqd_cindex in sqcb0 to revert FRPMR execution
         rs.lqp.sq.qstate.data.c_index0 -= 1
         rs.lqp.sq.qstate.data.sqd_cindex -= 1
+        if  rs.lqp.sq.qstate.data.c_index0 < 0:
+            rs.lqp.sq.qstate.data.c_index0 += (2 ** 16)
+        if  rs.lqp.sq.qstate.data.sqd_cindex < 0:
+            rs.lqp.sq.qstate.data.sqd_cindex += (2 ** 16)
+        logger.info("Value of c_index0 is %d and sqd_cindex is %d" % (rs.lqp.sq.qstate.data.c_index0, rs.lqp.sq.qstate.data.sqd_cindex))
         rs.lqp.sq.qstate.WriteWithDelay()
     
         # Set KT entry to free to execute FRPMR again

@@ -23,6 +23,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.r_key = 2
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
     tc.pvtdata.wrid = 0x0807
+    SetIterPrivOperEnable(tc)
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
@@ -194,4 +195,5 @@ def TestCaseTeardown(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_l_key)
     kt_entry.data = tc.pvtdata.mr_kt_entry.data
     kt_entry.WriteWithDelay()
+    rs.lqp.sq.qstate.reset_priv() 
     return

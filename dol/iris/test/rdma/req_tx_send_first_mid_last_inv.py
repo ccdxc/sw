@@ -20,6 +20,7 @@ def TestCaseSetup(tc):
     # Key table size is 1024 in the test now, change the max value if this changes in the test
     tc.pvtdata.inv_r_key = random.randrange(0, 1023)
     tc.pvtdata.wrid = random.randrange(0, 0xffff)
+    SetIterPrivOperEnable(tc)
     if (GlobalOptions.dryrun): return
     assert(tc.pvtdata.sq_pre_qstate.log_pmtu > 0)
     tc.pvtdata.payload_size = random.randrange(64, (1 << tc.pvtdata.sq_pre_qstate.log_pmtu))
@@ -65,4 +66,7 @@ def TestCaseVerify(tc):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession 
+    #Disable Privileged operations on this QP 
+    rs.lqp.sq.qstate.reset_priv() 
     return

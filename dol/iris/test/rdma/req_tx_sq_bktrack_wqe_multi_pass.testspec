@@ -600,12 +600,13 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 6
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                  len   : 2112 # (1024 + 1024 + 64)
 
             sges:
-                - va  : ref://testcase/buffers/id=SEND_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=SEND_BUF
                   len : ref://testcase/buffers/id=SEND_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF
 
@@ -616,6 +617,7 @@ descriptors:
             op_type : 4  # OP_TYPE_WRITE
             wrid    : 7
             num_sges: 2
+            fence : callback://rdma/rdma/GetFenceConfig
 
             write   :
                   va     : ref://testcase/pvtdata/write_va
@@ -623,10 +625,10 @@ descriptors:
                   r_key  : ref://testcase/pvtdata/write_rkey
 
             sges:
-                - va  : ref://testcase/buffers/id=WRITE_BUF1/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=WRITE_BUF1
                   len : ref://testcase/buffers/id=WRITE_BUF1/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=WRITE_BUF1
-                - va  : ref://testcase/buffers/id=WRITE_BUF2/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=WRITE_BUF2
                   len : ref://testcase/buffers/id=WRITE_BUF2/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF
 
@@ -637,12 +639,13 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 7
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                  len   : 64
 
             sges:
-                - va  : ref://testcase/buffers/id=SEND_ONLY1_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=SEND_ONLY1_BUF
                   len : ref://testcase/buffers/id=SEND_ONLY1_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_ONLY1_BUF
 
@@ -653,12 +656,13 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 8
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                  len   : 64
 
             sges:
-                - va  : ref://testcase/buffers/id=SEND_ONLY2_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=SEND_ONLY2_BUF
                   len : ref://testcase/buffers/id=SEND_ONLY2_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_ONLY2_BUF
 
@@ -669,12 +673,13 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 9
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                  len   : 64
 
             sges:
-                - va  : ref://testcase/buffers/id=SEND_ONLY3_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=SEND_ONLY3_BUF
                   len : ref://testcase/buffers/id=SEND_ONLY3_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_ONLY3_BUF
 
@@ -685,12 +690,13 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 10
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                  len   : 64
 
             sges:
-                - va  : ref://testcase/buffers/id=SEND_ONLY4_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=SEND_ONLY4_BUF
                   len : ref://testcase/buffers/id=SEND_ONLY4_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_ONLY4_BUF
 
@@ -701,6 +707,7 @@ descriptors:
             op_type : 3  # OP_TYPE_READ
             wrid    : 8
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             read    :
                 va    : ref://testcase/pvtdata/read_va
@@ -708,7 +715,7 @@ descriptors:
                 r_key : ref://testcase/pvtdata/read_rkey
 
             sges:
-                - va  : ref://testcase/buffers/id=READ_BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=READ_BUF
                   len : ref://testcase/buffers/id=READ_BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=READ_BUF
 

@@ -91,15 +91,16 @@ descriptors:
             op_type : 0  # OP_TYPE_SEND
             wrid    : 6
             num_sges: 2
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                 len: 64
                
             sges:
-                - va  : ref://testcase/buffers/id=BUF1/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=BUF1
                   len : ref://testcase/buffers/id=BUF1/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF1
-                - va  : ref://testcase/buffers/id=BUF2/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=BUF2
                   len : ref://testcase/buffers/id=BUF2/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF2
 

@@ -35,6 +35,7 @@ def TestCaseSetup(tc):
     rs.lqp.sq.qstate.WriteWithDelay()
 
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
+    SetIterPrivOperEnable(tc)
 
     return
 
@@ -90,4 +91,5 @@ def TestCaseTeardown(tc):
     rs.lqp.sq.qstate.data.roce_opt_mss_enable = 0
     rs.lqp.sq.qstate.data.timestamp = 0
     rs.lqp.sq.qstate.WriteWithDelay()
+    rs.lqp.sq.qstate.reset_priv() 
     return

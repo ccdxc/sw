@@ -171,13 +171,14 @@ descriptors:
             op_type : 1  # OP_TYPE_SEND_WITH_INV
             wrid    : ref://testcase/pvtdata/wrid
             num_sges: 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                 inv_key : ref://testcase/pvtdata/inv_r_key
                 len: 2112
                
             sges:
-                - va  : ref://testcase/buffers/id=BUF/address
+                - va  : callback://rdma/rdma/GetMrSlabAddr/id=BUF
                   len : ref://testcase/buffers/id=BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 

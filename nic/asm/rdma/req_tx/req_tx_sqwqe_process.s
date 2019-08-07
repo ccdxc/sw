@@ -331,7 +331,11 @@ skip_li_fence:
     nop
     
 bind_mw:
-    KT_BASE_ADDR_GET2(r2, r3)
+    // Postpone MW operation until fence condition is met.
+    seq            c1, d.base.fence, 1
+    bbeq.c1        CAPRI_KEY_FIELD(IN_P, fence_done), 0, skip_mw_fence
+
+    KT_BASE_ADDR_GET2(r2, r3) //BD-slot
     add            r3, d.bind_mw.l_key, r0
     KEY_ENTRY_ADDR_GET(r2, r2, r3)
 
@@ -385,6 +389,13 @@ bind_mw:
     nop.e
     nop
 
+skip_mw_fence:
+    phvwrpair  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, \
+               CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
+    b          trigger_dcqcn
+    phvwr      CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1 // BD-Slot
+
+    
 frpmr:
     /*
      * Fetch lkey address and load frpmr-sqlkey MPU-only program in stage3. 

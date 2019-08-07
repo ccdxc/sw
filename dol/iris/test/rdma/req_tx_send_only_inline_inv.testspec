@@ -82,6 +82,7 @@ descriptors:
             op_type : 1  # OP_TYPE_SEND_WITH_INV
             wrid    : ref://testcase/pvtdata/wrid
             inline_data_vld : 1
+            fence : callback://rdma/rdma/GetFenceConfig
 
             send    :
                 inv_key : ref://testcase/pvtdata/inv_r_key

@@ -599,6 +599,8 @@ frpmr:
 
     phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
     phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
+    // Fence on FRPMR WQE is no-op. So set fence_done to 1 to skip fence check.
+    phvwr      CAPRI_PHV_FIELD(SQCB_TO_WQE_P, fence_done), 1
 
     // Below flags are required to increment cindex and load sqcb2_write_back in stage-5.
     phvwrpair  CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3 , CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
