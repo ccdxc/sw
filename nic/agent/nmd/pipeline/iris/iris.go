@@ -207,6 +207,7 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 			log.Errorf("Error writing the naples status object in host mode. Err: %v", err)
 			return err
 		}
+		return nil
 	}
 
 	naplesStatus := delphiProto.NaplesStatus{

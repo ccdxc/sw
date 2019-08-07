@@ -137,6 +137,7 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 		file = append(file, s...)
 		_ = ioutil.WriteFile("/sysconfig/config0/naplesStatus.json", file, 0644)
 		_ = ioutil.WriteFile("/sysconfig/config1/naplesStatus.json", file, 0644)
+		return nil
 	}
 
 	naplesStatus := delphiProto.NaplesStatus{
