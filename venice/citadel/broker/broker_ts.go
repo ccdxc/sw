@@ -199,7 +199,12 @@ func (br *Broker) ReadDatabases(ctx context.Context) ([]*influxmeta.DatabaseInfo
 	// select random shard
 	shard := cl.ShardMap.Shards[rand.Int63n(int64(len(cl.ShardMap.Shards)))]
 	// read from primary
-	repl := shard.Replicas[shard.PrimaryReplica]
+	repl, ok := shard.Replicas[shard.PrimaryReplica]
+	if ok != true {
+		br.logger.Errorf("failed to find replicas for %v from %+v", shard.PrimaryReplica, shard.Replicas)
+		return nil, fmt.Errorf("failed to get replicas")
+	}
+
 	br.logger.Infof("reading database from shard %d primary replica %d", repl.ShardID, repl.ReplicaID)
 	dbInfo, err := br.readDatabaseInReplica(ctx, repl)
 	if err != nil {
