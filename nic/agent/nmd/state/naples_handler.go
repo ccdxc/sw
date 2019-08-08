@@ -701,9 +701,6 @@ func (n *NMD) AdmitNaples() {
 					// Registration is complete here. Set the status to Registration done.
 					log.Infof("Setting the transition phase to registration done")
 					n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
-					if err = n.persistState(true); err != nil {
-						log.Errorf("Failed to persist naples state. Err: %v", err)
-					}
 
 					nic, _ := n.GetSmartNIC()
 					recorder.Event(eventtypes.NIC_ADMITTED, fmt.Sprintf("SmartNIC %s(%s) admitted to the cluster", nic.Spec.ID, nic.Name), nic)
@@ -715,6 +712,10 @@ func (n *NMD) AdmitNaples() {
 					}
 					if err := n.UpdateNaplesInfoFromConfig(); err != nil {
 						log.Errorf("Failed to update naples config post updation")
+					}
+
+					if err = n.persistState(true); err != nil {
+						log.Errorf("Failed to persist naples state. Err: %v", err)
 					}
 
 					return
