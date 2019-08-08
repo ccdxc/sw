@@ -91,8 +91,13 @@ ionic_completion_destroy(struct ionic_completion *completion)     // IN
 {
         VMK_ASSERT(completion);
 
-        ionic_spinlock_destroy(completion->lock);
-        completion->lock = NULL;
+        if (completion &&
+            (completion->validation_id == IONIC_EN_COMPL_VALIDATION_ID) &&
+            (completion->lock)) {
+                ionic_spinlock_destroy(completion->lock);
+                completion->lock = NULL;
+                completion->validation_id = 0;
+        }
 }
 
 
@@ -121,6 +126,7 @@ ionic_completion_init(struct ionic_completion *completion)        // IN
         VMK_ASSERT(completion);
         IONIC_INIT_WORLD_EVENT_ID(&completion->event_id);
         completion->done = VMK_FALSE;
+        completion->validation_id = IONIC_EN_COMPL_VALIDATION_ID;
 }
 
 
@@ -148,10 +154,10 @@ ionic_complete(struct ionic_completion *completion)               // IN
 {
         VMK_ASSERT(completion);
 
-        if (completion && completion->lock) {
-                vmk_SpinlockLockIgnoreDeathPending(completion->lock);
+        if (completion &&
+            (completion->validation_id == IONIC_EN_COMPL_VALIDATION_ID) &&
+            (completion->lock)) {
                 completion->done = VMK_TRUE;
-                vmk_SpinlockUnlock(completion->lock);
                 vmk_WorldWakeup(completion->event_id);
         }
 }
@@ -202,6 +208,7 @@ ionic_wait_for_completion_timeout(struct ionic_completion *completion,    // IN
 
         } else {
                 vmk_SpinlockUnlock(completion->lock);
+                is_timeout = VMK_FALSE;
         }
 
         /*

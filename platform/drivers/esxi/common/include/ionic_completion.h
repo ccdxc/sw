@@ -13,10 +13,13 @@
 
 #include <vmkapi.h>
 
+#define IONIC_EN_COMPL_VALIDATION_ID    0xfffffffffffffffeULL
+
 struct ionic_completion {
         vmk_Bool              done;
         vmk_WorldEventID      event_id;
         vmk_Lock              lock;
+        vmk_uint64            validation_id;
 };
 
 VMK_ReturnStatus

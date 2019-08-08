@@ -119,17 +119,16 @@ ionic_open(struct lif *lif)
 {
         VMK_ReturnStatus status = VMK_FAILURE;
         struct ionic_en_priv_data *priv_data;
-        struct ionic_en_uplink_handle *uplink_handle;
-        vmk_uint32 i, max_rx_normal_queues;
-        vmk_uint32 shared_q_data_idx, max_rx_rss_queues;
+        vmk_uint32 i, max_rx_normal_queues = 0;
+        vmk_uint32 shared_q_data_idx = 0;
+        vmk_uint32 max_rx_rss_queues = 0;
         struct ionic *ionic = lif->ionic;
 
         priv_data = IONIC_CONTAINER_OF(ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
-        uplink_handle = lif->uplink_handle;
 
-        if (!uplink_handle->is_mgmt_nic) {
+        if (!lif->uplink_handle->is_mgmt_nic) {
                 vmk_MutexLock(ionic->dev_cmd_lock);
                 ionic_dev_cmd_port_state(&ionic->en_dev.idev,
                                          PORT_ADMIN_STATE_UP);
@@ -138,7 +137,7 @@ ionic_open(struct lif *lif)
                 vmk_MutexUnlock(ionic->dev_cmd_lock);
         }
 
-        max_rx_normal_queues = uplink_handle->max_rx_normal_queues;
+        max_rx_normal_queues = lif->uplink_handle->max_rx_normal_queues;
         for (i = 0; i < lif->nrxqcqs; i++) {
 		ionic_rx_fill(&lif->rxqcqs[i]->q);
                 if (i < max_rx_normal_queues) {
@@ -160,9 +159,9 @@ ionic_open(struct lif *lif)
                 }
         }
 
-        max_rx_rss_queues = uplink_handle->max_rx_rss_queues;
+        max_rx_rss_queues = lif->uplink_handle->max_rx_rss_queues;
 
-        if (!uplink_handle->is_mgmt_nic) {
+        if (!lif->uplink_handle->is_mgmt_nic) {
                 status = ionic_en_rx_rss_init(priv_data,
                                               lif);
                 if (status != VMK_OK) {
@@ -201,7 +200,7 @@ txqcqs_err:
                                         priv_data);
         }
 
-        if (!uplink_handle->is_mgmt_nic) {
+        if (!lif->uplink_handle->is_mgmt_nic) {
                 ionic_en_rx_rss_deinit(priv_data,
                                        lif);
         }
@@ -224,38 +223,37 @@ ionic_stop(struct lif *lif)
 {
         VMK_ReturnStatus status, status1 = VMK_OK;
         struct ionic_en_priv_data *priv_data;
-        struct ionic_en_uplink_handle *uplink_handle;
-        vmk_uint32 i, max_rx_normal_queues;
-        vmk_uint32 max_rx_rss_queues, shared_q_data_idx;
+        vmk_uint32 i, max_rx_normal_queues = 0;
+        vmk_uint32 max_rx_rss_queues = 0;
+        vmk_uint32 shared_q_data_idx = 0;
         struct ionic *ionic = lif->ionic;
 
         priv_data = IONIC_CONTAINER_OF(ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
-        uplink_handle = lif->uplink_handle;
 
-        max_rx_normal_queues = uplink_handle->max_rx_normal_queues;
+        max_rx_normal_queues = lif->uplink_handle->max_rx_normal_queues;
 
         for (i = 0; i < lif->nrxqcqs; i++) {
                 status = ionic_qcq_disable(lif->rxqcqs[i]);
 		if (status != VMK_OK) {
-                        ionic_en_err("ionic_qcq_disable() failed, status: %s",
-                                     vmk_StatusToString(status));
+                        ionic_en_err("rx ionic_qcq_disable() failed, i=%d, status: %s",
+                                     i, vmk_StatusToString(status));
                         /* In the failure case, we still keep disabling
                            the next qcq element and record the status */
                         status1 = status;
                 }
         }
 
-        max_rx_rss_queues = uplink_handle->max_rx_rss_queues;
+        max_rx_rss_queues = lif->uplink_handle->max_rx_rss_queues;
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		// TODO post NOP Tx desc and wait for its completion
 		// TODO before disabling Tx queue
 		status = ionic_qcq_disable(lif->txqcqs[i]);
 		if (status != VMK_OK) {
-                        ionic_en_err("ionic_qcq_disable() failed, status: %s",
-                                     vmk_StatusToString(status));
+                        ionic_en_err("tx ionic_qcq_disable() failed, i=%d, status: %s",
+                                     i, vmk_StatusToString(status));
                         /* In the failure case, we still keep disabling
                            the next qcq element and record the status */
                         status1 = status;
@@ -285,7 +283,7 @@ ionic_stop(struct lif *lif)
                 ionic_tx_flush(&lif->txqcqs[i]->cq);
         }
 
-        if (!uplink_handle->is_mgmt_nic) {
+        if (!lif->uplink_handle->is_mgmt_nic) {
                 ionic_en_rx_rss_deinit(priv_data,
                                        lif);
         }
@@ -481,7 +479,6 @@ ionic_stop_control_path(struct lif *lif)
         vmk_NetPollFlushRx(adminqcq->netpoll);
         vmk_NetPollInterruptUnSet(adminqcq->netpoll);
 
-        ionic_intr_mask(&notifyqcq->intr, VMK_TRUE);
         vmk_IntrDisable(notifyqcq->intr.cookie);
         vmk_IntrSync(notifyqcq->intr.cookie);
         vmk_NetPollDisable(notifyqcq->netpoll);
@@ -803,6 +800,12 @@ static bool ionic_notifyq_cb(struct cq *cq,
                            vmk_NameToString(&uplink_handle->uplink_name),
                            comp->reset.reset_code,
                            comp->reset.state);
+                ionic_intr_mask(&lif->notifyqcq->intr, VMK_TRUE);
+
+                /* Skip disabling netpoll */
+                lif->notifyqcq->is_netpoll_enabled = VMK_FALSE;
+
+                ionic_qcq_disable(lif->notifyqcq);
                 ionic_all_rxq_empty(lif);
                 ionic_lif_reset(lif);
                 ionic_reset(&priv_data->ionic);

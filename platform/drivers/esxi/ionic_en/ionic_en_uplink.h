@@ -19,7 +19,7 @@
 #define IONIX_MAX_NUM_RX_RSS_QUEUE               1
 
 #define IONIC_EN_DEFAULT_MTU_SIZE               1500
-#define IONIC_EN_MAX_BUF_SIZE_PRIV_STATS        4096 * 2
+#define IONIC_EN_MAX_BUF_SIZE_PRIV_STATS        4096 * 4
 
 #define IONIC_EN_TX_COAL_USECS                  64
 #define IONIC_EN_RX_COAL_USECS                  64
