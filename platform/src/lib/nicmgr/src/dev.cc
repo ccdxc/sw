@@ -72,7 +72,7 @@ oprom_type_to_str(OpromType type)
 }
 
 DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
-                            platform_t platform, EV_P)
+                            sdk::platform::platform_type_t platform, EV_P)
 {
     NIC_HEADER_TRACE("Initializing DeviceManager");
     init_done = false;

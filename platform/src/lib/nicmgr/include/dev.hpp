@@ -77,7 +77,7 @@ class AdminQ;
 class DeviceManager {
 public:
     DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
-                  platform_t platform, EV_P = NULL);
+                  sdk::platform::platform_type_t platform, EV_P = NULL);
 
     int LoadConfig(std::string path);
     void CreateUplinks(uint32_t id, uint32_t port, bool is_oob);

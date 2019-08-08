@@ -41,18 +41,27 @@ void *
 nicmgrapi::nicmgr_thread_start(void *ctxt) {
     evutil_check log_check, port_status_check;
     EV_P;
-    string config_file = "/nic/conf/device.json";
     fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
-    platform_t platform = PLATFORM_HW;
+    pds_state *state;
+    string config_file;
 
     SDK_THREAD_INIT(ctxt);
     EV_A = evutil_create_loop();
+
+    // get pds state
+    state = (pds_state *)sdk::lib::thread::current_thread()->data();
+
+#ifdef __x86_64__
+    config_file = state->cfg_path() + "/" + state->pipeline() + "/device.json";
+#else
+    config_file = state->cfg_path() + "/device.json";
+#endif
 
     // instantiate the logger
     utils::logger::init();
 
     // initialize pciemgr
-    if (platform_is_hw(platform)) {
+    if (platform_is_hw(state->platform_type())) {
         PDS_TRACE_INFO("initializing pciemgr");
         pciemgr = new class pciemgr("nicmgrd", EV_A);
         pciemgr->initialize();
@@ -60,7 +69,7 @@ nicmgrapi::nicmgr_thread_start(void *ctxt) {
 
 
     PDS_TRACE_INFO("Initializing device manager ...");
-    devmgr = new DeviceManager(config_file, fwd_mode, platform, EV_A);
+    devmgr = new DeviceManager(config_file, fwd_mode, state->platform_type(), EV_A);
     devmgr->LoadConfig(config_file);
 
     if (pciemgr) {

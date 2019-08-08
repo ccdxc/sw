@@ -95,15 +95,18 @@ sltctx::copyin() {
 
 void
 sltctx::copyout() {
-    if (params->key) {
+    if (params->key)
         memcpy(params->key, swkey, props->swkey_len);
-    }
-    if (params->mask) {
+    else
+        params->key = &swkey;
+    if (params->mask)
         memcpy(params->mask, swkeymask, props->swkey_len);
-    }
-    if (params->appdata) {
+    else
+        params->mask = &swkeymask;
+    if (params->appdata)
         memcpy(params->appdata, swdata, props->swdata_len);
-    }
+    else
+        params->appdata = &swdata;
     return;
 }
 

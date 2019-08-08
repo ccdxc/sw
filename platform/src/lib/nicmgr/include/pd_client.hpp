@@ -66,22 +66,11 @@ typedef enum lif_rss_type_s {
   LIF_RSS_TYPE_IPV6_UDP_EX = 256,
 } lif_rss_type_t;
 
-/**
- * Platform Modes
- */
-typedef enum platform_s {
-    PLATFORM_NONE,
-    PLATFORM_SIM,
-    PLATFORM_HW,
-    PLATFORM_HAPS,
-    PLATFORM_RTL,
-    PLATFORM_MOCK,
-} platform_t;
-
 static inline bool
-platform_is_hw(platform_t platform)
+platform_is_hw(sdk::platform::platform_type_t platform)
 {
-    return (platform == PLATFORM_HW) || (platform == PLATFORM_HAPS);
+    return (platform == platform_type_t::PLATFORM_TYPE_HW) ||
+           (platform == platform_type_t::PLATFORM_TYPE_HAPS);
 }
 
 /**
@@ -101,13 +90,13 @@ const uint32_t kNumMaxLIFs = 2048;
 
 class PdClient {
 public:
-    static PdClient* factory(platform_t platform, fwd_mode_t fwd_mode);
+    static PdClient* factory(sdk::platform::platform_type_t platform, fwd_mode_t fwd_mode);
     void update(void);
     void destroy(PdClient *pdc);
 
     std::string hal_cfg_path_;
     std::string gen_dir_path_;
-    platform_t platform_;
+    sdk::platform::platform_type_t platform_;
     fwd_mode_t fwd_mode_;
     sdk::platform::utils::program_info *pinfo_;
     sdk::platform::utils::mpartition *mp_;

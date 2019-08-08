@@ -315,34 +315,39 @@ __label__ done;
         SLTCAM_TRACE_ERR_GOTO(done, "txn validate, r:%d", ret);
     }
 
-    // Find the tcam_index, if handle is not provided.
-    if (ctx->params->handle.valid() == false) {
-        ret = find_(ctx);
+    // remove using handle
+    if (ctx->tcam_index_valid) {
+        // use tcam_index to read swkey
+        ret = read_(ctx);
         if (ret != sdk::SDK_RET_OK) {
-            SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
+            SLTCAM_TRACE_ERR_GOTO(done, "read, r:%d", ret);
         }
+        // Copy the swkey into params->key
+        ctx->copyout();
     }
 
-    ctx->dbslot_valid = true;
-    // Remove the entry from the DB
-    ret = db_.remove(ctx);
+    // find dbslot
+    ret = find_(ctx);
     if (ret != sdk::SDK_RET_OK) {
-        SLTCAM_TRACE_ERR_GOTO(done, "db remove, r:%d", ret);
+        SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
     }
 
-    // Remove from HW
+    // Remove from HW using swkey
+    ctx->clearsw();
     ret = write_(ctx);
     if (ret != sdk::SDK_RET_OK) {
         // At this point, not much can be done, print err and proceed
         SLTCAM_TRACE_ERR("write, r:%d", ret);
     }
 
-    // Release this handle
-    ret = txn_.release(ctx);
+    // Remove the entry from the DB
+    ret = db_.remove(ctx);
     if (ret != sdk::SDK_RET_OK) {
-        // At this point, not much can be done, print err and proceed
-        SLTCAM_TRACE_ERR("txn release, r:%d", ret);
+        SLTCAM_TRACE_ERR_GOTO(done, "db remove, r:%d", ret);
     }
+
+    // Release this handle
+    txn_.release(ctx);
 
     // Free the tcam entry
     ret = dealloc_(ctx);
@@ -350,9 +355,6 @@ __label__ done;
         // At this point, not much can be done, print err and proceed
         SLTCAM_TRACE_ERR("dealloc, r:%d", ret);
     }
-
-    // Save the handle
-    params->handle.pindex(ctx->tcam_index);
 
 done:
     //db_.sanitize(ctx);

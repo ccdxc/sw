@@ -433,7 +433,7 @@ void PdClient::update(void)
     set_program_info();
 }
 
-PdClient* PdClient::factory(platform_t platform, fwd_mode_t fwd_mode)
+PdClient* PdClient::factory(sdk::platform::platform_type_t platform, fwd_mode_t fwd_mode)
 {
     int ret;
     PdClient *pdc = new PdClient();

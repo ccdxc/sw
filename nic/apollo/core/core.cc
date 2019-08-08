@@ -77,6 +77,9 @@ parse_pipeline_config (string pipeline, pds_state *state)
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     parse_cores_config(pt, state);
+
+    // save pipeline
+    state->set_pipeline(pipeline);
     return SDK_RET_OK;
 }
 
@@ -204,8 +207,9 @@ thread_nicmgr_spawn (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
-    if ((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
-        (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) {
+    if (((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
+         (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) ||
+         (getenv("NICMGR_SIM_MODE"))) {
         // spawn nicmgr thread
         new_thread =
             thread_create("nicmgr", THREAD_ID_NICMGR,
@@ -214,7 +218,7 @@ thread_nicmgr_spawn (pds_state *state)
                 nicmgr::nicmgrapi::nicmgr_thread_start,
                 sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                 sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                NULL);
+                state);
         SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                                 "nicmgr thread create failure");
         new_thread->start(new_thread);

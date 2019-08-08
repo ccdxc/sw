@@ -127,9 +127,7 @@ db::remove(sltctx *ctx) {
     // Delete the data
     elem_get_(ctx->dbslot)->clear();
     // Shrink the DB
-    sdk_ret_t ret = shrink_(ctx);
-    if (ret != sdk::SDK_RET_OK)
-        return ret;
+    SDK_ASSERT(shrink_(ctx) == sdk::SDK_RET_OK);
     // Decrement the count
     SDK_ASSERT(count_);
     count_--;

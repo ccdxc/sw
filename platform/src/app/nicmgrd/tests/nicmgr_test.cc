@@ -110,11 +110,11 @@ nicmgr_init()
     if (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) {
         devmgr =
             new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
-                              g_fwd_mode, PLATFORM_HW);
+                              g_fwd_mode, platform_type_t::PLATFORM_TYPE_HW);
     } else {
         devmgr =
             new DeviceManager("../platform/src/app/nicmgrd/etc/eth-smart.json",
-                              g_fwd_mode, PLATFORM_HW);
+                              g_fwd_mode, platform_type_t::PLATFORM_TYPE_HW);
     }
     EXPECT_TRUE(devmgr != NULL);
 

@@ -47,6 +47,8 @@ public:
     static void destroy(pds_state *ps);
     void set_cfg_path(string cfg_path) { cfg_path_ = cfg_path; }
     string cfg_path(void) const { return cfg_path_; }
+    void set_pipeline(string pipeline) { pipeline_ = pipeline; }
+    string pipeline(void) const { return pipeline_; }
     void set_catalog(catalog *catalog) { catalog_ = catalog; }
     catalog *catalogue(void) const { return catalog_; }
     void set_mpartition(mpartition *mpartition) { mpartition_ = mpartition; }
@@ -97,6 +99,7 @@ public:
 
 private:
     string                  cfg_path_;
+    string                  pipeline_;
     catalog                 *catalog_;
     mpartition              *mpartition_;
     platform_type_t         platform_type_;

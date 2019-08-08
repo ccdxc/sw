@@ -28,7 +28,7 @@ DeviceManager *devmgr;
 pciemgr *pciemgr;
 static string config_file;
 fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
-platform_t platform = PLATFORM_NONE;
+sdk::platform::platform_type_t platform = platform_type_t::PLATFORM_TYPE_NONE;
 bool g_hal_up = false;
 extern void nicmgr_do_client_registration(void);
 extern bool devices_restored;
@@ -146,17 +146,17 @@ int main(int argc, char *argv[])
             break;
         case 'p':
             if (string(optarg) == "sim") {
-                platform = PLATFORM_SIM;
+                platform = platform_type_t::PLATFORM_TYPE_SIM;
             } else if (string(optarg) == "hw") {
-                platform = PLATFORM_HW;
+                platform = platform_type_t::PLATFORM_TYPE_HW;
             } else if (string(optarg) == "haps") {
-                platform = PLATFORM_HAPS;
+                platform = platform_type_t::PLATFORM_TYPE_HAPS;
             } else if (string(optarg) == "rtl") {
-                platform = PLATFORM_RTL;
+                platform = platform_type_t::PLATFORM_TYPE_RTL;
             } else if (string(optarg) == "mock") {
-                platform = PLATFORM_MOCK;
+                platform = platform_type_t::PLATFORM_TYPE_MOCK;
             } else  {
-                platform = PLATFORM_NONE;
+                platform = platform_type_t::PLATFORM_TYPE_NONE;
             }
             break;
         default:
