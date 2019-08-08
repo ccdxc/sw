@@ -91,7 +91,7 @@
                 "kind": "service",
                 "service-name": "hal"
             }],
-        "flags": ["save_stdout_on_crash"],
+        "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 0.0
     },
     {

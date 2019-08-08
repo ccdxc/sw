@@ -90,6 +90,23 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 			},
 		}
 
+		defNS := netproto.Namespace{
+			TypeMeta: api.TypeMeta{Kind: "Namespace"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "default",
+				Name:   "default",
+				CreationTime: api.Timestamp{
+					Timestamp: *c,
+				},
+				ModTime: api.Timestamp{
+					Timestamp: *c,
+				},
+			},
+			Status: netproto.NamespaceStatus{
+				NamespaceID: 1,
+			},
+		}
+
 		defVrf := netproto.Vrf{
 			TypeMeta: api.TypeMeta{Kind: "Vrf"},
 			ObjectMeta: api.ObjectMeta{
@@ -113,6 +130,7 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 		na.Lock()
 		na.TenantDB[na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)] = &tn
 		na.VrfDB[na.Solver.ObjectKey(defVrf.ObjectMeta, defVrf.TypeMeta)] = &defVrf
+		na.NamespaceDB[na.Solver.ObjectKey(defNS.ObjectMeta, defNS.TypeMeta)] = &defNS
 		na.Unlock()
 	}
 
