@@ -4,9 +4,23 @@ import (
 	"crypto/x509"
 	"errors"
 	"net"
+	"strconv"
+	"strings"
 
 	"github.com/pensando/sw/api/generated/auth"
 )
+
+const defaultLDAPPort int = 389
+
+// AddDefaultPort checks if a port is present in URL of LDAP servers, else it adds default port
+func AddDefaultPort(url string) (string, error) {
+	_, _, err := net.SplitHostPort(url)
+	if err != nil && strings.Contains(err.Error(), "missing port in address") {
+		url = url + ":" + strconv.Itoa(defaultLDAPPort)
+		return url, nil
+	}
+	return url, err
+}
 
 // ValidateLdapConfig validates ldap configuration
 func ValidateLdapConfig(config *auth.Ldap) []error {
@@ -26,14 +40,15 @@ func ValidateLdapConfig(config *auth.Ldap) []error {
 			errs = append(errs, errors.New("ldap server not defined"))
 		}
 		for _, srv := range config.Servers {
-			_, _, err := net.SplitHostPort(srv.Url)
-			if err != nil {
-				errs = append(errs, err)
-			}
-			url := "ldap://" + srv.Url + "/" + config.BaseDN
-			_, err = ParseLdapURL(url, "", SUB, "")
-			if err != nil {
-				errs = append(errs, err)
+			if url, portErr := AddDefaultPort(srv.Url); portErr == nil {
+				srv.Url = url
+				urlNew := "ldap://" + srv.Url + "/" + config.BaseDN
+				_, err := ParseLdapURL(urlNew, "", SUB, "")
+				if err != nil {
+					errs = append(errs, err)
+				}
+			} else {
+				errs = append(errs, portErr)
 			}
 			if srv.TLSOptions != nil && srv.TLSOptions.StartTLS && !srv.TLSOptions.SkipServerCertVerification {
 				if srv.TLSOptions.ServerName == "" {

@@ -3,7 +3,6 @@ package ldap
 import (
 	"errors"
 	"fmt"
-	"net"
 	"testing"
 
 	"github.com/pensando/sw/api/generated/auth"
@@ -71,6 +70,35 @@ func TestValidateLdapConfig(t *testing.T) {
 			errs: []error{},
 		},
 		{
+			name: "Valid LDAP Config, takes default port",
+			in: &auth.Ldap{
+				Enabled: true,
+				Servers: []*auth.LdapServer{
+					{
+						Url: "localhost",
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 ServerName,
+							TrustedCerts:               TrustedCerts,
+						},
+					},
+				},
+
+				BaseDN:       BaseDN,
+				BindDN:       BindDN,
+				BindPassword: BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             UserAttribute,
+					UserObjectClass:  UserObjectClassAttribute,
+					Group:            GroupAttribute,
+					GroupObjectClass: GroupObjectClassAttribute,
+				},
+			},
+
+			errs: []error{},
+		},
+		{
 			name: "Missing LDAP Server",
 			in: &auth.Ldap{
 				Enabled: true,
@@ -89,7 +117,7 @@ func TestValidateLdapConfig(t *testing.T) {
 			errs: []error{errors.New("ldap server not defined")},
 		},
 		{
-			name: "missing LDAP host",
+			name: "Valid LDAP config, missing server URL",
 			in: &auth.Ldap{
 				Enabled: true,
 				Servers: []*auth.LdapServer{
@@ -115,7 +143,7 @@ func TestValidateLdapConfig(t *testing.T) {
 				},
 			},
 
-			errs: []error{&net.AddrError{Err: "missing port in address", Addr: ""}},
+			errs: []error{},
 		},
 		{
 			name: "Invalid TLS Config",

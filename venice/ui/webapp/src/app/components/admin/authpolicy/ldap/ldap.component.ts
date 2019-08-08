@@ -111,7 +111,6 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     }
   }
   private setValidatorOnServerControl(control: AbstractControl) {
-    control.get('url').setValidators(required);
     const controlTLSOption = control.get(['tls-options']);
     control.get(['tls-options', 'server-name']).setValidators(this.isTLSOptionFieldRequired(controlTLSOption, 'server-name'));
     control.get(['tls-options', 'trusted-certs']).setValidators(this.isTLSOptionFieldRequired(controlTLSOption, 'trusted-certs'));

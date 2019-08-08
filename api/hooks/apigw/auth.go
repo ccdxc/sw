@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
-	"strconv"
 	"strings"
 
 	"github.com/pensando/sw/api"
@@ -26,8 +24,6 @@ var (
 	// errSuperAdminRoleBindingNoSubject is returned when there is no user and group in AdminRoleBinding in default tenant
 	errSuperAdminRoleBindingNoSubject = fmt.Errorf("%s in %s tenant should have at least one user or group", globals.AdminRoleBinding, globals.DefaultTenant)
 )
-
-const defaultLDAPPort int = 389
 
 type serviceID struct {
 	kind   string
@@ -218,46 +214,6 @@ func (a *authHooks) userUpdateCheck(ctx context.Context, in interface{}) (contex
 	return ctx, in, false, nil
 }
 
-// portCheck checks if a port is present in URL of LDAP servers, else it adds default port
-func portCheck(url string) (string, error) {
-	_, _, err := net.SplitHostPort(url)
-	if err != nil && strings.Contains(err.Error(), "missing port in address") {
-		url = url + ":" + strconv.Itoa(defaultLDAPPort)
-		return url, nil
-	}
-	return url, err
-}
-
-// ldapCheck pre-call hook validates ldap authpolicy object during create or update
-func (a *authHooks) ldapCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
-	a.logger.DebugLog("msg", "APIGw ldapCheck hook called")
-	obj, ok := in.(*auth.AuthenticationPolicy)
-	if !ok {
-		return ctx, in, true, errors.New("invalid input type")
-	}
-	config := obj.Spec.Authenticators.Ldap
-	if config != nil && config.Enabled == true {
-		if len(config.Servers) == 0 {
-			return ctx, in, true, errors.New("ldap server not defined")
-		}
-		missingServerURL := false
-		for _, server := range config.Servers {
-			if server.Url != "" {
-				if url, portErr := portCheck(server.Url); portErr == nil {
-					server.Url = url
-				}
-			} else {
-				missingServerURL = true
-				break
-			}
-		}
-		if missingServerURL {
-			return ctx, in, true, errors.New("missing server url")
-		}
-	}
-	return ctx, obj, false, nil
-}
-
 // ldapConnectionCheck pre-call hook checks if connection succeeds to LDAP
 func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw ldapConnectionCheck hook called")
@@ -277,10 +233,8 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 		status := &auth.LdapServerStatus{
 			Server: server,
 		}
-		if server.Url != "" {
-			if url, portErr := portCheck(server.Url); portErr == nil {
-				server.Url = url
-			}
+		if url, portErr := ldap.AddDefaultPort(server.Url); portErr == nil {
+			server.Url = url
 			_, err := a.ldapChecker.Connect(server.Url, server.TLSOptions)
 			if err != nil {
 				a.logger.Errorf("error connecting to LDAP [%s]: %v", server.Url, err)
@@ -292,7 +246,7 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 			}
 			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
 		} else {
-			status.Message = "missing server url"
+			status.Message = portErr.Error()
 			status.Result = auth.LdapServerStatus_Connect_Failure.String()
 			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
 		}
@@ -319,10 +273,8 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 		status := &auth.LdapServerStatus{
 			Server: server,
 		}
-		if server.Url != "" {
-			if url, portErr := portCheck(server.Url); portErr == nil {
-				server.Url = url
-			}
+		if url, portErr := ldap.AddDefaultPort(server.Url); portErr == nil {
+			server.Url = url
 			ok, err := a.ldapChecker.Bind(server.Url, server.TLSOptions, config.BindDN, config.BindPassword)
 			if err != nil || !ok {
 				a.logger.Errorf("bind failed for ldap [%s]: %v", server.Url, err)
@@ -334,7 +286,7 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 			}
 			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
 		} else {
-			status.Message = "missing server url"
+			status.Message = portErr.Error()
 			status.Result = auth.LdapServerStatus_Bind_Failure.String()
 			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
 		}
@@ -550,21 +502,6 @@ func (a *authHooks) registerUserUpdateCheckHook(svc apigw.APIGatewayService) err
 	return nil
 }
 
-func (a *authHooks) registerLdapCheckHook(svc apigw.APIGatewayService) error {
-	ids := []serviceID{
-		{"AuthenticationPolicy", apiintf.CreateOper},
-		{"AuthenticationPolicy", apiintf.UpdateOper},
-	}
-	for _, id := range ids {
-		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
-		if err != nil {
-			return err
-		}
-		prof.AddPreCallHook(a.ldapCheck)
-	}
-	return nil
-}
-
 func (a *authHooks) registerLdapConnectionCheckHook(svc apigw.APIGatewayService) error {
 	prof, err := svc.GetServiceProfile("LdapConnectionCheck")
 	if err != nil {
@@ -715,11 +652,6 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 
 	// register hook for preventing user update if password is specified
 	if err := r.registerUserUpdateCheckHook(svc); err != nil {
-		return err
-	}
-
-	// register hook for validating LDAP policy create or update
-	if err := r.registerLdapCheckHook(svc); err != nil {
 		return err
 	}
 
