@@ -54,6 +54,11 @@ func (l *kitLogger) SetOutput(w io.Writer) Logger {
 
 	// Configure levelled logging
 	l.logger = kitlevel.NewFilter(l.logger, getFilterOption(l.config.Filter))
+
+	if l.config.ThrottleCfg != nil {
+		l.logger = newThrottledLogger(l.config.ThrottleCfg, l.logger)
+	}
+
 	return l
 }
 

@@ -353,7 +353,6 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "github.com/imdario/mergo"
   version = "0.3.7"
 
-
 [[constraint]]
   name = "github.com/cayleygraph/cayley"
   revision = "e4023df2f0cecef7aae93ee9c44848fe359e6611"
@@ -361,4 +360,8 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 [[constraint]]
   name = "github.com/sethvargo/go-password"
   version = "0.1.2"
+
+[[constraint]]
+  name = "github.com/go-logfmt/logfmt"
+  version = "0.3.0"
 

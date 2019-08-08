@@ -8,6 +8,7 @@ package log
 import (
 	"context"
 	"io"
+	"time"
 
 	kitlog "github.com/go-kit/kit/log"
 )
@@ -133,6 +134,19 @@ type FileConfig struct {
 	MaxAge int
 }
 
+// ThrottleConfig contains the parameter used to throttle messages
+type ThrottleConfig struct {
+	// ThrottleThreshold is the number of matching messages emitted in a flush that trigger throttling
+	ThrottleThreshold uint64
+
+	// FlushInterval is the time between flushing of throttled messages
+	FlushInterval time.Duration
+
+	// GetKeyFn is the function used to determine whether two messages match for throttling purposes.
+	// The arguments are KV pairs, for example "level"="info", "msg"="hello world", ...
+	GetKeyFn func(...interface{}) (string, error)
+}
+
 // Config contains config params for the logger
 type Config struct {
 	// Module Name
@@ -159,6 +173,9 @@ type Config struct {
 	// FileCfg contains config params for
 	// logging to file with log rotation
 	FileCfg FileConfig
+
+	// ThrottleCfg is the optional config for message throttling
+	ThrottleCfg *ThrottleConfig
 
 	// file writer
 	fileWriter io.WriteCloser

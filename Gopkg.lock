@@ -2876,6 +2876,7 @@
     "github.com/go-kit/kit/log/level",
     "github.com/go-kit/kit/tracing/opentracing",
     "github.com/go-kit/kit/transport/grpc",
+    "github.com/go-logfmt/logfmt",
     "github.com/go-martini/martini",
     "github.com/go-openapi/analysis",
     "github.com/go-openapi/loads",

@@ -42,6 +42,10 @@ func stackTrace() kitlog.Valuer {
 func newLogger(config *Config) *kitLogger {
 	l := newKitLogLogger(config)
 
+	if config.ThrottleCfg != nil {
+		l = newThrottledLogger(config.ThrottleCfg, l)
+	}
+
 	// Some iota test code assumes that logfile is created as soon as the process starts.
 	// Hence create it
 	if config.LogToFile {
@@ -131,6 +135,7 @@ func newKitLogLogger(config *Config) kitlog.Logger {
 
 	// Configure log filter
 	l = kitlevel.NewFilter(l, getFilterOption(config.Filter))
+
 	return l
 }
 

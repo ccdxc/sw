@@ -68,7 +68,11 @@ func main() {
 	env.GitVersion = GitVersion
 	env.GitCommit = GitCommit
 	env.BuildDate = BuildDate
-	grpclog.SetLoggerV2(env.Logger)
+
+	// special logger with throttling for gRPC
+	grpcLoggerConf := log.GetDefaultThrottledLoggerConfig(*logConfig)
+	grpcLogger := log.GetNewLogger(grpcLoggerConf)
+	grpclog.SetLoggerV2(grpcLogger)
 
 	// create events recorder
 	// FIXME: eventSource.NodeName should match with the name in node object; either we
