@@ -126,6 +126,7 @@ rmmod mnet mnet_uio_pdrv_genirq ionic_mnic
 
 echo "Killing all processes except init and switch_rootfs.sh"
 update_fwupgrade_state "KILLING ALL PROCESSES EXCEPT INIT..."
+save_fwupgrade_state
 kill_processes
 update_fwupgrade_state "KILLED ALL PROCESSES EXCEPT INIT"
 save_fwupgrade_state
@@ -168,13 +169,47 @@ umount /dev/shm
 umount /run
 umount /tmp
 
+echo "=== devfs before move to new filesystem ===" > /obfl/devfs_move.log
+ls -l /dev/ >> /obfl/devfs_move.log
 mount --move --no-mtab /dev /new/rw/dev
+if [ $? -ne 0 ]; then
+    update_fwupgrade_state "FAILED TO MOVE DEVFS TO NEW FILESYSTEM"
+    save_fwupgrade_state
+
+    echo "content of /dev/ during failure" >> /obfl/devfs_move.log
+    ls -l /dev/ >> /obfl/devfs_move.log
+    echo "content of /new/rw/dev/ during failure" >> /obfl/devfs_move.log
+    ls -l /new/rw/dev/ >> /obfl/devfs_move.log
+
+    exit 1
+fi
+
+echo "=== devfs after move to new filesystem ===" >> /obfl/devfs_move.log
+ls -l /new/rw/dev/ >> /obfl/devfs_move.log
+
+echo "=== procfs before move to new filesystem ===" > /obfl/procfs_move.log
+ls -l /proc/ >> /obfl/procfs_move.log
 mount --move --no-mtab /proc /new/rw/proc
+if [ $? -ne 0 ]; then
+    update_fwupgrade_state "FAILED TO MOVE PROCFS TO NEW FILESYSTEM"
+    save_fwupgrade_state
+
+    echo "content of /proc/ during failure" >> /obfl/procfs_move.log
+    ls -l /proc/ >> /obfl/procfs_move.log
+    echo "content of /new/rw/proc/ during failure" >> /obfl/procfs_move.log
+    ls -l /new/rw/proc/ >> /obfl/procfs_move.log
+
+    exit 1
+
+fi
+
+echo "=== procfs after move to new filesystem ===" >> /obfl/procfs_move.log
+ls -l /new/rw/proc/ >> /obfl/procfs_move.log
 
 cd /new/rw
 mkdir -p old
 
-echo "`date` PERFORMING PIVOT_ROOT TO NEW FS" >> /new/rw/var/run/fwupgrade.state
+echo "`/new/rw/bin/date` PERFORMING PIVOT_ROOT TO NEW FS" >> /new/rw/var/run/fwupgrade.state
 
 pivot_root . old
 

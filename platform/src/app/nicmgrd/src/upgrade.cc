@@ -24,6 +24,7 @@ UpgradeState ExpectedState;
 uint32_t ServiceTimeout;
 bool MoveToNextState;
 bool SendAppResp;
+bool IsUpgFailed = false;
 
 namespace nicmgr {
 
@@ -59,6 +60,7 @@ HdlrResp
 nicmgr_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    IsUpgFailed = false;
 
     if (!devmgr->UpgradeCompatCheck())
         resp.resp=FAIL;
@@ -140,13 +142,21 @@ HdlrResp
 nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    IsUpgFailed = true;
 
     // walk all objects and delete them
     NIC_FUNC_DEBUG("Deleting all objects of EthDevInfo from Delphi");
-    vector<delphi::objects::EthDeviceInfoPtr> objlist = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
-    for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj=objlist.begin(); obj !=objlist.end(); ++obj) {
+    vector<delphi::objects::EthDeviceInfoPtr> EthDevList = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
+    for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj = EthDevList.begin(); obj != EthDevList.end(); ++obj) {
         g_nicmgr_svc->sdk()->DeleteObject(*obj);
     }
+
+    NIC_FUNC_DEBUG("Deleting all objects of UplinkInfo from Delphi");
+    vector<delphi::objects::UplinkInfoPtr> UplinkList = delphi::objects::UplinkInfo::List(g_nicmgr_svc->sdk());
+    for (vector<delphi::objects::UplinkInfoPtr>::iterator obj = UplinkList.begin(); obj != UplinkList.end(); ++obj) {
+        g_nicmgr_svc->sdk()->DeleteObject(*obj);
+    }
+
     unlink(nicmgr_upgrade_state_file); 
 
     if (UpgCtxApi::UpgCtxGetUpgState(upgCtx) == CompatCheck) {
@@ -337,9 +347,11 @@ nicmgr_upg_hndlr::upg_timer_func(void *obj)
 
     if (SendAppResp) {
         if (ExpectedState == DEVICES_RESET_STATE) {
-            ret = writefile(nicmgr_upgrade_state_file, "in progress", 11);
-            if (ret == -1)
-                return;
+            if (!IsUpgFailed) {
+                ret = writefile(nicmgr_upgrade_state_file, "in progress", 11);
+                if (ret == -1)
+                    return;
+            }
         }
 
         NIC_FUNC_DEBUG("Sending App Response to upgrade manager");
