@@ -41,7 +41,10 @@ check_zombies()
         if [ $i -ne 1 ]; then
             kill -s SIGCHLD $i
             sleep 1
-            kill -KILL $i
+            # make sure that we don't kill ourselves
+            if [ $i -ne $$ ]; then
+                kill -KILL $i
+            fi
         fi
     done
 }
