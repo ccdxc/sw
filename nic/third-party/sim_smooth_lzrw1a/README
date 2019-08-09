@@ -1,0 +1,20 @@
+gcc -std=c99 lzrw1-a.c main.c
+
+Options:
+
+-r  repetition count, default 100
+-s  input buffer size, default 8K
+-l  max random length, default 576
+-f  read pattern from a file and use it (file expected to contain hex ascii digits)
+-c  liveness count, default 0 (0 means no liveness reporting, otherwise print a line after this many reps to report liveness)
+
+Example:
+
+~/ipcores/new$ ./a.out -r 10000 -s 8192 -l 155
+rep_count 10000 buf_size 8192 rand_len_max 155
+min_cp_size 1003 max_cp_size 1837
+last cp_adler32 0xd72ae614 dc_adler32 0xd72ae614
+rep_count 10000 num_uncompressables 0 num_data_miscompares 0 num_chksum_mismatches 0
+
+
+NOTE: Data are always randomized (except in the pattern file case) so last adler32 numbers above would be different after each run.

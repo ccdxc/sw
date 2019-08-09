@@ -67,6 +67,12 @@ targets:
     area:
     sub-area:
     feature:
+  smooth_lzrw1a:
+    commands: ["sh", "-c", "cd /sw && make pull-assets && cd nic/third-party/sim_smooth_lzrw1a && gcc -std=c99 lzrw1-a.c main.c -o smooth_lzrw1a && ./smooth_lzrw1a; ret=$?; exit $ret" ]
+    owners: ["email:piraman@pensando.io"]
+    area:
+    sub-area:
+    feature:
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
