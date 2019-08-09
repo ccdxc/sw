@@ -20,8 +20,7 @@ grep "overlay" /proc/mounts | grep -q "lowerdir=/new"
 
 #if lowerdir=/new is not found then we are in fresh boot mode
 if [ $? -ne 0 ]; then
-    cd /update
-    find . \( -path ./lost+found -o -path ./naples_fw.tar -o \) -prune -o -exec rm -rf '{}' ';' &> /dev/null
+    cd /update && find . \( -path ./lost+found -o -path ./naples_fw.tar -o \) -prune -o -exec rm -rf '{}' ';' &> /dev/null
     rm -rf /data/delphi.dat
 fi
 
