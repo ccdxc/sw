@@ -59,7 +59,7 @@ type TSMClient struct {
 }
 
 // NewTSMClient creates a new techsupport agent
-func NewTSMClient(name string, mac string, kind string, configPath string, controllers []string, listenURL string) *TSMClient {
+func NewTSMClient(name string, mac string, kind string, configPath string, controllers []string, techsupportURL string, diagnosticsURL string) *TSMClient {
 	log.Infof("Name : %v MAC : %v Controllers : %v", name, mac, controllers)
 	var resolverClient resolver.Interface
 	if len(controllers) != 0 {
@@ -87,14 +87,15 @@ func NewTSMClient(name string, mac string, kind string, configPath string, contr
 		cfg:            res,
 	}
 
-	if listenURL != "" {
-		log.Infof("Setting listenURL number to : %v", listenURL)
-		res.RESTUri = listenURL
+	if techsupportURL != "" {
+		log.Infof("Setting techsupportURL number to : %v", techsupportURL)
+		res.RESTUri = techsupportURL
 	}
 
+	// RESTUri is expected to be non-null for techsupport agent on Naples
 	if res.RESTUri != "" {
 		log.Info("REST URI is non null")
-		agent.restServer = rest.NewRestServer(res.RESTUri, agent.tsCh)
+		agent.restServer = rest.NewRestServer(res.RESTUri, diagnosticsURL, agent.tsCh)
 	}
 
 	return agent

@@ -66,7 +66,7 @@ var revProxyConfig = map[string]string{
 
 	// Techsupport
 	"/api/techsupport/": "http://127.0.0.1:" + globals.NaplesTechSupportRestPort,
-	"/api/diagnostics/": "http://127.0.0.1:" + globals.NaplesTechSupportRestPort,
+	"/api/diagnostics/": "http://127.0.0.1:" + globals.NaplesDiagnosticsRestPort,
 }
 
 func getRevProxyTLSConfig() (*tls.Config, error) {

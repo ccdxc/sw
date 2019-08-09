@@ -76,7 +76,7 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 		}
 
 		// Create a new Techsupport Agent
-		tsmClient := tsa.NewTSMClient(obj.ID, obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, controllers, globals.Localhost+":"+globals.NaplesTechSupportRestPort)
+		tsmClient := tsa.NewTSMClient(obj.ID, obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, controllers, globals.Localhost+":"+globals.NaplesTechSupportRestPort, globals.Localhost+":"+globals.NaplesDiagnosticsRestPort)
 		s.tsmClient = tsmClient
 
 		if s.tsmClient != nil {
@@ -88,7 +88,7 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 		if s.tsmClient != nil {
 			s.tsmClient.Stop()
 		}
-		tsmClient := tsa.NewTSMClient("naples-tsa", obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, nil, globals.Localhost+":"+globals.NaplesTechSupportRestPort)
+		tsmClient := tsa.NewTSMClient("naples-tsa", obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, nil, globals.Localhost+":"+globals.NaplesTechSupportRestPort, "")
 		s.tsmClient = tsmClient
 
 		if s.tsmClient != nil {
@@ -137,7 +137,7 @@ func main() {
 	}
 
 	// Plugging in default values when the agent is created.
-	tsmClient := tsa.NewTSMClient("naples-tsa", "NA", string(cluster.KindSmartNIC), delphiService.configFile, nil, globals.Localhost+":"+globals.NaplesTechSupportRestPort)
+	tsmClient := tsa.NewTSMClient("naples-tsa", "NA", string(cluster.KindSmartNIC), delphiService.configFile, nil, globals.Localhost+":"+globals.NaplesTechSupportRestPort, "")
 	delphiService.tsmClient = tsmClient
 
 	if delphiService.tsmClient != nil {

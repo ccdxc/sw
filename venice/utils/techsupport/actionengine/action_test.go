@@ -1,4 +1,4 @@
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 // This file contains the actions needed for TechSupport
 
 package actionengine
@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	//"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/diagnostics"
 	tsconfig "github.com/pensando/sw/venice/ctrler/tsm/config"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -27,6 +29,16 @@ func createTechSupportActionItem(name string, method tsconfig.ActionItem_ActionM
 		Name:    name,
 		Method:  method,
 		Command: command,
+	}
+}
+
+func createDiagnosticsRequest(name, query, command, args string) *diagnostics.DiagnosticsRequest {
+	return &diagnostics.DiagnosticsRequest{
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+		Query:      query,
+		Parameters: map[string]string{"command": command, "args": args},
 	}
 }
 
@@ -217,4 +229,28 @@ func TestRunActionsNonExistingDir(t *testing.T) {
 	_, err = os.Stat(outDir)
 	Assert(t, !os.IsNotExist(err), "RunActions failed to create non-existing directory")
 	deleteFile(outDir)
+}
+
+func TestDiagnosticsLs(t *testing.T) {
+	diagnosticsRequest := createDiagnosticsRequest("valid", "ACTION", "ls", "-l")
+
+	_, err := RunDiagnosticsActions(diagnosticsRequest)
+
+	Assert(t, err == nil, "valid diagnostics request failed")
+}
+
+func TestDiagnosticsInvalid(t *testing.T) {
+	diagnosticsRequest := createDiagnosticsRequest("valid", "ACTION", "touch", "/diagnosticsTest")
+
+	_, err := RunDiagnosticsActions(diagnosticsRequest)
+
+	Assert(t, err != nil, "invalid diagnostics request passed")
+}
+
+func TestDiagnosticsInsecure(t *testing.T) {
+	diagnosticsRequest := createDiagnosticsRequest("valid", "ACTION", "ls", "-l && touch /diagnosticsTest")
+
+	_, err := RunDiagnosticsActions(diagnosticsRequest)
+
+	Assert(t, err != nil, "insecure diagnostics request passed")
 }
