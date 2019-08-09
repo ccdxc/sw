@@ -154,6 +154,10 @@ testcases:
             iperfthreads     : 16
             #capture_pcap : true
 
+    -   name    : Load_Defaults
+        testcase: testcases.drivers.load_defaults
+        enable  : True
+
     -   name    : DriverReloadStress
         testcase: testcases.drivers.driverreload
         enable : true
