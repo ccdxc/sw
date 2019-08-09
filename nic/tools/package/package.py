@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--target', dest='target',
                     default='haps',
-                    help='Package for sim, haps, arm-dev, zebu, debug, debug-arm')
+                    help='Package for sim, haps, arm-dev, zebu, debug, debug-arm, gold')
 
 # Do not strip the target shared libs and binaries
 parser.add_argument('--no-strip', dest='no_strip',
@@ -147,7 +147,10 @@ else:
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
     else:
-        files.append('nic/tools/package/pack_haps.txt')
+        if args.target == 'gold':
+            files.append('nic/tools/package/pack_haps_gold.txt')
+        else:
+            files.append('nic/tools/package/pack_haps.txt')
         # skip platform for apollo
         files.append('nic/tools/package/pack_platform.txt')
 

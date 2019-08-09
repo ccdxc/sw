@@ -3,6 +3,7 @@
 export ARCH         ?= x86_64
 export PIPELINE     ?= iris
 export PLATFORM     ?= sim
+export FWTYPE       ?= full
 export TOPDIR       := ${realpath ${CURDIR}/../}
 export NICDIR       := ${TOPDIR}/nic
 export IOTADIR      := ${TOPDIR}/iota

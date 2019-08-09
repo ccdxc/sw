@@ -36,20 +36,7 @@ export NIC_SDK_SOLIBS   := utils list slab shmmgr mmgr sdkpal sdkfru \
     hash hbmhash tcam timerfd catalog device sdkplatformutils sdkcapri \
     sdkp4loader sdkasicrw lif_mgr sdkring
 
-export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
-                                cfg_plugin_rdma \
-                                cfg_plugin_nvme \
-                                cfg_plugin_aclqos \
-                                cfg_plugin_nat \
-                                cfg_plugin_gft \
-                                cfg_plugin_ipsec \
-                                cfg_plugin_mcast \
-                                cfg_plugin_telemetry \
-                                cfg_plugin_l4lb \
-                                cfg_plugin_lif \
-                                cfg_plugin_accel \
-                                plugin_network \
-                                plugin_alg_utils \
+export NIC_HAL_DLOPEN_SOLIBS := plugin_network \
                                 plugin_sfw \
                                 plugin_alg_sip \
                                 plugin_alg_tftp \
@@ -60,18 +47,37 @@ export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 plugin_ep_learn \
                                 plugin_lb \
                                 plugin_nat \
-                                plugin_proxy \
                                 plugin_telemetry \
-                                plugin_app_redir
+                                plugin_app_redir 
 
 export NIC_HAL_PROTO_SOLIBS := halproto hal_svc_gen hal_svc
-export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy
-export NIC_HAL_PLUGIN_SOLIBS := plugin_classic \
-                                plugin_ep_learn_common \
-                                plugin_sfw_pkt_utils \
-                                isc_dhcp
+export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
+                                    cfg_plugin_nw \
+                                    cfg_plugin_rdma \
+                                    cfg_plugin_nvme \
+                                    cfg_plugin_aclqos \
+                                    cfg_plugin_nat \
+                                    cfg_plugin_gft \
+                                    cfg_plugin_ipsec \
+                                    cfg_plugin_mcast \
+                                    cfg_plugin_telemetry \
+                                    cfg_plugin_l4lb \
+                                    cfg_plugin_lif \
+                                    cfg_plugin_accel \
+                                    cfg_plugin_sfw \
+                                    plugin_alg_utils \
+                                    plugin_proxy
 
+export NIC_HAL_PLUGIN_full_SOLIBS := plugin_classic \
+                                     plugin_ep_learn_common \
+                                     plugin_sfw_pkt_utils \
+                                     isc_dhcp
 
+export NIC_HAL_PLUGIN_gold_SOLIBS := plugin_classic \
+                                     plugin_ep_learn_common \
+                                     isc_dhcp
+
+export NIC_HAL_UTILS_gold_SOLIBS := utils bitmap block_list nat trace bm_allocator
 export NIC_HAL_UTILS_SOLIBS := utils bitmap block_list nat eventmgr \
     trace fsm bm_allocator
 
@@ -169,17 +175,22 @@ export CLI_artemis_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
 # ==========================================================================
 #                        HAL Binary/Gtest Libs
 # ==========================================================================
-export NIC_HAL_PLUGIN_SOLIBS:= ${NIC_HAL_PLUGIN_SOLIBS} \
-                               ${NIC_HAL_DLOPEN_SOLIBS} \
-                               ${NIC_HAL_PROTO_SOLIBS} \
-                               ${NIC_HAL_CFG_PLUGIN_SOLIBS}
+
+export NIC_HAL_PLUGIN_full_SOLIBS:= ${NIC_HAL_PLUGIN_full_SOLIBS} \
+                                    ${NIC_HAL_DLOPEN_SOLIBS} \
+                                    ${NIC_HAL_PROTO_SOLIBS} \
+                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS}
+
+export NIC_HAL_PLUGIN_gold_SOLIBS:= ${NIC_HAL_PLUGIN_gold_SOLIBS} \
+                                    ${NIC_HAL_PROTO_SOLIBS} \
+                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS}
 
 export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
-                               ${NIC_HAL_PLUGIN_SOLIBS} \
+                               ${NIC_HAL_PLUGIN_${FWTYPE}_SOLIBS} \
                                ${NIC_HAL_UTILS_SOLIBS} \
                                ${NIC_FTE_SOLIBS} \
-                               ${NIC_HAL_TLS_SOLIBS} \
                                ${NIC_LKL_SOLIBS} \
+                               ${NIC_HAL_TLS_SOLIBS} \
                                ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                ${NIC_HAL_PD_SOLIBS} \
                                ${NIC_LINKMGR_SOLIBS} \

@@ -84,6 +84,7 @@ define INCLUDE_MODULEMK
     MODULE_LIBS                 :=
     MODULE_GEN_DIR              :=
     MODULE_GOPKG                :=
+    MODULE_FWTYPE               :=
 
     # MODULE_DIR can be used by module.mk to know their current
     # directory.
@@ -117,6 +118,7 @@ define INCLUDE_MODULEMK
     $${TGID}_LDFLAGS        := $${MODULE_LDFLAGS} ${CMD_LINKER_FLAGS}
     $${TGID}_PIPELINE       := $$(findstring $${PIPELINE},$${MODULE_PIPELINE})
     $${TGID}_ARCH           := $$(findstring ${ARCH},$${MODULE_ARCH})
+    $${TGID}_FWTYPE         := $$(findstring $${FWTYPE},$${MODULE_FWTYPE})
     $${TGID}_DEPS           := $${MODULE_DEPS}
     $${TGID}_PREREQS        := $$(join $$(addprefix ${BLD_OUT_DIR}/,$$(subst .,_,$${MODULE_PREREQS})),\
                                        $$(addprefix /,$${MODULE_PREREQS}))
@@ -316,9 +318,11 @@ endef
 define FILTER_TARGETS_BY_PIPELINE
     ifeq "$${${1}_PIPELINE}" "${PIPELINE}"
         ifeq "$${${1}_ARCH}" "${ARCH}"
-            ALL_TARGETS += $${${1}_MKTARGET}
-            ifeq "$${${1}_RECIPE_SUBTYPE}" "GTEST"
-                ALL_GTEST_TARGETS += $${${1}_MKTARGET}
+            ifeq "$${${1}_FWTYPE}" "${FWTYPE}"
+                ALL_TARGETS += $${${1}_MKTARGET}
+                ifeq "$${${1}_RECIPE_SUBTYPE}" "GTEST"
+                    ALL_GTEST_TARGETS += $${${1}_MKTARGET}
+                endif
             endif
         endif
     endif

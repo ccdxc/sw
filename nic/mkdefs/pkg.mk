@@ -12,6 +12,11 @@ ifeq (,$(filter $(PIPELINE),hello l2switch elektra))
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target host
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target test-utils
 ifeq ($(ARCH),aarch64)
+ifeq ($(FWTYPE),gold)
+	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
+	--pipeline $(PIPELINE) --target gold $(PKG_ARGS)
+else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	$(eval STRIP := )
     ifeq ($(PIPELINE),$(filter $(PIPELINE),apollo artemis))
@@ -21,6 +26,7 @@ ifeq ($(ARCH),aarch64)
 		--pipeline $(PIPELINE) $(PKG_ARGS) $(STRIP)
 	cd $(NICDIR) && $(NICDIR)/sdk/platform/mputrace/captrace.py gen_syms \
 		--pipeline $(PIPELINE)
+endif
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
