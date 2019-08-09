@@ -102,7 +102,7 @@ def Setup(tc):
     if arping.ArPing(tc) != api.types.status.SUCCESS:
         api.Logger.info("arping failed on setup")
     if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
-        api.Logger.info("ping test failed")
+        api.Logger.info("ping test failed on setup")
         return api.types.status.FAILURE
     req = api.Trigger_CreateExecuteCommandsRequest()
 
@@ -112,6 +112,8 @@ def Setup(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/nicmgr_upgstate")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/*tar*")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/NaplesTechSupport-*")
         api.Trigger_AddNaplesCommand(req, node, "touch /update/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:

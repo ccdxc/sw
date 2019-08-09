@@ -14,7 +14,7 @@ def Setup(tc):
     if arping.ArPing(tc) != api.types.status.SUCCESS:
         api.Logger.info("arping failed on setup")
     if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
-        api.Logger.info("ping test failed")
+        api.Logger.info("ping test failed on setup")
         return api.types.status.FAILURE
 
     req = api.Trigger_CreateExecuteCommandsRequest()
@@ -100,6 +100,8 @@ def Teardown(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK))
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG))
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/upgrade_to_same_firmware_allowed")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/*tar*")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/NaplesTechSupport-*")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)
