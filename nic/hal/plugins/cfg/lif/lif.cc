@@ -1063,6 +1063,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     spec = app_ctxt->spec;
 
     lif = (lif_t *)dhl_entry->obj;
+    lif_make_clone(lif, (lif_t **)&dhl_entry->cloned_obj, *spec);
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("{}:update upd cb {}",
@@ -1462,7 +1463,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     lif_t                 *lif         = NULL;
     cfg_op_ctxt_t         cfg_ctxt     = { 0 };
     dhl_entry_t           dhl_entry    = { 0 };
-    const                 LifKeyHandle &kh = spec .key_or_handle ();
+    const                 LifKeyHandle &kh = spec.key_or_handle();
     lif_update_app_ctxt_t app_ctxt     = { 0 };
     hal_handle_t          hal_handle   = 0;
     uint64_t              hw_lif_id    = 0;
@@ -1531,7 +1532,19 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         goto end;
     }
 
-    lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj, spec);
+    /* 
+     * Scenario:
+     * EP Moved to this lif: 
+     * - Take cfg db read lock. This should prevent lif update to
+     *   create the clone
+     * Lif Update from Nicmgr:
+     * - When we clone here without write lock, FTE thread which is
+     *   processing EP move takes read lock and gets the LIF. It will
+     *   update the lif with ENIC in its if_list. The clone will not
+     *   have this new ENIC and after the end of update we lost 
+     *   the ENIC in if_list which is there in lif but not in its clone.
+     */
+    // lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj, spec);
 
     // form ctxt and call infra update object
     dhl_entry.handle  = lif->hal_handle;

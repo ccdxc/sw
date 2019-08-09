@@ -83,16 +83,18 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
     uint32_t cur_lif_id = 0;
     hal_handle_t ep_handle;
 
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+
 
     /* Lif update only for host originated packet */
     if (!is_host_originated_packet(ctx)) {
-        return ret;
+        goto end;
     }
 
    if ((cpu_hdr->src_app_id == P4PLUS_APPTYPE_IPSEC) &&
        (cpu_hdr->src_lif == HAL_LIF_CPU)) {
        HAL_TRACE_DEBUG("No EP lif update necessary for pkts coming from CPU lif");
-       return ret;
+       goto end;
     }
 
     HAL_TRACE_DEBUG("Doing EP lif update if necessary");
@@ -104,7 +106,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
     if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
         HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
-        return ret;
+        goto end;
     }
     l2seg = (hal::l2seg_t *)obj;
 
@@ -113,14 +115,14 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
     if (sep == nullptr) {
         HAL_TRACE_ERR("Source endpoint not found.");
         ret = HAL_RET_EP_NOT_FOUND;
-        return ret;
+        goto end;
     }
 
     sif = hal::find_if_by_handle(sep->if_handle);
     if (sif == NULL) {
         HAL_TRACE_ERR("Source interface not found.");
         ret = HAL_RET_IF_NOT_FOUND;
-        return ret;
+        goto end;
     }
 
     lif = find_lif_by_handle(sif->lif_handle);
@@ -137,14 +139,14 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
         if (lif == NULL) {
             HAL_TRACE_INFO("Could not find lif object for hw_lif{}.", cpu_hdr->src_lif);
             ret = HAL_RET_LIF_NOT_FOUND;
-            return ret;
+            goto end;
         }
 
        ret = hal::enic_update_lif(sif, lif, &new_hal_if);
 
        if (ret != HAL_RET_OK) {
            HAL_TRACE_ERR("Enic update failed!");
-           return ret;
+           goto end;
        }
 
        //Remember the ep handle as we are updating.
@@ -152,7 +154,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
       ret = hal::endpoint_update_if(sep, new_hal_if);
       if (ret != HAL_RET_OK) {
           HAL_TRACE_ERR("Endpoint interface update failed!");
-          return ret;
+          goto end;
       }
 
       sep = find_ep_by_handle(ep_handle);
@@ -160,7 +162,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
       if (sep == nullptr) {
           HAL_TRACE_ERR("Endpoint look up failed after update");
           ret = HAL_RET_EP_NOT_FOUND;
-          return ret;
+          goto end;
       }
 
       /* Set Source EP so that plugins can process correctly */
@@ -171,7 +173,8 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
 
     }
 
-
+end:
+    hal::hal_cfg_db_close();
     return ret;
 }
 

@@ -212,6 +212,7 @@ uint64_t lif_hw_lif_id_get (lif_t *lif);
 hal_ret_t lif_disable_tx_scheduler (void);
 int32_t hal_get_pc_offset(const char *prog_name, const char *label,
                           uint8_t *offset);
+hal_ret_t lif_make_clone (lif_t *lif, lif_t **lif_clone, LifSpec& spec);
 
 }    // namespace hal
 
