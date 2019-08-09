@@ -142,8 +142,8 @@ header_type entry_inactive_t {
 header_type scratch_metadata_t {
     fields {
         cond_processed             : 1;
-        flow_packets               : 4;
-        flow_bytes                 : 18;
+        flow_packets               : 64;
+        flow_bytes                 : 64;
         flow_start_timestamp       : 32;       // when flow started
         flow_last_seen_timestamp   : 32;       // when was the flow last seen
         tx_drop_count              : 16;
@@ -223,15 +223,6 @@ header_type scratch_metadata_t {
         flow_rtt_seq_no               : 32;
         flow_rtt                      : 34; // Max 16 sec assuming nano sec granularity
         flow_rtt_timestamp            : 48;
-
-        // Microburst detection
-        burst_start_timestamp : 48;
-        burst_max_timestamp   : 48;
-        micro_burst_cycles    : 32; // enough ??
-        allowed_bytes         : 40;
-        max_allowed_bytes     : 40;
-        burst_exceed_bytes    : 40;
-        burst_exceed_count    : 32;
 
         // ipsg
         lif                   : 11;

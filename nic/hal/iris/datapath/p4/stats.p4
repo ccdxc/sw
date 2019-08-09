@@ -241,12 +241,7 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
                   drop_packets, drop_bytes, drop_reason, drop_count_map,
                   drop_count1, drop_count2, drop_count3, drop_count4,
                   drop_count5, drop_count6, drop_count7, drop_count8,
-                  flow_agg_index1, flow_agg_index2,
-                  // micro-burst detection
-                  burst_start_timestamp, burst_max_timestamp,
-                  micro_burst_cycles, allowed_bytes,
-                  max_allowed_bytes, burst_exceed_bytes,
-                  burst_exceed_count) {
+                  flow_agg_index1, flow_agg_index2) {
     modify_field(scratch_metadata.flow_last_seen_timestamp,
                  last_seen_timestamp);
     if (capri_intrinsic.drop == TRUE) {
@@ -278,13 +273,6 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
     modify_field(scratch_metadata.drop_count, drop_count8);
     modify_field(scratch_metadata.flow_agg_index, flow_agg_index1);
     modify_field(scratch_metadata.flow_agg_index, flow_agg_index2);
-    modify_field(scratch_metadata.burst_start_timestamp, burst_start_timestamp);
-    modify_field(scratch_metadata.burst_max_timestamp, burst_max_timestamp);
-    modify_field(scratch_metadata.allowed_bytes, allowed_bytes);
-    modify_field(scratch_metadata.max_allowed_bytes, max_allowed_bytes);
-    modify_field(scratch_metadata.burst_exceed_bytes, burst_exceed_bytes);
-    modify_field(scratch_metadata.burst_exceed_count, burst_exceed_count);
-    modify_field(scratch_metadata.micro_burst_cycles, micro_burst_cycles);
 
 #if 0
     // take care of wrap around case.

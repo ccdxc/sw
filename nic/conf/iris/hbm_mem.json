@@ -327,7 +327,7 @@
         },
         {
             "name": "p4_atomic_stats",
-            "size": "33792K",
+            "size": "1024K",
             "reset": true
         },
         {

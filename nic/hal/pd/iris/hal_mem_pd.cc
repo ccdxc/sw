@@ -72,8 +72,7 @@ namespace pd {
 
 class hal_state_pd *g_hal_state_pd;
 
-asicpd_stats_region_info_t g_stats_region_arr[] = {{P4TBL_ID_FLOW_STATS, 5},
-                                               {P4TBL_ID_RX_POLICER_ACTION, 5},
+asicpd_stats_region_info_t g_stats_region_arr[] = {{P4TBL_ID_RX_POLICER_ACTION, 5},
                                                {P4TBL_ID_COPP_ACTION, 5}};
 int g_stats_region_arrlen = sizeof(g_stats_region_arr)/sizeof(asicpd_stats_region_info_t);
 
