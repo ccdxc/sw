@@ -220,7 +220,7 @@ const (
 	VeniceTechSupport         = "pen-vtsa"
 	NaplesTechSupport         = "pen-ntsa"
 	NaplesTechSupportRestPort = "9017"
-	NaplesDiagnosticsRestPort = "9018"
+	NaplesDiagnosticsRestPort = "9024"
 
 	// DefaultClusterVersionName
 	DefaultVersionName = "clusterVersion"
