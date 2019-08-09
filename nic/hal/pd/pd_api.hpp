@@ -2725,7 +2725,8 @@ typedef struct pd_capri_barco_asym_poll_pend_req_args_s {
     uint32_t *ids;
 } __PACK__ pd_capri_barco_asym_poll_pend_req_args_t;
 
-typedef struct pd_capri_barco_asym_ecc_point_mul_p256_args_s {
+typedef struct pd_capri_barco_asym_ecc_point_mul_args_s {
+    uint16_t key_size;
     uint8_t *p;
     uint8_t *n;
     uint8_t *xg;
@@ -2737,7 +2738,7 @@ typedef struct pd_capri_barco_asym_ecc_point_mul_p256_args_s {
     uint8_t *k;
     uint8_t *x3;
     uint8_t *y3;
-} __PACK__ pd_capri_barco_asym_ecc_point_mul_p256_args_t;
+} __PACK__ pd_capri_barco_asym_ecc_point_mul_args_t;
 
 typedef struct pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_s {
     uint8_t *p;
@@ -3415,7 +3416,7 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET,178, "PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET")\
     ENTRY(PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, 179, "PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET")\
     ENTRY(PD_FUNC_ID_BARCO_RING_META_GET,   180, "PD_FUNC_ID_BARCO_RING_META_GET")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, 181, "PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256")\
+    ENTRY(PD_FUNC_ID_BARCO_ASYM_ECC_MUL,    181, "PD_FUNC_ID_BARCO_ASYM_ECC_MUL")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, 182, "PD_FUNC_ID_BARCO_ASYM_ECDSA_P256")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, 183, "PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, 184, "PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT")\
@@ -3928,7 +3929,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_capri_barco_symm_req_descr_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_config_get);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecc_point_mul_p256);
+        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecc_point_mul);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_gen);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_verify);
@@ -4420,7 +4421,7 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_asym_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_symm_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_config_get);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecc_point_mul_p256);
+PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecc_point_mul);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_gen);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_verify);

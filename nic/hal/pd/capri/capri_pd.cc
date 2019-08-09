@@ -175,10 +175,11 @@ pd_capri_barco_asym_poll_pend_req(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecc_point_mul_p256 (pd_func_args_t *pd_func_args)
+pd_capri_barco_asym_ecc_point_mul(pd_func_args_t *pd_func_args)
 {
-    pd_capri_barco_asym_ecc_point_mul_p256_args_t *args = pd_func_args->pd_capri_barco_asym_ecc_point_mul_p256;
-    return capri_barco_asym_ecc_point_mul_p256(args->p,
+    pd_capri_barco_asym_ecc_point_mul_args_t *args = pd_func_args->pd_capri_barco_asym_ecc_point_mul;
+    return capri_barco_asym_ecc_point_mul(     args->key_size,
+                                               args->p,
                                                args->n,
                                                args->xg,
                                                args->yg,

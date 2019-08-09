@@ -18,7 +18,7 @@ using internal::CryptoApiResponseMsg;
 namespace hal {
 
 
-#define ECC_MAX_KEY_SIZE 32
+#define ECC_MAX_KEY_SIZE 66 /* P-521 */
 #define RSA_MAX_KEY_SIZE 512
 
 #define CRYPTO_MAX_HASH_DIGEST_LEN 64

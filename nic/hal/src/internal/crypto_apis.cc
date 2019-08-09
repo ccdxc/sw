@@ -48,13 +48,17 @@ hal_ret_t crypto_asym_api_ecc_point_mul(internal::CryptoApiRequest &req,
     uint32_t            key_size;
     uint8_t             px[ECC_MAX_KEY_SIZE];
     uint8_t             py[ECC_MAX_KEY_SIZE];
-    pd::pd_capri_barco_asym_ecc_point_mul_p256_args_t args;
+    pd::pd_capri_barco_asym_ecc_point_mul_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
 
     key_size = req.ecc_point_mul_fp().ecc_domain_params().keysize();
 
     switch (key_size) {
-        case 32:
+        case 28: /* P-224 */
+        case 32: /* P-256 */
+        case 48: /* P-384 */
+        case 66: /* P-521 */
+            args.key_size = key_size;
             args.p = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().p().data();
             args.n = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().n().data();
             args.xg = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().g().x().data();
@@ -66,8 +70,8 @@ hal_ret_t crypto_asym_api_ecc_point_mul(internal::CryptoApiRequest &req,
             args.k = (uint8_t *)req.ecc_point_mul_fp().k().data();
             args.x3 = px;
             args.y3 = py;
-            pd_func_args.pd_capri_barco_asym_ecc_point_mul_p256 = &args;
-            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, &pd_func_args);
+            pd_func_args.pd_capri_barco_asym_ecc_point_mul = &args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECC_MUL, &pd_func_args);
             if (ret == HAL_RET_OK) {
                 resp->mutable_ecc_point_mul_fp()->mutable_q()->mutable_x()->assign(
                         (const char*)px, (size_t) key_size);

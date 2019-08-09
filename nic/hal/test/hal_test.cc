@@ -34,6 +34,7 @@
 #include <google/protobuf/util/json_util.h>
 #include "nic/hal/test/fips_rsa_testvec_parser.h"
 #include "nic/hal/test/fips_sha3_testvec_parser.h"
+#include "nic/hal/test/fips_ecc_cdh_testvec_parser.h"
 #include <sys/stat.h>
 
 
@@ -2849,6 +2850,74 @@ public:
         return ret;
     }
 
+    int fips_ecc_cdh_gen(uint16_t key_size_bytes, 
+            char *p, char *n, char *gx, char *gy, char *a, char *b,
+            char *diut, char *qcavsx, char *qcavsy,
+            char *ziut)
+    {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(internal::ASYMAPI_ECC_POINT_MUL_FP);
+
+        /* Setup domain parameters */
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_domain_params()->set_keysize(key_size_bytes);
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_domain_params()->mutable_p()->assign(p, key_size_bytes);
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_domain_params()->mutable_n()->assign(n, key_size_bytes);
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_domain_params()->mutable_g()->mutable_x()->assign(gx, key_size_bytes);
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_domain_params()->mutable_g()->mutable_y()->assign(gy, key_size_bytes);
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_domain_params()->mutable_a()->assign(a, key_size_bytes);
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_domain_params()->mutable_b()->assign(b, key_size_bytes);
+
+        /* Multiplier - Self private key */
+        req->mutable_ecc_point_mul_fp()->mutable_k()->assign(diut, key_size_bytes);
+
+        /* Point - Peer's public key */
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_point()->mutable_x()->assign(qcavsx, key_size_bytes);
+        req->mutable_ecc_point_mul_fp()->mutable_ecc_point()->mutable_y()->assign(qcavsy, key_size_bytes);
+
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            memcpy(ziut, rsp_msg.response(0).ecc_point_mul_fp().q().x().c_str(), key_size_bytes);
+        }
+        else {
+            std::cout << "ECC Point Mul failed status="
+                      << status.error_code()
+                      << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+    int fips_ecc_cdh(std::string fips_testvec_filename)
+    {
+        int     ret = 0;
+        std::vector<fips_ecc_cdh_group_t> groups;
+
+        fips_testvec_ecc_cdh_parser testvec_ecc_cdh_parser(fips_testvec_filename.c_str());
+        groups = testvec_ecc_cdh_parser.fips_ecc_cdh_groups_get();
+
+        for (std::vector<fips_ecc_cdh_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
+            for (int idx = 0; idx < (*it).entry_count; idx++) {
+                ret = fips_ecc_cdh_gen((*it).key_size_bytes,
+                        (*it).p, (*it).n, (*it).gx, (*it).gy, (*it).a, (*it).b,
+                        (*it).entries[idx].diut, (*it).entries[idx].qcavsx, (*it).entries[idx].qcavsy,
+                                (*it).entries[idx].ziut);
+                if (ret) {
+                    return ret;
+                }
+            }
+        }
+        for (std::vector<fips_ecc_cdh_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
+            testvec_ecc_cdh_parser.print_group_testvec(stdout, (*it));
+        }
+        return ret;
+    }
+
 private:
     bool channel_ready;
     std::unique_ptr<Vrf::Stub> vrf_stub_;
@@ -3658,6 +3727,14 @@ main (int argc, char** argv)
             }
             fips_tests = true;
         }
+        else if (!strcmp(argv[1], "fips-ecc-cdh")) {
+            if (argc != 3) {
+                std::cout << "Usage: hal_test fips-ecc-cdh <fips-testvector-file>"
+                          << std::endl;
+                return -1;
+            }
+            fips_tests = true;
+        }
     } else {
         std::cout << "Usage: <pgm> [<options>] config" << std::endl;
         return 0;
@@ -3897,6 +3974,10 @@ main (int argc, char** argv)
         }
         else if (!strcmp(argv[1], "fips-sha3-monte-hashgen")) {
             hclient.fips_sha3_monte_hash_gen(script_dir_ + std::string(argv[2]));
+            return 0;
+        }
+        else if (!strcmp(argv[1], "fips-ecc-cdh")) {
+            hclient.fips_ecc_cdh(script_dir_ + std::string(argv[2]));
             return 0;
         }
     } else if (config == false) {
