@@ -372,6 +372,10 @@ export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDes
       'component': this.getClassName(), 'state':
         Eventtypes.COMPONENT_DESTROY
     });
+    this.controllerService.setToolbarData({
+      buttons: [],
+      breadcrumb: [],
+    });
   }
 
 }

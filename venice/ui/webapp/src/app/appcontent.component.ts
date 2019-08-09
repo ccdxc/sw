@@ -442,9 +442,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   _handleComponentStateChangeDestroy(payload: any) {
     this._currentComponent = null;
-    if (this._breadcrumbToolbar) {
-      this._breadcrumbToolbar.clear();
-    }
   }
 
   /**
