@@ -10,8 +10,8 @@ struct phv_ p;
 
 init_config:
     bbne            k.service_header_valid, TRUE, service_header_done
-    xor             r1, k.service_header_local_ip_mapping_done, 0x1
-    phvwr           p.control_metadata_local_ip_mapping_ohash_lkp, r1
+    xor             r1, k.service_header_local_mapping_done, 0x1
+    phvwr           p.control_metadata_local_mapping_ohash_lkp, r1
     xor             r1, k.service_header_remote_vnic_mapping_rx_done, 0x1
     phvwr           p.control_metadata_remote_vnic_mapping_rx_ohash_lkp, r1
     xor             r1, k.service_header_flow_done, 0x1
@@ -26,6 +26,9 @@ service_header_done:
     sub             r1, k.capri_p4_intrinsic_frame_size, \
                         k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r1
+    seq             c1, k.control_metadata_mode, APOLLO_MODE_EVPN
+    phvwr.c1        p.p4i_apollo_i2e_dst, k.key_metadata_l2_dst
+    phvwr.!c1       p.p4i_apollo_i2e_dst, k.key_metadata_dst
     sne.e           c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
     phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
 

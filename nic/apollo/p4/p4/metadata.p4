@@ -18,6 +18,7 @@ header_type key_metadata_t {
         sport               : 16;
         ipv4_src            : 32;
         ipv4_dst            : 32;
+        l2_dst              : 48;
     }
 }
 
@@ -36,7 +37,8 @@ header_type vnic_metadata_t {
 header_type control_metadata_t {
     fields {
         mapping_lkp_addr                    : 128;
-        local_ip_mapping_ohash_lkp          : 1;
+        local_l2_mapping_lkp_addr           : 48;
+        local_mapping_ohash_lkp             : 1;
         remote_vnic_mapping_rx_ohash_lkp    : 1;
         remote_vnic_mapping_tx_ohash_lkp    : 1;
         skip_flow_lkp                       : 1;
@@ -127,6 +129,7 @@ header_type scratch_metadata_t {
         cpu_flags           : 16;
         nexthop_index       : 12;
         num_nexthops        : 4;
+        pad6                : 6;
 
         subnet_id           : 16;
         snat                : 1;

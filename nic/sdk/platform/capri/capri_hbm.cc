@@ -343,7 +343,7 @@ capri_hbm_cache_regions_init (void)
     memset(&p4plus_txdma_reg, 0, sizeof(p4plus_txdma_reg));
     for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
         reg = g_capri_state_pd->mempartition()->region(i);
-        if (is_region_cache_pipe_none(reg)) {
+        if (is_region_cache_pipe_none(reg) || is_region_an_alias(reg)) {
             continue;
         }
 

@@ -22,8 +22,10 @@ native_ipv4_packet:
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort
-    phvwr.e         p.key_metadata_proto, k.ipv4_1_protocol
-    phvwr           p.control_metadata_mapping_lkp_addr, k.ipv4_1_srcAddr
+    phvwr           p.key_metadata_proto, k.ipv4_1_protocol
+    phvwr.e         p.control_metadata_mapping_lkp_addr, k.ipv4_1_srcAddr
+    phvwr.f         p.{key_metadata_l2_dst,control_metadata_local_l2_mapping_lkp_addr}, \
+                        k.{ethernet_1_dstAddr,ethernet_1_srcAddr}
 
 .align
 native_ipv6_packet:
@@ -35,9 +37,11 @@ native_ipv6_packet:
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort
-    phvwr.e         p.key_metadata_proto, k.ipv6_1_nextHdr
-    phvwr           p.control_metadata_mapping_lkp_addr, \
+    phvwr           p.key_metadata_proto, k.ipv6_1_nextHdr
+    phvwr.e         p.control_metadata_mapping_lkp_addr, \
                         k.{ipv6_1_srcAddr_sbit0_ebit31...ipv6_1_srcAddr_sbit64_ebit127}
+    phvwr.f         p.{key_metadata_l2_dst,control_metadata_local_l2_mapping_lkp_addr}, \
+                        k.{ethernet_1_dstAddr,ethernet_1_srcAddr}
 
 .align
 native_nonip_packet:
@@ -45,8 +49,10 @@ native_nonip_packet:
     phvwr.c1        p.key_metadata_dport, k.ctag_1_etherType
     phvwr.!c1       p.key_metadata_dport, k.ethernet_1_etherType
     phvwr           p.key_metadata_ktype, KEY_TYPE_MAC
-    phvwr.e         p.key_metadata_src, k.ethernet_1_srcAddr
-    phvwr           p.key_metadata_dst, k.ethernet_1_dstAddr
+    phvwr           p.key_metadata_src, k.ethernet_1_srcAddr
+    phvwr.e         p.key_metadata_dst, k.ethernet_1_dstAddr
+    phvwr.f         p.{key_metadata_l2_dst,control_metadata_local_l2_mapping_lkp_addr}, \
+                        k.{ethernet_1_dstAddr,ethernet_1_srcAddr}
 
 /*****************************************************************************/
 /* error function                                                            */

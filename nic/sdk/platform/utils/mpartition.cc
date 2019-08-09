@@ -167,6 +167,7 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
                 SDK_TRACE_ERR("Unable to find base region %s for the region %s", base_region, reg->mem_reg_name);
                 return SDK_RET_ERR;
             }
+            reg->is_alias = true;
             reg->start_offset = base->start_offset;
         } else {
             reg->start_offset = offset;

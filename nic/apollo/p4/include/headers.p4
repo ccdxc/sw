@@ -130,14 +130,14 @@ header_type mpls_t {
 
 header_type service_header_t {
     fields {
-        local_ip_mapping_ohash : 32;
+        local_mapping_ohash : 32;
         remote_vnic_mapping_rx_ohash : 32;
         flow_ohash : 32;
 
         epoch : 32;
 
         pad1 : 5;
-        local_ip_mapping_done : 1;
+        local_mapping_done : 1;
         remote_vnic_mapping_rx_done : 1;
         flow_done : 1;
     }

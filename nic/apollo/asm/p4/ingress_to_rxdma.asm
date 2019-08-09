@@ -9,7 +9,7 @@ struct phv_ p;
 %%
 
 ingress_to_rxdma:
-    seq             c1, k.service_header_local_ip_mapping_done, FALSE
+    seq             c1, k.service_header_local_mapping_done, FALSE
     seq.!c1         c1, k.service_header_flow_done, FALSE
     bcf             [c1], recirc_packet
     seq             c1, k.control_metadata_fastpath, TRUE

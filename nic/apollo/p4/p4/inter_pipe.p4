@@ -6,7 +6,7 @@ action ingress_to_rxdma() {
     remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
-    if ((service_header.local_ip_mapping_done == FALSE) or
+    if ((service_header.local_mapping_done == FALSE) or
         (service_header.flow_done == FALSE) or
         (service_header.remote_vnic_mapping_rx_done == FALSE)) {
         add_header(predicate_header);

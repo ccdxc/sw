@@ -44,6 +44,7 @@ typedef struct mpartition_region_s {
     mem_addr_t      start_offset;   /**< Start address offset */
     cache_pipe_t    cache_pipe;     /**< Cached pipe */
     bool            reset;          /**< True to bzero this region during init */
+    bool            is_alias;       /**< True if alias for another region */
 } mpartition_region_t;
 
 class mpartition {
@@ -229,6 +230,12 @@ is_region_cache_pipe_p4plus_all(mpartition_region_t *reg)
 {
     return (reg->cache_pipe & cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_ALL) ==
            cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_ALL;
+}
+
+static inline bool
+is_region_an_alias(mpartition_region_t *reg)
+{
+    return reg->is_alias;
 }
 
 }    // namespace utils

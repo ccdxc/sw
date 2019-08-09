@@ -401,6 +401,86 @@ uint8_t g_rcv_pkt7[] = {
     0x77, 0x7A, 0x78, 0x79,
 };
 
+uint8_t g_snd_pkt8[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
+    0xC2, 0xC3, 0xC4, 0xC5, 0x81, 0x00, 0x0F, 0x64,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x06, 0x63, 0x84, 0x0B, 0x0B,
+    0x01, 0x01, 0x0A, 0x0A, 0x01, 0x02, 0x12, 0x34,
+    0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB3,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
+    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+};
+
+uint8_t g_rcv_pkt8[] = {
+    0x00, 0x12, 0x34, 0x56, 0x78, 0x90, 0x00, 0xAA,
+    0xBB, 0xCC, 0xDD, 0xEE, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x8E, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0xA2, 0x86, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C,
+    0x01, 0x01, 0xC4, 0x41, 0x12, 0xB5, 0x00, 0x7A,
+    0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0xAB, 0xCD,
+    0xEF, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+    0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x08, 0x00,
+    0x45, 0x00, 0x00, 0x5C, 0x00, 0x01, 0x00, 0x00,
+    0x40, 0x06, 0x63, 0x84, 0x0B, 0x0B, 0x01, 0x01,
+    0x0A, 0x0A, 0x01, 0x02, 0x12, 0x34, 0x56, 0x78,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x50, 0x02, 0x20, 0x00, 0xF2, 0xB3, 0x00, 0x00,
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
+    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
+    0x78, 0x79, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79,
+};
+
+uint8_t g_snd_pkt9[] = {
+    0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x00, 0x12,
+    0x34, 0x56, 0x78, 0x90, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x8E, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0xA2, 0x86, 0x0C, 0x0C, 0x01, 0x01, 0x64, 0x65,
+    0x66, 0x67, 0x2B, 0xA9, 0x12, 0xB5, 0x00, 0x7A,
+    0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x0F, 0x23,
+    0x45, 0x00, 0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5,
+    0x00, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0x08, 0x00,
+    0x45, 0x00, 0x00, 0x5C, 0x00, 0x01, 0x00, 0x00,
+    0x40, 0x06, 0x63, 0x84, 0x0A, 0x0A, 0x01, 0x02,
+    0x0B, 0x0B, 0x01, 0x01, 0x56, 0x78, 0x12, 0x34,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x50, 0x02, 0x20, 0x00, 0xF2, 0xB3, 0x00, 0x00,
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
+    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
+    0x78, 0x79, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79,
+};
+
+uint8_t g_rcv_pkt9[] = {
+    0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x00, 0x01,
+    0x02, 0x03, 0x04, 0x05, 0x81, 0x00, 0x00, 0x64,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x06, 0x63, 0x84, 0x0A, 0x0A,
+    0x01, 0x02, 0x0B, 0x0B, 0x01, 0x01, 0x56, 0x78,
+    0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB3,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
+    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+};
+
 uint64_t mytep_ip = 0x64656667;
 uint64_t mytep_mac = 0x00AABBCCDDEEULL;
 
@@ -441,6 +521,9 @@ uint16_t g_tep_index3 = 300;
 uint16_t g_ctag_vid3 = 101;
 uint16_t g_local_vnic_tag3 = 101;
 uint32_t g_local_slot_id3 = 0x12346;
+
+uint16_t g_ctag_vid4 = 0xF64;
+uint32_t g_local_slot_id4 = 0xF2345;
 
 uint16_t g_sacl_ip_class_id = 0x355;
 uint16_t g_sacl_sport_class_id = 0x59;
@@ -706,6 +789,7 @@ vnic_tx_init ()
     uint64_t sacl_hbm_addr;
     uint64_t lpm_hbm_addr;
     uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX;
+    uint8_t entry_idx = 0;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -729,7 +813,7 @@ vnic_tx_init ()
            sizeof(local_vnic_info->lpm_v4addr1));
     memcpy(local_vnic_info->lpm_v4addr2, &lpm_hbm_addr,
            sizeof(local_vnic_info->lpm_v4addr2));
-    entry_write(tbl_id, 0, &key, &mask, &data, false,
+    entry_write(tbl_id, entry_idx++, &key, &mask, &data, false,
                 LOCAL_VNIC_BY_VLAN_TABLE_SIZE);
 
     memset(&key, 0, sizeof(key));
@@ -738,7 +822,33 @@ vnic_tx_init ()
     mask.ctag_1_vid_mask = 0xFFFF;
     local_vnic_info->mirror_en = true;
     local_vnic_info->mirror_session = (1 << g_mirror_session_id);
-    entry_write(tbl_id, 1, &key, &mask, &data, false,
+    entry_write(tbl_id, entry_idx++, &key, &mask, &data, false,
+                LOCAL_VNIC_BY_VLAN_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.ctag_1_vid = g_ctag_vid4;
+    mask.ctag_1_vid_mask = 0xFFFF;
+    data.action_id = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
+    local_vnic_info->mode = APOLLO_MODE_EVPN;
+    local_vnic_info->vpc_id = g_vpc_id1;
+    local_vnic_info->epoch1_valid = true;
+    local_vnic_info->epoch1 = EPOCH;
+    local_vnic_info->local_vnic_tag = g_local_vnic_tag;
+    local_vnic_info->skip_src_dst_check1 = false;
+    memcpy(local_vnic_info->overlay_mac1, &g_layer1_smac, 6);
+    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr1));
+    memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr2));
+    lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
+    memcpy(local_vnic_info->lpm_v4addr1, &lpm_hbm_addr,
+           sizeof(local_vnic_info->lpm_v4addr1));
+    memcpy(local_vnic_info->lpm_v4addr2, &lpm_hbm_addr,
+           sizeof(local_vnic_info->lpm_v4addr2));
+    entry_write(tbl_id, entry_idx++, &key, &mask, &data, false,
                 LOCAL_VNIC_BY_VLAN_TABLE_SIZE);
 }
 
@@ -802,6 +912,25 @@ vnic_rx_init ()
            sizeof(local_vnic_info->sacl_v4addr2));
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vxlan_1_vni = g_local_slot_id4;
+    data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->mode = APOLLO_MODE_EVPN;
+    local_vnic_info->vpc_id = g_vpc_id1;
+    local_vnic_info->epoch1_valid = true;
+    local_vnic_info->epoch1 = EPOCH;
+    local_vnic_info->local_vnic_tag = 0;
+    local_vnic_info->skip_src_dst_check1 = false;
+    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr1));
+    memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr2));
+    entry_write(tbl_id, 0, &key, NULL, &data, true,
+                LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
+
 }
 
 static void
@@ -840,13 +969,12 @@ vnic_init (void)
 }
 
 static void
-mappings_init (void)
+local_ip_mappings_init (void)
 {
     local_ip_mapping_swkey_t key;
     local_ip_mapping_actiondata_t data;
     local_ip_mapping_local_ip_mapping_info_t *mapping_info =
         &data.action_u.local_ip_mapping_local_ip_mapping_info;
-    uint32_t tbl_id = P4TBL_ID_LOCAL_IP_MAPPING;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -854,8 +982,34 @@ mappings_init (void)
     memcpy(key.control_metadata_mapping_lkp_addr, &g_layer1_sip, 4);
     data.action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
     mapping_info->entry_valid = true;
+    entry_write(P4TBL_ID_LOCAL_IP_MAPPING, 0, &key, NULL, &data, true,
+                VNIC_IP_MAPPING_TABLE_SIZE);
+}
 
-    entry_write(tbl_id, 0, &key, NULL, &data, true, VNIC_IP_MAPPING_TABLE_SIZE);
+static void
+local_l2_mappings_init (void)
+{
+    local_l2_mapping_swkey_t key;
+    local_l2_mapping_actiondata_t data;
+    local_l2_mapping_local_l2_mapping_info_t *mapping_info =
+        &data.action_u.local_l2_mapping_local_l2_mapping_info;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_lkp_id = g_vpc_id1;
+    memcpy(key.control_metadata_local_l2_mapping_lkp_addr, &g_layer1_smac, 6);
+    data.action_id = LOCAL_L2_MAPPING_LOCAL_L2_MAPPING_INFO_ID;
+    mapping_info->entry_valid = true;
+    mapping_info->local_vnic_tag = g_local_vnic_tag;
+    entry_write(P4TBL_ID_LOCAL_L2_MAPPING, 0, &key, NULL, &data, true,
+                VNIC_IP_MAPPING_TABLE_SIZE);
+}
+
+static void
+mappings_init (void)
+{
+    local_ip_mappings_init();
+    local_l2_mappings_init();
 }
 
 static void
@@ -872,6 +1026,19 @@ flow_tx_hash_init ()
     key.key_metadata_lkp_id = g_local_vnic_tag;
     key.key_metadata_ipv4_src = g_layer1_sip;
     key.key_metadata_ipv4_dst = g_layer1_dip;
+    key.key_metadata_proto = g_layer1_proto;
+    key.key_metadata_sport = g_layer1_sport;
+    key.key_metadata_dport = g_layer1_dport;
+    data.action_id = IPV4_FLOW_IPV4_FLOW_HASH_ID;
+    flow_hash_info->entry_valid = true;
+    flow_hash_info->session_index = g_session_index;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_lkp_id = g_vpc_id1;
+    key.key_metadata_ipv4_src = g_layer1_sip;
+    key.key_metadata_ipv4_dst = g_layer1_dip2;
     key.key_metadata_proto = g_layer1_proto;
     key.key_metadata_sport = g_layer1_sport;
     key.key_metadata_dport = g_layer1_dport;
@@ -1256,6 +1423,19 @@ vxlan_mappings_init (void)
     mapping_info->dst_slot_id = g_local_slot_id3;
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 REMOTE_VNIC_MAPPING_TX_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    memcpy(key.p4e_apollo_i2e_dst, &g_layer1_dmac, 6);
+    key.txdma_to_p4e_header_vpc_id = g_vpc_id2;
+    data.action_id = REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID;
+    mapping_info->entry_valid = true;
+    mapping_info->nexthop_group_index = g_nexthop_group_index2;
+    mapping_info->dst_slot_id_valid = true;
+    mapping_info->dst_slot_id = g_gw_slot_id2;
+    entry_write(tbl_id, 0, &key, NULL, &data, true,
+                REMOTE_VNIC_MAPPING_TX_TABLE_SIZE);
+
 }
 
 static void
@@ -1653,6 +1833,44 @@ TEST_F(apollo_test, test1)
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt8));
+        memcpy(ipkt.data(), g_snd_pkt8, sizeof(g_snd_pkt8));
+        epkt.resize(sizeof(g_rcv_pkt8));
+        memcpy(epkt.data(), g_rcv_pkt8, sizeof(g_rcv_pkt8));
+        std::cout << "[TCID=" << tcid << "] Testing Host to Switch (EVPN)" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt9));
+        memcpy(ipkt.data(), g_snd_pkt9, sizeof(g_snd_pkt9));
+        epkt.resize(sizeof(g_rcv_pkt9));
+        memcpy(epkt.data(), g_rcv_pkt9, sizeof(g_rcv_pkt9));
+        std::cout << "[TCID=" << tcid << "] Testing Switch to Host (EVPN)" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_1);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
             }
             testcase_end(tcid, i + 1);
         }

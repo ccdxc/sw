@@ -44,7 +44,7 @@ action lpm_init(base_v4addr, base_v6addr) {
 control ingress {
     ingress_vnic_info();
     key_init();
-    local_ip_mapping();
+    local_mapping();
     rvpath_check();
     nacl();
     flow_lookup();

@@ -23,7 +23,7 @@ action local_ip_mapping_info(entry_valid, local_vnic_tag,
         if (local_vnic_tag != 0) {
             modify_field(vnic_metadata.local_vnic_tag, local_vnic_tag);
         }
-        modify_field(service_header.local_ip_mapping_done, TRUE);
+        modify_field(service_header.local_mapping_done, TRUE);
         modify_field(p4i_apollo_i2e.xlate_index, xlate_index);
 
         // if hardware register indicates miss, compare hashes with r1
@@ -44,6 +44,7 @@ action local_ip_mapping_info(entry_valid, local_vnic_tag,
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.local_ip_hash == hash3)) {
             modify_field(scratch_metadata.local_ip_hint, hint3);
+            modify_field(scratch_metadata.hint_valid, TRUE);
         }
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.local_ip_hash == hash4)) {
@@ -88,9 +89,9 @@ action local_ip_mapping_info(entry_valid, local_vnic_tag,
         }
 
         if (scratch_metadata.hint_valid == TRUE) {
-            modify_field(service_header.local_ip_mapping_ohash,
+            modify_field(service_header.local_mapping_ohash,
                          scratch_metadata.local_ip_hint);
-            modify_field(control_metadata.local_ip_mapping_ohash_lkp, TRUE);
+            modify_field(control_metadata.local_mapping_ohash_lkp, TRUE);
         } else {
             if (vnic_metadata.skip_src_dst_check == FALSE) {
                 modify_field(control_metadata.p4i_drop_reason,
@@ -139,7 +140,7 @@ table local_ip_mapping {
 @pragma overflow_table local_ip_mapping
 table local_ip_mapping_ohash {
     reads {
-        service_header.local_ip_mapping_ohash : exact;
+        service_header.local_mapping_ohash  : exact;
     }
     actions {
         local_ip_mapping_info;
@@ -147,12 +148,125 @@ table local_ip_mapping_ohash {
     size : VNIC_IP_MAPPING_OHASH_TABLE_SIZE;
 }
 
-control local_ip_mapping {
-    if (service_header.valid == FALSE) {
-        apply(local_ip_mapping);
+/******************************************************************************/
+/* Local mapping (mac based)                                                  */
+/******************************************************************************/
+@pragma capi appdatafields vpc_id vpc_id_valid local_vnic_tag
+@pragma capi hwfields_access_api
+action local_l2_mapping_info(entry_valid, local_vnic_tag, vpc_id, vpc_id_valid,
+                             pad, hash1, hint1, hash2, hint2, hash3, hint3,
+                             hash4, hint4, more_hashes, more_hints) {
+
+    if (entry_valid == TRUE) {
+        // if hardware register indicates hit, take the results
+        if (vpc_id_valid == TRUE) {
+            modify_field(vnic_metadata.vpc_id, vpc_id);
+        }
+        if (local_vnic_tag != 0) {
+            modify_field(vnic_metadata.local_vnic_tag, local_vnic_tag);
+        }
+        modify_field(service_header.local_mapping_done, TRUE);
+
+        // if hardware register indicates miss, compare hashes with r1
+        // (scratch_metadata.local_ip_hash) and setup lookup in overflow table
+        modify_field(scratch_metadata.local_ip_hash,
+                     scratch_metadata.local_ip_hash);
+        modify_field(scratch_metadata.hint_valid, FALSE);
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.local_ip_hash == hash1)) {
+            modify_field(scratch_metadata.local_ip_hint, hint1);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.local_ip_hash == hash2)) {
+            modify_field(scratch_metadata.local_ip_hint, hint2);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.local_ip_hash == hash3)) {
+            modify_field(scratch_metadata.local_ip_hint, hint3);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.local_ip_hash == hash4)) {
+            modify_field(scratch_metadata.local_ip_hint, hint4);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        modify_field(scratch_metadata.flag, more_hashes);
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flag == TRUE)) {
+            modify_field(scratch_metadata.local_ip_hint, more_hints);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+
+        if (scratch_metadata.hint_valid == TRUE) {
+            modify_field(service_header.local_mapping_ohash,
+                         scratch_metadata.local_ip_hint);
+            modify_field(control_metadata.local_mapping_ohash_lkp, TRUE);
+        } else {
+            if (vnic_metadata.skip_src_dst_check == FALSE) {
+                modify_field(control_metadata.p4i_drop_reason,
+                             1 << P4I_DROP_SRC_DST_CHECK_FAIL);
+                drop_packet();
+            }
+        }
+    } else {
+        if (vnic_metadata.skip_src_dst_check == FALSE) {
+            modify_field(control_metadata.p4i_drop_reason,
+                         1 << P4I_DROP_SRC_DST_CHECK_FAIL);
+            drop_packet();
+        }
     }
-    if (control_metadata.local_ip_mapping_ohash_lkp == TRUE) {
-        apply(local_ip_mapping_ohash);
+
+    modify_field(scratch_metadata.flag, vpc_id_valid);
+    modify_field(scratch_metadata.flag, entry_valid);
+    modify_field(scratch_metadata.pad6, pad);
+    modify_field(scratch_metadata.local_ip_hash, hash1);
+    modify_field(scratch_metadata.local_ip_hash, hash2);
+    modify_field(scratch_metadata.local_ip_hash, hash3);
+    modify_field(scratch_metadata.local_ip_hash, hash4);
+}
+
+@pragma stage 1
+@pragma hbm_table
+table local_l2_mapping {
+    reads {
+        key_metadata.lkp_id                         : exact;
+        control_metadata.local_l2_mapping_lkp_addr  : exact;
+    }
+    actions {
+        local_l2_mapping_info;
+    }
+    size : VNIC_IP_MAPPING_TABLE_SIZE;
+}
+
+@pragma stage 3
+@pragma hbm_table
+@pragma overflow_table local_l2_mapping
+table local_l2_mapping_ohash {
+    reads {
+        service_header.local_mapping_ohash  : exact;
+    }
+    actions {
+        local_l2_mapping_info;
+    }
+    size : VNIC_IP_MAPPING_OHASH_TABLE_SIZE;
+}
+
+control local_mapping {
+    if (service_header.valid == FALSE) {
+        if (control_metadata.mode == APOLLO_MODE_DEFAULT) {
+            apply(local_ip_mapping);
+        } else {
+            apply(local_l2_mapping);
+        }
+    }
+    if (control_metadata.local_mapping_ohash_lkp == TRUE) {
+        if (control_metadata.mode == APOLLO_MODE_DEFAULT) {
+            apply(local_ip_mapping_ohash);
+        } else {
+            apply(local_l2_mapping_ohash);
+        }
     }
 }
 

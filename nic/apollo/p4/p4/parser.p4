@@ -10,7 +10,6 @@ header cap_phv_intr_txdma_t capri_txdma_intrinsic;
  * Headers
  *****************************************************************************/
 @pragma synthetic_header
-@pragma pa_field_union ingress p4i_apollo_i2e.dst                   key_metadata.dst
 @pragma pa_field_union ingress p4i_apollo_i2e.local_vnic_tag        vnic_metadata.local_vnic_tag
 header apollo_i2e_metadata_t p4i_apollo_i2e;
 header apollo_i2e_metadata_t p4e_apollo_i2e;
