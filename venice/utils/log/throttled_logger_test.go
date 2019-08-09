@@ -39,13 +39,6 @@ func getThresholdLogger(t *testing.T, threshold int, buf *bytes.Buffer) Logger {
 	return tl
 }
 
-func getNumLogEntries(numLogMessages, threshold int) int {
-	if numLogMessages > threshold {
-		return threshold
-	}
-	return numLogMessages
-}
-
 func getMessageCount(t *testing.T, expLevel, expMsg string, buf *bytes.Buffer) (int, int) {
 	var numLogEntries, throttleCount int
 	decoder := logfmt.NewDecoder(bytes.NewReader(buf.Bytes()))
@@ -58,7 +51,6 @@ func getMessageCount(t *testing.T, expLevel, expMsg string, buf *bytes.Buffer) (
 		}
 
 		var level, msg, throttleCountStr string
-		var err error
 		for {
 			more := decoder.ScanKeyval()
 			if !more {
@@ -68,10 +60,11 @@ func getMessageCount(t *testing.T, expLevel, expMsg string, buf *bytes.Buffer) (
 						numLogEntries++
 					} else {
 						// records that contain throttled message counts are not counted as regular log entries
-						throttleCount, err = strconv.Atoi(throttleCountStr)
+						tc, err := strconv.Atoi(throttleCountStr)
 						if err != nil {
 							t.Fatalf("Error parsing throttle count %s, err: %v, buf: %s", throttleCountStr, err, buf.String())
 						}
+						throttleCount += tc
 					}
 				}
 				break
@@ -117,20 +110,13 @@ func TestThrottleableLogs(t *testing.T) {
 			for j := 0; j < numLogMessages; j++ {
 				tl.Infof(testMsg)
 			}
-			time.Sleep(3 * testFlushInterval)
+			time.Sleep(2 * testFlushInterval)
 
-			expNumLogEntries := getNumLogEntries(numLogMessages, threshold)
 			numLogEntries, numThrottledMsgs := getMessageCount(t, "info", testMsg, buf)
-
-			if numLogEntries != expNumLogEntries {
-				t.Fatalf("Unexpected number of log entries. Have: %d, want: %d, buf: %s", numLogEntries, expNumLogEntries, buf.String())
-			}
-
 			if numLogMessages != numLogEntries+numThrottledMsgs {
 				t.Fatalf("Unexpected number of log messages. LogEntries: %d, NumThrottledMsgs: %d, Expected Total: %d, buf: %s",
 					numLogEntries, numThrottledMsgs, numLogMessages, buf.String())
 			}
-
 			buf.Truncate(0)
 		}
 	}
@@ -149,7 +135,7 @@ func TestUnthrottleableLogs(t *testing.T) {
 				testMsg := fmt.Sprintf("HelloWorld%d", j)
 				tl.Infof(testMsg)
 			}
-			time.Sleep(3 * testFlushInterval)
+			time.Sleep(2 * testFlushInterval)
 
 			numLogEntries, numThrottledMsgs := getMessageCount(t, "info", "", buf)
 			if numLogEntries != numLogMessages {
@@ -177,15 +163,10 @@ func TestThrottleableLeveledLogs(t *testing.T) {
 				tl.Infof(testMsg)
 				tl.Errorf(testMsg)
 			}
-			time.Sleep(3 * testFlushInterval)
-
-			expNumLogEntries := getNumLogEntries(numLogMessages, threshold)
+			time.Sleep(2 * testFlushInterval)
 
 			for _, level := range []string{"info", "error"} {
 				numLogEntries, numThrottledMsgs := getMessageCount(t, level, testMsg, buf)
-				if numLogEntries != expNumLogEntries {
-					t.Fatalf("Unexpected number of level %s log entries. Have: %d, want: %d, buf: %s", level, numLogEntries, expNumLogEntries, buf.String())
-				}
 				if numLogMessages != numLogEntries+numThrottledMsgs {
 					t.Fatalf("Unexpected number of level %s log messages. LogEntries: %d, NumThrottledMsgs: %d, Expected Total: %d, buf: %s", level, numLogEntries, numThrottledMsgs, numLogMessages, buf.String())
 				}
