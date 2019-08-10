@@ -109,6 +109,11 @@ int intr_config_local_msi(const int intr,
 void intr_state_get(const int intr, intr_state_t *st);
 void intr_state_set(const int intr, intr_state_t *st);
 
+/* interrupt coalescing */
+void intr_coal_set_resolution(const int ticks);
+int intr_coal_get_resolution(void);
+int intr_coal_get_params(int *mul, int *div);
+
 /*
  * Reset functions.  These functions have a "dmask" parameter for the
  *     reset value of the drvcfg.mask register.  If the device has

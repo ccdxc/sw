@@ -936,8 +936,11 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     dev_ident->nlifs = spec->lif_count;
     dev_ident->nintrs = spec->intr_count;
     dev_ident->ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
-    dev_ident->intr_coal_mult = 1;
-    dev_ident->intr_coal_div = 10;
+
+    int mul, div;
+    intr_coal_get_params(&mul, &div);
+    dev_ident->intr_coal_mult = mul;
+    dev_ident->intr_coal_div = div;
 
     comp->ver = IONIC_IDENTITY_VERSION_1;
 

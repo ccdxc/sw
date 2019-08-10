@@ -596,6 +596,11 @@ AccelDev::_DevcmdIdentify(void *req,
     rsp->base.nlifs = spec->lif_count;
     rsp->base.ndbpgs_per_lif = 1;
     rsp->base.nintrs = spec->intr_count;
+
+    int mul, div;
+    intr_coal_get_params(&mul, &div);
+    rsp->base.intr_coal_mult = mul;
+    rsp->base.intr_coal_div = div;
     rsp->base.intr_assert_stride = intr_assert_stride();
     rsp->base.intr_assert_data = intr_assert_data();
     rsp->base.intr_assert_addr = intr_assert_addr(intr_base);

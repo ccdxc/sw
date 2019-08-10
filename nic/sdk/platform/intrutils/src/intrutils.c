@@ -48,10 +48,6 @@
 #define INTR_ASSERT_STRIDE      0x4
 #define INTR_ASSERT_DATA        0x00000001 /* in little-endian */
 
-#define INTR_COALESCE_OFFSET    CAP_INTR_CSR_DHS_INTR_COALESCE_BYTE_OFFSET
-#define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
-#define INTR_COALESCE_STRIDE    0x8
-
 #define INTR_STATE_OFFSET       CAP_INTR_CSR_DHS_INTR_STATE_BYTE_OFFSET
 #define INTR_STATE_BASE         (INTR_BASE + INTR_STATE_OFFSET)
 #define INTR_STATE_STRIDE       0x10
@@ -541,15 +537,6 @@ intr_cfg_legacy_intx(void)
     pal_reg_wr32w(pa, w, NWORDS(w));
 }
 
-static void
-intr_cfg_coalesce_resolution(const int res)
-{
-    const u_int64_t pa =
-        (INTR_BASE + CAP_INTR_CSR_CFG_INTR_COALESCE_BYTE_ADDRESS);
-
-    pal_reg_wr32(pa, res);
-}
-
 /*
  * One-time hardware initialization.
  */
@@ -558,6 +545,9 @@ intr_hwinit(void)
 {
     intr_cfg_legacy_intx();
     if (!pal_is_asic()) {
-        intr_cfg_coalesce_resolution(83);
+        intr_coal_set_resolution(83);
+    } else {
+        /* set 3.0us resolution */
+        intr_coal_set_resolution(2500);
     }
 }
