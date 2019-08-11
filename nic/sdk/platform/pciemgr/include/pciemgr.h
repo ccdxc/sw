@@ -27,6 +27,7 @@ typedef struct pciemgr_params_s {
     u_int32_t compliance:1;     /* compliance test mode */
     u_int32_t strict_crs:1;     /* enable crs=1 at open */
     u_int32_t restart:1;        /* restarting */
+    u_int32_t single_pnd:1;     /* single pending mode */
 } pciemgr_params_t;
 
 #include "pciehw.h"

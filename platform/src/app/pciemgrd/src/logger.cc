@@ -101,8 +101,8 @@ logger_init(void)
     spdlogger->set_pattern("[%Y%m%d-%H:%M:%S.%e]:%L %v");
     spdlogger->set_level(default_loglevel());
 
-    static evutil_check logcheck;
-    evutil_add_check(EV_DEFAULT_ &logcheck, logflush, NULL);
+    static evutil_prepare logprep;
+    evutil_add_prepare(EV_DEFAULT_ &logprep, logflush, NULL);
 
     pciesys_set_logger(&pciemgrd_logger);
 }

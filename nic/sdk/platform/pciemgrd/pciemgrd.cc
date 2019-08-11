@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -260,6 +260,10 @@ pciemgrd_params(pciemgrenv_t *pme)
     pme->fifopri = pciemgrd_param_ull("PCIE_FIFOPRI", pme->fifopri);
     pme->mlockall = pciemgrd_param_ull("PCIE_MLOCKALL", pme->mlockall);
 
+    pciemgr_params_t *params = &pme->params;
+    params->single_pnd = pciemgrd_param_ull("PCIE_SINGLE_PND",
+                                            params->single_pnd);
+
     if (pme->params.restart) {
         if (upgrade_state_restore() < 0) {
             pciesys_logerror("restore failed, forcing full init\n");
@@ -367,11 +371,61 @@ pciemgrd_sched_init(pciemgrenv_t *pme)
 #endif
 }
 
+// called after libev blocks, before any io,timer handlers
+static void
+evmon_begin(void *arg)
+{
+    u_int64_t *tstamp = (u_int64_t *)arg;
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    *tstamp = tv.tv_sec * 1000000 + tv.tv_usec;
+}
+
+// called before libev blocks, after any io,timer handlers
+static void
+evmon_end(void *arg)
+{
+    u_int64_t *tstamp = (u_int64_t *)arg;
+    u_int64_t tnow, tdelta;
+    struct timeval tv;
+
+    // first time called is before evmon_begin
+    if (*tstamp == 0) return;
+
+    gettimeofday(&tv, NULL);
+    tnow = tv.tv_sec * 1000000 + tv.tv_usec;
+
+    tdelta = tnow - *tstamp;
+    if (tdelta > 2000) {
+        pciesys_logwarn("evmon %ldus delay\n", tdelta);
+    }
+}
+
+//
+// Monitor libev callbacks runtime.  If any callbacks take too long
+// to run we'll log a msg about it.  We don't want slow callbacks
+// doing blocking calls that might keep pciemgr from servicing
+// pcie transactions and delivering completions before the
+// pcie transaction timeout (typically 10ms-50ms).
+//
+static void
+pciemgrd_evmon_init(pciemgrenv_t *pme)
+{
+    static evutil_check evmoncheck;
+    static evutil_prepare evmonprep;
+    static u_int64_t evmon_tstamp;
+
+    evutil_add_check(EV_DEFAULT_ &evmoncheck, evmon_begin, &evmon_tstamp);
+    evutil_add_prepare(EV_DEFAULT_ &evmonprep, evmon_end, &evmon_tstamp);
+}
+
 void
 pciemgrd_sys_init(pciemgrenv_t *pme)
 {
     pciemgrd_mem_init(pme);
     pciemgrd_sched_init(pme);
+    pciemgrd_evmon_init(pme);
 }
 
 void

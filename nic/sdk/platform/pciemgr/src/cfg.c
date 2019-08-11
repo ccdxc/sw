@@ -114,6 +114,12 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
                           PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_SRIOV_CTRL);
         set_bars_handlers(phwdev, cfgbase, PCIEHW_CFGHND_SRIOV_BARS);
     }
+
+    if (strncmp(phwdev->name, "pciestress", strlen("pciestress")) == 0) {
+        cfgspace_setdm(&cs, 0x400, 0, 0xffffffff);
+        pciehw_set_cfghnd(phwdev, 0x400, PMTF_RW | PMTF_INDIRECT,
+                          PCIEHW_CFGHND_DBG_DELAY);
+    }
 }
 
 /*
@@ -237,12 +243,41 @@ stlp_overlap(const pcie_stlp_t *stlp,
     return tlpaddr < regaddr + regsize && tlpaddr + tlpsize > regaddr;
 }
 
+static void
+pciehw_cfgrd_delay(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    cfgspace_t cs;
+    u_int32_t delayus;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    delayus = cfgspace_readd(&cs, 0x400);
+    if (delayus) {
+        pciesys_logdebug("cfgrd delay %uus\n", delayus);
+        usleep(delayus);
+    }
+}
+
 void
 pciehw_cfgrd_notify(pciehwdev_t *phwdev,
                     const pcie_stlp_t *stlp,
                     const tlpauxinfo_t *info,
                     const pciehw_spmt_t *spmt)
 {
+    const u_int16_t reg = stlp->addr;
+    const u_int16_t regdw = reg >> 2;
+    pciehw_cfghnd_t hnd = PCIEHW_CFGHND_NONE;
+
+    if (regdw < PCIEHW_CFGHNDSZ) {
+        hnd = phwdev->cfghnd[regdw];
+    }
+    switch (hnd) {
+    default:
+    case PCIEHW_CFGHND_NONE:
+        break;
+    case PCIEHW_CFGHND_DBG_DELAY:
+        pciehw_cfgrd_delay(phwdev, stlp);
+        break;
+    }
 }
 
 static u_int32_t
@@ -580,6 +615,7 @@ pciehw_cfgwr_notify(pciehwdev_t *phwdev,
         hnd = phwdev->cfghnd[regdw];
     }
     switch (hnd) {
+    default:
     case PCIEHW_CFGHND_NONE:
         break;
     case PCIEHW_CFGHND_CMD:

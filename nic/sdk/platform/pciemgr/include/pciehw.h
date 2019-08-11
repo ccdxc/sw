@@ -49,6 +49,7 @@ enum pciehw_cfghnd_e {
     PCIEHW_CFGHND_MSIX,
     PCIEHW_CFGHND_SRIOV_CTRL,
     PCIEHW_CFGHND_SRIOV_BARS,
+    PCIEHW_CFGHND_DBG_DELAY,
 };
 typedef enum pciehw_cfghnd_e pciehw_cfghnd_t;
 

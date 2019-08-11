@@ -22,6 +22,7 @@
 #include "nic/sdk/platform/misc/include/maclib.h"
 #include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
 #include "nic/sdk/lib/device/device.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 
 #include "logger.hpp"
 
@@ -357,6 +358,14 @@ DeviceManager::LoadConfig(string path)
         }
     }
 
+    NIC_HEADER_TRACE("Loading Pciestress devices");
+    // Create Pciestress devices
+    if (spec.get_child_optional("pciestress")) {
+        for (const auto &node : spec.get_child("pciestress")) {
+            if (0) Eth::ParseConfig(node); // XXX
+            AddDevice(PCIESTRESS, NULL);
+        }
+    }
 #endif //IRIS
 
     evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, 1);
@@ -424,6 +433,24 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
             virtio_dev->SetType(type);
             devices[virtio_dev->GetName()] = virtio_dev;
             return (Device *)virtio_dev;
+        case PCIESTRESS:
+            extern class pciemgr *pciemgr;
+
+            if (pciemgr) {
+                pciehdevice_resources_t pres;
+                static int instance;
+
+                memset(&pres, 0, sizeof(pres));
+                pres.type = PCIEHDEVICE_PCIESTRESS;
+                snprintf(pres.pfres.name, sizeof(pres.pfres.name),
+                         "pciestress%d", instance++);
+                int ret = pciemgr->add_devres(&pres);
+                if (ret != 0) {
+                    NIC_LOG_ERR("pciestress add failed {}", ret);
+                    return NULL;
+                }
+            }
+            return NULL;
 #endif //IRIS
         default:
             return NULL;

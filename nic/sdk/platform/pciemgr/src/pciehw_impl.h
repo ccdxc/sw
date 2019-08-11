@@ -118,6 +118,7 @@ void pciehw_vfstride_init(void);
 
 void pciehw_tgt_port_init(void);
 void pciehw_tgt_port_skip_notify(const int port, const int on);
+void pciehw_tgt_port_single_pnd(const int port, const int on);
 
 void pciehw_itr_port_init(void);
 

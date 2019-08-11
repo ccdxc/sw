@@ -24,6 +24,7 @@ enum DeviceType
 #endif //IRIS
     NVME,
     VIRTIO,
+    PCIESTRESS,
 };
 
 /**

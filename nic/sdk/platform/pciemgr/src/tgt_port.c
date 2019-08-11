@@ -54,6 +54,23 @@ pciehw_tgt_port_skip_notify(const int port, const int on)
 }
 
 void
+pciehw_tgt_port_single_pnd(const int port, const int on)
+{
+    const u_int64_t pa = tgt_port_addr(port);
+    tgt_portcfg_t cfg;
+
+    cfg.all32 = pal_reg_rd32(pa);
+    cfg.single_pnd = on;
+    pal_reg_wr32(pa, cfg.all32);
+}
+
+void
 pciehw_tgt_port_init(void)
 {
+    const pciemgr_params_t *params = pciehw_get_params();
+    int port;
+
+    for (port = 0; port < PCIEHW_NPORTS; port++) {
+        pciehw_tgt_port_single_pnd(port, params->single_pnd);
+    }
 }

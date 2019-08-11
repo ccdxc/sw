@@ -220,6 +220,10 @@ server_loop(pciemgrenv_t *pme)
     pciesys_loginfo("cpumask: %d\n", pme->cpumask);
     pciesys_loginfo("fifopri: %d\n", pme->fifopri);
     pciesys_loginfo("mlockall: %d\n", pme->mlockall);
+
+    pciemgr_params_t *params = &pme->params;
+    pciesys_loginfo("single_pnd: %d\n", params->single_pnd);
+
     pciesys_loginfo("---------------- config ----------------\n");
 
     pciemgrd_sys_init(pme);
