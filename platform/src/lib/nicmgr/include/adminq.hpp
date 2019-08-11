@@ -18,6 +18,8 @@
 #include "pal_compat.hpp"
 #include "nicmgr_utils.hpp"
 
+#define ADMINQ_TIMEOUT 2
+
 
 typedef void (*adminq_cb_t) ( void *obj,
     void *req, void *req_data, void *resp, void *resp_data

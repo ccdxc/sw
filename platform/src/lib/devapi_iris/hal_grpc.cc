@@ -105,8 +105,12 @@ hal_grpc::get_hal_grpc(void)
 }
 
 #define SET_TIMEOUT()                                                       \
+    uint8_t timeout = HAL_GRPC_API_TIMEOUT;                                 \
+    if (fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC) {                     \
+        timeout = HAL_GRPC_CLASSIC_API_TIMEOUT;                             \
+    }                                                                       \
     std::chrono::system_clock::time_point deadline =                        \
-        std::chrono::system_clock::now() + seconds(HAL_GRPC_API_TIMEOUT);   \
+        std::chrono::system_clock::now() + seconds(timeout);                \
     context.set_deadline(deadline);
 
 #define HAL_CREATE_API(obj_api, obj_class, pkg)                             \

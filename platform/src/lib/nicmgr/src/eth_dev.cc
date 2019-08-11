@@ -33,6 +33,7 @@
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 
@@ -748,8 +749,10 @@ void
 Eth::DevcmdHandler()
 {
     status_code_t status;
+    timespec_t start_ts, end_ts, ts_diff;
 
     NIC_HEADER_TRACE("Devcmd");
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
 #ifndef __aarch64__
     // read devcmd region
     READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd,
@@ -789,6 +792,14 @@ devcmd_done:
               (uint8_t *)devcmd + offsetof(union dev_cmd_regs, done),
               sizeof(devcmd->done), 0);
 #endif
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
+    NIC_LOG_DEBUG("DevCmd Time taken: {}s.{}ns",
+                  ts_diff.tv_sec, ts_diff.tv_nsec);
+    if (pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC && 
+        ts_diff.tv_sec >= DEVCMD_TIMEOUT) {
+        NIC_LOG_ERR("Fatal Error: Devmd took more than 2 secs");
+    }
     NIC_HEADER_TRACE("Devcmd End");
 }
 

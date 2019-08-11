@@ -35,6 +35,7 @@ namespace pt = boost::property_tree;
 #define DOORBELL_ADDR(lif_num) \
     ((0x8400000) | (0xb << UPD_BITS_POSITION) | (lif_num << LIF_BITS_POSITION))
 
+#define DEVCMD_TIMEOUT 2
 /**
  * ETH Device type
  */

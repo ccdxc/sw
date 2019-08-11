@@ -4,6 +4,7 @@
 
 #include "adminq.hpp"
 #include "logger.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 
 
 AdminQ::AdminQ(
@@ -362,6 +363,7 @@ AdminQ::PostResponse(struct nicmgr_resp_desc *resp_desc)
 void
 AdminQ::Poll(void *obj)
 {
+    timespec_t start_ts, end_ts, ts_diff;
     AdminQ *adminq = (AdminQ *)obj;
 
     struct nicmgr_req_desc req_desc = { 0 };
@@ -377,6 +379,7 @@ AdminQ::Poll(void *obj)
         resp_desc.adminq_qstate_addr = req_desc.adminq_qstate_addr;
 
         NIC_HEADER_TRACE("AdminCmd");
+        clock_gettime(CLOCK_MONOTONIC, &start_ts);
 
         if (adminq->handler) {
             adminq->handler(adminq->handler_obj,
@@ -384,6 +387,14 @@ AdminQ::Poll(void *obj)
                 &resp_desc.comp, &resp_data);
         }
 
+        clock_gettime(CLOCK_MONOTONIC, &end_ts);
+        ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
+        NIC_LOG_DEBUG("AdminCmd Time taken: {}s.{}ns",
+                      ts_diff.tv_sec, ts_diff.tv_nsec);
+        if (adminq->pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC
+            && ts_diff.tv_sec >= ADMINQ_TIMEOUT) {
+            NIC_LOG_ERR("Fatal Error: Devmd took more than 2 secs");
+        }
         NIC_HEADER_TRACE("AdminCmd End");
 
         if (adminq->response_enabled) {
