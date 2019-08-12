@@ -111,8 +111,8 @@ func main() {
 		trace.DisableOpenTrace()
 	}
 	pl.InfoLog("msg", "Starting Run", "KVStore", config.Kvstore, "GRPCServer", config.GrpcServerPort, "version", config.Version)
-	dbgPort := ":" + globals.APIServerRESTPort
-	dbgsock, err := net.Listen("tcp", dbgPort)
+	dbgURL := globals.Localhost + ":" + globals.APIServerRESTPort
+	dbgsock, err := net.Listen("tcp", dbgURL)
 	if err != nil {
 		panic("failed to open debug port")
 	}

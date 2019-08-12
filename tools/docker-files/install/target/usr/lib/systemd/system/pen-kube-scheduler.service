@@ -14,6 +14,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
   -v /var/lib/pensando/pki/kubernetes/pen-kube-scheduler:/var/lib/pensando/pki/kubernetes/pen-kube-scheduler \
   --name pen-kube-scheduler ${PEN_KUBE_SCHEDULER} \
   kube-scheduler \
+  --address "127.0.0.1" \
   $KUBECONFIG_FILE
 
 ExecStop=/usr/bin/docker stop -t 2 pen-kube-scheduler

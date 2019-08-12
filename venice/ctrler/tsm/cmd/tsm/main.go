@@ -26,7 +26,7 @@ func main() {
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tsm)), "Redirect logs to file")
 		listenURL       = flag.String("listen-url", ":"+globals.TsmRPCPort, "gRPC listener URL")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
-		restURL         = flag.String("rest-url", ":"+globals.TsmRESTPort, "rest listener URL")
+		restURL         = flag.String("rest-url", globals.Localhost+":"+globals.TsmRESTPort, "rest listener URL")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 	)
 	flag.Parse()
