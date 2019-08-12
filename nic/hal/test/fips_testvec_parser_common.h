@@ -101,6 +101,22 @@ class fips_common_parser {
             return 0;
         }
 
+        int fips_testvec_hex_output_padded(FILE *f, const char *label, char *buf,
+                uint16_t len, uint16_t pad_len)
+        {
+            int         idx = 0;
+
+            fprintf(f, "%s = ", label);
+
+            for (idx = 0; idx < pad_len; idx++) {
+                fprintf(f, "%02hhx", 0);
+            }
+            for (idx = 0; idx < len; idx++) {
+                fprintf(f, "%02hhx", buf[idx]);
+            }
+            fprintf(f, "\n");
+            return 0;
+        }
 
 };
 

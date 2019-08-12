@@ -20,7 +20,7 @@ using namespace std;
     ECC-CDH Common Helpers
 ******************************************************************************/
 #define FIPS_ECC_CDH_ENTRIES_MAX    25
-#define FIPS_ECC_CDH_KEY_SIZE_MAX   66
+#define FIPS_ECC_CDH_KEY_SIZE_MAX   68
 
 typedef struct fips_ecc_cdh_group_entries_s {
     /* Public+Private Key Pair */

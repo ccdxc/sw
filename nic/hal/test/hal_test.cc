@@ -2903,10 +2903,18 @@ public:
 
         for (std::vector<fips_ecc_cdh_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
             for (int idx = 0; idx < (*it).entry_count; idx++) {
-                ret = fips_ecc_cdh_gen((*it).key_size_bytes,
-                        (*it).p, (*it).n, (*it).gx, (*it).gy, (*it).a, (*it).b,
-                        (*it).entries[idx].diut, (*it).entries[idx].qcavsx, (*it).entries[idx].qcavsy,
-                                (*it).entries[idx].ziut);
+                if ((*it).key_size_bytes == 66) {
+                    ret = fips_ecc_cdh_gen((*it).key_size_bytes,
+                            (*it).p, (*it).n, (*it).gx, (*it).gy, (*it).a, (*it).b,
+                            (*it).entries[idx].diut, (*it).entries[idx].qcavsx+2, (*it).entries[idx].qcavsy+2,
+                            (*it).entries[idx].ziut);
+                }
+                else {
+                    ret = fips_ecc_cdh_gen((*it).key_size_bytes,
+                            (*it).p, (*it).n, (*it).gx, (*it).gy, (*it).a, (*it).b,
+                            (*it).entries[idx].diut, (*it).entries[idx].qcavsx, (*it).entries[idx].qcavsy,
+                            (*it).entries[idx].ziut);
+                }
                 if (ret) {
                     return ret;
                 }

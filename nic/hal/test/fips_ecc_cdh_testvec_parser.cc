@@ -479,7 +479,15 @@ fips_testvec_ecc_cdh_parser::fips_testvec_ecc_cdh_parser(const char *test_vector
                 FIPS_TESTVEC_ECC_CDH_ERR("Failed to parse 'QCAVSx'\n");
                 break;
             }
-            if (bn_len != group.key_size_bytes) {
+            if (group.key_size_bytes == 66) {
+                /* P-521 keys are encoded as 68 bytes long in the test vectors */
+                if (bn_len != (group.key_size_bytes + 2)) {
+                    FIPS_TESTVEC_ECC_CDH_ERR("Invalid QCAVSx size: expected %d, got %d\n",
+                            group.key_size_bytes + 2, (int)bn_len);
+                    break;
+                }
+            }
+            else if (bn_len != group.key_size_bytes) {
                 FIPS_TESTVEC_ECC_CDH_ERR("Invalid QCAVSx size: expected %d, got %d\n",
                         group.key_size_bytes, (int)bn_len);
                 break;
@@ -494,7 +502,15 @@ fips_testvec_ecc_cdh_parser::fips_testvec_ecc_cdh_parser(const char *test_vector
                 FIPS_TESTVEC_ECC_CDH_ERR("Failed to parse 'QCAVSy'\n");
                 break;
             }
-            if (bn_len != group.key_size_bytes) {
+            if (group.key_size_bytes == 66) {
+                /* P-521 keys are encoded as 68 bytes long in the test vectors */
+                if (bn_len != (group.key_size_bytes + 2)) {
+                    FIPS_TESTVEC_ECC_CDH_ERR("Invalid QCAVSy size: expected %d, got %d\n",
+                            group.key_size_bytes+2, (int)bn_len);
+                    break;
+                }
+            }
+            else if (bn_len != group.key_size_bytes) {
                 FIPS_TESTVEC_ECC_CDH_ERR("Invalid QCAVSy size: expected %d, got %d\n",
                         group.key_size_bytes, (int)bn_len);
                 break;
@@ -528,12 +544,22 @@ void fips_testvec_ecc_cdh_parser::print_group_testvec(FILE *fp, fips_ecc_cdh_gro
         fips_testvec_hex_output(fp, "QCAVSy",
                 group.entries[idx].qcavsy,
                 group.key_size_bytes);
-        fips_testvec_hex_output(fp, "QIUTx",
-                group.entries[idx].qiutx,
-                group.key_size_bytes);
-        fips_testvec_hex_output(fp, "QIUTy",
-                group.entries[idx].qiuty,
-                group.key_size_bytes);
+        if (group.key_size_bytes == 66) {
+            fips_testvec_hex_output_padded(fp, "QIUTx",
+                    group.entries[idx].qiutx,
+                    group.key_size_bytes, 2);
+            fips_testvec_hex_output_padded(fp, "QIUTy",
+                    group.entries[idx].qiuty,
+                    group.key_size_bytes, 2);
+        }
+        else {
+            fips_testvec_hex_output(fp, "QIUTx",
+                    group.entries[idx].qiutx,
+                    group.key_size_bytes);
+            fips_testvec_hex_output(fp, "QIUTy",
+                    group.entries[idx].qiuty,
+                    group.key_size_bytes);
+        }
         fips_testvec_hex_output(fp, "ZIUT",
                 group.entries[idx].ziut,
                 group.key_size_bytes);
