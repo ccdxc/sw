@@ -18,7 +18,13 @@ if [[ "$1" ==  --cfg ]]; then
 fi
 
 export PATH=${PATH}:${BUILD_DIR}/bin
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log
+if [ $? -eq 0 ]
+then
+    rm -f apollo_scale_test.log
+else
+    tail -100 apollo_scale_test.log
+fi
 #$GDB apollo_scale_test -p p1 -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_p1.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_v4_only.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all --gen-suppressions=all --verbose --error-limit=no --log-file=valgrind-out.txt apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_v4_only.json

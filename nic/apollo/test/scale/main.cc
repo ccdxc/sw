@@ -38,6 +38,7 @@ protected:
     /** called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
         /* call base class function */
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
         params.enable_fte = false;
@@ -46,6 +47,7 @@ protected:
     }
     /** called at the end of all test cases in this class */
     static void TearDownTestCase() {
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         pds_test_base::TearDownTestCase();
     }
 };
