@@ -180,7 +180,7 @@ ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_netpoll(int budget, ionic_cq_cb cb, void *cb_arg);
 
 VMK_ReturnStatus
-ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
+ionic_dev_cmd_wait_check(struct ionic *ionic, unsigned long max_wait);
 
 VMK_ReturnStatus
 ionic_identify(struct ionic *ionic);

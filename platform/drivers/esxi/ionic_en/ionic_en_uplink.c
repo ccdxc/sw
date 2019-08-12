@@ -376,7 +376,7 @@ ionic_en_uplink_pause_params_set(vmk_AddrCookie driver_data,
 
         vmk_MutexLock(ionic->dev_cmd_lock);
         ionic_dev_cmd_port_autoneg(idev, params.autoNegotiate);
-        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        status = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
         vmk_MutexUnlock(ionic->dev_cmd_lock);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_dev_cmd_port_autoneg() failed, status: %s",
@@ -385,7 +385,7 @@ ionic_en_uplink_pause_params_set(vmk_AddrCookie driver_data,
 
         vmk_MutexLock(ionic->dev_cmd_lock);
         ionic_dev_cmd_port_pause(idev, requested_pause);
-        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        status = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
         vmk_MutexUnlock(ionic->dev_cmd_lock);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_dev_cmd_port_pause() failed, status: %s",
@@ -1754,7 +1754,7 @@ ionic_en_uplink_driver_info_init(struct ionic_en_priv_data *priv_data,  // IN
         }
 
         vmk_NameInitialize(&fw_version,
-                           idev->dev_info->fw_version);
+                           idev->dev_info_regs->fw_version);
 
         vmk_NameCopy(&driver_info->firmwareVersion,
                      &fw_version);

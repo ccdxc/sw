@@ -21,12 +21,12 @@ VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic)
         if (num_bars < 1 || bar->len != BAR0_SIZE)
                 return VMK_BAD_ADDR_RANGE;
 
-        idev->dev_info = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
-        idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
+        idev->dev_info_regs = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
+        idev->dev_cmd_regs = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
         idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
         idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 
-        sig = ionic_readl_raw((vmk_VA)&idev->dev_info->signature);
+        sig = ionic_readl_raw((vmk_VA)&idev->dev_info_regs->signature);
         if (sig != IONIC_DEV_INFO_SIGNATURE) {
             ionic_en_err("Incompatible firmware signature %x", sig);
             return VMK_BAD_ADDR_RANGE;
@@ -91,15 +91,70 @@ void ionic_dev_clean(struct ionic *ionic)
         ionic_mutex_destroy(ionic->en_dev.idev.cmb_inuse_lock);
 }
 
+
+/* Devcmd Interface */
+VMK_ReturnStatus
+ionic_heartbeat_check(struct ionic *ionic)
+{
+        struct ionic_dev *idev = &ionic->en_dev.idev;
+        vmk_uint64 hb_time;
+        vmk_uint32 fw_status;
+        vmk_uint32 hb;
+
+         /* wait at least one second before testing again */
+        hb_time = vmk_GetTimerCycles();
+        if (IONIC_TIME_BEFORE(hb_time, (idev->last_hb_time + HZ))) {
+                ionic_en_dbg("hb_time: %lu, last_hb_time + HZ: %lu",
+                             hb_time, idev->last_hb_time + HZ);
+                return VMK_STATUS_PENDING;
+        }
+
+         /* firmware is useful only if fw_status is non-zero */
+        fw_status = ionic_readl_raw((vmk_VA)&idev->dev_info_regs->fw_status);
+        if (!fw_status) {
+                ionic_en_err("FW is not useable at this moment,"
+                             "fw_status is: %d", fw_status);
+                return VMK_FAILURE;
+        }
+
+        hb = ionic_readl_raw((vmk_VA)&idev->dev_info_regs->fw_heartbeat);
+        if (!hb) {
+                ionic_en_err("FW is not useable at this moment, "
+                             "fw_heartbeat is: %d.", hb);
+                return VMK_FAILURE;
+        }
+
+        if (hb == idev->last_hb) {
+                /* only complain once for each stall seen */
+                if (idev->last_hb_time != 1) {
+                        ionic_en_err("FW heartbeat stalled at %d\n",
+                                     idev->last_hb);
+                        idev->last_hb_time = 1;
+                }
+
+                return VMK_FAILURE;
+        }
+
+        if (idev->last_hb_time == 1) {
+                ionic_en_info("FW heartbeat restored at %d\n", hb);
+        }
+
+        idev->last_hb = hb;
+        idev->last_hb_time = hb_time;
+
+        return VMK_OK;
+}
+
+
 /* Devcmd Interface */
 u8 ionic_dev_cmd_status(struct ionic_dev *idev)
 {
-        return ionic_readb_raw((vmk_VA)&idev->dev_cmd->comp.status);
+        return ionic_readb_raw((vmk_VA)&idev->dev_cmd_regs->comp.status);
 }
 
 bool ionic_dev_cmd_done(struct ionic_dev *idev)
 {
-        return ionic_readl_raw((vmk_VA)&idev->dev_cmd->done) & DEV_CMD_DONE;
+        return ionic_readl_raw((vmk_VA)&idev->dev_cmd_regs->done) & DEV_CMD_DONE;
 }
 
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
@@ -108,7 +163,7 @@ void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
         unsigned int i;
 
         for (i = 0; i < ARRAY_SIZE(comp->words); i++)
-                comp->words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd->comp.words[i]);
+                comp->words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd_regs->comp.words[i]);
 }
 
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
@@ -117,10 +172,10 @@ void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 
         for (i = 0; i < ARRAY_SIZE(cmd->words); i++)
                 ionic_writel_raw(cmd->words[i],
-                                 (vmk_VA)&idev->dev_cmd->cmd.words[i]);
+                                 (vmk_VA)&idev->dev_cmd_regs->cmd.words[i]);
 
-        ionic_writel_raw(0, (vmk_VA)&idev->dev_cmd->done);
-        ionic_writel_raw(1, (vmk_VA)&idev->dev_cmd->doorbell);
+        ionic_writel_raw(0, (vmk_VA)&idev->dev_cmd_regs->done);
+        ionic_writel_raw(1, (vmk_VA)&idev->dev_cmd_regs->doorbell);
 
 }
 

@@ -132,7 +132,7 @@ ionic_open(struct lif *lif)
                 vmk_MutexLock(ionic->dev_cmd_lock);
                 ionic_dev_cmd_port_state(&ionic->en_dev.idev,
                                          PORT_ADMIN_STATE_UP);
-                ionic_dev_cmd_wait_check(&ionic->en_dev.idev,
+                ionic_dev_cmd_wait_check(ionic,
                                          HZ * devcmd_timeout);
                 vmk_MutexUnlock(ionic->dev_cmd_lock);
         }
@@ -617,7 +617,7 @@ ionic_dev_recover_world(void *data)
                         is_done_fw_upgrade = VMK_TRUE;
                 }
 
-                if (priv_data->ionic.en_dev.idev.dev_info->fw_status) {
+                if (priv_data->ionic.en_dev.idev.dev_info_regs->fw_status) {
                         ionic_dev_recover(priv_data);
                         wait_time = VMK_TIMEOUT_UNLIMITED_MS;
                         is_done_fw_upgrade = VMK_FALSE;
@@ -735,7 +735,7 @@ ionic_lif_reset(struct lif *lif)
 
         vmk_MutexLock(lif->ionic->dev_cmd_lock);
         ionic_dev_cmd_lif_reset(idev, lif->index);
-        ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
         vmk_MutexUnlock(lif->ionic->dev_cmd_lock);
 }
 
@@ -1936,7 +1936,7 @@ ionic_lif_adminq_init(struct lif *lif)
         vmk_MutexLock(lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_adminq_init(idev, qcq, lif->index, qcq->cq.bound_intr->index);
 
-        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        status = ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
         vmk_MutexUnlock(lif->ionic->dev_cmd_lock);
 	if (status != VMK_OK) {
                 ionic_en_err("ionic_dev_cmd_wait_check() failed, status: %s",
@@ -2436,7 +2436,7 @@ ionic_lif_init(struct lif *lif)
 
         vmk_MutexLock(lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_init(idev, lif->index, lif->info_pa);
-	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	status = ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
         ionic_dev_cmd_comp(idev, &comp);
         vmk_MutexUnlock(lif->ionic->dev_cmd_lock);
 	if (status != VMK_OK) {
@@ -2592,7 +2592,7 @@ ionic_lif_identify(struct ionic *ionic)
 	vmk_MutexLock(ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_identify(idev, IONIC_LIF_TYPE_CLASSIC,
                                    IONIC_IDENTITY_VERSION_1);
-        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        status = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
 	vmk_MutexUnlock(ionic->dev_cmd_lock);
 	if (status != VMK_OK) {
                 ionic_en_err("ionic_dev_cmd_wait_check() failed, status: %s",
@@ -2601,9 +2601,9 @@ ionic_lif_identify(struct ionic *ionic)
         }
 
 	nwords = IONIC_MIN(ARRAY_SIZE(ident->lif.words),
-                           ARRAY_SIZE(idev->dev_cmd->data));
+                           ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
-		ident->lif.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
+		ident->lif.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd_regs->data[i]);
 
 	ionic_en_info("capabilities 0x%lx ", ident->lif.capabilities);
 	ionic_en_info("eth.features 0x%lx ", ident->lif.eth.config.features);

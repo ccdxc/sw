@@ -112,9 +112,17 @@ static inline void ionic_struct_size_checks(void)
 	VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_comp) == 16);
 }
 
+/** struct ionic_devinfo - device information. */
+struct ionic_devinfo {
+        u8 asic_type;
+        u8 asic_rev;
+        char fw_version[IONIC_DEVINFO_FWVERS_BUFLEN + 1];
+        char serial_num[IONIC_DEVINFO_SERIAL_BUFLEN + 1];
+};
+
 struct ionic_dev {
-        union dev_info_regs __iomem *dev_info;
-	union dev_cmd_regs __iomem *dev_cmd;
+        union dev_info_regs __iomem *dev_info_regs;
+	union dev_cmd_regs __iomem *dev_cmd_regs;
 
         struct doorbell __iomem *db_pages;
         dma_addr_t phy_db_pages;
@@ -128,10 +136,13 @@ struct ionic_dev {
         uint32_t cmb_npages;
 
         struct port_info *port_info;
-        u32 port_info_sz;
         dma_addr_t port_info_pa;
+        u32 port_info_sz;
 
         u8 port_index;
+        struct ionic_devinfo dev_info;
+        vmk_uint64 last_hb_time;
+        u32 last_hb;
 };
 
 struct cq_info {
@@ -211,6 +222,9 @@ struct ionic;
 
 VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic);
 void ionic_dev_clean(struct ionic *ionic);
+
+VMK_ReturnStatus
+ionic_heartbeat_check(struct ionic *ionic);
 
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);

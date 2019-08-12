@@ -212,49 +212,85 @@ ionic_adminq_check_err(struct lif *lif,
                        struct ionic_admin_ctx *ctx,
                        vmk_Bool is_timeout)
 {
-	const char *name;
-	const char *status;
+        VMK_ReturnStatus status = VMK_FAILURE;
+        const char *name;
+        const char *status_str;
 
-	if (ctx->comp.comp.status || is_timeout) {
+        if (ctx->comp.comp.status || is_timeout) {
                 /* For FW upgrade use */
                 if (ctx->cmd.cmd.opcode == CMD_OPCODE_RX_FILTER_DEL &&
                     ctx->comp.comp.status == IONIC_RC_ENOENT) {
                         return VMK_OK;
                 }
 
+                do {
+                        status = ionic_heartbeat_check(lif->ionic);
+                        if (status == VMK_STATUS_PENDING) {
+                                vmk_WorldSleep(VMK_MSEC_PER_SEC);
+                        } else if (status == VMK_FAILURE) {
+                                break;
+                        } else if (status == VMK_OK) {
+                                /* if FW is alive, we can try
+                                 * one more time */
+                                status = VMK_RETRY;
+                                break;
+                        }
+                } while(status == VMK_STATUS_PENDING);
+
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
-		status = ionic_en_error_to_str(ctx->comp.comp.status);
+		status_str = ionic_en_error_to_str(ctx->comp.comp.status);
 		ionic_en_err("%s (%d) failed: %s (%d) %s\n",
-			   name,
-			   ctx->cmd.cmd.opcode,
-			   status,
-			   ctx->comp.comp.status,
-			   (is_timeout ? "(timeout)" : ""));
-		return VMK_FAILURE;
+			     name,
+			     ctx->cmd.cmd.opcode,
+			     status_str,
+			     ctx->comp.comp.status,
+			     (is_timeout ? "(timeout)" : ""));
+		return status;
 	}
 
 	return VMK_OK;
 }
+
+static vmk_Bool keep_posting = VMK_TRUE;
 
 VMK_ReturnStatus
 ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	VMK_ReturnStatus status;
         vmk_Bool is_timeout;
+        vmk_Bool is_retry = VMK_FALSE;
 
-	status = ionic_api_adminq_post(lif, ctx);
-	if (status != VMK_OK) {
-		ionic_en_err("ionic_api_adminq_post() failed, status: %s",
-			  vmk_StatusToString(status));
-		return status;
-	}
+if (VMK_UNLIKELY(!keep_posting)) {
+                return VMK_FAILURE;
+        }
 
-	is_timeout = ionic_wait_for_completion_timeout(&ctx->work,
+retry:
+        status = ionic_api_adminq_post(lif, ctx);
+        if (status != VMK_OK) {
+                ionic_en_err("ionic_api_adminq_post() failed, "
+                              "status: %s", vmk_StatusToString(status));
+                return status;
+        }
+
+        is_timeout = ionic_wait_for_completion_timeout(&ctx->work,
                                                        devcmd_timeout *
                                                        VMK_MSEC_PER_SEC);
-	return ionic_adminq_check_err(lif,
-                                      ctx,
-                                      is_timeout);
+
+        status = ionic_adminq_check_err(lif,
+                                        ctx,
+                                        is_timeout);
+        if (status == VMK_RETRY && is_retry == VMK_FALSE) {
+                ionic_en_info("FW is still alive, try one more time");
+                is_retry = VMK_TRUE;
+                goto retry;
+        } else if(status != VMK_OK) {
+                keep_posting = VMK_FALSE;
+                ionic_en_err("ionic_adminq_check_err() failed, "
+                             "status: %s", vmk_StatusToString(status));
+                status = VMK_FAILURE;
+        }
+
+        return status;
 }
 
 int ionic_netpoll(int budget, ionic_cq_cb cb, 
@@ -282,25 +318,43 @@ int ionic_netpoll(int budget, ionic_cq_cb cb,
 
 
 static VMK_ReturnStatus
-ionic_dev_cmd_check_error(struct ionic_dev *idev)
+ionic_dev_cmd_check_error(struct ionic *ionic)
 {
-        VMK_ReturnStatus status;
+        VMK_ReturnStatus status = VMK_FAILURE;
+        struct ionic_dev *idev = &ionic->en_dev.idev;
 
         status = ionic_dev_cmd_status(idev);
         switch (status) {
                 case IONIC_RC_SUCCESS:
                 case IONIC_RC_EEXIST:
                 case IONIC_RC_ENOENT:
-                        return VMK_OK;
+                        status = VMK_OK;
         }
 
-        return VMK_FAILURE;
+        if (status != VMK_OK) {
+                do {
+                        status = ionic_heartbeat_check(ionic);
+                        if (status == VMK_STATUS_PENDING) {
+                                vmk_WorldSleep(VMK_MSEC_PER_SEC);
+                        } else if (status == VMK_FAILURE) {
+                                break;
+                        } else if (status == VMK_OK) {
+                                /* if FW is alive, we can try
+                                 * one more time */
+                                status = VMK_RETRY;
+                                break;
+                        }
+                } while(status == VMK_STATUS_PENDING);
+        }
+
+        return status;
 }
 
 static VMK_ReturnStatus
-ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
+ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_wait)
 {
         VMK_ReturnStatus status;
+        struct ionic_dev *idev = &ionic->en_dev.idev;
         unsigned long time;
         int done;
 
@@ -314,9 +368,9 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 #ifdef IONIC_DEBUG
                 if (done) {
                         ionic_en_dbg("DEVCMD %d done took %ld secs (%ld jiffies)\n",
-                                  idev->dev_cmd->cmd.cmd.opcode,
-                                  (vmk_GetTimerCycles() + max_wait - time) / HZ,
-                                  vmk_GetTimerCycles() + max_wait - time);
+                                     idev->dev_cmd_regs->cmd.cmd.opcode,
+                                     (vmk_GetTimerCycles() + max_wait - time) / HZ,
+                                     vmk_GetTimerCycles() + max_wait - time);
                 }
 #endif
                 if (done) {
@@ -340,18 +394,36 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 
 
 VMK_ReturnStatus
-ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
+ionic_dev_cmd_wait_check(struct ionic *ionic, unsigned long max_wait)
 {
         VMK_ReturnStatus status;
+        vmk_Bool is_retry = VMK_FALSE;
 
-        status = ionic_dev_cmd_wait(idev, max_wait);
+        if (VMK_UNLIKELY(!keep_posting)) {
+                return VMK_FAILURE;
+        }
+
+retry:
+        status = ionic_dev_cmd_wait(ionic, max_wait);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_dev_cmd_wait() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
 
-        return ionic_dev_cmd_check_error(idev);
+        status = ionic_dev_cmd_check_error(ionic);
+        if (status == VMK_RETRY && is_retry == VMK_FALSE) {
+                ionic_en_info("FW is still alive, try one more time");
+                is_retry = VMK_TRUE;
+                goto retry;
+        } else if(status != VMK_OK) {
+                keep_posting = VMK_FALSE;
+                ionic_en_err("ionic_dev_cmd_check_error() failed, "
+                             "status: %s", vmk_StatusToString(status));
+                status = VMK_FAILURE;
+        }
+
+        return status;
 }
 
 
@@ -424,7 +496,7 @@ ionic_init(struct ionic *ionic)
 
         ionic_dev_cmd_init(idev);
 
-        return ionic_dev_cmd_wait_check(idev,
+        return ionic_dev_cmd_wait_check(ionic,
                                         HZ * devcmd_timeout);
 }
 
@@ -439,7 +511,7 @@ ionic_reset(struct ionic *ionic)
         vmk_MutexLock(ionic->dev_cmd_lock);
         ionic_dev_cmd_reset(idev);
 
-        status = ionic_dev_cmd_wait_check(idev,
+        status = ionic_dev_cmd_wait_check(ionic,
                                           HZ * devcmd_timeout);
         vmk_MutexUnlock(ionic->dev_cmd_lock);
         if (status != VMK_OK) {
@@ -480,18 +552,18 @@ ionic_identify(struct ionic *ionic)
 	vmk_MutexLock(ionic->dev_cmd_lock);
 
 	nwords = IONIC_MIN(ARRAY_SIZE(ident->drv.words),
-                           ARRAY_SIZE(idev->dev_cmd->data));
+                           ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
 		ionic_writel_raw(ident->drv.words[i],
-                                 (vmk_VA)&idev->dev_cmd->data[i]);
+                                 (vmk_VA)&idev->dev_cmd_regs->data[i]);
 
 	ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1);
-	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	status = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
 	if (status == VMK_OK) {
 		nwords = IONIC_MIN(ARRAY_SIZE(ident->dev.words),
-                                   ARRAY_SIZE(idev->dev_cmd->data));
+                                   ARRAY_SIZE(idev->dev_cmd_regs->data));
 		for (i = 0; i < nwords; i++)
-			ident->dev.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
+			ident->dev.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd_regs->data[i]);
 	}
 
 	vmk_MutexUnlock(ionic->dev_cmd_lock);
@@ -511,13 +583,13 @@ ionic_port_identify(struct ionic *ionic)
 	vmk_MutexLock(ionic->dev_cmd_lock);
 
 	ionic_dev_cmd_port_identify(idev);
-	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	status = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
 	if (status == VMK_OK) {
 		nwords = IONIC_MIN(ARRAY_SIZE(ident->port.words),
-                                   ARRAY_SIZE(idev->dev_cmd->data));
+                                   ARRAY_SIZE(idev->dev_cmd_regs->data));
 		for (i = 0; i < nwords; i++)
 			ident->port.words[i] =
-                                ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
+                                ionic_readl_raw((vmk_VA)&idev->dev_cmd_regs->data[i]);
 	}
 
 	vmk_MutexUnlock(ionic->dev_cmd_lock);
@@ -554,13 +626,13 @@ ionic_port_init(struct ionic *ionic)
 	vmk_MutexLock(ionic->dev_cmd_lock);
 
 	nwords = IONIC_MIN(ARRAY_SIZE(ident->port.config.words),
-                           ARRAY_SIZE(idev->dev_cmd->data));
+                           ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
 		ionic_writel_raw(ident->port.config.words[i],
-                                 (vmk_VA)&idev->dev_cmd->data[i]);
+                                 (vmk_VA)&idev->dev_cmd_regs->data[i]);
 
 	ionic_dev_cmd_port_init(idev);
-	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
 
 	vmk_MutexUnlock(ionic->dev_cmd_lock);
 
@@ -579,11 +651,10 @@ ionic_port_reset(struct ionic *ionic)
 
 	vmk_MutexLock(ionic->dev_cmd_lock);
 	ionic_dev_cmd_port_reset(idev);
-	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
 	vmk_MutexUnlock(ionic->dev_cmd_lock);
 	if (err) {
 		ionic_en_err("ionic_port_reset() failed\n");
-		return err;
 	}
 
 	priv_data = IONIC_CONTAINER_OF(ionic,
@@ -985,12 +1056,7 @@ ionic_en_detach(vmk_Device device)                                // IN
  
         ionic_port_reset(&priv_data->ionic);
 
-        status = ionic_reset(&priv_data->ionic);
-        if (status != VMK_OK) {
-                ionic_en_err("ionic_reset() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
-        }
+        ionic_reset(&priv_data->ionic);
 
         ionic_dma_engine_destroy(priv_data->dma_engine_streaming);
         ionic_dma_engine_destroy(priv_data->dma_engine_coherent);
