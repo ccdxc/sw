@@ -577,11 +577,6 @@ mac_cfg_hw (mac_info_t *mac_info)
                              tx_pause_enable, rx_pause_enable);
             break;
         }
-
-        cap_mx_cfg_ch_en(chip_id,
-                         inst_id,
-                         ch,
-                         (mac_ch_en >> ch) & 1);
     }
 
     return 0;

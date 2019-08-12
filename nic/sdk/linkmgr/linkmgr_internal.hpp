@@ -15,11 +15,12 @@ namespace linkmgr {
 #define XCVR_POLL_TIME          1000 // 1000 ms = 1 s
 #define MAX_LOG_SIZE            1024
 
-// max link training fail count until the busy loop is exited
-#define MAX_LINK_TRAIN_FAIL_COUNT 10
+// max link training fail count before starting timer
+#define MAX_LINK_TRAIN_FAIL_COUNT 5
 
 extern linkmgr_cfg_t g_linkmgr_cfg;
 extern char log_buf[];
+extern bool hal_cfg;
 
 #define SDK_LINKMGR_LOG(type, log_buf) { \
     if (g_linkmgr_cfg.port_log_fn) {                                      \

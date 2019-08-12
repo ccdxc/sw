@@ -1408,16 +1408,14 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
         ret = capri_tm_drain_uplink_port(port);
         if (ret != sdk::SDK_RET_OK) {
             SDK_TRACE_ERR("Port %u is not fully drained", port);
-            // Ignore the return status and continue
-            ret = sdk::SDK_RET_OK;
+            ret = sdk::SDK_RET_ERR;
         }
 
         // wait for the sop and eop counters to match
         ret = capri_tm_sop_eop_check(port);
         if (ret != sdk::SDK_RET_OK) {
             SDK_TRACE_ERR("Port %u is not fully drained", port);
-            // Ignore the return status and continue
-            ret = sdk::SDK_RET_OK;
+            ret = sdk::SDK_RET_ERR;
         }
     }
 
@@ -1425,7 +1423,7 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
 
     SDK_TRACE_DEBUG("%s uplink port %u",
                     enable ? "Enable" : "Disable", port);
-    return sdk::SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t

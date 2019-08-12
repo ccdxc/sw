@@ -61,6 +61,8 @@ signal_linkmgr(void) {
     pthread_mutex_unlock(&g_linkmgr_sync.mutex);
 }
 
+bool hal_cfg = false;
+
 bool
 port_link_poll_enabled (void)
 {
@@ -287,10 +289,17 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
 
     SDK_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
+    switch (operation) {
+        case LINKMGR_OPERATION_PORT_ENABLE:
+        case LINKMGR_OPERATION_PORT_DISABLE:
+            SDK_ATOMIC_STORE_BOOL(&hal_cfg, true);
+            break;
+
+        default:
+            break;
+    }
     SDK_ATOMIC_FETCH_ADD(&g_linkmgr_workq[curr_tid].nentries, 1);
-
     signal_linkmgr();
-
     if (mode == q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING) {
         while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
             if (can_yield == true) {
@@ -316,7 +325,7 @@ static sdk_ret_t
 port_event_enable (linkmgr_entry_data_t *data)
 {
     port *port_p = (port *)data->ctxt;
-    return port_p->port_enable();
+    return port_p->port_enable(true);
 }
 
 static sdk_ret_t
@@ -446,10 +455,12 @@ linkmgr_event_loop (void* ctxt)
 
             switch (rw_entry->opn) {
             case LINKMGR_OPERATION_PORT_ENABLE:
+                SDK_ATOMIC_STORE_BOOL(&hal_cfg, false);
                 port_event_enable(&rw_entry->data);
                 break;
 
             case LINKMGR_OPERATION_PORT_DISABLE:
+                SDK_ATOMIC_STORE_BOOL(&hal_cfg, false);
                 port_event_disable(&rw_entry->data);
                 break;
 

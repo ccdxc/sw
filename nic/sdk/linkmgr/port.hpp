@@ -215,9 +215,14 @@ public:
         this->num_mac_sync_retries_ = num_mac_sync;
     }
 
-    sdk_ret_t port_enable(void);
+    uint32_t num_link_train_retries(void) { return this->num_link_train_retries_; }
+    void set_num_link_train_retries(uint32_t num_link_train) {
+        this->num_link_train_retries_ = num_link_train;
+    }
+
+    sdk_ret_t port_enable(bool start_en_timer = false);
     sdk_ret_t port_disable(void);
-    sdk_ret_t port_link_sm_process(void);
+    sdk_ret_t port_link_sm_process(bool start_en_timer = false);
     dfe_ret_t port_link_sm_dfe_process(void);
     an_ret_t  port_link_sm_an_process(void);
     bool      port_dfe_tuning_enabled(void);
@@ -398,6 +403,7 @@ private:
     uint32_t              num_dfe_retries_;           // number of times ical is retried in one pass of SM
     uint32_t              num_an_hcd_retries_;        // number of times AN HCD was retried in one pass of SM
     uint32_t              num_mac_sync_retries_;      // number of times MAC sync is retried in one pass of SM
+    uint32_t              num_link_train_retries_;    // number of times link training failed in one pass of SM
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);

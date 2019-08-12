@@ -715,13 +715,13 @@ port::port_link_sm_an_process(void)
 
         SDK_PORT_SM_TRACE(this, "wait AN HCD");
 
-        // 1000 * 100 usecs = 100 msecs
-        for (int i = 0; i < 1000; ++i) {
+        // 5000 * 10 usecs = 50 msecs
+        for (int i = 0; i < 5000; ++i) {
             an_good = port_serdes_an_wait_hcd();
             if (an_good == true) {
                 break;
             }
-            usleep(100);
+            usleep(10);
         }
 
         // If AN HCD doesn't resolve:
@@ -895,7 +895,7 @@ port::port_link_sm_dfe_process(void)
 }
 
 sdk_ret_t
-port::port_link_sm_process(void)
+port::port_link_sm_process(bool start_en_timer)
 {
     int  timeout    = 500; // msecs
     bool sig_detect = false;
@@ -912,7 +912,7 @@ port::port_link_sm_process(void)
         switch (this->link_sm_) {
             case port_link_sm_t::PORT_LINK_SM_DISABLED:
 
-                // Enable MAC TX drain
+                // Enable MAC TX drain and set Tx/Rx=0x0
                 port_mac_tx_drain(true);
 
                 // TODO Disable and drain PB
@@ -952,6 +952,21 @@ port::port_link_sm_process(void)
                 break;
 
             case port_link_sm_t::PORT_LINK_SM_ENABLED:
+
+                if ((start_en_timer == true) ||
+                    (SDK_ATOMIC_LOAD_BOOL(&hal_cfg) == true)) {
+                    // if this is invoked by cfg thread, start the timer so that
+                    // the call can return
+                    this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
+                    timeout = MIN_PORT_TIMER_INTERVAL;
+                    this->bringup_timer_val_ += timeout;
+                    this->link_bring_up_timer_ =
+                        sdk::linkmgr::timer_schedule(
+                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
+                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                            false);
+                    break;
+                }
 
                 SDK_PORT_SM_DEBUG(this, "Enabled");
 
@@ -1028,12 +1043,6 @@ port::port_link_sm_process(void)
                 // configure the mac
                 port_mac_cfg();
 
-                // Disable MAC TX drain
-                port_mac_tx_drain(false);
-
-                // put port in flush
-                port_flush_set(true);
-
                 // send MAC remote faults
                 port_mac_send_remote_faults(true);
 
@@ -1043,8 +1052,21 @@ port::port_link_sm_process(void)
 
                 if (auto_neg_enable() == true) {
                     // Restart AN if link training failed.
-                    if (port_serdes_an_link_train_check() == false) {
-                        retry_sm = true;
+                    if (port_serdes_an_link_train_check() == false ||
+                            port_serdes_eye_check() == false ) {
+                        set_num_link_train_retries(num_link_train_retries() + 1);
+                        if (num_link_train_retries() == MAX_LINK_TRAIN_FAIL_COUNT) {
+                            set_num_link_train_retries(0);
+                            timeout = rand() % 2 == 0? 500 : MIN_PORT_TIMER_INTERVAL;
+                            this->bringup_timer_val_ += timeout;
+                            this->link_bring_up_timer_ =
+                                sdk::lib::timer_schedule(
+                                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
+                                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                                        false);
+                        } else {
+                            retry_sm = true;
+                        }
                         set_num_an_hcd_retries(0);
                         // skip the serdes reset since it is done during AN_INIT
                         port_link_sm_retry_enabled(false);
@@ -1215,11 +1237,11 @@ port::port_link_sm_process(void)
                 // TODO Enable PB
                 port_pb_enable(true);
 
+                // Disable MAC TX drain and set Tx/Rx=0x1
+                port_mac_tx_drain(false);
+
                 // enable mac interrupts
                 port_mac_intr_en(true);
-
-                // bring port out of flush
-                port_flush_set(false);
 
                 // set operational status as up
                 this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_UP);
@@ -1246,7 +1268,7 @@ port::port_link_sm_process(void)
 }
 
 sdk_ret_t
-port::port_enable(void)
+port::port_enable(bool start_en_timer)
 {
     // check if already enabled
     if (this->admin_state_ == port_admin_state_t::PORT_ADMIN_STATE_UP) {
@@ -1258,7 +1280,7 @@ port::port_enable(void)
     set_port_link_dfe_sm(port_link_sm_t::PORT_LINK_SM_DFE_DISABLED);
     set_port_link_an_sm(port_link_sm_t::PORT_LINK_SM_AN_DISABLED);
 
-    port_link_sm_process();
+    port_link_sm_process(start_en_timer);
 
     this->admin_state_ = port_admin_state_t::PORT_ADMIN_STATE_UP;
 
@@ -1379,9 +1401,6 @@ port::port_mac_state_reset(void)
     port_mac_soft_reset(true);
     port_mac_enable(false);
 
-    // clear MAC remote faults
-    port_mac_send_remote_faults(false);
-
     // reset MAC global programming since serdes config
     // is changed to run AN
     if (auto_neg_enable() == true) {
@@ -1419,6 +1438,9 @@ port::port_link_sm_counters_reset(void)
     // reset AN HCD retry counter
     set_num_an_hcd_retries(0);
 
+    // reset AN link training retry counter
+    set_num_link_train_retries(0);
+
     // reset dfe retry count
     set_num_dfe_retries(0);
 
@@ -1443,8 +1465,8 @@ port::port_pb_enable(bool enable) {
     uint32_t tm_port = logical_port_to_tm_port(port_num());
 
     // TODO remove capri reference
-    sdk::platform::capri::capri_tm_enable_disable_uplink_port(tm_port, enable);
-    return SDK_RET_OK;
+    return sdk::platform::capri::capri_tm_enable_disable_uplink_port(
+                                                        tm_port, enable);
 }
 
 sdk_ret_t
@@ -1518,6 +1540,7 @@ port::port_init(linkmgr_cfg_t *cfg)
                         sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
     }
 
+    srand(time(NULL));
     return rc;
 }
 

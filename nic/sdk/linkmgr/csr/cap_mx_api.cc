@@ -1477,6 +1477,8 @@ cap_mx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
     // MAC control bit 5
    addr = (mac_ch == 1) ? 0x500 : (mac_ch == 2) ? 0x600 : (mac_ch == 3) ? 0x700 : 0x400;
    cap_mx_set_bit(chip_id, inst_id, addr, 5, drain);
+   cap_mx_set_bit(chip_id, inst_id, addr, 0, drain == true? false : true);
+   cap_mx_set_bit(chip_id, inst_id, addr, 1, drain == true? false : true);
 
     // MAC transmit config  bit 15
    addr = (mac_ch == 1) ? 0x501 : (mac_ch == 2) ? 0x601 : (mac_ch == 3) ? 0x701 : 0x401;
