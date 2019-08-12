@@ -128,9 +128,11 @@ linkmgr_logger_init (void)
     }
 
     logger =
-        ::utils::log::factory("linkmgr", 0x1, ::utils::log_mode_sync,
+        ::utils::log::factory("linkmgr",
+                              sdk::lib::thread::control_cores_mask(),
+                              ::utils::log_mode_sync,
                               false, logfile.c_str(),
-	                      5 << 20, // size(5MB)
+                              5 << 20, // size(5MB)
                               1 /* number of files */,
                               ::utils::trace_debug,
                               ::utils::log_none);

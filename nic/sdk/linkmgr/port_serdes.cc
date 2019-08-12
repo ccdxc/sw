@@ -431,7 +431,8 @@ serdes_global_init_hw(uint32_t     jtag_id,
     aapl->verbose              = 0;
     aapl->serdes_int_timeout   = 3000;
 
-    // disable logging to default stderr since we will log to file
+    // disable logging to default stdout/stderr since we will log to file
+    aapl->enable_stream_logging = 0;
     aapl->enable_stream_err_logging = 0;
 
     if (aacs_connect == true) {

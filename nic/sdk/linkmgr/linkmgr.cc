@@ -44,10 +44,18 @@ bool port_link_poll_en = true;
 
 static inline void
 wait_linkmgr(void) {
+    static int log_cnt = 0;
+
     pthread_mutex_lock(&g_linkmgr_sync.mutex);
     while (g_linkmgr_sync.post == 0) {
         int rc = pthread_cond_wait(&g_linkmgr_sync.cond, &g_linkmgr_sync.mutex);
-        //check for rc
+        if (rc != 0) {
+            // ETIMEDOUT/EINVAL/EPERM error condition not expected.
+            // Log the error for few times.
+            if (log_cnt++ <  100) {
+                SDK_LINKMGR_TRACE_ERR("pthread_cond_wait returned %u", rc);
+            }
+        }
     }
     g_linkmgr_sync.post = 0;
     pthread_mutex_unlock(&g_linkmgr_sync.mutex);
