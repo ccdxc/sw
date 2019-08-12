@@ -61,6 +61,7 @@ public:
     void update_tx_stats(uint16_t pktcount);
     void set_bypass_fte(bool bypass_fte) { bypass_fte_ = bypass_fte; }
     void incr_freed_tx_stats(void);
+    void compute_cps();
 
 private:
     uint8_t                 id_;
@@ -77,13 +78,15 @@ private:
     ipc_logger             *logger_;
     fte_stats_t             stats_;
     bool                    bypass_fte_;
+    timespec_t              t_old_ts_, t_cur_ts_;
+    uint64_t                time_diff;
 
     void process_arq();
     void process_arq_new();
     void process_softq();
     void ctx_mem_init();
-    void compute_cps();
-    void compute_cps_batch(uint16_t);
+    void compute_pps();
+    void compute_pps_batch(uint16_t);
 };
 
 //------------------------------------------------------------------------------
@@ -97,11 +100,10 @@ static inst_t *g_inst_list[hal::MAX_FTE_THREADS];
 thread_local inst_t *t_inst;
 
 //-----------------------------------------------------------------------------
- // FTE thread local variables
- // ----------------------------------------------------------------------------
-thread_local timespec_t t_old_ts;
-thread_local timespec_t t_cur_ts;
+// FTE thread local variables
+//----------------------------------------------------------------------------
 thread_local uint64_t t_rx_pkts;
+thread_local uint64_t t_rx_cxn;
 
 //------------------------------------------------------------------------------
 // FTE main pkt loop
@@ -431,7 +433,7 @@ void inst_t::process_softq()
     while (npkt < FTE_MAX_SOFTQ_BATCH_SZ && softq_->dequeue(&op, &data)) {
         //Increment stats
         stats_.fte_hbm_stats->qstats.softq_req++;
-        compute_cps();
+        compute_pps();
 
         (*(softq_fn_t)op)(data);
         npkt++;
@@ -559,68 +561,98 @@ void inst_t::incr_freed_tx_stats(void)
     stats_.fte_hbm_stats->qstats.freed_tx_pkts++;
 }
 
+//----------------------------------------------------------------------------
+// Compute CPS on the given FTE instance
+//----------------------------------------------------------------------------
+void fte_inst_compute_cps(void)
+{
+    if (fte_disabled_ || t_inst == NULL) {
+        return;
+    }
+
+    t_inst->compute_cps();
+}
+
 //-----------------------------------------------------------------------------
- // Compute Connections per second
- //-----------------------------------------------------------------------------
- void inst_t::compute_cps(void)
- {
+// Compute Connections per second
+//-----------------------------------------------------------------------------
+void inst_t::compute_cps(void)
+{
+    if (time_diff > TIME_NSECS_PER_SEC) {
+        stats_.fte_hbm_stats->cpsstats.cps = t_rx_cxn;
+        t_rx_cxn = 1;
+    } else if (time_diff == TIME_NSECS_PER_SEC) {
+        stats_.fte_hbm_stats->cpsstats.cps = ++t_rx_cxn;
+    } else {
+        t_rx_cxn++;
+    }
+
+    // Record the Max. CPS we've done
+    if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
+        stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
+}
+
+//-----------------------------------------------------------------------------
+// Compute packets per second
+//-----------------------------------------------------------------------------
+void inst_t::compute_pps(void)
+{
      sdk::timespec_t temp_ts;
-     uint64_t         time_diff;
 
      // Get the current timestamp
-     HAL_GET_SYSTEM_CLOCK(&t_cur_ts);
+     HAL_GET_SYSTEM_CLOCK(&t_cur_ts_);
 
-     temp_ts = t_cur_ts;
-     sdk::timestamp_subtract(&temp_ts, &t_old_ts);
+     temp_ts = t_cur_ts_;
+     sdk::timestamp_subtract(&temp_ts, &t_old_ts_);
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts;
-         t_old_ts = t_cur_ts;
+         stats_.fte_hbm_stats->cpsstats.pps = t_rx_pkts;
+         t_old_ts_ = t_cur_ts_;
          t_rx_pkts = 1;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
-         stats_.fte_hbm_stats->cpsstats.cps = ++t_rx_pkts;
-         t_old_ts = t_cur_ts;
+         stats_.fte_hbm_stats->cpsstats.pps = ++t_rx_pkts;
+         t_old_ts_ = t_cur_ts_;
      } else {
          t_rx_pkts++;
      }
 
-     // Record the Max. CPS we've done
-     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
-         stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
+     // Record the Max. PPS we've done
+     if (stats_.fte_hbm_stats->cpsstats.pps > stats_.fte_hbm_stats->cpsstats.pps_hwm)
+         stats_.fte_hbm_stats->cpsstats.pps_hwm = stats_.fte_hbm_stats->cpsstats.pps;
 
- }
+}
 
 //-----------------------------------------------------------------------------
- // Compute Connections per second
- //-----------------------------------------------------------------------------
- void inst_t::compute_cps_batch(uint16_t pktcount)
- {
+// Compute packets per second
+//-----------------------------------------------------------------------------
+void inst_t::compute_pps_batch(uint16_t pktcount)
+{
      sdk::timespec_t temp_ts;
      uint64_t         time_diff;
 
      // Get the current timestamp
-     HAL_GET_SYSTEM_CLOCK(&t_cur_ts);
+     HAL_GET_SYSTEM_CLOCK(&t_cur_ts_);
 
-     temp_ts = t_cur_ts;
-     sdk::timestamp_subtract(&temp_ts, &t_old_ts);
+     temp_ts = t_cur_ts_;
+     sdk::timestamp_subtract(&temp_ts, &t_old_ts_);
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts;
-         t_old_ts = t_cur_ts;
+         stats_.fte_hbm_stats->cpsstats.pps = t_rx_pkts;
+         t_old_ts_ = t_cur_ts_;
          t_rx_pkts = pktcount;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
          t_rx_pkts += pktcount;
-         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts;
-         t_old_ts = t_cur_ts;
+         stats_.fte_hbm_stats->cpsstats.pps = t_rx_pkts;
+         t_old_ts_ = t_cur_ts_;
      } else {
          t_rx_pkts += pktcount;
      }
 
-     // Record the Max. CPS we've done
-     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
-         stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
+     // Record the Max. PPS we've done
+     if (stats_.fte_hbm_stats->cpsstats.pps > stats_.fte_hbm_stats->cpsstats.pps_hwm)
+         stats_.fte_hbm_stats->cpsstats.pps_hwm = stats_.fte_hbm_stats->cpsstats.pps;
 
  }
 
@@ -634,14 +666,14 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
      * we'll still compute CPS.
      */
     if (bypass_fte_ && !cpu_rxhdr) {
-        compute_cps();
+        compute_pps();
         stats_.fte_hbm_stats->qstats.flow_miss_pkts++;
 	return;
     }
 
     lifqid_t lifq = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
-    compute_cps();
+    compute_pps();
 
     if (lifq == FLOW_MISS_LIFQ) {
         stats_.fte_hbm_stats->qstats.flow_miss_pkts++;
@@ -669,7 +701,7 @@ void inst_t::update_rx_stats_batch(uint16_t pktcount)
      */
     if (!bypass_fte_) return;
 
-    compute_cps_batch(pktcount);
+    compute_pps_batch(pktcount);
     stats_.fte_hbm_stats->qstats.flow_miss_pkts += pktcount;
     return;
 }

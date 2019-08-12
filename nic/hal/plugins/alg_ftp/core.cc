@@ -725,7 +725,6 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
     l4_alg_status_t               *l4_sess = NULL;
     ftp_info_t                    *ftp_info = NULL;
     fte::flow_update_t             flowupd;
-    uint32_t                       payload_offset;
     fte::feature_session_state_t  *alg_state = NULL;
     sfw_info_t                    *sfw_info =
                                    (sfw_info_t*)ctx.feature_state(\
@@ -735,7 +734,6 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         return fte::PIPELINE_CONTINUE;
     }
 
-    payload_offset = ctx.cpu_rxhdr()->payload_offset;
     alg_state = ctx.feature_session_state();
     if (sfw_info->alg_proto == nwsec::APP_SVC_FTP &&
         (!ctx.existing_session())) {

@@ -461,6 +461,28 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
+      "name": "PacketsPerSecond",
+      "displayName": "PPS",
+      "description": "Packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level7"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxPacketsPerSecond",
+      "displayName": "Max-PPS",
+      "description": "Max packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level7"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "reporterID",
       "description": "Name of reporting object",
       "baseType": "string",

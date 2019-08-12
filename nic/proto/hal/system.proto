@@ -305,9 +305,11 @@ message FTEStatsInfo {
   uint64                   tls_proxy_pkts    = 7;
   uint64                   softq_reqs        = 8;
   uint64                   queued_tx_pkts    = 9;
-  uint64                   max_conn_per_sec  = 10;
-  repeated FTEError        fte_errors        = 11;
-  repeated FTEFeatureStats feature_stats     = 12;
+  uint64                   max_conn_per_second  = 10;
+  uint64                   packets_per_second     = 11;
+  uint64                   max_packets_per_second = 12;
+  repeated FTEError        fte_errors        = 13;
+  repeated FTEFeatureStats feature_stats     = 14;
 }
 
 // FTE Global Stats

@@ -339,7 +339,7 @@ ctx_t::init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
 }
 
 #define LOG_FLOW_UPDATE(__updinfo)                                         \
-    HAL_TRACE_DEBUG("{}.{} feature={} ret={} {}={}",                       \
+    HAL_TRACE_VERBOSE("{}.{} feature={} ret={} {}={}",                       \
                     role,                                                  \
                     (role == hal::FLOW_ROLE_INITIATOR)? istage_ : rstage_, \
                     feature_name_, ret, #__updinfo, flowupd.__updinfo)

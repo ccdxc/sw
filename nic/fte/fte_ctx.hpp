@@ -445,6 +445,10 @@ typedef struct fte_flow_log_info_s {
     nwsec::SecurityAction  sfw_action;
     nwsec::ALGName         alg;
     hal_handle_t           parent_session_id;
+    uint64_t               iflow_packets;
+    uint64_t               iflow_bytes;
+    uint64_t               rflow_packets;
+    uint64_t               rflow_bytes;
 } fte_flow_log_info_t;
 
 // API to increment per-instance stats per feature
@@ -483,6 +487,8 @@ typedef struct fte_hbm_stats_ {
     struct {
         uint64_t          cps;                         // Number of connections per second processed by this FTE
         uint64_t          cps_hwm;                     // Max. Number of connections per second processed by this FTE at any time
+        uint64_t          pps;                         // Number of packets per second processed by this FTE
+        uint64_t          pps_hwm;                     // Max. Number of packets per second processed by this FTE at any time
     } __PACK__ cpsstats;
     struct {
         uint64_t          flow_miss_pkts;              // Number of flow miss packets processed by this FTE
@@ -739,7 +745,7 @@ public:
             return &rflow_log_[rstage_];
         }
     }
-    void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
+    inline void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
                           fte_flow_log_info_t *fwlog);
     void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }

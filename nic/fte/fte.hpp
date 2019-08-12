@@ -108,4 +108,7 @@ void set_bypass_fte (uint8_t fte_id, bool bypass_fte=false);
 // API to increment per-instance stats for freed TX resources
 void incr_inst_freed_tx_stats(void);
 
+//Compute CPS
+void fte_inst_compute_cps(void);
+
 } // namespace fte

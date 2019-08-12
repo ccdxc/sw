@@ -1627,7 +1627,6 @@ nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                    *dhl_entry = NULL;
     nwsec_policy_t                 *policy = NULL;
     hal_handle_t                   hal_handle = 0;
-    nwsec_policy_upd_app_ctxt_t    *app_ctx = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1636,7 +1635,6 @@ nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctx = (nwsec_policy_upd_app_ctxt_t *) cfg_ctxt->app_ctxt;
 
     policy = (nwsec_policy_t *) dhl_entry->obj;
     hal_handle = dhl_entry->handle;

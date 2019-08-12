@@ -2919,7 +2919,7 @@ system_fte_stats_get(SystemResponse *rsp)
 
         if (per_fte_stats.fte_hbm_stats) {
             fte_stats->set_conn_per_second(per_fte_stats.fte_hbm_stats->cpsstats.cps);
-            fte_stats->set_max_conn_per_sec(per_fte_stats.fte_hbm_stats->cpsstats.cps_hwm);
+            fte_stats->set_max_conn_per_second(per_fte_stats.fte_hbm_stats->cpsstats.cps_hwm);
             fte_stats->set_flow_miss_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_miss_pkts);
             fte_stats->set_retransmit_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_retransmit_pkts);
             fte_stats->set_redir_pkts(per_fte_stats.fte_hbm_stats->qstats.redirect_pkts);
@@ -2928,6 +2928,8 @@ system_fte_stats_get(SystemResponse *rsp)
             fte_stats->set_tls_proxy_pkts(per_fte_stats.fte_hbm_stats->qstats.tls_proxy_pkts);
             fte_stats->set_softq_reqs(per_fte_stats.fte_hbm_stats->qstats.softq_req);
             fte_stats->set_queued_tx_pkts(per_fte_stats.fte_hbm_stats->qstats.queued_tx_pkts);
+            fte_stats->set_packets_per_second(per_fte_stats.fte_hbm_stats->cpsstats.pps);
+            fte_stats->set_max_packets_per_second(per_fte_stats.fte_hbm_stats->cpsstats.pps_hwm);
         }
 
         for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {

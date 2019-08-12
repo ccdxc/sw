@@ -1108,11 +1108,18 @@ cleanup:
 hal_ret_t
 pd_session_delete (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t          ret = HAL_RET_OK;
+    hal_ret_t             ret = HAL_RET_OK;
     pd_session_delete_args_t *args = pd_func_args->pd_session_delete;
-    pd_session_t       *session_pd = NULL;
+    pd_session_t         *session_pd = NULL;
+    pd_func_args_t        get_func_args = {0};
+    pd_session_get_args_t session_get_args = {0};
 
     HAL_TRACE_DEBUG("Deleting pd state for session");
+
+    session_get_args.session = args->session;
+    session_get_args.session_state = args->session_state;
+    get_func_args.pd_session_get = &session_get_args;
+    pd_session_get(&get_func_args);
 
     session_pd = args->session->pd;
 

@@ -182,13 +182,48 @@ ctx_t::lookup_flow_objs()
         }
     }
 
-    //Lookup src and dest EPs
-    hal::ep_get_from_flow_key(&key_, &sep_, &dep_);
+    //If we already found sl2seg_ during key lookup for flow miss
+    //then we use that to derive the source ep
+    if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
+        // Try to find sep by looking at L2.
+        ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+        sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
+        HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
+                           sl2seg_->seg_id, macaddr2str(ethhdr->smac));
+
+        ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+        dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
+        HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
+                              sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
+    } else if (existing_session()) {
+        sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
+                                       session_->iflow->config.l2_info.smac);
+        HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
+                           session_->iflow->config.l2_info.l2seg_id,
+                           macaddr2str(session_->iflow->config.l2_info.smac));
+        dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
+                                      session_->iflow->config.l2_info.dmac);
+        HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
+                          session_->iflow->config.l2_info.l2seg_id,
+                          macaddr2str(session_->iflow->config.l2_info.dmac));
+    } 
+    if ((sep_ == NULL || dep_ == NULL) && 
+        hal::is_platform_type_sim()) {
+        hal::ep_t *sep = NULL, *dep = NULL;
+
+        //Lookup src and dest EPs
+        hal::ep_get_from_flow_key(&key_, &sep, &dep);
+        if (sep_ == NULL) sep_ = sep;
+        if (dep_ == NULL) dep_ = dep;
+
+        HAL_TRACE_VERBOSE("L3 lookup sep: {} dep: {}", (sep_ != NULL)?"found":"not found", 
+                        (dep_ != NULL)?"found":"not found");
+    }
     if (sep_) {
         sep_handle_ = sep_->hal_handle;
         if (protobuf_request()) {
             key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL) ? hal::FLOW_DIR_FROM_DMA :
-                hal::FLOW_DIR_FROM_UPLINK;
+                      hal::FLOW_DIR_FROM_UPLINK;
         }
         if ((sl2seg_ == NULL) ||
             (sl2seg_ != NULL && sl2seg_->hal_handle != sep_->l2seg_handle)) {
@@ -197,31 +232,6 @@ ctx_t::lookup_flow_objs()
         }
         sif_ = hal::find_if_by_handle(sep_->if_handle);
         SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
-    } else {
-        HAL_TRACE_DEBUG("fte: src ep unknown");
-        //If we already found sl2seg_ during key lookup for flow miss
-        //then we use that to derive the source ep
-        if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
-            // Try to find sep by looking at L2.
-            ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
-            sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
-            HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
-                              sl2seg_->seg_id, macaddr2str(ethhdr->smac));
-        } else if (existing_session()) {
-            sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
-                                          session_->iflow->config.l2_info.smac);
-            HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
-                              session_->iflow->config.l2_info.l2seg_id,
-                              macaddr2str(session_->iflow->config.l2_info.smac));
-        }
-        if (sep_) {
-            sep_handle_ = sep_->hal_handle;
-            sif_ = hal::find_if_by_handle(sep_->if_handle);
-            SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
-
-            sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
-            SDK_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
-       }
     }
 
     if (dep_) {
@@ -231,26 +241,7 @@ ctx_t::lookup_flow_objs()
             dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
             SDK_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
-    } else {
-        if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
-            ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
-            dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
-            HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
-                              sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
-        } else if (existing_session()) {
-            dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id, session_->iflow->config.l2_info.dmac);
-            HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
-                              session_->iflow->config.l2_info.l2seg_id,
-                              macaddr2str(session_->iflow->config.l2_info.dmac));
-        }
-        if (dep_) {
-            dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
-        } else {
-            HAL_TRACE_DEBUG("fte: dest ep unknown");
-        }
-    }
 
-    if (dep_) {
         dif_ = hal::find_if_by_handle(dep_->if_handle);
         SDK_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
          /* Check if LIF is known for the dep */
@@ -463,9 +454,12 @@ static inline void fw_log(ipc_logger *logger, fwlog::FWEvent ev)
 //------------------------------------------------------------------------------
 // Add FTE Flow logging information in logging infra
 //------------------------------------------------------------------------------
-void
+inline void
 ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
-                         fte_flow_log_info_t *log) {
+                  fte_flow_log_info_t *log) {
+    timespec_t      ctime;
+    int64_t         ctime_ns;
+
     t_fwlg.Clear();
 
     // Dont log for non-ipv4 flows or netflow
@@ -492,8 +486,14 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     t_fwlg.set_direction((key.dir == hal::FLOW_DIR_FROM_UPLINK) ?
                          types::FLOW_DIRECTION_FROM_UPLINK :\
                          types::FLOW_DIRECTION_FROM_HOST);
-    if (pipeline_event() == FTE_SESSION_DELETE)
+    clock_gettime(CLOCK_REALTIME, &ctime);
+    if (pipeline_event() == FTE_SESSION_DELETE) {
         t_fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
+        t_fwlg.set_iflow_packets(session_state.iflow_state.packets);
+        t_fwlg.set_rflow_packets(session_state.rflow_state.packets);
+    }
+    sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+    t_fwlg.set_timestamp(ctime_ns);
     t_fwlg.set_session_id(sess_hdl);
     t_fwlg.set_alg(log->alg);
     t_fwlg.set_fwaction(log->sfw_action);
@@ -792,6 +792,7 @@ ctx_t::update_flow_table()
     session_args.valid_rflow = valid_rflow_;
 
     if (hal_cleanup() == true) {
+        session_args.session_state = &session_state;
         // Cleanup session if hal_cleanup is set
         if (session_) {
             update_type = "delete";
@@ -831,9 +832,16 @@ ctx_t::update_flow_table()
     }
 
 end:
+
     // Dont log when we hit an error
     if (!ipc_logging_disable() && (ret == HAL_RET_OK) &&
         ((session_exists == false) || (update_type == "delete"))) {
+      
+        // Compute CPS
+        if (session_exists == false) {
+            fte_inst_compute_cps();
+        }
+ 
         /* Add flow logging only for initiator flows */
         uint8_t istage = 0;
         add_flow_logging(key_, session_handle, &iflow_log_[istage]);

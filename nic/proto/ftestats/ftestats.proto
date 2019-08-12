@@ -17,6 +17,8 @@ message FteCPSMetrics {
 
     delphi.Counter connections_per_second     = 2  [(venice.metricsField) = {DisplayName: "CPS" Description: "Connections per second"}];
     delphi.Counter max_connections_per_second = 3  [(venice.metricsField) = {DisplayName: "Max-CPS" Description: "Max Connections per second" Tags:[ Level7 ] }];
+    delphi.Counter packets_per_second         = 4  [(venice.metricsField) = {DisplayName: "PPS" Description: "Packets per second" Tags:[ Level7 ] }];
+    delphi.Counter max_packets_per_second     = 5  [(venice.metricsField) = {DisplayName: "Max-PPS" Description: "Max packets per second" Tags:[ Level7 ] }];
 }
 
 message FteLifQMetrics { 

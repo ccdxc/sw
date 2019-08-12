@@ -17,6 +17,10 @@ type FteCPSMetrics struct {
 
 	MaxConnectionsPerSecond metrics.Counter
 
+	PacketsPerSecond metrics.Counter
+
+	MaxPacketsPerSecond metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -33,6 +37,10 @@ func (mtr *FteCPSMetrics) Size() int {
 
 	sz += mtr.MaxConnectionsPerSecond.Size()
 
+	sz += mtr.PacketsPerSecond.Size()
+
+	sz += mtr.MaxPacketsPerSecond.Size()
+
 	return sz
 }
 
@@ -47,6 +55,12 @@ func (mtr *FteCPSMetrics) Unmarshal() error {
 
 	mtr.MaxConnectionsPerSecond = mtr.metrics.GetCounter(offset)
 	offset += mtr.MaxConnectionsPerSecond.Size()
+
+	mtr.PacketsPerSecond = mtr.metrics.GetCounter(offset)
+	offset += mtr.PacketsPerSecond.Size()
+
+	mtr.MaxPacketsPerSecond = mtr.metrics.GetCounter(offset)
+	offset += mtr.MaxPacketsPerSecond.Size()
 
 	return nil
 }
@@ -65,6 +79,16 @@ func (mtr *FteCPSMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.MaxConnectionsPerSecond.Size()
 
+	if fldName == "PacketsPerSecond" {
+		return offset
+	}
+	offset += mtr.PacketsPerSecond.Size()
+
+	if fldName == "MaxPacketsPerSecond" {
+		return offset
+	}
+	offset += mtr.MaxPacketsPerSecond.Size()
+
 	return offset
 }
 
@@ -77,6 +101,18 @@ func (mtr *FteCPSMetrics) SetConnectionsPerSecond(val metrics.Counter) error {
 // SetMaxConnectionsPerSecond sets cunter in shared memory
 func (mtr *FteCPSMetrics) SetMaxConnectionsPerSecond(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MaxConnectionsPerSecond"))
+	return nil
+}
+
+// SetPacketsPerSecond sets cunter in shared memory
+func (mtr *FteCPSMetrics) SetPacketsPerSecond(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PacketsPerSecond"))
+	return nil
+}
+
+// SetMaxPacketsPerSecond sets cunter in shared memory
+func (mtr *FteCPSMetrics) SetMaxPacketsPerSecond(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("MaxPacketsPerSecond"))
 	return nil
 }
 

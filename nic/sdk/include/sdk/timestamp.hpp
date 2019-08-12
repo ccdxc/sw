@@ -171,6 +171,17 @@ timestamp_to_nsecs (timespec_t *ts, uint64_t *nsecs)
     *nsecs += (uint64_t) (ts->tv_sec * TIME_NSECS_PER_SEC);
 }
 
+//--------------------------------------------------------------------------
+// convert time from timespec format to nanoseconds
+//--------------------------------------------------------------------------
+static inline void
+timestamp_to_nsecs (timespec_t *ts, int64_t *nsecs)
+{
+    assert((ts != NULL) && (nsecs != NULL));
+    *nsecs = ts->tv_nsec;
+    *nsecs += (int64_t) (ts->tv_sec * TIME_NSECS_PER_SEC);
+}
+
 }    // namespace sdk
 
 using sdk::timespec_t;

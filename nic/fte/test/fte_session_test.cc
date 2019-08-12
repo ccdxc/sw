@@ -112,142 +112,31 @@ TEST_F(fte_session_test, session_create)
 TEST_F(fte_session_test, fte_stats)
 {
     fte::fte_stats_t    stats;
-    vector<Tins::EthernetII> pkts;
-    const int num_flows = 10;
+    const int num_flows = 200;
     uint64_t  softq_req = 0;
 
     stats = fte::fte_stats_get(FTE_ID);
     softq_req = stats.fte_hbm_stats->qstats.softq_req;
     cout << "softq req: " << softq_req++ << endl;
 
-    for (uint32_t sport = 1; sport <= num_flows; sport++) {
-        for (uint32_t dport = 1; dport <= 5; dport++) {
-            Tins::TCP tcp = Tins::TCP(dport, sport);
-            tcp.flags(Tins::TCP::SYN);
+    for (uint32_t sport = 1, dport=1; sport <= num_flows; sport++, dport++) {
+        vector<Tins::EthernetII> pkts;
+        Tins::TCP tcp = Tins::TCP(dport, sport);
+        tcp.flags(Tins::TCP::SYN);
 
-            Tins::EthernetII eth =
-                Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:02"),
+        Tins::EthernetII eth =
+             Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:02"),
                                  Tins::HWAddress<6>("aa:bb:0a:00:00:01")) /
-                Tins::Dot1Q(100) /
-                Tins::IP(Tins::IPv4Address(htonl(0x0A000002)), Tins::IPv4Address(htonl(0x0A000001))) /
-                tcp;
-            pkts.push_back(eth);
-            inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh1, l2segh, pkts);
-        }
+             Tins::Dot1Q(100) /
+             Tins::IP(Tins::IPv4Address(htonl(0x0A000002)), Tins::IPv4Address(htonl(0x0A000001))) /
+             tcp;
+        pkts.push_back(eth);
+        inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh1, l2segh, pkts);
     }
+
     stats = fte::fte_stats_get(FTE_ID);
     EXPECT_NE(stats.fte_hbm_stats->cpsstats.cps, 0);
-    EXPECT_EQ(stats.fte_hbm_stats->qstats.softq_req, softq_req+50);
+    EXPECT_EQ(stats.fte_hbm_stats->qstats.softq_req, softq_req+200);
     cout << "CPS: " << stats.fte_hbm_stats->cpsstats.cps << endl;
     cout << "Max. CPS: " << stats.fte_hbm_stats->cpsstats.cps_hwm << endl;
-}
-
-TEST_F (fte_session_test, fte_test_local_remote_ep_lookup)
-{
-    hal_ret_t ret;
-    hal::session_t *session = NULL;
-    hal::flow_t    *flow = NULL;
-    hal::ep_t      *sep = NULL, *dep = NULL;
-    hal::l2seg_t   *l2seg = NULL;
-
-    // Create TCP session
-    Tins::TCP tcp = Tins::TCP(5000, 5001);
-    tcp.flags(Tins::TCP::SYN);
-
-    Tins::EthernetII eth =
-         Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:04"),
-                          Tins::HWAddress<6>("aa:bb:0a:00:00:03")) /
-                          Tins::Dot1Q(100) /
-                          Tins::IP(Tins::IPv4Address(htonl(0x0A000004)), Tins::IPv4Address(htonl(0x0A000003))) /
-                          tcp;
-
-    ret = inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh3, l2segh, eth);
-    EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_FALSE(ctx_.drop());
-    EXPECT_NE(ctx_.session(), nullptr);
-    EXPECT_EQ(ctx_.sif()->hal_handle, intfh3);
-    EXPECT_EQ(ctx_.sl2seg()->hal_handle, l2segh);
-
-    session = ctx_.session();
-    flow = session->iflow;
-    ret = hal::ep_get_from_flow_key(&flow->config.key, &sep, &dep);
-    ASSERT_NE(ret, HAL_RET_OK);
-    sep = hal::find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.smac);
-    dep = hal::find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.dmac);
-
-    EXPECT_EQ(dep, nullptr);
-    EXPECT_NE(sep, nullptr);
-    l2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
-    ASSERT_NE(l2seg, nullptr);
-    ASSERT_EQ(sep->l2seg_handle, l2segh); 
-}
-
-TEST_F (fte_session_test, fte_test_local_local_ep_lookup)
-{
-    hal_ret_t ret;
-    hal::session_t *session = NULL;
-    hal::flow_t    *flow = NULL;
-    hal::ep_t      *l3sep = NULL, *l3dep = NULL;
-    hal::ep_t      *l2sep = NULL, *l2dep = NULL;
-    hal::l2seg_t   *l2seg = NULL;
-
-    // Create TCP session
-    Tins::TCP tcp = Tins::TCP(5000, 5001);
-    tcp.flags(Tins::TCP::SYN);
-
-    Tins::EthernetII eth =
-         Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:01"),
-                          Tins::HWAddress<6>("aa:bb:0a:00:00:02")) /
-                          Tins::Dot1Q(100) /
-                          Tins::IP(Tins::IPv4Address(htonl(0x0A000001)), Tins::IPv4Address(htonl(0x0A000002))) /
-                          tcp;
-
-    ret = inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh2, l2segh, eth);
-    EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_FALSE(ctx_.drop());
-    EXPECT_NE(ctx_.session(), nullptr);
-    EXPECT_EQ(ctx_.sif()->hal_handle, intfh2);
-    EXPECT_EQ(ctx_.sl2seg()->hal_handle, l2segh);
-
-    session = ctx_.session();
-    flow = session->iflow;
-    ret = hal::ep_get_from_flow_key(&flow->config.key, &l3sep, &l3dep);
-    ASSERT_EQ(ret, HAL_RET_OK);
-    l2sep = hal::find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.smac);
-    l2dep = hal::find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.dmac);
-    ASSERT_EQ(l3dep, l2dep);
-    ASSERT_EQ(l3sep, l2sep);
-
-    EXPECT_NE(l3dep, nullptr);
-    EXPECT_NE(l3sep, nullptr);
-    l2seg = hal::l2seg_lookup_by_handle(l3sep->l2seg_handle);
-    ASSERT_NE(l2seg, nullptr);
-    ASSERT_EQ(l3sep->l2seg_handle, l2segh);
-}
-
-TEST_F (fte_session_test, fte_test_icmp_session)
-{
-    hal_ret_t ret;
-    hal::session_t *session = NULL;
-
-    // Create TCP session
-    Tins::ICMP icmp = Tins::ICMP();
-    icmp.type(Tins::ICMP::Flags::INFO_REQUEST);
-    icmp.code(0);
-    
-    Tins::EthernetII eth =
-         Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:01"),
-                          Tins::HWAddress<6>("aa:bb:0a:00:00:02")) /
-                          Tins::Dot1Q(100) /
-                          Tins::IP(Tins::IPv4Address(htonl(0x0A000001)), Tins::IPv4Address(htonl(0x0A000002))) /
-                          icmp;
-
-    ret = inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh2, l2segh, eth);
-    EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_FALSE(ctx_.drop());
-    EXPECT_NE(ctx_.session(), nullptr);
-    session = ctx_.session();
-
-    ret = session_delete(session, true);
-    ASSERT_EQ(ret, HAL_RET_OK);     
 }

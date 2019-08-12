@@ -24,6 +24,26 @@
           "Tags": [
             "Level7"
           ]
+        },
+        {
+          "Name": "PacketsPerSecond",
+          "DisplayName": "PPS",
+          "Description": "Packets per second",
+          "Units": "Count",
+          "BaseType": "Counter",
+          "Tags": [
+            "Level7"
+          ]
+        },
+        {
+          "Name": "MaxPacketsPerSecond",
+          "DisplayName": "Max-PPS",
+          "Description": "Max packets per second",
+          "Units": "Count",
+          "BaseType": "Counter",
+          "Tags": [
+            "Level7"
+          ]
         }
       ],
       "Tags": [
