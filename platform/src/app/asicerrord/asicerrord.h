@@ -230,9 +230,6 @@ static inline void poll_##kind##metrics(uint64_t key, uint32_t addr) { \
         return; \
     } \
 
-#define CAPRI_PRINT_HBM_ERROR() \
-    unravel_intr(data);
-
 #define CAPRI_INTR_KIND_FIELD(fld, offset, type) \
     if (data & (1 << offset)) { \
         reg->fld++; \
@@ -243,6 +240,9 @@ static inline void poll_##kind##metrics(uint64_t key, uint32_t addr) { \
             ERR("Register {} key {} at address {:x} interrupt {} type {} times {}", \
                  regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
     } \
+
+#define CAPRI_PRINT_HBM_ERROR() \
+    unravel_intr(data);
 
 #define CAPRI_INTR_KIND_END(classkind) \
     rc = sdk::lib::pal_reg_write(addr, &data, size); \

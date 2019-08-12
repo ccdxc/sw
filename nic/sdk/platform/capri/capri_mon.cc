@@ -28,7 +28,8 @@ read_cattrip_table(cattrip_t *entry, uint64_t nwl_base_addr, uint8_t t_offset)
     uint32_t reg_value = 0;
     sdk::asic::asic_reg_read(nwl_base_addr + entry->offset, &reg_value, 1, true);
     if (reg_value) {
-        SDK_OBFL_TRACE_INFO("%s %d", entry->message, t_offset);
+        SDK_OBFL_TRACE_ERR("ECCERR::reading register %x %s %d",
+                            nwl_base_addr + entry->offset, entry->message.c_str(), t_offset);
     }
 }
 
@@ -39,7 +40,9 @@ read_cattrip_reg(uint64_t nwl_base_addr, uint8_t channel)
     sdk::asic::asic_reg_read(nwl_base_addr +
             DDR_CSR_APB_CPU0_DFI_STAT_DFI_CATTRIP_BYTE_ADDRESS, &reg_value, 1, true);
     if (reg_value) {
-        SDK_OBFL_TRACE_INFO("%s %d", "CRITICAL CATTRIP at channel =", channel);
+        SDK_OBFL_TRACE_ERR("CRITCATTRIP::reading register %x %s %d", nwl_base_addr +
+                            DDR_CSR_APB_CPU0_DFI_STAT_DFI_CATTRIP_BYTE_ADDRESS,
+                            "CRITICAL CATTRIP at channel =", channel);
         return true;
     }
     return false;

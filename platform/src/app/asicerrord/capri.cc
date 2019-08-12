@@ -488,9 +488,9 @@ CAPRI_INTR_KIND_BEGIN(pbpbchbminthbmxoff, 1, PbpbchbminthbmxoffMetrics)
 CAPRI_INTR_KIND_END(PbpbchbminthbmxoffMetrics)
 
 CAPRI_INTR_KIND_BEGIN(mcmchintmc, 2, McmchintmcMetrics)
-    CAPRI_PRINT_HBM_ERROR()
     CAPRI_INTR_KIND_FIELD(ecc_1bit_thres_ps1, 0, ERROR)
     CAPRI_INTR_KIND_FIELD(ecc_1bit_thres_ps0, 1, ERROR)
+    CAPRI_PRINT_HBM_ERROR()
 CAPRI_INTR_KIND_END(McmchintmcMetrics)
 
 void poll_capri_intr() {
