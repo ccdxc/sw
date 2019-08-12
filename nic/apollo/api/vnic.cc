@@ -71,6 +71,9 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     this->vnic_encap_ = spec->vnic_encap;
     this->fabric_encap_ = spec->fabric_encap;
     this->switch_vnic_ = spec->switch_vnic;
+    if (is_mac_set(spec->mac_addr)) {
+        memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);
+    }
     return SDK_RET_OK;
 }
 

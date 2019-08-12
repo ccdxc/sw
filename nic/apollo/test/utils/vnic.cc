@@ -80,6 +80,8 @@ vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
     vnic_feeder_encap_init(id, vnic_encap_type, &vnic_encap);
     vnic_feeder_encap_init(id, fabric_encap_type, &fabric_encap);
     this->src_dst_check = src_dst_check;
+    this->tx_mirror_session_bmap = 0;
+    this->rx_mirror_session_bmap = 0;
     num_obj = num_vnic;
 }
 
@@ -87,8 +89,11 @@ void
 vnic_feeder::iter_next(int width) {
     id += width;
     vnic_feeder_encap_next(&vnic_encap);
-    if (apollo())
+    if (apollo()) {
         vnic_feeder_encap_next(&fabric_encap);
+        tx_mirror_session_bmap += width;
+        rx_mirror_session_bmap += width;
+    }
     mac_u64 += width;
     cur_iter_pos++;
 }
@@ -111,6 +116,8 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     MAC_UINT64_TO_ADDR(spec->mac_addr, mac_u64);
     spec->rsc_pool_id = rsc_pool_id;
     spec->src_dst_check = src_dst_check;
+    spec->tx_mirror_session_bmap = tx_mirror_session_bmap;
+    spec->rx_mirror_session_bmap = rx_mirror_session_bmap;
 }
 
 bool
@@ -122,6 +129,8 @@ vnic_feeder::key_compare(const pds_vnic_key_t *key) const {
 
 bool
 vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
+    mac_addr_t mac = {0};
+
     if (!api::pdsencap_isequal(&vnic_encap, &spec->vnic_encap))
         return false;
 
@@ -134,9 +143,14 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
 
         if (src_dst_check != spec->src_dst_check)
             return false;
+
+        if (tx_mirror_session_bmap != spec->tx_mirror_session_bmap)
+            return false;
+
+        if (rx_mirror_session_bmap != spec->rx_mirror_session_bmap)
+            return false;
     }
 
-    mac_addr_t mac = {0};
     MAC_UINT64_TO_ADDR(mac, mac_u64);
     if (memcmp(mac, &spec->mac_addr, sizeof(mac)))
         return false;

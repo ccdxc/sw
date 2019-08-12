@@ -197,25 +197,20 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic);
 
-    /// \brief fill the VNIC stats
-    /// \param[in] tx_stats transmit statistics table data
-    /// \param[in] rx_stats receive statistics table data
-    void fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
-                         vnic_rx_stats_actiondata_t *rx_stats,
-                         pds_vnic_stats_t *stats);
-
-    /// \breif fill the VNIC specification
-    /// \param[in]  egress_vnic_data   EGRESS_LOCAL_VNIC_INFO_RX table data
-    /// \param[in]  vnic_by_vlan_data  LOCAL_VNIC_BY_VLAN_TX table data
-    /// \param[in]  vnic_by_slot_key   LOCAL_VNIC_BY_SLOT_RX table key
-    /// \param[in]  vnic_by_slot_data  LOCAL_VNIC_BY_SLOT_RX table data
+    /// \brief      fill the VNIC spec
     /// \param[out] spec specification
-    void fill_vnic_spec_(
-                egress_local_vnic_info_actiondata_t *egress_vnic_data,
-                local_vnic_by_vlan_tx_actiondata_t  *vnic_by_vlan_data,
-                local_vnic_by_slot_rx_swkey_t       *vnic_by_slot_key,
-                local_vnic_by_slot_rx_actiondata_t  *vnic_by_slot_data,
-                pds_vnic_spec_t *spec);
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_vnic_spec_t *spec);
+
+    /// \brief      fill the VNIC stats
+    /// \param[out] stats statistics
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_stats_(pds_vnic_stats_t *stats);
+
+    /// \brief      fill the VNIC status
+    /// \param[out] status status
+    void fill_status_(pds_vnic_status_t *status);
+
 private:
     // P4 datapath specific state
     uint16_t hw_id_;                           ///< hardware id

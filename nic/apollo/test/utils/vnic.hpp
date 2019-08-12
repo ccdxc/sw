@@ -7,6 +7,7 @@
 #define __TEST_UTILS_VNIC_HPP__
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/vnic_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -27,6 +28,8 @@ public:
     uint64_t mac_u64;
     pds_rsc_pool_id_t rsc_pool_id;
     bool src_dst_check;
+    uint8_t tx_mirror_session_bmap;
+    uint8_t rx_mirror_session_bmap;
 
     // Constructor
     vnic_feeder() { };

@@ -32,6 +32,7 @@ typedef uint32_t                  pds_rule_id_t;    ///< Rule index
 typedef uint32_t                  pds_rsc_pool_id_t;    ///< Resource pool id
 typedef uint32_t                  pds_epoch_t;          ///< Epoch id
 typedef uint32_t                  pds_slot_id_t;        ///< MPLS tag value
+typedef uint16_t                  pds_vlan_id_t;        ///< VLAN tag value
 typedef uint32_t                  pds_vnid_id_t;        ///< VXLAN id
 typedef uint32_t                  pds_mpls_tag_t;       ///< MPLS tag value
 typedef uint32_t                  pds_mapping_id_t;     ///< Mapping table index

@@ -210,6 +210,10 @@ public:
     /// \return    true if vnic is switch vnic, else false
     bool switch_vnic(void) { return switch_vnic_; }
 
+    /// \brief     return the MAC address corresponding to this vnic
+    /// \return    ethernet MAC address of this vnic
+    mac_addr_t& mac(void) { return mac_; }
+
 private:
     /// \brief    constructor
     vnic_entry();
@@ -230,6 +234,7 @@ private:
     pds_encap_t       vnic_encap_;       ///< vnic's vlan encap
     pds_encap_t       fabric_encap_;     ///< fabric encap information
     bool              switch_vnic_;      ///< TRUE if this is switch vnic
+    mac_addr_t        mac_;              ///< MAC address of this vnic
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance
 
