@@ -85,3 +85,21 @@ func pkgVerify(pkgName string) (string, error) {
 	}
 	return execCmd(v)
 }
+
+func rmUpgTechSupportFiles() (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-rf ", "/data/pre-upgrade-logs.tar.gz"}, ""),
+	}
+	execCmd(v)
+	v = &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-rf ", "/data/post-upgrade-logs.tar.gz"}, ""),
+	}
+	execCmd(v)
+	v = &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-rf ", "/data/naples-disruptive-upgrade-tech-support*"}, ""),
+	}
+	return execCmd(v)
+}

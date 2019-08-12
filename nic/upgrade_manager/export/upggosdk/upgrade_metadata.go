@@ -229,6 +229,7 @@ func isPrePostImageMetaSame(upgCtx *UpgCtx) bool {
 
 func isUpgradeAllowed(pkgName string) error {
 	removeUpgMetaFiles()
+	rmUpgTechSupportFiles()
 	upgCtx.firmwarePkgName = pkgName
 	_, err := pkgVerify(pkgName)
 	if err != nil {
