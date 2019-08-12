@@ -78,7 +78,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256_test(void)
     uint8_t             x3[32];
     uint8_t             y3[32];
 
-    ret = capri_barco_asym_ecc_point_mul_p256(p, n,
+    ret = capri_barco_asym_ecc_point_mul(32, p, n,
         xg, yg, a, b, xg, yg, k, x3, y3);
 
     return ret;
