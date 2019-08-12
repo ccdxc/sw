@@ -1296,7 +1296,45 @@ func TestAgentCrudEvents(t *testing.T) {
 			Name:      "testEnic",
 		},
 		Spec: netproto.InterfaceSpec{
-			Type: "ENIC",
+			Type: "UPLINK_ETH",
+		},
+		Status: netproto.InterfaceStatus{
+			OperStatus: "UP",
+		},
+	}
+	AssertOk(t, stateMgr.OnInterfaceCreateReq("test-node", &netIf), "Interface create")
+	AssertOk(t, stateMgr.OnInterfaceUpdateReq("test-node", &netIf), "Interface update")
+
+	netIf = netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEnic",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_MGMT",
+		},
+		Status: netproto.InterfaceStatus{
+			OperStatus: "DOWN",
+		},
+	}
+	AssertOk(t, stateMgr.OnInterfaceCreateReq("test-node", &netIf), "Interface create")
+	AssertOk(t, stateMgr.OnInterfaceUpdateReq("test-node", &netIf), "Interface update")
+	stateMgr.OnInterfaceDeleteReq("test-node", &netIf)
+
+	netIf = netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEnic",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "HOST_PF",
+		},
+		Status: netproto.InterfaceStatus{
+			OperStatus: "DOWN",
 		},
 	}
 	AssertOk(t, stateMgr.OnInterfaceCreateReq("test-node", &netIf), "Interface create")

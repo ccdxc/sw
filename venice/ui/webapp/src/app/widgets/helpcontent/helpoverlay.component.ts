@@ -53,6 +53,10 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.closeHelp();
     }));
 
+    this.subscriptions.push( this.controllerService.subscribe(Eventtypes.LOGOUT, (payload) => {
+      this.closeHelp();
+    }));
+
     this.subscriptions.push( this.controllerService.subscribe(Eventtypes.HELP_OVERLAY_OPEN, (payload) => {
       this.openHelp();
     }));

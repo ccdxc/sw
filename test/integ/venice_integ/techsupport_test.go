@@ -625,7 +625,7 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 	numNodes := 1 + rand.Intn(20)
 	nodes := []*cluster.SmartNIC{}
 	for i := 0; i < numNodes; i++ {
-		n := newSmartNICNode(fmt.Sprintf("00ae.cd00.000%d", i), nil)
+		n := newSmartNICNode(fmt.Sprintf("00ae.cd00.%04d", i), nil)
 		err := it.createSmartNICNode(ctx, n)
 		AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n))
 		nodes = append(nodes, n)
@@ -636,7 +636,7 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 	numRequests := 5 + rand.Intn(20)
 	requests := []*monitoring.TechSupportRequest{}
 	for i := 0; i < numRequests; i++ {
-		r := newTechSupportRequest(fmt.Sprintf("00ae.cd00.000%d", i), []string{"00ae.cd00.0000"}, nil)
+		r := newTechSupportRequest(fmt.Sprintf("00ae.cd00.%04d", i), []string{"00ae.cd00.0000"}, nil)
 		err := it.createTechSupportRequest(ctx, r)
 		AssertOk(c, err, fmt.Sprintf("Error creating TechSupportRequest %+v", r))
 		requests = append(requests, r)

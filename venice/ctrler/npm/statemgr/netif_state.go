@@ -20,19 +20,23 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	}
 
 	switch agentNetif.Status.OperStatus {
-	case "UP", "DOWN":
-		netif.Status.OperStatus = agentNetif.Status.OperStatus
+	case "UP":
+		netif.Status.OperStatus = network.NetworkInterfaceStatus_UP.String()
+	case "DOWN":
+		netif.Status.OperStatus = network.NetworkInterfaceStatus_DOWN.String()
 	default:
-		netif.Status.OperStatus = "UP" // TBD: should default be modeled to vencie user?
+		netif.Status.OperStatus = network.NetworkInterfaceStatus_UP.String() // TBD: should default be modeled to vencie user?
 	}
 
 	switch agentNetif.Spec.Type {
-	case "UPLINK_ETH", "UPLINK_MGMT":
-		netif.Status.Type = agentNetif.Spec.Type
+	case "UPLINK_ETH":
+		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_ETH.String()
+	case "UPLINK_MGMT":
+		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_MGMT.String()
 	case "HOST_PF":
-		netif.Status.Type = "ENIC"
+		netif.Status.Type = network.NetworkInterfaceStatus_HOST_PF.String()
 	default:
-		netif.Status.Type = "UPLINK_ETH" // TBD: what if we receive unrecognized type, perhaps ingore it?
+		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_ETH.String() // TBD: what if we receive unrecognized type, perhaps ingore it?
 	}
 	netif.Tenant = ""
 	netif.Namespace = ""

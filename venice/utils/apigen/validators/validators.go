@@ -205,7 +205,7 @@ func HostAddr(in string) error {
 // MacAddr verifies it is a valid MAC address is in dot format - aaaa.bbbb.cccc
 //   see tests for valid formats
 func MacAddr(in string) error {
-	r := regexp.MustCompile("([0-9a-fA-F]{4}[.]){2}([0-9a-fA-F]{4})")
+	r := regexp.MustCompile("([0-9a-fA-F]{4}[.]){2}([0-9a-fA-F]{4})$")
 	if r.MatchString(in) {
 		return nil
 	}
