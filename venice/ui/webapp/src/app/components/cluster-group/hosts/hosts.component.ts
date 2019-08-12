@@ -107,6 +107,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
       buttons = [{
         cssClass: 'global-button-primary host-button newhost-button-ADD',
         text: 'ADD HOST',
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
       }];
     }

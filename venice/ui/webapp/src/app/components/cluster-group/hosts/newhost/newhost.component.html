@@ -3,7 +3,7 @@
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
          fxLayoutAlign="start stretch" class="newhost-content">
-      <div fxFlex fxLayout="column" [formGroup]="newHost.$formGroup">
+      <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
         <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newhost-row">
           <div fxFlex="nogrow" class="newhost-text">NAME:</div>
           <input fxFlex="300px" formControlName="name" class="newhost-name" appErrorTooltip
@@ -29,11 +29,11 @@
       <div *ngIf="isInline" class="newhost-buttoncontainer" fxFlex="nogrow"
            fxLayout="row wrap" fxLayoutAlign="start start">
         <div fxFlex="nogrow">
-          <button [disabled]="!isValidForm()" (click)="saveHost()"
+          <button [disabled]="!isFormValid()" (click)="saveObject()"
                   class="global-button-primary newhost-save">SAVE</button>
         </div>
         <div fxFlex="nogrow">
-          <button (click)="cancelHost()"
+          <button (click)="cancelObject()"
                   class="global-button-neutral newhost-cancel">CANCEL</button>
         </div>
       </div>

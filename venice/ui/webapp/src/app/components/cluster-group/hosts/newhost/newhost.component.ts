@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild, ChangeDetectorRef} from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, OnDestroy, ViewChild, ChangeDetectorRef} from '@angular/core';
 import { Animations } from '@app/animations';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
@@ -8,12 +8,21 @@ import { ClusterHost, IClusterHost} from '@sdk/v1/models/generated/cluster/clust
 import {ClusterSmartNICID} from '@sdk/v1/models/generated/cluster/cluster-smart-nicid.model';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Observable } from 'rxjs';
-import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
 import { required, patternValidator } from '@sdk/v1/utils/validators';
 import { FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { TargetLocator } from 'selenium-webdriver';
 import { IApiStatus } from '@sdk/v1/models/generated/cluster';
+import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+
+/**
+ * NewhostComponent extends CreationForm
+ * It enable adding and updating host object.  User must specify to use "ID" or "MAC" in UI-html
+ * Internally, 'radioValue' holds the selected value (ID or MAC)
+ *
+ *  postNgInit() -> getPreSelectedSmartNICID() // when in edit mode, we compute the radio value from data
+ *
+ * In createObjct() and updateObject(), we clean up data using clearOtherRadios()
+ */
 
 @Component({
   selector: 'app-newhost',
@@ -22,7 +31,7 @@ import { IApiStatus } from '@sdk/v1/models/generated/cluster';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class NewhostComponent extends BaseComponent implements OnInit, AfterViewInit {
+  export class NewhostComponent  extends CreationForm<IClusterHost, ClusterHost> implements OnInit, AfterViewInit, OnDestroy {
 
   public static KEYS_ID = 'id';
   public static KEYS_MACADDRESS = 'mac-address';
@@ -30,38 +39,33 @@ export class NewhostComponent extends BaseComponent implements OnInit, AfterView
   public static MACADDRESS_REGEX: string = '^([0-9a-fA-F]{4}[.]){2}([0-9a-fA-F]{4})$';
   public static MACADDRESS_MESSAGE: string = 'MAC address must be of the format aaaa.bbbb.cccc';
 
-  newHost: ClusterHost;
-
   @Input() isInline: boolean = false;
   @Input() existingObjects: IClusterHost[] = [];
-  @Input() hostData: IClusterHost;
+  @Input() objectData: IClusterHost;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   newHostForm: FormGroup;
 
   smartNICIDs: any;
 
-  oldButtons: ToolbarButton[] = [];
-
   smartNICIDOptions: string[] = [];
 
+  // This property keep track of user input selection (ID or MAC)
   radioValue: string = '';
 
   constructor(protected _controllerService: ControllerService,
     protected _clusterService: ClusterService,
   ) {
-    super(_controllerService);
+    super(_controllerService, ClusterHost);
   }
 
-  ngOnInit() {
-    if (this.hostData != null) {
-      this.newHost = new ClusterHost(this.hostData);
+  postNgInit() {
+    if (this.objectData != null) {
+      // in edit mode.  We compute the radio (ID/MAC) value
       this.getPreSelectedSmartNICID();
-    } else {
-      this.newHost = new ClusterHost();
     }
 
-    this.newHostForm = this.newHost.$formGroup;
+    this.newHostForm = this.newObject.$formGroup;
     const smartNICIDs: any = this.newHostForm.get(['spec', 'smart-nics']);
 
     if (smartNICIDs.controls.length === 0) {
@@ -70,7 +74,7 @@ export class NewhostComponent extends BaseComponent implements OnInit, AfterView
 
     if (this.isInline) {
       // disable name field
-      this.newHost.$formGroup.get(['meta', 'name']).disable();
+      this.newObject.$formGroup.get(['meta', 'name']).disable();
     }
 
     this.smartNICIDs = (<any>this.newHostForm.get(['spec', 'smart-nics'])).controls;
@@ -78,44 +82,21 @@ export class NewhostComponent extends BaseComponent implements OnInit, AfterView
     // gets the options for the radio buttons
     this.smartNICIDOptions = Object.keys((<any>this.newHostForm.get(['spec', 'smart-nics', 0])).controls);
 
-    this.newHost.$formGroup.get(['meta', 'name']).setValidators([
-      this.newHost.$formGroup.get(['meta', 'name']).validator,
+    this.newObject.$formGroup.get(['meta', 'name']).setValidators([
+      this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isNewHostNameValid(this.existingObjects) ]);
 
-    this.newHost.$formGroup.get(['spec', 'smart-nics', 0, 'mac-address']).setValidators([
+    this.newObject.$formGroup.get(['spec', 'smart-nics', 0, 'mac-address']).setValidators([
       patternValidator(NewhostComponent.MACADDRESS_REGEX, NewhostComponent.MACADDRESS_MESSAGE) ]);
 
   }
 
-  ngAfterViewInit() {
-    if (!this.isInline) {
-      // If it is not inline, we change the toolbar buttons, and save the old one
-      // so that we can set it back when we are done
-      const currToolbar = this._controllerService.getToolbarData();
-      this.oldButtons = currToolbar.buttons;
-      currToolbar.buttons = [
-        {
-          cssClass: 'global-button-primary host-button host-button-SAVE',
-          text: 'CREATE HOST',
-          callback: () => { this.saveHost(); },
-          computeClass: () => this.computeButtonClass()
-        },
-        {
-          cssClass: 'global-button-neutral host-button host-button-CANCEL',
-          text: 'CANCEL',
-          callback: () => { this.cancelHost(); }
-        },
-      ];
-
-      this._controllerService.setToolbarData(currToolbar);
-    }
-  }
 
   getPreSelectedSmartNICID() {
     // sets radio when editing
 
-    if (this.newHost.spec['smart-nics'].length !== 0) {
-      const clusterSmartNICID: ClusterSmartNICID = this.newHost.spec['smart-nics'][0];
+    if (this.newObject.spec['smart-nics'].length !== 0) {
+      const clusterSmartNICID: ClusterSmartNICID = this.newObject.spec['smart-nics'][0];
 
       if ( clusterSmartNICID[NewhostComponent.KEYS_ID] !== null) {
         this.radioValue = NewhostComponent.KEYS_ID;
@@ -130,33 +111,18 @@ export class NewhostComponent extends BaseComponent implements OnInit, AfterView
 
   }
 
-  setPreviousToolbar() {
-    if (this.oldButtons != null) {
-      const currToolbar = this._controllerService.getToolbarData();
-      currToolbar.buttons = this.oldButtons;
-      this._controllerService.setToolbarData(currToolbar);
-    }
-  }
-
   computeButtonClass() {
-    if (Utility.isEmpty(this.newHost.$formGroup.get('meta.name').value)) {
+    if (Utility.isEmpty(this.newObject.$formGroup.get('meta.name').value)) {
       return 'global-button-disabled';
     }
-    if ( this.newHost.$formGroup.get('meta.name').status === 'VALID' &&
-    this.isValidForm()) {
+    if ( this.newObject.$formGroup.get('meta.name').status === 'VALID' &&
+    this.isFormValid()) {
       return '';
     } else {
       return 'global-button-disabled';
     }
   }
 
-  cancelHost() {
-    if (!this.isInline) {
-      // Need to reset the toolbar that we changed
-      this.setPreviousToolbar();
-    }
-    this.formClose.emit();
-  }
 
   addSmartNICID() {
     // updates the form
@@ -169,18 +135,26 @@ export class NewhostComponent extends BaseComponent implements OnInit, AfterView
     this.radioValue = $event.value;
   }
 
-  clearOtherRadios() {
-    // clears the other nonselected radio values if their forms have values in them
-    const smartNICID: FormGroup = <FormGroup>this.newHostForm.get(['spec', 'smart-nics', 0]);
-    for (let i = 0; i < this.smartNICIDOptions.length; i++) {
-      const j: string = this.smartNICIDOptions[i];
-      if (j !== this.radioValue) {
-        smartNICID.controls[j].setValue(null);
+  /**
+   * User can flip between id and mac, we want to clear the non-selected field.
+   * Say, the radio value is 'id', we remove the 'mac-address' value
+   */
+  clearOtherRadios(): IClusterHost {
+    const host: IClusterHost = this.newObject.getFormGroupValues();
+    for (let i = 0; i < host.spec['smart-nics'].length; i++) {
+      const config = host.spec['smart-nics'][i];
+      const keys = Object.keys(config);
+      for (let j = 0; j < keys.length; j++) {
+        const key = keys[j];
+        if (this.radioValue !== key) {
+          delete config[key];
+        }
       }
     }
+    return host;
   }
 
-  isValidForm() {
+  isFormValid(): boolean {
     // checks that the ADD NAPLES BY field is filled out
     if (this.radioValue !== '') {
       if (!Utility.isEmpty(this.newHostForm.get(['spec', 'smart-nics', 0, this.radioValue]).value)
@@ -191,46 +165,68 @@ export class NewhostComponent extends BaseComponent implements OnInit, AfterView
     return false;
   }
 
-  saveHost() {
-    // Submit to server
-    this.clearOtherRadios();
-    const host: IClusterHost = this.newHost.getFormGroupValues();
-    let handler: Observable<{ body: IClusterHost | IApiStatus | Error, statusCode: number }>;
-
-
-    if (this.isInline) {
-      handler = this._clusterService.UpdateHost(this.newHost.meta.name, host);
-    } else {
-      handler = this._clusterService.AddHost(host);
-    }
-
-    handler.subscribe(
-      (response) => {
-        if (this.isInline) {
-          this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated host ' + this.newHost.meta.name);
-        } else {
-          this._controllerService.invokeSuccessToaster(Utility.CREATE_SUCCESS_SUMMARY, 'Created host ' + host.meta.name);
-        }
-        this.cancelHost();
-      },
-      (error) => {
-        if (this.isInline) {
-          this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
-        } else {
-          this._controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
-        }
-      }
-    );
-
-  }
-
   isNewHostNameValid(existingObjects: IClusterHost[]): ValidatorFn {
     // checks if name field is valid
     return Utility.isModelNameUniqueValidator(existingObjects, 'newHost-name');
   }
 
+  getClassName(): string {
+    return this.constructor.name;
+  }
 
+  setInlineToolbar(): void {
+    if (!this.isInline) {
+      // If it is not inline, we change the toolbar buttons, and save the old one
+      // so that we can set it back when we are done
+      const currToolbar = this._controllerService.getToolbarData();
+      this.oldButtons = currToolbar.buttons;
+      currToolbar.buttons = [
+        {
+          cssClass: 'global-button-primary host-button host-button-SAVE',
+          text: 'CREATE HOST',
+          callback: () => { this.saveObject(); },
+          computeClass: () => this.computeButtonClass()
+        },
+        {
+          cssClass: 'global-button-neutral host-button host-button-CANCEL',
+          text: 'CANCEL',
+          callback: () => {
+            this.cancelObject(); // this.cancelHost();
+           }
+        },
+      ];
 
+      this._controllerService.setToolbarData(currToolbar);
+    }
+  }
 
+  /**
+   * override super api
+   * We make up the JSON object
+   */
+  createObject(newObject: IClusterHost): Observable<{ body: IClusterHost | IApiStatus | Error; statusCode: number; }> {
+    const host: IClusterHost = this.clearOtherRadios();
+    return this._clusterService.AddHost(host);
+  }
 
+  /**
+   * override super api
+   * We make up the JSON object
+   */
+  updateObject(newObject: IClusterHost, oldObject: IClusterHost): Observable<{ body: IClusterHost | IApiStatus | Error; statusCode: number; }> {
+    const host: IClusterHost = this.clearOtherRadios();
+    return this._clusterService.UpdateHost(oldObject.meta.name, host);
+  }
+
+  generateCreateSuccessMsg(object: IClusterHost): string {
+    return 'Created host ' + object.meta.name;
+  }
+
+  generateUpdateSuccessMsg(object: IClusterHost): string {
+    return 'Updated host ' + object.meta.name;
+  }
+
+  getObjectValues(): IClusterHost {
+    return  this.newObject.getFormGroupValues();
+  }
 }
