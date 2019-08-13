@@ -8,7 +8,11 @@ README for updating capri asic pointer and asic files
     2) Generate and copy diffs
         a) Generate the diff for SW repo and copy the diff as jenkins user to:
            /var/lib/jenkins/diffs/ASIC_SW_COMBINED_SANITY/sw/
-        b) If corresponding ASIC changes are required, then copy the asic diff to
+        b) Update the version of third_party_libs in /sw/minio/VERSIONS in SW repo and copy the diff as jenkins user to:
+           /var/lib/jenkins/diffs/ASIC_SW_COMBINED_SANITY/sw/
+           (This step is required since we need to increment the version number whenever third party libs including updated
+           ASIC lib are pushed to minio. See #4 below.)
+        c) If corresponding ASIC changes are required, then copy the asic diff to
            /var/lib/jenkins/diffs/ASIC_SW_COMBINED_SANITY/asic
 
     3) Trigger the asic-sw-combined-sanity using the below link. Specify the required ASIC_BRANCH and ASSET_LABEL (ASIC SHA) in the link.

@@ -200,7 +200,7 @@ cd $SW_REPO_DIR/sw
 perl -i -pe "s/asic_libs .*/asic_libs ${ASSET_LABEL}/g; s/ncc_tools .*/ncc_tools ${ASSET_LABEL}/g; s/pbc_config .*/pbc_config ${ASSET_LABEL}/g;" minio/VERSIONS
 
 # increment the third-party version in minio/VERSIONS
-sed -ri 's/(third_party_libs 1.1.)([0-9]+)/echo "\1$((\2+1))"/ge' minio/VERSIONS
+# sed -ri 's/(third_party_libs 1.1.)([0-9]+)/echo "\1$((\2+1))"/ge' minio/VERSIONS
 
 THIRD_PARTY_ASSET_LABEL=`cat minio/VERSIONS | grep third_party_libs | awk '{print $2}'`
 echo "THIRD_PARTY_ASSET_LABEL: $THIRD_PARTY_ASSET_LABEL"
@@ -209,7 +209,7 @@ echo "THIRD_PARTY_ASSET_LABEL: $THIRD_PARTY_ASSET_LABEL"
 tar cvz $(cat minio/asic_libs.txt)  | asset-upload -f asic_libs  ${ASSET_LABEL} /dev/stdin
 tar cvz $(cat minio/ncc_tools.txt)  | asset-upload -f ncc_tools  ${ASSET_LABEL} /dev/stdin
 tar cvz $(cat minio/pbc_config.txt) | asset-upload -f pbc_config ${ASSET_LABEL} /dev/stdin
-tar cvz $(cat minio/third_party_libs.txt) | asset-upload -f third_party_libs ${THIRD_PARTY_ASSET_LABEL} /dev/stdin
+tar cvz $(cat minio/third_party_libs.txt) | asset-upload third_party_libs ${THIRD_PARTY_ASSET_LABEL} /dev/stdin
 
 # Prepare to push the changes
 git remote add upstream $CS_REMOTE || exit 1
