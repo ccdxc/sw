@@ -608,6 +608,24 @@ ionic_queue_task_handler(void *arg, int pendindg)
 	KASSERT(rxq, ("task handler called with rxq == NULL"));
 
 	IONIC_RX_LOCK(rxq);
+	if ((rxq->lif->netdev->if_drv_flags & IFF_DRV_RUNNING) == 0) {
+		/* The task should return early if not IFF_DRV_RUNNING.  The
+		 * rxq lock will guarantee that the running state is observed
+		 * to change here when needed.
+		 *
+		 * When the running state is cleared, after that in the same
+		 * thread the driver will do a final clean of the rxq, which
+		 * involves taking and dropping the rxq lock.  When rxq the
+		 * lock is aquired here after the final clean, we will also
+		 * observe that the running state is cleared.
+		 *
+		 * Returning early from the task does not change the rxq or txq
+		 * state, and does not unmask the isr.
+		 */
+		IONIC_RX_UNLOCK(rxq);
+		return;
+	}
+
 	rxq->stats.task++;
 	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d\n",
 		rxq->comp_index, rxq->head_index, rxq->tail_index);

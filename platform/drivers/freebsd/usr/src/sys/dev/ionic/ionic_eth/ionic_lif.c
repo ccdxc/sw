@@ -2290,14 +2290,15 @@ ionic_lif_rxqs_deinit(struct lif *lif)
 				IONIC_INTR_MASK_SET);
 		ionic_rxq_disable(rxq);
 
-		IONIC_RX_LOCK(rxq);
-		ionic_rx_clean(rxq, rxq->num_descs);
-		ionic_rx_empty(rxq);
-		IONIC_RX_UNLOCK(rxq);
 		if (rxq->taskq) {
 			taskqueue_drain(rxq->taskq, &rxq->tx_task);
 			taskqueue_drain(rxq->taskq, &rxq->task);
 		}
+
+		IONIC_RX_LOCK(rxq);
+		ionic_rx_clean(rxq, rxq->num_descs);
+		ionic_rx_empty(rxq);
+		IONIC_RX_UNLOCK(rxq);
 	}
 }
 
