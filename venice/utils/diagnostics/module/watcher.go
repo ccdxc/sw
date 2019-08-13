@@ -124,8 +124,11 @@ func GetWatcher(name, apiServer string, rslver resolver.Interface, logger log.Lo
 		gWatcher.watcher = watcherutils.NewWatcher(name, apiServer, rslver, logger, gWatcher.initiateWatchCb, gWatcher.processEventCb,
 			[]rpckit.Option{rpckit.WithTLSClientIdentity(name)},
 			&watcherutils.KindOptions{
-				Kind:    string(diagapi.KindModule),
-				Options: &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Name: name}},
+				Kind: string(diagapi.KindModule),
+				Options: &api.ListWatchOptions{
+					ObjectMeta:          api.ObjectMeta{Name: name},
+					FieldChangeSelector: []string{"Spec"}, // only watch for spec changes
+				},
 			})
 	})
 
