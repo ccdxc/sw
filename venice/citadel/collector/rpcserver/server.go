@@ -32,6 +32,7 @@ const (
 type DebugEntry struct {
 	LastReportedTime string `json:"last-reported-time"`
 	Reporter         string `json:"reporter"`
+	NumPoints        int    `json:"num-points"`
 }
 
 // CollRPCSrv defines a collector RPC server
@@ -122,6 +123,7 @@ func (s *CollRPCSrv) WriteMetrics(c context.Context, mb *metric.MetricBundle) (*
 		s.dbgInfo.Store(peer, &DebugEntry{
 			LastReportedTime: time.Now().Format(time.RFC3339),
 			Reporter:         mb.GetReporter(),
+			NumPoints:        len(p),
 		})
 	}
 

@@ -677,7 +677,7 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 	for _, shard := range cl.ShardMap.Shards {
 		// query one of the repicas in each shard
 		for _, replica := range shard.Replicas {
-			dn.logger.Infof("query remote shard %d, replica: %v, node: %v", shard.ShardID, replica.ReplicaID, replica.NodeUUID)
+			dn.logger.Debugf("query remote shard %d, replica: %v, node: %v", shard.ShardID, replica.ReplicaID, replica.NodeUUID)
 
 			if !cl.IsNodeAlive(replica.NodeUUID) {
 				// go to the next replica
@@ -696,7 +696,7 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 		}
 	}
 
-	dn.logger.Infof("number of query result channels: %d", len(queryShards))
+	dn.logger.Debugf("number of query result channels: %d", len(queryShards))
 
 	return resultsCh, nil
 }

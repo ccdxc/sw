@@ -81,8 +81,8 @@ func fwlogGen(fwlogShm string, numEntries, rateps int) error {
 			for _, fd := range ipcList {
 				ev := &halproto.FWEvent{
 					Sipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
-					Dipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
-					Dport:     uint32(rand.Int31n(5000)),
+					Dipv4:     uint32(192 + 168<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
+					Dport:     uint32(rand.Int31n(4096)),
 					Sport:     uint32(rand.Int31n(5000)),
 					IpProt:    halproto.IPProtocol(protKey()),
 					Fwaction:  halproto.SecurityAction(fwActionKey()),
