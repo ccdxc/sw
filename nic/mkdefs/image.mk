@@ -92,6 +92,10 @@ firmware-upgrade: build-upg-image
 		${NICDIR}/naples_upg_fw_${SW_VERSION}.tar
 	ln -frs ${NICDIR}/naples_upg_fw_${SW_VERSION}.tar ${NICDIR}/naples_upg_fw.tar
 
+.PHONY: penctl-version
+penctl-version: 
+	${TOPDIR}/penctl/tools/penctl_version.sh
+
 .PHONY: firmware
 firmware:
 	${NICDIR}/mkdefs/build_firmware.sh
