@@ -13,6 +13,7 @@ import { required, patternValidator } from '@sdk/v1/utils/validators';
 import { FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { IApiStatus } from '@sdk/v1/models/generated/cluster';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 /**
  * NewhostComponent extends CreationForm
@@ -54,9 +55,10 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
   radioValue: string = '';
 
   constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _clusterService: ClusterService,
   ) {
-    super(_controllerService, ClusterHost);
+    super(_controllerService, uiconfigsService, ClusterHost);
   }
 
   postNgInit() {
