@@ -560,6 +560,11 @@ mac_cfg_hw (mac_info_t *mac_info)
         cap_mx_set_fec(chip_id, inst_id, ch, fec);
         cap_mx_set_rx_padding(chip_id, inst_id, ch, mac_info->rx_pad_enable);
         cap_mx_set_mtu(chip_id, inst_id, ch, mx_api_speed, mac_info->mtu);
+        cap_mx_set_vlan_check(chip_id, inst_id, ch,
+                              3 /* num of tags to check */,
+                              0x8100 /* tag1 */,
+                              0x8100 /* tag2 */,
+                              0x8100 /* tag3 */);
 
         switch (pause) {
         case port_pause_type_t::PORT_PAUSE_TYPE_LINK:

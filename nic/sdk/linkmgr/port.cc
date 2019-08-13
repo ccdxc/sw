@@ -413,7 +413,11 @@ port::port_serdes_pcal_start(void)
     uint32_t lane = 0;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns()->serdes_pcal_start(port_sbus_addr(lane));
+        if (auto_neg_enable() == true) {
+            serdes_fns()->serdes_an_pcal_start(port_sbus_addr(lane));
+        } else {
+            serdes_fns()->serdes_pcal_start(port_sbus_addr(lane));
+        }
     }
 
     return 0;
@@ -523,9 +527,15 @@ port::port_serdes_an_link_train_check (void)
 
             o_core_status = serdes_fns()->serdes_an_core_status(sbus_addr);
 
-            if ( (o_core_status & 0x2) == 0x0) {
-                if (o_core_status != 0x34) {
-                    training_fail = true;
+            if ( (o_core_status & 0x2) == 0x0) {    // training completed
+                if (o_core_status != 0x34) {        // training not yet passed
+                    if ( (o_core_status & 0x1) == 0x1) {
+                        // training failed
+                        training_fail = true;
+                    } else {
+                        // training has completed, but not yet failed/passed
+                        continue;
+                    }
                 }
 
                 o_core_status_arr[lane] = o_core_status;
@@ -1073,15 +1083,34 @@ port::port_link_sm_process(bool start_en_timer)
                         break;
                     }
 
-                    // transition to clear MAC remote faults for AN
+                    // Link training would have completed ICAL.
+                    // Transition DFE SM to pcal one shot for AN
+                    set_port_link_dfe_sm(
+                            port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL);
+
+                    // transition link SM to AN DFE tuning
                     this->set_port_link_sm(
-                        port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS);
+                                    port_link_sm_t::PORT_LINK_SM_AN_DFE_TUNING);
                     retry_sm = true;
                     break;
                 }
 
                 // transition to serdes signal detect state
                 this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT);
+
+            case port_link_sm_t::PORT_LINK_SM_AN_DFE_TUNING:
+                dfe_ret = port_link_sm_dfe_process();
+                if (dfe_ret == DFE_WAIT) {
+                    // DFE tuning is pending
+                    // Timer would have been already started. So just break.
+                    break;
+                }
+
+                // transition to clear MAC remote faults
+                this->set_port_link_sm(
+                    port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS);
+                retry_sm = true;
+                break;
 
             case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
 
@@ -1227,10 +1256,8 @@ port::port_link_sm_process(bool start_en_timer)
 
             case port_link_sm_t::PORT_LINK_SM_UP:
 
-                if (auto_neg_enable() == false) {
-                    SDK_PORT_SM_DEBUG(this, "PCAL continuous");
-                    port_serdes_pcal_continuous_start();
-                }
+                SDK_PORT_SM_DEBUG(this, "PCAL continuous");
+                port_serdes_pcal_continuous_start();
 
                 SDK_PORT_SM_TRACE(this, "Link UP");
 

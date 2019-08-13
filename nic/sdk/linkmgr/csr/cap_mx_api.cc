@@ -28,6 +28,21 @@ void cap_mx_apb_write(int chip_id, int inst_id, int addr, int data) {
     // mx_csr.dhs_apb.entry[addr].show();
 }
 
+// reads addr, set/reset bit and writes back
+static int
+cap_mx_set_bit (int chip_id, int inst_id, int addr, int bit, bool set)
+{
+   int data = cap_mx_apb_read(chip_id, inst_id, addr);
+
+   if (set) {
+       data = data | (1 << bit);
+   } else {
+       data = data & ~(1 << bit);
+   }
+   cap_mx_apb_write(chip_id, inst_id, addr, data);
+   return 0;
+}
+
 int
 cap_mx_serdes_lpbk_get (int chip_id, int inst_id, int ch)
 {
@@ -200,16 +215,14 @@ set_bits(uint32_t data, int pos, int num_bits, uint32_t value)
     return data;
 }
 
-int
+static int
 cap_mx_set_bits(int chip_id, int inst_id, uint32_t addr,
                 int pos, int num_bits, uint32_t value)
 {
     uint32_t data = cap_mx_apb_read(chip_id, inst_id, addr);
 
-    set_bits(data, pos, num_bits, value);
-
+    data = set_bits(data, pos, num_bits, value);
     cap_mx_apb_write(chip_id, inst_id, addr, data);
-
     return 0;
 }
 
@@ -251,7 +264,7 @@ cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy,
     if (pri_vec == 0) {
         // No pause
         cap_mx_apb_write(chip_id, inst_id, addr1, 0x030);
-        cap_mx_apb_write(chip_id, inst_id, addr2, 0x010);  // bit4 Promiscuous Mode (1: disable MAC address check)
+        cap_mx_set_bit(chip_id, inst_id, addr2, 4, 1);  // bit4 Promiscuous Mode (1: disable MAC address check)
         cap_mx_apb_write(chip_id, inst_id, addr3, 0x00);   // MAC Tx Priority Pause Vector
     } else {
         if (legacy) {
@@ -266,15 +279,10 @@ cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy,
                 data = reset_bit(data, 8);
             }
             cap_mx_apb_write(chip_id, inst_id, addr1, data);
-
-            data = 0x110;
+            cap_mx_set_bit(chip_id, inst_id, addr2, 4, 1);
+            cap_mx_set_bit(chip_id, inst_id, addr2, 8, 1);
             // bit5: Enable Rx Flow Control Decode
-            if (rx_pause_enable == true) {
-                data = set_bit(data, 5);
-            } else {
-                data = reset_bit(data, 5);
-            }
-            cap_mx_apb_write(chip_id, inst_id, addr2, data);   // bit8 filter pause frame
+            cap_mx_set_bit(chip_id, inst_id, addr2, 5, rx_pause_enable);
             cap_mx_apb_write(chip_id, inst_id, addr3, 0x00);   // MAC Tx Priority Pause Vector
         } else {
             // PFC
@@ -288,15 +296,10 @@ cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy,
                 data = reset_bit(data, 9);
             }
             cap_mx_apb_write(chip_id, inst_id, addr1, data);
-
-            data = 0x110;
+            cap_mx_set_bit(chip_id, inst_id, addr2, 4, 1);
+            cap_mx_set_bit(chip_id, inst_id, addr2, 8, 1);
             // bit5: Enable Rx Flow Control Decode
-            if (rx_pause_enable == true) {
-                data = set_bit(data, 5);
-            } else {
-                data = reset_bit(data, 5);
-            }
-            cap_mx_apb_write(chip_id, inst_id, addr2, data);   // bit8 filter pause frame
+            cap_mx_set_bit(chip_id, inst_id, addr2, 5, rx_pause_enable);
             cap_mx_apb_write(chip_id, inst_id, addr3, pri_vec); // MAC Tx Priority Pause Vector
         }
     }
@@ -1442,21 +1445,6 @@ cap_mx_base_r_pcs_status2_clear (int chip_id, int inst_id, int mac_ch)
     return 0;
 }
 
-// reads addr, set/reset bit and writes back
-static int
-cap_mx_set_bit (int chip_id, int inst_id, int addr, int bit, bool set)
-{
-   int data = cap_mx_apb_read(chip_id, inst_id, addr);
-
-   if (set) {
-       data = data | (1 << bit);
-   } else {
-       data = data & ~(1 << bit);
-   }
-   cap_mx_apb_write(chip_id, inst_id, addr, data);
-   return 0;
-}
-
 int
 cap_mx_send_remote_faults (int chip_id, int inst_id, int mac_ch,
                            bool send)
@@ -1490,3 +1478,35 @@ cap_mx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
    return 0;
 }
 
+int
+cap_mx_set_vlan_check (int chip_id, int inst_id, int mac_ch,
+                       int num_tags, uint32_t tag1, uint32_t tag2,
+                       uint32_t tag3)
+{
+    int addr = (mac_ch == 1) ? 0x502 : (mac_ch == 2) ? 0x602 : (mac_ch == 3) ? 0x702 : 0x402;
+
+    switch(num_tags) {
+    case 1:
+        cap_mx_set_bits(chip_id, inst_id, addr, 2, 2, 0x1);
+        break;
+    case 2:
+        cap_mx_set_bits(chip_id, inst_id, addr, 2, 2, 0x2);
+        break;
+    case 3:
+        cap_mx_set_bits(chip_id, inst_id, addr, 2, 2, 0x3);
+        break;
+    case 0:
+    default:
+        cap_mx_set_bits(chip_id, inst_id, addr, 2, 2, 0x0);
+        break;
+    }
+
+    // always program tags. MAC Receive config controls which tags to check
+    addr = (mac_ch == 1) ? 0x507 : (mac_ch == 2) ? 0x607 : (mac_ch == 3) ? 0x707 : 0x407;
+    cap_mx_apb_write(chip_id, inst_id, addr, tag1);
+    addr = (mac_ch == 1) ? 0x508 : (mac_ch == 2) ? 0x608 : (mac_ch == 3) ? 0x708 : 0x408;
+    cap_mx_apb_write(chip_id, inst_id, addr, tag2);
+    addr = (mac_ch == 1) ? 0x509 : (mac_ch == 2) ? 0x609 : (mac_ch == 3) ? 0x709 : 0x409;
+    cap_mx_apb_write(chip_id, inst_id, addr, tag3);
+    return 0;
+}

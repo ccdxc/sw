@@ -1278,6 +1278,7 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_eye_get       = &serdes_eye_get_default;
     serdes_fn->serdes_ical_start    = &serdes_ical_start_default;
     serdes_fn->serdes_pcal_start    = &serdes_pcal_start_default;
+    serdes_fn->serdes_an_pcal_start = &serdes_pcal_start_default;
     serdes_fn->serdes_pcal_continuous_start =
                             &serdes_pcal_continuous_start_default;
     serdes_fn->serdes_dfe_status    = &serdes_dfe_status_default;
@@ -1324,6 +1325,7 @@ port_serdes_fn_init(platform_type_t platform_type,
 
         // skip PCAL for HW since ICAL mode does both ICAL and PCAL
         serdes_fn->serdes_pcal_start    = &serdes_pcal_start_default;
+        serdes_fn->serdes_an_pcal_start = &serdes_pcal_start_hw;
 
         serdes_fn->serdes_pcal_continuous_start =
                                 &serdes_pcal_continuous_start_hw;

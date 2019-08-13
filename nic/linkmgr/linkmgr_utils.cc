@@ -218,6 +218,9 @@ sdk_port_link_sm_to_port_link_sm_spec (port_link_sm_t link_sm)
     case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
         return ::port::PORT_LINK_SM_SIGNAL_DETECT;
 
+    case port_link_sm_t::PORT_LINK_SM_AN_DFE_TUNING:
+        return ::port::PORT_LINK_SM_AN_DFE_TUNING;
+
     case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
         return ::port::PORT_LINK_SM_DFE_TUNING;
 

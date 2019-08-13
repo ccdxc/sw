@@ -80,5 +80,8 @@ int cap_mx_base_r_pcs_status2_clear(int chip_id, int inst_id, int mac_ch);
 int cap_mx_send_remote_faults(int chip_id, int inst_id, int mac_ch,
                               bool send);
 int cap_mx_tx_drain(int chip_id, int inst_id, int mac_ch, bool drain);
+int cap_mx_set_vlan_check(int chip_id, int inst_id, int mac_ch,
+                          int num_tags, uint32_t tag1, uint32_t tag2,
+                          uint32_t tag3);
 
 #endif // __SDK_LINKMGR_CAP_MX_API_H__
