@@ -54,7 +54,7 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
     protected cdr: ChangeDetectorRef,
     protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   // Hook for overriding

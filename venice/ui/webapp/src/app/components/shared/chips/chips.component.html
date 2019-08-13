@@ -1,0 +1,27 @@
+<div [ngClass]="'ui-chips ui-widget'" [ngStyle]="style" [class]="styleClass"
+     (click)="onClick($event)">
+  <ul
+      [ngClass]="{'ui-inputtext ui-state-default ui-corner-all':true,'ui-state-focus':focus,'ui-state-disabled':disabled}">
+    <li #token *ngFor="let item of value; let i = index;"
+        class="ui-chips-token ui-state-highlight ui-corner-all" (click)="onItemClick($event, item)">
+      <!-- ui-chips-token-item is an added class not from primeng -->
+      <div *ngIf="!itemTemplate" class="ui-chips-token-item">
+        <mat-icon *ngIf="!disabled" class="ui-chips-token-icon" (click)="removeItem($event,i)">close
+        </mat-icon>
+        <span *ngIf="!itemTemplate"
+              class="ui-chips-token-label">{{field ? resolveFieldData(item,field) : item}}</span>
+      </div>
+      <ng-container
+                    *ngTemplateOutlet="itemTemplate; context: {$implicit: item, cancelFunc: generateCancelClickFunction(i)}">
+      </ng-container>
+    </li>
+    <li class="ui-chips-input-token">
+      <input #inputtext type="text" [attr.id]="inputId"
+             [attr.placeholder]="(value && value.length ? null : placeholder)"
+             [attr.tabindex]="tabindex" (keydown)="onKeydown($event)"
+             [attr.maxlength]="maxChipLength"
+             (focus)="onInputFocus($event)" (blur)="onInputBlur($event)" [disabled]="disabled"
+             [ngStyle]="inputStyle" [class]="inputStyleClass">
+    </li>
+  </ul>
+</div>

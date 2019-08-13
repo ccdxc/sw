@@ -1,11 +1,11 @@
 /**-----
  Angular imports
  ------------------*/
-import {  ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import {  ComponentFixture, TestBed, inject, fakeAsync, tick, discardPeriodicTasks, flush } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 /**-----
  VeniceUI Framework -  imports
@@ -43,6 +43,8 @@ import { TestingUtility } from '@app/common/TestingUtility';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
+import { NewworkloadComponent } from './newworkload/newworkload.component';
+import { ClusterService } from '@app/services/generated/cluster.service';
 
 @Component({
   template: ''
@@ -158,6 +160,7 @@ describe('WorkloadComponent', () => {
      TestBed.configureTestingModule({
       declarations: [WorkloadComponent,
         WorkloadwidgetComponent,
+        NewworkloadComponent,
         DummyComponent
       ],
       imports: [
@@ -174,6 +177,8 @@ describe('WorkloadComponent', () => {
         PrimengModule,
         MaterialdesignModule,
         SharedModule,
+        ReactiveFormsModule,
+        FormsModule,
         BrowserAnimationsModule
       ],
       providers: [
@@ -186,7 +191,8 @@ describe('WorkloadComponent', () => {
         MatIconRegistry,
         UIConfigsService,
         MessageService,
-        AuthService
+        AuthService,
+        ClusterService
       ]
     });
 
@@ -197,7 +203,8 @@ describe('WorkloadComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should populate table', () => {
+  it('should populate table', fakeAsync(() => {
+    TestingUtility.setAllPermissions();
     const service = TestBed.get(WorkloadServiceGen);
     spyOn(service, 'WatchWorkload').and.returnValue(
       new BehaviorSubject({
@@ -217,6 +224,8 @@ describe('WorkloadComponent', () => {
         ]
       })
     );
+    fixture.detectChanges();
+    tick(1000);
     fixture.detectChanges();
     // check table header
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
@@ -241,7 +250,10 @@ describe('WorkloadComponent', () => {
         });
       }
     };
-    TestingUtility.verifyTable([workload3, workload2, workload1], component.cols, tableBody, caseMap);
-  });
+    TestingUtility.verifyTable([workload3, workload2, workload1], component.cols, tableBody, caseMap, 'editdelete');
+    fixture.destroy();
+    discardPeriodicTasks();
+    flush();
+  }));
 
 });

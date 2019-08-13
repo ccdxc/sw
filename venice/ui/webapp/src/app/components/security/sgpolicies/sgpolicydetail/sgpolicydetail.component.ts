@@ -1,21 +1,18 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation, OnDestroy, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { IPUtility } from '@app/common/IPUtility';
 import { Utility } from '@app/common/Utility';
-import { BaseComponent } from '@app/components/base/base.component';
 import { SearchUtil } from '@app/components/search/SearchUtil';
-import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { SearchPolicySearchRequest, ISearchPolicyMatchEntry, SearchPolicySearchResponse_status } from '@sdk/v1/models/generated/search';
-import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint } from '@sdk/v1/models/generated/security';
-import { Table } from 'primeng/table';
+import { SearchPolicySearchRequest, ISearchPolicyMatchEntry, ISearchPolicySearchResponse, SearchPolicySearchResponse_status } from '@sdk/v1/models/generated/search';
+import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint, ISecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
@@ -26,6 +23,7 @@ import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { Animations } from '@app/animations';
+import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -89,9 +87,8 @@ interface RuleHitEntry {
   encapsulation: ViewEncapsulation.None,
   animations: [Animations]
 })
-export class SgpolicydetailComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('sgpolicyTable') sgpolicyTurboTable: Table;
-  @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
+export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy, SecuritySGPolicy> implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('tableEditComponent') tableViewComponent: TablevieweditHTMLComponent;
   viewInitComplete: boolean = false;
   searchPolicyInvoked: boolean = false;  // avoid loop caused by invokeSearchPolicy
   subscriptions = [];
@@ -161,7 +158,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
 
   // Holds all the policy rules of the currently selected policy
-  sgPolicyRules: ReadonlyArray<SecuritySGRuleWrapper[]>;
+  dataObjects: ReadonlyArray<any>;
 
   // Current filter applied to all the data in the table
   currentSearch;
@@ -191,21 +188,26 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   // Helps avoid rebuidling the string unless there are changes
   ruleMetricsTooltip: { [hash: string]: string } = {};
 
+  // properties from tableview component
+  disableTableWhenRowExpanded: boolean = true;
+  isTabComponent: boolean = false;
+  // TODO: add exporting capability
+  exportFilename: string = '';
+
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
     protected searchService: SearchService,
     private _route: ActivatedRoute,
     private clusterService: ClusterService,
     protected uiconfigsService: UIConfigsService,
+    protected cdr: ChangeDetectorRef,
     protected metricsqueryService: MetricsqueryService,
   ) {
-    super(_controllerService, uiconfigsService);
+    super(_controllerService, cdr, uiconfigsService);
   }
 
-
-  ngOnInit() {
+  postNgInit() {
     this.initializeData();
-    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'SgpolicydetailComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._route.paramMap.subscribe(params => {
       const id = params.get('id');
       this.selectedPolicyId = id;
@@ -220,6 +222,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     });
   }
 
+  // Blank hook to satisfy inheritance.
+  // Any toolbar buttons should be added to the toolbar setting in postNgInit route subscription
+  setDefaultToolbar() { }
+
   initializeData() {
     // Initializing variables so that state is cleared between routing of different
     // sgpolicies
@@ -229,7 +235,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     });
     this.subscriptions = [];
     this.sgPolicies = [];
-    this.sgPolicyRules = [];
+    this.dataObjects = [];
     this.ruleCount = 0;
     this.showDeletionScreen = false;
     this.showMissingScreen = false;
@@ -331,7 +337,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
    * for when the data changes
    */
   dataUpdated() {
-    this.ruleCount = this.sgPolicyRules.length;
+    this.ruleCount = this.dataObjects.length;
     if (this.searchPolicyInvoked) {
       this.searchPolicyInvoked = false;
       return;
@@ -357,11 +363,11 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.sourceIpFormControl.setValue('');
     this.destIpFormControl.setValue('');
     this.portFormControl.setValue('');
-    this.errorMessage = '';
+    this.searchErrorMessage = '';
     if (this.selectedRuleIndex != null) {
       this.selectedRuleIndex = null;
       // scroll back to top
-      this.lazyRenderWrapper.resetTableView();
+      this.tableViewComponent.lazyRenderWrapper.resetTableView();
     }
     this.updateRulesByPolicy();
     this.currentSearch = null;
@@ -431,36 +437,38 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     };
     this.loading = true;
     // If we are displaying old data, we force update to new data
-    if (this.lazyRenderWrapper.hasUpdate) {
+    if (this.tableViewComponent.lazyRenderWrapper.hasUpdate) {
       // Current search is set to be the new data
       // When on data update fires from resetting the table view,
       // We will call this function again with the provided search.
-      this.lazyRenderWrapper.resetTableView();
+      this.tableViewComponent.lazyRenderWrapper.resetTableView();
       return;
     }
     this.searchSubscription = this.searchService.PostPolicyQuery(req).subscribe(
       (data) => {
-        // const body = data.body as ISearchPolicySearchResponse;
-        const body = data.body as any;
+        const body = data.body as ISearchPolicySearchResponse;
         if (body.status ===  SearchPolicySearchResponse_status.match) {
           if (this.selectedPolicy == null || body.results[this.selectedPolicy.meta.name] == null) {
             this.searchErrorMessage = 'No Matching Rule';
             this.searchPolicyInvoked = true;
-            this.sgPolicyRules = [];
+            this.dataObjects = [];
           } else {
             this.searchErrorMessage = '';
             const entries = body.results[this.selectedPolicy.meta.name].entries;
             this.searchPolicyInvoked = true;
-            this.sgPolicyRules = this.addOrderRankingForQueries(entries);
+            this.dataObjects = this.addOrderRankingForQueries(entries);
           }
         } else {
           this.searchErrorMessage = 'No Matching Rule';
           this.searchPolicyInvoked = true;
-          this.sgPolicyRules = [];
+          this.dataObjects = [];
         }
         this.loading = false;
       },
-      this._controllerService.restErrorHandler('Policy search failed')
+      (error) => {
+        this.loading = false;
+        this._controllerService.invokeRESTErrorToaster('Policy search failed', error);
+      },
     );
 
   }
@@ -493,7 +501,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   }
 
   updateRulesByPolicy() {
-    this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
+    this.dataObjects = this.addOrderRanking(this.selectedPolicy.spec.rules);
   }
 
   getSGPoliciesDetail() {
@@ -547,7 +555,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           this.disableFormControls();
 
           this.selectedPolicy = null;
-          this.sgPolicyRules = [];
+          this.dataObjects = [];
         }
       },
       this._controllerService.webSocketErrorHandler('Failed to get SG Policy')

@@ -4,8 +4,8 @@ $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
 .sgpolicy-widget {
-  @include primary-font;
-  overflow: hidden;
+  @include primary-font();
+  height: 100%;
 }
 
 .sgpolicyrecord-icon {

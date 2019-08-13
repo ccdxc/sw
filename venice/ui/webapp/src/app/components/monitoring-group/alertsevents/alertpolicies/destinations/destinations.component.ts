@@ -47,7 +47,7 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
     protected cdr: ChangeDetectorRef,
     protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   postNgInit() { }

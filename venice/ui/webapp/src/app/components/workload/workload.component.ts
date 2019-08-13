@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
@@ -8,10 +8,12 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { WorkloadWorkload, IWorkloadWorkload, IApiStatus } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
-import { Subscription } from 'rxjs';
-import { BaseComponent } from '../base/base.component';
+import { Subscription, Observable } from 'rxjs';
+import { TableCol } from '../shared/tableviewedit';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -24,7 +26,7 @@ import { BaseComponent } from '../base/base.component';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloadComponent extends BaseComponent implements OnInit, OnDestroy {
+export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, WorkloadWorkload> implements OnInit, OnDestroy {
   // Feature Flags
   hideWorkloadWidgets: boolean = this.uiconfigsService.isFeatureDisabled('WorkloadWidgets');
 
@@ -62,22 +64,19 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
 
   // Workload table vars
 
-  // Holds all the workloads
-  workloads: ReadonlyArray<WorkloadWorkload>;
-
   // Used for the table - when true there is a loading icon displayed
   tableLoading: boolean = false;
 
   // Used for processing watch events
   workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
 
-  cols: any[] = [
-    { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: true },
-    { field: 'spec.host-name', header: 'Host name', class: 'workload-column-host-name', sortable: true },
-    { field: 'meta.labels', header: 'Labels', class: 'workload-column-labels', sortable: false },
-    { field: 'spec.interfaces', header: 'Interfaces', class: 'workload-column-interfaces', sortable: false },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'workload-column-date', sortable: true },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'workload-column-date', sortable: true },
+  cols: TableCol[] = [
+    { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: true, width: 15 },
+    { field: 'spec.host-name', header: 'Host name', class: 'workload-column-host-name', sortable: true, width: 15 },
+    { field: 'meta.labels', header: 'Labels', class: 'workload-column-labels', sortable: false, width: 15},
+    { field: 'spec.interfaces', header: 'Interfaces', class: 'workload-column-interfaces', sortable: false},
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'workload-column-date', sortable: true, width: '180px' },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'workload-column-date', sortable: true, width: '180px' },
   ];
 
   // Name of the row we are hovering over
@@ -89,30 +88,41 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   securityGroups: string[] = ['SG1', 'SG2'];
   labels: any = { 'Loc': ['NL', 'AMS'], 'Env': ['test', 'prod'] };
 
+  isTabComponent: boolean = false;
+  disableTableWhenRowExpanded: boolean  = true;
+  dataObjects: ReadonlyArray<WorkloadWorkload> = [];
+  exportFilename: string = 'Venice-workloads';
+
+
 
   constructor(
     private workloadService: WorkloadService,
     protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected dialog: MatDialog,
+    protected cdr: ChangeDetectorRef,
   ) {
-    super(_controllerService);
+    super(_controllerService, cdr, uiconfigsService);
   }
 
-  ngOnInit() {
-    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
-      'component': 'WorkloadComponent', 'state':
-        Eventtypes.COMPONENT_INIT
-    });
-    // Setting the toolbar of the app
+  postNgInit() {
+    this.getWorkloads();
+  }
+
+  setDefaultToolbar() {
+    let buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.workloadworkload_create)) {
+      buttons = [{
+        cssClass: 'global-button-primary global-button-padding',
+        text: 'ADD WORKLOAD',
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        callback: () => { this.createNewObject(); }
+      }];
+    }
     this._controllerService.setToolbarData({
-      buttons: [],
+      buttons: buttons,
       breadcrumb: [{ label: 'Workloads Overview', url: Utility.getBaseUIUrl() + 'workload' }]
     });
-    // Fetching workload items
-    this.getWorkloads();
-    // Default selected workloadwidget
-    this.selectedWorkloadWidget = 'totalworkloads';
   }
 
   // Commenting out as modal isn't part of August release
@@ -131,18 +141,6 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
 
   toggleHeroStats() {
     this.heroStatsToggled = !this.heroStatsToggled;
-  }
-
-  ngOnDestroy() {
-    if (this.subscriptions != null) {
-      this.subscriptions.forEach(subscription => {
-        subscription.unsubscribe();
-      });
-    }
-    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
-      'component': 'WorkloadComponent', 'state':
-        Eventtypes.COMPONENT_DESTROY
-    });
   }
 
   formatLabels(labelObj) {
@@ -226,7 +224,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
 
   getWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
-    this.workloads = this.workloadEventUtility.array;
+    this.dataObjects = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
@@ -234,6 +232,18 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
       this._controllerService.webSocketErrorHandler('Failed to get Workloads')
     );
     this.subscriptions.push(subscription);
+  }
+
+  deleteRecord(object: WorkloadWorkload): Observable<{ body: IWorkloadWorkload | IApiStatus | Error, statusCode: number }> {
+    return this.workloadService.DeleteWorkload(object.meta.name);
+  }
+
+  generateDeleteConfirmMsg(object: IWorkloadWorkload) {
+    return 'Are you sure you want to delete workload ' + object.meta.name;
+  }
+
+  generateDeleteSuccessMsg(object: IWorkloadWorkload) {
+    return 'Deleted workload ' + object.meta.name;
   }
 
   /**

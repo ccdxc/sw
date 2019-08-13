@@ -34,6 +34,8 @@ import { TimeRangeComponent } from './timerange/timerange.component';
 import { UIChartComponent } from './primeng-chart/chart';
 import { OrderedlistComponent } from './orderedlist/orderedlist.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { ChipsComponent } from './chips/chips.component';
+import { DomHandler } from 'primeng/api';
 
 @NgModule({
   imports: [
@@ -73,7 +75,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     AdvancedSearchComponent,
     TimeRangeComponent,
     UIChartComponent,
-    OrderedlistComponent
+    OrderedlistComponent,
+    ChipsComponent
   ],
   exports: [
     PagebodyComponent,
@@ -102,7 +105,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     LabeleditorComponent,
     TimeRangeComponent,
     UIChartComponent,
-    OrderedlistComponent
+    OrderedlistComponent,
+    ChipsComponent
   ],
+  providers: [
+    DomHandler
+  ]
 })
 export class SharedModule { }

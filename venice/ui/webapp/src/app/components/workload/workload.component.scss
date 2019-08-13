@@ -9,6 +9,11 @@
   height: 48px;
 }
 
+.workload-widget {
+  @include primary-font();
+  height: 100%;
+}
+
 .workload-widgetcontainer {
   border-bottom: solid 1px #dddddd;
   border-top: solid 1px #dddddd;
@@ -51,32 +56,6 @@ $table-headercontentheight: 25px;
 
 .workload-table-headercontent {
   margin: 20px 15px 13px 0px;
-}
-
-.workload-column-name {
-  width: 15%;
-}
-
-.workload-column-date {
-  width: 10%;
-}
-
-.workload-column-labels {
-  width: 15%;
-}
-
-.workload-column-host-name {
-  width: 15%;
-}
-
-.workload-column-interfaces {
-  width: 35%;
-}
-
-.workload-column-interfaces-data {
-  div {
-    height: 25px;
-  }
 }
 
 .workload-table-button {

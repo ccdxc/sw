@@ -188,8 +188,9 @@ class DummyComponent extends TablevieweditAbstract<IDummyObj, DummyObj> {
   disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
-    protected cdr: ChangeDetectorRef) {
-    super(controllerService, cdr);
+    protected cdr: ChangeDetectorRef,
+    protected uiconfigService: UIConfigsService) {
+    super(controllerService, cdr, uiconfigService);
   }
 
   postNgInit() { }
@@ -257,8 +258,9 @@ class DummyCreateObj extends BaseModel implements IDummyCreateObj {
 })
 class DummyCreateComponent extends CreationForm<IDummyCreateObj, DummyCreateObj> {
   constructor(protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef) {
-    super(controllerService, DummyCreateObj);
+    super(controllerService, uiconfigsService, DummyCreateObj);
   }
 
   getClassName() {

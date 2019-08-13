@@ -58,7 +58,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
     protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
     protected monitoringService: MonitoringService) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   postNgInit() {

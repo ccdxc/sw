@@ -17,6 +17,7 @@ import { TableCol } from '@app/components/shared/tableviewedit';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { RolloutRollout } from '@sdk/v1/models/generated/rollout';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 /**
  * This component let user upload Venice rollout images and manage existing images.
@@ -87,9 +88,10 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   constructor(protected controllerService: ControllerService,
     private objstoreService: ObjstoreService,
     protected cdr: ChangeDetectorRef,
-    private rolloutService: RolloutService
+    private rolloutService: RolloutService,
+    protected uiconfigsService: UIConfigsService
   ) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   getClassName(): string {

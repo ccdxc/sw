@@ -1,0 +1,138 @@
+<div fxFlex="auto" fxLayout="column" class="newworkload-container">
+
+  <div fxFlex="auto" fxLayout="row">
+    <ng-container *ngTemplateOutlet="meta"></ng-container>
+    <div fxFlex></div>
+    <div *ngIf="isInline" class="neweventpolicy-buttoncontainer" fxFlex="nogrow"
+         fxLayout="row wrap" fxLayoutAlign="start start">
+      <div fxFlex="nogrow">
+        <span (click)="saveObject()"
+              class="global-button-primary global-button-padding newworkload-save"
+              [ngClass]="computeInlineButtonClass()">SAVE</span>
+      </div>
+      <div fxFlex="nogrow">
+        <span (click)="cancelObject()"
+              class="global-button-neutral global-button-padding newworkload-save">CANCEL</span>
+      </div>
+    </div>
+  </div>
+  <div fxFlex="30px"></div>
+  <ng-container *ngTemplateOutlet="hostname"></ng-container>
+  <div fxFlex="30px"></div>
+  <ng-container *ngTemplateOutlet="interfaces"></ng-container>
+
+</div>
+
+<ng-template #meta>
+  <div fxFlex="none" [formGroup]="newObject.$formGroup">
+    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" formGroupName="meta"
+         class="newworkload-row">
+      <div>NAME:</div>
+      <input fxFlex="300px" formControlName="name" class="newworkload-name" appErrorTooltip
+             spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #hostname>
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center"
+       [formGroup]="newObject.$formGroup.get('spec')" fxLayoutGap="20px">
+    <div fxFlex="nogrow">HOST NAME:</div>
+    <p-dropdown class="newworkload-host" fxFlex="200px"
+                formControlName="host-name" styleClass="neweventalertpolicy-font"
+                placeholder="select host name..."
+                [options]="hostOptions"></p-dropdown>
+    <!-- <p-multiSelect class="newsgpolicy-multiselect" fxFlex="300px"
+                    appendTo="body" styleClass="newsgpolicy-font"
+                    [filter]="false"
+                    defaultLabel="Select Groups..."
+                    [options]="fakeSecurityGroups"
+                    ></p-multiSelect> -->
+  </div>
+</ng-template>
+
+<ng-template #interfaces>
+  <div fxFlex="none" fxLayout="column">
+    <div fxFlex="none" fxLayout="row">
+      <div fxFlex="none">INTERFACES:</div>
+      <div fxFlex="5px"></div>
+      <div fxFlex="none" class="newworkload-subtext">(specify one or more)</div>
+    </div>
+    <div fxFlex="15px"></div>
+
+    <div fxFlex="none" fxLayout="column"
+         [formGroup]="newObject.$formGroup.get(['spec', 'interfaces'])">
+      <div fxFlex="nogrow" class="newworkload-interfaces" fxLayout="column" fxLayoutGap="15px"
+           [@slideInOut]
+           *ngFor="let interface of controlAsFormArray(newObject.$formGroup.get(['spec','interfaces'])).controls; let index = index; let first = first"
+           [formGroupName]="index">
+        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center">
+          <div fxFlex="none">INTERFACE {{index + 1}}:</div>
+          <div fxFlex="15px"></div>
+          <mat-icon fxFlex="nogrow" class="global-trash-button"
+                    *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','interfaces'])).length > 1"
+                    (click)="removeInterface(index)">delete</mat-icon>
+        </div>
+
+        <div fxFlex="nogrow" class="newworkload-interfaces" fxLayout="column" fxLayoutGap="10px">
+          <div fxFlex fxLayout="row wrap" fxlayoutAlign="start start" fxLayoutGap="100px">
+            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
+                 class="newworkload-input">
+              <div fxFlex="none">Mac-Address:</div>
+              <input fxFlex="nogrow" appErrorTooltip formControlName="mac-address"
+                     spellcheck="false" type="text"
+                     class="newworkload-input newworkload-mac-address"
+                     pInputText placeholder="">
+            </div>
+            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
+                 class="newworkload-input">
+              <div fxFlex="none">Micro-seg vlan:</div>
+              <input fxFlex="nogrow" appErrorTooltip formControlName="micro-seg-vlan"
+                     spellcheck="false" type="number"
+                     class="newworkload-input newworkload-micro-seg-vlan"
+                     pInputText placeholder="">
+            </div>
+            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
+                 class="newworkload-input">
+              <div fxFlex="none">External vlan:</div>
+              <input fxFlex="nogrow" appErrorTooltip formControlName="external-vlan"
+                     spellcheck="false" type="number"
+                     class="newworkload-input newworkload-external-vlan"
+                     pInputText placeholder="">
+            </div>
+          </div>
+
+          <div fxFlex fxLayout="column" fxLayoutGap="10px">
+            <div fxFlex="none" fxLayout="row">
+              <div fxFlex="none">IP Addresses:</div>
+              <div fxFlex="5px"></div>
+              <div fxFlex="none" class="newworkload-subtext">(specify one or more)</div>
+            </div>
+            <app-chips class="newworkload-chip"
+                       [maxChipLength]="15"
+                       [addOnBlur]="true"
+                       [addOnTab]="true"
+                       formControlName="ip-addresses">
+              <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
+                <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
+                     [ngClass]="{'error': !isValidIP(item)}">
+                  <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
+                  <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
+                            (click)="cancelFunc($event)">close</mat-icon>
+                </div>
+              </ng-template>
+            </app-chips>
+          </div>
+
+        </div>
+
+        <div fxFlex="15px"></div>
+
+
+      </div>
+    </div>
+    <div fxFle="none"
+         (click)="addInterface()"
+         class="newworkload-add-interface">+ INTERFACE</div>
+  </div>
+</ng-template>

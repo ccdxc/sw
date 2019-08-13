@@ -6,6 +6,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MonitoringEventPolicy, IMonitoringEventPolicy, IApiStatus, } from '@sdk/v1/models/generated/monitoring';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
   selector: 'app-neweventpolicy',
@@ -19,9 +20,10 @@ export class NeweventpolicyComponent extends CreationForm<IMonitoringEventPolicy
   @ViewChild('syslogComponent') syslogComponent: SyslogComponent;
 
   constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _monitoringService: MonitoringService,
   ) {
-    super(_controllerService, MonitoringEventPolicy);
+    super(_controllerService, uiconfigsService, MonitoringEventPolicy);
   }
 
   getClassName(): string {

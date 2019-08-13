@@ -8,6 +8,7 @@ import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.
 import { MatchruleComponent } from '@app/components/monitoring-group/matchrule/matchrule.component';
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
   selector: 'app-newflowexportpolicy',
@@ -27,9 +28,10 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
   formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFlowExportPolicySpec.propInfo['format'].enum);
 
   constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _monitoringService: MonitoringService,
   ) {
-    super(_controllerService, MonitoringFlowExportPolicy);
+    super(_controllerService, uiconfigsService, MonitoringFlowExportPolicy);
   }
 
   getClassName(): string {

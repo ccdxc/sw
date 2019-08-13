@@ -16,6 +16,7 @@ import { IMonitoringTechSupportRequest, MonitoringTechSupportRequest } from '@sd
 import { RepeaterComponent, RepeaterData, ValueType } from 'web-app-framework';
 import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 
 @Component({
@@ -50,9 +51,10 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
+    protected uiconfigsService: UIConfigsService,
     private clusterService: ClusterService,
   ) {
-    super(_controllerService, MonitoringTechSupportRequest);
+    super(_controllerService, uiconfigsService, MonitoringTechSupportRequest);
   }
 
   getClassName(): string {

@@ -1,0 +1,57 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newworkload-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  margin-left: 53px;
+  height: 30px !important;
+}
+
+.newworkload-attach-radio {
+  margin-left: 5px;
+  margin-top: 6px;
+  @include global-mat-radio(12px);
+}
+
+.newworkload-container {
+  padding: 20px 15px;
+  @include primary-font();
+}
+
+.newworkload-multiselect {
+  height: 30px !important;
+}
+
+.newworkload-subtext {
+  margin-top: 2px;
+  @include primary-font(12px, #b2b3b4, 300);
+}
+
+.newworkload-interfaces {
+  margin-left: $horizontal-gutter;
+}
+
+.newworkload-input {
+  height: 30px;
+}
+
+.newworkload-chip {
+  width: 400px;
+  height: 30px;
+}
+
+.newworkload-save,
+.newworkload-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.newworkload-add-interface {
+  @include primary-font(16px, #6ba0e5, 500);
+  cursor: pointer;
+}

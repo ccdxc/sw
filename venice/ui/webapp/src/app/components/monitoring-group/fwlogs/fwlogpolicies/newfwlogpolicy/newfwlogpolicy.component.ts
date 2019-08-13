@@ -8,6 +8,7 @@ import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
   selector: 'app-newfwlogpolicy',
@@ -28,9 +29,10 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
   filterOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum, [NewfwlogpolicyComponent.LOGOPTIONS_NONE]);
 
   constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _monitoringService: MonitoringService,
   ) {
-    super(_controllerService, MonitoringFwlogPolicy);
+    super(_controllerService, uiconfigsService, MonitoringFwlogPolicy);
   }
 
   getClassName(): string {

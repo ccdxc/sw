@@ -20,6 +20,7 @@ import {RepeaterData} from 'web-app-framework';
 import { RowClickEvent, TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 import {Icon} from '@app/models/frontend/shared/icon.interface';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
   selector: 'app-auditevents',
@@ -88,15 +89,14 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 14},
   ];
 
-  subscriptions: Subscription[] = [];
-
   constructor(
     protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,
     protected searchService: SearchService,
     protected auditService: AuditService,
+    protected uiconfigsService: UIConfigsService,
   ) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   postNgInit() {

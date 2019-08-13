@@ -60,7 +60,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
               protected cdr: ChangeDetectorRef,
               protected uiconfigsService: UIConfigsService,
               protected controllerService: ControllerService) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   getHosts() {

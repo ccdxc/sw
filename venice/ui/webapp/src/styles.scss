@@ -111,6 +111,15 @@
     padding-right: 10px;
   }
 
+  .global-trash-button {
+    color: #767676;
+    cursor: pointer;
+
+    &:hover {
+      color: black;
+    }
+  }
+
   .penui-table-header-icon {
     margin-right: 5px;
   }

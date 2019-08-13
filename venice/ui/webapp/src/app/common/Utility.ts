@@ -36,6 +36,7 @@ export class Utility {
   public static LOGIN_IDLE_SETTIME_HANDLE: any = null;
   // Key for the observable obtained from localStorage.getUserdataObservable
   public static USER_DATA_OBSERVABLE = 'UserDataObservable';
+  public static MAX_OBJECT_NAME_LENGTH = 64;
   public static WEBSOCKET_403 = 'Please check your authorization settings and contact system administrator.';  // see VS=157
   public static UPDATE_FAILED_SUMMARY = 'Update Failed';
   public static CREATE_FAILED_SUMMARY = 'Create Failed';

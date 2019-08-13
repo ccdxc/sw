@@ -8,6 +8,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem } from 'primeng/primeng';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
   selector: 'app-neweventalertpolicy',
@@ -28,9 +29,10 @@ export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertP
   oldButtons: ToolbarButton[] = [];
 
   constructor(protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _monitoringService: MonitoringService,
   ) {
-    super(controllerService, MonitoringAlertPolicy);
+    super(controllerService, uiconfigsService, MonitoringAlertPolicy);
   }
 
   postNgInit() {

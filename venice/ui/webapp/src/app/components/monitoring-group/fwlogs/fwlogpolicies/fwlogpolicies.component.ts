@@ -65,7 +65,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
     protected monitoringService: MonitoringService,
     protected _iterableDiffers: IterableDiffers
   ) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
 

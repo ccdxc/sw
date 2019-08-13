@@ -115,7 +115,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     protected telemetryService: TelemetryqueryService,
     protected securityService: SecurityService,
   ) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   getClassName(): string {

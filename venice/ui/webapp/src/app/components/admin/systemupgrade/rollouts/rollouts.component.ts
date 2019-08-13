@@ -78,7 +78,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
               protected objstoreService: ObjstoreService,
               protected router: Router,
               protected uiconfigsService: UIConfigsService) {
-    super(controllerService, cdr);
+    super(controllerService, cdr, uiconfigsService);
   }
 
   /**

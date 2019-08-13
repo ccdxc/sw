@@ -57,14 +57,16 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-rowData>
-        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData"
+        <tr (mouseover)="rowHover(rowData)" (mouseleave)="resetHover(rowData)"
+            [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData"
             class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}"
             [style.min-height]="virtualRowHeight + 'px'"
             fxLayout="row"
             (click)="rowClick.emit({event: $event, rowData: rowData})">
           <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
               [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
-            <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}">
+            <ng-container
+                          *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData}">
             </ng-container>
           </td>
           <!--

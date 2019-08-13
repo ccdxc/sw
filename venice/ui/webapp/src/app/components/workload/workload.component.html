@@ -13,67 +13,88 @@
       </app-workloadwidget>
     </div>
   </div>
-  <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  <app-tableviewedit fxLayout="column" class="workload-widget"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [runDoCheck]="true"
+                     [virtualRowHeight]="58"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [createTemplate]="createTemplate"
+                     [expandTemplate]="expandTemplate"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
 </app-pagebody>
 
-<ng-template #DataTable>
-  <div fxFlex class="workload-table">
-    <app-lazyrender [data]="workloads" [rows]="28" [virtualRowHeight]="58" [runDoCheck]="true">
-      <p-table #workloadTable class="global-primeng-table-lazyload" [columns]="cols"
-               sortField="meta.mod-time" [sortOrder]='-1'
-               dataKey="meta.name" [responsive]="true"
-               [loading]="tableLoading" [resizableColumns]="true">
-        <!-- Table Caption -->
-        <ng-template pTemplate="caption">
-          <app-tableheader title="Workloads" [count]="workloads.length" [total]="workloads.length"
-                           [icon]="tableIcon" width="250px">
-          </app-tableheader>
-        </ng-template>
-        <!-- Table Header -->
-        <ng-template pTemplate="header" let-columns>
-          <tr>
-            <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''"
-                [class]="col.class">
-              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
-              </app-sorticon>
-            </th>
-          </tr>
-        </ng-template>
-        <!-- Table Body -->
-        <ng-template pTemplate="body" let-rowData>
-          <tr (mouseover)="rowHover(rowData)" (mouseleave)="resetHover(rowData)">
-            <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-              <div *ngSwitchCase="'meta.mod-time'">
-                {{rowData.meta['mod-time'] | PrettyDate }}
-              </div>
-              <div *ngSwitchCase="'meta.creation-time'">
-                {{rowData.meta['creation-time'] | PrettyDate }}
-              </div>
-              <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">
-                <ng-container *ngFor="let index of getKeys(rowData.spec.interfaces)">
-                  <ng-container
-                                *ngIf="rowData.status != null && rowData.status.interfaces != null && rowData.status.interfaces[index] != null && rowData.status.interfaces[index]['ip-addresses'] != null">
-                    <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
-                      {{rowData.status.interfaces[index]["ip-addresses"].join(', ')}}</div>
-                  </ng-container>
-                  <ng-container
-                                *ngIf="rowData.status == null || rowData.status.interfaces == null || rowData.status.interfaces[index] == null || rowData.status.interfaces[index]['ip-addresses'] == null">
-                    <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
-                      {{rowData.spec.interfaces[index]["ip-addresses"].join(', ')}}</div>
-                  </ng-container>
-                  <div @fastSlideInOut *ngIf="rowHoverName === rowData.meta.name"
-                       class="workload-column-values">Micro-seg vlan:
-                    {{rowData.spec.interfaces[index]["micro-seg-vlan"]}} External vlan:
-                    {{rowData.spec.interfaces[index]["external-vlan"]}}</div>
-                </ng-container>
-              </div>
-              <ng-container *ngSwitchDefault>
-                {{displayColumn(rowData, col)}}
-              </ng-container>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </app-lazyrender>
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Workloads" [total]="count" [icon]="tableIcon" width="250px">
+  </app-tableheader>
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-newworkload (formClose)="creationFormClose()" fxFlex="none">
+  </app-newworkload>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <app-newworkload [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"
+                   fxFlex="none">
+  </app-newworkload>
+</ng-template>
+
+
+<ng-template #bodyTemplate let-rowData let-col="col" let-hovered="hovered">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.name'">
+      <div>
+        <a routerLink="./{{rowData.meta.name}}">{{rowData.meta.name}}</a>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      <div>
+        {{rowData.meta['mod-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      <div>
+        {{rowData.meta['creation-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">
+      <ng-container *ngFor="let index of getKeys(rowData.spec.interfaces)">
+        <ng-container
+                      *ngIf="rowData.status != null && rowData.status.interfaces != null && rowData.status.interfaces[index] != null && rowData.status.interfaces[index]['ip-addresses'] != null">
+          <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
+            {{rowData.status.interfaces[index]["ip-addresses"].join(', ')}}</div>
+        </ng-container>
+        <ng-container
+                      *ngIf="rowData.status == null || rowData.status.interfaces == null || rowData.status.interfaces[index] == null || rowData.status.interfaces[index]['ip-addresses'] == null">
+          <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
+            {{rowData.spec.interfaces[index]["ip-addresses"].join(', ')}}</div>
+        </ng-container>
+        <div @fastSlideInOut *ngIf="hovered"
+             class="workload-column-values">Micro-seg vlan:
+          {{rowData.spec.interfaces[index]["micro-seg-vlan"]}} External vlan:
+          {{rowData.spec.interfaces[index]["external-vlan"]}}</div>
+      </ng-container>
+    </div>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon *roleGuard="'workloadworkload_update'" matTooltip="Edit policy"
+              class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+    <mat-icon *roleGuard="'workloadworkload_delete'" matTooltip="Delete policy"
+              class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>

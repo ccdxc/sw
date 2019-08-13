@@ -64,6 +64,17 @@ export class IPUtility {
     return !IPUtility.isValidIP(control.value) ? { validIP: { message: 'Must be a valid IP in dot notation' } } : null;
   }
 
+  public static isValidIPListValidator(control: AbstractControl): ValidationErrors | null {
+    if (control.value == null || control.value.length === 0) {
+      return null;
+    }
+    const invalidIP = control.value.find( (ip) => {
+      return !IPUtility.isValidIP(ip);
+    });
+
+    return invalidIP != null ? { validIP: { message: invalidIP + ' is not a valid IP in dot notation' } } : null;
+  }
+
   /**
    * Creates a fully formed IP from a partially given ip
    * by adding wildcards for the remaining octets
