@@ -88,6 +88,7 @@ venice::get_ptree_(std::string& naples_status_file, ptree& prop_tree)
     SDK_TRACE_DEBUG("naples_status_file has permission %s", naples_status_file.c_str());
 
     try {
+	usleep(100);
         read_json(naples_status_file.c_str(), prop_tree);
     } catch (exception const& e) {
         SDK_TRACE_DEBUG("exception %s", e.what());
@@ -126,6 +127,7 @@ venice::populate_venice(ptree &root)
     BOOST_FOREACH(ptree::value_type &v, root.get_child("Controllers"))
     {
         venice_db_.controllers.push_back(v.second.data().c_str());
+        SDK_TRACE_DEBUG("Controller: %s", v.second.data().c_str());
     }
     BOOST_FOREACH(ptree::value_type &it, root.get_child("Fru"))
     {
