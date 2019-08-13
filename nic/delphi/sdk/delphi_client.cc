@@ -841,6 +841,11 @@ error DelphiClient::SocketClosed() {
     // let the service know that delphi hub went down
     this->service_->SocketClosed();
 
+    // clear our local cache of the database
+    this->subtrees_.clear();
+    this->syncQueue_.clear();
+    this->eventQueue_.clear();
+    
     // reconnect in background
     this->reconnectTimer_.start(0, CLIENT_RECONNECT_PERIOD);
 
