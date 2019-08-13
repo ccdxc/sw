@@ -423,7 +423,8 @@ static int ionic_get_coalesce(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 
-	coalesce->tx_coalesce_usecs = lif->tx_coalesce_usecs;
+	/* Tx uses Rx interrupt */
+	coalesce->tx_coalesce_usecs = lif->rx_coalesce_usecs;
 	coalesce->rx_coalesce_usecs = lif->rx_coalesce_usecs;
 
 	return 0;
@@ -433,11 +434,11 @@ static int ionic_set_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct identity *ident = &lif->ionic->ident;
-	struct ionic_dev *idev = &lif->ionic->idev;
-	u32 tx_coal, rx_coal;
+	struct identity *ident;
 	struct qcq *qcq;
 	unsigned int i;
+	u32 usecs;
+	u32 coal;
 
 	if (coalesce->rx_max_coalesced_frames ||
 	    coalesce->rx_coalesce_usecs_irq ||
@@ -461,38 +462,41 @@ static int ionic_set_coalesce(struct net_device *netdev,
 	    coalesce->rate_sample_interval)
 		return -EINVAL;
 
-	if (ident->dev.intr_coal_div == 0)
+	ident = &lif->ionic->ident;
+	if (ident->dev.intr_coal_div == 0) {
+		netdev_warn(netdev, "bad HW value in dev.intr_coal_div = %d\n",
+			    ident->dev.intr_coal_div);
 		return -EIO;
-
-	/* Convert from usecs to device units */
-	tx_coal = coalesce->tx_coalesce_usecs *
-		  le32_to_cpu(ident->dev.intr_coal_mult) /
-		  le32_to_cpu(ident->dev.intr_coal_div);
-	rx_coal = coalesce->rx_coalesce_usecs *
-		  le32_to_cpu(ident->dev.intr_coal_mult) /
-		  le32_to_cpu(ident->dev.intr_coal_div);
-
-	if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX)
-		return -ERANGE;
-
-	if (coalesce->tx_coalesce_usecs != lif->tx_coalesce_usecs) {
-		for (i = 0; i < lif->nxqs; i++) {
-			qcq = lif->txqcqs[i].qcq;
-			ionic_intr_coal_init(idev->intr_ctrl,
-					     qcq->intr.index,
-					     tx_coal);
-		}
-		lif->tx_coalesce_usecs = coalesce->tx_coalesce_usecs;
 	}
 
-	if (coalesce->rx_coalesce_usecs != lif->rx_coalesce_usecs) {
-		for (i = 0; i < lif->nxqs; i++) {
-			qcq = lif->rxqcqs[i].qcq;
-			ionic_intr_coal_init(idev->intr_ctrl,
-					     qcq->intr.index,
-					     rx_coal);
+	/* Tx uses Rx interrupt, so only change Rx */
+	if (coalesce->tx_coalesce_usecs != lif->rx_coalesce_usecs) {
+		netdev_warn(netdev, "only the rx-usecs can be changed\n");
+		return -EINVAL;
+	}
+
+	coal = ionic_coal_usec_to_hw(lif->ionic, coalesce->rx_coalesce_usecs);
+
+	if (coal > INTR_CTRL_COAL_MAX)
+		return -ERANGE;
+
+	/* If they asked for non-zero and it resolved to zero, bump it up */
+	if (!coal && coalesce->rx_coalesce_usecs)
+		coal = 1;
+
+	/* Convert it back to get device resolution */
+	usecs = ionic_coal_hw_to_usec(lif->ionic, coal);
+
+	if (usecs != lif->rx_coalesce_usecs) {
+		lif->rx_coalesce_usecs = usecs;
+
+		if (test_bit(LIF_UP, lif->state)) {
+			for (i = 0; i < lif->nxqs; i++) {
+				qcq = lif->rxqcqs[i].qcq;
+				ionic_intr_coal_init(lif->ionic->idev.intr_ctrl,
+						     qcq->intr.index, coal);
+			}
 		}
-		lif->rx_coalesce_usecs = coalesce->rx_coalesce_usecs;
 	}
 
 	return 0;

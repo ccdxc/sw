@@ -1456,6 +1456,7 @@ static int ionic_txrx_alloc(struct lif *lif)
 	unsigned int flags;
 	unsigned int i;
 	int err = 0;
+	u32 coal;
 
 	flags = QCQ_F_TX_STATS | QCQ_F_SG;
 	for (i = 0; i < lif->nxqs; i++) {
@@ -1481,6 +1482,7 @@ static int ionic_txrx_alloc(struct lif *lif)
 	}
 
 	flags = QCQ_F_RX_STATS | QCQ_F_INTR;
+	coal = ionic_coal_usec_to_hw(lif->ionic, lif->rx_coalesce_usecs);
 	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_alloc(lif, IONIC_QTYPE_RXQ, i, "rx", flags,
 				      lif->nrxq_descs,
@@ -1493,6 +1495,8 @@ static int ionic_txrx_alloc(struct lif *lif)
 		/* this makes the stats block easy to find from qcq context */
 		lif->rxqcqs[i].qcq->stats = lif->rxqcqs[i].stats;
 
+		ionic_intr_coal_init(lif->ionic->idev.intr_ctrl,
+				     lif->rxqcqs[i].qcq->intr.index, coal);
 		ionic_link_qcq_interrupts(lif->rxqcqs[i].qcq,
 					  lif->txqcqs[i].qcq);
 
@@ -1659,6 +1663,7 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	struct device *dev = ionic->dev;
 	struct lif *lif;
 	int tbl_sz;
+	u32 coal;
 	int err;
 
 	if (index == 0) {
@@ -1727,6 +1732,10 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->index = index;
 	lif->ntxq_descs = IONIC_DEF_TXRX_DESC;
 	lif->nrxq_descs = IONIC_DEF_TXRX_DESC;
+
+	/* Convert the default coalesce value to actual hw resolution */
+	coal = ionic_coal_usec_to_hw(lif->ionic, IONIC_ITR_COAL_USEC_DEFAULT);
+	lif->rx_coalesce_usecs = ionic_coal_hw_to_usec(lif->ionic, coal);
 
 	snprintf(lif->name, sizeof(lif->name), "lif%u", index);
 

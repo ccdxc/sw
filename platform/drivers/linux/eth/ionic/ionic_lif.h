@@ -179,7 +179,6 @@ struct lif {
 	u32 rss_ind_tbl_sz;
 
 	struct rx_filters rx_filters;
-	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
 	struct mutex dbid_inuse_lock;	/* lock the dbid bit list */
 	unsigned long *dbid_inuse;
@@ -280,6 +279,35 @@ static inline void debug_stats_napi_poll(struct qcq *qcq,
 		napi_cntr_idx = MAX_NUM_NAPI_CNTR - 1;
 
 	qcq->napi_stats.work_done_cntr[napi_cntr_idx]++;
+}
+
+static inline u32 ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs)
+{
+	u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
+	u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
+
+	/* Div-by-zero should never be an issue, but check anyway */
+	if (!div || !mult)
+		return 0;
+
+	/* Round up in case usecs is close to the next hw unit */
+	usecs += (div / mult) >> 1;
+
+	/* Convert from usecs to device units */
+	return (usecs * mult) / div;
+}
+
+static inline u32 ionic_coal_hw_to_usec(struct ionic *ionic, u32 units)
+{
+	u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
+	u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
+
+	/* Div-by-zero should never be an issue, but check anyway */
+	if (!div || !mult)
+		return 0;
+
+	/* Convert from device units to usec */
+	return (units * div) / mult;
 }
 
 #define DEBUG_STATS_CQE_CNT(cq)		((cq)->compl_count++)
