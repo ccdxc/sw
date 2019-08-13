@@ -904,8 +904,6 @@ TEST_F(nwsec_policy_test, test7) {
     SecurityRule                           *rule_spec, rule_spec2;
     SecurityPolicyDeleteRequest             pol_del_req;
     SecurityPolicyDeleteResponse            pol_del_rsp;
-    hal_handle_t                            sess_hdl = 0, skip_sess_hdl = 0;
-    hal::session_t                          *session = NULL;
 
     hal::vrf_t *vrf = hal::vrf_lookup_by_handle(nwsec_policy_test::vrfh);
     pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(11);

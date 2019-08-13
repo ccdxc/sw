@@ -260,9 +260,6 @@ action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id
                  mirror_on_drop_session_id);
     modify_field(control_metadata.clear_promiscuous_repl, clear_promiscuous_repl);
     modify_field(control_metadata.nic_mode, nic_mode);
-
-    // write nic mode (table constant)
-    modify_field(control_metadata.nic_mode, scratch_metadata.flag);
 }
 
 @pragma stage 1

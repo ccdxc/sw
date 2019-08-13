@@ -89,16 +89,17 @@ action flow_miss() {
             modify_field(capri_intrinsic.tm_replicate_en, TRUE);
             modify_field(capri_intrinsic.tm_replicate_ptr,
                          control_metadata.flow_miss_idx);
-	    modify_field(flow_miss_metadata.rewrite_index,
+            modify_field(rewrite_metadata.rewrite_index,
                          flow_miss_metadata.rewrite_index);
-	    modify_field(flow_miss_metadata.tunnel_rewrite_index,
+            modify_field(rewrite_metadata.tunnel_rewrite_index,
                          flow_miss_metadata.tunnel_rewrite_index);
-	    modify_field(flow_miss_metadata.tunnel_vnid,
+            modify_field(rewrite_metadata.tunnel_vnid,
                          flow_miss_metadata.tunnel_vnid);
-	    modify_field(flow_miss_metadata.tunnel_originate,
+            modify_field(tunnel_metadata.tunnel_originate,
                          flow_miss_metadata.tunnel_originate);
         } else {
-            modify_field(control_metadata.drop_reason, DROP_MULTI_DEST_NOT_PINNED_UPLINK);
+            modify_field(control_metadata.drop_reason,
+                         DROP_MULTI_DEST_NOT_PINNED_UPLINK);
             drop_packet();
         }
     }

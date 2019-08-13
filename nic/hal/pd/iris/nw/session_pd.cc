@@ -47,8 +47,6 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
     sdk_ret_t sdk_ret;
     directmap *stats_table;
     flow_stats_actiondata_t d = { 0 };
-    mem_addr_t              stats_mem_addr = 0;
-    uint64_t                zero_val = 0;
 
     SDK_ASSERT(assoc_hw_idx != NULL);
     stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
@@ -70,6 +68,9 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
     }
 
 #if 0
+    mem_addr_t              stats_mem_addr = 0;
+    uint64_t                zero_val = 0;
+
     ret = hal_pd_stats_addr_get(P4TBL_ID_FLOW_STATS,
                                 *assoc_hw_idx, &stats_mem_addr);
     if (ret != HAL_RET_OK) {

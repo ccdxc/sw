@@ -133,8 +133,7 @@ flow_miss_multicast:
   bcf           [!c1], flow_miss_mdest_not_pinned_drop
   or            r1, k.control_metadata_flow_miss_idx_s8_e15, \
                     k.control_metadata_flow_miss_idx_s0_e7, 8
-  phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, \
-                    r1, \
+  phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, r1, \
                     p.capri_intrinsic_tm_replicate_en, 1
   phvwr         p.tunnel_metadata_tunnel_originate[0], \
                     k.flow_miss_metadata_tunnel_originate
