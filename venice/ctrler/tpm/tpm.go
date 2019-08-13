@@ -245,7 +245,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// watch tenants
-	watcher, err = pm.apiClient.ClusterV1().Tenant().Watch(ctx, &opts)
+	watcher, err = pm.apiClient.ClusterV1().Tenant().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}})
 	if err != nil {
 		pmLog.Errorf("failed to watch tenant, error: {%s}", err)
 		return err

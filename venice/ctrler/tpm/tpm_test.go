@@ -292,7 +292,7 @@ func TestProcessEvents(t *testing.T) {
 	mSp.EXPECT().Watch(ctx, opts).Return(statsEvent, nil).Times(1)
 	mFp.EXPECT().Watch(ctx, opts).Return(fwlogEvent, nil).Times(1)
 	mEvp.EXPECT().Watch(ctx, opts).Return(flowExpEvent, nil).Times(1)
-	mTnt.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("mock tenant failure")).Times(1)
+	mTnt.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(nil, fmt.Errorf("mock tenant failure")).Times(1)
 
 	mapi.EXPECT().MonitoringV1().Return(sV1).Times(3)
 	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
@@ -352,7 +352,7 @@ func TestEventLoop(t *testing.T) {
 	tenantWatch := mockkvs.NewMockWatcher(ctrl)
 	tenantWatch.EXPECT().EventChan().Return(nil).Times(1)
 	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
-	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(tenantWatch, nil).Times(1)
 
 	// close stats channel
 	close(statsCh)
@@ -382,7 +382,7 @@ func TestEventLoop(t *testing.T) {
 	tenantCh := make(chan *kvstore.WatchEvent, 2)
 	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
 	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
-	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(tenantWatch, nil).Times(1)
 
 	// stats event
 	statsCh <- &kvstore.WatchEvent{Object: &telemetry.StatsPolicy{}}
@@ -394,7 +394,7 @@ func TestEventLoop(t *testing.T) {
 	flowExpCh <- &kvstore.WatchEvent{Object: &telemetry.FlowExportPolicy{}}
 
 	// tenant event
-	tenantCh <- &kvstore.WatchEvent{Object: &cluster.Tenant{}}
+	tenantCh <- &kvstore.WatchEvent{Object: &cluster.Tenant{Spec: cluster.TenantSpec{AdminUser: "test"}}}
 
 	// send invalid event type
 	statsCh <- &kvstore.WatchEvent{}
@@ -419,7 +419,7 @@ func TestEventLoop(t *testing.T) {
 	// tenant watch
 	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
 	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
-	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(tenantWatch, nil).Times(1)
 
 	// cancel context
 	go func() {
@@ -448,7 +448,7 @@ func TestEventLoop(t *testing.T) {
 	// tenant watch
 	tenantWatch.EXPECT().EventChan().Return(tenantCh).Times(1)
 	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
-	mTenant.EXPECT().Watch(gomock.Any(), opts).Return(tenantWatch, nil).Times(1)
+	mTenant.EXPECT().Watch(gomock.Any(), &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(tenantWatch, nil).Times(1)
 
 	nCtx, nCancel := context.WithCancel(context.Background())
 	pa.cancel = nCancel
