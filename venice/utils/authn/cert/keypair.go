@@ -175,7 +175,7 @@ func GetKeyPair(name, apiServer string, rslver resolver.Interface, l log.Logger)
 			[]rpckit.Option{rpckit.WithTLSClientIdentity("auth-watcher")},
 			&watcher.KindOptions{
 				Kind:    string(cluster.KindCluster),
-				Options: &api.ListWatchOptions{},
+				Options: &api.ListWatchOptions{FieldChangeSelector: []string{"Spec.Certs", "Spec.Key"}},
 			})
 		if err := gKeyPair.generateSelfSignedCert(); err != nil {
 			gKeyPair.logger.Fatalf("error generating self signed cert: %v", err)
