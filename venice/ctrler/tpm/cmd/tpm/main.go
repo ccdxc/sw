@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
-	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
@@ -36,6 +36,7 @@ func main() {
 		listenURL       = flag.String("listen-url", ":"+globals.TpmRPCPort, "gRPC listener URL")
 		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tpm)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		restURL         = flag.String("rest-url", globals.Localhost+":"+globals.TpmRestPort, "rest listener URL")
 		debugFlag       = flag.Bool("debug", false, "enable debug mode")
 	)
 
@@ -84,20 +85,11 @@ func main() {
 	diagOption := tpm.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.Tpm, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, nsClient, logger))
 
 	// init policy manager
-	pm, err := tpm.NewPolicyManager(*listenURL, nsClient, watcherOption, diagOption)
+	pm, err := tpm.NewPolicyManager(*listenURL, nsClient, *restURL, watcherOption, diagOption)
 	if err != nil {
 		// let the scheduler restart tpm
 		log.Fatalf("failed to init policy agent, %s", err)
 	}
-
-	// debug
-	// curl --unix-socket /var/run/pensando/debug/tpm.sock http://localhost/debug
-	debugSocket := debug.New(pm.Debug)
-	err = debugSocket.StartServer(dbgSock)
-	if err != nil {
-		log.Fatalf("Failed to start debug server, %v", err)
-	}
-	defer debugSocket.StopServer()
 
 	log.Infof("%s is running {%+v}", globals.Tpm, pm)
 	recorder.Event(eventtypes.SERVICE_RUNNING,

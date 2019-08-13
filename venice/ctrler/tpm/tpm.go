@@ -5,9 +5,15 @@ package tpm
 
 import (
 	"context"
+	"expvar"
 	"fmt"
+	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/gorilla/mux"
+
+	"github.com/pensando/sw/nic/agent/httputils"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -47,7 +53,9 @@ type PolicyManager struct {
 	// policyDB
 	policyDb *memdb.Memdb
 	// tpm rpc server
-	rpcServer     *rpcserver.PolicyRPCServer
+	rpcServer *rpcserver.PolicyRPCServer
+	// rest server
+	restServer    *http.Server
 	diagSvc       diagnostics.Service
 	moduleWatcher module.Watcher
 }
@@ -75,7 +83,7 @@ const statsCollectionInterval = "30s"
 var pmLog vLog.Logger
 
 // NewPolicyManager creates a policy manager instance
-func NewPolicyManager(listenURL string, nsClient resolver.Interface, opts ...Option) (*PolicyManager, error) {
+func NewPolicyManager(listenURL string, nsClient resolver.Interface, restURL string, opts ...Option) (*PolicyManager, error) {
 
 	pmLog = vLog.WithContext("pkg", pkgName)
 	pm := &PolicyManager{nsClient: nsClient,
@@ -93,11 +101,22 @@ func NewPolicyManager(listenURL string, nsClient resolver.Interface, opts ...Opt
 	}
 
 	pm.rpcServer = server
+
+	router := mux.NewRouter()
+	router.Methods("GET").Subrouter().Handle("/debug/state", httputils.MakeHTTPHandler(pm.Debug))
+	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+
+	pm.restServer = &http.Server{Addr: restURL, Handler: router}
+	go pm.restServer.ListenAndServe()
 	return pm, nil
 }
 
 // Stop shutdown policy watch
 func (pm *PolicyManager) Stop() {
+	if pm.restServer != nil {
+		pm.restServer.Close()
+	}
+
 	if pm.moduleWatcher != nil {
 		pm.moduleWatcher.Stop()
 	}
@@ -385,7 +404,7 @@ func (pm *PolicyManager) deleteDatabase(tenantName string, dbName string) error 
 }
 
 // Debug function dumps all policy cache for debug
-func (pm *PolicyManager) Debug() interface{} {
+func (pm *PolicyManager) Debug(r *http.Request) (interface{}, error) {
 	kind := []string{"StatsPolicy", "FwlogPolicy", "FlowExportPolicy"}
 	dbgInfo := struct {
 		Policy  map[string]map[string]memdb.Object
@@ -404,5 +423,5 @@ func (pm *PolicyManager) Debug() interface{} {
 		}
 	}
 	dbgInfo.Clients = pm.rpcServer.Debug()
-	return dbgInfo
+	return dbgInfo, nil
 }

@@ -29,7 +29,7 @@ const listenURL = "127.0.0.1:"
 
 func TestProcessStatsPolicy(t *testing.T) {
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(listenURL, r)
+	pa, err := NewPolicyManager(listenURL, r, "127.0.0.1:")
 	tu.AssertOk(t, err, "failed to create policy manager")
 	pol := &telemetry.StatsPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
@@ -44,7 +44,9 @@ func TestProcessStatsPolicy(t *testing.T) {
 	tu.AssertOk(t, err, "stats policy not found")
 	tu.Assert(t, v == pol, "stats policy didn't match")
 
-	d := pa.Debug()
+	d, err := pa.Debug(nil)
+	tu.AssertOk(t, err, "failed to get debug info")
+
 	dbg, ok := d.(struct {
 		Policy  map[string]map[string]memdb.Object
 		Clients map[string]map[string]string
@@ -75,7 +77,7 @@ func TestProcessStatsPolicy(t *testing.T) {
 
 func TestProcessFwlogPolicy(t *testing.T) {
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(listenURL, r)
+	pa, err := NewPolicyManager(listenURL, r, "127.0.0.1:")
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	pol := &telemetry.FwlogPolicy{
@@ -111,7 +113,7 @@ func TestProcessFwlogPolicy(t *testing.T) {
 
 func TestProcessExportPolicy(t *testing.T) {
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(listenURL, r)
+	pa, err := NewPolicyManager(listenURL, r, "127.0.0.1:")
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	pol := &telemetry.FlowExportPolicy{
@@ -308,7 +310,7 @@ func TestEventLoop(t *testing.T) {
 	defer cancel()
 
 	r := mockresolver.New()
-	pa, err := NewPolicyManager(listenURL, r)
+	pa, err := NewPolicyManager(listenURL, r, "127.0.0.1:")
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	opts := &api.ListWatchOptions{}

@@ -189,7 +189,8 @@ const (
 	BrowserURIPrefix = "browser"
 
 	// TPM
-	TpmRPCPort = "9020"
+	TpmRPCPort  = "9020"
+	TpmRestPort = "9040"
 
 	// Trouble shooting (TSM) Controller
 	TsmRPCPort  = "9030"

@@ -1098,7 +1098,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	time.Sleep(time.Millisecond * 100)
 
 	// create tpm
-	pm, err := tpm.NewPolicyManager(integTestTPMURL, rc)
+	pm, err := tpm.NewPolicyManager(integTestTPMURL, rc, "127.0.0.1:")
 	c.Assert(err, check.IsNil)
 	it.tpm = pm
 
