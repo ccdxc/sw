@@ -173,6 +173,39 @@ fte_span_pd_alloc_res (pd_fte_span_t *fte_span_pd)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+nacl_stats_program_tbl (pd_fte_span_t *fte_span_pd, bool insert)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    directmap              *nacl_stats_tbl = NULL;
+    nacl_stats_actiondata_t d = {0};
+
+    nacl_stats_tbl = g_hal_state_pd->dm_table(P4TBL_ID_NACL_STATS);
+    SDK_ASSERT_RETURN((nacl_stats_tbl != NULL), HAL_RET_ERR);
+
+    // populate the action information
+    d.action_id = NACL_STATS_NACL_STATS_ID; 
+
+    // Initialize the stats
+    d.action_u.nacl_stats_nacl_stats.stats_packets = 0;
+
+    if (insert) {
+        sdk_ret = nacl_stats_tbl->insert(&d, &fte_span_pd->stats_index);
+    } else {
+        sdk_ret = nacl_stats_tbl->remove(fte_span_pd->stats_index);
+    }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("nacl stats table write failure, ret {}",
+                      ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Nacl Stats : Stats idx: {} programmed",
+                    fte_span_pd->stats_index);
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
 {
@@ -208,6 +241,12 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         mirr_data.action_u.mirror_local_span.dst_lport = CPU_LPORT;
         mirr_data.action_u.mirror_local_span.qid_en = 1;
         mirr_data.action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
+
+        if (fte_span_pd->stats_index) {
+            // Clean up the stats programming
+            nacl_stats_program_tbl(fte_span_pd, false);
+            fte_span_pd->stats_index = 0; 
+        }
 
 
         // Only for Testing, uncomment so that every packet is spanned to FTE
@@ -312,7 +351,20 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
                 mask.control_metadata_from_cpu_mask =
                     ~(mask.control_metadata_from_cpu_mask & 0);
             }
+
         }
+
+        if (fte_span_pd->stats_index) {
+            // Clean up the stats programming
+            nacl_stats_program_tbl(fte_span_pd, false);
+            fte_span_pd->stats_index = 0;
+        }
+ 
+        if (fte_span->attach_stats) {
+            // Program nacl_stats table
+            nacl_stats_program_tbl(fte_span_pd, true);
+            data.action_u.nacl_nacl_permit.stats_idx = (uint16_t)fte_span_pd->stats_index;
+        } 
 
         data.action_id = NACL_NACL_PERMIT_ID;
         if (fte_span->is_egress) {
@@ -399,9 +451,9 @@ end:
 hal_ret_t
 pd_fte_span_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t               ret;
+    hal_ret_t                  ret;
     pd_fte_span_create_args_t *args = pd_func_args->pd_fte_span_create;
-    pd_fte_span_t                *fte_span_pd;
+    pd_fte_span_t             *fte_span_pd;
 
     SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
 
@@ -429,6 +481,8 @@ pd_fte_span_create (pd_func_args_t *pd_func_args)
         goto end;
     }
 
+    *args->stats_index = fte_span_pd->stats_index;
+
 end:
     if (ret != HAL_RET_OK) {
         fte_span_pd_cleanup(fte_span_pd);
@@ -452,10 +506,26 @@ pd_fte_span_update (pd_func_args_t *pd_func_args)
         goto end;
     }
 
+    *args->stats_index = fte_span_pd_clone->stats_index;
+
 end:
     if (ret != HAL_RET_OK) {
         fte_span_pd_cleanup(fte_span_pd_clone);
     }
+
+    return ret;
+}
+
+hal_ret_t
+pd_fte_span_get (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                   ret;
+    pd_fte_span_get_args_t     *args = pd_func_args->pd_fte_span_get;
+    pd_fte_span_t               *fte_span_pd;
+
+    fte_span_pd = (pd_fte_span_t *)args->fte_span->pd;
+
+    *args->stats_index = fte_span_pd->stats_index;
 
     return ret;
 }

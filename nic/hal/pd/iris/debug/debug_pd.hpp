@@ -14,6 +14,7 @@ namespace pd {
 
 struct pd_fte_span_s {
     acl_tcam_entry_handle_t handle;
+    uint32_t         stats_index;
 
     fte_span_t      *fte_span;
 } __PACK__;

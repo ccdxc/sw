@@ -37,6 +37,7 @@ var (
 	isEgress        bool
 	isDisable       bool
 	matchAny        bool
+	addStats        bool
 )
 
 var fteSpanDebugCmd = &cobra.Command{
@@ -82,6 +83,7 @@ func init() {
 	fteSpanDebugCmd.Flags().BoolVar(&fromCPU, "from-cpu", false, "Specify from cpu flag")
 	fteSpanDebugCmd.Flags().BoolVar(&isEgress, "is-egress", false, "Enable egress span")
 	fteSpanDebugCmd.Flags().BoolVar(&matchAny, "match-any", false, "Span every packet")
+	fteSpanDebugCmd.Flags().BoolVar(&addStats, "add-stats", false, "Attach NACL Stats")
 }
 
 func fteSpanShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -257,6 +259,7 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 		EthDmac:       ethDmac,
 		FromCpu:       fromCPU,
 		IsEgress:      isEgress,
+		AttachStats:   addStats,
 	}
 	fteSpanReqMsg := &halproto.FteSpanRequestMsg{
 		Request: []*halproto.FteSpanRequest{req},
@@ -269,14 +272,19 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	var statsIdx uint32
 	// Print Tables: For now its only one at a time
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
+		statsIdx = resp.StatsIndex
 	}
 
-	fmt.Println("Success: FTE Span Installed.")
-
+	if addStats == true {
+		fmt.Println("Success: FTE Span Installed with stats index ", statsIdx)
+	} else {
+		fmt.Println("Success: FTE Span Installed.")
+	}
 }

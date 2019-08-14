@@ -325,6 +325,35 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+//  NACL Stats init 
+//  0: nop entry.
+//-----------------------------------------------------------------------------
+static hal_ret_t
+p4pd_nacl_stats_init (void)
+{
+    uint32_t                    idx = NACL_STATS_NOP_ENTRY;
+    hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
+    directmap                  *dm;
+    nacl_stats_actiondata_t     data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_NACL_STATS);
+    SDK_ASSERT(dm != NULL);
+
+    // "catch-all" nop entry
+    data.action_id = NACL_STATS_NOP_ID;
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("NACL Stats table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 p4pd_l4_profile_init (void)
 {
@@ -403,7 +432,7 @@ p4pd_session_state_init (void)
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("flow state table write failure, idx : {}, err : {}",
+        HAL_TRACE_ERR("session state table write failure, idx : {}, err : {}",
                       idx, ret);
         return ret;
     }
@@ -1567,6 +1596,7 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     SDK_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_compute_checksum_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_egress_drop_stats_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_nacl_stats_init() == HAL_RET_OK);
 
     // initialize all PB/TM tables with default entries, if any
     // Even though this is not really a P4 Table it is very

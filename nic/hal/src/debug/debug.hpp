@@ -62,9 +62,9 @@ typedef struct fte_span_s {
     uint64_t                    eth_dmac;
     bool                        from_cpu;
     bool                        is_egress;
+    bool                        attach_stats;
 
     uint32_t                    span_lport;
-
     void                        *pd;
 
     hal_handle_t                hal_handle;

@@ -497,6 +497,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_MISC_GET, pd_accel_rgroup_misc_get);
 
     // fte_span pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_GET, pd_fte_span_get);
     PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_CREATE, pd_fte_span_create);
     PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_UPDATE, pd_fte_span_update);
     PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_MEM_FREE, pd_fte_span_mem_free);

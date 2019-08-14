@@ -3109,14 +3109,17 @@ typedef struct pd_uplink_tm_control_args_s {
 // fte span
 typedef struct pd_fte_span_create_args_s {
     fte_span_t               *fte_span;
+    uint32_t                 *stats_index;
 } __PACK__ pd_fte_span_create_args_t;
 
 typedef struct pd_fte_span_update_args_s {
     fte_span_t               *fte_span_clone;
+    uint32_t                 *stats_index;
 } __PACK__ pd_fte_span_update_args_t;
 
 typedef struct pd_fte_span_get_args_s {
     fte_span_t               *fte_span;
+    uint32_t                 *stats_index;
 } __PACK__ pd_fte_span_get_args_t;
 
 typedef struct pd_fte_span_mem_free_args_s {

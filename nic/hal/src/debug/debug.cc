@@ -471,8 +471,9 @@ validate_fte_span_create (FteSpanRequest& req,
 }
 
 static hal_ret_t
-fte_span_prepare_rsp (FteSpanResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
+fte_span_prepare_rsp (FteSpanResponse *rsp, hal_ret_t ret, uint32_t stats_index)
 {
+    rsp->set_stats_index(stats_index);
     rsp->set_api_status(hal_prepare_rsp(ret));
     return HAL_RET_OK;
 }
@@ -498,6 +499,7 @@ fte_span_init_from_spec (fte_span_t *fte_span, FteSpanRequest* req)
     fte_span->from_cpu = req->from_cpu();
     fte_span->is_egress = req->is_egress();
     fte_span->span_lport = req->span_lport();
+    fte_span->attach_stats = req->attach_stats();
 
     return HAL_RET_OK;
 }
@@ -523,6 +525,7 @@ fte_span_to_spec (FteSpanRequest* req, fte_span_t *fte_span)
     req->set_eth_dmac(fte_span->eth_dmac);
     req->set_from_cpu(fte_span->from_cpu);
     req->set_is_egress(fte_span->is_egress);
+    req->set_attach_stats(fte_span->attach_stats);
 
     return HAL_RET_OK;
 }
@@ -545,6 +548,7 @@ fte_span_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // PD Call to allocate PD resources and HW programming
     pd_fte_span_args.fte_span           = fte_span;
+    pd_fte_span_args.stats_index        = (uint32_t *)cfg_ctxt->app_ctxt;
     pd_func_args.pd_fte_span_create = &pd_fte_span_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_FTE_SPAN_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -591,6 +595,7 @@ hal_ret_t fte_span_create(FteSpanRequest& req,
     fte_span_t      *fte_span = NULL;
     dhl_entry_t     dhl_entry = { 0 };
     cfg_op_ctxt_t   cfg_ctxt  = { 0 };
+    uint32_t        stats_index = 0;
 
     hal_api_trace(" API Begin: FTE Span create ");
     proto_msg_dump(req);
@@ -632,7 +637,7 @@ hal_ret_t fte_span_create(FteSpanRequest& req,
     // form ctxt and call infra add
     dhl_entry.handle  = fte_span->hal_handle;
     dhl_entry.obj     = fte_span;
-    cfg_ctxt.app_ctxt = NULL;
+    cfg_ctxt.app_ctxt = &stats_index;
     // cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
@@ -655,7 +660,7 @@ end:
         // HAL_API_STATS_INC(HAL_API_FTE_SPAN_CREATE_SUCCESS);
     }
 
-    fte_span_prepare_rsp(rsp, ret, fte_span ? fte_span->hal_handle : HAL_HANDLE_INVALID);
+    fte_span_prepare_rsp(rsp, ret, stats_index);
     return ret;
 }
 
@@ -702,6 +707,7 @@ fte_span_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     fte_span_clone = (fte_span_t *)dhl_entry->cloned_obj;
 
     pd_fte_span_args.fte_span_clone = fte_span_clone;
+    pd_fte_span_args.stats_index = (uint32_t *)cfg_ctxt->app_ctxt;
     pd_func_args.pd_fte_span_update = &pd_fte_span_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_FTE_SPAN_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -750,6 +756,7 @@ fte_span_update(FteSpanRequest& req,
     fte_span_t      *fte_span = g_hal_state->fte_span();
     dhl_entry_t     dhl_entry = { 0 };
     cfg_op_ctxt_t   cfg_ctxt  = { 0 };
+    uint32_t        stats_index = 0;
 
     hal_api_trace(" API Begin: FTE span update ");
     proto_msg_dump(req);
@@ -771,7 +778,7 @@ fte_span_update(FteSpanRequest& req,
     // form ctxt and call infra update object
     dhl_entry.handle  = fte_span->hal_handle;
     dhl_entry.obj     = fte_span;
-    cfg_ctxt.app_ctxt = NULL;
+    cfg_ctxt.app_ctxt = &stats_index;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
@@ -789,22 +796,33 @@ end:
         // HAL_API_STATS_INC(HAL_API_FTE_SPAN_UPDATE_FAIL);
     }
 
-    fte_span_prepare_rsp(rsp, ret,
-                       fte_span ? fte_span->hal_handle : HAL_HANDLE_INVALID);
+    fte_span_prepare_rsp(rsp, ret, stats_index);
     return ret;
 }
 
 hal_ret_t
 fte_span_get(FteSpanResponseMsg *rsp_msg)
 {
-    hal_ret_t       ret = HAL_RET_OK;
-    fte_span_t      *fte_span = g_hal_state->fte_span();
+    pd::pd_fte_span_get_args_t    pd_fte_span_args = { 0 };
+    pd::pd_func_args_t               pd_func_args = {0};
+    hal_ret_t                        ret = HAL_RET_OK;
+    fte_span_t                      *fte_span = g_hal_state->fte_span();
+    uint32_t                         stats_index = 0;
 
     auto response = rsp_msg->add_response();
     FteSpanRequest *req = response->mutable_request();
 
     ret = fte_span_to_spec(req, fte_span);
 
+    pd_fte_span_args.fte_span = fte_span;
+    pd_fte_span_args.stats_index = &stats_index;
+    pd_func_args.pd_fte_span_get = &pd_fte_span_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FTE_SPAN_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update fte_span pd, err : {}", ret);
+    }
+
+    response->set_stats_index(stats_index);
     response->set_api_status(types::API_STATUS_OK);
 
     return ret;

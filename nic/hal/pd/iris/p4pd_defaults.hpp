@@ -20,6 +20,9 @@
 // Twice NAT table
 #define TWICE_NAT_NOP_ENTRY         0
 
+// NACL Stats table
+#define NACL_STATS_NOP_ENTRY     0
+
 // Rewrite table
 #define REWRITE_NOP_ENTRY           0
 #define REWRITE_DECAP_VLAN_ENTRY    1
