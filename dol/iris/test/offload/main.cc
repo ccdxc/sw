@@ -96,21 +96,21 @@ typedef struct {
 
 const static vector<rsa_vector_entry_t> rsa_testvectors =
 {
-    {"rsa-testvectors/SigGen15_186-3.txt",
+    {"rsa-testvectors/SigGen15_186-3.req",
      crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PADDING},
 
     // For signature verification, we want to produce the ciphered output
     // so the encryption method is used.
-    {"rsa-testvectors/SigVer15_186-3.rsp",
+    {"rsa-testvectors/SigVer15_186-3.req",
       crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
 
-    //{"rsa-testvectors/SigGen931_186-3.txt",
+    //{"rsa-testvectors/SigGen931_186-3.req",
     // crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_X931_PADDING},
 
 #ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
-    {"rsa-testvectors/SigGen15_186-3_TruncatedSHAs.txt",
+    {"rsa-testvectors/SigGen15_186-3_TruncatedSHAs.req",
      crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PADDING},
-    {"rsa-testvectors/SigVer15_186-3_TruncatedSHAs.rsp",
+    {"rsa-testvectors/SigVer15_186-3_TruncatedSHAs.req",
      crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
 #endif
 };
@@ -125,18 +125,18 @@ typedef struct {
 
 const static vector<ecdsa_vector_entry_t> ecdsa_testvectors =
 {
-    {"ecdsa-testvectors/SigGen.txt",
+    {"ecdsa-testvectors/SigGen.req",
      crypto_ecdsa::ECDSA_KEY_CREATE_SIGN},
 
     // For signature verification, we want to produce the ciphered output
     // so the encryption method is used.
-    //{"ecdsa-testvectors/SigVer.rsp",
-    //  crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
+    {"ecdsa-testvectors/SigVer.req",
+      crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
 
 #ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
-    {"ecdsa-testvectors/SigGen_TruncatedSHAs.txt",
+    {"ecdsa-testvectors/SigGen_TruncatedSHAs.req",
      crypto_ecdsa::ECDSA_KEY_CREATE_SIGN},
-    {"ecdsa-testvectors/SigVer_TruncatedSHAs.rsp",
+    {"ecdsa-testvectors/SigVer_TruncatedSHAs.req",
      crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
 #endif
 

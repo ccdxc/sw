@@ -108,8 +108,9 @@ rsa_sign(rsa_sign_params_t& params)
     ossl_ret = EVP_PKEY_sign(pkey_ctx, (unsigned char *)sig_actual,
                              &siglen, digest->read(),
                              digest->content_size_get());
-    if ((ossl_ret <= 0) && !params.failure_expected()) {
-        OFFL_FUNC_ERR("Failed to sign digest message: {}", ossl_ret);
+    if (ossl_ret <= 0) {
+        OFFL_FUNC_ERR_OR_DEBUG(params.failure_expected(),
+                               "Failed to sign digest message: {}", ossl_ret);
         goto done;
     }
 
@@ -192,8 +193,9 @@ rsa_verify(rsa_verify_params_t& params)
                                sig_expected->content_size_get(),
                                digest->read(),
                                digest->content_size_get());
-    if ((ossl_ret <= 0) && !params.failure_expected()) {
-        OFFL_FUNC_ERR("Failed to verify digest message: {}", ossl_ret);
+    if (ossl_ret <= 0) {
+        OFFL_FUNC_ERR_OR_DEBUG(params.failure_expected(),
+                               "Failed to verify digest message: {}", ossl_ret);
         goto done;
     }
 

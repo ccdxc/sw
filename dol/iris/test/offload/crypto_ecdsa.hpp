@@ -171,6 +171,9 @@ public:
         curve_nid_(NID_undef),
         domain_vec_(nullptr),
         d_(nullptr),
+        pub_key_vec_(nullptr),
+        qx_(nullptr),
+        qy_(nullptr),
         msg_(nullptr)
     {
     }
@@ -200,6 +203,24 @@ public:
         return *this;
     }
     ecdsa_pre_push_params_t&
+    pub_key_vec(dp_mem_t *pub_key_vec)
+    {
+        pub_key_vec_ = pub_key_vec;
+        return *this;
+    }
+    ecdsa_pre_push_params_t&
+    qx(dp_mem_t *qx)
+    {
+        qx_ = qx;
+        return *this;
+    }
+    ecdsa_pre_push_params_t&
+    qy(dp_mem_t *qy)
+    {
+        qy_ = qy;
+        return *this;
+    }
+    ecdsa_pre_push_params_t&
     msg(dp_mem_t *msg)
     {
         msg_ = msg;
@@ -216,6 +237,9 @@ public:
     int curve_nid(void) { return curve_nid_; }
     dp_mem_t *domain_vec(void) { return domain_vec_; }
     dp_mem_t *d(void) { return d_; }
+    dp_mem_t *pub_key_vec(void) { return pub_key_vec_; }
+    dp_mem_t *qx(void) { return qx_; }
+    dp_mem_t *qy(void) { return qy_; }
     dp_mem_t *msg(void) { return msg_; }
     const string& hash_algo(void) { return hash_algo_; }
 
@@ -224,6 +248,9 @@ private:
     int                         curve_nid_;
     dp_mem_t                    *domain_vec_;
     dp_mem_t                    *d_;            // ECDSA private key
+    dp_mem_t                    *pub_key_vec_;  // ECDSA public key
+    dp_mem_t                    *qx_;           // (qx, qy) are fragments of
+    dp_mem_t                    *qy_;           //    public_key_vec
     dp_mem_t                    *msg_;
     string                      hash_algo_;
 };
@@ -368,15 +395,29 @@ class ecdsa_hw_verify_params_t
 public:
 
     ecdsa_hw_verify_params_t() :
-        sig_input_(nullptr),
+        sig_input_vec_(nullptr),
+        sig_r_(nullptr),
+        sig_s_(nullptr),
         hash_input_(nullptr)
     {
     }
 
     ecdsa_hw_verify_params_t&
-    sig_input(dp_mem_t *sig_input)
+    sig_input_vec(dp_mem_t *sig_input_vec)
     {
-        sig_input_ = sig_input;
+        sig_input_vec_ = sig_input_vec;
+        return *this;
+    }
+    ecdsa_hw_verify_params_t&
+    sig_r(dp_mem_t *sig_r)
+    {
+        sig_r_ = sig_r;
+        return *this;
+    }
+    ecdsa_hw_verify_params_t&
+    sig_s(dp_mem_t *sig_s)
+    {
+        sig_s_ = sig_s;
         return *this;
     }
     ecdsa_hw_verify_params_t&
@@ -386,11 +427,15 @@ public:
         return *this;
     }
 
-    dp_mem_t *sig_input(void) { return sig_input_; }
+    dp_mem_t *sig_input_vec(void) { return sig_input_vec_; }
+    dp_mem_t *sig_r(void) { return sig_r_; }
+    dp_mem_t *sig_s(void) { return sig_s_; }
     dp_mem_t *hash_input(void) { return hash_input_; }
 
 private:
-    dp_mem_t                    *sig_input_;
+    dp_mem_t                    *sig_input_vec_;
+    dp_mem_t                    *sig_r_;        // (r, s) are fragments of sig_input_vec
+    dp_mem_t                    *sig_s_;
     dp_mem_t                    *hash_input_;
 };
 

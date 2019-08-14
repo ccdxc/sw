@@ -16,6 +16,7 @@ namespace crypto_asym {
  * Number of paramaters fields required for HW programming:
  */
 enum {
+    ECDSA_NUM_PUB_KEY_FIELDS            = 2,    // Qx, Qy
     ECDSA_NUM_SIG_FIELDS                = 2,    // r, s
     ECDSA_NUM_KEY_DOMAIN_FIELDS         = 6,    // p, n, xg, yg, a, b
 };
@@ -311,7 +312,9 @@ public:
          cmd_rsa_sign_(false),
          cmd_rsa_verify_(false),
          cmd_rsa_encrypt_(false),
-         cmd_rsa_decrypt_(false)
+         cmd_rsa_decrypt_(false),
+         cmd_ecdsa_sign_(false),
+         cmd_ecdsa_verify_(false)
     {
     }
 

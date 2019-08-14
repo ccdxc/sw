@@ -566,10 +566,126 @@ private:
     bool                        wait_for_completion_;
 };
 
+/*
+ * Engine EC signature verification parameters
+ */
+class ec_verify_params_t
+{
+public:
+    ec_verify_params_t() :
+        curve_nid_(0),
+        md_(nullptr),
+        ec_(nullptr),
+        key_idx_(CRYPTO_ASYM_KEY_IDX_INVALID),
+        digest_(nullptr),
+        sig_input_vec_(nullptr),
+        sig_r_(nullptr),
+        sig_s_(nullptr),
+        skip_DER_decode_(false),
+        failure_expected_(false),
+        wait_for_completion_(false)
+    {
+    }
+
+    ec_verify_params_t&
+    curve_nid(int curve_nid)
+    {
+        curve_nid_ = curve_nid;
+        return *this;
+    }
+    ec_verify_params_t&
+    md(const eng_evp_md_t *md)
+    {
+        md_ = md;
+        return *this;
+    }
+    ec_verify_params_t&
+    ec(void *ec)
+    {
+        ec_ = ec;
+        return *this;
+    }
+    ec_verify_params_t&
+    key_idx(crypto_asym::key_idx_t key_idx)
+    {
+        key_idx_ = key_idx;
+        return *this;
+    }
+    ec_verify_params_t&
+    digest(dp_mem_t *digest)
+    {
+        digest_ = digest;
+        return *this;
+    }
+    ec_verify_params_t&
+    sig_input_vec(dp_mem_t *sig_input_vec)
+    {
+        sig_input_vec_ = sig_input_vec;
+        return *this;
+    }
+    ec_verify_params_t&
+    sig_r(dp_mem_t *sig_r)
+    {
+        sig_r_ = sig_r;
+        return *this;
+    }
+    ec_verify_params_t&
+    sig_s(dp_mem_t *sig_s)
+    {
+        sig_s_ = sig_s;
+        return *this;
+    }
+    ec_verify_params_t
+    skip_DER_decode(bool skip_DER_decode)
+    {
+        skip_DER_decode_ = skip_DER_decode;
+        return *this;
+    }
+    ec_verify_params_t&
+    failure_expected(bool failure_expected)
+    {
+        failure_expected_ = failure_expected;
+        return *this;
+    }
+    ec_verify_params_t&
+    wait_for_completion(bool wait_for_completion)
+    {
+        wait_for_completion_ = wait_for_completion;
+        return *this;
+    }
+
+    int curve_nid(void) { return curve_nid_; }
+    const eng_evp_md_t *md(void) { return md_; }
+    void *ec(void) { return ec_; }
+    crypto_asym::key_idx_t key_idx(void) { return key_idx_; }
+    dp_mem_t *digest(void) { return digest_; }
+    dp_mem_t *sig_input_vec(void) { return sig_input_vec_; }
+    dp_mem_t *sig_r(void) { return sig_r_; }
+    dp_mem_t *sig_s(void) { return sig_s_; }
+    bool skip_DER_decode(void) { return skip_DER_decode_; }
+    bool failure_expected(void) { return failure_expected_; }
+    bool wait_for_completion(void) { return wait_for_completion_; }
+
+private:
+    int                         curve_nid_;
+    const eng_evp_md_t          *md_;
+    void                        *ec_;
+    crypto_asym::key_idx_t      key_idx_;
+    dp_mem_t                    *digest_;
+    dp_mem_t                    *sig_input_vec_;
+    dp_mem_t                    *sig_r_;        // (r, s) are fragments of sig_input_vec
+    dp_mem_t                    *sig_s_;
+    bool                        skip_DER_decode_;  // skip Distinguished Encoding Rules
+    bool                        failure_expected_;
+    bool                        wait_for_completion_;
+};
+
 bool init(const char *engine_path);
 
 bool dp_mem_pad_in_place(dp_mem_t *msg,
                          uint32_t to_len);
+bool dp_mem_unpad_in_place(dp_mem_t *msg,
+                           uint32_t to_len);
 bool dp_mem_trunc_in_place(dp_mem_t *msg,
                            uint32_t bits_len);
 bool bn_to_dp_mem_pad(const BIGNUM *bn,
@@ -587,6 +703,7 @@ bool rsa_verify(rsa_verify_params_t& params);
 
 bool ec_domain_params_gen(ec_domain_params_t& params);
 bool ec_sign(ec_sign_params_t& params);
+bool ec_verify(ec_verify_params_t& params);
 
 } // namespace eng_if
 

@@ -1,4 +1,5 @@
 #include "eng_if.hpp"
+#include "utils.hpp"
 
 namespace eng_if {
 
@@ -191,6 +192,30 @@ error:
         BN_clear_free(bn);
     }
     return success;
+}
+
+/*
+ * Remove padding from a dp_mem message.
+ */
+bool
+dp_mem_unpad_in_place(dp_mem_t *msg,
+                      uint32_t to_len)
+{
+    uint32_t    cur_len;
+
+    /*
+     * Note: we don't use BN_bin2bn() to remove padding because it
+     * assumes the pad bytes are zero. Also, we follow BN convention
+     * that padded bytes are in the front.
+     */
+    cur_len = msg->line_size_get();
+    if (cur_len > to_len) {
+        uint8_t *p = msg->read_thru();
+        memmove(p, p + cur_len - to_len, to_len);
+        msg->content_size_set(to_len);
+        msg->write_thru();
+    }
+    return true;
 }
 
 /*

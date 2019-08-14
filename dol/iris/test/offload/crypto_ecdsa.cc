@@ -14,9 +14,11 @@ namespace crypto_ecdsa {
 enum {
     ECDSA_DMA_DESC_IDX_KEY0,
     ECDSA_DMA_DESC_IDX_KEY1,
-    ECDSA_DMA_DESC_IDX_K_RANDOM,
+    ECDSA_DMA_DESC_IDX_SIGN_K_RANDOM,
     ECDSA_DMA_DESC_IDX_SIGN_DIGEST,
-    ECDSA_DMA_DESC_IDX_SIG_OUTPUT,
+    ECDSA_DMA_DESC_IDX_SIGN_SIG_OUTPUT,
+    ECDSA_DMA_DESC_IDX_VERIFY_SIG_INPUT,
+    ECDSA_DMA_DESC_IDX_VERIFY_DIGEST,
     ECDSA_DMA_DESC_IDX_MAX,
 };
 
@@ -111,6 +113,7 @@ bool
 ecdsa_t::push(ecdsa_push_params_t& push_params)
 {
     eng_if::ec_sign_params_t            sign_params;
+    eng_if::ec_verify_params_t          verify_params;
     bool                                success = false;
 
     this->push_params = push_params;
@@ -133,6 +136,18 @@ ecdsa_t::push(ecdsa_push_params_t& push_params)
         break;
 
     case ECDSA_KEY_CREATE_VERIFY:
+            success = eng_if::ec_verify(
+                              verify_params.curve_nid(pre_params.curve_nid()).
+                                            md(evp_md).
+                                            key_idx(key_idx).
+                                            digest(digest).
+                                            sig_input_vec(push_params.sig_expected_vec()).
+                                            sig_r(push_params.r_expected()).
+                                            sig_s(push_params.s_expected()).
+                                            ec(this).
+                                            skip_DER_decode(true).
+                                            failure_expected(push_params.failure_expected()).
+                                            wait_for_completion(false));
         break;
 
     default:
@@ -181,12 +196,12 @@ ecdsa_t::push(ecdsa_hw_sign_params_t& hw_sign_params)
                data(hw_sign_params.hash_input());
     dma_desc_pool->pre_push(dma_params);
 
-    dma_params.desc_idx(ECDSA_DMA_DESC_IDX_K_RANDOM).
+    dma_params.desc_idx(ECDSA_DMA_DESC_IDX_SIGN_K_RANDOM).
                next_idx(ECDSA_DMA_DESC_IDX_SIGN_DIGEST).
                data(hw_sign_params.k_random());
     req_params.input_list_addr(dma_desc_pool->pre_push(dma_params));
 
-    dma_params.desc_idx(ECDSA_DMA_DESC_IDX_SIG_OUTPUT).
+    dma_params.desc_idx(ECDSA_DMA_DESC_IDX_SIGN_SIG_OUTPUT).
                next_idx(CRYPTO_ASYM_DMA_DESC_IDX_INVALID).
                data(hw_sign_params.sig_output_vec());
     req_params.output_list_addr(dma_desc_pool->pre_push(dma_params)).
@@ -207,6 +222,49 @@ ecdsa_t::push(ecdsa_hw_sign_params_t& hw_sign_params)
 bool
 ecdsa_t::push(ecdsa_hw_verify_params_t& hw_verify_params)
 {
+    crypto_asym::req_desc_t                 req_desc;
+    crypto_asym::req_desc_pre_push_params_t req_params;
+    crypto_asym::dma_desc_pool_pre_push_params_t dma_params;
+
+    this->hw_verify_params = hw_verify_params;
+
+    /*
+     * Pad out r_expected and s_expected to the required HW expanded size,
+     */
+    eng_if::dp_mem_pad_in_place(hw_verify_params.sig_r(),
+                                hw_verify_params.sig_r()->line_size_get());
+    eng_if::dp_mem_pad_in_place(hw_verify_params.sig_s(),
+                                hw_verify_params.sig_s()->line_size_get());
+    hw_verify_params.sig_input_vec()->content_size_set(
+                         hw_verify_params.sig_r()->content_size_get() * 2);
+    /*
+     * Pad out digest to the same size
+     */
+    eng_if::dp_mem_pad_in_place(hw_verify_params.hash_input(),
+                                hw_verify_params.sig_r()->line_size_get());
+    /*
+     * Initialize status for later polling
+     */
+    status->init();
+
+    dma_params.desc_idx(ECDSA_DMA_DESC_IDX_VERIFY_DIGEST).
+               next_idx(CRYPTO_ASYM_DMA_DESC_IDX_INVALID).
+               data(hw_verify_params.hash_input());
+    dma_desc_pool->pre_push(dma_params);
+
+    dma_params.desc_idx(ECDSA_DMA_DESC_IDX_VERIFY_SIG_INPUT).
+               next_idx(ECDSA_DMA_DESC_IDX_VERIFY_DIGEST).
+               data(hw_verify_params.sig_input_vec());
+
+    req_params.input_list_addr(dma_desc_pool->pre_push(dma_params)).
+               output_list_addr(0).
+               status_addr(status->pa()).
+               key_idx(key_idx);
+    req_desc.pre_push(req_params);
+
+    dma_desc_pool->push();
+    ecdsa_params.acc_ring()->push(req_desc.push(), ecdsa_params.push_type(),
+                                  ecdsa_params.seq_qid());
     return true;
 }
 
@@ -265,15 +323,17 @@ ecdsa_t::full_verify(void)
         return false;
     }
 
-    /*
-     * Pad out r_expected and s_expected to the required HW expanded size,
-     * which is how HW would have formatted r_actual and s_actual.
-     */
-    eng_if::dp_mem_pad_in_place(push_params.r_expected(),
-                                push_params.r_expected()->line_size_get());
-    eng_if::dp_mem_pad_in_place(push_params.s_expected(),
-                                push_params.s_expected()->line_size_get());
     if (ecdsa_key_create_type_is_sign(pre_params.key_create_type())) {
+
+        /*
+         * Unpad the actual signatures before verification. HW has a known
+         * yet-to-be-explained behavior where it may pad the resulting
+         * signatures with non-zero bytes!
+         */
+        eng_if::dp_mem_unpad_in_place(push_params.r_actual(),
+                                      ecdsa_params.P_bytes_len());
+        eng_if::dp_mem_unpad_in_place(push_params.s_actual(),
+                                      ecdsa_params.P_bytes_len());
         test_success = expected_actual_verify("signature (r)",
                                               push_params.r_expected(),
                                               push_params.r_actual()) &&
@@ -301,10 +361,43 @@ ecdsa_t::key_create(ecdsa_pre_push_params_t& pre_params)
 
     case ECDSA_KEY_CREATE_SIGN:
         key_params.cmd_ecdsa_sign(true);
+
+        /*
+         * Pad out d to the required HW expanded size,
+         */
+        eng_if::dp_mem_pad_in_place(pre_params.d(),
+                                    pre_params.d()->line_size_get());
+        /*
+         * curve domain params and d each takes a DMA descriptor;
+         * key is described by DMA descriptor list;
+         */
+        dma_params.desc_idx(ECDSA_DMA_DESC_IDX_KEY1).
+                   next_idx(CRYPTO_ASYM_DMA_DESC_IDX_INVALID).
+                   data(pre_params.d());
+        dma_desc_pool->pre_push(dma_params);
         break;
 
     case ECDSA_KEY_CREATE_VERIFY:
         key_params.cmd_ecdsa_verify(true);
+
+        /*
+         * Pad out (qx, qy) to the required HW expanded size;
+         * Both of these are fragments of pre_params.pub_key_vec()
+         */
+        eng_if::dp_mem_pad_in_place(pre_params.qx(),
+                                    pre_params.qx()->line_size_get());
+        eng_if::dp_mem_pad_in_place(pre_params.qy(),
+                                    pre_params.qy()->line_size_get());
+        pre_params.pub_key_vec()->content_size_set(
+                                  pre_params.qx()->content_size_get() * 2);
+        /*
+         * curve domain params and d each takes a DMA descriptor;
+         * key is described by DMA descriptor list;
+         */
+        dma_params.desc_idx(ECDSA_DMA_DESC_IDX_KEY1).
+                   next_idx(CRYPTO_ASYM_DMA_DESC_IDX_INVALID).
+                   data(pre_params.pub_key_vec());
+        dma_desc_pool->pre_push(dma_params);
         break;
 
     default:
@@ -313,20 +406,6 @@ ecdsa_t::key_create(ecdsa_pre_push_params_t& pre_params)
         return false;
         break;
     }
-
-    /*
-     * Pad out d to the required HW expanded size,
-     */
-    eng_if::dp_mem_pad_in_place(pre_params.d(),
-                                pre_params.d()->line_size_get());
-    /*
-     * curve domain params and d each takes a DMA descriptor;
-     * key is described by DMA descriptor list;
-     */
-    dma_params.desc_idx(ECDSA_DMA_DESC_IDX_KEY1).
-               next_idx(CRYPTO_ASYM_DMA_DESC_IDX_INVALID).
-               data(pre_params.d());
-    dma_desc_pool->pre_push(dma_params);
 
     dma_params.desc_idx(ECDSA_DMA_DESC_IDX_KEY0).
                next_idx(ECDSA_DMA_DESC_IDX_KEY1).
@@ -461,10 +540,41 @@ sign(void *ctx,
     return success ? sig_output_vec->line_size_get() : -1;
 }
 
+static int
+verify(void *ctx,
+       const PSE_EC_VERIFY_PARAM *param)
+{
+    ecdsa_t                 *crypto_ecdsa = static_cast<ecdsa_t *>(ctx);
+    dp_mem_t                *hash_input;
+    dp_mem_t                *sig_intput_vec;
+    dp_mem_t                *sig_r;
+    dp_mem_t                *sig_s;
+    ecdsa_hw_verify_params_t verify_params;
+    bool                    success;
+
+    hash_input = static_cast<dp_mem_t *>((void *)param->hash_input);
+    sig_intput_vec = static_cast<dp_mem_t *>((void *)param->sig_input_vec);
+    sig_r = static_cast<dp_mem_t *>((void *)param->r);
+    sig_s = static_cast<dp_mem_t *>((void *)param->s);
+
+    success = crypto_ecdsa->push(verify_params.hash_input(hash_input).
+                                               sig_input_vec(sig_intput_vec).
+                                               sig_r(sig_r).
+                                               sig_s(sig_s));
+    if (success) {
+        if (param->wait_for_completion) {
+            crypto_ecdsa->post_push();
+            success = crypto_ecdsa->completion_check();
+        }
+    }
+
+    return success ? 1 : -1;
+}
+
 const PSE_EC_OFFLOAD_METHOD pse_ec_offload_method =
 {
     .sign       = sign,
-    .verify     = nullptr,
+    .verify     = verify,
     .mem_method = &pse_mem_method,
 };
 

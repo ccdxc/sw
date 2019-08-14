@@ -88,8 +88,24 @@ typedef struct pse_ec_verify_param_s {
     void                *caller_ctx;
     int32_t             key_idx;
     const uint8_t       *caller_unique_id;
+    uint8_t             *hash_input;
+    uint8_t             *sig_input_vec;
+    uint8_t             *r;
+    uint8_t             *s;
     bool                async;
     bool                wait_for_completion;
+
+    /*
+     * Required params if key hasn't been programmed
+     */
+    uint8_t             *p;
+    uint8_t             *n;
+    uint8_t             *xg;
+    uint8_t             *yg;
+    uint8_t             *a;
+    uint8_t             *b;
+    uint8_t             *xq;
+    uint8_t             *yq;
 } PSE_EC_VERIFY_PARAM;
 
 typedef struct pse_ec_offload_method_s {
@@ -133,6 +149,13 @@ pse_ec_sign_param_init(PSE_EC_SIGN_PARAM *param)
     param->key_idx = -1;
 }
 
+static inline void
+pse_ec_verify_param_init(PSE_EC_VERIFY_PARAM *param)
+{
+    memset(param, 0, sizeof(*param));
+    param->key_idx = -1;
+}
+
 typedef struct pse_buffer_s {
     uint32_t    len;
     uint8_t     *data;
@@ -159,12 +182,24 @@ typedef struct PSE_rsa_key_st {
     PSE_RSA_KEY_OFFLOAD offload;
 } PSE_RSA_KEY;
 
+typedef struct PSE_ec_key_sign_offload_st {
+    PSE_OFFLOAD_MEM  *k_random;
+    PSE_OFFLOAD_MEM  *sig_output_vec;
+} PSE_EC_KEY_SIGN_OFFLOAD;
+
+typedef struct PSE_ec_key_verify_offload_st {
+    PSE_OFFLOAD_MEM  *sig_r;
+    PSE_OFFLOAD_MEM  *sig_s;
+} PSE_EC_KEY_VERIFY_OFFLOAD;
+
 typedef struct PSE_ec_key_offload_st {
     int              curve_nid;
     const PSE_EC_OFFLOAD_METHOD *offload_method;
-    PSE_OFFLOAD_MEM  *k_random;
-    PSE_OFFLOAD_MEM  *sig_output_vec;
-    bool             skip_DER_encode;   // skip Distinguished Encoding Rules
+    union {
+        PSE_EC_KEY_SIGN_OFFLOAD sign;
+        PSE_EC_KEY_VERIFY_OFFLOAD verify;
+    };
+    bool             skip_DER;   // skip Distinguished Encoding Rules
     bool             wait_for_completion;
 } PSE_EC_KEY_OFFLOAD;
 

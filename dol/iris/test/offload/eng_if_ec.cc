@@ -10,13 +10,13 @@ namespace eng_if {
  * ENGINE_set_load_privkey_function().
  */
 static EVP_PKEY *
-local_ec_pkey_load(void *caller_ctx,
-                   crypto_asym::key_idx_t key_idx,
-                   int curve_nid,
-                   dp_mem_t *k_random,
-                   dp_mem_t *sig_output_vec,
-                   bool skip_DER_encode,
-                   bool wait_for_completion)
+local_ec_sign_pkey_load(void *caller_ctx,
+                        crypto_asym::key_idx_t key_idx,
+                        int curve_nid,
+                        dp_mem_t *k_random,
+                        dp_mem_t *sig_output_vec,
+                        bool skip_DER,
+                        bool wait_for_completion)
 {
     PSE_KEY             key = {0};
     EVP_PKEY            *pkey;
@@ -25,10 +25,40 @@ local_ec_pkey_load(void *caller_ctx,
     key.u.ec_key.key_id = key_idx;
     key.u.ec_key.offload.curve_nid = curve_nid;
     key.u.ec_key.offload.offload_method = &crypto_ecdsa::pse_ec_offload_method;
-    key.u.ec_key.offload.k_random = (PSE_OFFLOAD_MEM *)k_random;
-    key.u.ec_key.offload.sig_output_vec = (PSE_OFFLOAD_MEM *)sig_output_vec;
-    key.u.ec_key.offload.skip_DER_encode = skip_DER_encode;
     key.u.ec_key.offload.wait_for_completion = wait_for_completion;
+    key.u.ec_key.offload.skip_DER = skip_DER;
+    key.u.ec_key.offload.sign.k_random = (PSE_OFFLOAD_MEM *)k_random;
+    key.u.ec_key.offload.sign.sig_output_vec = (PSE_OFFLOAD_MEM *)sig_output_vec;
+
+    pkey = ENGINE_load_private_key(eng_if_engine, (const char *)&key,
+                                   NULL, caller_ctx);
+    if (!pkey) {
+        OFFL_FUNC_ERR("Failed to setup EC key");
+    }
+    return pkey;
+}
+
+
+static EVP_PKEY *
+local_ec_verify_pkey_load(void *caller_ctx,
+                         crypto_asym::key_idx_t key_idx,
+                         int curve_nid,
+                         dp_mem_t *sig_r,
+                         dp_mem_t *sig_s,
+                         bool skip_DER,
+                         bool wait_for_completion)
+{
+    PSE_KEY             key = {0};
+    EVP_PKEY            *pkey;
+
+    key.type = EVP_PKEY_EC;
+    key.u.ec_key.key_id = key_idx;
+    key.u.ec_key.offload.curve_nid = curve_nid;
+    key.u.ec_key.offload.offload_method = &crypto_ecdsa::pse_ec_offload_method;
+    key.u.ec_key.offload.wait_for_completion = wait_for_completion;
+    key.u.ec_key.offload.skip_DER = skip_DER;
+    key.u.ec_key.offload.verify.sig_r = (PSE_OFFLOAD_MEM *)sig_r;
+    key.u.ec_key.offload.verify.sig_s = (PSE_OFFLOAD_MEM *)sig_s;
 
     pkey = ENGINE_load_private_key(eng_if_engine, (const char *)&key,
                                    NULL, caller_ctx);
@@ -127,6 +157,7 @@ ec_domain_params_gen(ec_domain_params_t& params)
     bn_to_dp_mem_pad(b, params.b(), 0);
 
     if (OFFL_IS_LOG_LEVEL_DEBUG()) {
+        OFFL_FUNC_DEBUG("curve_name {} nid {}", params.curve_name(), nid);
         OFFL_FUNC_DEBUG("p size {}", params.p()->content_size_get());
         utils::dump(params.p()->read(), params.p()->content_size_get());
         OFFL_FUNC_DEBUG("n size {}", params.n()->content_size_get());
@@ -178,7 +209,8 @@ ec_sign(ec_sign_params_t& params)
     bool                success = false;
 
     /* Setup key */
-    evp_pkey = local_ec_pkey_load(params.ec(), params.key_idx(), params.curve_nid(),
+    evp_pkey = local_ec_sign_pkey_load(params.ec(), params.key_idx(),
+                                  params.curve_nid(),
                                   params.k_random(), params.sig_output_vec(),
                                   params.skip_DER_encode(),
                                   params.wait_for_completion());
@@ -232,8 +264,94 @@ ec_sign(ec_sign_params_t& params)
     ossl_ret = EVP_PKEY_sign(pkey_ctx, (unsigned char *)sig_output_vec,
                              &siglen, (const unsigned char *)digest,
                              digest->content_size_get());
-    if ((ossl_ret <= 0) && !params.failure_expected()) {
-        OFFL_FUNC_ERR("Failed to sign digest message: {}", ossl_ret);
+    if (ossl_ret <= 0) {
+        OFFL_FUNC_ERR_OR_DEBUG(params.failure_expected(),
+                               "Failed to sign digest message: {}", ossl_ret);
+        goto done;
+    }
+
+    success = true;
+
+done:
+    if (!success && !params.failure_expected()) {
+        ERR_print_errors(eng_if_bio);
+    }
+    ERR_clear_error();
+    if (pkey_ctx) {
+        EVP_PKEY_CTX_free(pkey_ctx);
+    }
+    if (evp_pkey) {
+        EVP_PKEY_free(evp_pkey);
+    }
+    if (ec_key) {
+        EC_KEY_free(ec_key);
+    }
+    return success;
+}
+
+
+/*
+ * Verify a signature
+ */
+bool
+ec_verify(ec_verify_params_t& params)
+{
+    EVP_PKEY_CTX        *pkey_ctx = NULL;
+    EVP_PKEY            *evp_pkey = NULL;
+    EC_KEY              *ec_key = NULL;
+    dp_mem_t            *digest = params.digest();
+    dp_mem_t            *sig_input_vec = params.sig_input_vec();
+    int                 ossl_ret;
+    bool                success = false;
+
+    /* Setup key */
+    evp_pkey = local_ec_verify_pkey_load(params.ec(), params.key_idx(),
+                               params.curve_nid(),
+                               params.sig_r(), params.sig_s(),
+                               params.skip_DER_decode(),
+                               params.wait_for_completion());
+    if (!evp_pkey) {
+        OFFL_FUNC_ERR("Failed to setup EC evp_pkey");
+        goto done;
+    }
+
+    ec_key = EVP_PKEY_get0_EC_KEY(evp_pkey);
+    if (!ec_key) {
+        OFFL_FUNC_ERR("Failed to locate curve for nid {}", params.curve_nid());
+        goto done;
+    }
+
+    if (!EVP_PKEY_set1_EC_KEY(evp_pkey, ec_key)) {
+        OFFL_FUNC_ERR("Failed EVP_PKEY_set1_EC_KEY");
+        goto done;
+    }
+
+    pkey_ctx = EVP_PKEY_CTX_new(evp_pkey, NULL);
+    if (!pkey_ctx) {
+        OFFL_FUNC_ERR("Failed to allocate EVP_PKEY_CTX");
+        goto done;
+    }
+    ossl_ret = EVP_PKEY_verify_init(pkey_ctx);
+    if (ossl_ret <= 0) {
+        OFFL_FUNC_ERR("Failed to init EVP_PKEY_CTX: {}", ossl_ret);
+        goto done;
+    }
+
+    ossl_ret = EVP_PKEY_CTX_set_signature_md(pkey_ctx, params.md());
+    if (ossl_ret <= 0) {
+        OFFL_FUNC_ERR("Failed to setup hash scheme in EVP_PKEY_CTX: {}",
+                      ossl_ret);
+        goto done;
+    }
+    OFFL_FUNC_DEBUG("sig_input_vec: {:#x} digest: {:#x}",
+                    (uint64_t)sig_input_vec, (uint64_t)digest);
+    ossl_ret = EVP_PKEY_verify(pkey_ctx, (const unsigned char *)sig_input_vec,
+                               sig_input_vec->content_size_get(),
+                               (const unsigned char *)digest,
+                               digest->content_size_get());
+    if (ossl_ret <= 0) {
+        OFFL_FUNC_ERR_OR_DEBUG(params.failure_expected(),
+                               "Failed to verify digest message: {}", ossl_ret);
         goto done;
     }
 

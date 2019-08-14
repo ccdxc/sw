@@ -347,7 +347,8 @@ rsa_testvec_t::push(rsa_testvec_push_params_t& push_params)
             rsa_pre_params.msg(msg_repr->msg_expected).
                            hash_algo(msg_repr->sha_algo);
             if (!msg_repr->crypto_rsa->pre_push(rsa_pre_params)) {
-                OFFL_FUNC_ERR("failed crypto_rsa pre_push");
+                OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected,
+                                       "failed crypto_rsa pre_push");
                 msg_repr->push_failure = true;
 
             } else {
@@ -357,7 +358,8 @@ rsa_testvec_t::push(rsa_testvec_push_params_t& push_params)
                                 sig_actual(msg_repr->sig_actual).
                                 failure_expected(msg_repr->failure_expected);
                 if (!msg_repr->crypto_rsa->push(rsa_push_params)) {
-                    OFFL_FUNC_ERR("failed crypto_rsa push");
+                    OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected,
+                                           "failed crypto_rsa push");
                     msg_repr->push_failure = true;
                 }
             }

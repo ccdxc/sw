@@ -136,13 +136,43 @@ int pse_ecdsa_sign(int type, const unsigned char *dgst,
     }
 
     s = pse_ecdsa_sign_sig(dgst, dlen, kinv, r, eckey);
-    if (!ex_data->offload.skip_DER_encode) {
+    if (!ex_data->offload.skip_DER) {
         if (s == NULL) {
             return 0;
         }
         *siglen = i2d_ECDSA_SIG(s, &sig);
     }
     ECDSA_SIG_free(s);
+    return 1;
+}
+
+static int
+pse_digest_truncate(const unsigned char *dgst,
+                    int dgst_len,
+                    uint32_t bits_len,
+                    BIGNUM *m,
+                    bool *dsgt_trunc)
+{
+    /*
+     * Need to truncate digest if it is too long: first truncate whole bytes.
+     */
+    *dsgt_trunc = false;
+    if ((8 * dgst_len) != bits_len) {
+        *dsgt_trunc = true;
+        if ((8 * dgst_len) > bits_len)
+            dgst_len = (bits_len + 7) / 8;
+
+        if (!BN_bin2bn(dgst, dgst_len, m)) {
+            WARN("Failed to covert dgst to m");
+            return -1;
+        }
+
+        /* If still too long truncate remaining bits with a shift */
+        if ((8 * dgst_len > bits_len) && !BN_rshift(m, m, 8 - (bits_len & 0x7))) {
+            WARN("Failed to truncate dgst")
+            return -1;
+        }
+    }
     return 1;
 }
 
@@ -228,24 +258,12 @@ ECDSA_SIG *pse_ecdsa_sign_sig(const unsigned char *dgst,
         WARN("Failed to allocate memory for m, k");
         goto cleanup;
     }
+
     /*
-     * Need to truncate digest if it is too long: first truncate whole bytes.
+     * Need to truncate digest if it is too long
      */
-    if ((8 * dgst_len) != bits_len) {
-        dsgt_trunc = true;
-        if ((8 * dgst_len) > bits_len)
-            dgst_len = ceil_bytes_len;
-
-        if (!BN_bin2bn(hash_input, dgst_len, m)) {
-            WARN("Failed to covert dgst to m");
-            return NULL;
-        }
-
-        /* If still too long truncate remaining bits with a shift */
-        if ((8 * dgst_len > bits_len) && !BN_rshift(m, m, 8 - (bits_len & 0x7))) {
-            WARN("Failed to truncate dgst")
-            goto cleanup;
-        }
+    if (pse_digest_truncate(hash_input, dgst_len, bits_len, m, &dsgt_trunc) <= 0) {
+        goto cleanup;
     }
 
     pse_ec_sign_param_init(&param);
@@ -257,7 +275,7 @@ ECDSA_SIG *pse_ecdsa_sign_sig(const unsigned char *dgst,
     int iter = 0;
     do {
 
-        if (ex_data->offload.k_random) {
+        if (ex_data->offload.sign.k_random) {
             if (dsgt_trunc) {
                 if (BN_bn2binpad(m, mem_method->read((PSE_OFFLOAD_MEM *)dgst),
                                  ceil_bytes_len) <= 0) {
@@ -268,9 +286,9 @@ ECDSA_SIG *pse_ecdsa_sign_sig(const unsigned char *dgst,
                                              ceil_bytes_len);
                 mem_method->write_thru((PSE_OFFLOAD_MEM *)dgst);
             }
-            param.k_random = (uint8_t *)ex_data->offload.k_random;
+            param.k_random = (uint8_t *)ex_data->offload.sign.k_random;
             param.hash_input = (uint8_t *)dgst;
-            param.sig_output_vec = (uint8_t *)ex_data->offload.sig_output_vec;
+            param.sig_output_vec = (uint8_t *)ex_data->offload.sign.sig_output_vec;
             INFO("Sign using key_idx: %d, dgst_len: %d, bits_len: %d",
                  ex_data->hw_key_index, dgst_len, bits_len);
 
@@ -302,7 +320,7 @@ ECDSA_SIG *pse_ecdsa_sign_sig(const unsigned char *dgst,
         ret = offload_method->sign(ex_data->caller_ctx, &param);
 
         INFO("ret : %d", ret);
-        if((ret < 0) && !ex_data->offload.k_random) {
+        if((ret < 0) && !ex_data->offload.sign.k_random) {
             WARN("ecdsa_sign_gen failed...retrying..");
             continue;
         }
@@ -315,7 +333,7 @@ ECDSA_SIG *pse_ecdsa_sign_sig(const unsigned char *dgst,
     }
 #endif
 
-    if (!ex_data->offload.skip_DER_encode) {
+    if (!ex_data->offload.skip_DER) {
         siglen = bits_len / 8;
         r = BN_bin2bn(buf_r, siglen, NULL);
         s = BN_bin2bn(buf_s, siglen, NULL);
@@ -341,31 +359,43 @@ int pse_ecdsa_verify(int type, const unsigned char *dgst,
                      int sig_len, EC_KEY *eckey)
 {
     int ret = -1;
-    ECDSA_SIG *dsig;
+    ECDSA_SIG *dsig = NULL;
     unsigned char *der = NULL;
     int derlen = -1;
+    const PSE_EC_EX_DATA  *ex_data;
 
     INFO("Inside");
-    dsig = ECDSA_SIG_new();
-    if(dsig == NULL) {
-        WARN("Failed to allocate ECDSA_SIG dsig");
-        return ret;
+    ex_data = pse_ec_get_ex_data(eckey);
+    if(!ex_data) {
+        WARN("Failed to find the exdata from the key");
+        return 0;
     }
 
-    if(d2i_ECDSA_SIG(&dsig, &sigbuf, sig_len) == NULL) {
-        WARN("Failed to convert sig_buf to decoded sig");
-        return ret;
+    if (!ex_data->offload.skip_DER) {
+        dsig = ECDSA_SIG_new();
+        if(dsig == NULL) {
+            WARN("Failed to allocate ECDSA_SIG dsig");
+            return ret;
+        }
+
+        if(d2i_ECDSA_SIG(&dsig, &sigbuf, sig_len) == NULL) {
+            WARN("Failed to convert sig_buf to decoded sig");
+            return ret;
+        }
+
+        /* Ensure signature uses DER and doesn't have trailing garbage */
+        derlen = i2d_ECDSA_SIG(dsig, &der);
+        if(derlen != sig_len) {
+            WARN("Failure: ECDSA_SIG length mismatch: derlen %d, sig_len: %d",
+                 derlen, sig_len);
+            goto cleanup;
+        }
+        ret = pse_ecdsa_verify_sig(dgst, dgst_len, dsig, eckey);
+
+    } else {
+        ret = pse_ecdsa_verify_sig(dgst, dgst_len, (ECDSA_SIG *)sigbuf, eckey);
     }
 
-    /* Ensure signature uses DER and doesn't have trailing garbage */
-    derlen = i2d_ECDSA_SIG(dsig, &der);
-    if(derlen != sig_len) {
-        WARN("Failure: ECDSA_SIG length mismatch: derlen %d, sig_len: %d",
-             derlen, sig_len);
-        goto cleanup;
-    }
-
-    ret = pse_ecdsa_verify_sig(dgst, dgst_len, dsig, eckey);
 
 cleanup:
     OPENSSL_clear_free(der, derlen);
@@ -388,150 +418,215 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
     BIGNUM              *xp = NULL, *yp = NULL;
     const EC_POINT      *ec_point = NULL;
     const BIGNUM        *sig_r = NULL, *sig_s = NULL;
-    int                 siglen = 0;
+    BIGNUM              *m = NULL;
+    int                 bits_len = 0, siglen = 0;
+    int                 ceil_bytes_len;
     pse_buffer_t        bp, bn, bxg,byg;
     pse_buffer_t        ba, bb, bxq,byq;
     pse_buffer_t        br, bs;
+    const PSE_EC_EX_DATA  *ex_data = NULL;
+    const PSE_EC_OFFLOAD_METHOD *offload_method;
+    const PSE_OFFLOAD_MEM_METHOD *mem_method;
+    const unsigned char *hash_input;
+    PSE_EC_VERIFY_PARAM param;
+    bool dsgt_trunc = false;
 
     if((eckey == NULL) ||
        ((group = EC_KEY_get0_group(eckey)) == NULL) ||
-       ((pub_key = EC_KEY_get0_public_key(eckey)) == NULL) ||
        (sig == NULL)) {
         WARN("Invalid arguments");
         return ret;
     }
     
-    if ((ec_point = EC_GROUP_get0_generator(group)) == NULL) {
-        WARN("Failed to retrieve ec_point");
+    ex_data = pse_ec_get_ex_data(eckey);
+    if(!ex_data) {
+        WARN("Failed to find the exdata from the key");
         return ret;
     }
 
+    offload_method = ex_data->offload.offload_method;
+    if (!offload_method) {
+        WARN("Failed to get rsa offload_method");
+        return ret;
+    }
+    mem_method = offload_method->mem_method;
+
+    pse_ec_verify_param_init(&param);
+    param.key_idx = ex_data->hw_key_index;
+    param.hash_input = (uint8_t *)dgst;
+    param.async = true;
+    param.caller_unique_id = (const uint8_t *)engine_pse_id;
+    param.wait_for_completion = ex_data->offload.wait_for_completion;
+
     if((ctx = BN_CTX_new()) == NULL) {
         WARN("Failed to allocate BN ctx");
-        goto cleanup;
+        return ret;
     }
-    
+
     BN_CTX_start(ctx);
-    p = BN_CTX_get(ctx);
-    a = BN_CTX_get(ctx);
-    b = BN_CTX_get(ctx);
-    xg = BN_CTX_get(ctx);
-    yg = BN_CTX_get(ctx);
-    xp = BN_CTX_get(ctx);
-    yp = BN_CTX_get(ctx);
+    m = BN_CTX_get(ctx);
     order = BN_CTX_get(ctx);
-    if(order == NULL) {
-        WARN("Failed to allocate parameters");
-        goto cleanup;
+    if(!m || !order) {
+        WARN("Failed to allocate m or order parameters");
+        goto cleanup_ctx;
     }
 
     if(!EC_GROUP_get_order(group, order, ctx)) {
         WARN("Failed to get order from the group");
-        goto cleanup;
+        goto cleanup_ctx;
     }
-    
-    siglen = BN_num_bytes(order);
+    bits_len = BN_num_bits(order);
+    ceil_bytes_len = (bits_len + 7) / 8;
 
-    ECDSA_SIG_get0(sig, &sig_r, &sig_s);
-    if(BN_is_zero(sig_r) || BN_is_negative(sig_r) || BN_ucmp(sig_r, order) >= 0 ||
-       BN_is_zero(sig_s) || BN_is_negative(sig_s) || BN_ucmp(sig_s, order) >= 0) {
-        WARN("sig_r and sig_s validation failed");
-        ret = 0;
-        goto cleanup;
+    /*
+     * Need to truncate digest if it is too long
+     */
+    hash_input = dgst;
+    if (mem_method) {
+        hash_input = mem_method->read((PSE_OFFLOAD_MEM *)dgst);
     }
-    
-    if(EC_METHOD_get_field_type(EC_GROUP_method_of(group)) ==
-            NID_X9_62_prime_field) {
-        if(!EC_GROUP_get_curve_GFp(group, p, a, b, ctx)) {
-            WARN("Failed to get GFp parameters");
-            goto cleanup;
-        } 
-        if(!EC_POINT_get_affine_coordinates_GFp(group, ec_point,
-                                                xg, yg, ctx)) {
-            WARN("Failed to get ec_point GFp parameters");
-            goto cleanup;
-        }
-        if(!EC_POINT_get_affine_coordinates_GFp(group, pub_key,
-                                                xp, yp, ctx)) {
-            WARN("Failed to get pub_key GFp parameters");
-            goto cleanup;
-        }
-    } else { 
-        if(!EC_GROUP_get_curve_GF2m(group, p, a, b, ctx)) {
-            WARN("Failed to get GF2m parameters");
-            goto cleanup;
-        } 
-        if(!EC_POINT_get_affine_coordinates_GF2m(group, ec_point,
-                                                 xg, yg, ctx)) {
-            WARN("Failed to get ec_point GF2m parameters");
-            goto cleanup;
-        }
-        if(!EC_POINT_get_affine_coordinates_GF2m(group, pub_key,
-                                                 xp, yp, ctx)) {
-            WARN("Failed to get pub_key GF2m parameters");
-            goto cleanup;
-        } 
+    if (pse_digest_truncate(hash_input, dgst_len, bits_len, m, &dsgt_trunc) <= 0) {
+        goto cleanup_ctx;
     }
-    INFO("Siglen: %d", siglen);
 
-    pse_BN_to_buffer_pad(p, &bp, siglen);
-    pse_BN_to_buffer_pad(order, &bn, siglen);
-    pse_BN_to_buffer_pad(xg, &bxg, siglen);
-    pse_BN_to_buffer_pad(yg, &byg, siglen);
-    pse_BN_to_buffer_pad(a, &ba, siglen);
-    pse_BN_to_buffer_pad(b, &bb, siglen);
-    pse_BN_to_buffer_pad(xp, &bxq, siglen);
-    pse_BN_to_buffer_pad(yp, &byq, siglen);
-    pse_BN_to_buffer_pad(sig_r, &br, siglen);
-    pse_BN_to_buffer_pad(sig_s, &bs, siglen);
+    if (mem_method) {
+        param.sig_input_vec = (uint8_t *)sig;
+        param.r = (uint8_t *)ex_data->offload.verify.sig_r;
+        param.s = (uint8_t *)ex_data->offload.verify.sig_s;
+        if (dsgt_trunc) {
+            if (BN_bn2binpad(m, mem_method->read((PSE_OFFLOAD_MEM *)dgst),
+                             ceil_bytes_len) <= 0) {
+                WARN("Failed BN_bn2binpad");
+                goto cleanup_ctx;
+            }
+            mem_method->content_size_set((PSE_OFFLOAD_MEM *)dgst,
+                                         ceil_bytes_len);
+            mem_method->write_thru((PSE_OFFLOAD_MEM *)dgst);
+        }
 
-    INFO("ECDSA parameters: ");
-    LOG_BUFFER("bp", bp);
-    LOG_BUFFER("bn", bn);
-    LOG_BUFFER("bxg", bxg);
-    LOG_BUFFER("byg", byg);
-    LOG_BUFFER("ba", ba);
-    LOG_BUFFER("bb", bb);
-    LOG_BUFFER("bxq", bxq);
-    LOG_BUFFER("byq", byq);
-    LOG_BUFFER("br", br);
-    LOG_BUFFER("bs", bs);
+    } else {
+        if((pub_key = EC_KEY_get0_public_key(eckey)) == NULL) {
+            WARN("Invalid pub_key");
+            goto cleanup_ctx;
+        }
+        
+        if ((ec_point = EC_GROUP_get0_generator(group)) == NULL) {
+            WARN("Failed to retrieve ec_point");
+            goto cleanup_ctx;
+        }
+
+        p = BN_CTX_get(ctx);
+        a = BN_CTX_get(ctx);
+        b = BN_CTX_get(ctx);
+        xg = BN_CTX_get(ctx);
+        yg = BN_CTX_get(ctx);
+        xp = BN_CTX_get(ctx);
+        yp = BN_CTX_get(ctx);
+
+        siglen = BN_num_bytes(order);
+
+        ECDSA_SIG_get0(sig, &sig_r, &sig_s);
+        if(BN_is_zero(sig_r) || BN_is_negative(sig_r) || BN_ucmp(sig_r, order) >= 0 ||
+           BN_is_zero(sig_s) || BN_is_negative(sig_s) || BN_ucmp(sig_s, order) >= 0) {
+            WARN("sig_r and sig_s validation failed");
+            ret = 0;
+            goto cleanup_ctx;
+        }
+        
+        if(EC_METHOD_get_field_type(EC_GROUP_method_of(group)) ==
+                NID_X9_62_prime_field) {
+            if(!EC_GROUP_get_curve_GFp(group, p, a, b, ctx)) {
+                WARN("Failed to get GFp parameters");
+                goto cleanup_ctx;
+            } 
+            if(!EC_POINT_get_affine_coordinates_GFp(group, ec_point,
+                                                    xg, yg, ctx)) {
+                WARN("Failed to get ec_point GFp parameters");
+                goto cleanup_ctx;
+            }
+            if(!EC_POINT_get_affine_coordinates_GFp(group, pub_key,
+                                                    xp, yp, ctx)) {
+                WARN("Failed to get pub_key GFp parameters");
+                goto cleanup_ctx;
+            }
+        } else { 
+            if(!EC_GROUP_get_curve_GF2m(group, p, a, b, ctx)) {
+                WARN("Failed to get GF2m parameters");
+                goto cleanup_ctx;
+            } 
+            if(!EC_POINT_get_affine_coordinates_GF2m(group, ec_point,
+                                                     xg, yg, ctx)) {
+                WARN("Failed to get ec_point GF2m parameters");
+                goto cleanup_ctx;
+            }
+            if(!EC_POINT_get_affine_coordinates_GF2m(group, pub_key,
+                                                     xp, yp, ctx)) {
+                WARN("Failed to get pub_key GF2m parameters");
+                goto cleanup_ctx;
+            } 
+        }
+        INFO("Siglen: %d", siglen);
+
+        pse_BN_to_buffer_pad(p, &bp, siglen);
+        pse_BN_to_buffer_pad(order, &bn, siglen);
+        pse_BN_to_buffer_pad(xg, &bxg, siglen);
+        pse_BN_to_buffer_pad(yg, &byg, siglen);
+        pse_BN_to_buffer_pad(a, &ba, siglen);
+        pse_BN_to_buffer_pad(b, &bb, siglen);
+        pse_BN_to_buffer_pad(xp, &bxq, siglen);
+        pse_BN_to_buffer_pad(yp, &byq, siglen);
+        pse_BN_to_buffer_pad(sig_r, &br, siglen);
+        pse_BN_to_buffer_pad(sig_s, &bs, siglen);
+
+        INFO("ECDSA parameters: ");
+        LOG_BUFFER("bp", bp);
+        LOG_BUFFER("bn", bn);
+        LOG_BUFFER("bxg", bxg);
+        LOG_BUFFER("byg", byg);
+        LOG_BUFFER("ba", ba);
+        LOG_BUFFER("bb", bb);
+        LOG_BUFFER("bxq", bxq);
+        LOG_BUFFER("byq", byq);
+        LOG_BUFFER("br", br);
+        LOG_BUFFER("bs", bs);
+
+        param.p  = bp.data;
+        param.n  = bn.data;
+        param.xg = bxg.data;
+        param.yg = byg.data;
+        param.a  = ba.data;
+        param.b  = bb.data;
+        param.xq = bxq.data;
+        param.yq = byq.data;
+        param.r  = br.data;
+        param.s  = bs.data;
+    }
 
 #ifndef NO_PEN_HW_OFFLOAD
-    // Send verify request to barco
-    ret = pd_tls_asym_ecdsa_p256_sig_verify(bp.data,
-                                            bn.data, 
-                                            bxg.data,
-                                            byg.data,
-                                            ba.data,
-                                            bb.data,
-                                            bxq.data,
-                                            byq.data,
-                                            br.data,
-                                            bs.data,
-                                            (uint8_t*)dgst,
-                                            true,
-                                            (const uint8_t *)engine_pse_id);
+    ret = offload_method->verify(ex_data->caller_ctx, &param);
     
 #else
     ret = 1;
 #endif
     INFO("Return value: ret %d", ret);
-cleanup:
+
+    if (!mem_method) {
+        pse_free_buffer(&bp);
+        pse_free_buffer(&bn);
+        pse_free_buffer(&bxg);
+        pse_free_buffer(&byg);
+        pse_free_buffer(&ba);
+        pse_free_buffer(&bb);
+        pse_free_buffer(&bxq);
+        pse_free_buffer(&byq);
+        pse_free_buffer(&br);
+        pse_free_buffer(&bs);
+    }
+cleanup_ctx:
     if(ctx) {
         BN_CTX_end(ctx);
         BN_CTX_free(ctx);
     }
-    pse_free_buffer(&bp);
-    pse_free_buffer(&bn);
-    pse_free_buffer(&bxg);
-    pse_free_buffer(&byg);
-    pse_free_buffer(&ba);
-    pse_free_buffer(&bb);
-    pse_free_buffer(&bxq);
-    pse_free_buffer(&byq);
-    pse_free_buffer(&br);
-    pse_free_buffer(&bs);
     return ret;
 }
 

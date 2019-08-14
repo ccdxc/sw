@@ -423,9 +423,13 @@ ecdsa_testvec_t::push(ecdsa_testvec_push_params_t& push_params)
             }
 
             pre_params.d(msg_repr->d).
+                       pub_key_vec(msg_repr->pub_key_vec).
+                       qx(msg_repr->qx).
+                       qy(msg_repr->qy).
                        msg(msg_repr->msg);
             if (!msg_repr->crypto_ecdsa->pre_push(pre_params)) {
-                OFFL_FUNC_ERR("failed crypto_ecdsa pre_push");
+                OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected,
+                                       "failed crypto_ecdsa pre_push");
                 msg_repr->push_failure = true;
 
             } else {
@@ -437,8 +441,21 @@ ecdsa_testvec_t::push(ecdsa_testvec_push_params_t& push_params)
                                   r_actual(msg_repr->r_actual).
                                   s_actual(msg_repr->s_actual).
                                   failure_expected(msg_repr->failure_expected);
+#ifdef __x86_64__
+                /*
+                 * failure_expected implies a SigVer test and there would be
+                 * no way to suppress verification failure messages from the model
+                 * which would mess up jobd sanity runs. Hence, we will skip the
+                 * push step altogether to avoid that.
+                 */
+                if (msg_repr->failure_expected) {
+                    msg_repr->push_failure = true;
+                    continue;
+                }
+#endif
                 if (!msg_repr->crypto_ecdsa->push(ecdsa_push_params)) {
-                    OFFL_FUNC_ERR("failed crypto_ecdsa push");
+                    OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected,
+                                           "failed crypto_ecdsa push");
                     msg_repr->push_failure = true;
                 }
             }
@@ -491,7 +508,7 @@ ecdsa_testvec_t::completion_check(void)
                 }
 
             } END_FOR_EACH_MSG_REPR(curve_repr, msg_repr)
-        } END_FOR_EACH_CURVE_REPR(key_repr)
+        } END_FOR_EACH_CURVE_REPR(curve_repr)
     }
 
     if (num_test_failures) {
@@ -532,7 +549,7 @@ ecdsa_testvec_t::full_verify(void)
                 }
 
             } END_FOR_EACH_MSG_REPR(curve_repr, msg_repr)
-        } END_FOR_EACH_CURVE_REPR(key_repr)
+        } END_FOR_EACH_CURVE_REPR(curve_repr)
     }
 
     if (num_test_failures) {
@@ -567,20 +584,17 @@ ecdsa_testvec_t::rsp_file_output(const string& mem_type_str)
                 rsp_output->hex_bn(PARSE_STR_MSG_PREFIX, msg_repr->msg);
                 if (ecdsa_key_create_type_is_sign(testvec_params.key_create_type())) {
                     rsp_output->hex_bn(PARSE_STR_D_PREFIX, msg_repr->d);
-                }
-                rsp_output->hex_bn(PARSE_STR_Qx_PREFIX, msg_repr->qx);
-                rsp_output->hex_bn(PARSE_STR_Qy_PREFIX, msg_repr->qy);
-                if (ecdsa_key_create_type_is_sign(testvec_params.key_create_type())) {
                     rsp_output->hex_bn(PARSE_STR_k_PREFIX, msg_repr->k);
-                }
-                failure = msg_repr->push_failure        ||
-                          msg_repr->compl_failure       ||
-                          msg_repr->verify_failure;
-                if (ecdsa_key_create_type_is_sign(testvec_params.key_create_type())) {
                     rsp_output->hex_bn(PARSE_STR_R_PREFIX, msg_repr->r_actual);
                     rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->s_actual,
                                        PARSE_STR_S_SUFFIX);
                 } else {
+                    rsp_output->hex_bn(PARSE_STR_Qx_PREFIX, msg_repr->qx);
+                    rsp_output->hex_bn(PARSE_STR_Qy_PREFIX, msg_repr->qy);
+
+                    failure = msg_repr->push_failure        ||
+                              msg_repr->compl_failure       ||
+                              msg_repr->verify_failure;
                     rsp_output->hex_bn(PARSE_STR_R_PREFIX, msg_repr->r_expected);
                     rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->s_expected);
                     rsp_output->str(PARSE_STR_RESULT_PREFIX, failure ? "F" : "P",

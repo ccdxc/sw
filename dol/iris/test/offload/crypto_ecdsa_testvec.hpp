@@ -310,12 +310,13 @@ public:
     {
         assert(P_expanded_len);
 
-        qx = new dp_mem_t(1, P_expanded_len,
+        pub_key_vec = new dp_mem_t(1, P_expanded_len *
+                          crypto_asym::ECDSA_NUM_PUB_KEY_FIELDS,
                           DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.q_mem_type(),
                           0, DP_MEM_ALLOC_NO_FILL);
-        qy = new dp_mem_t(1, P_expanded_len,
-                          DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.q_mem_type(),
-                          0, DP_MEM_ALLOC_NO_FILL);
+        qx = pub_key_vec->fragment_find(P_expanded_len * 0, P_expanded_len);
+        qy = pub_key_vec->fragment_find(P_expanded_len * 1, P_expanded_len);
+
         k = new dp_mem_t(1, P_expanded_len,
                          DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.k_mem_type(),
                          0, DP_MEM_ALLOC_NO_FILL);
@@ -347,11 +348,10 @@ public:
                 if (crypto_ecdsa) delete crypto_ecdsa;
                 if (sig_actual_vec) delete sig_actual_vec;
                 if (sig_expected_vec) delete sig_expected_vec;
+                if (pub_key_vec) delete pub_key_vec;
                 if (msg) delete msg;
                 if (d) delete d;
                 if (k) delete k;
-                if (qy) delete qy;
-                if (qx) delete qx;
             }
         }
     }
@@ -360,7 +360,8 @@ public:
 
 private:
     ecdsa_testvec_t&            ecdsa_testvec;
-    dp_mem_t                    *qx;            // (qx, qy) form the public key
+    dp_mem_t                    *pub_key_vec;
+    dp_mem_t                    *qx;            // (qx, qy) are fragments of pub_key_vec
     dp_mem_t                    *qy;
     dp_mem_t                    *k;             // fresh random value
     dp_mem_t                    *sig_expected_vec;

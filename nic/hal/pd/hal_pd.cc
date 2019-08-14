@@ -812,7 +812,10 @@ extern "C" int
 pd_tls_asym_ecdsa_p256_sig_verify_param(void *ctx,
                                         const PSE_EC_VERIFY_PARAM *param)
 {
-    return 0;
+    return pd_tls_asym_ecdsa_p256_sig_verify(param->p, param->n, param->xg, param->yg,
+                                             param->a, param->b, param->xq, param->yq,
+                                             param->r, param->s, param->hash_input,
+                                             param->async, param->caller_unique_id);
 }
 
 extern "C" int
