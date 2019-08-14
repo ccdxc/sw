@@ -251,7 +251,7 @@ ionic_adminq_check_err(struct lif *lif,
 	return VMK_OK;
 }
 
-static vmk_Bool keep_posting = VMK_TRUE;
+static vmk_Bool ionic_keep_posting = VMK_TRUE;
 
 VMK_ReturnStatus
 ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
@@ -260,7 +260,7 @@ ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
         vmk_Bool is_timeout;
         vmk_Bool is_retry = VMK_FALSE;
 
-if (VMK_UNLIKELY(!keep_posting)) {
+if (VMK_UNLIKELY(!ionic_keep_posting)) {
                 return VMK_FAILURE;
         }
 
@@ -284,7 +284,7 @@ retry:
                 is_retry = VMK_TRUE;
                 goto retry;
         } else if(status != VMK_OK) {
-                keep_posting = VMK_FALSE;
+                ionic_keep_posting = VMK_FALSE;
                 ionic_en_err("ionic_adminq_check_err() failed, "
                              "status: %s", vmk_StatusToString(status));
                 status = VMK_FAILURE;
@@ -399,7 +399,7 @@ ionic_dev_cmd_wait_check(struct ionic *ionic, unsigned long max_wait)
         VMK_ReturnStatus status;
         vmk_Bool is_retry = VMK_FALSE;
 
-        if (VMK_UNLIKELY(!keep_posting)) {
+        if (VMK_UNLIKELY(!ionic_keep_posting)) {
                 return VMK_FAILURE;
         }
 
@@ -417,7 +417,7 @@ retry:
                 is_retry = VMK_TRUE;
                 goto retry;
         } else if(status != VMK_OK) {
-                keep_posting = VMK_FALSE;
+                ionic_keep_posting = VMK_FALSE;
                 ionic_en_err("ionic_dev_cmd_check_error() failed, "
                              "status: %s", vmk_StatusToString(status));
                 status = VMK_FAILURE;

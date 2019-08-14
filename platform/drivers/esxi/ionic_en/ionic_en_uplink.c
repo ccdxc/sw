@@ -494,7 +494,7 @@ ionic_en_uplink_cable_type_get(vmk_AddrCookie driver_data,
             xcvr_pid <= XCVR_PID_SFP_25GBASE_CR_N) {
                 *cableType = VMK_UPLINK_CABLE_TYPE_DA;
         } else if (xcvr_pid >= XCVR_PID_QSFP_100G_AOC &&
-                   xcvr_pid <= XCVR_PID_SFP_10GBASE_CU) {
+                   xcvr_pid <= XCVR_PID_QSFP_100G_PSM4) {
                 *cableType = VMK_UPLINK_CABLE_TYPE_FIBRE;
         } else {
                 *cableType = VMK_UPLINK_CABLE_TYPE_OTHER;
