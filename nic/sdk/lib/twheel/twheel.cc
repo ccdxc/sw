@@ -177,9 +177,17 @@ twheel::delay_delete_(twentry_t *twentry)
     init_twentry_(twentry, twentry->timer_id_,
                   TWHEEL_DELAY_DELETE, false, NULL, NULL);
     TWHEEL_LOCK_SLICE(twentry->slice_);
+   /*
+    * When creating a twentry for delay delete, create it with valid false.
+    * This valid false should be within the slice lock, so that no one
+    * can access this twentry with valid true. We were hitting a case
+    * where del_timer is accessing this twentry and putting the same twentry
+    * into another slice. Now we have delay delete twentry in two slices and
+    * this is causing double free.
+    */
     insert_timer_(twentry);
-    TWHEEL_UNLOCK_SLICE(twentry->slice_);
     twentry->valid_ = FALSE;
+    TWHEEL_UNLOCK_SLICE(twentry->slice_);
 }
 
 //------------------------------------------------------------------------------
