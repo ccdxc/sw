@@ -186,8 +186,9 @@ func getLogs(subDir string, url string) error {
 func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
 	cmd := exec.Command(req.Executable, parts...)
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, req.Env)
-
+	if len(cmd.Env) == 0 {
+		cmd.Env = append(cmd.Env, "/bin:/sbin:/usr/bin:/usr/sbin:/platform/bin:/nic/bin:/platform/tools:/nic/tools")
+	}
 	if verbose {
 		fmt.Printf("Upgrade Cmd Execute Request: %+v env: [%s]", req, os.Environ())
 	}
