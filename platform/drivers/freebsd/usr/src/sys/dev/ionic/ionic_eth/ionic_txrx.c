@@ -42,6 +42,7 @@
 #include <net/ethernet.h>
 #include <sys/buf_ring.h>
 #include <net/sff8472.h>
+#include <net/sff8436.h>
 
 #include <sys/sockio.h>
 #include <sys/kdb.h>
@@ -1853,10 +1854,18 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	case XCVR_PID_QSFP_40GBASE_LR4:
 	case XCVR_PID_QSFP_40GBASE_AOC:
 		qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
-		sbuf_printf(sb, "    QSFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
-			16, &xcvr->sprom[SFF_8472_VENDOR_START],
-			16, &xcvr->sprom[SFF_8472_PN_START],
-			16, &xcvr->sprom[SFF_8472_SN_START]);
+		if (xcvr->sprom[SFF_8436_ID] == 0) {
+			/* Older firmware sends page1 info in page0 space */
+			sbuf_printf(sb, "    QSFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
+				16, &xcvr->sprom[SFF_8472_VENDOR_START],
+				16, &xcvr->sprom[SFF_8472_PN_START],
+				16, &xcvr->sprom[SFF_8472_SN_START]);
+		} else {
+			sbuf_printf(sb, "    QSFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
+				16, &xcvr->sprom[SFF_8436_VENDOR_START],
+				16, &xcvr->sprom[SFF_8436_PN_START],
+				16, &xcvr->sprom[SFF_8436_SN_START]);
+		}
 		break;
 
 	case XCVR_PID_SFP_25GBASE_CR_S:
