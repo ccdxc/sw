@@ -511,8 +511,8 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
     } else {
       this.newObject = new this.objConstructor();
     }
-    this.setDefaultValidation();
     this.postNgInit();
+    this.setDefaultValidation();
   }
 
   setDefaultValidation() {

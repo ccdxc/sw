@@ -18,7 +18,6 @@
 
 .securityapps-column-metaname {
   width: 30%;
-  color: #007bff;
 }
 
 .securityapps-column-host-name {
@@ -37,10 +36,26 @@
   }
 }
 
+.security-new-app {
+  padding-left: 10px;
+  padding-right: 10px;
+  cursor: pointer;
+}
+
+
 .securityapps-rowhighlight {
   >td {
     z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
     position: relative; // needed for z-index to take effect
     background-color: rgb(234, 241, 249) !important;
   }
+}
+
+.securityapps-widget {
+  @include primary-font();
+  height: 100%;
+}
+
+.pointer {
+  cursor: pointer;
 }

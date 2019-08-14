@@ -8,9 +8,10 @@ import { PrimengModule } from '@lib/primeng.module';
 
 import { SecurityappsComponent } from './securityapps.component';
 import { SecurityappsRoutingModule } from './securityapps.route';
+import { NewsecurityappComponent} from './newsecurityapp/newsecurityapp.component';
 
 @NgModule({
-  declarations: [SecurityappsComponent],
+  declarations: [SecurityappsComponent, NewsecurityappComponent],
   imports: [
     CommonModule,
     FormsModule,

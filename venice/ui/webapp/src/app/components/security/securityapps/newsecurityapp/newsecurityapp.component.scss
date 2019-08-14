@@ -1,0 +1,139 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newsecurityapp-container {
+  background: white;
+
+  &:hover {
+    background: white;
+  }
+}
+
+.newsecurityapp-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newsecurityapp-small-input {
+  height: 30px;
+}
+
+.newsecurityapp-divider {
+  border-right: 1px solid #dddddd;
+}
+
+.newsecurityapp-input {
+  width: 155px;
+  padding: 5px 10px !important;
+
+}
+
+.newsecurityapp-tinywide-input {
+  width: 100px;
+}
+
+.newsecurityapp-both-proto {
+  margin-top: 15px;
+}
+
+.newsecurityapp-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newsecurityapp-and {
+  white-space: nowrap;
+  margin-top: 2*$vertical-gutter;
+  color: #6ba0e5;
+  display: inline-block;
+
+}
+
+
+.newsecurityapp-save,
+.newsecurityapp-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+
+.newsecurityapp-app-type {
+  margin-top: 3px;
+}
+
+.newsecurityapp-toggle-text {
+  white-space: normal;
+}
+
+.newsecurityapp-toggle-color {
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}
+
+.newsecurityapp-text-margin {
+  margin-top: 2px;
+}
+
+.newsecurityapp-message-length {
+  font-size: 14px;
+  margin-right: 10px;
+  margin-top: 8px;
+}
+
+.newsecurityapp-content {
+  background: white;
+  min-height: 180px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
+}
+
+.newsecurityapp-programs {
+  margin-right: 10px;
+}
+
+.newsecurityapp-text {
+  width: 35px;
+  height: 17px;
+  font-size: 14px;
+  margin-top: 2*$vertical-gutter;
+  margin-left: $horizontal-gutter;
+  @include primary-font();
+}
+
+.newsecurityapp-namefield {
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+.newsecurityapp-format {
+  margin-left: 5px;
+  margin-top: 9px;
+  @include global-mat-radio(12px);
+}
+
+.newsecurityapp-spacing {
+  margin-top: 15px;
+  margin-left: 10px;
+}
+
+.newsecurityapp-save,
+.newsecuritypp-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.newsecurityapp-buttoncontainer {
+  margin-top: $vertical-gutter;
+}
+
+.newsecurityapp-button {
+  padding-left: 10px;
+  padding-right: 10px;
+  cursor: pointer;
+}
