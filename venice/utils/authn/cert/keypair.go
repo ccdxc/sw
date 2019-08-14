@@ -96,7 +96,9 @@ func (kp *clusterKeyPair) getCertificate() func(clientHello *tls.ClientHelloInfo
 
 func (kp *clusterKeyPair) TLSConfig() *tls.Config {
 	return &tls.Config{
-		GetCertificate: kp.getCertificate(),
+		GetCertificate:         kp.getCertificate(),
+		MinVersion:             tls.VersionTLS11,
+		SessionTicketsDisabled: true,
 	}
 }
 

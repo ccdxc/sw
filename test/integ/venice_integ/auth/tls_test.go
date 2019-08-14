@@ -78,6 +78,47 @@ func TestTLSConfig(t *testing.T) {
 	Assert(t, err != nil, fmt.Sprintf("should not be able to update with mismatched cert and key"))
 }
 
+func TestTLSVersion(t *testing.T) {
+	// create cluster object
+	_ = MustCreateCluster(tinfo.apicl)
+	defer MustDeleteCluster(tinfo.apicl)
+
+	minSupportedVersion := tls.VersionTLS11
+	// start with supported versions first so that by the time we get to the unsupported ones
+	// we know for sure that server is up and running
+	for tlsVersion := tls.VersionTLS12; tlsVersion >= tls.VersionSSL30; tlsVersion-- {
+		client := http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+					MaxVersion:         uint16(tlsVersion),
+				},
+			},
+		}
+		req, err := http.NewRequest("GET", fmt.Sprintf("https://%s", tinfo.apiGwAddr), nil)
+		if err != nil {
+			t.Fatalf("error creating http request: %v", err)
+		}
+		if tlsVersion >= minSupportedVersion {
+			AssertEventually(t, func() (bool, interface{}) {
+				resp, err := client.Do(req)
+				if err != nil {
+					return false, err
+				}
+				defer resp.Body.Close()
+				// Read the entire response
+				ioutil.ReadAll(resp.Body)
+				return true, nil
+			}, "http connection with self signed server cert failed")
+		} else {
+			resp, err := client.Do(req)
+			Assert(t, resp == nil, "Got non-nil response %+v for request with unsupported TLS version %v", resp, tlsVersion)
+			Assert(t, strings.Contains(err.Error(), "protocol version not supported"),
+				"Got unexpected error \"%v\" for request with unsupported TLS version %v", err, tlsVersion)
+		}
+	}
+}
+
 func TestSelfIssuedCert(t *testing.T) {
 	caKey, _, x509CACert, pemCACert, _, err := certstestutils.GeneratePEMSelfSignedCertAndKey("TestCA", 3650)
 	if err != nil {
