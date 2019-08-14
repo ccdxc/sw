@@ -2028,6 +2028,7 @@ err_out_unmap_dbell:
 err_out_free_dbid:
 	free(lif->dbid_inuse, M_IONIC);
 err_out_free_netdev:
+	ionic_lif_sysctl_free(lif);
 	ionic_lif_netdev_free(lif);
 	free(lif, M_IONIC);
 
@@ -3686,6 +3687,7 @@ ionic_lifs_unregister(struct ionic *ionic)
 		if (lif->registered) {
 			lif->registered = false;
 		}
+		ionic_lif_sysctl_free(lif);
 	}
 }
 

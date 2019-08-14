@@ -2963,14 +2963,19 @@ ionic_set_os_features(struct ifnet *ifp, uint32_t hw_features)
 }
 
 void
+ionic_lif_sysctl_free(struct lif *lif)
+{
+	if (lif->sysctl_ifnet) {
+		sysctl_ctx_free(&lif->sysctl_ctx);
+		lif->sysctl_ifnet = NULL;
+	}
+}
+
+void
 ionic_lif_netdev_free(struct lif *lif)
 {
-
- 	if(lif->sysctl_ifnet)
-	 	 sysctl_ctx_free(&lif->sysctl_ctx);
-
 	if (lif->netdev) {
-	   	if_free(lif->netdev);
+		if_free(lif->netdev);
 		lif->netdev = NULL;
 	}
 }

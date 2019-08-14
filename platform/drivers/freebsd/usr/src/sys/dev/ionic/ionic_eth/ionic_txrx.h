@@ -35,6 +35,7 @@ int ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq);
 
 int ionic_lif_netdev_alloc(struct lif *lif, int ndescs);
 void ionic_lif_netdev_free(struct lif *lifs);
+void ionic_lif_sysctl_free(struct lif *lifs);
 
 int ionic_set_os_features(struct ifnet *ifp, uint32_t hw_features);
 int ionic_enable_os_features(struct ifnet *ifp);
