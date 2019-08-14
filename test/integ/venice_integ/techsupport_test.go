@@ -178,10 +178,22 @@ func (it *veniceIntegSuite) createControllerNode(ctx context.Context, node *clus
 	return err
 }
 
-func (it *veniceIntegSuite) deleteSmartNICNode(ctx context.Context, node *api.ObjectMeta) error {
-	_, err := it.apisrvClient.ClusterV1().SmartNIC().Delete(ctx, node)
+func (it *veniceIntegSuite) deleteSmartNICNode(ctx context.Context, meta *api.ObjectMeta) error {
+	n, err := it.apisrvClient.ClusterV1().SmartNIC().Get(ctx, meta)
 	if err != nil {
-		log.Errorf("Error deleting SmartNIC node %+v: %v", node, err)
+		log.Errorf("Error getting SmartNIC node %+v: %v", meta, err)
+		return err
+	}
+	n.Spec.Admit = false
+	n.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, n)
+	if err != nil {
+		log.Errorf("Error updating SmartNIC node %+v: %v", meta, err)
+		return err
+	}
+	_, err = it.apisrvClient.ClusterV1().SmartNIC().Delete(ctx, meta)
+	if err != nil {
+		log.Errorf("Error deleting SmartNIC node %+v: %v", n, err)
 		return err
 	}
 	return err
@@ -387,35 +399,35 @@ func (it *veniceIntegSuite) waitForTechSupportControllerUpdate(c *C, refObj stat
 
 func (it *veniceIntegSuite) TestTechSupportRequestCreateDelete(c *C) {
 	tsrs := map[string]*monitoring.TechSupportRequest{
-		"TSR1": newTechSupportRequest("TSR1", []string{"00ae.cd00.0011"}, nil),
-		"TSR2": newTechSupportRequest("TSR2", []string{"00ae.cd00.0011", "00ae.cd00.0012", "00ae.cd00.0014"}, nil),
-		"TSR3": newTechSupportRequest("TSR3", []string{"00ae.cd00.0014"}, nil),
+		"TSR1": newTechSupportRequest("TSR1", []string{"00ae.cd88.0011"}, nil),
+		"TSR2": newTechSupportRequest("TSR2", []string{"00ae.cd88.0011", "00ae.cd88.0012", "00ae.cd88.0014"}, nil),
+		"TSR3": newTechSupportRequest("TSR3", []string{"00ae.cd88.0014"}, nil),
 	}
 
 	agents := map[string]*techSupportAgent{
-		"node-1": newTechSupportAgent("00ae.cd00.0011", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["TSR1"], tsrs["TSR2"]}),
-		"node-2": newTechSupportAgent("00ae.cd00.0012", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["TSR2"]}),
-		"node-3": newTechSupportAgent("00ae.cd00.0013", kindSmartNICNode, []*monitoring.TechSupportRequest{}),
+		"node-1": newTechSupportAgent("00ae.cd88.0011", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["TSR1"], tsrs["TSR2"]}),
+		"node-2": newTechSupportAgent("00ae.cd88.0012", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["TSR2"]}),
+		"node-3": newTechSupportAgent("00ae.cd88.0013", kindSmartNICNode, []*monitoring.TechSupportRequest{}),
 	}
 
 	ctx, err := authntestutils.NewLoggedInContext(context.Background(), it.apiGwAddr, it.userCred)
 	AssertOk(c, err, "Error creating logged in context")
-	n1 := newSmartNICNode("00ae.cd00.0011", map[string]string{"group": "red", "type": "prod"})
+	n1 := newSmartNICNode("00ae.cd88.0011", map[string]string{"group": "red", "type": "prod"})
 	err = it.createSmartNICNode(ctx, n1)
 	AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n1))
 	defer it.deleteSmartNICNode(ctx, &n1.ObjectMeta)
 
-	n2 := newSmartNICNode("00ae.cd00.0012", map[string]string{"group": "red", "type": "prod"})
+	n2 := newSmartNICNode("00ae.cd88.0012", map[string]string{"group": "red", "type": "prod"})
 	err = it.createSmartNICNode(ctx, n2)
 	AssertOk(c, err, fmt.Sprintf("Error creating Controller node %+v", n2))
 	defer it.deleteSmartNICNode(ctx, &n2.ObjectMeta)
 
-	n3 := newSmartNICNode("00ae.cd00.0013", map[string]string{"group": "red", "type": "prod"})
+	n3 := newSmartNICNode("00ae.cd88.0013", map[string]string{"group": "red", "type": "prod"})
 	err = it.createSmartNICNode(ctx, n3)
 	AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n3))
 	defer it.deleteSmartNICNode(ctx, &n3.ObjectMeta)
 
-	n4 := newSmartNICNode("00ae.cd00.0014", map[string]string{"group": "red", "type": "prod"})
+	n4 := newSmartNICNode("00ae.cd88.0014", map[string]string{"group": "red", "type": "prod"})
 	err = it.createSmartNICNode(ctx, n4)
 	AssertOk(c, err, fmt.Sprintf("Error creating Controller node %+v", n4))
 	defer it.deleteSmartNICNode(ctx, &n4.ObjectMeta)
@@ -427,10 +439,10 @@ func (it *veniceIntegSuite) TestTechSupportRequestCreateDelete(c *C) {
 	checkAgentWatches(c, agents)
 
 	// "late-agent" represents a node that shows up after the requests have been posted and it does not get the notification as it was not part of the
-	lateAgent := newTechSupportAgent("00ae.cd00.0014", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["TSR2"], tsrs["TSR3"]})
+	lateAgent := newTechSupportAgent("00ae.cd88.0014", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["TSR2"], tsrs["TSR3"]})
 	go lateAgent.watch(ctx, c)
 	defer lateAgent.stop()
-	lateAgentMap := map[string]*techSupportAgent{"00ae.cd00.0014": lateAgent}
+	lateAgentMap := map[string]*techSupportAgent{"00ae.cd88.0014": lateAgent}
 	checkAgentWatches(c, lateAgentMap)
 
 	for _, r := range tsrs {
@@ -625,7 +637,7 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 	numNodes := 1 + rand.Intn(20)
 	nodes := []*cluster.SmartNIC{}
 	for i := 0; i < numNodes; i++ {
-		n := newSmartNICNode(fmt.Sprintf("00ae.cd00.%04d", i), nil)
+		n := newSmartNICNode(fmt.Sprintf("00ae.cd99.%04d", i), nil)
 		err := it.createSmartNICNode(ctx, n)
 		AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n))
 		nodes = append(nodes, n)
@@ -636,7 +648,7 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 	numRequests := 5 + rand.Intn(20)
 	requests := []*monitoring.TechSupportRequest{}
 	for i := 0; i < numRequests; i++ {
-		r := newTechSupportRequest(fmt.Sprintf("00ae.cd00.%04d", i), []string{"00ae.cd00.0000"}, nil)
+		r := newTechSupportRequest(fmt.Sprintf("00ae.cd99.%04d", i), []string{"00ae.cd99.0000"}, nil)
 		err := it.createTechSupportRequest(ctx, r)
 		AssertOk(c, err, fmt.Sprintf("Error creating TechSupportRequest %+v", r))
 		requests = append(requests, r)
@@ -669,12 +681,12 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 		len(sm.ListTechSupportObjectState(kindSmartNICNode)), numNodes+numOldNodes), "1s", "15s")
 
 	tsmAPIAddr := tsCtrler.RPCServer.GetListenURL()
-	agent := newTechSupportAgent("00ae.cd00.0000", kindSmartNICNode, requests)
+	agent := newTechSupportAgent("00ae.cd99.0000", kindSmartNICNode, requests)
 	agent.tsmAPIAddr = tsmAPIAddr
 	go agent.watch(ctx, c)
 	defer agent.stop()
 
-	agentMap := map[string]*techSupportAgent{"00ae.cd00.0000": agent}
+	agentMap := map[string]*techSupportAgent{"00ae.cd99.0000": agent}
 	checkAgentWatches(c, agentMap)
 	checkAgentNotifications(c, agentMap, 1)
 }

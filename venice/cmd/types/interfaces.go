@@ -459,9 +459,19 @@ type HealthClient interface {
 
 // ClusterHealthMonitor responsible for cluster health update functionalities
 type ClusterHealthMonitor interface {
-	// Starts starts the monitor and updates health
+	// Start starts the monitor and updates health
 	Start()
 
 	// Stop stops the cluster health monitor
+	Stop()
+}
+
+// ClusterBootstrapService enables cluster formation using a REST API.
+// API is unauthenticated and is only available when node is not part of a cluster.
+type ClusterBootstrapService interface {
+	// Starts starts the bootstrap API REST endpoint
+	Start() error
+
+	// Stop stops the bootstrap API REST endpoint
 	Stop()
 }

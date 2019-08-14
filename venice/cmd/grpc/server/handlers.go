@@ -362,6 +362,10 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 
 	env.HealthClient = health.NewClient(env.ResolverClient)
 
+	if env.ClusterBootstrapService != nil {
+		env.ClusterBootstrapService.Stop()
+	}
+
 	return &grpc.ClusterJoinResp{}, nil
 }
 
@@ -466,6 +470,10 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 	cerr = utils.DeleteCluster()
 	if err != nil {
 		env.Logger.Errorf("Error deleting cluster: %v", cerr)
+	}
+
+	if env.ClusterBootstrapService != nil {
+		env.ClusterBootstrapService.Start()
 	}
 
 	return &grpc.ClusterDisjoinResp{}, err

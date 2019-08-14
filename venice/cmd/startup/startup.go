@@ -306,11 +306,16 @@ func OnStart() {
 	// as they are needed  by the gRPC server that listens for cluster events
 	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer)
 	env.StateMgr = cache.NewStatemgr(env.CfgWatcherService)
+	env.ClusterBootstrapService = services.NewClusterBootstrapService(":" + env.Options.RESTPort)
 
 	var cluster *utils.Cluster
 	var err error
 	if cluster, err = utils.GetCluster(); err != nil || cluster == nil {
 		log.Debugf("OnStart cluster:%v err:%v possibly not part of cluster yet", cluster, err)
+		err = env.ClusterBootstrapService.Start()
+		if err != nil {
+			log.Fatalf("Node is not part of a cluster. Error starting cluster bootstrap endpoint on port %v: %v", env.Options.RESTPort, err)
+		}
 		return
 	}
 

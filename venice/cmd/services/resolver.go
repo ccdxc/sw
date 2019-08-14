@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	v1 "k8s.io/client-go/pkg/api/v1"
@@ -229,6 +230,8 @@ func (r *resolverService) List() *protos.ServiceList {
 	}
 	for k := range r.svcMap {
 		svc := r.svcMap[k]
+		// return sorted list so that results from multiple invocations of this RPC can be compared using reflect.DeepEqual
+		sort.Slice(svc.Instances, func(i, j int) bool { return svc.Instances[i].Name < svc.Instances[j].Name })
 		slist.Items = append(slist.Items, &svc)
 	}
 	return slist
@@ -248,6 +251,8 @@ func (r *resolverService) ListInstances() *protos.ServiceInstanceList {
 		for ii := range svc.Instances {
 			slist.Items = append(slist.Items, svc.Instances[ii])
 		}
+		// return sorted list so that results from multiple invocations of this RPC can be compared using reflect.DeepEqual
+		sort.Slice(slist.Items, func(i, j int) bool { return slist.Items[i].Name < slist.Items[j].Name })
 	}
 	return slist
 }

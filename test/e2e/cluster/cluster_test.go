@@ -2,10 +2,8 @@ package cluster
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"net"
 	"reflect"
 	"regexp"
 	"strings"
@@ -17,8 +15,10 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/test/utils"
 	cmdprotos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var _ = Describe("cluster tests", func() {
@@ -60,7 +60,7 @@ var _ = Describe("cluster tests", func() {
 			oldLeader = cl.Status.Leader
 			oldLeaderIP = ts.tu.NameToIPMap[oldLeader]
 
-			serviceListBefore = getServices(oldLeader)
+			serviceListBefore = getServices(ts, oldLeader)
 
 			By(fmt.Sprintf("Pausing cmd on old leader %v", oldLeader))
 			ts.tu.CommandOutput(oldLeaderIP, "docker pause pen-cmd")
@@ -120,7 +120,7 @@ var _ = Describe("cluster tests", func() {
 			serviceListBefore.Items = xformList(serviceListBefore.Items)
 
 			Eventually(func() bool {
-				serviceListAfter := getServices(newLeader)
+				serviceListAfter := getServices(ts, newLeader)
 				By(fmt.Sprintf("after: %v", serviceListAfter.String()))
 				serviceListAfter.Items = xformList(serviceListAfter.Items)
 				return reflect.DeepEqual(serviceListAfter, serviceListBefore)
@@ -145,19 +145,17 @@ var _ = Describe("cluster tests", func() {
 	})
 })
 
-func getServices(node string) cmdprotos.ServiceList {
-	var srvList cmdprotos.ServiceList
-	srvURL := "http://" + node + ":" + globals.CMDRESTPort + "/api/v1/services"
+func getServices(ts *TestSuite, node string) cmdprotos.ServiceList {
 	By(fmt.Sprintf("Getting services from %v", node))
-	httpClient := &http.Client{Timeout: 10 * time.Second}
-	resp, err := httpClient.Get(srvURL)
+	rpcClient, err := rpckit.NewRPCClient("cluster_test", node+":"+globals.CMDGRPCAuthPort, rpckit.WithRemoteServerName(globals.Cmd), rpckit.WithTLSProvider(ts.tu.TLSProvider))
 	Expect(err).ShouldNot(HaveOccurred())
-	data, err := ioutil.ReadAll(resp.Body)
+	defer rpcClient.Close()
+	client := cmdprotos.NewServiceAPIClient(rpcClient.ClientConn)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	srvList, err := client.ListServices(ctx, &api.Empty{})
 	Expect(err).ShouldNot(HaveOccurred())
-	err = json.Unmarshal(data, &srvList)
-	Expect(err).ShouldNot(HaveOccurred())
-	resp.Body.Close()
-	return srvList
+	return *srvList
 }
 
 func validateCluster() {
@@ -248,10 +246,10 @@ func validateCluster() {
 	}, 60, 5).Should(BeTrue(), "version object should have correct values")
 
 	Eventually(func() string {
-		s1 := getServices(ts.tu.QuorumNodes[0])
+		s1 := getServices(ts, ts.tu.QuorumNodes[0])
 		serviceListNode1 := s1.String()
 		for index, n := range ts.tu.QuorumNodes {
-			s := getServices(n)
+			s := getServices(ts, n)
 			serviceList := s.String()
 			if serviceListNode1 != serviceList {
 				m := make(map[string]cmdprotos.Service)
@@ -317,5 +315,52 @@ func validateCluster() {
 		By(fmt.Sprintf("ts: %s kubectl get pods -o wide: %s", time.Now().String(), ts.tu.LocalCommandOutput("kubectl get pods -o wide")))
 		return false
 	}, 60, 5).Should(BeTrue(), "cluster should be in healthy state")
+
+	// Bootstrap port should be shut on all nodes that are part of the cluster and open on those that are not
+	Eventually(func() bool {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		nctx, err = ts.tu.NewLoggedInContext(ctx)
+		if err != nil {
+			cancel()
+			By(fmt.Sprintf("ts: %s err: %v logging in", time.Now().String(), err))
+			return false
+		}
+		allNodes, err := apiClient.ClusterV1().Node().List(nctx, &api.ListWatchOptions{})
+		cancel()
+		if err != nil {
+			By(fmt.Sprintf("ts: %s err: %v getting node Info", time.Now().String(), err))
+			return false
+		}
+
+		isJoinedNode := func(name string) bool {
+			for _, n := range allNodes {
+				if name == n.Name {
+					return true
+				}
+			}
+			return false
+		}
+
+		for _, ip := range ts.tu.VeniceNodeIPs {
+			bsURL := net.JoinHostPort(ip, globals.CMDRESTPort)
+			nodeName := ts.tu.IPToNameMap[ip]
+			conn, err := net.Dial("tcp", bsURL)
+			if isJoinedNode(nodeName) && !utils.IsConnRefusedError(err) {
+				By(fmt.Sprintf("Node %v(%s) has joined the cluster but bootstrap port %s is not shut. Dial error: %+v",
+					ip, nodeName, globals.CMDRESTPort, err))
+				return false
+			}
+			if !isJoinedNode(nodeName) && err != nil {
+				By(fmt.Sprintf("Node %v(%s) has not joined the cluster but was unable to dial bootstrap port %s. Err: %v",
+					ip, nodeName, globals.CMDRESTPort, err))
+				return false
+			}
+			if conn != nil {
+				conn.Close()
+			}
+		}
+		return true
+	}, 60, 5).Should(BeTrue(), "Bootstrap ports should be shut on all cluster nodes")
+
 	By(fmt.Sprintf("ts: %s Cluster is Healthy", time.Now().String()))
 }

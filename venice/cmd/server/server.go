@@ -18,22 +18,27 @@ import (
 func Run(options *options.ServerRunOptions) {
 	flag.Parse()
 
-	s := rest.NewRESTServer()
+	s := rest.NewDebugRESTServer()
+	debugURL := globals.Localhost + ":" + globals.CMDDebugPort
 	go func() {
-		s.RunOnAddr(":" + options.RESTPort)
+		s.RunOnAddr(debugURL)
 	}()
-
-	log.Infof("%s is running", globals.Cmd)
-	recorder.Event(eventtypes.SERVICE_RUNNING,
-		fmt.Sprintf("Service %s running on %s", globals.Cmd, utils.GetHostname()), nil)
+	log.Infof("Debug endpoint started at %s", debugURL)
 
 	clusterMgmtURL := ":" + options.ClusterMgmtPort
 	localCertsURL := globals.Localhost + ":" + options.UnauthCertAPIPort
 	nicRegURL := ":" + options.SmartNICRegistrationPort
 
 	grpcserver.RunUnauthServer(clusterMgmtURL, localCertsURL, nicRegURL, nil)
+	log.Infof("gRPC Endpoints: ClusterMgmt API %s, Local Certs API %s, SmartNIC registration: %s",
+		clusterMgmtURL, localCertsURL, nicRegURL)
 
 	// Server for authenticated services is not started here because it needs a
 	// certificate. It can only be started after the cluster is formed and the
 	// CA is ready
+
+	log.Infof("%s is running", globals.Cmd)
+	recorder.Event(eventtypes.SERVICE_RUNNING,
+		fmt.Sprintf("Service %s running on %s", globals.Cmd, utils.GetHostname()), nil)
+
 }

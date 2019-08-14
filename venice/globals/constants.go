@@ -121,6 +121,7 @@ const (
 	CMDSmartNICUpdatesPort      = CMDGRPCLeaderInstancePort
 	CMDUnauthCertAPIPort        = "9018"
 	CMDSmartNICRegistrationPort = "9019"
+	CMDDebugPort                = "9023"
 
 	// API Server
 	APIServerPort     = "9003"
