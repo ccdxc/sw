@@ -143,8 +143,7 @@ linkmgr_logger_init (void)
 
 void linkmgr_log(sdk::lib::sdk_trace_level_e trace_level, const char *buf)
 {
-    linkmgr_logger->logger()->debug("{}", buf);
-    linkmgr_logger->logger()->flush();
+    linkmgr_logger->logger()->debug(buf);
 }
 
 static bool
