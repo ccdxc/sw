@@ -51,6 +51,16 @@ func TestMemDb(t *testing.T) {
 	AssertOk(t, mDb.DeleteObject(ap), "failed to delete object from mem DB")
 	objs = mDb.ListObjects("AlertPolicy")
 	Assert(t, len(objs) == 4, "invalid number of alert policies, expected: %v, got: %v", 5, len(objs))
+
+	// test alert destination
+	Assert(t, mDb.GetAlertDestination("dest-1") == nil, "expected nil but got alert destination")
+	mDb.AddObject(policygen.CreateAlertDestinationObj(globals.DefaultTenant, "system", "dest-1",
+		&monitoring.SyslogExport{
+			Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
+		}))
+	objs = mDb.ListObjects("AlertDestination")
+	Assert(t, len(objs) == 1, "invalid number of alert destinations, expected: %v, got: %v", 1, len(objs))
+	Assert(t, mDb.GetAlertDestination("dest-1") != nil, "failed to get alert destination")
 }
 
 // TestGetAlertPolicies tests GetAlertPolicies(...) with various filters

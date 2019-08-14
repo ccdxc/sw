@@ -14,19 +14,17 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
-	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
+	eapiclient "github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	aeutils "github.com/pensando/sw/venice/utils/alertengine"
-	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var (
@@ -72,21 +70,21 @@ var (
 // events to alerts based on the event based alert policies.
 type alertEngineImpl struct {
 	sync.RWMutex
-	logger          log.Logger              // logger
-	resolverClient  resolver.Interface      // to connect with apiserver to fetch alert policies; and send alerts
-	memDb           *memdb.MemDb            // in-memory db/cache
-	apiClient       apiclient.Services      // API server client
-	exporter        *exporter.AlertExporter // exporter to export alerts to different destinations
-	ctx             context.Context         // context to cancel goroutines
-	cancelFunc      context.CancelFunc      // context to cancel goroutines
-	wg              sync.WaitGroup          // for start routine
-	running         bool                    // indicates if alert engine is running or not
-	maintenanceMode *bool                   // indicates if the maintenance mode is on or not
+	logger          log.Logger                // logger
+	resolverClient  resolver.Interface        // to connect with apiserver to fetch alert policies; and send alerts
+	memDb           *memdb.MemDb              // in-memory db/cache
+	configWatcher   *eapiclient.ConfigWatcher // API server client
+	exporter        *exporter.AlertExporter   // exporter to export alerts to different destinations
+	ctx             context.Context           // context to cancel goroutines
+	cancelFunc      context.CancelFunc        // context to cancel goroutines
+	wg              sync.WaitGroup            // for version watcher routine
+	maintenanceMode *bool                     // indicates if the maintenance mode is on or not
 }
 
 // NewAlertEngine creates the new events alert engine.
-func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, logger log.Logger, resolverClient resolver.Interface) (Interface, error) {
-	if nil == logger || nil == resolverClient {
+func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, configWatcher *eapiclient.ConfigWatcher,
+	logger log.Logger, resolverClient resolver.Interface) (Interface, error) {
+	if nil == logger || nil == resolverClient || nil == configWatcher {
 		return nil, errors.New("all parameters are required")
 	}
 
@@ -94,39 +92,44 @@ func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, logger log.Lo
 	ae := &alertEngineImpl{
 		logger:         logger,
 		resolverClient: resolverClient,
+		configWatcher:  configWatcher,
 		memDb:          memDb,
+		exporter:       exporter.NewAlertExporter(memDb, configWatcher, logger.WithContext("submodule", "alert_exporter")),
 		ctx:            ctx,
 		cancelFunc:     cancelFunc,
 	}
 
 	ae.wg.Add(1)
-	go ae.Start()
+	go ae.watchVersionObject()
 
 	return ae, nil
 }
 
 // ProcessEvents will be called from the events manager whenever the events are received.
 // And, it creates an alert whenever the event matches any policy.
-func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
+func (a *alertEngineImpl) ProcessEvents(reqID string, eventList *evtsapi.EventList) {
+	a.logger.Infof("debug: {req: %s} processing events at alert engine", reqID)
+	defer a.logger.Infof("debug: {req: %s} finished processing events at alert engine", reqID)
+
+	maintenanceMode := false
 	a.RLock()
-	if !a.running || a.maintenanceMode == nil {
-		a.logger.Errorf("alert engine not running, could not process events")
+	if a.configWatcher.APIClient() == nil || a.maintenanceMode == nil {
+		a.logger.Errorf("alert engine not ready to process events, waiting for API client and maintenance mode updates: %p, %v",
+			a.configWatcher.APIClient(), a.maintenanceMode)
 		a.RUnlock()
 		return
+	}
+	if *a.maintenanceMode {
+		maintenanceMode = true
 	}
 	a.RUnlock()
 
 	for _, evt := range eventList.GetItems() {
-		a.RLock()
-		if a.maintenanceMode != nil && *a.maintenanceMode {
-			if evt.GetCategory() != eventattrs.Category_Rollout.String() {
-				// skip processing all events that don't belong to rollout category
-				// as a result, only rollout alerts will be triggered in the maintenance mode
-				a.RUnlock()
-				continue
-			}
+		if maintenanceMode && evt.GetCategory() != eventattrs.Category_Rollout.String() {
+			// skip processing all events that don't belong to rollout category
+			// as a result, only rollout alerts will be triggered in the maintenance mode
+			continue
 		}
-		a.RUnlock()
 
 		// fetch alert policies belonging to evt.Tenant
 		alertPolicies := a.memDb.GetAlertPolicies(
@@ -150,37 +153,6 @@ func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
 	}
 }
 
-// Start starts the alert engine after establishing a conn. with API server
-func (a *alertEngineImpl) Start() {
-	defer a.wg.Done()
-	var err error
-
-	for {
-		select {
-		case <-a.ctx.Done():
-			return
-		default:
-			// create API client
-			if a.apiClient, err = a.createAPIClient(); err != nil {
-				a.logger.Errorf("failed to create API client, retrying... err: %v", err)
-				continue
-			}
-
-			if a.ctx.Err() != nil {
-				return
-			}
-
-			// create alert exporter
-			a.Lock()
-			a.exporter = exporter.NewAlertExporter(a.memDb, a.apiClient, a.logger.WithContext("submodule", "alert_exporter"))
-			a.running = true
-			a.Unlock()
-
-			return
-		}
-	}
-}
-
 // Stop stops the alert engine by closing all the workers.
 func (a *alertEngineImpl) Stop() {
 	a.Lock()
@@ -189,25 +161,46 @@ func (a *alertEngineImpl) Stop() {
 	a.cancelFunc()
 	a.wg.Wait()
 
-	if a.apiClient != nil {
-		if err := a.apiClient.Close(); err != nil {
-			a.logger.Errorf("failed to close API client, err: %v", err)
-		}
-	}
+	a.exporter.Stop() // this will stop any exports that're in line
+}
 
-	if a.running {
-		a.exporter.Stop() // this will stop any exports that're in line
-		a.running = false
+// watches version objects and sets the maintenance mode accordingly
+func (a *alertEngineImpl) watchVersionObject() {
+	defer a.wg.Done()
+
+	watchCh := a.memDb.WatchVersion()
+	defer a.memDb.StopWatchVersion(watchCh)
+
+	for {
+		select {
+		case <-a.ctx.Done():
+			return
+		case evt, ok := <-watchCh:
+			if !ok {
+				a.logger.Errorf("error reading version from the channel, closing")
+				return
+			}
+			versionObj := evt.Obj.(*cluster.Version)
+			switch evt.EventType {
+			case memdb.CreateEvent, memdb.UpdateEvent:
+				if !utils.IsEmpty(versionObj.Status.RolloutBuildVersion) {
+					a.setMaintenanceMode(true)
+				}
+				a.setMaintenanceMode(false)
+			case memdb.DeleteEvent:
+				a.setMaintenanceMode(false)
+			}
+		}
 	}
 }
 
-// SetMaintenanceMode sets the maintenance mode flag
-func (a *alertEngineImpl) SetMaintenanceMode(flag bool) {
+// setMaintenanceMode sets the maintenance mode flag
+func (a *alertEngineImpl) setMaintenanceMode(flag bool) {
 	a.Lock()
 	defer a.Unlock()
 	if flag {
 		if a.maintenanceMode == nil || (a.maintenanceMode != nil && !*a.maintenanceMode) {
-			a.logger.Infof("entering maintenance mode, only upgrade/rollout events will be processed")
+			a.logger.Infof("entering maintenance mode, only upgrade events will be processed")
 		}
 	} else {
 		if a.maintenanceMode != nil && *a.maintenanceMode {
@@ -225,9 +218,10 @@ func (a *alertEngineImpl) runPolicy(ap *monitoring.AlertPolicy, evt *evtsapi.Eve
 		a.logger.Debugf("event {%s: %s} matched the alert policy {%s} with requirements:[%+v]", evt.GetName(), evt.GetMessage(), ap.GetName(), ap.Spec.GetRequirements())
 		created, err := a.createAlert(ap, evt, reqWithObservedVal)
 		if err != nil {
-			a.logger.Errorf("failed to create alert for event: %v, err: %v", evt.GetUUID(), err)
+			errStatus, ok := status.FromError(err)
+			a.logger.Errorf("failed to create alert for event: %v, err: %v, %v", evt.GetUUID(), err, errStatus)
 			// TODO: @Yuva, figure out if there are better ways to handle this case
-			if errStatus, ok := status.FromError(err); ok && errStatus.Code() == codes.InvalidArgument && errStatus.Message() == "Request validation failed" {
+			if ok && errStatus.Code() == codes.InvalidArgument && errStatus.Message() == "Request validation failed" {
 				return nil
 			}
 		}
@@ -237,7 +231,8 @@ func (a *alertEngineImpl) runPolicy(ap *monitoring.AlertPolicy, evt *evtsapi.Eve
 			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 1) // update total hits and open alerts count
 		} else {
 			a.logger.Debugf("existing open alert found for event {%s:%s}", evt.GetName(), evt.GetMessage())
-			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 0) //update only hits, alert exists already, (source.nodeName, event.Type, event.Severity)
+			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 0) //update only hits, alert exists already,
+			// (source.nodeName, event.Type, event.Severity)
 		}
 
 		return err
@@ -247,7 +242,8 @@ func (a *alertEngineImpl) runPolicy(ap *monitoring.AlertPolicy, evt *evtsapi.Eve
 }
 
 // createAlert helper function to construct and create the alert using API client.
-func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *evtsapi.Event, matchedRequirements []*monitoring.MatchedRequirement) (bool, error) {
+func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *evtsapi.Event,
+	matchedRequirements []*monitoring.MatchedRequirement) (bool, error) {
 	var err error
 	alertUUID := uuid.NewV4().String()
 	alertName := alertUUID
@@ -289,6 +285,10 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 	alert.SelfLink = alert.MakeURI("configs", "v1", "monitoring")
 
 	alertCreated, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		if a.configWatcher.APIClient() == nil {
+			return false, fmt.Errorf("empty API client")
+		}
+
 		// check there is an existing alert from the same event
 		outstandingAlerts := a.memDb.GetAlerts(
 			memdb.WithTenantFilter(alertPolicy.GetTenant()),
@@ -319,12 +319,12 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 
 		// evt.GetObjectRef() == nil; cannot find outstanding alert if any.
 		// create an alert
-		_, err = a.apiClient.MonitoringV1().Alert().Create(ctx, alert)
+		_, err = a.configWatcher.APIClient().MonitoringV1().Alert().Create(ctx, alert)
 		if err == nil {
 			return true, nil
 		}
 		return false, err
-	}, 60*time.Millisecond, maxRetry)
+	}, 100*time.Millisecond, maxRetry)
 
 	if err != nil {
 		return false, err
@@ -341,12 +341,17 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 }
 
 // updateAlertPolicy helper function to update total hits and open alerts count on the alert policy.
-func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotalHitsBy, incrementOpenAlertsBy int) error {
+func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotalHitsBy,
+	incrementOpenAlertsBy int) error {
 	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		if a.configWatcher.APIClient() == nil {
+			return nil, fmt.Errorf("empty API client")
+		}
+
 		a.Lock() // to avoid racing updates
 		defer a.Unlock()
 
-		ap, err := a.apiClient.MonitoringV1().AlertPolicy().Get(ctx,
+		ap, err := a.configWatcher.APIClient().MonitoringV1().AlertPolicy().Get(ctx,
 			&api.ObjectMeta{Name: meta.GetName(), Tenant: meta.GetTenant(), Namespace: meta.GetNamespace(), ResourceVersion: meta.GetResourceVersion(), UUID: meta.GetUUID()}) // get the alert policy
 		if err != nil {
 			return nil, err
@@ -355,28 +360,13 @@ func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotal
 		ap.Status.OpenAlerts += int32(incrementOpenAlertsBy)
 		ap.Status.TotalHits += int32(incrementTotalHitsBy)
 
-		ap, err = a.apiClient.MonitoringV1().AlertPolicy().Update(ctx, ap) // update the policy
+		ap, err = a.configWatcher.APIClient().MonitoringV1().AlertPolicy().UpdateStatus(ctx, ap) // update the policy
 		if err != nil {
 			return nil, err
 		}
 
 		return nil, nil
-	}, 60*time.Millisecond, maxRetry)
+	}, time.Second, maxRetry)
 
 	return err
-}
-
-// createAPIClient helper function to create API server client.
-func (a *alertEngineImpl) createAPIClient() (apiclient.Services, error) {
-	logger := a.logger.WithContext("pkg", fmt.Sprintf("%s-%s", globals.EvtsMgr, "alert-engine-api-client"))
-	client, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, logger,
-			rpckit.WithBalancer(balancer.New(a.resolverClient)), rpckit.WithLogger(logger))
-	}, 2*time.Second, maxRetry)
-	if err != nil {
-		a.logger.Errorf("failed to create API client {API server URLs from resolver: %v}, err: %v", a.resolverClient.GetURLs(globals.APIServer), err)
-		return nil, err
-	}
-
-	return client.(apiclient.Services), err
 }

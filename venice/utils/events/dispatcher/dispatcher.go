@@ -441,14 +441,16 @@ func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event, offset *events.
 	resp, _ := newBatch(evts, offset)
 	// notify all the watchers
 	for _, w := range d.exporters.list {
+		d.logger.Infof("distributing events of len {%v} to exporter {%s}", len(evts), w.wr.Name())
 		select {
 		case <-w.eventsCh.Stopped():
-			d.logger.Debugf("exporter event channel {%s} stopped; cannot deliver events", w.wr.Name())
+			d.logger.Errorf("exporter event channel {%s} stopped; cannot deliver events", w.wr.Name())
 		case w.eventsCh.Chan() <- resp:
 			// slow exporters will block this. So, it is highly recommended to set a large enough
 			// channel length for them.
 		default:
-			d.logger.Debugf("exporter event channel {%s} failed to receive events", w.wr.Name())
+			d.logger.Errorf("exporter event channel {%s} failed to receive events, may be the buffer is full",
+				w.wr.Name())
 			// for non-blocking send; exporter failing to receive the event for a any reason (channel full)
 			// will lose the event.
 		}

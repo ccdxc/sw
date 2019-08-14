@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -46,6 +47,11 @@ func NewEvtsMgrRPCHandler(client elastic.ESClient, alertEngine alertengine.Inter
 // notification to all the watchers.
 // Events library will gather events across tenants.
 func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *evtsapi.EventList) (*api.Empty, error) {
+	// create a tracking request ID that will be helpful for debugging
+	trackingID := uuid.NewV4().String()
+	e.logger.Infof("{req: %s} processing req, len: %d", trackingID, len(eventList.Items))
+	defer e.logger.Infof("{req: %s} finished processing req", trackingID)
+
 	events := eventList.GetItems()
 	if len(events) == 0 {
 		return &api.Empty{}, nil
@@ -83,7 +89,7 @@ func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *evtsapi.E
 	}
 
 	// send events to alert engine for processing
-	e.alertEngine.ProcessEvents(eventList)
+	e.alertEngine.ProcessEvents(trackingID, eventList)
 
 	return &api.Empty{}, nil
 }

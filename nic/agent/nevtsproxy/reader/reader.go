@@ -155,7 +155,7 @@ func (r *Reader) startEvtsReader(shmPath string) {
 	if existingRdr, ok := r.evtReaders[shmPath]; ok {
 		r.logger.Debugf("reader already exists for {%s}; restarting the reader..", shmPath)
 		if numPendingEvts := existingRdr.NumPendingEvents(); numPendingEvts != 0 {
-			r.logger.Debugf("pending events to be read from the existing reader for {%s}: %v", shmPath, numPendingEvts)
+			r.logger.Errorf("pending events to be read from the existing reader for {%s}: %v", shmPath, numPendingEvts)
 			time.Sleep(2 * time.Second)
 		}
 		existingRdr.Stop()

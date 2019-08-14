@@ -105,12 +105,12 @@ func (v *VeniceExporter) Start(eventsCh events.Chan, offsetTracker events.Offset
 	v.wg.Add(1)
 	go v.receiveEvents()
 
-	v.logger.Info("started venice events exporter")
+	v.logger.Info("{exporter %s} started", v.name)
 }
 
 // Stop stops the exporter
 func (v *VeniceExporter) Stop() {
-	v.logger.Infof("stopping venice events exporter")
+	v.logger.Infof("{exporter %s} stopping", v.name)
 	v.stop.Do(func() {
 		if v.eventsChan != nil {
 			v.eventsChan.Stop()
@@ -162,7 +162,9 @@ func (v *VeniceExporter) WriteEvents(events []*evtsapi.Event) error {
 	v.eventsMgr.Unlock()
 
 	// send events to events manager
-	_, err := v.eventsMgr.client.SendEvents(v.ctx, &evtsapi.EventList{Items: events})
+	ctx, cancel := context.WithTimeout(v.ctx, 200*time.Second)
+	defer cancel()
+	_, err := v.eventsMgr.client.SendEvents(ctx, &evtsapi.EventList{Items: events})
 	if err == nil {
 		return nil
 	}
@@ -196,20 +198,23 @@ func (v *VeniceExporter) receiveEvents() {
 		// this exporter or when dispatcher shuts down.
 		case batch, ok := <-v.eventsChan.ResultChan():
 			if !ok { // channel closed
+				v.logger.Errorf("{exporter %s} exiting events receiver channel", v.name)
 				return
 			}
 
+			v.logger.Infof("{exporter %s} received events batch, len: %v", v.name, len(batch.GetEvents()))
 			v.logger.Debugf("{exporter %s} received events: %v, offset: %v", v.name, events.Minify(batch.GetEvents()), batch.GetOffset())
 
 			// all the incoming batch of events needs to be processed in order to avoid losing track of events
 			for {
 				if err := v.ctx.Err(); err != nil {
-					v.logger.Debugf("{exporter %s} context closed, err: %v", v.name, err)
+					v.logger.Errorf("{exporter %s} context closed, err: %v", v.name, err)
 					return
 				}
 
 				if err := v.WriteEvents(batch.GetEvents()); err != nil {
-					v.logger.Debugf("{exporter %s} failed to send events to the events manager, retrying.. err: %v", v.name, err)
+					v.logger.Errorf("{exporter %s} failed to send events to the events manager, retrying.. err: %v",
+						v.name, err)
 					time.Sleep(1 * time.Second)
 					continue
 				}
@@ -218,7 +223,9 @@ func (v *VeniceExporter) receiveEvents() {
 				v.eventsOffsetTracker.UpdateOffset(batch.GetOffset())
 				break
 			}
+			v.logger.Infof("{exporter %s} done processing events batch", v.name)
 		case <-v.shutdown:
+			v.logger.Errorf("{exporter %s} shutting down events receiver channel", v.name)
 			return
 		}
 	}
@@ -226,18 +233,28 @@ func (v *VeniceExporter) receiveEvents() {
 
 // reconnect helper function to re-establish the connection with events manager
 func (v *VeniceExporter) reconnect() {
+	var client *rpckit.RPCClient
+	var err error
 	for {
-		if err := v.eventsMgr.rpcClient.Reconnect(); err != nil {
-			log.Debugf("failed to reconnect to events manager, retrying.. err: %v", err)
+		if !utils.IsEmpty(v.eventsMgr.url) {
+			v.logger.Infof("{exporter %s} reconnecting to events manager client using URL: {%v}", v.name, v.eventsMgr.url)
+			client, err = rpckit.NewRPCClient(v.name, v.eventsMgr.url, rpckit.WithRemoteServerName(globals.EvtsMgr), rpckit.WithLogger(v.logger))
+		} else {
+			v.logger.Infof("{exporter %s} reconnecting to events manager client using resolver", v.name)
+			client, err = rpckit.NewRPCClient(v.name, globals.EvtsMgr, rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)), rpckit.WithLogger(v.logger))
+		}
+		if err != nil {
+			log.Errorf("{exporter %s} failed to reconnect to events manager, retrying.. err: %v", v.name, err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
 
 		v.eventsMgr.Lock()
-		defer v.eventsMgr.Unlock()
+		v.eventsMgr.rpcClient = client
 		v.eventsMgr.client = emgrpc.NewEvtsMgrAPIClient(v.eventsMgr.rpcClient.ClientConn)
 		v.eventsMgr.connectionAlive = true
-		log.Info("reconnected with events manager")
+		log.Infof("{exporter %s} reconnected with events manager", v.name)
+		v.eventsMgr.Unlock()
 		return
 	}
 }
@@ -248,16 +265,16 @@ func (v *VeniceExporter) initEvtsMgrGrpcClient(maxRetries int) error {
 	var err error
 
 	if !utils.IsEmpty(v.eventsMgr.url) {
-		v.logger.Debugf("creating events manager client using URL: {%v}", v.eventsMgr.url)
+		v.logger.Infof("{exporter %s} creating events manager client using URL: {%v}", v.name, v.eventsMgr.url)
 		client, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return rpckit.NewRPCClient(v.name, v.eventsMgr.url, rpckit.WithRemoteServerName(globals.EvtsMgr),
 				rpckit.WithLogger(v.logger))
 		}, 2*time.Second, maxRetries)
 	} else { // use resolver client
-		v.logger.Debug("creating events manager client using resolver")
+		v.logger.Infof("{exporter %s} creating events manager client using resolver", v.name)
 		client, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return rpckit.NewRPCClient(v.name, globals.EvtsMgr, rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)),
-				rpckit.WithRemoteServerName(globals.EvtsMgr), rpckit.WithLogger(v.logger))
+				rpckit.WithLogger(v.logger))
 		}, 2*time.Second, maxRetries)
 	}
 

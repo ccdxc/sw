@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
+	eapiclient "github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
@@ -41,22 +41,22 @@ var (
 // AlertExporter represents the alert exporter
 type AlertExporter struct {
 	sync.Mutex
-	memDb        *memdb.MemDb          // memDB to read alert destinations
-	apiClient    apiclient.Services    // API server client
-	logger       log.Logger            // logger
-	destinations map[string][]Exporter // map of destination names and it's respective list of exporters
-	stop         chan struct{}         // to stop exporter
-	once         sync.Once             // to make stop idempotent
+	memDb         *memdb.MemDb              // memDB to read alert destinations
+	configWatcher *eapiclient.ConfigWatcher // API server client
+	logger        log.Logger                // logger
+	destinations  map[string][]Exporter     // map of destination names and it's respective list of exporters
+	stop          chan struct{}             // to stop exporter
+	once          sync.Once                 // to make stop idempotent
 }
 
 // NewAlertExporter creates a new exporter to export alerts to different destinations.
-func NewAlertExporter(memDb *memdb.MemDb, apiClient apiclient.Services, logger log.Logger) *AlertExporter {
+func NewAlertExporter(memDb *memdb.MemDb, configWatcher *eapiclient.ConfigWatcher, logger log.Logger) *AlertExporter {
 	e := &AlertExporter{
-		memDb:        memDb,
-		apiClient:    apiClient,
-		logger:       logger,
-		destinations: make(map[string][]Exporter),
-		stop:         make(chan struct{}),
+		memDb:         memDb,
+		configWatcher: configWatcher,
+		logger:        logger,
+		destinations:  make(map[string][]Exporter),
+		stop:          make(chan struct{}),
 	}
 
 	// watch alert destination updates and update exporters accordingly
@@ -207,20 +207,20 @@ func (e *AlertExporter) watchAlertDestinations() {
 
 // updateAlertDestination helper function to update total notifications sent on the alert policy.
 func (e *AlertExporter) updateAlertDestination(destName string, numNotificationsSent int) error {
-	if e.apiClient == nil {
+	if e.configWatcher.APIClient() == nil {
 		return fmt.Errorf("could not update alert destination")
 	}
 
 	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		aDest := e.memDb.GetAlertDestination(destName)
 		if aDest != nil {
-			ad, err := e.apiClient.MonitoringV1().AlertDestination().Get(ctx, aDest.GetObjectMeta()) // get the alert destination
+			ad, err := e.configWatcher.APIClient().MonitoringV1().AlertDestination().Get(ctx, aDest.GetObjectMeta()) // get the alert destination
 			if err != nil {
 				return nil, err
 			}
 
 			ad.Status.TotalNotificationsSent += int32(numNotificationsSent)
-			ad, err = e.apiClient.MonitoringV1().AlertDestination().Update(ctx, ad)
+			ad, err = e.configWatcher.APIClient().MonitoringV1().AlertDestination().Update(ctx, ad)
 			if err != nil {
 				return nil, err
 			}

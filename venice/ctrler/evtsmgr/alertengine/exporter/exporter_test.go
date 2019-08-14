@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	mockapi "github.com/pensando/sw/api/mock"
+	eapiclient "github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -35,7 +36,7 @@ func TestExporter(t *testing.T) {
 	mMonitoring.mAlertDestination = mAlertDestination
 
 	memDb := memdb.NewMemDb()
-	exporter := NewAlertExporter(memDb, mAPI, log.GetNewLogger(log.GetDefaultConfig("alert_exporter_test")))
+	exporter := NewAlertExporter(memDb, &eapiclient.ConfigWatcher{}, log.GetNewLogger(log.GetDefaultConfig("alert_exporter_test")))
 	defer exporter.Stop()
 	stop := make(chan struct{})
 

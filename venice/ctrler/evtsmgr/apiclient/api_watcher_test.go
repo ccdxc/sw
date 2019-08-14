@@ -1,4 +1,4 @@
-package evtsmgr
+package apiclient
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	mockkvs "github.com/pensando/sw/venice/utils/kvstore/mock"
+	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -100,7 +101,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
-	evtsMgr := &EventsManager{logger: logger, memDb: memdb.NewMemDb()}
+	evtsMgr := &ConfigWatcher{logger: log.SetConfig(log.GetDefaultConfig(t.Name())), memDb: memdb.NewMemDb()}
 	opts := &api.ListWatchOptions{}
 
 	mMonitoring := &mockMonitoringV1{}
@@ -120,7 +121,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	evtsMgr.apiClient = mapi
 
 	// fail alert policy WATCH
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("alert policy watch failed")).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(nil, fmt.Errorf("alert policy watch failed")).Times(1)
 	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(1)
 	err := evtsMgr.processEvents(parentCtx)
 	Assert(t, err != nil, "missed alert policy watch failure")
@@ -128,7 +129,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	// fail alert WATCH
 	mWatcher := mockkvs.NewMockWatcher(ctrl)
 	mWatcher.EXPECT().EventChan().Return(nil).Times(1)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("alert watch failed")).Times(1)
 	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(2)
 	err = evtsMgr.processEvents(parentCtx)
@@ -137,7 +138,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	// fail alert destination WATCH
 	mWatcher = mockkvs.NewMockWatcher(ctrl)
 	mWatcher.EXPECT().EventChan().Return(nil).Times(2)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("alert destination watch failed")).Times(1)
 	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(3)
@@ -147,7 +148,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	// fail event policy WATCH
 	mWatcher = mockkvs.NewMockWatcher(ctrl)
 	mWatcher.EXPECT().EventChan().Return(nil).Times(3)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("event policy watch failed")).Times(1)
@@ -162,7 +163,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	mAPWatcher.EXPECT().EventChan().Return(apCh).Times(1)
 	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert destination, alerts, event policy and version watchers
 	mWatcher.EXPECT().EventChan().Return(nil).Times(4)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mAPWatcher, nil).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mAPWatcher, nil).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
@@ -198,7 +199,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	defer close(aCh)
 	mAWatcher.EXPECT().EventChan().Return(aCh).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mAWatcher, nil).Times(1)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mVersion.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
@@ -233,7 +234,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	defer close(adCh)
 	mADWatcher.EXPECT().EventChan().Return(adCh).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mADWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mVersion.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
@@ -268,7 +269,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	defer close(epCh)
 	mEPWatcher.EXPECT().EventChan().Return(epCh).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mEPWatcher, nil).Times(1)
 	mVersion.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)

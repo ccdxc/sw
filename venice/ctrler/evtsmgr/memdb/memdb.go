@@ -209,6 +209,18 @@ func (m *MemDb) StopWatchAlertDestinations(watchChan chan memdb.Event) {
 	m.StopWatchObjects("AlertDestination", watchChan)
 }
 
+// WatchVersion returns the watcher to watch for version events
+func (m *MemDb) WatchVersion() chan memdb.Event {
+	watchChan := make(chan memdb.Event, memdb.WatchLen)
+	m.WatchObjects("Version", watchChan)
+	return watchChan
+}
+
+// StopWatchVersion stops the version watcher
+func (m *MemDb) StopWatchVersion(watchChan chan memdb.Event) {
+	m.StopWatchObjects("Version", watchChan)
+}
+
 // NewMemDb creates a new mem DB
 func NewMemDb() *MemDb {
 	amemDb := &MemDb{

@@ -39,6 +39,10 @@ eventtypes::EventTypes get_random_event_type()
 
     while (!valid) {
         rand_evt_type = rand() % 5 + static_cast<int>(eventtypes::SERVICE_STARTED);
+        if (rand_evt_type == static_cast<int>(eventtypes::SERVICE_UNRESPONSIVE) ||
+            rand_evt_type == static_cast<int>(eventtypes::NAPLES_SERVICE_STOPPED)) {
+            continue;
+        }
         valid = eventtypes::EventTypes_IsValid(rand_evt_type);
     }
 
@@ -55,7 +59,7 @@ int record_event(events_recorder* recorder, eventtypes::EventTypes type, const c
     int retries = 60;
     while (ret_val == -1 && retries > 0) {
         logger->error("failed to record event {}:{}, retrying", type, message);
-        usleep(100000); // 100ms
+        usleep(10000); // 10ms
         ret_val = recorder->event(type, "Dummy", key, message);
         retries--;
     }
@@ -68,19 +72,23 @@ int record_event(events_recorder* recorder, eventtypes::EventTypes type, const c
 int record_events(events_recorder* recorder, int rps, int total_events, char* message_substr)
 {
     int num_events_recorded = 0;
-    int num_events_per_iteration = (rps < 10) ? rps : (rps / 10);
+    int num_events_per_iteration = (rps < 5) ? rps : (rps / 5);
+    // 100ms or 10ms accounts for the time to send events
+    int time_to_sleep = (rps < 5) ? 1000000 : 100000;
     while (num_events_recorded < total_events) {
         for (int i = 0; i < num_events_per_iteration; i++) {
             char rand_str[10];
             gen_random_str(rand_str, 10);
-            std::string evt_message = message_substr + std::string(" ") + rand_str;
+            std::string evt_message = message_substr + std::string("-") + std::to_string(i + num_events_recorded) +
+                std::string(" ") + rand_str;
             int ret_val = record_event(recorder, get_random_event_type(), evt_message.c_str());
             if (ret_val != 0) {
                 return ret_val;
             }
         }
         num_events_recorded += num_events_per_iteration;
-        usleep(100000); // 100ms
+        usleep(time_to_sleep); // 1s or 100ms
+        logger->info("num events recorded so far: {}", num_events_recorded);
     }
 
     return 0;

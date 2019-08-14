@@ -10,20 +10,21 @@ import (
 	"testing"
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	emgrpc "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/apiserver"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
+	eapiclient "github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
-	mock "github.com/pensando/sw/venice/utils/elastic/mock/server"
+	"github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
@@ -78,7 +79,7 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	memDb := memdb.NewMemDb()
 
 	// create alert engine
-	alertEngine, err := alertengine.NewAlertEngine(context.Background(), memDb, tLogger.WithContext("submodule", "alertengine"), mr)
+	alertEngine, err := alertengine.NewAlertEngine(context.Background(), memDb, &eapiclient.ConfigWatcher{}, tLogger.WithContext("submodule", "alertengine"), mr)
 	AssertOk(t, err, "failed to create alert engine")
 
 	// create grpc server

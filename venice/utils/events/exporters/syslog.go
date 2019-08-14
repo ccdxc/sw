@@ -82,12 +82,12 @@ func (s *SyslogExporter) Start(eventsCh events.Chan, offsetTracker events.Offset
 	s.wg.Add(1)
 	go s.receiveEvents()
 
-	s.logger.Infof("started syslog events exporter {%s}", s.name)
+	s.logger.Infof("{exporter %s} started", s.name)
 }
 
 // Stop stops the exporter
 func (s *SyslogExporter) Stop() {
-	s.logger.Infof("stopping the syslog events exporter {%s}", s.name)
+	s.logger.Infof("{exporter %s} stopping", s.name)
 	s.stop.Do(func() {
 		if s.eventsChan != nil {
 			s.eventsChan.Stop()
@@ -183,9 +183,11 @@ func (s *SyslogExporter) receiveEvents() {
 		// this exporter or when dispatcher shuts down.
 		case batch, ok := <-s.eventsChan.ResultChan():
 			if !ok { // channel closed
+				s.logger.Errorf("{exporter %s} exiting events receiver channel", s.name)
 				return
 			}
 
+			s.logger.Infof("{exporter %s} received events batch, len: %v", s.name, len(batch.GetEvents()))
 			s.logger.Debugf("{exporter %s} received events: %v", s.name, events.Minify(batch.GetEvents()))
 
 			// all the incoming batch of events needs to be processed in order to avoid losing track of events
@@ -205,7 +207,9 @@ func (s *SyslogExporter) receiveEvents() {
 				s.eventsOffsetTracker.UpdateOffset(batch.GetOffset())
 				break
 			}
+			s.logger.Infof("{exporter %s} done processing events batch", s.name)
 		case <-s.shutdown:
+			s.logger.Errorf("{exporter %s} shutting down events receiver channel", s.name)
 			return
 		}
 	}
