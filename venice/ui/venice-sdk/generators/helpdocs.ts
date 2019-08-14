@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as rmdir from 'rimraf'
-import { writeTemplate, walk, ensureFile, getSwagger } from './utils';
+import { writeTemplate, walk, ensureFile, getSwagger, regexQuote } from './utils';
 import * as path from 'path';
 import * as generator from '@pensando/swagger-ts-generator'
 import * as showdown from 'showdown';
@@ -53,7 +53,10 @@ export function generateHelpDocs(config: Config) {
     const md = fs.readFileSync(entry.output, 'utf8');
     converter.makeHtml(md);
     const metadata = converter.getMetadata();
-    refMap[metadata.id] = path.join(config.htmlLinkBase, entry.filePath.split('.').slice(0, -1).join('.')) + '.html';
+    let id = metadata.id;
+    id = metadata.id.replace(/\s/g, '')
+    id = id.replace(/\r?\n|\r/g, '')
+    refMap[id] = path.join(config.htmlLinkBase, entry.filePath.split('.').slice(0, -1).join('.')) + '.html';
   });
 
   // Write link manifest file
@@ -63,9 +66,9 @@ export function generateHelpDocs(config: Config) {
   // Replace reference links in md files
   var linkReplacer = {
     type: 'lang',
-    filter: function (text, converter, options) {
+    filter: function (text: string, converter, options) {
       Object.keys(refMap).forEach( (key) => {
-        text = text.replace('(%' + key + ')', '(' + refMap[key] + ')');
+        text = text.replace(new RegExp(regexQuote('(%' + key + ')'), 'g'), '(' + refMap[key] + ')');
       });
       text = text.replace('/images/', path.join(config.htmlLinkBase, '/images/'))
       return text;

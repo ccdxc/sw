@@ -146,6 +146,10 @@ function ensureFile(outputFileName, content) {
     generator.utils.log("generated " + outputFileName);
 }
 exports.ensureFile = ensureFile;
+function regexQuote(str) {
+    return str.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+}
+exports.regexQuote = regexQuote;
 function eventsHook(swagger) {
     var eventTypes = [];
     var eventPath = path.join(process.cwd(), '../../../events/generated/eventtypes/eventtypes.json');

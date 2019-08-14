@@ -637,10 +637,6 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
       'component': this.getClassName(), 'state':
         Eventtypes.COMPONENT_DESTROY
     });
-    this.controllerService.setToolbarData({
-      buttons: [],
-      breadcrumb: [],
-    });
   }
 
 }

@@ -161,6 +161,10 @@ export function ensureFile(outputFileName, content) {
   generator.utils.log(`generated ${outputFileName}`);
 }
 
+export function regexQuote(str) {
+  return str.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+}
+
 function eventsHook(swagger) {
   const eventTypes = [];
   const eventPath = path.join(process.cwd(), '../../../events/generated/eventtypes/eventtypes.json');

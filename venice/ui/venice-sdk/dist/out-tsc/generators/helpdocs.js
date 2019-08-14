@@ -39,7 +39,10 @@ function generateHelpDocs(config) {
         var md = fs.readFileSync(entry.output, 'utf8');
         converter.makeHtml(md);
         var metadata = converter.getMetadata();
-        refMap[metadata.id] = path.join(config.htmlLinkBase, entry.filePath.split('.').slice(0, -1).join('.')) + '.html';
+        var id = metadata.id;
+        id = metadata.id.replace(/\s/g, '');
+        id = id.replace(/\r?\n|\r/g, '');
+        refMap[id] = path.join(config.htmlLinkBase, entry.filePath.split('.').slice(0, -1).join('.')) + '.html';
     });
     // Write link manifest file
     var outputFile = path.join(config.htmlDir, 'linkMap.ts');
@@ -49,7 +52,7 @@ function generateHelpDocs(config) {
         type: 'lang',
         filter: function (text, converter, options) {
             Object.keys(refMap).forEach(function (key) {
-                text = text.replace('(%' + key + ')', '(' + refMap[key] + ')');
+                text = text.replace(new RegExp(utils_1.regexQuote('(%' + key + ')'), 'g'), '(' + refMap[key] + ')');
             });
             text = text.replace('/images/', path.join(config.htmlLinkBase, '/images/'));
             return text;

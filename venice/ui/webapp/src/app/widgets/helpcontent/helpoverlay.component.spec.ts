@@ -106,13 +106,53 @@ describe('HelpoverlayComponent', () => {
     // Set text by url
     const httpMock: HttpTestingController = TestBed.get(HttpTestingController);
     component.replaceHelpContentByURL('test', 'new' as any);
-    const req = httpMock.expectOne('test');
+    let req = httpMock.expectOne('test');
     expect(req.request.method).toBe('GET');
     req.flush('<div>help by url</div>');
     fixture.detectChanges();
     expect(component.loadedHTML).toContain('help by url');
     const helpContent = fixture.debugElement.query(By.css('.helpoverlay-content div'));
     expect(helpContent.nativeElement.textContent).toContain('help by url');
+
+    // navigate backwards
+    component.replaceHelpContentByURL('test1', 'new' as any);
+    req = httpMock.expectOne('test1');
+    expect(req.request.method).toBe('GET');
+    req.flush('<div>help by url</div>');
+    fixture.detectChanges();
+    const historyButtons = fixture.debugElement.queryAll(By.css('.helpoverlay-history-buttons'));
+
+    tu.sendClick(historyButtons[0]);
+    req = httpMock.expectOne('test');
+    expect(req.request.method).toBe('GET');
+    req.flush('<div>help by url</div>');
+    fixture.detectChanges();
+
+    // navigate forwards
+    // historyButtons = fixture.debugElement.queryAll(By.css('helpoverlay-history-buttons'));
+
+    tu.sendClick(historyButtons[1]);
+    req = httpMock.expectOne('test1');
+    expect(req.request.method).toBe('GET');
+    req.flush('<div>help by url</div>');
+    fixture.detectChanges();
+
+    // navigate back, then to new page, should remove forward history
+    tu.sendClick(historyButtons[0]);
+    req = httpMock.expectOne('test');
+    expect(req.request.method).toBe('GET');
+    req.flush('<div>help by url</div>');
+    fixture.detectChanges();
+
+    component.replaceHelpContentByURL('test2', 'new' as any);
+    req = httpMock.expectOne('test2');
+    expect(req.request.method).toBe('GET');
+    req.flush('<div>help by url</div>');
+    fixture.detectChanges();
+
+    expect(component.isForwardButtonDisabled()).toBeTruthy();
+
+
 
     // Loading help text by the api isn't currently supported.
     // // Should load component text

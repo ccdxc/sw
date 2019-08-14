@@ -176,19 +176,19 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
         case HistoryEvent.new:
           this.forwardHistory = [];
           if (this.currentContentUrl.length !== 0) {
-            this.backHistory.push(url);
+            this.backHistory.push(this.currentContentUrl);
           }
           break;
         case HistoryEvent.backward:
           this.popArray(this.backHistory);
           if (this.currentContentUrl.length !== 0) {
-            this.forwardHistory.push(url);
+            this.forwardHistory.push(this.currentContentUrl);
           }
           break;
         case HistoryEvent.forward:
           this.popArray(this.forwardHistory);
           if (this.currentContentUrl.length !== 0) {
-            this.backHistory.push(url);
+            this.backHistory.push(this.currentContentUrl);
           }
           break;
         default:
