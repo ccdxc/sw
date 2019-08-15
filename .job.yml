@@ -89,53 +89,53 @@ references:
   - nic/utils/ftlite
   - nic/apollo/doc
 
-dir_dependencies:
+dependencies:
   platform:
-    - nic/apollo
-    - iota/test/venice/hwtest
+    - reference: nic/apollo
+    - reference: iota/test/venice/hwtest
+      exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
   vendor:
-    - api
-    - venice
-    - test/ci_targets/e2e
+    - reference: api
+    - reference: venice
+    - reference: test/ci_targets/e2e
   nic:
-    - iota/test/venice/hwtest
+    - reference: iota/test/venice/hwtest
+      exclude_dirs: ["apollo", "doc"]
   nic/agent:
-    - api
-    - test/ci_targets/e2e
-  nic/sdk:
-    - nic/apollo
-  nic/conf/apollo:
-    - nic/apollo
-  nic/conf/artemis:
-    - nic/apollo
-  dol:
-    - iota/test/venice/hwtest
-  dol/apollo:
-    - nic/apollo
-  dol/artemis:
-    - nic/apollo
-  dol/test/networking: 
-    - nic
-  nic/debug_cli/apollo:
-    - nic/apollo
-  venice:
-    - api
-    - test/ci_targets/e2e
-    - iota/test/venice/hwtest
-  test:
-    - api
-    - test/ci_targets/e2e
-    - platform
-  api:
-    - test/ci_targets/e2e
-    - venice/ui
-  metrics:
-    - venice/ui
-  events:
-    - venice/ui
-  iota:
-    - iota/test/venice/hwtest
-  storage/offload: 
-    - storage/offload/linux-build-test
+    - reference: api
+    - reference: test/ci_targets/e2e
   nic/apollo:
-    - nic/apollo/doc
+    - reference: nic/apollo/doc
+  nic/sdk:
+    - reference: nic/apollo
+  nic/conf/apollo:
+    - reference: nic/apollo
+  nic/conf/artemis:
+    - reference: nic/apollo
+  dol/apollo:
+    - reference: nic/apollo
+  dol/artemis:
+    - reference: nic/apollo
+  dol/test/networking: 
+    - reference: nic
+  nic/debug_cli/apollo:
+    - reference: nic/apollo
+  venice:
+    - reference: api
+    - reference: test/ci_targets/e2e
+    - reference: iota/test/venice/hwtest
+  test:
+    - reference: api
+    - reference: test/ci_targets/e2e
+    - reference: platform
+  api:
+    - reference: test/ci_targets/e2e
+    - reference: venice/ui
+  metrics:
+    - reference: venice/ui
+  events:
+    - reference: venice/ui
+  iota:
+    - reference: iota/test/venice/hwtest
+  storage/offload: 
+    - reference: storage/offload/linux-build-test
