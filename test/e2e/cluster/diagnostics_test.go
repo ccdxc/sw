@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -636,6 +637,43 @@ var _ = Describe("diagnostics tests", func() {
 					!strings.Contains(respStr, "\"cpustats\":") ||
 					!strings.Contains(respStr, "\"memstats\":") {
 					return fmt.Errorf("no stats returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+		})
+	})
+	Context("naples", func() {
+		var modObjs []*diagnostics.Module
+		BeforeEach(func() {
+			var err error
+			Eventually(func() error {
+				modObjs, err = ts.restSvc.DiagnosticsV1().Module().List(ts.loggedInCtx, &api.ListWatchOptions{
+					FieldSelector: fmt.Sprintf("status.category=%s", diagnostics.ModuleStatus_Naples.String())})
+				if err != nil {
+					return err
+				}
+				if len(modObjs) == 0 {
+					return errors.New("no module objects found for Naples")
+				}
+				return err
+			}, 60, 1).Should(BeNil())
+		})
+		It("check query", func() {
+			var err error
+			// query through Debug action
+			Eventually(func() error {
+				resp := make(map[string]interface{})
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObjs[0].Name},
+					Parameters: map[string]string{
+						"command": "ps",
+					},
+				}, &resp); err != nil {
+					return err
+				}
+				if !strings.Contains(respStr, "PID") {
+					return fmt.Errorf("no query response returned: {%v}", respStr)
 				}
 				return nil
 			}, 30, 1).Should(BeNil())

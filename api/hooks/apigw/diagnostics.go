@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pensando/sw/api/generated/audit"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -35,7 +36,7 @@ func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in interface{})
 	var err error
 	clGetter := d.clientGetter
 	if clGetter == nil { // will be not nil for unit testing. will set a mock
-		clGetter, err = diagnostics.NewClientGetter(globals.APIGw, obj, diagnostics.NewRouter(d.rslvr, d.moduleGetter), d.diagSvc)
+		clGetter, err = diagnostics.NewClientGetter(globals.APIGw, obj, diagnostics.NewRouter(d.rslvr, d.moduleGetter), d.diagSvc, d.rslvr)
 		if err != nil {
 			d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("unable to instantiate ClientGetter to process diagnostics request [%#v]", *obj), "error", err)
 			return ctx, nil, true, err
@@ -62,6 +63,7 @@ func (d *diagnosticsHooks) registerDebugPreCallHook(svc apigw.APIGatewayService)
 		return err
 	}
 	prof.AddPreCallHook(d.DebugPreCallHook)
+	prof.SetAuditLevel(audit.Level_Request.String())
 	return nil
 }
 

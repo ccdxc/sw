@@ -115,49 +115,17 @@ func (hc *HTTPClient) BasicAuthReq(method, url, user, pass string) (*http.Respon
 
 // Req executes an http request, unmarshals result
 func (hc *HTTPClient) Req(method, url string, body, resp interface{}) (int, error) {
-	var buf *bytes.Buffer
-	rc := http.StatusServiceUnavailable
-	content, err := json.Marshal(body)
+	b, code, err := hc.ReqRaw(method, url, body)
 	if err != nil {
-		return rc, err
+		return code, err
 	}
-
-	buf = bytes.NewBuffer(content)
-
-	req, err := http.NewRequest(method, url, buf)
-	if err != nil {
-		return rc, err
-	}
-	req = req.WithContext(hc.ctx)
-
-	for h, v := range hc.headers {
-		req.Header.Set(h, v)
-	}
-
-	r, err := hc.c.Do(req)
-	if err != nil {
-		return rc, err
-	}
-	defer r.Body.Close()
-
-	if r.StatusCode != http.StatusOK {
-		return r.StatusCode, fmt.Errorf("Server responded with %d", r.StatusCode)
-	}
-
 	if resp == nil {
-		return r.StatusCode, nil
+		return code, nil
 	}
-
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return r.StatusCode, err
+	if err := json.Unmarshal(b, resp); err != nil {
+		return code, err
 	}
-	err = json.Unmarshal(b, resp)
-	if err != nil {
-		return r.StatusCode, err
-	}
-
-	return r.StatusCode, nil
+	return code, nil
 }
 
 // ReadHTTPResp is a utility that unmarshals an http response
@@ -176,4 +144,42 @@ func ReadHTTPResp(r *http.Response, data interface{}) error {
 	}
 
 	return nil
+}
+
+// ReqRaw executes an http request
+func (hc *HTTPClient) ReqRaw(method, url string, body interface{}) ([]byte, int, error) {
+	var buf *bytes.Buffer
+	rc := http.StatusServiceUnavailable
+	content, err := json.Marshal(body)
+	if err != nil {
+		return nil, rc, err
+	}
+
+	buf = bytes.NewBuffer(content)
+
+	req, err := http.NewRequest(method, url, buf)
+	if err != nil {
+		return nil, rc, err
+	}
+	req = req.WithContext(hc.ctx)
+
+	for h, v := range hc.headers {
+		req.Header.Set(h, v)
+	}
+
+	r, err := hc.c.Do(req)
+	if err != nil {
+		return nil, rc, err
+	}
+	defer r.Body.Close()
+
+	if r.StatusCode != http.StatusOK {
+		return nil, r.StatusCode, fmt.Errorf("Server responded with %d", r.StatusCode)
+	}
+
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, r.StatusCode, err
+	}
+	return b, r.StatusCode, nil
 }

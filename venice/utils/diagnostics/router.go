@@ -2,8 +2,10 @@ package diagnostics
 
 import (
 	"fmt"
+	"net"
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -29,15 +31,29 @@ func (r *router) GetRoute(diagReq *diagapi.DiagnosticsRequest) (string, string, 
 	// find service instance URL to route for Venice grpc services
 	var svcURL string
 	if IsSupported(modObj) {
-		svcInstanceList := r.rslvr.Lookup(svcName)
-		if svcInstanceList != nil {
-			for _, svcInstance := range svcInstanceList.Items {
-				if svcInstance.Node == modObj.Status.Node && svcInstance.Service == svcName {
-					svcURL = svcInstance.URL
-					break
+		switch modObj.Status.Category {
+		case diagapi.ModuleStatus_Naples.String():
+			if modObj.Status.Node == "" {
+				break // IP address for Naples not available yet
+			}
+			ip, _, err := net.ParseCIDR(modObj.Status.Node)
+			if err != nil {
+				return "", "", err
+			}
+			svcURL = fmt.Sprintf("https://%s:%s/api/diagnostics/", ip.String(), globals.AgentProxyPort)
+			svcName = diagapi.ModuleStatus_Naples.String()
+		default: // venice modules
+			svcInstanceList := r.rslvr.Lookup(svcName)
+			if svcInstanceList != nil {
+				for _, svcInstance := range svcInstanceList.Items {
+					if svcInstance.Node == modObj.Status.Node && svcInstance.Service == svcName {
+						svcURL = svcInstance.URL
+						break
+					}
 				}
 			}
 		}
+
 	} else {
 		return "", "", fmt.Errorf("diagnostics not supported for module [%s]", modObj.Name)
 	}
@@ -56,6 +72,9 @@ func NewRouter(rslver resolver.Interface, moduleGetter module.Getter) Router {
 }
 
 func validateService(svcName string, modObj *diagapi.Module) bool {
+	if modObj.Status.Category == diagapi.ModuleStatus_Naples.String() {
+		return true // for naples modules, ServicePorts are not set
+	}
 	for _, port := range modObj.Status.ServicePorts {
 		if port.Name == svcName {
 			return true

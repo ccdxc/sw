@@ -68,7 +68,6 @@ func readDiagnosticsRequest(req *http.Request) (*diagnostics.DiagnosticsRequest,
 // HandleDiagnostics handles diagnostics request
 func (rs *RestServer) HandleDiagnostics(w http.ResponseWriter, r *http.Request) {
 	log.Infof("Handling diagnostics request")
-
 	diagnosticsReq, err := readDiagnosticsRequest(r)
 	if err != nil {
 		log.Errorf("Failed to read diagnostics request. Err : %v", err)
