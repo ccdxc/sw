@@ -73,7 +73,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->info(args); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -81,7 +80,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->debug(args); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 

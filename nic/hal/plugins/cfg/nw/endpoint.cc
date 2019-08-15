@@ -2258,8 +2258,6 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("EP del cb");
-
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_ep_delete_args_init(&pd_ep_args);
     pd_ep_args.ep = ep;

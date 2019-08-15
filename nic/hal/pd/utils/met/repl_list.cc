@@ -65,20 +65,18 @@ ReplList::attach_to_repl_list(ReplList *list)
     hal_ret_t rs = HAL_RET_OK;
 
     if (!list) {
-        HAL_TRACE_ERR("{}: from list null!", __FUNCTION__);
+        HAL_TRACE_ERR("from list null!");
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
     if (get_attached_list_index()) {
-        HAL_TRACE_ERR("{}: List is already attached to {}!", __FUNCTION__,
-                      get_attached_list_index());
+        HAL_TRACE_ERR("List is already attached to {}!", get_attached_list_index());
         rs = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: attaching repl_list: {} -> {}", \
-                    __FUNCTION__, get_repl_tbl_index(),
+    HAL_TRACE_DEBUG("attaching repl_list: {} -> {}", get_repl_tbl_index(),
                     list->get_repl_tbl_index());
 
     set_attached_list_index(list->get_repl_tbl_index());
@@ -97,13 +95,13 @@ ReplList::detach_frm_repl_list()
     hal_ret_t rs = HAL_RET_OK;
 
     if (get_attached_list_index() == 0) {
-        HAL_TRACE_ERR("{}: List is not attached!", __FUNCTION__);
+        HAL_TRACE_ERR("List is not attached!");
         rs = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: Detaching repl_list: {} ->x {}", \
-                    __FUNCTION__, get_repl_tbl_index(),
+    HAL_TRACE_DEBUG(" Detaching repl_list: {} ->x {}", \
+                    get_repl_tbl_index(),
                     get_attached_list_index());
 
     set_attached_list_index(0);
@@ -127,8 +125,8 @@ ReplList::add_replication(void *data)
     ReplTableEntry *repl_te = NULL;
     ReplTableEntry  *last_entry = last_repl_tbl_entry_;
 
-    HAL_TRACE_DEBUG("{}: Adding replication entry to repl_list: {}",
-            __FUNCTION__, repl_tbl_index_);
+    HAL_TRACE_DEBUG("Adding replication entry to repl_list: {}",
+            repl_tbl_index_);
 
     // repl_entry = new ReplEntry(data, met_->get_repl_entry_data_len());
     repl_entry = ReplEntry::factory(data,
@@ -164,8 +162,7 @@ ReplList::del_replication(void *data)
     hal_ret_t rs = HAL_RET_ENTRY_NOT_FOUND;
     ReplTableEntry *repl_te = NULL;
 
-    HAL_TRACE_DEBUG("{}: Deleting replication entry from repl_list: {}",
-            __FUNCTION__, repl_tbl_index_);
+    HAL_TRACE_DEBUG("Del. repl. entry from repl_list: {}", repl_tbl_index_);
 
     repl_te = first_repl_tbl_entry_;
     while (repl_te) {
@@ -312,8 +309,7 @@ ReplList::get_repl_table_entry(ReplTableEntry **rte)
         repl_tbl_idx = repl_tbl_index_;
     }
 
-    HAL_TRACE_DEBUG("ReplList::{}: Create RTE: {}", __FUNCTION__,
-                    repl_tbl_idx);
+    HAL_TRACE_DEBUG("ReplList:: Create RTE: {}", repl_tbl_idx);
     // Create a new replication table entry
     // tmp_rte = new ReplTableEntry(repl_tbl_idx, this);
     tmp_rte = ReplTableEntry::factory(repl_tbl_idx, this);
@@ -366,7 +362,7 @@ ReplList::cleanup_last_repl_table_entry()
     }
 
     if (rs != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Failed to detach list!", __FUNCTION__);
+        HAL_TRACE_ERR("Failed to detach list!");
         goto end;
     }
 

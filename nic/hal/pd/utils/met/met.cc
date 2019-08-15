@@ -162,7 +162,7 @@ Met::create_repl_list_with_id(uint32_t repl_list_idx)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Met:{}: Alloc repl table id: {}", __FUNCTION__, repl_list_idx);
+    HAL_TRACE_DEBUG("Met: Alloc repl table id: {}", repl_list_idx);
 
     // repl_list = new ReplList(repl_list_idx, this);
     repl_list = ReplList::factory(repl_list_idx, this);
@@ -194,7 +194,7 @@ Met::create_repl_list_block(uint32_t *repl_list_idx, uint32_t size)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Met:{}: Alloc repl table id: {}[+{}]", __FUNCTION__,
+    HAL_TRACE_DEBUG("Met: Alloc repl table id: {}[+{}]", 
                     *repl_list_idx, size);
 
     for (uint32_t i = 0; i < size; i++) {
@@ -280,20 +280,19 @@ Met::attach_repl_lists(uint32_t frm_list_idx, uint32_t to_list_idx)
     hal_ret_t               rs = HAL_RET_OK;
     ReplList                *frm_list = NULL, *temp_list = NULL;
 
-    HAL_TRACE_DEBUG("Met:{}: from {} to {}", __FUNCTION__,
-                    frm_list_idx, to_list_idx);
+    HAL_TRACE_DEBUG("Met: from {} to {}", frm_list_idx, to_list_idx);
 
     // Get Repl. List
     itr = repl_list_map_.find(frm_list_idx);
     if (itr == repl_list_map_.end()) {
-        HAL_TRACE_ERR("Met: {}: from list not found!", __FUNCTION__);
+        HAL_TRACE_ERR("Met: from list not found!");
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
     frm_list = itr->second;
     if (!frm_list) {
-        HAL_TRACE_ERR("Met: {}: from list null!", __FUNCTION__);
+        HAL_TRACE_ERR("Met: from list null!" );
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -301,7 +300,7 @@ Met::attach_repl_lists(uint32_t frm_list_idx, uint32_t to_list_idx)
     // Get Repl. List
     itr = repl_list_map_.find(to_list_idx);
     if (itr == repl_list_map_.end()) {
-        HAL_TRACE_ERR("Met: {}: to list not found!", __FUNCTION__);
+        HAL_TRACE_ERR("Met: to list not found!");
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -310,16 +309,14 @@ Met::attach_repl_lists(uint32_t frm_list_idx, uint32_t to_list_idx)
     while (temp_list->get_attached_list_index()) {
         // The next list is attached to another list
         if (temp_list->get_attached_list_index() == frm_list->get_repl_tbl_index()) {
-            HAL_TRACE_ERR("{}: circular attachment not allowed!",
-                          __FUNCTION__);
+            HAL_TRACE_ERR("circular attachment not allowed!");
             rs = HAL_RET_INVALID_ARG;
             goto end;
         }
 
         temp_itr = repl_list_map_.find(temp_list->get_attached_list_index());
         if (temp_itr == repl_list_map_.end()) {
-            HAL_TRACE_ERR("Met: {}: list not found in attached chain!",
-                          __FUNCTION__);
+            HAL_TRACE_ERR("Met: list not found in attached chain!");
             rs = HAL_RET_ENTRY_NOT_FOUND;
             goto end;
         }
@@ -330,7 +327,7 @@ Met::attach_repl_lists(uint32_t frm_list_idx, uint32_t to_list_idx)
     rs = frm_list->attach_to_repl_list(itr->second);
 
     if (rs != HAL_RET_OK){
-        HAL_TRACE_ERR("Met: {}: Failed with ret {}", __FUNCTION__, rs);
+        HAL_TRACE_ERR("Met: Failed with ret {}",rs);
         goto end;
     }
 
@@ -348,19 +345,19 @@ Met::detach_repl_lists(uint32_t frm_list_idx)
     ReplList                *frm_list = NULL;
     ReplListMap::iterator   itr;
 
-    HAL_TRACE_DEBUG("Met:{}: from {}", __FUNCTION__, frm_list_idx);
+    HAL_TRACE_DEBUG("Met: from {}", frm_list_idx);
 
     // Get Repl. List
     itr = repl_list_map_.find(frm_list_idx);
     if (itr == repl_list_map_.end()) {
-        HAL_TRACE_ERR("Met: {}: from list not found!", __FUNCTION__);
+        HAL_TRACE_ERR("Met: from list not found!");
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
     frm_list = itr->second;
     if (!frm_list) {
-        HAL_TRACE_ERR("Met: {}: from list null!", __FUNCTION__);
+        HAL_TRACE_ERR("Met: from list null!");
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -368,7 +365,7 @@ Met::detach_repl_lists(uint32_t frm_list_idx)
     rs = frm_list->detach_frm_repl_list();
 
     if (rs != HAL_RET_OK){
-        HAL_TRACE_ERR("Met: {}: Failed with ret {}", __FUNCTION__, rs);
+        HAL_TRACE_ERR("Met: Failed with ret {}", rs);
         goto end;
     }
 
@@ -386,8 +383,7 @@ Met::add_replication(uint32_t repl_list_idx, void *data)
     ReplListMap::iterator   itr;
     ReplList                *repl_list;
 
-    HAL_TRACE_DEBUG("{}: Adding replication entry to : {}",
-                    __FUNCTION__, repl_list_idx);
+    HAL_TRACE_DEBUG("Adding repl. entry to : {}", repl_list_idx);
 
     // Get Repl. List
     itr = repl_list_map_.find(repl_list_idx);
@@ -448,7 +444,7 @@ Met::alloc_repl_table_index(uint32_t *idx)
         return HAL_RET_NO_RESOURCE;
     }
 
-    HAL_TRACE_DEBUG("Met:{}: Alloc repl table id: {}", __FUNCTION__, *idx);
+    HAL_TRACE_DEBUG("Met: Alloc repl table id: {}",*idx);
     return rs;
 }
 
@@ -460,7 +456,7 @@ Met::free_repl_table_index(uint32_t idx)
 {
     hal_ret_t   rs = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("Met:{}: Freeing repl table id: {}", __FUNCTION__, idx);
+    HAL_TRACE_DEBUG("Met: Freeing repl table id: {}", idx);
     indexer::status irs = repl_table_indexer_->free(idx);
     if (irs == indexer::DUPLICATE_FREE) {
         return HAL_RET_DUP_FREE;
@@ -639,12 +635,12 @@ Met::trace_met()
 {
     hal_ret_t       ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("------------------------------------------------------");
-    HAL_TRACE_DEBUG("Num. of Repl_lists: {}", repl_list_map_.size());
-
     // Commenting out as this is filling up the logs. Make it INFO once
     // we have the proper level set in HAL.
 #if 0
+    HAL_TRACE_DEBUG("------------------------------------------------------");
+    HAL_TRACE_DEBUG("Num. of Repl_lists: {}", repl_list_map_.size());
+
     ReplList        *tmp_repl_list = NULL;
     for (std::map<uint32_t, ReplList*>::iterator it = repl_list_map_.begin();
             it != repl_list_map_.end(); ++it) {
@@ -653,8 +649,8 @@ Met::trace_met()
 
         tmp_repl_list->trace_repl_list();
     }
-#endif
     HAL_TRACE_DEBUG("------------------------------------------------------");
+#endif
 
     return ret;
 }

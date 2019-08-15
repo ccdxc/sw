@@ -5100,7 +5100,8 @@ end:
     // Release write lock
     g_hal_state->cfg_db()->wunlock();
     
-    if (ctxt.hal_if) {
+    // Repin ipfix flows only if you are in host pin mode
+    if (ctxt.hal_if && is_forwarding_mode_host_pinned()) {
         // Repin ipfix flows
         ret = hal_if_repin_ipfix_flows(ctxt.hal_if);
         if (ret != HAL_RET_OK) {

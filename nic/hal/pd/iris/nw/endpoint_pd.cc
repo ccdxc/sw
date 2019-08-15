@@ -136,7 +136,7 @@ pd_ep_delete (pd_func_args_t *pd_func_args)
     SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("deleting pd state for ep {}",
+    HAL_TRACE_VERBOSE("deleting pd state for ep {}",
                     ep_l2_key_to_str(args->ep));
 
     ep_pd = (pd_ep_t *)args->ep->pd;
@@ -979,8 +979,9 @@ ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
                       pd_ep->reg_mac_tbl_idx, ret);
         goto end;
     } else {
-        HAL_TRACE_DEBUG("classic: DeProgrammed at: {} ",
-                        pd_ep->reg_mac_tbl_idx);
+        // Getting trace from hash lib. This is redundant.
+        HAL_TRACE_VERBOSE("classic: DeProgrammed at: {} ",
+                          pd_ep->reg_mac_tbl_idx);
     }
 
 end:

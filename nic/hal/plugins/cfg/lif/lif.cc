@@ -1066,9 +1066,6 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif_make_clone(lif, (lif_t **)&dhl_entry->cloned_obj, *spec);
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update upd cb {}",
-                    __FUNCTION__, lif->lif_id);
-
     // Rule of thumb is if anything which clone has to be updated doesnt result
     // in change of original, it can be done here.
 
@@ -1221,7 +1218,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     lif_update_app_ctxt_t *app_ctxt   = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1232,9 +1229,6 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     lif       = (lif_t *)dhl_entry->obj;
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
-
-    HAL_TRACE_DEBUG("{}:update commit cb {}",
-                    __FUNCTION__, lif->lif_id);
 
 #if 0
     // Update PI clone
@@ -1265,8 +1259,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     pd_func_args.pd_lif_mem_free = &pd_lif_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_MEM_FREE, &pd_func_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to delete lif pd, err : {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("failed to delete lif pd, err : {}", ret);
     }
 
     // Free PI
@@ -1528,7 +1521,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.pkt_filter_allmc_changed ||
           app_ctxt.pinned_uplink_changed ||
           app_ctxt.name_changed)) {
-        HAL_TRACE_ERR("{}:no change in lif update: noop", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
 
@@ -2292,8 +2285,7 @@ lif_print_ifs(lif_t *lif)
     dllist_for_each(lnode, &(lif->if_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         hal_if = find_if_by_handle(entry->handle_id);
-        HAL_TRACE_DEBUG("{}: if: {}",
-                __FUNCTION__, hal_if->if_id);
+        HAL_TRACE_DEBUG("if: {}", hal_if->if_id);
     }
 }
 

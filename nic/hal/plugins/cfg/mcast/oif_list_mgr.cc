@@ -293,7 +293,7 @@ hal_ret_t oif_list_delete(oif_list_id_t list_id)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("Deleted list {}", list_id);
+    HAL_TRACE_VERBOSE("Deleted list {}", list_id);
     return HAL_RET_OK;
 }
 
