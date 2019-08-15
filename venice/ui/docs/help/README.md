@@ -19,8 +19,8 @@ Images must live under `ui/docs/help/images/`. Other markdown files can then by 
 Ex. `![LDAP image](/images/ldap.png)`
 
 ## Adding in generated tables
-The markdown file is be rendered as is except for <load-table>.
-<load-table> allows you to add in tables of api fields/descriptions that are generated from the swagger files.
+The markdown file is be rendered as is except for `<load-table>`.
+`<load-table>` allows you to add in tables of api fields/descriptions that are generated from the swagger files.
 
 load-table options can be specified with key:value notation placed inside the tag.
 

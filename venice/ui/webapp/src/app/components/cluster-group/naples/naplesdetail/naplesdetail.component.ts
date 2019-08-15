@@ -147,7 +147,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       card.firstStat.value = null;
       card.secondStat.value = null;
       card.thirdStat.value = null;
-      card.data = { x: [], y: [] };
+      card.lineData.data = [];
       card.cardState = CardStates.LOADING;
     });
   }
@@ -327,9 +327,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     if (MetricsUtility.resultHasData(this.timeSeriesData)) {
       const timeSeriesData = this.timeSeriesData;
 
-      const index = timeSeriesData.series[0].columns.indexOf(fieldName);
-      const data = Utility.transformToPlotly(timeSeriesData.series[0].values, 0, index);
-      heroCard.data = data;
+      const data = MetricsUtility.transformToChartjsTimeSeries(timeSeriesData.series[0], fieldName);
+      heroCard.lineData.data = data;
     }
 
     // Current stat calculation - we take the last point

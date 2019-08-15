@@ -1693,6 +1693,24 @@ export class Utility {
     return reason;
   }
 
+  public static hexToRgb(hex: string) {
+    if (hex.startsWith('#')) {
+      hex = hex.slice(1);
+    }
+    const bigint = parseInt(hex, 16);
+    /* tslint:disable:no-bitwise */
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+     /* tslint:enable:no-bitwise */
+    return {r: r, g: g, b: b};
+  }
+
+  public static getRgbaFromHex(color: string, opacity) {
+    const ret = Utility.hexToRgb(color);
+    return `rgba(${ret.r}, ${ret.g}, ${ret.b}, ${opacity})`;
+  }
+
   setControllerService(controllerService: ControllerService) {
     this.myControllerService = controllerService;
   }

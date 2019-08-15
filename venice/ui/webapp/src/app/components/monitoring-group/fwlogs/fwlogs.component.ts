@@ -318,7 +318,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   fwlogQueryListener() {
     // In case multiple components invoke a request for logs
     // We buffer them and take the last request in a 500ms window
-    this.fwlogsQueryObserver.pipe(debounceTime(500)).subscribe(
+    const sub = this.fwlogsQueryObserver.pipe(debounceTime(500)).subscribe(
       (queryList) => {
         this.searchSubscription = this.telemetryService.PostFwlogs(queryList).subscribe(
           (resp) => {
@@ -347,6 +347,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
         this.subscriptions.push(this.searchSubscription);
       }
     );
+    this.subscriptions.push(sub);
   }
 
   getFwlogs(order = this.tableWrapper.table.sortOrder) {

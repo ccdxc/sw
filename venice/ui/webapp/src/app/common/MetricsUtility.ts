@@ -6,6 +6,8 @@ import { HeroCardOptions } from '@app/components/shared/herocard/herocard.compon
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { MetricsPollingOptions, MetricsPollingQuery } from '@app/services/metricsquery.service';
+import { Chart } from 'chart.js';
+import { LinegraphComponent } from '@app/components/shared/linegraph/linegraph.component';
 
 /**
  * serverData is in the following form:
@@ -415,9 +417,19 @@ export class MetricsUtility {
         description: 'Highest CPU Usage',
         tooltip: 'Averaged over past 5m'
       },
-      data: {
-        x: [],
-        y: []
+      lineData: {
+        title: '',
+        hideTitle: true,
+        data: [],
+        statColor: themeColor,
+        gradientStart: Utility.getRgbaFromHex(themeColor, 1),
+        gradientStop: Utility.getRgbaFromHex(themeColor, 0),
+        graphId: 'cluster-cpu' + Utility.s4(),
+        defaultValue: 0,
+        defaultDescription: '',
+        hoverDescription: '',
+        isPercentage: true,
+        scaleMin: 0,
       },
       backgroundIcon: {
         svgIcon: 'cpu',
@@ -450,9 +462,20 @@ export class MetricsUtility {
         description: 'Highest Memory Usage',
         tooltip: 'Averaged over past 5m'
       },
-      data: {
-        x: [],
-        y: []
+      lineData: {
+        title: '',
+        hideTitle: true,
+        data: [],
+        statColor: themeColor,
+        gradientStart: Utility.getRgbaFromHex(themeColor, 1),
+        gradientStop: Utility.getRgbaFromHex(themeColor, 0),
+        graphId: 'cluster-mem' + Utility.s4(),
+        defaultValue: 0,
+        defaultDescription: '',
+        hoverDescription: '',
+        isPercentage: true,
+        scaleMin: 0,
+        valueFormatter: LinegraphComponent.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'memory',
@@ -485,9 +508,20 @@ export class MetricsUtility {
         description: 'Highest Disk Usage',
         tooltip: 'Averaged over past 5m'
       },
-      data: {
-        x: [],
-        y: []
+      lineData: {
+        title: '',
+        hideTitle: true,
+        data: [],
+        statColor: themeColor,
+        gradientStart: Utility.getRgbaFromHex(themeColor, 1),
+        gradientStop: Utility.getRgbaFromHex(themeColor, 0),
+        graphId: 'cluster-disk' + Utility.s4(),
+        defaultValue: 0,
+        defaultDescription: '',
+        hoverDescription: '',
+        isPercentage: true,
+        scaleMin: 0,
+        valueFormatter: LinegraphComponent.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'storage',
@@ -520,9 +554,20 @@ export class MetricsUtility {
         description: 'Cluster Usage',
         tooltip: 'Averaged over past 5m'
       },
-      data: {
-        x: [],
-        y: []
+      lineData: {
+        title: '',
+        hideTitle: true,
+        data: [],
+        statColor: themeColor,
+        gradientStart: Utility.getRgbaFromHex(themeColor, 1),
+        gradientStop: Utility.getRgbaFromHex(themeColor, 0),
+        graphId: 'detail-cpu' + Utility.s4(),
+        defaultValue: 0,
+        defaultDescription: '',
+        hoverDescription: '',
+        isPercentage: true,
+        scaleMin: 0,
+        valueFormatter: LinegraphComponent.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'cpu',
@@ -554,9 +599,20 @@ export class MetricsUtility {
         description: 'Cluster Usage',
         tooltip: 'Averaged over past 5m'
       },
-      data: {
-        x: [],
-        y: []
+      lineData: {
+        title: '',
+        hideTitle: true,
+        data: [],
+        statColor: themeColor,
+        gradientStart: Utility.getRgbaFromHex(themeColor, 1),
+        gradientStop: Utility.getRgbaFromHex(themeColor, 0),
+        graphId: 'detail-mem' + Utility.s4(),
+        defaultValue: 0,
+        defaultDescription: '',
+        hoverDescription: '',
+        isPercentage: true,
+        scaleMin: 0,
+        valueFormatter: LinegraphComponent.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'memory',
@@ -588,9 +644,20 @@ export class MetricsUtility {
         description: 'Cluster Usage',
         tooltip: 'Averaged over past 5m'
       },
-      data: {
-        x: [],
-        y: []
+      lineData: {
+        title: '',
+        hideTitle: true,
+        data: [],
+        statColor: themeColor,
+        gradientStart: Utility.getRgbaFromHex(themeColor, 1),
+        gradientStop: Utility.getRgbaFromHex(themeColor, 0),
+        graphId: 'detail-storage' + Utility.s4(),
+        defaultValue: 0,
+        defaultDescription: '',
+        hoverDescription: '',
+        isPercentage: true,
+        scaleMin: 0,
+        valueFormatter: LinegraphComponent.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'storage',
@@ -638,5 +705,47 @@ export class MetricsUtility {
       return f.toLowerCase().includes(field.toLowerCase());
     });
   }
+
+  public static addMultiColorLineGraph() {
+    Chart.defaults.multicolorLine = Chart.defaults.line;
+    Chart.controllers.multicolorLine = Chart.controllers.line.extend({
+      draw: function(ease) {
+        let startIndex = 0;
+        const
+          meta = this.getMeta(),
+          points = meta.data || [],
+          colors = this.getDataset().colors,
+          area = this.chart.chartArea,
+          originalDatasets = meta.dataset._children;
+
+        function _setColor(newColor, data) {
+          data.dataset._view.borderColor = newColor;
+        }
+
+        if (!colors) {
+          Chart.controllers.line.prototype.draw.call(this, ease);
+          return;
+        }
+
+        for (let i = 2; i <= colors.length; i++) {
+          if (colors[i - 1] !== colors[i]) {
+            _setColor(colors[i - 1], meta);
+            meta.dataset._children = originalDatasets.slice(startIndex, i);
+            meta.dataset.draw();
+            startIndex = i - 1;
+          }
+        }
+
+        meta.dataset._children = originalDatasets.slice(startIndex);
+        meta.dataset.draw();
+        meta.dataset._children = originalDatasets;
+
+        points.forEach(function(point) {
+          point.draw(area);
+        });
+      }
+    });
+  }
+
 
 }

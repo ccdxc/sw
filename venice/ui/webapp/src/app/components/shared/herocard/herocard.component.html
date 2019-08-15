@@ -68,13 +68,13 @@
         </div>
       </div>
       <div fxFlex="56px" fxLayout="row" class="herocard-south">
-        <div [@fade] fxFlex="auto" fxLayout="row" fxLayoutAlign="center center"
+        <div [@fade] fxFlex="auto" fxLayout="row" fxLayoutAlign="center stretch"
              *ngIf="cardState === cardStates.READY && showGraph" class="herocard-chart">
-          <pw-plotly-chart fxFlex="none"
-                           [data]="dataset"
-                           [options]="options"
-                           [layout]="layout">
-          </pw-plotly-chart>
+          <app-linegraph fxFlex="100%" [hideStats]="true"
+                         fxLayout="row" [graphPadding]="graphPadding"
+                         [highlightLastPointColor]="themeColor"
+                         [showValueInTooltip]="true"
+                         class="" [stats]="linegraphStats"></app-linegraph>
         </div>
       </div>
     </div>

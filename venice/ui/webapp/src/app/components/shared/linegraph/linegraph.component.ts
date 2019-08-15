@@ -1,9 +1,12 @@
 import { Component, OnInit, ViewEncapsulation, Input, SimpleChanges, AfterViewInit } from '@angular/core';
-import { Chart, ChartOptions, ChartPoint, ChartData } from 'chart.js';
+import { Chart, ChartOptions, ChartPoint, ChartData, ChartDataSets } from 'chart.js';
 import { PrettyDatePipe } from '../Pipes/PrettyDate.pipe';
+import { MetricsUtility } from '@app/common/MetricsUtility';
+import { Utility } from '@app/common/Utility';
 
 export interface LineGraphStat {
   title: string;
+  hideTitle?: boolean;
   data: Array<number | null | undefined> | ChartPoint[];
   statColor: string;
   gradientStart: string;
@@ -19,6 +22,17 @@ export interface LineGraphStat {
   scaleMax?: number;
 }
 
+export interface GraphPadding {
+  top: number;
+  right: number;
+  left: number;
+  bottom: number;
+}
+
+interface LinegraphPoint extends ChartPoint {
+  isNull?: boolean;
+}
+
 @Component({
   selector: 'app-linegraph',
   templateUrl: './linegraph.component.html',
@@ -28,15 +42,21 @@ export interface LineGraphStat {
 export class LinegraphComponent implements OnInit, AfterViewInit {
   @Input() stats: LineGraphStat[] = [];
   @Input() statSpace: string = '100px';
-
-  charts: Chart[] = [];
-  statValues = {};
-  canvasPadding = {
+  @Input() hideStats: boolean = false;
+  // Setting to null or empty string will disable it from highlighting the last point
+  @Input() highlightLastPointColor: string;
+  @Input() highlightOnHover: boolean = true;
+  @Input() showValueInTooltip: boolean = false;
+  @Input() customizeGraphOptions: (ChartOptions: ChartOptions) => ChartOptions;
+  @Input() graphPadding: GraphPadding = {
     right: 4,
     top: 10,
     bottom: 20, // height of the title label + 1 for spacing between line and graph
     left: 10
   };
+
+  charts: Chart[] = [];
+  statValues = {};
 
   // Holds what data point is selected
   selectedIndex;
@@ -54,6 +74,7 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
   constructor() { }
 
   ngOnInit() {
+    MetricsUtility.addMultiColorLineGraph();
     // This component currently doesn't support stats having different number of entries
     // This is because on hover we use selected index for highlighting.
     // TODO: Move selectedIndex to selected time
@@ -93,20 +114,26 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
       if (stat.valueFormatter) {
         valueString = stat.valueFormatter(value);
       } else {
-        // By default we round to one decimal
-        if (value != null) {
-          valueString = value.toFixed(1);
-          if (valueString.endsWith('.0')) {
-            // Remove ending .0
-            valueString = valueString.slice(0, valueString.length - 2);
-          }
-        }
+        valueString = this.defaultFormatValue(value);
       }
       this.statValues[stat.graphId] = {
         value: valueString,
         description: desc
       };
     });
+  }
+
+  defaultFormatValue(value) {
+    // By default we round to one decimal
+    let valueString;
+    if (value != null) {
+      valueString = value.toFixed(1);
+      if (valueString.endsWith('.0')) {
+        // Remove ending .0
+        valueString = valueString.slice(0, valueString.length - 2);
+      }
+    }
+    return valueString;
   }
 
   resetSelectedPoint() {
@@ -119,12 +146,30 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
    * Draws the highlighting of the selected points
    */
   updatePointStyle() {
-    const helper = (dataset) => {
+    const helper = (dataset: ChartDataSets, stat: LineGraphStat) => {
       const pointBackgroundColor = [];
 
+      // Setting color for the part of the line where values are null
+      const colors = [];
+      (dataset.data as ChartPoint[]).forEach((p) => {
+        if ((p as LinegraphPoint).isNull) {
+          colors.push('#dddddd');
+        } else {
+          colors.push(stat.statColor);
+        }
+      });
+      // Using multicolor line chart type (see metricsutility.ts)
+      (dataset as any).colors = colors;
+
       for (let index = 0; index < dataset.data.length; index++) {
-        if (index === this.selectedIndex) {
+        // point color
+        if (index === this.selectedIndex && this.highlightOnHover && !(dataset.data[index] as LinegraphPoint).isNull) {
           pointBackgroundColor.push('#676763');
+        } else if (this.highlightLastPointColor != null && this.highlightLastPointColor.length !== 0 && index === dataset.data.length - 1) {
+          // Don't want to highlight last point if it's a null value
+          if (!(dataset.data[index] as LinegraphPoint).isNull) {
+            pointBackgroundColor.push(this.highlightLastPointColor);
+          }
         } else {
           pointBackgroundColor.push('rgba(0, 0, 0, 0)');
         }
@@ -132,8 +177,8 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
       dataset.pointBackgroundColor = pointBackgroundColor;
     };
 
-    this.charts.forEach((chart) => {
-      helper(chart.data.datasets[0]);
+    this.charts.forEach((chart, index) => {
+      helper(chart.data.datasets[0], this.stats[index]);
       chart.update();
     });
   }
@@ -154,20 +199,35 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
     if (this.chartsInitialized) {
       this.stats.forEach((stat, index) => {
         const chart = this.charts[index];
-        chart.data.datasets[0].data = stat.data;
+        chart.data.datasets[0].data = this.formatData(stat.data as ChartPoint[]);
         chart.update();
-        // We reset the selected index in case it is now out of bounds
-        this.selectedIndex = null;
-        this.updatePointStyle();
-        this.updateStatValues();
       });
+      // We reset the selected index in case it is now out of bounds
+      this.selectedIndex = null;
+      this.updatePointStyle();
+      this.updateStatValues();
     } else {
       this.chartsInitialized = true;
       this.stats.forEach((stat) => {
         const chart = this.genChart(stat);
         this.charts.push(chart);
       });
+      this.updatePointStyle();
     }
+  }
+
+  formatData(data: ChartPoint[]) {
+    if (data == null) {
+      return [];
+    }
+    const ret = Utility.getLodash().cloneDeep(data);
+    ret.forEach((point: LinegraphPoint) => {
+      if (point.y == null) {
+        point.isNull = true;
+        point.y = 0;
+      }
+    });
+    return ret;
   }
 
   /**
@@ -180,13 +240,13 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
     const color = stat.statColor;
     const gradientStart = stat.gradientStart;
     const gradientStop = stat.gradientStop;
-    const data = stat.data;
+    const data = this.formatData(stat.data as ChartPoint[]);
 
     const canvas: any = document.getElementById(id);
     const canvasContainer: any = document.getElementById(id + '-container');
     const canvasHeight = canvasContainer.clientHeight;
     const ctx = canvas.getContext('2d');
-    const gradientFill = ctx.createLinearGradient(0, 0, 0, canvasHeight - this.canvasPadding.bottom - 1);
+    const gradientFill = ctx.createLinearGradient(0, 0, 0, canvasHeight - this.graphPadding.bottom - 1);
     gradientFill.addColorStop(0, gradientStart);
     gradientFill.addColorStop(1, gradientStop);
 
@@ -205,7 +265,7 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
     };
 
     return new Chart(canvas, {
-      type: 'line',
+      type: 'multicolorLine', // graph type defined in metricsutility.ts
       data: dataLinegraph,
       options: this.generateOptions(id + 'Tooltip', stat),
     });
@@ -220,10 +280,10 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
    *                     or to use 0-100 scale.
    */
   generateOptions(chartTooltipId, stat: LineGraphStat): ChartOptions {
-    const ret: ChartOptions = {
+    let ret: ChartOptions = {
       maintainAspectRatio: false,
       layout: {
-        padding: this.canvasPadding
+        padding: this.graphPadding
       },
       legend: {
         display: false,
@@ -234,7 +294,6 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
         enabled: false,
         mode: 'index',
         intersect: false,
-        position: 'nearest',
         custom: this.createCustomTooltip(chartTooltipId)
       },
       animation: {
@@ -298,6 +357,9 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
     if (stat.scaleMin != null) {
       ret.scales.yAxes[0].ticks.min = stat.scaleMin;
     }
+    if (this.customizeGraphOptions) {
+      ret = this.customizeGraphOptions(ret);
+    }
     return ret;
   }
 
@@ -307,6 +369,7 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
    * it won't be clipped by the size of the canvas.
    */
   createCustomTooltip(chartTooltipId) {
+    const componentThis = this;
     return function(tooltip) {
       // This function will be called in the context of the chart
       const chartThis: any = this;
@@ -335,9 +398,31 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
         const titleLines = tooltip.title || [];
         const prettyDate = new PrettyDatePipe('en-US');
 
-        titleLines.forEach(function(title) {
-          tooltipEl.innerHTML = prettyDate.transform(title);
-        });
+        tooltipEl.innerHTML = '';
+        const stat = componentThis.stats[tooltip.dataPoints[0].datasetIndex];
+        let isNull = false;
+        if (stat.data[tooltip.dataPoints[0].index] != null) {
+          isNull = (stat.data[tooltip.dataPoints[0].index] as ChartPoint).y == null;
+        }
+        if (isNull) {
+          tooltipEl.innerHTML += 'No data available';
+        } else {
+          if (componentThis.showValueInTooltip) {
+
+            let valueString;
+
+            const value = parseFloat(tooltip.dataPoints[0].value);
+            if (stat.valueFormatter) {
+              valueString = stat.valueFormatter(value);
+            } else {
+              valueString = componentThis.defaultFormatValue(value);
+            }
+            tooltipEl.innerHTML += valueString + '<br>';
+          }
+          titleLines.forEach(function(title) {
+            tooltipEl.innerHTML += prettyDate.transform(title);
+          });
+        }
       }
       const positionY = chartThis._chart.canvas.offsetTop;
       const positionX = chartThis._chart.canvas.offsetLeft;

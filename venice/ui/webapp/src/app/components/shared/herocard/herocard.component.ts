@@ -5,6 +5,7 @@ import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Router } from '@angular/router';
 import { StatArrowDirection, CardStates } from '../basecard/basecard.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LineGraphStat, GraphPadding } from '../linegraph/linegraph.component';
 
 export interface Stat {
   value: any;
@@ -13,13 +14,6 @@ export interface Stat {
   tooltip?: string;
   url?: string;
 }
-
-interface Data {
-  x: Array<any>;
-  y: Array<any>;
-}
-
-
 
 export interface HeroCardOptions {
   title: string;
@@ -30,7 +24,7 @@ export interface HeroCardOptions {
   themeColor?: string;
   icon: Icon;
   lastUpdateTime?: string;
-  data?: Data;
+  lineData?: LineGraphStat;
   arrowDirection?: StatArrowDirection;
   timeRange?: string;
   cardState?: CardStates;
@@ -55,54 +49,25 @@ export class HerocardComponent implements OnInit, OnChanges {
   @Input() statColor: string = '';
   @Input() backgroundIcon: Icon;
   @Input() icon: Icon;
-  @Input() lastUpdateTime;
-  @Input() data: Data;
+  @Input() lastUpdateTime: string;
+  @Input() lineData: LineGraphStat;
   @Input() arrowDirection: StatArrowDirection = StatArrowDirection.HIDDEN;
   @Input() timeRange: string;
   // When set to true, card contents will fade into view
   @Input() cardState: CardStates = CardStates.LOADING;
 
   showGraph: boolean = false;
-  layout = {
-    showlegend: false,
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    autosize: true,
-    margin: {
-      t: 0,
-      l: 0,
-      r: 0,
-      b: 0
-    },
-    width: 365,
-    height: 40,
-    yaxis: {
-      autorange: false,
-      range: [0, 100],
-      showgrid: false,
-      zeroline: false,
-      showline: false,
-      autotick: true,
-      ticks: '',
-      showticklabels: false
-    },
-    xaxis: {
-      autorange: true,
-      showgrid: false,
-      zeroline: false,
-      showline: false,
-      autotick: true,
-      ticks: '',
-      showticklabels: false
-    }
-  };
-
-  options = { displayModeBar: false, staticPlot: true };
-
-  dataset = [];
-
   thresholds: any = {};
   conditionColors: any = {};
+
+  linegraphStats: LineGraphStat[] = [];
+
+  graphPadding: GraphPadding = {
+    top: 5,
+    right: 15,
+    bottom: 10,
+    left: 15,
+  };
 
   constructor(private router: Router, protected uiconfigsService: UIConfigsService) { }
 
@@ -113,6 +78,7 @@ export class HerocardComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    this.linegraphStats = [this.lineData];
     if (this.cardState === CardStates.READY) {
       this.setupDataset();
     }
@@ -182,37 +148,16 @@ export class HerocardComponent implements OnInit, OnChanges {
 
   private setupDataset() {
     // If we only have one data point, we don't show the graph
-    if (this.data.x.length <= 1) {
+    if (this.lineData == null) {
       this.showGraph = false;
       return;
     }
-    this.dataset = [
-      // passed in graph data
-      {
-        x: this.data.x,
-        y: this.data.y,
-        type: 'scatter',
-        mode: 'lines',
-        line: {
-          shape: 'linear',
-          color: this.themeColor,
-          width: 1
-        }
-      },
-      // second trace to add marker on last point
-      {
-        x: [this.data.x[this.data.x.length - 1]],
-        y: [this.data.y[this.data.y.length - 1]],
-        type: 'scatter',
-        mode: 'marker',
-        line: {
-          color: this.themeColor,
-        }
-      }
-    ];
+    if (this.lineData.data.length <= 1) {
+      this.showGraph = false;
+      return;
+    }
     this.showGraph = true;
   }
-
   firstStatClick() {
     if (this.firstStat.value != null && this.firstStat.url != null) {
       this.router.navigateByUrl(this.firstStat.url);
@@ -230,5 +175,6 @@ export class HerocardComponent implements OnInit, OnChanges {
       this.router.navigateByUrl(this.thirdStat.url);
     }
   }
+
 
 }

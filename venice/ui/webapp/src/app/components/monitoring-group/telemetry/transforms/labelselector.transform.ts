@@ -137,6 +137,7 @@ export class LabelSelectorTransform extends MetricTransform<LabelSelectorTransfo
     values.forEach( (val) => {
       this.formArray.push(new FormControl(val));
     });
+    this.currValue = values;
     // Form array subscription should run and update the rest of the variables
   }
 

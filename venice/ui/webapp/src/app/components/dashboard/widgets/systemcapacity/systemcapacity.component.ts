@@ -367,7 +367,11 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
         const data2 = MetricsUtility.transformToChartjsTimeSeries(this.timeSeriesData.series[0], fieldName2);
 
         for (let index = 0; index < data1.length; index++) {
-          data1[index].y = data1[index].y + data2[index].y;
+          if (data1[index].y == null || data2[index].y == null) {
+            data1[index].y = null;
+          } else {
+            data1[index].y = data1[index].y + data2[index].y;
+          }
         }
         this.networkGraphStat.lineGraphStat.data = data1;
 

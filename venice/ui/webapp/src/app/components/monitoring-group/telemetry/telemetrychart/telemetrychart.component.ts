@@ -29,6 +29,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { GraphTitleTransform } from '../transforms/graphtitle.transform';
 import { GroupByTimeTransform } from '../transforms/groupbytime.transform';
 import { RoundCountersTransform } from '../transforms/roundcounters.transform';
+import { debounceTime } from 'rxjs/operators';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -63,6 +64,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   @Input() inDebugMode: boolean = false;
   @Input() selectedTimeRange: TimeRange;
   @Output() saveChartReq: EventEmitter<GraphConfig> = new EventEmitter<GraphConfig>();
+
+  graphLoading: boolean = false;
 
   themeColor: string = '#b592e3';
 
@@ -103,6 +106,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   metricSubscription: Subscription;
   subscriptions: Subscription[] = [];
 
+  // Metrics observer, used for debouncing metric requests
+  metricsQueryObserver: Subject<TelemetryPollingMetricQueries> = new Subject();
+
   // Subject to be passed into data sources so that they can request data
   getMetricsSubject: Subject<any> = new Subject<any>();
 
@@ -136,6 +142,10 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   fieldQueryMap: QueryMap =  {};
   fieldValueMap: ValueMap = {};
 
+  // Flag to indicate whether we have finished loading a user's config
+  // Used to prevent fetching metrics before all configs are loaded
+  configLoaded: boolean = false;
+
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
@@ -144,6 +154,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   }
 
   ngOnInit() {
+    this.metricsQueryListener();
     this.setupValueOverrides();
     this.getNaples();
     this.getNodes();
@@ -159,7 +170,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     }
 
     const metricsSubjectSubscription = this.getMetricsSubject.subscribe( () => {
-      this.getMetrics();
+      if (this.configLoaded) {
+        this.getMetrics();
+      }
     });
     this.subscriptions.push(metricsSubjectSubscription);
 
@@ -177,6 +190,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     if (this.chartConfig != null && this.chartConfig.id !== '') {
       this.loadConfig();
     }
+    this.configLoaded = true;
 
     if (this.dataSources.length === 0) {
       this.addDataSource();
@@ -257,6 +271,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       const source = this.addDataSource();
       source.load(_.cloneDeep(dataTransform));
     });
+    this.configLoaded = true;
     this.getMetrics();
   }
 
@@ -286,6 +301,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       response => {
         this.nodeEventUtility.processEvents(response);
         this.labelMap['Node'] = Utility.getLabels(this.nodes as any[]);
+        // Need to refetch metrics now that name -> mac Address override is in place.
+        this.getMetrics();
       },
       this.controllerService.webSocketErrorHandler('Failed to get labels')
     );
@@ -308,6 +325,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
             this.nameToMacAddr[smartnic.spec.id] = smartnic.meta.name;
           }
         }
+        // Need to refetch metrics now that name -> mac Address override is in place.
+        this.getMetrics();
       },
       this.controllerService.webSocketErrorHandler('Failed to get labels')
     );
@@ -452,15 +471,34 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       this.drawGraph();
       return;
     }
-    this.metricSubscription = this.telemetryqueryService.pollMetrics('telemetryExplore-' + Utility.s4() + Utility.s4(), queryList).subscribe(
-      (data: ITelemetry_queryMetricsQueryResponse) => {
-        // If tenant is null, then it is the default response from the behavior subject, and not from the backend
-        if (data.tenant != null) {
-          this.metricData = data;
-          this.drawGraph();
-        }
+    this.graphLoading = true;
+    this.metricsQueryObserver.next(queryList);
+  }
+
+  metricsQueryListener() {
+    // Buffers requests for 200ms before issuing a
+    // metrics request. This way we limit multiple requests going out when the component is being initalized
+    const subscription = this.metricsQueryObserver.pipe(debounceTime(200)).subscribe(
+      (queryList) => {
+        this.metricSubscription = this.telemetryqueryService.pollMetrics('telemetryExplore-' + Utility.s4() + Utility.s4(), queryList).subscribe(
+          (data: ITelemetry_queryMetricsQueryResponse) => {
+            // If tenant is null, then it is the default response from the behavior subject, and not from the backend
+            if (data.tenant != null) {
+              this.metricData = data;
+              this.drawGraph();
+            }
+          },
+          (err) => {
+            // Err is already logged to a toaster by the polling service.
+            // Drawing graph so that the graph is reset
+            // and we turn off the spinner
+            this.drawGraph();
+          }
+        );
+        this.subscriptions.push(this.metricSubscription);
       }
     );
+    this.subscriptions.push(subscription);
   }
 
   resetGraph() {
@@ -471,11 +509,13 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   drawGraph() {
     if (this.metricData == null) {
       this.resetGraph();
+      this.graphLoading = false;
       return;
     }
 
     if (!MetricsUtility.responseHasData(this.metricData)) {
       this.resetGraph();
+      this.graphLoading = false;
       return;
     }
 
@@ -564,6 +604,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     this.lineData = {
       datasets: resDataSets
     };
+    this.graphLoading = false;
   }
 
   ngOnDestroy() {

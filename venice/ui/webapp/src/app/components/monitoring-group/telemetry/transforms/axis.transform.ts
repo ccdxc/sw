@@ -1,7 +1,7 @@
 import { TransformGraphOptions, GraphTransform, TransformDataset, TransformNames } from './types';
 import { FormGroup, FormControl } from '@angular/forms';
 import { patternValidator } from '@sdk/v1/utils/validators';
-import { ChartYAxe, ChartOptions } from 'chart.js';
+import { ChartYAxe, ChartOptions, LinearTickOptions } from 'chart.js';
 import { getFieldData } from '../utility';
 import { Utility } from '@app/common/Utility';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
@@ -200,7 +200,8 @@ export class AxisTransform extends GraphTransform<{}> {
     const min = parseInt(axisValues.yAxis.min, 10);
     if (axisValues.yAxis.min  !== '' && !isNaN(min)) {
       yAxisOptions.ticks.min = min;
-    } else if (previousUnit === 'Percent') {
+    } else {
+      // We always show the min as 0 for all stats
       yAxisOptions.ticks.suggestedMin = 0;
     }
 
@@ -210,6 +211,9 @@ export class AxisTransform extends GraphTransform<{}> {
     } else if (previousUnit === 'Percent') {
       yAxisOptions.ticks.suggestedMax = 100;
     }
+
+    yAxisOptions.ticks.maxTicksLimit = 6;
+    (yAxisOptions.ticks as LinearTickOptions).precision = 0;
   }
 
   load(config: {}) {

@@ -20,6 +20,8 @@ import { MessageService } from '@app/services/message.service.ts';
 import { ConfirmationService } from 'primeng/primeng';
 import { AuthService } from '@app/services/auth.service';
 import { HttpClient, HttpHandler } from '@angular/common/http';
+import { LinegraphComponent } from '../linegraph/linegraph.component';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 const mockRouter = {
   navigateByUrl: jasmine.createSpy('navigateByUrl')
@@ -37,12 +39,14 @@ describe('HerocardComponent', () => {
         DsbdwidgetheaderComponent,
         PrettyDatePipe,
         SpinnerComponent,
-        BasecardComponent
+        BasecardComponent,
+        LinegraphComponent,
       ],
       imports: [
         WidgetsModule,
         MaterialdesignModule,
         NoopAnimationsModule,
+        FlexLayoutModule,
       ],
       providers: [
         { provide: Router, useValue: mockRouter },
@@ -62,10 +66,10 @@ describe('HerocardComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(HerocardComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should allow stats to be clickable and have tooltip', () => {
+    fixture.detectChanges();
     // Check stat clicking
     component.cardState = CardStates.READY;
     component.firstStat = {
@@ -111,6 +115,20 @@ describe('HerocardComponent', () => {
 
   it('should hide parts of the display', () => {
     component.title = 'testCard';
+    component.lineData = {
+      title: '',
+      hideTitle: true,
+      data: [],
+      statColor: 'red',
+      gradientStart: 'white',
+      gradientStop: 'white',
+      graphId: 'test',
+      defaultValue: 0,
+      defaultDescription: '',
+      hoverDescription: '',
+      isPercentage: true,
+      scaleMin: 0,
+    },
     // Title should always be shown
     fixture.detectChanges();
     const title = fixture.debugElement.query(By.css('.dsbd-widgetheader-title'));
@@ -133,7 +151,7 @@ describe('HerocardComponent', () => {
       expect(statDesc).toBeNull();
     });
 
-    // // We check setting a value for each stat separately
+    // We check setting a value for each stat separately
     stats.forEach((stat) => {
       component[stat + 'Stat'] = {
         value: 'statValue',
@@ -186,21 +204,21 @@ describe('HerocardComponent', () => {
 
 
     // Graph should be hidden if there is less than one point
-    let graph = fixture.debugElement.query(By.css('pw-plotly-chart'));
+    let graph = fixture.debugElement.query(By.css('app-linegraph'));
     expect(graph).toBeNull();
 
     // Updating to add one point
-    component.data = { x: [0], y: [0] };
+    component.lineData.data = [{t: 0, y: 0}];
     component.ngOnChanges(null);
     fixture.detectChanges();
-    graph = fixture.debugElement.query(By.css('pw-plotly-chart'));
+    graph = fixture.debugElement.query(By.css('app-linegraph'));
     expect(graph).toBeNull();
 
     // More than one point, graph should show
-    component.data = { x: [0, 1], y: [0, 1] };
+    component.lineData.data = [{t: 0, y: 0}, {t: 1, y: 1}];
     component.ngOnChanges(null);
     fixture.detectChanges();
-    graph = fixture.debugElement.query(By.css('pw-plotly-chart'));
+    graph = fixture.debugElement.query(By.css('app-linegraph'));
     expect(graph).toBeTruthy();
 
     stats.forEach((stat, index) => {
@@ -213,7 +231,7 @@ describe('HerocardComponent', () => {
 
     fixture.detectChanges();
 
-    graph = fixture.debugElement.query(By.css('pw-plotly-chart'));
+    graph = fixture.debugElement.query(By.css('app-linegraph'));
     expect(graph).toBeNull();
     stats.forEach((stat) => {
       const statVal = fixture.debugElement.query(By.css('.herocard-' + stat + '-stat-value'));

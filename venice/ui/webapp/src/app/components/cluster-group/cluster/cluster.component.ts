@@ -242,9 +242,8 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     if (MetricsUtility.resultHasData(this.timeSeriesData)) {
       const timeSeriesData = this.timeSeriesData;
 
-      const index = timeSeriesData.series[0].columns.indexOf(fieldName);
-      const data = Utility.transformToPlotly(timeSeriesData.series[0].values, 0, index);
-      heroCard.data = data;
+      const data = MetricsUtility.transformToChartjsTimeSeries(timeSeriesData.series[0], fieldName);
+      heroCard.lineData.data = data;
     }
 
     // current avg
