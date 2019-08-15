@@ -39,7 +39,8 @@ func TestE2ETest(t *testing.T) {
 		return
 	}
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "E2e cmd Suite")
+	s := NewReporter()
+	RunSpecsWithDefaultAndCustomReporters(t, "E2e cmd Suite", []Reporter{s})
 }
 
 // All the test config, state and any helper caches for running this test
