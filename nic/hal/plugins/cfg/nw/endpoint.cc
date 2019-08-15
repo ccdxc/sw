@@ -18,6 +18,9 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "nic/include/fte.hpp"
 
+#define HAL_MAX_DATA_THREAD          (g_hal_state->oper_db()->max_data_threads())
+#define HAL_MAX_SESSIONS_PER_UPDATE  128
+
 namespace hal {
 
 dhcp_status_func_t dhcp_status_func = nullptr;
@@ -121,7 +124,10 @@ ep_init (ep_t *ep)
     SDK_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_SHARED);
 
     sdk::lib::dllist_reset(&ep->ip_list_head);
-    sdk::lib::dllist_reset(&ep->session_list_head);
+    ep->session_list_head = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, 
+               sizeof(dllist_ctxt_t)*HAL_MAX_DATA_THREAD);
+    for (uint8_t idx=0; idx<HAL_MAX_DATA_THREAD; idx++)
+        sdk::lib::dllist_reset(&ep->session_list_head[idx]);
     ep->nh_list = block_list::factory(sizeof(hal_handle_t));
     ep->sgs.sg_id_cnt = 0;
     memset(&ep->sgs.arr_sg_id, 0 , MAX_SG_PER_ARRAY);
@@ -160,6 +166,9 @@ static inline hal_ret_t
 ep_cleanup (ep_t *ep)
 {
     block_list::destroy(ep->nh_list);
+    if (ep->session_list_head != NULL) {
+        HAL_FREE(HAL_MEM_ALLOC_DLLIST, ep->session_list_head);
+    }
 
     SDK_SPINLOCK_DESTROY(&ep->slock);
     ep_free(ep);
@@ -1139,30 +1148,42 @@ end:
 }
 
 typedef struct ep_session_upd_args_ {
-    uint32_t       num_handles;
-    hal_handle_t  *session_hdl_list;
+    uint8_t         fte_id;
+    uint32_t        num_list;
+    hal_handle_t  **session_hdl_list;
 } ep_session_upd_args_t;
+
+// Runs in FTE Context to walk a batch
+void
+fte_session_update_list (void *data)
+{
+    hal_handle_t *session_list = (hal_handle_t *)data;
+    // Set the feature id to run update on
+    uint64_t      bitmap = (1 << fte::feature_id("pensando.io/network:fwding"));
+
+    for (uint8_t i=0; i<HAL_MAX_SESSIONS_PER_UPDATE; i++) {
+        if (session_list[i])
+            fte::session_update_in_fte(session_list[i], bitmap);
+    }
+    HAL_FREE(HAL_MEM_ALLOC_SESS_UPD_LIST, session_list);
+}
 
 static void
 ep_update_session_walk_cb(void *timer, uint32_t timer_id, void *ctxt)
 {
-    session_t                       *session = NULL;
     ep_session_upd_args_t           *args = (ep_session_upd_args_t *)ctxt;
     hal_ret_t                       ret;
 
     HAL_TRACE_VERBOSE("Ep Session update walk cb");
 
     // Walk though session list and call FTE provided API
-    for (uint32_t idx = 0; idx < args->num_handles; idx++) {
-        HAL_TRACE_VERBOSE("Session: {}", args->session_hdl_list[idx]);
-        session = find_session_by_handle(args->session_hdl_list[idx]);
-        if (session) {
-            // TODO: Walk few more at a time to converge
-            // faster
-            ret = fte::session_update_async(session);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("failed to update the session {}", args->session_hdl_list[idx]);
-            }
+    for (uint32_t idx = 0; idx < args->num_list; idx++) {
+        ret = fte::fte_softq_enqueue(args->fte_id,
+                                  fte_session_update_list,
+                                  (void *)args->session_hdl_list[idx]);
+            SDK_ASSERT(ret == HAL_RET_OK);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to post session update");
         }
     }
 
@@ -1176,39 +1197,53 @@ ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     void                            *ep_timer = NULL;
-    uint32_t                         idx = 0;
+    uint32_t                         idx = 0, list=0;
     ep_session_upd_args_t           *ctxt = NULL;
     dllist_ctxt_t                   *curr, *next;
     hal_handle_id_list_entry_t      *entry = NULL;
 
     HAL_TRACE_DEBUG("Received IF change notification for ep: {}", ep->hal_handle);
 
-    if (dllist_empty(&ep->session_list_head)) {
-        return HAL_RET_OK;
-    }
+    for (uint8_t fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
+        if (dllist_empty(&ep->session_list_head[fte_id])) {
+            continue;
+        }
 
-    ctxt = (ep_session_upd_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_UPD_CTXT,
+        ctxt = (ep_session_upd_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_UPD_CTXT,
                                        sizeof(ep_session_upd_args_t));
-    SDK_ASSERT(ctxt != NULL);
+        SDK_ASSERT(ctxt != NULL);
 
-    ctxt->session_hdl_list = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_UPD_LIST,
-                               sizeof(hal_handle_t)*dllist_count(&ep->session_list_head));
-    SDK_ASSERT(ctxt->session_hdl_list != NULL);
-   
-    dllist_for_each_safe(curr, next, &ep->session_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        ctxt->session_hdl_list[idx++] = entry->handle_id; 
-    }
-    ctxt->num_handles = idx;
+        uint32_t num_list = (dllist_count(&ep->session_list_head[fte_id])/HAL_MAX_SESSIONS_PER_UPDATE) + 1;
+        ctxt->session_hdl_list = (hal_handle_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_UPD_LIST,
+                               sizeof(hal_handle_t*)*num_list);
+        SDK_ASSERT(ctxt->session_hdl_list != NULL);
+  
+        ctxt->session_hdl_list[list] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                               sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
+        SDK_ASSERT(ctxt->session_hdl_list[list] != NULL);
 
-    ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
+        dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            ctxt->session_hdl_list[list][idx++] = entry->handle_id;
+            if (idx == HAL_MAX_SESSIONS_PER_UPDATE) {
+                idx = 0;
+                ctxt->session_hdl_list[++list] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                               sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
+                SDK_ASSERT(ctxt->session_hdl_list[list] != NULL);
+            }
+        }
+        ctxt->num_list = list+1;
+        ctxt->fte_id = fte_id;
+
+        ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
                                  EP_UPDATE_SESSION_TIMER, 
                                  (void *) ctxt,
                                  ep_update_session_walk_cb, false); 
 
-    if (!ep_timer) {
-        HAL_TRACE_ERR("Failed to schedule the timer for the ep");
-        return HAL_RET_ERR;
+        if (!ep_timer) {
+            HAL_TRACE_ERR("Failed to schedule the timer for the ep");
+            continue; 
+        }
     }
     return ret;
 }
@@ -1285,7 +1320,7 @@ ep_make_clone (ep_t *ep, ep_t **ep_clone)
     pd::hal_pd_call(pd::PD_FUNC_ID_EP_MAKE_CLONE, &pd_func_args);
 
     // after clone always reset lists
-    dllist_reset(&(*ep_clone)->session_list_head);
+    (*ep_clone)->session_list_head = NULL;
 
     return HAL_RET_OK;
 }
@@ -1312,20 +1347,8 @@ ep_copy_ip_list (ep_t *dst_ep, ep_t *src_ep)
 hal_ret_t
 ep_copy_session_list (ep_t *dst_ep, ep_t *src_ep)
 {
-    dllist_ctxt_t                   *curr, *next;
-    hal_handle_id_list_entry_t      *entry = NULL;
-
-    sdk::lib::dllist_reset(&dst_ep->session_list_head);
-    // Walk though session list and call FTE provided API
-    dllist_for_each_safe(curr, next, &src_ep->session_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_VERBOSE("copying to clone session handle {}", entry->handle_id);
-        // Remove from list
-        sdk::lib::dllist_del(&entry->dllist_ctxt);
-        sdk::lib::dllist_add(&dst_ep->session_list_head, &entry->dllist_ctxt);
-    }
-    HAL_TRACE_VERBOSE("ep_clone no of sessions: {}", sdk::lib::dllist_count(&dst_ep->session_list_head));
-
+    dst_ep->session_list_head = src_ep->session_list_head;
+    src_ep->session_list_head = NULL;
 
     return HAL_RET_OK;
 }
@@ -1430,7 +1453,7 @@ endpoint_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// helper to get endpoint from key or handle
+// helper to get endpoint from! key or handle
 //------------------------------------------------------------------------------
 hal_ret_t
 find_ep (EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status)
@@ -2312,24 +2335,26 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    if (!dllist_empty(&ep->session_list_head)) {
-        ep_session_delete_args_t    *ctxt = NULL;
-        void                        *ep_timer = NULL;
+    for (uint8_t idx=0; idx<HAL_MAX_DATA_THREAD; idx++) {
+        if (!dllist_empty(&ep->session_list_head[idx])) {
+            ep_session_delete_args_t    *ctxt = NULL;
+            void                        *ep_timer = NULL;
 
-        ctxt = (ep_session_delete_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT,
+            ctxt = (ep_session_delete_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT,
                                        sizeof(ep_session_delete_args_t));
-        SDK_ASSERT(ctxt != NULL);
+            SDK_ASSERT(ctxt != NULL);
 
-        sdk::lib::dllist_move(&ctxt->session_list, &ep->session_list_head);
+            sdk::lib::dllist_move(&ctxt->session_list, &ep->session_list_head[idx]);
      
-        ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_DELETE,
+            ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_DELETE,
                                  EP_UPDATE_SESSION_TIMER,
                                  (void *)ctxt,
                                  ep_session_delete_cb, false);
 
-        if (!ep_timer) {
-            HAL_TRACE_ERR("Failed to schedule the timer for the ep session delete");
-            return HAL_RET_ERR;
+            if (!ep_timer) {
+                HAL_TRACE_ERR("Failed to schedule the timer for the ep session delete");
+                return HAL_RET_ERR;
+            }
         }
     }
 
@@ -2664,7 +2689,7 @@ ep_add_session (ep_t *ep, session_t *session)
     entry->handle_id = session->hal_handle;
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);
-    sdk::lib::dllist_add(&ep->session_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&ep->session_list_head[session->fte_id], &entry->dllist_ctxt);
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);
 
 end:
@@ -2741,7 +2766,7 @@ ep_del_session (ep_t *ep, session_t *session)
     dllist_ctxt_t               *curr = NULL, *next = NULL;
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &ep->session_list_head) {
+    dllist_for_each_safe(curr, next, &ep->session_list_head[session->fte_id]) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == session->hal_handle) {
             // Remove from list
@@ -2760,7 +2785,7 @@ ep_del_session (ep_t *ep, session_t *session)
     /* For now calling empty callback only if all sessions are deleted
      * Might not be the case as some IPs sessions might be cleared up earlier.
      */
-    if (dllist_empty(&ep->session_list_head)) {
+    if (dllist_empty(&ep->session_list_head[session->fte_id])) {
         sessions_empty_cb(ep);
     }
     return ret;

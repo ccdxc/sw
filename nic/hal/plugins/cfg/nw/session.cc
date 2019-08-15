@@ -73,7 +73,7 @@ session_stats_t  *g_session_stats;
 #define HAL_SESSIONS_TO_SCAN_PER_INTVL             (500)
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
-#define HAL_MAX_SESSION_PER_ENQ                     5
+#define HAL_MAX_SESSION_PER_ENQ                     128 
 #define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads())
 #define HAL_MAX_ERRORS                              255
 #define HAL_SESSION_STATS_SHIFT                     7
@@ -1198,7 +1198,7 @@ session_get_all(SessionGetResponseMsg *rsp)
 }
 
 hal_ret_t
-session_update_list (dllist_ctxt_t *session_list, bool async)
+session_update_list (dllist_ctxt_t *session_list, bool async, uint64_t featureid_bitmap)
 {
     // update all sessions
     hal_ret_t ret = HAL_RET_OK;
@@ -1210,7 +1210,7 @@ session_update_list (dllist_ctxt_t *session_list, bool async)
         hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
         if (session) {
             if (async) {
-                ret = fte::session_update_async(session);
+                ret = fte::session_update_async(session, featureid_bitmap);
             } else {
                 // TODO: No sync call in fte ?
             }
@@ -2239,6 +2239,7 @@ session_age_cb (void *entry, void *ctxt)
             // time to clean up the session, add handle to session list
             args->session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = \
                                                                  session->hal_handle;
+            session->deleting = 1;
 
             // Stop processing if we have reached the maximum limit per FTE
             // We will process the rest in the next round

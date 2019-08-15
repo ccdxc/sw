@@ -21,6 +21,7 @@
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/sdk/linkmgr/linkmgr_internal.hpp"
+#include "nic/include/fte.hpp"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
@@ -5159,7 +5160,8 @@ hal_if_repin_ipfix_flows (if_t *uplink)
     }
 
     HAL_TRACE_DEBUG("Update the IPFIX sessions");
-    session_update_list(&ipfix_session_list, true);
+    session_update_list(&ipfix_session_list, true, 
+                        (1 << fte::feature_id("pensando.io/telemetry:telemetry")));
     
     return HAL_RET_OK;
 }

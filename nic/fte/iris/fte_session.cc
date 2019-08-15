@@ -87,6 +87,7 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
         HAL_TRACE_DEBUG("Invalid session handle {}", session_handle);
         return  HAL_RET_HANDLE_INVALID;
     }
+    session->deleting = 1;
 
     HAL_TRACE_DEBUG("fte:: Received session Delete for session id {} in Vrf id {} force_delete: {}",
                     session->hal_handle,
@@ -145,7 +146,7 @@ session_delete_async (hal::session_t *session, bool force_delete)
 }
 
 hal_ret_t
-session_update_in_fte (hal_handle_t session_handle)
+session_update_in_fte (hal_handle_t session_handle, uint64_t featureid_bitmap)
 {
     hal_ret_t ret;
     ctx_t ctx = {};
@@ -159,6 +160,11 @@ session_update_in_fte (hal_handle_t session_handle)
     if (session == NULL) {
         HAL_TRACE_DEBUG("Invalid session handle {}", session_handle);
         return  HAL_RET_HANDLE_INVALID;
+    }
+
+    // Bail if its already getting deleted
+    if (session->deleting) {
+        return HAL_RET_OK;
     }
 
     HAL_TRACE_DEBUG("fte:: Received session update for session id {} in Vrf id {}",
@@ -180,6 +186,7 @@ session_update_in_fte (hal_handle_t session_handle)
         goto end;
     }
     ctx.set_pipeline_event(FTE_SESSION_UPDATE);
+    ctx.set_featureid_bitmap(featureid_bitmap);
 
     ret = ctx.process();
 
@@ -191,10 +198,11 @@ end:
 }
 
 hal_ret_t
-session_update_async (hal::session_t *session)
+session_update_async (hal::session_t *session, uint64_t featureid_bitmap)
 {
     struct fn_ctx_t {
         hal_handle_t session_handle;
+        uint64_t     featureid_bitmap;
         hal_ret_t ret;
     };
     fn_ctx_t *fn_ctx = (fn_ctx_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_SESS_UPD_DATA, (sizeof(fn_ctx_t)));
@@ -204,7 +212,7 @@ session_update_async (hal::session_t *session)
 
     fte_softq_enqueue(session->fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
-            fn_ctx->ret = session_update_in_fte(fn_ctx->session_handle);
+            fn_ctx->ret = session_update_in_fte(fn_ctx->session_handle, fn_ctx->featureid_bitmap);
             if (fn_ctx->ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("session update in fte failed for handle: {}", fn_ctx->session_handle);
             }

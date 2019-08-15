@@ -130,7 +130,7 @@ typedef struct ep_s {
     // llist_ctxt_t        vrf_ep_lentry;     // links in L2 segment endpoint list
     // dllist_ctxt_t        l2seg_ep_lentry;      // links in L2 segment endpoint list
     // dllist_ctxt_t        if_ep_lentry;         // links in inteface endpoint list
-    dllist_ctxt_t        session_list_head;    // session from/to this EP
+    dllist_ctxt_t        *session_list_head;    // session from/to this EP
     block_list           *nh_list;             // next hops back refs
 
 } __PACK__ ep_t;

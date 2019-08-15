@@ -21,11 +21,11 @@ using fwlog::FWEvent;
 namespace fte {
 
 // FTE pipeline events
-#define FTE_PIPELINE_EVENT_ENTRIES(ENTRY)           \
-    ENTRY(FTE_SESSION_CREATE,   0, "create")        \
-    ENTRY(FTE_SESSION_UPDATE,   1, "update")        \
-    ENTRY(FTE_SESSION_DELETE,   2, "delete")        \
-    ENTRY(FTE_SESSION_GET,      3, "get")           \
+#define FTE_PIPELINE_EVENT_ENTRIES(ENTRY)              \
+    ENTRY(FTE_SESSION_CREATE,            0, "create")  \
+    ENTRY(FTE_SESSION_UPDATE,            1, "update")  \
+    ENTRY(FTE_SESSION_DELETE,            2, "delete")  \
+    ENTRY(FTE_SESSION_GET,               3, "get")     
 
 DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
 #undef FTE_PIPELINE_EVENT_ENTRIES
@@ -751,6 +751,9 @@ public:
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }
     bool is_flow_swapped(void) { return is_flow_swapped_; }
     uint16_t payload_len(void) { return payload_len_; }
+    void set_featureid_bitmap(uint64_t bitmap) { featureid_bitmap_ = bitmap; }
+    uint64_t featureid_bitmap(void) { return featureid_bitmap_; }
+    uint16_t get_feature_id(void) { return feature_id_; }
 
     // protected methods accessed by gtest
 protected:
@@ -831,6 +834,7 @@ private:
     hal::flow_pgm_attrs_t rflow_attrs_list[MAX_STAGES];
     bool                  is_flow_swapped_;
     uint16_t              payload_len_;
+    uint64_t              featureid_bitmap_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

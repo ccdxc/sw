@@ -390,6 +390,7 @@ struct session_s {
     uint16_t            skip_sfw_reval:1;         // do not reeval session
     uint16_t            is_ipfix_flow:1;          // to track ipfix flows
     uint16_t            sfw_action:3;             // sfw action to log
+    uint16_t            deleting:1;               // is session queued up for deletion 
     uint64_t            sfw_rule_id;              // sfw rule id
 
     flow_t              *iflow;                   // initiator flow
@@ -489,7 +490,7 @@ void session_set_tcp_state (session_t *session, hal::flow_role_t role,
                            FlowTCPState tcp_state);
 hal_ret_t session_get_all_stream(grpc::ServerWriter<session::SessionGetResponseMsg> *writer);
 hal_ret_t session_get_all (session::SessionGetResponseMsg *rsp);
-hal_ret_t session_update_list (dllist_ctxt_t *session_list, bool async);
+hal_ret_t session_update_list (dllist_ctxt_t *session_list, bool async, uint64_t feature_bitmap);
 hal_ret_t session_delete_list (dllist_ctxt_t *session_list, bool async=false);
 hal_ret_t session_delete_all (session::SessionDeleteResponseMsg *rsp);
 hal_ret_t session_eval_matching_session (session_match_t *match);

@@ -12,6 +12,7 @@
 #include "gen/proto/types.pb.h"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
+#include "nic/include/fte.hpp"
 
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_update_args_t;
@@ -77,7 +78,8 @@ telemetry_eval_sessions (void)
     g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
 
     HAL_TRACE_DEBUG("Update sessions, count {}", dllist_count(&session_list));
-    ret = session_update_list(&session_list, true);
+    ret = session_update_list(&session_list, true, 
+                              (1 << fte::feature_id("pensando.io/telemetry:telemetry")));
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session update list failed {}", ret);
     }

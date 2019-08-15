@@ -230,6 +230,11 @@ telemetry_exec (fte::ctx_t &ctx)
     hal_ret_t   ret = HAL_RET_OK;
     sfw_info_t  *sfw_info = NULL;
     fte::flow_update_t  ipfix_upd = {type: fte::FLOWUPD_ACTION};
+
+    // For updates process only if we need to
+    if (ctx.pipeline_event() == fte::FTE_SESSION_UPDATE &&
+        !(ctx.featureid_bitmap() & (1 << ctx.get_feature_id())))
+        return fte::PIPELINE_CONTINUE;  
     
     hal::session_t *session = ctx.session();
     HAL_TRACE_VERBOSE("telemetry plugin exec, event {}", ctx.pipeline_event());

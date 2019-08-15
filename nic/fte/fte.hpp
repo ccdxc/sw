@@ -29,11 +29,11 @@ typedef pipeline_action_t (*session_update_handler_t)(ctx_t &ctx); // Session up
 typedef struct feature_info_s {
     // feature speicific per ctx state (this is not persisited
     // across packets, only valid during processing of one packet)
-    size_t                    state_size;
-    feature_state_init_t      state_init_fn;
-    session_delete_handler_t  sess_del_cb;
-    session_get_handler_t     sess_get_cb;
-    session_update_handler_t  sess_upd_cb;
+    size_t                           state_size;
+    feature_state_init_t             state_init_fn;
+    session_delete_handler_t         sess_del_cb;
+    session_get_handler_t            sess_get_cb;
+    session_update_handler_t         sess_upd_cb;
 
     // TODO(goli) need to define these
     // grpc_session_create_handler_t
@@ -63,7 +63,8 @@ hal_ret_t session_get(hal::session_t *session, SessionGetResponse *response);
 hal_ret_t session_delete_in_fte(hal_handle_t session_handle, bool force_delete=false);
 hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
 hal_ret_t session_delete_async(hal::session_t *session, bool force_delete=false);
-hal_ret_t session_update_async(hal::session_t *session);
+hal_ret_t session_update_async(hal::session_t *session, uint64_t bitmap);
+hal_ret_t session_update_in_fte(hal_handle_t session_handle, uint64_t bitmap);
 
 // Find if a feature is enabled on a session or not
 bool session_is_feature_enabled(hal::session_t *session, const char *feature);

@@ -254,6 +254,11 @@ fwding_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
 
+    // For updates process only if we need to
+    if (ctx.pipeline_event() == fte::FTE_SESSION_UPDATE && 
+        !(ctx.featureid_bitmap() & (1 << ctx.get_feature_id()))) 
+        return fte::PIPELINE_CONTINUE;
+
     ret = update_flow(ctx);
 
     if (ret != HAL_RET_OK) {
