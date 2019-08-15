@@ -311,7 +311,8 @@ TEST_F(DelphiIntegTest, HubDisconnectTest) {
     // verify all the clients got on mount callback
     for (int i = 0; i < NUM_CLIENTS; i++) {
         ASSERT_EQ_EVENTUALLY(services[i]->inited, true) << "client was not inited";
-        ASSERT_EQ_EVENTUALLY(sdks[i]->ListKind("ExampleSpec").size(), NUM_CLIENTS) << "client did not have all the objects";
+        ASSERT_EQ_EVENTUALLY(sdks[i]->ListKind("ExampleSpec").size(),
+            0) << "client had leftover objects";
     }
 }
 
