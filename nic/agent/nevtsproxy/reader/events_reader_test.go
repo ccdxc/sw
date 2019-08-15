@@ -311,13 +311,13 @@ func startEventWriter(shmName string, size int, stopCh chan struct{}, fakeErrors
 			buf := ipcW.GetBuffer(msgSize) // get buffer
 			if buf == nil {
 				log.Errorf("failed to get buffer from shared memory")
-				return 0
+				return totalEventsSent
 			}
 
 			_, err := writeEvent(buf, hEvt) // write event to the obtained buffer
 			if err != nil {
 				log.Errorf("failed to write event to shared memory")
-				return 0
+				return totalEventsSent
 			}
 			ipcW.PutBuffer(buf, msgSize)
 			totalEventsSent++

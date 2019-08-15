@@ -161,8 +161,7 @@ func (r *Reader) startEvtsReader(shmPath string) {
 		existingRdr.Stop()
 	}
 
-	eRdr, err := NewEventReader(r.nodeName, shmPath, r.pollDelay, r.logger,
-		WithEventsDispatcher(r.evtsDispatcher))
+	eRdr, err := NewEventReader(r.nodeName, shmPath, r.pollDelay, r.logger, WithEventsDispatcher(r.evtsDispatcher))
 	if err != nil {
 		r.logger.Errorf("failed to create reader for shm: %s, err: %v", shmPath, err)
 		return

@@ -1,11 +1,18 @@
 package shm
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"syscall"
+	"time"
 
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
+)
+
+var (
+	maxRetries = 20
 )
 
 // This file contains functions to perform shm Create/Open/Delete operations.
@@ -30,12 +37,18 @@ type IPC struct {
 
 // OpenSharedMem opens the shared memory identified by given name.
 func OpenSharedMem(path string) (*SharedMem, error) {
-	size := getFileSize(path)
-	if size == 0 {
-		return nil, fmt.Errorf("shm. size: 0")
+	size, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		size := getFileSize(path)
+		if size == 0 {
+			return 0, fmt.Errorf("shm. size: 0")
+		}
+		return size, nil
+	}, 100*time.Millisecond, maxRetries)
+	if err != nil {
+		return nil, err
 	}
 
-	return sharedMem(path, size, syscall.O_RDWR)
+	return sharedMem(path, size.(int), syscall.O_RDWR)
 }
 
 // CreateSharedMem creates shared memory of given name and size.
