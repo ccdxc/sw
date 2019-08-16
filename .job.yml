@@ -94,7 +94,7 @@ dependencies:
     - reference: nic/apollo
     - reference: iota/test/venice/hwtest
       exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
-    - reference: iota/test/venice/no-venice
+    - reference: iota/test/no-venice
       exclude_dirs: ["doc"]
   vendor:
     - reference: api
@@ -141,6 +141,7 @@ dependencies:
     - reference: venice/ui
   iota:
     - reference: iota/test/venice/hwtest
-    - reference: iota/test/venice/no-venice
+    - reference: iota/test/no-venice
+      exclude_dirs: ["test/venice", "test/apollo"]
   storage/offload: 
     - reference: storage/offload/linux-build-test
