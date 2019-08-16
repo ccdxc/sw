@@ -306,7 +306,7 @@ func (br *Broker) writePointsInReplica(ctx context.Context, nodeuuid string, req
 		// trigger db creation
 		if strings.Contains(err.Error(), "database not found") {
 			if dbErr := br.CreateDatabase(ctx, req.Database); dbErr != nil {
-				br.logger.Error("failed to create database %s, %v", req.Database, dbErr)
+				br.logger.Errorf("failed to create database %s, %v", req.Database, dbErr)
 			}
 			// continue
 		}
