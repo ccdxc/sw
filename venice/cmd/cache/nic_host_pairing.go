@@ -52,8 +52,9 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 					sm.UpdateSmartNIC(nic, true)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Spec.ID, nic.Name, host.Name)
 				} else if nic.Status.Host != host.Name {
-					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Spec.ID, nic.Name, host.Name, nic.Status.Host)
-					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nil)
+					errMsg := fmt.Sprintf("DSC %s(%s) matches Spec IDs of host %s but is already associated with host"+
+						" %s", nic.Spec.ID, nic.Name, host.Name, nic.Status.Host)
+					recorder.Event(eventtypes.HOST_DSC_SPEC_CONFLICT, errMsg, nil)
 					log.Errorf(errMsg)
 				}
 			}
@@ -127,8 +128,9 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 					sm.UpdateSmartNIC(nic.SmartNIC, true)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.ID, host.Name)
 				} else if nic.Status.Host != host.Name {
-					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.ID, host.Name, nic.Status.Host)
-					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nil)
+					errMsg := fmt.Sprintf("DSC %s(%s) matches Spec IDs of host %s but is already associated with host"+
+						" %s", nic.Name, nic.Spec.ID, host.Name, nic.Status.Host)
+					recorder.Event(eventtypes.HOST_DSC_SPEC_CONFLICT, errMsg, nil)
 					log.Errorf(errMsg)
 				}
 			}

@@ -94,37 +94,38 @@ enum EventTypes {
                                          (severity)  = WARN,
                                          (desc)      = "Module creation for diagnostics failed"];
 
-    // -------------------------------- Host/NIC events -------------------------- //
-    NIC_ADMITTED                    = 100 [(category)   = Cluster,
+    // -------------------------------- Host/DSC events -------------------------- //
+    DSC_ADMITTED                    = 100 [(category)   = Cluster,
                                            (severity)   = INFO,
-                                           (desc)       = "NIC admitted to the cluster"];
-    NIC_REJECTED                    = 101 [(category)   = Cluster,
-                                           (severity)   = WARN,
-                                           (desc)       = "A SmartNIC admission request was rejected"];
+                                           (desc)       = "DSC admitted to the cluster"];
 
-    NIC_UNREACHABLE                 = 102 [(category)   = Cluster,
+    DSC_REJECTED                    = 101 [(category)   = Cluster,
+                                           (severity)   = WARN,
+                                           (desc)       = "DSC admission request was rejected"];
+
+    DSC_UNREACHABLE                 = 102 [(category)   = Cluster,
                                             (severity)  = CRITICAL,
-                                            (desc)      = "NIC is unreachable"];
+                                            (desc)      = "DSC is unreachable"];
 
-    NIC_HEALTHY                     = 103 [(category)   = Cluster,
+    DSC_HEALTHY                     = 103 [(category)   = Cluster,
                                             (severity)  = INFO,
-                                            (desc)      = "NIC is healthy"];
+                                            (desc)      = "DSC is healthy"];
 
-    NIC_UNHEALTHY                   = 104 [(category)   = Cluster,
+    DSC_UNHEALTHY                   = 104 [(category)   = Cluster,
                                            (severity)   = CRITICAL,
-                                           (desc)       = "NIC is unhealthy"];
+                                           (desc)       = "DSC is unhealthy"];
 
-    HOST_SMART_NIC_SPEC_CONFLICT    = 105 [(category)   = Cluster,
+    HOST_DSC_SPEC_CONFLICT          = 105 [(category)   = Cluster,
                                            (severity)   = WARN,
-                                           (desc)       = "The system has detected a conflict between the SmartNIC specifications of different Host objects"];
+                                           (desc)       = "The system has detected a conflict between the DSC specifications of different Host objects"];
 
-    NIC_DEADMITTED                  = 106 [(category)   = Cluster,
+    DSC_DEADMITTED                  = 106 [(category)   = Cluster,
                                           (severity)   = INFO,
-                                          (desc)       = "NIC de-admitted from the cluster"];
+                                          (desc)       = "DSC de-admitted from the cluster"];
 
-    NIC_DECOMMISSIONED              = 107 [(category)   = Cluster,
+    DSC_DECOMMISSIONED              = 107 [(category)   = Cluster,
                                           (severity)   = INFO,
-                                          (desc)       = "NIC decommissioned from the cluster"];
+                                          (desc)       = "DSC decommissioned from the cluster"];
 
     // ----------------------------- API Gateway events ---------------------- //
     AUTO_GENERATED_TLS_CERT         = 200 [(category) = Cluster,

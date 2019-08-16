@@ -11,6 +11,41 @@
    "Desc": "Auto generated certificate is being used for API Gateway TLS"
   },
   {
+   "Name": "DSC_ADMITTED",
+   "Severity": "info",
+   "Desc": "DSC admitted to the cluster"
+  },
+  {
+   "Name": "DSC_DEADMITTED",
+   "Severity": "info",
+   "Desc": "DSC de-admitted from the cluster"
+  },
+  {
+   "Name": "DSC_DECOMMISSIONED",
+   "Severity": "info",
+   "Desc": "DSC decommissioned from the cluster"
+  },
+  {
+   "Name": "DSC_HEALTHY",
+   "Severity": "info",
+   "Desc": "DSC is healthy"
+  },
+  {
+   "Name": "DSC_REJECTED",
+   "Severity": "warn",
+   "Desc": "DSC admission request was rejected"
+  },
+  {
+   "Name": "DSC_UNHEALTHY",
+   "Severity": "critical",
+   "Desc": "DSC is unhealthy"
+  },
+  {
+   "Name": "DSC_UNREACHABLE",
+   "Severity": "critical",
+   "Desc": "DSC is unreachable"
+  },
+  {
    "Name": "ELECTION_CANCELLED",
    "Severity": "warn",
    "Desc": "Leader election cancelled"
@@ -31,9 +66,9 @@
    "Desc": "Leader election stopped"
   },
   {
-   "Name": "HOST_SMART_NIC_SPEC_CONFLICT",
+   "Name": "HOST_DSC_SPEC_CONFLICT",
    "Severity": "warn",
-   "Desc": "The system has detected a conflict between the SmartNIC specifications of different Host objects"
+   "Desc": "The system has detected a conflict between the DSC specifications of different Host objects"
   },
   {
    "Name": "LEADER_CHANGED",
@@ -59,41 +94,6 @@
    "Name": "MODULE_CREATION_FAILED",
    "Severity": "warn",
    "Desc": "Module creation for diagnostics failed"
-  },
-  {
-   "Name": "NIC_ADMITTED",
-   "Severity": "info",
-   "Desc": "NIC admitted to the cluster"
-  },
-  {
-   "Name": "NIC_DEADMITTED",
-   "Severity": "info",
-   "Desc": "NIC de-admitted from the cluster"
-  },
-  {
-   "Name": "NIC_DECOMMISSIONED",
-   "Severity": "info",
-   "Desc": "NIC decommissioned from the cluster"
-  },
-  {
-   "Name": "NIC_HEALTHY",
-   "Severity": "info",
-   "Desc": "NIC is healthy"
-  },
-  {
-   "Name": "NIC_REJECTED",
-   "Severity": "warn",
-   "Desc": "A SmartNIC admission request was rejected"
-  },
-  {
-   "Name": "NIC_UNHEALTHY",
-   "Severity": "critical",
-   "Desc": "NIC is unhealthy"
-  },
-  {
-   "Name": "NIC_UNREACHABLE",
-   "Severity": "critical",
-   "Desc": "NIC is unreachable"
   },
   {
    "Name": "NODE_DISJOINED",

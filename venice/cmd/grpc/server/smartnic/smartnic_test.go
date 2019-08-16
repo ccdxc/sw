@@ -426,7 +426,7 @@ func verifyWatchAPIIsInvoked(t *testing.T, client grpc.SmartNICUpdatesClient, na
 
 func validateNICSpecConflictEvent(events *[]mockevtsrecorder.Event, nic, host1, host2 string) bool {
 	for _, ev := range *events {
-		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT)] {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.HOST_DSC_SPEC_CONFLICT)] {
 			msg := ev.Message
 			return strings.Contains(msg, nic) && strings.Contains(msg, host1) && strings.Contains(msg, host2)
 		}
@@ -1402,7 +1402,8 @@ func TestManualAdmission(t *testing.T) {
 	// check that events got generated
 	numRejectEvents := 0
 	for _, ev := range mr.GetEvents() {
-		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.NIC_REJECTED)] && strings.Contains(ev.Message, mac2) {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.DSC_REJECTED)] && strings.Contains(ev.Message,
+			mac2) {
 			numRejectEvents++
 		}
 	}
@@ -1491,7 +1492,8 @@ func TestAutoAdmitRejectedNICs(t *testing.T) {
 
 	numRejectEvents := 0
 	for _, ev := range mr.GetEvents() {
-		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.NIC_REJECTED)] && strings.Contains(ev.Message, mac2) {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.DSC_REJECTED)] && strings.Contains(ev.Message,
+			mac2) {
 			numRejectEvents++
 		}
 	}
@@ -1740,7 +1742,7 @@ func TestHostNICPairing(t *testing.T) {
 
 	// Check that there are no conflict events
 	for _, ev := range mr.GetEvents() {
-		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT)] {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.HOST_DSC_SPEC_CONFLICT)] {
 			log.Fatalf("Found unexpected NIC conflict events: %+v", mr.GetEvents())
 		}
 	}

@@ -120,12 +120,12 @@ var _ = Describe("events test", func() {
 			Skip("No NAPLES node to be added to the cluster. Skipping NMD events test")
 		}
 
-		// check for NIC_ADMITTED event
-		// NOTE: cluster objects are not allowed to have tenant, so, NIC_ADMITTED event will be in a index (e.g. venice.external.events.2018-09-12)
+		// check for DSC_ADMITTED event
+		// NOTE: cluster objects are not allowed to have tenant, so, DSC_ADMITTED event will be in a index (e.g. venice.external.events.2018-09-12)
 		// different than other events (e.g.venice.external.<tenant>.events.2018-09-12).
 		Eventually(func() error {
 			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Nmd),
-				es.NewTermQuery("type.keyword", eventtypes.NIC_ADMITTED.String()))
+				es.NewTermQuery("type.keyword", eventtypes.DSC_ADMITTED.String()))
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant), // empty tenant
 				elastic.GetDocType(globals.Events),
@@ -136,10 +136,10 @@ var _ = Describe("events test", func() {
 			}
 
 			if ts.tu.NumNaplesHosts > int(res.TotalHits()) {
-				return fmt.Errorf("got only %d (%s events) while expecting atleast %d events", int(res.TotalHits()), eventtypes.NIC_ADMITTED.String(), ts.tu.NumNaplesHosts)
+				return fmt.Errorf("got only %d (%s events) while expecting atleast %d events", int(res.TotalHits()), eventtypes.DSC_ADMITTED.String(), ts.tu.NumNaplesHosts)
 			}
 			return nil
-		}, 100, 1).Should(BeNil(), fmt.Sprintf("ts: %s could not find enough number of %s events in elasticsearch", time.Now().String(), eventtypes.NIC_ADMITTED.String()))
+		}, 100, 1).Should(BeNil(), fmt.Sprintf("ts: %s could not find enough number of %s events in elasticsearch", time.Now().String(), eventtypes.DSC_ADMITTED.String()))
 	})
 
 	AfterEach(func() {

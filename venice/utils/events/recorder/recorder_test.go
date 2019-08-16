@@ -94,8 +94,8 @@ func TestEventsRecorder(t *testing.T) {
 	AssertOk(t, err, "failed to create events recorder")
 	defer evtsRecorder.Close()
 
-	evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
-	evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
+	evtsRecorder.Event(eventtypes.DSC_ADMITTED, "test event - 1", nil)
+	evtsRecorder.Event(eventtypes.DSC_UNHEALTHY, "test event - 2", nil)
 
 	// send events using multiple workers and check if things are still intact
 	wg := new(sync.WaitGroup)
@@ -109,8 +109,8 @@ func TestEventsRecorder(t *testing.T) {
 			for j := 0; j < each; j++ {
 				// record events w/o reference object
 				message := fmt.Sprintf("thread: %v; event: %v", j, threadID)
-				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, message, nil)
-				evtsRecorder.Event(eventtypes.NIC_ADMITTED, message, nil)
+				evtsRecorder.Event(eventtypes.DSC_UNHEALTHY, message, nil)
+				evtsRecorder.Event(eventtypes.DSC_ADMITTED, message, nil)
 
 				// create test NIC object
 				testNIC := policygen.CreateSmartNIC("0014.2201.2345",
@@ -122,8 +122,8 @@ func TestEventsRecorder(t *testing.T) {
 					})
 
 				// record events with reference object
-				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, message, testNIC)
-				evtsRecorder.Event(eventtypes.NIC_ADMITTED, message, testNIC)
+				evtsRecorder.Event(eventtypes.DSC_UNHEALTHY, message, testNIC)
+				evtsRecorder.Event(eventtypes.DSC_ADMITTED, message, testNIC)
 			}
 			wg.Done()
 		}(i, evtsRecorder)
@@ -186,10 +186,10 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 			case <-stopEventRecorder:
 				return
 			case <-ticker.C:
-				evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
+				evtsRecorder.Event(eventtypes.DSC_ADMITTED, "test event - 1", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 
-				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
+				evtsRecorder.Event(eventtypes.DSC_UNHEALTHY, "test event - 2", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 			}
 		}
@@ -271,10 +271,10 @@ func TestRecorderFileBackup(t *testing.T) {
 			case <-stopEventRecorder:
 				return
 			case <-ticker.C:
-				evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
+				evtsRecorder.Event(eventtypes.DSC_ADMITTED, "test event - 1", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 
-				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
+				evtsRecorder.Event(eventtypes.DSC_UNHEALTHY, "test event - 2", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 			}
 		}
@@ -341,10 +341,10 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 			case <-stopWorkers:
 				return
 			case <-ticker.C:
-				evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
+				evtsRecorder.Event(eventtypes.DSC_ADMITTED, "test event - 1", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 
-				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
+				evtsRecorder.Event(eventtypes.DSC_UNHEALTHY, "test event - 2", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 			}
 		}

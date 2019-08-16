@@ -141,53 +141,53 @@ func init() {
 		Category: "cluster",
 		Desc:     "Module creation for diagnostics failed"}
 
-	eventTypes[NIC_ADMITTED] = &EventTypeAttributes{
-		EType:    NIC_ADMITTED.String(),
+	eventTypes[DSC_ADMITTED] = &EventTypeAttributes{
+		EType:    DSC_ADMITTED.String(),
 		Severity: "info",
 		Category: "cluster",
-		Desc:     "NIC admitted to the cluster"}
+		Desc:     "DSC admitted to the cluster"}
 
-	eventTypes[NIC_REJECTED] = &EventTypeAttributes{
-		EType:    NIC_REJECTED.String(),
+	eventTypes[DSC_REJECTED] = &EventTypeAttributes{
+		EType:    DSC_REJECTED.String(),
 		Severity: "warn",
 		Category: "cluster",
-		Desc:     "A SmartNIC admission request was rejected"}
+		Desc:     "DSC admission request was rejected"}
 
-	eventTypes[NIC_UNREACHABLE] = &EventTypeAttributes{
-		EType:    NIC_UNREACHABLE.String(),
+	eventTypes[DSC_UNREACHABLE] = &EventTypeAttributes{
+		EType:    DSC_UNREACHABLE.String(),
 		Severity: "critical",
 		Category: "cluster",
-		Desc:     "NIC is unreachable"}
+		Desc:     "DSC is unreachable"}
 
-	eventTypes[NIC_HEALTHY] = &EventTypeAttributes{
-		EType:    NIC_HEALTHY.String(),
+	eventTypes[DSC_HEALTHY] = &EventTypeAttributes{
+		EType:    DSC_HEALTHY.String(),
 		Severity: "info",
 		Category: "cluster",
-		Desc:     "NIC is healthy"}
+		Desc:     "DSC is healthy"}
 
-	eventTypes[NIC_UNHEALTHY] = &EventTypeAttributes{
-		EType:    NIC_UNHEALTHY.String(),
+	eventTypes[DSC_UNHEALTHY] = &EventTypeAttributes{
+		EType:    DSC_UNHEALTHY.String(),
 		Severity: "critical",
 		Category: "cluster",
-		Desc:     "NIC is unhealthy"}
+		Desc:     "DSC is unhealthy"}
 
-	eventTypes[HOST_SMART_NIC_SPEC_CONFLICT] = &EventTypeAttributes{
-		EType:    HOST_SMART_NIC_SPEC_CONFLICT.String(),
+	eventTypes[HOST_DSC_SPEC_CONFLICT] = &EventTypeAttributes{
+		EType:    HOST_DSC_SPEC_CONFLICT.String(),
 		Severity: "warn",
 		Category: "cluster",
-		Desc:     "The system has detected a conflict between the SmartNIC specifications of different Host objects"}
+		Desc:     "The system has detected a conflict between the DSC specifications of different Host objects"}
 
-	eventTypes[NIC_DEADMITTED] = &EventTypeAttributes{
-		EType:    NIC_DEADMITTED.String(),
+	eventTypes[DSC_DEADMITTED] = &EventTypeAttributes{
+		EType:    DSC_DEADMITTED.String(),
 		Severity: "info",
 		Category: "cluster",
-		Desc:     "NIC de-admitted from the cluster"}
+		Desc:     "DSC de-admitted from the cluster"}
 
-	eventTypes[NIC_DECOMMISSIONED] = &EventTypeAttributes{
-		EType:    NIC_DECOMMISSIONED.String(),
+	eventTypes[DSC_DECOMMISSIONED] = &EventTypeAttributes{
+		EType:    DSC_DECOMMISSIONED.String(),
 		Severity: "info",
 		Category: "cluster",
-		Desc:     "NIC decommissioned from the cluster"}
+		Desc:     "DSC decommissioned from the cluster"}
 
 	eventTypes[AUTO_GENERATED_TLS_CERT] = &EventTypeAttributes{
 		EType:    AUTO_GENERATED_TLS_CERT.String(),

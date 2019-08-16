@@ -123,7 +123,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 				if decommission {
 					// NIC has been decommissioned by user. Go back to classic mode.
 					log.Infof("SmartNIC %s has been decommissioned, triggering change to HOST managed mode", nic.ObjectMeta.Name)
-					recorder.Event(eventtypes.NIC_DECOMMISSIONED, fmt.Sprintf("SmartNIC %s(%s) decommissioned from the cluster", nic.Spec.ID, nic.Name), nic)
+					recorder.Event(eventtypes.DSC_DECOMMISSIONED, fmt.Sprintf("DSC %s(%s) decommissioned from the cluster", nic.Spec.ID, nic.Name), nic)
 					cfg := nmd.Naples{}
 					// Update config status to reflect the mode change
 					cfg.Spec.Mode = nmd.MgmtMode_HOST.String()
@@ -139,7 +139,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
 					log.Infof("Naples successfully decommissioned and moved to HOST mode.")
 				} else {
-					recorder.Event(eventtypes.NIC_DEADMITTED, fmt.Sprintf("SmartNIC %s(%s) de-admitted from the cluster", nic.Spec.ID, nic.Name), nic)
+					recorder.Event(eventtypes.DSC_DEADMITTED, fmt.Sprintf("DSC %s(%s) de-admitted from the cluster", nic.Spec.ID, nic.Name), nic)
 					err = n.StopManagedMode()
 					if err != nil {
 						log.Errorf("Failed to stop managed mode. Err : %v", err)

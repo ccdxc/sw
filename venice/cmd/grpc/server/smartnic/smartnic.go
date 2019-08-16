@@ -260,12 +260,12 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 
 		switch updHealthCond.Status {
 		case cluster.ConditionStatus_TRUE.String():
-			evtType = eventtypes.NIC_HEALTHY
-			msg = fmt.Sprintf("SmartNIC %s(%s) is %s", updObj.Spec.ID, nicName, cluster.SmartNICCondition_HEALTHY.String())
+			evtType = eventtypes.DSC_HEALTHY
+			msg = fmt.Sprintf("DSC %s(%s) is %s", updObj.Spec.ID, nicName, cluster.SmartNICCondition_HEALTHY.String())
 
 		case cluster.ConditionStatus_FALSE.String():
-			evtType = eventtypes.NIC_UNHEALTHY
-			msg = fmt.Sprintf("SmartNIC %s(%s) is not %s", updObj.Spec.ID, nicName, cluster.SmartNICCondition_HEALTHY.String())
+			evtType = eventtypes.DSC_UNHEALTHY
+			msg = fmt.Sprintf("DSC %s(%s) is not %s", updObj.Spec.ID, nicName, cluster.SmartNICCondition_HEALTHY.String())
 
 		default:
 			// this should not happen
@@ -518,8 +518,8 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		}
 
 		if nicObj.Status.AdmissionPhase == cluster.SmartNICStatus_REJECTED.String() {
-			recorder.Event(eventtypes.NIC_REJECTED,
-				fmt.Sprintf("Admission for SmartNIC %s(%s) was rejected, reason: %s", nicObj.Spec.ID, nicObj.Name, nicObj.Status.AdmissionPhaseReason), nicObj)
+			recorder.Event(eventtypes.DSC_REJECTED,
+				fmt.Sprintf("Admission for DSC %s(%s) was rejected, reason: %s", nicObj.Spec.ID, nicObj.Name, nicObj.Status.AdmissionPhaseReason), nicObj)
 
 			return &grpc.RegisterNICResponse{
 				AdmissionResponse: &grpc.NICAdmissionResponse{
@@ -770,8 +770,8 @@ func (s *RPCServer) MonitorHealth() {
 								if err != nil {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}
-								recorder.Event(eventtypes.NIC_UNREACHABLE,
-									fmt.Sprintf("SmartNIC %s(%s) is %s", nic.Spec.ID, nic.Name, eventtypes.NIC_UNREACHABLE.String()), nicState.SmartNIC)
+								recorder.Event(eventtypes.DSC_UNREACHABLE,
+									fmt.Sprintf("DSC %s(%s) is %s", nic.Spec.ID, nic.Name, eventtypes.DSC_UNREACHABLE.String()), nicState.SmartNIC)
 							}
 							break
 						}
