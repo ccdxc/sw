@@ -2996,6 +2996,7 @@
     "golang.org/x/net/trace",
     "golang.org/x/sync/errgroup",
     "golang.org/x/sys/unix",
+    "golang.org/x/time/rate",
     "golang.org/x/tools/cmd/goimports",
     "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",

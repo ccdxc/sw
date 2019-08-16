@@ -23,6 +23,7 @@ import (
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/trace"
 
@@ -69,6 +70,10 @@ func (t *tInfo) setupElastic() error {
 	config := log.GetDefaultConfig("AuditIntegTest")
 	config.Filter = log.AllowAllFilter
 	t.logger = log.GetNewLogger(config)
+
+	// We need a fairly high limit because all clients are collapsed into a single process
+	// so they hit the same rate limiter
+	rpckit.SetDefaultListenerConnectionRateLimit(50)
 
 	var err error
 	err = testutils.SetupIntegTLSProvider()

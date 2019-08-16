@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api/cache"
@@ -22,6 +23,13 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/safelist"
+)
+
+var (
+	// The maximum number of back-to-back connections accepted by the listener
+	defaultListenerConnectionBurst = 100
+	// The maximum rate of incoming connetions accepted by the listener
+	defaultListenerConnectionRateLimit = rate.Limit(5.0) // connections/s
 )
 
 // apiSrv is the container type for the Api Server.
@@ -283,6 +291,13 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	if config.Logger != nil {
 		opts = append(opts, rpckit.WithLogger(config.Logger))
 	}
+	// For ApiServer we need higher connection burst/rate because all controllers
+	// open multiple connections at startup time
+	opts = append(opts, rpckit.WithListenerRateLimitConfig(
+		&rpckit.RateLimitConfig{
+			R: defaultListenerConnectionRateLimit,
+			B: defaultListenerConnectionBurst,
+		}))
 	// Create the GRPC connection for the server.
 	var s *rpckit.RPCServer
 	{

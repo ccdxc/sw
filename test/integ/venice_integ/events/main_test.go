@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
@@ -87,6 +88,10 @@ func (t *tInfo) setup(tst *testing.T) error {
 	t.logger.Infof("Starting test %s", tst.Name())
 	t.mockResolver = mockresolver.New()
 	t.testName = tst.Name()
+
+	// We need a fairly high limit because all clients are collapsed into a single process
+	// so they hit the same rate limiter
+	rpckit.SetDefaultListenerConnectionRateLimit(50)
 
 	// start certificate server
 	err = testutils.SetupIntegTLSProvider()

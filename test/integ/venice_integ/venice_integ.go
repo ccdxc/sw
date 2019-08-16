@@ -966,6 +966,11 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 
 func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	os.MkdirAll(path.Dir(globals.NmdBackupDBPath), 0664)
+
+	// We need a fairly high limit because all clients are collapsed into a single process
+	// so they hit the same rate limiter
+	rpckit.SetDefaultListenerConnectionRateLimit(50)
+
 	createNaplesOOBInterface()
 	it.ctx, it.cancel = context.WithCancel(context.Background())
 	// logger

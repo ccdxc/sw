@@ -13,8 +13,10 @@ import (
 	"os"
 	"path"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/keepalive"
@@ -29,6 +31,18 @@ const (
 	// from hanging on a server failure. The default timeout on keepalives
 	// is 20 seconds.
 	clientKeepaliveTime = 5 * time.Second
+	defaultDialTimeout  = 6 * time.Second
+)
+
+var (
+	// The period for server-side TCP keepalives
+	defaultListenerTCPKeepAlivePeriod = 3 * time.Minute
+	// The maximum number of back-to-back connections accepted by the listener
+	defaultListenerConnectionBurst = 50
+	// The maximum rate of incoming connetions accepted by the listener
+	defaultListenerConnectionRateLimit = 0.2 // connections/s
+	// frequency at which rate limiter logs rejected connections
+	rateLimiterLogFrequency = uint64(1000) // blocked connections
 )
 
 // Singleton stats
@@ -55,21 +69,24 @@ func ClearStats() {
 
 // These are options that are common to both client and server
 type options struct {
-	stats             *statsMiddleware  // Stats middleware for the server instance
-	tracer            *tracerMiddleware // Tracer middleware for the server
-	middlewares       []Middleware      // list of middlewares
-	enableTracer      bool              // option to enable tracer middleware
-	enableLogger      bool              // option to enable logging middleware
-	enableStats       bool              // option to enable Stats middleware
-	maxMsgSize        int               // Max message size allowed on the connections
-	tlsProvider       TLSProvider       // provides TLS parameters for all RPC clients and servers
-	customTLSProvider bool              // a flag that indicates that user has explicitly passed in a TLS provider
-	balancer          grpc.Balancer     // Load balance RPCs between available servers (client option)
-	remoteServerName  string            // The name of the server that client is connecting to (client option)
-	logger            log.Logger
-	tlsClientIdentity string         // Custom client identity passed to the TLS provider
-	rpcFailFast       *bool          // Explicit value for the connection-wide gRPC FailFast flag
-	customDialTimeout *time.Duration // Custom dial timeout for connection establishment -- use 0 for "no timeout"
+	stats                   *statsMiddleware  // Stats middleware for the server instance
+	tracer                  *tracerMiddleware // Tracer middleware for the server
+	middlewares             []Middleware      // list of middlewares
+	enableTracer            bool              // option to enable tracer middleware
+	enableLogger            bool              // option to enable logging middleware
+	enableStats             bool              // option to enable Stats middleware
+	maxMsgSize              int               // Max message size allowed on the connections
+	tlsProvider             TLSProvider       // provides TLS parameters for all RPC clients and servers
+	customTLSProvider       bool              // a flag that indicates that user has explicitly passed in a TLS provider
+	balancer                grpc.Balancer     // Load balance RPCs between available servers (client option)
+	remoteServerName        string            // The name of the server that client is connecting to (client option)
+	logger                  log.Logger
+	tlsClientIdentity       string           // Custom client identity passed to the TLS provider
+	rpcFailFast             *bool            // Explicit value for the connection-wide gRPC FailFast flag
+	customDialer            *net.Dialer      // Custom dialer to pass to gRPC layer
+	customDialTimeout       *time.Duration   // Custom dial timeout for connection establishment -- use 0 for "no timeout"
+	tcpKeepAlivePeriod      *time.Duration   // Keep-Alive period for TCP servers
+	listenerRateLimitConfig *RateLimitConfig // Parameters for the listener rate-limited
 }
 
 // RPCServer contains RPC server state
@@ -97,6 +114,14 @@ type RPCClient struct {
 	remoteURL   string           // URL we are connecting to
 	useBalancer bool             // Does the client user a resolver
 	options
+}
+
+// RateLimitConfig is the configuration for a rate-limiter that can be used to
+// limit connections accepted by RPCServer listener.
+// See https://godoc.org/golang.org/x/time/rate
+type RateLimitConfig struct {
+	R rate.Limit // rate in number of events per second. 0 = no events
+	B int        // maxumum burst size in numbers of events. 0 = no events
 }
 
 // Option fills the optional params for RPCClient and RPCServer
@@ -196,6 +221,29 @@ func WithDialTimeout(to time.Duration) Option {
 	}
 }
 
+// WithDialer supplies a custom dialer that will be passed to gRPC layer
+func WithDialer(d *net.Dialer) Option {
+	return func(o *options) {
+		o.customDialer = d
+	}
+}
+
+// WithTCPListenerKeepAlivePeriod specifies a custom period for the server TCP keepalives
+func WithTCPListenerKeepAlivePeriod(p time.Duration) Option {
+	return func(o *options) {
+		o.tcpKeepAlivePeriod = new(time.Duration)
+		(*o.tcpKeepAlivePeriod) = p
+	}
+}
+
+// WithListenerRateLimitConfig specifies a custom connection rate limiter configuration for the server
+func WithListenerRateLimitConfig(c *RateLimitConfig) Option {
+	return func(o *options) {
+		o.listenerRateLimitConfig = new(RateLimitConfig)
+		(*o.listenerRateLimitConfig) = *c
+	}
+}
+
 func getDefaultTLSClientIdentity() string {
 	hostname, _ := os.Hostname()
 	return path.Base(os.Args[0]) + "-" + hostname
@@ -203,25 +251,70 @@ func getDefaultTLSClientIdentity() string {
 
 func defaultOptions(mysvcName, role string) *options {
 	return &options{
-		stats:        newStatsMiddleware(mysvcName, role),
-		enableTracer: false,
-		enableLogger: true,
-		enableStats:  true,
+		stats:              newStatsMiddleware(mysvcName, role),
+		enableTracer:       false,
+		enableLogger:       true,
+		enableStats:        true,
+		tcpKeepAlivePeriod: &defaultListenerTCPKeepAlivePeriod,
+		listenerRateLimitConfig: &RateLimitConfig{
+			R: rate.Limit(defaultListenerConnectionRateLimit),
+			B: defaultListenerConnectionBurst},
 	}
 }
 
-type tcpKeepAliveListener struct {
+type rpckitListener struct {
 	*net.TCPListener
+	keepAlivePeriod    *time.Duration
+	rateLimitersConfig *RateLimitConfig
+	rateLimitersMap    *sync.Map // Thread-safe map. Must use a pointer to avoid implicit copies
 }
 
-func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
+type clientRateLimiter struct {
+	rateLimiter        *rate.Limiter
+	blockedConnections uint64
+}
+
+func (ln rpckitListener) Accept() (c net.Conn, err error) {
 	tc, err := ln.AcceptTCP()
 	if err != nil {
-		return
+		return tc, err
 	}
-	tc.SetKeepAlive(true)
-	tc.SetKeepAlivePeriod(3 * time.Minute)
+	if ln.keepAlivePeriod != nil {
+		tc.SetKeepAlive(true)
+		tc.SetKeepAlivePeriod(*ln.keepAlivePeriod)
+	}
+	if ln.rateLimitersConfig != nil {
+		key, _, _ := net.SplitHostPort(tc.RemoteAddr().String())
+		clientRL, ok := ln.rateLimitersMap.Load(key)
+		if !ok {
+			clientRL = &clientRateLimiter{
+				rateLimiter: rate.NewLimiter(ln.rateLimitersConfig.R, ln.rateLimitersConfig.B),
+			}
+			ln.rateLimitersMap.Store(key, clientRL)
+		}
+		rl := clientRL.(*clientRateLimiter)
+		if !rl.rateLimiter.Allow() {
+			tc.Close()
+			if (rl.blockedConnections % rateLimiterLogFrequency) == 0 {
+				log.Infof("Rate limiter blocked %d connections (total) from client %s", atomic.LoadUint64(&rl.blockedConnections)+1, tc.RemoteAddr().String())
+			}
+			atomic.AddUint64(&rl.blockedConnections, 1)
+			return tc, nil
+		}
+	}
 	return tc, nil
+}
+
+func newRPCKitListener(listener *net.TCPListener, keepAlivePeriod *time.Duration, rlc *RateLimitConfig) *rpckitListener {
+	l := &rpckitListener{
+		TCPListener:        listener,
+		keepAlivePeriod:    keepAlivePeriod,
+		rateLimitersConfig: rlc,
+	}
+	if rlc != nil {
+		l.rateLimitersMap = new(sync.Map)
+	}
+	return l
 }
 
 // NewRPCServer returns a gRPC server listening on a local port
@@ -260,7 +353,11 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	}
 	// If started with ":0", listenURL needs to be updated.
 	rpcServer.listenURL = lis.Addr().String()
-	rpcServer.listener = ListenWrapper(tcpKeepAliveListener{lis.(*net.TCPListener)})
+	rpcServer.listener = ListenWrapper(
+		newRPCKitListener(
+			lis.(*net.TCPListener),
+			rpcServer.tcpKeepAlivePeriod,
+			rpcServer.listenerRateLimitConfig))
 
 	// add default middlewares
 	if rpcServer.enableStats {
@@ -497,12 +594,18 @@ func (c *RPCClient) getDialOpts() ([]grpc.DialOption, error) {
 	if c.rpcFailFast != nil {
 		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.FailFast(*c.rpcFailFast)))
 	}
+	if c.customDialer != nil {
+		dialFunc := func(addr string, t time.Duration) (net.Conn, error) {
+			return c.customDialer.Dial("tcp", addr)
+		}
+		grpcOpts = append(grpcOpts, grpc.WithDialer(dialFunc))
+	}
 	if c.customDialTimeout != nil {
 		if *(c.customDialTimeout) != 0 {
 			grpcOpts = append(grpcOpts, grpc.WithTimeout(*(c.customDialTimeout)))
 		}
 	} else {
-		grpcOpts = append(grpcOpts, grpc.WithTimeout(time.Second*6))
+		grpcOpts = append(grpcOpts, grpc.WithTimeout(defaultDialTimeout))
 	}
 	grpcOpts = append(grpcOpts, grpc.WithBlock(),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: clientKeepaliveTime}),

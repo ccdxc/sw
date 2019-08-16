@@ -73,7 +73,7 @@ func validateStats(t *testing.T, svc, prefix, method, suffix string, reqs, resps
 	respsKey := fmt.Sprintf("%v/%v/responses%v%v", svc, prefix, method, suffix)
 	errsKey := fmt.Sprintf("%v/%v/errors%v%v", svc, prefix, method, suffix)
 
-	Assert(t, getStat(t, reqsKey) == reqs, "Unexpected rpc requests", getStat(t, reqsKey), reqs)
+	Assert(t, getStat(t, reqsKey) == reqs, "Unexpected rpc requests %+v %+v", getStat(t, reqsKey), reqs)
 	Assert(t, getStat(t, respsKey) == resps, "Unexpected rpc responses", getStat(t, respsKey), resps)
 	Assert(t, getStat(t, errsKey) == errs, "Unexpected rpc errors", getStat(t, errsKey), errs)
 }
@@ -618,4 +618,114 @@ func TestRPCTraceMiddlewares(t *testing.T) {
 	Assert(t, ok, "RPC response sent not found in annotations")
 	_, ok = collector.AnnotationsSeen["{\"gRPC response received\":\"respMsg:\\\"test response\\\" callerNodeUUID:\\\"testnode-uuid\\\" \"}"]
 	Assert(t, ok, "RPC response received not found in annotations")
+}
+
+func createRPCClients(t *testing.T, wg *sync.WaitGroup, srcAddr, srvURL string, numConns int, rate int) (int, int, time.Duration) {
+	var errors, success int
+	sleepMs := time.Duration(1000.0 / rate)
+	defer wg.Done()
+	begin := time.Now()
+	for i := 0; i < numConns; i++ {
+		dialer := &net.Dialer{LocalAddr: &net.TCPAddr{IP: net.ParseIP(srcAddr)}}
+		client, err := NewRPCClient(srcAddr, srvURL, WithTracerEnabled(false), WithDialer(dialer))
+		if err != nil {
+			t.Logf("Failed to create client with error %v", err)
+			errors++
+		} else {
+			testClient := NewTestClient(client.ClientConn)
+			_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
+			if err != nil {
+				t.Logf("Failed to perform RPC with error %v", err)
+				errors++
+			} else {
+				success++
+			}
+		}
+		client.Close()
+		time.Sleep(sleepMs * time.Millisecond)
+	}
+	end := time.Now()
+	return success, errors, end.Sub(begin)
+}
+
+func TestRPCConnectionRateLimit(t *testing.T) {
+	ClearStats()
+
+	SetDefaultClientFactory(NewClientFactory("testnode-uuid"))
+
+	// create an rpc handler object
+	testHandler := NewTestRPCHandler("dummy message", "test response")
+
+	rlc := &RateLimitConfig{
+		B: 10,
+		R: 1.0,
+	}
+	rpcServer, err := NewRPCServer("testServer", "127.0.0.1:0", WithTracerEnabled(false),
+		WithListenerRateLimitConfig(rlc), WithTCPListenerKeepAlivePeriod(1*time.Second))
+	AssertOk(t, err, "Failed to create listener")
+
+	// register the handlers and start the server
+	RegisterTestServer(rpcServer.GrpcServer, testHandler)
+
+	rpcServer.Start()
+	defer rpcServer.Stop()
+
+	getCompletionTime := func(numConns int, connRate float64) time.Duration {
+		return time.Duration(float64(numConns)/connRate) * 1000 * time.Millisecond
+	}
+
+	getSuccessfulRPCs := func(numConns, burstSize int, connRate, acceptRate float64) int {
+		if connRate <= acceptRate {
+			return numConns
+		}
+		rlConns := numConns - burstSize
+		rlTime := getCompletionTime(rlConns, connRate)
+		return burstSize + int(acceptRate*float64(rlTime)/float64(time.Second))
+	}
+
+	numConnsPerClient := 60
+	rates := []float64{1, 5, 10, 20}
+	expSuccessfulRPCs := make([]int, len(rates))
+	actualSuccessfulRPCs := make([]int, len(rates))
+	expCompletionTimes := make([]time.Duration, len(rates))
+	actualCompletionTimes := make([]time.Duration, len(rates))
+
+	for i := 0; i < len(rates); i++ {
+		expCompletionTimes[i] = getCompletionTime(numConnsPerClient, rates[i])
+		var acceptRate float64
+		if rates[i] <= float64(rlc.R) {
+			acceptRate = rates[i]
+		} else {
+			acceptRate = float64(rlc.R)
+		}
+		expSuccessfulRPCs[i] = getSuccessfulRPCs(numConnsPerClient, rlc.B, rates[i], acceptRate)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(rates))
+	for i := range rates {
+		go func(i int) {
+			var numErrs int
+			actualSuccessfulRPCs[i], numErrs, actualCompletionTimes[i] =
+				createRPCClients(t, &wg, fmt.Sprintf("127.0.0.%d", i+10), rpcServer.GetListenURL(), numConnsPerClient, int(rates[i]))
+			Assert(t, actualSuccessfulRPCs[i]+numErrs == numConnsPerClient,
+				"Results mismatch, successful RPCs: %d, errors: %d, total: %d", actualSuccessfulRPCs[i]+numErrs == numConnsPerClient)
+		}(i)
+	}
+	wg.Wait()
+
+	margin := 0.2
+	for i, r := range rates {
+		rpcLowerBound := float64(expSuccessfulRPCs[i]) * (1 - margin)
+		rpcUpperBound := float64(expSuccessfulRPCs[i]) * (1 + margin)
+		rpcActualValue := float64(actualSuccessfulRPCs[i])
+		Assert(t, rpcActualValue > rpcLowerBound && rpcActualValue < rpcUpperBound,
+			"Rate: %f Unexpected number of successful RPCs. Have: %f, want: %f-%f", r, rpcActualValue, rpcLowerBound, rpcUpperBound)
+
+		compTimeLowerBound := float64(expCompletionTimes[i]) * (1 - margin)
+		compTimeUpperBound := float64(expCompletionTimes[i]) * (1 + margin)
+		compTimeActualValue := float64(actualCompletionTimes[i])
+		Assert(t, compTimeActualValue > compTimeLowerBound && compTimeActualValue < compTimeUpperBound,
+			"Rate: %f Unexpected completion time. Have: %f, want: %f-%f", r, compTimeActualValue, compTimeLowerBound, compTimeUpperBound)
+	}
 }

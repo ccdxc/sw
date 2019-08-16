@@ -164,6 +164,10 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "golang.org/x/crypto"
 
 [[constraint]]
+  branch = "master"
+  name = "golang.org/x/time"
+
+[[constraint]]
   name = "golang.org/x/net"
   branch = "release-branch.go1.11"
 

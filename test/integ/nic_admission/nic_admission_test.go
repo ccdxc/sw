@@ -1121,6 +1121,10 @@ func Setup(m *testing.M) {
 	pl := log.SetConfig(logConfig)
 	grpclog.SetLoggerV2(pl)
 
+	// We need a fairly high limit because all clients are collapsed into a single process
+	// so they hit the same rate limiter
+	rpckit.SetDefaultListenerConnectionRateLimit(50)
+
 	// start certificate server and set up TLS provider
 	// need to do this before Chdir() so that it finds the certificates on disk
 	err := testutils.SetupIntegTLSProvider()

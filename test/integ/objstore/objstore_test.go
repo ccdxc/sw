@@ -60,6 +60,9 @@ func TestObjStoreInteg(t *testing.T) {
 }
 
 func (it *objstoreIntegSuite) SetUpSuite(c *C) {
+	// We need a fairly high limit because all clients are collapsed into a single process
+	// so they hit the same rate limiter
+	rpckit.SetDefaultListenerConnectionRateLimit(50)
 	err := testutils.SetupIntegTLSProvider()
 	if err != nil {
 		log.Fatalf("Error setting up TLS provider: %v", err)

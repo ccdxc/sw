@@ -14,6 +14,10 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+var (
+	rpcRetryInterval = 500 * time.Millisecond
+)
+
 // Observer is an interface implemented by observers of resolver.
 type Observer interface {
 	// OnNotifyResolver handles an event published by the resolver
@@ -128,7 +132,7 @@ func (r *resolverClient) runUntilCancel() {
 		rpcOptions = append(rpcOptions, r.config.Options...)
 		rpcClient, err = rpckit.NewRPCClient(r.config.Name, r.config.Servers[i], rpcOptions...)
 		if err != nil {
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(rpcRetryInterval)
 			continue
 		}
 		client := types.NewServiceAPIClient(rpcClient.ClientConn)
@@ -136,7 +140,7 @@ func (r *resolverClient) runUntilCancel() {
 		// watch for events in a loop.
 		watcher, err := client.WatchServiceInstances(r.ctx, &api.Empty{})
 		if err != nil {
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(rpcRetryInterval)
 			continue
 		}
 		first := true
@@ -193,7 +197,7 @@ func (r *resolverClient) runUntilCancel() {
 		}
 
 		// Sleep before retrying
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(rpcRetryInterval)
 	}
 }
 

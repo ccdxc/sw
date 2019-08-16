@@ -19,6 +19,7 @@ import (
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/trace"
 
@@ -59,6 +60,10 @@ var tinfo tInfo
 
 func (tInfo *tInfo) setup() error {
 	var err error
+
+	// We need a fairly high limit because all clients are collapsed into a single process
+	// so they hit the same rate limiter
+	rpckit.SetDefaultListenerConnectionRateLimit(50)
 
 	err = testutils.SetupIntegTLSProvider()
 	if err != nil {
