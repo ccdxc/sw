@@ -22,7 +22,7 @@ type diagnosticsHooks struct {
 	rslvr        resolver.Interface
 	b            balancer.Balancer
 	logger       log.Logger
-	moduleGetter module.Getter
+	moduleGetter diagnostics.Getter
 	clientGetter diagnostics.ClientGetter // to support unit testing
 	diagSvc      diagnostics.Service
 }

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -23,6 +24,7 @@ import (
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -193,6 +195,10 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			return nil, errShuttingDown.makeError(nil, []string{}, "")
 		}
 	}
+	stTime := time.Now()
+	defer func() {
+		hdr.Record(fmt.Sprintf("%s.%s.stagingBufferUpdate", m.svcPrefix, m.name), time.Since(stTime))
+	}()
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
 	if err != nil {
@@ -417,6 +423,11 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			return nil, errShuttingDown.makeError(nil, []string{}, "")
 		}
 	}
+
+	stTime := time.Now()
+	defer func() {
+		hdr.Record(fmt.Sprintf("%s.%s.HandleInvocation", m.svcPrefix, m.name), time.Since(stTime))
+	}()
 
 	l.InfoLog("service", m.svcPrefix, "method", m.name, "version", m.version)
 	if m.enabled == false {

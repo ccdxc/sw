@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
+	diagapi "github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -60,7 +61,7 @@ func (g *getter) refreshAPIClient() error {
 }
 
 // NewGetter returns the module.Getter implementation TODO: Can have a cache based implementation in future
-func NewGetter(apiServer string, rslvr resolver.Interface, b balancer.Balancer, logger log.Logger) Getter {
+func NewGetter(apiServer string, rslvr resolver.Interface, b balancer.Balancer, logger log.Logger) diagapi.Getter {
 	if gGetter != nil {
 		gGetter.apiServer = apiServer
 		gGetter.rslvr = rslvr

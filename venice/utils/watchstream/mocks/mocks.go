@@ -65,6 +65,11 @@ func (f *FakeWatchPrefixes) GetExact(path string) watchstream.WatchEventQ {
 	return nil
 }
 
+// Stats implements a mock interface
+func (f *FakeWatchPrefixes) Stats() map[string][]watchstream.WatchQueueStat {
+	return nil
+}
+
 // FakeWatchEventQ implements a mock interface
 type FakeWatchEventQ struct {
 	sync.Mutex

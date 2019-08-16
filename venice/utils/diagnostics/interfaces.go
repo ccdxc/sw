@@ -26,6 +26,8 @@ type Service interface {
 	RegisterHandler(rpcMethod, query string, handler Handler) error
 	// UnregisterHandler stops and un-registers handler. It returns false if handler is not found
 	UnregisterHandler(rpcMethod, query string) (Handler, bool)
+	// RegisterCustomAction registers service specific custom actions with a handler.
+	RegisterCustomAction(action string, handler CustomHandler) error
 	// GetHandlers returns all the registered handlers
 	GetHandlers() []Handler
 	// GetHandler returns the registered handler for the given rpc method and query
@@ -67,4 +69,17 @@ type Client interface {
 type Router interface {
 	// GetRoute returns service URL and remote service name
 	GetRoute(*diagapi.DiagnosticsRequest) (string, string, error)
+}
+
+// CustomHandler handle service specific actions. Inputs are opaque actions and params (not
+// validated by the diagnostics infra). The handler returns a interface and error. If the
+// returned object is a proto.Message then the object is marshalled into a proto.Any,
+// otherwise the object is json marshalled into a string and returned. If error is not nil,
+// the error is returned as the body of the response.
+type CustomHandler func(action string, params map[string]string) (interface{}, error)
+
+// Getter is an interface to fetch module object
+type Getter interface {
+	// GetModule returns module object given the key
+	GetModule(name string) (*diagapi.Module, error)
 }

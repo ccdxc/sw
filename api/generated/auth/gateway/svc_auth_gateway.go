@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterAuthV1 struct {
 
 func (a adapterAuthV1) AutoAddAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoAddAuthenticationPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddAuthenticationPolicy")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterAuthV1) AutoAddAuthenticationPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterAuthV1) AutoAddRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoAddRole", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddRole")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterAuthV1) AutoAddRole(oldctx oldcontext.Context, t *auth.Role, opti
 
 func (a adapterAuthV1) AutoAddRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoAddRoleBinding", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddRoleBinding")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterAuthV1) AutoAddRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 
 func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoAddUser", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddUser")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, opti
 
 func (a adapterAuthV1) AutoAddUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoAddUserPreference", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddUserPreference")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterAuthV1) AutoAddUserPreference(oldctx oldcontext.Context, t *auth.
 
 func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoDeleteAuthenticationPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAuthenticationPolicy")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context,
 
 func (a adapterAuthV1) AutoDeleteRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoDeleteRole", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRole")
 	if err != nil {
@@ -215,6 +244,10 @@ func (a adapterAuthV1) AutoDeleteRole(oldctx oldcontext.Context, t *auth.Role, o
 
 func (a adapterAuthV1) AutoDeleteRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoDeleteRoleBinding", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRoleBinding")
 	if err != nil {
@@ -238,6 +271,10 @@ func (a adapterAuthV1) AutoDeleteRoleBinding(oldctx oldcontext.Context, t *auth.
 
 func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoDeleteUser", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteUser")
 	if err != nil {
@@ -261,6 +298,10 @@ func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, o
 
 func (a adapterAuthV1) AutoDeleteUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoDeleteUserPreference", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteUserPreference")
 	if err != nil {
@@ -284,6 +325,10 @@ func (a adapterAuthV1) AutoDeleteUserPreference(oldctx oldcontext.Context, t *au
 
 func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoGetAuthenticationPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetAuthenticationPolicy")
 	if err != nil {
@@ -307,6 +352,10 @@ func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterAuthV1) AutoGetRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoGetRole", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetRole")
 	if err != nil {
@@ -330,6 +379,10 @@ func (a adapterAuthV1) AutoGetRole(oldctx oldcontext.Context, t *auth.Role, opti
 
 func (a adapterAuthV1) AutoGetRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoGetRoleBinding", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetRoleBinding")
 	if err != nil {
@@ -353,6 +406,10 @@ func (a adapterAuthV1) AutoGetRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 
 func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoGetUser", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetUser")
 	if err != nil {
@@ -376,6 +433,10 @@ func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, opti
 
 func (a adapterAuthV1) AutoGetUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoGetUserPreference", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetUserPreference")
 	if err != nil {
@@ -399,6 +460,10 @@ func (a adapterAuthV1) AutoGetUserPreference(oldctx oldcontext.Context, t *auth.
 
 func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.AuthenticationPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoListAuthenticationPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListAuthenticationPolicy")
 	if err != nil {
@@ -425,6 +490,10 @@ func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t
 
 func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.RoleList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoListRole", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListRole")
 	if err != nil {
@@ -453,6 +522,10 @@ func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchO
 
 func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.RoleBindingList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoListRoleBinding", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListRoleBinding")
 	if err != nil {
@@ -481,6 +554,10 @@ func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.Lis
 
 func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.UserList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoListUser", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListUser")
 	if err != nil {
@@ -509,6 +586,10 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 
 func (a adapterAuthV1) AutoListUserPreference(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.UserPreferenceList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoListUserPreference", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListUserPreference")
 	if err != nil {
@@ -537,6 +618,10 @@ func (a adapterAuthV1) AutoListUserPreference(oldctx oldcontext.Context, t *api.
 
 func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoUpdateAuthenticationPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAuthenticationPolicy")
 	if err != nil {
@@ -560,6 +645,10 @@ func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context,
 
 func (a adapterAuthV1) AutoUpdateRole(oldctx oldcontext.Context, t *auth.Role, options ...grpc.CallOption) (*auth.Role, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoUpdateRole", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRole")
 	if err != nil {
@@ -583,6 +672,10 @@ func (a adapterAuthV1) AutoUpdateRole(oldctx oldcontext.Context, t *auth.Role, o
 
 func (a adapterAuthV1) AutoUpdateRoleBinding(oldctx oldcontext.Context, t *auth.RoleBinding, options ...grpc.CallOption) (*auth.RoleBinding, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoUpdateRoleBinding", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRoleBinding")
 	if err != nil {
@@ -606,6 +699,10 @@ func (a adapterAuthV1) AutoUpdateRoleBinding(oldctx oldcontext.Context, t *auth.
 
 func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoUpdateUser", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateUser")
 	if err != nil {
@@ -629,6 +726,10 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 
 func (a adapterAuthV1) AutoUpdateUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1AutoUpdateUserPreference", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateUserPreference")
 	if err != nil {
@@ -652,6 +753,10 @@ func (a adapterAuthV1) AutoUpdateUserPreference(oldctx oldcontext.Context, t *au
 
 func (a adapterAuthV1) IsAuthorized(oldctx oldcontext.Context, t *auth.SubjectAccessReviewRequest, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1IsAuthorized", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("IsAuthorized")
 	if err != nil {
@@ -675,6 +780,10 @@ func (a adapterAuthV1) IsAuthorized(oldctx oldcontext.Context, t *auth.SubjectAc
 
 func (a adapterAuthV1) LdapBindCheck(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1LdapBindCheck", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("LdapBindCheck")
 	if err != nil {
@@ -698,6 +807,10 @@ func (a adapterAuthV1) LdapBindCheck(oldctx oldcontext.Context, t *auth.Authenti
 
 func (a adapterAuthV1) LdapConnectionCheck(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1LdapConnectionCheck", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("LdapConnectionCheck")
 	if err != nil {
@@ -721,6 +834,10 @@ func (a adapterAuthV1) LdapConnectionCheck(oldctx oldcontext.Context, t *auth.Au
 
 func (a adapterAuthV1) PasswordChange(oldctx oldcontext.Context, t *auth.PasswordChangeRequest, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1PasswordChange", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("PasswordChange")
 	if err != nil {
@@ -744,6 +861,10 @@ func (a adapterAuthV1) PasswordChange(oldctx oldcontext.Context, t *auth.Passwor
 
 func (a adapterAuthV1) PasswordReset(oldctx oldcontext.Context, t *auth.PasswordResetRequest, options ...grpc.CallOption) (*auth.User, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1PasswordReset", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("PasswordReset")
 	if err != nil {
@@ -767,6 +888,10 @@ func (a adapterAuthV1) PasswordReset(oldctx oldcontext.Context, t *auth.Password
 
 func (a adapterAuthV1) TokenSecretGenerate(oldctx oldcontext.Context, t *auth.TokenSecretRequest, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.AuthV1TokenSecretGenerate", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("TokenSecretGenerate")
 	if err != nil {

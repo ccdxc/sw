@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterRolloutV1 struct {
 
 func (a adapterRolloutV1) AutoAddRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoAddRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddRollout")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterRolloutV1) AutoAddRollout(oldctx oldcontext.Context, t *rollout.R
 
 func (a adapterRolloutV1) AutoAddRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoAddRolloutAction", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddRolloutAction")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterRolloutV1) AutoAddRolloutAction(oldctx oldcontext.Context, t *rol
 
 func (a adapterRolloutV1) AutoDeleteRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoDeleteRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRollout")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterRolloutV1) AutoDeleteRollout(oldctx oldcontext.Context, t *rollou
 
 func (a adapterRolloutV1) AutoDeleteRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoDeleteRolloutAction", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRolloutAction")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterRolloutV1) AutoDeleteRolloutAction(oldctx oldcontext.Context, t *
 
 func (a adapterRolloutV1) AutoGetRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoGetRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetRollout")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterRolloutV1) AutoGetRollout(oldctx oldcontext.Context, t *rollout.R
 
 func (a adapterRolloutV1) AutoGetRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoGetRolloutAction", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetRolloutAction")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterRolloutV1) AutoGetRolloutAction(oldctx oldcontext.Context, t *rol
 
 func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*rollout.RolloutList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoListRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListRollout")
 	if err != nil {
@@ -218,6 +247,10 @@ func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.List
 
 func (a adapterRolloutV1) AutoListRolloutAction(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*rollout.RolloutActionList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoListRolloutAction", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListRolloutAction")
 	if err != nil {
@@ -244,6 +277,10 @@ func (a adapterRolloutV1) AutoListRolloutAction(oldctx oldcontext.Context, t *ap
 
 func (a adapterRolloutV1) AutoUpdateRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoUpdateRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRollout")
 	if err != nil {
@@ -267,6 +304,10 @@ func (a adapterRolloutV1) AutoUpdateRollout(oldctx oldcontext.Context, t *rollou
 
 func (a adapterRolloutV1) AutoUpdateRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoUpdateRolloutAction", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRolloutAction")
 	if err != nil {
@@ -290,6 +331,10 @@ func (a adapterRolloutV1) AutoUpdateRolloutAction(oldctx oldcontext.Context, t *
 
 func (a adapterRolloutV1) CreateRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1CreateRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("CreateRollout")
 	if err != nil {
@@ -313,6 +358,10 @@ func (a adapterRolloutV1) CreateRollout(oldctx oldcontext.Context, t *rollout.Ro
 
 func (a adapterRolloutV1) RemoveRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1RemoveRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("RemoveRollout")
 	if err != nil {
@@ -336,6 +385,10 @@ func (a adapterRolloutV1) RemoveRollout(oldctx oldcontext.Context, t *rollout.Ro
 
 func (a adapterRolloutV1) StopRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1StopRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("StopRollout")
 	if err != nil {
@@ -359,6 +412,10 @@ func (a adapterRolloutV1) StopRollout(oldctx oldcontext.Context, t *rollout.Roll
 
 func (a adapterRolloutV1) UpdateRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1UpdateRollout", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("UpdateRollout")
 	if err != nil {

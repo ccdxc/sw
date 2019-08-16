@@ -6,13 +6,12 @@ import (
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 type router struct {
 	rslvr        resolver.Interface
-	moduleGetter module.Getter
+	moduleGetter Getter
 }
 
 func (r *router) GetRoute(diagReq *diagapi.DiagnosticsRequest) (string, string, error) {
@@ -64,7 +63,7 @@ func (r *router) GetRoute(diagReq *diagapi.DiagnosticsRequest) (string, string, 
 }
 
 // NewRouter returns router instance
-func NewRouter(rslver resolver.Interface, moduleGetter module.Getter) Router {
+func NewRouter(rslver resolver.Interface, moduleGetter Getter) Router {
 	return &router{
 		rslvr:        rslver,
 		moduleGetter: moduleGetter,

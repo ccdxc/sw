@@ -28,6 +28,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -52,6 +53,10 @@ type adapterTelemetryV1 struct {
 
 func (a adapterTelemetryV1) Fwlogs(oldctx oldcontext.Context, t *telemetry_query.FwlogsQueryList, options ...grpc.CallOption) (*telemetry_query.FwlogsQueryResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.TelemetryV1Fwlogs", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Fwlogs")
 	if err != nil {
@@ -71,6 +76,10 @@ func (a adapterTelemetryV1) Fwlogs(oldctx oldcontext.Context, t *telemetry_query
 
 func (a adapterTelemetryV1) Metrics(oldctx oldcontext.Context, t *telemetry_query.MetricsQueryList, options ...grpc.CallOption) (*telemetry_query.MetricsQueryResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.TelemetryV1Metrics", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Metrics")
 	if err != nil {

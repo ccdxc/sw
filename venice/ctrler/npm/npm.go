@@ -35,7 +35,12 @@ import (
 	"expvar"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api"
 
 	"github.com/gorilla/mux"
 
@@ -44,7 +49,8 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
-	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
+	"github.com/pensando/sw/venice/utils/debug/stats"
+	diagproto "github.com/pensando/sw/venice/utils/diagnostics/protos"
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -82,12 +88,15 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolve
 	}
 	// create nimbus server
 	msrv := nimbus.NewMbusServer(globals.Npm, rpcServer)
-
+	var diagSvc *diagHandler
 	var options []statemgr.Option
 	if enableDiagnostics {
+		diagSvc = &diagHandler{}
 		options = append(options,
 			statemgr.WithDiagnosticsHandler("Debug", diagapi.DiagnosticsRequest_Log.String(), diagsvc.NewElasticLogsHandler(globals.Npm, utils.GetHostname(), diagapi.ModuleStatus_Venice, resolver, logger)),
-			statemgr.WithDiagnosticsHandler("Debug", diagapi.DiagnosticsRequest_Stats.String(), diagsvc.NewExpVarHandler(globals.Npm, utils.GetHostname(), diagapi.ModuleStatus_Venice, logger)))
+			statemgr.WithDiagnosticsHandler("Debug", diagapi.DiagnosticsRequest_Stats.String(), diagsvc.NewExpVarHandler(globals.Npm, utils.GetHostname(), diagapi.ModuleStatus_Venice, logger)),
+			statemgr.WithDiagnosticsHandler("Debug", diagapi.DiagnosticsRequest_Action.String(), diagSvc))
+
 	}
 	// create network state manager
 	stateMgr, err := statemgr.NewStatemgr(rpcServer, apisrvURL, resolver, msrv, logger, options...)
@@ -104,7 +113,10 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolve
 		mserver:   msrv,
 		rpcServer: rpcServer,
 	}
-
+	if diagSvc != nil {
+		diagSvc.stateMgr = stateMgr
+		diagSvc.mserver = msrv
+	}
 	// start the RPC server
 	rpcServer.Start()
 
@@ -159,3 +171,55 @@ func (c *Netctrler) runDebugRESTServer(restURL string) error {
 
 	return nil
 }
+
+type diagHandler struct {
+	stateMgr *statemgr.Statemgr
+	mserver  *nimbus.MbusServer
+}
+
+// HandleRequest processes diagnostic query specified in the request
+func (d *diagHandler) HandleRequest(ctx context.Context, req *diagapi.DiagnosticsRequest) (*api.Any, error) {
+	params := req.Parameters
+	action, ok := params["action"]
+	if !ok {
+		return nil, fmt.Errorf("action not specified")
+	}
+	ret := &diagproto.String{}
+	switch action {
+	case "list-objects":
+		kind, ok := params["kind"]
+		if !ok {
+			ret.Content = "kind was not specified"
+		} else {
+			objs := d.stateMgr.ListObjects(kind)
+			str, err := json.Marshal(objs)
+			if err != nil {
+				ret.Content = fmt.Sprintf("marshall returned error (%s)", err)
+			} else {
+				ret.Content = strings.Replace(string(str), "\\\"", "\"", -1)
+			}
+		}
+	case "dump-nimbus-db":
+		ddb, err := d.mserver.DumpDatabase()
+		if err == nil {
+			ret.Content = strings.Replace(string(ddb), "\\\"", "\"", -1)
+		} else {
+			ret.Content = fmt.Sprintf("dump db returned error (%s)", err)
+		}
+	default:
+		ret.Content = fmt.Sprintf("Unknown action [%v]. valid actions (list-objects, dump-nimbus-db)", action)
+	}
+	anyObj, err := types.MarshalAny(ret)
+	if err != nil {
+		return nil, err
+	}
+	return &api.Any{Any: *anyObj}, nil
+}
+
+// Start initializes the handler. If the handler is already started it should be a no-op
+func (d *diagHandler) Start() error {
+	return nil
+}
+
+// Stop stops the handler. If the handler is already stopped it should be a no-op
+func (d *diagHandler) Stop() {}

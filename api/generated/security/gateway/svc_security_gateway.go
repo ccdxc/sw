@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterSecurityV1 struct {
 
 func (a adapterSecurityV1) AutoAddApp(oldctx oldcontext.Context, t *security.App, options ...grpc.CallOption) (*security.App, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoAddApp", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddApp")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterSecurityV1) AutoAddApp(oldctx oldcontext.Context, t *security.App
 
 func (a adapterSecurityV1) AutoAddCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoAddCertificate", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddCertificate")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterSecurityV1) AutoAddCertificate(oldctx oldcontext.Context, t *secu
 
 func (a adapterSecurityV1) AutoAddFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoAddFirewallProfile", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddFirewallProfile")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterSecurityV1) AutoAddFirewallProfile(oldctx oldcontext.Context, t *
 
 func (a adapterSecurityV1) AutoAddSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoAddSGPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddSGPolicy")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterSecurityV1) AutoAddSGPolicy(oldctx oldcontext.Context, t *securit
 
 func (a adapterSecurityV1) AutoAddSecurityGroup(oldctx oldcontext.Context, t *security.SecurityGroup, options ...grpc.CallOption) (*security.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoAddSecurityGroup", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddSecurityGroup")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterSecurityV1) AutoAddSecurityGroup(oldctx oldcontext.Context, t *se
 
 func (a adapterSecurityV1) AutoAddTrafficEncryptionPolicy(oldctx oldcontext.Context, t *security.TrafficEncryptionPolicy, options ...grpc.CallOption) (*security.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoAddTrafficEncryptionPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddTrafficEncryptionPolicy")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterSecurityV1) AutoAddTrafficEncryptionPolicy(oldctx oldcontext.Cont
 
 func (a adapterSecurityV1) AutoDeleteApp(oldctx oldcontext.Context, t *security.App, options ...grpc.CallOption) (*security.App, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoDeleteApp", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteApp")
 	if err != nil {
@@ -215,6 +244,10 @@ func (a adapterSecurityV1) AutoDeleteApp(oldctx oldcontext.Context, t *security.
 
 func (a adapterSecurityV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoDeleteCertificate", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteCertificate")
 	if err != nil {
@@ -238,6 +271,10 @@ func (a adapterSecurityV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *s
 
 func (a adapterSecurityV1) AutoDeleteFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoDeleteFirewallProfile", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteFirewallProfile")
 	if err != nil {
@@ -261,6 +298,10 @@ func (a adapterSecurityV1) AutoDeleteFirewallProfile(oldctx oldcontext.Context, 
 
 func (a adapterSecurityV1) AutoDeleteSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoDeleteSGPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSGPolicy")
 	if err != nil {
@@ -284,6 +325,10 @@ func (a adapterSecurityV1) AutoDeleteSGPolicy(oldctx oldcontext.Context, t *secu
 
 func (a adapterSecurityV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t *security.SecurityGroup, options ...grpc.CallOption) (*security.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoDeleteSecurityGroup", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSecurityGroup")
 	if err != nil {
@@ -307,6 +352,10 @@ func (a adapterSecurityV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t 
 
 func (a adapterSecurityV1) AutoDeleteTrafficEncryptionPolicy(oldctx oldcontext.Context, t *security.TrafficEncryptionPolicy, options ...grpc.CallOption) (*security.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoDeleteTrafficEncryptionPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTrafficEncryptionPolicy")
 	if err != nil {
@@ -330,6 +379,10 @@ func (a adapterSecurityV1) AutoDeleteTrafficEncryptionPolicy(oldctx oldcontext.C
 
 func (a adapterSecurityV1) AutoGetApp(oldctx oldcontext.Context, t *security.App, options ...grpc.CallOption) (*security.App, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoGetApp", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetApp")
 	if err != nil {
@@ -353,6 +406,10 @@ func (a adapterSecurityV1) AutoGetApp(oldctx oldcontext.Context, t *security.App
 
 func (a adapterSecurityV1) AutoGetCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoGetCertificate", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetCertificate")
 	if err != nil {
@@ -376,6 +433,10 @@ func (a adapterSecurityV1) AutoGetCertificate(oldctx oldcontext.Context, t *secu
 
 func (a adapterSecurityV1) AutoGetFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoGetFirewallProfile", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetFirewallProfile")
 	if err != nil {
@@ -399,6 +460,10 @@ func (a adapterSecurityV1) AutoGetFirewallProfile(oldctx oldcontext.Context, t *
 
 func (a adapterSecurityV1) AutoGetSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoGetSGPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetSGPolicy")
 	if err != nil {
@@ -422,6 +487,10 @@ func (a adapterSecurityV1) AutoGetSGPolicy(oldctx oldcontext.Context, t *securit
 
 func (a adapterSecurityV1) AutoGetSecurityGroup(oldctx oldcontext.Context, t *security.SecurityGroup, options ...grpc.CallOption) (*security.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoGetSecurityGroup", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetSecurityGroup")
 	if err != nil {
@@ -445,6 +514,10 @@ func (a adapterSecurityV1) AutoGetSecurityGroup(oldctx oldcontext.Context, t *se
 
 func (a adapterSecurityV1) AutoGetTrafficEncryptionPolicy(oldctx oldcontext.Context, t *security.TrafficEncryptionPolicy, options ...grpc.CallOption) (*security.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoGetTrafficEncryptionPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetTrafficEncryptionPolicy")
 	if err != nil {
@@ -468,6 +541,10 @@ func (a adapterSecurityV1) AutoGetTrafficEncryptionPolicy(oldctx oldcontext.Cont
 
 func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.AppList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoListApp", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListApp")
 	if err != nil {
@@ -496,6 +573,10 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 
 func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.CertificateList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoListCertificate", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListCertificate")
 	if err != nil {
@@ -524,6 +605,10 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 
 func (a adapterSecurityV1) AutoListFirewallProfile(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.FirewallProfileList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoListFirewallProfile", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListFirewallProfile")
 	if err != nil {
@@ -552,6 +637,10 @@ func (a adapterSecurityV1) AutoListFirewallProfile(oldctx oldcontext.Context, t 
 
 func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.SGPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoListSGPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListSGPolicy")
 	if err != nil {
@@ -580,6 +669,10 @@ func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.Li
 
 func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.SecurityGroupList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoListSecurityGroup", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListSecurityGroup")
 	if err != nil {
@@ -608,6 +701,10 @@ func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *a
 
 func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.TrafficEncryptionPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoListTrafficEncryptionPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListTrafficEncryptionPolicy")
 	if err != nil {
@@ -636,6 +733,10 @@ func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Con
 
 func (a adapterSecurityV1) AutoUpdateApp(oldctx oldcontext.Context, t *security.App, options ...grpc.CallOption) (*security.App, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoUpdateApp", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateApp")
 	if err != nil {
@@ -659,6 +760,10 @@ func (a adapterSecurityV1) AutoUpdateApp(oldctx oldcontext.Context, t *security.
 
 func (a adapterSecurityV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoUpdateCertificate", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateCertificate")
 	if err != nil {
@@ -682,6 +787,10 @@ func (a adapterSecurityV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *s
 
 func (a adapterSecurityV1) AutoUpdateFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoUpdateFirewallProfile", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateFirewallProfile")
 	if err != nil {
@@ -705,6 +814,10 @@ func (a adapterSecurityV1) AutoUpdateFirewallProfile(oldctx oldcontext.Context, 
 
 func (a adapterSecurityV1) AutoUpdateSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoUpdateSGPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSGPolicy")
 	if err != nil {
@@ -728,6 +841,10 @@ func (a adapterSecurityV1) AutoUpdateSGPolicy(oldctx oldcontext.Context, t *secu
 
 func (a adapterSecurityV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t *security.SecurityGroup, options ...grpc.CallOption) (*security.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoUpdateSecurityGroup", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSecurityGroup")
 	if err != nil {
@@ -751,6 +868,10 @@ func (a adapterSecurityV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t 
 
 func (a adapterSecurityV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.Context, t *security.TrafficEncryptionPolicy, options ...grpc.CallOption) (*security.TrafficEncryptionPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SecurityV1AutoUpdateTrafficEncryptionPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTrafficEncryptionPolicy")
 	if err != nil {

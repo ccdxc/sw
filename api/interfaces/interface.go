@@ -56,6 +56,7 @@ type CacheInterface interface {
 	Restore() error
 	Clear()
 	GetKvConn() kvstore.Interface
+	DebugAction(action string, params []string) string
 }
 
 // OverlayStatus is status of Overlay verification including objects in the overlay

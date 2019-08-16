@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/authz"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	{{.GoPkg.Name}} "{{getRelPath .}}/generated/{{.GoPkg.Name}}"
 	grpcclient "{{getRelPath .}}/generated/{{.GoPkg.Name}}/grpc/client"
 )
@@ -57,6 +58,10 @@ type adapter{{.Name}} struct {
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInputType $pkgname . true}}, options ...grpc.CallOption) (*{{getOutputType $pkgname . true}}, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.{{$svcname}}{{.Name}}", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("{{.Name}}")
 	if err != nil {

@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterMonitoringV1 struct {
 
 func (a adapterMonitoringV1) AutoAddAlert(oldctx oldcontext.Context, t *monitoring.Alert, options ...grpc.CallOption) (*monitoring.Alert, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddAlert", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddAlert")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterMonitoringV1) AutoAddAlert(oldctx oldcontext.Context, t *monitori
 
 func (a adapterMonitoringV1) AutoAddAlertDestination(oldctx oldcontext.Context, t *monitoring.AlertDestination, options ...grpc.CallOption) (*monitoring.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddAlertDestination", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddAlertDestination")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterMonitoringV1) AutoAddAlertDestination(oldctx oldcontext.Context, 
 
 func (a adapterMonitoringV1) AutoAddAlertPolicy(oldctx oldcontext.Context, t *monitoring.AlertPolicy, options ...grpc.CallOption) (*monitoring.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddAlertPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddAlertPolicy")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterMonitoringV1) AutoAddAlertPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoAddEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddEventPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddEventPolicy")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterMonitoringV1) AutoAddEventPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoAddFlowExportPolicy(oldctx oldcontext.Context, t *monitoring.FlowExportPolicy, options ...grpc.CallOption) (*monitoring.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddFlowExportPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddFlowExportPolicy")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterMonitoringV1) AutoAddFlowExportPolicy(oldctx oldcontext.Context, 
 
 func (a adapterMonitoringV1) AutoAddFwlogPolicy(oldctx oldcontext.Context, t *monitoring.FwlogPolicy, options ...grpc.CallOption) (*monitoring.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddFwlogPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddFwlogPolicy")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterMonitoringV1) AutoAddFwlogPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoAddMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddMirrorSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddMirrorSession")
 	if err != nil {
@@ -215,6 +244,10 @@ func (a adapterMonitoringV1) AutoAddMirrorSession(oldctx oldcontext.Context, t *
 
 func (a adapterMonitoringV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddStatsPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddStatsPolicy")
 	if err != nil {
@@ -238,6 +271,10 @@ func (a adapterMonitoringV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoAddTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddTechSupportRequest", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddTechSupportRequest")
 	if err != nil {
@@ -261,6 +298,10 @@ func (a adapterMonitoringV1) AutoAddTechSupportRequest(oldctx oldcontext.Context
 
 func (a adapterMonitoringV1) AutoAddTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddTroubleshootingSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddTroubleshootingSession")
 	if err != nil {
@@ -284,6 +325,10 @@ func (a adapterMonitoringV1) AutoAddTroubleshootingSession(oldctx oldcontext.Con
 
 func (a adapterMonitoringV1) AutoDeleteAlert(oldctx oldcontext.Context, t *monitoring.Alert, options ...grpc.CallOption) (*monitoring.Alert, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteAlert", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAlert")
 	if err != nil {
@@ -307,6 +352,10 @@ func (a adapterMonitoringV1) AutoDeleteAlert(oldctx oldcontext.Context, t *monit
 
 func (a adapterMonitoringV1) AutoDeleteAlertDestination(oldctx oldcontext.Context, t *monitoring.AlertDestination, options ...grpc.CallOption) (*monitoring.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteAlertDestination", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAlertDestination")
 	if err != nil {
@@ -330,6 +379,10 @@ func (a adapterMonitoringV1) AutoDeleteAlertDestination(oldctx oldcontext.Contex
 
 func (a adapterMonitoringV1) AutoDeleteAlertPolicy(oldctx oldcontext.Context, t *monitoring.AlertPolicy, options ...grpc.CallOption) (*monitoring.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteAlertPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAlertPolicy")
 	if err != nil {
@@ -353,6 +406,10 @@ func (a adapterMonitoringV1) AutoDeleteAlertPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoDeleteEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteEventPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteEventPolicy")
 	if err != nil {
@@ -376,6 +433,10 @@ func (a adapterMonitoringV1) AutoDeleteEventPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoDeleteFlowExportPolicy(oldctx oldcontext.Context, t *monitoring.FlowExportPolicy, options ...grpc.CallOption) (*monitoring.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteFlowExportPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteFlowExportPolicy")
 	if err != nil {
@@ -399,6 +460,10 @@ func (a adapterMonitoringV1) AutoDeleteFlowExportPolicy(oldctx oldcontext.Contex
 
 func (a adapterMonitoringV1) AutoDeleteFwlogPolicy(oldctx oldcontext.Context, t *monitoring.FwlogPolicy, options ...grpc.CallOption) (*monitoring.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteFwlogPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteFwlogPolicy")
 	if err != nil {
@@ -422,6 +487,10 @@ func (a adapterMonitoringV1) AutoDeleteFwlogPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoDeleteMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteMirrorSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteMirrorSession")
 	if err != nil {
@@ -445,6 +514,10 @@ func (a adapterMonitoringV1) AutoDeleteMirrorSession(oldctx oldcontext.Context, 
 
 func (a adapterMonitoringV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteStatsPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteStatsPolicy")
 	if err != nil {
@@ -468,6 +541,10 @@ func (a adapterMonitoringV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoDeleteTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteTechSupportRequest", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTechSupportRequest")
 	if err != nil {
@@ -491,6 +568,10 @@ func (a adapterMonitoringV1) AutoDeleteTechSupportRequest(oldctx oldcontext.Cont
 
 func (a adapterMonitoringV1) AutoDeleteTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteTroubleshootingSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTroubleshootingSession")
 	if err != nil {
@@ -514,6 +595,10 @@ func (a adapterMonitoringV1) AutoDeleteTroubleshootingSession(oldctx oldcontext.
 
 func (a adapterMonitoringV1) AutoGetAlert(oldctx oldcontext.Context, t *monitoring.Alert, options ...grpc.CallOption) (*monitoring.Alert, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetAlert", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetAlert")
 	if err != nil {
@@ -537,6 +622,10 @@ func (a adapterMonitoringV1) AutoGetAlert(oldctx oldcontext.Context, t *monitori
 
 func (a adapterMonitoringV1) AutoGetAlertDestination(oldctx oldcontext.Context, t *monitoring.AlertDestination, options ...grpc.CallOption) (*monitoring.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetAlertDestination", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetAlertDestination")
 	if err != nil {
@@ -560,6 +649,10 @@ func (a adapterMonitoringV1) AutoGetAlertDestination(oldctx oldcontext.Context, 
 
 func (a adapterMonitoringV1) AutoGetAlertPolicy(oldctx oldcontext.Context, t *monitoring.AlertPolicy, options ...grpc.CallOption) (*monitoring.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetAlertPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetAlertPolicy")
 	if err != nil {
@@ -583,6 +676,10 @@ func (a adapterMonitoringV1) AutoGetAlertPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoGetEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetEventPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetEventPolicy")
 	if err != nil {
@@ -606,6 +703,10 @@ func (a adapterMonitoringV1) AutoGetEventPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoGetFlowExportPolicy(oldctx oldcontext.Context, t *monitoring.FlowExportPolicy, options ...grpc.CallOption) (*monitoring.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetFlowExportPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetFlowExportPolicy")
 	if err != nil {
@@ -629,6 +730,10 @@ func (a adapterMonitoringV1) AutoGetFlowExportPolicy(oldctx oldcontext.Context, 
 
 func (a adapterMonitoringV1) AutoGetFwlogPolicy(oldctx oldcontext.Context, t *monitoring.FwlogPolicy, options ...grpc.CallOption) (*monitoring.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetFwlogPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetFwlogPolicy")
 	if err != nil {
@@ -652,6 +757,10 @@ func (a adapterMonitoringV1) AutoGetFwlogPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoGetMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetMirrorSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetMirrorSession")
 	if err != nil {
@@ -675,6 +784,10 @@ func (a adapterMonitoringV1) AutoGetMirrorSession(oldctx oldcontext.Context, t *
 
 func (a adapterMonitoringV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetStatsPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetStatsPolicy")
 	if err != nil {
@@ -698,6 +811,10 @@ func (a adapterMonitoringV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *mo
 
 func (a adapterMonitoringV1) AutoGetTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetTechSupportRequest", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetTechSupportRequest")
 	if err != nil {
@@ -721,6 +838,10 @@ func (a adapterMonitoringV1) AutoGetTechSupportRequest(oldctx oldcontext.Context
 
 func (a adapterMonitoringV1) AutoGetTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetTroubleshootingSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetTroubleshootingSession")
 	if err != nil {
@@ -744,6 +865,10 @@ func (a adapterMonitoringV1) AutoGetTroubleshootingSession(oldctx oldcontext.Con
 
 func (a adapterMonitoringV1) AutoListAlert(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.AlertList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListAlert", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListAlert")
 	if err != nil {
@@ -772,6 +897,10 @@ func (a adapterMonitoringV1) AutoListAlert(oldctx oldcontext.Context, t *api.Lis
 
 func (a adapterMonitoringV1) AutoListAlertDestination(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.AlertDestinationList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListAlertDestination", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListAlertDestination")
 	if err != nil {
@@ -800,6 +929,10 @@ func (a adapterMonitoringV1) AutoListAlertDestination(oldctx oldcontext.Context,
 
 func (a adapterMonitoringV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.AlertPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListAlertPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListAlertPolicy")
 	if err != nil {
@@ -828,6 +961,10 @@ func (a adapterMonitoringV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *a
 
 func (a adapterMonitoringV1) AutoListEventPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.EventPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListEventPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListEventPolicy")
 	if err != nil {
@@ -856,6 +993,10 @@ func (a adapterMonitoringV1) AutoListEventPolicy(oldctx oldcontext.Context, t *a
 
 func (a adapterMonitoringV1) AutoListFlowExportPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.FlowExportPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListFlowExportPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListFlowExportPolicy")
 	if err != nil {
@@ -884,6 +1025,10 @@ func (a adapterMonitoringV1) AutoListFlowExportPolicy(oldctx oldcontext.Context,
 
 func (a adapterMonitoringV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.FwlogPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListFwlogPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListFwlogPolicy")
 	if err != nil {
@@ -912,6 +1057,10 @@ func (a adapterMonitoringV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *a
 
 func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.MirrorSessionList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListMirrorSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListMirrorSession")
 	if err != nil {
@@ -940,6 +1089,10 @@ func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.StatsPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListStatsPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListStatsPolicy")
 	if err != nil {
@@ -968,6 +1121,10 @@ func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *a
 
 func (a adapterMonitoringV1) AutoListTechSupportRequest(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.TechSupportRequestList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListTechSupportRequest", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListTechSupportRequest")
 	if err != nil {
@@ -994,6 +1151,10 @@ func (a adapterMonitoringV1) AutoListTechSupportRequest(oldctx oldcontext.Contex
 
 func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.TroubleshootingSessionList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListTroubleshootingSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListTroubleshootingSession")
 	if err != nil {
@@ -1022,6 +1183,10 @@ func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Co
 
 func (a adapterMonitoringV1) AutoUpdateAlert(oldctx oldcontext.Context, t *monitoring.Alert, options ...grpc.CallOption) (*monitoring.Alert, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateAlert", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAlert")
 	if err != nil {
@@ -1045,6 +1210,10 @@ func (a adapterMonitoringV1) AutoUpdateAlert(oldctx oldcontext.Context, t *monit
 
 func (a adapterMonitoringV1) AutoUpdateAlertDestination(oldctx oldcontext.Context, t *monitoring.AlertDestination, options ...grpc.CallOption) (*monitoring.AlertDestination, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateAlertDestination", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAlertDestination")
 	if err != nil {
@@ -1068,6 +1237,10 @@ func (a adapterMonitoringV1) AutoUpdateAlertDestination(oldctx oldcontext.Contex
 
 func (a adapterMonitoringV1) AutoUpdateAlertPolicy(oldctx oldcontext.Context, t *monitoring.AlertPolicy, options ...grpc.CallOption) (*monitoring.AlertPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateAlertPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAlertPolicy")
 	if err != nil {
@@ -1091,6 +1264,10 @@ func (a adapterMonitoringV1) AutoUpdateAlertPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoUpdateEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateEventPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateEventPolicy")
 	if err != nil {
@@ -1114,6 +1291,10 @@ func (a adapterMonitoringV1) AutoUpdateEventPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoUpdateFlowExportPolicy(oldctx oldcontext.Context, t *monitoring.FlowExportPolicy, options ...grpc.CallOption) (*monitoring.FlowExportPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateFlowExportPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateFlowExportPolicy")
 	if err != nil {
@@ -1137,6 +1318,10 @@ func (a adapterMonitoringV1) AutoUpdateFlowExportPolicy(oldctx oldcontext.Contex
 
 func (a adapterMonitoringV1) AutoUpdateFwlogPolicy(oldctx oldcontext.Context, t *monitoring.FwlogPolicy, options ...grpc.CallOption) (*monitoring.FwlogPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateFwlogPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateFwlogPolicy")
 	if err != nil {
@@ -1160,6 +1345,10 @@ func (a adapterMonitoringV1) AutoUpdateFwlogPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoUpdateMirrorSession(oldctx oldcontext.Context, t *monitoring.MirrorSession, options ...grpc.CallOption) (*monitoring.MirrorSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateMirrorSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateMirrorSession")
 	if err != nil {
@@ -1183,6 +1372,10 @@ func (a adapterMonitoringV1) AutoUpdateMirrorSession(oldctx oldcontext.Context, 
 
 func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t *monitoring.StatsPolicy, options ...grpc.CallOption) (*monitoring.StatsPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateStatsPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateStatsPolicy")
 	if err != nil {
@@ -1206,6 +1399,10 @@ func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t 
 
 func (a adapterMonitoringV1) AutoUpdateTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateTechSupportRequest", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTechSupportRequest")
 	if err != nil {
@@ -1229,6 +1426,10 @@ func (a adapterMonitoringV1) AutoUpdateTechSupportRequest(oldctx oldcontext.Cont
 
 func (a adapterMonitoringV1) AutoUpdateTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateTroubleshootingSession", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTroubleshootingSession")
 	if err != nil {

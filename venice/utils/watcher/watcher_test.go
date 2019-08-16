@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
@@ -22,8 +23,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
-
-	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 )
 
 const (

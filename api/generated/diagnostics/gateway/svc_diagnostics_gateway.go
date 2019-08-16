@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterDiagnosticsV1 struct {
 
 func (a adapterDiagnosticsV1) AutoAddModule(oldctx oldcontext.Context, t *diagnostics.Module, options ...grpc.CallOption) (*diagnostics.Module, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.DiagnosticsV1AutoAddModule", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddModule")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterDiagnosticsV1) AutoAddModule(oldctx oldcontext.Context, t *diagno
 
 func (a adapterDiagnosticsV1) AutoDeleteModule(oldctx oldcontext.Context, t *diagnostics.Module, options ...grpc.CallOption) (*diagnostics.Module, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.DiagnosticsV1AutoDeleteModule", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteModule")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterDiagnosticsV1) AutoDeleteModule(oldctx oldcontext.Context, t *dia
 
 func (a adapterDiagnosticsV1) AutoGetModule(oldctx oldcontext.Context, t *diagnostics.Module, options ...grpc.CallOption) (*diagnostics.Module, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.DiagnosticsV1AutoGetModule", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetModule")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterDiagnosticsV1) AutoGetModule(oldctx oldcontext.Context, t *diagno
 
 func (a adapterDiagnosticsV1) AutoListModule(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*diagnostics.ModuleList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.DiagnosticsV1AutoListModule", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListModule")
 	if err != nil {
@@ -149,6 +166,10 @@ func (a adapterDiagnosticsV1) AutoListModule(oldctx oldcontext.Context, t *api.L
 
 func (a adapterDiagnosticsV1) AutoUpdateModule(oldctx oldcontext.Context, t *diagnostics.Module, options ...grpc.CallOption) (*diagnostics.Module, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.DiagnosticsV1AutoUpdateModule", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateModule")
 	if err != nil {
@@ -172,6 +193,10 @@ func (a adapterDiagnosticsV1) AutoUpdateModule(oldctx oldcontext.Context, t *dia
 
 func (a adapterDiagnosticsV1) Debug(oldctx oldcontext.Context, t *diagnostics.DiagnosticsRequest, options ...grpc.CallOption) (*diagnostics.DiagnosticsResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.DiagnosticsV1Debug", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Debug")
 	if err != nil {

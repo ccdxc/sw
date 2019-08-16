@@ -28,3 +28,7 @@ message Logs {
 message Stats {
     map<string,string> Stats = 1 [(gogoproto.jsontag) = "stats,omitempty"];
 }
+
+message String {
+    string Content = 1 [(gogoproto.jsontag) = "string,omitempty"];
+}

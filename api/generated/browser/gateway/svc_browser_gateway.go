@@ -28,6 +28,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -52,6 +53,10 @@ type adapterBrowserV1 struct {
 
 func (a adapterBrowserV1) Query(oldctx oldcontext.Context, t *browser.BrowseRequest, options ...grpc.CallOption) (*browser.BrowseResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BrowserV1Query", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Query")
 	if err != nil {
@@ -71,6 +76,10 @@ func (a adapterBrowserV1) Query(oldctx oldcontext.Context, t *browser.BrowseRequ
 
 func (a adapterBrowserV1) References(oldctx oldcontext.Context, t *browser.BrowseRequest, options ...grpc.CallOption) (*browser.BrowseResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BrowserV1References", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("References")
 	if err != nil {
@@ -90,6 +99,10 @@ func (a adapterBrowserV1) References(oldctx oldcontext.Context, t *browser.Brows
 
 func (a adapterBrowserV1) Referrers(oldctx oldcontext.Context, t *browser.BrowseRequest, options ...grpc.CallOption) (*browser.BrowseResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BrowserV1Referrers", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Referrers")
 	if err != nil {

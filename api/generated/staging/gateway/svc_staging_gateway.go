@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterStagingV1 struct {
 
 func (a adapterStagingV1) AutoAddBuffer(oldctx oldcontext.Context, t *staging.Buffer, options ...grpc.CallOption) (*staging.Buffer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1AutoAddBuffer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddBuffer")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterStagingV1) AutoAddBuffer(oldctx oldcontext.Context, t *staging.Bu
 
 func (a adapterStagingV1) AutoDeleteBuffer(oldctx oldcontext.Context, t *staging.Buffer, options ...grpc.CallOption) (*staging.Buffer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1AutoDeleteBuffer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteBuffer")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterStagingV1) AutoDeleteBuffer(oldctx oldcontext.Context, t *staging
 
 func (a adapterStagingV1) AutoGetBuffer(oldctx oldcontext.Context, t *staging.Buffer, options ...grpc.CallOption) (*staging.Buffer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1AutoGetBuffer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetBuffer")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterStagingV1) AutoGetBuffer(oldctx oldcontext.Context, t *staging.Bu
 
 func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*staging.BufferList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1AutoListBuffer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListBuffer")
 	if err != nil {
@@ -151,6 +168,10 @@ func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListW
 
 func (a adapterStagingV1) AutoUpdateBuffer(oldctx oldcontext.Context, t *staging.Buffer, options ...grpc.CallOption) (*staging.Buffer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1AutoUpdateBuffer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateBuffer")
 	if err != nil {
@@ -174,6 +195,10 @@ func (a adapterStagingV1) AutoUpdateBuffer(oldctx oldcontext.Context, t *staging
 
 func (a adapterStagingV1) Clear(oldctx oldcontext.Context, t *staging.ClearAction, options ...grpc.CallOption) (*staging.ClearAction, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1Clear", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Clear")
 	if err != nil {
@@ -197,6 +222,10 @@ func (a adapterStagingV1) Clear(oldctx oldcontext.Context, t *staging.ClearActio
 
 func (a adapterStagingV1) Commit(oldctx oldcontext.Context, t *staging.CommitAction, options ...grpc.CallOption) (*staging.CommitAction, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1Commit", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Commit")
 	if err != nil {

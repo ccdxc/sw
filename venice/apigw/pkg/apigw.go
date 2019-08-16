@@ -56,6 +56,7 @@ import (
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/gzipserver"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -654,6 +655,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	var user *auth.User
 	var operations []authz.Operation
 	if !skipAuth {
+		authTime := time.Now()
 		var ok bool
 		user, ok = a.isRequestAuthenticated(nctx)
 		if !ok {
@@ -662,7 +664,10 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		}
 		// add user to context
 		nctx = NewContextWithUser(nctx, user)
+		hdr.Record("apigw.AuthN", time.Since(authTime))
+
 		if !a.skipAuthz {
+			authTime = time.Now()
 			pzHooks := prof.PreAuthZHooks()
 			for _, h := range pzHooks {
 				nctx, i, err = h(nctx, i)
@@ -685,17 +690,21 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 				a.logger.ErrorLog("method", "HandleRequest", "msg", "Not authorized", "operations", authz.PrintOperations(operations), "user", user.Name, "tenant", user.Tenant)
 				return nil, apierr
 			}
+			hdr.Record("apigw.AuthZ", time.Since(authTime))
 		}
 	}
+	auditTime := time.Now()
 	// audit before making the call
 	if err := a.audit(auditEventID, user, i, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
 		recorder.Event(eventtypes.AUDITING_FAILED,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), user)
 		return nil, apierrors.ToGrpcError("Auditing failed, call aborted", []string{err.Error()}, int32(codes.Unavailable), "", nil)
 	}
+	hdr.Record("apigw.PreCallAudit", time.Since(auditTime))
 	// Call pre Call Hooks
 	skipCall := false
 	skip = false
+	callTime := time.Now()
 	precall := prof.PreCallHooks()
 	for _, h := range precall {
 		nctx, i, skip, err = h(nctx, i)
@@ -725,11 +734,14 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	}
 
 	a.copyToOutgoingContext(nctx, ctx)
+	hdr.Record("apigw.CallTime", time.Since(callTime))
+	auditTime = time.Now()
 	if err := a.audit(auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
 		recorder.Event(eventtypes.AUDITING_FAILED,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		return out, apierrors.ToGrpcError("Auditing failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 	}
+	hdr.Record("apigw.PostCallAudit", time.Since(auditTime))
 	return out, err
 }
 

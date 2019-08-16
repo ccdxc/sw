@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterWorkloadV1 struct {
 
 func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoAddEndpoint", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddEndpoint")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workloa
 
 func (a adapterWorkloadV1) AutoAddWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoAddWorkload", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddWorkload")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterWorkloadV1) AutoAddWorkload(oldctx oldcontext.Context, t *workloa
 
 func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoDeleteEndpoint", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteEndpoint")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *work
 
 func (a adapterWorkloadV1) AutoDeleteWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoDeleteWorkload", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteWorkload")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterWorkloadV1) AutoDeleteWorkload(oldctx oldcontext.Context, t *work
 
 func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoGetEndpoint", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetEndpoint")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workloa
 
 func (a adapterWorkloadV1) AutoGetWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoGetWorkload", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetWorkload")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterWorkloadV1) AutoGetWorkload(oldctx oldcontext.Context, t *workloa
 
 func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*workload.EndpointList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoListEndpoint", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListEndpoint")
 	if err != nil {
@@ -220,6 +249,10 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 
 func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*workload.WorkloadList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoListWorkload", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListWorkload")
 	if err != nil {
@@ -248,6 +281,10 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 
 func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoUpdateEndpoint", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateEndpoint")
 	if err != nil {
@@ -271,6 +308,10 @@ func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *work
 
 func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AutoUpdateWorkload", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateWorkload")
 	if err != nil {

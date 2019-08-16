@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterObjstoreV1 struct {
 
 func (a adapterObjstoreV1) AutoAddBucket(oldctx oldcontext.Context, t *objstore.Bucket, options ...grpc.CallOption) (*objstore.Bucket, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoAddBucket", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddBucket")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterObjstoreV1) AutoAddBucket(oldctx oldcontext.Context, t *objstore.
 
 func (a adapterObjstoreV1) AutoAddObject(oldctx oldcontext.Context, t *objstore.Object, options ...grpc.CallOption) (*objstore.Object, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoAddObject", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddObject")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterObjstoreV1) AutoAddObject(oldctx oldcontext.Context, t *objstore.
 
 func (a adapterObjstoreV1) AutoDeleteBucket(oldctx oldcontext.Context, t *objstore.Bucket, options ...grpc.CallOption) (*objstore.Bucket, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoDeleteBucket", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteBucket")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterObjstoreV1) AutoDeleteBucket(oldctx oldcontext.Context, t *objsto
 
 func (a adapterObjstoreV1) AutoDeleteObject(oldctx oldcontext.Context, t *objstore.Object, options ...grpc.CallOption) (*objstore.Object, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoDeleteObject", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteObject")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterObjstoreV1) AutoDeleteObject(oldctx oldcontext.Context, t *objsto
 
 func (a adapterObjstoreV1) AutoGetBucket(oldctx oldcontext.Context, t *objstore.Bucket, options ...grpc.CallOption) (*objstore.Bucket, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoGetBucket", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetBucket")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterObjstoreV1) AutoGetBucket(oldctx oldcontext.Context, t *objstore.
 
 func (a adapterObjstoreV1) AutoGetObject(oldctx oldcontext.Context, t *objstore.Object, options ...grpc.CallOption) (*objstore.Object, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoGetObject", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetObject")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterObjstoreV1) AutoGetObject(oldctx oldcontext.Context, t *objstore.
 
 func (a adapterObjstoreV1) AutoListBucket(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*objstore.BucketList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoListBucket", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListBucket")
 	if err != nil {
@@ -218,6 +247,10 @@ func (a adapterObjstoreV1) AutoListBucket(oldctx oldcontext.Context, t *api.List
 
 func (a adapterObjstoreV1) AutoListObject(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*objstore.ObjectList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoListObject", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListObject")
 	if err != nil {
@@ -245,6 +278,10 @@ func (a adapterObjstoreV1) AutoListObject(oldctx oldcontext.Context, t *api.List
 
 func (a adapterObjstoreV1) AutoUpdateBucket(oldctx oldcontext.Context, t *objstore.Bucket, options ...grpc.CallOption) (*objstore.Bucket, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoUpdateBucket", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateBucket")
 	if err != nil {
@@ -268,6 +305,10 @@ func (a adapterObjstoreV1) AutoUpdateBucket(oldctx oldcontext.Context, t *objsto
 
 func (a adapterObjstoreV1) AutoUpdateObject(oldctx oldcontext.Context, t *objstore.Object, options ...grpc.CallOption) (*objstore.Object, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoUpdateObject", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateObject")
 	if err != nil {

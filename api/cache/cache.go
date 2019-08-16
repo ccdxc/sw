@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
 	"expvar"
 	"fmt"
 	"reflect"
@@ -1143,6 +1144,20 @@ func (c *cache) GetKvConn() kvstore.Interface {
 		return r.(kvstore.Interface)
 	}
 	return nil
+}
+
+func (c *cache) DebugAction(action string, params []string) string {
+	switch action {
+	case "list-watchers":
+		s := c.queues.Stats()
+		rstr, err := json.Marshal(s)
+		if err == nil {
+			return string(rstr)
+		}
+		return "marshal failed" + err.Error()
+	default:
+		return "unknown action"
+	}
 }
 
 func (c *cache) getRefRequirements(ctx context.Context, key string, oper apiintf.APIOperType, obj runtime.Object) apiintf.Requirement {

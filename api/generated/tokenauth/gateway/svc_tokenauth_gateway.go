@@ -28,6 +28,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -52,6 +53,10 @@ type adapterTokenAuthV1 struct {
 
 func (a adapterTokenAuthV1) GenerateNodeToken(oldctx oldcontext.Context, t *tokenauth.NodeTokenRequest, options ...grpc.CallOption) (*tokenauth.NodeTokenResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.TokenAuthV1GenerateNodeToken", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("GenerateNodeToken")
 	if err != nil {

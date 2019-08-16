@@ -3,6 +3,7 @@ package apisrvpkg
 import (
 	"context"
 	"fmt"
+
 	"math"
 	"sync"
 
@@ -11,13 +12,17 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api/cache"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/graph"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	diagnostics "github.com/pensando/sw/venice/utils/diagnostics"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -281,6 +286,13 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	if err != nil {
 		a.Logger.Fatalf("could not create graph (%s)", err)
 	}
+	diagSvc := diagsvc.GetDiagnosticsService(globals.APIServer, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, config.Logger)
+	if err := diagSvc.RegisterHandler("Debug", diagapi.DiagnosticsRequest_Stats.String(), diagsvc.NewExpVarHandler(globals.APIServer, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, config.Logger)); err != nil {
+		a.Logger.ErrorLog("method", "GetDiagnosticsServiceWithDefaults", "msg", "failed to register expvar handler", "err", err)
+	}
+	diagSvc.RegisterCustomAction("list-watchers", func(action string, params map[string]string) (interface{}, error) {
+		return a.apiCache.DebugAction(action, nil), nil
+	})
 
 	opts := []rpckit.Option{}
 	if !config.DevMode {
@@ -306,6 +318,9 @@ func (a *apiSrv) Run(config apiserver.Config) {
 			panic(fmt.Sprintf("Could not start Server on port %v err(%s)", config.GrpcServerPort, err))
 		}
 		a.runstate.addr = s.GetListenURL()
+
+		// Register the Diagnostics service
+		diagnostics.RegisterService(s.GrpcServer, diagSvc)
 	}
 
 	a.rslvrURIs = config.Resolvers

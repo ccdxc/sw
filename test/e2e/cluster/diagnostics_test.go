@@ -277,6 +277,52 @@ var _ = Describe("diagnostics tests", func() {
 				return nil
 			}, 30, 1).Should(BeNil())
 		})
+		It("check Action (list-objects) query", func() {
+			var err error
+			// query stats through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Action.String(),
+					Parameters: map[string]string{"action": "list-objects", "kind": "Network"},
+				}, &resp); err != nil {
+					return err
+				}
+				if strings.Contains(respStr, "unknown query") ||
+					strings.Contains(respStr, "rpc error:") {
+					return fmt.Errorf("did not succeed: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+		})
+		It("check Action (dump-nimbus-db) query", func() {
+			var err error
+			// query stats through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Action.String(),
+					Parameters: map[string]string{"action": "dump-nimbus-db"},
+				}, &resp); err != nil {
+					return err
+				}
+				if strings.Contains(respStr, "unknown query") ||
+					strings.Contains(respStr, "rpc error:") {
+					return fmt.Errorf("did not succeed: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+		})
 	})
 	Context("apigw logs", func() {
 		var modObj *diagnostics.Module
@@ -674,6 +720,64 @@ var _ = Describe("diagnostics tests", func() {
 				}
 				if !strings.Contains(respStr, "PID") {
 					return fmt.Errorf("no query response returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+		})
+	})
+	Context("apiserver", func() {
+		var modObj *diagnostics.Module
+		BeforeEach(func() {
+			var err error
+			var node string
+			Eventually(func() error {
+				node = ts.tu.GetNodeForService(globals.APIServer)
+				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.APIServer)})
+				return err
+			}, 10, 1).Should(BeNil())
+		})
+		It("check stats query", func() {
+			var err error
+			// query stats through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Stats.String(),
+				}, &resp); err != nil {
+					return err
+				}
+				if !strings.Contains(respStr, "\"cmdline\":") ||
+					!strings.Contains(respStr, "\"cpustats\":") ||
+					!strings.Contains(respStr, "\"memstats\":") {
+					return fmt.Errorf("no stats returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+		})
+		It("check Action (list-watchers) query", func() {
+			var err error
+			// query stats through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Action.String(),
+					Parameters: map[string]string{"action": "list-watchers"},
+				}, &resp); err != nil {
+					return err
+				}
+				if strings.Contains(respStr, "unknown query") ||
+					strings.Contains(respStr, "rpc error:") {
+					return fmt.Errorf("did not succeed: {%v}", respStr)
 				}
 				return nil
 			}, 30, 1).Should(BeNil())

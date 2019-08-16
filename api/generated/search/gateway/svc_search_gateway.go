@@ -28,6 +28,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -52,6 +53,10 @@ type adapterSearchV1 struct {
 
 func (a adapterSearchV1) PolicyQuery(oldctx oldcontext.Context, t *search.PolicySearchRequest, options ...grpc.CallOption) (*search.PolicySearchResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SearchV1PolicyQuery", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("PolicyQuery")
 	if err != nil {
@@ -71,6 +76,10 @@ func (a adapterSearchV1) PolicyQuery(oldctx oldcontext.Context, t *search.Policy
 
 func (a adapterSearchV1) Query(oldctx oldcontext.Context, t *search.SearchRequest, options ...grpc.CallOption) (*search.SearchResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.SearchV1Query", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Query")
 	if err != nil {

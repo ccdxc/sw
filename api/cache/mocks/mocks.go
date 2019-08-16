@@ -50,6 +50,11 @@ func (f *FakeCache) Stat(tx context.Context, keys []string) []apiintf.ObjectStat
 	return nil
 }
 
+// DebugAction is a mock implementation
+func (f *FakeCache) DebugAction(action string, params []string) string {
+	return ""
+}
+
 // Clear is mock implementation
 func (f *FakeCache) Clear() {
 }
@@ -450,6 +455,11 @@ func (f *FakeOverlay) NewTxn() kvstore.Txn {
 // NewWrappedTxn is a mock implementation
 func (f *FakeOverlay) NewWrappedTxn(ctx context.Context) kvstore.Txn {
 	return f.NewTxn()
+}
+
+// DebugAction is a mock implementation
+func (f *FakeOverlay) DebugAction(action string, params []string) string {
+	return ""
 }
 
 // FakeRequirement is a mock implementation

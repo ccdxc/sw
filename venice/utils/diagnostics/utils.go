@@ -17,13 +17,14 @@ import (
 
 // list of supported modules for diagnostics
 var supportedVeniceModules = map[string]bool{
-	globals.Spyglass: true,
-	globals.Npm:      true,
-	globals.APIGw:    true,
-	globals.Citadel:  true,
-	globals.EvtsMgr:  true,
-	globals.Rollout:  true,
-	globals.Tpm:      true,
+	globals.Spyglass:  true,
+	globals.Npm:       true,
+	globals.APIGw:     true,
+	globals.Citadel:   true,
+	globals.EvtsMgr:   true,
+	globals.Rollout:   true,
+	globals.Tpm:       true,
+	globals.APIServer: true,
 }
 
 // list of support naples modules for diagnostics

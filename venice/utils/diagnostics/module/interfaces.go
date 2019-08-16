@@ -38,9 +38,3 @@ const (
 	Update = Oper("Update")
 	Delete = Oper("Delete")
 )
-
-// Getter is an interface to fetch module object
-type Getter interface {
-	// GetModule returns module object given the key
-	GetModule(name string) (*diagnostics.Module, error)
-}

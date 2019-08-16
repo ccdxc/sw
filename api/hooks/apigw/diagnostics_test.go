@@ -14,7 +14,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/mock"
-	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/log"
 	rslvrmock "github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -26,7 +25,7 @@ func TestDebugPreCallHook(t *testing.T) {
 		in           interface{}
 		svcInstance  *cmdprotos.ServiceInstance
 		clientGetter diagnostics.ClientGetter
-		moduleGetter module.Getter
+		moduleGetter diagnostics.Getter
 		router       diagnostics.Router
 		out          interface{}
 		skipCall     bool

@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterClusterV1 struct {
 
 func (a adapterClusterV1) AuthBootstrapComplete(oldctx oldcontext.Context, t *cluster.ClusterAuthBootstrapRequest, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AuthBootstrapComplete", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AuthBootstrapComplete")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterClusterV1) AuthBootstrapComplete(oldctx oldcontext.Context, t *cl
 
 func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddCluster", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddCluster")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.C
 
 func (a adapterClusterV1) AutoAddHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddHost", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddHost")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterClusterV1) AutoAddHost(oldctx oldcontext.Context, t *cluster.Host
 
 func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddNode", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddNode")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node
 
 func (a adapterClusterV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddSmartNIC", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddSmartNIC")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterClusterV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cluster.
 
 func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddTenant", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddTenant")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Te
 
 func (a adapterClusterV1) AutoAddVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddVersion", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddVersion")
 	if err != nil {
@@ -215,6 +244,10 @@ func (a adapterClusterV1) AutoAddVersion(oldctx oldcontext.Context, t *cluster.V
 
 func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteCluster", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteCluster")
 	if err != nil {
@@ -238,6 +271,10 @@ func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluste
 
 func (a adapterClusterV1) AutoDeleteHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteHost", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteHost")
 	if err != nil {
@@ -261,6 +298,10 @@ func (a adapterClusterV1) AutoDeleteHost(oldctx oldcontext.Context, t *cluster.H
 
 func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteNode", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteNode")
 	if err != nil {
@@ -284,6 +325,10 @@ func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.N
 
 func (a adapterClusterV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteSmartNIC", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSmartNIC")
 	if err != nil {
@@ -307,6 +352,10 @@ func (a adapterClusterV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *clust
 
 func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteTenant", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTenant")
 	if err != nil {
@@ -330,6 +379,10 @@ func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster
 
 func (a adapterClusterV1) AutoDeleteVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteVersion", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteVersion")
 	if err != nil {
@@ -353,6 +406,10 @@ func (a adapterClusterV1) AutoDeleteVersion(oldctx oldcontext.Context, t *cluste
 
 func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetCluster", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetCluster")
 	if err != nil {
@@ -376,6 +433,10 @@ func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.C
 
 func (a adapterClusterV1) AutoGetHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetHost", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetHost")
 	if err != nil {
@@ -399,6 +460,10 @@ func (a adapterClusterV1) AutoGetHost(oldctx oldcontext.Context, t *cluster.Host
 
 func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetNode", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetNode")
 	if err != nil {
@@ -422,6 +487,10 @@ func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node
 
 func (a adapterClusterV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetSmartNIC", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetSmartNIC")
 	if err != nil {
@@ -445,6 +514,10 @@ func (a adapterClusterV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cluster.
 
 func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetTenant", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetTenant")
 	if err != nil {
@@ -468,6 +541,10 @@ func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Te
 
 func (a adapterClusterV1) AutoGetVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetVersion", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetVersion")
 	if err != nil {
@@ -491,6 +568,10 @@ func (a adapterClusterV1) AutoGetVersion(oldctx oldcontext.Context, t *cluster.V
 
 func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.ClusterList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListCluster", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListCluster")
 	if err != nil {
@@ -517,6 +598,10 @@ func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.List
 
 func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.HostList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListHost", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListHost")
 	if err != nil {
@@ -543,6 +628,10 @@ func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWat
 
 func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.NodeList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListNode", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListNode")
 	if err != nil {
@@ -569,6 +658,10 @@ func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWat
 
 func (a adapterClusterV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.SmartNICList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListSmartNIC", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListSmartNIC")
 	if err != nil {
@@ -595,6 +688,10 @@ func (a adapterClusterV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.Lis
 
 func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.TenantList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListTenant", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListTenant")
 	if err != nil {
@@ -621,6 +718,10 @@ func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListW
 
 func (a adapterClusterV1) AutoListVersion(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.VersionList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListVersion", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListVersion")
 	if err != nil {
@@ -647,6 +748,10 @@ func (a adapterClusterV1) AutoListVersion(oldctx oldcontext.Context, t *api.List
 
 func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateCluster", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateCluster")
 	if err != nil {
@@ -670,6 +775,10 @@ func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluste
 
 func (a adapterClusterV1) AutoUpdateHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateHost", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateHost")
 	if err != nil {
@@ -693,6 +802,10 @@ func (a adapterClusterV1) AutoUpdateHost(oldctx oldcontext.Context, t *cluster.H
 
 func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateNode", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateNode")
 	if err != nil {
@@ -716,6 +829,10 @@ func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.N
 
 func (a adapterClusterV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateSmartNIC", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSmartNIC")
 	if err != nil {
@@ -739,6 +856,10 @@ func (a adapterClusterV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *clust
 
 func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateTenant", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTenant")
 	if err != nil {
@@ -762,6 +883,10 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 
 func (a adapterClusterV1) AutoUpdateVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateVersion", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateVersion")
 	if err != nil {
@@ -785,6 +910,10 @@ func (a adapterClusterV1) AutoUpdateVersion(oldctx oldcontext.Context, t *cluste
 
 func (a adapterClusterV1) UpdateTLSConfig(oldctx oldcontext.Context, t *cluster.UpdateTLSConfigRequest, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1UpdateTLSConfig", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("UpdateTLSConfig")
 	if err != nil {

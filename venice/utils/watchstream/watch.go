@@ -62,12 +62,21 @@ type WatchEventQ interface {
 	Stop() bool
 }
 
+// WatchQueueStat gives visibility to the WatchQueue for debugging
+type WatchQueueStat struct {
+	PeerID        string
+	QLength       int
+	LastRev       uint64
+	LastTimeStamp time.Time
+}
+
 // WatchedPrefixes is an interface for managing WatchEventQueues
 type WatchedPrefixes interface {
 	Add(path, peer string) WatchEventQ
 	Del(path, peer string) WatchEventQ
 	Get(path string) []WatchEventQ
 	GetExact(path string) WatchEventQ
+	Stats() map[string][]WatchQueueStat
 }
 
 // watcher is used track individual client side watchers
@@ -79,6 +88,8 @@ type watcher struct {
 	version uint64
 	// time for last update
 	lastUpd time.Time
+	// peerID is the name of the peer
+	peerID string
 }
 
 // GetState returns (current version, last update time)
@@ -275,6 +286,34 @@ func (w *watchedPrefixes) GetExact(path string) WatchEventQ {
 	return ret.(*watchEventQ)
 }
 
+func (w *watchedPrefixes) Stats() map[string][]WatchQueueStat {
+	defer w.RUnlock()
+	w.RLock()
+	ret := make(map[string][]WatchQueueStat)
+	log.Infof("got call to Stat WatchedPrefixes")
+	collectFn := func(prefix patricia.Prefix, item patricia.Item) error {
+		if i, ok := item.(*watchEventQ); ok {
+			path := i.path
+			statWatcher := func(i interface{}) bool {
+				r := i.(*watcher)
+				rev, ts := r.GetState()
+				ret[path] = append(ret[path], WatchQueueStat{
+					PeerID:        r.peerID,
+					LastRev:       rev,
+					LastTimeStamp: ts,
+				})
+				return true
+			}
+			i.watcherList.Iterate(statWatcher)
+		} else {
+			log.Infof("no requested Type [%+v]", i)
+		}
+		return nil
+	}
+	w.trie.VisitSubtree(patricia.Prefix("/"), collectFn)
+	return ret
+}
+
 // Enqueue enqueues an watch event to the queue.
 func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error {
 	start := time.Now()
@@ -308,7 +347,8 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 // for each element. Dequeue() runs as a go routine and does callbacks in a tight loop
 // till the end of the list is encountered.
 func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupFn func()) {
-	tracker := watcher{}
+	peer := ctxutils.GetContextID(ctx)
+	tracker := watcher{peerID: peer}
 	tracker.ctx, tracker.cancel = context.WithCancel(ctx)
 	w.wg.Add(1)
 	tel := w.watcherList.Insert(&tracker)
@@ -322,7 +362,6 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 	var wg sync.WaitGroup
 	var startVer uint64
 
-	peer := ctxutils.GetContextID(ctx)
 	sendevent := func(e *list.Element) {
 		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)

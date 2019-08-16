@@ -35,9 +35,11 @@ func (d *diagnosticsService) RegisterHandler(rpcMethod, query string, handler di
 	key := getHandlerKey(rpcMethod, query)
 	defer d.Unlock()
 	d.Lock()
-	_, ok := d.handlers[key]
+	h, ok := d.handlers[key]
 	if ok {
-		return fmt.Errorf("duplicate handler registration for query %s", query)
+		// Stop the current handler and register the new one provided
+		h.Stop()
+		d.logger.InfoLog("method", "RegisterHandler", "msg", "closing existing handler due to duplicate re-registration", "method", rpcMethod, "query", query)
 	}
 	if err := handler.Start(); err != nil {
 		return err
@@ -57,6 +59,27 @@ func (d *diagnosticsService) UnregisterHandler(rpcMethod, query string) (diagnos
 	handler.Stop()
 	delete(d.handlers, key)
 	return handler, true
+}
+
+// RegisterCustomAction registers service specific custom actions with a handler.
+func (d *diagnosticsService) RegisterCustomAction(action string, handler diagnostics.CustomHandler) error {
+	key := getHandlerKey("Debug", diagapi.DiagnosticsRequest_Action.String())
+	defer d.Unlock()
+	d.Lock()
+	h, ok := d.handlers[key]
+	if !ok {
+		h = &customActionHandler{actions: make(map[string]diagnostics.CustomHandler)}
+		d.handlers[key] = h
+	}
+	ch := h.(*customActionHandler)
+	defer ch.Unlock()
+	ch.Lock()
+	if _, ok := ch.actions[action]; ok {
+		return fmt.Errorf("action is already registered")
+	}
+	ch.actions[action] = handler
+	ch.knownActions = append(ch.knownActions, action)
+	return nil
 }
 
 func (d *diagnosticsService) GetHandlers() []diagnostics.Handler {

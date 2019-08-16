@@ -30,6 +30,7 @@ var _ listerwatcher.WatcherClient
 
 // DiagnosticsRequest_QueryType_normal is a map of normalized values for the enum
 var DiagnosticsRequest_QueryType_normal = map[string]string{
+	"action":  "action",
 	"log":     "log",
 	"profile": "profile",
 	"stats":   "stats",
@@ -39,12 +40,14 @@ var DiagnosticsRequest_QueryType_vname = map[int32]string{
 	0: "log",
 	1: "profile",
 	2: "stats",
+	3: "action",
 }
 
 var DiagnosticsRequest_QueryType_vvalue = map[string]int32{
 	"log":     0,
 	"profile": 1,
 	"stats":   2,
+	"action":  3,
 }
 
 func (x DiagnosticsRequest_QueryType) String() string {

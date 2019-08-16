@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterBookstoreV1 struct {
 
 func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.OutageRequest, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AddOutage", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AddOutage")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.Ou
 
 func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstore.ApplyDiscountReq, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1Applydiscount", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Applydiscount")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstor
 
 func (a adapterBookstoreV1) AutoAddBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoAddBook", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddBook")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterBookstoreV1) AutoAddBook(oldctx oldcontext.Context, t *bookstore.
 
 func (a adapterBookstoreV1) AutoAddCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoAddCoupon", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddCoupon")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterBookstoreV1) AutoAddCoupon(oldctx oldcontext.Context, t *bookstor
 
 func (a adapterBookstoreV1) AutoAddCustomer(oldctx oldcontext.Context, t *bookstore.Customer, options ...grpc.CallOption) (*bookstore.Customer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoAddCustomer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddCustomer")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterBookstoreV1) AutoAddCustomer(oldctx oldcontext.Context, t *bookst
 
 func (a adapterBookstoreV1) AutoAddOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoAddOrder", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddOrder")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterBookstoreV1) AutoAddOrder(oldctx oldcontext.Context, t *bookstore
 
 func (a adapterBookstoreV1) AutoAddPublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoAddPublisher", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddPublisher")
 	if err != nil {
@@ -215,6 +244,10 @@ func (a adapterBookstoreV1) AutoAddPublisher(oldctx oldcontext.Context, t *books
 
 func (a adapterBookstoreV1) AutoAddStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoAddStore", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddStore")
 	if err != nil {
@@ -238,6 +271,10 @@ func (a adapterBookstoreV1) AutoAddStore(oldctx oldcontext.Context, t *bookstore
 
 func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoDeleteBook", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteBook")
 	if err != nil {
@@ -261,6 +298,10 @@ func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *booksto
 
 func (a adapterBookstoreV1) AutoDeleteCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoDeleteCoupon", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteCoupon")
 	if err != nil {
@@ -284,6 +325,10 @@ func (a adapterBookstoreV1) AutoDeleteCoupon(oldctx oldcontext.Context, t *books
 
 func (a adapterBookstoreV1) AutoDeleteCustomer(oldctx oldcontext.Context, t *bookstore.Customer, options ...grpc.CallOption) (*bookstore.Customer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoDeleteCustomer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteCustomer")
 	if err != nil {
@@ -307,6 +352,10 @@ func (a adapterBookstoreV1) AutoDeleteCustomer(oldctx oldcontext.Context, t *boo
 
 func (a adapterBookstoreV1) AutoDeleteOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoDeleteOrder", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteOrder")
 	if err != nil {
@@ -330,6 +379,10 @@ func (a adapterBookstoreV1) AutoDeleteOrder(oldctx oldcontext.Context, t *bookst
 
 func (a adapterBookstoreV1) AutoDeletePublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoDeletePublisher", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeletePublisher")
 	if err != nil {
@@ -353,6 +406,10 @@ func (a adapterBookstoreV1) AutoDeletePublisher(oldctx oldcontext.Context, t *bo
 
 func (a adapterBookstoreV1) AutoDeleteStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoDeleteStore", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteStore")
 	if err != nil {
@@ -376,6 +433,10 @@ func (a adapterBookstoreV1) AutoDeleteStore(oldctx oldcontext.Context, t *bookst
 
 func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoGetBook", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetBook")
 	if err != nil {
@@ -399,6 +460,10 @@ func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.
 
 func (a adapterBookstoreV1) AutoGetCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoGetCoupon", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetCoupon")
 	if err != nil {
@@ -422,6 +487,10 @@ func (a adapterBookstoreV1) AutoGetCoupon(oldctx oldcontext.Context, t *bookstor
 
 func (a adapterBookstoreV1) AutoGetCustomer(oldctx oldcontext.Context, t *bookstore.Customer, options ...grpc.CallOption) (*bookstore.Customer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoGetCustomer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetCustomer")
 	if err != nil {
@@ -445,6 +514,10 @@ func (a adapterBookstoreV1) AutoGetCustomer(oldctx oldcontext.Context, t *bookst
 
 func (a adapterBookstoreV1) AutoGetOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoGetOrder", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetOrder")
 	if err != nil {
@@ -468,6 +541,10 @@ func (a adapterBookstoreV1) AutoGetOrder(oldctx oldcontext.Context, t *bookstore
 
 func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoGetPublisher", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetPublisher")
 	if err != nil {
@@ -491,6 +568,10 @@ func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *books
 
 func (a adapterBookstoreV1) AutoGetStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoGetStore", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetStore")
 	if err != nil {
@@ -514,6 +595,10 @@ func (a adapterBookstoreV1) AutoGetStore(oldctx oldcontext.Context, t *bookstore
 
 func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.BookList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoListBook", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListBook")
 	if err != nil {
@@ -540,6 +625,10 @@ func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListW
 
 func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.CouponList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoListCoupon", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListCoupon")
 	if err != nil {
@@ -566,6 +655,10 @@ func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.Lis
 
 func (a adapterBookstoreV1) AutoListCustomer(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.CustomerList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoListCustomer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListCustomer")
 	if err != nil {
@@ -592,6 +685,10 @@ func (a adapterBookstoreV1) AutoListCustomer(oldctx oldcontext.Context, t *api.L
 
 func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.OrderList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoListOrder", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListOrder")
 	if err != nil {
@@ -618,6 +715,10 @@ func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.List
 
 func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.PublisherList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoListPublisher", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListPublisher")
 	if err != nil {
@@ -644,6 +745,10 @@ func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.
 
 func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.StoreList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoListStore", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListStore")
 	if err != nil {
@@ -670,6 +775,10 @@ func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.List
 
 func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoUpdateBook", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateBook")
 	if err != nil {
@@ -693,6 +802,10 @@ func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *booksto
 
 func (a adapterBookstoreV1) AutoUpdateCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoUpdateCoupon", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateCoupon")
 	if err != nil {
@@ -716,6 +829,10 @@ func (a adapterBookstoreV1) AutoUpdateCoupon(oldctx oldcontext.Context, t *books
 
 func (a adapterBookstoreV1) AutoUpdateCustomer(oldctx oldcontext.Context, t *bookstore.Customer, options ...grpc.CallOption) (*bookstore.Customer, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoUpdateCustomer", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateCustomer")
 	if err != nil {
@@ -739,6 +856,10 @@ func (a adapterBookstoreV1) AutoUpdateCustomer(oldctx oldcontext.Context, t *boo
 
 func (a adapterBookstoreV1) AutoUpdateOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoUpdateOrder", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateOrder")
 	if err != nil {
@@ -762,6 +883,10 @@ func (a adapterBookstoreV1) AutoUpdateOrder(oldctx oldcontext.Context, t *bookst
 
 func (a adapterBookstoreV1) AutoUpdatePublisher(oldctx oldcontext.Context, t *bookstore.Publisher, options ...grpc.CallOption) (*bookstore.Publisher, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoUpdatePublisher", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdatePublisher")
 	if err != nil {
@@ -785,6 +910,10 @@ func (a adapterBookstoreV1) AutoUpdatePublisher(oldctx oldcontext.Context, t *bo
 
 func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1AutoUpdateStore", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateStore")
 	if err != nil {
@@ -808,6 +937,10 @@ func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookst
 
 func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstore.ApplyDiscountReq, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1Cleardiscount", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Cleardiscount")
 	if err != nil {
@@ -831,6 +964,10 @@ func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstor
 
 func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.RestockRequest, options ...grpc.CallOption) (*bookstore.RestockResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.BookstoreV1Restock", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Restock")
 	if err != nil {

@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +55,10 @@ type adapterNetworkV1 struct {
 
 func (a adapterNetworkV1) AutoAddLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddLbPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddLbPolicy")
 	if err != nil {
@@ -77,6 +82,10 @@ func (a adapterNetworkV1) AutoAddLbPolicy(oldctx oldcontext.Context, t *network.
 
 func (a adapterNetworkV1) AutoAddNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddNetwork", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddNetwork")
 	if err != nil {
@@ -100,6 +109,10 @@ func (a adapterNetworkV1) AutoAddNetwork(oldctx oldcontext.Context, t *network.N
 
 func (a adapterNetworkV1) AutoAddNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddNetworkInterface", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddNetworkInterface")
 	if err != nil {
@@ -123,6 +136,10 @@ func (a adapterNetworkV1) AutoAddNetworkInterface(oldctx oldcontext.Context, t *
 
 func (a adapterNetworkV1) AutoAddService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddService", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddService")
 	if err != nil {
@@ -146,6 +163,10 @@ func (a adapterNetworkV1) AutoAddService(oldctx oldcontext.Context, t *network.S
 
 func (a adapterNetworkV1) AutoAddVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddVirtualRouter", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoAddVirtualRouter")
 	if err != nil {
@@ -169,6 +190,10 @@ func (a adapterNetworkV1) AutoAddVirtualRouter(oldctx oldcontext.Context, t *net
 
 func (a adapterNetworkV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteLbPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteLbPolicy")
 	if err != nil {
@@ -192,6 +217,10 @@ func (a adapterNetworkV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *netwo
 
 func (a adapterNetworkV1) AutoDeleteNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteNetwork", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteNetwork")
 	if err != nil {
@@ -215,6 +244,10 @@ func (a adapterNetworkV1) AutoDeleteNetwork(oldctx oldcontext.Context, t *networ
 
 func (a adapterNetworkV1) AutoDeleteNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteNetworkInterface", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteNetworkInterface")
 	if err != nil {
@@ -238,6 +271,10 @@ func (a adapterNetworkV1) AutoDeleteNetworkInterface(oldctx oldcontext.Context, 
 
 func (a adapterNetworkV1) AutoDeleteService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteService", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteService")
 	if err != nil {
@@ -261,6 +298,10 @@ func (a adapterNetworkV1) AutoDeleteService(oldctx oldcontext.Context, t *networ
 
 func (a adapterNetworkV1) AutoDeleteVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteVirtualRouter", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteVirtualRouter")
 	if err != nil {
@@ -284,6 +325,10 @@ func (a adapterNetworkV1) AutoDeleteVirtualRouter(oldctx oldcontext.Context, t *
 
 func (a adapterNetworkV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetLbPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetLbPolicy")
 	if err != nil {
@@ -307,6 +352,10 @@ func (a adapterNetworkV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.
 
 func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetNetwork", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetNetwork")
 	if err != nil {
@@ -330,6 +379,10 @@ func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.N
 
 func (a adapterNetworkV1) AutoGetNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetNetworkInterface", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetNetworkInterface")
 	if err != nil {
@@ -353,6 +406,10 @@ func (a adapterNetworkV1) AutoGetNetworkInterface(oldctx oldcontext.Context, t *
 
 func (a adapterNetworkV1) AutoGetService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetService", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetService")
 	if err != nil {
@@ -376,6 +433,10 @@ func (a adapterNetworkV1) AutoGetService(oldctx oldcontext.Context, t *network.S
 
 func (a adapterNetworkV1) AutoGetVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetVirtualRouter", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoGetVirtualRouter")
 	if err != nil {
@@ -399,6 +460,10 @@ func (a adapterNetworkV1) AutoGetVirtualRouter(oldctx oldcontext.Context, t *net
 
 func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.LbPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListLbPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListLbPolicy")
 	if err != nil {
@@ -427,6 +492,10 @@ func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.Lis
 
 func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.NetworkList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListNetwork", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListNetwork")
 	if err != nil {
@@ -455,6 +524,10 @@ func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.List
 
 func (a adapterNetworkV1) AutoListNetworkInterface(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.NetworkInterfaceList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListNetworkInterface", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListNetworkInterface")
 	if err != nil {
@@ -481,6 +554,10 @@ func (a adapterNetworkV1) AutoListNetworkInterface(oldctx oldcontext.Context, t 
 
 func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.ServiceList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListService", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListService")
 	if err != nil {
@@ -509,6 +586,10 @@ func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.List
 
 func (a adapterNetworkV1) AutoListVirtualRouter(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.VirtualRouterList, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListVirtualRouter", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoListVirtualRouter")
 	if err != nil {
@@ -537,6 +618,10 @@ func (a adapterNetworkV1) AutoListVirtualRouter(oldctx oldcontext.Context, t *ap
 
 func (a adapterNetworkV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateLbPolicy", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateLbPolicy")
 	if err != nil {
@@ -560,6 +645,10 @@ func (a adapterNetworkV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *netwo
 
 func (a adapterNetworkV1) AutoUpdateNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateNetwork", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateNetwork")
 	if err != nil {
@@ -583,6 +672,10 @@ func (a adapterNetworkV1) AutoUpdateNetwork(oldctx oldcontext.Context, t *networ
 
 func (a adapterNetworkV1) AutoUpdateNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateNetworkInterface", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateNetworkInterface")
 	if err != nil {
@@ -606,6 +699,10 @@ func (a adapterNetworkV1) AutoUpdateNetworkInterface(oldctx oldcontext.Context, 
 
 func (a adapterNetworkV1) AutoUpdateService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateService", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateService")
 	if err != nil {
@@ -629,6 +726,10 @@ func (a adapterNetworkV1) AutoUpdateService(oldctx oldcontext.Context, t *networ
 
 func (a adapterNetworkV1) AutoUpdateVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
 	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateVirtualRouter", time.Since(trackTime))
+	}()
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateVirtualRouter")
 	if err != nil {

@@ -50,7 +50,7 @@ func (m *moduleGetter) GetModule(name string) (*diagapi.Module, error) {
 }
 
 // GetModuleGetter returns mock module getter
-func GetModuleGetter(modObj *diagapi.Module, simulateError bool) module.Getter {
+func GetModuleGetter(modObj *diagapi.Module, simulateError bool) diagnostics.Getter {
 	return &moduleGetter{
 		modObj:        modObj,
 		simulateError: simulateError,
@@ -108,6 +108,10 @@ func (d *diagnosticsService) RegisterHandler(rpcMethod, query string, handler di
 
 func (d *diagnosticsService) UnregisterHandler(rpcMethod, query string) (diagnostics.Handler, bool) {
 	return nil, false
+}
+
+func (d *diagnosticsService) RegisterCustomAction(action string, handler diagnostics.CustomHandler) error {
+	return nil
 }
 
 func (d *diagnosticsService) GetHandlers() []diagnostics.Handler {

@@ -95,6 +95,7 @@ message DiagnosticsRequest {
         Log     = 0;
         Profile = 1;
         Stats   = 2;
+        Action  = 3;
     }
 
     api.TypeMeta T                 = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
