@@ -118,11 +118,11 @@ int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long m
 		// Check the status
 		err = ionic_dev_cmd_wait_check(idev, max_seconds);
 		if (err == IONIC_RC_EAGAIN) {
-			printf("%04x:%04x %02x:%02x:%x - NIC is initializing\n",
-				   ionic->pdev->vendor, ionic->pdev->device,
-				   PCI_BUS(ionic->pdev->busdevfn),
-				   PCI_SLOT(ionic->pdev->busdevfn),
-				   PCI_FUNC(ionic->pdev->busdevfn));
+			DBG2("%04x:%04x %02x:%02x:%x - NIC is initializing\n",
+				 ionic->pdev->vendor, ionic->pdev->device,
+				 PCI_BUS(ionic->pdev->busdevfn),
+				 PCI_SLOT(ionic->pdev->busdevfn),
+				 PCI_FUNC(ionic->pdev->busdevfn));
 			// Delay
 			mdelay(1000);
 			continue;
