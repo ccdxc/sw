@@ -7,44 +7,30 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { AuthLdapServerStatus_result,  } from './enums';
+import { AuthLdapAttributeMapping, IAuthLdapAttributeMapping } from './auth-ldap-attribute-mapping.model';
 import { AuthLdapServer, IAuthLdapServer } from './auth-ldap-server.model';
 
-export interface IAuthLdapServerStatus {
-    'result': AuthLdapServerStatus_result;
-    'message'?: string;
-    'server'?: IAuthLdapServer;
+export interface IAuthLdapDomain {
     'base-dn'?: string;
     'bind-dn'?: string;
     'bind-password'?: string;
+    'attribute-mapping'?: IAuthLdapAttributeMapping;
+    'servers'?: Array<IAuthLdapServer>;
+    'tag'?: string;
 }
 
 
-export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerStatus {
-    'result': AuthLdapServerStatus_result = null;
-    'message': string = null;
-    'server': AuthLdapServer = null;
+export class AuthLdapDomain extends BaseModel implements IAuthLdapDomain {
     /** The LDAP base DN to be used in a user search. */
     'base-dn': string = null;
     /** The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server. */
     'bind-dn': string = null;
     /** The password for the LDAP database account specified in the Root DN field. */
     'bind-password': string = null;
+    'attribute-mapping': AuthLdapAttributeMapping = null;
+    'servers': Array<AuthLdapServer> = null;
+    'tag': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'result': {
-            enum: AuthLdapServerStatus_result,
-            default: 'connect-success',
-            required: true,
-            type: 'string'
-        },
-        'message': {
-            required: false,
-            type: 'string'
-        },
-        'server': {
-            required: false,
-            type: 'object'
-        },
         'base-dn': {
             description:  'The LDAP base DN to be used in a user search.',
             required: false,
@@ -60,22 +46,34 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
             required: false,
             type: 'string'
         },
+        'attribute-mapping': {
+            required: false,
+            type: 'object'
+        },
+        'servers': {
+            required: false,
+            type: 'object'
+        },
+        'tag': {
+            required: false,
+            type: 'string'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return AuthLdapServerStatus.propInfo[propName];
+        return AuthLdapDomain.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return AuthLdapServerStatus.propInfo;
+        return AuthLdapDomain.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (AuthLdapServerStatus.propInfo[prop] != null &&
-                        AuthLdapServerStatus.propInfo[prop].default != null);
+        return (AuthLdapDomain.propInfo[prop] != null &&
+                        AuthLdapDomain.propInfo[prop].default != null);
     }
 
     /**
@@ -84,7 +82,8 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['server'] = new AuthLdapServer();
+        this['attribute-mapping'] = new AuthLdapAttributeMapping();
+        this['servers'] = new Array<AuthLdapServer>();
         this.setValues(values, setDefaults);
     }
 
@@ -93,45 +92,43 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['result'] != null) {
-            this['result'] = values['result'];
-        } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('result')) {
-            this['result'] = <AuthLdapServerStatus_result>  AuthLdapServerStatus.propInfo['result'].default;
-        } else {
-            this['result'] = null
-        }
-        if (values && values['message'] != null) {
-            this['message'] = values['message'];
-        } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('message')) {
-            this['message'] = AuthLdapServerStatus.propInfo['message'].default;
-        } else {
-            this['message'] = null
-        }
-        if (values) {
-            this['server'].setValues(values['server'], fillDefaults);
-        } else {
-            this['server'].setValues(null, fillDefaults);
-        }
         if (values && values['base-dn'] != null) {
             this['base-dn'] = values['base-dn'];
-        } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('base-dn')) {
-            this['base-dn'] = AuthLdapServerStatus.propInfo['base-dn'].default;
+        } else if (fillDefaults && AuthLdapDomain.hasDefaultValue('base-dn')) {
+            this['base-dn'] = AuthLdapDomain.propInfo['base-dn'].default;
         } else {
             this['base-dn'] = null
         }
         if (values && values['bind-dn'] != null) {
             this['bind-dn'] = values['bind-dn'];
-        } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('bind-dn')) {
-            this['bind-dn'] = AuthLdapServerStatus.propInfo['bind-dn'].default;
+        } else if (fillDefaults && AuthLdapDomain.hasDefaultValue('bind-dn')) {
+            this['bind-dn'] = AuthLdapDomain.propInfo['bind-dn'].default;
         } else {
             this['bind-dn'] = null
         }
         if (values && values['bind-password'] != null) {
             this['bind-password'] = values['bind-password'];
-        } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('bind-password')) {
-            this['bind-password'] = AuthLdapServerStatus.propInfo['bind-password'].default;
+        } else if (fillDefaults && AuthLdapDomain.hasDefaultValue('bind-password')) {
+            this['bind-password'] = AuthLdapDomain.propInfo['bind-password'].default;
         } else {
             this['bind-password'] = null
+        }
+        if (values) {
+            this['attribute-mapping'].setValues(values['attribute-mapping'], fillDefaults);
+        } else {
+            this['attribute-mapping'].setValues(null, fillDefaults);
+        }
+        if (values) {
+            this.fillModelArray<AuthLdapServer>(this, 'servers', values['servers'], AuthLdapServer);
+        } else {
+            this['servers'] = [];
+        }
+        if (values && values['tag'] != null) {
+            this['tag'] = values['tag'];
+        } else if (fillDefaults && AuthLdapDomain.hasDefaultValue('tag')) {
+            this['tag'] = AuthLdapDomain.propInfo['tag'].default;
+        } else {
+            this['tag'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -140,16 +137,23 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'result': CustomFormControl(new FormControl(this['result'], [required, enumValidator(AuthLdapServerStatus_result), ]), AuthLdapServerStatus.propInfo['result']),
-                'message': CustomFormControl(new FormControl(this['message']), AuthLdapServerStatus.propInfo['message']),
-                'server': CustomFormGroup(this['server'].$formGroup, AuthLdapServerStatus.propInfo['server'].required),
-                'base-dn': CustomFormControl(new FormControl(this['base-dn']), AuthLdapServerStatus.propInfo['base-dn']),
-                'bind-dn': CustomFormControl(new FormControl(this['bind-dn']), AuthLdapServerStatus.propInfo['bind-dn']),
-                'bind-password': CustomFormControl(new FormControl(this['bind-password']), AuthLdapServerStatus.propInfo['bind-password']),
+                'base-dn': CustomFormControl(new FormControl(this['base-dn']), AuthLdapDomain.propInfo['base-dn']),
+                'bind-dn': CustomFormControl(new FormControl(this['bind-dn']), AuthLdapDomain.propInfo['bind-dn']),
+                'bind-password': CustomFormControl(new FormControl(this['bind-password']), AuthLdapDomain.propInfo['bind-password']),
+                'attribute-mapping': CustomFormGroup(this['attribute-mapping'].$formGroup, AuthLdapDomain.propInfo['attribute-mapping'].required),
+                'servers': new FormArray([]),
+                'tag': CustomFormControl(new FormControl(this['tag']), AuthLdapDomain.propInfo['tag']),
+            });
+            // generate FormArray control elements
+            this.fillFormArray<AuthLdapServer>('servers', this['servers'], AuthLdapServer);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('attribute-mapping') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('attribute-mapping').get(field);
+                control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('server') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('server').get(field);
+            Object.keys((this._formGroup.get('servers') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('servers').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -162,12 +166,12 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['result'].setValue(this['result']);
-            this._formGroup.controls['message'].setValue(this['message']);
-            this['server'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['base-dn'].setValue(this['base-dn']);
             this._formGroup.controls['bind-dn'].setValue(this['bind-dn']);
             this._formGroup.controls['bind-password'].setValue(this['bind-password']);
+            this['attribute-mapping'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<AuthLdapServer>(this, 'servers', this['servers'], AuthLdapServer);
+            this._formGroup.controls['tag'].setValue(this['tag']);
         }
     }
 }

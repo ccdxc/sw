@@ -19,8 +19,12 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Invalid LDAP config",
 			in: &auth.Ldap{
-				Enabled:          true,
-				AttributeMapping: &auth.LdapAttributeMapping{},
+				Enabled: true,
+				Domains: []*auth.LdapDomain{
+					{
+						AttributeMapping: &auth.LdapAttributeMapping{},
+					},
+				},
 			},
 			errs: []error{errors.New("base DN not defined"),
 				errors.New("bind DN not defined"),
@@ -34,6 +38,7 @@ func TestValidateLdapConfig(t *testing.T) {
 			name: "No LDAP attribute mapping",
 			in: &auth.Ldap{
 				Enabled: true,
+				Domains: []*auth.LdapDomain{{}},
 			},
 			errs: []error{errors.New("base DN not defined"),
 				errors.New("bind DN not defined"),
@@ -44,26 +49,30 @@ func TestValidateLdapConfig(t *testing.T) {
 			name: "Valid LDAP Config",
 			in: &auth.Ldap{
 				Enabled: true,
-				Servers: []*auth.LdapServer{
+				Domains: []*auth.LdapDomain{
 					{
-						Url: "localhost:389",
-						TLSOptions: &auth.TLSOptions{
-							StartTLS:                   true,
-							SkipServerCertVerification: false,
-							ServerName:                 ServerName,
-							TrustedCerts:               TrustedCerts,
+						Servers: []*auth.LdapServer{
+							{
+								Url: "localhost:389",
+								TLSOptions: &auth.TLSOptions{
+									StartTLS:                   true,
+									SkipServerCertVerification: false,
+									ServerName:                 ServerName,
+									TrustedCerts:               TrustedCerts,
+								},
+							},
+						},
+
+						BaseDN:       BaseDN,
+						BindDN:       BindDN,
+						BindPassword: BindPassword,
+						AttributeMapping: &auth.LdapAttributeMapping{
+							User:             UserAttribute,
+							UserObjectClass:  UserObjectClassAttribute,
+							Group:            GroupAttribute,
+							GroupObjectClass: GroupObjectClassAttribute,
 						},
 					},
-				},
-
-				BaseDN:       BaseDN,
-				BindDN:       BindDN,
-				BindPassword: BindPassword,
-				AttributeMapping: &auth.LdapAttributeMapping{
-					User:             UserAttribute,
-					UserObjectClass:  UserObjectClassAttribute,
-					Group:            GroupAttribute,
-					GroupObjectClass: GroupObjectClassAttribute,
 				},
 			},
 
@@ -73,26 +82,30 @@ func TestValidateLdapConfig(t *testing.T) {
 			name: "Valid LDAP Config, takes default port",
 			in: &auth.Ldap{
 				Enabled: true,
-				Servers: []*auth.LdapServer{
+				Domains: []*auth.LdapDomain{
 					{
-						Url: "localhost",
-						TLSOptions: &auth.TLSOptions{
-							StartTLS:                   true,
-							SkipServerCertVerification: false,
-							ServerName:                 ServerName,
-							TrustedCerts:               TrustedCerts,
+						Servers: []*auth.LdapServer{
+							{
+								Url: "localhost",
+								TLSOptions: &auth.TLSOptions{
+									StartTLS:                   true,
+									SkipServerCertVerification: false,
+									ServerName:                 ServerName,
+									TrustedCerts:               TrustedCerts,
+								},
+							},
+						},
+
+						BaseDN:       BaseDN,
+						BindDN:       BindDN,
+						BindPassword: BindPassword,
+						AttributeMapping: &auth.LdapAttributeMapping{
+							User:             UserAttribute,
+							UserObjectClass:  UserObjectClassAttribute,
+							Group:            GroupAttribute,
+							GroupObjectClass: GroupObjectClassAttribute,
 						},
 					},
-				},
-
-				BaseDN:       BaseDN,
-				BindDN:       BindDN,
-				BindPassword: BindPassword,
-				AttributeMapping: &auth.LdapAttributeMapping{
-					User:             UserAttribute,
-					UserObjectClass:  UserObjectClassAttribute,
-					Group:            GroupAttribute,
-					GroupObjectClass: GroupObjectClassAttribute,
 				},
 			},
 
@@ -102,16 +115,20 @@ func TestValidateLdapConfig(t *testing.T) {
 			name: "Missing LDAP Server",
 			in: &auth.Ldap{
 				Enabled: true,
-				Servers: []*auth.LdapServer{},
+				Domains: []*auth.LdapDomain{
+					{
+						Servers: []*auth.LdapServer{},
 
-				BaseDN:       BaseDN,
-				BindDN:       BindDN,
-				BindPassword: BindPassword,
-				AttributeMapping: &auth.LdapAttributeMapping{
-					User:             UserAttribute,
-					UserObjectClass:  UserObjectClassAttribute,
-					Group:            GroupAttribute,
-					GroupObjectClass: GroupObjectClassAttribute,
+						BaseDN:       BaseDN,
+						BindDN:       BindDN,
+						BindPassword: BindPassword,
+						AttributeMapping: &auth.LdapAttributeMapping{
+							User:             UserAttribute,
+							UserObjectClass:  UserObjectClassAttribute,
+							Group:            GroupAttribute,
+							GroupObjectClass: GroupObjectClassAttribute,
+						},
+					},
 				},
 			},
 			errs: []error{errors.New("ldap server not defined")},
@@ -120,26 +137,30 @@ func TestValidateLdapConfig(t *testing.T) {
 			name: "Valid LDAP config, missing server URL",
 			in: &auth.Ldap{
 				Enabled: true,
-				Servers: []*auth.LdapServer{
+				Domains: []*auth.LdapDomain{
 					{
-						Url: "",
-						TLSOptions: &auth.TLSOptions{
-							StartTLS:                   true,
-							SkipServerCertVerification: false,
-							ServerName:                 ServerName,
-							TrustedCerts:               TrustedCerts,
+						Servers: []*auth.LdapServer{
+							{
+								Url: "",
+								TLSOptions: &auth.TLSOptions{
+									StartTLS:                   true,
+									SkipServerCertVerification: false,
+									ServerName:                 ServerName,
+									TrustedCerts:               TrustedCerts,
+								},
+							},
+						},
+
+						BaseDN:       BaseDN,
+						BindDN:       BindDN,
+						BindPassword: BindPassword,
+						AttributeMapping: &auth.LdapAttributeMapping{
+							User:             UserAttribute,
+							UserObjectClass:  UserObjectClassAttribute,
+							Group:            GroupAttribute,
+							GroupObjectClass: GroupObjectClassAttribute,
 						},
 					},
-				},
-
-				BaseDN:       BaseDN,
-				BindDN:       BindDN,
-				BindPassword: BindPassword,
-				AttributeMapping: &auth.LdapAttributeMapping{
-					User:             UserAttribute,
-					UserObjectClass:  UserObjectClassAttribute,
-					Group:            GroupAttribute,
-					GroupObjectClass: GroupObjectClassAttribute,
 				},
 			},
 
@@ -149,26 +170,30 @@ func TestValidateLdapConfig(t *testing.T) {
 			name: "Invalid TLS Config",
 			in: &auth.Ldap{
 				Enabled: true,
-				Servers: []*auth.LdapServer{
+				Domains: []*auth.LdapDomain{
 					{
-						Url: "localhost:389",
-						TLSOptions: &auth.TLSOptions{
-							StartTLS:                   true,
-							SkipServerCertVerification: false,
-							ServerName:                 "",
-							TrustedCerts:               "",
+						Servers: []*auth.LdapServer{
+							{
+								Url: "localhost:389",
+								TLSOptions: &auth.TLSOptions{
+									StartTLS:                   true,
+									SkipServerCertVerification: false,
+									ServerName:                 "",
+									TrustedCerts:               "",
+								},
+							},
+						},
+
+						BaseDN:       BaseDN,
+						BindDN:       BindDN,
+						BindPassword: BindPassword,
+						AttributeMapping: &auth.LdapAttributeMapping{
+							User:             UserAttribute,
+							UserObjectClass:  UserObjectClassAttribute,
+							Group:            GroupAttribute,
+							GroupObjectClass: GroupObjectClassAttribute,
 						},
 					},
-				},
-
-				BaseDN:       BaseDN,
-				BindDN:       BindDN,
-				BindPassword: BindPassword,
-				AttributeMapping: &auth.LdapAttributeMapping{
-					User:             UserAttribute,
-					UserObjectClass:  UserObjectClassAttribute,
-					Group:            GroupAttribute,
-					GroupObjectClass: GroupObjectClassAttribute,
 				},
 			},
 
@@ -178,25 +203,52 @@ func TestValidateLdapConfig(t *testing.T) {
 			name: "Missing TLS Options ",
 			in: &auth.Ldap{
 				Enabled: true,
-				Servers: []*auth.LdapServer{
+				Domains: []*auth.LdapDomain{
 					{
-						Url:        "localhost:389",
-						TLSOptions: nil,
-					},
-				},
+						Servers: []*auth.LdapServer{
+							{
+								Url:        "localhost:389",
+								TLSOptions: nil,
+							},
+						},
 
-				BaseDN:       BaseDN,
-				BindDN:       BindDN,
-				BindPassword: BindPassword,
-				AttributeMapping: &auth.LdapAttributeMapping{
-					User:             UserAttribute,
-					UserObjectClass:  UserObjectClassAttribute,
-					Group:            GroupAttribute,
-					GroupObjectClass: GroupObjectClassAttribute,
+						BaseDN:       BaseDN,
+						BindDN:       BindDN,
+						BindPassword: BindPassword,
+						AttributeMapping: &auth.LdapAttributeMapping{
+							User:             UserAttribute,
+							UserObjectClass:  UserObjectClassAttribute,
+							Group:            GroupAttribute,
+							GroupObjectClass: GroupObjectClassAttribute,
+						},
+					},
 				},
 			},
 
 			errs: []error{},
+		},
+		{
+			name: "No ldap domains",
+			in: &auth.Ldap{
+				Enabled: true,
+				Domains: []*auth.LdapDomain{},
+			},
+
+			errs: []error{errors.New("ldap domain not defined")},
+		},
+		{
+			name: "More than one ldap domains",
+			in: &auth.Ldap{
+				Enabled: true,
+				Domains: []*auth.LdapDomain{{}, {}},
+			},
+
+			errs: []error{errors.New("only one ldap domain is supported")},
+		},
+		{
+			name: "no ldap authenticator",
+			in:   nil,
+			errs: []error{errors.New("ldap authenticator config not defined")},
 		},
 	}
 

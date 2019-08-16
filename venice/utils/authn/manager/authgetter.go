@@ -128,19 +128,19 @@ func (ug *defaultAuthGetter) GetAuthenticators() ([]authn.Authenticator, error) 
 	}
 	// instantiate authenticators
 	authenticatorOrder := policy.Spec.Authenticators.GetAuthenticatorOrder()
-	authenticators := make([]authn.Authenticator, len(authenticatorOrder))
-	for i, authenticatorType := range authenticatorOrder {
+	var authenticators []authn.Authenticator
+	for _, authenticatorType := range authenticatorOrder {
 		switch authenticatorType {
 		case auth.Authenticators_LOCAL.String():
-			authenticators[i] = password.NewPasswordAuthenticator(
+			authenticators = append(authenticators, password.NewPasswordAuthenticator(
 				ug.name,
 				ug.apiServer,
 				ug.resolver,
-				policy.Spec.Authenticators.GetLocal())
+				policy.Spec.Authenticators.GetLocal()))
 		case auth.Authenticators_LDAP.String():
-			authenticators[i] = ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
+			authenticators = append(authenticators, ldap.NewLdapAuthenticator(policy.Spec.Authenticators.Ldap))
 		case auth.Authenticators_RADIUS.String():
-			authenticators[i] = radius.NewRadiusAuthenticator(policy.Spec.Authenticators.GetRadius())
+			authenticators = append(authenticators, radius.NewRadiusAuthenticator(policy.Spec.Authenticators.Radius))
 		}
 	}
 	return authenticators, nil

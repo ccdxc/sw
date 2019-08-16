@@ -30,19 +30,28 @@ func ValidateLdapConfig(config *auth.Ldap) []error {
 		return errs
 	}
 	if config.Enabled {
-		if config.BaseDN == "" {
+		if len(config.Domains) > 1 {
+			errs = append(errs, errors.New("only one ldap domain is supported"))
+			return errs
+		}
+		if len(config.Domains) == 0 {
+			errs = append(errs, errors.New("ldap domain not defined"))
+			return errs
+		}
+		domain := config.Domains[0]
+		if domain.BaseDN == "" {
 			errs = append(errs, errors.New("base DN not defined"))
 		}
-		if config.BindDN == "" {
+		if domain.BindDN == "" {
 			errs = append(errs, errors.New("bind DN not defined"))
 		}
-		if len(config.Servers) == 0 {
+		if len(domain.Servers) == 0 {
 			errs = append(errs, errors.New("ldap server not defined"))
 		}
-		for _, srv := range config.Servers {
+		for _, srv := range domain.Servers {
 			if url, portErr := AddDefaultPort(srv.Url); portErr == nil {
 				srv.Url = url
-				urlNew := "ldap://" + srv.Url + "/" + config.BaseDN
+				urlNew := "ldap://" + srv.Url + "/" + domain.BaseDN
 				_, err := ParseLdapURL(urlNew, "", SUB, "")
 				if err != nil {
 					errs = append(errs, err)
@@ -60,20 +69,20 @@ func ValidateLdapConfig(config *auth.Ldap) []error {
 				}
 			}
 		}
-		if config.AttributeMapping == nil {
+		if domain.AttributeMapping == nil {
 			errs = append(errs, errors.New("ldap attributes mapping not defined"))
 			return errs
 		}
-		if config.AttributeMapping.User == "" {
+		if domain.AttributeMapping.User == "" {
 			errs = append(errs, errors.New("user attribute mapping not defined"))
 		}
-		if config.AttributeMapping.UserObjectClass == "" {
+		if domain.AttributeMapping.UserObjectClass == "" {
 			errs = append(errs, errors.New("user object class not defined"))
 		}
-		if config.AttributeMapping.Group == "" {
+		if domain.AttributeMapping.Group == "" {
 			errs = append(errs, errors.New("group attribute mapping not defined"))
 		}
-		if config.AttributeMapping.GroupObjectClass == "" {
+		if domain.AttributeMapping.GroupObjectClass == "" {
 			errs = append(errs, errors.New("group object class not defined"))
 		}
 

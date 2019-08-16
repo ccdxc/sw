@@ -61,26 +61,30 @@ func TestGetAuthenticators(t *testing.T) {
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
 					Enabled: true,
-					Servers: []*auth.LdapServer{
+					Domains: []*auth.LdapDomain{
 						{
-							Url: "localhost:389",
-							TLSOptions: &auth.TLSOptions{
-								StartTLS:                   true,
-								SkipServerCertVerification: false,
-								ServerName:                 ServerName,
-								TrustedCerts:               TrustedCerts,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost:389",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 ServerName,
+										TrustedCerts:               TrustedCerts,
+									},
+								},
+							},
+
+							BaseDN:       BaseDN,
+							BindDN:       BindDN,
+							BindPassword: BindPassword,
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             UserAttribute,
+								UserObjectClass:  UserObjectClassAttribute,
+								Group:            GroupAttribute,
+								GroupObjectClass: GroupObjectClassAttribute,
 							},
 						},
-					},
-
-					BaseDN:       BaseDN,
-					BindDN:       BindDN,
-					BindPassword: BindPassword,
-					AttributeMapping: &auth.LdapAttributeMapping{
-						User:             UserAttribute,
-						UserObjectClass:  UserObjectClassAttribute,
-						Group:            GroupAttribute,
-						GroupObjectClass: GroupObjectClassAttribute,
 					},
 				},
 				Local: &auth.Local{
@@ -114,26 +118,30 @@ func TestGetTokenManager(t *testing.T) {
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
 					Enabled: true,
-					Servers: []*auth.LdapServer{
+					Domains: []*auth.LdapDomain{
 						{
-							Url: "localhost:389",
-							TLSOptions: &auth.TLSOptions{
-								StartTLS:                   true,
-								SkipServerCertVerification: false,
-								ServerName:                 ServerName,
-								TrustedCerts:               TrustedCerts,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost:389",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 ServerName,
+										TrustedCerts:               TrustedCerts,
+									},
+								},
+							},
+
+							BaseDN:       BaseDN,
+							BindDN:       BindDN,
+							BindPassword: BindPassword,
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             UserAttribute,
+								UserObjectClass:  UserObjectClassAttribute,
+								Group:            GroupAttribute,
+								GroupObjectClass: GroupObjectClassAttribute,
 							},
 						},
-					},
-
-					BaseDN:       BaseDN,
-					BindDN:       BindDN,
-					BindPassword: BindPassword,
-					AttributeMapping: &auth.LdapAttributeMapping{
-						User:             UserAttribute,
-						UserObjectClass:  UserObjectClassAttribute,
-						Group:            GroupAttribute,
-						GroupObjectClass: GroupObjectClassAttribute,
 					},
 				},
 				Local: &auth.Local{

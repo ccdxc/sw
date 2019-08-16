@@ -42,7 +42,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 	}
 	var response *radius.Packet
 	var err error
-	for _, server := range a.radiusConfig.Servers {
+	for _, server := range a.radiusConfig.Domains[0].Servers {
 		var request *radius.Packet
 		request, err = a.newAccessRequest(credential, server)
 		if err != nil {
@@ -112,7 +112,7 @@ func (a *authenticator) newAccessRequest(credential authn.Credential, server *au
 		return nil, err
 	}
 	// NAS identifier is 253 bytes max
-	if err := rfc2865.NASIdentifier_SetString(packet, a.radiusConfig.NasID); err != nil {
+	if err := rfc2865.NASIdentifier_SetString(packet, a.radiusConfig.Domains[0].NasID); err != nil {
 		log.Errorf("Error setting NAS Identifier in RADIUS access-request packet: Err: %v", err)
 		return nil, err
 	}

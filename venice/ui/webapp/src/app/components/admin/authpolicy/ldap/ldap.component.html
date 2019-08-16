@@ -115,7 +115,8 @@
 <ng-template #LDAPConfig>
   <div fxFlex="noshrink" fxLayout="row">
     <div fxFlex="50px"></div>
-    <div fxFlex fxLayout="row wrap" fxLayoutGap="10px" [formGroup]="LDAPObject.$formGroup">
+    <div fxFlex fxLayout="row wrap" fxLayoutGap="10px"
+         [formGroup]="LDAPObject.$formGroup.get(['domains', '0'])">
       <!-- INPUT GROUP 1 -->
       <div fxFlex="nogrow" fxLayout="column" class="ldap-input-group">
         <!-- <div fxFlex="nogrow" class="ldap-group-title">
@@ -164,12 +165,12 @@
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["bind-dn"] }}
+              {{ LDAPObject.domains[0]["bind-dn"] }}
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
               **********
-              <!-- per VS-214 {{ LDAPObject["bind-password"] }} -->
+              <!-- per VS-214 {{ LDAPObject.domains[0]["bind-password"] }} -->
             </div>
           </div>
 
@@ -218,15 +219,15 @@
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["base-dn"] }}
+              {{ LDAPObject.domains[0]["base-dn"] }}
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["attribute-mapping"]["user-object-class"]}}
+              {{ LDAPObject.domains[0]["attribute-mapping"]["user-object-class"]}}
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["attribute-mapping"]["group-object-class"]}}
+              {{ LDAPObject.domains[0]["attribute-mapping"]["group-object-class"]}}
             </div>
           </div>
         </div>
@@ -274,15 +275,15 @@
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["attribute-mapping"].user }}
+              {{ LDAPObject.domains[0]["attribute-mapping"].user }}
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["attribute-mapping"].group }}
+              {{ LDAPObject.domains[0]["attribute-mapping"].group }}
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["attribute-mapping"].tenant }}
+              {{ LDAPObject.domains[0]["attribute-mapping"].tenant }}
             </div>
           </div>
 
@@ -313,11 +314,11 @@
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["attribute-mapping"]["fullname"]}}
+              {{ LDAPObject.domains[0]["attribute-mapping"]["fullname"]}}
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["attribute-mapping"].email }}
+              {{ LDAPObject.domains[0]["attribute-mapping"].email }}
             </div>
           </div>
 
@@ -338,7 +339,7 @@
     <div fxFlex="nogrow" class="ldap-fieldtitle">
       SERVERS:
     </div>
-    <ng-container *ngFor="let server of LDAPObject.servers">
+    <ng-container *ngFor="let server of LDAPObject.domains[0].servers">
       <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px">
         <mat-icon fxFlex="nogrow"
                   *ngIf="server['tls-options']['start-tls'] && !server['tls-options']['skip-server-cert-verification']"
@@ -356,7 +357,7 @@
 
 <ng-template #LDAPServers>
   <div fxFlex="noshrink" fxLayout="column" class="ldap-servergroup" [@slideInOut]
-       *ngFor="let server of controlAsFormArray(LDAPObject.$formGroup.get('servers')).controls; let index = index; let first = first"
+       *ngFor="let server of controlAsFormArray(LDAPObject.$formGroup.get(['domains', '0', 'servers'])).controls; let index = index; let first = first"
        [formGroup]="server">
     <div fxFlex="20px"></div>
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between start">
@@ -366,7 +367,7 @@
       <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center"
            class="ldap-and">
         <span *ngIf="first" fxFlex="nogrow" (click)="addServer()">+ ADD</span>
-        <mat-icon *ngIf="controlAsFormArray(LDAPObject.$formGroup.get('servers')).length > 1"
+        <mat-icon *ngIf="controlAsFormArray(LDAPObject.$formGroup.get(['domains', '0', 'servers'])).length > 1"
                   fxFlex="nogrow" (click)="removeServer(index)" [style.color]="'#767676'">delete
         </mat-icon>
       </div>

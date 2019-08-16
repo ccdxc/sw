@@ -14,6 +14,7 @@ export interface IAuthRadiusServerStatus {
     'result': AuthRadiusServerStatus_result;
     'message'?: string;
     'server'?: IAuthRadiusServer;
+    'nas-id'?: string;
 }
 
 
@@ -21,6 +22,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     'result': AuthRadiusServerStatus_result = null;
     'message': string = null;
     'server': AuthRadiusServer = null;
+    'nas-id': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'result': {
             enum: AuthRadiusServerStatus_result,
@@ -35,6 +37,10 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
         'server': {
             required: false,
             type: 'object'
+        },
+        'nas-id': {
+            required: false,
+            type: 'string'
         },
     }
 
@@ -88,6 +94,13 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
         } else {
             this['server'].setValues(null, fillDefaults);
         }
+        if (values && values['nas-id'] != null) {
+            this['nas-id'] = values['nas-id'];
+        } else if (fillDefaults && AuthRadiusServerStatus.hasDefaultValue('nas-id')) {
+            this['nas-id'] = AuthRadiusServerStatus.propInfo['nas-id'].default;
+        } else {
+            this['nas-id'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -98,6 +111,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
                 'result': CustomFormControl(new FormControl(this['result'], [required, enumValidator(AuthRadiusServerStatus_result), ]), AuthRadiusServerStatus.propInfo['result']),
                 'message': CustomFormControl(new FormControl(this['message']), AuthRadiusServerStatus.propInfo['message']),
                 'server': CustomFormGroup(this['server'].$formGroup, AuthRadiusServerStatus.propInfo['server'].required),
+                'nas-id': CustomFormControl(new FormControl(this['nas-id']), AuthRadiusServerStatus.propInfo['nas-id']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('server') as FormGroup).controls).forEach(field => {
@@ -117,6 +131,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
             this._formGroup.controls['result'].setValue(this['result']);
             this._formGroup.controls['message'].setValue(this['message']);
             this['server'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['nas-id'].setValue(this['nas-id']);
         }
     }
 }

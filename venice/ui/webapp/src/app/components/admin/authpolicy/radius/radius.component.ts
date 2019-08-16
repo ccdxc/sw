@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, Output, EventE
 import { required } from '@sdk/v1/utils/validators';
 import { AuthpolicybaseComponent } from '@app/components/admin/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
-import { IAuthRadius, AuthRadius, AuthRadiusServer } from '@sdk/v1/models/generated/auth';
+import {IAuthRadius, AuthRadius, AuthRadiusServer, AuthRadiusDomain} from '@sdk/v1/models/generated/auth';
 import { RadiusSave } from '@app/components/admin/authpolicy/.';
 import { FormArray, AbstractControl } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
@@ -52,6 +52,8 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   ngOnInit() {
     super.ngOnInit();
+    this.radiusObject.domains = [new AuthRadiusDomain()];
+    this.radiusObject.setModelToBeFormGroupValues();
   }
 
   ngAfterContentInit() {
@@ -65,6 +67,12 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   updateRadiusObject() {
     this.radiusObject.setValues(this.radiusData);
+    if (this.radiusObject.domains == null || this.radiusObject.domains.length === 0) {
+      const newDomain = new AuthRadiusDomain();
+      this.radiusObject.domains = [ newDomain ];
+      const domains = this.radiusObject.$formGroup.get(['domains']) as FormArray;
+      domains.insert(0, newDomain.$formGroup);
+    }
     this.setRadiusValidationRules();
   }
 
@@ -72,8 +80,8 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
    * This function is responsible for setting Required Validation on form fields
    */
   private setRadiusValidationRules() {
-    this.radiusObject.$formGroup.get(['nas-id']).setValidators(required);
-    const servers: FormArray = this.radiusObject.$formGroup.get('servers') as FormArray;
+    this.radiusObject.$formGroup.get(['domains', '0', 'nas-id']).setValidators(required);
+    const servers: FormArray = this.radiusObject.$formGroup.get(['domains', '0', 'servers']) as FormArray;
     if (servers.length > 0) {
       const controls = servers.controls;
       for (let i = 0; i < controls.length; i++) {
@@ -101,7 +109,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     this.setRadiusEditMode(!this.radiusEditMode);
     if (this.radiusEditMode) {
       // Add a blank server if there is none
-      if (this.radiusObject.servers.length === 0) {
+      if (this.radiusObject.domains[0].servers.length === 0) {
         this.addServer();
       }
       this.setRadiusValidationRules();
@@ -147,7 +155,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   addServer() {
-    const servers = this.radiusObject.$formGroup.get('servers') as FormArray;
+    const servers = this.radiusObject.$formGroup.get(['domains', '0', 'servers']) as FormArray;
     const newServer = new AuthRadiusServer().$formGroup;
     this.setValidatorOnServerControl(newServer);
     servers.insert(0, newServer);
@@ -156,7 +164,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   removeServer(index) {
-    const servers = this.radiusObject.$formGroup.get('servers') as FormArray;
+    const servers = this.radiusObject.$formGroup.get(['domains', '0', 'servers']) as FormArray;
     if (servers.length > 1) {
       servers.removeAt(index);
     }

@@ -26,26 +26,30 @@ func getDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
 					Enabled: true,
-					Servers: []*auth.LdapServer{
+					Domains: []*auth.LdapDomain{
 						{
-							Url: ldapURL,
-							TLSOptions: &auth.TLSOptions{
-								StartTLS:                   true,
-								SkipServerCertVerification: false,
-								ServerName:                 ServerName,
-								TrustedCerts:               TrustedCerts,
+							Servers: []*auth.LdapServer{
+								{
+									Url: ldapURL,
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 ServerName,
+										TrustedCerts:               TrustedCerts,
+									},
+								},
+							},
+
+							BaseDN:       BaseDN,
+							BindDN:       BindDN,
+							BindPassword: BindPassword,
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             UserAttribute,
+								UserObjectClass:  UserObjectClassAttribute,
+								Group:            GroupAttribute,
+								GroupObjectClass: GroupObjectClassAttribute,
 							},
 						},
-					},
-
-					BaseDN:       BaseDN,
-					BindDN:       BindDN,
-					BindPassword: BindPassword,
-					AttributeMapping: &auth.LdapAttributeMapping{
-						User:             UserAttribute,
-						UserObjectClass:  UserObjectClassAttribute,
-						Group:            GroupAttribute,
-						GroupObjectClass: GroupObjectClassAttribute,
 					},
 				},
 				Local: &auth.Local{
@@ -214,29 +218,33 @@ func TestBind(t *testing.T) {
 
 	ldapConf := &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: ldapURL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: ldapURL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 ServerName,
+							TrustedCerts:               TrustedCerts,
+						},
+					},
+				},
+				BaseDN:       BaseDN,
+				BindDN:       BindDN,
+				BindPassword: BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             UserAttribute,
+					UserObjectClass:  UserObjectClassAttribute,
+					Group:            GroupAttribute,
+					GroupObjectClass: GroupObjectClassAttribute,
 				},
 			},
 		},
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-		},
 	}
 	for _, test := range tests {
-		ldapConf.Servers[0].Url = test.url
+		ldapConf.Domains[0].Servers[0].Url = test.url
 		authenticator := &authenticator{
 			ldapConfig:      ldapConf,
 			getConnectionFn: getMockConnectionGetter(test.name),

@@ -300,8 +300,8 @@ func TestAuthPolicy(t *testing.T) {
 			},
 			Spec: auth.AuthenticationPolicySpec{
 				Authenticators: auth.Authenticators{
-					Ldap:               &auth.Ldap{Enabled: false, BindDN: getADConfig().BindDN, BindPassword: getADConfig().BindPassword},
-					Radius:             &auth.Radius{Enabled: false, Servers: []*auth.RadiusServer{{Url: getACSConfig().URL, Secret: getACSConfig().NasSecret}}},
+					Ldap:               &auth.Ldap{Enabled: false, Domains: []*auth.LdapDomain{{BindDN: getADConfig().BindDN, BindPassword: getADConfig().BindPassword}}},
+					Radius:             &auth.Radius{Enabled: false, Domains: []*auth.RadiusDomain{{Servers: []*auth.RadiusServer{{Url: getACSConfig().URL, Secret: getACSConfig().NasSecret}}}}},
 					Local:              &auth.Local{Enabled: true},
 					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 				},
@@ -313,16 +313,16 @@ func TestAuthPolicy(t *testing.T) {
 	Assert(t, policy.Name == "AuthenticationPolicy3", fmt.Sprintf("invalid auth policy name, [%s]", policy.Name))
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
 	Assert(t, policy.Spec.TokenExpiry == "24h", fmt.Sprintf("expected token expiry to be [%s], got [%s]", "24h", policy.Spec.TokenExpiry))
-	Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == "", fmt.Sprintf("ldap bindpassword [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Ldap.BindPassword))
-	Assert(t, policy.Spec.Authenticators.Radius.Servers[0].Secret == "", fmt.Sprintf("radius secret [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Radius.Servers[0].Secret))
+	Assert(t, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword == "", fmt.Sprintf("ldap bindpassword [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Ldap.Domains[0].BindPassword))
+	Assert(t, policy.Spec.Authenticators.Radius.Domains[0].Servers[0].Secret == "", fmt.Sprintf("radius secret [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Radius.Domains[0].Servers[0].Secret))
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
 		return err == nil, nil
 	}, "unable to fetch auth policy")
 	Assert(t, policy.Name == "AuthenticationPolicy3", "invalid auth policy name")
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
-	Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == "", fmt.Sprintf("ldap bindpassword [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Ldap.BindPassword))
-	Assert(t, policy.Spec.Authenticators.Radius.Servers[0].Secret == "", fmt.Sprintf("radius secret [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Radius.Servers[0].Secret))
+	Assert(t, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword == "", fmt.Sprintf("ldap bindpassword [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Ldap.Domains[0].BindPassword))
+	Assert(t, policy.Spec.Authenticators.Radius.Domains[0].Servers[0].Secret == "", fmt.Sprintf("radius secret [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Radius.Domains[0].Servers[0].Secret))
 	// test DELETE AuthenticationPolicy
 	policy, err = restcl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy3"})
 	Assert(t, err != nil, "AuthenticationPolicy can't be deleted", "100ms", "1s")
@@ -435,38 +435,42 @@ func TestLdapLogin(t *testing.T) {
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
-			// incorrect config
+		Domains: []*auth.LdapDomain{
 			{
-				Url: config.URL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 "incorrect",
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					// incorrect config
+					{
+						Url: config.URL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 "incorrect",
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+					// correct config
+					{
+						Url: config.URL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
 				},
-			},
-			// correct config
-			{
-				Url: config.URL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
-				},
-			},
-		},
 
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
-			Tenant:           config.TenantAttribute,
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
+					Tenant:           config.TenantAttribute,
+				},
+			},
 		},
 	}
 	// create tenant and admin user
@@ -506,7 +510,7 @@ func TestLdapLogin(t *testing.T) {
 		policy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Get(context.TODO(), &api.ObjectMeta{})
 		return err == nil, err
 	}, "unable to retrieve auth policy")
-	policy.Spec.Authenticators.Ldap.BindPassword = "incorrect"
+	policy.Spec.Authenticators.Ldap.Domains[0].BindPassword = "incorrect"
 	AssertEventually(t, func() (bool, interface{}) {
 		npolicy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), policy)
 		return err == nil, err
@@ -517,7 +521,7 @@ func TestLdapLogin(t *testing.T) {
 		return err != nil, nil
 	}, "ldap user login should fail with incorrect bind password")
 	// update policy with correct bind password
-	npolicy.Spec.Authenticators.Ldap.BindPassword = config.BindPassword
+	npolicy.Spec.Authenticators.Ldap.Domains[0].BindPassword = config.BindPassword
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), npolicy)
 		return err == nil, err
@@ -525,7 +529,7 @@ func TestLdapLogin(t *testing.T) {
 	_, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, ldapUserCred)
 	AssertOk(t, err, "unable to get logged in context")
 	// don't supply bind password
-	policy.Spec.Authenticators.Ldap.BindPassword = ""
+	policy.Spec.Authenticators.Ldap.Domains[0].BindPassword = ""
 	AssertEventually(t, func() (bool, interface{}) {
 		npolicy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), policy)
 		return err == nil, err
@@ -543,27 +547,31 @@ func TestUsernameConflict(t *testing.T) {
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: config.URL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: config.URL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
+					Tenant:           config.TenantAttribute,
 				},
 			},
-		},
-
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
-			Tenant:           config.TenantAttribute,
 		},
 	}
 	// create tenant and admin user
@@ -621,27 +629,31 @@ func TestLdapChecks(t *testing.T) {
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: config.URL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: config.URL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
+					Tenant:           config.TenantAttribute,
 				},
 			},
-		},
-
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
-			Tenant:           config.TenantAttribute,
 		},
 	}
 	MustCreateCluster(tinfo.apicl)
@@ -672,8 +684,8 @@ func TestLdapChecks(t *testing.T) {
 	}, "unable to check ldap connection")
 	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
 	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Connect_Success.String(), "expected ldap connection check to succeed")
-	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
-		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
 	// bind check
 	AssertEventually(t, func() (bool, interface{}) {
 		retpolicy, err = restcl.AuthV1().AuthenticationPolicy().LdapBindCheck(context.TODO(), policy)
@@ -684,10 +696,10 @@ func TestLdapChecks(t *testing.T) {
 	}, "unable to check bind on ldap connection")
 	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
 	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Bind_Success.String(), "expected ldap bind check to succeed")
-	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
-		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
 	// check incorrect bind password
-	policy.Spec.Authenticators.Ldap.BindPassword = "incorrectpasswd"
+	policy.Spec.Authenticators.Ldap.Domains[0].BindPassword = "incorrectpasswd"
 	AssertEventually(t, func() (bool, interface{}) {
 		retpolicy, err = restcl.AuthV1().AuthenticationPolicy().LdapBindCheck(context.TODO(), policy)
 		if err != nil {
@@ -697,11 +709,11 @@ func TestLdapChecks(t *testing.T) {
 	}, "unable to check bind on ldap connection")
 	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
 	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Bind_Failure.String(), "expected ldap bind check to fail")
-	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
-		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
-	policy.Spec.Authenticators.Ldap.BindPassword = config.BindPassword
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	policy.Spec.Authenticators.Ldap.Domains[0].BindPassword = config.BindPassword
 	// check connection failure
-	policy.Spec.Authenticators.Ldap.Servers[0].Url = "unknown:333"
+	policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url = "unknown:333"
 	AssertEventually(t, func() (bool, interface{}) {
 		retpolicy, err = restcl.AuthV1().AuthenticationPolicy().LdapConnectionCheck(context.TODO(), policy)
 		if err != nil {
@@ -711,8 +723,8 @@ func TestLdapChecks(t *testing.T) {
 	}, "unable to check bind on ldap connection")
 	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
 	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Connect_Failure.String(), "expected ldap connection check to fail")
-	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
-		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
 }
 
 func TestRadiusLogin(t *testing.T) {
@@ -724,21 +736,25 @@ func TestRadiusLogin(t *testing.T) {
 	}
 	radiusConf := &auth.Radius{
 		Enabled: true,
-		Servers: []*auth.RadiusServer{
-			// incorrect config
+		Domains: []*auth.RadiusDomain{
 			{
-				Url:        "10.11.100.101:1812",
-				Secret:     "incorrect",
-				AuthMethod: auth.Radius_PAP.String(),
-			},
-			// correct config
-			{
-				Url:        config.URL,
-				Secret:     config.NasSecret,
-				AuthMethod: auth.Radius_PAP.String(),
+				Servers: []*auth.RadiusServer{
+					// incorrect config
+					{
+						Url:        "10.11.100.101:1812",
+						Secret:     "incorrect",
+						AuthMethod: auth.Radius_PAP.String(),
+					},
+					// correct config
+					{
+						Url:        config.URL,
+						Secret:     config.NasSecret,
+						AuthMethod: auth.Radius_PAP.String(),
+					},
+				},
+				NasID: config.NasID,
 			},
 		},
-		NasID: config.NasID,
 	}
 	// create tenant and admin user
 	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, radiusConf, localUserCred, tinfo.l); err != nil {
@@ -777,7 +793,7 @@ func TestRadiusLogin(t *testing.T) {
 		policy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Get(context.TODO(), &api.ObjectMeta{})
 		return err == nil, err
 	}, "unable to retrieve auth policy")
-	for _, srv := range policy.Spec.Authenticators.Radius.Servers {
+	for _, srv := range policy.Spec.Authenticators.Radius.Domains[0].Servers {
 		srv.Secret = "incorrect"
 	}
 	AssertEventually(t, func() (bool, interface{}) {
@@ -790,7 +806,7 @@ func TestRadiusLogin(t *testing.T) {
 		return err != nil, nil
 	}, "radius user login should fail with incorrect secret")
 	// update policy with correct secret
-	for _, srv := range npolicy.Spec.Authenticators.Radius.Servers {
+	for _, srv := range npolicy.Spec.Authenticators.Radius.Domains[0].Servers {
 		srv.Secret = config.NasSecret
 	}
 	AssertEventually(t, func() (bool, interface{}) {
@@ -800,7 +816,7 @@ func TestRadiusLogin(t *testing.T) {
 	_, err = NewLoggedInContextWithTimeout(context.TODO(), tinfo.apiGwAddr, radiusUserCred, 9*time.Second)
 	AssertOk(t, err, "unable to get logged in context")
 	// don't send secret while updating policy
-	for _, srv := range policy.Spec.Authenticators.Radius.Servers {
+	for _, srv := range policy.Spec.Authenticators.Radius.Domains[0].Servers {
 		srv.Secret = ""
 	}
 	AssertEventually(t, func() (bool, interface{}) {
@@ -985,12 +1001,16 @@ func TestAuthOrder(t *testing.T) {
 	}
 	radiusConf := &auth.Radius{
 		Enabled: true,
-		Servers: []*auth.RadiusServer{{
-			Url:        "10.11.100.101:1812",
-			Secret:     "incorrect",
-			AuthMethod: auth.Radius_PAP.String(),
-		}},
-		NasID: config.NasID,
+		Domains: []*auth.RadiusDomain{
+			{
+				Servers: []*auth.RadiusServer{{
+					Url:        "10.11.100.101:1812",
+					Secret:     "incorrect",
+					AuthMethod: auth.Radius_PAP.String(),
+				}},
+				NasID: config.NasID,
+			},
+		},
 	}
 	// create tenant and admin user
 	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, radiusConf, localUserCred, tinfo.l); err != nil {

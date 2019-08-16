@@ -113,7 +113,8 @@
 <ng-template #RadiusConfig>
   <div fxFlex="noshrink" fxLayout="row">
     <div fxFlex="50px"></div>
-    <div fxFlex fxLayout="row wrap" fxLayoutGap="10px" [formGroup]="radiusObject.$formGroup">
+    <div fxFlex fxLayout="row wrap" fxLayoutGap="10px"
+         [formGroup]="radiusObject.$formGroup.get(['domains', '0'])">
       <!-- INPUT GROUP 1 -->
       <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
         <div fxFlex="30px" class="radius-fieldtitle">CONFIG</div>
@@ -138,7 +139,7 @@
           <div fxFlex fxLayout="column" *ngIf="!radiusEditMode">
             <div fxFlex="30px" fxLayout="row" class="radius-fieldtitle radius-input"
                  fxLayoutAlign="start center">
-              {{ radiusObject["nas-id"] }}
+              {{ radiusObject.domains[0]["nas-id"] }}
             </div>
           </div>
 
@@ -150,7 +151,7 @@
            class="radius-input-group">
         <div fxFlex="30px" class="radius-fieldtitle">SERVERS</div>
         <div fxFlex="noshrink" fxLayout="row">
-          <div fxFlex fxLayout="column" *ngFor="let server of radiusObject.servers">
+          <div fxFlex fxLayout="column" *ngFor="let server of radiusObject.domains[0].servers">
             <div fxFlex="30px" fxLayout="row" class="radius-fieldtitle radius-input"
                  fxLayoutAlign="start center" fxLayoutGap="5px">
               <mat-icon fxFlex="nogrow" class="authpolicy-lock">lock</mat-icon>
@@ -169,7 +170,7 @@
 
 <ng-template #RadiusServers>
   <div fxFlex="noshrink" fxLayout="column" class="radius-servergroup" [@slideInOut]
-       *ngFor="let server of controlAsFormArray(radiusObject.$formGroup.get('servers')).controls; let index = index; let first = first"
+       *ngFor="let server of controlAsFormArray(radiusObject.$formGroup.get(['domains', '0', 'servers'])).controls; let index = index; let first = first"
        [formGroup]="server">
     <div fxFlex="20px"></div>
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between start">
@@ -179,7 +180,7 @@
       <div fxFlex="noshrink" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center"
            class="radius-and">
         <span *ngIf="first" fxFlex="nogrow" (click)="addServer()">+ ADD</span>
-        <mat-icon *ngIf="controlAsFormArray(radiusObject.$formGroup.get('servers')).length > 1"
+        <mat-icon *ngIf="controlAsFormArray(radiusObject.$formGroup.get(['domains', '0', 'servers'])).length > 1"
                   fxFlex="nogrow" (click)="removeServer(index)" [style.color]="'#767676'">delete
         </mat-icon>
       </div>

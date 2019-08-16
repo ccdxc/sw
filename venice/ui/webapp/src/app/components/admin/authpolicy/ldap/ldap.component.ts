@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, View
 import { ValidatorFn, ValidationErrors } from '@angular/forms';
 import { AuthpolicybaseComponent } from '@app/components/admin/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
-import { AuthLdap, AuthLdapServer, AuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
+import { AuthLdap, AuthLdapDomain, AuthLdapServer, AuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
 import { required } from '@sdk/v1/utils/validators';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material';
@@ -13,6 +13,7 @@ import { Utility } from '@app/common/Utility';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 import { ControllerService } from '@app/services/controller.service';
+
 /**
  * LdapComponent (child) is a child component of AuthPolicy.component (parent)
  * parent passes in "LDAPData" to child, child has a "LDAPObject" to reflect "LDAPData".
@@ -81,6 +82,12 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   updateLDAPObject() {
     this.LDAPObject.setValues(this.LDAPData);
+    if (this.LDAPObject.domains == null || this.LDAPObject.domains.length === 0) {
+      const newDomain = new AuthLdapDomain();
+      this.LDAPObject.domains = [ newDomain ];
+      const domains = this.LDAPObject.$formGroup.get(['domains']) as FormArray;
+      domains.insert(0, newDomain.$formGroup);
+    }
     this.setLDAPValidationRules();
   }
 
@@ -89,19 +96,19 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
    */
   private setLDAPValidationRules() {
     // TODO: Changing auth.proto LDAP validation rule has ripple effects on go-test, we set validator in UI 2019-01-24
-    this.LDAPObject.$formGroup.get(['bind-dn']).setValidators(required);
-    this.LDAPObject.$formGroup.get(['base-dn']).setValidators(required);
+    this.LDAPObject.$formGroup.get(['domains', '0', 'bind-dn']).setValidators(required);
+    this.LDAPObject.$formGroup.get(['domains', '0', 'base-dn']).setValidators(required);
     if (this.inCreateMode) {
       this.LDAPObject.$formGroup.get(['bind-password']).setValidators(required);
     }
 
-    const attribute_mapping: AbstractControl = this.LDAPObject.$formGroup.get('attribute-mapping') as AbstractControl;
+    const attribute_mapping: AbstractControl = this.LDAPObject.$formGroup.get(['domains', '0', 'attribute-mapping']) as AbstractControl;
     attribute_mapping.get('user-object-class').setValidators(required);
     attribute_mapping.get('user').setValidators(required);
     attribute_mapping.get('group-object-class').setValidators(required);
     attribute_mapping.get('group').setValidators(required);
 
-    const servers: FormArray = this.LDAPObject.$formGroup.get('servers') as FormArray;
+    const servers: FormArray = this.LDAPObject.$formGroup.get('domains.0.servers') as FormArray;
     if (servers.length > 0) {
       const controls = servers.controls;
       for (let i = 0; i < controls.length; i++) {
@@ -150,11 +157,11 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     if (this.LDAPEditMode) {
       this.verifyCertToggleFormArray = new FormArray([]);
       // Add a blank server if there is none
-      if (this.LDAPObject.servers.length === 0) {
+      if (this.LDAPObject.domains[0].servers.length === 0) {
         this.addServer();
       }
       this.setLDAPValidationRules();
-      const servers = this.LDAPObject.$formGroup.get('servers') as FormArray;
+      const servers = this.LDAPObject.$formGroup.get(['domains', '0', 'servers']) as FormArray;
       // Each server, we register the verify toggle, and check for diasbling fields
       servers.controls.forEach((server, index) => {
         const verifyCert = !server.get(['tls-options', 'skip-server-cert-verification']).value;
@@ -237,7 +244,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   addServer() {
-    const servers = this.LDAPObject.$formGroup.get('servers') as FormArray;
+    const servers = this.LDAPObject.$formGroup.get(['domains', '0', 'servers']) as FormArray;
     const newServer = new AuthLdapServer({ 'tls-options': { 'start-tls': true, 'skip-server-cert-verification': false } }).$formGroup;
     servers.insert(0, newServer);
     this.verifyCertToggleFormArray.insert(0, new FormControl(true));
@@ -249,7 +256,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   removeServer(index) {
-    const servers = this.LDAPObject.$formGroup.get('servers') as FormArray;
+    const servers = this.LDAPObject.$formGroup.get(['domains', '0', 'servers']) as FormArray;
     if (servers.length > 1) {
       servers.removeAt(index);
       this.verifyCertToggleFormArray.removeAt(index);

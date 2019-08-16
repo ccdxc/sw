@@ -35,36 +35,40 @@ class MockAuthService extends AuthService {
           'authenticator-order': [AuthAuthenticators_authenticator_order.local, AuthAuthenticators_authenticator_order.ldap],
           ldap: {
             enabled: true,
-            'base-dn': 'basedn',
-            'bind-dn': 'binddn',
-            'bind-password': 'bindpass',
-            'attribute-mapping': {
-              'email': 'email',
-              'fullname': 'fullname',
-              'user': 'user',
-              'user-object-class': 'user-obj',
-              'group-object-class': 'group-obj-class',
-              'group': 'group',
-              'tenant': 'tenant'
-            },
-            servers: [
+            domains: [
               {
-                'url': '10.1.1.10:8000',
-                'tls-options': {
-                  'server-name': 'server1',
-                  'skip-server-cert-verification': false,
-                  'start-tls': true,
-                  'trusted-certs': 'example cert'
-                }
-              },
-              {
-                'url': '10.1.1.11:8000',
-                'tls-options': {
-                  'server-name': 'server1',
-                  'skip-server-cert-verification': true,
-                  'start-tls': false,
-                  'trusted-certs': 'example cert'
-                }
+                'base-dn': 'basedn',
+                'bind-dn': 'binddn',
+                'bind-password': 'bindpass',
+                'attribute-mapping': {
+                  'email': 'email',
+                  'fullname': 'fullname',
+                  'user': 'user',
+                  'user-object-class': 'user-obj',
+                  'group-object-class': 'group-obj-class',
+                  'group': 'group',
+                  'tenant': 'tenant'
+                },
+                servers: [
+                  {
+                    'url': '10.1.1.10:8000',
+                    'tls-options': {
+                      'server-name': 'server1',
+                      'skip-server-cert-verification': false,
+                      'start-tls': true,
+                      'trusted-certs': 'example cert'
+                    }
+                  },
+                  {
+                    'url': '10.1.1.11:8000',
+                    'tls-options': {
+                      'server-name': 'server1',
+                      'skip-server-cert-verification': true,
+                      'start-tls': false,
+                      'trusted-certs': 'example cert'
+                    }
+                  }
+                ]
               }
             ]
           },

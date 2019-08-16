@@ -44,25 +44,29 @@ func TestGetADPrimaryGroup(t *testing.T) {
 	}
 	ldapConf := &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: ldapURL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: ldapURL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 ServerName,
+							TrustedCerts:               TrustedCerts,
+						},
+					},
+				},
+				BaseDN:       BaseDN,
+				BindDN:       BindDN,
+				BindPassword: BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             UserAttribute,
+					UserObjectClass:  UserObjectClassAttribute,
+					Group:            GroupAttribute,
+					GroupObjectClass: GroupObjectClassAttribute,
 				},
 			},
-		},
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
 		},
 	}
 	for _, test := range tests {
@@ -70,7 +74,7 @@ func TestGetADPrimaryGroup(t *testing.T) {
 			ldapConfig:      ldapConf,
 			getConnectionFn: getMockConnectionGetter(test.name),
 		}
-		group, err := authenticator.getADPrimaryGroup("ldap://"+ldapConf.Servers[0].Url, ldapConf.Servers[0].TLSOptions, test.entry)
+		group, err := authenticator.getADPrimaryGroup("ldap://"+ldapConf.Domains[0].Servers[0].Url, ldapConf.Domains[0].Servers[0].TLSOptions, test.entry)
 		Assert(t, test.err == err, fmt.Sprintf("[%v] test failed, err: %v", test.name, err))
 		Assert(t, group == test.group, fmt.Sprintf("[%v] test failed,, expected group [%v], got [%v]", test.name, test.group, group))
 	}

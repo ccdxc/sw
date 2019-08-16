@@ -226,29 +226,41 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 	if config == nil {
 		return ctx, in, true, errors.New("ldap authenticator config not defined")
 	}
-	if len(config.Servers) == 0 {
-		return ctx, in, true, errors.New("ldap server not defined")
+	if len(config.Domains) == 0 {
+		return ctx, in, true, errors.New("ldap domain not defined")
 	}
-	for _, server := range config.Servers {
-		status := &auth.LdapServerStatus{
-			Server: server,
+	if len(config.Domains) > 1 {
+		return ctx, in, true, errors.New("only one ldap domain is supported")
+	}
+	for _, domain := range config.Domains {
+		if len(domain.Servers) == 0 {
+			return ctx, in, true, errors.New("ldap server not defined")
 		}
-		if url, portErr := ldap.AddDefaultPort(server.Url); portErr == nil {
-			server.Url = url
-			_, err := a.ldapChecker.Connect(server.Url, server.TLSOptions)
-			if err != nil {
-				a.logger.Errorf("error connecting to LDAP [%s]: %v", server.Url, err)
-				status.Message = err.Error()
-				status.Result = auth.LdapServerStatus_Connect_Failure.String()
-			} else {
-				status.Message = "ldap connection check successful"
-				status.Result = auth.LdapServerStatus_Connect_Success.String()
+		for _, server := range domain.Servers {
+			status := &auth.LdapServerStatus{
+				Server:       server,
+				BaseDN:       domain.BaseDN,
+				BindDN:       domain.BindDN,
+				BindPassword: domain.BindPassword,
 			}
-			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
-		} else {
-			status.Message = portErr.Error()
-			status.Result = auth.LdapServerStatus_Connect_Failure.String()
-			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+			if url, portErr := ldap.AddDefaultPort(server.Url); portErr == nil {
+				server.Url = url
+				_, err := a.ldapChecker.Connect(server.Url, server.TLSOptions)
+				if err != nil {
+					a.logger.Errorf("error connecting to LDAP [%s]: %v", server.Url, err)
+					status.Message = err.Error()
+					status.Result = auth.LdapServerStatus_Connect_Failure.String()
+				} else {
+					status.Message = "ldap connection check successful"
+					status.Result = auth.LdapServerStatus_Connect_Success.String()
+				}
+				obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+			} else {
+				status.Message = portErr.Error()
+				status.Result = auth.LdapServerStatus_Connect_Failure.String()
+				obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+
+			}
 		}
 	}
 	return ctx, obj, true, nil
@@ -266,29 +278,40 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 	if config == nil {
 		return ctx, in, true, errors.New("ldap authenticator config not defined")
 	}
-	if len(config.Servers) == 0 {
-		return ctx, in, true, errors.New("ldap server not defined")
+	if len(config.Domains) == 0 {
+		return ctx, in, true, errors.New("ldap domain not defined")
 	}
-	for _, server := range config.Servers {
-		status := &auth.LdapServerStatus{
-			Server: server,
+	if len(config.Domains) > 1 {
+		return ctx, in, true, errors.New("only one ldap domain is supported")
+	}
+	for _, domain := range config.Domains {
+		if len(domain.Servers) == 0 {
+			return ctx, in, true, errors.New("ldap server not defined")
 		}
-		if url, portErr := ldap.AddDefaultPort(server.Url); portErr == nil {
-			server.Url = url
-			ok, err := a.ldapChecker.Bind(server.Url, server.TLSOptions, config.BindDN, config.BindPassword)
-			if err != nil || !ok {
-				a.logger.Errorf("bind failed for ldap [%s]: %v", server.Url, err)
-				status.Message = fmt.Sprintf("bind failed for ldap: %v", err)
-				status.Result = auth.LdapServerStatus_Bind_Failure.String()
-			} else {
-				status.Message = "ldap bind successful"
-				status.Result = auth.LdapServerStatus_Bind_Success.String()
+		for _, server := range domain.Servers {
+			status := &auth.LdapServerStatus{
+				Server:       server,
+				BaseDN:       domain.BaseDN,
+				BindDN:       domain.BindDN,
+				BindPassword: domain.BindPassword,
 			}
-			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
-		} else {
-			status.Message = portErr.Error()
-			status.Result = auth.LdapServerStatus_Bind_Failure.String()
-			obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+			if url, portErr := ldap.AddDefaultPort(server.Url); portErr == nil {
+				server.Url = url
+				ok, err := a.ldapChecker.Bind(server.Url, server.TLSOptions, domain.BindDN, domain.BindPassword)
+				if err != nil || !ok {
+					a.logger.Errorf("bind failed for ldap [%s]: %v", server.Url, err)
+					status.Message = fmt.Sprintf("bind failed for ldap: %v", err)
+					status.Result = auth.LdapServerStatus_Bind_Failure.String()
+				} else {
+					status.Message = "ldap bind successful"
+					status.Result = auth.LdapServerStatus_Bind_Success.String()
+				}
+				obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+			} else {
+				status.Message = portErr.Error()
+				status.Result = auth.LdapServerStatus_Bind_Failure.String()
+				obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+			}
 		}
 	}
 	return ctx, obj, true, nil

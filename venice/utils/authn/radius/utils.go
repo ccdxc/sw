@@ -14,13 +14,22 @@ func ValidateRadiusConfig(config *auth.Radius) []error {
 		return errs
 	}
 	if config.Enabled {
-		if config.NasID == "" || len(config.NasID) > 253 {
+		if len(config.Domains) > 1 {
+			errs = append(errs, errors.New("only one radius domain is supported"))
+			return errs
+		}
+		if len(config.Domains) == 0 {
+			errs = append(errs, errors.New("no radius domain defined"))
+			return errs
+		}
+		domain := config.Domains[0]
+		if domain.NasID == "" || len(domain.NasID) > 253 {
 			errs = append(errs, errors.New("NAS ID cannot be empty or longer than 253 bytes"))
 		}
-		if len(config.Servers) == 0 {
+		if len(domain.Servers) == 0 {
 			errs = append(errs, errors.New("radius server not defined"))
 		}
-		for _, srv := range config.Servers {
+		for _, srv := range domain.Servers {
 			if srv.Url == "" {
 				errs = append(errs, errors.New("radius <address:port> not defined"))
 			}

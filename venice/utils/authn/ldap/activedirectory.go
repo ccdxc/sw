@@ -43,9 +43,9 @@ func (a *authenticator) getADPrimaryGroup(referral string, tlsOptions *auth.TLSO
 	groupSID = strings.Join(toks, "-")
 	log.Debugf("user [%q], primary group SID [%q]", entry.DN, groupSID)
 	var attributes = []string{
-		a.ldapConfig.GetAttributeMapping().GetGroup(),
+		a.ldapConfig.Domains[0].GetAttributeMapping().GetGroup(),
 	}
-	ldapURL, err := ParseLdapURL(referral, a.ldapConfig.BaseDN, SUB, a.primaryGroupADSearchFilter(groupSID))
+	ldapURL, err := ParseLdapURL(referral, a.ldapConfig.Domains[0].BaseDN, SUB, a.primaryGroupADSearchFilter(groupSID))
 	if err != nil {
 		log.Errorf("Unable to parse ldap referral [%q] to search primary group [%q] for user [%q], Err: %v", referral, groupSID, entry.DN, err)
 		return "", err
@@ -56,7 +56,7 @@ func (a *authenticator) getADPrimaryGroup(referral string, tlsOptions *auth.TLSO
 		return "", ErrNoHostInLDAPReferral
 	}
 	log.Debugf("ldapURL.Addr: %q, referral: %q", ldapURL.Addr, referral)
-	entries, err := a.search(ldapURL.Addr, tlsOptions, a.ldapConfig.BaseDN, ldapURL.Scope, ldap.DerefAlways,
+	entries, err := a.search(ldapURL.Addr, tlsOptions, a.ldapConfig.Domains[0].BaseDN, ldapURL.Scope, ldap.DerefAlways,
 		a.primaryGroupADSearchFilter(groupSID), attributes, func(referral string, conn connection, sr *ldap.SearchResult) (bool, error) {
 			if len(sr.Entries) == 0 && len(sr.Referrals) > 0 {
 				log.Infof("Referrals returned for group [%q] for search filter [%q]: %v", groupSID, a.primaryGroupADSearchFilter(groupSID), sr.Referrals)
@@ -82,7 +82,7 @@ func (a *authenticator) getADPrimaryGroup(referral string, tlsOptions *auth.TLSO
 }
 
 func (a *authenticator) primaryGroupADSearchFilter(groupSID string) string {
-	return fmt.Sprintf("(&(objectClass=%s)(%s=%s))", a.ldapConfig.AttributeMapping.GroupObjectClass, ObjectSid, groupSID)
+	return fmt.Sprintf("(&(objectClass=%s)(%s=%s))", a.ldapConfig.Domains[0].AttributeMapping.GroupObjectClass, ObjectSid, groupSID)
 }
 
 // SidToString converts sid from binary form to string

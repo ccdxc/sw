@@ -7,29 +7,23 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { AuthRadiusServer, IAuthRadiusServer } from './auth-radius-server.model';
+import { AuthRadiusDomain, IAuthRadiusDomain } from './auth-radius-domain.model';
 
 export interface IAuthRadius {
     'enabled'?: boolean;
-    'nas-id'?: string;
-    'servers'?: Array<IAuthRadiusServer>;
+    'domains'?: Array<IAuthRadiusDomain>;
 }
 
 
 export class AuthRadius extends BaseModel implements IAuthRadius {
     'enabled': boolean = null;
-    'nas-id': string = null;
-    'servers': Array<AuthRadiusServer> = null;
+    'domains': Array<AuthRadiusDomain> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'enabled': {
             required: false,
             type: 'boolean'
         },
-        'nas-id': {
-            required: false,
-            type: 'string'
-        },
-        'servers': {
+        'domains': {
             required: false,
             type: 'object'
         },
@@ -57,7 +51,7 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['servers'] = new Array<AuthRadiusServer>();
+        this['domains'] = new Array<AuthRadiusDomain>();
         this.setValues(values, setDefaults);
     }
 
@@ -73,17 +67,10 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
         } else {
             this['enabled'] = null
         }
-        if (values && values['nas-id'] != null) {
-            this['nas-id'] = values['nas-id'];
-        } else if (fillDefaults && AuthRadius.hasDefaultValue('nas-id')) {
-            this['nas-id'] = AuthRadius.propInfo['nas-id'].default;
-        } else {
-            this['nas-id'] = null
-        }
         if (values) {
-            this.fillModelArray<AuthRadiusServer>(this, 'servers', values['servers'], AuthRadiusServer);
+            this.fillModelArray<AuthRadiusDomain>(this, 'domains', values['domains'], AuthRadiusDomain);
         } else {
-            this['servers'] = [];
+            this['domains'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -93,14 +80,13 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'enabled': CustomFormControl(new FormControl(this['enabled']), AuthRadius.propInfo['enabled']),
-                'nas-id': CustomFormControl(new FormControl(this['nas-id']), AuthRadius.propInfo['nas-id']),
-                'servers': new FormArray([]),
+                'domains': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<AuthRadiusServer>('servers', this['servers'], AuthRadiusServer);
+            this.fillFormArray<AuthRadiusDomain>('domains', this['domains'], AuthRadiusDomain);
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('servers') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('servers').get(field);
+            Object.keys((this._formGroup.get('domains') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('domains').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -114,8 +100,7 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['enabled'].setValue(this['enabled']);
-            this._formGroup.controls['nas-id'].setValue(this['nas-id']);
-            this.fillModelArray<AuthRadiusServer>(this, 'servers', this['servers'], AuthRadiusServer);
+            this.fillModelArray<AuthRadiusDomain>(this, 'domains', this['domains'], AuthRadiusDomain);
         }
     }
 }

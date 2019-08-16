@@ -18,70 +18,82 @@ func authenticationPoliciesData(config *LdapConfig) map[string]*auth.Ldap {
 	ldapdata := make(map[string]*auth.Ldap)
 	ldapdata["TLS Enabled"] = &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: config.URL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: config.URL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
 				},
 			},
-		},
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
 		},
 	}
 	ldapdata["TLS Skip Server Verification"] = &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: config.URL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: true,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: config.URL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: true,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
 				},
 			},
-		},
-
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
 		},
 	}
 	ldapdata["Without TLS"] = &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: config.URL,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS: false,
+				Servers: []*auth.LdapServer{
+					{
+						Url: config.URL,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS: false,
+						},
+					},
+				},
+
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
 				},
 			},
-		},
-
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
 		},
 	}
 
@@ -95,27 +107,31 @@ func createDefaultAuthenticationPolicy(config *LdapConfig) *auth.AuthenticationP
 			Enabled: true,
 		}, &auth.Ldap{
 			Enabled: true,
-			Servers: []*auth.LdapServer{
+			Domains: []*auth.LdapDomain{
 				{
-					Url: config.URL,
-					TLSOptions: &auth.TLSOptions{
-						StartTLS:                   true,
-						SkipServerCertVerification: false,
-						ServerName:                 config.ServerName,
-						TrustedCerts:               config.TrustedCerts,
+					Servers: []*auth.LdapServer{
+						{
+							Url: config.URL,
+							TLSOptions: &auth.TLSOptions{
+								StartTLS:                   true,
+								SkipServerCertVerification: false,
+								ServerName:                 config.ServerName,
+								TrustedCerts:               config.TrustedCerts,
+							},
+						},
+					},
+
+					BaseDN:       config.BaseDN,
+					BindDN:       config.BindDN,
+					BindPassword: config.BindPassword,
+					AttributeMapping: &auth.LdapAttributeMapping{
+						User:             config.UserAttribute,
+						UserObjectClass:  config.UserObjectClassAttribute,
+						Group:            config.GroupAttribute,
+						GroupObjectClass: config.GroupObjectClassAttribute,
+						Tenant:           config.TenantAttribute,
 					},
 				},
-			},
-
-			BaseDN:       config.BaseDN,
-			BindDN:       config.BindDN,
-			BindPassword: config.BindPassword,
-			AttributeMapping: &auth.LdapAttributeMapping{
-				User:             config.UserAttribute,
-				UserObjectClass:  config.UserObjectClassAttribute,
-				Group:            config.GroupAttribute,
-				GroupObjectClass: config.GroupObjectClassAttribute,
-				Tenant:           config.TenantAttribute,
 			},
 		},
 		&auth.Radius{Enabled: false})
@@ -180,25 +196,29 @@ func testIncorrectUserAuthentication(t *testing.T, config *LdapConfig) {
 func testIncorrectLdapAttributeMapping(t *testing.T, config *LdapConfig) {
 	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: tinfo.ldapAddr,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             "cn",
+					UserObjectClass:  "organization",
+					Group:            "ou",
+					GroupObjectClass: "groupOfNames",
 				},
 			},
-		},
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             "cn",
-			UserObjectClass:  "organization",
-			Group:            "ou",
-			GroupObjectClass: "groupOfNames",
 		},
 	})
 	if err != nil {
@@ -220,25 +240,29 @@ func testIncorrectLdapAttributeMapping(t *testing.T, config *LdapConfig) {
 func testIncorrectBaseDN(t *testing.T, config *LdapConfig) {
 	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: tinfo.ldapAddr,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+				BaseDN:       "DC=pensandoo,DC=io",
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
 				},
 			},
-		},
-		BaseDN:       "DC=pensandoo,DC=io",
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
 		},
 	})
 	if err != nil {
@@ -260,25 +284,29 @@ func testIncorrectBaseDN(t *testing.T, config *LdapConfig) {
 func testIncorrectBindPassword(t *testing.T, config *LdapConfig) {
 	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: tinfo.ldapAddr,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: "wrongbindpassword",
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
 				},
 			},
-		},
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: "wrongbindpassword",
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
 		},
 	})
 	if err != nil {
@@ -300,25 +328,29 @@ func testIncorrectBindPassword(t *testing.T, config *LdapConfig) {
 func testDisabledLdapAuthenticator(t *testing.T, config *LdapConfig) {
 	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: false,
-		Servers: []*auth.LdapServer{
+		Domains: []*auth.LdapDomain{
 			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
+				Servers: []*auth.LdapServer{
+					{
+						Url: tinfo.ldapAddr,
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 config.ServerName,
+							TrustedCerts:               config.TrustedCerts,
+						},
+					},
+				},
+				BaseDN:       config.BaseDN,
+				BindDN:       config.BindDN,
+				BindPassword: config.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             config.UserAttribute,
+					UserObjectClass:  config.UserObjectClassAttribute,
+					Group:            config.GroupAttribute,
+					GroupObjectClass: config.GroupObjectClassAttribute,
 				},
 			},
-		},
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             config.UserAttribute,
-			UserObjectClass:  config.UserObjectClassAttribute,
-			Group:            config.GroupAttribute,
-			GroupObjectClass: config.GroupObjectClassAttribute,
 		},
 	})
 

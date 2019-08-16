@@ -39,14 +39,18 @@ var _ = Describe("auth tests", func() {
 			// add radius config
 			authPolicy.Spec.Authenticators.Radius = &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{
+				Domains: []*auth.RadiusDomain{
 					{
-						Url:        ts.tu.Radius.URL,
-						Secret:     ts.tu.Radius.NasSecret,
-						AuthMethod: auth.Radius_PAP.String(),
+						Servers: []*auth.RadiusServer{
+							{
+								Url:        ts.tu.Radius.URL,
+								Secret:     ts.tu.Radius.NasSecret,
+								AuthMethod: auth.Radius_PAP.String(),
+							},
+						},
+						NasID: ts.tu.Radius.NasID,
 					},
 				},
-				NasID: ts.tu.Radius.NasID,
 			}
 			authPolicy.Spec.Authenticators.AuthenticatorOrder = []string{"LOCAL", "RADIUS"}
 			Eventually(func() error {

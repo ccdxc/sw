@@ -477,6 +477,27 @@ func (m *LdapAttributeMapping) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *LdapDomain) Clone(into interface{}) (interface{}, error) {
+	var out *LdapDomain
+	var ok bool
+	if into == nil {
+		out = &LdapDomain{}
+	} else {
+		out, ok = into.(*LdapDomain)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*LdapDomain))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *LdapDomain) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *LdapServer) Clone(into interface{}) (interface{}, error) {
 	var out *LdapServer
 	var ok bool
@@ -709,6 +730,34 @@ func (m *Radius) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Radius) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Domains {
+		if m.Domains[k] != nil {
+			i := m.Domains[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *RadiusDomain) Clone(into interface{}) (interface{}, error) {
+	var out *RadiusDomain
+	var ok bool
+	if into == nil {
+		out = &RadiusDomain{}
+	} else {
+		out, ok = into.(*RadiusDomain)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*RadiusDomain))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RadiusDomain) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Servers {
 		if m.Servers[k] != nil {
@@ -1404,6 +1453,19 @@ func (m *LdapAttributeMapping) Normalize() {
 
 }
 
+func (m *LdapDomain) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *LdapDomain) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *LdapDomain) Normalize() {
+
+}
+
 func (m *LdapServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1610,6 +1672,36 @@ func (m *Radius) References(tenant string, path string, resp map[string]apiintf.
 
 func (m *Radius) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	for k, v := range m.Domains {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sDomains[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *Radius) Normalize() {
+
+	for k, v := range m.Domains {
+		if v != nil {
+			v.Normalize()
+			m.Domains[k] = v
+		}
+	}
+
+}
+
+func (m *RadiusDomain) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *RadiusDomain) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
 	for k, v := range m.Servers {
 		dlmtr := "."
 		if path == "" {
@@ -1623,7 +1715,7 @@ func (m *Radius) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) 
 	return ret
 }
 
-func (m *Radius) Normalize() {
+func (m *RadiusDomain) Normalize() {
 
 	for k, v := range m.Servers {
 		if v != nil {
@@ -2359,7 +2451,18 @@ func (m *Authenticators) ApplyStorageTransformer(ctx context.Context, toStorage 
 }
 
 func (m *Ldap) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
-	if vs, ok := storageTransformersMapAuth["Ldap"]; ok {
+	for i, v := range m.Domains {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Domains[i] = &c
+	}
+	return nil
+}
+
+func (m *LdapDomain) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapAuth["LdapDomain"]; ok {
 		for _, v := range vs {
 			if err := v(ctx, m, toStorage); err != nil {
 				return err
@@ -2370,6 +2473,17 @@ func (m *Ldap) ApplyStorageTransformer(ctx context.Context, toStorage bool) erro
 }
 
 func (m *Radius) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Domains {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Domains[i] = &c
+	}
+	return nil
+}
+
+func (m *RadiusDomain) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Servers {
 		c := *v
 		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
@@ -2648,20 +2762,20 @@ func init() {
 	}
 
 	{
-		LdapBindPasswordTx, err := storage.NewSecretValueTransformer()
+		LdapDomainBindPasswordTx, err := storage.NewSecretValueTransformer()
 		if err != nil {
 			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
 		}
-		storageTransformersMapAuth["Ldap"] = append(storageTransformersMapAuth["Ldap"],
+		storageTransformersMapAuth["LdapDomain"] = append(storageTransformersMapAuth["LdapDomain"],
 			func(ctx context.Context, i interface{}, toStorage bool) error {
 				var data []byte
 				var err error
-				m := i.(*Ldap)
+				m := i.(*LdapDomain)
 
 				if toStorage {
-					data, err = LdapBindPasswordTx.TransformToStorage(ctx, []byte(m.BindPassword))
+					data, err = LdapDomainBindPasswordTx.TransformToStorage(ctx, []byte(m.BindPassword))
 				} else {
-					data, err = LdapBindPasswordTx.TransformFromStorage(ctx, []byte(m.BindPassword))
+					data, err = LdapDomainBindPasswordTx.TransformFromStorage(ctx, []byte(m.BindPassword))
 				}
 				m.BindPassword = string(data)
 

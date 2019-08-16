@@ -63,9 +63,9 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 
 	// Create external user
 	return authn.CreateExternalUser(ldapCredential.Username,
-		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetTenant()),
-		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetFullname()),
-		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetEmail()),
+		entry.GetAttributeValue(a.ldapConfig.Domains[0].GetAttributeMapping().GetTenant()),
+		entry.GetAttributeValue(a.ldapConfig.Domains[0].GetAttributeMapping().GetFullname()),
+		entry.GetAttributeValue(a.ldapConfig.Domains[0].GetAttributeMapping().GetEmail()),
 		groups,
 		auth.Authenticators_LDAP)
 }
@@ -83,12 +83,12 @@ func (a *authenticator) bind(username, password string) (*ldap.Entry, []string, 
 	if err != nil {
 		return nil, nil, err
 	}
-	entries, err := a.search(server.Url, server.TLSOptions, a.ldapConfig.BaseDN, SUB, ldap.DerefAlways, a.defaultUserSearchFilter(username), []string{
-		a.ldapConfig.GetAttributeMapping().GetUser(),
-		a.ldapConfig.GetAttributeMapping().GetTenant(),
-		a.ldapConfig.GetAttributeMapping().GetGroup(),
-		a.ldapConfig.GetAttributeMapping().GetEmail(),
-		a.ldapConfig.GetAttributeMapping().GetFullname(),
+	entries, err := a.search(server.Url, server.TLSOptions, a.ldapConfig.Domains[0].BaseDN, SUB, ldap.DerefAlways, a.defaultUserSearchFilter(username), []string{
+		a.ldapConfig.Domains[0].GetAttributeMapping().GetUser(),
+		a.ldapConfig.Domains[0].GetAttributeMapping().GetTenant(),
+		a.ldapConfig.Domains[0].GetAttributeMapping().GetGroup(),
+		a.ldapConfig.Domains[0].GetAttributeMapping().GetEmail(),
+		a.ldapConfig.Domains[0].GetAttributeMapping().GetFullname(),
 		PrimaryGroupID,
 		ObjectSid}, func(referral string, conn connection, sr *ldap.SearchResult) (bool, error) {
 
@@ -122,9 +122,9 @@ func (a *authenticator) bind(username, password string) (*ldap.Entry, []string, 
 			groups = append(groups, primaryGrp)
 		}
 		// Recursively fetch all groups that this user is member of
-		groups = append(groups, sr.Entries[0].GetAttributeValues(a.ldapConfig.GetAttributeMapping().GetGroup())...)
+		groups = append(groups, sr.Entries[0].GetAttributeValues(a.ldapConfig.Domains[0].GetAttributeMapping().GetGroup())...)
 		if len(groups) == 0 {
-			log.Infof("User entry [%q] has no group attributes defined for attribute mapping [%q]", sr.Entries[0].DN, a.ldapConfig.GetAttributeMapping().GetGroup())
+			log.Infof("User entry [%q] has no group attributes defined for attribute mapping [%q]", sr.Entries[0].DN, a.ldapConfig.Domains[0].GetAttributeMapping().GetGroup())
 			return false, nil
 		}
 		log.Debugf("User entry [%q] is member of groups [%v]", sr.Entries[0].DN, groups)
@@ -150,7 +150,7 @@ func (a *authenticator) bind(username, password string) (*ldap.Entry, []string, 
 
 func (a *authenticator) getLdapGroups(referral string, tlsOptions *auth.TLSOptions, groups []string) ([]string, error) {
 	var attributes = []string{
-		a.ldapConfig.GetAttributeMapping().GetGroup(),
+		a.ldapConfig.Domains[0].GetAttributeMapping().GetGroup(),
 	}
 
 	ldapURL, err := ParseLdapURL(referral, "", BASE, a.defaultGroupSearchFilter())
@@ -199,7 +199,7 @@ func (a *authenticator) getLdapGroups(referral string, tlsOptions *auth.TLSOptio
 			return nil, ErrNoneOrMultipleGroupEntries
 		}
 		// search for parent groups
-		parents := entries[0].GetAttributeValues(a.ldapConfig.GetAttributeMapping().GetGroup())
+		parents := entries[0].GetAttributeValues(a.ldapConfig.Domains[0].GetAttributeMapping().GetGroup())
 		for _, parent := range parents {
 			if !visitedGroups[parent] {
 				groupQueue.push(parent)
@@ -260,8 +260,8 @@ func (a *authenticator) search(
 		defer conn.Close()
 
 		// First bind with a bind DN
-		if err := conn.Bind(a.ldapConfig.GetBindDN(), a.ldapConfig.GetBindPassword()); err != nil {
-			log.Errorf("LDAP [%q] bind operation failed for bind user [%q]: Err: %v", referral, a.ldapConfig.GetBindDN(), err)
+		if err := conn.Bind(a.ldapConfig.Domains[0].GetBindDN(), a.ldapConfig.Domains[0].GetBindPassword()); err != nil {
+			log.Errorf("LDAP [%q] bind operation failed for bind user [%q]: Err: %v", referral, a.ldapConfig.Domains[0].GetBindDN(), err)
 			continue
 		}
 
@@ -297,20 +297,20 @@ func (a *authenticator) search(
 }
 
 func (a *authenticator) defaultUserSearchFilter(username string) string {
-	userObjectClass := a.ldapConfig.GetAttributeMapping().GetUserObjectClass()
-	usernameAttribute := a.ldapConfig.GetAttributeMapping().GetUser()
+	userObjectClass := a.ldapConfig.Domains[0].GetAttributeMapping().GetUserObjectClass()
+	usernameAttribute := a.ldapConfig.Domains[0].GetAttributeMapping().GetUser()
 	return fmt.Sprintf("(&(objectClass=%s)(%s=%s))", userObjectClass, usernameAttribute, username)
 }
 
 func (a *authenticator) defaultGroupSearchFilter() string {
-	return fmt.Sprintf("(objectClass=%s)", a.ldapConfig.GetAttributeMapping().GetGroupObjectClass())
+	return fmt.Sprintf("(objectClass=%s)", a.ldapConfig.Domains[0].GetAttributeMapping().GetGroupObjectClass())
 }
 
 // pickLdapServer picks an available LDAP server by checking connection
 func (a *authenticator) pickLdapServer() (*auth.LdapServer, error) {
 	var conn connection
 	var err error
-	for _, server := range a.ldapConfig.Servers {
+	for _, server := range a.ldapConfig.Domains[0].Servers {
 		conn, err = a.getConnectionFn(server.Url, server.TLSOptions)
 		if err == nil {
 			conn.Close()

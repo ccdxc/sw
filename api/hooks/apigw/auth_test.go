@@ -556,26 +556,30 @@ func TestLdapConnectionCheck(t *testing.T) {
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
 					Enabled: true,
-					Servers: []*auth.LdapServer{
+					Domains: []*auth.LdapDomain{
 						{
-							Url: "localhost:389",
-							TLSOptions: &auth.TLSOptions{
-								StartTLS:                   true,
-								SkipServerCertVerification: false,
-								ServerName:                 "testserver",
-								TrustedCerts:               "certs",
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost:389",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
 							},
 						},
-					},
-
-					BaseDN:       "DC=io,DC=pensando",
-					BindDN:       "DN=admin",
-					BindPassword: "password",
-					AttributeMapping: &auth.LdapAttributeMapping{
-						User:             "samAccount",
-						UserObjectClass:  "user",
-						Group:            "group",
-						GroupObjectClass: "ou",
 					},
 				},
 				Local: &auth.Local{
@@ -643,25 +647,29 @@ func TestLdapConnectionCheck(t *testing.T) {
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
 							Enabled: true,
-							Servers: []*auth.LdapServer{
+							Domains: []*auth.LdapDomain{
 								{
-									Url: "localhost",
-									TLSOptions: &auth.TLSOptions{
-										StartTLS:                   true,
-										SkipServerCertVerification: false,
-										ServerName:                 "testserver",
-										TrustedCerts:               "certs",
+									Servers: []*auth.LdapServer{
+										{
+											Url: "localhost",
+											TLSOptions: &auth.TLSOptions{
+												StartTLS:                   true,
+												SkipServerCertVerification: false,
+												ServerName:                 "testserver",
+												TrustedCerts:               "certs",
+											},
+										},
+									},
+									BaseDN:       "DC=io,DC=pensando",
+									BindDN:       "DN=admin",
+									BindPassword: "password",
+									AttributeMapping: &auth.LdapAttributeMapping{
+										User:             "samAccount",
+										UserObjectClass:  "user",
+										Group:            "group",
+										GroupObjectClass: "ou",
 									},
 								},
-							},
-							BaseDN:       "DC=io,DC=pensando",
-							BindDN:       "DN=admin",
-							BindPassword: "password",
-							AttributeMapping: &auth.LdapAttributeMapping{
-								User:             "samAccount",
-								UserObjectClass:  "user",
-								Group:            "group",
-								GroupObjectClass: "ou",
 							},
 						},
 						Local: &auth.Local{
@@ -687,16 +695,20 @@ func TestLdapConnectionCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled:      true,
-							Servers:      []*auth.LdapServer{},
-							BaseDN:       "DC=io,DC=pensando",
-							BindDN:       "DN=admin",
-							BindPassword: "password",
-							AttributeMapping: &auth.LdapAttributeMapping{
-								User:             "samAccount",
-								UserObjectClass:  "user",
-								Group:            "group",
-								GroupObjectClass: "ou",
+							Enabled: true,
+							Domains: []*auth.LdapDomain{
+								{
+									Servers:      []*auth.LdapServer{},
+									BaseDN:       "DC=io,DC=pensando",
+									BindDN:       "DN=admin",
+									BindPassword: "password",
+									AttributeMapping: &auth.LdapAttributeMapping{
+										User:             "samAccount",
+										UserObjectClass:  "user",
+										Group:            "group",
+										GroupObjectClass: "ou",
+									},
+								},
 							},
 						},
 						Local: &auth.Local{
@@ -711,6 +723,54 @@ func TestLdapConnectionCheck(t *testing.T) {
 				Result: auth.LdapServerStatus_Connect_Success.String(),
 			},
 			err: errors.New("ldap server not defined"),
+		},
+		{
+			name: "no ldap domains",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Domains: []*auth.LdapDomain{},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status:      nil,
+			err:         errors.New("ldap domain not defined"),
+		},
+		{
+			name: "more than one ldap domains",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Domains: []*auth.LdapDomain{{}, {}},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status:      nil,
+			err:         errors.New("only one ldap domain is supported"),
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
@@ -761,26 +821,30 @@ func TestLdapBindCheck(t *testing.T) {
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
 					Enabled: true,
-					Servers: []*auth.LdapServer{
+					Domains: []*auth.LdapDomain{
 						{
-							Url: "localhost:389",
-							TLSOptions: &auth.TLSOptions{
-								StartTLS:                   true,
-								SkipServerCertVerification: false,
-								ServerName:                 "testserver",
-								TrustedCerts:               "certs",
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost:389",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 "testserver",
+										TrustedCerts:               "certs",
+									},
+								},
+							},
+
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
 							},
 						},
-					},
-
-					BaseDN:       "DC=io,DC=pensando",
-					BindDN:       "DN=admin",
-					BindPassword: "password",
-					AttributeMapping: &auth.LdapAttributeMapping{
-						User:             "samAccount",
-						UserObjectClass:  "user",
-						Group:            "group",
-						GroupObjectClass: "ou",
 					},
 				},
 				Local: &auth.Local{
@@ -847,16 +911,20 @@ func TestLdapBindCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled:      true,
-							Servers:      []*auth.LdapServer{},
-							BaseDN:       "DC=io,DC=pensando",
-							BindDN:       "DN=admin",
-							BindPassword: "password",
-							AttributeMapping: &auth.LdapAttributeMapping{
-								User:             "samAccount",
-								UserObjectClass:  "user",
-								Group:            "group",
-								GroupObjectClass: "ou",
+							Enabled: true,
+							Domains: []*auth.LdapDomain{
+								{
+									Servers:      []*auth.LdapServer{},
+									BaseDN:       "DC=io,DC=pensando",
+									BindDN:       "DN=admin",
+									BindPassword: "password",
+									AttributeMapping: &auth.LdapAttributeMapping{
+										User:             "samAccount",
+										UserObjectClass:  "user",
+										Group:            "group",
+										GroupObjectClass: "ou",
+									},
+								},
 							},
 						},
 						Local: &auth.Local{
@@ -883,25 +951,29 @@ func TestLdapBindCheck(t *testing.T) {
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
 							Enabled: true,
-							Servers: []*auth.LdapServer{
+							Domains: []*auth.LdapDomain{
 								{
-									Url: "localhost",
-									TLSOptions: &auth.TLSOptions{
-										StartTLS:                   true,
-										SkipServerCertVerification: false,
-										ServerName:                 "testserver",
-										TrustedCerts:               "certs",
+									Servers: []*auth.LdapServer{
+										{
+											Url: "localhost",
+											TLSOptions: &auth.TLSOptions{
+												StartTLS:                   true,
+												SkipServerCertVerification: false,
+												ServerName:                 "testserver",
+												TrustedCerts:               "certs",
+											},
+										},
+									},
+									BaseDN:       "DC=io,DC=pensando",
+									BindDN:       "DN=admin",
+									BindPassword: "password",
+									AttributeMapping: &auth.LdapAttributeMapping{
+										User:             "samAccount",
+										UserObjectClass:  "user",
+										Group:            "group",
+										GroupObjectClass: "ou",
 									},
 								},
-							},
-							BaseDN:       "DC=io,DC=pensando",
-							BindDN:       "DN=admin",
-							BindPassword: "password",
-							AttributeMapping: &auth.LdapAttributeMapping{
-								User:             "samAccount",
-								UserObjectClass:  "user",
-								Group:            "group",
-								GroupObjectClass: "ou",
 							},
 						},
 						Local: &auth.Local{
@@ -916,6 +988,54 @@ func TestLdapBindCheck(t *testing.T) {
 				Result: auth.LdapServerStatus_Bind_Success.String(),
 			},
 			err: nil,
+		},
+		{
+			name: "no ldap domains",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Domains: []*auth.LdapDomain{},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status:      nil,
+			err:         errors.New("ldap domain not defined"),
+		},
+		{
+			name: "more than one ldap domains",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Domains: []*auth.LdapDomain{{}, {}},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status:      nil,
+			err:         errors.New("only one ldap domain is supported"),
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")

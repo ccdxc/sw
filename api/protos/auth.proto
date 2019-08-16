@@ -88,17 +88,23 @@ message Authenticators {
 
 message Ldap {
     // Whether LDAP is enabled or not
-    bool Enabled                          = 1 [(gogoproto.jsontag) = "enabled"];
+    bool Enabled                = 1 [(gogoproto.jsontag) = "enabled"];
+    repeated LdapDomain Domains = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "domains,omitempty"];
+}
+
+message LdapDomain {
     // The LDAP base DN to be used in a user search.
-    string BaseDN                         = 2 [(gogoproto.jsontag) = "base-dn,omitempty"];
+    string BaseDN                         = 1 [(gogoproto.jsontag) = "base-dn,omitempty"];
     // The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.
-    string BindDN                         = 3 [(gogoproto.jsontag) = "bind-dn,omitempty"];
+    string BindDN                         = 2 [(gogoproto.jsontag) = "bind-dn,omitempty"];
     // The password for the LDAP database account specified in the Root DN field.
-    string BindPassword                   = 4 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "bind-password,omitempty"];
+    string BindPassword                   = 3 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "bind-password,omitempty"];
     // Defines how attributes in the LDAP directory are mapped to user properties
-    LdapAttributeMapping AttributeMapping = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attribute-mapping,omitempty"];
+    LdapAttributeMapping AttributeMapping = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attribute-mapping,omitempty"];
     // Servers is a list that lets you configure multiple LDAP servers for high availability
-    repeated LdapServer Servers           = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];
+    repeated LdapServer Servers           = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];
+    // Tag to group domains for authentication
+    string Tag                            = 6 [(gogoproto.jsontag) = "tag,omitempty"];
 }
 
 message LdapServer {
@@ -151,11 +157,17 @@ message LdapServerStatus {
         Bind_Failure    = 3 [(venice.enumValueStr) = "bind-failure"];
     }
     // Result indicates if ldap check was successful
-    string Result     = 1 [(venice.check) = "StrEnum(LdapServerStatus.LdapResult)", (gogoproto.jsontag) = "result,omitempty"];
+    string Result       = 1 [(venice.check) = "StrEnum(LdapServerStatus.LdapResult)", (gogoproto.jsontag) = "result,omitempty"];
     // Message contains error message in case of failed check or a success message
-    string Message    = 2 [(gogoproto.jsontag) = "message,inline"];
+    string Message      = 2 [(gogoproto.jsontag) = "message,inline"];
     // LdapServer contains the ldap server configuration that was checked
-    LdapServer Server = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "server,omitempty"];
+    LdapServer Server   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "server,omitempty"];
+    // The LDAP base DN to be used in a user search.
+    string BaseDN       = 4 [(gogoproto.jsontag) = "base-dn,omitempty"];
+    // The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.
+    string BindDN       = 5 [(gogoproto.jsontag) = "bind-dn,omitempty"];
+    // The password for the LDAP database account specified in the Root DN field.
+    string BindPassword = 6 [(gogoproto.jsontag) = "bind-password,omitempty"];
 }
 
 message Local {
@@ -174,9 +186,15 @@ message Radius {
         EAP_TTLS_PAP  = 2[(venice.enumValueStr) = "eap-ttls-pap"];;
     }
     bool Enabled                  = 1 [(gogoproto.jsontag) = "enabled"];
+    repeated RadiusDomain Domains = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "domains,omitempty"];
+}
+
+message RadiusDomain {
     // NasID is a string identifying the NAS(API Gw) originating the Access-Request
-    string NasID                  = 2 [(gogoproto.jsontag) = "nas-id,omitempty"];
-    repeated RadiusServer Servers = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];
+    string NasID                  = 1 [(gogoproto.jsontag) = "nas-id,omitempty"];
+    repeated RadiusServer Servers = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];
+    // Tag to group domains for authentication
+    string Tag                    = 3 [(gogoproto.jsontag) = "tag,omitempty"];
 }
 
 message RadiusServer {
@@ -202,6 +220,8 @@ message RadiusServerStatus {
     string Message      = 2 [(gogoproto.jsontag) = "message,inline"];
     // RadiusServer contains the radius server configuration that was checked
     RadiusServer Server = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "server,omitempty"];
+    // NasID is a string identifying the NAS(API Gw) originating the Access-Request
+    string NasID        = 4 [(gogoproto.jsontag) = "nas-id,omitempty"];
 }
 
 // status part of authentication policy object

@@ -66,6 +66,8 @@ describe('LdapComponent', () => {
   it('should display toggle and values based on input', () => {
     component.LDAPData = new AuthLdap({
       enabled: true,
+      domains: [
+      {
       'base-dn': 'basedn',
       'bind-dn': 'binddn',
       'bind-password': 'bindpass',
@@ -97,6 +99,8 @@ describe('LdapComponent', () => {
             'trusted-certs': 'example cert'
           }
         }
+      ]
+      }
       ]
     });
     fixture.detectChanges();
@@ -132,36 +136,40 @@ describe('LdapComponent', () => {
     // test new incoming data updates the view
     component.LDAPData = new AuthLdap({
       enabled: false,
-      'base-dn': 'basedn-change',
-      'bind-dn': 'binddn',
-      'bind-password': 'bindpass',
-      'attribute-mapping': {
-        'email': 'email',
-        'fullname': 'fullname-change',
-        'user': 'user',
-        'user-object-class': 'user-obj-change',
-        'group-object-class': 'group-obj-class',
-        'group': 'group',
-        'tenant': 'tenant'
-      },
-      servers: [
+      domains: [
         {
-          'url': '10.1.1.10:8000',
-          'tls-options': {
-            'server-name': 'server1',
-            'skip-server-cert-verification': true,
-            'start-tls': true,
-            'trusted-certs': 'example cert'
-          }
-        },
-        {
-          'url': '10.10.10.11:8000',
-          'tls-options': {
-            'server-name': 'server1',
-            'skip-server-cert-verification': true,
-            'start-tls': false,
-            'trusted-certs': 'example cert'
-          }
+          'base-dn': 'basedn-change',
+          'bind-dn': 'binddn',
+          'bind-password': 'bindpass',
+          'attribute-mapping': {
+            'email': 'email',
+            'fullname': 'fullname-change',
+            'user': 'user',
+            'user-object-class': 'user-obj-change',
+            'group-object-class': 'group-obj-class',
+            'group': 'group',
+            'tenant': 'tenant'
+          },
+          servers: [
+            {
+              'url': '10.1.1.10:8000',
+              'tls-options': {
+                'server-name': 'server1',
+                'skip-server-cert-verification': true,
+                'start-tls': true,
+                'trusted-certs': 'example cert'
+              }
+            },
+            {
+              'url': '10.10.10.11:8000',
+              'tls-options': {
+                'server-name': 'server1',
+                'skip-server-cert-verification': true,
+                'start-tls': false,
+                'trusted-certs': 'example cert'
+              }
+            }
+          ]
         }
       ]
     });
@@ -362,36 +370,40 @@ describe('LdapComponent', () => {
       TestingUtility.addPermissions([UIRolePermissions.authauthenticationpolicy_update, UIRolePermissions.authauthenticationpolicy_delete]);
       component.LDAPData = new AuthLdap({
         enabled: true,
-        'base-dn': 'basedn',
-        'bind-dn': 'binddn',
-        'bind-password': 'bindpass',
-        'attribute-mapping': {
-          'email': 'email',
-          'fullname': 'fullname',
-          'user': 'user',
-          'user-object-class': 'user-obj',
-          'group-object-class': 'group-obj-class',
-          'group': 'group',
-          'tenant': 'tenant'
-        },
-        servers: [
+        domains: [
           {
-            'url': '10.1.1.10:8000',
-            'tls-options': {
-              'server-name': 'server1',
-              'skip-server-cert-verification': false,
-              'start-tls': true,
-              'trusted-certs': 'example cert'
-            }
-          },
-          {
-            'url': '10.1.1.11:8000',
-            'tls-options': {
-              'server-name': 'server2',
-              'skip-server-cert-verification': true,
-              'start-tls': false,
-              'trusted-certs': 'example cert2'
-            }
+            'base-dn': 'basedn',
+            'bind-dn': 'binddn',
+            'bind-password': 'bindpass',
+            'attribute-mapping': {
+              'email': 'email',
+              'fullname': 'fullname',
+              'user': 'user',
+              'user-object-class': 'user-obj',
+              'group-object-class': 'group-obj-class',
+              'group': 'group',
+              'tenant': 'tenant'
+            },
+            servers: [
+              {
+                'url': '10.1.1.10:8000',
+                'tls-options': {
+                  'server-name': 'server1',
+                  'skip-server-cert-verification': false,
+                  'start-tls': true,
+                  'trusted-certs': 'example cert'
+                }
+              },
+              {
+                'url': '10.1.1.11:8000',
+                'tls-options': {
+                  'server-name': 'server2',
+                  'skip-server-cert-verification': true,
+                  'start-tls': false,
+                  'trusted-certs': 'example cert2'
+                }
+              }
+            ]
           }
         ]
       });

@@ -13,6 +13,7 @@ The following Messages are defined.
   Authenticators
   Ldap
   LdapAttributeMapping
+  LdapDomain
   LdapServer
   LdapServerStatus
   Local
@@ -23,6 +24,7 @@ The following Messages are defined.
   PasswordResetRequest
   Permission
   Radius
+  RadiusDomain
   RadiusServer
   RadiusServerStatus
   Resource

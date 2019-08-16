@@ -291,6 +291,7 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 				ret = append(ret, errors.New("local authenticator config not defined"))
 			}
 		case auth.Authenticators_LDAP.String():
+
 			ret = append(ret, ldap.ValidateLdapConfig(r.Spec.Authenticators.GetLdap())...)
 		case auth.Authenticators_RADIUS.String():
 			ret = append(ret, radius.ValidateRadiusConfig(r.Spec.Authenticators.GetRadius())...)
@@ -312,7 +313,7 @@ func (s *authHooks) validateBindPassword(ctx context.Context, kv kvstore.Interfa
 		switch authenticatorType {
 		case auth.Authenticators_LDAP.String():
 			config := r.Spec.Authenticators.GetLdap()
-			if config != nil && config.Enabled && config.BindPassword == "" {
+			if config != nil && config.Enabled && len(config.Domains) == 1 && config.Domains[0].BindPassword == "" {
 				return i, true, errors.New("bind password not defined")
 			}
 		default:
@@ -411,15 +412,15 @@ func (s *authHooks) populateSecretsInAuthPolicy(ctx context.Context, kv kvstore.
 				return oldObj, err
 			}
 			policySpecCopy := *cloneObj.(*auth.AuthenticationPolicySpec)
-			if policySpecCopy.Authenticators.Ldap != nil && policyObj.Spec.Authenticators.Ldap != nil {
+			if policySpecCopy.Authenticators.Ldap != nil && len(policySpecCopy.Authenticators.Ldap.Domains) == 1 && policyObj.Spec.Authenticators.Ldap != nil && len(policyObj.Spec.Authenticators.Ldap.Domains) == 1 {
 				// set password only if user didn't send any
-				if policySpecCopy.Authenticators.Ldap.BindPassword == "" {
-					policySpecCopy.Authenticators.Ldap.BindPassword = policyObj.Spec.Authenticators.Ldap.BindPassword
+				if policySpecCopy.Authenticators.Ldap.Domains[0].BindPassword == "" {
+					policySpecCopy.Authenticators.Ldap.Domains[0].BindPassword = policyObj.Spec.Authenticators.Ldap.Domains[0].BindPassword
 				}
 			}
-			if policySpecCopy.Authenticators.Radius != nil && policyObj.Spec.Authenticators.Radius != nil {
-				for _, server := range policySpecCopy.Authenticators.Radius.Servers {
-					for _, savedServer := range policyObj.Spec.Authenticators.Radius.Servers {
+			if policySpecCopy.Authenticators.Radius != nil && len(policySpecCopy.Authenticators.Radius.Domains) == 1 && policyObj.Spec.Authenticators.Radius != nil && len(policyObj.Spec.Authenticators.Radius.Domains) == 1 {
+				for _, server := range policySpecCopy.Authenticators.Radius.Domains[0].Servers {
+					for _, savedServer := range policyObj.Spec.Authenticators.Radius.Domains[0].Servers {
 						if server.Url == savedServer.Url {
 							// set secret only if user didn't send any
 							if server.Secret == "" {

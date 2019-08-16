@@ -54,12 +54,16 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: config.Password,
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        config.URL,
-					Secret:     config.NasSecret,
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: config.NasID,
+				Domains: []*auth.RadiusDomain{
+					{
+						Servers: []*auth.RadiusServer{{
+							Url:        config.URL,
+							Secret:     config.NasSecret,
+							AuthMethod: auth.Radius_PAP.String(),
+						}},
+						NasID: config.NasID,
+					},
+				},
 			},
 			expected: true,
 		},
@@ -69,12 +73,16 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: config.Password,
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        "localhost:1234",
-					Secret:     config.NasSecret,
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: config.NasID,
+				Domains: []*auth.RadiusDomain{
+					{
+						Servers: []*auth.RadiusServer{{
+							Url:        "localhost:1234",
+							Secret:     config.NasSecret,
+							AuthMethod: auth.Radius_PAP.String(),
+						}},
+						NasID: config.NasID,
+					},
+				},
 			},
 			expected: false,
 		},
@@ -84,12 +92,16 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: config.Password,
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        config.URL,
-					Secret:     "incorrectSecret",
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: config.NasID,
+				Domains: []*auth.RadiusDomain{
+					{
+						Servers: []*auth.RadiusServer{{
+							Url:        config.URL,
+							Secret:     "incorrectSecret",
+							AuthMethod: auth.Radius_PAP.String(),
+						}},
+						NasID: config.NasID,
+					},
+				},
 			},
 			expected: false,
 		},
@@ -99,12 +111,16 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: config.Password,
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        config.URL,
-					Secret:     config.NasSecret,
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: config.NasID,
+				Domains: []*auth.RadiusDomain{
+					{
+						Servers: []*auth.RadiusServer{{
+							Url:        config.URL,
+							Secret:     config.NasSecret,
+							AuthMethod: auth.Radius_PAP.String(),
+						}},
+						NasID: config.NasID,
+					},
+				},
 			},
 			expected: false,
 		},
@@ -114,12 +130,16 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: "incorrectPassword",
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        config.URL,
-					Secret:     config.NasSecret,
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: config.NasID,
+				Domains: []*auth.RadiusDomain{
+					{
+						Servers: []*auth.RadiusServer{{
+							Url:        config.URL,
+							Secret:     config.NasSecret,
+							AuthMethod: auth.Radius_PAP.String(),
+						}},
+						NasID: config.NasID,
+					},
+				},
 			},
 			expected: false,
 		},
@@ -129,12 +149,16 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: config.Password,
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        config.URL,
-					Secret:     config.NasSecret,
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: config.NasID,
+				Domains: []*auth.RadiusDomain{
+					{
+						Servers: []*auth.RadiusServer{{
+							Url:        config.URL,
+							Secret:     config.NasSecret,
+							AuthMethod: auth.Radius_PAP.String(),
+						}},
+						NasID: config.NasID,
+					},
+				},
 			},
 			expected: false,
 		},
@@ -144,12 +168,16 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: CreateAlphabetString(129),
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        config.URL,
-					Secret:     config.NasSecret,
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: config.NasID,
+				Domains: []*auth.RadiusDomain{
+					{
+						Servers: []*auth.RadiusServer{{
+							Url:        config.URL,
+							Secret:     config.NasSecret,
+							AuthMethod: auth.Radius_PAP.String(),
+						}},
+						NasID: config.NasID,
+					},
+				},
 			},
 			expected: false,
 		},
@@ -159,19 +187,23 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			password: config.Password,
 			policy: &auth.Radius{
 				Enabled: true,
-				Servers: []*auth.RadiusServer{
+				Domains: []*auth.RadiusDomain{
 					{
-						Url:        "localhost:1234",
-						Secret:     config.NasSecret,
-						AuthMethod: auth.Radius_PAP.String(),
-					},
-					{
-						Url:        config.URL,
-						Secret:     config.NasSecret,
-						AuthMethod: auth.Radius_PAP.String(),
+						Servers: []*auth.RadiusServer{
+							{
+								Url:        "localhost:1234",
+								Secret:     config.NasSecret,
+								AuthMethod: auth.Radius_PAP.String(),
+							},
+							{
+								Url:        config.URL,
+								Secret:     config.NasSecret,
+								AuthMethod: auth.Radius_PAP.String(),
+							},
+						},
+						NasID: config.NasID,
 					},
 				},
-				NasID: config.NasID,
 			},
 			expected: true,
 		},
@@ -211,12 +243,16 @@ func TestACSAuthentication(t *testing.T) {
 func testNoGroupUser(t *testing.T, config *RadiusConfig) {
 	radiusConf := &auth.Radius{
 		Enabled: true,
-		Servers: []*auth.RadiusServer{{
-			Url:        config.URL,
-			Secret:     config.NasSecret,
-			AuthMethod: auth.Radius_PAP.String(),
-		}},
-		NasID: config.NasID,
+		Domains: []*auth.RadiusDomain{
+			{
+				Servers: []*auth.RadiusServer{{
+					Url:        config.URL,
+					Secret:     config.NasSecret,
+					AuthMethod: auth.Radius_PAP.String(),
+				}},
+				NasID: config.NasID,
+			},
+		},
 	}
 	policy, err := createAuthenticationPolicy(radiusConf)
 	if err != nil {

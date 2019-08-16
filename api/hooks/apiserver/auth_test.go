@@ -318,9 +318,13 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 						},
 						Radius: &auth.Radius{
 							Enabled: true,
-							Servers: []*auth.RadiusServer{
+							Domains: []*auth.RadiusDomain{
 								{
-									Url: "",
+									Servers: []*auth.RadiusServer{
+										{
+											Url: "",
+										},
+									},
 								},
 							},
 						},
@@ -346,7 +350,11 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 						},
 						Radius: &auth.Radius{
 							Enabled: true,
-							NasID:   "Venice",
+							Domains: []*auth.RadiusDomain{
+								{
+									NasID: "Venice",
+								},
+							},
 						},
 						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
 					},
@@ -369,10 +377,14 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 						},
 						Radius: &auth.Radius{
 							Enabled: true,
-							NasID:   "Venice",
-							Servers: []*auth.RadiusServer{
+							Domains: []*auth.RadiusDomain{
 								{
-									Url: "localhost:1812",
+									NasID: "Venice",
+									Servers: []*auth.RadiusServer{
+										{
+											Url: "localhost:1812",
+										},
+									},
 								},
 							},
 						},
@@ -493,24 +505,28 @@ func TestValidateBindPassword(t *testing.T) {
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
 							Enabled: true,
-							Servers: []*auth.LdapServer{
+							Domains: []*auth.LdapDomain{
 								{
-									Url: "localhost:389",
-									TLSOptions: &auth.TLSOptions{
-										StartTLS:                   true,
-										SkipServerCertVerification: true,
+									Servers: []*auth.LdapServer{
+										{
+											Url: "localhost:389",
+											TLSOptions: &auth.TLSOptions{
+												StartTLS:                   true,
+												SkipServerCertVerification: true,
+											},
+										},
+									},
+
+									BaseDN:       "DC=pensando,DC=io",
+									BindDN:       "CN=admin,DC=pensando,DC=io",
+									BindPassword: "",
+									AttributeMapping: &auth.LdapAttributeMapping{
+										User:             "uid",
+										UserObjectClass:  "inetPersonOrg",
+										Group:            "memberOf",
+										GroupObjectClass: "group",
 									},
 								},
-							},
-
-							BaseDN:       "DC=pensando,DC=io",
-							BindDN:       "CN=admin,DC=pensando,DC=io",
-							BindPassword: "",
-							AttributeMapping: &auth.LdapAttributeMapping{
-								User:             "uid",
-								UserObjectClass:  "inetPersonOrg",
-								Group:            "memberOf",
-								GroupObjectClass: "group",
 							},
 						},
 						Local: &auth.Local{
@@ -628,12 +644,20 @@ func TestGenerateSecretAction(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -647,12 +671,20 @@ func TestGenerateSecretAction(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -700,12 +732,12 @@ func TestGenerateSecretAction(t *testing.T) {
 			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
 			err := policy.ApplyStorageTransformer(context.Background(), false)
 			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
-			Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == test.out.Spec.Authenticators.Ldap.BindPassword,
-				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.BindPassword, policy.Spec.Authenticators.Ldap.BindPassword))
-			Assert(t, len(policy.Spec.Authenticators.Radius.Servers) == len(test.out.Spec.Authenticators.Radius.Servers),
-				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Servers), len(policy.Spec.Authenticators.Radius.Servers)))
-			for _, radius := range policy.Spec.Authenticators.Radius.Servers {
-				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Servers {
+			Assert(t, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword == test.out.Spec.Authenticators.Ldap.Domains[0].BindPassword,
+				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.Domains[0].BindPassword, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword))
+			Assert(t, len(policy.Spec.Authenticators.Radius.Domains[0].Servers) == len(test.out.Spec.Authenticators.Radius.Domains[0].Servers),
+				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Domains[0].Servers), len(policy.Spec.Authenticators.Radius.Domains[0].Servers)))
+			for _, radius := range policy.Spec.Authenticators.Radius.Domains[0].Servers {
+				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Domains[0].Servers {
 					if radius.Url == expectedRadius.Url {
 						Assert(t, radius.Secret == expectedRadius.Secret,
 							fmt.Sprintf("[%v] test failed, expected radius [%s] secret [%s], got [%s]", test.name, radius.Url, expectedRadius.Secret, radius.Secret))
@@ -745,11 +777,19 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{},
+						Ldap: &auth.Ldap{
+							Domains: []*auth.LdapDomain{
+								{},
+							},
+						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812"},
-								{Url: "192.168.10.12:1812"},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812"},
+										{Url: "192.168.10.12:1812"},
+									},
+								},
 							},
 						},
 					},
@@ -763,12 +803,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -783,12 +831,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -805,12 +861,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: "newpassword",
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: "newpassword",
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: "newpassword"},
-								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: "newpassword"},
+										{Url: "192.168.10.12:1812", Secret: "newpassword"},
+									},
+								},
 							},
 						},
 					},
@@ -824,12 +888,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -844,12 +916,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: "newpassword",
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: "newpassword",
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: "newpassword"},
-								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: "newpassword"},
+										{Url: "192.168.10.12:1812", Secret: "newpassword"},
+									},
+								},
 							},
 						},
 					},
@@ -865,11 +945,17 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{},
+						Ldap: &auth.Ldap{
+							Domains: []*auth.LdapDomain{{}},
+						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812"},
-								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812"},
+										{Url: "192.168.10.12:1812", Secret: "newpassword"},
+									},
+								},
 							},
 						},
 					},
@@ -883,12 +969,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -903,12 +997,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: "newpassword"},
+									},
+								},
 							},
 						},
 					},
@@ -924,10 +1026,16 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{},
+						Ldap: &auth.Ldap{
+							Domains: []*auth.LdapDomain{{}},
+						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.12:1812", Secret: "newpassword"},
+									},
+								},
 							},
 						},
 					},
@@ -941,12 +1049,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -961,11 +1077,19 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.12:1812", Secret: "newpassword"},
+									},
+								},
 							},
 						},
 					},
@@ -981,12 +1105,18 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{},
+						Ldap: &auth.Ldap{
+							Domains: []*auth.LdapDomain{{}},
+						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812"},
-								{Url: "192.168.10.12:1812"},
-								{Url: "192.168.10.13:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812"},
+										{Url: "192.168.10.12:1812"},
+										{Url: "192.168.10.13:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -1000,12 +1130,20 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -1020,13 +1158,21 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
-								{Url: "192.168.10.13:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+										{Url: "192.168.10.13:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -1044,8 +1190,12 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.13:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.13:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -1091,12 +1241,12 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
 		if err == nil {
 			policy, _ := out.(auth.AuthenticationPolicy)
-			Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == test.out.Spec.Authenticators.Ldap.BindPassword,
-				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.BindPassword, policy.Spec.Authenticators.Ldap.BindPassword))
-			Assert(t, len(policy.Spec.Authenticators.Radius.Servers) == len(test.out.Spec.Authenticators.Radius.Servers),
-				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Servers), len(policy.Spec.Authenticators.Radius.Servers)))
-			for _, radius := range policy.Spec.Authenticators.Radius.Servers {
-				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Servers {
+			Assert(t, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword == test.out.Spec.Authenticators.Ldap.Domains[0].BindPassword,
+				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.Domains[0].BindPassword, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword))
+			Assert(t, len(policy.Spec.Authenticators.Radius.Domains[0].Servers) == len(test.out.Spec.Authenticators.Radius.Domains[0].Servers),
+				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Domains[0].Servers), len(policy.Spec.Authenticators.Radius.Domains[0].Servers)))
+			for _, radius := range policy.Spec.Authenticators.Radius.Domains[0].Servers {
+				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Domains[0].Servers {
 					if radius.Url == expectedRadius.Url {
 						Assert(t, radius.Secret == expectedRadius.Secret,
 							fmt.Sprintf("[%v] test failed, expected radius [%s] secret [%s], got [%s]", test.name, radius.Url, expectedRadius.Secret, radius.Secret))
@@ -2086,12 +2236,20 @@ func TestReturnAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -2105,12 +2263,20 @@ func TestReturnAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -2124,12 +2290,20 @@ func TestReturnAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -2146,12 +2320,20 @@ func TestReturnAuthPolicy(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							BindPassword: testPassword,
+							Domains: []*auth.LdapDomain{
+								{
+									BindPassword: testPassword,
+								},
+							},
 						},
 						Radius: &auth.Radius{
-							Servers: []*auth.RadiusServer{
-								{Url: "192.168.10.11:1812", Secret: testPassword},
-								{Url: "192.168.10.12:1812", Secret: testPassword},
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812", Secret: testPassword},
+										{Url: "192.168.10.12:1812", Secret: testPassword},
+									},
+								},
 							},
 						},
 					},
@@ -2193,12 +2375,12 @@ func TestReturnAuthPolicy(t *testing.T) {
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
 		if err == nil {
 			policy, _ := out.(auth.AuthenticationPolicy)
-			Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == test.out.Spec.Authenticators.Ldap.BindPassword,
-				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.BindPassword, policy.Spec.Authenticators.Ldap.BindPassword))
-			Assert(t, len(policy.Spec.Authenticators.Radius.Servers) == len(test.out.Spec.Authenticators.Radius.Servers),
-				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Servers), len(policy.Spec.Authenticators.Radius.Servers)))
-			for _, radius := range policy.Spec.Authenticators.Radius.Servers {
-				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Servers {
+			Assert(t, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword == test.out.Spec.Authenticators.Ldap.Domains[0].BindPassword,
+				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.Domains[0].BindPassword, policy.Spec.Authenticators.Ldap.Domains[0].BindPassword))
+			Assert(t, len(policy.Spec.Authenticators.Radius.Domains[0].Servers) == len(test.out.Spec.Authenticators.Radius.Domains[0].Servers),
+				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Domains[0].Servers), len(policy.Spec.Authenticators.Radius.Domains[0].Servers)))
+			for _, radius := range policy.Spec.Authenticators.Radius.Domains[0].Servers {
+				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Domains[0].Servers {
 					if radius.Url == expectedRadius.Url {
 						Assert(t, radius.Secret == expectedRadius.Secret,
 							fmt.Sprintf("[%v] test failed, expected radius [%s] secret [%s], got [%s]", test.name, radius.Url, expectedRadius.Secret, radius.Secret))

@@ -331,6 +331,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		"auth.Authenticators":             apisrvpkg.NewMessage("auth.Authenticators"),
 		"auth.Ldap":                       apisrvpkg.NewMessage("auth.Ldap"),
 		"auth.LdapAttributeMapping":       apisrvpkg.NewMessage("auth.LdapAttributeMapping"),
+		"auth.LdapDomain":                 apisrvpkg.NewMessage("auth.LdapDomain"),
 		"auth.LdapServer":                 apisrvpkg.NewMessage("auth.LdapServer"),
 		"auth.LdapServerStatus":           apisrvpkg.NewMessage("auth.LdapServerStatus"),
 		"auth.Local":                      apisrvpkg.NewMessage("auth.Local"),
@@ -715,6 +716,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 
 		"auth.Permission":         apisrvpkg.NewMessage("auth.Permission"),
 		"auth.Radius":             apisrvpkg.NewMessage("auth.Radius"),
+		"auth.RadiusDomain":       apisrvpkg.NewMessage("auth.RadiusDomain"),
 		"auth.RadiusServer":       apisrvpkg.NewMessage("auth.RadiusServer"),
 		"auth.RadiusServerStatus": apisrvpkg.NewMessage("auth.RadiusServerStatus"),
 		"auth.Resource":           apisrvpkg.NewMessage("auth.Resource"),
