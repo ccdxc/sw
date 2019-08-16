@@ -3,10 +3,13 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -151,6 +154,21 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	if matchAll && !dropOnlyFilter {
 		return i, false, fmt.Errorf("Match-all type rule can be used only for mirror-on-drop")
 	}
+
+	switch oper {
+	case apiintf.CreateOper:
+		pl := monitoring.MirrorSessionList{}
+		policyKey := strings.TrimSuffix(pl.MakeKey(string(apiclient.GroupMonitoring)), "/")
+		err := kv.List(ctx, policyKey, &pl)
+		if err != nil {
+			return nil, false, fmt.Errorf("error retrieving mirror policy: %v", err)
+		}
+
+		if len(pl.Items) >= statemgr.MaxMirrorSessions {
+			return nil, false, fmt.Errorf("can't configure more than %v mirror policy", statemgr.MaxMirrorSessions)
+		}
+	}
+
 	return i, true, nil
 }
 

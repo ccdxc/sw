@@ -49,8 +49,9 @@ type Statemgr struct {
 }
 
 const (
-	watcherQueueLen   = 16
-	maxMirrorSessions = 8
+	watcherQueueLen = 16
+	// MaxMirrorSessions is the maximum number of mirror sessions allowed
+	MaxMirrorSessions = 8
 )
 
 // FindObject looks up an object in local db
@@ -151,7 +152,7 @@ func (sm *Statemgr) setStop() {
 func (sm *Statemgr) MirrorSessionCountAllocate() bool {
 	sm.Mutex.Lock()
 	defer sm.Mutex.Unlock()
-	if sm.numMirrorSessions < maxMirrorSessions {
+	if sm.numMirrorSessions < MaxMirrorSessions {
 		sm.numMirrorSessions++
 		log.Infof("Allocated mirror session: count %v", sm.numMirrorSessions)
 		return true

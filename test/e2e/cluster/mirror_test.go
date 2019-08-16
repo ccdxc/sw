@@ -7,9 +7,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 
-	apiclient "github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api"
+
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/globals"
 )
@@ -43,7 +45,7 @@ var _ = Describe("MirrorSession Tests", func() {
 								IPAddresses: []string{"10.1.1.10"},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP"},
+								ProtoPorts: []string{"TCP/5555"},
 							},
 						},
 						{
@@ -51,7 +53,7 @@ var _ = Describe("MirrorSession Tests", func() {
 								IPAddresses: []string{"10.2.2.20"},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"UDP"},
+								ProtoPorts: []string{"UDP/5555"},
 							},
 						},
 					},
@@ -73,6 +75,38 @@ var _ = Describe("MirrorSession Tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(mirrorRestIf).ShouldNot(Equal(nil))
 		})
+
+		It("Check max mirror sessions", func() {
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
+			ms := testMirrorSessions[0]
+
+			for i := 0; i < statemgr.MaxMirrorSessions+1; i++ {
+				ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
+				ms.Spec.Collectors = []monitoring.MirrorCollector{
+					{
+						Type: "ERSPAN",
+						ExportCfg: &monitoring.MirrorExportConfig{
+							Destination: fmt.Sprintf("192.168.30.1"),
+						},
+					},
+				}
+
+				By(fmt.Sprintf("Creating MirrorSession %v", ms.Name))
+				_, err := mirrorRestIf.Create(ctx, &ms)
+				if i < statemgr.MaxMirrorSessions {
+					Expect(err).ShouldNot(HaveOccurred())
+				} else {
+					Expect(err).Should(HaveOccurred())
+				}
+			}
+			s, err := mirrorRestIf.List(ctx, &api.ListWatchOptions{})
+			Expect(err).ShouldNot(HaveOccurred())
+			for _, i := range s {
+				_, err := mirrorRestIf.Delete(ctx, i.GetObjectMeta())
+				Expect(err).ShouldNot(HaveOccurred())
+			}
+		})
+
 		It("Should run mirror sessions Test 1", func() {
 			// create mirror session with exp duration of 5s
 			// check that it starts running and then stops after 5s

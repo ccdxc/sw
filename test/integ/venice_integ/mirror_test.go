@@ -244,14 +244,14 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 	ms.Name = fmt.Sprintf("MirrorSession_%v", mid)
 	log.Infof("----- Create (>Max) Mirror Sessions %v", ms.Name)
 	err = it.createMirrorSession(ctx, activeMs, &ms)
-	Assert(c, err == nil, "Unable to create a mirror session - %v", ms.Name)
-	mid++
+	Assert(c, err != nil, "created more than max. mirror session - %v", ms.Name)
+
 	log.Infof("----- List mirror sessions")
 	msList, err := it.restClient.MonitoringV1().MirrorSession().List(ctx, &api.ListWatchOptions{
 		ObjectMeta: api.ObjectMeta{Tenant: "default"}})
 	Assert(c, err == nil, "Unable to retrieve mirror session list %v", err)
 	totalSessions := len(msList)
-	Assert(c, totalSessions == mid, "All sessions were not successfully created atual %v, expected %v", totalSessions, mid)
+	Assert(c, totalSessions == mid, "All sessions were not successfully created atual %v, expected %v, %+v", totalSessions, mid, msList)
 	for _, ms := range msList {
 		log.Infof("----- MirrorSession %v state %v", ms.Name, ms.Status.State)
 	}
@@ -262,17 +262,17 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 			if err != nil {
 				return false, err
 			}
-			if tms.Status.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String() {
+			if tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() {
 				errSessions++
 			}
 		}
-		return errSessions == 1, nil
-	}, "Could not find a extra session in error state", intervals...)
+		return errSessions == 0, nil
+	}, "found mirror session in error state", intervals...)
 
 	// Test updates
 	// change errored sessions startTime to get it into scheduled state
 	ms = testMirrorSessions[1]
-	mid = maxMirrorSessions
+	mid = maxMirrorSessions - 1
 	ms.Name = fmt.Sprintf("MirrorSession_%v", mid)
 	tm, err := ms.Spec.StartConditions.ScheduleTime.Time()
 	Assert(c, err == nil, "Time() errored for %v", ms.Spec.StartConditions.ScheduleTime)
