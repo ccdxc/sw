@@ -154,8 +154,12 @@ pmt_clr(const int pmti)
 }
 
 static void
-pmt_set_cfg(pciehwdev_t *phwdev,
-            const int pmti,
+pmt_set_cfg(const int pmti,
+            const u_int8_t port,
+            const u_int16_t bdf,
+            const u_int16_t bdfm,
+            const u_int16_t bdfst,
+            const u_int16_t bdflim,
             const u_int64_t cfgpa,
             const u_int16_t addr,
             const u_int16_t addrm,
@@ -166,8 +170,7 @@ pmt_set_cfg(pciehwdev_t *phwdev,
     pmt_t pmt;
 
     pmt_cfg_enc(&pmt,
-                phwdev->port,
-                phwdev->bdf,
+                port, bdf, bdfm, bdfst, bdflim,
                 cfgpa, addr, addrm,
                 romsksel, vfstridesel,
                 pmtflags);
@@ -224,48 +227,104 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem();
     const pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
-    const u_int64_t cfgpa = pal_mem_vtop(&phwmem->cfgcur[hwdevh]);
+    u_int64_t cfgpa = pal_mem_vtop(&phwmem->cfgcur[hwdevh]);
     const u_int64_t zerospa = pal_mem_vtop(phwmem->zeros);
+    const u_int8_t port = phwdev->port;
+    u_int16_t bdf, bdfm, bdfst, bdflim;
+    pciehwdevh_t cfgdevh;
     int pmti, i;
 
-    for (i = 0; i < PCIEHW_ROMSKSZ; i++) {
-        const int romsk = phwdev->romsksel[i];
-        const u_int32_t pmtf = phwdev->cfgpmtf[i];
-        if (romsk != ROMSK_RDONLY || pmtf != PMTF_NONE) {
-            pmti = pmt_alloc(1);
-            if (pmti < 0) {
-                pciesys_logerror("load_cfg: pmt_alloc failed i %d\n", i);
-                goto error_out;
-            }
-            pmt_set_owner(pmti, hwdevh);
-            pmt_set_cfg(phwdev, pmti, cfgpa, i << 2, 0xffff,
-                        romsk, VFSTRIDE_IDX_DEVCFG, pmtf);
+    /* bdf default for exact match */
+    bdf = phwdev->bdf;
+    bdfm = 0xffff;
+    bdfst = bdf;
+    bdflim = bdf;
+    cfgdevh = hwdevh;
+    /*
+     * Install cfg space entries for PF or VF0.
+     */
+    if (!phwdev->vf || phwdev->vfidx == 0) {
+        /*
+         * If VF0 adjust bdflim,bdfm to match all totalvfs.
+         */
+        if (phwdev->vf) {
+            const pciehwdev_t *parent = pciehwdev_get(phwdev->parenth);
+            const u_int32_t totalvfs = parent->totalvfs;
+            u_int16_t bdfmax;
+
+            /*
+             * Start at the "bdfst" of our parent, which for sriov pf
+             * is always device 0, function 0 on our bus.  The sriov vfs
+             * show up as additional functions on this bus.
+             * Set "bdfm" to match bus number and wildcard on dev,fnc.
+             * Then set "bdflim" limit to upper bound of dev, fnc based
+             * on totalvfs.
+             *
+             * XXX this is too permissive!  For example, if we want 9 vfs
+             * we set bdflim.dev=2 and bdflim.fnc=7, so cfg space is active
+             * for 2*8=16 vfs.  For now, rely on host not to probe vfs
+             * that it doesn't expect to find.  Fix this by adding 2 entries
+             * for each, one that covers dev=1,fnc=0-7, and one that covers
+             * dev=2,fnc=0.
+             */
+            bdfst = parent->bdf;
+            bdfmax = bdfst + totalvfs;
+            bdfm = 0xff00; /* XXX match all VFs on this bus */
+            bdflim = bdf_make(bdf_to_bus(bdfmax),
+                              totalvfs > 256 ? 0x1f : bdf_to_dev(bdfmax),
+                              totalvfs > 7   ? 0xf  : bdf_to_fnc(bdfmax));
+            /* adjust these to match bdfst */
+            cfgdevh = phwdev->parenth;
+            cfgpa = pal_mem_vtop(&phwmem->cfgcur[phwdev->parenth]);
         }
+
+        for (i = 0; i < PCIEHW_ROMSKSZ; i++) {
+            const int romsk = phwdev->romsksel[i];
+            const u_int32_t pmtf = phwdev->cfgpmtf[i];
+            if (romsk != ROMSK_RDONLY || pmtf != PMTF_NONE) {
+                pmti = pmt_alloc(1);
+                if (pmti < 0) {
+                    pciesys_logerror("load_cfg: pmt_alloc failed i %d\n", i);
+                    goto error_out;
+                }
+                pmt_set_owner(pmti, cfgdevh);
+                pmt_set_cfg(pmti, port, bdf, bdfm, bdfst, bdflim,
+                            cfgpa, i << 2, 0xffff,
+                            romsk, VFSTRIDE_IDX_DEVCFG, pmtf);
+            }
+        }
+        /*
+         * Catchall entry.  We add a read-write entry for all addresses,
+         * but ROMSK_RDONLY selects the read-only entry so effectively this
+         * claims all read/write transactions but writes have no effect.
+         * We limit the range to PCIEHW_CFGSZ because that is all we have
+         * here in cfgpa.
+         */
+        pmti = pmt_alloc(1);
+        if (pmti < 0) {
+            pciesys_logerror("load_cfg: pmt_alloc failed catchall\n");
+            goto error_out;
+        }
+        pmt_set_owner(pmti, cfgdevh);
+        pmt_set_cfg(pmti, port, bdf, bdfm, bdfst, bdflim,
+                    cfgpa, 0, ~(PCIEHW_CFGSZ - 1),
+                    ROMSK_RDONLY, VFSTRIDE_IDX_DEVCFG, PMTF_RW);
     }
     /*
-     * Catchall entry.  We add a read-write entry for all addresses,
-     * but romsk=1 selects the read-only entry so effectively this
-     * claims all read/write transactions but writes have no effect.
-     * We limit the range to PCIEHW_CFGSZ because that is all we have
-     * here in cfgpa.  For access to cfgspace above PCIEHW_CFGSZ add
-     * an entry to zerospa.
+     * For access to cfgspace above PCIEHW_CFGSZ add an entry to zerospa.
+     * Note we can't use an entry that works for all VFs here because
+     * the bdf wildcard match will always attempt to scale by bdf offset
+     *
+     * XXX Handle this region in sw with a single "force indirect" entry?
      */
-    pmti = pmt_alloc(1);
-    if (pmti < 0) {
-        pciesys_logerror("load_cfg: pmt_alloc failed catchall\n");
-        goto error_out;
-    }
-    pmt_set_owner(pmti, hwdevh);
-    pmt_set_cfg(phwdev, pmti, cfgpa, 0, ~(PCIEHW_CFGSZ - 1),
-                ROMSK_RDONLY, VFSTRIDE_IDX_DEVCFG, PMTF_RW);
-
     pmti = pmt_alloc(1);
     if (pmti < 0) {
         pciesys_logerror("load_cfg: pmt_alloc failed catchall zeros\n");
         goto error_out;
     }
     pmt_set_owner(pmti, hwdevh);
-    pmt_set_cfg(phwdev, pmti, zerospa, 0, 0,
+    pmt_set_cfg(pmti, port, bdf, 0xffff, bdf, bdf,
+                zerospa, 0, 0,
                 ROMSK_RDONLY, VFSTRIDE_IDX_4K, PMTF_RW);
     return 0;
 
@@ -400,16 +459,19 @@ pmt_init(void)
 static int last_hdr_displayed;
 
 /*
-idx  id typ rw p:00:00.0 0xreg_
-                                vfid port 00:00.0 vfst romsk 0xaddress VINTA
+idx  id typ p:bb:dd.f bdfmsk p:bdflim  rw cfgreg vfst romsk address     flags
+1    0  cfg 0:b4:00.0 0xffff 0:b4:00.0 -w 0x0004 0    0     0x0c4802000 vi---
  */
 static void
 pmt_show_cfg_entry_hdr(void)
 {
-    pciesys_loginfo("%-4s %-2s %-3s %-2s %-9s %-6s "
-                    "%-4s %-9s %-4s %-5s %-11s %-5s\n",
-                    "idx", "id", "typ", "rw", "p:bb:dd.f", "cfgreg",
-                    "vfid", "p:bdflim", "vfst", "romsk",
+    pciesys_loginfo("%-4s %-2s %-3s "
+                    "%-9s %-6s %-9s "
+                    "%-2s %-6s %-4s %-5s "
+                    "%-11s %-5s\n",
+                    "idx", "id", "typ",
+                    "p:bb:dd.f", "bdfmsk", "p:bdflim",
+                    "rw", "cfgreg", "vfst", "romsk",
                     "address", "flags");
 }
 
@@ -420,23 +482,32 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     /* const pmt_cfg_format_t *m = &dm->mask.cfg; */
     const pmr_cfg_entry_t *r = &pmt->pmre.cfg;
     /* bus adjust cfg bdf to match display of bar bdf */
-    const u_int16_t bdf = pciehw_hostbdf(d->port, d->bdf);
+    const u_int16_t bdf = pciehw_hostbdf(d->port,
+                                         bdf_make(r->bstart,
+                                                  r->dstart,
+                                                  r->fstart));
+    const u_int16_t bdflim = pciehw_hostbdf(d->port,
+                                            bdf_make(r->blimit,
+                                                     r->dlimit,
+                                                     r->flimit));
 
     if (last_hdr_displayed != PMTT_CFG) {
         pmt_show_cfg_entry_hdr();
         last_hdr_displayed = PMTT_CFG;
     }
 
-    pciesys_loginfo("%-4d %-2d %-3s %c%c %1d:%-7s 0x%04x "
-                    "%-4d %d:%-7s %-4d %-5d 0x%09" PRIx64 " %c%c%c%c%c\n",
+    pciesys_loginfo("%-4d %-2d %-3s "
+                    "%1d:%-7s 0x%04x %1d:%-7s "
+                    "%c%c 0x%04x %-4d %-5d "
+                    "0x%09" PRIx64 " %c%c%c%c%c\n",
                     pmti, d->tblid,
                     d->type == r->type ? pmt_type_str(d->type) : "BAD",
+                    d->port, bdf_to_str(bdf),
+                    dm->mask.cfg.bdf,
+                    r->plimit, bdf_to_str(bdflim),
                     pmt_allows_rd(pmt) ? 'r' : '-',
                     pmt_allows_wr(pmt) ? 'w' : '-',
-                    d->port, bdf_to_str(bdf), d->addrdw << 2,
-                    r->vfbase,
-                    r->plimit,
-                    bdf_to_str(bdf_make(r->blimit, r->dlimit, r->flimit)),
+                    d->addrdw << 2,
                     r->vfstridesel,
                     r->romsksel,
                     (u_int64_t)r->addrdw << 2,

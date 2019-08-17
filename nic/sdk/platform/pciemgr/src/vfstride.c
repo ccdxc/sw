@@ -49,6 +49,13 @@ vfstride_set(const int idx,
         u_int32_t w;
     } e;
 
+    e.w = 0;
+
+    assert(pshift < (1 << 5));
+    assert(bshift < (1 << 5));
+    assert(dshift < (1 << 5));
+    assert(fshift < (1 << 5));
+
     e.p = pshift;
     e.b = bshift;
     e.d = dshift;
@@ -63,13 +70,18 @@ vfstride_set(const int idx,
 void
 pciehw_vfstride_init(void)
 {
+    u_int8_t pshf, bshf, dshf, fshf;
     int i;
 
     for (i = 0; i < VFSTRIDE_COUNT; i++) {
         pal_reg_wr32(vfstride_addr(i), 0);
     }
 
-    /* XXX hardcode these entries for now */
-    vfstride_set(VFSTRIDE_IDX_DEVCFG, 0, 0, 0, 0, PCIEHW_CFGSZ);
-    vfstride_set(VFSTRIDE_IDX_4K,  0, 0, 0, 0, 0x1000);
+    /* insert these entries */
+    pshf = 0;
+    fshf = (ffs(PCIEHW_CFGSZ) - 1) - 2; /* -2: dwords */
+    dshf = fshf + 3;
+    bshf = dshf + 8;
+    vfstride_set(VFSTRIDE_IDX_DEVCFG, pshf, bshf, dshf, fshf, PCIEHW_CFGSZ);
+    vfstride_set(VFSTRIDE_IDX_4K,     0, 0, 0, 0, 0x1000);
 }

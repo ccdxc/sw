@@ -232,7 +232,7 @@ handle_notify(pciehw_port_t *p, notify_entry_t *nentry)
         pciehw_shmem_t *pshmem = pciehw_get_shmem();
         const u_int32_t pmti = info->pmti;
         pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
-        const pciehwdevh_t hwdevh = spmt->owner;
+        const pciehwdevh_t hwdevh = spmt->owner + info->vfid;
         pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
         pcie_stlp_t stlpbuf, *stlp = &stlpbuf;
 

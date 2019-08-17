@@ -310,6 +310,9 @@ void
 pmt_cfg_enc(pmt_t *pmt,
             const u_int8_t port,
             const u_int16_t bdf,
+            const u_int16_t bdfm,
+            const u_int16_t bdfst,
+            const u_int16_t bdflim,
             const u_int64_t cfgpa,
             const u_int16_t addr,
             const u_int16_t addrm,
@@ -342,7 +345,7 @@ pmt_cfg_enc(pmt_t *pmt,
     DM_SET_CFG(dm, type, PMT_TYPE_CFG, 0x7);
     DM_SET_CFG(dm, port, port, 0x7);
     DM_SET_CFG(dm, rw, rw, rwm);
-    DM_SET_CFG(dm, bdf, bdf, 0xffff);
+    DM_SET_CFG(dm, bdf, bdf, bdfm);
     DM_SET_CFG(dm, addrdw, addr >> 2, addrm >> 2);
 
     pmt_entry_enc(&pmt->pmte, &dm);
@@ -353,13 +356,13 @@ pmt_cfg_enc(pmt_t *pmt,
     pmr->indirect  = indirect;
     pmr->notify    = notify;
     pmr->pstart    = port;
-    pmr->bstart    = bdf_to_bus(bdf);
-    pmr->dstart    = bdf_to_dev(bdf);
-    pmr->fstart    = bdf_to_fnc(bdf);
+    pmr->bstart    = bdf_to_bus(bdfst);
+    pmr->dstart    = bdf_to_dev(bdfst);
+    pmr->fstart    = bdf_to_fnc(bdfst);
     pmr->plimit    = port;
-    pmr->blimit    = bdf_to_bus(bdf);
-    pmr->dlimit    = bdf_to_dev(bdf);
-    pmr->flimit    = bdf_to_fnc(bdf);
+    pmr->blimit    = bdf_to_bus(bdflim);
+    pmr->dlimit    = bdf_to_dev(bdflim);
+    pmr->flimit    = bdf_to_fnc(bdflim);
     pmr->vfstridesel = vfstridesel;
     pmr->td        = 0;
     pmr->addrdw    = cfgpadw;

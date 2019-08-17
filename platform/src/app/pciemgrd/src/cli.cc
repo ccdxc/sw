@@ -287,8 +287,11 @@ add_nvme(int argc, char *argv[])
     pfres->nvme.qidc = 64;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "i:I:l:L:N:p:r:R:v:")) != -1) {
+    while ((opt = getopt(argc, argv, "C:i:I:l:L:N:p:r:R:v:")) != -1) {
         switch (opt) {
+        case 'C':
+            pfres->nvme.classcode = strtoul(optarg, NULL, 0);
+            break;
         case 'v':
             pfres->totalvfs = strtoull(optarg, NULL, 0);
             if (pfres->totalvfs > 0) {
@@ -308,6 +311,7 @@ add_nvme(int argc, char *argv[])
                 vfres->nvme.regssz = pfres->nvme.regssz;
                 vfres->nvme.regs_stride = vfres->nvme.regssz;
                 vfres->nvme.qidc = pfres->nvme.qidc;
+                vfres->nvme.classcode = pfres->nvme.classcode;
             }
             break;
         default:

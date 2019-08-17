@@ -646,7 +646,7 @@ pciehw_cfgrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     const tlpauxinfo_t *info = &ientry->info;
     const u_int32_t pmti = info->pmti;
     const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
-    const pciehwdevh_t hwdevh = spmt->owner;
+    const pciehwdevh_t hwdevh = spmt->owner + info->vfid;
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
     u_int32_t val;
 
@@ -671,8 +671,14 @@ pciehw_cfgwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     const tlpauxinfo_t *info = &ientry->info;
     const u_int32_t pmti = info->pmti;
     const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
-    const pciehwdevh_t hwdevh = spmt->owner;
+    const pciehwdevh_t hwdevh = spmt->owner + info->vfid;
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
+
+#ifdef PCIEMGR_DEBUG
+    pciesys_logdebug("cfgwr_indirect: %s vfid %d wr 0x%lx sz %d data 0x%lx\n",
+                     pciehwdev_get_name(phwdev), info->vfid,
+                     stlp->addr, stlp->size, stlp->data);
+#endif
 
     /*
      * For indirect writes, write the data first,

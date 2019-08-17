@@ -135,7 +135,10 @@ nvme_cfg(pciehdev_t *pdev, const pciehdev_res_t *res, const u_int16_t devid)
     pciehcfg_setconf_vf(pcfg, res->is_vf);
     pciehcfg_setconf_deviceid(pcfg, devid);
     pciehcfg_setconf_classcode(pcfg, 0x010802);
-    //pciehcfg_setconf_classcode(pcfg, 0x088000); // XXX
+    if (res->nvme.classcode) {
+        // override keeps nvme driver from trying to initialize for testing
+        pciehcfg_setconf_classcode(pcfg, res->nvme.classcode);
+    }
     pciehcfg_setconf_nintrs(pcfg, res->intrc);
     pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));

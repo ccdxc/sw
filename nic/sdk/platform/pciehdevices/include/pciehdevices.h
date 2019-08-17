@@ -44,6 +44,7 @@ typedef struct pciehdev_nvmeres_s {
     u_int32_t regssz;           /* nvme register region size */
     u_int32_t regs_stride;      /* VF: nvme register region stride */
     u_int32_t qidc;             /* nvme qid count */
+    u_int32_t classcode;        /* override classcode */
 } pciehdev_nvmeres_t;
 
 typedef struct pciehdev_virtiores_s {
