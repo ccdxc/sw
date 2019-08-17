@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/utils/ftlite/ftlite_ipv4_structs.hpp"
 #include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
+#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
@@ -1040,11 +1041,13 @@ static inline void
 pds_pb_stats_entry_fill (pds_pb_debug_stats_t *pds_stats, void *ctxt)
 {
     sdk::platform::capri::tm_pb_debug_stats_t *stats = &pds_stats->stats;
+    sdk::platform::capri::capri_queue_stats_t *qos_queue_stats = &pds_stats->qos_queue_stats;
     pds::PbStatsGetResponse *rsp = (pds::PbStatsGetResponse *)ctxt;
     auto pb_stats = rsp->mutable_pbstats()->add_portstats();
     auto port = pb_stats->mutable_packetbufferport();
     auto buffer_stats = pb_stats->mutable_bufferstats();
     auto oflow_fifo_stats = pb_stats->mutable_oflowfifostats();
+    auto q_stats = pb_stats->mutable_qosqueuestats();
 
     pds_pb_stats_port_fill(port, pds_stats->port);
 
@@ -1078,6 +1081,29 @@ pds_pb_stats_entry_fill (pds_pb_debug_stats_t *pds_stats, void *ctxt)
     drop_counts->mutable_entry(4)->set_count(stats->oflow_fifo_stats.drop_counts.write_buffer_full_drop_count);
     drop_counts->add_entry()->set_type(pds::OflowFifoDropType::CONTROL_FIFO_FULL_DROP);
     drop_counts->mutable_entry(5)->set_count(stats->oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
+
+    for (int i = 0; i < CAPRI_TM_MAX_QUEUES; i++) {
+        if (qos_queue_stats->iq_stats[i].iq.valid) {
+            auto input_stats = q_stats->add_inputqueuestats();
+            auto iq_stats = &qos_queue_stats->iq_stats[i].stats;
+            input_stats->set_inputqueueidx(qos_queue_stats->iq_stats[i].iq.queue);
+            input_stats->mutable_oflowfifostats()->set_goodpktsin(iq_stats->oflow.good_pkts_in);
+            input_stats->mutable_oflowfifostats()->set_goodpktsout(iq_stats->oflow.good_pkts_out);
+            input_stats->mutable_oflowfifostats()->set_erroredpktsin(iq_stats->oflow.errored_pkts_in);
+            input_stats->mutable_oflowfifostats()->set_fifodepth(iq_stats->oflow.fifo_depth);
+            input_stats->mutable_oflowfifostats()->set_maxfifodepth(iq_stats->oflow.max_fifo_depth);
+            input_stats->set_bufferoccupancy(iq_stats->buffer_occupancy);
+            input_stats->set_peakoccupancy(iq_stats->peak_occupancy);
+            input_stats->set_portmonitor(iq_stats->port_monitor);
+        }
+        if (qos_queue_stats->oq_stats[i].oq.valid) {
+            auto output_stats = q_stats->add_outputqueuestats();
+            auto oq_stats = &qos_queue_stats->oq_stats[i].stats;
+            output_stats->set_outputqueueidx(qos_queue_stats->oq_stats[i].oq.queue);
+            output_stats->set_queuedepth(oq_stats->queue_depth);
+            output_stats->set_portmonitor(oq_stats->port_monitor);
+        }
+    }
 
     rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
 }

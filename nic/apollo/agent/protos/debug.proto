@@ -231,10 +231,38 @@ message PacketBufferPort {
   uint32               PortNum  = 2;
 }
 
+message QosInputOflowQueueStats {
+  uint64 GoodPktsIn    = 1;    // Cumulative count of good packets in
+  uint64 GoodPktsOut   = 2;    // Cumulative count of good packets out
+  uint64 ErroredPktsIn = 3;    // Cumulative count of errored packets in
+  uint32 FifoDepth     = 4;    // Instantaneous Overflow fifo depth in bytes
+  uint32 MaxFifoDepth  = 5;    // Maximum Overflow fifo depth observed in bytes
+}
+
+message QosInputQueueStats {
+  uint32                  InputQueueIdx   = 1;
+  QosInputOflowQueueStats OflowFifoStats  = 2;    // Overflow fifo stats
+  uint32                  BufferOccupancy = 3;    // Instantaneous buffer occupancy in bytes
+  uint32                  PeakOccupancy   = 4;    // Peak buffer occupancy in bytes
+  uint64                  PortMonitor     = 5;    // port monitor counter
+}
+
+message QosOutputQueueStats {
+  uint32 OutputQueueIdx = 1;
+  uint32 QueueDepth     = 2;    // Instantaneous output queue depth in pkts
+  uint64 PortMonitor    = 3;    // port monitor counter
+}
+
+message QosQueueStats {
+  repeated QosInputQueueStats  InputQueueStats  = 1;    // List of input queue statistics per each input queue
+  repeated QosOutputQueueStats OutputQueueStats = 2;    // List of output queue statistics per each output queue
+}
+
 message PacketBufferPortStats {
   PacketBufferPort PacketBufferPort = 1;    // Port identifier
-  BufferStats      BufferStats       = 2;    // PBC block statistics
+  BufferStats      BufferStats      = 2;    // PBC block statistics
   OflowFifoStats   OflowFifoStats   = 3;    // Overflow fifo statistics
+  QosQueueStats    QosQueueStats    = 4;    // QoS queue statistics
 }
 
 // PacketBufferStats captures all the statistics of the packet buffering module

@@ -289,6 +289,7 @@ capri_impl::pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) {
             OBFL_LOG_ERR("Get PB stats failed for port {}", tm_port);
             continue;
         }
+        ret = capri_queue_stats_get(tm_port, &pb_stats.qos_queue_stats);
         pb_stats.port = tm_port;
         cb(&pb_stats, ctxt);
     }

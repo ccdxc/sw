@@ -36,6 +36,13 @@ var systemShowCmd = &cobra.Command{
 	Run:   systemShowCmdHandler,
 }
 
+var queueStatsCmd = &cobra.Command{
+	Use:   "queue-statistics",
+	Short: "show system queue-statistics",
+	Long:  "show system queue-statistics",
+	Run:   systemQueueStatsCmdHandler,
+}
+
 var systemQueueCreditsShowCmd = &cobra.Command{
 	Use:   "queue-credits",
 	Short: "show system packet-buffer-stats queue-credits",
@@ -93,6 +100,9 @@ func init() {
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.Flags().Bool("power", false, "Show system power information")
 	systemShowCmd.Flags().Bool("temperature", false, "Show system power information")
+	systemShowCmd.AddCommand(queueStatsCmd)
+	queueStatsCmd.Flags().Bool("input", false, "Show system input queue-statistics")
+	queueStatsCmd.Flags().Bool("output", false, "Show system input queue-statistics")
 
 	debugCmd.AddCommand(traceDebugCmd)
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level (Allowed: none, error, warn, info, debug, verbose)")
@@ -143,7 +153,7 @@ func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	queueCreditsHeaderPrint()
+	queueHeaderPrint()
 
 	qVal := [16]uint32{}
 	qVal2 := [16]uint32{}
@@ -159,12 +169,12 @@ func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
 				qVal2[qIndex-16] = queueCredit.GetCredit()
 			}
 		}
-		str = fmt.Sprintf("%-6v\n", qVal)
+		str = fmt.Sprintf("%-9v\n", qVal)
 		str = strings.Replace(str, "[", "", -1)
 		str = strings.Replace(str, "]", "", -1)
 		fmt.Printf("%s\n", str)
 		fmt.Printf("     |")
-		str = fmt.Sprintf("%-6v\n", qVal2)
+		str = fmt.Sprintf("%-9v\n", qVal2)
 		str = strings.Replace(str, "[", "", -1)
 		str = strings.Replace(str, "]", "", -1)
 		fmt.Printf("%s\n", str)
@@ -172,11 +182,11 @@ func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
 
 }
 
-func queueCreditsHeaderPrint() {
-	hdrLine := strings.Repeat("-", 115)
+func queueHeaderPrint() {
+	hdrLine := strings.Repeat("-", 166)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d\n"+
-		"%-6s%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d\n",
+	fmt.Printf("%-6s%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d\n"+
+		"%-6s%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d%-10d\n",
 		"     |", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 		"     |", 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31)
 	fmt.Println(hdrLine)
@@ -208,6 +218,209 @@ func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Memory trim succeeded\n")
+}
+
+func systemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	resp, err := client.PbStatsGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("PB stats get failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	input := false
+	output := false
+
+	if cmd.Flags().Changed("input") ||
+		cmd.Flags().Changed("ouput") {
+		if cmd.Flags().Changed("input") {
+			input = true
+		}
+		if cmd.Flags().Changed("output") {
+			output = true
+		}
+	} else {
+		input = true
+		output = true
+	}
+
+	systemQueueStatsPrint(resp.GetPbStats(), input, output)
+}
+
+func systemQueueStatsPrint(resp *pds.PacketBufferStats, input bool, output bool) {
+	portStats := resp.GetPortStats()
+	var str string
+
+	if input == true {
+		fmt.Printf("Buffer Occupancy:\n")
+		queueHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+				qIndex := input.GetInputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = input.GetBufferOccupancy()
+				} else {
+					qVal2[qIndex-16] = input.GetBufferOccupancy()
+				}
+			}
+			str = fmt.Sprintf("%-9v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-9v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+
+		fmt.Printf("Peak Occupancy:\n")
+		queueHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+				qIndex := input.GetInputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = input.GetPeakOccupancy()
+				} else {
+					qVal2[qIndex-16] = input.GetPeakOccupancy()
+				}
+			}
+			str = fmt.Sprintf("%-9v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-9v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+
+		fmt.Printf("Input Queue Port Monitor:\n")
+		queueHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint64{}
+			qVal2 := [16]uint64{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+				qIndex := input.GetInputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = input.GetPortMonitor()
+				} else {
+					qVal2[qIndex-16] = input.GetPortMonitor()
+				}
+			}
+			str = fmt.Sprintf("%-9v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-9v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
+
+	if output == true {
+		fmt.Printf("Queue Depth:\n")
+		queueHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, output := range port.GetQosQueueStats().GetOutputQueueStats() {
+				qIndex := output.GetOutputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = output.GetQueueDepth()
+				} else {
+					qVal2[qIndex-16] = output.GetQueueDepth()
+				}
+			}
+			str = fmt.Sprintf("%-9v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-9v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+
+		fmt.Printf("Output Queue Port Monitor:\n")
+		queueHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint64{}
+			qVal2 := [16]uint64{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, output := range port.GetQosQueueStats().GetOutputQueueStats() {
+				qIndex := output.GetOutputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = output.GetPortMonitor()
+				} else {
+					qVal2[qIndex-16] = output.GetPortMonitor()
+				}
+			}
+			str = fmt.Sprintf("%-9v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-9v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
 }
 
 func pbShowCmdHandler(cmd *cobra.Command, args []string) {

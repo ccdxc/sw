@@ -18,6 +18,7 @@
 #include "nic/utils/ftlite/ftlite_ipv4_structs.hpp"
 #include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 
 /// \cond DO_NOT_DOCUMENT
 
@@ -52,6 +53,7 @@ typedef struct pds_table_stats_e {
 typedef struct pds_pb_debug_stats_e {
     uint32_t port;
     sdk::platform::capri::tm_pb_debug_stats_t stats;
+    sdk::platform::capri::capri_queue_stats_t qos_queue_stats;
 } pds_pb_debug_stats_t;
 
 typedef struct pds_meter_debug_stats_e {
