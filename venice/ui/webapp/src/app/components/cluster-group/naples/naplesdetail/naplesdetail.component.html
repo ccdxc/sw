@@ -184,7 +184,7 @@
                     </ng-template>
                   </p-table>
                 </div>
-                <app-labeleditor [data]="selectedObj" [metadata]="labelEditorMetaData"
+                <app-labeleditor [objects]="[selectedObj]" [metadata]="labelEditorMetaData"
                                  (saveEmitter)="handleEditSave($event)"
                                  (cancelEmitter)="handleEditCancel($event)"
                                  [inLabelEditMode]="inLabelEditMode"></app-labeleditor>

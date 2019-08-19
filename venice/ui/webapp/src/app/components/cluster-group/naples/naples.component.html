@@ -29,21 +29,38 @@
              class="global-primeng-table-lazyload" [columns]="cols"
              dataKey="meta.name" [responsive]="true"
              sortField="meta.mod-time" [sortOrder]='-1'
+             [(selection)]="selectedNaples"
              [resizableColumns]="true">
       <!-- Table Caption -->
       <ng-template pTemplate="caption">
-        <div fxFlex="auto" fxLayout="row">
-          <div>
-            <app-tableheader title="Naples" [total]="filteredNaples.length" [icon]="naplesIcon"
-                             width="250px">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+            <app-tableheader title="Naples" [total]="filteredNaples.length" [icon]="naplesIcon">
             </app-tableheader>
+
+            <div fxFlex="none" fxLayoutAlign="start center">
+              <!-- TABLE FUNCTION ICONS HERE -->
+              <mat-icon class="naples-add-label-button"
+                        *ngIf="selectedNaples.length>0"
+                        [matTooltip]="'Add labels to selected naples'"
+                        (click)="editLabels()">label</mat-icon>
+              <app-labeleditor
+                               [metadata]="labelEditorMetaData"
+                               [inLabelEditMode]="inLabelEditMode"
+                               (saveEmitter)="handleEditSave($event)"
+                               (cancelEmitter)="handleEditCancel($event)"
+                               [objects]="selectedNaples"
+                               [nameKey]="'spec.id'">
+              </app-labeleditor>
+            </div>
           </div>
-          <div fxFlex="grow" class="naples-table-advsearch" fxLayout="column">
+          <div fxLayout="row">
             <app-advanced-search #advancedSearchComponent
                                  [formArray]="fieldFormArray" [cols]="cols"
                                  (cancelEmitter)="onCancelSearch($event)"
                                  (searchEmitter)="getSmartNICs()"
-                                 kind="SmartNIC">
+                                 kind="SmartNIC"
+                                 fxFlex="grow">
             </app-advanced-search>
           </div>
         </div>
@@ -51,6 +68,9 @@
       <!-- Table Header -->
       <ng-template pTemplate="header" let-columns>
         <tr>
+          <th style="width: 3em">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
           <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''"
               [class]="col.class">
             <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
@@ -61,6 +81,10 @@
       <!-- Table Body -->
       <ng-template pTemplate="body" let-rowData>
         <tr>
+          <td>
+            <p-tableCheckbox [value]="rowData">
+            </p-tableCheckbox>
+          </td>
           <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
             <div *ngSwitchCase="'spec.id'">
               <a routerLink="./{{rowData.meta.name}}">{{rowData.spec.id}}</a>

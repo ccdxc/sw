@@ -400,15 +400,15 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.inLabelEditMode = false;
   }
 
-  handleEditSave(labels: object) {
-    const obj = new ClusterSmartNIC(this.selectedObj.getModelValues());
-    const name = this.selectedObj.meta.name;
-    obj.meta.labels = labels;
-    const sub = this.clusterService.UpdateSmartNIC(name, obj, '',  this.objList[0]).subscribe(response => {
-      this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${this.selectedObj.meta.name}'s labels`);
-    }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
-    this.subscriptions.push(sub);
-    this.inLabelEditMode = false;
+  handleEditSave(newObjects: ClusterSmartNIC[]) {
+    if (newObjects.length > 0) {
+      const name = newObjects[0].meta.name;
+      const sub = this.clusterService.UpdateSmartNIC(name, newObjects[0], '',  this.objList[0]).subscribe(response => {
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${name}'s labels`);
+      }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
+      this.subscriptions.push(sub);
+      this.inLabelEditMode = false;
+    }
   }
 
   /**

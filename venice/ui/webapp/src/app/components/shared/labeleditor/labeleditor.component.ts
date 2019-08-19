@@ -10,10 +10,18 @@ import {
 } from '@angular/core';
 import {LabelEditorMetadataModel, LabelEditorModel, VeniceObject} from './index';
 import {Utility} from '@common/Utility';
+import {FormArray, FormControl, FormGroup} from '@angular/forms';
 
 // Label Editor Widget
-// This widget will allow user to edit the key value pair in meta.labels
-// Example usage: webapp/src/app/components/cluster-group/naples/naplesdetail/naplesdetail.component.html
+// This widget will allow user to edit the key value pair in meta.labels for multiple objects at the same time.
+// Example usage: webapp/src/app/components/cluster-group/naples.component.html
+
+// Initially we iterate over the labels of all the selected objects and find the common labels.
+// These common labels are displayed by the label editor in case the user wants to change or remove them.
+// The user can also add new labels to all of these objects.
+// If the user is trying to edit an existing key, we show a warning next to the editor and show more details about the conflict on hover.
+// When the user saves the labels a list of the updated objects is sent back to the original component.
+
 @Component({
   selector: 'app-labeleditor',
   templateUrl: './labeleditor.component.html',
@@ -24,9 +32,22 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   models: LabelEditorModel[];
   usableArray = [];
   usableJson = {};
+  labelWarnings = [null];
+  commonLabels: LabelEditorModel[];
+  updatedObjects: VeniceObject[] = [];
+
+  form = new FormGroup({
+    cities: new FormArray([
+      new FormControl(''),
+    ]),
+  });
+
+  @Input() dialogMode = true;
+
+  @Input() objects: VeniceObject[] = [];
+  // Instance propety used to get object "name"
+  @Input() nameKey: string = 'meta.name';
   // the object user wants to edit. Must contains meta.labels
-  @Input() data: VeniceObject;
-  // meta data that controls the behavior of this widget. E.g. enable save, enable delete, enable edit, enable cancel
   @Input() metadata: LabelEditorMetadataModel;
   // In the future, some labels may be not editable and not deletable. Widget user can override this buildModel() API to customize it.
   @Input() myBuildModel: Function;
@@ -38,7 +59,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   // get edited meta.labels as an obj format
   @Output() jsonValue = new EventEmitter();
   // save handler
-  @Output() saveEmitter: EventEmitter<object> = new EventEmitter<object>();
+  @Output() saveEmitter: EventEmitter<VeniceObject[]> = new EventEmitter<VeniceObject[]>();
   // cancel handler
   @Output() cancelEmitter: EventEmitter<object> = new EventEmitter<object>();
 
@@ -57,6 +78,11 @@ export class LabeleditorComponent implements OnInit, OnChanges {
       return false;
     }
     return obj.hasOwnProperty(key);
+  }
+
+  onFormChange(prop, index) {
+    this.onObjectEdit();
+    this.updateWarning(prop, index);
   }
 
   /**
@@ -87,6 +113,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
    */
   addProperty() {
     this.models.push(this.buildModel('', ''));
+    this.labelWarnings.push(null);
   }
 
   /**
@@ -103,6 +130,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
       this.models.splice(index, 1);
     }
     this.onObjectEdit();
+    this.labelWarnings.splice(index, 1);
   }
 
   /**
@@ -122,6 +150,19 @@ export class LabeleditorComponent implements OnInit, OnChanges {
     }
   }
 
+  getValueClass(prop: LabelEditorModel): string {
+    if (!prop) {
+      return '';
+    }
+    if (prop.valueClass) {
+      return prop.valueClass;
+    } else if (this.metadata.valuesClasses) {
+      return this.metadata.valuesClasses;
+    } else {
+      return 'label-editor-input-value';
+    }
+  }
+
   /**
    * Helper function to get class for key input with error if the input is not valid
    * @param prop
@@ -130,26 +171,42 @@ export class LabeleditorComponent implements OnInit, OnChanges {
     return this.validate(prop.key) ? this.getKeyClass(prop) : `${this.getKeyClass(prop)} error`;
   }
 
+  getValueClassWithValidator(prop: LabelEditorModel): string {
+    return this.validateValue(prop.value) ? this.getValueClass(prop) : `${this.getValueClass(prop)} error`;
+  }
 
   ngOnInit() {
     if (!this.models) {
       this.models = [];
     }
+    this.init();
   }
 
   /**
    * Build LabelEditorModel models from meta.labels
    */
   buildModels(): LabelEditorModel[] {
-    const res = [];
-    if (this.data.meta.labels && !Utility.getLodash().isEmpty(this.data.meta.labels)) {
-      Object.entries(this.data.meta.labels).forEach(([key, value]) => {
-        res.push(this.buildModel(key, value));
-      });
-    } else {
-      res.push(this.buildModel('', ''));
+    this.commonLabels = [];
+    let labels = {};
+
+    // Check if any objects are passed
+    if (this.objects.length > 0 && !!this.objects[0]) {
+      // Check if the first object has labels
+      if (!!this.objects[0].meta.hasOwnProperty('labels') && !!this.objects[0].meta.labels) {
+        labels = this.objects[0].meta.labels;
+        // If multiple objects are passed, get all the common labels.
+        for (const key of Object.keys(labels)) {
+          if (this.isLabelCommon(key)) {
+            this.commonLabels.push( this.buildModel(key, labels[key]) );
+            this.removeCommonLabel(key);
+          }
+        }
+      }
     }
-    return res;
+    if (this.commonLabels.length === 0) {
+      this.commonLabels.push(this.buildModel('', ''));
+    }
+    return Utility.getLodash().cloneDeep(this.commonLabels);
   }
 
   /**
@@ -179,7 +236,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
    * Build default LabelEditorMetadataModel
    */
   buildDefaultMetadataModel(): LabelEditorMetadataModel {
-    const myTitle = (this.data) ? this.data.meta.name + ' Labels' : 'Label Editor';
+    const myTitle = (this.objects.length === 1 && !!this.objects[0]) ? this.objects[0].meta.name + ' Labels' : 'Label Editor';
     const labelEditorMetadataModel = {
       title: myTitle,
       keysEditable: true,
@@ -193,21 +250,22 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (!this.data) {
-      // data not loaded
+    // the passed object(s) have changed. We need to process them again.
+    if (this.objects.length === 0 || !this.objects[0]) {
       if (!this.models) {
         this.models = [
           this.buildModel('', '')
         ];
       }
-      if (!this.metadata) {
-        this.metadata = this.buildDefaultMetadataModel();
-      }
     } else {
-      // data loaded, use real data
       this.init();
-      if (!this.metadata) {
-        this.metadata = this.buildDefaultMetadataModel();
+    }
+
+    // When inLabelEditMode is false, editor is not actually destroyed just hidden
+    // Previous warnings need to be reset when its hidden
+    if (!!changes && changes.hasOwnProperty('inLabelEditMode') && !changes['inLabelEditMode'].currentValue) {
+      for (let i = 0; i < this.labelWarnings.length; i++) {
+        this.labelWarnings[i] = null;
       }
     }
   }
@@ -216,10 +274,53 @@ export class LabeleditorComponent implements OnInit, OnChanges {
    * Data init
    */
   init() {
+    if (!this.metadata) {
+      this.metadata = this.buildDefaultMetadataModel();
+    }
+    this.updatedObjects = Utility.getLodash().cloneDeep(this.objects);
     this.usableJson = {};
     this.usableArray = [];
     this.models = this.buildModels();
     this.onObjectEdit();
+  }
+
+  isLabelCommon(key) {
+    const valueSet = new Set<string>();
+    for (const obj of this.objects) {
+      if (!!obj.meta.labels && obj.meta.labels.hasOwnProperty(key)) {
+        valueSet.add(obj.meta.labels[key]);
+      } else {
+        return false;
+      }
+      if (valueSet.size > 1) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  removeCommonLabel(key) {
+    for (const obj of this.updatedObjects) {
+      delete obj.meta.labels[key];
+    }
+  }
+
+  // The new object retains all the untouched key-values from the old naples object.
+  updateLabelsForObject(object, models) {
+    if (!object.meta.hasOwnProperty('labels') || object.meta.labels === null ) {
+      object.meta.labels = {};
+    }
+    for (const prop of models) {
+      if (prop.key !== '' && prop.value !== '') {
+        object.meta.labels[prop.key] = prop.value;
+      }
+    }
+  }
+
+  updateObjects() {
+    for (const obj of this.updatedObjects) {
+      this.updateLabelsForObject(obj, this.models);
+    }
   }
 
   /**
@@ -227,7 +328,8 @@ export class LabeleditorComponent implements OnInit, OnChanges {
    */
   save() {
     // save fields, the saveEmitter will handle the http call
-    this.saveEmitter.emit(this.usableJson);
+    this.updateObjects();
+    this.saveEmitter.emit(this.updatedObjects);
   }
 
   /**
@@ -245,7 +347,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
    * @param key
    */
   validate(key: string): boolean {
-    if (!key || key === '') {
+    if (!!key || key === '') {
       return true;
     }
     let counter = 0;
@@ -258,6 +360,15 @@ export class LabeleditorComponent implements OnInit, OnChanges {
     }
     this.formValidated = true;
     return true;
+  }
+
+  validateValue(value: string): boolean {
+    if (value === '') {
+      return true;
+    }
+
+    this.formValidated = !!value;
+    return !!value;
   }
 
   /**
@@ -279,5 +390,40 @@ export class LabeleditorComponent implements OnInit, OnChanges {
     if ($event && $event.which === 13) {
       this.delete(prop);
     }
+    if (this.models.length === 0) {
+      this.models.push(this.buildModel('', ''));
+    }
+  }
+
+  buildObjectLabelMap() {
+    const objectLabelMap = new Map<string, Set<string>>();
+    for (const object of this.objects) {
+      if (object.meta.hasOwnProperty('labels') && !!object.meta.labels) {
+        for (const key of Object.keys(object.meta.labels)) {
+          if ( !(key in objectLabelMap)) {
+            objectLabelMap[key] = new Set<string>();
+          }
+          objectLabelMap[key].add( Utility.getObjectValueByPropertyPath(object, this.nameKey) );
+        }
+      }
+    }
+    return objectLabelMap;
+  }
+
+  updateWarning(label, index) {
+    // Currently we dont support empty keys or values
+    if (label.key === '' || label.value === '') {
+      this.labelWarnings[index] = 'Labels with empty key/value will be removed';
+      return;
+    }
+
+    const objectLabelMap = this.buildObjectLabelMap();
+    let tooltip = 'Key already present in ';
+    if (label.key in objectLabelMap) {
+      tooltip += Array.from(objectLabelMap[label.key]).join(', ');
+    } else {
+      tooltip = null;
+    }
+    this.labelWarnings[index] = tooltip;
   }
 }

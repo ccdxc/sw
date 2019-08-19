@@ -27,11 +27,14 @@
   </div>
   <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center center">
     <div [@fastSlideInOut] *ngIf="showAdvancedPanel" fxFlex="80">
-      <mat-card class="advanced-search-expansion" fxLayout="column" fxFlex>
-        <span class="advanced-search-expansion-span-label">Keyword:</span>
+      <mat-card class="advanced-search-expansion" fxLayout="column" fxFlex
+                fxLayoutAlign="start stretch">
+        <span class="advanced-search-expansion-span-label"
+              fxLayoutAlign="start center">Keyword:</span>
         <input [(ngModel)]="generalSearch" type="text" pInputText placeholder="General Search"
                class="advanced-search-general-search" (keydown)="onKeydown($event)">
-        <span class="advanced-search-expansion-span-label">Column:</span>
+        <span class="advanced-search-expansion-span-label"
+              fxLayoutAlign="start center">Column:</span>
         <app-repeater #fieldRepeater
                       [data]="fieldData"
                       [formArray]="formArray"

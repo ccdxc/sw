@@ -95,19 +95,23 @@ export class TestingUtility {
       {
         [key: string]:
         (fieldElem: DebugElement, rowData: any, rowIndex: number) => void
-      } = {}, actionColContent = '') {
+      } = {}, actionColContent = '', hasCheckbox = false) {
 
     const rows = tableElem.queryAll(By.css('tr'));
     expect(rows.length).toBe(data.length, 'Data did not match number of entries in the table');
     rows.forEach((row, rowIndex) => {
       const rowData = data[rowIndex];
       row.children.forEach((field, fieldIndex) => {
-        if (fieldIndex === columns.length) {
+        const checkboxOffSet = hasCheckbox ? 1 : 0;
+        if (hasCheckbox && fieldIndex === 0) {
+          return;
+        }
+        if (fieldIndex - checkboxOffSet === columns.length) {
           // Action col
           expect(field.nativeElement.textContent).toBe(actionColContent, 'action column did not match');
           return;
         }
-        const colData = columns[fieldIndex];
+        const colData = columns[fieldIndex - checkboxOffSet];
         if (caseMap[colData.field] != null) {
           // Delegate to supplied function
           const handlerFunction = caseMap[colData.field];

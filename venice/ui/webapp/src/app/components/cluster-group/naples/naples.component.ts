@@ -11,7 +11,7 @@ import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueri
 import { ClusterSmartNIC, IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { Table } from 'primeng/table';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 import { NaplesConditionValues } from '.';
@@ -19,6 +19,7 @@ import { AdvancedSearchComponent } from '@components/shared/advanced-search/adva
 import { FormArray } from '@angular/forms';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { SearchService } from '@app/services/generated/search.service';
+import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
 
 @Component({
   selector: 'app-naples',
@@ -43,6 +44,10 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   naples: ReadonlyArray<ClusterSmartNIC> = [];
   filteredNaples: ReadonlyArray<ClusterSmartNIC> = [];
+  selectedNaples: ClusterSmartNIC[] = [];
+  inLabelEditMode: boolean = false;
+  labelEditorMetaData: LabelEditorMetadataModel;
+
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
   naplesMap: { [napleName: string]: ClusterSmartNIC };
@@ -129,6 +134,20 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     });
   }
 
+  updateSelectedNaples() {
+    const tempMap = new Map<string, ClusterSmartNIC>();
+    for (const obj of this.naples) {
+      tempMap[obj.meta.name] = obj;
+    }
+    const updatedSelectedObjects: ClusterSmartNIC[] = [];
+    for (const selObj of this.selectedNaples) {
+      if (selObj.meta.name in tempMap) {
+        updatedSelectedObjects.push(tempMap[selObj.meta.name]);
+      }
+    }
+    this.selectedNaples = updatedSelectedObjects;
+  }
+
   getNaples() {
     this.naplesMap = {};
     this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
@@ -139,6 +158,9 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
         this.naplesEventUtility.processEvents(response);
         for (const naple of this.naples) {
           this.naplesMap[naple.meta.name] = naple;
+        }
+        if (this.selectedNaples.length > 0) {
+          this.updateSelectedNaples();
         }
       },
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
@@ -389,10 +411,73 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     return Object.values(tmpMap);
 }
 
+  editLabels() {
+    this.labelEditorMetaData = {
+      title: 'Editing naples objects',
+      keysEditable: true,
+      valuesEditable: true,
+      propsDeletable: true,
+      extendable: true,
+      save: true,
+      cancel: true,
+    };
+
+  if (!this.inLabelEditMode) {
+      this.inLabelEditMode = true;
+    }
+  }
+
+  updateWithForkjoin(updatedNaples) {
+    const observables = [];
+    for (const naplesObject of updatedNaples) {
+      const name = naplesObject.meta.name;
+      const sub = this.clusterService.UpdateSmartNIC(name, naplesObject, '', this.naplesMap[name]);
+      observables.push(sub);
+    }
+
+    const summary = 'Naples update';
+
+    forkJoin(observables).subscribe(
+      (results: any[]) => {
+
+        let successCount: number = 0;
+        let failCount: number = 0;
+        const errors: string[] = [];
+        for (let i = 0; i < results.length; i++) {
+          if (results[i]['statusCode'] === 200) {
+            successCount += 1;
+          } else {
+            failCount += 1;
+            errors.push(results[i].body.message);
+          }
+        }
+
+        if (successCount > 0) {
+          const msg = 'Successfully updated ' + successCount.toString() + ' naples.';
+          this._controllerService.invokeSuccessToaster(summary, msg);
+          this.inLabelEditMode = false;
+        }
+        if (failCount > 0) {
+          this._controllerService.invokeRESTErrorToaster(summary, errors.join('\n'));
+        }
+    },
+    this._controllerService.restErrorHandler(summary + ' Failed')
+    );
+  }
+
+  // The save emitter from labeleditor returns the updated objects here.
+  // We use forkjoin to update all the naples.
+  handleEditSave(updatedNaples: ClusterSmartNIC[]) {
+    this.updateWithForkjoin(updatedNaples);
+  }
+
+  handleEditCancel($event) {
+    this.inLabelEditMode = false;
+  }
+
   ngOnDestroy() {
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
     });
   }
-
 }

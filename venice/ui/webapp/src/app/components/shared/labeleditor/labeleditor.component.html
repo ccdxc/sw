@@ -1,18 +1,32 @@
 <div *ngIf="inLabelEditMode" class="ui-widget-overlay ui-dialog-mask" style="z-index:10"></div>
-<p-dialog #dialog [header]="hasProp( metadata, 'title') ? metadata['title'] : 'Label Editor'"
-          [(visible)]="inLabelEditMode" fxFlex fxLayout="row wrap" (onHide)="cancel()"
-          [draggable]="false" [focusOnShow]="false">
+<div *ngIf="dialogMode" fxFlex="nogrow">
+  <p-dialog #dialog [header]="hasProp( metadata, 'title') ? metadata['title'] : 'Label Editor'"
+            [(visible)]="inLabelEditMode" fxFlex fxLayout="row wrap" (onHide)="cancel()"
+            [draggable]="false" [focusOnShow]="false">
+    <ng-container *ngTemplateOutlet="body"></ng-container>
+  </p-dialog>
+</div>
+<div *ngIf="!dialogMode">
+  <div>
+    <ng-container *ngTemplateOutlet="body"></ng-container>
+  </div>
+</div>
+
+<ng-template #body>
   <p-scrollPanel styleClass="label-editor-scroll-panel">
-    <div *ngFor="let prop of models;  let last = last;" fxLayout="row" fxLayoutAlign="start center">
+    <div *ngFor="let prop of models; let index = index; let last = last;" fxLayout="row"
+         fxLayoutAlign="start center">
       <div name="prop"
            [class]=" prop.class ? prop.class : ( metadata.PropsClasses ? metadata.PropsClasses : '')"
            fxLayout="row" fxLayoutAlign="start center">
+        <mat-icon [ngStyle]="{ 'visibility': !!labelWarnings[index]?'visible':'hidden' }"
+                  [matTooltip]="labelWarnings[index]">warning</mat-icon>
         <!--     label key-->
         <div fxFlex="nogrow" style="padding: 5px">
           <input pInputText [(ngModel)]="prop.key"
                  [ngClass]="getKeyClassWithValidator(prop)"
                  [readonly]=" hasProp( prop, 'keyEditable' )  ? !prop.keyEditable : ( metadata.keysEditable ?  !metadata.keysEditable : 'true')"
-                 (change)="onObjectEdit()"
+                 (change)="onFormChange(prop, index)"
                  [placeholder]="prop.keyPlaceholder || 'key'"
                  tabindex="0"
                  (keyup)="validate(prop.key)">
@@ -22,15 +36,17 @@
         <div fxFlex="nogrow" style="padding: 5px"
              [class]=" prop.valueParentClass ? prop.valueParentClass : ( metadata.valuesParentsClasses ? metadata.valuesParentsClasses : '')">
           <input pInputText *ngIf="prop.element == 'input' || ! hasProp(prop, 'element')"
+                 [ngClass]="getValueClassWithValidator(prop)"
                  [type]="prop.inputType ? prop.inputType : 'text' "
                  [(ngModel)]="prop.value"
                  [class]=" prop.valueClass ? prop.valueClass : ( metadata.valuesClasses ? metadata.valuesClasses : 'label-editor-input-value')"
                  [min]="prop.min" [max]="prop.max" [step]="prop.step"
                  [readonly]=" hasProp( prop, 'valueEditable' )  ? !prop.valueEditable : ( metadata.valuesEditable ?  !metadata.valuesEditable : 'true')"
                  [disabled]=" hasProp( prop, 'valueEditable' )  ? !prop.valueEditable : ( metadata.valuesEditable ?  !metadata.valuesEditable : 'true')"
-                 (change)="onObjectEdit()"
+                 (change)="onFormChange(prop, index)"
                  [placeholder]="prop.valuePlaceholder || 'value'"
-                 (keydown)="($event.which ==13) && last? addProperty() : ''">
+                 (keydown)="($event.which ==13) && last? addProperty() : ''"
+                 (keyup)="validateValue(prop.value)">
         </div>
         <!--     label add button-->
         <div class="label-editor-add" fxFlex="nogrow" (click)="addProperty()"
@@ -40,8 +56,7 @@
 
         <!--     label delete button-->
         <div class="label-editor-delete" fxFlex="nogrow" (click)="delete(prop)"
-             *ngIf="! (hasProp(prop, 'deletable') ? ! prop.deletable : ( metadata.propsDeletable ?  ! metadata.propsDeletable : 'true'))
-             && models.length !== 1">
+             *ngIf="! (hasProp(prop, 'deletable') ? ! prop.deletable : ( metadata.propsDeletable ?  ! metadata.propsDeletable : 'true'))">
           <mat-icon tabindex="0" (keydown)="onDeleteKeydown($event, prop)">delete</mat-icon>
         </div>
       </div>
@@ -65,4 +80,4 @@
       {{metadata.cancelTxt ? metadata.cancelTxt : 'CANCEL'}}
     </button>
   </div>
-</p-dialog>
+</ng-template>

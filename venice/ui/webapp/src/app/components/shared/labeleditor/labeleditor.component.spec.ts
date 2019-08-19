@@ -56,7 +56,8 @@ describe('LabeleditorComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(LabeleditorComponent);
     component = fixture.componentInstance;
-    component.data = new ClusterSmartNIC(naples1);
+    component.objects = [];
+    component.objects.push(new ClusterSmartNIC(naples1));
     component.inLabelEditMode = true;
     tu = new TestingUtility(fixture);
     fixture.detectChanges();
