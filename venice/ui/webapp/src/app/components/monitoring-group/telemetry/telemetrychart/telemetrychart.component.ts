@@ -109,6 +109,11 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   // Metrics observer, used for debouncing metric requests
   metricsQueryObserver: Subject<TelemetryPollingMetricQueries> = new Subject();
 
+  // Last query we sent to the poll utility
+  lastQuery: TelemetryPollingMetricQueries = null;
+  // last time range used for the last query
+  lastTimeRange: TimeRange = null;
+
   // Subject to be passed into data sources so that they can request data
   getMetricsSubject: Subject<any> = new Subject<any>();
 
@@ -301,7 +306,6 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       response => {
         this.nodeEventUtility.processEvents(response);
         this.labelMap['Node'] = Utility.getLabels(this.nodes as any[]);
-        // Need to refetch metrics now that name -> mac Address override is in place.
         this.getMetrics();
       },
       this.controllerService.webSocketErrorHandler('Failed to get labels')
@@ -325,12 +329,20 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
             this.nameToMacAddr[smartnic.spec.id] = smartnic.meta.name;
           }
         }
-        // Need to refetch metrics now that name -> mac Address override is in place.
         this.getMetrics();
       },
       this.controllerService.webSocketErrorHandler('Failed to get labels')
     );
     this.subscriptions.push(subscription);
+  }
+
+  checkIfQueriesSelectorChanged(newQuery: TelemetryPollingMetricQueries, oldQuery: TelemetryPollingMetricQueries): boolean {
+    if (oldQuery == null || oldQuery.queries.length === 0 || newQuery == null || newQuery.queries.length === 0) {
+      return false;
+    }
+    return oldQuery.queries.some((query, index) => {
+      return !Utility.getLodash().isEqual(query.query.selector, newQuery.queries[index].query.selector);
+    });
   }
 
   generateDefaultGraphOptions(): ChartOptions {
@@ -426,6 +438,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     if (this.dataSources.length > 1) {
       this.dataSources.splice(index, 1);
     }
+    // Check if
     this.getMetrics();
   }
 
@@ -433,45 +446,122 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // Pushing into next event loop so that angular's change detection
     // doesn't complain.
     setTimeout( () => {
-      this.selectedTimeRange = timeRange;
-      this.getMetrics();
+      if (this.selectedTimeRange == null || !timeRange.isSame(this.selectedTimeRange)) {
+        this.selectedTimeRange = timeRange;
+        this.getMetrics();
+      }
     }, 0);
   }
 
-  getMetrics() {
-    if (this.metricSubscription) {
-      // discarding previous subscription incase it isn't completed yet.
-      this.metricSubscription.unsubscribe();
-      this.metricSubscription = null;
-    }
+
+  generateMetricsQuery(): TelemetryPollingMetricQueries {
     const queryList: TelemetryPollingMetricQueries = {
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
+    // Using variable so that this is not used inside updating timeSeriesQueryPolling
+    // We may use an incorrect time instance if we do
+    const timeRange = this.selectedTimeRange;
     this.dataSources.forEach( (source) => {
       if (source.fields != null && source.fields.length !== 0) {
         const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
         // Remvoing default group by time
         query.query['group-by-time'] = null;
         // Set timerange
-        if (this.selectedTimeRange != null) {
-          query.query['start-time'] = this.selectedTimeRange.getTime().startTime.toISOString() as any;
-          query.query['end-time'] = this.selectedTimeRange.getTime().endTime.toISOString() as any;
+        const setQueryTime = (currQuery: ITelemetry_queryMetricsQuerySpec) => {
+          if (timeRange != null) {
+            currQuery['start-time'] = timeRange.getTime().startTime.toISOString() as any;
+            currQuery['end-time'] = timeRange.getTime().endTime.toISOString() as any;
+          } else {
+            // Default time range
+            currQuery['start-time'] = moment().subtract('1', 'd').toISOString() as any;
+            currQuery['end-time'] = moment().toISOString() as any;
+          }
+        };
+        setQueryTime(query.query);
+        // Update query timing
+        // If query end timing is now, then we need to have a sliding window
+        if (this.selectedTimeRange == null) {
+          // if selectedTimeRange is blank, then the default is till now
+          query.pollingOptions.timeUpdater = (queryBody: ITelemetry_queryMetricsQuerySpec) => {
+            queryBody['start-time'] = queryBody['end-time'];
+            query['end-time'] = timeRange.getTime().endTime.toISOString() as any;
+          };
+        } else if (this.selectedTimeRange.isEndTimeNow()) {
+          query.pollingOptions.mergeFunction = MetricsUtility.createTimeSeriesQueryMerge(this.selectedTimeRange.getDuration().asMinutes());
+          // Update polling options
+          query.pollingOptions.timeUpdater = (queryBody: ITelemetry_queryMetricsQuerySpec) => {
+            queryBody['start-time'] = queryBody['end-time'];
+            query['end-time'] = timeRange.getTime().endTime.toISOString() as any;
+          };
         } else {
-          // Default time range
-          query.query['start-time'] = moment().subtract('1', 'd').toISOString() as any;
-          query.query['end-time'] = moment().toISOString() as any;
+          query.pollingOptions.mergeFunction = null;
+          // Always fetch the same data since the window isn't sliding
+          query.pollingOptions.timeUpdater = setQueryTime;
         }
         source.transformQuery({query: query.query});
         queryList.queries.push(query);
       }
     });
+    return queryList;
+  }
+
+  areQueriesEqual(q1Input: TelemetryPollingMetricQueries, q2Input: TelemetryPollingMetricQueries): boolean {
+    if (q1Input == null && q2Input == null) {
+      return true;
+    } else if (q1Input == null || q2Input == null) {
+      return false;
+    }
+    if (q1Input.queries.length !== q2Input.queries.length) {
+      return false;
+    }
+    const _  = Utility.getLodash();
+    const queryUnequal = q1Input.queries.some( (q1, index) => {
+      const q2 = q2Input.queries[index];
+      const q1Query = Utility.getLodash().cloneDeep(q1.query);
+      const q2Query = _.cloneDeep(q2.query);
+      // Replace time fields so they aren't checked
+      q1Query['start-time'] = null;
+      q1Query['end-time'] = null;
+      q2Query['start-time'] = null;
+      q2Query['end-time'] = null;
+      return !_.isEqual(q1Query, q2Query);
+    });
+    if (queryUnequal) {
+      return false;
+    }
+    return true;
+  }
+
+  isTimeRangeSame(t1: TimeRange, t2: TimeRange) {
+    if (t1 == null && t2 == null) {
+      return true;
+    } else if (t1 == null || t2 == null) {
+      return false;
+    }
+    return t1.isSame(t2);
+  }
+
+  getMetrics() {
+    const queryList: TelemetryPollingMetricQueries = this.generateMetricsQuery();
     if (queryList.queries.length === 0) {
       this.metricData = null;
       this.drawGraph();
       return;
     }
+    // If it's the same query we don't need to generate a new query
+    if (this.areQueriesEqual(this.lastQuery, queryList) && this.isTimeRangeSame(this.selectedTimeRange, this.lastTimeRange)) {
+      return;
+    }
+
+    if (this.metricSubscription) {
+      // discarding previous subscription incase it isn't completed yet.
+      this.metricSubscription.unsubscribe();
+      this.metricSubscription = null;
+    }
     this.graphLoading = true;
+    this.lastQuery = queryList;
+    this.lastTimeRange = this.selectedTimeRange;
     this.metricsQueryObserver.next(queryList);
   }
 

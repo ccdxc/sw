@@ -136,7 +136,7 @@ export class MetricsUtility {
   public static timeSeriesQueryPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
-      mergeFunction: MetricsUtility.timeSeriesQueryMerge
+      mergeFunction: MetricsUtility.createTimeSeriesQueryMerge()
     };
     return { query: MetricsUtility.timeSeriesQuery(kind, selector), pollingOptions: pollOptions };
   }
@@ -147,11 +147,17 @@ export class MetricsUtility {
     queryBody['end-time'] = Utility.roundDownTime(5).toISOString() as any;
   }
 
-  public static timeSeriesQueryMerge(currData: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult) {
-    // Drops any values that are older than 24 hours from the current time.
+  // window is the time in minutes from the current time of points that should be dropped
+  public static createTimeSeriesQueryMerge(window: number = 24 * 60) {
+    return (currData: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult) => {
+      return MetricsUtility.timeSeriesQueryMerge(currData, newData, window);
+    };
+  }
+
+  public static timeSeriesQueryMerge(currData: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult, window: number) {
+    // Drops any values that are older than window minutes from the current time.
     // We then add on the newer values.
     const _ = Utility.getLodash();
-    const window = 24 * 60;
     if (MetricsUtility.resultHasData(currData)) {
       const moment = Utility.getMomentJS();
       const windowStart = moment().subtract(window, 'minutes');

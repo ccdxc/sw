@@ -136,6 +136,26 @@ export class TimeRange {
       endTime: temp.endTime,
     };
   }
+
+  isSame(time: TimeRange): boolean {
+    if (time == null) {
+      return false;
+    }
+    const newTimeRange = time.helper();
+    const currTimeRange = this.helper();
+
+    return newTimeRange.startTime.isSame(currTimeRange.startTime, 'minute') &&  newTimeRange.endTime.isSame(currTimeRange.endTime, 'minute');
+  }
+
+  isEndTimeNow() {
+    const endTime = this.helper().endTime;
+    return endTime.isSame(moment(), 'second');
+  }
+
+  getDuration(): moment.Duration {
+    const temp = this.helper();
+    return moment.duration(temp.endTime.diff(temp.startTime));
+  }
 }
 
 export interface TimeSyntaxEntry {
