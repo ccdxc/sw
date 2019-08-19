@@ -196,6 +196,7 @@ describe('HostsComponent', () => {
   });
 
   it('should populate table', () => {
+    TestingUtility.setAllPermissions();
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchHost').and.returnValue(
       TestingUtility.createWatchEventsSubject([

@@ -84,6 +84,14 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/security', 'sgpolicies']
       },
       {
+        label: 'Security Groups',
+        icon: {
+          cssClass: 'app-l-side-nav-security-securitygroups'
+        },
+        roleGuard: UIRolePermissions.securitysecuritygroup_read,
+        link: ['/security', 'securitygroups']
+      },
+      {
         label: 'Security Apps',
         icon: {
           cssClass: 'app-l-side-nav-security-apps'

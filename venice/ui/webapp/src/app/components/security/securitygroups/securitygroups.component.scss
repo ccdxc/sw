@@ -1,0 +1,9 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.securitygroups-button {
+  margin: $vertical-gutter $horizontal-gutter;
+  padding: 0px $horizontal-gutter;
+}

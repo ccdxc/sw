@@ -24,6 +24,15 @@ const routes: Routes = [
         loadChildren: '@app/components/security/securityapps/securityapps.module#SecurityappsModule'
       }
     ]
+  },
+  {
+    path: 'securitygroups',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/security/securitygroups/securitygroups.module#SecuritygroupsModule'
+      }
+    ]
   }
 ];
 

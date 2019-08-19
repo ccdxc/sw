@@ -1,0 +1,97 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newsecuritygroup-container {
+  background: white;
+
+  &:hover {
+    background: white;
+  }
+}
+
+
+.newsecuritygroup-input {
+  width: 155px;
+}
+
+.newsecuritygroup-content {
+  background: white;
+  min-height: 130px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
+}
+
+.newsecuritygroup-field-label {
+  margin-top: 2*$vertical-gutter;
+  margin-left: $horizontal-gutter;
+  height: 30px;
+  @include primary-font();
+}
+
+.newsecuritygroup-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newsecuritygroup-value {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newsecuritygroup-font {
+  @include primary-font();
+}
+
+.newsecuritygroup-divider {
+  border-bottom: 1px solid #dddddd;
+}
+
+.newsecuritygroup-filter {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newsecuritygroup-save,
+.newsecuritygroup-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.newsecuritygroup-buttoncontainer {
+  margin-top: 1.5 * $vertical-gutter;
+}
+
+
+.newsecuritygroup-save,
+.newsecuritygroup-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  border-width: 0px;
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+.newsecuritygroup-buttoncontainer {
+  margin-top: 1.5 * $vertical-gutter;
+}
+
+.newsecuritygroup-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+/** align the repeater properly */
+.newsecuritygroup-section-workloadlabels-div {
+  margin-top: -6px;
+  max-height: 150px;
+  overflow: auto;
+}

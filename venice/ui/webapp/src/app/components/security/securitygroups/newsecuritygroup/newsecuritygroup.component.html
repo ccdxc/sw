@@ -1,0 +1,76 @@
+<div fxFlex="auto" fxLayout="column">
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newsecuritygroup-container">
+    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
+         fxLayoutAlign="start stretch" class="newsecuritygroup-content">
+      <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
+        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newsecuritygroup-row">
+          <div fxFlex="nogrow" class="newsecuritygroup-field-label">NAME:</div>
+          <input fxFlex="300px" formControlName="name" class="newsecuritygroup-name" appErrorTooltip
+                 spellcheck="false" type="text" pInputText
+                 placeholder="Unique Security Group Name...">
+        </div>
+        <div fxFlex="25px"></div>
+        <div fxFlex="100" formGroupName="spec">
+          <div fxFlex="40" fxLayout="column" class="newsecuritygroup-row">
+            <div fxFlex="nogrow" class="newsecuritygroup-field-label">MATCH PREFIXES:</div>
+            <div class="newsecuritygroup-section-div">
+              <!-- we need template withing app-chips to apply close icon style  -->
+              <app-chips formControlName="match-prefixes"
+                         [addOnBlur]="true"
+                         [addOnTab]="true"
+                         class="newsecuritygroup-input-item newsecuritygroup-chips"
+                         [matTooltip]="'Type in match-prefixes name and hit enter key.'"
+                         placeholder="ex: 192.168.0.15">
+                <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
+                  <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
+                       [ngClass]="{'error': !isValidIP(item)}">
+                    <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
+                    <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
+                              (click)="cancelFunc($event)">close</mat-icon>
+                  </div>
+                </ng-template>
+              </app-chips>
+            </div>
+            <div fxFlex="nogrow" class="newsecuritygroup-field-label">SERVICES LABELS:</div>
+            <div class="newsecuritygroup-section-div">
+              <app-chips formControlName="service-labels" [addOnBlur]="true" [addOnTab]="true"
+                         class="newsecuritygroup-input-item newsecuritygroup-chips"
+                         [matTooltip]="'Type in service label and hit enter key.'"
+                         placeholder="ex: serv1, serv2">
+                <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
+                  <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item">
+                    <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
+                    <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
+                              (click)="cancelFunc($event)">close</mat-icon>
+                  </div>
+                </ng-template>
+              </app-chips>
+            </div>
+          </div>
+          <div fxFlex="60" fxLayout="column" class="newsecuritygroup-row">
+            <div fxFlex="nogrow" class="newsecuritygroup-field-label">Workload Labels:</div>
+            <div class="newsecuritygroup-section-div newsecuritygroup-section-workloadlabels-div">
+              <app-repeater #workloadlabelRepeater [data]="labelData" [formArray]="labelFormArray"
+                            (repeaterValues)="handleLabelRepeaterData($event)"></app-repeater>
+            </div>
+          </div>
+        </div>
+        <div fxFlex="20px"></div>
+        <!-- Buffer, creating as a div so there are no hiccups in the animation-->
+      </div>
+
+      <div *ngIf="isInline" class="newsecuritygroup-buttoncontainer" fxFlex="nogrow"
+           fxLayout="row wrap" fxLayoutAlign="start start">
+        <div fxFlex="nogrow">
+          <button [disabled]="!isFormValid()" (click)="saveObject()"
+                  class="global-button-primary newsecuritygroup-save">SAVE</button>
+        </div>
+        <div fxFlex="nogrow">
+          <button (click)="cancelObject()"
+                  class="global-button-neutral newsecuritygroup-cancel">CANCEL</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

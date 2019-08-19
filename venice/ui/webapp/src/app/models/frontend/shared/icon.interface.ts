@@ -13,4 +13,7 @@ export interface Icon {
 
   /* Name of the svgIcon to load */
   svgIcon?: string;
+
+  /* url string */
+  url?: string;
 }

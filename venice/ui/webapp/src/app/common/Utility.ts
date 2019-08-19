@@ -97,21 +97,31 @@ export class Utility {
    * @param labelsSelectors;
    */
   public static convertLabelSelectorsToStringList(labelsSelectors: ILabelsSelector[]): string[] {
-    const list = [];
+    let list = [];
     if (!labelsSelectors) {
       return [];
     }
     labelsSelectors.forEach((labelsSelector) => {
-      const labelsRequirements = labelsSelector.requirements;
-      labelsRequirements.forEach(
-        (labelsRequirement) => {
-          if (!Utility.isEmpty(labelsRequirement.key) && !Utility.isEmpty(labelsRequirement.operator) && !Utility.isEmpty(labelsRequirement.values)) {
-            const str = labelsRequirement.key + ' ' + labelsRequirement.operator + ' ' + labelsRequirement.values + '\n';
-            list.push(str);
-          }
-        }
-      );
+      const myList = Utility.convertOneLabelSelectorToStringList(labelsSelector);
+      list = list.concat(myList);
     });
+    return list;
+  }
+
+  public static convertOneLabelSelectorToStringList(labelsSelector: ILabelsSelector): string[] {
+    const labelsRequirements = labelsSelector.requirements;
+    const list = [];
+    if (!labelsSelector) {
+      return [];
+    }
+    labelsRequirements.forEach(
+      (labelsRequirement) => {
+        if (!Utility.isEmpty(labelsRequirement.key) && !Utility.isEmpty(labelsRequirement.operator) && !Utility.isEmpty(labelsRequirement.values)) {
+          const str = labelsRequirement.key + ' ' + labelsRequirement.operator + ' ' + labelsRequirement.values + '\n';
+          list.push(str);
+        }
+      }
+    );
     return list;
   }
 

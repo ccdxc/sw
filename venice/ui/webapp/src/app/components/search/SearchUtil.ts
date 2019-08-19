@@ -1101,4 +1101,32 @@ export class SearchUtil {
     return payload;
   }
 
+  // Example:
+  // orderValue = {
+  // requirements: [{
+  //   keyFormControl: "key",
+  //   operatorFormControl: "in",
+  //   valueFormControl: ["1"]}]
+  // }
+  public static convertFormArrayToSearchExpression(value: any, addMetatag: boolean = false): SearchExpression[] {
+    const data = value;
+    if (data == null) {
+      return null;
+    }
+
+    let retData = data.filter((item) => {
+      return !Utility.isEmpty(item.keyFormControl) && !Utility.isEmpty(item.valueFormControl) && item.valueFormControl.length !== 0;
+    });
+    // make sure the value field is an array
+    retData = retData.map((item) => {
+      const searchExpression: SearchExpression = {
+        key: ((addMetatag) ? 'meta.labels.' : '')  + item.keyFormControl,
+        operator: item.operatorFormControl,
+        values: Array.isArray(item.valueFormControl) ? item.valueFormControl : item.valueFormControl.trim().split(',')
+      };
+      return searchExpression;
+    });
+    return retData;
+  }
+
 }

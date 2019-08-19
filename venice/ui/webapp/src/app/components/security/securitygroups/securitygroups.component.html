@@ -1,5 +1,5 @@
-<app-pagebody [icon]="bodyicon" header="Hosts Overview">
-  <div fxFlex class="hosts-table-container">
+<app-pagebody [icon]="bodyicon" header="Security Groups Overview">
+  <div fxFlex class="securitygroups-table-container">
     <ng-container *ngTemplateOutlet="DataTable"></ng-container>
   </div>
 </app-pagebody>
@@ -21,14 +21,15 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Hosts" [total]="dataObjects.length" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Security Groups" [total]="dataObjects.length" [icon]="headerIcon"
+                   width="250px">
   </app-tableheader>
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newhost (formClose)="creationFormClose()"
-               fxFlex="none" [existingObjects]='dataObjects'>
-  </app-newhost>
+  <app-newsecuritygroup (formClose)="creationFormClose()"
+                        fxFlex="none" [existingObjects]='dataObjects'>
+  </app-newsecuritygroup>
 </ng-template>
 
 <!-- TABLE BODY -->
@@ -40,19 +41,7 @@
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
-    <ng-container *ngSwitchCase="'spec.smart-nics'">
-      <div *ngFor="let v of rowData['processedSmartNics']">
-        <ng-container *roleGuard="'clusterSmartnic_read'">
-          <a *ngIf="v.mac != ''" routerLink="/cluster/naples/{{v.mac}}">{{v.text}}</a>
-          <a *ngIf="v.mac == ''">{{v.text}}</a>
-        </ng-container>
-        <ng-container *roleGuard="{req: 'clusterSmartnic_read', checkUnauthorized: true }">
-          <a>{{v.text}}</a>
-        </ng-container>
-        <mat-icon class="not_admitted_icon" [inline]="true" *ngIf="!v.admitted"
-                  [matTooltip]="'Not Admitted'">announcement</mat-icon>
-      </div>
-    </ng-container>
+
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
     </ng-container>
@@ -64,11 +53,11 @@
 
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
 
-    <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
+    <mat-icon matTooltip="Edit security group" *roleGuard="'securitysecuritygroup_update'"
               class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit
     </mat-icon>
-    <mat-icon matTooltip="Delete host" *roleGuard="'clusterhost_delete'"
+    <mat-icon matTooltip="Delete security group" *roleGuard="'securitysecuritygroup_delete'"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete
     </mat-icon>
@@ -76,6 +65,6 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newhost [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-               (formClose)="closeRowExpand()" fxFlex="none"></app-newhost>
+  <app-newsecuritygroup [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+                        (formClose)="closeRowExpand()" fxFlex="none"></app-newsecuritygroup>
 </ng-template>

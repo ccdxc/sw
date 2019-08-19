@@ -8,7 +8,7 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 import { FormArray, FormGroup, AbstractControl, ValidatorFn } from '@angular/forms';
-import {SecurityAppOptions} from '@app/components/security/index.ts';
+import { SecurityAppOptions} from '@app/components/security';
 import { SecurityProtoPort } from '@sdk/v1/models/generated/search';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';

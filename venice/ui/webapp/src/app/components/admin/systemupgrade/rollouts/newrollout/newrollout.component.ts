@@ -325,24 +325,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   //   valueFormControl: ["1"]}]
   // }
   convertFormArrayToSearchExpression(orderValue: any, addMetatag: boolean = false): SearchExpression[] {
-    const data = orderValue.requirements;
-    if (data == null) {
-      return null;
-    }
-
-    let retData = data.filter((item) => {
-      return !Utility.isEmpty(item.keyFormControl) && !Utility.isEmpty(item.valueFormControl) && item.valueFormControl.length !== 0;
-    });
-    // make sure the value field is an array
-    retData = retData.map((item) => {
-      const searchExpression: SearchExpression = {
-        key: ((addMetatag) ? 'meta.labels.' : '')  + item.keyFormControl,
-        operator: item.operatorFormControl,
-        values: Array.isArray(item.valueFormControl) ? item.valueFormControl : item.valueFormControl.trim().split(',')
-      };
-      return searchExpression;
-    });
-    return retData;
+    return SearchUtil.convertFormArrayToSearchExpression(orderValue.requirements, addMetatag);
   }
 
   onRolloutNowChange(checked) {

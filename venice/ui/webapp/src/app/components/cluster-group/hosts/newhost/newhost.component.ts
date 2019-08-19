@@ -24,7 +24,6 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
  *
  * In createObjct() and updateObject(), we clean up data using clearOtherRadios()
  */
-
 @Component({
   selector: 'app-newhost',
   templateUrl: './newhost.component.html',
