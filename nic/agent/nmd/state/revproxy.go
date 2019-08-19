@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"encoding/pem"
 	"fmt"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/venice/globals"
@@ -125,6 +126,36 @@ func (n *NMD) StartReverseProxy() error {
 // StopReverseProxy stops the NMD reverse proxy
 func (n *NMD) StopReverseProxy() error {
 	return n.revProxy.Stop()
+}
+
+// RestartRevProxyWithRetries restarts NMD reverse proxy
+func (n *NMD) RestartRevProxyWithRetries() error {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	done := time.After(20 * time.Second)
+
+	for {
+		select {
+		case <-ticker.C:
+			err := n.StopReverseProxy()
+			if err != nil {
+				log.Errorf("Failed to stop reverse proxy. Err: %v", err)
+				break
+			}
+
+			err = n.StartReverseProxy()
+			if err != nil {
+				log.Errorf("Failed to start reverse proxy. Err : %v", err)
+				break
+			}
+
+			log.Info("Successfully restarted reverse proxy.")
+			return nil
+		case <-done:
+			log.Error("Failed to restart reverse proxy after 20 seconds.")
+			return fmt.Errorf("failed to restart reverse proxy")
+		}
+	}
 }
 
 // UpdateReverseProxyConfig updates the configuration of the NMD reverse proxy

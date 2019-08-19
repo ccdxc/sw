@@ -315,15 +315,9 @@ func (n *NMD) handleHostModeTransition() error {
 		log.Errorf("Error removing trust roots: %v", err)
 	}
 	// restart rev proxy so that it can go back to HTTP and no client auth
-	err = n.StopReverseProxy()
-	if err != nil {
-		log.Errorf("Failed to stop reverse proxy. Err: %v", err)
-		return err
-	}
 
-	err = n.StartReverseProxy()
+	err = n.RestartRevProxyWithRetries()
 	if err != nil {
-		log.Errorf("Failed to start reverse proxy. Err: %v", err)
 		return err
 	}
 

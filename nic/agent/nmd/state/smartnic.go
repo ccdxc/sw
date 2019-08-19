@@ -117,8 +117,10 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 				}
 
 				// restart rev proxy so that it can go back to HTTP and no client auth
-				n.StopReverseProxy()
-				n.StartReverseProxy()
+				err = n.RestartRevProxyWithRetries()
+				if err != nil {
+					log.Errorf("Failed to restart reverse proxy. Err : %v", err)
+				}
 
 				if decommission {
 					// NIC has been decommissioned by user. Go back to classic mode.
