@@ -51,7 +51,7 @@
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'meta.name'">
       <div>
-        <a routerLink="./{{rowData.meta.name}}">{{rowData.meta.name}}</a>
+        {{rowData.meta.name}}
       </div>
     </ng-container>
     <ng-container *ngSwitchCase="'meta.mod-time'">
@@ -62,6 +62,11 @@
     <ng-container *ngSwitchCase="'meta.creation-time'">
       <div>
         {{rowData.meta['creation-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'spec.host-name'">
+      <div>
+        <a routerLink="/cluster/hosts"> {{rowData.spec["host-name"]}}</a>
       </div>
     </ng-container>
     <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">

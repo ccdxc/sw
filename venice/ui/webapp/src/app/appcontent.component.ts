@@ -18,7 +18,7 @@ import { ClusterVersion } from '@sdk/v1/models/generated/cluster';
 import { MonitoringAlert, IMonitoringAlert, IMonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
 import { Subject, Subscription, timer, interval } from 'rxjs';
 import { map, takeUntil, tap, retryWhen, delayWhen } from 'rxjs/operators';
-import { CommonComponent } from './common.component';
+import { BaseComponent} from '@app/components/base/base.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';
 import { Eventtypes } from './enum/eventtypes.enum';
@@ -47,7 +47,7 @@ export interface GetUserObjRequest {
   encapsulation: ViewEncapsulation.None,
   providers: []
 })
-export class AppcontentComponent extends CommonComponent implements OnInit, OnDestroy, AfterViewInit {
+export class AppcontentComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
   os = '';
   browsertype = '';
   browserversion = '';
@@ -120,7 +120,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     protected authService: AuthService,
     protected rolloutService: RolloutService,
   ) {
-    super();
+    super(_controllerService, uiconfigsService);
   }
   /**
    * Component life cycle event hook
@@ -296,7 +296,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   ngOnDestroy() {
     this.unsubscribeStore$.next();
     this.unsubscribeStore$.complete();
-    this.unsubscribeAll();
+    this.subscriptions.forEach( (sub) => {
+      sub.unsubscribe();
+    });
     this._boolInitApp = false;
     this.idle.stop();
   }

@@ -44,8 +44,6 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 // Pensando UI components
 import { AppRoutingModule } from '@app/app.routing';
 import { AppComponent } from '@app/app.component';
-import { BaseComponent } from '@app/components/base/base.component';
-import { CommonComponent } from '@app/common.component';
 
 // import VeniceUI modules so that they will load fast
 import { CoreModule } from '@app/core';
@@ -93,8 +91,6 @@ import { LoginModule } from './components/login/login.module';
   declarations: [
     AppComponent,
     AppcontentComponent,
-    BaseComponent,
-    CommonComponent,
     ToolbarComponent,
     IdleWarningComponent,
     SearchComponent,
@@ -109,7 +105,6 @@ import { LoginModule } from './components/login/login.module';
     BgfileuploadComponent,
   ],
   entryComponents: [
-    BaseComponent,
     IdleWarningComponent,
     HelpoverlayComponent
   ],

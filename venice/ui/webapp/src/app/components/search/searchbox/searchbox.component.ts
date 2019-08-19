@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { CommonComponent } from '@app/common.component';
+import { BaseComponent} from '@app/components/base/base.component';
 import { Utility } from '@app/common/Utility';
 import { CompileSearchInputStringResult, GuidedSearchCriteria, SearchExpression, SearchGrammarItem, SearchResultPayload, SearchSuggestion, SearchsuggestionTypes} from '@app/components/search';
 import { SearchComponent } from '@app/components/search/search/search.component';
@@ -8,6 +8,7 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 
 /**
@@ -87,20 +88,20 @@ import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/genera
   styleUrls: ['./searchbox.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SearchboxComponent extends CommonComponent implements OnInit, OnDestroy {
+export class SearchboxComponent extends BaseComponent implements OnInit, OnDestroy {
 
 
   // widget properties
   searchVeniceApplication: any;
   noSearchSuggestion: String = 'no search suggestion';
   searchSuggestions: SearchSuggestion[] = [];
-  subscriptions = {};
   @ViewChild('search') _searchwidget: SearchComponent;
 
   constructor(
     protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _searchService: SearchService) {
-    super();
+    super(_controllerService, uiconfigsService);
   }
 
 
@@ -111,21 +112,19 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
 
   ngOnInit() {
     // set up subscriptions
-    this.subscriptions[Eventtypes.SEARCH_SET_SEARCHSTRING_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_SET_SEARCHSTRING_REQUEST, (payload) => {
+    let sub = this._controllerService.subscribe(Eventtypes.SEARCH_SET_SEARCHSTRING_REQUEST, (payload) => {
       this.onSetSearchStringRequest(payload);
     });
+    this.subscriptions.push(sub);
 
-    this.subscriptions[Eventtypes.SEARCH_OPEN_GUIDEDSERCH_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_OPEN_GUIDEDSERCH_REQUEST, (payload) => {
+    sub = this._controllerService.subscribe(Eventtypes.SEARCH_OPEN_GUIDEDSERCH_REQUEST, (payload) => {
       this.onOpenGuidedSearchRequest(payload);
     });
+    this.subscriptions.push(sub);
   }
 
   ngOnDestroy(): void {
-    Object.keys(this.subscriptions).forEach((item) => {
-      if (this.subscriptions[item]) {
-        this.subscriptions[item].unsubscribe();
-      }
-    });
+    this.unsubscribeAll();
   }
 
   /**
@@ -314,8 +313,6 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
         console.error(this.getClassName() + '_callSearchRESTAPI()' + response);
       }
     }, err => {
-      this.successMessage = '';
-      this.errorMessage = 'Failed to retrieve data! ' + err;
       this.error(err);
       this._searchwidget.loading = false;
       if (!this._searchwidget.isInGuidedSearchMode) {

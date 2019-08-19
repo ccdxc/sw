@@ -43,6 +43,7 @@ import { SearchsuggestionsComponent } from '@app/components/search/searchsuggest
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MessageService } from '@app/services/message.service';
+import { UIConfigsService } from './services/uiconfigs.service';
 
 describe('AppComponent', () => {
     configureTestSuite(() => {
@@ -80,6 +81,7 @@ describe('AppComponent', () => {
         OverlayContainer,
         MessageService,
         AuthServiceGen,
+        UIConfigsService,
       ],
     });
 

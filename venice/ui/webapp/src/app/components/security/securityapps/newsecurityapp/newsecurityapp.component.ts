@@ -80,7 +80,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     return this._securityService.UpdateApp(oldObject.meta.name, newObject, null, oldObject);
   }
 
-  setInlineToolbar() {
+  setToolbar() {
     if (!this.isInline) {
       // If it is not inline, we change the toolbar buttons, and save the old one
       // so that we can set it back when we are done

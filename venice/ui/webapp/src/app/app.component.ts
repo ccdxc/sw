@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { LogService } from '@app/services/logging/log.service';
-import { CommonComponent } from '@app/common.component';
+import { BaseComponent} from '@app/components/base/base.component';
 import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
+import { UIConfigsService } from './services/uiconfigs.service';
 
 
 /**
@@ -14,12 +15,13 @@ import { ControllerService } from '@app/services/controller.service';
   encapsulation: ViewEncapsulation.None,
   providers: []
 })
-export class AppComponent extends CommonComponent implements OnInit  {
+export class AppComponent extends BaseComponent implements OnInit  {
   constructor(
     protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _logService: LogService,
   ) {
-    super();
+    super(_controllerService, uiconfigsService);
   }
 
   /**

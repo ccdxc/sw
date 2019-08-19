@@ -59,7 +59,7 @@ export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertP
     return true;
   }
 
-  setInlineToolbar() {
+  setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
     currToolbar.buttons = [
       {

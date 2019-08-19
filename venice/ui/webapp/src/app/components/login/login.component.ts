@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonComponent } from '@app/common.component';
+import { BaseComponent} from '@app/components/base/base.component';
 import * as authActions from '@app/core';
 import { Store } from '@ngrx/store';
 import { Utility } from '../../common/Utility';
@@ -17,7 +17,7 @@ import { LocalStorageService } from '@app/core';
 
   encapsulation: ViewEncapsulation.None
 })
-export class LoginComponent extends CommonComponent implements OnInit, OnDestroy {
+export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
   credentials = { username: '', password: '' };
   successMessage = '';
   errorMessage = '';
@@ -31,13 +31,13 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
 
   constructor(
     private _authService: AuthService,
-    private _controllerService: ControllerService,
-    private uiconfigService: UIConfigsService,
+    protected _controllerService: ControllerService,
+    protected uiconfigService: UIConfigsService,
     private router: Router,
     private store$: Store<any>,
     private localStorage: LocalStorageService
   ) {
-    super();
+    super(_controllerService, uiconfigService);
   }
 
   /**
@@ -48,7 +48,7 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
       this.redirect();
       return;
     }
-    this.subscriptions[Utility.USER_DATA_OBSERVABLE] = this.localStorage.getUserdataObservable().subscribe(
+    let sub = this.localStorage.getUserdataObservable().subscribe(
       (data) => {
         if (this._controllerService.isUserLogin()) {
           this.redirect();
@@ -56,18 +56,23 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
         }
       },
     );
+    this.subscriptions.push(sub);
+
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'LoginComponent', 'state': Eventtypes.COMPONENT_INIT });
 
     // setting up subscription
-    this.subscriptions[Eventtypes.LOGIN_FAILURE] = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
+    sub = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
       // in auth.effect.ts (VS-302), there is a timer ticking after user clicks
       if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
       this.onLoginFailure(payload);
     });
-    this.subscriptions[Eventtypes.LOGIN_SUCCESS] = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+    this.subscriptions.push(sub);
+
+    sub = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
       if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
       this.onLoginSuccess(payload);
     });
+    this.subscriptions.push(sub);
   }
 
   /**

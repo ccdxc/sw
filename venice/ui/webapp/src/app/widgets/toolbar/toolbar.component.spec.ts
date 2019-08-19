@@ -24,6 +24,9 @@ import { ToolbarData, ToolbarButton } from '@app/models/frontend/shared/toolbar.
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { By } from '@angular/platform-browser';
 import { MessageService } from '@app/services/message.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('ToolbarComponent', () => {
   let component: ToolbarComponent;
@@ -38,6 +41,7 @@ describe('ToolbarComponent', () => {
         RouterTestingModule,
         FormsModule,
         ReactiveFormsModule,
+        HttpClientTestingModule
       ],
       providers: [
         ControllerService,
@@ -45,7 +49,9 @@ describe('ToolbarComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        MessageService
+        MessageService,
+        UIConfigsService,
+        AuthService
       ]
     });
       });

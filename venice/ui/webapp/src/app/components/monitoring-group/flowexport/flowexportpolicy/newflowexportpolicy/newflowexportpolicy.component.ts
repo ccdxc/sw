@@ -51,7 +51,7 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
     return true;
   }
 
-  setInlineToolbar() {
+  setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
     currToolbar.buttons = [
       {

@@ -97,7 +97,7 @@ export class NewsecuritygroupComponent  extends CreationForm<ISecuritySecurityGr
     return list;
   }
 
-  setInlineToolbar(): void {
+  setToolbar(): void {
     if (!this.isInline) {
       // If it is not inline, we change the toolbar buttons, and save the old one
       // so that we can set it back when we are done

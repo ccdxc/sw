@@ -86,7 +86,7 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
     this.getNodes();
   }
 
-  setInlineToolbar() {
+  setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
     currToolbar.buttons = [
       {

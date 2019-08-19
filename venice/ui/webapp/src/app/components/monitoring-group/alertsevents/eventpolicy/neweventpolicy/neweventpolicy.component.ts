@@ -38,7 +38,7 @@ export class NeweventpolicyComponent extends CreationForm<IMonitoringEventPolicy
     return true;
   }
 
-  setInlineToolbar() {
+  setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
     this.oldButtons = currToolbar.buttons;
     currToolbar.buttons = [

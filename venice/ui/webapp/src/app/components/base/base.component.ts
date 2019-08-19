@@ -1,27 +1,26 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
+import { OnInit } from '@angular/core';
+import { AbstractControl, FormArray } from '@angular/forms';
+import { Utility } from '@app/common/Utility';
+import { LogService } from '@app/services/logging/log.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SortEvent } from 'primeng/components/common/api';
-import { CommonComponent } from '../../common.component';
 import { ControllerService } from '../../services/controller.service';
 import { TableUtility } from '../shared/tableviewedit/tableutility';
+import { Subscription } from 'rxjs';
 // declare var google: any;
 
 /**
  * Basic component that all components should extend from
  */
-@Component({
-  selector: 'app-base',
-  templateUrl: './base.component.html',
-  styleUrls: ['./base.component.scss']
-})
-export class BaseComponent extends CommonComponent implements OnInit {
+export class BaseComponent implements OnInit {
   // protected static googleLoaded: any;
   private _interval: any;
+  protected logger: LogService;
+  protected subscriptions: Subscription[] = [];
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService = null) {
-    super();
+    this.logger = Utility.getInstance().getLogService();
   }
 
   ngOnInit() {
@@ -221,6 +220,75 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
   controlAsFormArray(control: AbstractControl): FormArray {
     return control as FormArray;
+  }
+
+  debug(msg: string, ...optionalParams: any[]) {
+    if (!this.logger) {
+      console.error('common.component.ts logger is null');
+      return;
+    }
+    const caller = this.getClassName();
+    this.logger.debug(msg, caller, optionalParams);
+  }
+
+  info(msg: string, ...optionalParams: any[]) {
+    if (!this.logger) {
+      console.error('common.component.ts logger is null');
+      return;
+    }
+    const caller = this.getClassName();
+    this.logger.info(msg, caller, optionalParams);
+  }
+
+  warn(msg: string, ...optionalParams: any[]) {
+    if (!this.logger) {
+      console.error('common.component.ts logger is null');
+      return;
+    }
+    const caller = this.getClassName();
+    this.logger.warn(msg, caller, optionalParams);
+  }
+
+  error(msg: string, ...optionalParams: any[]) {
+    if (!this.logger) {
+      console.error('common.component.ts logger is null');
+      return;
+    }
+    const caller = this.getClassName();
+    this.logger.error(msg, caller, optionalParams);
+  }
+
+  fatal(msg: string, ...optionalParams: any[]) {
+    if (!this.logger) {
+      console.error('common.component.ts logger is null');
+      return;
+    }
+    const caller = this.getClassName();
+    this.logger.fatal(msg, caller, optionalParams);
+  }
+
+  log(msg: string, ...optionalParams: any[]) {
+    if (!this.logger) {
+      console.error('common.component.ts logger is null');
+      return;
+    }
+    const caller = this.getClassName();
+    this.logger.log(msg, caller, optionalParams);
+  }
+
+  clear(): void {
+    if (!this.logger) {
+      console.error('common.component.ts logger is null');
+      return;
+    }
+    this.logger.clear();
+  }
+
+  unsubscribeAll() {
+
+    this.subscriptions.forEach( (sub) => {
+      sub.unsubscribe();
+    });
   }
 
 }

@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation, TemplateRef } from '@angular/core';
 import { ControllerService } from '../../services/controller.service';
-import { CommonComponent } from '../../common.component';
+import { BaseComponent} from '@app/components/base/base.component';
 import { Subscription } from 'rxjs';
 
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ToolbarButton, BreadcrumbItem, ToolbarData, SplitButton, Dropdown } from '@app/models/frontend/shared/toolbar.interface';
 import { Utility } from '@app/common/Utility';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 /**
  * ToolbarComponent is a widget.  It shows breadcrumb and hosts buttons/split-buttons/dropdowns
@@ -20,15 +21,17 @@ import { Utility } from '@app/common/Utility';
   styleUrls: ['./toolbar.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ToolbarComponent extends CommonComponent implements OnInit, OnDestroy {
+export class ToolbarComponent extends BaseComponent implements OnInit, OnDestroy {
   private subscription: Subscription;
   breadcrumb: BreadcrumbItem[] = [{ label: '' }];
   buttons: ToolbarButton[] = [];
   splitbuttons: SplitButton[] = [];
   dropdowns: Dropdown[] = [];
 
-  constructor(protected _controllerService: ControllerService) {
-    super();
+  constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService
+    ) {
+    super(_controllerService, uiconfigsService);
   }
 
   ngOnInit() {

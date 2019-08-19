@@ -85,7 +85,7 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
     this.subscriptions.push(subscription);
   }
 
-  setInlineToolbar() {
+  setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
     currToolbar.buttons = [
       {

@@ -15,7 +15,7 @@ import { TableUtility } from './tableutility';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { BaseComponent } from './basecomponent';
+import { BaseComponent } from '@app/components/base/base.component';
 
 
 /**
@@ -488,7 +488,7 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
   // Defining as abstract to enforce the idea that ngOnInit shouldn't be overriden unless
   // it's really needed.
   abstract postNgInit(): void;
-  abstract setInlineToolbar(): void;
+  abstract setToolbar(): void;
 
   abstract createObject(object: I): Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
   abstract updateObject(newObject: I, oldObject: I): Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
@@ -536,7 +536,7 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
       // so that we can set it back when we are done
       const currToolbar = this.controllerService.getToolbarData();
       this.oldButtons = currToolbar.buttons;
-      this.setInlineToolbar();
+      this.setToolbar();
     }
   }
 

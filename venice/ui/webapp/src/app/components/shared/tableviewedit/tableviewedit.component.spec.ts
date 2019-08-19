@@ -276,7 +276,7 @@ class DummyCreateComponent extends CreationForm<IDummyCreateObj, DummyCreateObj>
   }
 
   // Will be mocked in test
-  setInlineToolbar() {
+  setToolbar() {
     this.controllerService.setToolbarData({});
   }
 
@@ -501,7 +501,7 @@ describe('TablevieweditComponent', () => {
     const createFixture = TestBed.createComponent(DummyCreateComponent);
     const createComponent = createFixture.componentInstance;
     const postNgInitSpy = spyOn(createComponent, 'postNgInit');
-    const toolbarSpy = spyOn(createComponent, 'setInlineToolbar');
+    const toolbarSpy = spyOn(createComponent, 'setToolbar');
     createFixture.detectChanges();
     expect(createComponent.newObject).toBeTruthy();
     expect(postNgInitSpy).toHaveBeenCalled();
@@ -525,7 +525,7 @@ describe('TablevieweditComponent', () => {
     createComponent.isInline = true;
     createComponent.objectData = { meta: { name: 'policy1'}};
     const postNgInitSpy = spyOn(createComponent, 'postNgInit');
-    const toolbarSpy = spyOn(createComponent, 'setInlineToolbar');
+    const toolbarSpy = spyOn(createComponent, 'setToolbar');
     createFixture.detectChanges();
     expect(createComponent.newObject).toBeTruthy();
     expect(postNgInitSpy).toHaveBeenCalled();
