@@ -15,7 +15,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/browser"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -45,14 +45,17 @@ func (h *browserHooks) getURI(ctx context.Context) (string, error) {
 
 func (h *browserHooks) addOperations(ctx context.Context, i interface{}) (context.Context, interface{}, error) {
 	h.logger.InfoLog("msg", "received addOperations PreAuthzHook callback", "obj", i)
-	in, ok := i.(*browser.BrowseRequest)
-	if !ok {
+
+	switch i.(type) {
+	case *browser.BrowseRequest:
+	case *browser.BrowseRequestList:
+	default:
 		return ctx, i, errors.New("invalid input")
 	}
 	user, ok := apigwpkg.UserFromContext(ctx)
 	if !ok || user == nil {
 		h.logger.ErrorLog("msg", "no user present in context passed to browser  addOperations PreAuthZ hook")
-		return ctx, in, apigwpkg.ErrNoUserInContext
+		return ctx, i, apigwpkg.ErrNoUserInContext
 	}
 	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	resource := authz.NewResource(
@@ -111,17 +114,21 @@ func (h *browserHooks) refereesPreCallHook(ctx context.Context, i interface{}) (
 
 func (h *browserHooks) queryPreCallHook(ctx context.Context, i interface{}) (context.Context, interface{}, bool, error) {
 	h.logger.InfoLog("msg", "received query PreCallHook callback", "obj", i)
-	in, ok := i.(*browser.BrowseRequest)
+	reqList, ok := i.(*browser.BrowseRequestList)
+
 	if !ok {
 		return ctx, i, true, errors.New("invalid input")
 	}
 
-	sch := runtime.GetDefaultScheme()
-	uri := in.URI
-	in.URI = sch.GetKey(uri)
-	if in.URI == "" {
-		h.logger.ErrorLog("msg", "could not map URI to key", "URI", uri)
-		return ctx, i, false, errors.New("unknown URI path")
+	for ix, br := range reqList.RequestList {
+		sch := runtime.GetDefaultScheme()
+		uri := br.URI
+		br.URI = sch.GetKey(uri)
+		if br.URI == "" {
+			h.logger.ErrorLog("msg", "could not map URI to key", "URI", uri)
+			return ctx, i, false, errors.New("unknown URI path")
+		}
+		reqList.RequestList[ix] = br
 	}
 	return ctx, i, false, nil
 }

@@ -48,38 +48,59 @@ message Object {
 
 }
 
+message BrowseRequestObject {
+    // URI is the root node from where to query
+    string URI = 1 [(gogoproto.jsontag) = "uri", (venice.check) = "StrLen(2,512)"];
+    // QueryType is the direction of the query
+    string QueryType = 2 [(gogoproto.jsontag) = "query-type", (venice.check) = "StrEnum(QueryType)"];
+    // Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations
+    //  0 means to maximum depth.
+    uint32 MaxDepth = 3 [(gogoproto.jsontag) = "max-depth", (venice.default) = "1"];
+    // When CountOnly is set the response only contains counts and not the actual objects.
+    bool CountOnly = 4 [(gogoproto.jsontag) = "count-only"];
+}
 
 // BrowseRequest is the query request for the dependency tree
 message BrowseRequest {
     api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-
-    // Never makes it to the KV store, but added to satisfy code gen infra,
     option (venice.objectPrefix) = {Singleton: "BrowseRequest"};
-    // URI is the root node from where to query
-    string URI = 3 [(gogoproto.jsontag) = "uri", (venice.check) = "StrLen(2,512)"];
-    // QueryType is the direction of the query
-    string QueryType = 4 [(gogoproto.jsontag) = "query-type", (venice.check) = "StrEnum(QueryType)"];
-    // Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations
-    //  0 means to maximum depth.
-    uint32 MaxDepth = 5 [(gogoproto.jsontag) = "max-depth", (venice.default) = "1"];
-    // When CountOnly is set the response only contains counts and not the actual objects.
-    bool CountOnly = 6 [(gogoproto.jsontag) = "count-only"];
+    BrowseRequestObject B = 3 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+}
+
+// BrowseRequest is the query request for the dependency tree
+message BrowseRequestList {
+
+    api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    option (venice.objectPrefix) = {Singleton: "BrowseRequest"};
+    repeated BrowseRequestObject RequestList = 3 [(gogoproto.jsontag) = "requestlist", (gogoproto.nullable) = false];
 }
 
 // BrowseResponse is the response to a query request
+message BrowseResponseObject {
+    // RootURI is the root node for the response
+    string RootURI = 1 [(gogoproto.jsontag) = "root-uri"];
+    // QueryType is the direction of the query
+    string QueryType = 2 [(gogoproto.jsontag) = "query-type"];
+    // MaxDepth that the response explored. Reflects the value specified in the query
+    uint32 MaxDepth = 3 [(gogoproto.jsontag) = "max-depth"];
+    // TotalCount of objects in the response
+    uint32 TotalCount = 4 [(gogoproto.jsontag) = "total-count"];
+    // map of results. Key to the map is the URI of the  Object.
+    map <string, Object> Objects = 5 [(gogoproto.jsontag) = "objects", (gogoproto.nullable) = false];
+}
+
 message BrowseResponse {
     api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    option (venice.objectPrefix) = {Singleton: "BrowseRequest"};
+    BrowseResponseObject B = 3 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+}
 
-    // RootURI is the root node for the response
-    string RootURI = 3 [(gogoproto.jsontag) = "root-uri"];
-    // QueryType is the direction of the query
-    string QueryType = 4 [(gogoproto.jsontag) = "query-type"];
-    // MaxDepth that the response explored. Reflects the value specified in the query
-    uint32 MaxDepth = 5 [(gogoproto.jsontag) = "max-depth"];
-    // TotalCount of objects in the response
-    uint32 TotalCount = 6 [(gogoproto.jsontag) = "total-count"];
-    // map of results. Key to the map is the URI of the  Object.
-    map <string, Object> Objects = 7 [(gogoproto.jsontag) = "objects", (gogoproto.nullable) = false];
+// BrowseResponseList is the response to a querylist request
+message BrowseResponseList {
+    api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated BrowseResponseObject ResponseList = 3 [(gogoproto.jsontag) = "responselist", (gogoproto.nullable) = false];
 }

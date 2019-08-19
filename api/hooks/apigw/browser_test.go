@@ -10,7 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/browser"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -111,12 +111,15 @@ func TestBrowserPreCallHooks(t *testing.T) {
 	Assert(t, ret.MaxDepth == 1, fmt.Sprintf("got wrong depth [%d]", ret.MaxDepth), nil)
 	Assert(t, ret.QueryType == browser.QueryType_Dependencies.String(), fmt.Sprintf("got wrong type [%v]", ret.QueryType), nil)
 
-	req.URI = "/configs/testgrp/v1/testobj/testname"
-	ctx, reti, skip, err = h.queryPreCallHook(ctx, req)
-	ret = reti.(*browser.BrowseRequest)
+	queryList := &browser.BrowseRequestList{}
+	reqObj := browser.BrowseRequestObject{}
+	reqObj.URI = "/configs/testgrp/v1/testobj/testname"
+	queryList.RequestList = append(queryList.RequestList, reqObj)
+	ctx, reti, skip, err = h.queryPreCallHook(ctx, queryList)
+	requestList := reti.(*browser.BrowseRequestList).GetRequestList()
 	Assert(t, skip == false, "expecting false for skip", nil)
 	AssertOk(t, err, "expecting to succeed got(%s)", err)
-	Assert(t, ret.URI == "/testgrp/testobj/testname", fmt.Sprintf("got wrong URI[%v]", ret.URI), nil)
+	Assert(t, requestList[0].URI == "/testgrp/testobj/testname", fmt.Sprintf("got wrong URI[%v]", requestList[0].URI), nil)
 
 	nctx, _, err := h.addOperations(ctx, req)
 	AssertOk(t, err, "expecting to succeed got(%s)", err)

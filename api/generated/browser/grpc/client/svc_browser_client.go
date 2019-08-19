@@ -29,9 +29,9 @@ func NewBrowserV1(conn *grpc.ClientConn, logger log.Logger) browser.ServiceBrows
 			conn,
 			"browser.BrowserV1",
 			"Query",
-			browser.EncodeGrpcReqBrowseRequest,
-			browser.DecodeGrpcRespBrowseResponse,
-			&browser.BrowseResponse{},
+			browser.EncodeGrpcReqBrowseRequestList,
+			browser.DecodeGrpcRespBrowseResponseList,
+			&browser.BrowseResponseList{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()

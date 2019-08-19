@@ -14,8 +14,8 @@ export interface IBrowserBrowseRequest {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'uri': string;
-    'query-type': BrowserBrowseRequest_query_type;
+    'uri'?: string;
+    'query-type'?: BrowserBrowseRequest_query_type;
     'max-depth'?: number;
     'count-only'?: boolean;
 }
@@ -28,10 +28,7 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
     /** length of string should be between 2 and 512 */
     'uri': string = null;
     'query-type': BrowserBrowseRequest_query_type = null;
-    /** Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations
-     0 means to maximum depth. */
     'max-depth': number = null;
-    /** When CountOnly is set the response only contains counts and not the actual objects. */
     'count-only': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
@@ -48,23 +45,21 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
         },
         'uri': {
             description:  'length of string should be between 2 and 512',
-            required: true,
+            required: false,
             type: 'string'
         },
         'query-type': {
             enum: BrowserBrowseRequest_query_type,
             default: 'dependencies',
-            required: true,
+            required: false,
             type: 'string'
         },
         'max-depth': {
             default: parseInt('1'),
-            description:  'Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations  0 means to maximum depth.',
             required: false,
             type: 'number'
         },
         'count-only': {
-            description:  'When CountOnly is set the response only contains counts and not the actual objects.',
             required: false,
             type: 'boolean'
         },
@@ -158,8 +153,8 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
                 'kind': CustomFormControl(new FormControl(this['kind']), BrowserBrowseRequest.propInfo['kind']),
                 'api-version': CustomFormControl(new FormControl(this['api-version']), BrowserBrowseRequest.propInfo['api-version']),
                 'meta': CustomFormGroup(this['meta'].$formGroup, BrowserBrowseRequest.propInfo['meta'].required),
-                'uri': CustomFormControl(new FormControl(this['uri'], [required, minLengthValidator(2), maxLengthValidator(512), ]), BrowserBrowseRequest.propInfo['uri']),
-                'query-type': CustomFormControl(new FormControl(this['query-type'], [required, enumValidator(BrowserBrowseRequest_query_type), ]), BrowserBrowseRequest.propInfo['query-type']),
+                'uri': CustomFormControl(new FormControl(this['uri'], [minLengthValidator(2), maxLengthValidator(512), ]), BrowserBrowseRequest.propInfo['uri']),
+                'query-type': CustomFormControl(new FormControl(this['query-type'], [enumValidator(BrowserBrowseRequest_query_type), ]), BrowserBrowseRequest.propInfo['query-type']),
                 'max-depth': CustomFormControl(new FormControl(this['max-depth']), BrowserBrowseRequest.propInfo['max-depth']),
                 'count-only': CustomFormControl(new FormControl(this['count-only']), BrowserBrowseRequest.propInfo['count-only']),
             });

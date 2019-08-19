@@ -41,8 +41,8 @@ func MakeGRPCServerBrowserV1(ctx context.Context, endpoints EndpointsBrowserV1Se
 		Endpoints: endpoints,
 		QueryHdlr: grpctransport.NewServer(
 			endpoints.QueryEndpoint,
-			DecodeGrpcReqBrowseRequest,
-			EncodeGrpcRespBrowseResponse,
+			DecodeGrpcReqBrowseRequestList,
+			EncodeGrpcRespBrowseResponseList,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
 		),
 
@@ -62,7 +62,7 @@ func MakeGRPCServerBrowserV1(ctx context.Context, endpoints EndpointsBrowserV1Se
 	}
 }
 
-func (s *grpcServerBrowserV1) Query(ctx oldcontext.Context, req *BrowseRequest) (*BrowseResponse, error) {
+func (s *grpcServerBrowserV1) Query(ctx oldcontext.Context, req *BrowseRequestList) (*BrowseResponseList, error) {
 	_, resp, err := s.QueryHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func decodeHTTPrespBrowserV1Query(_ context.Context, r *http.Response) (interfac
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp BrowseResponse
+	var resp BrowseResponseList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }

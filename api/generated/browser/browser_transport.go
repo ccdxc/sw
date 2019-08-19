@@ -51,6 +51,74 @@ func DecodeGrpcRespBrowseRequest(ctx context.Context, response interface{}) (int
 	return response, nil
 }
 
+func encodeHTTPBrowseRequestList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBrowseRequestList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BrowseRequestList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBrowseRequestList encodes GRPC request
+func EncodeGrpcReqBrowseRequestList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseRequestList)
+	return req, nil
+}
+
+// DecodeGrpcReqBrowseRequestList decodes GRPC request
+func DecodeGrpcReqBrowseRequestList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseRequestList)
+	return req, nil
+}
+
+// EncodeGrpcRespBrowseRequestList encodes GRC response
+func EncodeGrpcRespBrowseRequestList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBrowseRequestList decodes GRPC response
+func DecodeGrpcRespBrowseRequestList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPBrowseRequestObject(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBrowseRequestObject(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BrowseRequestObject
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBrowseRequestObject encodes GRPC request
+func EncodeGrpcReqBrowseRequestObject(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseRequestObject)
+	return req, nil
+}
+
+// DecodeGrpcReqBrowseRequestObject decodes GRPC request
+func DecodeGrpcReqBrowseRequestObject(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseRequestObject)
+	return req, nil
+}
+
+// EncodeGrpcRespBrowseRequestObject encodes GRC response
+func EncodeGrpcRespBrowseRequestObject(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBrowseRequestObject decodes GRPC response
+func DecodeGrpcRespBrowseRequestObject(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPBrowseResponse(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -82,6 +150,74 @@ func EncodeGrpcRespBrowseResponse(ctx context.Context, response interface{}) (in
 
 // DecodeGrpcRespBrowseResponse decodes GRPC response
 func DecodeGrpcRespBrowseResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPBrowseResponseList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBrowseResponseList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BrowseResponseList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBrowseResponseList encodes GRPC request
+func EncodeGrpcReqBrowseResponseList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseResponseList)
+	return req, nil
+}
+
+// DecodeGrpcReqBrowseResponseList decodes GRPC request
+func DecodeGrpcReqBrowseResponseList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseResponseList)
+	return req, nil
+}
+
+// EncodeGrpcRespBrowseResponseList encodes GRC response
+func EncodeGrpcRespBrowseResponseList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBrowseResponseList decodes GRPC response
+func DecodeGrpcRespBrowseResponseList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPBrowseResponseObject(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBrowseResponseObject(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BrowseResponseObject
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBrowseResponseObject encodes GRPC request
+func EncodeGrpcReqBrowseResponseObject(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseResponseObject)
+	return req, nil
+}
+
+// DecodeGrpcReqBrowseResponseObject decodes GRPC request
+func DecodeGrpcReqBrowseResponseObject(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BrowseResponseObject)
+	return req, nil
+}
+
+// EncodeGrpcRespBrowseResponseObject encodes GRC response
+func EncodeGrpcRespBrowseResponseObject(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBrowseResponseObject decodes GRPC response
+func DecodeGrpcRespBrowseResponseObject(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

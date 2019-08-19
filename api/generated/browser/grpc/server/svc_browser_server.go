@@ -74,7 +74,7 @@ func (s *sbrowserSvc_browserBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsBrowserV1.fnAutoWatchSvcBrowserV1 = srv.WatchFromKv
 
 		s.endpointsBrowserV1.fnQuery = srv.AddMethod("Query",
-			apisrvpkg.NewMethod(srv, pkgMessages["browser.BrowseRequest"], pkgMessages["browser.BrowseResponse"], "browser", "Query")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["browser.BrowseRequestList"], pkgMessages["browser.BrowseResponseList"], "browser", "Query")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "browser/v1/BrowseRequest"), nil
 		}).HandleInvocation
 
@@ -123,12 +123,12 @@ func (s *sbrowserSvc_browserBackend) Reset() {
 	cleanupRegistration()
 }
 
-func (e *eBrowserV1Endpoints) Query(ctx context.Context, t browser.BrowseRequest) (browser.BrowseResponse, error) {
+func (e *eBrowserV1Endpoints) Query(ctx context.Context, t browser.BrowseRequestList) (browser.BrowseResponseList, error) {
 	r, err := e.fnQuery(ctx, t)
 	if err == nil {
-		return r.(browser.BrowseResponse), err
+		return r.(browser.BrowseResponseList), err
 	}
-	return browser.BrowseResponse{}, err
+	return browser.BrowseResponseList{}, err
 
 }
 func (e *eBrowserV1Endpoints) References(ctx context.Context, t browser.BrowseRequest) (browser.BrowseResponse, error) {

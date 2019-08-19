@@ -82,6 +82,24 @@ func (m *BrowseRequest) MakeURI(cat, ver, prefix string) string {
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/BrowseRequest")
 }
 
+// MakeKey generates a KV store key for the object
+func (m *BrowseRequestList) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "BrowseRequest", "/Singleton")
+}
+
+func (m *BrowseRequestList) MakeURI(cat, ver, prefix string) string {
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/BrowseRequest")
+}
+
+// MakeKey generates a KV store key for the object
+func (m *BrowseResponse) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "BrowseRequest", "/Singleton")
+}
+
+func (m *BrowseResponse) MakeURI(cat, ver, prefix string) string {
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/BrowseRequest")
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *BrowseRequest) Clone(into interface{}) (interface{}, error) {
 	var out *BrowseRequest
@@ -100,6 +118,55 @@ func (m *BrowseRequest) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *BrowseRequest) Defaults(ver string) bool {
+	var ret bool
+	ret = m.BrowseRequestObject.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BrowseRequestList) Clone(into interface{}) (interface{}, error) {
+	var out *BrowseRequestList
+	var ok bool
+	if into == nil {
+		out = &BrowseRequestList{}
+	} else {
+		out, ok = into.(*BrowseRequestList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*BrowseRequestList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BrowseRequestList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.RequestList {
+		i := m.RequestList[k]
+		ret = i.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BrowseRequestObject) Clone(into interface{}) (interface{}, error) {
+	var out *BrowseRequestObject
+	var ok bool
+	if into == nil {
+		out = &BrowseRequestObject{}
+	} else {
+		out, ok = into.(*BrowseRequestObject)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*BrowseRequestObject))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BrowseRequestObject) Defaults(ver string) bool {
 	var ret bool
 	ret = true
 	switch ver {
@@ -128,6 +195,55 @@ func (m *BrowseResponse) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *BrowseResponse) Defaults(ver string) bool {
+	var ret bool
+	ret = m.BrowseResponseObject.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BrowseResponseList) Clone(into interface{}) (interface{}, error) {
+	var out *BrowseResponseList
+	var ok bool
+	if into == nil {
+		out = &BrowseResponseList{}
+	} else {
+		out, ok = into.(*BrowseResponseList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*BrowseResponseList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BrowseResponseList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.ResponseList {
+		i := m.ResponseList[k]
+		ret = i.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BrowseResponseObject) Clone(into interface{}) (interface{}, error) {
+	var out *BrowseResponseObject
+	var ok bool
+	if into == nil {
+		out = &BrowseResponseObject{}
+	} else {
+		out, ok = into.(*BrowseResponseObject)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*BrowseResponseObject))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BrowseResponseObject) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Objects {
 		i := m.Objects[k]
@@ -197,13 +313,73 @@ func (m *BrowseRequest) References(tenant string, path string, resp map[string]a
 func (m *BrowseRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
-	if vs, ok := validatorMapBrowser["BrowseRequest"][ver]; ok {
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "BrowseRequestObject"
+		if errs := m.BrowseRequestObject.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	return ret
+}
+
+func (m *BrowseRequest) Normalize() {
+
+	m.BrowseRequestObject.Normalize()
+
+	m.ObjectMeta.Normalize()
+
+}
+
+func (m *BrowseRequestList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *BrowseRequestList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	for k, v := range m.RequestList {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sRequestList[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *BrowseRequestList) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	for k, v := range m.RequestList {
+		v.Normalize()
+		m.RequestList[k] = v
+
+	}
+
+}
+
+func (m *BrowseRequestObject) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *BrowseRequestObject) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapBrowser["BrowseRequestObject"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapBrowser["BrowseRequest"]["all"]; ok {
+	} else if vs, ok := validatorMapBrowser["BrowseRequestObject"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -213,9 +389,7 @@ func (m *BrowseRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 	return ret
 }
 
-func (m *BrowseRequest) Normalize() {
-
-	m.ObjectMeta.Normalize()
+func (m *BrowseRequestObject) Normalize() {
 
 	m.QueryType = QueryType_normal[strings.ToLower(m.QueryType)]
 
@@ -228,6 +402,66 @@ func (m *BrowseResponse) References(tenant string, path string, resp map[string]
 func (m *BrowseResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "BrowseResponseObject"
+		if errs := m.BrowseResponseObject.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	return ret
+}
+
+func (m *BrowseResponse) Normalize() {
+
+	m.BrowseResponseObject.Normalize()
+
+	m.ObjectMeta.Normalize()
+
+}
+
+func (m *BrowseResponseList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *BrowseResponseList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	for k, v := range m.ResponseList {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sResponseList[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *BrowseResponseList) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	for k, v := range m.ResponseList {
+		v.Normalize()
+		m.ResponseList[k] = v
+
+	}
+
+}
+
+func (m *BrowseResponseObject) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *BrowseResponseObject) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
 	for k, v := range m.Objects {
 		dlmtr := "."
 		if path == "" {
@@ -241,9 +475,7 @@ func (m *BrowseResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpe
 	return ret
 }
 
-func (m *BrowseResponse) Normalize() {
-
-	m.ObjectMeta.Normalize()
+func (m *BrowseResponseObject) Normalize() {
 
 	for k, v := range m.Objects {
 		v.Normalize()
@@ -319,13 +551,15 @@ func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
 		&BrowseRequest{},
+		&BrowseRequestList{},
+		&BrowseResponse{},
 	)
 
 	validatorMapBrowser = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapBrowser["BrowseRequest"] = make(map[string][]func(string, interface{}) error)
-	validatorMapBrowser["BrowseRequest"]["all"] = append(validatorMapBrowser["BrowseRequest"]["all"], func(path string, i interface{}) error {
-		m := i.(*BrowseRequest)
+	validatorMapBrowser["BrowseRequestObject"] = make(map[string][]func(string, interface{}) error)
+	validatorMapBrowser["BrowseRequestObject"]["all"] = append(validatorMapBrowser["BrowseRequestObject"]["all"], func(path string, i interface{}) error {
+		m := i.(*BrowseRequestObject)
 
 		if _, ok := QueryType_vvalue[m.QueryType]; !ok {
 			vals := []string{}
@@ -337,8 +571,8 @@ func init() {
 		return nil
 	})
 
-	validatorMapBrowser["BrowseRequest"]["all"] = append(validatorMapBrowser["BrowseRequest"]["all"], func(path string, i interface{}) error {
-		m := i.(*BrowseRequest)
+	validatorMapBrowser["BrowseRequestObject"]["all"] = append(validatorMapBrowser["BrowseRequestObject"]["all"], func(path string, i interface{}) error {
+		m := i.(*BrowseRequestObject)
 		args := make([]string, 0)
 		args = append(args, "2")
 		args = append(args, "512")

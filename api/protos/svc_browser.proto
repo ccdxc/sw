@@ -16,7 +16,7 @@ service BrowserV1 {
      option (venice.apiPrefix) = "browser";
      option (venice.apiVersion) = "v1";
 
-     rpc Query (BrowseRequest) returns (BrowseResponse) {
+     rpc Query (BrowseRequestList) returns (BrowseResponseList) {
          option (google.api.http) = {
             post: "/query"
             body: "*"

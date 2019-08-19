@@ -29,7 +29,6 @@ export class BrowserBrowseResponse extends BaseModel implements IBrowserBrowseRe
     'query-type': string = null;
     'max-depth': number = null;
     'total-count': number = null;
-    /** map of results. Key to the map is the URI of the  Object. */
     'objects': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
@@ -61,7 +60,6 @@ export class BrowserBrowseResponse extends BaseModel implements IBrowserBrowseRe
             type: 'number'
         },
         'objects': {
-            description:  'map of results. Key to the map is the URI of the  Object.',
             required: false,
             type: 'object'
         },

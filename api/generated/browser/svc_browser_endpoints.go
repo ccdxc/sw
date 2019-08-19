@@ -70,16 +70,16 @@ type EndpointsBrowserV1Server struct {
 }
 
 // Query is endpoint for Query
-func (e EndpointsBrowserV1Client) Query(ctx context.Context, in *BrowseRequest) (*BrowseResponse, error) {
+func (e EndpointsBrowserV1Client) Query(ctx context.Context, in *BrowseRequestList) (*BrowseResponseList, error) {
 	resp, err := e.QueryEndpoint(ctx, in)
 	if err != nil {
-		return &BrowseResponse{}, err
+		return &BrowseResponseList{}, err
 	}
-	return resp.(*BrowseResponse), nil
+	return resp.(*BrowseResponseList), nil
 }
 
 type respBrowserV1Query struct {
-	V   BrowseResponse
+	V   BrowseResponseList
 	Err error
 }
 
@@ -116,18 +116,18 @@ func (e EndpointsBrowserV1Client) AutoWatchSvcBrowserV1(ctx context.Context, in 
 }
 
 // Query implementation on server Endpoint
-func (e EndpointsBrowserV1Server) Query(ctx context.Context, in BrowseRequest) (BrowseResponse, error) {
+func (e EndpointsBrowserV1Server) Query(ctx context.Context, in BrowseRequestList) (BrowseResponseList, error) {
 	resp, err := e.QueryEndpoint(ctx, in)
 	if err != nil {
-		return BrowseResponse{}, err
+		return BrowseResponseList{}, err
 	}
-	return *resp.(*BrowseResponse), nil
+	return *resp.(*BrowseResponseList), nil
 }
 
 // MakeBrowserV1QueryEndpoint creates  Query endpoints for the service
 func MakeBrowserV1QueryEndpoint(s ServiceBrowserV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*BrowseRequest)
+		req := request.(*BrowseRequestList)
 		v, err := s.Query(ctx, *req)
 		return respBrowserV1Query{
 			V:   v,
@@ -229,7 +229,7 @@ type loggingBrowserV1MiddlewareServer struct {
 	next   ServiceBrowserV1Server
 }
 
-func (m loggingBrowserV1MiddlewareClient) Query(ctx context.Context, in *BrowseRequest) (resp *BrowseResponse, err error) {
+func (m loggingBrowserV1MiddlewareClient) Query(ctx context.Context, in *BrowseRequestList) (resp *BrowseResponseList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -273,7 +273,7 @@ func (m loggingBrowserV1MiddlewareClient) AutoWatchSvcBrowserV1(ctx context.Cont
 	return nil, errors.New("not implemented")
 }
 
-func (m loggingBrowserV1MiddlewareServer) Query(ctx context.Context, in BrowseRequest) (resp BrowseResponse, err error) {
+func (m loggingBrowserV1MiddlewareServer) Query(ctx context.Context, in BrowseRequestList) (resp BrowseResponseList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -346,7 +346,7 @@ func makeURIBrowserV1AutoWatchSvcBrowserV1WatchOper(in *api.ListWatchOptions) st
 
 }
 
-func (r *EndpointsBrowserV1RestClient) BrowserV1QueryEndpoint(ctx context.Context, in *BrowseRequest) (*BrowseResponse, error) {
+func (r *EndpointsBrowserV1RestClient) BrowserV1QueryEndpoint(ctx context.Context, in *BrowseRequestList) (*BrowseResponseList, error) {
 	return nil, errors.New("not allowed")
 }
 

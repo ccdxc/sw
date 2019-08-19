@@ -29,6 +29,11 @@ export enum BrowserBrowseRequest_query_type {
     'depended-by' = "depended-by",
 }
 
+export enum BrowserBrowseRequestObject_query_type {
+    'dependencies' = "dependencies",
+    'depended-by' = "depended-by",
+}
+
 export enum BrowserObject_query_type {
     'dependencies' = "dependencies",
     'depended-by' = "depended-by",
@@ -81,6 +86,7 @@ export class AllEnums {
     ObjectURIs_ref_type = ObjectURIs_ref_type;
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     BrowserBrowseRequest_query_type = BrowserBrowseRequest_query_type;
+    BrowserBrowseRequestObject_query_type = BrowserBrowseRequestObject_query_type;
     BrowserObject_query_type = BrowserObject_query_type;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;

@@ -11,9 +11,9 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/browser"
 	"github.com/pensando/sw/api/graph"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -278,13 +278,52 @@ func (r *browserHooks) makeObjectFromVertex(in *graph.Vertex, sch *runtime.Schem
 	return ret, nil
 }
 
-func (r *browserHooks) processQuery(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-	r.logger.InfoLog("msg", "processQuery action routine called")
-	ret := browser.BrowseResponse{Objects: make(map[string]browser.Object)}
-	in, ok := i.(browser.BrowseRequest)
+func (r *browserHooks) processQueryList(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r.logger.InfoLog("msg", "processQueryList action routine called")
+	ret := browser.BrowseResponseList{}
+	in, ok := i.(browser.BrowseRequestList)
 	if !ok {
 		return ret, false, errInvalidInputType
 	}
+	for ix := 0; ix < len(in.RequestList); ix++ {
+		resRet, _, err := r.processQuery(ctx, kv, txn, key, oper, dryRun, in.RequestList[ix])
+
+		if resRet, ok := resRet.(browser.BrowseResponseObject); ok {
+			ret.ResponseList = append(ret.ResponseList, resRet)
+		}
+
+		if err != nil {
+			return ret, false, err
+		}
+	}
+	return ret, false, nil
+}
+
+func (r *browserHooks) getReturnResponse(i interface{}, ret browser.BrowseResponseObject) interface{} {
+	switch i.(type) {
+	case browser.BrowseRequest:
+		nret := browser.BrowseResponse{}
+		nret.Objects = ret.Objects
+		nret.RootURI = ret.RootURI
+		nret.QueryType = ret.QueryType
+		nret.MaxDepth = ret.MaxDepth
+		nret.TotalCount = ret.TotalCount
+		return nret
+	case browser.BrowseRequestObject:
+		return ret
+	}
+	return ret
+}
+
+func (r *browserHooks) processQuery(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r.logger.InfoLog("msg", "processQuery action routine called")
+	ret := browser.BrowseResponseObject{}
+	ret.Objects = make(map[string]browser.Object)
+	in, ok := i.(browser.BrowseRequestObject)
+	if !ok {
+		return ret, false, errInvalidInputType
+	}
+
 	if r.graphDb == nil {
 		r.graphDb = r.apisrv.GetGraphDB()
 		r.cache = apisrvpkg.GetAPIServerCache()
@@ -296,6 +335,7 @@ func (r *browserHooks) processQuery(ctx context.Context, kv kvstore.Interface, t
 	if in.QueryType == browser.QueryType_Dependencies.String() {
 		qtype = graph.RefOut
 	}
+
 	sch := runtime.GetDefaultScheme()
 	if in.MaxDepth == 0 || in.MaxDepth > 1 {
 		r.logger.InfoLog("msg", "processQuery fetching Tree", "object", in.URI, "direction", in.QueryType)
@@ -333,7 +373,7 @@ func (r *browserHooks) processQuery(ctx context.Context, kv kvstore.Interface, t
 			o, err := r.makeObjectFromKey(in.URI, qtype, sch)
 			if err == nil {
 				ret.Objects[sch.GetURI(in.URI, r.version)] = o
-				return ret, false, nil
+				return r.getReturnResponse(i, ret), false, nil
 			}
 			return ret, false, errors.New("object not found")
 		}
@@ -359,12 +399,13 @@ func (r *browserHooks) processQuery(ctx context.Context, kv kvstore.Interface, t
 			o, err := r.makeObjectFromKey(in.URI, qtype, sch)
 			if err == nil {
 				ret.Objects[sch.GetURI(in.URI, r.version)] = o
-				return ret, false, nil
+				return r.getReturnResponse(i, ret), false, nil
 			}
 			return ret, false, errors.New("object not found")
 		}
 	}
-	return ret, false, nil
+
+	return r.getReturnResponse(i, ret), false, nil
 }
 
 func registerBrowserHooks(svc apiserver.Service, logger log.Logger) {
@@ -372,7 +413,7 @@ func registerBrowserHooks(svc apiserver.Service, logger log.Logger) {
 	r.svc = svc
 	r.logger = logger.WithContext("Service", "Browser")
 	r.logger.InfoLog("msg", "registering=hooks")
-	svc.GetMethod("Query").WithPreCommitHook(r.processQuery)
+	svc.GetMethod("Query").WithPreCommitHook(r.processQueryList)
 	svc.GetMethod("References").WithPreCommitHook(r.processQuery)
 	svc.GetMethod("Referrers").WithPreCommitHook(r.processQuery)
 	r.apisrv = apisrvpkg.MustGetAPIServer()

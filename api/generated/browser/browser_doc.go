@@ -8,7 +8,11 @@ Input file: browser.proto
 The following Messages are defined.
 
   BrowseRequest
+  BrowseRequestList
+  BrowseRequestObject
   BrowseResponse
+  BrowseResponseList
+  BrowseResponseObject
   Object
   Object_URIs
 

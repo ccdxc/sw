@@ -108,21 +108,21 @@
             "type": "string"
           },
           {
-            "name": "uri",
+            "name": "B.uri",
             "description": "URI is the root node from where to query. length of string should be between 2 and 512",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "query-type",
+            "name": "B.query-type",
             "description": "QueryType is the direction of the query.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "max-depth",
+            "name": "B.max-depth",
             "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations\n 0 means to maximum depth.",
             "in": "query",
             "required": false,
@@ -130,7 +130,7 @@
             "format": "int64"
           },
           {
-            "name": "count-only",
+            "name": "B.count-only",
             "description": "When CountOnly is set the response only contains counts and not the actual objects.",
             "in": "query",
             "required": false,
@@ -235,21 +235,21 @@
             "type": "string"
           },
           {
-            "name": "uri",
+            "name": "B.uri",
             "description": "URI is the root node from where to query. length of string should be between 2 and 512",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "query-type",
+            "name": "B.query-type",
             "description": "QueryType is the direction of the query.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "max-depth",
+            "name": "B.max-depth",
             "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations\n 0 means to maximum depth.",
             "in": "query",
             "required": false,
@@ -257,7 +257,7 @@
             "format": "int64"
           },
           {
-            "name": "count-only",
+            "name": "B.count-only",
             "description": "When CountOnly is set the response only contains counts and not the actual objects.",
             "in": "query",
             "required": false,
@@ -277,7 +277,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/browserBrowseResponse"
+              "$ref": "#/definitions/browserBrowseResponseList"
             }
           }
         },
@@ -360,36 +360,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "uri",
-            "description": "URI is the root node from where to query. length of string should be between 2 and 512",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "query-type",
-            "description": "QueryType is the direction of the query.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "max-depth",
-            "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations\n 0 means to maximum depth.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "count-only",
-            "description": "When CountOnly is set the response only contains counts and not the actual objects.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -402,7 +372,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/browserBrowseResponse"
+              "$ref": "#/definitions/browserBrowseResponseList"
             }
           }
         },
@@ -412,7 +382,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/browserBrowseRequest"
+              "$ref": "#/definitions/browserBrowseRequestList"
             }
           }
         ],
@@ -737,10 +707,6 @@
     },
     "browserBrowseRequest": {
       "type": "object",
-      "required": [
-        "uri",
-        "query-type"
-      ],
       "properties": {
         "kind": {
           "type": "string"
@@ -751,6 +717,60 @@
         "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
+        "uri": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 512,
+          "description": "length of string should be between 2 and 512"
+        },
+        "query-type": {
+          "type": "string",
+          "enum": [
+            "dependencies",
+            "depended-by"
+          ],
+          "default": "dependencies"
+        },
+        "max-depth": {
+          "type": "integer",
+          "format": "int64",
+          "default": "1"
+        },
+        "count-only": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "BrowseRequest is the query request for the dependency tree"
+    },
+    "browserBrowseRequestList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "requestlist": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/browserBrowseRequestObject"
+          }
+        }
+      },
+      "title": "BrowseRequest is the query request for the dependency tree"
+    },
+    "browserBrowseRequestObject": {
+      "type": "object",
+      "required": [
+        "uri",
+        "query-type"
+      ],
+      "properties": {
         "uri": {
           "type": "string",
           "minLength": 2,
@@ -778,8 +798,7 @@
           "format": "boolean",
           "description": "When CountOnly is set the response only contains counts and not the actual objects."
         }
-      },
-      "title": "BrowseRequest is the query request for the dependency tree"
+      }
     },
     "browserBrowseResponse": {
       "type": "object",
@@ -793,6 +812,52 @@
         "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
+        "root-uri": {
+          "type": "string"
+        },
+        "query-type": {
+          "type": "string"
+        },
+        "max-depth": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "total-count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "objects": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/browserObject"
+          }
+        }
+      }
+    },
+    "browserBrowseResponseList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "responselist": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/browserBrowseResponseObject"
+          }
+        }
+      },
+      "title": "BrowseResponseList is the response to a querylist request"
+    },
+    "browserBrowseResponseObject": {
+      "type": "object",
+      "properties": {
         "root-uri": {
           "type": "string",
           "title": "RootURI is the root node for the response"

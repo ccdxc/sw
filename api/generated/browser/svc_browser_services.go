@@ -19,7 +19,7 @@ var _ api.ObjectMeta
 type ServiceBrowserV1Client interface {
 	AutoWatchSvcBrowserV1(ctx context.Context, in *api.ListWatchOptions) (BrowserV1_AutoWatchSvcBrowserV1Client, error)
 
-	Query(ctx context.Context, t *BrowseRequest) (*BrowseResponse, error)
+	Query(ctx context.Context, t *BrowseRequestList) (*BrowseResponseList, error)
 	References(ctx context.Context, t *BrowseRequest) (*BrowseResponse, error)
 	Referrers(ctx context.Context, t *BrowseRequest) (*BrowseResponse, error)
 }
@@ -28,7 +28,7 @@ type ServiceBrowserV1Client interface {
 type ServiceBrowserV1Server interface {
 	AutoWatchSvcBrowserV1(in *api.ListWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) error
 
-	Query(ctx context.Context, t BrowseRequest) (BrowseResponse, error)
+	Query(ctx context.Context, t BrowseRequestList) (BrowseResponseList, error)
 	References(ctx context.Context, t BrowseRequest) (BrowseResponse, error)
 	Referrers(ctx context.Context, t BrowseRequest) (BrowseResponse, error)
 }

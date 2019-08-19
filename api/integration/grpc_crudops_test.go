@@ -21,20 +21,20 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 
 	"google.golang.org/grpc/codes"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	gwruntime "github.com/pensando/grpc-gateway/runtime"
 
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/browser"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/test/utils"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/netutils"
 
 	"github.com/pensando/sw/api"
@@ -3042,21 +3042,24 @@ func TestReferences(t *testing.T) {
 		},
 	}
 	uri := fmt.Sprintf("https://localhost:%v/configs/browser/v1/query", tinfo.apigwport)
-	req := browser.BrowseRequest{}
-	for _, c := range cases {
-		resp := browser.BrowseResponse{}
-		c.uri = strings.Replace(c.uri, "{SUBSTORD}", retord.Name, 1)
-		req.URI = c.uri
-		req.QueryType = c.tpe
-		req.MaxDepth = c.depth
-		_, err = clnt.Req("POST", uri, &req, &resp)
-		AssertOk(t, err, "rest request failed (%s)", err)
-		obj, ok := resp.Objects[c.uri]
-		t.Logf("response is [%+v]", resp)
-		Assert(t, ok, "did not find object [%v]", c.uri)
-		validateRslts(obj.Links, c.rslts)
+	req := browser.BrowseRequestList{}
+	resp := browser.BrowseResponseList{}
+	for ix := range cases {
+		cases[ix].uri = strings.Replace(cases[ix].uri, "{SUBSTORD}", retord.Name, 1)
+		newBRO := browser.BrowseRequestObject{}
+		newBRO.URI = cases[ix].uri
+		newBRO.QueryType = cases[ix].tpe
+		newBRO.MaxDepth = cases[ix].depth
+		req.RequestList = append(req.RequestList, newBRO)
 	}
-
+	_, err = clnt.Req("POST", uri, &req, &resp)
+	AssertOk(t, err, "rest request failed (%s)", err)
+	for ix, r := range resp.ResponseList {
+		obj, ok := r.Objects[cases[ix].uri]
+		t.Logf("response is [%+v]", resp)
+		Assert(t, ok, "did not find object [%v]", cases[ix].uri)
+		validateRslts(obj.Links, cases[ix].rslts)
+	}
 }
 
 func TestSorting(t *testing.T) {

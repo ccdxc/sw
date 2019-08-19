@@ -12,7 +12,11 @@
 
 	It has these top-level messages:
 		BrowseRequest
+		BrowseRequestList
+		BrowseRequestObject
 		BrowseResponse
+		BrowseResponseList
+		BrowseResponseObject
 		Object
 */
 package browser
@@ -94,15 +98,8 @@ type BrowseRequest struct {
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
 	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// URI is the root node from where to query
-	URI string `protobuf:"bytes,3,opt,name=URI,json=uri,proto3" json:"uri"`
-	// QueryType is the direction of the query
-	QueryType string `protobuf:"bytes,4,opt,name=QueryType,json=query-type,proto3" json:"query-type"`
-	// Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations
-	//  0 means to maximum depth.
-	MaxDepth uint32 `protobuf:"varint,5,opt,name=MaxDepth,json=max-depth,proto3" json:"max-depth"`
-	// When CountOnly is set the response only contains counts and not the actual objects.
-	CountOnly bool `protobuf:"varint,6,opt,name=CountOnly,json=count-only,proto3" json:"count-only"`
+	//
+	BrowseRequestObject `protobuf:"bytes,3,opt,name=B,json=,inline,embedded=B" json:",inline"`
 }
 
 func (m *BrowseRequest) Reset()                    { *m = BrowseRequest{} }
@@ -110,86 +107,159 @@ func (m *BrowseRequest) String() string            { return proto.CompactTextStr
 func (*BrowseRequest) ProtoMessage()               {}
 func (*BrowseRequest) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{0} }
 
-func (m *BrowseRequest) GetURI() string {
+// BrowseRequest is the query request for the dependency tree
+type BrowseRequestList struct {
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
+	//
+	RequestList []BrowseRequestObject `protobuf:"bytes,3,rep,name=RequestList,json=requestlist" json:"requestlist"`
+}
+
+func (m *BrowseRequestList) Reset()                    { *m = BrowseRequestList{} }
+func (m *BrowseRequestList) String() string            { return proto.CompactTextString(m) }
+func (*BrowseRequestList) ProtoMessage()               {}
+func (*BrowseRequestList) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{1} }
+
+func (m *BrowseRequestList) GetRequestList() []BrowseRequestObject {
+	if m != nil {
+		return m.RequestList
+	}
+	return nil
+}
+
+//
+type BrowseRequestObject struct {
+	// URI is the root node from where to query
+	URI string `protobuf:"bytes,1,opt,name=URI,json=uri,proto3" json:"uri"`
+	// QueryType is the direction of the query
+	QueryType string `protobuf:"bytes,2,opt,name=QueryType,json=query-type,proto3" json:"query-type"`
+	// Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations
+	//  0 means to maximum depth.
+	MaxDepth uint32 `protobuf:"varint,3,opt,name=MaxDepth,json=max-depth,proto3" json:"max-depth"`
+	// When CountOnly is set the response only contains counts and not the actual objects.
+	CountOnly bool `protobuf:"varint,4,opt,name=CountOnly,json=count-only,proto3" json:"count-only"`
+}
+
+func (m *BrowseRequestObject) Reset()                    { *m = BrowseRequestObject{} }
+func (m *BrowseRequestObject) String() string            { return proto.CompactTextString(m) }
+func (*BrowseRequestObject) ProtoMessage()               {}
+func (*BrowseRequestObject) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{2} }
+
+func (m *BrowseRequestObject) GetURI() string {
 	if m != nil {
 		return m.URI
 	}
 	return ""
 }
 
-func (m *BrowseRequest) GetQueryType() string {
+func (m *BrowseRequestObject) GetQueryType() string {
 	if m != nil {
 		return m.QueryType
 	}
 	return ""
 }
 
-func (m *BrowseRequest) GetMaxDepth() uint32 {
+func (m *BrowseRequestObject) GetMaxDepth() uint32 {
 	if m != nil {
 		return m.MaxDepth
 	}
 	return 0
 }
 
-func (m *BrowseRequest) GetCountOnly() bool {
+func (m *BrowseRequestObject) GetCountOnly() bool {
 	if m != nil {
 		return m.CountOnly
 	}
 	return false
 }
 
-// BrowseResponse is the response to a query request
+//
 type BrowseResponse struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
 	//
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// RootURI is the root node for the response
-	RootURI string `protobuf:"bytes,3,opt,name=RootURI,json=root-uri,proto3" json:"root-uri"`
-	// QueryType is the direction of the query
-	QueryType string `protobuf:"bytes,4,opt,name=QueryType,json=query-type,proto3" json:"query-type"`
-	// MaxDepth that the response explored. Reflects the value specified in the query
-	MaxDepth uint32 `protobuf:"varint,5,opt,name=MaxDepth,json=max-depth,proto3" json:"max-depth"`
-	// TotalCount of objects in the response
-	TotalCount uint32 `protobuf:"varint,6,opt,name=TotalCount,json=total-count,proto3" json:"total-count"`
-	// map of results. Key to the map is the URI of the  Object.
-	Objects map[string]Object `protobuf:"bytes,7,rep,name=Objects,json=objects" json:"objects" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	//
+	BrowseResponseObject `protobuf:"bytes,3,opt,name=B,json=,inline,embedded=B" json:",inline"`
 }
 
 func (m *BrowseResponse) Reset()                    { *m = BrowseResponse{} }
 func (m *BrowseResponse) String() string            { return proto.CompactTextString(m) }
 func (*BrowseResponse) ProtoMessage()               {}
-func (*BrowseResponse) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{1} }
+func (*BrowseResponse) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{3} }
 
-func (m *BrowseResponse) GetRootURI() string {
+// BrowseResponseList is the response to a querylist request
+type BrowseResponseList struct {
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
+	//
+	ResponseList []BrowseResponseObject `protobuf:"bytes,3,rep,name=ResponseList,json=responselist" json:"responselist"`
+}
+
+func (m *BrowseResponseList) Reset()                    { *m = BrowseResponseList{} }
+func (m *BrowseResponseList) String() string            { return proto.CompactTextString(m) }
+func (*BrowseResponseList) ProtoMessage()               {}
+func (*BrowseResponseList) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{4} }
+
+func (m *BrowseResponseList) GetResponseList() []BrowseResponseObject {
+	if m != nil {
+		return m.ResponseList
+	}
+	return nil
+}
+
+// BrowseResponse is the response to a query request
+type BrowseResponseObject struct {
+	// RootURI is the root node for the response
+	RootURI string `protobuf:"bytes,1,opt,name=RootURI,json=root-uri,proto3" json:"root-uri"`
+	// QueryType is the direction of the query
+	QueryType string `protobuf:"bytes,2,opt,name=QueryType,json=query-type,proto3" json:"query-type"`
+	// MaxDepth that the response explored. Reflects the value specified in the query
+	MaxDepth uint32 `protobuf:"varint,3,opt,name=MaxDepth,json=max-depth,proto3" json:"max-depth"`
+	// TotalCount of objects in the response
+	TotalCount uint32 `protobuf:"varint,4,opt,name=TotalCount,json=total-count,proto3" json:"total-count"`
+	// map of results. Key to the map is the URI of the  Object.
+	Objects map[string]Object `protobuf:"bytes,5,rep,name=Objects,json=objects" json:"objects" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+}
+
+func (m *BrowseResponseObject) Reset()                    { *m = BrowseResponseObject{} }
+func (m *BrowseResponseObject) String() string            { return proto.CompactTextString(m) }
+func (*BrowseResponseObject) ProtoMessage()               {}
+func (*BrowseResponseObject) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{5} }
+
+func (m *BrowseResponseObject) GetRootURI() string {
 	if m != nil {
 		return m.RootURI
 	}
 	return ""
 }
 
-func (m *BrowseResponse) GetQueryType() string {
+func (m *BrowseResponseObject) GetQueryType() string {
 	if m != nil {
 		return m.QueryType
 	}
 	return ""
 }
 
-func (m *BrowseResponse) GetMaxDepth() uint32 {
+func (m *BrowseResponseObject) GetMaxDepth() uint32 {
 	if m != nil {
 		return m.MaxDepth
 	}
 	return 0
 }
 
-func (m *BrowseResponse) GetTotalCount() uint32 {
+func (m *BrowseResponseObject) GetTotalCount() uint32 {
 	if m != nil {
 		return m.TotalCount
 	}
 	return 0
 }
 
-func (m *BrowseResponse) GetObjects() map[string]Object {
+func (m *BrowseResponseObject) GetObjects() map[string]Object {
 	if m != nil {
 		return m.Objects
 	}
@@ -217,7 +287,7 @@ type Object struct {
 func (m *Object) Reset()                    { *m = Object{} }
 func (m *Object) String() string            { return proto.CompactTextString(m) }
 func (*Object) ProtoMessage()               {}
-func (*Object) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{2} }
+func (*Object) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{6} }
 
 func (m *Object) GetURI() string {
 	if m != nil {
@@ -255,7 +325,7 @@ type Object_URIs struct {
 func (m *Object_URIs) Reset()                    { *m = Object_URIs{} }
 func (m *Object_URIs) String() string            { return proto.CompactTextString(m) }
 func (*Object_URIs) ProtoMessage()               {}
-func (*Object_URIs) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{2, 0} }
+func (*Object_URIs) Descriptor() ([]byte, []int) { return fileDescriptorBrowser, []int{6, 0} }
 
 func (m *Object_URIs) GetRefType() string {
 	if m != nil {
@@ -273,7 +343,11 @@ func (m *Object_URIs) GetURI() []api.ObjectRef {
 
 func init() {
 	proto.RegisterType((*BrowseRequest)(nil), "browser.BrowseRequest")
+	proto.RegisterType((*BrowseRequestList)(nil), "browser.BrowseRequestList")
+	proto.RegisterType((*BrowseRequestObject)(nil), "browser.BrowseRequestObject")
 	proto.RegisterType((*BrowseResponse)(nil), "browser.BrowseResponse")
+	proto.RegisterType((*BrowseResponseList)(nil), "browser.BrowseResponseList")
+	proto.RegisterType((*BrowseResponseObject)(nil), "browser.BrowseResponseObject")
 	proto.RegisterType((*Object)(nil), "browser.Object")
 	proto.RegisterType((*Object_URIs)(nil), "browser.Object.URIs")
 	proto.RegisterEnum("browser.QueryType", QueryType_name, QueryType_value)
@@ -310,25 +384,97 @@ func (m *BrowseRequest) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n2
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintBrowser(dAtA, i, uint64(m.BrowseRequestObject.Size()))
+	n3, err := m.BrowseRequestObject.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n3
+	return i, nil
+}
+
+func (m *BrowseRequestList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BrowseRequestList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintBrowser(dAtA, i, uint64(m.TypeMeta.Size()))
+	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n4
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintBrowser(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n5, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n5
+	if len(m.RequestList) > 0 {
+		for _, msg := range m.RequestList {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintBrowser(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *BrowseRequestObject) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BrowseRequestObject) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
 	if len(m.URI) > 0 {
-		dAtA[i] = 0x1a
+		dAtA[i] = 0xa
 		i++
 		i = encodeVarintBrowser(dAtA, i, uint64(len(m.URI)))
 		i += copy(dAtA[i:], m.URI)
 	}
 	if len(m.QueryType) > 0 {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintBrowser(dAtA, i, uint64(len(m.QueryType)))
 		i += copy(dAtA[i:], m.QueryType)
 	}
 	if m.MaxDepth != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x18
 		i++
 		i = encodeVarintBrowser(dAtA, i, uint64(m.MaxDepth))
 	}
 	if m.CountOnly {
-		dAtA[i] = 0x30
+		dAtA[i] = 0x20
 		i++
 		if m.CountOnly {
 			dAtA[i] = 1
@@ -358,44 +504,116 @@ func (m *BrowseResponse) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintBrowser(dAtA, i, uint64(m.TypeMeta.Size()))
-	n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n3
+	i += n6
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintBrowser(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n4, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n7, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n4
+	i += n7
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintBrowser(dAtA, i, uint64(m.BrowseResponseObject.Size()))
+	n8, err := m.BrowseResponseObject.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	return i, nil
+}
+
+func (m *BrowseResponseList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BrowseResponseList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintBrowser(dAtA, i, uint64(m.TypeMeta.Size()))
+	n9, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n9
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintBrowser(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n10, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n10
+	if len(m.ResponseList) > 0 {
+		for _, msg := range m.ResponseList {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintBrowser(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *BrowseResponseObject) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BrowseResponseObject) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
 	if len(m.RootURI) > 0 {
-		dAtA[i] = 0x1a
+		dAtA[i] = 0xa
 		i++
 		i = encodeVarintBrowser(dAtA, i, uint64(len(m.RootURI)))
 		i += copy(dAtA[i:], m.RootURI)
 	}
 	if len(m.QueryType) > 0 {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintBrowser(dAtA, i, uint64(len(m.QueryType)))
 		i += copy(dAtA[i:], m.QueryType)
 	}
 	if m.MaxDepth != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x18
 		i++
 		i = encodeVarintBrowser(dAtA, i, uint64(m.MaxDepth))
 	}
 	if m.TotalCount != 0 {
-		dAtA[i] = 0x30
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintBrowser(dAtA, i, uint64(m.TotalCount))
 	}
 	if len(m.Objects) > 0 {
 		for k, _ := range m.Objects {
-			dAtA[i] = 0x3a
+			dAtA[i] = 0x2a
 			i++
 			v := m.Objects[k]
 			msgSize := 0
@@ -412,11 +630,11 @@ func (m *BrowseResponse) MarshalTo(dAtA []byte) (int, error) {
 			dAtA[i] = 0x12
 			i++
 			i = encodeVarintBrowser(dAtA, i, uint64((&v).Size()))
-			n5, err := (&v).MarshalTo(dAtA[i:])
+			n11, err := (&v).MarshalTo(dAtA[i:])
 			if err != nil {
 				return 0, err
 			}
-			i += n5
+			i += n11
 		}
 	}
 	return i, nil
@@ -440,19 +658,19 @@ func (m *Object) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintBrowser(dAtA, i, uint64(m.TypeMeta.Size()))
-	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n12, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n12
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintBrowser(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n7, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n13, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
+	i += n13
 	if len(m.URI) > 0 {
 		dAtA[i] = 0x1a
 		i++
@@ -490,11 +708,11 @@ func (m *Object) MarshalTo(dAtA []byte) (int, error) {
 			dAtA[i] = 0x12
 			i++
 			i = encodeVarintBrowser(dAtA, i, uint64((&v).Size()))
-			n8, err := (&v).MarshalTo(dAtA[i:])
+			n14, err := (&v).MarshalTo(dAtA[i:])
 			if err != nil {
 				return 0, err
 			}
-			i += n8
+			i += n14
 		}
 	}
 	return i, nil
@@ -552,6 +770,30 @@ func (m *BrowseRequest) Size() (n int) {
 	n += 1 + l + sovBrowser(uint64(l))
 	l = m.ObjectMeta.Size()
 	n += 1 + l + sovBrowser(uint64(l))
+	l = m.BrowseRequestObject.Size()
+	n += 1 + l + sovBrowser(uint64(l))
+	return n
+}
+
+func (m *BrowseRequestList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovBrowser(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovBrowser(uint64(l))
+	if len(m.RequestList) > 0 {
+		for _, e := range m.RequestList {
+			l = e.Size()
+			n += 1 + l + sovBrowser(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BrowseRequestObject) Size() (n int) {
+	var l int
+	_ = l
 	l = len(m.URI)
 	if l > 0 {
 		n += 1 + l + sovBrowser(uint64(l))
@@ -576,6 +818,30 @@ func (m *BrowseResponse) Size() (n int) {
 	n += 1 + l + sovBrowser(uint64(l))
 	l = m.ObjectMeta.Size()
 	n += 1 + l + sovBrowser(uint64(l))
+	l = m.BrowseResponseObject.Size()
+	n += 1 + l + sovBrowser(uint64(l))
+	return n
+}
+
+func (m *BrowseResponseList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovBrowser(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovBrowser(uint64(l))
+	if len(m.ResponseList) > 0 {
+		for _, e := range m.ResponseList {
+			l = e.Size()
+			n += 1 + l + sovBrowser(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BrowseResponseObject) Size() (n int) {
+	var l int
+	_ = l
 	l = len(m.RootURI)
 	if l > 0 {
 		n += 1 + l + sovBrowser(uint64(l))
@@ -753,6 +1019,227 @@ func (m *BrowseRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BrowseRequestObject", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.BrowseRequestObject.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBrowser(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BrowseRequestList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBrowser
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BrowseRequestList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BrowseRequestList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RequestList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RequestList = append(m.RequestList, BrowseRequestObject{})
+			if err := m.RequestList[len(m.RequestList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBrowser(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BrowseRequestObject) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBrowser
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BrowseRequestObject: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BrowseRequestObject: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field URI", wireType)
 			}
 			var stringLen uint64
@@ -780,7 +1267,7 @@ func (m *BrowseRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.URI = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field QueryType", wireType)
 			}
@@ -809,7 +1296,7 @@ func (m *BrowseRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.QueryType = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxDepth", wireType)
 			}
@@ -828,7 +1315,7 @@ func (m *BrowseRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CountOnly", wireType)
 			}
@@ -960,6 +1447,227 @@ func (m *BrowseResponse) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BrowseResponseObject", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.BrowseResponseObject.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBrowser(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BrowseResponseList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBrowser
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BrowseResponseList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BrowseResponseList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ResponseList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBrowser
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ResponseList = append(m.ResponseList, BrowseResponseObject{})
+			if err := m.ResponseList[len(m.ResponseList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBrowser(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBrowser
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BrowseResponseObject) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBrowser
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BrowseResponseObject: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BrowseResponseObject: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RootURI", wireType)
 			}
 			var stringLen uint64
@@ -987,7 +1695,7 @@ func (m *BrowseResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.RootURI = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field QueryType", wireType)
 			}
@@ -1016,7 +1724,7 @@ func (m *BrowseResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.QueryType = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxDepth", wireType)
 			}
@@ -1035,7 +1743,7 @@ func (m *BrowseResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TotalCount", wireType)
 			}
@@ -1054,7 +1762,7 @@ func (m *BrowseResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Objects", wireType)
 			}
@@ -1736,58 +2444,65 @@ var (
 func init() { proto.RegisterFile("browser.proto", fileDescriptorBrowser) }
 
 var fileDescriptorBrowser = []byte{
-	// 848 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x95, 0x41, 0x6f, 0xe3, 0x44,
-	0x14, 0xc7, 0x3b, 0x49, 0xd3, 0x34, 0x93, 0x3a, 0x09, 0x53, 0x04, 0xb6, 0x85, 0x9a, 0xa8, 0xda,
-	0xaa, 0xd9, 0xa8, 0x8e, 0xd9, 0x22, 0x10, 0xda, 0x03, 0x08, 0xef, 0x16, 0xa9, 0x62, 0x77, 0x0b,
-	0xd3, 0x56, 0x9c, 0x9d, 0xe4, 0x25, 0x6b, 0xea, 0xcc, 0x78, 0xed, 0x71, 0x5b, 0x7f, 0x00, 0xaa,
-	0xde, 0xb8, 0xf3, 0x11, 0x7a, 0xe4, 0x53, 0xec, 0x71, 0xc5, 0x07, 0x88, 0x50, 0xc4, 0x01, 0xe5,
-	0xce, 0x1d, 0xcd, 0x38, 0x6e, 0x9c, 0xc0, 0x72, 0xd8, 0xcb, 0x5e, 0x92, 0xf7, 0xfe, 0xf3, 0xde,
-	0xcc, 0x9b, 0xdf, 0x9b, 0x27, 0x63, 0xad, 0x17, 0xf2, 0xab, 0x08, 0xc2, 0x6e, 0x10, 0x72, 0xc1,
-	0x49, 0x79, 0xee, 0x9a, 0x9f, 0x8c, 0x38, 0x1f, 0xf9, 0x60, 0xbb, 0x81, 0x67, 0xbb, 0x8c, 0x71,
-	0xe1, 0x0a, 0x8f, 0xb3, 0x28, 0x0d, 0x33, 0x8f, 0x46, 0x9e, 0x78, 0x19, 0xf7, 0xba, 0x7d, 0x3e,
-	0xb6, 0x03, 0x60, 0x91, 0xcb, 0x06, 0xdc, 0x8e, 0xae, 0xec, 0x4b, 0x60, 0x5e, 0x1f, 0xec, 0x58,
-	0x78, 0x7e, 0x24, 0x53, 0x47, 0xc0, 0xf2, 0xd9, 0xb6, 0xc7, 0xfa, 0x7e, 0x3c, 0x80, 0x6c, 0x1b,
-	0x2b, 0xb7, 0xcd, 0x88, 0x8f, 0xb8, 0xad, 0xe4, 0x5e, 0x3c, 0x54, 0x9e, 0x72, 0x94, 0x35, 0x0f,
-	0xdf, 0x7b, 0xcb, 0xa9, 0xb2, 0xc6, 0x31, 0x08, 0x37, 0x0d, 0xdb, 0xfd, 0xbb, 0x80, 0x35, 0x47,
-	0x5d, 0x83, 0xc2, 0xab, 0x18, 0x22, 0x41, 0xbe, 0xc0, 0xe8, 0x4c, 0x47, 0x2d, 0xd4, 0xae, 0x1e,
-	0x6a, 0x5d, 0x37, 0xf0, 0xba, 0x67, 0x49, 0x00, 0xcf, 0x41, 0xb8, 0xce, 0xf6, 0xeb, 0x49, 0x73,
-	0xed, 0xcd, 0xa4, 0x89, 0x66, 0x93, 0x66, 0xf9, 0xc0, 0x63, 0xbe, 0xc7, 0x80, 0x66, 0x06, 0xf9,
-	0x16, 0xa3, 0x13, 0xbd, 0xa0, 0xf2, 0xea, 0x2a, 0xef, 0xa4, 0xf7, 0x13, 0xf4, 0x85, 0xca, 0x34,
-	0x73, 0x99, 0x35, 0x79, 0xfa, 0x01, 0x1f, 0x7b, 0x02, 0xc6, 0x81, 0x48, 0xe8, 0x8a, 0x4f, 0x3a,
-	0xb8, 0x78, 0x4e, 0x8f, 0xf5, 0x62, 0x0b, 0xb5, 0x2b, 0x8e, 0x7e, 0x77, 0x63, 0x68, 0xa7, 0x22,
-	0x7c, 0x06, 0xac, 0x7d, 0x78, 0xf0, 0xf9, 0xa3, 0xc3, 0x87, 0xb3, 0x49, 0xb3, 0x18, 0x87, 0x1e,
-	0x95, 0x3f, 0xe4, 0x09, 0xae, 0xfc, 0x10, 0x43, 0x98, 0xc8, 0x12, 0xf5, 0x75, 0x95, 0xf1, 0xe0,
-	0xee, 0xc6, 0x20, 0xa7, 0x22, 0x3c, 0x62, 0xf1, 0xb8, 0x7d, 0xbf, 0x28, 0xd3, 0xf0, 0x2b, 0xe9,
-	0x59, 0x22, 0x09, 0x80, 0xe6, 0x6c, 0x62, 0xe3, 0xcd, 0xe7, 0xee, 0xf5, 0x53, 0x08, 0xc4, 0x4b,
-	0xbd, 0xd4, 0x42, 0x6d, 0xcd, 0x21, 0xbf, 0xdd, 0x18, 0xe8, 0xd1, 0x6c, 0xd2, 0xac, 0x8c, 0xdd,
-	0x6b, 0x6b, 0x20, 0x57, 0xe8, 0xc2, 0x24, 0x16, 0xae, 0x3c, 0xe1, 0x31, 0x13, 0x27, 0xcc, 0x4f,
-	0xf4, 0x8d, 0x16, 0x6a, 0x6f, 0x3a, 0x35, 0xb9, 0x7f, 0x5f, 0x8a, 0x16, 0x67, 0x7e, 0x42, 0x73,
-	0xf6, 0xe3, 0xed, 0xdf, 0x7f, 0x36, 0xea, 0xe6, 0x32, 0xe5, 0xdd, 0x3f, 0x8b, 0xb8, 0x96, 0x29,
-	0x51, 0xc0, 0x59, 0x04, 0xef, 0x1d, 0xfc, 0x3e, 0x2e, 0x53, 0xce, 0xc5, 0x02, 0xfe, 0xd6, 0x6c,
-	0xd2, 0xdc, 0x0c, 0x39, 0x17, 0x96, 0x04, 0x7e, 0x6f, 0xc9, 0xfb, 0xaf, 0x52, 0xaf, 0xfd, 0x0f,
-	0xdf, 0xce, 0xbf, 0xf8, 0x6a, 0x6f, 0x45, 0xfb, 0x29, 0xc6, 0x67, 0x5c, 0xb8, 0xbe, 0xe2, 0xab,
-	0xd8, 0x6a, 0x4e, 0x7d, 0x36, 0x69, 0x56, 0x85, 0x54, 0x2d, 0x45, 0x95, 0xe6, 0x1d, 0x72, 0x82,
-	0xcb, 0xe9, 0x7d, 0x23, 0xbd, 0xdc, 0x2a, 0xb6, 0xab, 0x87, 0x0f, 0xba, 0xd9, 0x94, 0x2e, 0xf3,
-	0x9d, 0x63, 0x89, 0x8e, 0x98, 0x08, 0x13, 0xa7, 0x2e, 0xc1, 0x48, 0x9c, 0x3c, 0x55, 0x69, 0x66,
-	0x98, 0xdf, 0xe1, 0xad, 0x7c, 0x24, 0x69, 0xe0, 0xe2, 0x05, 0x24, 0xaa, 0x31, 0x15, 0x2a, 0x4d,
-	0xb2, 0x87, 0x4b, 0x97, 0xae, 0x1f, 0xc3, 0x3d, 0xf4, 0xec, 0xc0, 0x34, 0x8f, 0xa6, 0xab, 0x8f,
-	0x0b, 0x5f, 0xa2, 0xdd, 0x5f, 0xd7, 0xf1, 0x46, 0xaa, 0xbe, 0xf7, 0xf6, 0x1a, 0xf9, 0xb9, 0x2a,
-	0x2f, 0x8d, 0xd1, 0x1e, 0x2e, 0x53, 0xb8, 0x84, 0x30, 0xca, 0xda, 0x59, 0x95, 0x95, 0x84, 0xa9,
-	0x44, 0x33, 0x63, 0x79, 0xda, 0x4a, 0xef, 0x38, 0x6d, 0x5f, 0xe3, 0xd2, 0x33, 0x8f, 0x5d, 0x44,
-	0xfa, 0x86, 0xea, 0x96, 0xb9, 0x02, 0xaf, 0xab, 0x16, 0xd3, 0x1e, 0x69, 0xf3, 0x1e, 0x95, 0x7c,
-	0xa9, 0xd1, 0xf4, 0xcf, 0xbc, 0xc6, 0xeb, 0xe7, 0xf4, 0x38, 0x22, 0xdf, 0xc8, 0xa2, 0x87, 0xaa,
-	0x16, 0xd5, 0x1b, 0x67, 0xff, 0xee, 0xc6, 0xf8, 0x38, 0xab, 0x85, 0xc2, 0x10, 0x42, 0x60, 0x7d,
-	0x90, 0x01, 0xd1, 0x43, 0xf5, 0x92, 0x61, 0x98, 0x96, 0x93, 0xe5, 0x11, 0x2b, 0x45, 0x52, 0x50,
-	0x95, 0xd4, 0x72, 0x70, 0x29, 0x0c, 0x9d, 0xea, 0xfc, 0xf4, 0x14, 0xd3, 0x39, 0x3d, 0x36, 0x5f,
-	0x60, 0xbc, 0xa8, 0xee, 0x3f, 0xde, 0x45, 0x67, 0xf9, 0x5d, 0x7c, 0xb8, 0x7a, 0x35, 0x59, 0x76,
-	0xee, 0x71, 0x74, 0xbe, 0xca, 0xf1, 0x24, 0x0d, 0xbc, 0xf5, 0x14, 0x02, 0x60, 0x03, 0x60, 0x7d,
-	0x0f, 0xa2, 0xc6, 0x1a, 0x69, 0x62, 0x3c, 0x57, 0x06, 0x4e, 0xd2, 0x40, 0x66, 0x7d, 0x7a, 0x6b,
-	0x54, 0x07, 0x73, 0xc5, 0xea, 0x25, 0x9d, 0x5f, 0x10, 0xae, 0x2d, 0xdf, 0x93, 0xec, 0xe3, 0xda,
-	0x0b, 0x77, 0x0c, 0x83, 0x7b, 0xb9, 0xb1, 0x66, 0x6e, 0x4f, 0x6f, 0x8d, 0x3a, 0x93, 0xaa, 0x15,
-	0x66, 0x32, 0xd9, 0xc3, 0xda, 0x8f, 0xe0, 0x5e, 0x2c, 0xe2, 0x90, 0x49, 0xa6, 0xb7, 0x46, 0xed,
-	0x0a, 0xdc, 0x8b, 0x5c, 0x98, 0x85, 0x3f, 0x38, 0x05, 0x1f, 0xfa, 0x82, 0x87, 0x8b, 0xd0, 0x82,
-	0xf9, 0xd1, 0xf4, 0xd6, 0x20, 0xd1, 0x7c, 0x61, 0x11, 0xee, 0x34, 0x5e, 0x4f, 0x77, 0xd0, 0x9b,
-	0xe9, 0x0e, 0xfa, 0x63, 0xba, 0x83, 0xfe, 0x9a, 0xee, 0xac, 0x7d, 0x8f, 0x7a, 0x1b, 0xea, 0x43,
-	0xf3, 0xd9, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa2, 0x72, 0x06, 0x4d, 0x3d, 0x07, 0x00, 0x00,
+	// 954 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcd, 0x6e, 0xdb, 0x46,
+	0x10, 0xf6, 0x5a, 0x96, 0x65, 0xad, 0x7e, 0xb3, 0x36, 0x5a, 0x91, 0x48, 0x2d, 0x43, 0xa8, 0x61,
+	0x47, 0x30, 0xa5, 0xc6, 0x45, 0x8b, 0x22, 0x87, 0x16, 0x65, 0xe2, 0x00, 0x46, 0x9d, 0xb8, 0x5d,
+	0xdb, 0xc8, 0x99, 0x92, 0x46, 0x0a, 0x6b, 0x6a, 0x97, 0x21, 0x97, 0xb6, 0xf9, 0x00, 0x35, 0x7c,
+	0xeb, 0xbd, 0x8f, 0xe0, 0x63, 0x9f, 0x22, 0xc7, 0xa0, 0x0f, 0x20, 0x14, 0x3a, 0x14, 0x85, 0x8a,
+	0x00, 0x7d, 0x81, 0x02, 0xc5, 0x2e, 0x49, 0x8b, 0x72, 0x1c, 0xb7, 0xc8, 0x25, 0xb9, 0x48, 0x33,
+	0xb3, 0x33, 0xb3, 0xdf, 0x7c, 0xf3, 0x69, 0x21, 0x5c, 0xea, 0x78, 0xfc, 0xd4, 0x07, 0xaf, 0xe5,
+	0x7a, 0x5c, 0x70, 0x92, 0x8b, 0x5d, 0xfd, 0xee, 0x80, 0xf3, 0x81, 0x03, 0x6d, 0xcb, 0xb5, 0xdb,
+	0x16, 0x63, 0x5c, 0x58, 0xc2, 0xe6, 0xcc, 0x8f, 0xd2, 0xf4, 0x9d, 0x81, 0x2d, 0x9e, 0x07, 0x9d,
+	0x56, 0x97, 0x0f, 0xdb, 0x2e, 0x30, 0xdf, 0x62, 0x3d, 0xde, 0xf6, 0x4f, 0xdb, 0x27, 0xc0, 0xec,
+	0x2e, 0xb4, 0x03, 0x61, 0x3b, 0xbe, 0x2c, 0x1d, 0x00, 0x4b, 0x57, 0xb7, 0x6d, 0xd6, 0x75, 0x82,
+	0x1e, 0x24, 0x6d, 0x8c, 0x54, 0x9b, 0x01, 0x1f, 0xf0, 0xb6, 0x0a, 0x77, 0x82, 0xbe, 0xf2, 0x94,
+	0xa3, 0xac, 0x38, 0x7d, 0xfd, 0x2d, 0xb7, 0x4a, 0x8c, 0x43, 0x10, 0x56, 0x94, 0xd6, 0xf8, 0x0b,
+	0xe1, 0x92, 0xa9, 0xc6, 0xa0, 0xf0, 0x22, 0x00, 0x5f, 0x90, 0x2f, 0x31, 0x3a, 0xac, 0xa1, 0x35,
+	0xb4, 0x59, 0xd8, 0x2e, 0xb5, 0x2c, 0xd7, 0x6e, 0x1d, 0x86, 0x2e, 0x3c, 0x01, 0x61, 0x99, 0xcb,
+	0x2f, 0x47, 0xf5, 0xb9, 0x57, 0xa3, 0x3a, 0x9a, 0x8c, 0xea, 0xb9, 0x2d, 0x9b, 0x39, 0x36, 0x03,
+	0x9a, 0x18, 0xe4, 0x31, 0x46, 0xfb, 0xb5, 0x79, 0x55, 0x57, 0x51, 0x75, 0xfb, 0x9d, 0x1f, 0xa1,
+	0x2b, 0x54, 0xa5, 0x9e, 0xaa, 0x2c, 0xcb, 0xdb, 0xb7, 0xf8, 0xd0, 0x16, 0x30, 0x74, 0x45, 0x48,
+	0xaf, 0xf9, 0x64, 0x07, 0x23, 0xb3, 0x96, 0x51, 0x7d, 0xee, 0xb6, 0x12, 0xc2, 0x67, 0x20, 0x46,
+	0x8d, 0x6f, 0x87, 0xf3, 0x60, 0xf9, 0xb7, 0x9f, 0xb4, 0x8a, 0x3e, 0x3b, 0x5b, 0xe3, 0x1f, 0x84,
+	0xef, 0xcc, 0x44, 0xf6, 0xec, 0x0f, 0x60, 0xe2, 0x03, 0x5c, 0x48, 0xc1, 0xa9, 0x65, 0xd6, 0x32,
+	0xff, 0x6f, 0xf6, 0xc9, 0xa8, 0x5e, 0xf0, 0xa2, 0xb0, 0x63, 0xfb, 0x82, 0xa6, 0x9d, 0x9b, 0xe7,
+	0xff, 0x03, 0xe1, 0xe5, 0x1b, 0xda, 0x91, 0x26, 0xce, 0x1c, 0xd1, 0x5d, 0xc5, 0x41, 0xde, 0xac,
+	0x5d, 0x9e, 0x6b, 0xa5, 0x03, 0xe1, 0xed, 0x01, 0xdb, 0xdc, 0xde, 0xfa, 0xe2, 0xfe, 0xf6, 0xbd,
+	0xc9, 0xa8, 0x9e, 0x09, 0x3c, 0x9b, 0xca, 0x0f, 0xf2, 0x10, 0xe7, 0x7f, 0x08, 0xc0, 0x0b, 0x25,
+	0x49, 0x6a, 0xfa, 0xbc, 0xf9, 0xe9, 0xe5, 0xb9, 0x46, 0x0e, 0x84, 0xb7, 0xc3, 0x82, 0xe1, 0xe6,
+	0xd5, 0xa1, 0x2c, 0xc3, 0x2f, 0xa4, 0x67, 0x88, 0xd0, 0x05, 0x9a, 0xb2, 0x49, 0x1b, 0x2f, 0x3d,
+	0xb1, 0xce, 0x1e, 0x81, 0x2b, 0x9e, 0xab, 0x5d, 0x97, 0x4c, 0xf2, 0xeb, 0xb9, 0x86, 0xee, 0x4f,
+	0x46, 0xf5, 0xfc, 0xd0, 0x3a, 0x33, 0x7a, 0xf2, 0x84, 0x4e, 0x4d, 0x62, 0xe0, 0xfc, 0x43, 0x1e,
+	0x30, 0xb1, 0xcf, 0x9c, 0xb0, 0xb6, 0xb0, 0x86, 0x36, 0x97, 0xcc, 0xb2, 0xec, 0xdf, 0x95, 0x41,
+	0x83, 0x33, 0x27, 0xa4, 0x29, 0xbb, 0xf1, 0x1a, 0xe1, 0x72, 0x32, 0xa8, 0xef, 0x72, 0xe6, 0xc3,
+	0x7b, 0xdf, 0xf2, 0xe3, 0xa9, 0xae, 0x3f, 0x79, 0x63, 0xb7, 0x11, 0xc6, 0x77, 0x17, 0xf6, 0x6b,
+	0x84, 0xc9, 0x6c, 0xaf, 0x0f, 0x42, 0xd9, 0xcf, 0x70, 0x31, 0x8d, 0x27, 0x96, 0xf6, 0x7f, 0x8c,
+	0xbf, 0x12, 0x6b, 0xbb, 0xe8, 0xc5, 0x71, 0x25, 0xee, 0x19, 0xaf, 0xf1, 0xf7, 0x3c, 0x5e, 0xb9,
+	0xa9, 0x98, 0x6c, 0xe0, 0x1c, 0xe5, 0x5c, 0x4c, 0xd5, 0x5c, 0x9c, 0x8c, 0xea, 0x4b, 0x1e, 0xe7,
+	0xc2, 0x90, 0x0a, 0xbe, 0xb2, 0xa4, 0xa0, 0xae, 0xcb, 0xb8, 0x7c, 0x8b, 0x60, 0x9b, 0x6f, 0x08,
+	0xb6, 0xf4, 0x56, 0xad, 0x7e, 0x86, 0xf1, 0x21, 0x17, 0x96, 0xa3, 0x04, 0xab, 0xc4, 0x5a, 0x32,
+	0x2b, 0xf2, 0xc7, 0x2a, 0x64, 0xd4, 0x50, 0x32, 0xa5, 0x69, 0x87, 0x1c, 0xe1, 0x5c, 0x84, 0xdf,
+	0xaf, 0x65, 0x15, 0x45, 0xcd, 0x5b, 0x29, 0x8a, 0xd7, 0xe1, 0xef, 0x30, 0xe1, 0x85, 0x66, 0x25,
+	0xe6, 0x2b, 0xc7, 0xa3, 0x28, 0x4d, 0x0c, 0xfd, 0x3b, 0x5c, 0x4c, 0x67, 0x92, 0x2a, 0xce, 0x1c,
+	0x43, 0x18, 0x11, 0x43, 0xa5, 0x49, 0xd6, 0x71, 0xf6, 0xc4, 0x72, 0x02, 0xb8, 0x5a, 0x76, 0x72,
+	0x6d, 0x54, 0x47, 0xa3, 0xd3, 0x07, 0xf3, 0x5f, 0xa1, 0xc6, 0x2f, 0x0b, 0x78, 0x31, 0x26, 0xf9,
+	0x7d, 0xcb, 0x4a, 0x8b, 0x9e, 0xab, 0x8c, 0xda, 0x5a, 0x6e, 0xe6, 0x75, 0x5a, 0xc7, 0x39, 0x0a,
+	0x27, 0xe0, 0xf9, 0xa0, 0x88, 0xcf, 0x9b, 0x05, 0x89, 0xc4, 0x8b, 0x42, 0x34, 0x31, 0x66, 0x1f,
+	0xb1, 0xec, 0x3b, 0x3e, 0x62, 0xdf, 0xe0, 0xec, 0x9e, 0xcd, 0x8e, 0xfd, 0xda, 0xa2, 0xda, 0x99,
+	0x7e, 0x8d, 0xbc, 0x96, 0x3a, 0x8c, 0x76, 0x54, 0x8a, 0x77, 0x94, 0x75, 0x64, 0x8c, 0x46, 0x5f,
+	0xfa, 0x19, 0x5e, 0x38, 0xa2, 0xbb, 0x3e, 0xf9, 0x56, 0x82, 0xee, 0x2b, 0x2c, 0x91, 0x68, 0x37,
+	0x2e, 0xcf, 0xb5, 0x8f, 0x13, 0x2c, 0x14, 0xfa, 0xe0, 0x01, 0xeb, 0x82, 0x4c, 0xf0, 0xef, 0x29,
+	0x3d, 0x43, 0x3f, 0x82, 0x93, 0xd4, 0x11, 0x23, 0xa2, 0x64, 0x5e, 0x21, 0x29, 0xa7, 0xc8, 0xa5,
+	0xd0, 0x37, 0x0b, 0xf1, 0xed, 0x11, 0x4d, 0x47, 0x74, 0x57, 0x7f, 0x8a, 0xf1, 0x14, 0xdd, 0x0d,
+	0xba, 0x68, 0xce, 0xea, 0x62, 0xe5, 0xfa, 0x68, 0x12, 0x76, 0x4a, 0x1c, 0xcd, 0xaf, 0x53, 0x7c,
+	0x92, 0x2a, 0x2e, 0x3e, 0x02, 0x17, 0x58, 0x0f, 0x58, 0xd7, 0x06, 0xbf, 0x3a, 0x47, 0xea, 0x18,
+	0xc7, 0x91, 0x9e, 0x19, 0x56, 0x91, 0x5e, 0x19, 0x5f, 0x68, 0x85, 0x5e, 0x1c, 0x31, 0x3a, 0x61,
+	0xf3, 0x67, 0x84, 0xcb, 0xb3, 0x73, 0x92, 0x0d, 0x5c, 0x7e, 0x6a, 0x0d, 0xa1, 0x77, 0x15, 0xae,
+	0xce, 0xe9, 0xcb, 0xe3, 0x0b, 0xad, 0xc2, 0x64, 0xd4, 0xf0, 0x92, 0x30, 0x59, 0xc7, 0xa5, 0x67,
+	0x60, 0x1d, 0x4f, 0xf3, 0x90, 0x4e, 0xc6, 0x17, 0x5a, 0xf9, 0x14, 0xac, 0xe3, 0x54, 0x9a, 0x81,
+	0xef, 0x1c, 0x80, 0x03, 0x5d, 0xc1, 0xbd, 0x69, 0xea, 0xbc, 0xfe, 0xd1, 0xf8, 0x42, 0x23, 0x7e,
+	0x7c, 0x30, 0x4d, 0x37, 0xab, 0x2f, 0xc7, 0xab, 0xe8, 0xd5, 0x78, 0x15, 0xfd, 0x3e, 0x5e, 0x45,
+	0x7f, 0x8e, 0x57, 0xe7, 0xbe, 0x47, 0x9d, 0x45, 0xf5, 0x9f, 0xe9, 0xf3, 0x7f, 0x03, 0x00, 0x00,
+	0xff, 0xff, 0x9e, 0xf6, 0x0e, 0xae, 0x08, 0x0a, 0x00, 0x00,
 }

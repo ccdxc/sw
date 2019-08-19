@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IBrowserBrowseResponse,BrowserBrowseResponse,BrowserBrowseRequest,IBrowserBrowseRequest } from '../../models/generated/browser';
+import { IBrowserBrowseResponse,BrowserBrowseResponse,IBrowserBrowseResponseList,BrowserBrowseResponseList,BrowserBrowseRequestList,IBrowserBrowseRequestList } from '../../models/generated/browser';
 
 @Injectable()
 export class Browserv1Service extends AbstractService {
@@ -48,25 +48,25 @@ export class Browserv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
   }
   
-  public GetQuery_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}> {
+  public GetQuery_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/browser/v1/query';
     const opts = {
       eventID: 'GetQuery_1',
-      objType: 'BrowserBrowseResponse',
+      objType: 'BrowserBrowseResponseList',
       isStaging: false,
     }
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}>;
   }
   
-  public PostQuery(body: IBrowserBrowseRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}> {
+  public PostQuery(body: IBrowserBrowseRequestList, stagingID: string = "", trimObject: boolean = true):Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/browser/v1/query';
     const opts = {
       eventID: 'PostQuery',
-      objType: 'BrowserBrowseResponse',
+      objType: 'BrowserBrowseResponseList',
       isStaging: false,
     }
     if (stagingID != null && stagingID.length != 0) {
@@ -74,9 +74,9 @@ export class Browserv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new BrowserBrowseRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new BrowserBrowseRequestList(body))
     }
-    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}>;
   }
   
 }

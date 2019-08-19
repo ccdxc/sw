@@ -51,7 +51,7 @@ type adapterBrowserV1 struct {
 	gw      apigw.APIGateway
 }
 
-func (a adapterBrowserV1) Query(oldctx oldcontext.Context, t *browser.BrowseRequest, options ...grpc.CallOption) (*browser.BrowseResponse, error) {
+func (a adapterBrowserV1) Query(oldctx oldcontext.Context, t *browser.BrowseRequestList, options ...grpc.CallOption) (*browser.BrowseResponseList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
 	defer func() {
@@ -64,14 +64,14 @@ func (a adapterBrowserV1) Query(oldctx oldcontext.Context, t *browser.BrowseRequ
 	}
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*browser.BrowseRequest)
+		in := i.(*browser.BrowseRequestList)
 		return a.service.Query(ctx, in)
 	}
 	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
 	if ret == nil {
 		return nil, err
 	}
-	return ret.(*browser.BrowseResponse), err
+	return ret.(*browser.BrowseResponseList), err
 }
 
 func (a adapterBrowserV1) References(oldctx oldcontext.Context, t *browser.BrowseRequest, options ...grpc.CallOption) (*browser.BrowseResponse, error) {
