@@ -199,7 +199,7 @@ func (k *k8sService) runUntilCancel() {
 			watcher, err = k.client.CoreV1().Pods(defaultNS).Watch(metav1.ListOptions{})
 			ii++
 			if ii%10 == 0 {
-				log.Errorf("Waiting for pod watch to succeed for %v seconds", ii)
+				log.Errorf("Waiting for pod watch to succeed for %v seconds, last err: %v", ii, err)
 			}
 		}
 	}
