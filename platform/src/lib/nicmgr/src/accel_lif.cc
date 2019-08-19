@@ -1053,14 +1053,23 @@ AccelLif::accel_lif_hal_up_action(accel_lif_event_t event)
     ctl_cosA = 1;
 
     ACCEL_LIF_DEVAPI_CHECK(ACCEL_RC_ERROR, ACCEL_LIF_EV_NULL);
+    dev_api->qos_get_txtc_cos("INTERNAL_TX_PROXY_DROP", 1, &cosB);
+    if ((int)cosB < 0) {
+        NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
+                    LifNameGet(), "INTERNAL_TX_PROXY_DROP", 1);
+        cosB = 0;
+        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+    }
     dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
-    if (ctl_cosB < 0) {
+    if ((int)ctl_cosB < 0) {
         NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
                     LifNameGet(), "CONTROL", 1);
         ctl_cosB = 0;
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
     }
 
+    NIC_LOG_DEBUG("{}: cosA: {} cosB: {} ctl_cosA: {} ctl_cosB: {}",
+                  LifNameGet(), cosA, cosB, ctl_cosA, ctl_cosB);
     notifyq = new AccelLifUtils::NotifyQ(LifNameGet(), pd, LifIdGet(),
                                  ACCEL_NOTIFYQ_TX_QTYPE, ACCEL_NOTIFYQ_TX_QID,
                                  intr_base, ctl_cosA, ctl_cosB);
@@ -1628,6 +1637,7 @@ AccelLif::accel_lif_seq_queue_batch_init_action(accel_lif_event_t event)
     cmd.qgroup = batch_cmd->qgroup;
     cmd.enable = batch_cmd->enable;
     cmd.cos = batch_cmd->cos;
+    cmd.cos_override = batch_cmd->cos_override;
     cmd.total_wrings = batch_cmd->total_wrings;
     cmd.host_wrings = batch_cmd->host_wrings;
     cmd.entry_size = batch_cmd->entry_size;
@@ -1969,7 +1979,7 @@ AccelLif::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
     qstate.cosA = 0;
-    qstate.cosB = cmd->cos;
+    qstate.cosB = cmd->cos_override ? cmd->cos : cosB;
     qstate.host_wrings = cmd->host_wrings;
     qstate.total_wrings = cmd->total_wrings;
     qstate.pid = cmd->pid;

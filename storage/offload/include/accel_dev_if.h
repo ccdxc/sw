@@ -621,6 +621,7 @@ typedef struct notifyq_init_cpl {
  *              reserved.
  * @wring_base: Work Queue ring base address.
  * @core_id:    informational CPU core_id
+ * @cos_override: override FW selected cos with cmd cos
  */
 typedef struct seq_queue_init_cmd {
 	uint8_t     opcode;
@@ -637,7 +638,8 @@ typedef struct seq_queue_init_cmd {
 	__le64      wring_base;
 	__le16      core_id;
 	storage_seq_qgroup_t qgroup;
-	uint8_t     rsvd2[37];
+	uint8_t     cos_override;
+	uint8_t     rsvd2[36];
 } seq_queue_init_cmd_t;
 
 /**
@@ -687,6 +689,7 @@ typedef admin_cpl_t seq_queue_control_cpl_t;
  * @wring_size: Work ring size, encoded as a log2(size),
  *              in number of descriptors.
  * @wring_base: Work Queue ring starting base address.
+ * @cos_override: override FW selected cos with cmd cos
  */
 typedef struct seq_queue_batch_init_cmd {
 	uint8_t     opcode;
@@ -703,7 +706,8 @@ typedef struct seq_queue_batch_init_cmd {
 	__le64      wring_base;
 	__le32      num_queues;
 	storage_seq_qgroup_t qgroup;
-	uint8_t     rsvd2[35];
+	uint8_t     cos_override;
+	uint8_t     rsvd2[34];
 } seq_queue_batch_init_cmd_t;
 
 /**
