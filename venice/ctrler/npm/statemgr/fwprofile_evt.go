@@ -3,6 +3,9 @@
 package statemgr
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
@@ -74,29 +77,87 @@ func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile
 	return &fwp
 }
 
+func (sm *Statemgr) updatePropogationStatus(genID string,
+	current *security.PropagationStatus, nodeVersions map[string]string) *security.PropagationStatus {
+
+	objs := sm.ListObjects("SmartNIC")
+	newProp := &security.PropagationStatus{GenerationID: genID}
+
+	pendingNodes := []string{}
+	for _, obj := range objs {
+		snic, err := SmartNICStateFromObj(obj)
+		if err != nil || !sm.isSmartNICHealthy(&snic.SmartNIC.SmartNIC) {
+			continue
+		}
+
+		if ver, ok := nodeVersions[snic.SmartNIC.Name]; ok && ver == genID {
+			newProp.Updated++
+		} else {
+			pendingNodes = append(pendingNodes, snic.SmartNIC.Name)
+			newProp.Pending++
+			if current.MinVersion == "" || versionToInt(ver) < versionToInt(newProp.MinVersion) {
+				newProp.MinVersion = ver
+			}
+		}
+	}
+
+	// set status
+	if newProp.Pending == 0 {
+		newProp.Status = fmt.Sprintf("Propagation Complete")
+	} else {
+		newProp.Status = fmt.Sprintf("Propagation pending on: %s", strings.Join(pendingNodes, ", "))
+		newProp.PendingNaples = pendingNodes
+	}
+
+	return newProp
+}
+
+func (sm *Statemgr) propgatationStatusDifferent(
+	current *security.PropagationStatus,
+	other *security.PropagationStatus) bool {
+
+	sliceEqual := func(X, Y []string) bool {
+		m := make(map[string]int)
+
+		for _, y := range Y {
+			m[y]++
+		}
+
+		for _, x := range X {
+			if m[x] > 0 {
+				m[x]--
+				continue
+			}
+			//not present or execess
+			return false
+		}
+
+		return len(m) == 0
+	}
+
+	if other.GenerationID != current.GenerationID || other.Updated != current.Updated || other.Pending != current.Pending || other.Status != current.Status ||
+		other.MinVersion != current.MinVersion || !sliceEqual(current.PendingNaples, other.PendingNaples) {
+		return true
+	}
+	return false
+}
+
 // Write writes the object to api server
 func (fps *FirewallProfileState) Write() error {
 	fps.FirewallProfile.Lock()
 	defer fps.FirewallProfile.Unlock()
 
-	// Consolidate the NodeVersions
 	prop := &fps.FirewallProfile.Status.PropagationStatus
-	prop.GenerationID = fps.FirewallProfile.GenerationID
-	prop.Updated = 0
-	prop.Pending = 0
-	prop.MinVersion = ""
-	for _, ver := range fps.NodeVersions {
-		if ver == prop.GenerationID {
-			prop.Updated++
-		} else {
-			prop.Pending++
-			if prop.MinVersion == "" || versionToInt(ver) < versionToInt(prop.MinVersion) {
-				prop.MinVersion = ver
-			}
-		}
+	newProp := fps.stateMgr.updatePropogationStatus(fps.FirewallProfile.GenerationID, prop, fps.NodeVersions)
+
+	//Do write only if changed
+	if fps.stateMgr.propgatationStatusDifferent(prop, newProp) {
+		fps.FirewallProfile.Status.PropagationStatus = *newProp
+		return fps.FirewallProfile.Write()
 	}
 
-	return fps.FirewallProfile.Write()
+	return nil
+
 }
 
 // OnSecurityProfileCreateReq gets called when agent sends create request

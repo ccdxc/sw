@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/shardworkers"
 )
 
 // Order is a wrapper object that implements additional functionality
@@ -77,7 +78,8 @@ func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Order)
 		kind := "Order"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -157,7 +159,8 @@ func (ct *ctrlerCtx) handleOrderEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Order)
 		kind := "Order"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -169,63 +172,58 @@ func (ct *ctrlerCtx) handleOrderEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Order{
-					Order:      *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Order_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*bookstore.Order)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Order{
+						Order:      *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Order_Created_Events").Inc()
+					obj.Lock()
 					err = orderHandler.OnOrderCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Order.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Order)
-
-				ct.stats.Counter("Order_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Order)
+					ct.stats.Counter("Order_Updated_Events").Inc()
+					obj.Lock()
 					err = orderHandler.OnOrderUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Order)
-
-			ct.stats.Counter("Order_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Order", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*bookstore.Order)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Order)
+				ct.stats.Counter("Order_Deleted_Events").Inc()
+				obj.Lock()
 				err = orderHandler.OnOrderDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Order.GetKey())
+				return nil
+			}
+			ct.runJob("Order", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Order watch channel", tp)
@@ -419,9 +417,7 @@ func (api *orderAPI) Create(obj *bookstore.Order) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Order().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -437,9 +433,7 @@ func (api *orderAPI) Update(obj *bookstore.Order) error {
 		}
 
 		_, err = apicl.BookstoreV1().Order().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -454,7 +448,8 @@ func (api *orderAPI) Delete(obj *bookstore.Order) error {
 			return err
 		}
 
-		apicl.BookstoreV1().Order().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.BookstoreV1().Order().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -498,6 +493,7 @@ func (api *orderAPI) List() []*Order {
 
 // Watch sets up a event handlers for Order object
 func (api *orderAPI) Watch(handler OrderHandler) error {
+	api.ct.startWorkerPool("Order")
 	return api.ct.WatchOrder(handler)
 }
 
@@ -560,7 +556,8 @@ func (ct *ctrlerCtx) handleBookEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Book)
 		kind := "Book"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -640,7 +637,8 @@ func (ct *ctrlerCtx) handleBookEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Book)
 		kind := "Book"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -652,63 +650,58 @@ func (ct *ctrlerCtx) handleBookEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Book{
-					Book:       *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Book_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*bookstore.Book)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Book{
+						Book:       *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Book_Created_Events").Inc()
+					obj.Lock()
 					err = bookHandler.OnBookCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Book.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Book)
-
-				ct.stats.Counter("Book_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Book)
+					ct.stats.Counter("Book_Updated_Events").Inc()
+					obj.Lock()
 					err = bookHandler.OnBookUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Book)
-
-			ct.stats.Counter("Book_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Book", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*bookstore.Book)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Book)
+				ct.stats.Counter("Book_Deleted_Events").Inc()
+				obj.Lock()
 				err = bookHandler.OnBookDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Book.GetKey())
+				return nil
+			}
+			ct.runJob("Book", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Book watch channel", tp)
@@ -902,9 +895,7 @@ func (api *bookAPI) Create(obj *bookstore.Book) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Book().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -920,9 +911,7 @@ func (api *bookAPI) Update(obj *bookstore.Book) error {
 		}
 
 		_, err = apicl.BookstoreV1().Book().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -937,7 +926,8 @@ func (api *bookAPI) Delete(obj *bookstore.Book) error {
 			return err
 		}
 
-		apicl.BookstoreV1().Book().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.BookstoreV1().Book().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -981,6 +971,7 @@ func (api *bookAPI) List() []*Book {
 
 // Watch sets up a event handlers for Book object
 func (api *bookAPI) Watch(handler BookHandler) error {
+	api.ct.startWorkerPool("Book")
 	return api.ct.WatchBook(handler)
 }
 
@@ -1043,7 +1034,8 @@ func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Publisher)
 		kind := "Publisher"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1123,7 +1115,8 @@ func (ct *ctrlerCtx) handlePublisherEventParallel(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*bookstore.Publisher)
 		kind := "Publisher"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1135,63 +1128,58 @@ func (ct *ctrlerCtx) handlePublisherEventParallel(evt *kvstore.WatchEvent) error
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Publisher{
-					Publisher:  *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Publisher_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*bookstore.Publisher)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Publisher{
+						Publisher:  *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Publisher_Created_Events").Inc()
+					obj.Lock()
 					err = publisherHandler.OnPublisherCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Publisher.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Publisher)
-
-				ct.stats.Counter("Publisher_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Publisher)
+					ct.stats.Counter("Publisher_Updated_Events").Inc()
+					obj.Lock()
 					err = publisherHandler.OnPublisherUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Publisher)
-
-			ct.stats.Counter("Publisher_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Publisher", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*bookstore.Publisher)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Publisher)
+				ct.stats.Counter("Publisher_Deleted_Events").Inc()
+				obj.Lock()
 				err = publisherHandler.OnPublisherDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Publisher.GetKey())
+				return nil
+			}
+			ct.runJob("Publisher", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Publisher watch channel", tp)
@@ -1385,9 +1373,7 @@ func (api *publisherAPI) Create(obj *bookstore.Publisher) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1403,9 +1389,7 @@ func (api *publisherAPI) Update(obj *bookstore.Publisher) error {
 		}
 
 		_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -1420,7 +1404,8 @@ func (api *publisherAPI) Delete(obj *bookstore.Publisher) error {
 			return err
 		}
 
-		apicl.BookstoreV1().Publisher().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.BookstoreV1().Publisher().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1464,6 +1449,7 @@ func (api *publisherAPI) List() []*Publisher {
 
 // Watch sets up a event handlers for Publisher object
 func (api *publisherAPI) Watch(handler PublisherHandler) error {
+	api.ct.startWorkerPool("Publisher")
 	return api.ct.WatchPublisher(handler)
 }
 
@@ -1526,7 +1512,8 @@ func (ct *ctrlerCtx) handleStoreEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Store)
 		kind := "Store"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1606,7 +1593,8 @@ func (ct *ctrlerCtx) handleStoreEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Store)
 		kind := "Store"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1618,63 +1606,58 @@ func (ct *ctrlerCtx) handleStoreEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Store{
-					Store:      *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Store_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*bookstore.Store)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Store{
+						Store:      *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Store_Created_Events").Inc()
+					obj.Lock()
 					err = storeHandler.OnStoreCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Store.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Store)
-
-				ct.stats.Counter("Store_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Store)
+					ct.stats.Counter("Store_Updated_Events").Inc()
+					obj.Lock()
 					err = storeHandler.OnStoreUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Store)
-
-			ct.stats.Counter("Store_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Store", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*bookstore.Store)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Store)
+				ct.stats.Counter("Store_Deleted_Events").Inc()
+				obj.Lock()
 				err = storeHandler.OnStoreDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Store.GetKey())
+				return nil
+			}
+			ct.runJob("Store", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Store watch channel", tp)
@@ -1868,9 +1851,7 @@ func (api *storeAPI) Create(obj *bookstore.Store) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Store().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1886,9 +1867,7 @@ func (api *storeAPI) Update(obj *bookstore.Store) error {
 		}
 
 		_, err = apicl.BookstoreV1().Store().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -1903,7 +1882,8 @@ func (api *storeAPI) Delete(obj *bookstore.Store) error {
 			return err
 		}
 
-		apicl.BookstoreV1().Store().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.BookstoreV1().Store().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1947,6 +1927,7 @@ func (api *storeAPI) List() []*Store {
 
 // Watch sets up a event handlers for Store object
 func (api *storeAPI) Watch(handler StoreHandler) error {
+	api.ct.startWorkerPool("Store")
 	return api.ct.WatchStore(handler)
 }
 
@@ -2009,7 +1990,8 @@ func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Coupon)
 		kind := "Coupon"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2089,7 +2071,8 @@ func (ct *ctrlerCtx) handleCouponEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Coupon)
 		kind := "Coupon"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2101,63 +2084,58 @@ func (ct *ctrlerCtx) handleCouponEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Coupon{
-					Coupon:     *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Coupon_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*bookstore.Coupon)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Coupon{
+						Coupon:     *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Coupon_Created_Events").Inc()
+					obj.Lock()
 					err = couponHandler.OnCouponCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Coupon.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Coupon)
-
-				ct.stats.Counter("Coupon_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Coupon)
+					ct.stats.Counter("Coupon_Updated_Events").Inc()
+					obj.Lock()
 					err = couponHandler.OnCouponUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Coupon)
-
-			ct.stats.Counter("Coupon_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Coupon", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*bookstore.Coupon)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Coupon)
+				ct.stats.Counter("Coupon_Deleted_Events").Inc()
+				obj.Lock()
 				err = couponHandler.OnCouponDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Coupon.GetKey())
+				return nil
+			}
+			ct.runJob("Coupon", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Coupon watch channel", tp)
@@ -2351,9 +2329,7 @@ func (api *couponAPI) Create(obj *bookstore.Coupon) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2369,9 +2345,7 @@ func (api *couponAPI) Update(obj *bookstore.Coupon) error {
 		}
 
 		_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -2386,7 +2360,8 @@ func (api *couponAPI) Delete(obj *bookstore.Coupon) error {
 			return err
 		}
 
-		apicl.BookstoreV1().Coupon().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.BookstoreV1().Coupon().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -2430,6 +2405,7 @@ func (api *couponAPI) List() []*Coupon {
 
 // Watch sets up a event handlers for Coupon object
 func (api *couponAPI) Watch(handler CouponHandler) error {
+	api.ct.startWorkerPool("Coupon")
 	return api.ct.WatchCoupon(handler)
 }
 
@@ -2492,7 +2468,8 @@ func (ct *ctrlerCtx) handleCustomerEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Customer)
 		kind := "Customer"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2572,7 +2549,8 @@ func (ct *ctrlerCtx) handleCustomerEventParallel(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*bookstore.Customer)
 		kind := "Customer"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2584,63 +2562,58 @@ func (ct *ctrlerCtx) handleCustomerEventParallel(evt *kvstore.WatchEvent) error 
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Customer{
-					Customer:   *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Customer_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*bookstore.Customer)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Customer{
+						Customer:   *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Customer_Created_Events").Inc()
+					obj.Lock()
 					err = customerHandler.OnCustomerCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Customer.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Customer)
-
-				ct.stats.Counter("Customer_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Customer)
+					ct.stats.Counter("Customer_Updated_Events").Inc()
+					obj.Lock()
 					err = customerHandler.OnCustomerUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Customer)
-
-			ct.stats.Counter("Customer_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Customer", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*bookstore.Customer)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Customer)
+				ct.stats.Counter("Customer_Deleted_Events").Inc()
+				obj.Lock()
 				err = customerHandler.OnCustomerDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Customer.GetKey())
+				return nil
+			}
+			ct.runJob("Customer", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Customer watch channel", tp)
@@ -2834,9 +2807,7 @@ func (api *customerAPI) Create(obj *bookstore.Customer) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2852,9 +2823,7 @@ func (api *customerAPI) Update(obj *bookstore.Customer) error {
 		}
 
 		_, err = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -2869,7 +2838,8 @@ func (api *customerAPI) Delete(obj *bookstore.Customer) error {
 			return err
 		}
 
-		apicl.BookstoreV1().Customer().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.BookstoreV1().Customer().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -2913,6 +2883,7 @@ func (api *customerAPI) List() []*Customer {
 
 // Watch sets up a event handlers for Customer object
 func (api *customerAPI) Watch(handler CustomerHandler) error {
+	api.ct.startWorkerPool("Customer")
 	return api.ct.WatchCustomer(handler)
 }
 

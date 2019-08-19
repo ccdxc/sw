@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindSGPolicy(objmeta *api.ObjectMeta) (*netproto.SGPolicy,
 }
 
 // ListSGPolicys lists all SGPolicys in the mbus
-func (ms *MbusServer) ListSGPolicys(ctx context.Context) ([]*netproto.SGPolicy, error) {
+func (ms *MbusServer) ListSGPolicys(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.SGPolicy, error) {
 	var objlist []*netproto.SGPolicy
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("SGPolicy")
+	objs := ms.memDB.ListObjects("SGPolicy", filterFn)
 	for _, oo := range objs {
 		obj, err := SGPolicyFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type SGPolicyStatusReactor interface {
 	OnSGPolicyDeleteReq(nodeID string, objinfo *netproto.SGPolicy) error
 	OnSGPolicyOperUpdate(nodeID string, objinfo *netproto.SGPolicy) error
 	OnSGPolicyOperDelete(nodeID string, objinfo *netproto.SGPolicy) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // SGPolicyTopic is the SGPolicy topic on message bus
@@ -155,8 +155,16 @@ func (eh *SGPolicyTopic) GetSGPolicy(ctx context.Context, objmeta *api.ObjectMet
 func (eh *SGPolicyTopic) ListSGPolicys(ctx context.Context, objsel *api.ObjectMeta) (*netproto.SGPolicyList, error) {
 	var objlist netproto.SGPolicyList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("SGPolicy", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("SGPolicy")
+	objs := eh.server.memDB.ListObjects("SGPolicy", filterFn)
 	for _, oo := range objs {
 		obj, err := SGPolicyFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *SGPolicyTopic) ListSGPolicys(ctx context.Context, objsel *api.ObjectMe
 // WatchSGPolicys watches SGPolicys and sends streaming resp
 func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.SGPolicyApi_WatchSGPolicysServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("SGPolicy", watchChan)
-	defer eh.server.memDB.StopWatchObjects("SGPolicy", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("SGPolicy", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("SGPolicy", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("SGPolicy", &watcher)
+	defer eh.server.memDB.StopWatchObjects("SGPolicy", &watcher)
+
 	// get a list of all SGPolicys
 	objlist, err := eh.ListSGPolicys(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 	defer eh.server.Stats("SGPolicy", "ActiveWatch").Dec()
 	defer eh.server.Stats("SGPolicy", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all SGPolicys and send it out
 	for _, obj := range objlist.SGPolicys {
 		watchEvt := netproto.SGPolicyEvent{
 			EventType: api.EventType_CreateEvent,
 			SGPolicy:  *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 				EventType: etype,
 				SGPolicy:  *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()

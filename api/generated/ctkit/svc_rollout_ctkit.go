@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/shardworkers"
 )
 
 // Rollout is a wrapper object that implements additional functionality
@@ -77,7 +78,8 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*rollout.Rollout)
 		kind := "Rollout"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -157,7 +159,8 @@ func (ct *ctrlerCtx) handleRolloutEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*rollout.Rollout)
 		kind := "Rollout"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -169,63 +172,58 @@ func (ct *ctrlerCtx) handleRolloutEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Rollout{
-					Rollout:    *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Rollout_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*rollout.Rollout)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Rollout{
+						Rollout:    *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Rollout_Created_Events").Inc()
+					obj.Lock()
 					err = rolloutHandler.OnRolloutCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Rollout.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Rollout)
-
-				ct.stats.Counter("Rollout_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Rollout)
+					ct.stats.Counter("Rollout_Updated_Events").Inc()
+					obj.Lock()
 					err = rolloutHandler.OnRolloutUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Rollout)
-
-			ct.stats.Counter("Rollout_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Rollout", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*rollout.Rollout)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Rollout)
+				ct.stats.Counter("Rollout_Deleted_Events").Inc()
+				obj.Lock()
 				err = rolloutHandler.OnRolloutDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Rollout.GetKey())
+				return nil
+			}
+			ct.runJob("Rollout", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Rollout watch channel", tp)
@@ -419,9 +417,7 @@ func (api *rolloutAPI) Create(obj *rollout.Rollout) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -437,9 +433,7 @@ func (api *rolloutAPI) Update(obj *rollout.Rollout) error {
 		}
 
 		_, err = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -454,7 +448,8 @@ func (api *rolloutAPI) Delete(obj *rollout.Rollout) error {
 			return err
 		}
 
-		apicl.RolloutV1().Rollout().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.RolloutV1().Rollout().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -498,6 +493,7 @@ func (api *rolloutAPI) List() []*Rollout {
 
 // Watch sets up a event handlers for Rollout object
 func (api *rolloutAPI) Watch(handler RolloutHandler) error {
+	api.ct.startWorkerPool("Rollout")
 	return api.ct.WatchRollout(handler)
 }
 
@@ -560,7 +556,8 @@ func (ct *ctrlerCtx) handleRolloutActionEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*rollout.RolloutAction)
 		kind := "RolloutAction"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -640,7 +637,8 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallel(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*rollout.RolloutAction)
 		kind := "RolloutAction"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -652,63 +650,58 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallel(evt *kvstore.WatchEvent) e
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &RolloutAction{
-					RolloutAction: *eobj,
-					HandlerCtx:    nil,
-					ctrler:        ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("RolloutAction_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*rollout.RolloutAction)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &RolloutAction{
+						RolloutAction: *eobj,
+						HandlerCtx:    nil,
+						ctrler:        ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("RolloutAction_Created_Events").Inc()
+					obj.Lock()
 					err = rolloutactionHandler.OnRolloutActionCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.RolloutAction.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*RolloutAction)
-
-				ct.stats.Counter("RolloutAction_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*RolloutAction)
+					ct.stats.Counter("RolloutAction_Updated_Events").Inc()
+					obj.Lock()
 					err = rolloutactionHandler.OnRolloutActionUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*RolloutAction)
-
-			ct.stats.Counter("RolloutAction_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("RolloutAction", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*rollout.RolloutAction)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*RolloutAction)
+				ct.stats.Counter("RolloutAction_Deleted_Events").Inc()
+				obj.Lock()
 				err = rolloutactionHandler.OnRolloutActionDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.RolloutAction.GetKey())
+				return nil
+			}
+			ct.runJob("RolloutAction", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RolloutAction watch channel", tp)
@@ -902,9 +895,7 @@ func (api *rolloutactionAPI) Create(obj *rollout.RolloutAction) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -920,9 +911,7 @@ func (api *rolloutactionAPI) Update(obj *rollout.RolloutAction) error {
 		}
 
 		_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -937,7 +926,8 @@ func (api *rolloutactionAPI) Delete(obj *rollout.RolloutAction) error {
 			return err
 		}
 
-		apicl.RolloutV1().RolloutAction().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.RolloutV1().RolloutAction().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -981,6 +971,7 @@ func (api *rolloutactionAPI) List() []*RolloutAction {
 
 // Watch sets up a event handlers for RolloutAction object
 func (api *rolloutactionAPI) Watch(handler RolloutActionHandler) error {
+	api.ct.startWorkerPool("RolloutAction")
 	return api.ct.WatchRolloutAction(handler)
 }
 

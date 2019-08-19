@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/shardworkers"
 )
 
 // Endpoint is a wrapper object that implements additional functionality
@@ -77,7 +78,8 @@ func (ct *ctrlerCtx) handleEndpointEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*workload.Endpoint)
 		kind := "Endpoint"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -157,7 +159,8 @@ func (ct *ctrlerCtx) handleEndpointEventParallel(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*workload.Endpoint)
 		kind := "Endpoint"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -169,63 +172,58 @@ func (ct *ctrlerCtx) handleEndpointEventParallel(evt *kvstore.WatchEvent) error 
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Endpoint{
-					Endpoint:   *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Endpoint_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*workload.Endpoint)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Endpoint{
+						Endpoint:   *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Endpoint_Created_Events").Inc()
+					obj.Lock()
 					err = endpointHandler.OnEndpointCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Endpoint.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Endpoint)
-
-				ct.stats.Counter("Endpoint_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Endpoint)
+					ct.stats.Counter("Endpoint_Updated_Events").Inc()
+					obj.Lock()
 					err = endpointHandler.OnEndpointUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Endpoint)
-
-			ct.stats.Counter("Endpoint_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Endpoint", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*workload.Endpoint)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Endpoint)
+				ct.stats.Counter("Endpoint_Deleted_Events").Inc()
+				obj.Lock()
 				err = endpointHandler.OnEndpointDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Endpoint.GetKey())
+				return nil
+			}
+			ct.runJob("Endpoint", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Endpoint watch channel", tp)
@@ -419,9 +417,7 @@ func (api *endpointAPI) Create(obj *workload.Endpoint) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -437,9 +433,7 @@ func (api *endpointAPI) Update(obj *workload.Endpoint) error {
 		}
 
 		_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -454,7 +448,8 @@ func (api *endpointAPI) Delete(obj *workload.Endpoint) error {
 			return err
 		}
 
-		apicl.WorkloadV1().Endpoint().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.WorkloadV1().Endpoint().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -498,6 +493,7 @@ func (api *endpointAPI) List() []*Endpoint {
 
 // Watch sets up a event handlers for Endpoint object
 func (api *endpointAPI) Watch(handler EndpointHandler) error {
+	api.ct.startWorkerPool("Endpoint")
 	return api.ct.WatchEndpoint(handler)
 }
 
@@ -560,7 +556,8 @@ func (ct *ctrlerCtx) handleWorkloadEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*workload.Workload)
 		kind := "Workload"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -640,7 +637,8 @@ func (ct *ctrlerCtx) handleWorkloadEventParallel(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*workload.Workload)
 		kind := "Workload"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -652,63 +650,58 @@ func (ct *ctrlerCtx) handleWorkloadEventParallel(evt *kvstore.WatchEvent) error 
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Workload{
-					Workload:   *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Workload_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*workload.Workload)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Workload{
+						Workload:   *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Workload_Created_Events").Inc()
+					obj.Lock()
 					err = workloadHandler.OnWorkloadCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Workload.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Workload)
-
-				ct.stats.Counter("Workload_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Workload)
+					ct.stats.Counter("Workload_Updated_Events").Inc()
+					obj.Lock()
 					err = workloadHandler.OnWorkloadUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Workload)
-
-			ct.stats.Counter("Workload_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Workload", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*workload.Workload)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Workload)
+				ct.stats.Counter("Workload_Deleted_Events").Inc()
+				obj.Lock()
 				err = workloadHandler.OnWorkloadDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Workload.GetKey())
+				return nil
+			}
+			ct.runJob("Workload", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Workload watch channel", tp)
@@ -902,9 +895,7 @@ func (api *workloadAPI) Create(obj *workload.Workload) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -920,9 +911,7 @@ func (api *workloadAPI) Update(obj *workload.Workload) error {
 		}
 
 		_, err = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -937,7 +926,8 @@ func (api *workloadAPI) Delete(obj *workload.Workload) error {
 			return err
 		}
 
-		apicl.WorkloadV1().Workload().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.WorkloadV1().Workload().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -981,6 +971,7 @@ func (api *workloadAPI) List() []*Workload {
 
 // Watch sets up a event handlers for Workload object
 func (api *workloadAPI) Watch(handler WorkloadHandler) error {
+	api.ct.startWorkerPool("Workload")
 	return api.ct.WatchWorkload(handler)
 }
 

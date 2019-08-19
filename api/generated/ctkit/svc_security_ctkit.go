@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/shardworkers"
 )
 
 // SecurityGroup is a wrapper object that implements additional functionality
@@ -77,7 +78,8 @@ func (ct *ctrlerCtx) handleSecurityGroupEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*security.SecurityGroup)
 		kind := "SecurityGroup"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -157,7 +159,8 @@ func (ct *ctrlerCtx) handleSecurityGroupEventParallel(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*security.SecurityGroup)
 		kind := "SecurityGroup"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -169,63 +172,58 @@ func (ct *ctrlerCtx) handleSecurityGroupEventParallel(evt *kvstore.WatchEvent) e
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &SecurityGroup{
-					SecurityGroup: *eobj,
-					HandlerCtx:    nil,
-					ctrler:        ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("SecurityGroup_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*security.SecurityGroup)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &SecurityGroup{
+						SecurityGroup: *eobj,
+						HandlerCtx:    nil,
+						ctrler:        ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("SecurityGroup_Created_Events").Inc()
+					obj.Lock()
 					err = securitygroupHandler.OnSecurityGroupCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.SecurityGroup.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*SecurityGroup)
-
-				ct.stats.Counter("SecurityGroup_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*SecurityGroup)
+					ct.stats.Counter("SecurityGroup_Updated_Events").Inc()
+					obj.Lock()
 					err = securitygroupHandler.OnSecurityGroupUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*SecurityGroup)
-
-			ct.stats.Counter("SecurityGroup_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("SecurityGroup", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*security.SecurityGroup)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*SecurityGroup)
+				ct.stats.Counter("SecurityGroup_Deleted_Events").Inc()
+				obj.Lock()
 				err = securitygroupHandler.OnSecurityGroupDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.SecurityGroup.GetKey())
+				return nil
+			}
+			ct.runJob("SecurityGroup", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SecurityGroup watch channel", tp)
@@ -419,9 +417,7 @@ func (api *securitygroupAPI) Create(obj *security.SecurityGroup) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -437,9 +433,7 @@ func (api *securitygroupAPI) Update(obj *security.SecurityGroup) error {
 		}
 
 		_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -454,7 +448,8 @@ func (api *securitygroupAPI) Delete(obj *security.SecurityGroup) error {
 			return err
 		}
 
-		apicl.SecurityV1().SecurityGroup().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.SecurityV1().SecurityGroup().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -498,6 +493,7 @@ func (api *securitygroupAPI) List() []*SecurityGroup {
 
 // Watch sets up a event handlers for SecurityGroup object
 func (api *securitygroupAPI) Watch(handler SecurityGroupHandler) error {
+	api.ct.startWorkerPool("SecurityGroup")
 	return api.ct.WatchSecurityGroup(handler)
 }
 
@@ -560,7 +556,8 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*security.SGPolicy)
 		kind := "SGPolicy"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -640,7 +637,8 @@ func (ct *ctrlerCtx) handleSGPolicyEventParallel(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*security.SGPolicy)
 		kind := "SGPolicy"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -652,63 +650,58 @@ func (ct *ctrlerCtx) handleSGPolicyEventParallel(evt *kvstore.WatchEvent) error 
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &SGPolicy{
-					SGPolicy:   *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("SGPolicy_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*security.SGPolicy)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &SGPolicy{
+						SGPolicy:   *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("SGPolicy_Created_Events").Inc()
+					obj.Lock()
 					err = sgpolicyHandler.OnSGPolicyCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.SGPolicy.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*SGPolicy)
-
-				ct.stats.Counter("SGPolicy_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*SGPolicy)
+					ct.stats.Counter("SGPolicy_Updated_Events").Inc()
+					obj.Lock()
 					err = sgpolicyHandler.OnSGPolicyUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*SGPolicy)
-
-			ct.stats.Counter("SGPolicy_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("SGPolicy", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*security.SGPolicy)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*SGPolicy)
+				ct.stats.Counter("SGPolicy_Deleted_Events").Inc()
+				obj.Lock()
 				err = sgpolicyHandler.OnSGPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.SGPolicy.GetKey())
+				return nil
+			}
+			ct.runJob("SGPolicy", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SGPolicy watch channel", tp)
@@ -902,9 +895,7 @@ func (api *sgpolicyAPI) Create(obj *security.SGPolicy) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -920,9 +911,7 @@ func (api *sgpolicyAPI) Update(obj *security.SGPolicy) error {
 		}
 
 		_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -937,7 +926,8 @@ func (api *sgpolicyAPI) Delete(obj *security.SGPolicy) error {
 			return err
 		}
 
-		apicl.SecurityV1().SGPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.SecurityV1().SGPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -981,6 +971,7 @@ func (api *sgpolicyAPI) List() []*SGPolicy {
 
 // Watch sets up a event handlers for SGPolicy object
 func (api *sgpolicyAPI) Watch(handler SGPolicyHandler) error {
+	api.ct.startWorkerPool("SGPolicy")
 	return api.ct.WatchSGPolicy(handler)
 }
 
@@ -1043,7 +1034,8 @@ func (ct *ctrlerCtx) handleAppEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*security.App)
 		kind := "App"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1123,7 +1115,8 @@ func (ct *ctrlerCtx) handleAppEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*security.App)
 		kind := "App"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1135,63 +1128,58 @@ func (ct *ctrlerCtx) handleAppEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &App{
-					App:        *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("App_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*security.App)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &App{
+						App:        *eobj,
+						HandlerCtx: nil,
+						ctrler:     ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("App_Created_Events").Inc()
+					obj.Lock()
 					err = appHandler.OnAppCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.App.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*App)
-
-				ct.stats.Counter("App_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*App)
+					ct.stats.Counter("App_Updated_Events").Inc()
+					obj.Lock()
 					err = appHandler.OnAppUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*App)
-
-			ct.stats.Counter("App_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("App", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*security.App)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*App)
+				ct.stats.Counter("App_Deleted_Events").Inc()
+				obj.Lock()
 				err = appHandler.OnAppDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.App.GetKey())
+				return nil
+			}
+			ct.runJob("App", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on App watch channel", tp)
@@ -1385,9 +1373,7 @@ func (api *appAPI) Create(obj *security.App) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1403,9 +1389,7 @@ func (api *appAPI) Update(obj *security.App) error {
 		}
 
 		_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -1420,7 +1404,8 @@ func (api *appAPI) Delete(obj *security.App) error {
 			return err
 		}
 
-		apicl.SecurityV1().App().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.SecurityV1().App().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1464,6 +1449,7 @@ func (api *appAPI) List() []*App {
 
 // Watch sets up a event handlers for App object
 func (api *appAPI) Watch(handler AppHandler) error {
+	api.ct.startWorkerPool("App")
 	return api.ct.WatchApp(handler)
 }
 
@@ -1526,7 +1512,8 @@ func (ct *ctrlerCtx) handleFirewallProfileEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*security.FirewallProfile)
 		kind := "FirewallProfile"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1606,7 +1593,8 @@ func (ct *ctrlerCtx) handleFirewallProfileEventParallel(evt *kvstore.WatchEvent)
 		eobj := evt.Object.(*security.FirewallProfile)
 		kind := "FirewallProfile"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -1618,63 +1606,58 @@ func (ct *ctrlerCtx) handleFirewallProfileEventParallel(evt *kvstore.WatchEvent)
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &FirewallProfile{
-					FirewallProfile: *eobj,
-					HandlerCtx:      nil,
-					ctrler:          ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("FirewallProfile_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*security.FirewallProfile)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &FirewallProfile{
+						FirewallProfile: *eobj,
+						HandlerCtx:      nil,
+						ctrler:          ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("FirewallProfile_Created_Events").Inc()
+					obj.Lock()
 					err = firewallprofileHandler.OnFirewallProfileCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.FirewallProfile.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*FirewallProfile)
-
-				ct.stats.Counter("FirewallProfile_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*FirewallProfile)
+					ct.stats.Counter("FirewallProfile_Updated_Events").Inc()
+					obj.Lock()
 					err = firewallprofileHandler.OnFirewallProfileUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*FirewallProfile)
-
-			ct.stats.Counter("FirewallProfile_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("FirewallProfile", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*security.FirewallProfile)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*FirewallProfile)
+				ct.stats.Counter("FirewallProfile_Deleted_Events").Inc()
+				obj.Lock()
 				err = firewallprofileHandler.OnFirewallProfileDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.FirewallProfile.GetKey())
+				return nil
+			}
+			ct.runJob("FirewallProfile", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on FirewallProfile watch channel", tp)
@@ -1868,9 +1851,7 @@ func (api *firewallprofileAPI) Create(obj *security.FirewallProfile) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1886,9 +1867,7 @@ func (api *firewallprofileAPI) Update(obj *security.FirewallProfile) error {
 		}
 
 		_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -1903,7 +1882,8 @@ func (api *firewallprofileAPI) Delete(obj *security.FirewallProfile) error {
 			return err
 		}
 
-		apicl.SecurityV1().FirewallProfile().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.SecurityV1().FirewallProfile().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1947,6 +1927,7 @@ func (api *firewallprofileAPI) List() []*FirewallProfile {
 
 // Watch sets up a event handlers for FirewallProfile object
 func (api *firewallprofileAPI) Watch(handler FirewallProfileHandler) error {
+	api.ct.startWorkerPool("FirewallProfile")
 	return api.ct.WatchFirewallProfile(handler)
 }
 
@@ -2009,7 +1990,8 @@ func (ct *ctrlerCtx) handleCertificateEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*security.Certificate)
 		kind := "Certificate"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2089,7 +2071,8 @@ func (ct *ctrlerCtx) handleCertificateEventParallel(evt *kvstore.WatchEvent) err
 		eobj := evt.Object.(*security.Certificate)
 		kind := "Certificate"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2101,63 +2084,58 @@ func (ct *ctrlerCtx) handleCertificateEventParallel(evt *kvstore.WatchEvent) err
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &Certificate{
-					Certificate: *eobj,
-					HandlerCtx:  nil,
-					ctrler:      ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("Certificate_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*security.Certificate)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &Certificate{
+						Certificate: *eobj,
+						HandlerCtx:  nil,
+						ctrler:      ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("Certificate_Created_Events").Inc()
+					obj.Lock()
 					err = certificateHandler.OnCertificateCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.Certificate.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*Certificate)
-
-				ct.stats.Counter("Certificate_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*Certificate)
+					ct.stats.Counter("Certificate_Updated_Events").Inc()
+					obj.Lock()
 					err = certificateHandler.OnCertificateUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*Certificate)
-
-			ct.stats.Counter("Certificate_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("Certificate", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*security.Certificate)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*Certificate)
+				ct.stats.Counter("Certificate_Deleted_Events").Inc()
+				obj.Lock()
 				err = certificateHandler.OnCertificateDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.Certificate.GetKey())
+				return nil
+			}
+			ct.runJob("Certificate", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Certificate watch channel", tp)
@@ -2351,9 +2329,7 @@ func (api *certificateAPI) Create(obj *security.Certificate) error {
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2369,9 +2345,7 @@ func (api *certificateAPI) Update(obj *security.Certificate) error {
 		}
 
 		_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -2386,7 +2360,8 @@ func (api *certificateAPI) Delete(obj *security.Certificate) error {
 			return err
 		}
 
-		apicl.SecurityV1().Certificate().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.SecurityV1().Certificate().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -2430,6 +2405,7 @@ func (api *certificateAPI) List() []*Certificate {
 
 // Watch sets up a event handlers for Certificate object
 func (api *certificateAPI) Watch(handler CertificateHandler) error {
+	api.ct.startWorkerPool("Certificate")
 	return api.ct.WatchCertificate(handler)
 }
 
@@ -2492,7 +2468,8 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEvent(evt *kvstore.WatchEvent)
 		eobj := evt.Object.(*security.TrafficEncryptionPolicy)
 		kind := "TrafficEncryptionPolicy"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2572,7 +2549,8 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEventParallel(evt *kvstore.Wat
 		eobj := evt.Object.(*security.TrafficEncryptionPolicy)
 		kind := "TrafficEncryptionPolicy"
 
-		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
@@ -2584,63 +2562,58 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEventParallel(evt *kvstore.Wat
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				obj := &TrafficEncryptionPolicy{
-					TrafficEncryptionPolicy: *eobj,
-					HandlerCtx:              nil,
-					ctrler:                  ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("TrafficEncryptionPolicy_Created_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*security.TrafficEncryptionPolicy)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &TrafficEncryptionPolicy{
+						TrafficEncryptionPolicy: *eobj,
+						HandlerCtx:              nil,
+						ctrler:                  ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("TrafficEncryptionPolicy_Created_Events").Inc()
+					obj.Lock()
 					err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, eobj.GetKey())
+						ct.delObject(kind, obj.TrafficEncryptionPolicy.GetKey())
 					}
-				}()
-			} else {
-				obj := fobj.(*TrafficEncryptionPolicy)
-
-				ct.stats.Counter("TrafficEncryptionPolicy_Updated_Events").Inc()
-
-				// call the event handler
-				obj.Lock()
-				go func() {
+				} else {
+					obj := fobj.(*TrafficEncryptionPolicy)
+					ct.stats.Counter("TrafficEncryptionPolicy_Updated_Events").Inc()
+					obj.Lock()
 					err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					}
-				}()
-			}
-		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
-			if err != nil {
-				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				}
 				return err
 			}
-
-			obj := fobj.(*TrafficEncryptionPolicy)
-
-			ct.stats.Counter("TrafficEncryptionPolicy_Deleted_Events").Inc()
-
-			// Call the event reactor
-			obj.Lock()
-			go func() {
+			ct.runJob("TrafficEncryptionPolicy", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*security.TrafficEncryptionPolicy)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*TrafficEncryptionPolicy)
+				ct.stats.Counter("TrafficEncryptionPolicy_Deleted_Events").Inc()
+				obj.Lock()
 				err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-
-				ct.delObject(kind, eobj.GetKey())
-			}()
+				ct.delObject(kind, obj.TrafficEncryptionPolicy.GetKey())
+				return nil
+			}
+			ct.runJob("TrafficEncryptionPolicy", eobj, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on TrafficEncryptionPolicy watch channel", tp)
@@ -2834,9 +2807,7 @@ func (api *trafficencryptionpolicyAPI) Create(obj *security.TrafficEncryptionPol
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2852,9 +2823,7 @@ func (api *trafficencryptionpolicyAPI) Update(obj *security.TrafficEncryptionPol
 		}
 
 		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
@@ -2869,7 +2838,8 @@ func (api *trafficencryptionpolicyAPI) Delete(obj *security.TrafficEncryptionPol
 			return err
 		}
 
-		apicl.SecurityV1().TrafficEncryptionPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		return err
 	}
 
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -2913,6 +2883,7 @@ func (api *trafficencryptionpolicyAPI) List() []*TrafficEncryptionPolicy {
 
 // Watch sets up a event handlers for TrafficEncryptionPolicy object
 func (api *trafficencryptionpolicyAPI) Watch(handler TrafficEncryptionPolicyHandler) error {
+	api.ct.startWorkerPool("TrafficEncryptionPolicy")
 	return api.ct.WatchTrafficEncryptionPolicy(handler)
 }
 

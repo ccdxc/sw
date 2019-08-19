@@ -4,6 +4,7 @@ package statemgr
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -216,6 +217,8 @@ func (ws *WorkloadState) createEndpoints() error {
 	}
 
 	// loop over each interface of the workload
+	ws.stateMgr.Lock()
+	defer ws.stateMgr.Unlock()
 	for ii := range ws.Workload.Spec.Interfaces {
 		// check if we have a network for this workload
 		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
@@ -309,7 +312,7 @@ func (ws *WorkloadState) createEndpoints() error {
 		}
 
 		// see if we need to delete old endpoint
-		oldEP, err := ws.stateMgr.FindEndpoint(ws.Workload.Tenant, epName)
+		/*oldEP, err := ws.stateMgr.FindEndpoint(ws.Workload.Tenant, epName)
 		if err == nil {
 			_, isSpecDifferent := ref.ObjDiff(oldEP.Endpoint.Spec, epInfo.Spec)
 			_, isStatusDifferent := ref.ObjDiff(oldEP.Endpoint.Status, epInfo.Status)
@@ -332,6 +335,11 @@ func (ws *WorkloadState) createEndpoints() error {
 			if err != nil {
 				log.Errorf("Error creating endpoint. Err: %v", err)
 			}
+		}*/
+		// create new endpoint
+		err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
+		if err != nil {
+			log.Errorf("Error creating endpoint. Err: %v", err)
 		}
 	}
 
@@ -387,4 +395,46 @@ func (sm *Statemgr) FindWorkload(tenant, name string) (*WorkloadState, error) {
 	}
 
 	return WorkloadStateFromObj(obj)
+}
+
+//RemoveStaleEndpoints remove stale endpoints
+func (sm *Statemgr) RemoveStaleEndpoints() error {
+
+	workloads := sm.ctrler.Workload().List()
+	endpoints := sm.ctrler.Endpoint().List()
+
+	workloadMacPresent := func(wName, mac string) bool {
+		for _, workload := range workloads {
+			if workload.Name == wName {
+				for ii := range workload.Workload.Spec.Interfaces {
+					wmac, _ := strconv.ParseMacAddr(workload.Workload.Spec.Interfaces[ii].MACAddress)
+					if wmac == mac {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}
+
+	for _, ep := range endpoints {
+		splitString := strings.Split(ep.Name, "-")
+		if len(splitString) != 2 || !workloadMacPresent(splitString[0], splitString[1]) {
+			// delete the endpoint in api server
+			epInfo := workload.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Name:      ep.Name,
+					Tenant:    ep.Tenant,
+					Namespace: ep.Namespace,
+				},
+			}
+			err := sm.ctrler.Endpoint().Delete(&epInfo)
+			if err != nil {
+				log.Errorf("Error deleting the endpoint. Err: %v", err)
+			}
+		}
+	}
+
+	return nil
 }

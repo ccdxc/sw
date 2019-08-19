@@ -21,10 +21,12 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/shardworkers"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const maxApisrvWriteRetry = 5
+const numberOfShardWorkers = 64
 
 // db of objects for a kind
 type kindStore struct {
@@ -32,20 +34,21 @@ type kindStore struct {
 }
 
 type ctrlerCtx struct {
-	sync.Mutex                                // lock for the controller
-	name        string                        // controller name
-	rpcServer   *rpckit.RPCServer             // grpc server
-	apisrvURL   string                        // API server URL
-	logger      log.Logger                    // logger
-	resolver    resolver.Interface            // name resolver
-	stoped      bool                          // stop the watchers
-	watchers    map[string]kvstore.Watcher    // watchers
-	watchCancel map[string]context.CancelFunc // stop watcher
-	handlers    map[string]interface{}        // event handlers
-	waitGrp     sync.WaitGroup                // wait group to wait on all go routines to exit
-	kinds       map[string]*kindStore         // DB of all kinds
-	apicl       apiclient.Services            // api client to write
-	stats       tsdb.Obj                      // ctkit stats
+	sync.Mutex                                      // lock for the controller
+	name        string                              // controller name
+	rpcServer   *rpckit.RPCServer                   // grpc server
+	apisrvURL   string                              // API server URL
+	logger      log.Logger                          // logger
+	resolver    resolver.Interface                  // name resolver
+	stoped      bool                                // stop the watchers
+	watchers    map[string]kvstore.Watcher          // watchers
+	watchCancel map[string]context.CancelFunc       // stop watcher
+	handlers    map[string]interface{}              // event handlers
+	waitGrp     sync.WaitGroup                      // wait group to wait on all go routines to exit
+	kinds       map[string]*kindStore               // DB of all kinds
+	workPools   map[string]*shardworkers.WorkerPool // Worker pool for each kind all kinds
+	apicl       apiclient.Services                  // api client to write
+	stats       tsdb.Obj                            // ctkit stats
 	diagSvc     diag.Service
 }
 
@@ -125,9 +128,11 @@ func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, r
 		watchCancel: make(map[string]context.CancelFunc),
 		handlers:    make(map[string]interface{}),
 		kinds:       make(map[string]*kindStore),
+		workPools:   make(map[string]*shardworkers.WorkerPool),
 		stats:       tsdbObj,
 		diagSvc:     diagsvc.GetDiagnosticsService(name, utils.GetHostname(), diagnostics.ModuleStatus_Venice, logger),
 	}
+
 	if rpcServer != nil {
 		diag.RegisterService(rpcServer.GrpcServer, ctrl.diagSvc)
 	}
@@ -141,6 +146,11 @@ func (ct *ctrlerCtx) Stop() error {
 	// stop all watchers
 	for _, wt := range ct.watchers {
 		wt.Stop()
+	}
+
+	//Stop worker pools
+	for _, workerPool := range ct.workPools {
+		workerPool.Stop()
 	}
 
 	// cancel all watchers
@@ -158,6 +168,13 @@ func (ct *ctrlerCtx) Stop() error {
 	ct.waitGrp.Wait()
 
 	return nil
+}
+
+func (ct *ctrlerCtx) startWorkerPool(kind string) {
+	workerPool := shardworkers.NewWorkerPool(numberOfShardWorkers)
+	workerPool.Start()
+	ct.workPools[kind] = workerPool
+	return
 }
 
 func (ct *ctrlerCtx) apiClient() (apiclient.Services, error) {
@@ -203,6 +220,10 @@ func (ct *ctrlerCtx) addObject(kind, key string, obj runtime.Object) error {
 	ks.objects[key] = obj
 
 	return nil
+}
+
+func (ct *ctrlerCtx) runJob(pool string, workObj shardworkers.WorkObj, work shardworkers.WorkFunc) error {
+	return ct.workPools[pool].RunJob(workObj, work)
 }
 
 func (ct *ctrlerCtx) findObject(kind, key string) (runtime.Object, error) {

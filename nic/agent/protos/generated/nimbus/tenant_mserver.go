@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindTenant(objmeta *api.ObjectMeta) (*netproto.Tenant, err
 }
 
 // ListTenants lists all Tenants in the mbus
-func (ms *MbusServer) ListTenants(ctx context.Context) ([]*netproto.Tenant, error) {
+func (ms *MbusServer) ListTenants(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Tenant, error) {
 	var objlist []*netproto.Tenant
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Tenant")
+	objs := ms.memDB.ListObjects("Tenant", filterFn)
 	for _, oo := range objs {
 		obj, err := TenantFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type TenantStatusReactor interface {
 	OnTenantDeleteReq(nodeID string, objinfo *netproto.Tenant) error
 	OnTenantOperUpdate(nodeID string, objinfo *netproto.Tenant) error
 	OnTenantOperDelete(nodeID string, objinfo *netproto.Tenant) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // TenantTopic is the Tenant topic on message bus
@@ -155,8 +155,16 @@ func (eh *TenantTopic) GetTenant(ctx context.Context, objmeta *api.ObjectMeta) (
 func (eh *TenantTopic) ListTenants(ctx context.Context, objsel *api.ObjectMeta) (*netproto.TenantList, error) {
 	var objlist netproto.TenantList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("Tenant", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Tenant")
+	objs := eh.server.memDB.ListObjects("Tenant", filterFn)
 	for _, oo := range objs {
 		obj, err := TenantFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *TenantTopic) ListTenants(ctx context.Context, objsel *api.ObjectMeta) 
 // WatchTenants watches Tenants and sends streaming resp
 func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.TenantApi_WatchTenantsServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("Tenant", watchChan)
-	defer eh.server.memDB.StopWatchObjects("Tenant", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Tenant", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("Tenant", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("Tenant", &watcher)
+	defer eh.server.memDB.StopWatchObjects("Tenant", &watcher)
+
 	// get a list of all Tenants
 	objlist, err := eh.ListTenants(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 	defer eh.server.Stats("Tenant", "ActiveWatch").Dec()
 	defer eh.server.Stats("Tenant", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all Tenants and send it out
 	for _, obj := range objlist.Tenants {
 		watchEvt := netproto.TenantEvent{
 			EventType: api.EventType_CreateEvent,
 			Tenant:    *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Tenant to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending Tenant to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 				EventType: etype,
 				Tenant:    *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending Tenant to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending Tenant to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()

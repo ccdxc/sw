@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindSecurityProfile(objmeta *api.ObjectMeta) (*netproto.Se
 }
 
 // ListSecurityProfiles lists all SecurityProfiles in the mbus
-func (ms *MbusServer) ListSecurityProfiles(ctx context.Context) ([]*netproto.SecurityProfile, error) {
+func (ms *MbusServer) ListSecurityProfiles(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.SecurityProfile, error) {
 	var objlist []*netproto.SecurityProfile
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("SecurityProfile")
+	objs := ms.memDB.ListObjects("SecurityProfile", filterFn)
 	for _, oo := range objs {
 		obj, err := SecurityProfileFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type SecurityProfileStatusReactor interface {
 	OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // SecurityProfileTopic is the SecurityProfile topic on message bus
@@ -155,8 +155,16 @@ func (eh *SecurityProfileTopic) GetSecurityProfile(ctx context.Context, objmeta 
 func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel *api.ObjectMeta) (*netproto.SecurityProfileList, error) {
 	var objlist netproto.SecurityProfileList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("SecurityProfile", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("SecurityProfile")
+	objs := eh.server.memDB.ListObjects("SecurityProfile", filterFn)
 	for _, oo := range objs {
 		obj, err := SecurityProfileFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 // WatchSecurityProfiles watches SecurityProfiles and sends streaming resp
 func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, stream netproto.SecurityProfileApi_WatchSecurityProfilesServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("SecurityProfile", watchChan)
-	defer eh.server.memDB.StopWatchObjects("SecurityProfile", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("SecurityProfile", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("SecurityProfile", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("SecurityProfile", &watcher)
+	defer eh.server.memDB.StopWatchObjects("SecurityProfile", &watcher)
+
 	// get a list of all SecurityProfiles
 	objlist, err := eh.ListSecurityProfiles(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 	defer eh.server.Stats("SecurityProfile", "ActiveWatch").Dec()
 	defer eh.server.Stats("SecurityProfile", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all SecurityProfiles and send it out
 	for _, obj := range objlist.SecurityProfiles {
 		watchEvt := netproto.SecurityProfileEvent{
 			EventType:       api.EventType_CreateEvent,
 			SecurityProfile: *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 				EventType:       etype,
 				SecurityProfile: *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()

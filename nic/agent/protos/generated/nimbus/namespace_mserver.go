@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindNamespace(objmeta *api.ObjectMeta) (*netproto.Namespac
 }
 
 // ListNamespaces lists all Namespaces in the mbus
-func (ms *MbusServer) ListNamespaces(ctx context.Context) ([]*netproto.Namespace, error) {
+func (ms *MbusServer) ListNamespaces(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Namespace, error) {
 	var objlist []*netproto.Namespace
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Namespace")
+	objs := ms.memDB.ListObjects("Namespace", filterFn)
 	for _, oo := range objs {
 		obj, err := NamespaceFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type NamespaceStatusReactor interface {
 	OnNamespaceDeleteReq(nodeID string, objinfo *netproto.Namespace) error
 	OnNamespaceOperUpdate(nodeID string, objinfo *netproto.Namespace) error
 	OnNamespaceOperDelete(nodeID string, objinfo *netproto.Namespace) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // NamespaceTopic is the Namespace topic on message bus
@@ -155,8 +155,16 @@ func (eh *NamespaceTopic) GetNamespace(ctx context.Context, objmeta *api.ObjectM
 func (eh *NamespaceTopic) ListNamespaces(ctx context.Context, objsel *api.ObjectMeta) (*netproto.NamespaceList, error) {
 	var objlist netproto.NamespaceList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("Namespace", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Namespace")
+	objs := eh.server.memDB.ListObjects("Namespace", filterFn)
 	for _, oo := range objs {
 		obj, err := NamespaceFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *NamespaceTopic) ListNamespaces(ctx context.Context, objsel *api.Object
 // WatchNamespaces watches Namespaces and sends streaming resp
 func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto.NamespaceApi_WatchNamespacesServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("Namespace", watchChan)
-	defer eh.server.memDB.StopWatchObjects("Namespace", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Namespace", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("Namespace", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("Namespace", &watcher)
+	defer eh.server.memDB.StopWatchObjects("Namespace", &watcher)
+
 	// get a list of all Namespaces
 	objlist, err := eh.ListNamespaces(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 	defer eh.server.Stats("Namespace", "ActiveWatch").Dec()
 	defer eh.server.Stats("Namespace", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all Namespaces and send it out
 	for _, obj := range objlist.Namespaces {
 		watchEvt := netproto.NamespaceEvent{
 			EventType: api.EventType_CreateEvent,
 			Namespace: *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Namespace to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending Namespace to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 				EventType: etype,
 				Namespace: *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending Namespace to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending Namespace to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()

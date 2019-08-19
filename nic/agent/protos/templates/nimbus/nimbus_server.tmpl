@@ -8,15 +8,15 @@ Input file: {{.Name}}
 package nimbus
 
 import (
-	"context"
-	"errors"
+    "context"
+    "errors"
 
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
-	"github.com/pensando/sw/venice/utils/rpckit"
+    "github.com/pensando/sw/api"
+    "github.com/pensando/sw/nic/agent/protos/netproto"
+    "github.com/pensando/sw/venice/globals"
+    "github.com/pensando/sw/venice/utils/log"
+    memdb "github.com/pensando/sw/venice/utils/memdb2"
+    "github.com/pensando/sw/venice/utils/rpckit"
 )
 
 {{range .Services}}
@@ -28,39 +28,39 @@ import (
 
 // Find{{$crudObject}} finds an {{$crudObject}} by object meta
 func (ms *MbusServer) Find{{$crudObject}}(objmeta *api.ObjectMeta) (*netproto.{{$crudObject}}, error) {
-	// find the object
-	obj, err := ms.memDB.FindObject("{{$crudObject}}", objmeta)
-	if err != nil {
-		return nil, err
-	}
+    // find the object
+    obj, err := ms.memDB.FindObject("{{$crudObject}}", objmeta)
+    if err != nil {
+        return nil, err
+    }
 
-	return {{$crudObject}}FromObj(obj)
+    return {{$crudObject}}FromObj(obj)
 }
 
 // List{{$crudObject}}s lists all {{$crudObject}}s in the mbus
-func (ms *MbusServer) List{{$crudObject}}s(ctx context.Context) ([]*netproto.{{$crudObject}}, error) {
-	var objlist []*netproto.{{$crudObject}}
+func (ms *MbusServer) List{{$crudObject}}s(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.{{$crudObject}}, error) {
+    var objlist []*netproto.{{$crudObject}}
 
-	// walk all objects
-	objs := ms.memDB.ListObjects("{{$crudObject}}")
-	for _, oo := range objs {
-		obj, err := {{$crudObject}}FromObj(oo)
-		if err == nil {
-			objlist = append(objlist, obj)
-		}
-	}
+    // walk all objects
+    objs := ms.memDB.ListObjects("{{$crudObject}}", filterFn)
+    for _, oo := range objs {
+        obj, err := {{$crudObject}}FromObj(oo)
+        if err == nil {
+            objlist = append(objlist, obj)
+        }
+    }
 
-	return objlist, nil
+    return objlist, nil
 }
 
 // {{$crudObject}}StatusReactor is the reactor interface implemented by controllers
 type {{$crudObject}}StatusReactor interface {
-	On{{$crudObject}}CreateReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
-	On{{$crudObject}}UpdateReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
-	On{{$crudObject}}DeleteReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
-	On{{$crudObject}}OperUpdate(nodeID string, objinfo *netproto.{{$crudObject}}) error
-	On{{$crudObject}}OperDelete(nodeID string, objinfo *netproto.{{$crudObject}}) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+    On{{$crudObject}}CreateReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
+    On{{$crudObject}}UpdateReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
+    On{{$crudObject}}DeleteReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
+    On{{$crudObject}}OperUpdate(nodeID string, objinfo *netproto.{{$crudObject}}) error
+    On{{$crudObject}}OperDelete(nodeID string, objinfo *netproto.{{$crudObject}}) error
+    GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // {{$crudObject}}Topic is the {{$crudObject}} topic on message bus
@@ -72,201 +72,208 @@ type {{$crudObject}}Topic struct {
 
 // Add{{$crudObject}}Topic returns a network RPC server
 func Add{{$crudObject}}Topic(server *MbusServer, reactor {{$crudObject}}StatusReactor) (*{{$crudObject}}Topic, error) {
-	// RPC handler instance
-	handler := {{$crudObject}}Topic{
-		grpcServer: server.grpcServer,
-		server:     server,
-		statusReactor: reactor,
-	}
+    // RPC handler instance
+    handler := {{$crudObject}}Topic{
+        grpcServer: server.grpcServer,
+        server:     server,
+        statusReactor: reactor,
+    }
 
-	// register the RPC handlers
-	if server.grpcServer != nil {
-		netproto.Register{{$svcname}}Server(server.grpcServer.GrpcServer, &handler)
-	}
-	
-	return &handler, nil
+    // register the RPC handlers
+    if server.grpcServer != nil {
+        netproto.Register{{$svcname}}Server(server.grpcServer.GrpcServer, &handler)
+    }
+
+    return &handler, nil
 }
 
 // Create{{$crudObject}} creates {{$crudObject}}
 func (eh *{{$crudObject}}Topic) Create{{$crudObject}}(ctx context.Context, objinfo *netproto.{{$crudObject}}) (*netproto.{{$crudObject}}, error) {
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received Create{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
+    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+    log.Infof("Received Create{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
 
-	// trigger callbacks. we allow creates to happen before it exists in memdb
-	if eh.statusReactor != nil {
-		eh.statusReactor.On{{$crudObject}}CreateReq(nodeID, objinfo)
-	}
+    // trigger callbacks. we allow creates to happen before it exists in memdb
+    if eh.statusReactor != nil {
+        eh.statusReactor.On{{$crudObject}}CreateReq(nodeID, objinfo)
+    }
 
-	// increment stats
-	eh.server.Stats("{{$crudObject}}", "AgentCreate").Inc()
+    // increment stats
+    eh.server.Stats("{{$crudObject}}", "AgentCreate").Inc()
 
-	return objinfo, nil
+    return objinfo, nil
 }
 
 // Update{{$crudObject}} updates {{$crudObject}}
 func (eh *{{$crudObject}}Topic) Update{{$crudObject}}(ctx context.Context, objinfo *netproto.{{$crudObject}}) (*netproto.{{$crudObject}}, error) {
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received Update{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
+    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+    log.Infof("Received Update{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
 
-	// incr stats
-	eh.server.Stats("{{$crudObject}}", "AgentUpdate").Inc()
+    // incr stats
+    eh.server.Stats("{{$crudObject}}", "AgentUpdate").Inc()
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.On{{$crudObject}}UpdateReq(nodeID, objinfo)
-	}
+    // trigger callbacks
+    if eh.statusReactor != nil {
+        eh.statusReactor.On{{$crudObject}}UpdateReq(nodeID, objinfo)
+    }
 
-	return objinfo, nil
+    return objinfo, nil
 }
 
 // Delete{{$crudObject}} deletes an {{$crudObject}}
 func (eh *{{$crudObject}}Topic) Delete{{$crudObject}}(ctx context.Context, objinfo *netproto.{{$crudObject}}) (*netproto.{{$crudObject}}, error) {
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received Delete{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
+    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+    log.Infof("Received Delete{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
 
-	// incr stats
-	eh.server.Stats("{{$crudObject}}", "AgentDelete").Inc()
+    // incr stats
+    eh.server.Stats("{{$crudObject}}", "AgentDelete").Inc()
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.On{{$crudObject}}DeleteReq(nodeID, objinfo)
-	}
+    // trigger callbacks
+    if eh.statusReactor != nil {
+        eh.statusReactor.On{{$crudObject}}DeleteReq(nodeID, objinfo)
+    }
 
-	return objinfo, nil
+    return objinfo, nil
 }
 
 // {{$crudObject}}FromObj converts memdb object to {{$crudObject}}
 func {{$crudObject}}FromObj(obj memdb.Object) (*netproto.{{$crudObject}}, error) {
-	switch obj.(type) {
-	case *netproto.{{$crudObject}}:
-		eobj := obj.(*netproto.{{$crudObject}})
-		return eobj, nil
-	default:
-		return nil, ErrIncorrectObjectType
-	}
+    switch obj.(type) {
+    case *netproto.{{$crudObject}}:
+        eobj := obj.(*netproto.{{$crudObject}})
+        return eobj, nil
+    default:
+        return nil, ErrIncorrectObjectType
+    }
 }
 
 // Get{{$crudObject}} returns a specific {{$crudObject}}
 func (eh *{{$crudObject}}Topic) Get{{$crudObject}}(ctx context.Context, objmeta *api.ObjectMeta) (*netproto.{{$crudObject}}, error) {
-	// find the object
-	obj, err := eh.server.memDB.FindObject("{{$crudObject}}", objmeta)
-	if err != nil {
-		return nil, err
-	}
+    // find the object
+    obj, err := eh.server.memDB.FindObject("{{$crudObject}}", objmeta)
+    if err != nil {
+        return nil, err
+    }
 
-	return {{$crudObject}}FromObj(obj)
+    return {{$crudObject}}FromObj(obj)
 }
 
 // List{{$crudObject}}s lists all {{$crudObject}}s matching object selector
 func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel *api.ObjectMeta) (*netproto.{{$crudObject}}List, error) {
-	var objlist netproto.{{$crudObject}}List
+    var objlist netproto.{{$crudObject}}List
 
-	// walk all objects
-	objs := eh.server.memDB.ListObjects("{{$crudObject}}")
-	for _, oo := range objs {
-		obj, err := {{$crudObject}}FromObj(oo)
-		if err == nil {
-			objlist.{{$crudObject}}s = append(objlist.{{$crudObject}}s, obj)
-		}
-	}
+    filterFn := func(memdb.Object) bool {
+            return true
+    }
 
-	return &objlist, nil
+    if  eh.statusReactor != nil {
+        filterFn = eh.statusReactor.GetWatchFilter("{{$crudObject}}", objsel)
+    }
+
+    // walk all objects
+    objs := eh.server.memDB.ListObjects("{{$crudObject}}", filterFn)
+    for _, oo := range objs {
+        obj, err := {{$crudObject}}FromObj(oo)
+        if err == nil {
+            objlist.{{$crudObject}}s = append(objlist.{{$crudObject}}s, obj)
+        }
+    }
+
+    return &objlist, nil
 }
 
 // Watch{{$crudObject}}s watches {{$crudObject}}s and sends streaming resp
 func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, stream netproto.{{$svcname}}_Watch{{$crudObject}}sServer) error {
-	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("{{$crudObject}}", watchChan)
-	defer eh.server.memDB.StopWatchObjects("{{$crudObject}}", watchChan)
+    // watch for changes
+    watcher := memdb.Watcher{}
+    watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+    defer close(watcher.Channel)
 
-     filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
-	if  eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("{{$crudObject}}", ometa)
-	}
-	// get a list of all {{$crudObject}}s
-	objlist, err := eh.List{{$crudObject}}s(context.Background(), ometa)
-	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
-		return err
-	}
+    if  eh.statusReactor != nil {
+        watcher.Filter = eh.statusReactor.GetWatchFilter("{{$crudObject}}", ometa)
+    } else {
+        watcher.Filter = func(memdb.Object) bool {
+            return true
+        }
+    }
 
-	// increment stats
-	eh.server.Stats("{{$crudObject}}", "ActiveWatch").Inc()
-	eh.server.Stats("{{$crudObject}}", "WatchConnect").Inc()
-	defer eh.server.Stats("{{$crudObject}}", "ActiveWatch").Dec()
-	defer eh.server.Stats("{{$crudObject}}", "WatchDisconnect").Inc()
+    ctx := stream.Context()
+    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+    watcher.Name = nodeID
+    eh.server.memDB.WatchObjects("{{$crudObject}}", &watcher)
+    defer eh.server.memDB.StopWatchObjects("{{$crudObject}}", &watcher)
 
-	ctx := stream.Context()
+    // get a list of all {{$crudObject}}s
+    objlist, err := eh.List{{$crudObject}}s(context.Background(), ometa)
+    if err != nil {
+        log.Errorf("Error getting a list of objects. Err: %v", err)
+        return err
+    }
 
-	// walk all {{$crudObject}}s and send it out
-	for _, obj := range objlist.{{$crudObject}}s {
-		watchEvt := netproto.{{$crudObject}}Event{
-			EventType: api.EventType_CreateEvent,
-			{{$crudObject}}:  *obj,
-		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
-		}
-	}
+    // increment stats
+    eh.server.Stats("{{$crudObject}}", "ActiveWatch").Inc()
+    eh.server.Stats("{{$crudObject}}", "WatchConnect").Inc()
+    defer eh.server.Stats("{{$crudObject}}", "ActiveWatch").Dec()
+    defer eh.server.Stats("{{$crudObject}}", "WatchDisconnect").Inc()
 
-	// loop forever on watch channel
-	for {
-		select {
-		// read from channel
-		case evt, ok := <-watchChan:
-			if !ok {
-				log.Errorf("Error reading from channel. Closing watch")
-				return errors.New("Error reading from channel")
-			}
 
-			// convert the events
-			var etype api.EventType
-			switch evt.EventType {
-			case memdb.CreateEvent:
-				etype = api.EventType_CreateEvent
-			case memdb.UpdateEvent:
-				etype = api.EventType_UpdateEvent
-			case memdb.DeleteEvent:
-				etype = api.EventType_DeleteEvent
-			}
 
-			// get the object
-			obj, err := {{$crudObject}}FromObj(evt.Obj)
-			if err != nil {
-				return err
-			}
+    // walk all {{$crudObject}}s and send it out
+    for _, obj := range objlist.{{$crudObject}}s {
+        watchEvt := netproto.{{$crudObject}}Event{
+            EventType: api.EventType_CreateEvent,
+            {{$crudObject}}:  *obj,
+        }
+        err = stream.Send(&watchEvt)
+        if err != nil {
+            log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
+            return err
+        }
+    }
 
-			// convert to netproto format
-			watchEvt := netproto.{{$crudObject}}Event{
-				EventType: etype,
-				{{$crudObject}}:  *obj,
-			}
-            if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
-			}
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
+    // loop forever on watch channel
+    for {
+        select {
+        // read from channel
+        case evt, ok := <-watcher.Channel:
+            if !ok {
+                log.Errorf("Error reading from channel. Closing watch")
+                return errors.New("Error reading from channel")
+            }
 
-	// done
+            // convert the events
+            var etype api.EventType
+            switch evt.EventType {
+            case memdb.CreateEvent:
+                etype = api.EventType_CreateEvent
+            case memdb.UpdateEvent:
+                etype = api.EventType_UpdateEvent
+            case memdb.DeleteEvent:
+                etype = api.EventType_DeleteEvent
+            }
+
+            // get the object
+            obj, err := {{$crudObject}}FromObj(evt.Obj)
+            if err != nil {
+                return err
+            }
+
+            // convert to netproto format
+            watchEvt := netproto.{{$crudObject}}Event{
+                EventType: etype,
+                {{$crudObject}}:  *obj,
+            }
+            // streaming send
+            err = stream.Send(&watchEvt)
+            if err != nil {
+                log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
+                return err
+            }
+        case <-ctx.Done():
+            return ctx.Err()
+        }
+    }
+
+    // done
 }
 
 
@@ -297,26 +304,26 @@ func (eh *{{$crudObject}}Topic) update{{$crudObject}}Oper(oper *netproto.{{$crud
 }
 
 func (eh *{{$crudObject}}Topic) {{$crudObject}}OperUpdate(stream netproto.{{$crudObject}}Api_{{$crudObject}}OperUpdateServer) error {
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+    ctx := stream.Context()
+    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
-	for {
-		oper, err := stream.Recv()
-		if err == io.EOF {
-			log.Errorf("{{$crudObject}}OperUpdate stream ended. closing..")
-			return stream.SendAndClose(&api.TypeMeta{})
-		} else if err != nil {
-			log.Errorf("Error receiving from {{$crudObject}}OperUpdate stream. Err: %v", err)
-			return err
-		}
+    for {
+        oper, err := stream.Recv()
+        if err == io.EOF {
+            log.Errorf("{{$crudObject}}OperUpdate stream ended. closing..")
+            return stream.SendAndClose(&api.TypeMeta{})
+        } else if err != nil {
+            log.Errorf("Error receiving from {{$crudObject}}OperUpdate stream. Err: %v", err)
+            return err
+        }
 
-		err = eh.update{{$crudObject}}Oper(oper, nodeID)
-		if err != nil {
-			log.Errorf("Error updating {{$crudObject}} oper state. Err: %v", err)
-		}
-	}
+        err = eh.update{{$crudObject}}Oper(oper, nodeID)
+        if err != nil {
+            log.Errorf("Error updating {{$crudObject}} oper state. Err: %v", err)
+        }
+    }
 }
 
-       {{end}}       
+       {{end}}
     {{end}}
 {{end}}

@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindSecurityGroup(objmeta *api.ObjectMeta) (*netproto.Secu
 }
 
 // ListSecurityGroups lists all SecurityGroups in the mbus
-func (ms *MbusServer) ListSecurityGroups(ctx context.Context) ([]*netproto.SecurityGroup, error) {
+func (ms *MbusServer) ListSecurityGroups(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.SecurityGroup, error) {
 	var objlist []*netproto.SecurityGroup
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("SecurityGroup")
+	objs := ms.memDB.ListObjects("SecurityGroup", filterFn)
 	for _, oo := range objs {
 		obj, err := SecurityGroupFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type SecurityGroupStatusReactor interface {
 	OnSecurityGroupDeleteReq(nodeID string, objinfo *netproto.SecurityGroup) error
 	OnSecurityGroupOperUpdate(nodeID string, objinfo *netproto.SecurityGroup) error
 	OnSecurityGroupOperDelete(nodeID string, objinfo *netproto.SecurityGroup) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // SecurityGroupTopic is the SecurityGroup topic on message bus
@@ -155,8 +155,16 @@ func (eh *SecurityGroupTopic) GetSecurityGroup(ctx context.Context, objmeta *api
 func (eh *SecurityGroupTopic) ListSecurityGroups(ctx context.Context, objsel *api.ObjectMeta) (*netproto.SecurityGroupList, error) {
 	var objlist netproto.SecurityGroupList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("SecurityGroup", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("SecurityGroup")
+	objs := eh.server.memDB.ListObjects("SecurityGroup", filterFn)
 	for _, oo := range objs {
 		obj, err := SecurityGroupFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *SecurityGroupTopic) ListSecurityGroups(ctx context.Context, objsel *ap
 // WatchSecurityGroups watches SecurityGroups and sends streaming resp
 func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream netproto.SecurityGroupApi_WatchSecurityGroupsServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("SecurityGroup", watchChan)
-	defer eh.server.memDB.StopWatchObjects("SecurityGroup", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("SecurityGroup", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("SecurityGroup", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("SecurityGroup", &watcher)
+	defer eh.server.memDB.StopWatchObjects("SecurityGroup", &watcher)
+
 	// get a list of all SecurityGroups
 	objlist, err := eh.ListSecurityGroups(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 	defer eh.server.Stats("SecurityGroup", "ActiveWatch").Dec()
 	defer eh.server.Stats("SecurityGroup", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all SecurityGroups and send it out
 	for _, obj := range objlist.SecurityGroups {
 		watchEvt := netproto.SecurityGroupEvent{
 			EventType:     api.EventType_CreateEvent,
 			SecurityGroup: *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 				EventType:     etype,
 				SecurityGroup: *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()

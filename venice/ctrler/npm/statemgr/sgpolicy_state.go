@@ -141,37 +141,20 @@ func (sgp *SgpolicyState) GetKey() string {
 
 // Write writes the object to api server
 func (sgp *SgpolicyState) Write() error {
+
 	sgp.SGPolicy.Lock()
 	defer sgp.SGPolicy.Unlock()
 
-	// Consolidate the NodeVersions
 	prop := &sgp.SGPolicy.Status.PropagationStatus
-	prop.GenerationID = sgp.SGPolicy.GenerationID
-	prop.Updated = 0
-	prop.Pending = 0
-	prop.MinVersion = ""
-	pendingNodes := []string{}
-	for nid, ver := range sgp.NodeVersions {
-		if ver == prop.GenerationID {
-			prop.Updated++
-		} else {
-			prop.Pending++
-			pendingNodes = append(pendingNodes, nid)
-			if prop.MinVersion == "" || versionToInt(ver) < versionToInt(prop.MinVersion) {
-				prop.MinVersion = ver
-			}
-		}
+	newProp := sgp.stateMgr.updatePropogationStatus(sgp.SGPolicy.GenerationID, prop, sgp.NodeVersions)
+
+	//Do write only if changed
+	if sgp.stateMgr.propgatationStatusDifferent(prop, newProp) {
+		sgp.SGPolicy.Status.PropagationStatus = *newProp
+		return sgp.SGPolicy.Write()
 	}
 
-	// set status
-	if prop.Pending == 0 {
-		prop.Status = fmt.Sprintf("Propagation Complete")
-	} else {
-		prop.Status = fmt.Sprintf("Propagation pending on: %s", strings.Join(pendingNodes, ", "))
-		prop.PendingNaples = pendingNodes
-	}
-
-	return sgp.SGPolicy.Write()
+	return nil
 }
 
 // Delete cleans up all state associated with the sg

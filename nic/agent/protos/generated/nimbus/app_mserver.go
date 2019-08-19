@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindApp(objmeta *api.ObjectMeta) (*netproto.App, error) {
 }
 
 // ListApps lists all Apps in the mbus
-func (ms *MbusServer) ListApps(ctx context.Context) ([]*netproto.App, error) {
+func (ms *MbusServer) ListApps(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.App, error) {
 	var objlist []*netproto.App
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("App")
+	objs := ms.memDB.ListObjects("App", filterFn)
 	for _, oo := range objs {
 		obj, err := AppFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type AppStatusReactor interface {
 	OnAppDeleteReq(nodeID string, objinfo *netproto.App) error
 	OnAppOperUpdate(nodeID string, objinfo *netproto.App) error
 	OnAppOperDelete(nodeID string, objinfo *netproto.App) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // AppTopic is the App topic on message bus
@@ -155,8 +155,16 @@ func (eh *AppTopic) GetApp(ctx context.Context, objmeta *api.ObjectMeta) (*netpr
 func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ObjectMeta) (*netproto.AppList, error) {
 	var objlist netproto.AppList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("App", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("App")
+	objs := eh.server.memDB.ListObjects("App", filterFn)
 	for _, oo := range objs {
 		obj, err := AppFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ObjectMeta) (*netp
 // WatchApps watches Apps and sends streaming resp
 func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_WatchAppsServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("App", watchChan)
-	defer eh.server.memDB.StopWatchObjects("App", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("App", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("App", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("App", &watcher)
+	defer eh.server.memDB.StopWatchObjects("App", &watcher)
+
 	// get a list of all Apps
 	objlist, err := eh.ListApps(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 	defer eh.server.Stats("App", "ActiveWatch").Dec()
 	defer eh.server.Stats("App", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all Apps and send it out
 	for _, obj := range objlist.Apps {
 		watchEvt := netproto.AppEvent{
 			EventType: api.EventType_CreateEvent,
 			App:       *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending App to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending App to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 				EventType: etype,
 				App:       *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending App to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending App to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()

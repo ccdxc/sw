@@ -5,6 +5,7 @@ package statemgr
 import (
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -15,7 +16,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -43,6 +44,7 @@ type Topics struct {
 
 // Statemgr is the object state manager
 type Statemgr struct {
+	sync.Mutex
 	mbus                 *nimbus.MbusServer // nimbus server
 	periodicUpdaterQueue chan updatable     // queue for periodically writing items back to apiserver
 	ctrler               ctkit.Controller   // controller instance
@@ -108,6 +110,9 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	for _, o := range options {
 		o(statemgr)
 	}
+
+	//Remove state endpoints before we start watching.
+	statemgr.RemoveStaleEndpoints()
 
 	// newPeriodicUpdater creates a new go subroutines
 	// Given that objects returned by `NewStatemgr` should live for the duration
@@ -210,8 +215,9 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 }
 
 // runPeriodicUpdater runs periodic and write objects back
+
 func runPeriodicUpdater(queue chan updatable) {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	pending := make(map[string]updatable)
 	shouldExit := false
 	for {
@@ -259,18 +265,18 @@ func agentObjectMeta(vmeta api.ObjectMeta) api.ObjectMeta {
 }
 
 // GetWatchFilter returns a filter function to filter Watch Events
-func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool {
+func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool {
 	switch kind {
 	case "Endpoint":
 		objMac, err := net.ParseMAC(ometa.Name)
 		name := objMac.String()
 		if err != nil {
 			sm.logger.Infof("object meta does not have a valid mac - returning default func [%+v]", ometa)
-			return func(api.EventType, memdb.Object) bool {
+			return func(memdb.Object) bool {
 				return true
 			}
 		}
-		return func(evType api.EventType, obj memdb.Object) bool {
+		return func(obj memdb.Object) bool {
 			ep := obj.(*netproto.Endpoint)
 			if inmac, err := net.ParseMAC(ep.Spec.NodeUUID); err == nil {
 				return inmac.String() == name
@@ -278,7 +284,7 @@ func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.
 			return true
 		}
 	}
-	return func(api.EventType, memdb.Object) bool {
+	return func(memdb.Object) bool {
 		return true
 	}
 }

@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindEndpoint(objmeta *api.ObjectMeta) (*netproto.Endpoint,
 }
 
 // ListEndpoints lists all Endpoints in the mbus
-func (ms *MbusServer) ListEndpoints(ctx context.Context) ([]*netproto.Endpoint, error) {
+func (ms *MbusServer) ListEndpoints(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Endpoint, error) {
 	var objlist []*netproto.Endpoint
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Endpoint")
+	objs := ms.memDB.ListObjects("Endpoint", filterFn)
 	for _, oo := range objs {
 		obj, err := EndpointFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type EndpointStatusReactor interface {
 	OnEndpointDeleteReq(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperUpdate(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoint) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // EndpointTopic is the Endpoint topic on message bus
@@ -155,8 +155,16 @@ func (eh *EndpointTopic) GetEndpoint(ctx context.Context, objmeta *api.ObjectMet
 func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ObjectMeta) (*netproto.EndpointList, error) {
 	var objlist netproto.EndpointList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("Endpoint", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Endpoint")
+	objs := eh.server.memDB.ListObjects("Endpoint", filterFn)
 	for _, oo := range objs {
 		obj, err := EndpointFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ObjectMe
 // WatchEndpoints watches Endpoints and sends streaming resp
 func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.EndpointApi_WatchEndpointsServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("Endpoint", watchChan)
-	defer eh.server.memDB.StopWatchObjects("Endpoint", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Endpoint", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("Endpoint", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("Endpoint", &watcher)
+	defer eh.server.memDB.StopWatchObjects("Endpoint", &watcher)
+
 	// get a list of all Endpoints
 	objlist, err := eh.ListEndpoints(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 	defer eh.server.Stats("Endpoint", "ActiveWatch").Dec()
 	defer eh.server.Stats("Endpoint", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all Endpoints and send it out
 	for _, obj := range objlist.Endpoints {
 		watchEvt := netproto.EndpointEvent{
 			EventType: api.EventType_CreateEvent,
 			Endpoint:  *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Endpoint to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending Endpoint to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 				EventType: etype,
 				Endpoint:  *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending Endpoint to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending Endpoint to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()

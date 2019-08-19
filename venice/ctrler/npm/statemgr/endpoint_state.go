@@ -317,23 +317,24 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	ns, err := sm.FindNetwork(epinfo.Tenant, eps.Endpoint.Status.Network)
 	if err != nil {
 		log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
-		return err
-	}
-	ns.Lock()
-	defer ns.Unlock()
+	} else {
+		ns.Lock()
+		defer ns.Unlock()
+		// free the IPv4 address
+		if eps.Endpoint.Status.IPv4Address != "" {
+			err = ns.freeIPv4Addr(eps.Endpoint.Status.IPv4Address)
+			if err != nil {
+				log.Errorf("Error freeing the endpoint address. Err: %v", err)
+			}
 
-	// free the IPv4 address
-	if eps.Endpoint.Status.IPv4Address != "" {
-		err = ns.freeIPv4Addr(eps.Endpoint.Status.IPv4Address)
-		if err != nil {
-			log.Errorf("Error freeing the endpoint address. Err: %v", err)
+			// write the modified network state to api server
+			err = ns.Network.Write()
+			if err != nil {
+				log.Errorf("Error writing the network object. Err: %v", err)
+			}
 		}
-
-		// write the modified network state to api server
-		err = ns.Network.Write()
-		if err != nil {
-			log.Errorf("Error writing the network object. Err: %v", err)
-		}
+		// remove it from the database
+		delete(ns.endpointDB, eps.endpointKey())
 	}
 
 	// delete the endpoint
@@ -341,8 +342,6 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	if err != nil {
 		log.Errorf("Error deleting the endpoint{%+v}. Err: %v", eps, err)
 	}
-	// remove it from the database
-	delete(ns.endpointDB, eps.endpointKey())
 	sm.mbus.DeleteObject(convertEndpoint(&eps.Endpoint.Endpoint))
 
 	log.Infof("Deleted endpoint: %+v", eps)

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -83,6 +83,11 @@ func (ms *MbusServer) Stats(kind, cname string) api.Counter {
 // DumpDatabase dumps the entire database as json
 func (ms *MbusServer) DumpDatabase() ([]byte, error) {
 	return ms.memDB.MarshalJSON()
+}
+
+// GetLastObjectForWatcher dumps the entire database as json
+func (ms *MbusServer) GetLastObjectForWatcher(kind string, watchName string, event memdb.EventType) (memdb.Object, error) {
+	return ms.memDB.GetLastObjectForWatcher(kind, watchName, event)
 }
 
 // NewMbusServer creates a new instance of message bus server

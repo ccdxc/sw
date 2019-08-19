@@ -142,6 +142,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 	// verify network is deleted from the db
 	_, err = stateMgr.FindNetwork("default", "default")
 	Assert(t, (err != nil), "Network still found after its deleted")
+
 }
 
 func TestNetworkList(t *testing.T) {
@@ -249,6 +250,105 @@ func TestEndpointCreateDelete(t *testing.T) {
 	// delete the second endpoint
 	err = stateMgr.ctrler.Endpoint().Delete(&newEP)
 	Assert(t, (err == nil), "Error deleting the endpoint", newEP)
+
+}
+
+func TestEndpointStaleDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testSmartNIC",
+		},
+		Spec: cluster.SmartNICSpec{},
+		Status: cluster.SmartNICStatus{
+			PrimaryMAC: "0001.0203.0405",
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testHost",
+		},
+		Spec: cluster.HostSpec{
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "0001.0203.0405",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&host)
+	AssertOk(t, err, "Could not create the host")
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "0001.0203.0405",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create the workload
+	err = stateMgr.ctrler.Workload().Create(&wr)
+	AssertOk(t, err, "Could not create the workload")
+
+	// verify we can find the network for the workload
+	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
+	AssertOk(t, err, "Could not find the network")
+
+	// verify we can find the endpoint associated with the workload
+	foundEp, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
+	Assert(t, ok, "Could not find the endpoint", "testWorkload-0001.0203.0405")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	//Delete a a host
+	err = stateMgr.ctrler.Host().Delete(&host)
+	//Assert(t, err == nil, "Error deleting the host")
+
+	//obj, err1 := stateMgr.FindObject("Network", "default", "default", "Network-Vlan-1")
+	//Assert(t, err1 == nil, "Error finding the network")
+	err = stateMgr.ctrler.Network().Delete(&nw.Network.Network)
+	Assert(t, err == nil, "Error deleting the network")
+
+	// delete the workload and it will fail to trigger endpoint delete.
+	err = stateMgr.ctrler.Workload().Delete(&wr)
+	Assert(t, err == nil, "Error deleting the workload")
+
+	//stateMgr.ctrler.Endpoint.Workload.Delete()
+	err = stateMgr.RemoveStaleEndpoints()
+	Assert(t, (err == nil), "Network still found after its deleted")
+
+	// verify endpoint is gone from the database
+	obj1, _ := stateMgr.FindEndpoint("", "testWorkload-0001.0203.0405")
+	Assert(t, (obj1 == nil), "Deleted endpoint still found in network db", "testWorkload-0001.0203.0405")
 }
 
 func TestEndpointCreateFailure(t *testing.T) {
@@ -1358,12 +1458,12 @@ func TestWatchFilter(t *testing.T) {
 	obj1 := netproto.Network{}
 	obj1.Name = "xyz"
 	obj2 := netproto.Endpoint{}
-	Assert(t, filterFn1(api.EventType_CreateEvent, &obj1), "expecting filter to pass")
-	Assert(t, filterFn2(api.EventType_CreateEvent, &obj2), "expecting filter to pass")
+	Assert(t, filterFn1(&obj1), "expecting filter to pass")
+	Assert(t, filterFn2(&obj2), "expecting filter to pass")
 	obj2.Spec.NodeUUID = "0000.0000.0001"
-	Assert(t, filterFn2(api.EventType_CreateEvent, &obj2), "expecting filter to pass")
+	Assert(t, filterFn2(&obj2), "expecting filter to pass")
 	obj2.Spec.NodeUUID = "0000.0000.0002"
-	Assert(t, filterFn2(api.EventType_CreateEvent, &obj2) == false, "expecting filter to fail")
+	Assert(t, filterFn2(&obj2) == false, "expecting filter to fail")
 }
 
 func TestMain(m *testing.M) {

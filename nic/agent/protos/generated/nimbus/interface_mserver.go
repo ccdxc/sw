@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	memdb "github.com/pensando/sw/venice/utils/memdb2"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,11 +32,11 @@ func (ms *MbusServer) FindInterface(objmeta *api.ObjectMeta) (*netproto.Interfac
 }
 
 // ListInterfaces lists all Interfaces in the mbus
-func (ms *MbusServer) ListInterfaces(ctx context.Context) ([]*netproto.Interface, error) {
+func (ms *MbusServer) ListInterfaces(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Interface, error) {
 	var objlist []*netproto.Interface
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Interface")
+	objs := ms.memDB.ListObjects("Interface", filterFn)
 	for _, oo := range objs {
 		obj, err := InterfaceFromObj(oo)
 		if err == nil {
@@ -54,7 +54,7 @@ type InterfaceStatusReactor interface {
 	OnInterfaceDeleteReq(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperUpdate(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperDelete(nodeID string, objinfo *netproto.Interface) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(api.EventType, memdb.Object) bool
+	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
 // InterfaceTopic is the Interface topic on message bus
@@ -155,8 +155,16 @@ func (eh *InterfaceTopic) GetInterface(ctx context.Context, objmeta *api.ObjectM
 func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ObjectMeta) (*netproto.InterfaceList, error) {
 	var objlist netproto.InterfaceList
 
+	filterFn := func(memdb.Object) bool {
+		return true
+	}
+
+	if eh.statusReactor != nil {
+		filterFn = eh.statusReactor.GetWatchFilter("Interface", objsel)
+	}
+
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Interface")
+	objs := eh.server.memDB.ListObjects("Interface", filterFn)
 	for _, oo := range objs {
 		obj, err := InterfaceFromObj(oo)
 		if err == nil {
@@ -170,17 +178,24 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.Object
 // WatchInterfaces watches Interfaces and sends streaming resp
 func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto.InterfaceApi_WatchInterfacesServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	eh.server.memDB.WatchObjects("Interface", watchChan)
-	defer eh.server.memDB.StopWatchObjects("Interface", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
 
-	filterFn := func(api.EventType, memdb.Object) bool {
-		return true
-	}
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Interface", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("Interface", ometa)
+	} else {
+		watcher.Filter = func(memdb.Object) bool {
+			return true
+		}
 	}
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher.Name = nodeID
+	eh.server.memDB.WatchObjects("Interface", &watcher)
+	defer eh.server.memDB.StopWatchObjects("Interface", &watcher)
+
 	// get a list of all Interfaces
 	objlist, err := eh.ListInterfaces(context.Background(), ometa)
 	if err != nil {
@@ -194,22 +209,16 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 	defer eh.server.Stats("Interface", "ActiveWatch").Dec()
 	defer eh.server.Stats("Interface", "WatchDisconnect").Inc()
 
-	ctx := stream.Context()
-
 	// walk all Interfaces and send it out
 	for _, obj := range objlist.Interfaces {
 		watchEvt := netproto.InterfaceEvent{
 			EventType: api.EventType_CreateEvent,
 			Interface: *obj,
 		}
-		if filterFn(api.EventType_CreateEvent, obj) {
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Interface to stream. Err: %v", err)
-				return err
-			}
-		} else {
-			log.Infof("Endpoint [%v] filtered from sending", obj)
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending Interface to stream. Err: %v", err)
+			return err
 		}
 	}
 
@@ -217,7 +226,7 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
@@ -245,15 +254,11 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 				EventType: etype,
 				Interface: *obj,
 			}
-			if filterFn(etype, obj) {
-				// streaming send
-				err = stream.Send(&watchEvt)
-				if err != nil {
-					log.Errorf("Error sending Interface to stream. Err: %v", err)
-					return err
-				}
-			} else {
-				log.Infof("Endpoint [%v] filtered from sending", obj)
+			// streaming send
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending Interface to stream. Err: %v", err)
+				return err
 			}
 		case <-ctx.Done():
 			return ctx.Err()
