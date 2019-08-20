@@ -767,7 +767,7 @@ int itree_t::check() const
             return -120;
 
         // check max
-        if (node->max != MAX(node->high, MAX(node->left->max, node->right->max)))
+        if (node->max != ITREE_MAX(node->high, ITREE_MAX(node->left->max, node->right->max)))
             return -130;
 
         // check left

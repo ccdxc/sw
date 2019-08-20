@@ -9,7 +9,7 @@ namespace acl {
 
 using sdk::lib::slab;
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define ITREE_MAX(a, b) ((a) > (b) ? (a) : (b))
 
 class itree_t {
 public:
@@ -59,7 +59,7 @@ private:
 
         const node_t *update(uint8_t c, const itree_t::node_t* l,
                              const itree_t::node_t *r) const {
-            uint32_t m = MAX(high, MAX(l->max, r->max));
+            uint32_t m = ITREE_MAX(high, ITREE_MAX(l->max, r->max));
 
             if (color == c && left == l && right == r && max == m) {
                 return this;

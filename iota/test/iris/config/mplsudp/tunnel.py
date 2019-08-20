@@ -98,7 +98,7 @@ class MplsOverUdpTunnelManager:
         wlpool2 = api.GetWorkloads(nodes[1])
         assert(len(wlpool1) == len(wlpool2))
 
-        req = api.Trigger_CreateAllParallelCommandsRequest()
+        req = api.Trigger_CreateExecuteCommandsRequest()
         tunnels = []
         for wid in range(len(wlpool1)):
             # Create tunnel in local node
