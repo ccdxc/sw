@@ -182,8 +182,7 @@ apollo_impl::destroy(apollo_impl *impl) {
         tparams.handle = apollo_impl_db()->ingress_drop_stats_tbl_hdls_[i];
         apollo_impl_db()->ingress_drop_stats_tbl()->remove(&tparams);
     }
-    //api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
-    apollo_impl_db()->~apollo_impl_state();
+    api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
     p4pd_cleanup();
 }
 

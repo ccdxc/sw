@@ -82,8 +82,8 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *vnic_ht(void) { return vnic_ht_; }
-    slab *vnic_slab(void) { return vnic_slab_; }
+    ht *vnic_ht(void) const { return vnic_ht_; }
+    slab *vnic_slab(void) const { return vnic_slab_; }
     friend class vnic_entry;   /**< vnic_entry class is friend of vnic_state */
 
 private:

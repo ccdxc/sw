@@ -224,27 +224,6 @@ route_compare_cb (const void *route1, const void *route2, void *ctxt)
 }
 
 /**
- * @brief    given number of routes, compute the number of intervals in the
- *           interval tree
- * @param[in]    num_routes number of routes
- * @return    number of intervale tree nodes needed to support the given route
- *            scale
- */
-static inline uint32_t
-compute_intervals (uint32_t num_routes)
-{
-    num_routes--;
-    num_routes |= num_routes >> 1;
-    num_routes |= num_routes >> 2;
-    num_routes |= num_routes >> 4;
-    num_routes |= num_routes >> 8;
-    num_routes |= num_routes >> 16;
-    num_routes++;
-
-    return (1 << num_routes);
-}
-
-/**
  * @brief    build an interval table corresponding to the give route table
  * @param[in]    route_table    route table
  * @param[in]   itable         interval node table that will be filled with

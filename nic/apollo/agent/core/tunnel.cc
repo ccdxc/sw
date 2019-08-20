@@ -33,6 +33,11 @@ tep_create (uint32_t key, pds_tep_spec_t *spec)
         PDS_TRACE_ERR("Tunnel {} create failed, key exists already", key);
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
+    if ((ret = tep_create_validate(spec)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to create tunnel {}, err {}",
+                      ipaddr2str(&spec->key.ip_addr), ret);
+        return ret;
+    }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_tep_create(spec)) != sdk::SDK_RET_OK) {
             return ret;
