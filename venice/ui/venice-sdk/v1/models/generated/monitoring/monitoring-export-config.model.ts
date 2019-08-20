@@ -22,7 +22,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     /** should be a valid layer3 or layer 4 protocol and port/type */
     'transport': string = null;
     'credentials': MonitoringExternalCred = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringExportConfig]: PropInfoItem } = {
         'destination': {
             description:  'length of string should be between 1 and 2048',
             required: true,

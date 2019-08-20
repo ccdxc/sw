@@ -15,7 +15,7 @@ export interface IObjstoreStreamChunk {
 
 export class ObjstoreStreamChunk extends BaseModel implements IObjstoreStreamChunk {
     'Content': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreStreamChunk]: PropInfoItem } = {
         'Content': {
             required: false,
             type: 'string'

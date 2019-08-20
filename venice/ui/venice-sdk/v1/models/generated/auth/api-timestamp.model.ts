@@ -17,7 +17,7 @@ export interface IApiTimestamp {
 export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     'seconds': string = null;
     'nanos': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiTimestamp]: PropInfoItem } = {
         'seconds': {
             required: false,
             type: 'string'

@@ -16,7 +16,7 @@ export interface ISecurityAutoMsgSecurityGroupWatchHelper {
 
 export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implements ISecurityAutoMsgSecurityGroupWatchHelper {
     'events': Array<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityAutoMsgSecurityGroupWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

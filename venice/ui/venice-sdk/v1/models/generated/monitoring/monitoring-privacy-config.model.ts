@@ -19,7 +19,7 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     'algo': MonitoringPrivacyConfig_algo = null;
     /** Password contains the privacy password. */
     'password': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringPrivacyConfig]: PropInfoItem } = {
         'algo': {
             enum: MonitoringPrivacyConfig_algo,
             default: 'des56',

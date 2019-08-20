@@ -18,7 +18,7 @@ export interface INetworkAutoMsgLbPolicyWatchHelperWatchEvent {
 export class NetworkAutoMsgLbPolicyWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgLbPolicyWatchHelperWatchEvent {
     'type': string = null;
     'object': NetworkLbPolicy = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkAutoMsgLbPolicyWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

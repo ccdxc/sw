@@ -21,7 +21,7 @@ export class ClusterQuorumMemberCondition extends BaseModel implements IClusterQ
     'type': ClusterQuorumMemberCondition_type = null;
     'status': ClusterQuorumMemberCondition_status = null;
     'last-transition-time': Date = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterQuorumMemberCondition]: PropInfoItem } = {
         'type': {
             enum: ClusterQuorumMemberCondition_type_uihint,
             default: 'healthy',

@@ -19,7 +19,7 @@ export class TokenauthNodeTokenRequest extends BaseModel implements ITokenauthNo
     'audience': Array<string> = null;
     'validity-start': Date = null;
     'validity-end': Date = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITokenauthNodeTokenRequest]: PropInfoItem } = {
         'audience': {
             required: false,
             type: 'Array<string>'

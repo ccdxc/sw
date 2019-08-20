@@ -13,7 +13,7 @@ export interface INetworkNetworkInterfaceSpec {
 
 
 export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNetworkInterfaceSpec {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetworkInterfaceSpec]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

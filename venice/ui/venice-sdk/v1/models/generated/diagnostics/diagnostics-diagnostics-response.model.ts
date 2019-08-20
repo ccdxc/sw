@@ -16,7 +16,7 @@ export interface IDiagnosticsDiagnosticsResponse {
 
 export class DiagnosticsDiagnosticsResponse extends BaseModel implements IDiagnosticsDiagnosticsResponse {
     'diagnostics': ApiAny = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IDiagnosticsDiagnosticsResponse]: PropInfoItem } = {
         'diagnostics': {
             required: false,
             type: 'object'

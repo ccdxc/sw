@@ -23,7 +23,7 @@ export class BrowserBrowseResponseList extends BaseModel implements IBrowserBrow
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
     'responselist': Array<BrowserBrowseResponseObject> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IBrowserBrowseResponseList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

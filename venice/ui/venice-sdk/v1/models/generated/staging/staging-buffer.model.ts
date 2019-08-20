@@ -26,7 +26,7 @@ export class StagingBuffer extends BaseModel implements IStagingBuffer {
     'meta': ApiObjectMeta = null;
     'spec': StagingBufferSpec = null;
     'status': StagingBufferStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingBuffer]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

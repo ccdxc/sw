@@ -52,7 +52,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
        - "/v1/tenants/tenants/tenant2" 
      System generated and updated, not updatable by user. */
     'self-link': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiObjectMeta]: PropInfoItem } = {
         'name': {
             description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: true,

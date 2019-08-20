@@ -31,7 +31,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     'match-rules': Array<MonitoringMatchRule> = null;
     /** Export contains export parameters. */
     'exports': Array<MonitoringExportConfig> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringFlowExportPolicySpec]: PropInfoItem } = {
         'vrf-name': {
             required: false,
             type: 'string'

@@ -18,7 +18,7 @@ export interface IClusterAutoMsgTenantWatchHelperWatchEvent {
 export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgTenantWatchHelperWatchEvent {
     'type': string = null;
     'object': ClusterTenant = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterAutoMsgTenantWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

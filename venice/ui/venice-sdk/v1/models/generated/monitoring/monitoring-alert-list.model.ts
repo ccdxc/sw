@@ -23,7 +23,7 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<MonitoringAlert> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

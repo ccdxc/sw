@@ -38,7 +38,7 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
     If client auth is enabled and AllowedPeerId is not specified, server accepts any
     client certificate as long as it is valid  (not expired and with a valid trust chain). */
     'tls-server-allowed-peer-id': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkTLSServerPolicySpec]: PropInfoItem } = {
         'tls-server-certificates': {
             description:  'List of names of certificates to present to clients. The certificates &quot;usage&quot; field must contain &quot;server&quot;. If multiple certificates names are provided, system tries to choose the correct one using SNI, otherwise it picks the first one in the list.',
             required: false,

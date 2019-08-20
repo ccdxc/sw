@@ -19,7 +19,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     /** should be a valid host address, IP address or hostname */
     'host-name': string = null;
     'interfaces': Array<WorkloadWorkloadIntfSpec> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadWorkloadSpec]: PropInfoItem } = {
         'host-name': {
             description:  'should be a valid host address, IP address or hostname',
             hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',

@@ -26,7 +26,7 @@ export class SecurityFirewallProfile extends BaseModel implements ISecurityFirew
     'meta': ApiObjectMeta = null;
     'spec': SecurityFirewallProfileSpec = null;
     'status': SecurityFirewallProfileStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityFirewallProfile]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -19,7 +19,7 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     'status': SearchPolicySearchResponse_status = null;
     /** Result is Map of <SGPolicy object name, PolicyMatch Entry>. */
     'results': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchPolicySearchResponse]: PropInfoItem } = {
         'status': {
             enum: SearchPolicySearchResponse_status,
             default: 'match',

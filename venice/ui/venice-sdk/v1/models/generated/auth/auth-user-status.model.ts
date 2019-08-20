@@ -27,7 +27,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'authenticators': Array<AuthUserStatus_authenticators> = null;
     'last-password-change': Date = null;
     'access-review': Array<AuthOperationStatus> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthUserStatus]: PropInfoItem } = {
         'roles': {
             required: false,
             type: 'Array<string>'

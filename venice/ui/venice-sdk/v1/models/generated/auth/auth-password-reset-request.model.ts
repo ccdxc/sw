@@ -20,7 +20,7 @@ export class AuthPasswordResetRequest extends BaseModel implements IAuthPassword
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthPasswordResetRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

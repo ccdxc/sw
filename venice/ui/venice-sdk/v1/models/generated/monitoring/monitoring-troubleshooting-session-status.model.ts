@@ -19,7 +19,7 @@ export interface IMonitoringTroubleshootingSessionStatus {
 export class MonitoringTroubleshootingSessionStatus extends BaseModel implements IMonitoringTroubleshootingSessionStatus {
     'state': MonitoringTroubleshootingSessionStatus_state = null;
     'troubleshooting-results': Array<MonitoringTsResult> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTroubleshootingSessionStatus]: PropInfoItem } = {
         'state': {
             enum: MonitoringTroubleshootingSessionStatus_state_uihint,
             default: 'running',

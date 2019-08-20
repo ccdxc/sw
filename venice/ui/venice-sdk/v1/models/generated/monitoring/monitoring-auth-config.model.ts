@@ -19,7 +19,7 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     'algo': MonitoringAuthConfig_algo = null;
     /** Password contains the authentication password. */
     'password': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAuthConfig]: PropInfoItem } = {
         'algo': {
             enum: MonitoringAuthConfig_algo,
             default: 'md5',

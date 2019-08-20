@@ -18,7 +18,7 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     /** Kind represents the type of the API object. */
     'kind': string = null;
     'api-version': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiTypeMeta]: PropInfoItem } = {
         'kind': {
             description:  'Kind represents the type of the API object.',
             required: false,

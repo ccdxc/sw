@@ -27,7 +27,7 @@ export class MonitoringFwlogPolicy extends BaseModel implements IMonitoringFwlog
     'spec': MonitoringFwlogPolicySpec = null;
     /** Status contains the current state of the policy. */
     'status': MonitoringFwlogPolicyStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringFwlogPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

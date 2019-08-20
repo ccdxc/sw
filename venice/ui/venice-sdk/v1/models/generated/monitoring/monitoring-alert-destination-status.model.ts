@@ -15,7 +15,7 @@ export interface IMonitoringAlertDestinationStatus {
 
 export class MonitoringAlertDestinationStatus extends BaseModel implements IMonitoringAlertDestinationStatus {
     'total-notifications-sent': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertDestinationStatus]: PropInfoItem } = {
         'total-notifications-sent': {
             required: false,
             type: 'number'

@@ -30,7 +30,7 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
     'query-type': BrowserBrowseRequest_query_type = null;
     'max-depth': number = null;
     'count-only': boolean = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IBrowserBrowseRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

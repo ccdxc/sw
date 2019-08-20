@@ -19,7 +19,7 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     'offset': number = null;
     /** value should be at least 1 */
     'count': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryPaginationSpec]: PropInfoItem } = {
         'offset': {
             default: parseInt('0'),
             description:  'value should be at least 0',

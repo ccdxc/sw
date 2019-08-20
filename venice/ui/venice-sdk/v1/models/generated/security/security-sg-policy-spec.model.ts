@@ -20,7 +20,7 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     'attach-groups': Array<string> = null;
     'attach-tenant': boolean = null;
     'rules': Array<SecuritySGRule> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySGPolicySpec]: PropInfoItem } = {
         'attach-groups': {
             required: false,
             type: 'Array<string>'

@@ -28,7 +28,7 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     'kinds': Array<string> = null;
     'fields': FieldsSelector = null;
     'labels': LabelsSelector = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchSearchQuery]: PropInfoItem } = {
         'texts': {
             required: false,
             type: 'object'

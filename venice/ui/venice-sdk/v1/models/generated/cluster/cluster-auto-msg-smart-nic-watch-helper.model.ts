@@ -16,7 +16,7 @@ export interface IClusterAutoMsgSmartNICWatchHelper {
 
 export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClusterAutoMsgSmartNICWatchHelper {
     'events': Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterAutoMsgSmartNICWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

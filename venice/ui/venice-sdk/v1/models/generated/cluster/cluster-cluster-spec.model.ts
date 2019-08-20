@@ -34,7 +34,7 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     'auto-admit-nics': boolean = null;
     'certs': string = null;
     'key': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterClusterSpec]: PropInfoItem } = {
         'quorum-nodes': {
             description:  'QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.',
             required: false,

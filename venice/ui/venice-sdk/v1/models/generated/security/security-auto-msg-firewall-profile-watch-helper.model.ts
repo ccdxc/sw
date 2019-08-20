@@ -16,7 +16,7 @@ export interface ISecurityAutoMsgFirewallProfileWatchHelper {
 
 export class SecurityAutoMsgFirewallProfileWatchHelper extends BaseModel implements ISecurityAutoMsgFirewallProfileWatchHelper {
     'events': Array<SecurityAutoMsgFirewallProfileWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityAutoMsgFirewallProfileWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

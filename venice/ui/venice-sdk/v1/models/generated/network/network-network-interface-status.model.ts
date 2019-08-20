@@ -30,7 +30,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     'primary-mac': string = null;
     'if-host-status': NetworkNetworkInterfaceHostStatus = null;
     'if-uplink-status': NetworkNetworkInterfaceUplinkStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetworkInterfaceStatus]: PropInfoItem } = {
         'smart-nic': {
             required: false,
             type: 'string'

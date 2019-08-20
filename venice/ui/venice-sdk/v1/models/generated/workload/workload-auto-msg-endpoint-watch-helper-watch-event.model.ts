@@ -18,7 +18,7 @@ export interface IWorkloadAutoMsgEndpointWatchHelperWatchEvent {
 export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel implements IWorkloadAutoMsgEndpointWatchHelperWatchEvent {
     'type': string = null;
     'object': WorkloadEndpoint = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadAutoMsgEndpointWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

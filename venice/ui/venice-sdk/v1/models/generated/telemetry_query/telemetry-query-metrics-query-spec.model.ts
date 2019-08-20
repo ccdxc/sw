@@ -46,7 +46,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     'group-by-field': string = null;
     'pagination': Telemetry_queryPaginationSpec = null;
     'sort-order': Telemetry_queryMetricsQuerySpec_sort_order = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryMetricsQuerySpec]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

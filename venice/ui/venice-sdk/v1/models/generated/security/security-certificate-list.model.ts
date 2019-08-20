@@ -23,7 +23,7 @@ export class SecurityCertificateList extends BaseModel implements ISecurityCerti
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<SecurityCertificate> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityCertificateList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

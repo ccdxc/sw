@@ -20,7 +20,7 @@ export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITe
     'tenant': string = null;
     'namespace': string = null;
     'results': Array<Telemetry_queryFwlogsQueryResult> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryFwlogsQueryResponse]: PropInfoItem } = {
         'tenant': {
             required: false,
             type: 'string'

@@ -23,7 +23,7 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<StagingBuffer> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingBufferList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

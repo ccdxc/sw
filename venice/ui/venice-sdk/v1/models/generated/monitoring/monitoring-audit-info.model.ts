@@ -19,7 +19,7 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     'user': string = null;
     /** Time at which the action was performed. */
     'time': Date = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAuditInfo]: PropInfoItem } = {
         'user': {
             description:  'Name of the user performed some action.',
             required: false,

@@ -18,7 +18,7 @@ export interface IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent {
 export class MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent {
     'type': string = null;
     'object': MonitoringAlertDestination = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

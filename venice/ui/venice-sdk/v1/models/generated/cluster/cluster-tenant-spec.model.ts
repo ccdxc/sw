@@ -15,7 +15,7 @@ export interface IClusterTenantSpec {
 
 export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     'admin-user': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterTenantSpec]: PropInfoItem } = {
         'admin-user': {
             required: false,
             type: 'string'

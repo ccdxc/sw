@@ -18,7 +18,7 @@ export interface ITechSupportRequestSpecNodeSelectorSpec {
 export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements ITechSupportRequestSpecNodeSelectorSpec {
     'names': Array<string> = null;
     'labels': LabelsSelector = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITechSupportRequestSpecNodeSelectorSpec]: PropInfoItem } = {
         'names': {
             required: false,
             type: 'Array<string>'

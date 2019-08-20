@@ -23,7 +23,7 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<ClusterHost> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterHostList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

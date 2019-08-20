@@ -33,7 +33,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
     'service': string = null;
     'service-ports': Array<DiagnosticsServicePort> = null;
     'mac-address': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IDiagnosticsModuleStatus]: PropInfoItem } = {
         'node': {
             required: false,
             type: 'string'

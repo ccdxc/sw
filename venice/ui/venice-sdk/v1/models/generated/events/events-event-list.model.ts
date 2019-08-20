@@ -22,7 +22,7 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     'api-version': string = null;
     'resource-version': string = null;
     'items': Array<EventsEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IEventsEventList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

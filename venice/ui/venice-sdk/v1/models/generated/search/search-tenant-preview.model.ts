@@ -15,7 +15,7 @@ export interface ISearchTenantPreview {
 
 export class SearchTenantPreview extends BaseModel implements ISearchTenantPreview {
     'tenants': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchTenantPreview]: PropInfoItem } = {
         'tenants': {
             required: false,
             type: 'object'

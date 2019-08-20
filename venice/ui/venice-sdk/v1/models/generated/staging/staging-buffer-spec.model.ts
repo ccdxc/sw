@@ -15,7 +15,7 @@ export interface IStagingBufferSpec {
 
 export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
     'Contact': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingBufferSpec]: PropInfoItem } = {
         'Contact': {
             required: false,
             type: 'string'

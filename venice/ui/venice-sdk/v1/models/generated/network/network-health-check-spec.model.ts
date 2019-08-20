@@ -23,7 +23,7 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     'probe-port-or-url': string = null;
     'max-timeouts': number = null;
     'declare-healthy-count': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkHealthCheckSpec]: PropInfoItem } = {
         'interval': {
             required: false,
             type: 'number'

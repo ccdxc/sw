@@ -24,7 +24,7 @@ export class RolloutRolloutActionStatus extends BaseModel implements IRolloutRol
     'start-time': Date = null;
     'end-time': Date = null;
     'prev-version': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IRolloutRolloutActionStatus]: PropInfoItem } = {
         'state': {
             enum: RolloutRolloutActionStatus_state,
             default: 'progressing',

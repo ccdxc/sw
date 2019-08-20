@@ -23,7 +23,7 @@ export class AuthSubjectAccessReviewRequest extends BaseModel implements IAuthSu
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
     'operations': Array<AuthOperation> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthSubjectAccessReviewRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

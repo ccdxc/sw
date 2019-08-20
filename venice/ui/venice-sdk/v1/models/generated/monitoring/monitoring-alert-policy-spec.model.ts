@@ -44,7 +44,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
     /** name of the alert destinations to be used to send out notification when an alert
     gets generated. */
     'destinations': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertPolicySpec]: PropInfoItem } = {
         'resource': {
             description:  'Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy      Event - event based alert policy      EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted.',
             required: false,

@@ -57,7 +57,7 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
     /** should be a valid time duration
      */
     'icmp-timeout': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityFirewallProfileSpec]: PropInfoItem } = {
         'session-idle-timeout': {
             default: '90s',
             description:  'should be a valid time duration ',

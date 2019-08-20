@@ -28,7 +28,7 @@ export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
     'spec': WorkloadWorkloadSpec = null;
     /** Status contains the current state of the Workload. */
     'status': WorkloadWorkloadStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadWorkload]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

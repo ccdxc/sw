@@ -24,7 +24,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     /** value should be between 1 and 4095 */
     'external-vlan': number = null;
     'ip-addresses': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadWorkloadIntfSpec]: PropInfoItem } = {
         'mac-address': {
             description:  'should be a valid MAC address',
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',

@@ -16,7 +16,7 @@ export interface IStagingClearActionSpec {
 
 export class StagingClearActionSpec extends BaseModel implements IStagingClearActionSpec {
     'items': Array<StagingItemId> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingClearActionSpec]: PropInfoItem } = {
         'items': {
             required: false,
             type: 'object'

@@ -17,7 +17,7 @@ export interface ISecurityIPsecProtocolSpec {
 export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPsecProtocolSpec {
     'encryption-transform': string = null;
     'integrity-transform': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityIPsecProtocolSpec]: PropInfoItem } = {
         'encryption-transform': {
             required: false,
             type: 'string'

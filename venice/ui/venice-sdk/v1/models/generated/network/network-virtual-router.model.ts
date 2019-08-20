@@ -26,7 +26,7 @@ export class NetworkVirtualRouter extends BaseModel implements INetworkVirtualRo
     'meta': ApiObjectMeta = null;
     'spec': NetworkVirtualRouterSpec = null;
     'status': NetworkVirtualRouterStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkVirtualRouter]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -48,7 +48,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'smartNicSku': string = null;
     'host': string = null;
     'adm-phase-reason': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterSmartNICStatus]: PropInfoItem } = {
         'admission-phase': {
             enum: ClusterSmartNICStatus_admission_phase_uihint,
             default: 'unknown',

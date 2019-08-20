@@ -26,7 +26,7 @@ export class BrowserBrowseRequestObject extends BaseModel implements IBrowserBro
     'max-depth': number = null;
     /** When CountOnly is set the response only contains counts and not the actual objects. */
     'count-only': boolean = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IBrowserBrowseRequestObject]: PropInfoItem } = {
         'uri': {
             description:  'length of string should be between 2 and 512',
             required: true,

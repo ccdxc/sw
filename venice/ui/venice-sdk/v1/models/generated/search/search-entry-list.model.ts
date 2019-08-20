@@ -16,7 +16,7 @@ export interface ISearchEntryList {
 
 export class SearchEntryList extends BaseModel implements ISearchEntryList {
     'entries': Array<SearchEntry> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchEntryList]: PropInfoItem } = {
         'entries': {
             required: false,
             type: 'object'

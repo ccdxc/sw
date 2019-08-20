@@ -21,7 +21,7 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
     'version': string = null;
     'fw-major-ver': string = null;
     'fw-minor-ver': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterBiosInfo]: PropInfoItem } = {
         'vendor': {
             required: false,
             type: 'string'

@@ -16,7 +16,7 @@ export interface IWorkloadWorkloadStatus {
 
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
     'interfaces': Array<WorkloadWorkloadIntfStatus> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadWorkloadStatus]: PropInfoItem } = {
         'interfaces': {
             required: false,
             type: 'object'

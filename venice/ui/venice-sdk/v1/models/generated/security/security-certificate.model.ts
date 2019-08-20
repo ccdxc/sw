@@ -28,7 +28,7 @@ export class SecurityCertificate extends BaseModel implements ISecurityCertifica
     'spec': SecurityCertificateSpec = null;
     /** Status contains the current state of the certificate. */
     'status': SecurityCertificateStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityCertificate]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

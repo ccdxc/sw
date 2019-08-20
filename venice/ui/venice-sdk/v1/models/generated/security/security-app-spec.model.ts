@@ -22,7 +22,7 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
     /** Timeout specifies for how long the connection be kept before removing the flow entry, specified in string as '200s', '5m', etc. */
     'timeout': string = null;
     'alg': SecurityALG = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityAppSpec]: PropInfoItem } = {
         'proto-ports': {
             required: false,
             type: 'object'

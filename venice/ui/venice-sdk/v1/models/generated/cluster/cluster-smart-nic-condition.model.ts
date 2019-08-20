@@ -26,7 +26,7 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterSmartNICCondition]: PropInfoItem } = {
         'type': {
             enum: ClusterSmartNICCondition_type_uihint,
             default: 'healthy',

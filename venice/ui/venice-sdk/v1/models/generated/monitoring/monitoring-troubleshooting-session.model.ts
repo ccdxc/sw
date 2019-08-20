@@ -26,7 +26,7 @@ export class MonitoringTroubleshootingSession extends BaseModel implements IMoni
     'meta': ApiObjectMeta = null;
     'spec': MonitoringTroubleshootingSessionSpec = null;
     'status': MonitoringTroubleshootingSessionStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTroubleshootingSession]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

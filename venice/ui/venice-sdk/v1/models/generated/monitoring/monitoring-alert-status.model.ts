@@ -36,7 +36,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     'reason': MonitoringAlertReason = null;
     'acknowledged': MonitoringAuditInfo = null;
     'resolved': MonitoringAuditInfo = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertStatus]: PropInfoItem } = {
         'severity': {
             enum: MonitoringAlertStatus_severity,
             default: 'info',

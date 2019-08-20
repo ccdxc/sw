@@ -27,7 +27,7 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     'lb-policy': string = null;
     'tls-server-policy': NetworkTLSServerPolicySpec = null;
     'tls-client-policy': NetworkTLSClientPolicySpec = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkServiceSpec]: PropInfoItem } = {
         'workload-labels': {
             required: false,
             type: 'Array<string>'

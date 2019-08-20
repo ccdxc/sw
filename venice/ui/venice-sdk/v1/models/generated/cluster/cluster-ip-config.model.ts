@@ -19,7 +19,7 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     'ip-address': string = null;
     'default-gw': string = null;
     'dns-servers': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterIPConfig]: PropInfoItem } = {
         'ip-address': {
             required: false,
             type: 'string'

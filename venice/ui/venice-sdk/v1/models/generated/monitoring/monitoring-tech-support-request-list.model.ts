@@ -23,7 +23,7 @@ export class MonitoringTechSupportRequestList extends BaseModel implements IMoni
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<MonitoringTechSupportRequest> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTechSupportRequestList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

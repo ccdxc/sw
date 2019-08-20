@@ -16,7 +16,7 @@ export interface IRolloutAutoMsgRolloutActionWatchHelper {
 
 export class RolloutAutoMsgRolloutActionWatchHelper extends BaseModel implements IRolloutAutoMsgRolloutActionWatchHelper {
     'events': Array<RolloutAutoMsgRolloutActionWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IRolloutAutoMsgRolloutActionWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

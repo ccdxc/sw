@@ -15,7 +15,7 @@ export interface IAuditEventRequest {
 
 export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
     'uuid': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuditEventRequest]: PropInfoItem } = {
         'uuid': {
             required: false,
             type: 'string'

@@ -16,7 +16,7 @@ export interface IAuthRoleSpec {
 
 export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
     'permissions': Array<AuthPermission> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRoleSpec]: PropInfoItem } = {
         'permissions': {
             required: false,
             type: 'object'

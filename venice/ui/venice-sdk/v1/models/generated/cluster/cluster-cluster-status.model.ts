@@ -26,7 +26,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     'auth-bootstrapped': boolean = null;
     'conditions': Array<ClusterClusterCondition> = null;
     'quorum-status': ClusterQuorumStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterClusterStatus]: PropInfoItem } = {
         'leader': {
             description:  'Leader contains the node name of the cluster leader.',
             required: false,

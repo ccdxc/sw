@@ -23,7 +23,7 @@ export class AuthUserPreferenceList extends BaseModel implements IAuthUserPrefer
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<AuthUserPreference> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthUserPreferenceList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

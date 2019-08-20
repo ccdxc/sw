@@ -53,7 +53,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'max-results': number = null;
     /** order to sort List results in. */
     'sort-order': ApiListWatchOptions_sort_order = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiListWatchOptions]: PropInfoItem } = {
         'name': {
             description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: false,

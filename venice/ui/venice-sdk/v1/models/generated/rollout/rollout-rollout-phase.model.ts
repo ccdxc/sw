@@ -29,7 +29,7 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IRolloutRolloutPhase]: PropInfoItem } = {
         'name': {
             required: false,
             type: 'string'

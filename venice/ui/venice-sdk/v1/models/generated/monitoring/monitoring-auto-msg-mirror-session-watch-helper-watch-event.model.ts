@@ -18,7 +18,7 @@ export interface IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent {
 export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent {
     'type': string = null;
     'object': MonitoringMirrorSession = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

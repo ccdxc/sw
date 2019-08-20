@@ -16,7 +16,7 @@ export interface ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper {
 
 export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper {
     'events': Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

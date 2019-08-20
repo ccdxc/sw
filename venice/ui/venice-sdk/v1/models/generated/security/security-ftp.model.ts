@@ -15,7 +15,7 @@ export interface ISecurityFtp {
 
 export class SecurityFtp extends BaseModel implements ISecurityFtp {
     'allow-mismatch-ip-address': boolean = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityFtp]: PropInfoItem } = {
         'allow-mismatch-ip-address': {
             required: false,
             type: 'boolean'

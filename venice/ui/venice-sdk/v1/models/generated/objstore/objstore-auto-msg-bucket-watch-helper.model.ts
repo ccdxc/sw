@@ -16,7 +16,7 @@ export interface IObjstoreAutoMsgBucketWatchHelper {
 
 export class ObjstoreAutoMsgBucketWatchHelper extends BaseModel implements IObjstoreAutoMsgBucketWatchHelper {
     'events': Array<ObjstoreAutoMsgBucketWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreAutoMsgBucketWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

@@ -27,7 +27,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     'format': MonitoringFwlogPolicySpec_format = null;
     'filter': Array<MonitoringFwlogPolicySpec_filter> = null;
     'config': MonitoringSyslogExportConfig = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringFwlogPolicySpec]: PropInfoItem } = {
         'vrf-name': {
             required: false,
             type: 'string'

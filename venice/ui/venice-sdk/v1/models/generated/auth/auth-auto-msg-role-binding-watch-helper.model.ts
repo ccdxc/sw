@@ -16,7 +16,7 @@ export interface IAuthAutoMsgRoleBindingWatchHelper {
 
 export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAuthAutoMsgRoleBindingWatchHelper {
     'events': Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthAutoMsgRoleBindingWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

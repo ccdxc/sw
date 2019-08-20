@@ -24,7 +24,7 @@ export class ClusterQuorumMemberStatus extends BaseModel implements IClusterQuor
     'status': string = null;
     'term': string = null;
     'conditions': Array<ClusterQuorumMemberCondition> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterQuorumMemberStatus]: PropInfoItem } = {
         'id': {
             required: false,
             type: 'string'

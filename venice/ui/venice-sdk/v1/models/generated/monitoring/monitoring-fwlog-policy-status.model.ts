@@ -13,7 +13,7 @@ export interface IMonitoringFwlogPolicyStatus {
 
 
 export class MonitoringFwlogPolicyStatus extends BaseModel implements IMonitoringFwlogPolicyStatus {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringFwlogPolicyStatus]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

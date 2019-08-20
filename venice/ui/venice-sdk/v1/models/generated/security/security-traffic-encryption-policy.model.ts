@@ -28,7 +28,7 @@ export class SecurityTrafficEncryptionPolicy extends BaseModel implements ISecur
     'spec': SecurityTrafficEncryptionPolicySpec = null;
     /** Status contains the current state of the encryption policy. */
     'status': SecurityTrafficEncryptionPolicyStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityTrafficEncryptionPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

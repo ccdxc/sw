@@ -23,7 +23,7 @@ export class AuthRoleList extends BaseModel implements IAuthRoleList {
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<AuthRole> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRoleList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

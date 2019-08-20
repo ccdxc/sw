@@ -25,7 +25,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     'ldap': AuthLdap = null;
     'local': AuthLocal = null;
     'radius': AuthRadius = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthAuthenticators]: PropInfoItem } = {
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,
             default: 'local',

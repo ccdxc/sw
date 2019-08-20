@@ -19,7 +19,7 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
     /** should be a valid time duration
      */
     'timeout': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySunrpc]: PropInfoItem } = {
         'program-id': {
             required: false,
             type: 'string'

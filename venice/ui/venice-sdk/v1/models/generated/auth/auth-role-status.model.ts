@@ -13,7 +13,7 @@ export interface IAuthRoleStatus {
 
 
 export class AuthRoleStatus extends BaseModel implements IAuthRoleStatus {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRoleStatus]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

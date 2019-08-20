@@ -23,7 +23,7 @@ export class SecurityAppList extends BaseModel implements ISecurityAppList {
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<SecurityApp> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityAppList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

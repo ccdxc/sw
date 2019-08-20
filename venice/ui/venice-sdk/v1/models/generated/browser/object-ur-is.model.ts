@@ -19,7 +19,7 @@ export interface IObjectURIs {
 export class ObjectURIs extends BaseModel implements IObjectURIs {
     'ref-type': ObjectURIs_ref_type = null;
     'uri': Array<ApiObjectRef> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjectURIs]: PropInfoItem } = {
         'ref-type': {
             enum: ObjectURIs_ref_type,
             default: 'named-reference',

@@ -49,7 +49,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     'query': SearchSearchQuery = null;
     'tenants': Array<string> = null;
     'aggregate': boolean = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchSearchRequest]: PropInfoItem } = {
         'query-string': {
             description:  'length of string should be between 0 and 256',
             required: false,

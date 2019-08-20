@@ -17,7 +17,7 @@ export interface IStagingItemId {
 export class StagingItemId extends BaseModel implements IStagingItemId {
     'uri': string = null;
     'method': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingItemId]: PropInfoItem } = {
         'uri': {
             required: false,
             type: 'string'

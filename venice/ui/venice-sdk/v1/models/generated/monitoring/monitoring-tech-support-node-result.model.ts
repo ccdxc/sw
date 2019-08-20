@@ -24,7 +24,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
     'status': MonitoringTechSupportNodeResult_status = null;
     'reason': string = null;
     'uri': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTechSupportNodeResult]: PropInfoItem } = {
         'start-time': {
             required: false,
             type: 'Date'

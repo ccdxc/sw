@@ -31,7 +31,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     /** value should be between 0 and 4095 */
     'mgmt-vlan': number = null;
     'controllers': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterSmartNICSpec]: PropInfoItem } = {
         'admit': {
             required: false,
             type: 'boolean'

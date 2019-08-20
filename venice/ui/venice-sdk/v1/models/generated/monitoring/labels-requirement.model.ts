@@ -25,7 +25,7 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     "notEquals" operators need a single Value. "in" and "notIn" operators can have
     one or more values. */
     'values': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ILabelsRequirement]: PropInfoItem } = {
         'key': {
             description:  'The label key that the condition applies to.',
             required: false,

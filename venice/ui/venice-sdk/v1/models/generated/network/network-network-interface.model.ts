@@ -28,7 +28,7 @@ export class NetworkNetworkInterface extends BaseModel implements INetworkNetwor
     'spec': NetworkNetworkInterfaceSpec = null;
     /** NetworkInterfaceStatus contains the current state of the network adapter. */
     'status': NetworkNetworkInterfaceStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetworkInterface]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -18,7 +18,7 @@ export interface IStagingClearActionStatus {
 export class StagingClearActionStatus extends BaseModel implements IStagingClearActionStatus {
     'status': StagingClearActionStatus_status = null;
     'reason': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingClearActionStatus]: PropInfoItem } = {
         'status': {
             enum: StagingClearActionStatus_status,
             default: 'success',

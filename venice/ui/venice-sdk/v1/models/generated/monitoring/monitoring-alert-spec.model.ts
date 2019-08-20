@@ -16,7 +16,7 @@ export interface IMonitoringAlertSpec {
 
 export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSpec {
     'state': MonitoringAlertSpec_state = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertSpec]: PropInfoItem } = {
         'state': {
             enum: MonitoringAlertSpec_state_uihint,
             default: 'open',

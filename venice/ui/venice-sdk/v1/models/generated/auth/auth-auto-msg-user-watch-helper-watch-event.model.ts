@@ -18,7 +18,7 @@ export interface IAuthAutoMsgUserWatchHelperWatchEvent {
 export class AuthAutoMsgUserWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgUserWatchHelperWatchEvent {
     'type': string = null;
     'object': AuthUser = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthAutoMsgUserWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

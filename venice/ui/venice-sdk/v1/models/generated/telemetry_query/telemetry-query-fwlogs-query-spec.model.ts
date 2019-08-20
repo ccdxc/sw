@@ -49,7 +49,7 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
     'end-time': Date = null;
     'pagination': Telemetry_queryPaginationSpec = null;
     'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryFwlogsQuerySpec]: PropInfoItem } = {
         'source-ips': {
             description:  'should be a valid v4 or v6 IP address',
             hint:  '10.1.1.1, ff02::5 ',

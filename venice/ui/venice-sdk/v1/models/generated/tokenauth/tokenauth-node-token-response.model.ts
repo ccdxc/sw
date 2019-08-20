@@ -15,7 +15,7 @@ export interface ITokenauthNodeTokenResponse {
 
 export class TokenauthNodeTokenResponse extends BaseModel implements ITokenauthNodeTokenResponse {
     'Token': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITokenauthNodeTokenResponse]: PropInfoItem } = {
         'Token': {
             required: false,
             type: 'string'

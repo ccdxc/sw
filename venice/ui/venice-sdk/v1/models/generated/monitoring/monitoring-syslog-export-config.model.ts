@@ -18,7 +18,7 @@ export interface IMonitoringSyslogExportConfig {
 export class MonitoringSyslogExportConfig extends BaseModel implements IMonitoringSyslogExportConfig {
     'facility-override': MonitoringSyslogExportConfig_facility_override = null;
     'prefix': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringSyslogExportConfig]: PropInfoItem } = {
         'facility-override': {
             enum: MonitoringSyslogExportConfig_facility_override_uihint,
             default: 'user',

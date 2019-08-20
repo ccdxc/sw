@@ -16,7 +16,7 @@ export interface IAuthAutoMsgUserPreferenceWatchHelper {
 
 export class AuthAutoMsgUserPreferenceWatchHelper extends BaseModel implements IAuthAutoMsgUserPreferenceWatchHelper {
     'events': Array<AuthAutoMsgUserPreferenceWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthAutoMsgUserPreferenceWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

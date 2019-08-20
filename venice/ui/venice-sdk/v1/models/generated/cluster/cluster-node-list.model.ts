@@ -23,7 +23,7 @@ export class ClusterNodeList extends BaseModel implements IClusterNodeList {
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<ClusterNode> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterNodeList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

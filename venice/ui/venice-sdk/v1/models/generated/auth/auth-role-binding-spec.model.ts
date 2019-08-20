@@ -19,7 +19,7 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     'users': Array<string> = null;
     'user-groups': Array<string> = null;
     'role': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRoleBindingSpec]: PropInfoItem } = {
         'users': {
             required: false,
             type: 'Array<string>'

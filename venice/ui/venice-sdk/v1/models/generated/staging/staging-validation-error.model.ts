@@ -19,7 +19,7 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
     'uri': string = null;
     'method': string = null;
     'error': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingValidationError]: PropInfoItem } = {
         'uri': {
             required: false,
             type: 'string'

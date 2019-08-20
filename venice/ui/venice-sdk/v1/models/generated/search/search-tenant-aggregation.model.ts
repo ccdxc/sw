@@ -15,7 +15,7 @@ export interface ISearchTenantAggregation {
 
 export class SearchTenantAggregation extends BaseModel implements ISearchTenantAggregation {
     'tenants': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchTenantAggregation]: PropInfoItem } = {
         'tenants': {
             required: false,
             type: 'object'

@@ -16,7 +16,7 @@ export interface ISearchPolicyMatchEntries {
 
 export class SearchPolicyMatchEntries extends BaseModel implements ISearchPolicyMatchEntries {
     'entries': Array<SearchPolicyMatchEntry> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchPolicyMatchEntries]: PropInfoItem } = {
         'entries': {
             required: false,
             type: 'object'

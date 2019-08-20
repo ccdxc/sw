@@ -15,7 +15,7 @@ export interface IApiStatusResult {
 
 export class ApiStatusResult extends BaseModel implements IApiStatusResult {
     'Str': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiStatusResult]: PropInfoItem } = {
         'Str': {
             required: false,
             type: 'string'

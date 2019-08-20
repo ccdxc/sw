@@ -20,7 +20,7 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
     'workload-selector': LabelsSelector = null;
     'service-labels': Array<string> = null;
     'match-prefixes': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySecurityGroupSpec]: PropInfoItem } = {
         'workload-selector': {
             required: false,
             type: 'object'

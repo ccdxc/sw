@@ -21,7 +21,7 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
     there are inconsistencies in the trust chain. */
     'validity': SecurityCertificateStatus_validity = null;
     'workloads': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityCertificateStatus]: PropInfoItem } = {
         'validity': {
             enum: SecurityCertificateStatus_validity,
             default: 'unknown',

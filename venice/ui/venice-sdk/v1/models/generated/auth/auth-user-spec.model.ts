@@ -23,7 +23,7 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     'email': string = null;
     'password': string = null;
     'type': AuthUserSpec_type = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthUserSpec]: PropInfoItem } = {
         'fullname': {
             required: false,
             type: 'string'

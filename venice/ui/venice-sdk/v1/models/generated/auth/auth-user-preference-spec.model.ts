@@ -15,7 +15,7 @@ export interface IAuthUserPreferenceSpec {
 
 export class AuthUserPreferenceSpec extends BaseModel implements IAuthUserPreferenceSpec {
     'options': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthUserPreferenceSpec]: PropInfoItem } = {
         'options': {
             required: false,
             type: 'string'

@@ -26,7 +26,7 @@ export class MonitoringTechSupportRequest extends BaseModel implements IMonitori
     'meta': ApiObjectMeta = null;
     'spec': MonitoringTechSupportRequestSpec = null;
     'status': MonitoringTechSupportRequestStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTechSupportRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -28,7 +28,7 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
     'spec': ClusterSmartNICSpec = null;
     /** SmartNICStatus contains the current state of the network adapter. */
     'status': ClusterSmartNICStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterSmartNIC]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

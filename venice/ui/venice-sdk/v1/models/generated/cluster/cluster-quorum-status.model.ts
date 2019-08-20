@@ -16,7 +16,7 @@ export interface IClusterQuorumStatus {
 
 export class ClusterQuorumStatus extends BaseModel implements IClusterQuorumStatus {
     'members': Array<ClusterQuorumMemberStatus> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterQuorumStatus]: PropInfoItem } = {
         'members': {
             required: false,
             type: 'object'

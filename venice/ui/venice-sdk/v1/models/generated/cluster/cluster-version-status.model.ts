@@ -21,7 +21,7 @@ export class ClusterVersionStatus extends BaseModel implements IClusterVersionSt
     'vcs-commit': string = null;
     'build-date': string = null;
     'rollout-build-version': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterVersionStatus]: PropInfoItem } = {
         'build-version': {
             required: false,
             type: 'string'

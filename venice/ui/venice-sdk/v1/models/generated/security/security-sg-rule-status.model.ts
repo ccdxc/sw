@@ -15,7 +15,7 @@ export interface ISecuritySGRuleStatus {
 
 export class SecuritySGRuleStatus extends BaseModel implements ISecuritySGRuleStatus {
     'rule-hash': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySGRuleStatus]: PropInfoItem } = {
         'rule-hash': {
             required: false,
             type: 'string'

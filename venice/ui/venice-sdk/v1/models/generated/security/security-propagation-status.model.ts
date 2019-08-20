@@ -26,7 +26,7 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
     'min-version': string = null;
     'status': string = null;
     'pending-smartnics': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityPropagationStatus]: PropInfoItem } = {
         'generation-id': {
             required: false,
             type: 'string'

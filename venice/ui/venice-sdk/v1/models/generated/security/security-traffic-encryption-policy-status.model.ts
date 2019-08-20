@@ -13,7 +13,7 @@ export interface ISecurityTrafficEncryptionPolicyStatus {
 
 
 export class SecurityTrafficEncryptionPolicyStatus extends BaseModel implements ISecurityTrafficEncryptionPolicyStatus {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityTrafficEncryptionPolicyStatus]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -18,7 +18,7 @@ export interface ISearchPolicyMatchEntry {
 export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMatchEntry {
     'rule': SecuritySGRule = null;
     'index': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchPolicyMatchEntry]: PropInfoItem } = {
         'rule': {
             required: false,
             type: 'object'

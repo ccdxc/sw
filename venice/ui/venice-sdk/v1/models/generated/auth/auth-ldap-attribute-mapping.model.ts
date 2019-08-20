@@ -32,7 +32,7 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     'email': string = null;
     /** The name that the server uses for the Name attribute. */
     'fullname': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthLdapAttributeMapping]: PropInfoItem } = {
         'user': {
             description:  'The name that the server uses for the UserID Attribute.',
             required: false,

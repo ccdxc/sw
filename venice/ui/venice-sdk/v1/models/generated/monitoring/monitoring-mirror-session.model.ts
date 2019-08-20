@@ -26,7 +26,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     'meta': ApiObjectMeta = null;
     'mirror-session-spec': MonitoringMirrorSessionSpec = null;
     'status': MonitoringMirrorSessionStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringMirrorSession]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

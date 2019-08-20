@@ -18,7 +18,7 @@ export interface IClusterAutoMsgVersionWatchHelperWatchEvent {
 export class ClusterAutoMsgVersionWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgVersionWatchHelperWatchEvent {
     'type': string = null;
     'object': ClusterVersion = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterAutoMsgVersionWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

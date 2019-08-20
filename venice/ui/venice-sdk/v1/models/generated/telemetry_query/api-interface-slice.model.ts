@@ -16,7 +16,7 @@ export interface IApiInterfaceSlice {
 
 export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
     'Values': Array<ApiInterface> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiInterfaceSlice]: PropInfoItem } = {
         'Values': {
             required: false,
             type: 'object'

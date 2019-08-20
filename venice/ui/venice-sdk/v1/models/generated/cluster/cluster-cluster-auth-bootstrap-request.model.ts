@@ -20,7 +20,7 @@ export class ClusterClusterAuthBootstrapRequest extends BaseModel implements ICl
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterClusterAuthBootstrapRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

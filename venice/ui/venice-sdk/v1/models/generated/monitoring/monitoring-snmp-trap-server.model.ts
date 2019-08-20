@@ -33,7 +33,7 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     'auth-config': MonitoringAuthConfig = null;
     /** PrivacyConfig contains the configuration for encryption, valid only for v3. */
     'privacy-config': MonitoringPrivacyConfig = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringSNMPTrapServer]: PropInfoItem } = {
         'host': {
             description:  'Host where the trap needs to be sent.',
             required: false,

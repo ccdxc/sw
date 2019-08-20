@@ -43,7 +43,7 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     'policy-name': string = null;
     'reporter-id': string = null;
     'time': Date = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryFwlog]: PropInfoItem } = {
         'tenant': {
             required: false,
             type: 'string'

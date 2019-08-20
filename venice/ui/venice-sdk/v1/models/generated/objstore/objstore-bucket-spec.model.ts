@@ -15,7 +15,7 @@ export interface IObjstoreBucketSpec {
 
 export class ObjstoreBucketSpec extends BaseModel implements IObjstoreBucketSpec {
     'description': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreBucketSpec]: PropInfoItem } = {
         'description': {
             required: false,
             type: 'string'

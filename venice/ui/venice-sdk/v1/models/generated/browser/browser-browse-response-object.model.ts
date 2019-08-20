@@ -24,7 +24,7 @@ export class BrowserBrowseResponseObject extends BaseModel implements IBrowserBr
     'total-count': number = null;
     /** map of results. Key to the map is the URI of the  Object. */
     'objects': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IBrowserBrowseResponseObject]: PropInfoItem } = {
         'root-uri': {
             required: false,
             type: 'string'

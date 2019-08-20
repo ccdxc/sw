@@ -18,7 +18,7 @@ export interface IMonitoringTsResult {
 export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult {
     'time-window': MonitoringTimeWindow = null;
     'report-url': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTsResult]: PropInfoItem } = {
         'time-window': {
             required: false,
             type: 'object'

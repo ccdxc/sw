@@ -28,7 +28,7 @@ export class AuthAuthenticationPolicy extends BaseModel implements IAuthAuthenti
     'spec': AuthAuthenticationPolicySpec = null;
     /** Status contains the current state of the authentication policy. */
     'status': AuthAuthenticationPolicyStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthAuthenticationPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

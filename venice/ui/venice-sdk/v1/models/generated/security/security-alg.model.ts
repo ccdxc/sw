@@ -31,7 +31,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     'ftp': SecurityFtp = null;
     'sunrpc': Array<SecuritySunrpc> = null;
     'msrpc': Array<SecurityMsrpc> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityALG]: PropInfoItem } = {
         'type': {
             enum: SecurityALG_type,
             default: 'icmp',

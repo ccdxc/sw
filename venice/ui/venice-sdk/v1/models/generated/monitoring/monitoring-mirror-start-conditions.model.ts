@@ -15,7 +15,7 @@ export interface IMonitoringMirrorStartConditions {
 
 export class MonitoringMirrorStartConditions extends BaseModel implements IMonitoringMirrorStartConditions {
     'schedule-time': Date = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringMirrorStartConditions]: PropInfoItem } = {
         'schedule-time': {
             required: false,
             type: 'Date'

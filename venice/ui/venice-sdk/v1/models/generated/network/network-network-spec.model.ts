@@ -27,7 +27,7 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     'ipv6-gateway': string = null;
     'vlan-id': number = null;
     'vxlan-vni': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetworkSpec]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

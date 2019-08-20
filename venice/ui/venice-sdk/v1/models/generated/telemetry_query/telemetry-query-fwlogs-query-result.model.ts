@@ -18,7 +18,7 @@ export interface ITelemetry_queryFwlogsQueryResult {
 export class Telemetry_queryFwlogsQueryResult extends BaseModel implements ITelemetry_queryFwlogsQueryResult {
     'statement_id': number = null;
     'logs': Array<Telemetry_queryFwlog> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryFwlogsQueryResult]: PropInfoItem } = {
         'statement_id': {
             required: false,
             type: 'number'

@@ -16,7 +16,7 @@ export interface IApiWatchEventList {
 
 export class ApiWatchEventList extends BaseModel implements IApiWatchEventList {
     'events': Array<ApiWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiWatchEventList]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

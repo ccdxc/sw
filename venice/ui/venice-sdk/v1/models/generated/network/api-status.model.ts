@@ -31,7 +31,7 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     'code': number = null;
     /** Reference to the object (optional) for which this status is being sent. */
     'object-ref': ApiObjectRef = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiStatus]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

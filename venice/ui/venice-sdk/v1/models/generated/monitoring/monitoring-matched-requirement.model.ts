@@ -22,7 +22,7 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     'operator': MonitoringMatchedRequirement_operator = null;
     'values': Array<string> = null;
     'observed-value': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringMatchedRequirement]: PropInfoItem } = {
         'key': {
             required: false,
             type: 'string'

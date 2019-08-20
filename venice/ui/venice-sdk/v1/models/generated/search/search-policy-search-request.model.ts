@@ -41,7 +41,7 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     'to-ip-address': string = null;
     'from-security-group': string = null;
     'to-security-group': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchPolicySearchRequest]: PropInfoItem } = {
         'tenant': {
             default: 'default',
             description:  'Tenant Name, to perform query within a Tenant&#x27;s scope. The default tenant is &quot;default&quot;. In the backend this field gets auto-filled &amp; validated by apigw-hook based on user login context.',

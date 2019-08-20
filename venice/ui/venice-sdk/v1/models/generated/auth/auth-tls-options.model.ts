@@ -26,7 +26,7 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     'server-name': string = null;
     /** TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. */
     'trusted-certs': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthTLSOptions]: PropInfoItem } = {
         'start-tls': {
             required: false,
             type: 'boolean'

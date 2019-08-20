@@ -50,7 +50,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
     /** Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in
     JWS compact serialization format in this map. Data in this map will not be signed. */
     'data': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuditEventAttributes]: PropInfoItem } = {
         'stage': {
             enum: AuditEventAttributes_stage,
             default: 'requestauthorization',

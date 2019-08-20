@@ -26,7 +26,7 @@ export class ObjstoreBucket extends BaseModel implements IObjstoreBucket {
     'meta': ApiObjectMeta = null;
     'spec': ObjstoreBucketSpec = null;
     'status': ObjstoreBucketStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreBucket]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

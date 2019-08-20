@@ -28,7 +28,7 @@ export class NetworkNetwork extends BaseModel implements INetworkNetwork {
     'spec': NetworkNetworkSpec = null;
     /** Status contains the current state of the network. */
     'status': NetworkNetworkStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetwork]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

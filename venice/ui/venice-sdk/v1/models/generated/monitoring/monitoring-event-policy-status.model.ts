@@ -13,7 +13,7 @@ export interface IMonitoringEventPolicyStatus {
 
 
 export class MonitoringEventPolicyStatus extends BaseModel implements IMonitoringEventPolicyStatus {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringEventPolicyStatus]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

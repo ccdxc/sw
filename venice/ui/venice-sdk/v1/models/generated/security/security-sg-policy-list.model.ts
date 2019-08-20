@@ -23,7 +23,7 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<SecuritySGPolicy> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySGPolicyList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -23,7 +23,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     /** Quorum node or not. */
     'quorum': boolean = null;
     'conditions': Array<ClusterNodeCondition> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterNodeStatus]: PropInfoItem } = {
         'phase': {
             enum: ClusterNodeStatus_phase_uihint,
             default: 'unknown',

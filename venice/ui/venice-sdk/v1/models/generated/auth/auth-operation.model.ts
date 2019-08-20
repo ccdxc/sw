@@ -19,7 +19,7 @@ export interface IAuthOperation {
 export class AuthOperation extends BaseModel implements IAuthOperation {
     'resource': AuthResource = null;
     'action': AuthOperation_action = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthOperation]: PropInfoItem } = {
         'resource': {
             required: false,
             type: 'object'

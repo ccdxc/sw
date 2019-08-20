@@ -31,7 +31,7 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     'entries': Array<SearchEntry> = null;
     'preview-entries': SearchTenantPreview = null;
     'aggregated-entries': SearchTenantAggregation = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchSearchResponse]: PropInfoItem } = {
         'total-hits': {
             required: false,
             type: 'string'

@@ -15,7 +15,7 @@ export interface INetworkNetworkInterfaceHostStatus {
 
 export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INetworkNetworkInterfaceHostStatus {
     'host-ifname': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetworkInterfaceHostStatus]: PropInfoItem } = {
         'host-ifname': {
             required: false,
             type: 'string'

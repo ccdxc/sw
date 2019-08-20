@@ -19,7 +19,7 @@ export interface IMonitoringMirrorCollector {
 export class MonitoringMirrorCollector extends BaseModel implements IMonitoringMirrorCollector {
     'type': MonitoringMirrorCollector_type = null;
     'export-config': MonitoringMirrorExportConfig = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringMirrorCollector]: PropInfoItem } = {
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
             default: 'erspan',

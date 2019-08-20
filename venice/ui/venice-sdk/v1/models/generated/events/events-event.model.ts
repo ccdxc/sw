@@ -39,7 +39,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     'object-ref': ApiObjectRef = null;
     'source': EventsEventSource = null;
     'count': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IEventsEvent]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

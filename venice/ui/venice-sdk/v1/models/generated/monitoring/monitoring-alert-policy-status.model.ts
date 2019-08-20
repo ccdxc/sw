@@ -19,7 +19,7 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     'total-hits': number = null;
     'open-alerts': number = null;
     'acknowledged-alerts': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertPolicyStatus]: PropInfoItem } = {
         'total-hits': {
             required: false,
             type: 'number'

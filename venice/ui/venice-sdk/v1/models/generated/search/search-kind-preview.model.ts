@@ -15,7 +15,7 @@ export interface ISearchKindPreview {
 
 export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
     'kinds': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchKindPreview]: PropInfoItem } = {
         'kinds': {
             required: false,
             type: 'object'

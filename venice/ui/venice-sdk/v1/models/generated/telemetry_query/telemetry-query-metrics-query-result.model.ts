@@ -18,7 +18,7 @@ export interface ITelemetry_queryMetricsQueryResult {
 export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITelemetry_queryMetricsQueryResult {
     'statement_id': number = null;
     'series': Array<Telemetry_queryResultSeries> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryMetricsQueryResult]: PropInfoItem } = {
         'statement_id': {
             required: false,
             type: 'number'

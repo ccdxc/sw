@@ -17,7 +17,7 @@ export interface ISecuritySecurityGroupStatus {
 export class SecuritySecurityGroupStatus extends BaseModel implements ISecuritySecurityGroupStatus {
     'workloads': Array<string> = null;
     'Policies': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySecurityGroupStatus]: PropInfoItem } = {
         'workloads': {
             required: false,
             type: 'Array<string>'

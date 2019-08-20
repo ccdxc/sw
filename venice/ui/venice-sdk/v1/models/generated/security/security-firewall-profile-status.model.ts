@@ -16,7 +16,7 @@ export interface ISecurityFirewallProfileStatus {
 
 export class SecurityFirewallProfileStatus extends BaseModel implements ISecurityFirewallProfileStatus {
     'propagation-status': SecurityPropagationStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityFirewallProfileStatus]: PropInfoItem } = {
         'propagation-status': {
             required: false,
             type: 'object'

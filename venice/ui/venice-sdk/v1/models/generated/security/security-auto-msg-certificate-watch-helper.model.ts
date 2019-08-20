@@ -16,7 +16,7 @@ export interface ISecurityAutoMsgCertificateWatchHelper {
 
 export class SecurityAutoMsgCertificateWatchHelper extends BaseModel implements ISecurityAutoMsgCertificateWatchHelper {
     'events': Array<SecurityAutoMsgCertificateWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityAutoMsgCertificateWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

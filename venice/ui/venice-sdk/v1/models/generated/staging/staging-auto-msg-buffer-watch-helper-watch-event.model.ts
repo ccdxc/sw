@@ -18,7 +18,7 @@ export interface IStagingAutoMsgBufferWatchHelperWatchEvent {
 export class StagingAutoMsgBufferWatchHelperWatchEvent extends BaseModel implements IStagingAutoMsgBufferWatchHelperWatchEvent {
     'type': string = null;
     'object': StagingBuffer = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingAutoMsgBufferWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

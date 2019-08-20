@@ -13,7 +13,7 @@ export interface IClusterNodeSpec {
 
 
 export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterNodeSpec]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

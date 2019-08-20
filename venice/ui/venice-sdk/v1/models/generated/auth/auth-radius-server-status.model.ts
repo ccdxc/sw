@@ -23,7 +23,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     'message': string = null;
     'server': AuthRadiusServer = null;
     'nas-id': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRadiusServerStatus]: PropInfoItem } = {
         'result': {
             enum: AuthRadiusServerStatus_result,
             default: 'connect-success',

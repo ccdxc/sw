@@ -16,7 +16,7 @@ export interface IClusterStorageInfo {
 
 export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo {
     'devices': Array<ClusterStorageDeviceInfo> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterStorageInfo]: PropInfoItem } = {
         'devices': {
             required: false,
             type: 'object'

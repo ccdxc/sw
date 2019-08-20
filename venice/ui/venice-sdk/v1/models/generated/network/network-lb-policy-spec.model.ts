@@ -22,7 +22,7 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     'algorithm': string = null;
     'session-affinity': string = null;
     'health-check': NetworkHealthCheckSpec = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkLbPolicySpec]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

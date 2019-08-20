@@ -24,7 +24,7 @@ export class ApiInterface extends BaseModel implements IApiInterface {
     'Bool': boolean = null;
     'Float': number = null;
     'Interfaces': ApiInterfaceSlice = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiInterface]: PropInfoItem } = {
         'Str': {
             required: false,
             type: 'string'

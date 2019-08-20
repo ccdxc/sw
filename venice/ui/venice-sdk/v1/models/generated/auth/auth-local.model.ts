@@ -15,7 +15,7 @@ export interface IAuthLocal {
 
 export class AuthLocal extends BaseModel implements IAuthLocal {
     'enabled': boolean = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthLocal]: PropInfoItem } = {
         'enabled': {
             required: false,
             type: 'boolean'

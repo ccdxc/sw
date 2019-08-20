@@ -18,7 +18,7 @@ export interface IAuthRadius {
 export class AuthRadius extends BaseModel implements IAuthRadius {
     'enabled': boolean = null;
     'domains': Array<AuthRadiusDomain> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRadius]: PropInfoItem } = {
         'enabled': {
             required: false,
             type: 'boolean'

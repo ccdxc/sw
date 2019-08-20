@@ -28,7 +28,7 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
     'spec': SecuritySecurityGroupSpec = null;
     /** Status contains the current state of the security group. */
     'status': SecuritySecurityGroupStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySecurityGroup]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

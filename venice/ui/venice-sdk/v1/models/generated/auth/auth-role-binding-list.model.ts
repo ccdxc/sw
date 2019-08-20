@@ -23,7 +23,7 @@ export class AuthRoleBindingList extends BaseModel implements IAuthRoleBindingLi
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<AuthRoleBinding> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRoleBindingList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

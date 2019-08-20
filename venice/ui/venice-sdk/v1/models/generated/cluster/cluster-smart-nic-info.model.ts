@@ -28,7 +28,7 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     'cpu-info': ClusterCPUInfo = null;
     'memory-info': ClusterMemInfo = null;
     'storage-info': ClusterStorageInfo = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterSmartNICInfo]: PropInfoItem } = {
         'bios-info': {
             required: false,
             type: 'object'

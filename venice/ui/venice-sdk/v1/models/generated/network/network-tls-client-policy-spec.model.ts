@@ -34,7 +34,7 @@ export class NetworkTLSClientPolicySpec extends BaseModel implements INetworkTLS
     SubjAltName or Common Name (if SAN is not specified). If not specified,
     client validates the IP address of the server. */
     'tls-client-allowed-peer-id': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkTLSClientPolicySpec]: PropInfoItem } = {
         'tls-client-certificates-selector': {
             description:  'A map containing the certificate to use for a set of destinations. The key is a selector for workloads that exist either inside or outside the cluster. It can be based on labels, hostnames or &quot;IP:port&quot; pairs. The value is the name of the certificate to use for the selected destinations. The certificates &quot;usage&quot; field must contain &quot;client&quot;. TODO: replace the first &quot;string&quot; type with proper selector type when available. A single &quot;default&quot; certificate which matches all destinations is allowed. If a destination matches multiple non-default map keys, an error is returned. If a destination does not match any map key (and there is no default), the outbound connection is initiated without TLS.',
             required: false,

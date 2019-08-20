@@ -27,7 +27,7 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
     'spec': MonitoringFlowExportPolicySpec = null;
     /** Status contains the current state of the export policy. */
     'status': MonitoringFlowExportPolicyStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringFlowExportPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

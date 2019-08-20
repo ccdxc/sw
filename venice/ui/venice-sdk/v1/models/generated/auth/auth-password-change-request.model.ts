@@ -26,7 +26,7 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
     'old-password': string = null;
     /** length of string should be at least 1 */
     'new-password': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthPasswordChangeRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

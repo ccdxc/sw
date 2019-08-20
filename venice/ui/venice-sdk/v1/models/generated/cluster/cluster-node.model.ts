@@ -28,7 +28,7 @@ export class ClusterNode extends BaseModel implements IClusterNode {
     'spec': ClusterNodeSpec = null;
     /** Status contains the current state of the node. */
     'status': ClusterNodeStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterNode]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

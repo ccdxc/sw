@@ -23,7 +23,7 @@ export class DiagnosticsModuleList extends BaseModel implements IDiagnosticsModu
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<DiagnosticsModule> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IDiagnosticsModuleList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

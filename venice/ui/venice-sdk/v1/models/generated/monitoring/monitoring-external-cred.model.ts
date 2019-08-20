@@ -30,7 +30,7 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
     'key-data': string = null;
     /** CaData holds PEM-encoded bytes (typically read from a root certificates bundle). */
     'ca-data': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringExternalCred]: PropInfoItem } = {
         'auth-type': {
             enum: MonitoringExternalCred_auth_type_uihint,
             default: 'none',

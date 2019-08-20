@@ -25,7 +25,7 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     "notEquals" operators need a single Value. "in" and "notIn" operators can have
     one or more values. */
     'values': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IFieldsRequirement]: PropInfoItem } = {
         'key': {
             description:  'The label key that the condition applies to.',
             required: false,

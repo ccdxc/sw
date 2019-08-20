@@ -19,7 +19,7 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
     /** should be a valid time duration
      */
     'timeout': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityMsrpc]: PropInfoItem } = {
         'program-uuid': {
             required: false,
             type: 'string'

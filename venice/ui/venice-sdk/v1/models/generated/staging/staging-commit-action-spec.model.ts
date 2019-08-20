@@ -13,7 +13,7 @@ export interface IStagingCommitActionSpec {
 
 
 export class StagingCommitActionSpec extends BaseModel implements IStagingCommitActionSpec {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingCommitActionSpec]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

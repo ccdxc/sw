@@ -33,7 +33,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
     'start-time': Date = null;
     'end-time': Date = null;
     'prev-version': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IRolloutRolloutStatus]: PropInfoItem } = {
         'controller-nodes-status': {
             required: false,
             type: 'object'

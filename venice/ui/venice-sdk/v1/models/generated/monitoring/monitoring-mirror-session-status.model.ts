@@ -18,7 +18,7 @@ export interface IMonitoringMirrorSessionStatus {
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
     'oper-state': MonitoringMirrorSessionStatus_oper_state = null;
     'started-at': Date = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringMirrorSessionStatus]: PropInfoItem } = {
         'oper-state': {
             enum: MonitoringMirrorSessionStatus_oper_state_uihint,
             default: 'none',

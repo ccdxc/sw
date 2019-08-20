@@ -20,7 +20,7 @@ export class AuthTokenSecretRequest extends BaseModel implements IAuthTokenSecre
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthTokenSecretRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

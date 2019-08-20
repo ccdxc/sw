@@ -28,7 +28,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
     'spec': WorkloadEndpointSpec = null;
     /** Status contains the current state of the Endpoint. */
     'status': WorkloadEndpointStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadEndpoint]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

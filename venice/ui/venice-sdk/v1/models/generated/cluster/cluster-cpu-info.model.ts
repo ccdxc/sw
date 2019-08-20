@@ -21,7 +21,7 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
     'num-sockets': number = null;
     'num-cores': number = null;
     'num-threads': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterCPUInfo]: PropInfoItem } = {
         'speed': {
             required: false,
             type: 'string'

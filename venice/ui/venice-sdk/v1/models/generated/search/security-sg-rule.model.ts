@@ -29,7 +29,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     'to-ip-addresses': Array<string> = null;
     'from-security-groups': Array<string> = null;
     'to-security-groups': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySGRule]: PropInfoItem } = {
         'apps': {
             required: false,
             type: 'Array<string>'

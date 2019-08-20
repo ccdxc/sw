@@ -23,7 +23,7 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<SecurityTrafficEncryptionPolicy> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityTrafficEncryptionPolicyList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

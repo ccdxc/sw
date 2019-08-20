@@ -16,7 +16,7 @@ export interface IClusterHostSpec {
 
 export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     'smart-nics': Array<ClusterSmartNICID> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterHostSpec]: PropInfoItem } = {
         'smart-nics': {
             required: false,
             type: 'object'

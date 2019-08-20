@@ -18,7 +18,7 @@ export interface INetworkAutoMsgVirtualRouterWatchHelperWatchEvent {
 export class NetworkAutoMsgVirtualRouterWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgVirtualRouterWatchHelperWatchEvent {
     'type': string = null;
     'object': NetworkVirtualRouter = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkAutoMsgVirtualRouterWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

@@ -15,7 +15,7 @@ export interface ISearchKindAggregation {
 
 export class SearchKindAggregation extends BaseModel implements ISearchKindAggregation {
     'kinds': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISearchKindAggregation]: PropInfoItem } = {
         'kinds': {
             required: false,
             type: 'object'

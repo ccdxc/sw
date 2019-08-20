@@ -28,7 +28,7 @@ export class NetworkService extends BaseModel implements INetworkService {
     'spec': NetworkServiceSpec = null;
     /** Status contains the current state of the Service. */
     'status': NetworkServiceStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkService]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -16,7 +16,7 @@ export interface INetworkAutoMsgNetworkWatchHelper {
 
 export class NetworkAutoMsgNetworkWatchHelper extends BaseModel implements INetworkAutoMsgNetworkWatchHelper {
     'events': Array<NetworkAutoMsgNetworkWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkAutoMsgNetworkWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

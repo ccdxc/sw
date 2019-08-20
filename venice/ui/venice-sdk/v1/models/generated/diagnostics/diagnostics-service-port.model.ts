@@ -17,7 +17,7 @@ export interface IDiagnosticsServicePort {
 export class DiagnosticsServicePort extends BaseModel implements IDiagnosticsServicePort {
     'name': string = null;
     'port': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IDiagnosticsServicePort]: PropInfoItem } = {
         'name': {
             required: false,
             type: 'string'

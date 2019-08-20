@@ -13,7 +13,7 @@ export interface IClusterVersionSpec {
 
 
 export class ClusterVersionSpec extends BaseModel implements IClusterVersionSpec {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterVersionSpec]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

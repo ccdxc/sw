@@ -25,7 +25,7 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     'selector': FieldsSelector = null;
     'targets': Array<MonitoringExportConfig> = null;
     'config': MonitoringSyslogExportConfig = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringEventPolicySpec]: PropInfoItem } = {
         'format': {
             enum: MonitoringEventPolicySpec_format_uihint,
             default: 'syslog-bsd',

@@ -22,7 +22,7 @@ export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry
     'tags': object = null;
     'columns': Array<string> = null;
     'values': Array<ApiInterfaceSlice> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryResultSeries]: PropInfoItem } = {
         'name': {
             required: false,
             type: 'string'

@@ -24,7 +24,7 @@ export class ClusterUpdateTLSConfigRequest extends BaseModel implements ICluster
     'meta': ApiObjectMeta = null;
     'certs': string = null;
     'key': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterUpdateTLSConfigRequest]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

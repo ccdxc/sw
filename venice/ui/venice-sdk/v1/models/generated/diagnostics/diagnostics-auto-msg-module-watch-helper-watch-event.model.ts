@@ -18,7 +18,7 @@ export interface IDiagnosticsAutoMsgModuleWatchHelperWatchEvent {
 export class DiagnosticsAutoMsgModuleWatchHelperWatchEvent extends BaseModel implements IDiagnosticsAutoMsgModuleWatchHelperWatchEvent {
     'type': string = null;
     'object': DiagnosticsModule = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IDiagnosticsAutoMsgModuleWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

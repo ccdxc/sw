@@ -20,7 +20,7 @@ export class AuthRadiusDomain extends BaseModel implements IAuthRadiusDomain {
     'nas-id': string = null;
     'servers': Array<AuthRadiusServer> = null;
     'tag': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRadiusDomain]: PropInfoItem } = {
         'nas-id': {
             required: false,
             type: 'string'

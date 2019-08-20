@@ -18,7 +18,7 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     'id': string = null;
     /** should be a valid MAC address */
     'mac-address': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterSmartNICID]: PropInfoItem } = {
         'id': {
             required: false,
             type: 'string'

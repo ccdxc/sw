@@ -23,7 +23,7 @@ export class MonitoringEventPolicyList extends BaseModel implements IMonitoringE
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<MonitoringEventPolicy> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringEventPolicyList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

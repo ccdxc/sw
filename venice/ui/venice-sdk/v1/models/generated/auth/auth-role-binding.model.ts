@@ -28,7 +28,7 @@ export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
     'spec': AuthRoleBindingSpec = null;
     /** Status contains the current state of the role binding. */
     'status': AuthRoleBindingStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthRoleBinding]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

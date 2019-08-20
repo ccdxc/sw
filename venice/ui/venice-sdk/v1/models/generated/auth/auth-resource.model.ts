@@ -23,7 +23,7 @@ export class AuthResource extends BaseModel implements IAuthResource {
     'kind': string = null;
     'namespace': string = null;
     'name': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthResource]: PropInfoItem } = {
         'tenant': {
             required: false,
             type: 'string'

@@ -15,7 +15,7 @@ export interface INetworkServiceStatus {
 
 export class NetworkServiceStatus extends BaseModel implements INetworkServiceStatus {
     'workloads': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkServiceStatus]: PropInfoItem } = {
         'workloads': {
             required: false,
             type: 'Array<string>'

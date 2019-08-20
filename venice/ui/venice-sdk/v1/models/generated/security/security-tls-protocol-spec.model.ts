@@ -17,7 +17,7 @@ export interface ISecurityTLSProtocolSpec {
 export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSProtocolSpec {
     'version': string = null;
     'cipher-suite': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityTLSProtocolSpec]: PropInfoItem } = {
         'version': {
             required: false,
             type: 'string'

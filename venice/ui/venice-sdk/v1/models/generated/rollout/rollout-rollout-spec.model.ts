@@ -45,7 +45,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     'smartnics-only': boolean = null;
     'smartnic-must-match-constraint': boolean = null;
     'upgrade-type': RolloutRolloutSpec_upgrade_type = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IRolloutRolloutSpec]: PropInfoItem } = {
         'version': {
             required: false,
             type: 'string'

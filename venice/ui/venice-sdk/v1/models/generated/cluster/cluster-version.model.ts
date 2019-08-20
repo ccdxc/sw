@@ -28,7 +28,7 @@ export class ClusterVersion extends BaseModel implements IClusterVersion {
     'spec': ClusterVersionSpec = null;
     /** Status contains the current state of the Version. */
     'status': ClusterVersionStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterVersion]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

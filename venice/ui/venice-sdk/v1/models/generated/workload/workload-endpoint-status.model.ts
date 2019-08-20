@@ -42,7 +42,7 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     'SecurityGroups': Array<string> = null;
     'micro-segment-vlan': number = null;
     'workload-attributes': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadEndpointStatus]: PropInfoItem } = {
         'workload-name': {
             required: false,
             type: 'string'

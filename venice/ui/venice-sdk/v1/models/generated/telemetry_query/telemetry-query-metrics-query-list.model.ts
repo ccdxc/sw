@@ -20,7 +20,7 @@ export class Telemetry_queryMetricsQueryList extends BaseModel implements ITelem
     'tenant': string = null;
     'namespace': string = null;
     'queries': Array<Telemetry_queryMetricsQuerySpec> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ITelemetry_queryMetricsQueryList]: PropInfoItem } = {
         'tenant': {
             required: false,
             type: 'string'

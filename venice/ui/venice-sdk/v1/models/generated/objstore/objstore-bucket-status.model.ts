@@ -17,7 +17,7 @@ export interface IObjstoreBucketStatus {
 export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketStatus {
     'num-objects': number = null;
     'total-size': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreBucketStatus]: PropInfoItem } = {
         'num-objects': {
             required: false,
             type: 'number'

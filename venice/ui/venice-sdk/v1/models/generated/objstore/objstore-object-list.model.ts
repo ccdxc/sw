@@ -23,7 +23,7 @@ export class ObjstoreObjectList extends BaseModel implements IObjstoreObjectList
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<ObjstoreObject> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreObjectList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

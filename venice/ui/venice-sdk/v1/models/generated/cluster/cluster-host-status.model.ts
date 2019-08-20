@@ -15,7 +15,7 @@ export interface IClusterHostStatus {
 
 export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     'admitted-smart-nics': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterHostStatus]: PropInfoItem } = {
         'admitted-smart-nics': {
             required: false,
             type: 'Array<string>'

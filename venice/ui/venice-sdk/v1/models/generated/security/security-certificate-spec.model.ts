@@ -32,7 +32,7 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     These certificates are treated opaquely. We do not process them in any way
     other than decoding them for informational purposes. */
     'trust-chain': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityCertificateSpec]: PropInfoItem } = {
         'description': {
             required: false,
             type: 'string'

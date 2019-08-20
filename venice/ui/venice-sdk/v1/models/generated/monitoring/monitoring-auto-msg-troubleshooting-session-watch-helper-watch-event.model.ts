@@ -18,7 +18,7 @@ export interface IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent {
 export class MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent {
     'type': string = null;
     'object': MonitoringTroubleshootingSession = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

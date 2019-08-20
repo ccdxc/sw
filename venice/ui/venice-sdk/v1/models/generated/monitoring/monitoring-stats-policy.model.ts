@@ -27,7 +27,7 @@ export class MonitoringStatsPolicy extends BaseModel implements IMonitoringStats
     'spec': MonitoringStatsPolicySpec = null;
     /** Status contains the current state of the policy. */
     'status': MonitoringStatsPolicyStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringStatsPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

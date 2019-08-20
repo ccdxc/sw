@@ -26,7 +26,7 @@ export class StagingCommitAction extends BaseModel implements IStagingCommitActi
     'meta': ApiObjectMeta = null;
     'spec': StagingCommitActionSpec = null;
     'status': StagingCommitActionStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingCommitAction]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -13,7 +13,7 @@ export interface IWorkloadEndpointSpec {
 
 
 export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpointSpec {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadEndpointSpec]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

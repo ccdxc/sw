@@ -26,7 +26,7 @@ export class ClusterClusterCondition extends BaseModel implements IClusterCluste
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterClusterCondition]: PropInfoItem } = {
         'type': {
             enum: ClusterClusterCondition_type_uihint,
             default: 'healthy',

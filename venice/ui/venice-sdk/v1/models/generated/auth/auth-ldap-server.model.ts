@@ -18,7 +18,7 @@ export interface IAuthLdapServer {
 export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     'url': string = null;
     'tls-options': AuthTLSOptions = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthLdapServer]: PropInfoItem } = {
         'url': {
             required: false,
             type: 'string'

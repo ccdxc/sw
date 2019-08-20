@@ -30,7 +30,7 @@ export class AuthLdapDomain extends BaseModel implements IAuthLdapDomain {
     'attribute-mapping': AuthLdapAttributeMapping = null;
     'servers': Array<AuthLdapServer> = null;
     'tag': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthLdapDomain]: PropInfoItem } = {
         'base-dn': {
             description:  'The LDAP base DN to be used in a user search.',
             required: false,

@@ -18,7 +18,7 @@ export interface IClusterMemInfo {
 export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
     'type': ClusterMemInfo_type = null;
     'size': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterMemInfo]: PropInfoItem } = {
         'type': {
             enum: ClusterMemInfo_type,
             default: 'unknown',

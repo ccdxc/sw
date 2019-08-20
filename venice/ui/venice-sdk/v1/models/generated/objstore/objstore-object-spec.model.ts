@@ -17,7 +17,7 @@ export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec
     /** Content-Type for the stored object. Can either be specified when uploading.
      or the backend guesses one if possible. */
     'content-type': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreObjectSpec]: PropInfoItem } = {
         'content-type': {
             description:  'Content-Type for the stored object. Can either be specified when uploading.  or the backend guesses one if possible.',
             required: false,

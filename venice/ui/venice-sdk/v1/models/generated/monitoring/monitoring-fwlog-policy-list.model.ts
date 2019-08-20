@@ -23,7 +23,7 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<MonitoringFwlogPolicy> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringFwlogPolicyList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

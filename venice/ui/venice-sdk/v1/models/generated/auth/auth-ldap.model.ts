@@ -18,7 +18,7 @@ export interface IAuthLdap {
 export class AuthLdap extends BaseModel implements IAuthLdap {
     'enabled': boolean = null;
     'domains': Array<AuthLdapDomain> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthLdap]: PropInfoItem } = {
         'enabled': {
             required: false,
             type: 'boolean'

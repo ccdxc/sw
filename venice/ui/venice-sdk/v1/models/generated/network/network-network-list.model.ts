@@ -23,7 +23,7 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<NetworkNetwork> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetworkList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

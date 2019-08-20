@@ -22,7 +22,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     'status': MonitoringTechSupportRequestStatus_status = null;
     'ctrlr-node-results': object = null;
     'smartnic-node-results': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTechSupportRequestStatus]: PropInfoItem } = {
         'instance-id': {
             required: false,
             type: 'string'

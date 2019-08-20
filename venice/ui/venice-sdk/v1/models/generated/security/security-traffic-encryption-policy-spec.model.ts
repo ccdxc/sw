@@ -23,7 +23,7 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     'tls': SecurityTLSProtocolSpec = null;
     'ipsec': SecurityIPsecProtocolSpec = null;
     'key-rotation-interval-secs': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityTrafficEncryptionPolicySpec]: PropInfoItem } = {
         'mode': {
             required: false,
             type: 'string'

@@ -18,7 +18,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     /** should be a valid layer3 or layer 4 protocol and port/type */
     'proto-ports': Array<string> = null;
     'applications': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAppProtoSelector]: PropInfoItem } = {
         'proto-ports': {
             description:  'should be a valid layer3 or layer 4 protocol and port/type',
             hint:  'tcp/1234, arp',

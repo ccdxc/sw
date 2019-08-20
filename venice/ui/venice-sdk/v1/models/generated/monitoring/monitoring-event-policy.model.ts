@@ -28,7 +28,7 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
     'spec': MonitoringEventPolicySpec = null;
     /** Status contains the current state of an event policy. */
     'status': MonitoringEventPolicyStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringEventPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

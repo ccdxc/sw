@@ -25,7 +25,7 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
     'capacity': string = null;
     'percent-life-used-A': number = null;
     'percent-life-used-B': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterStorageDeviceInfo]: PropInfoItem } = {
         'serial-num': {
             required: false,
             type: 'string'

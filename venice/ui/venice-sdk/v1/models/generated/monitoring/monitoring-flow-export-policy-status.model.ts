@@ -13,7 +13,7 @@ export interface IMonitoringFlowExportPolicyStatus {
 
 
 export class MonitoringFlowExportPolicyStatus extends BaseModel implements IMonitoringFlowExportPolicyStatus {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringFlowExportPolicyStatus]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

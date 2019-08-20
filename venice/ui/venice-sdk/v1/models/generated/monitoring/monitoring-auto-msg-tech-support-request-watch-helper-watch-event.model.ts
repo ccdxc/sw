@@ -18,7 +18,7 @@ export interface IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent {
 export class MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent {
     'type': string = null;
     'object': MonitoringTechSupportRequest = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

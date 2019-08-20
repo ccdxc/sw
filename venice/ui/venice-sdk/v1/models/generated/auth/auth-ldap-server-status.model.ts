@@ -30,7 +30,7 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     'bind-dn': string = null;
     /** The password for the LDAP database account specified in the Root DN field. */
     'bind-password': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthLdapServerStatus]: PropInfoItem } = {
         'result': {
             enum: AuthLdapServerStatus_result,
             default: 'connect-success',

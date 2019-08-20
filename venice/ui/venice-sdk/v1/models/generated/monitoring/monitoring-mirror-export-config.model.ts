@@ -16,7 +16,7 @@ export interface IMonitoringMirrorExportConfig {
 export class MonitoringMirrorExportConfig extends BaseModel implements IMonitoringMirrorExportConfig {
     /** length of string should be between 1 and 2048 */
     'destination': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringMirrorExportConfig]: PropInfoItem } = {
         'destination': {
             description:  'length of string should be between 1 and 2048',
             required: true,

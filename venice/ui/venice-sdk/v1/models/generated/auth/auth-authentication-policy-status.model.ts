@@ -19,7 +19,7 @@ export interface IAuthAuthenticationPolicyStatus {
 export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAuthenticationPolicyStatus {
     'ldap-servers': Array<AuthLdapServerStatus> = null;
     'radius-servers': Array<AuthRadiusServerStatus> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthAuthenticationPolicyStatus]: PropInfoItem } = {
         'ldap-servers': {
             required: false,
             type: 'object'

@@ -26,7 +26,7 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterNodeCondition]: PropInfoItem } = {
         'type': {
             enum: ClusterNodeCondition_type_uihint,
             default: 'leader',

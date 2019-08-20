@@ -31,7 +31,7 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
     /** Links points to the relations of the object. The key for the map is the path to the filed which
       is causing the relation. */
     'links': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IBrowserObject]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

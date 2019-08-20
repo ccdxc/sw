@@ -20,7 +20,7 @@ export class StagingItem extends BaseModel implements IStagingItem {
     'uri': string = null;
     'method': string = null;
     'object': ApiAny = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IStagingItem]: PropInfoItem } = {
         'uri': {
             required: false,
             type: 'string'

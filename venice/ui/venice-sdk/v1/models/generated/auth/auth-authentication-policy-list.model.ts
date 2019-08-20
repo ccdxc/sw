@@ -23,7 +23,7 @@ export class AuthAuthenticationPolicyList extends BaseModel implements IAuthAuth
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<AuthAuthenticationPolicy> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthAuthenticationPolicyList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

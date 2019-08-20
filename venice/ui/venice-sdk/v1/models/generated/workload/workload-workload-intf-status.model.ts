@@ -17,7 +17,7 @@ export interface IWorkloadWorkloadIntfStatus {
 export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWorkloadIntfStatus {
     'ip-addresses': Array<string> = null;
     'endpoint': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IWorkloadWorkloadIntfStatus]: PropInfoItem } = {
         'ip-addresses': {
             required: false,
             type: 'Array<string>'

@@ -17,7 +17,7 @@ export interface IMonitoringAlertSource {
 export class MonitoringAlertSource extends BaseModel implements IMonitoringAlertSource {
     'component': string = null;
     'node-name': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertSource]: PropInfoItem } = {
         'component': {
             required: false,
             type: 'string'

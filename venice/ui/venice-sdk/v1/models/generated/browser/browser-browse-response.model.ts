@@ -30,7 +30,7 @@ export class BrowserBrowseResponse extends BaseModel implements IBrowserBrowseRe
     'max-depth': number = null;
     'total-count': number = null;
     'objects': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IBrowserBrowseResponse]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

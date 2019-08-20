@@ -22,7 +22,7 @@ export class DiagnosticsModuleSpec extends BaseModel implements IDiagnosticsModu
     /** EnableTrace enables traces for a module. Default is false. */
     'enable-trace': boolean = null;
     'args': Array<string> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IDiagnosticsModuleSpec]: PropInfoItem } = {
         'log-level': {
             enum: DiagnosticsModuleSpec_log_level,
             default: 'info',

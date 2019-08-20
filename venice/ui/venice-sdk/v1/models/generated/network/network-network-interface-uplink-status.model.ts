@@ -15,7 +15,7 @@ export interface INetworkNetworkInterfaceUplinkStatus {
 
 export class NetworkNetworkInterfaceUplinkStatus extends BaseModel implements INetworkNetworkInterfaceUplinkStatus {
     'link-speed': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkNetworkInterfaceUplinkStatus]: PropInfoItem } = {
         'link-speed': {
             required: false,
             type: 'string'

@@ -27,7 +27,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'collectors': Array<MonitoringMirrorCollector> = null;
     'match-rules': Array<MonitoringMatchRule> = null;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringMirrorSessionSpec]: PropInfoItem } = {
         'packet-size': {
             required: false,
             type: 'number'

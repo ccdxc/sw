@@ -16,7 +16,7 @@ export interface IMonitoringSNMPExport {
 
 export class MonitoringSNMPExport extends BaseModel implements IMonitoringSNMPExport {
     'snmp-trap-servers': Array<MonitoringSNMPTrapServer> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringSNMPExport]: PropInfoItem } = {
         'snmp-trap-servers': {
             required: false,
             type: 'object'

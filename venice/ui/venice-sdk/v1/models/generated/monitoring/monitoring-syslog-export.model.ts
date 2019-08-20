@@ -22,7 +22,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     'format': MonitoringSyslogExport_format = null;
     'targets': Array<MonitoringExportConfig> = null;
     'config': MonitoringSyslogExportConfig = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringSyslogExport]: PropInfoItem } = {
         'format': {
             enum: MonitoringSyslogExport_format_uihint,
             default: 'syslog-bsd',

@@ -54,7 +54,7 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
     'gateway-ip': string = null;
     'service-name': string = null;
     'data': object = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuditEvent]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

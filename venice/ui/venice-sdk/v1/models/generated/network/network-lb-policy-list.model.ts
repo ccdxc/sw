@@ -23,7 +23,7 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<NetworkLbPolicy> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkLbPolicyList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

@@ -16,7 +16,7 @@ export interface IClusterAutoMsgHostWatchHelper {
 
 export class ClusterAutoMsgHostWatchHelper extends BaseModel implements IClusterAutoMsgHostWatchHelper {
     'events': Array<ClusterAutoMsgHostWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterAutoMsgHostWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'

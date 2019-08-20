@@ -28,7 +28,7 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
     'spec': ClusterTenantSpec = null;
     /** Status contains the current state of the tenant. */
     'status': ClusterTenantStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterTenant]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

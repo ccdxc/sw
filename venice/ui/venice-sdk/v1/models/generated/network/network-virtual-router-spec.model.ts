@@ -13,7 +13,7 @@ export interface INetworkVirtualRouterSpec {
 
 
 export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtualRouterSpec {
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkVirtualRouterSpec]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {

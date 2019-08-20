@@ -28,7 +28,7 @@ export class AuthUser extends BaseModel implements IAuthUser {
     'spec': AuthUserSpec = null;
     /** Status contains the current state of the role binding. */
     'status': AuthUserStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthUser]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

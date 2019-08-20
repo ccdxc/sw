@@ -18,7 +18,7 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     /** Start/Stop Time - when start time is not specified, it implies start NOW. */
     'start-time': Date = null;
     'stop-time': Date = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTimeWindow]: PropInfoItem } = {
         'start-time': {
             description:  'Start/Stop Time - when start time is not specified, it implies start NOW.',
             required: false,

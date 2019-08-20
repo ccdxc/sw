@@ -17,7 +17,7 @@ export interface IFieldsSelector {
 export class FieldsSelector extends BaseModel implements IFieldsSelector {
     /** Requirements are ANDed. */
     'requirements': Array<FieldsRequirement> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IFieldsSelector]: PropInfoItem } = {
         'requirements': {
             description:  'Requirements are ANDed.',
             required: false,

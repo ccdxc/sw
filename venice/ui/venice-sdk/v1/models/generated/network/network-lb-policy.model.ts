@@ -28,7 +28,7 @@ export class NetworkLbPolicy extends BaseModel implements INetworkLbPolicy {
     'spec': NetworkLbPolicySpec = null;
     /** Status contains the current state of the LbPolicy. */
     'status': NetworkLbPolicyStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof INetworkLbPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

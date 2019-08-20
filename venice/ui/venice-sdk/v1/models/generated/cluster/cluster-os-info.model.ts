@@ -21,7 +21,7 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     'kernel-relase': string = null;
     'kernel-version': string = null;
     'processor': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterOsInfo]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

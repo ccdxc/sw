@@ -23,7 +23,7 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
     'drop-long-label-packets': boolean = null;
     'max-message-length': number = null;
     'query-response-timeout': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityDns]: PropInfoItem } = {
         'drop-multi-question-packets': {
             required: false,
             type: 'boolean'

@@ -26,7 +26,7 @@ export class RolloutRolloutAction extends BaseModel implements IRolloutRolloutAc
     'meta': ApiObjectMeta = null;
     'spec': RolloutRolloutSpec = null;
     'status': RolloutRolloutActionStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IRolloutRolloutAction]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

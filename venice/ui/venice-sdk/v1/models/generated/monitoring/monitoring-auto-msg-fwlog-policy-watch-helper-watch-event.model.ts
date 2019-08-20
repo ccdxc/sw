@@ -18,7 +18,7 @@ export interface IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent {
 export class MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent {
     'type': string = null;
     'object': MonitoringFwlogPolicy = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

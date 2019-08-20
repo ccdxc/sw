@@ -28,7 +28,7 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     'name': string = null;
     /** URI is a link to accessing the referenced object. */
     'uri': string = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IApiObjectRef]: PropInfoItem } = {
         'tenant': {
             description:  'Tenant of the object.',
             required: false,

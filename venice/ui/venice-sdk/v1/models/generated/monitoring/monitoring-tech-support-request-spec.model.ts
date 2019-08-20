@@ -21,7 +21,7 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
     'collection-selector': LabelsSelector = null;
     'node-selector': TechSupportRequestSpecNodeSelectorSpec = null;
     'verbosity': number = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTechSupportRequestSpec]: PropInfoItem } = {
         'collection-selector': {
             required: false,
             type: 'object'

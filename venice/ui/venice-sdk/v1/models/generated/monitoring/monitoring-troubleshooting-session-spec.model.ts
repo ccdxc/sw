@@ -23,7 +23,7 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     'time-window': MonitoringTimeWindow = null;
     'repeat-every': string = null;
     'enable-mirroring': boolean = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringTroubleshootingSessionSpec]: PropInfoItem } = {
         'flow-selector': {
             required: false,
             type: 'object'

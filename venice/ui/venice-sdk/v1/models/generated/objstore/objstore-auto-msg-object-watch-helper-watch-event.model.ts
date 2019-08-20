@@ -18,7 +18,7 @@ export interface IObjstoreAutoMsgObjectWatchHelperWatchEvent {
 export class ObjstoreAutoMsgObjectWatchHelperWatchEvent extends BaseModel implements IObjstoreAutoMsgObjectWatchHelperWatchEvent {
     'type': string = null;
     'object': ObjstoreObject = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IObjstoreAutoMsgObjectWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'

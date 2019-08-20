@@ -26,7 +26,7 @@ export class MonitoringAlertDestination extends BaseModel implements IMonitoring
     'meta': ApiObjectMeta = null;
     'spec': MonitoringAlertDestinationSpec = null;
     'status': MonitoringAlertDestinationStatus = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IMonitoringAlertDestination]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

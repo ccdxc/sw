@@ -23,7 +23,7 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<AuthUser> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuthUserList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

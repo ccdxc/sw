@@ -23,7 +23,7 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
     'items': Array<ClusterSmartNIC> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterSmartNICList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'

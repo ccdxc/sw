@@ -19,7 +19,7 @@ export interface ISecuritySGPolicyStatus {
 export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPolicyStatus {
     'propagation-status': SecurityPropagationStatus = null;
     'rule-status': Array<SecuritySGRuleStatus> = null;
-    public static propInfo: { [prop: string]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecuritySGPolicyStatus]: PropInfoItem } = {
         'propagation-status': {
             required: false,
             type: 'object'
