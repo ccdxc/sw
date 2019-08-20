@@ -71,12 +71,14 @@ ReplList::attach_to_repl_list(ReplList *list)
     }
 
     if (get_attached_list_index()) {
-        HAL_TRACE_ERR("List is already attached to {}!", get_attached_list_index());
+        HAL_TRACE_ERR("List is already attached to {}!",
+                      get_attached_list_index());
         rs = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("attaching repl_list: {} -> {}", get_repl_tbl_index(),
+    HAL_TRACE_VERBOSE("attaching repl_list: {} -> {}", \
+                    get_repl_tbl_index(),
                     list->get_repl_tbl_index());
 
     set_attached_list_index(list->get_repl_tbl_index());
@@ -100,7 +102,7 @@ ReplList::detach_frm_repl_list()
         goto end;
     }
 
-    HAL_TRACE_DEBUG(" Detaching repl_list: {} ->x {}", \
+    HAL_TRACE_DEBUG(" Detaching repl_list: {} ->x {}",
                     get_repl_tbl_index(),
                     get_attached_list_index());
 
@@ -126,7 +128,7 @@ ReplList::add_replication(void *data)
     ReplTableEntry  *last_entry = last_repl_tbl_entry_;
 
     HAL_TRACE_DEBUG("Adding replication entry to repl_list: {}",
-            repl_tbl_index_);
+                     repl_tbl_index_);
 
     // repl_entry = new ReplEntry(data, met_->get_repl_entry_data_len());
     repl_entry = ReplEntry::factory(data,

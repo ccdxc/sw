@@ -417,7 +417,7 @@ hal_print_handles_list (dllist_ctxt_t  *list)
 
     dllist_for_each(lnode, list) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("handle: {}", entry->handle_id);
+        HAL_TRACE_VERBOSE("handle: {}", entry->handle_id);
     }
 }
 
@@ -814,7 +814,7 @@ proto_msg_dump (Message& msg)
         return;
     }
     google::protobuf::util::MessageToJsonString(msg, &msg_str);
-    HAL_TRACE_DEBUG("{}", msg_str.c_str());
+    HAL_TRACE_VERBOSE("{}", msg_str.c_str());
 }
 
 }    // namespace hal

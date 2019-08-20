@@ -635,10 +635,10 @@ Met::trace_met()
 {
     hal_ret_t       ret = HAL_RET_OK;
 
+    HAL_TRACE_VERBOSE("Num. of Repl_lists: {}", repl_list_map_.size());
     // Commenting out as this is filling up the logs. Make it INFO once
     // we have the proper level set in HAL.
 #if 0
-    HAL_TRACE_DEBUG("------------------------------------------------------");
     HAL_TRACE_DEBUG("Num. of Repl_lists: {}", repl_list_map_.size());
 
     ReplList        *tmp_repl_list = NULL;
@@ -649,7 +649,6 @@ Met::trace_met()
 
         tmp_repl_list->trace_repl_list();
     }
-    HAL_TRACE_DEBUG("------------------------------------------------------");
 #endif
 
     return ret;

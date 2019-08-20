@@ -213,7 +213,7 @@ hal_ret_t pd_oif_list_get(pd_func_args_t *pd_func_args) {
 
     SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->rsp != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("Getting pd state for oif list {}", args->list);
+    HAL_TRACE_VERBOSE("Getting pd state for oif list {}", args->list);
 
     args->rsp->mutable_epd_info()->set_rep_index(args->list);
     return HAL_RET_OK;

@@ -70,8 +70,8 @@ ReplTableEntry::add_replication(ReplEntry *re)
     SDK_ASSERT_GOTO(num_repl_entries_ <
             repl_list_->get_met()->get_max_num_repls_per_entry(), end);
 
-    HAL_TRACE_DEBUG("{}: Adding replication entry to repl_table_entry: {}",
-                    __FUNCTION__, repl_table_index_);
+    HAL_TRACE_VERBOSE("Adding replication entry to repl_table_entry: {}",
+                        repl_table_index_);
 
     // Add replication entry
     if (first_repl_entry_ == NULL) {
@@ -100,13 +100,13 @@ ReplTableEntry::del_replication(void *data)
 
     SDK_ASSERT_GOTO(num_repl_entries_ != 0, end);
 
-    HAL_TRACE_DEBUG("{}: Deleting replication entry from repl_table_entry: {}",
-                    __FUNCTION__, repl_table_index_);
+    HAL_TRACE_DEBUG("Deleting replication entry from repl_table_entry: {}",
+                        repl_table_index_);
     re = first_repl_entry_;
     while(re) {
 
         if (!memcmp(data, re->get_data(), re->get_data_len())) {
-            HAL_TRACE_DEBUG("{}: Match", __FUNCTION__);
+            HAL_TRACE_DEBUG("Match");
             // match
             if (re->get_prev() == NULL) {
                 first_repl_entry_ = re->get_next();

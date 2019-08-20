@@ -198,7 +198,7 @@ pd_mc_entry_get (pd_func_args_t *pd_func_args)
     SDK_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
 
-    HAL_TRACE_DEBUG("Getting pd state for mc_entry {}",
+    HAL_TRACE_VERBOSE("Getting pd state for mc_entry {}",
                     mc_key_to_string(&args->mc_entry->key));
 
     mc_entry_pd = (pd_mc_entry_t *)args->mc_entry->pd;

@@ -401,7 +401,6 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
         hal_add_to_handle_list(&mc_entry->if_list_head, pi_if->hal_handle);
     }
 
-    HAL_TRACE_DEBUG("OIFs added:");
     hal_print_handles_list(&mc_entry->if_list_head);
 
 end:
@@ -1145,12 +1144,10 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
     L2SegmentKeyHandle          l2segkh;
     MulticastEntryKeyHandle     mcastkh;
 
-    hal_api_trace(" API Begin: mc entry update ");
-
     // validate the request message
     ret = validate_mc_entry_update(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Validation Failed. ret: {}", ret);
+        HAL_TRACE_ERR("mc entry upd Validation Failed. ret: {}", ret);
         goto end;
     }
 
@@ -1158,13 +1155,13 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
 
     mc_entry = mc_entry_lookup_key_or_handle(mcastkh);
     if (mc_entry == NULL) {
-        HAL_TRACE_ERR("mc_entry not found: {}",
+        HAL_TRACE_ERR("mc_entry upd  not found: {}",
                       mc_key_handle_spec_to_string(mcastkh));
         ret = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
+    HAL_TRACE_DEBUG("MC entry upd  {}, key: {}", mc_entry->hal_handle,
                     mc_key_to_string(&mc_entry->key));
 
     // instantiate a new mc_entry

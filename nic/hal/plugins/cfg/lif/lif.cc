@@ -314,7 +314,7 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
                         lif->qinfo[ent.purpose()].size);
     }
 
-    HAL_TRACE_DEBUG("Lif lif_id: {}, Qcount: {}",
+    HAL_TRACE_VERBOSE("Lif lif_id: {}, Qcount: {}",
                     lif->lif_id, qcount);
     lif->qcount = qcount;
 
@@ -412,7 +412,7 @@ lif_fwd_create (LifSpec& spec, LifResponse *rsp, lif_t *lif,
     pd::pd_lif_create_args_t pd_lif_args;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_TRACE_DEBUG("{}: P4 Processing for lif id {}", __FUNCTION__,
+    HAL_TRACE_VERBOSE("{}: P4 Processing for lif id {}", __FUNCTION__,
                     spec.key_or_handle().lif_id());
 
     // allocate all PD resources and finish programming, if any
@@ -794,7 +794,6 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif_hal_info_t             proto_hal_info = {0};
     pd::pd_qos_class_get_qos_class_id_args_t q_args;
 
-    hal_api_trace(" API Begin: Lif Create ");
 	proto_msg_dump(spec);
 
     // validate the request message

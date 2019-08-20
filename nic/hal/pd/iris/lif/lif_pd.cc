@@ -857,7 +857,7 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
 
     stats_mem_addr += pd_lif->hw_lif_id << LIF_STATS_SIZE_SHIFT;
 
-    HAL_TRACE_DEBUG("lif:{}, stats_mem_addr: {:x}",
+    HAL_TRACE_VERBOSE("lif:{}, stats_mem_addr: {:x}",
                     pd_lif->hw_lif_id, stats_mem_addr);
 
     ret = sdk::asic::asic_mem_read(stats_mem_addr, (uint8_t *)&lif_metrics,
@@ -908,7 +908,7 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
                         lif_metrics.tx_queue_disabled_drops);
 #endif
 
-    HAL_TRACE_DEBUG("lif: hw_id: {}, Rx: Uc: {}, Mc: {}, Bc: {}, "
+    HAL_TRACE_VERBOSE("lif: hw_id: {}, Rx: Uc: {}, Mc: {}, Bc: {}, "
                     "Bytes: Uc: {}, Mc: {}, Bc: {}, Drops: {}",
                     pd_lif->hw_lif_id,
                     lif_metrics.rx_unicast_packets,
@@ -919,7 +919,7 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
                     lif_metrics.rx_broadcast_bytes,
                     lif_metrics.rx_queue_empty_drops +
                     lif_metrics.rx_queue_disabled_drops);
-    HAL_TRACE_DEBUG("lif: hw_id: {}, Tx: Uc: {}, Mc: {}, Bc: {}, "
+    HAL_TRACE_VERBOSE("lif: hw_id: {}, Tx: Uc: {}, Mc: {}, Bc: {}, "
                     "Bytes: Uc: {}, Mc: {}, Bc: {}, "
                     "Drops: UC: {}, MC: {}, BC: {}, "
                     "Bytes: UC: {}, MC: {}, BC: {}",
@@ -995,7 +995,7 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
         return hal_sdk_ret_to_hal_ret(sdk_ret);
     }
 
-    HAL_TRACE_DEBUG("Policer stat read lif {} hw_lif_id {} stats_addr {:#x} "
+    HAL_TRACE_VERBOSE("Policer stat read lif {} hw_lif_id {} stats_addr {:#x} "
                     "stats_0.permitted_packets {} "
                     "stats_0.permitted_bytes {} "
                     "stats_0.denied_packets {} "

@@ -85,7 +85,7 @@ InterfaceServiceImpl::LifGet(ServerContext *context,
 {
     uint32_t             i, nreqs = req->request_size();
 
-    HAL_TRACE_DEBUG("Received lif get");
+    HAL_TRACE_VERBOSE("Received lif get");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -104,7 +104,7 @@ InterfaceServiceImpl::LifGetQState(ServerContext *context,
                                    const GetQStateRequestMsg *reqs,
                                    GetQStateResponseMsg *resps)
 {
-    HAL_TRACE_DEBUG("Rcvd Get QState Request");
+    HAL_TRACE_VERBOSE("Rcvd Get QState Request");
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (int i = 0; i < reqs->reqs_size(); i++) {
         hal::LifGetQState(reqs->reqs(i), resps->add_resps());
@@ -118,7 +118,7 @@ InterfaceServiceImpl::LifSetQState(ServerContext *context,
                                    const SetQStateRequestMsg *reqs,
                                    SetQStateResponseMsg *resps)
 {
-    HAL_TRACE_DEBUG("Rcvd Set QState Request");
+    HAL_TRACE_VERBOSE("Rcvd Set QState Request");
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (int i = 0; i < reqs->reqs_size(); i++) {
         hal::LifSetQState(reqs->reqs(i), resps->add_resps());

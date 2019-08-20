@@ -22,7 +22,7 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
 {
     uint32_t num_queues;
 
-    HAL_TRACE_DEBUG("{}: Entered\n", __FUNCTION__);
+    HAL_TRACE_VERBOSE("{}: Entered", __FUNCTION__);
 
     //SDK_ASSERT(hw_lif_id < MAX_LIFS);
     SDK_ASSERT(rss != NULL);
@@ -53,7 +53,7 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
         }
     }
 
-    HAL_TRACE_DEBUG("{}: Leaving\n", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}: done", __FUNCTION__);
     return HAL_RET_OK;
 }
 
