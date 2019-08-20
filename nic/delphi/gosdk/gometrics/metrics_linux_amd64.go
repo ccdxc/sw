@@ -118,7 +118,7 @@ func (m *delphiMetrics) GetCounter(offset int) metrics.Counter {
 }
 
 func (m *delphiMetrics) SetCounter(cntr metrics.Counter, offset int) {
-	C.SetCounter(m.entry, C.int(cntr), C.int(offset))
+	C.SetCounter(m.entry, C.longlong(cntr), C.int(offset))
 }
 
 func (m *delphiMetrics) GetGauge(offset int) metrics.Gauge {

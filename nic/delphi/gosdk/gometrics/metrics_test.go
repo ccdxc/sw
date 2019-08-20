@@ -225,7 +225,7 @@ func TestMetricsSpecific(t *testing.T) {
 
 	// set some values
 	tmtr.SetRxCounter(200)
-	tmtr.SetTxCounter(300)
+	tmtr.SetTxCounter(0x123412345678)
 	tmtr.SetRxRate(400.0)
 	tmtr.SetTxRate(500.0)
 
@@ -233,6 +233,7 @@ func TestMetricsSpecific(t *testing.T) {
 	AssertOk(t, err, "Error finding test metrics entry")
 	fmt.Printf("Found metrics: %+v\n", tmtr)
 	Assert(t, (tmtr.RxCounter == 200), "Invalid counter value")
+	Assert(t, (tmtr.TxCounter == 0x123412345678), "Invalid counter value", tmtr.TxCounter)
 	Assert(t, (tmtr.RxRate == 400.0), "Invalid gauge value")
 	Assert(t, (tmtr.GetKey() == 3000), "Invalid key value")
 

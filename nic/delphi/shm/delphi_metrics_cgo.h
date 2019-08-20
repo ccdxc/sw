@@ -34,8 +34,8 @@ const char *MetricsEntryValue(DelphiMetrics_cgo mtr);
 int MetricsEntryKeylen(DelphiMetrics_cgo mtr);
 int MetricsEntryVallen(DelphiMetrics_cgo mtr);
 
-int GetCounter(DelphiMetrics_cgo mtr, int offset);
-void SetCounter(DelphiMetrics_cgo mtr, int val, int offset);
+long long GetCounter(DelphiMetrics_cgo mtr, int offset);
+void SetCounter(DelphiMetrics_cgo mtr, long long val, int offset);
 double GetGauge(DelphiMetrics_cgo mtr, int offset);
 void SetGauge(DelphiMetrics_cgo mtr, double val, int offset);
 

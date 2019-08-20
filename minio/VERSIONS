@@ -11,7 +11,7 @@ pbc_config 70c44b16fea7919e290989d71e40717162aabf74
 upgrade 1.0.16
 iota 1.0.2
 host_tools 1.0.21
-delphi_lib 1.0.8
+delphi_lib 1.0.9
 pensando_firmware 1.0.12
 buildroot 0c42a596f0f00e47b5799536998686dc37d43ecc
 platform_drivers 1.0.2

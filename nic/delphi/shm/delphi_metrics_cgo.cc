@@ -159,11 +159,11 @@ DelphiMetrics_cgo MetricsCreateEntry(const char *kind, char *key, int keylen, in
     return (void *)valptr;
 }
 
-int GetCounter(DelphiMetrics_cgo mtr, int offset) {
+long long GetCounter(DelphiMetrics_cgo mtr, int offset) {
     auto entry = HASH_ENTRY_FROM_VAL_PTR(mtr, delphi::metrics::DelphiMetrics::GetDelphiShm());
     // check if this is a dpstats coming from PAL memory
     if (entry->flags & HT_ENTRY_FLAG_DPSTATS) {
-        int data = 0;
+        long long data = 0;
 #ifdef __x86_64__
 #elif __aarch64__
         uint64_t pal_addr = *(uint64_t *)mtr + offset;
@@ -179,14 +179,14 @@ int GetCounter(DelphiMetrics_cgo mtr, int offset) {
     }
 
     // return from shared memory
-    void *ptr = (void *)((intptr_t)mtr + offset);
+    long long *ptr = (long long *)((intptr_t)mtr + offset);
     assert(((int64_t)ptr & 0x07) == 0);
-    return *(int *)ptr;
+    return *ptr;
 }
 
-void SetCounter(DelphiMetrics_cgo mtr, int val, int offset) {
-    void *ptr = (void *)((intptr_t)mtr + offset);
-     *(int *)ptr = val;
+void SetCounter(DelphiMetrics_cgo mtr, long long val, int offset) {
+    long long *ptr = (long long *)((intptr_t)mtr + offset);
+    *ptr = val;
 }
 
 double GetGauge(DelphiMetrics_cgo mtr, int offset) {
