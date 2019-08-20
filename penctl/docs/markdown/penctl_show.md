@@ -29,6 +29,7 @@ Show Object and Information
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
+* [penctl show dsc](penctl_show_dsc.md)	 - Shows the DSC object
 * [penctl show events](penctl_show_events.md)	 - Show events from Naples
 * [penctl show firmware-version](penctl_show_firmware-version.md)	 - Get firmware version on Naples
 * [penctl show interface](penctl_show_interface.md)	 - Show interface
@@ -41,7 +42,6 @@ Show Object and Information
 * [penctl show proc-meminfo](penctl_show_proc-meminfo.md)	 - Check /proc/meminfo file on Naples
 * [penctl show qos-class](penctl_show_qos-class.md)	 - show qos-class object
 * [penctl show running-firmware](penctl_show_running-firmware.md)	 - Show running firmware from Naples (To be deprecated. Please use: penctl show firmware-version)
-* [penctl show smartnic](penctl_show_smartnic.md)	 - Shows the SmartNIC object
 * [penctl show startup-firmware](penctl_show_startup-firmware.md)	 - Show startup firmware from Naples
 * [penctl show system](penctl_show_system.md)	 - show system information
 * [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Naples (in MB)

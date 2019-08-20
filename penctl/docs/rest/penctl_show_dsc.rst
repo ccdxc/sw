@@ -1,9 +1,9 @@
-.. _penctl_show_smartnic:
+.. _penctl_show_dsc:
 
-penctl show smartnic
---------------------
+penctl show dsc
+---------------
 
-Shows the SmartNIC object
+Shows the DSC object
 
 Synopsis
 ~~~~~~~~
@@ -11,20 +11,20 @@ Synopsis
 
 
 -----------------------------------------
- Shows current Spec and Status of SmartNIC object 
+ Shows current Spec and Status of DSC object 
 -----------------------------------------
 
 
 ::
 
-  penctl show smartnic [flags]
+  penctl show dsc [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for smartnic
+  -h, --help   help for dsc
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

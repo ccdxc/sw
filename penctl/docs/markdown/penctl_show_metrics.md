@@ -44,6 +44,6 @@ penctl show metrics [flags]
 * [penctl show metrics pcie](penctl_show_metrics_pcie.md)	 - 
 * [penctl show metrics rule](penctl_show_metrics_rule.md)	 - Show RuleMetrics from Naples
 * [penctl show metrics sessionsummary](penctl_show_metrics_sessionsummary.md)	 - Show SessionSummaryMetrics from Naples
-* [penctl show metrics sonic](penctl_show_metrics_sonic.md)	 - Metrics for Storage Offload NIC
+* [penctl show metrics sonic](penctl_show_metrics_sonic.md)	 - Metrics for Storage Offload DSC
 * [penctl show metrics system](penctl_show_metrics_system.md)	 - Metrics for system monitors
 

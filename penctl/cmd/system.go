@@ -51,9 +51,9 @@ var getSystemQueueStatsCmd = &cobra.Command{
 }
 
 var getSmartNicCmd = &cobra.Command{
-	Use:   "smartnic",
-	Short: "Shows the SmartNIC object",
-	Long:  "\n-----------------------------------------\n Shows current Spec and Status of SmartNIC object \n-----------------------------------------\n",
+	Use:   "dsc",
+	Short: "Shows the DSC object",
+	Long:  "\n-----------------------------------------\n Shows current Spec and Status of DSC object \n-----------------------------------------\n",
 	RunE:  getSmartNicCmdHandler,
 }
 

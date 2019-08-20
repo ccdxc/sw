@@ -115,7 +115,8 @@ func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
 	printHTTPReq(req)
 	res, err := penHTTPClient.Do(req)
 	if err != nil {
-		if strings.Contains(err.Error(), httpsSignature) {
+		fmt.Println("Unable to get response from Naples.")
+		if strings.Contains(err.Error(), httpsSignature) || strings.Contains(err.Error(), "transport connection broken") {
 			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
 		}
 		return nil, err

@@ -58,5 +58,5 @@ penctl show metrics sonic sequencer_metrics [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics sonic](penctl_show_metrics_sonic.md)	 - Metrics for Storage Offload NIC
+* [penctl show metrics sonic](penctl_show_metrics_sonic.md)	 - Metrics for Storage Offload DSC
 

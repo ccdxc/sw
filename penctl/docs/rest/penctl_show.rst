@@ -37,6 +37,7 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
+* `penctl show dsc <penctl_show_dsc.rst>`_ 	 - Shows the DSC object
 * `penctl show events <penctl_show_events.rst>`_ 	 - Show events from Naples
 * `penctl show firmware-version <penctl_show_firmware-version.rst>`_ 	 - Get firmware version on Naples
 * `penctl show interface <penctl_show_interface.rst>`_ 	 - Show interface
@@ -49,7 +50,6 @@ SEE ALSO
 * `penctl show proc-meminfo <penctl_show_proc-meminfo.rst>`_ 	 - Check /proc/meminfo file on Naples
 * `penctl show qos-class <penctl_show_qos-class.rst>`_ 	 - show qos-class object
 * `penctl show running-firmware <penctl_show_running-firmware.rst>`_ 	 - Show running firmware from Naples (To be deprecated. Please use: penctl show firmware-version)
-* `penctl show smartnic <penctl_show_smartnic.rst>`_ 	 - Shows the SmartNIC object
 * `penctl show startup-firmware <penctl_show_startup-firmware.rst>`_ 	 - Show startup firmware from Naples
 * `penctl show system <penctl_show_system.rst>`_ 	 - show system information
 * `penctl show system-memory-usage <penctl_show_system-memory-usage.rst>`_ 	 - Show free/used memory on Naples (in MB)

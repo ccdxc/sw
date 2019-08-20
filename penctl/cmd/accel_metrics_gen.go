@@ -38,12 +38,12 @@ func hw_ringsonicShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - sonic
 //rootCmd =
-//longHelpStr = Metrics for Storage Offload NIC
-//shortHelpStr = Metrics for Storage Offload NIC
+//longHelpStr = Metrics for Storage Offload DSC
+//shortHelpStr = Metrics for Storage Offload DSC
 var sonicShowCmd = &cobra.Command{
 	Use:   "sonic",
-	Short: "Metrics for Storage Offload NIC",
-	Long:  "\n---------------------------------\n Metrics for Storage Offload NIC\n---------------------------------\n",
+	Short: "Metrics for Storage Offload DSC",
+	Long:  "\n---------------------------------\n Metrics for Storage Offload DSC\n---------------------------------\n",
 }
 
 //cmd - sequencer_info
@@ -100,8 +100,8 @@ func init() {
 
 	//cmd - sonic
 	//rootCmd =
-	//longHelpStr = Metrics for Storage Offload NIC
-	//shortHelpStr = Metrics for Storage Offload NIC
+	//longHelpStr = Metrics for Storage Offload DSC
+	//shortHelpStr = Metrics for Storage Offload DSC
 
 	metricsShowCmd.AddCommand(sonicShowCmd)
 

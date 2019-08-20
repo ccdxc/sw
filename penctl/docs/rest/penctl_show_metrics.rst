@@ -52,6 +52,6 @@ SEE ALSO
 * `penctl show metrics pcie <penctl_show_metrics_pcie.rst>`_ 	 - 
 * `penctl show metrics rule <penctl_show_metrics_rule.rst>`_ 	 - Show RuleMetrics from Naples
 * `penctl show metrics sessionsummary <penctl_show_metrics_sessionsummary.rst>`_ 	 - Show SessionSummaryMetrics from Naples
-* `penctl show metrics sonic <penctl_show_metrics_sonic.rst>`_ 	 - Metrics for Storage Offload NIC
+* `penctl show metrics sonic <penctl_show_metrics_sonic.rst>`_ 	 - Metrics for Storage Offload DSC
 * `penctl show metrics system <penctl_show_metrics_system.rst>`_ 	 - Metrics for system monitors
 

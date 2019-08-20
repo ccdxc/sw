@@ -1,13 +1,13 @@
 ## penctl show metrics sonic
 
-Metrics for Storage Offload NIC
+Metrics for Storage Offload DSC
 
 ### Synopsis
 
 
 
 ---------------------------------
- Metrics for Storage Offload NIC
+ Metrics for Storage Offload DSC
 ---------------------------------
 
 

@@ -8,8 +8,8 @@ import "metrics_annotations.proto";
 message AccelMetricsPenctlRootCmd {
     option (venice.penctlParentCmd) = {
         Cmd:          "sonic",
-        HelpStr:      "Metrics for Storage Offload NIC",
-        ShortHelpStr: "Metrics for Storage Offload NIC"
+        HelpStr:      "Metrics for Storage Offload DSC",
+        ShortHelpStr: "Metrics for Storage Offload DSC"
     };
 }
 
