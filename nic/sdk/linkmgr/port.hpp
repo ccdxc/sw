@@ -404,6 +404,8 @@ private:
     uint32_t              num_an_hcd_retries_;        // number of times AN HCD was retried in one pass of SM
     uint32_t              num_mac_sync_retries_;      // number of times MAC sync is retried in one pass of SM
     uint32_t              num_link_train_retries_;    // number of times link training failed in one pass of SM
+    bool                  persist_stats_collect_;     // set after initial link-up state; never reset (? TBD)
+    uint64_t              persist_stats_data_[MAX_MAC_STATS]; // saved stats before link flap or mac resets;
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);
@@ -430,6 +432,15 @@ private:
     sdk_ret_t port_serdes_state_reset(void);
     void port_link_sm_counters_reset(void);
     sdk_ret_t port_link_sm_retry_enabled(bool serdes_reset = true);
+
+    // methods to support persist mac stats across link flaps
+    // note: hw mac stats get cleared upon link flap; we maintain prev in sw
+    sdk_ret_t port_mac_stats_persist_collect_enable(void);
+    sdk_ret_t port_mac_stats_persist_collect_disable(void);
+    sdk_ret_t port_mac_stats_persist_collate(uint64_t *stats_data);
+    sdk_ret_t port_mac_stats_persist_update(void);
+    sdk_ret_t port_mac_stats_persist_clear(bool reset);
+
 };
 
 }    // namespace linkmgr

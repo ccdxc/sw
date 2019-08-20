@@ -3,9 +3,10 @@
 #ifndef __SDK_LINKMGR_CAP_MX_API_H__
 #define __SDK_LINKMGR_CAP_MX_API_H__
 
-#define MAX_CHANNEL 4
-#define MAX_PORT    4
-#define MAX_MAC     2
+#define MAX_CHANNEL    4
+#define MAX_PORT       4
+#define MAX_MAC        2
+#define MAX_MAC_STATS 89
 
 struct mac_profile_t {
    mac_mode_t mac_mode;

@@ -836,7 +836,7 @@ void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report,
    "L", "Reserved"
    };
 
-   for (int i = 0; i < 90; i += 1) {
+   for (int i = 0; i < MAX_MAC_STATS; i += 1) {
       string report_type = stats[i*2];
       if (short_report == 1 && (report_type.compare("L") == 0)) continue;
 

@@ -5,11 +5,11 @@
 
 #include "include/sdk/base.hpp"
 #include "linkmgr.hpp"
+#include "include/sdk/asic/capri/cap_mx_api.h"
 
 namespace sdk {
 namespace linkmgr {
 
-#define MAX_MAC_STATS      89
 #define MAX_MGMT_MAC_STATS 32
 
 typedef struct mac_info_s {

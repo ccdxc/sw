@@ -163,6 +163,7 @@ sdk_ret_t
 port::port_mac_stats_reset(bool reset)
 {
     mac_fns()->mac_stats_reset(this->mac_id_, this->mac_ch_, reset);
+    port_mac_stats_persist_clear(reset);
 
     return SDK_RET_OK;
 }
@@ -940,6 +941,9 @@ port::port_link_sm_process(bool start_en_timer)
                     this->link_debounce_timer_ = NULL;
                 }
 
+                // pull the stats and save in persist storage before bringing down
+                port_mac_stats_persist_update();
+
                 // reset MAC
                 port_mac_state_reset();
 
@@ -1261,6 +1265,9 @@ port::port_link_sm_process(bool start_en_timer)
 
                 SDK_PORT_SM_TRACE(this, "Link UP");
 
+                // start persist stats collection - relevant on first link-up and remains set
+                port_mac_stats_persist_collect_enable();
+
                 // TODO Enable PB
                 port_pb_enable(true);
 
@@ -1401,6 +1408,8 @@ sdk_ret_t
 port::port_mac_stats_get (uint64_t *stats_data)
 {
     mac_fns()->mac_stats_get(this->mac_id_, this->mac_ch_, stats_data);
+    // add persist stats to this current stats_data and return
+    this->port_mac_stats_persist_collate(stats_data);
     return SDK_RET_OK;
 }
 
@@ -1484,6 +1493,63 @@ port::port_link_sm_retry_enabled(bool serdes_reset)
         port_serdes_state_reset();
     }
     this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
+    return SDK_RET_OK;
+}
+
+// Function to add stats before last reset to current stats and return
+sdk_ret_t
+port::port_mac_stats_persist_collect_enable(void)
+{
+    if (this->persist_stats_collect_ == false) {
+        SDK_PORT_SM_TRACE(this, "Enabling persistent stats collection");
+    }
+    this->persist_stats_collect_ = true;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_stats_persist_collect_disable(void)
+{
+    this->persist_stats_collect_ = false;
+    SDK_PORT_SM_TRACE(this, "Disabling persistent stats collection");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_stats_persist_collate(uint64_t *stats_data)
+{
+    int iter;
+
+    for (iter = 0; iter < MAX_MAC_STATS; iter++) {
+        stats_data[iter] += this->persist_stats_data_[iter];
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_stats_persist_update(void)
+{
+    int iter;
+    uint64_t stats_data[MAX_MAC_STATS];
+
+    if (this->persist_stats_collect_ == true) {
+        mac_fns()->mac_stats_get(this->mac_id_, this->mac_ch_, stats_data);
+
+        SDK_PORT_SM_TRACE(this, "Updating persistent stats");
+        for (iter = 0; iter < MAX_MAC_STATS; iter++) {
+            this->persist_stats_data_[iter] += stats_data[iter];
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_stats_persist_clear(bool reset)
+{
+    if (reset) {
+        SDK_PORT_SM_TRACE(this, "Clearing persistent stats");
+        memset(this->persist_stats_data_, 0, sizeof(this->persist_stats_data_));
+    }
     return SDK_RET_OK;
 }
 
