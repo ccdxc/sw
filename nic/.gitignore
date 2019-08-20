@@ -64,6 +64,7 @@ third-party/liblmdb/
 sdk/third-party/avago/include/
 model_sim/libs/
 tools/ncc/csr_json/
+tools/sorrento/
 conf/init_bins
 conf/hal.ini
 conf/device.conf
