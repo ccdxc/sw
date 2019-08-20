@@ -52,14 +52,9 @@ var (
 		globals.KubeScheduler,
 		globals.KubeControllerManager,
 	}
-
 	// cluster status will be updated every 30 seconds or
 	// when any leader event is observed or when cluster is created/updated
 	ClusterStatusUpdateInterval = 30 * time.Second
-
-	// k8sClientTimeout is the total timeout for Kubernetes ApiServer requests.
-	// It covers the entire round-trip: TCP dial, TLS handshake, server response, reading response body.
-	k8sClientTimeout = 10 * time.Second
 )
 
 type masterService struct {
@@ -533,8 +528,7 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	}
 	m.k8sSvc.Stop()
 	config := &k8srest.Config{
-		Host:    fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
-		Timeout: k8sClientTimeout,
+		Host: fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
 	}
 	tlsClientConfig, err := credentials.GetKubernetesClientTLSConfig()
 	if err == nil {
