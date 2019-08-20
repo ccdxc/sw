@@ -363,7 +363,7 @@
                 [
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_FLOW_MISS" },
-                        "policer" : { "pps_policer" : { "packets_per_sec" : 32000, "burst_packets" : 3200 } }
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 400 } }
                     },
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_ARP" },
@@ -371,7 +371,7 @@
                     },
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_DHCP" },
-                        "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 400} }
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 40} }
                     }
                 ]
             }
