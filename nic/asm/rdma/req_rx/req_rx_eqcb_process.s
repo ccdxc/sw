@@ -19,8 +19,8 @@ struct eqcb_t d;
 
 #define PHV_EQ_INT_ASSERT_DATA_BEGIN       int_assert_data
 #define PHV_EQ_INT_ASSERT_DATA_END         int_assert_data
-#define PHV_ASYNC_EQ_INT_ASSERT_DATA_BEGIN int_assert_data
-#define PHV_ASYNC_EQ_INT_ASSERT_DATA_END   int_assert_data
+#define PHV_ASYNC_EQ_INT_ASSERT_DATA_BEGIN async_int_assert_data
+#define PHV_ASYNC_EQ_INT_ASSERT_DATA_END   async_int_assert_data
 
 #define IN_P t1_s2s_cqcb_to_eq_info
 

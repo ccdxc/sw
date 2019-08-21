@@ -2860,9 +2860,11 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_cqid;
 
+	/* the first eq is reserved for async events */
 	eq_idx = attr->comp_vector;
-	if (eq_idx >= dev->eq_count)
-		eq_idx = 0;
+	if (eq_idx >= dev->eq_count - 1)
+		eq_idx %= dev->eq_count - 1;
+	eq_idx += 1;
 
 	cq->eqid = dev->eq_vec[eq_idx]->eqid;
 
@@ -6770,8 +6772,8 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		dev->aq_count = ionic_aq_count;
 	}
 
-	/* need at least one eq and aq */
-	if (!dev->eq_count || !dev->aq_count) {
+	/* need at least two eq and one aq */
+	if (dev->eq_count < 2 || !dev->aq_count) {
 		rc = -EINVAL;
 		goto out;
 	}
@@ -6788,8 +6790,8 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		if (IS_ERR(eq)) {
 			rc = PTR_ERR(eq);
 
-			/* need at least one eq */
-			if (!eq_i) {
+			/* need at least two eq */
+			if (eq_i < 2) {
 				dev_err(dev->hwdev, "fail create eq %d\n", rc);
 				goto out;
 			}
@@ -7259,7 +7261,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	ibdev->node_type = RDMA_NODE_IB_CA;
 	ibdev->phys_port_cnt = 1;
-	ibdev->num_comp_vectors = dev->eq_count;
+
+	/* the first eq is reserved for async events */
+	ibdev->num_comp_vectors = dev->eq_count - 1;
 
 	addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
 

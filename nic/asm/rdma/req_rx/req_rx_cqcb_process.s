@@ -270,6 +270,7 @@ report_async:
     CAPRI_SET_TABLE_2_VALID_C(!c6, 0)
 
 report_async2:
+    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
     phvwr          CAPRI_PHV_FIELD(CQ_ASYNC_EQ_INFO_P, async_eq), 1
     REQ_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
