@@ -58,9 +58,9 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *vpc_ht(void) { return vpc_ht_; }
-    indexer *vpc_idxr(void) { return vpc_idxr_; }
-    slab *vpc_slab(void) { return vpc_slab_; }
+    ht *vpc_ht(void) const { return vpc_ht_; }
+    indexer *vpc_idxr(void) const { return vpc_idxr_; }
+    slab *vpc_slab(void) const { return vpc_slab_; }
     friend class vpc_entry;    ///< vpc_entry class is friend of vpc_state
 
 private:

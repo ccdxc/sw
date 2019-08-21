@@ -26,41 +26,41 @@ tep_state::tep_state() {
                           tep_entry::tep_key_func_get,
                           tep_entry::tep_hash_func_compute,
                           tep_entry::tep_key_func_compare);
-    SDK_ASSERT(tep_ht_ != NULL);
+    SDK_ASSERT(tep_ht() != NULL);
 
     tep_slab_ = slab::factory("tep", PDS_SLAB_ID_TEP, sizeof(tep_entry),
                               16, true, true, true, NULL);
-    SDK_ASSERT(tep_slab_ != NULL);
+    SDK_ASSERT(tep_slab() != NULL);
 }
 
 tep_state::~tep_state() {
-    ht::destroy(tep_ht_);
-    slab::destroy(tep_slab_);
+    ht::destroy(tep_ht());
+    slab::destroy(tep_slab());
 }
 
 tep_entry *
 tep_state::alloc(void) {
-    return ((tep_entry *)tep_slab_->alloc());
+    return ((tep_entry *)tep_slab()->alloc());
 }
 
 sdk_ret_t
 tep_state::insert(tep_entry *tep) {
-    return tep_ht_->insert_with_key(&tep->key_, tep, &tep->ht_ctxt_);
+    return tep_ht()->insert_with_key(&tep->key_, tep, &tep->ht_ctxt_);
 }
 
 tep_entry *
 tep_state::remove(tep_entry *tep) {
-    return (tep_entry *)(tep_ht_->remove(&tep->key_));
+    return (tep_entry *)(tep_ht()->remove(&tep->key_));
 }
 
 void
 tep_state::free(tep_entry *tep) {
-    tep_slab_->free(tep);
+    tep_slab()->free(tep);
 }
 
 tep_entry *
 tep_state::find(pds_tep_key_t *tep_key) const {
-    return (tep_entry *)(tep_ht_->lookup(tep_key));
+    return (tep_entry *)(tep_ht()->lookup(tep_key));
 }
 
 /// \@}    // end of PDS_TEP_STATE

@@ -64,8 +64,8 @@ private:
         void *ctxt;
     } if_walk_ctxt_t;
 
-    ht *if_ht(void) { return if_ht_; }
-    slab *if_slab(void) { return if_slab_; }
+    ht *if_ht(void) const { return if_ht_; }
+    slab *if_slab(void) const { return if_slab_; }
     static bool walk_cb_(void *entry, void *ctxt);
 
     friend class if_entry;

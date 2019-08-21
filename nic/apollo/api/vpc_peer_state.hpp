@@ -41,7 +41,7 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    slab *vpc_peer_slab(void) { return vpc_peer_slab_; }
+    slab *vpc_peer_slab(void) const { return vpc_peer_slab_; }
 
 private:
     slab    *vpc_peer_slab_;    ///< slab for allocating vpc peer entry

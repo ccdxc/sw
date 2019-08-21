@@ -63,8 +63,8 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *tag_ht(void) { return tag_ht_; }
-    slab *tag_slab(void) { return tag_slab_; }
+    ht *tag_ht(void) const { return tag_ht_; }
+    slab *tag_slab(void) const { return tag_slab_; }
     friend class tag_entry;   // tag_entry is friend of tag_state
 
 private:

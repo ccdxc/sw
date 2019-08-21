@@ -64,7 +64,7 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    slab *mirror_session_slab(void) { return mirror_session_slab_; }
+    slab *mirror_session_slab(void) const { return mirror_session_slab_; }
     ///< mirror_session class is friend of mirror_session_state
     friend class mirror_session;
 

@@ -29,28 +29,30 @@ namespace api_test {
 template <typename feeder_T, typename info_T>
 sdk::sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info) {
     if (!feeder.key_compare(&info->spec.key)) {
-        std::cout << "key compare failed; " << feeder << info << std::endl;
+        std::cerr << "key compare failed; " << feeder << info << std::endl;
         return sdk::SDK_RET_ERR;
     }
 
     if (!feeder.spec_compare(&info->spec)) {
-        std::cout << "spec compare failed; " << feeder << info << std::endl;
+        std::cerr << "spec compare failed; " << feeder << info << std::endl;
         return sdk::SDK_RET_ERR;
     }
+    std::cout << "info compare success; " << feeder << info << std::endl;
 
     return sdk::SDK_RET_OK;
 }
 
 /// \brief Compare the config with values read from hardware
-/// Comapres only spec
+/// Compares only spec
 template <typename feeder_T, typename info_T>
 sdk::sdk_ret_t api_info_compare_singleton(
     feeder_T& feeder, info_T *info) {
 
     if (!feeder.spec_compare(&info->spec)) {
-        std::cout << "spec compare failed; " << feeder << info << std::endl;
+        std::cerr << "spec compare failed; " << feeder << info << std::endl;
         return sdk::SDK_RET_ERR;
     }
+    std::cout << "info compare success; " << feeder << info << std::endl;
 
     return sdk::SDK_RET_OK;
 }

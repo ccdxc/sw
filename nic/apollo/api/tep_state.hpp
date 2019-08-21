@@ -59,8 +59,8 @@ public:
                                      void *elem);
 
 private:
-    ht *tep_ht(void) { return tep_ht_; }
-    slab *tep_slab(void) { return tep_slab_; }
+    ht *tep_ht(void) const { return tep_ht_; }
+    slab *tep_slab(void) const { return tep_slab_; }
     friend class tep_entry;    ///< tep_entry class is friend of tep_state
 
 private:

@@ -63,8 +63,8 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *meter_ht(void) { return meter_ht_; }
-    slab *meter_slab(void) { return meter_slab_; }
+    ht *meter_ht(void) const { return meter_ht_; }
+    slab *meter_slab(void) const { return meter_slab_; }
     friend class meter_entry;   // meter_entry is friend of meter_state
 
 private:

@@ -60,8 +60,8 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *policy_ht(void) { return policy_ht_; }
-    slab *rout_table_slab(void) { return policy_slab_; }
+    ht *policy_ht(void) const { return policy_ht_; }
+    slab *policy_slab(void) const { return policy_slab_; }
     friend class policy;   /**< policy class is friend of policy_state */
 
 private:

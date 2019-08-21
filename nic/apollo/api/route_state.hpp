@@ -65,8 +65,8 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *route_table_ht(void) { return route_table_ht_; }
-    slab *rout_table_slab(void) { return route_table_slab_; }
+    ht *route_table_ht(void) const { return route_table_ht_; }
+    slab *route_table_slab(void) const { return route_table_slab_; }
     friend class route_table;   // route_table is friend of route_table_state
 
 private:

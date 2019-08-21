@@ -22,25 +22,23 @@ namespace api {
  */
 policy_state::policy_state() {
     // TODO: need to tune multi-threading related params later
-    policy_ht_ =
-        ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
-                    policy::policy_key_func_get,
-                    policy::policy_hash_func_compute,
-                    policy::policy_key_func_compare);
-    SDK_ASSERT(policy_ht_ != NULL);
+    policy_ht_ = ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
+                             policy::policy_key_func_get,
+                             policy::policy_hash_func_compute,
+                             policy::policy_key_func_compare);
+    SDK_ASSERT(policy_ht() != NULL);
 
-    policy_slab_ =
-        slab::factory("security-policy", PDS_SLAB_ID_POLICY,
-                      sizeof(policy), 16, true, true, true, NULL);
-    SDK_ASSERT(policy_slab_ != NULL);
+    policy_slab_ = slab::factory("security-policy", PDS_SLAB_ID_POLICY,
+                                 sizeof(policy), 16, true, true, true, NULL);
+    SDK_ASSERT(policy_slab() != NULL);
 }
 
 /**
  * @brief    destructor
  */
 policy_state::~policy_state() {
-    ht::destroy(policy_ht_);
-    slab::destroy(policy_slab_);
+    ht::destroy(policy_ht());
+    slab::destroy(policy_slab());
 }
 
 /**
@@ -49,7 +47,7 @@ policy_state::~policy_state() {
  */
 policy *
 policy_state::policy_alloc(void) {
-    return ((policy *)policy_slab_->alloc());
+    return ((policy *)policy_slab()->alloc());
 }
 
 /**
@@ -58,7 +56,7 @@ policy_state::policy_alloc(void) {
  */
 void
 policy_state::policy_free(policy *policy) {
-    policy_slab_->free(policy);
+    policy_slab()->free(policy);
 }
 
 /**
@@ -68,7 +66,7 @@ policy_state::policy_free(policy *policy) {
  */
 policy *
 policy_state::policy_find(pds_policy_key_t *policy_key) const {
-    return (policy *)(policy_ht_->lookup(policy_key));
+    return (policy *)(policy_ht()->lookup(policy_key));
 }
 
 /** @} */    // end of PDS_POLICY_STATE

@@ -24,14 +24,14 @@ mapping_state::mapping_state() {
     mapping_slab_ = slab::factory("mapping", PDS_SLAB_ID_MAPPING,
                                   sizeof(mapping_entry),
                                   8192, true, true, NULL);
-    SDK_ASSERT(mapping_slab_ != NULL);
+    SDK_ASSERT(mapping_slab() != NULL);
 }
 
 /**
  * @brief    destructor
  */
 mapping_state::~mapping_state() {
-    slab::destroy(mapping_slab_);
+    slab::destroy(mapping_slab());
 }
 
 /**
@@ -40,7 +40,7 @@ mapping_state::~mapping_state() {
  */
 mapping_entry *
 mapping_state::alloc(void) {
-    return ((mapping_entry *)mapping_slab_->alloc());
+    return ((mapping_entry *)mapping_slab()->alloc());
 }
 
 /**
@@ -49,7 +49,7 @@ mapping_state::alloc(void) {
  */
 void
 mapping_state::free(mapping_entry *mapping) {
-    mapping_slab_->free(mapping);
+    mapping_slab()->free(mapping);
 }
 
 /** @} */    // end of PDS_MAPPING_STATE

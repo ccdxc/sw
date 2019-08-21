@@ -24,41 +24,41 @@ nexthop_group_state::nexthop_group_state() {
                     nexthop_group::nexthop_group_key_func_get,
                     nexthop_group::nexthop_group_hash_func_compute,
                     nexthop_group::nexthop_group_key_func_compare);
-    SDK_ASSERT(nexthop_group_ht_ != NULL);
+    SDK_ASSERT(nh_group_ht() != NULL);
     nexthop_group_slab_ =
         slab::factory("nexthop-group", PDS_SLAB_ID_NEXTHOP_GROUP,
                       sizeof(nexthop_group), 256, true, true, NULL);
-    SDK_ASSERT(nexthop_group_slab_ != NULL);
+    SDK_ASSERT(nh_group_slab() != NULL);
 }
 
 nexthop_group_state::~nexthop_group_state() {
-    ht::destroy(nexthop_group_ht_);
-    slab::destroy(nexthop_group_slab_);
+    ht::destroy(nh_group_ht());
+    slab::destroy(nh_group_slab());
 }
 
 nexthop_group *
 nexthop_group_state::alloc(void) {
-    return ((nexthop_group *)nexthop_group_slab_->alloc());
+    return ((nexthop_group *)nh_group_slab()->alloc());
 }
 
 sdk_ret_t
 nexthop_group_state::insert(nexthop_group *nh) {
-    return nexthop_group_ht_->insert_with_key(&nh->key_, nh, &nh->ht_ctxt_);
+    return nh_group_ht()->insert_with_key(&nh->key_, nh, &nh->ht_ctxt_);
 }
 
 nexthop_group *
 nexthop_group_state::remove(nexthop_group *nh) {
-    return (nexthop_group *)(nexthop_group_ht_->remove(&nh->key_));
+    return (nexthop_group *)(nh_group_ht()->remove(&nh->key_));
 }
 
 void
 nexthop_group_state::free(nexthop_group *nh) {
-    nexthop_group_slab_->free(nh);
+    nh_group_slab()->free(nh);
 }
 
 nexthop_group *
 nexthop_group_state::find(pds_nexthop_key_t *key) const {
-    return (nexthop_group *)(nexthop_group_ht_->lookup(key));
+    return (nexthop_group *)(nh_group_ht()->lookup(key));
 }
 
 /// \@}    // end of PDS_NEXTHOP_GROUP_STATE

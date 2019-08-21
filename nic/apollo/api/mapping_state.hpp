@@ -51,7 +51,7 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    slab *mapping_slab(void) { return mapping_slab_; }
+    slab *mapping_slab(void) const { return mapping_slab_; }
 
 private:
     slab    *mapping_slab_;    /**< slab for allocating mapping entry */

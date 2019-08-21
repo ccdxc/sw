@@ -57,9 +57,9 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *subnet_ht(void) { return subnet_ht_; }
-    indexer *subnet_idxr(void) { return subnet_idxr_; }
-    slab *subnet_slab(void) { return subnet_slab_; }
+    ht *subnet_ht(void) const { return subnet_ht_; }
+    indexer *subnet_idxr(void) const { return subnet_idxr_; }
+    slab *subnet_slab(void) const { return subnet_slab_; }
     friend class subnet_entry;    ///< subnet_entry class is friend of
                                   ///< subnet_state
 

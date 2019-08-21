@@ -19,22 +19,23 @@ namespace api {
 
 svc_mapping_state::svc_mapping_state() {
     svc_mapping_slab_ = slab::factory("svc-mapping", PDS_SLAB_ID_SVC_MAPPING,
-                                  sizeof(svc_mapping), 64, true, true, NULL);
-    SDK_ASSERT(svc_mapping_slab_ != NULL);
+                                      sizeof(svc_mapping), 64, true,
+                                      true, NULL);
+    SDK_ASSERT(svc_mapping_slab() != NULL);
 }
 
 svc_mapping_state::~svc_mapping_state() {
-    slab::destroy(svc_mapping_slab_);
+    slab::destroy(svc_mapping_slab());
 }
 
 svc_mapping *
 svc_mapping_state::alloc(void) {
-    return ((svc_mapping *)svc_mapping_slab_->alloc());
+    return ((svc_mapping *)svc_mapping_slab()->alloc());
 }
 
 void
 svc_mapping_state::free(svc_mapping *mapping) {
-    svc_mapping_slab_->free(mapping);
+    svc_mapping_slab()->free(mapping);
 }
 
 /** @} */    // end of PDS_SVC_MAPPING_STATE

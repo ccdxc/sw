@@ -57,8 +57,8 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *nh_ht(void) { return nexthop_ht_; }
-    slab *nh_slab(void) { return nexthop_slab_; }
+    ht *nh_ht(void) const { return nexthop_ht_; }
+    slab *nh_slab(void) const { return nexthop_slab_; }
     friend class nexthop;    ///< nexthop class is friend of nexthop_state
 
 private:
