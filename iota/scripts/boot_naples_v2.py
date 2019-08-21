@@ -491,6 +491,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /data/log && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
+        self.SendlineExpect("rm -rf /obfl/asicerrord_err*", "#")
 
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
