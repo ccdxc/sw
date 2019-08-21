@@ -385,7 +385,13 @@ cfgspace_setcap_pcie(cfgspace_t *cs,
          */
         v = 0;
         if (cp->cap_gen >= 4) {
-            v |= (0x1 << 8);            /* Crosslink Resolution: Upstream */
+            /*
+             * PCIe gen4 devices "may" hard-code 0x1 (upstream)
+             * or 0x2 (downstream) but some bioses *require* 0 in this
+             * field so we set 0x0 "no support" for better compatibility
+             * (e.g. Supermicro AMD BIOS Version 1.1a, 04/26/2018).
+             */
+            v |= 0 << 8;                /* Crosslink Resolution: no support */
         }
         cfgspace_setw(cs, capaddr + 0x32, v);
 
