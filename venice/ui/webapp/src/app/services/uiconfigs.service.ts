@@ -10,14 +10,21 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
 import { AuthService } from './auth.service';
 
+export enum Features {
+  securityGroups = 'securityGroups',
+  help = 'help',
+  workloadWidgets = 'workloadWidgets'
+}
+
 interface UIConfig {
-  'disabled-objects': string[];
-  'disabled-features': string[];
+  'enabled-features': Features[];
 }
 
 interface PageRequirement {
-  required?: string[];
-  default?: string[];
+  requiredPerm?: UIRolePermissions[];
+  defaultPerm?: UIRolePermissions[];
+  requiredFeatures?: Features[];
+  defaultFeatures?: Features[];
 }
 
 interface PageRequirementMap {
@@ -38,75 +45,84 @@ export class UIConfigsService {
   // Else, it is enabled
   // NOTE: If a subroute is not allowed, further nested paths are automatically blocked
   // Ex. if monitoring is blocked, monitoring/alertsevevnts will be blocked without checking
+  // ROUTES SHOULD NOT START WITH A SLASH
   pageRequirements: PageRequirementMap = {
     'cluster/cluster': {
-      required: [
+      requiredPerm: [
         UIRolePermissions.clustercluster_read,
       ],
     },
     'cluster/:id': {
-      required: [
+      requiredPerm: [
         UIRolePermissions.clusternode_read,
       ],
     },
     'cluster/naples': {
-      required: [
+      requiredPerm: [
         UIRolePermissions.clustersmartnic_read,
       ],
     },
     'cluster/hosts': {
-      required: [
+      requiredPerm: [
         UIRolePermissions.clusterhost_read,
       ],
     },
-    '/workload': {
-      required: [
+    'workload': {
+      requiredPerm: [
         UIRolePermissions.workloadworkload_read,
       ],
     },
-    '/security/sgpolicies': {
-      required: [
+    'security/sgpolicies': {
+      requiredPerm: [
         UIRolePermissions.securitysgpolicy_read,
       ],
     },
-    '/security/securityapps': {
-      required: [
+    'security/securityapps': {
+      requiredPerm: [
         UIRolePermissions.securityapp_read,
       ],
     },
+    'security/securitygroups': {
+      requiredPerm: [
+        UIRolePermissions.securitysecuritygroup_read,
+      ],
+      requiredFeatures: [
+        Features.securityGroups,
+      ]
+    },
     'monitoring/alertsevents/': {
-      default: [
+      defaultPerm: [
         UIRolePermissions.monitoringalert_read,
         UIRolePermissions.eventsevent_read,
       ]
     },
     'monitoring/alertsevents/alertpolicies': {
-      required: [
+      requiredPerm: [
         UIRolePermissions.monitoringalertpolicy_read,
       ],
     },
     'monitoring/alertsevents/eventpolicy': {
-      default: [
+      defaultPerm: [
         UIRolePermissions.monitoringeventpolicy_read,
       ]
     },
-    '/monitoring/fwlogs': {
-      required: [
+    'monitoring/fwlogs': {
+      requiredPerm: [
         UIRolePermissions.fwlogsquery_read,
       ],
     },
-    '/monitoring/fwlogs/fwlogpolicies': {
-      required: [
+    'monitoring/fwlogs/fwlogpolicies': {
+      requiredPerm: [
         UIRolePermissions.monitoringfwlogpolicy_read,
       ],
     },
-    '/monitoring/flowexport': {
-      required: [
+    'monitoring/flowexport': {
+      requiredPerm: [
         UIRolePermissions.monitoringflowexportpolicy_read,
       ],
     },
-    '/admin/techsupport': {
-      required: [
+    'admin/techsupport': {
+      requiredPerm: [
         UIRolePermissions.monitoringtechsupportrequest_read,
       ],
     },
@@ -191,41 +207,52 @@ export class UIConfigsService {
     if (this.pageRequirements[route] == null) {
       return true;
     }
-    const req = this.pageRequirements[route].required;
+    // permission guarding
+    const req = this.pageRequirements[route].requiredPerm;
     if (req != null && req.length !== 0) {
       // If one of the required objects are disabled, we return false
       const reqResult = req.some((obj) => {
-        return this.isObjectDisabled(obj);
+        return !this.isAuthorized(obj);
       });
       if (reqResult) {
         return false;
       }
     }
 
-    const defaultObjects = this.pageRequirements[route].default;
+    const defaultObjects = this.pageRequirements[route].defaultPerm;
     if (defaultObjects != null && defaultObjects.length !== 0) {
       // If one of the objects isn't disabled, we allow the route
       const defaultObjRes = defaultObjects.some((obj) => {
-        return !this.isObjectDisabled(obj);
+        return this.isAuthorized(obj);
       });
-      return defaultObjRes;
+      if (!defaultObjRes) {
+        return false;
+      }
+    }
+
+    // Checking feature guarding
+    const reqFeatures = this.pageRequirements[route].requiredFeatures;
+    if (reqFeatures != null && reqFeatures.length !== 0) {
+      // If one of the required objects are disabled, we return false
+      const reqResult = reqFeatures.some((obj) => {
+        return !this.isFeatureEnabled(obj);
+      });
+      if (reqResult) {
+        return false;
+      }
+    }
+
+    const defaultFeatures = this.pageRequirements[route].defaultFeatures;
+    if (defaultFeatures != null && defaultFeatures.length !== 0) {
+      // If one of the objects isn't disabled, we allow the route
+      const defaultRes = defaultFeatures.some((obj) => {
+        return this.isFeatureEnabled(obj);
+      });
+      if (!defaultRes) {
+        return false;
+      }
     }
     return true;
-  }
-
-  /**
-   * If we don't have a config file, we by default
-   * allow all objects
-   * @param objName
-   */
-  isObjectDisabled(objName: string): boolean {
-    if (this.configFile == null) {
-      return false;
-    }
-    const disabledObjs: string[] = this.configFile['disabled-objects'];
-    return disabledObjs.some((elem) => {
-      return elem.toLowerCase() === objName.toLowerCase();
-    });
   }
 
   /**
@@ -233,14 +260,34 @@ export class UIConfigsService {
    * allow all features
    * @param featureName
    */
-  isFeatureDisabled(featureName: string): boolean {
+  isFeatureEnabled(featureName: string): boolean {
     if (this.configFile == null) {
-      return false;
+      return true;
     }
-    const disabledFeatures: string[] = this.configFile['disabled-features'];
-    return disabledFeatures.some((elem) => {
+    const enabledFeatures: string[] = this.configFile['enabled-features'];
+    return enabledFeatures.some((elem) => {
       return elem.toLowerCase() === featureName.toLowerCase();
     });
+  }
+
+  featureGuardIsEnabled(req: Features[], opt: Features[]): boolean {
+    if (req != null && req.length !== 0) {
+      // If one of the required objects are disabled, we return false
+      return !req.some( (p) => {
+        if (!this.isFeatureEnabled(p)) {
+          return true;
+        }
+      });
+    }
+
+    if (opt != null && opt.length !== 0) {
+      // If all of the optional objects are disabled, we return false
+      return opt.some( (p) => {
+        return this.isFeatureEnabled(p);
+      });
+    }
+
+    return true;
   }
 
   navigateToHomepage() {

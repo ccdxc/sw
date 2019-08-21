@@ -1,5 +1,7 @@
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { RoleGuardInput } from './components/shared/directives/roleGuard.directive';
+import { FeatureGuardInput } from './components/shared/directives/featureGuard.directive';
+import { Features } from './services/uiconfigs.service';
 
 export interface SideNavItem {
   label: string;
@@ -10,6 +12,7 @@ export interface SideNavItem {
   children?: SideNavItem[];
   link?: string[];
   roleGuard?: RoleGuardInput | UIRolePermissions;
+  featureGuard?: FeatureGuardInput | Features;
 }
 
 export const sideNavMenu: SideNavItem[] = [
@@ -89,6 +92,7 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'app-l-side-nav-security-securitygroups'
         },
         roleGuard: UIRolePermissions.securitysecuritygroup_read,
+        featureGuard: Features.securityGroups,
         link: ['/security', 'securitygroups']
       },
       {

@@ -13,8 +13,6 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   encapsulation: ViewEncapsulation.None
 })
 export class AlertseventspageComponent extends BaseComponent implements OnInit, OnDestroy {
-  hideAlertpolicies: boolean = this.uiconfigsService.isObjectDisabled('AlertPolicies');
-
   breadCrumb = [{ label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' }];
 
 

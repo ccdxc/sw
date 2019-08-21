@@ -20,6 +20,7 @@ export enum Eventtypes {
   FETCH_USER_PREFERENCES,
   FETCH_USER_PERMISSIONS,
   NEW_USER_PERMISSIONS, // Triggered when ui permissions changes.
+  NEW_FEATURE_PERMISSIONS, // Triggered when ui feature permissions changes. Mainly for testing env
   HELP_CONTENT_CHANGE,
   HELP_OVERLAY_OPEN,
   HELP_OVERLAY_CLOSE,

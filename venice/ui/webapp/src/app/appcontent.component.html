@@ -40,7 +40,7 @@
               <button [disableRipple]="true" mat-button>DOCS</button>
             </a>
             <ng-container *ngIf="!isUINavigationBlocked">
-              <app-helpoverlay *ngIf="true" fxFlex="none"></app-helpoverlay>
+              <app-helpoverlay *featureGuard="'help'" fxFlex="none"></app-helpoverlay>
               <!-- Commenting out for August release -->
               <!-- <button mat-button>Save</button> -->
               <button *roleGuard="'monitoringAlert_read'" mat-icon-button
@@ -189,25 +189,28 @@
   <ng-container *ngIf="!isUINavigationBlocked">
     <ng-container *ngFor="let item of items">
       <li *roleGuard="item.roleGuard">
-        <a *ngIf="item.children == null" [routerLink]="item.link"
-           routerLinkActive="app-sidenav-selected" class="app-sidenav-item" [id]="item.label">
-          <i
-             [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
-          <span class="app-l-side-nav-item-label">{{item.label}}</span>
-        </a>
+        <ng-container *featureGuard="item.featureGuard">
+          <a *ngIf="item.children == null" [routerLink]="item.link"
+             routerLinkActive="app-sidenav-selected" class="app-sidenav-item" [id]="item.label">
+            <i
+               [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
+            <span class="app-l-side-nav-item-label">{{item.label}}</span>
+          </a>
 
-        <a *ngIf="item.children != null" class="app-sidenav-group-header" data-toggle="collapse"
-           aria-expanded="false" [href]="'#' + item.label + 'Submenu'">
-          <i
-             [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
-          <span class="app-l-side-nav-item-label">{{item.label}}</span>
-        </a>
+          <a *ngIf="item.children != null" class="app-sidenav-group-header" data-toggle="collapse"
+             aria-expanded="false" [href]="'#' + item.label + 'Submenu'">
+            <i
+               [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
+            <span class="app-l-side-nav-item-label">{{item.label}}</span>
+          </a>
 
-        <ul *ngIf="item.children != null && item.children.length > 0"
-            class="collapse list-unstyled app-l-side-nav-ul-submenu" [id]="item.label + 'Submenu'">
-          <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:item.children}">
-          </ng-container>
-        </ul>
+          <ul *ngIf="item.children != null && item.children.length > 0"
+              class="collapse list-unstyled app-l-side-nav-ul-submenu"
+              [id]="item.label + 'Submenu'">
+            <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:item.children}">
+            </ng-container>
+          </ul>
+        </ng-container>
       </li>
     </ng-container>
   </ng-container>

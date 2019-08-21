@@ -28,7 +28,7 @@ import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.com
 })
 export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, WorkloadWorkload> implements OnInit, OnDestroy {
   // Feature Flags
-  hideWorkloadWidgets: boolean = this.uiconfigsService.isFeatureDisabled('WorkloadWidgets');
+  hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
   @ViewChild('workloadTable') workloadTable: Table;
 

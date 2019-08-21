@@ -36,6 +36,7 @@ import { OrderedlistComponent } from './orderedlist/orderedlist.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChipsComponent } from './chips/chips.component';
 import { DomHandler } from 'primeng/api';
+import { FeatureGuardDirective } from './directives/featureGuard.directive';
 
 @NgModule({
   imports: [
@@ -71,6 +72,7 @@ import { DomHandler } from 'primeng/api';
     ErrorTooltipDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
+    FeatureGuardDirective,
     LabeleditorComponent,
     AdvancedSearchComponent,
     TimeRangeComponent,
@@ -101,6 +103,7 @@ import { DomHandler } from 'primeng/api';
     ErrorTooltipDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
+    FeatureGuardDirective,
     AdvancedSearchComponent,
     LabeleditorComponent,
     TimeRangeComponent,

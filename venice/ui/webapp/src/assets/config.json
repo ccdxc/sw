@@ -1,8 +1,5 @@
 {
-  "disabled-objects": [
-  ],
-  "disabled-features" : [
-      "WorkloadWidgets"
+  "enabled-features" : [
   ],
   "condition-thresholds": {
     "critical": 95,
