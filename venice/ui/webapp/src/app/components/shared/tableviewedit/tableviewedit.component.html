@@ -1,9 +1,9 @@
 <div fxFlex="auto" fxLayout="column" class="tableviewedit-widget">
   <div [@slideInOut] *ngIf="creatingMode" fxFlex="none" fxLayout="column">
     <ng-container *ngTemplateOutlet="createTemplate"></ng-container>
-    <div fxFlex="0px" class="tableviewedit-creation-border"></div>
+    <div fxFlex="none" class="tableviewedit-creation-border"></div>
   </div>
-  <div fxFlex class="tableviewedit-tablecontainer">
+  <div fxFlex="auto" class="tableviewedit-tablecontainer">
     <ng-container #table *ngTemplateOutlet="TableTemplate"></ng-container>
     <div *ngIf="creatingMode || (showRowExpand && disableTableWhenRowExpanded)"
          class="tableviewedit-overlay"></div>

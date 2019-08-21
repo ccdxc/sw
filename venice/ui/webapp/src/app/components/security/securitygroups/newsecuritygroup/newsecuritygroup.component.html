@@ -1,22 +1,26 @@
 <div fxFlex="auto" fxLayout="column">
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newsecuritygroup-container">
+  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center stretch"
+       class="newsecuritygroup-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
+    <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
          fxLayoutAlign="start stretch" class="newsecuritygroup-content">
-      <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
-        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newsecuritygroup-row">
-          <div fxFlex="nogrow" class="newsecuritygroup-field-label">NAME:</div>
+      <div fxFlex="auto" fxLayout="column" [formGroup]="newObject.$formGroup">
+        <div fxFlex="none" fxLayout="row" formGroupName="meta" class="newsecuritygroup-row">
+          <div fxFlex="none" class="newsecuritygroup-field-label">NAME:</div>
           <input fxFlex="300px" formControlName="name" class="newsecuritygroup-name" appErrorTooltip
                  spellcheck="false" type="text" pInputText
                  placeholder="Unique Security Group Name...">
         </div>
         <div fxFlex="25px"></div>
-        <div fxFlex="100" formGroupName="spec">
-          <div fxFlex="40" fxLayout="column" class="newsecuritygroup-row">
-            <div fxFlex="nogrow" class="newsecuritygroup-field-label">MATCH PREFIXES:</div>
-            <div class="newsecuritygroup-section-div">
+        <div fxFlex="auto" formGroupName="spec">
+
+          <div fxFlex="40" fxLayout="column" fxLayoutAlign="start start"
+               class="newsecuritygroup-row">
+            <div fxFlex="none" class="newsecuritygroup-field-label">MATCH PREFIXES:</div>
+            <div fxFlex="40px" fxLayout="column" fxLayoutAlign="start start"
+                 class="newsecuritygroup-section-div">
               <!-- we need template withing app-chips to apply close icon style  -->
-              <app-chips formControlName="match-prefixes"
+              <app-chips fxFlex="none" formControlName="match-prefixes"
                          [addOnBlur]="true"
                          [addOnTab]="true"
                          class="newsecuritygroup-input-item newsecuritygroup-chips"
@@ -32,9 +36,11 @@
                 </ng-template>
               </app-chips>
             </div>
-            <div fxFlex="nogrow" class="newsecuritygroup-field-label">SERVICES LABELS:</div>
-            <div class="newsecuritygroup-section-div">
-              <app-chips formControlName="service-labels" [addOnBlur]="true" [addOnTab]="true"
+
+            <div fxFlex="none" class="newsecuritygroup-field-label">SERVICES LABELS:</div>
+            <div fxFlex="40px" class="newsecuritygroup-section-div">
+              <app-chips fxFlex="none" fxLayout="column" fxLayoutAlign="start start"
+                         formControlName="service-labels" [addOnBlur]="true" [addOnTab]="true"
                          class="newsecuritygroup-input-item newsecuritygroup-chips"
                          [matTooltip]="'Type in service label and hit enter key.'"
                          placeholder="ex: serv1, serv2">
@@ -47,14 +53,17 @@
                 </ng-template>
               </app-chips>
             </div>
+
           </div>
           <div fxFlex="60" fxLayout="column" class="newsecuritygroup-row">
             <div fxFlex="nogrow" class="newsecuritygroup-field-label">Workload Labels:</div>
-            <div class="newsecuritygroup-section-div newsecuritygroup-section-workloadlabels-div">
+            <div fxFlex="auto"
+                 class="newsecuritygroup-section-div newsecuritygroup-section-workloadlabels-div">
               <app-repeater #workloadlabelRepeater [data]="labelData" [formArray]="labelFormArray"
                             (repeaterValues)="handleLabelRepeaterData($event)"></app-repeater>
             </div>
           </div>
+
         </div>
         <div fxFlex="20px"></div>
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
