@@ -150,9 +150,24 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 			nic.Status.Host = ""
 			log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.ID, host.Name)
 			// See if they can be paired with another host
-			err = sm.UpdateHostPairingStatus(kvstore.Created, nic.SmartNIC, nil)
-			if err != nil {
-				log.Errorf("Error updating NIC - Host pairing: %v", err)
+			allHosts, err := sm.ListHosts()
+			if err == nil {
+				for _, otherHost := range allHosts {
+					if otherHost.Name == host.Name {
+						continue
+					}
+					otherHost.Lock()
+					if isNICHostPair(nic.SmartNIC, otherHost.Host) {
+						nic.Status.Host = otherHost.Name
+						otherHost.Status.AdmittedSmartNICs = utils.AppendStringIfNotPresent(nic.Name, otherHost.Status.AdmittedSmartNICs)
+						sm.UpdateHost(otherHost.Host, true)
+						otherHost.Unlock()
+						break
+					}
+					otherHost.Unlock()
+				}
+			} else {
+				log.Errorf("Error getting list of Host objects: %v", err)
 			}
 			sm.UpdateSmartNIC(nic.SmartNIC, true)
 			nic.Unlock()

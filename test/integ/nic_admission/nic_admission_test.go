@@ -524,13 +524,15 @@ func TestCreateNMDs(t *testing.T) {
 					}
 					AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("100ms"), string("60s"))
 
+					nicMeta := &api.ObjectMeta{
+						Name: priMac,
+					}
+					hostMeta := &host.ObjectMeta
+
 					// Validate SmartNIC object is created
 					f5 := func() (bool, interface{}) {
 
-						meta := api.ObjectMeta{
-							Name: priMac,
-						}
-						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
+						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicMeta)
 						if err != nil || nicObj == nil {
 							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", priMac, err)
 							return false, nil
@@ -540,26 +542,32 @@ func TestCreateNMDs(t *testing.T) {
 					}
 					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("100ms"), string("30s"))
 
-					// Validate Host object is created
-					f6 := func() (bool, interface{}) {
+					// Validate Host object is created and paired
+					checkHostNICPair(t, hostMeta, nicMeta, true)
 
-						meta := api.ObjectMeta{
-							Name: host.Name,
-						}
-						hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
-						if err != nil || hostObj == nil {
-							log.Errorf("Failed to GET Host object:%s, %v", host.Name, err)
+					// modify the host obj spec to break the pair
+					setHostSmartNICIDs(t, hostMeta, []pencluster.SmartNICID{{MACAddress: getSmartNICMAC(99)}})
+					checkHostNICPair(t, hostMeta, nicMeta, false)
+
+					// form the pair again
+					setHostSmartNICIDs(t, hostMeta, []pencluster.SmartNICID{{MACAddress: priMac}})
+					checkHostNICPair(t, hostMeta, nicMeta, true)
+
+					// delete host object
+					tInfo.apiClient.ClusterV1().Host().Delete(context.Background(), hostMeta)
+					f6 := func() (bool, interface{}) {
+						nic, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicMeta)
+						if err != nil {
+							log.Errorf("Failed to GET SmartNIC object:%s, %v", nicMeta.Name, err)
 							return false, nil
 						}
-						log.Infof("Host object: %+v", host)
-						for ii := range hostObj.Status.AdmittedSmartNICs {
-							if hostObj.Status.AdmittedSmartNICs[ii] == priMac {
-								return true, nil
-							}
+						if nic.Status.Host != "" {
+							log.Errorf("Host not cleaned up from SmartNIC object as expected: %+v", nic)
+							return false, nil
 						}
-						return false, nil
+						return true, nil
 					}
-					AssertEventually(t, f6, "Failed to verify creation of required Host object", string("100ms"), string("30s"))
+					AssertEventually(t, f6, "Failed to verify update of SmartNIC object", string("100ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
 						tcName, priMac, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
@@ -568,7 +576,6 @@ func TestCreateNMDs(t *testing.T) {
 			}
 		})
 		log.Infof("#### Completed TestGroup")
-
 	}
 }
 
@@ -610,6 +617,14 @@ func setNICMgmtMode(t *testing.T, meta *api.ObjectMeta, mode string) {
 	nicObj.Spec.MgmtMode = mode
 	nicObj, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), nicObj)
 	AssertOk(t, err, "Error updating NIC in ApiServer")
+}
+
+func setHostSmartNICIDs(t *testing.T, meta *api.ObjectMeta, ids []pencluster.SmartNICID) {
+	hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), meta)
+	AssertOk(t, err, "Error getting host object")
+	hostObj.Spec.SmartNICs = ids
+	_, err = tInfo.apiClient.ClusterV1().Host().Update(context.Background(), hostObj)
+	AssertOk(t, err, "Error updating Host %+v in ApiServer", hostObj)
 }
 
 // setNAPLESConfigMode sets the value for the NaplesConfig.Spec.Mgmt in NAPLES
@@ -822,6 +837,42 @@ func setAutoAdmit(v bool) error {
 		return fmt.Errorf("Error updating cluster object: %v", err)
 	}
 	return nil
+}
+
+func checkHostNICPair(t *testing.T, hostMeta, nicMeta *api.ObjectMeta, established bool) {
+	var host *pencluster.Host
+	var nic *pencluster.SmartNIC
+	var err error
+
+	f := func() (bool, interface{}) {
+		host, err = tInfo.apiClient.ClusterV1().Host().Get(context.Background(), hostMeta)
+		if err != nil {
+			log.Errorf("Failed to GET Host object:%s, %v", hostMeta.Name, err)
+			return false, nil
+		}
+		nic, err = tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicMeta)
+		if err != nil {
+			log.Errorf("Failed to GET SmartNIC object:%s, %v", nicMeta.Name, err)
+			return false, nil
+		}
+		nicInHostStatus := false
+		for ii := range host.Status.AdmittedSmartNICs {
+			if host.Status.AdmittedSmartNICs[ii] == nic.Name {
+				nicInHostStatus = true
+				break
+			}
+		}
+		if established && (!nicInHostStatus || nic.Status.Host != host.Name) {
+			log.Errorf("NIC and Host object pairing not complete. Host: %+v, NIC: %+v", host, nic)
+			return false, nil
+		}
+		if !established && (nicInHostStatus || nic.Status.Host != "") {
+			log.Errorf("NIC and Host object pairing not cleaned up. Host: %+v, NIC: %+v", host, nic)
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f, fmt.Sprintf("Failed to validate Host-NIC pairing. Host: %+v, SmartNIC: %+v, err: %+v", host, nic, err))
 }
 
 // TestNICReadmit tests the flow in which a NIC is first admitted, then explicitly de-amitted and the re-admitted.
