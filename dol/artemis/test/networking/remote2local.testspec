@@ -68,8 +68,7 @@ packets:
     - packet:
         id          : TO_HOST_PKT # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId

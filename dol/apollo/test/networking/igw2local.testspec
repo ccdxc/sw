@@ -55,8 +55,7 @@ packets:
     - packet:
         id          : TO_HOST_PKT # Expected packet to host
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
                 src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping

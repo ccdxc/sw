@@ -28,8 +28,7 @@ packets:
     - packet:
         id          : FROM_HOST_PKT # Input packet from host
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr

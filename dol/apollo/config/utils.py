@@ -4,6 +4,8 @@ import enum
 import ipaddress
 import socket
 from random import sample
+from scapy.layers.l2 import Dot1Q
+
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
@@ -236,3 +238,9 @@ def IsPipelineArtemis():
     if GlobalOptions.pipeline == 'artemis':
         return True
     return False
+
+def GetVlanHeaderSize(packet):
+    pkt = packet.GetScapyPacket()
+    if Dot1Q in pkt:
+        return DOT1Q_HDR_LEN
+    return 0

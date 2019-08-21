@@ -6,11 +6,9 @@ selectors:
 
 packets:
     - packet:
-        id          : FROM_HOST_PKT # Input packet
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
@@ -31,10 +29,15 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
 
     - packet:
         id          : TO_HOST_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic/vnic=remote
         headers     :
             eth:
                 src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping

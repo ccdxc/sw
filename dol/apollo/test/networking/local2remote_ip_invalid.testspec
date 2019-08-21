@@ -12,8 +12,7 @@ packets:
         id          : FROM_HOST_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
@@ -26,7 +25,7 @@ packets:
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/localmapping/IP
-                dst     : aaaa:aaaa::0001
+                dst     : aaaa:0010:0010:0010:a1a1:bb11:11cc:dd1e
                 hlim    : 64
             tcp:
                 sport   : 100

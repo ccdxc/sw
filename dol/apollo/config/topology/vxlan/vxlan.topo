@@ -118,6 +118,7 @@ vpc:
               ipcount : 4             # Local IP mapping per vnic
               srcguard : true         # true or false (default false)
               public  : true
+              tagged  : false         # true or false (default true)
             - count   : 1             # VNICs per subnet
               ipcount : 4             # Local IP mapping per vnic
               srcguard : false        # true or false (default false)

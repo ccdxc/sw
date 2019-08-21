@@ -34,9 +34,9 @@ class VnicObject(base.ConfigObjectBase):
         self.TxMirror = txmirror
         self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
         self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
-        self._derive_oper_info()
-
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
+        self.dot1Qenabled = getattr(spec, 'tagged', True)
+        self._derive_oper_info()
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
@@ -67,8 +67,11 @@ class VnicObject(base.ConfigObjectBase):
         spec.VnicId = self.VnicId
         spec.SubnetId = self.SUBNET.SubnetId
         spec.VPCId = self.SUBNET.VPC.VPCId
-        spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
-        spec.VnicEncap.value.VlanId = self.VlanId
+        if self.dot1Qenabled:
+            spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
+            spec.VnicEncap.value.VlanId = self.VlanId
+        else:
+            spec.VnicEncap.type = types_pb2.ENCAP_TYPE_NONE
         spec.MACAddress = self.MACAddr.getnum()
         spec.ResourcePoolId = 0 # TODO, Need to allocate and use
         spec.SourceGuardEnable = self.SourceGuard
@@ -84,12 +87,15 @@ class VnicObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("VNIC object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- Vlan:%d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s"\
-             % (self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard)))
+        logger.info("- Vlan: %s %d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s"\
+             % (self.dot1Qenabled, self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard)))
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         return
+
+    def IsEncapTypeVLAN(self):
+        return self.dot1Qenabled
 
     def SetupTestcaseConfig(self, obj):
         return

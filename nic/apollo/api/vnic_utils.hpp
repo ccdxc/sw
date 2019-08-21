@@ -65,4 +65,4 @@ operator<<(std::ostream& os, const pds_vnic_info_t *obj) {
     return os;
 }
 
-#endif    // __API_VNIC_API_HPP__
+#endif    // __API_VNIC_UTILS_HPP__

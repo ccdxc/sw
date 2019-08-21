@@ -186,6 +186,21 @@ def GetPacketEncapFromMapping(testcase, packet, args=None):
     encaps.append(__get_packet_encap_impl(testcase.config.devicecfg, testcase.config.tunnel, args))
     return encaps
 
+def __get_host_packet_encap_impl(vnic):
+    encaps = []
+    if vnic.IsEncapTypeVLAN():
+        vlan_encap = infra_api.GetPacketTemplate('ENCAP_QTAG')
+        encaps.append(vlan_encap)
+    return encaps
+
+# Encap for to/from host packet
+def GetHostPacketEncapFromVnic(testcase, packet, args=None):
+    if args is None:
+        vnic = testcase.config.localmapping.VNIC
+    else:
+        vnic = testcase.config.remotemapping.VNIC
+    return __get_host_packet_encap_impl(vnic)
+
 def __get_packet_srcmac_impl(fwdmode, dobj, robj, lobj, args):
     if dobj.IsEncapTypeMPLS():
         if fwdmode == 'L2':

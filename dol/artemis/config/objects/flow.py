@@ -64,7 +64,7 @@ class FlowMapObject(base.ConfigObjectBase):
             # Received on switch port and send out on host port
             # So it is counted in receive
             if port == tc.config.hostport:
-                rxbytes = len(p.packet.rawbytes) - 4 # Remove VLAN header
+                rxbytes = len(p.packet.rawbytes) - utils.GetVlanHeaderSize(p.packet) # Remove VLAN header
                 break
 
         if tc.config.localmapping.AddrFamily == 'IPV6':
