@@ -91,6 +91,8 @@ ecdsa_t::pre_push(ecdsa_pre_push_params_t& pre_params)
         }
     }
 
+    digest_params.msg_is_component(
+                  ecdsa_key_create_type_is_sign_component(pre_params.key_create_type()));
     evp_md = eng_if::digest_gen(digest_params.hash_algo(pre_params.hash_algo()).
                                               msg(pre_params.msg()).
                                               digest(digest));
@@ -122,6 +124,7 @@ ecdsa_t::push(ecdsa_push_params_t& push_params)
     switch (pre_params.key_create_type()) {
 
     case ECDSA_KEY_CREATE_SIGN:
+    case ECDSA_KEY_CREATE_SIGN_COMPONENT:
         success = eng_if::ec_sign(
                           sign_params.curve_nid(pre_params.curve_nid()).
                                       md(evp_md).
@@ -136,18 +139,18 @@ ecdsa_t::push(ecdsa_push_params_t& push_params)
         break;
 
     case ECDSA_KEY_CREATE_VERIFY:
-            success = eng_if::ec_verify(
-                              verify_params.curve_nid(pre_params.curve_nid()).
-                                            md(evp_md).
-                                            key_idx(key_idx).
-                                            digest(digest).
-                                            sig_input_vec(push_params.sig_expected_vec()).
-                                            sig_r(push_params.r_expected()).
-                                            sig_s(push_params.s_expected()).
-                                            ec(this).
-                                            skip_DER_decode(true).
-                                            failure_expected(push_params.failure_expected()).
-                                            wait_for_completion(false));
+        success = eng_if::ec_verify(
+                          verify_params.curve_nid(pre_params.curve_nid()).
+                                        md(evp_md).
+                                        key_idx(key_idx).
+                                        digest(digest).
+                                        sig_input_vec(push_params.sig_expected_vec()).
+                                        sig_r(push_params.r_expected()).
+                                        sig_s(push_params.s_expected()).
+                                        ec(this).
+                                        skip_DER_decode(true).
+                                        failure_expected(push_params.failure_expected()).
+                                        wait_for_completion(false));
         break;
 
     default:
@@ -360,6 +363,7 @@ ecdsa_t::key_create(ecdsa_pre_push_params_t& pre_params)
     switch (pre_params.key_create_type()) {
 
     case ECDSA_KEY_CREATE_SIGN:
+    case ECDSA_KEY_CREATE_SIGN_COMPONENT:
         key_params.cmd_ecdsa_sign(true);
 
         /*

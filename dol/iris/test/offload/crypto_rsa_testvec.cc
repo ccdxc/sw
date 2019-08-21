@@ -14,7 +14,7 @@
 #define PARSE_TOKEN_STR_SHA_ALGO        "SHAAlg"
 #define PARSE_TOKEN_STR_MSG             "Msg"
 #define PARSE_TOKEN_STR_S               "S"
-#define PARSE_TOKEN_STR_SALT_VAL        "SaltVal="
+#define PARSE_TOKEN_STR_SALT_VAL        "SaltVal"
 
 /*
  * Unstripped versions
@@ -33,6 +33,7 @@
 #define PARSE_STR_S_PREFIX              "S = "
 #define PARSE_STR_S_SUFFIX              "\n"
 #define PARSE_STR_SALT_VAL_PREFIX       "SaltVal = "
+#define PARSE_STR_SALT_VAL_SUFFIX       "\n"
 
 namespace crypto_rsa {
 
@@ -258,6 +259,16 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
             }
             break;
 
+        case PARSE_TOKEN_ID_SALT_VAL:
+            if (!msg_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place SaltVal");
+                goto error;
+            }
+            if (!testvec_parser->parse_hex_bn(msg_repr->salt_val)) {
+                msg_repr->failed_parse_token = token_id;
+            }
+            break;
+
         case PARSE_TOKEN_ID_RESULT:
             if (!msg_repr.use_count()) {
                 OFFL_FUNC_ERR("out of place Result");
@@ -356,6 +367,7 @@ rsa_testvec_t::push(rsa_testvec_push_params_t& push_params)
                                 msg_actual(msg_repr->msg_actual).
                                 sig_expected(msg_repr->sig_expected).
                                 sig_actual(msg_repr->sig_actual).
+                                salt_val(msg_repr->salt_val).
                                 failure_expected(msg_repr->failure_expected);
                 if (!msg_repr->crypto_rsa->push(rsa_push_params)) {
                     OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected,
@@ -515,12 +527,21 @@ rsa_testvec_t::rsp_file_output(const string& mem_type_str)
                 rsp_output->str(PARSE_STR_SHA_ALGO_PREFIX, msg_repr->sha_algo);
                 if (rsa_key_create_type_is_sign(testvec_params.key_create_type())) {
                     rsp_output->hex_bn(PARSE_STR_MSG_PREFIX, msg_repr->msg_expected);
-                    rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->sig_actual,
-                                       PARSE_STR_S_SUFFIX);
+                    if (msg_repr->salt_val->content_size_get()) {
+                        rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->sig_actual);
+                        rsp_output->hex_bn(PARSE_STR_SALT_VAL_PREFIX, msg_repr->salt_val,
+                                           PARSE_STR_SALT_VAL_SUFFIX);
+                    } else {
+                        rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->sig_actual,
+                                           PARSE_STR_S_SUFFIX);
+                    }
                 } else {
                     rsp_output->hex_bn(PARSE_STR_E_PREFIX, msg_repr->e);
                     rsp_output->hex_bn(PARSE_STR_MSG_PREFIX, msg_repr->msg_expected);
                     rsp_output->hex_bn(PARSE_STR_S_PREFIX, msg_repr->sig_expected);
+                    if (msg_repr->salt_val->content_size_get()) {
+                        rsp_output->hex_bn(PARSE_STR_SALT_VAL_PREFIX, msg_repr->salt_val);
+                    }
                     rsp_output->str(PARSE_STR_RESULT_PREFIX, failure ? "F" : "P",
                                     PARSE_STR_RESULT_SUFFIX);
                 }

@@ -96,7 +96,8 @@ class digest_params_t
 public:
     digest_params_t() :
         msg_(nullptr),
-        digest_(nullptr)
+        digest_(nullptr),
+        msg_is_component_(false)
     {
     }
 
@@ -118,15 +119,23 @@ public:
         digest_ = digest;
         return *this;
     }
+    digest_params_t&
+    msg_is_component(bool msg_is_component)
+    {
+        msg_is_component_ = msg_is_component;
+        return *this;
+    }
 
     const string& hash_algo(void) { return hash_algo_; }
     dp_mem_t *msg(void) { return msg_; }
     dp_mem_t *digest(void) { return digest_; }
+    bool msg_is_component(void) { return msg_is_component_; }
 
 private:
     string                      hash_algo_;
     dp_mem_t                    *msg_;
     dp_mem_t                    *digest_;
+    bool                        msg_is_component_;
 };
 
 /*
@@ -143,6 +152,7 @@ public:
         d_e_(nullptr),
         digest_(nullptr),
         digest_padded_(nullptr),
+        salt_val_(nullptr),
         sig_actual_(nullptr),
         rsa_(nullptr),
         failure_expected_(false),
@@ -193,6 +203,12 @@ public:
         return *this;
     }
     rsa_sign_params_t&
+    salt_val(dp_mem_t *salt_val)
+    {
+        salt_val_ = salt_val;
+        return *this;
+    }
+    rsa_sign_params_t&
     sig_actual(dp_mem_t *sig_actual)
     {
         sig_actual_ = sig_actual;
@@ -224,6 +240,7 @@ public:
     dp_mem_t *d_e(void) { return d_e_; }
     dp_mem_t *digest(void) { return digest_; }
     dp_mem_t *digest_padded(void) { return digest_padded_; }
+    dp_mem_t *salt_val(void) { return salt_val_; }
     dp_mem_t *sig_actual(void) { return sig_actual_; }
     void *rsa(void) { return rsa_; }
     bool failure_expected(void) { return failure_expected_; }
@@ -237,6 +254,7 @@ private:
     dp_mem_t                    *d_e_;          // RSA public or private exponent
     dp_mem_t                    *digest_;
     dp_mem_t                    *digest_padded_;
+    dp_mem_t                    *salt_val_;
     dp_mem_t                    *sig_actual_;
     void                        *rsa_;
     bool                        failure_expected_;
@@ -258,6 +276,7 @@ public:
         sig_expected_(nullptr),
         digest_(nullptr),
         digest_padded_(nullptr),
+        salt_val_(nullptr),
         rsa_(nullptr),
         failure_expected_(false),
         wait_for_completion_(false)
@@ -313,6 +332,12 @@ public:
         return *this;
     }
     rsa_verify_params_t&
+    salt_val(dp_mem_t *salt_val)
+    {
+        salt_val_ = salt_val;
+        return *this;
+    }
+    rsa_verify_params_t&
     rsa(void *rsa)
     {
         rsa_ = rsa;
@@ -339,6 +364,7 @@ public:
     dp_mem_t *sig_expected(void) { return sig_expected_; }
     dp_mem_t *digest(void) { return digest_; }
     dp_mem_t *digest_padded(void) { return digest_padded_; }
+    dp_mem_t *salt_val(void) { return salt_val_; }
     void *rsa(void) { return rsa_; }
     bool failure_expected(void) { return failure_expected_; }
     bool wait_for_completion(void) { return wait_for_completion_; }
@@ -352,6 +378,7 @@ private:
     dp_mem_t                    *sig_expected_;
     dp_mem_t                    *digest_;
     dp_mem_t                    *digest_padded_;
+    dp_mem_t                    *salt_val_;
     void                        *rsa_;
     bool                        failure_expected_;
     bool                        wait_for_completion_;
@@ -694,6 +721,8 @@ bool bn_to_dp_mem_pad(const BIGNUM *bn,
 bool bn_to_dp_mem(const BIGNUM *bn,
                   dp_mem_t *mem);
 BIGNUM *dp_mem_to_bn(dp_mem_t *mem);
+bool dp_mem_to_dp_mem(dp_mem_t *dst,
+                      dp_mem_t *src);
 
 const eng_evp_md_t *hash_algo_find(const string& hash_algo);
 const eng_evp_md_t *digest_gen(digest_params_t& params);

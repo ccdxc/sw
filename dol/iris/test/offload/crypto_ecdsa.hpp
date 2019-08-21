@@ -27,13 +27,21 @@ class ecdsa_t;
 typedef enum {
     ECDSA_KEY_CREATE_VOID,
     ECDSA_KEY_CREATE_SIGN,
+    ECDSA_KEY_CREATE_SIGN_COMPONENT,
     ECDSA_KEY_CREATE_VERIFY,
 } ecdsa_key_create_type_t;
 
 static inline bool
+ecdsa_key_create_type_is_sign_component(ecdsa_key_create_type_t create_type)
+{
+    return create_type == ECDSA_KEY_CREATE_SIGN_COMPONENT;
+}
+
+static inline bool
 ecdsa_key_create_type_is_sign(ecdsa_key_create_type_t create_type)
 {
-    return create_type == ECDSA_KEY_CREATE_SIGN;
+    return (create_type == ECDSA_KEY_CREATE_SIGN) ||
+           ecdsa_key_create_type_is_sign_component(create_type);
 }
 
 static inline bool

@@ -104,8 +104,12 @@ const static vector<rsa_vector_entry_t> rsa_testvectors =
     {"rsa-testvectors/SigVer15_186-3.req",
       crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
 
-    //{"rsa-testvectors/SigGen931_186-3.req",
-    // crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_X931_PADDING},
+    // Probabilistic Signature Scheme (PSS)
+    {"rsa-testvectors/SigGenPSS_186-3.req",
+     crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PSS_PADDING},
+
+    {"rsa-testvectors/SigVerPSS_186-3.req",
+     crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PSS_PADDING},
 
 #ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
     {"rsa-testvectors/SigGen15_186-3_TruncatedSHAs.req",
@@ -128,18 +132,11 @@ const static vector<ecdsa_vector_entry_t> ecdsa_testvectors =
     {"ecdsa-testvectors/SigGen.req",
      crypto_ecdsa::ECDSA_KEY_CREATE_SIGN},
 
-    // For signature verification, we want to produce the ciphered output
-    // so the encryption method is used.
+    {"ecdsa-testvectors/SigGenComponent.req",
+     crypto_ecdsa::ECDSA_KEY_CREATE_SIGN_COMPONENT},
+
     {"ecdsa-testvectors/SigVer.req",
       crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
-
-#ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
-    {"ecdsa-testvectors/SigGen_TruncatedSHAs.req",
-     crypto_ecdsa::ECDSA_KEY_CREATE_SIGN},
-    {"ecdsa-testvectors/SigVer_TruncatedSHAs.req",
-     crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
-#endif
-
 };
 
 /*

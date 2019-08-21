@@ -3,6 +3,7 @@
 #include "e_pse.h"
 #include "pse_ec.h"
 #include "pse_rsa.h"
+#include "pse_rand.h"
 
 /* OpenSSL includes */
 
@@ -68,6 +69,11 @@ static int pse_bind_helper(ENGINE* eng, const char *id)
  
     if(!ENGINE_set_RSA(eng, pse_get_RSA_methods())) {
         WARN("ENGINE_set_RSA failed");
+        goto cleanup;
+    }
+    
+    if(!ENGINE_set_RAND(eng, pse_get_RAND_methods())) {
+        WARN("ENGINE_set_RAND failed");
         goto cleanup;
     }
     

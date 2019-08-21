@@ -264,7 +264,7 @@ status_t::success_check(bool failure_expected)
         }
         if (status->full_word & CRYPTO_ASYM_STATUS_NOT_IMPLEMENTED) {
             OFFL_LOG_ERR_OR_DEBUG(failure_expected,
-                                  "commnand is not valid");
+                                  "command is not valid");
         }
         if (status->full_word & CRYPTO_ASYM_STATUS_SIG_NOT_VALID) {
             OFFL_LOG_ERR_OR_DEBUG(failure_expected,

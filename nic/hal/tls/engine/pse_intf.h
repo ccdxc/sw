@@ -171,6 +171,7 @@ pse_buffer_init(PSE_BUFFER *buf)
 typedef struct PSE_rsa_key_offload_st {
     const PSE_RSA_OFFLOAD_METHOD *offload_method;
     PSE_OFFLOAD_MEM *digest_padded_mem;
+    PSE_OFFLOAD_MEM *salt_val;
     bool        wait_for_completion;
 } PSE_RSA_KEY_OFFLOAD;
 

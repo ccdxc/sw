@@ -11,6 +11,11 @@
 
 //#define NO_PEN_HW_OFFLOAD
 
+#ifndef min
+#define min(a, b)       ((a) < (b) ? (a) : (b))
+#define max(a, b)       ((a) > (b) ? (a) : (b))
+#endif
+
 extern const char *engine_pse_id;
 extern const char *engine_pse_name;
 

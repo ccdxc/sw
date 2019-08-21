@@ -15,4 +15,4 @@ void pse_free_RSA_methods(void);
 EVP_PKEY* pse_rsa_get_evp_key(ENGINE* engine, PSE_KEY *key,
                               UI_METHOD *ui_method, void *callback_data);
 
-#endif /* __PSE_EC_H__ */
+#endif /* __PSE_RSA_H__ */

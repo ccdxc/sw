@@ -134,6 +134,7 @@ rsa_t::push(rsa_push_params_t& push_params)
                                       d_e(pre_params.e()).
                                       digest(digest).
                                       digest_padded(digest_padded).
+                                      salt_val(push_params.salt_val()).
                                       sig_actual(push_params.sig_actual()).
                                       rsa(this).
                                       failure_expected(push_params.failure_expected()).
@@ -193,6 +194,16 @@ rsa_t::push(rsa_hw_sign_params_t& hw_sign_params)
      * Initialize status for later polling
      */
     status->init();
+
+    /*
+     * When it comes to PSS padding, OpenSSL actually does not add any
+     * padding to the digest, but our HW requires the digest to be the
+     * same size as everything else.
+     */
+    if (pre_params.pad_mode() == RSA_PKCS1_PSS_PADDING) {
+        eng_if::dp_mem_pad_in_place(hw_sign_params.hash_input(),
+                                    hw_sign_params.sig_output()->line_size_get());
+    }
 
     dma_params.desc_idx(RSA_DMA_DESC_IDX_HASH_INPUT).
                next_idx(CRYPTO_ASYM_DMA_DESC_IDX_INVALID).

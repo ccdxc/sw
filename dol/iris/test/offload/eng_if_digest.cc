@@ -32,15 +32,28 @@ digest_gen(digest_params_t& params)
      * These are built-in  to the library and obtained through appropriate
      * library calls (e.g. such as EVP_sha256() or EVP_sha512()).
      */
-    md_ctx = EVP_MD_CTX_create();
-    if (!md_ctx) {
-        OFFL_FUNC_ERR("Failed to create EVP_MD_CTX");
-        goto error;
-    }
-
     md = hash_algo_find(params.hash_algo());
     if (!md) {
         OFFL_FUNC_ERR("Failed to find md for {}", params.hash_algo());
+        goto error;
+    }
+
+    if (params.msg_is_component()) {
+
+        /*
+         * Input msg was already hashed so just copy it
+         */
+        if (!dp_mem_to_dp_mem(digest, msg)) {
+            OFFL_FUNC_ERR("Failed to initialize component digest");
+            md = NULL;
+            goto error;
+        }
+        goto done;
+    }
+
+    md_ctx = EVP_MD_CTX_create();
+    if (!md_ctx) {
+        OFFL_FUNC_ERR("Failed to create EVP_MD_CTX");
         goto error;
     }
 
@@ -74,6 +87,7 @@ digest_gen(digest_params_t& params)
     digest->content_size_set(digest_size);
     digest->write_thru();
 
+done:
     if (OFFL_IS_LOG_LEVEL_DEBUG()) {
         OFFL_FUNC_DEBUG("digest");
         utils::dump(digest->read(), digest->content_size_get());

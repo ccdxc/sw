@@ -331,6 +331,14 @@ public:
                              DP_MEM_ALIGN_NONE, rsa_testvec.testvec_params.e_mem_type(),
                              0, DP_MEM_ALLOC_NO_FILL);
         }
+
+        /*
+         * Allocate salt_val and init to zero length (in case it isn't used by the test)
+         */
+        salt_val = new dp_mem_t(1, modulus_bytes_len,
+                                DP_MEM_ALIGN_NONE, rsa_testvec.testvec_params.msg_mem_type(),
+                                0, DP_MEM_ALLOC_NO_FILL);
+        salt_val->content_size_set(0);
     }
 
     ~rsa_msg_repr_t()
@@ -338,6 +346,7 @@ public:
         if (rsa_testvec.testvec_params.base_params().destructor_free_buffers()) {
             if (rsa_testvec.test_success || !rsa_testvec.hw_started) {
                 if (crypto_rsa) delete crypto_rsa;
+                if (salt_val) delete salt_val;
                 if (e) delete e;
                 if (sig_vec) delete sig_vec;
                 if (msg_vec) delete msg_vec;
@@ -358,6 +367,7 @@ private:
     dp_mem_t                    *msg_expected;  // fragment of msg_vec
     dp_mem_t                    *msg_actual;    // fragment of msg_vec
     dp_mem_t                    *e;     // RSA public exponent (only for sig verify)
+    dp_mem_t                    *salt_val;      // random #, used by PSS
     rsa_t                       *crypto_rsa;
     parser_token_id_t           failed_parse_token;
     uint32_t                    failure_expected: 1,

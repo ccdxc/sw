@@ -164,6 +164,27 @@ dp_mem_to_bn(dp_mem_t *mem)
 
 
 /*
+ * Copy src dp_mem to dst dp_mem
+ */
+bool
+dp_mem_to_dp_mem(dp_mem_t *dst,
+                 dp_mem_t *src)
+{
+    uint32_t    copy_len = src->content_size_get();
+    if (dst->line_size_get() < copy_len) {
+        OFFL_FUNC_ERR("dst size %u too small - need to be at least %u",
+                      dst->line_size_get(), copy_len);
+        return false;
+    }
+
+    memcpy(dst->read(), src->read_thru(), copy_len);
+    dst->content_size_set(copy_len);
+    dst->write_thru();
+    return true;
+}
+
+
+/*
  * Pad a dp_mem message (could also be a modulus n, or e, or d, etc.) 
  * to the desired tolen.
  */

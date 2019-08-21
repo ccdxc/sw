@@ -1,5 +1,6 @@
 #include "e_pse.h"
 #include "pse_rsa.h"
+#include "pse_rand.h"
 #include <openssl/rsa.h>
 
 static RSA_METHOD *pse_rsa_method = NULL;
@@ -83,6 +84,12 @@ pse_rsa_set_ex_data(RSA *rsa, PSE_KEY* key, void *caller_ctx)
     ex_data->offload = key->u.rsa_key.offload;
     ex_data->caller_ctx = caller_ctx;
     RSA_set_ex_data(rsa, pse_rsa_ex_data_index, ex_data);
+
+    pse_RAND_set_salt_val(NULL);
+    if (ex_data->offload.offload_method && ex_data->offload.salt_val) {
+        pse_RAND_set_mem_method(ex_data->offload.offload_method->mem_method);
+        pse_RAND_set_salt_val(ex_data->offload.salt_val);
+    }
     return 1;
 }
 

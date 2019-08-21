@@ -15,11 +15,17 @@ local_rsa_pkey_load(void *caller_ctx,
                     dp_mem_t *n,
                     dp_mem_t *d_e,
                     dp_mem_t *digest_padded,
+                    dp_mem_t *salt_val,
                     bool wait_for_completion)
 {
     PSE_KEY             key = {0};
     EVP_PKEY            *pkey;
 
+    /*
+     * OpenSSL 1.1.0 does not support EVP_PKEY_RSA_PSS so use the
+     * default EVP_PKEY_RSA. The salt_len, if any, will be set
+     * using EVP_PKEY_CTX_set_rsa_pss_saltlen().
+     */
     key.type = EVP_PKEY_RSA;
     key.u.rsa_key.sign_key_id = key_idx;
     key.u.rsa_key.decrypt_key_id = key_idx;
@@ -30,6 +36,7 @@ local_rsa_pkey_load(void *caller_ctx,
 
     key.u.rsa_key.offload.offload_method = &crypto_rsa::pse_rsa_offload_method;
     key.u.rsa_key.offload.digest_padded_mem = (PSE_OFFLOAD_MEM *)digest_padded;
+    key.u.rsa_key.offload.salt_val = (PSE_OFFLOAD_MEM *)salt_val;
     key.u.rsa_key.offload.wait_for_completion = wait_for_completion;
 
     pkey = ENGINE_load_private_key(eng_if_engine, (const char *)&key,
@@ -52,6 +59,7 @@ rsa_sign(rsa_sign_params_t& params)
     EVP_PKEY            *evp_pkey;
     size_t              siglen;
     int                 ossl_ret;
+    int                 salt_len;
     dp_mem_t            *digest = params.digest();
     dp_mem_t            *sig_actual = params.sig_actual();
     bool                success = false;
@@ -60,6 +68,7 @@ rsa_sign(rsa_sign_params_t& params)
     evp_pkey = local_rsa_pkey_load(params.rsa(), params.key_idx(),
                                    params.n(), params.d_e(),
                                    params.digest_padded(),
+                                   params.salt_val(),
                                    params.wait_for_completion());
     if (!evp_pkey) {
         OFFL_FUNC_ERR("Failed to setup RSA evp_pkey");
@@ -84,6 +93,17 @@ rsa_sign(rsa_sign_params_t& params)
         goto done;
     }
 
+    salt_len = params.salt_val() ? 
+               params.salt_val()->content_size_get() : 0;
+    if (salt_len) {
+        ossl_ret = EVP_PKEY_CTX_set_rsa_pss_saltlen(pkey_ctx, salt_len);
+        if (ossl_ret <= 0) {
+            OFFL_FUNC_ERR("Failed to setup salt_len in EVP_PKEY_CTX: {}",
+                          ossl_ret);
+            goto done;
+        }
+    }
+
     ossl_ret = EVP_PKEY_CTX_set_signature_md(pkey_ctx, params.md());
     if (ossl_ret <= 0) {
         OFFL_FUNC_ERR("Failed to setup hash scheme in EVP_PKEY_CTX: {}",
@@ -103,7 +123,9 @@ rsa_sign(rsa_sign_params_t& params)
 
     OFFL_FUNC_DEBUG("siglen: {} msglen: {}", siglen,
                     digest->content_size_get());
-    sig_actual->content_size_set(siglen);
+    if (params.pad_mode() != RSA_PKCS1_PSS_PADDING) {
+        sig_actual->content_size_set(siglen);
+    }
 
     ossl_ret = EVP_PKEY_sign(pkey_ctx, (unsigned char *)sig_actual,
                              &siglen, digest->read(),
@@ -156,6 +178,7 @@ rsa_verify(rsa_verify_params_t& params)
     evp_pkey = local_rsa_pkey_load(params.rsa(), params.key_idx(),
                                    params.n(), params.d_e(),
                                    params.digest_padded(),
+                                   params.salt_val(),
                                    params.wait_for_completion());
     if (!evp_pkey) {
         OFFL_FUNC_ERR("Failed to setup RSA evp_pkey");
@@ -173,6 +196,10 @@ rsa_verify(rsa_verify_params_t& params)
         goto done;
     }
 
+    /*
+     * For PSS, signature verification will use OpenSSL salt_len
+     * auto recovery so we don't set the salt_len here.
+     */
     ossl_ret = EVP_PKEY_CTX_set_rsa_padding(pkey_ctx, params.pad_mode());
     if (ossl_ret <= 0) {
         OFFL_FUNC_ERR("Failed to setup padding scheme in EVP_PKEY_CTX: {}",
