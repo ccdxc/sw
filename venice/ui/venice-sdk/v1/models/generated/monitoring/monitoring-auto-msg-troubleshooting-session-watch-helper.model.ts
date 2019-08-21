@@ -46,6 +46,7 @@ export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseMode
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

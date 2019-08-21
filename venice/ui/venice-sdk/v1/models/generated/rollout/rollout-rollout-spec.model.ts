@@ -124,6 +124,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['order-constraints'] = new Array<LabelsSelector>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

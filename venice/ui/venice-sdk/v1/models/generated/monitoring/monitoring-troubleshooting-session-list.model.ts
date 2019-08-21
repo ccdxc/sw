@@ -66,6 +66,7 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringTroubleshootingSession>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -90,6 +90,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
         this['to-ip-addresses'] = new Array<string>();
         this['from-security-groups'] = new Array<string>();
         this['to-security-groups'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

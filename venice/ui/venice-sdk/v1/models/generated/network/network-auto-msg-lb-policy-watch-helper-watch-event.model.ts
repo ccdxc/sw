@@ -52,6 +52,7 @@ export class NetworkAutoMsgLbPolicyWatchHelperWatchEvent extends BaseModel imple
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new NetworkLbPolicy();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

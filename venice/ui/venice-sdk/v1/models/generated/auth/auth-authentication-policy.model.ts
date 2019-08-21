@@ -78,6 +78,7 @@ export class AuthAuthenticationPolicy extends BaseModel implements IAuthAuthenti
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new AuthAuthenticationPolicySpec();
         this['status'] = new AuthAuthenticationPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

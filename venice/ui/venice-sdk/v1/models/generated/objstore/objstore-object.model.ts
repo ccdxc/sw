@@ -74,6 +74,7 @@ export class ObjstoreObject extends BaseModel implements IObjstoreObject {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ObjstoreObjectSpec();
         this['status'] = new ObjstoreObjectStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

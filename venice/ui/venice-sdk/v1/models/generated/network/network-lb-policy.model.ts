@@ -78,6 +78,7 @@ export class NetworkLbPolicy extends BaseModel implements INetworkLbPolicy {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new NetworkLbPolicySpec();
         this['status'] = new NetworkLbPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

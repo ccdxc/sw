@@ -58,6 +58,7 @@ export class Telemetry_queryMetricsQueryList extends BaseModel implements ITelem
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['queries'] = new Array<Telemetry_queryMetricsQuerySpec>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

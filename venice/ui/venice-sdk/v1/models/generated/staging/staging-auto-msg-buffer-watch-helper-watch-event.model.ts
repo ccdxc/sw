@@ -52,6 +52,7 @@ export class StagingAutoMsgBufferWatchHelperWatchEvent extends BaseModel impleme
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new StagingBuffer();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

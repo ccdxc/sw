@@ -76,6 +76,7 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringFlowExportPolicySpec();
         this['status'] = new MonitoringFlowExportPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

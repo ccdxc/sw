@@ -91,6 +91,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         super();
         this['ip-config'] = new ClusterIPConfig();
         this['controllers'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

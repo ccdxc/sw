@@ -66,6 +66,7 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringAlert>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

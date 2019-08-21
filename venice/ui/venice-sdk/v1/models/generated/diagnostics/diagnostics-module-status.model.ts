@@ -97,6 +97,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['service-ports'] = new Array<DiagnosticsServicePort>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

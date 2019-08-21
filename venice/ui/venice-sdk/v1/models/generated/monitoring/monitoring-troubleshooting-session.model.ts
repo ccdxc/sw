@@ -74,6 +74,7 @@ export class MonitoringTroubleshootingSession extends BaseModel implements IMoni
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringTroubleshootingSessionSpec();
         this['status'] = new MonitoringTroubleshootingSessionStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

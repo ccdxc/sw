@@ -66,6 +66,7 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
         super();
         this['tls'] = new SecurityTLSProtocolSpec();
         this['ipsec'] = new SecurityIPsecProtocolSpec();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -78,6 +78,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         this['collectors'] = new Array<MonitoringMirrorCollector>();
         this['match-rules'] = new Array<MonitoringMatchRule>();
         this['packet-filters'] = new Array<MonitoringMirrorSessionSpec_packet_filters>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

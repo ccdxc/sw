@@ -160,6 +160,7 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
         this['user'] = new ApiObjectRef();
         this['client-ips'] = new Array<string>();
         this['resource'] = new ApiObjectRef();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -124,6 +124,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         super();
         this['query'] = new SearchSearchQuery();
         this['tenants'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

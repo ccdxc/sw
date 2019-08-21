@@ -78,6 +78,7 @@ export class ClusterVersion extends BaseModel implements IClusterVersion {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ClusterVersionSpec();
         this['status'] = new ClusterVersionStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

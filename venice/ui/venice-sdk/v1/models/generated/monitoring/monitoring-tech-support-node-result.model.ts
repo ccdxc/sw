@@ -71,6 +71,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

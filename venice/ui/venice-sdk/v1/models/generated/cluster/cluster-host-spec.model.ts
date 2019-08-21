@@ -46,6 +46,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['smart-nics'] = new Array<ClusterSmartNICID>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -88,6 +88,7 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
         this['entries'] = new Array<SearchEntry>();
         this['preview-entries'] = new SearchTenantPreview();
         this['aggregated-entries'] = new SearchTenantAggregation();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

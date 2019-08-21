@@ -44,6 +44,7 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

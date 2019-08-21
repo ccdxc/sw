@@ -52,6 +52,7 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['matched-requirements'] = new Array<MonitoringMatchedRequirement>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -58,6 +58,7 @@ export class AuthOperationStatus extends BaseModel implements IAuthOperationStat
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['operation'] = new AuthOperation();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

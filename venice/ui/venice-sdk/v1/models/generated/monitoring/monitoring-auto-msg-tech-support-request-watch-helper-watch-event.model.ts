@@ -52,6 +52,7 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent extends Ba
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new MonitoringTechSupportRequest();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

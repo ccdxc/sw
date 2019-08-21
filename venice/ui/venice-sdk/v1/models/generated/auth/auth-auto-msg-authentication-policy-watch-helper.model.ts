@@ -46,6 +46,7 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelper extends BaseModel implem
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

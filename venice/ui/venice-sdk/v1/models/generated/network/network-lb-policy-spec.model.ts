@@ -64,6 +64,7 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['health-check'] = new NetworkHealthCheckSpec();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

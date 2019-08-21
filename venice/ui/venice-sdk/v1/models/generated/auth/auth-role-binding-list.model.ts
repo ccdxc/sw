@@ -66,6 +66,7 @@ export class AuthRoleBindingList extends BaseModel implements IAuthRoleBindingLi
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<AuthRoleBinding>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

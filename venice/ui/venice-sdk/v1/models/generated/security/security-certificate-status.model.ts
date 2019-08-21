@@ -58,6 +58,7 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['workloads'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

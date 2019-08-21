@@ -46,6 +46,7 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

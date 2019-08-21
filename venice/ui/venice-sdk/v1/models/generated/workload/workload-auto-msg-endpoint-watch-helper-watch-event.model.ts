@@ -52,6 +52,7 @@ export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel impl
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new WorkloadEndpoint();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

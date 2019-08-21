@@ -52,6 +52,7 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['rule'] = new SecuritySGRule();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

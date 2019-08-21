@@ -28,6 +28,14 @@ export abstract class BaseModel {
             enumerable: false,
             writable: true,
         });
+        Object.defineProperty(this, "$inputValue", {
+            get: this.getInputValue,
+            enumerable: false,
+        });
+        Object.defineProperty(this, "_inputValue", {
+            writable: true,
+            enumerable: false,
+        });
         Object.defineProperty(this, "propInfo", {
             enumerable: false,
             writable: true,
@@ -41,11 +49,17 @@ export abstract class BaseModel {
      *   }); 
     */
     $formGroup: FormGroup;
+    $inputValue: any;
 
     protected _formGroup: FormGroup;
+    protected _inputValue: any;
     protected static propInfo: { [prop: string]: PropInfoItem };
     protected abstract getFormGroup(): FormGroup;
     public abstract getPropInfo(propName: string): PropInfoItem;
+
+    getInputValue() {
+        return this._inputValue;
+    }
 
     getFormGroupValues() {
         return this.$formGroup.value;

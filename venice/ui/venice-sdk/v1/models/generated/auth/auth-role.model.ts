@@ -78,6 +78,7 @@ export class AuthRole extends BaseModel implements IAuthRole {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new AuthRoleSpec();
         this['status'] = new AuthRoleStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

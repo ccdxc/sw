@@ -63,6 +63,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
         super();
         this['targets'] = new Array<MonitoringExportConfig>();
         this['config'] = new MonitoringSyslogExportConfig();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

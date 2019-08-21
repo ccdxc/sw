@@ -52,6 +52,7 @@ export class ObjstoreAutoMsgBucketWatchHelperWatchEvent extends BaseModel implem
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new ObjstoreBucket();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

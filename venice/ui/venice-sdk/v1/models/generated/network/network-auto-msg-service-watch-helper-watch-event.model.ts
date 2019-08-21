@@ -52,6 +52,7 @@ export class NetworkAutoMsgServiceWatchHelperWatchEvent extends BaseModel implem
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new NetworkService();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

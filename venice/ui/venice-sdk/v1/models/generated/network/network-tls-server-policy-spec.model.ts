@@ -88,6 +88,7 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
         this['tls-server-certificates'] = new Array<string>();
         this['tls-server-trust-roots'] = new Array<string>();
         this['tls-server-allowed-peer-id'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

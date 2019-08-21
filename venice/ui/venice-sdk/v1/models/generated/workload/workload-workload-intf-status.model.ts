@@ -51,6 +51,7 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['ip-addresses'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

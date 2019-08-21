@@ -66,6 +66,7 @@ export class ObjstoreObjectList extends BaseModel implements IObjstoreObjectList
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<ObjstoreObject>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

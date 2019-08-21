@@ -46,6 +46,7 @@ export class SecurityAutoMsgCertificateWatchHelper extends BaseModel implements 
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<SecurityAutoMsgCertificateWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

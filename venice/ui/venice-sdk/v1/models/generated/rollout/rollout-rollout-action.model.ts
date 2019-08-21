@@ -74,6 +74,7 @@ export class RolloutRolloutAction extends BaseModel implements IRolloutRolloutAc
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new RolloutRolloutSpec();
         this['status'] = new RolloutRolloutActionStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

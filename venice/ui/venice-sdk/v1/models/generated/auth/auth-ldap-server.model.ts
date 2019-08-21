@@ -52,6 +52,7 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['tls-options'] = new AuthTLSOptions();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

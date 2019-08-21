@@ -74,6 +74,7 @@ export class StagingClearAction extends BaseModel implements IStagingClearAction
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new StagingClearActionSpec();
         this['status'] = new StagingClearActionStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -70,6 +70,7 @@ export class ClusterQuorumMemberStatus extends BaseModel implements IClusterQuor
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['conditions'] = new Array<ClusterQuorumMemberCondition>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

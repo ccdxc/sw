@@ -46,6 +46,7 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelper extends BaseModel im
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

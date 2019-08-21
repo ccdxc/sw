@@ -66,6 +66,7 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<ClusterHost>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

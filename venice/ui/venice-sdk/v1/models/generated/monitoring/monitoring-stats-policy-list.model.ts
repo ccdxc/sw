@@ -66,6 +66,7 @@ export class MonitoringStatsPolicyList extends BaseModel implements IMonitoringS
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringStatsPolicy>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -152,6 +152,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['field-change-selector'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

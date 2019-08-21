@@ -66,6 +66,7 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<ClusterSmartNIC>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

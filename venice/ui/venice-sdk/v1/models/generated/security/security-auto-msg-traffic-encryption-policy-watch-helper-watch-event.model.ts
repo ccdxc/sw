@@ -52,6 +52,7 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new SecurityTrafficEncryptionPolicy();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

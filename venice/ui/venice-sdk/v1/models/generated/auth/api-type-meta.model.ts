@@ -52,6 +52,7 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

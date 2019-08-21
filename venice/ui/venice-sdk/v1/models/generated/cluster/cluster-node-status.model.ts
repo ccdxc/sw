@@ -65,6 +65,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['conditions'] = new Array<ClusterNodeCondition>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

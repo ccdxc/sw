@@ -44,6 +44,7 @@ export class TokenauthNodeTokenResponse extends BaseModel implements ITokenauthN
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

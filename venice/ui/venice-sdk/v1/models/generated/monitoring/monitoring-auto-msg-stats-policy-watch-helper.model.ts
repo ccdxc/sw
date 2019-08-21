@@ -46,6 +46,7 @@ export class MonitoringAutoMsgStatsPolicyWatchHelper extends BaseModel implement
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<MonitoringAutoMsgStatsPolicyWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

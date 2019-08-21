@@ -90,6 +90,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         super();
         this['object-ref'] = new ApiObjectRef();
         this['source'] = new EventsEventSource();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

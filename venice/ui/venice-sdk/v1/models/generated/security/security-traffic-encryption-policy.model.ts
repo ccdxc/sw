@@ -78,6 +78,7 @@ export class SecurityTrafficEncryptionPolicy extends BaseModel implements ISecur
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new SecurityTrafficEncryptionPolicySpec();
         this['status'] = new SecurityTrafficEncryptionPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -74,6 +74,7 @@ export class StagingBuffer extends BaseModel implements IStagingBuffer {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new StagingBufferSpec();
         this['status'] = new StagingBufferStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

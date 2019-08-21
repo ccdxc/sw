@@ -44,6 +44,7 @@ export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

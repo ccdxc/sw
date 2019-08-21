@@ -82,6 +82,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         this['user-groups'] = new Array<string>();
         this['authenticators'] = new Array<AuthUserStatus_authenticators>();
         this['access-review'] = new Array<AuthOperationStatus>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

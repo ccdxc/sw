@@ -71,6 +71,7 @@ export class RolloutRolloutActionStatus extends BaseModel implements IRolloutRol
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

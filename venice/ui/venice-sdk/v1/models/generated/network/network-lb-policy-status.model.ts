@@ -45,6 +45,7 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['type'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

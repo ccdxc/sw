@@ -52,6 +52,7 @@ export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITel
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['series'] = new Array<Telemetry_queryResultSeries>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

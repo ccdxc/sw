@@ -44,6 +44,7 @@ export class SearchCategoryPreview extends BaseModel implements ISearchCategoryP
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

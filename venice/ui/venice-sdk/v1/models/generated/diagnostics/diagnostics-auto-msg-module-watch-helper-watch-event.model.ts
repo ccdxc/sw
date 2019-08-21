@@ -52,6 +52,7 @@ export class DiagnosticsAutoMsgModuleWatchHelperWatchEvent extends BaseModel imp
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new DiagnosticsModule();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

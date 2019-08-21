@@ -126,6 +126,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         this['ip-config'] = new ClusterIPConfig();
         this['system-info'] = new ClusterSmartNICInfo();
         this['interfaces'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

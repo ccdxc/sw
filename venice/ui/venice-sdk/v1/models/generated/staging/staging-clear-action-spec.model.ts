@@ -46,6 +46,7 @@ export class StagingClearActionSpec extends BaseModel implements IStagingClearAc
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['items'] = new Array<StagingItemId>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

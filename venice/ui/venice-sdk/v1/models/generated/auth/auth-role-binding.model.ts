@@ -78,6 +78,7 @@ export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new AuthRoleBindingSpec();
         this['status'] = new AuthRoleBindingStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -52,6 +52,7 @@ export class RolloutAutoMsgRolloutActionWatchHelperWatchEvent extends BaseModel 
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new RolloutRolloutAction();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

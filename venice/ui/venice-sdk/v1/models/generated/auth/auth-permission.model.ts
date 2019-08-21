@@ -91,6 +91,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         super();
         this['resource-names'] = new Array<string>();
         this['actions'] = new Array<AuthPermission_actions>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -78,6 +78,7 @@ export class ClusterHost extends BaseModel implements IClusterHost {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ClusterHostSpec();
         this['status'] = new ClusterHostStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

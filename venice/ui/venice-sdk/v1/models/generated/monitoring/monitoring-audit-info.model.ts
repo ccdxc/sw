@@ -54,6 +54,7 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

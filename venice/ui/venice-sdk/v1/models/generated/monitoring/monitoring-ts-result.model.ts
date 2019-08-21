@@ -52,6 +52,7 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['time-window'] = new MonitoringTimeWindow();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

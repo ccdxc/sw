@@ -46,6 +46,7 @@ export class SearchEntryList extends BaseModel implements ISearchEntryList {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['entries'] = new Array<SearchEntry>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

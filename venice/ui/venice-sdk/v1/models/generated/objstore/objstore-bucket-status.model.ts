@@ -50,6 +50,7 @@ export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketSt
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -144,6 +144,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
         this['user'] = new ApiObjectRef();
         this['client-ips'] = new Array<string>();
         this['resource'] = new ApiObjectRef();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

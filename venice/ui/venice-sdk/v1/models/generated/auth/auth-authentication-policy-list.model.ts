@@ -66,6 +66,7 @@ export class AuthAuthenticationPolicyList extends BaseModel implements IAuthAuth
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<AuthAuthenticationPolicy>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

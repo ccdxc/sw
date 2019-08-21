@@ -61,6 +61,7 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
         this['source'] = new MonitoringMatchSelector();
         this['destination'] = new MonitoringMatchSelector();
         this['app-protocol-selectors'] = new MonitoringAppProtoSelector();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

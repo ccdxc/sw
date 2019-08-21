@@ -54,6 +54,7 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
         super();
         this['ldap-servers'] = new Array<AuthLdapServerStatus>();
         this['radius-servers'] = new Array<AuthRadiusServerStatus>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

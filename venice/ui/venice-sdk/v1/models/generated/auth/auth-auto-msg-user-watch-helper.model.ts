@@ -46,6 +46,7 @@ export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMs
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<AuthAutoMsgUserWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

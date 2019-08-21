@@ -48,6 +48,7 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['requirements'] = new Array<LabelsRequirement>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -78,6 +78,7 @@ export class NetworkNetworkInterface extends BaseModel implements INetworkNetwor
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new NetworkNetworkInterfaceSpec();
         this['status'] = new NetworkNetworkInterfaceStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -55,6 +55,7 @@ export class AuthOperation extends BaseModel implements IAuthOperation {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['resource'] = new AuthResource();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

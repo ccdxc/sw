@@ -52,6 +52,7 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new MonitoringAlert();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -46,6 +46,7 @@ export class DiagnosticsAutoMsgModuleWatchHelper extends BaseModel implements ID
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<DiagnosticsAutoMsgModuleWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

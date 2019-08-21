@@ -57,6 +57,7 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['dns-servers'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

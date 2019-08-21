@@ -44,6 +44,7 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

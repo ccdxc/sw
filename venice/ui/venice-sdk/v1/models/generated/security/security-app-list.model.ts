@@ -66,6 +66,7 @@ export class SecurityAppList extends BaseModel implements ISecurityAppList {
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<SecurityApp>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

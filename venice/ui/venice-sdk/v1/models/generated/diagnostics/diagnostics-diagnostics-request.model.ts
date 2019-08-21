@@ -78,6 +78,7 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
         super();
         this['meta'] = new ApiObjectMeta();
         this['service-port'] = new DiagnosticsServicePort();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

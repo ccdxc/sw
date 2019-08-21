@@ -431,7 +431,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     const observables = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
-      const sub = this.clusterService.UpdateSmartNIC(name, naplesObject, '', this.naplesMap[name]);
+      const sub = this.clusterService.UpdateSmartNIC(name, naplesObject, '', this.naplesMap[name].$inputValue);
       observables.push(sub);
     }
 

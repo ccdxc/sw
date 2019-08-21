@@ -74,6 +74,7 @@ export class ObjstoreBucket extends BaseModel implements IObjstoreBucket {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ObjstoreBucketSpec();
         this['status'] = new ObjstoreBucketStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

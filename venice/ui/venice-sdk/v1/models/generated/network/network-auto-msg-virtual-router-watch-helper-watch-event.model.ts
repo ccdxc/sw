@@ -52,6 +52,7 @@ export class NetworkAutoMsgVirtualRouterWatchHelperWatchEvent extends BaseModel 
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new NetworkVirtualRouter();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

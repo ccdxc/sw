@@ -92,6 +92,7 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
         super();
         this['auth-config'] = new MonitoringAuthConfig();
         this['privacy-config'] = new MonitoringPrivacyConfig();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

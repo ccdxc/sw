@@ -52,6 +52,7 @@ export class RolloutAutoMsgRolloutWatchHelperWatchEvent extends BaseModel implem
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new RolloutRollout();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

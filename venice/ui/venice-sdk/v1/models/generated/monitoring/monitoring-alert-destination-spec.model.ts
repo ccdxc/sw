@@ -70,6 +70,7 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
         this['email-export'] = new MonitoringEmailExport();
         this['snmp-export'] = new MonitoringSNMPExport();
         this['syslog-export'] = new MonitoringSyslogExport();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

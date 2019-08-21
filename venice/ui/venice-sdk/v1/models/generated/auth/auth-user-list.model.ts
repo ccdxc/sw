@@ -66,6 +66,7 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<AuthUser>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -66,6 +66,7 @@ export class RolloutRolloutActionList extends BaseModel implements IRolloutRollo
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<RolloutRolloutAction>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

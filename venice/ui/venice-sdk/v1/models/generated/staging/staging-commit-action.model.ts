@@ -74,6 +74,7 @@ export class StagingCommitAction extends BaseModel implements IStagingCommitActi
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new StagingCommitActionSpec();
         this['status'] = new StagingCommitActionStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

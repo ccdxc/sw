@@ -74,6 +74,7 @@ export class MonitoringTechSupportRequest extends BaseModel implements IMonitori
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringTechSupportRequestSpec();
         this['status'] = new MonitoringTechSupportRequestStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

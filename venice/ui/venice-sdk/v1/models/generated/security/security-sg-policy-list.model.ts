@@ -66,6 +66,7 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<SecuritySGPolicy>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -38,6 +38,7 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

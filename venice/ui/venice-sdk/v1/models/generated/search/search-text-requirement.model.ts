@@ -47,6 +47,7 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['text'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -78,6 +78,7 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new SecuritySecurityGroupSpec();
         this['status'] = new SecuritySecurityGroupStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

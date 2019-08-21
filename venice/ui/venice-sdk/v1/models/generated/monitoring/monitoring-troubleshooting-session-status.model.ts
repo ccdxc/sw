@@ -55,6 +55,7 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['troubleshooting-results'] = new Array<MonitoringTsResult>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

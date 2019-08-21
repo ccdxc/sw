@@ -46,6 +46,7 @@ export class SecurityFirewallProfileStatus extends BaseModel implements ISecurit
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['propagation-status'] = new SecurityPropagationStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

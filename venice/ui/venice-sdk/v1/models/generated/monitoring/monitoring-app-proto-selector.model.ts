@@ -55,6 +55,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
         super();
         this['proto-ports'] = new Array<string>();
         this['applications'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

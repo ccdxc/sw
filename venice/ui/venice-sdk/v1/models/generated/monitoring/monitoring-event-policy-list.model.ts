@@ -66,6 +66,7 @@ export class MonitoringEventPolicyList extends BaseModel implements IMonitoringE
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringEventPolicy>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

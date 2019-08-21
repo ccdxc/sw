@@ -55,6 +55,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['export-config'] = new MonitoringMirrorExportConfig();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

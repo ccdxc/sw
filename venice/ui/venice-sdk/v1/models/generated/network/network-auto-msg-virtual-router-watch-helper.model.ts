@@ -46,6 +46,7 @@ export class NetworkAutoMsgVirtualRouterWatchHelper extends BaseModel implements
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<NetworkAutoMsgVirtualRouterWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

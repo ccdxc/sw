@@ -78,6 +78,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new WorkloadEndpointSpec();
         this['status'] = new WorkloadEndpointStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

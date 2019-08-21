@@ -159,6 +159,7 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -46,6 +46,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

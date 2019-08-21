@@ -53,6 +53,7 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
         super();
         this['names'] = new Array<string>();
         this['labels'] = new LabelsSelector();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

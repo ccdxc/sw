@@ -66,6 +66,7 @@ export class SecurityFirewallProfileList extends BaseModel implements ISecurityF
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<SecurityFirewallProfile>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

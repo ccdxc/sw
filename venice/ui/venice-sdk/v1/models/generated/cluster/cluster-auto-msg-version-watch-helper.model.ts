@@ -46,6 +46,7 @@ export class ClusterAutoMsgVersionWatchHelper extends BaseModel implements IClus
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<ClusterAutoMsgVersionWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

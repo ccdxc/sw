@@ -76,6 +76,7 @@ export class MonitoringFwlogPolicy extends BaseModel implements IMonitoringFwlog
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringFwlogPolicySpec();
         this['status'] = new MonitoringFwlogPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

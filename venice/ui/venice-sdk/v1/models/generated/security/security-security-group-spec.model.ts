@@ -60,6 +60,7 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
         this['workload-selector'] = new LabelsSelector();
         this['service-labels'] = new Array<string>();
         this['match-prefixes'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

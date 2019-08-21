@@ -52,6 +52,7 @@ export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel imple
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new ClusterSmartNIC();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

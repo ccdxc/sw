@@ -46,6 +46,7 @@ export class NetworkAutoMsgNetworkInterfaceWatchHelper extends BaseModel impleme
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<NetworkAutoMsgNetworkInterfaceWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

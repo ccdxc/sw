@@ -91,6 +91,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
         super();
         this['match-rules'] = new Array<MonitoringMatchRule>();
         this['exports'] = new Array<MonitoringExportConfig>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -52,6 +52,7 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
         super();
         this['workloads'] = new Array<string>();
         this['Policies'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

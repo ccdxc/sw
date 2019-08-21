@@ -64,6 +64,7 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['items'] = new Array<EventsEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

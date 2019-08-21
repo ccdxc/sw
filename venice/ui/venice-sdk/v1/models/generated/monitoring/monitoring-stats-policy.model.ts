@@ -76,6 +76,7 @@ export class MonitoringStatsPolicy extends BaseModel implements IMonitoringStats
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringStatsPolicySpec();
         this['status'] = new MonitoringStatsPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

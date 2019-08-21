@@ -66,6 +66,7 @@ export class WorkloadWorkloadList extends BaseModel implements IWorkloadWorkload
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<WorkloadWorkload>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

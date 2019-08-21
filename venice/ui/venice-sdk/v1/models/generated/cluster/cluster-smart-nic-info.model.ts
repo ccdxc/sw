@@ -78,6 +78,7 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
         this['cpu-info'] = new ClusterCPUInfo();
         this['memory-info'] = new ClusterMemInfo();
         this['storage-info'] = new ClusterStorageInfo();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

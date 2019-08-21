@@ -46,6 +46,7 @@ export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRoll
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<RolloutAutoMsgRolloutWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -66,6 +66,7 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<NetworkNetwork>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

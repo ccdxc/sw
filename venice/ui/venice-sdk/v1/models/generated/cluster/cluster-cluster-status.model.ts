@@ -74,6 +74,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         super();
         this['conditions'] = new Array<ClusterClusterCondition>();
         this['quorum-status'] = new ClusterQuorumStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -52,6 +52,7 @@ export class ClusterAutoMsgNodeWatchHelperWatchEvent extends BaseModel implement
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new ClusterNode();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

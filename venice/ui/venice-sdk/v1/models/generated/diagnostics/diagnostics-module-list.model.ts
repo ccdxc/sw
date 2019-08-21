@@ -66,6 +66,7 @@ export class DiagnosticsModuleList extends BaseModel implements IDiagnosticsModu
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<DiagnosticsModule>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

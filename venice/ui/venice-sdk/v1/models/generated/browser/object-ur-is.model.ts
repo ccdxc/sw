@@ -55,6 +55,7 @@ export class ObjectURIs extends BaseModel implements IObjectURIs {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['uri'] = new Array<ApiObjectRef>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -46,6 +46,7 @@ export class DiagnosticsDiagnosticsResponse extends BaseModel implements IDiagno
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['diagnostics'] = new ApiAny();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -58,6 +58,7 @@ export class StagingItem extends BaseModel implements IStagingItem {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new ApiAny();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

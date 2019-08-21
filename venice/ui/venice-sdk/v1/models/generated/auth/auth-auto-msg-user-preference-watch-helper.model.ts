@@ -46,6 +46,7 @@ export class AuthAutoMsgUserPreferenceWatchHelper extends BaseModel implements I
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<AuthAutoMsgUserPreferenceWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

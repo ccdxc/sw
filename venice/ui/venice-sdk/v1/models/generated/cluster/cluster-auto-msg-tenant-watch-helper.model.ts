@@ -46,6 +46,7 @@ export class ClusterAutoMsgTenantWatchHelper extends BaseModel implements IClust
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<ClusterAutoMsgTenantWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

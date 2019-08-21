@@ -66,6 +66,7 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<SecurityTrafficEncryptionPolicy>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -52,6 +52,7 @@ export class SecurityAutoMsgSecurityGroupWatchHelperWatchEvent extends BaseModel
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new SecuritySecurityGroup();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

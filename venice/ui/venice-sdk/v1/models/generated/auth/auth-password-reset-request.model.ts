@@ -58,6 +58,7 @@ export class AuthPasswordResetRequest extends BaseModel implements IAuthPassword
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

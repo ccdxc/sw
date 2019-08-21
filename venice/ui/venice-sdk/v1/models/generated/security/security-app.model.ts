@@ -74,6 +74,7 @@ export class SecurityApp extends BaseModel implements ISecurityApp {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new SecurityAppSpec();
         this['status'] = new SecurityAppStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

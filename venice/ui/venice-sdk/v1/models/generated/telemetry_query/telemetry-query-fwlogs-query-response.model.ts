@@ -58,6 +58,7 @@ export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITe
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['results'] = new Array<Telemetry_queryFwlogsQueryResult>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

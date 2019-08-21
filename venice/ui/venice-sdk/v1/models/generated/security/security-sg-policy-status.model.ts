@@ -54,6 +54,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
         super();
         this['propagation-status'] = new SecurityPropagationStatus();
         this['rule-status'] = new Array<SecuritySGRuleStatus>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

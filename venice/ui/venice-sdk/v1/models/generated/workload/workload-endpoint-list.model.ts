@@ -66,6 +66,7 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<WorkloadEndpoint>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

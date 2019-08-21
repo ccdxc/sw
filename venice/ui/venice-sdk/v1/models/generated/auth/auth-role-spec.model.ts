@@ -46,6 +46,7 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['permissions'] = new Array<AuthPermission>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

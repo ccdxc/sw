@@ -66,6 +66,7 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['values'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

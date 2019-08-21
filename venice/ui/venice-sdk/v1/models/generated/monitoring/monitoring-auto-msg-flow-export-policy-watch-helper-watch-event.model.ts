@@ -52,6 +52,7 @@ export class MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent extends Base
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new MonitoringFlowExportPolicy();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

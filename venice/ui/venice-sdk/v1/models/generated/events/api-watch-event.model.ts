@@ -52,6 +52,7 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new GoogleprotobufAny();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

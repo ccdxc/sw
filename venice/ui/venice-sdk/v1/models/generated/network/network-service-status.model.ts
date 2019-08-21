@@ -45,6 +45,7 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['workloads'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

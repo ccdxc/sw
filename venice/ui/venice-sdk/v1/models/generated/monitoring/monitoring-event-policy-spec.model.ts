@@ -71,6 +71,7 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
         this['selector'] = new FieldsSelector();
         this['targets'] = new Array<MonitoringExportConfig>();
         this['config'] = new MonitoringSyslogExportConfig();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

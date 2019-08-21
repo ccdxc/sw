@@ -46,6 +46,7 @@ export class ApiWatchEventList extends BaseModel implements IApiWatchEventList {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<ApiWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

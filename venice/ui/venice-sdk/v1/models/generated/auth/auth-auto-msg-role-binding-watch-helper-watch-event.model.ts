@@ -52,6 +52,7 @@ export class AuthAutoMsgRoleBindingWatchHelperWatchEvent extends BaseModel imple
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new AuthRoleBinding();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

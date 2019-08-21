@@ -46,6 +46,7 @@ export class NetworkAutoMsgServiceWatchHelper extends BaseModel implements INetw
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<NetworkAutoMsgServiceWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

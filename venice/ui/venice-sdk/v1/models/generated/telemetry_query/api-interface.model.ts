@@ -70,6 +70,7 @@ export class ApiInterface extends BaseModel implements IApiInterface {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['Interfaces'] = new ApiInterfaceSlice();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

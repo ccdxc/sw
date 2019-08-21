@@ -46,6 +46,7 @@ export class WorkloadAutoMsgEndpointWatchHelper extends BaseModel implements IWo
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<WorkloadAutoMsgEndpointWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

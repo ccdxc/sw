@@ -68,6 +68,7 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['values'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

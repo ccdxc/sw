@@ -74,6 +74,7 @@ export class DiagnosticsModule extends BaseModel implements IDiagnosticsModule {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new DiagnosticsModuleSpec();
         this['status'] = new DiagnosticsModuleStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

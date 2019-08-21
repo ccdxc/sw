@@ -55,6 +55,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['interfaces'] = new Array<WorkloadWorkloadIntfSpec>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

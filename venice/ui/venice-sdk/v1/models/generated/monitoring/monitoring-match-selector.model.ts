@@ -55,6 +55,7 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
         super();
         this['ip-addresses'] = new Array<string>();
         this['mac-addresses'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

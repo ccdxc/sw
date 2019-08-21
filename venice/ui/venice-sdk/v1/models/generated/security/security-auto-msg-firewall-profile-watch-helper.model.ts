@@ -46,6 +46,7 @@ export class SecurityAutoMsgFirewallProfileWatchHelper extends BaseModel impleme
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<SecurityAutoMsgFirewallProfileWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

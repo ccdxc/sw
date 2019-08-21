@@ -46,6 +46,7 @@ export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['devices'] = new Array<ClusterStorageDeviceInfo>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

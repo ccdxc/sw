@@ -46,6 +46,7 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -85,6 +85,7 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['server'] = new AuthLdapServer();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

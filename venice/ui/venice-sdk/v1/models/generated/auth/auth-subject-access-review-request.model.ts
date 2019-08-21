@@ -66,6 +66,7 @@ export class AuthSubjectAccessReviewRequest extends BaseModel implements IAuthSu
         super();
         this['meta'] = new ApiObjectMeta();
         this['operations'] = new Array<AuthOperation>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

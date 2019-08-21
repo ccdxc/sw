@@ -88,6 +88,7 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

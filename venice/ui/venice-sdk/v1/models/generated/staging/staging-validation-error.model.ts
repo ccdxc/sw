@@ -57,6 +57,7 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['error'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -66,6 +66,7 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringFlowExportPolicy>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

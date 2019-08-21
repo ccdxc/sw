@@ -78,6 +78,7 @@ export class ClusterNode extends BaseModel implements IClusterNode {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ClusterNodeSpec();
         this['status'] = new ClusterNodeStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

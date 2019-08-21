@@ -55,6 +55,7 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

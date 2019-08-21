@@ -46,6 +46,7 @@ export class ObjstoreAutoMsgBucketWatchHelper extends BaseModel implements IObjs
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<ObjstoreAutoMsgBucketWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

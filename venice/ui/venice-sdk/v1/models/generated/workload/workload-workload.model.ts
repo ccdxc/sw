@@ -78,6 +78,7 @@ export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new WorkloadWorkloadSpec();
         this['status'] = new WorkloadWorkloadStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

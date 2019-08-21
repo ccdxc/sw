@@ -72,6 +72,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
         this['ldap'] = new AuthLdap();
         this['local'] = new AuthLocal();
         this['radius'] = new AuthRadius();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

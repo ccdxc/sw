@@ -53,6 +53,7 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

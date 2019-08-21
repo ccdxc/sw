@@ -79,6 +79,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         this['targets'] = new Array<MonitoringExportConfig>();
         this['filter'] = new Array<MonitoringFwlogPolicySpec_filter>();
         this['config'] = new MonitoringSyslogExportConfig();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

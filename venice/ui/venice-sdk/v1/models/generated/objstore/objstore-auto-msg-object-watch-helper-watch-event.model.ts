@@ -52,6 +52,7 @@ export class ObjstoreAutoMsgObjectWatchHelperWatchEvent extends BaseModel implem
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new ObjstoreObject();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

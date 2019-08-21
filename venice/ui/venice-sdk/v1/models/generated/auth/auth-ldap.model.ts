@@ -52,6 +52,7 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['domains'] = new Array<AuthLdapDomain>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

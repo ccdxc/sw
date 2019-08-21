@@ -66,6 +66,7 @@ export class AuthRoleList extends BaseModel implements IAuthRoleList {
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<AuthRole>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

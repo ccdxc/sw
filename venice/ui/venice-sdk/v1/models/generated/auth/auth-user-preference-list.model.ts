@@ -66,6 +66,7 @@ export class AuthUserPreferenceList extends BaseModel implements IAuthUserPrefer
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<AuthUserPreference>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

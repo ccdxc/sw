@@ -78,6 +78,7 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ClusterTenantSpec();
         this['status'] = new ClusterTenantStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -87,6 +87,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
         this['ftp'] = new SecurityFtp();
         this['sunrpc'] = new Array<SecuritySunrpc>();
         this['msrpc'] = new Array<SecurityMsrpc>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

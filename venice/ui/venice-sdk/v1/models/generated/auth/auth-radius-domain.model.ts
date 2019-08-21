@@ -58,6 +58,7 @@ export class AuthRadiusDomain extends BaseModel implements IAuthRadiusDomain {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['servers'] = new Array<AuthRadiusServer>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

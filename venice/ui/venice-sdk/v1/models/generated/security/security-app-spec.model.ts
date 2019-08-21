@@ -63,6 +63,7 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
         super();
         this['proto-ports'] = new Array<SecurityProtoPort>();
         this['alg'] = new SecurityALG();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

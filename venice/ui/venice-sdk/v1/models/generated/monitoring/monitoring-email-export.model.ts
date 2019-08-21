@@ -45,6 +45,7 @@ export class MonitoringEmailExport extends BaseModel implements IMonitoringEmail
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['email-list'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

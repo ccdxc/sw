@@ -153,6 +153,7 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         this['policy-names'] = new Array<string>();
         this['reporter-ids'] = new Array<string>();
         this['pagination'] = new Telemetry_queryPaginationSpec();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

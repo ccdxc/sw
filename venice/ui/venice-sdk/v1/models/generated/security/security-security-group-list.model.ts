@@ -66,6 +66,7 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<SecuritySecurityGroup>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

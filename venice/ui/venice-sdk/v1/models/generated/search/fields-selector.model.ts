@@ -48,6 +48,7 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['requirements'] = new Array<FieldsRequirement>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

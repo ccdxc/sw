@@ -66,6 +66,7 @@ export class SecurityCertificateList extends BaseModel implements ISecurityCerti
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<SecurityCertificate>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

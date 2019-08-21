@@ -81,6 +81,7 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
         this['kinds'] = new Array<string>();
         this['fields'] = new FieldsSelector();
         this['labels'] = new LabelsSelector();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

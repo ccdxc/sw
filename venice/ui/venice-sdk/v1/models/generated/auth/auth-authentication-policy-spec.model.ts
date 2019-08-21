@@ -63,6 +63,7 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['authenticators'] = new AuthAuthenticators();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

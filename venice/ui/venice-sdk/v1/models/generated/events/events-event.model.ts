@@ -112,6 +112,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         this['meta'] = new ApiObjectMeta();
         this['object-ref'] = new ApiObjectRef();
         this['source'] = new EventsEventSource();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

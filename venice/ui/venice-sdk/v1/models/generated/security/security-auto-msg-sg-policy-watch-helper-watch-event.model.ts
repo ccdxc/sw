@@ -52,6 +52,7 @@ export class SecurityAutoMsgSGPolicyWatchHelperWatchEvent extends BaseModel impl
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new SecuritySGPolicy();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

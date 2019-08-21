@@ -65,6 +65,7 @@ export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry
         super();
         this['columns'] = new Array<string>();
         this['values'] = new Array<ApiInterfaceSlice>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

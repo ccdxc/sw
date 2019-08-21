@@ -44,6 +44,7 @@ export class ApiStatusResult extends BaseModel implements IApiStatusResult {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

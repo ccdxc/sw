@@ -66,6 +66,7 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<ClusterCluster>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

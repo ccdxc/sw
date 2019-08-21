@@ -126,6 +126,7 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['SecurityGroups'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

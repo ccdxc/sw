@@ -78,6 +78,7 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['usages'] = new Array<SecurityCertificateSpec_usages>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

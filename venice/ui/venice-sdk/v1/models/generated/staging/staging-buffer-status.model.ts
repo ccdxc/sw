@@ -63,6 +63,7 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
         super();
         this['errors'] = new Array<StagingValidationError>();
         this['items'] = new Array<StagingItem>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

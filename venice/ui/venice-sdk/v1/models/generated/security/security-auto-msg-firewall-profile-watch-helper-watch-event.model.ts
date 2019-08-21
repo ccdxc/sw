@@ -52,6 +52,7 @@ export class SecurityAutoMsgFirewallProfileWatchHelperWatchEvent extends BaseMod
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new SecurityFirewallProfile();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

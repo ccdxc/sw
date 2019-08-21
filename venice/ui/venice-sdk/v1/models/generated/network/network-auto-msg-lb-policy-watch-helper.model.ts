@@ -46,6 +46,7 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

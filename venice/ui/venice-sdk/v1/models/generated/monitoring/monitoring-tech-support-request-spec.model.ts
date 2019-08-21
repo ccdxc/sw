@@ -60,6 +60,7 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
         super();
         this['collection-selector'] = new LabelsSelector();
         this['node-selector'] = new TechSupportRequestSpecNodeSelectorSpec();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -45,6 +45,7 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['attached-policies'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

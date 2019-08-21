@@ -66,6 +66,7 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
         super();
         this['flow-selector'] = new MonitoringMatchRule();
         this['time-window'] = new MonitoringTimeWindow();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

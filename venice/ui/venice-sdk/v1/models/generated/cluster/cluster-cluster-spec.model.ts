@@ -89,6 +89,7 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
         super();
         this['quorum-nodes'] = new Array<string>();
         this['ntp-servers'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

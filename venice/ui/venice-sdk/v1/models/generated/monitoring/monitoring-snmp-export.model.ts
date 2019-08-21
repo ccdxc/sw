@@ -46,6 +46,7 @@ export class MonitoringSNMPExport extends BaseModel implements IMonitoringSNMPEx
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['snmp-trap-servers'] = new Array<MonitoringSNMPTrapServer>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

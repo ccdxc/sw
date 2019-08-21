@@ -66,6 +66,7 @@ export class MonitoringMirrorSessionList extends BaseModel implements IMonitorin
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringMirrorSession>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

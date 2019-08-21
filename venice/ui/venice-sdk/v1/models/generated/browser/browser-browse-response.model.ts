@@ -88,6 +88,7 @@ export class BrowserBrowseResponse extends BaseModel implements IBrowserBrowseRe
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

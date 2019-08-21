@@ -46,6 +46,7 @@ export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAut
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

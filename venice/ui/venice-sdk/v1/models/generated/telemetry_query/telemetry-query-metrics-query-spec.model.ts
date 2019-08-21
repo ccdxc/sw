@@ -131,6 +131,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
         this['selector'] = new FieldsSelector();
         this['fields'] = new Array<string>();
         this['pagination'] = new Telemetry_queryPaginationSpec();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

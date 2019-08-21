@@ -74,6 +74,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
         this['meta'] = new ApiObjectMeta();
         this['mirror-session-spec'] = new MonitoringMirrorSessionSpec();
         this['status'] = new MonitoringMirrorSessionStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

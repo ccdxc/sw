@@ -101,6 +101,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         this['reason'] = new MonitoringAlertReason();
         this['acknowledged'] = new MonitoringAuditInfo();
         this['resolved'] = new MonitoringAuditInfo();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

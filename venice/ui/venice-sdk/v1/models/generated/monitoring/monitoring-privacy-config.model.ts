@@ -55,6 +55,7 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

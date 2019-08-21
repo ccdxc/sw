@@ -87,6 +87,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         super();
         this['if-host-status'] = new NetworkNetworkInterfaceHostStatus();
         this['if-uplink-status'] = new NetworkNetworkInterfaceUplinkStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

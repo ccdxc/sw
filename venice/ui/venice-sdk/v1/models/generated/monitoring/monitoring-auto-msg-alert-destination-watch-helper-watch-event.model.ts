@@ -52,6 +52,7 @@ export class MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent extends Base
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new MonitoringAlertDestination();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

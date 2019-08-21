@@ -78,6 +78,7 @@ export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new SecuritySGPolicySpec();
         this['status'] = new SecuritySGPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

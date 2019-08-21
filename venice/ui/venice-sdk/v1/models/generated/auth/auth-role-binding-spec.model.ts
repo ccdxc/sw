@@ -58,6 +58,7 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
         super();
         this['users'] = new Array<string>();
         this['user-groups'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

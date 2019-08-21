@@ -45,6 +45,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['admitted-smart-nics'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

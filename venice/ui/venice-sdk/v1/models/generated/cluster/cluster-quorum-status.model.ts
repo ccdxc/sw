@@ -46,6 +46,7 @@ export class ClusterQuorumStatus extends BaseModel implements IClusterQuorumStat
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['members'] = new Array<ClusterQuorumMemberStatus>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

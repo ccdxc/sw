@@ -87,6 +87,7 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

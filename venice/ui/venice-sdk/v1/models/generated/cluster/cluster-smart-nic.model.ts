@@ -78,6 +78,7 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ClusterSmartNICSpec();
         this['status'] = new ClusterSmartNICStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

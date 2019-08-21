@@ -66,6 +66,7 @@ export class MonitoringTechSupportRequestList extends BaseModel implements IMoni
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringTechSupportRequest>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

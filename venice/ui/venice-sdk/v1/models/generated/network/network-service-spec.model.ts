@@ -79,6 +79,7 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
         this['workload-labels'] = new Array<string>();
         this['tls-server-policy'] = new NetworkTLSServerPolicySpec();
         this['tls-client-policy'] = new NetworkTLSClientPolicySpec();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

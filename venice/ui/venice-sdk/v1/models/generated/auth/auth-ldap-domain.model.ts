@@ -84,6 +84,7 @@ export class AuthLdapDomain extends BaseModel implements IAuthLdapDomain {
         super();
         this['attribute-mapping'] = new AuthLdapAttributeMapping();
         this['servers'] = new Array<AuthLdapServer>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

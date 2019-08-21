@@ -52,6 +52,7 @@ export class MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent extend
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new MonitoringTroubleshootingSession();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

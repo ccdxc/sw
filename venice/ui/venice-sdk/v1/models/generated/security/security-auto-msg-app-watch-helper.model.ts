@@ -46,6 +46,7 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<SecurityAutoMsgAppWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

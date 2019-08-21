@@ -38,6 +38,7 @@ export class StagingCommitActionSpec extends BaseModel implements IStagingCommit
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

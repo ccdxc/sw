@@ -66,6 +66,7 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<MonitoringFwlogPolicy>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

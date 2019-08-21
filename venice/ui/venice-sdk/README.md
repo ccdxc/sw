@@ -19,6 +19,8 @@ setValues(): Updates the object to have the values of the passed in object.
 
 getFromGroup() or this.$formGroup: Returns the angular form group associated with this object. When it is created, it will have the same values as the object. However, changes to the model object are not reflected in the form group, and vice-versa. To get values from the form group, use this.$formGroup.values
 
+this.$inputValue: Returns the original value supplied when the object was created. This is useful for obtaining the actual value of the object that the server returned.
+
 setModelToBeFormGroupValues(): Overwrites the form group values to have the model values.
 
 setFormGroupValuesToBeModelValues(): Overwrites the model objects value to have the form groups values.

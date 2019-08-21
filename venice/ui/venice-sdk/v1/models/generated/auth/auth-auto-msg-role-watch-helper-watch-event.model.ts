@@ -52,6 +52,7 @@ export class AuthAutoMsgRoleWatchHelperWatchEvent extends BaseModel implements I
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new AuthRole();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

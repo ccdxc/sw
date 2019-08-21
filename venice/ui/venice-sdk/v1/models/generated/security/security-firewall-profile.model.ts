@@ -74,6 +74,7 @@ export class SecurityFirewallProfile extends BaseModel implements ISecurityFirew
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new SecurityFirewallProfileSpec();
         this['status'] = new SecurityFirewallProfileStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

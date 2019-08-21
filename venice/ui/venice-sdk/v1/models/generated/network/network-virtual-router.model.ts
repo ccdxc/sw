@@ -74,6 +74,7 @@ export class NetworkVirtualRouter extends BaseModel implements INetworkVirtualRo
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new NetworkVirtualRouterSpec();
         this['status'] = new NetworkVirtualRouterStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

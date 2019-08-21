@@ -78,6 +78,7 @@ export class AuthUser extends BaseModel implements IAuthUser {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new AuthUserSpec();
         this['status'] = new AuthUserStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

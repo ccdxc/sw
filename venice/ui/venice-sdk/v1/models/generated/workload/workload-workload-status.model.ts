@@ -46,6 +46,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['interfaces'] = new Array<WorkloadWorkloadIntfStatus>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

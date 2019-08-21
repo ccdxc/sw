@@ -52,6 +52,7 @@ export class SecurityAutoMsgAppWatchHelperWatchEvent extends BaseModel implement
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new SecurityApp();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -67,6 +67,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['server'] = new AuthRadiusServer();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

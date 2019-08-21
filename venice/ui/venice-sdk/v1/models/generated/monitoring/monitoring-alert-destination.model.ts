@@ -74,6 +74,7 @@ export class MonitoringAlertDestination extends BaseModel implements IMonitoring
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringAlertDestinationSpec();
         this['status'] = new MonitoringAlertDestinationStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

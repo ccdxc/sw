@@ -78,6 +78,7 @@ export class NetworkNetwork extends BaseModel implements INetworkNetwork {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new NetworkNetworkSpec();
         this['status'] = new NetworkNetworkStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

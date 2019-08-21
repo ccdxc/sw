@@ -52,6 +52,7 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new AuthAuthenticationPolicy();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

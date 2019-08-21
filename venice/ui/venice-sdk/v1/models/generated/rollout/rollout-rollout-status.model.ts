@@ -96,6 +96,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         this['controller-nodes-status'] = new Array<RolloutRolloutPhase>();
         this['controller-services-status'] = new Array<RolloutRolloutPhase>();
         this['smartnics-status'] = new Array<RolloutRolloutPhase>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

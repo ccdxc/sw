@@ -78,6 +78,7 @@ export class SecurityCertificate extends BaseModel implements ISecurityCertifica
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new SecurityCertificateSpec();
         this['status'] = new SecurityCertificateStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

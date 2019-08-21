@@ -76,6 +76,7 @@ export class NetworkTLSClientPolicySpec extends BaseModel implements INetworkTLS
         super();
         this['tls-client-trust-roots'] = new Array<string>();
         this['tls-client-allowed-peer-id'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

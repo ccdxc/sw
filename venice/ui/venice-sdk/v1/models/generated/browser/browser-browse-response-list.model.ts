@@ -66,6 +66,7 @@ export class BrowserBrowseResponseList extends BaseModel implements IBrowserBrow
         super();
         this['meta'] = new ApiObjectMeta();
         this['responselist'] = new Array<BrowserBrowseResponseObject>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

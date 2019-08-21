@@ -46,6 +46,7 @@ export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel impleme
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

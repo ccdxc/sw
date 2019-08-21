@@ -52,6 +52,7 @@ export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseMod
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new MonitoringMirrorSession();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

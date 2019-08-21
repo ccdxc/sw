@@ -52,6 +52,7 @@ export class ClusterAutoMsgClusterWatchHelperWatchEvent extends BaseModel implem
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new ClusterCluster();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

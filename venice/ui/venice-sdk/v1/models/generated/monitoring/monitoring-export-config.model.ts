@@ -63,6 +63,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['credentials'] = new MonitoringExternalCred();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

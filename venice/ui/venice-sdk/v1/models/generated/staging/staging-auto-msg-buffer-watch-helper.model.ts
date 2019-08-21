@@ -46,6 +46,7 @@ export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagi
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['events'] = new Array<StagingAutoMsgBufferWatchHelperWatchEvent>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

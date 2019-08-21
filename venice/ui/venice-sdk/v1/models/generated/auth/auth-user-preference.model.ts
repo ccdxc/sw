@@ -74,6 +74,7 @@ export class AuthUserPreference extends BaseModel implements IAuthUserPreference
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new AuthUserPreferenceSpec();
         this['status'] = new AuthUserPreferenceStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

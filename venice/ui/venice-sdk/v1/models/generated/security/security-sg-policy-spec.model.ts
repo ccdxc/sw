@@ -59,6 +59,7 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
         super();
         this['attach-groups'] = new Array<string>();
         this['rules'] = new Array<SecuritySGRule>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -78,6 +78,7 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringEventPolicySpec();
         this['status'] = new MonitoringEventPolicyStatus();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

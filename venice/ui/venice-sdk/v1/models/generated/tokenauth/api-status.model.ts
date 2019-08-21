@@ -87,6 +87,7 @@ export class ApiStatus extends BaseModel implements IApiStatus {
         this['result'] = new ApiStatusResult();
         this['message'] = new Array<string>();
         this['object-ref'] = new ApiObjectRef();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

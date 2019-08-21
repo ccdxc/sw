@@ -114,6 +114,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
         super();
         this['requirements'] = new Array<FieldsRequirement>();
         this['destinations'] = new Array<string>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

@@ -52,6 +52,7 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new ClusterTenant();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 

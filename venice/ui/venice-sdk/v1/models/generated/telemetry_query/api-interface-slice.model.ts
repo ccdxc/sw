@@ -46,6 +46,7 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['Values'] = new Array<ApiInterface>();
+        this._inputValue = values;
         this.setValues(values, setDefaults);
     }
 
