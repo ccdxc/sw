@@ -51,5 +51,7 @@ void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
 extern int ionic_use_adminq;
 extern int ionic_enable_msix;
 extern int ionic_max_queues;
+extern int ionic_cdp_vlan;
+extern int ionic_lldp_vlan;
 
 #endif /* _IONIC_TXRX_H_ */

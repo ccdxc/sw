@@ -72,6 +72,7 @@ int ionic_rx_filters_init(struct lif *lif);
 void ionic_rx_filters_deinit(struct lif *lif);
 int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 			 u32 hash, struct ionic_admin_ctx *ctx);
+struct rx_filter *ionic_rx_filter_by_vlan_addr(struct lif *lif, u16 vid, const u8 *addr);
 struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid);
 struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr);
 

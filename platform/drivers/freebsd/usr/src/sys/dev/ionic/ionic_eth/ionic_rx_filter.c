@@ -140,22 +140,40 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 	return 0;
 }
 
+struct rx_filter *ionic_rx_filter_by_vlan_addr(struct lif *lif, u16 vid, const u8 *addr)
+{
+	unsigned int key = vid & RX_FILTER_HLISTS_MASK;
+	struct hlist_head *head = &lif->rx_filters.by_hash[key];
+	struct rx_filter *f;
+
+	hlist_for_each_entry(f, head, by_hash) {
+		if (f->cmd.match != RX_FILTER_MATCH_MAC_VLAN)
+			continue;
+		if (f->cmd.mac_vlan.vlan != vid)
+			continue;
+		if (memcmp(addr, f->cmd.mac_vlan.addr, ETH_ALEN))
+			continue;
+		return f;
+	}
+
+	return NULL;
+}
+
 struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
 {
 	unsigned int key = vid & RX_FILTER_HLISTS_MASK;
 	struct hlist_head *head = &lif->rx_filters.by_hash[key];
-	struct rx_filter *f = NULL;
+	struct rx_filter *f;
 
-	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	hlist_for_each_entry(f, head, by_hash) {
 		if (f->cmd.match != RX_FILTER_MATCH_VLAN)
 			continue;
-		if (f->cmd.vlan.vlan == vid)
-			break;
+		if (f->cmd.vlan.vlan != vid)
+			continue;
+		return f;
 	}
-	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
-	return f;
+	return NULL;
 }
 
 struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
@@ -167,8 +185,9 @@ struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 	hlist_for_each_entry(f, head, by_hash) {
 		if (f->cmd.match != RX_FILTER_MATCH_MAC)
 			continue;
-		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN) == 0)
-			return f;
+		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN))
+			continue;
+		return f;
 	}
 
 	return NULL;
