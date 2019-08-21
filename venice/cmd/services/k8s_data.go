@@ -528,7 +528,6 @@ var k8sModules = map[string]protos.Module{
 					Args: []string{
 						"-resolver-urls", "$RESOLVER_URLS",
 						"-cluster-nodes", "$QUORUM_NODES",
-						"-trace",
 					},
 				},
 			},
