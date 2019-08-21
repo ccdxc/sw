@@ -44,15 +44,18 @@ typedef struct venice_s {
 
 class venice {
 public:
+    venice_t venice_db_;    // device database
+
     static venice *factory(std::string naples_status_file="");
     static void destroy(venice *dev);
+    sdk_ret_t init(std::string &naples_status_file);
+    sdk_ret_t dump_venice_coordinates();
+    string get_naples_status_file();
 
 private:
-    venice_t venice_db_;    // device database
     venice() {};
     ~venice();
 
-    sdk_ret_t init(std::string &naples_status_file);
     static sdk_ret_t get_ptree_(std::string& naples_status_file, ptree& prop_tree);
     void populate_venice_defaults_();
 

@@ -10,7 +10,6 @@
 
 #include <pthread.h>
 #include "include/sdk/base.hpp"
-#include "nic/sdk/lib/venice/venice.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/netagent/netagent.hpp"
@@ -48,7 +47,9 @@ netagentapi::netagent_thread_start(void *ctxt) {
                       NULL);
 #endif
 #endif
-   
+
+    netagent_init();
+
     PDS_TRACE_INFO("Listening to events ...");
     evutil_run(EV_A);
     pthread_cleanup_pop(1);
@@ -57,10 +58,31 @@ netagentapi::netagent_thread_start(void *ctxt) {
 }
 
 void
+netagentapi::netagent_init() {
+
+}
+
+void
+netagentapi::netagent_handle_venice_coordinates(sdk::lib::venice* ven, void *ctxt) {
+    if (((ven->venice_db_.naplesMode == "2") ||
+        (ven->venice_db_.naplesMode == "3")) &&
+        (!ven->venice_db_.controllers.empty())) {
+        PDS_TRACE_DEBUG("going to setup connection");
+    }
+}
+
+void
 netagentapi::netagent_handle_create_modify_venice_coordinates(void *ctxt) {
     PDS_TRACE_DEBUG("venice co-ordinates changed!!");
-    sdk::lib::venice* ven = sdk::lib::venice::factory();
-    PDS_TRACE_DEBUG("venice co-ordinates are {}", ven);
+    static sdk::lib::venice* ven = NULL;
+    if (ven == NULL) {
+        ven = sdk::lib::venice::factory();
+    } else {
+        string naples_status_file = ven->get_naples_status_file();
+        ven->init(naples_status_file);
+        ven->dump_venice_coordinates();
+    }
+    netagent_handle_venice_coordinates(ven, ctxt);
 }
 
 void

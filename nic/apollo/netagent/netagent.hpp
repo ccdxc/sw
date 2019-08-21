@@ -12,6 +12,7 @@
 #define __NETAGENT_HPP__
 
 #include "nic/sdk/platform/evutils/include/evutils.h"
+#include "nic/sdk/lib/venice/venice.hpp"
 
 /// \defgroup PDS_NETAGENT
 /// @{
@@ -40,6 +41,9 @@ public:
 
     static void netagent_handle_create_modify_venice_coordinates(void *ctxt);
     static void netagent_handle_delete_venice_coordinates(void *ctxt);
+    static void netagent_handle_venice_coordinates(sdk::lib::venice* venice, void *ctxt);
+
+    static void netagent_init();
 
 private:
     /// \brief    constructor
