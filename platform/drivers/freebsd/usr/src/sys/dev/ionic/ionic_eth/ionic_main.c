@@ -336,43 +336,60 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	return ionic_adminq_check_err(lif, ctx, remaining == 0);
 }
 
+#define IONIC_DEV_CMD_WARN_DELAY_MS 3000
 static int
 ionic_dev_cmd_wait(struct ionic_dev *idev,
 		   unsigned long max_wait,
 		   bool sleepable_ctx)
 {
-	unsigned long time;
-	int done;
+	unsigned long cmd_start, cmd_timo, msecs;
+	int done, waits = 0;
 
 	/* Bail out if the interface was disabled in response to an error */
 	if (unlikely(ionic_dev_cmd_disabled(idev)))
 		return ENXIO;
 
-	time = jiffies + max_wait;
+	cmd_start = ticks;
+	cmd_timo = cmd_start + max_wait;
 	do {
-
 		done = ionic_dev_cmd_done(idev);
-#ifdef IONIC_DEBUG
-		if (done)
-			IONIC_INFO("DEVCMD done took %ld secs (%ld jiffies)\n",
-			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
-#endif
-		if (done)
+		if (done) {
+			msecs = (ticks - cmd_start) * 1000 / HZ;
+			if (msecs > IONIC_DEV_CMD_WARN_DELAY_MS) {
+				IONIC_ERROR("DEVCMD took %lums (%d waits)\n",
+					    msecs, waits);
+			} else {
+				IONIC_INFO("DEVCMD took %lums (%d waits)\n",
+					   msecs, waits);
+			}
 			return 0;
+		}
 
-#ifdef __FreeBSD__
+		/* Either sleep for 100ms or spin for 1ms */
 		if (sleepable_ctx)
 			schedule_timeout_uninterruptible(HZ / 10);
 		else
-			/* XXX: use msleep but need mtx access. */
+			/* XXX: should use msleep, but lack mtx access */
 			DELAY(1000);
-#else
-		schedule_timeout_uninterruptible(HZ / 10);
-#endif
+		waits++;
+	} while (time_after(cmd_timo, ticks));
 
-	} while (time_after(time, jiffies));
+	msecs = (ticks - cmd_start) * 1000 / HZ;
 
-	IONIC_ERROR("DEVCMD timeout after %ld secs\n", max_wait / HZ);
+	/* Last chance */
+	done = ionic_dev_cmd_done(idev);
+	if (done) {
+		if (msecs > IONIC_DEV_CMD_WARN_DELAY_MS) {
+			IONIC_ERROR("DEVCMD took %lums (%d waits)\n",
+				    msecs, waits);
+		} else {
+			IONIC_INFO("DEVCMD took %lums (%d waits)\n",
+				   msecs, waits);
+		}
+		return 0;
+	}
+
+	IONIC_ERROR("DEVCMD timeout after %lums\n", msecs);
 
 	return ETIMEDOUT;
 }
@@ -402,9 +419,8 @@ ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 	err = ionic_dev_cmd_wait(idev, max_wait, false);
 	if (!err)
 		err = ionic_dev_cmd_check_error(idev);
-	if (err) {
+	if (err)
 		ionic_dev_cmd_disable(idev);
-	}
 	return err;
 }
 

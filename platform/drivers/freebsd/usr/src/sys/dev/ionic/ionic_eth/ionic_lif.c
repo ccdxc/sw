@@ -231,6 +231,8 @@ ionic_txq_wdog_work(struct work_struct *work)
 	struct lif *lif = container_of(work, struct lif, txq_wdog_work.work);
 	struct txque *txq;
 	int i, err = 0;
+	int first_txq = 0;
+	u64 first_wdog_start = 0;
 
 	if (!lif->txq_wdog_timeout)
 		return;
@@ -245,6 +247,10 @@ ionic_txq_wdog_work(struct work_struct *work)
 			if (txq->full &&
 			    ticks > txq->wdog_start + lif->txq_wdog_timeout) {
 				txq->stats.wdog_expired++;
+				if (!err) {
+					first_txq = i;
+					first_wdog_start = txq->wdog_start;
+				}
 				err = ETIMEDOUT;
 			}
 		}
@@ -257,7 +263,10 @@ ionic_txq_wdog_work(struct work_struct *work)
 		ionic_wdog_error_trigger = 0;
 	}
 	if (err) {
-		IONIC_QUE_ERROR(lif->adminq, "tx watchdog timeout\n");
+		IONIC_QUE_ERROR(lif->adminq,
+				"txq%d watchdog timeout (%lums)\n",
+				first_txq,
+				(ticks - first_wdog_start) * 1000 / HZ);
 		err = ionic_lif_reinit(lif, true);
 		if (err) {
 			/* Disable the watchdog */
@@ -1214,7 +1223,7 @@ ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 	adminq->total_ring_size = total_size;
 
 	if ((error = ionic_dma_alloc(adminq->lif->ionic, total_size, &adminq->cmd_dma, 0))) {
-		IONIC_QUE_ERROR(adminq, "failed to allocated DMA cmd ring, err: %d\n", error);
+		IONIC_QUE_ERROR(adminq, "failed to allocate DMA cmd ring, err: %d\n", error);
 		goto error_out;
 	}
 
@@ -1298,7 +1307,7 @@ ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 
 	error = ionic_dma_alloc(notifyq->lif->ionic, total_size, &notifyq->cmd_dma, 0);
 	if (error) {
-		IONIC_QUE_ERROR(notifyq, "failed to allocated DMA cmd ring, err: %d\n", error);
+		IONIC_QUE_ERROR(notifyq, "failed to allocate DMA cmd ring, err: %d\n", error);
 		goto error_out;
 	}
 
@@ -1403,7 +1412,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	rxq->total_ring_size = total_size;
 
 	if ((error = ionic_dma_alloc(rxq->lif->ionic, total_size, &rxq->cmd_dma, 0))) {
-		IONIC_QUE_ERROR(rxq, "failed to allocated DMA cmd ring, err: %d\n", error);
+		IONIC_QUE_ERROR(rxq, "failed to allocate DMA cmd ring, err: %d\n", error);
 		goto error_out;
 	}
 
@@ -1543,7 +1552,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	txq->total_ring_size = total_size;
 
 	if ((error = ionic_dma_alloc(txq->lif->ionic, total_size, &txq->cmd_dma, 0))) {
-		IONIC_QUE_ERROR(txq, "failed to allocated DMA cmd ring, err: %d\n", error);
+		IONIC_QUE_ERROR(txq, "failed to allocate DMA cmd ring, err: %d\n", error);
 		goto failed_alloc;
 	}
 
@@ -1564,7 +1573,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	/* Allocate buffer ring. */
 	txq->br = buf_ring_alloc(4096, M_IONIC, M_WAITOK, &txq->tx_mtx);
 	if (txq->br == NULL) {
-		IONIC_QUE_ERROR(txq, "failed to allocated buffer ring\n");
+		IONIC_QUE_ERROR(txq, "failed to allocate buffer ring\n");
 		goto failed_alloc;
 	}
 
