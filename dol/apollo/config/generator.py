@@ -16,6 +16,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
 import apollo.config.objects.mirror as mirror
+import apollo.config.objects.nexthop as nexthop
 import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
@@ -99,6 +100,16 @@ def __create():
     batch.client.Commit()
     return
 
+def __read():
+    # Read all objects which support GET
+    device.client.ReadObjects()
+    vpc.client.ReadObjects()
+    subnet.client.ReadObjects()
+    vnic.client.ReadObjects()
+    tunnel.client.ReadObjects()
+    nexthop.client.ReadObjects()
+    return
+
 def Main():
     timeprofiler.ConfigTimeProfiler.Start()
     agentapi.Init()
@@ -113,6 +124,8 @@ def Main():
 
     logger.info("Creating objects in Agent")
     __create()
+    logger.info("Reading objects via Agent")
+    __read()
     timeprofiler.ConfigTimeProfiler.Stop()
 
     ModelConnector.ConfigDone()

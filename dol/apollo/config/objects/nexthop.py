@@ -45,6 +45,11 @@ class NexthopObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = nh_pb2.NexthopGetRequest()
+        grpcmsg.Id.append(self.NexthopId)
+        return grpcmsg
+
     def Show(self):
         logger.info("Nexthop object:", self)
         logger.info("- %s" % repr(self))
@@ -130,6 +135,12 @@ class NexthopObjectClient:
         if utils.IsPipelineArtemis():
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
             api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
+        return
+
+    def ReadObjects(self):
+        if utils.IsPipelineArtemis():
+            msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs.values()))
+            api.client.Get(api.ObjectTypes.NEXTHOP, msgs)
         return
 
 client = NexthopObjectClient()

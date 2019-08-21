@@ -130,6 +130,11 @@ class SubnetObject(base.ConfigObjectBase):
         spec.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = subnet_pb2.SubnetGetRequest()
+        grpcmsg.Id.append(self.SubnetId)
+        return grpcmsg
+
     def Show(self):
         logger.info("SUBNET object:", self)
         logger.info("- %s" % repr(self))
@@ -174,6 +179,11 @@ class SubnetObjectClient:
         # Create VNIC and Remote Mapping Objects
         vnic.client.CreateObjects()
         rmapping.client.CreateObjects()
+        return
+
+    def ReadObjects(self):
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
+        api.client.Get(api.ObjectTypes.SUBNET, msgs)
         return
 
 client = SubnetObjectClient()

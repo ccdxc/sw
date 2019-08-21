@@ -86,6 +86,11 @@ class TunnelObject(base.ConfigObjectBase):
                 utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = tunnel_pb2.TunnelGetRequest()
+        grpcmsg.Id.append(self.Id)
+        return grpcmsg
+
     def IsWorkload(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
             return True
@@ -150,6 +155,13 @@ class TunnelObjectClient:
         api.client.Create(api.ObjectTypes.TUNNEL, msgs)
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
         api.client.Create(api.ObjectTypes.TUNNEL, msgs)
+        return
+
+    def ReadObjects(self):
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__lobjs))
+        api.client.Get(api.ObjectTypes.TUNNEL, msgs)
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
+        api.client.Get(api.ObjectTypes.TUNNEL, msgs)
         return
 
 client = TunnelObjectClient()

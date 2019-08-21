@@ -155,6 +155,11 @@ class VpcObject(base.ConfigObjectBase):
             utils.GetRpcIPPrefix(self.Nat46_pfx, spec.Nat46Prefix)
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = vpc_pb2.VPCGetRequest()
+        grpcmsg.Id.append(self.VPCId)
+        return grpcmsg
+
     def Show(self):
         logger.info("VPC Object:", self)
         logger.info("- %s" % repr(self))
@@ -231,6 +236,11 @@ class VpcObjectClient:
 
         # Create Subnet Objects after policy & route
         subnet.client.CreateObjects()
+        return
+
+    def ReadObjects(self):
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs.values()))
+        api.client.Get(api.ObjectTypes.VPC, msgs)
         return
 
 client = VpcObjectClient()

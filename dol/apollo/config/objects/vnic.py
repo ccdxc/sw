@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import sys
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
@@ -12,6 +13,7 @@ import vnic_pb2 as vnic_pb2
 import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
 
+from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger
 from apollo.config.store import Store
 
@@ -84,6 +86,30 @@ class VnicObject(base.ConfigObjectBase):
         spec.V6MeterId = self.V6MeterId
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = vnic_pb2.VnicGetRequest()
+        grpcmsg.VnicId.append(self.VnicId)
+        return grpcmsg
+
+    def Validate(self, spec):
+        if spec.VnicId != self.VnicId:
+            return False
+        # if spec.SubnetId != self.SUBNET.SubnetId:
+        #     return False
+        if spec.VPCId != self.SUBNET.VPC.VPCId:
+            return False
+        if spec.MACAddress != self.MACAddr.getnum():
+            return False
+        if spec.ResourcePoolId != 0:
+            return False
+        if spec.SourceGuardEnable != self.SourceGuard:
+            return False
+        if spec.V4MeterId != self.V4MeterId:
+            return False
+        if spec.V6MeterId != self.V6MeterId:
+            return False
+        return True
+
     def Show(self):
         logger.info("VNIC object:", self)
         logger.info("- %s" % repr(self))
@@ -103,18 +129,21 @@ class VnicObject(base.ConfigObjectBase):
 
 class VnicObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
 
     def IsValidConfig(self):
-        count = len(self.__objs)
+        count = len(self.__objs.values())
         if  count > resmgr.MAX_VNIC:
             return False, "VNIC count %d exceeds allowed limit of %d" %\
                           (count, resmgr.MAX_VNIC)
         return True, ""
+
+    def GetVnicObject(self, vnicid):
+        return self.__objs.get(vnicid, None)
 
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'vnic', None) == None:
@@ -143,17 +172,44 @@ class VnicObjectClient:
                 rxmirror = __get_rxmirror(vnic_spec_obj)
                 txmirror = __get_txmirror(vnic_spec_obj)
                 obj = VnicObject(parent, vnic_spec_obj, rxmirror, txmirror)
-                self.__objs.append(obj)
+                self.__objs.update({obj.VnicId: obj})
         return
 
     def CreateObjects(self):
-        if len(self.__objs) == 0:
+        if len(self.__objs.values()) == 0:
             return
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.VNIC, msgs)
         # Create Local Mapping Objects
         lmapping.client.CreateObjects()
         return
+
+    def ReadObjects(self):
+        if len(self.__objs.values()) == 0:
+            return
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs.values()))
+        resp = api.client.Get(api.ObjectTypes.VNIC, msgs)
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("VNIC object validation failed!!!")
+            sys.exit(1)
+        return
+
+    def ValidateObjects(self, getResp):
+        if GlobalOptions.dryrun:
+            return True
+        for obj in getResp:
+            if types_pb2.API_STATUS_OK != obj.ApiStatus:
+                logger.error("VNIC get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                vnic = self.GetVnicObject(spec.VnicId)
+                if not vnic.Validate(spec):
+                    logger.error("VNIC validation failed for ", obj)
+                    vnic.Show()
+                    return False
+        return True
 
 client = VnicObjectClient()
 

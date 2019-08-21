@@ -49,6 +49,10 @@ class DeviceObject(base.ConfigObjectBase):
         grpcmsg.Request.MACAddr = self.MACAddr.getnum()
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = device_pb2.DeviceRequest()
+        return grpcmsg
+
     def Update(self):
         self.old = copy.deepcopy(self)
         self.IPAddr = next(resmgr.TepIpAddressAllocator)
@@ -109,6 +113,11 @@ class DeviceObjectClient:
             obj.Show()
             obj.Update()
             obj.Show()
+        return
+
+    def ReadObjects(self):
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
+        api.client.Get(api.ObjectTypes.SWITCH, msgs)
         return
 
     def UpdateObjects(self):
