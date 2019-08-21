@@ -22,7 +22,7 @@ done
 
 if [ -z "$VER" ]
 then
-    VER=0.14.0_last-built
+    VER=0.15.0_last-built
     curl -O http://pxe/builds/hourly/${VER}/VERSION
     VER=$(cat VERSION) # something like 0.9.0-79 instead of aliases live 0.9.0_last-built
     rm VERSION

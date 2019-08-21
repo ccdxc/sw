@@ -5,11 +5,13 @@
 
 set -x
 
-while getopts ":i:c:" arg; do
+NTPSERVER=192.168.72.2
+while getopts ":i:c:n:" arg; do
   case $arg in
     i) IPADDR=$OPTARG;;
     c) CLUSTER=$OPTARG;;
-    \? ) echo "usage: $0 [-i ipAddr] [ -c clusterNodes ] " ; exit 0;;
+    n) NTPSERVER=$OPTARG;;
+    \? ) echo "usage: $0 [-n ntpserver] [-i ipAddr] [ -c clusterNodes ] " ; exit 0;;
   esac
 done
 
@@ -27,7 +29,7 @@ fi
 CLUSTER=$(echo $CLUSTER | sed 's/,/","/g')
 
 #post this object to create a cluster
-curl --header "Content-Type: application/json"   --request POST   --data '{ "kind": "Cluster", "api-version" : "v1", "meta": { "name" : "testCluster"  }, "spec" : { "auto-admit-nics" : true,"ntp-servers": [ "192.168.72.2" ], "quorum-nodes": [ "'$CLUSTER'" ] } }' http://$IPADDR:9001/api/v1/cluster
+curl --header "Content-Type: application/json"   --request POST   --data '{ "kind": "Cluster", "api-version" : "v1", "meta": { "name" : "testCluster"  }, "spec" : { "auto-admit-nics" : true,"ntp-servers": [ "'${NTPSERVER}'" ], "quorum-nodes": [ "'$CLUSTER'" ] } }' http://$IPADDR:9001/api/v1/cluster
 
 #wait for services to come up
 sleep 30
