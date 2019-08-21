@@ -650,6 +650,8 @@ apollo_impl::table_transaction_begin(void) {
     mapping_impl_db()->table_transaction_begin();
     route_table_impl_db()->table_transaction_begin();
     security_policy_impl_db()->table_transaction_begin();
+    nexthop_impl_db()->table_transaction_begin();
+    nexthop_group_impl_db()->table_transaction_begin();
     return SDK_RET_OK;
 }
 
@@ -660,6 +662,8 @@ apollo_impl::table_transaction_end(void) {
     mapping_impl_db()->table_transaction_end();
     route_table_impl_db()->table_transaction_end();
     security_policy_impl_db()->table_transaction_end();
+    nexthop_impl_db()->table_transaction_end();
+    nexthop_group_impl_db()->table_transaction_end();
     return SDK_RET_OK;
 }
 

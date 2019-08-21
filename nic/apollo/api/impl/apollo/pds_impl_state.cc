@@ -30,6 +30,7 @@ pds_impl_state::init(pds_state *state) {
     security_policy_impl_db_ = new security_policy_impl_state(state);
     mirror_impl_db_ = new mirror_impl_state(state);
     nexthop_impl_db_ = new nexthop_impl_state(state);
+    nexthop_group_impl_db_ = new nexthop_group_impl_state(state);
 
     return SDK_RET_OK;
 }
@@ -45,6 +46,7 @@ pds_impl_state::destroy(pds_impl_state *impl_state) {
     delete impl_state->security_policy_impl_db_;
     delete impl_state->mirror_impl_db_;
     delete impl_state->nexthop_impl_db_;
+    delete impl_state->nexthop_group_impl_db_;
 }
 
 pds_impl_state::pds_impl_state() {
