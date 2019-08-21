@@ -67,7 +67,7 @@ static_images = {
     'pen-kube-controller-manager': 'registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.7.14',
     'pen-kube-scheduler' : 'registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.7.14',
     'pen-kube-apiserver' : 'registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.7.14',
-    'pen-etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.2',
+    'pen-etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.15',
     'pen-filebeat' : 'registry.test.pensando.io:5000/pen-filebeat:v0.2',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.5',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.12',

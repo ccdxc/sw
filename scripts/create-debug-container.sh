@@ -22,12 +22,12 @@ rm kubernetes-server-linux-amd64.tar.gz
 rm -rf kubernetes
 
 # download etcd
-curl -fL --retry 3 --keepalive-time 2 -o etcd-linux-amd64.tar.gz https://storage.googleapis.com/etcd/v3.3.2/etcd-v3.3.2-linux-amd64.tar.gz
+curl -fL --retry 3 --keepalive-time 2 -o etcd-linux-amd64.tar.gz https://storage.googleapis.com/etcd/v3.3.15/etcd-v3.3.15-linux-amd64.tar.gz
 tar xvf etcd-linux-amd64.tar.gz
-mv etcd-v3.3.2-linux-amd64/etcdctl .
+mv etcd-v3.3.15-linux-amd64/etcdctl .
 chmod 755 ./etcdctl 
 rm etcd-linux-amd64.tar.gz
-rm -rf etcd-v3.3.2-linux-amd64
+rm -rf etcd-v3.3.15-linux-amd64
 
 # build venice tools
 go build -o ctctl github.com/pensando/sw/venice/citadel/cmd/ctctl
