@@ -186,16 +186,6 @@ TUNABLE_STR("hw.ionic.fw_update_ver", ionic_fw_update_ver, sizeof(ionic_fw_updat
 SYSCTL_STRING(_hw_ionic, OID_AUTO, fw_update_ver, CTLFLAG_RWTUN,
     ionic_fw_update_ver, 0, "Firmware version that needs to be programmed.");
 
-int ionic_cdp_vlan = 0;
-TUNABLE_INT("hw.ionic.cdp_vlan", &ionic_cdp_vlan);
-SYSCTL_INT(_hw_ionic, OID_AUTO, cdp_vlan, CTLFLAG_RDTUN,
-    &ionic_cdp_vlan, 0, "Receive CDP tagged with this vlan");
-
-int ionic_lldp_vlan = 0;
-TUNABLE_INT("hw.ionic.lldp_vlan", &ionic_lldp_vlan);
-SYSCTL_INT(_hw_ionic, OID_AUTO, lldp_vlan, CTLFLAG_RDTUN,
-    &ionic_lldp_vlan, 0, "Receive LLDP tagged with this vlan");
-
 static inline bool
 ionic_is_rx_tcp(uint8_t pkt_type)
 {
