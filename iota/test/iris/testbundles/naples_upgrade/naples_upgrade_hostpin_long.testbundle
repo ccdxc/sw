@@ -11,7 +11,7 @@ testcases:
             type : simple
             option : [""]
         args      :
-            sleep : 220
+            sleep : 300
 
     -   name: DISRUPTIVE_UPGRADE_FAIL_PRE_SWITCHROOT
         testcase    : testcases.naples_upgrade.disruptive_upgrade
@@ -19,7 +19,7 @@ testcases:
             type : simple
             option : ["compatcheckfail", "linkdownfail", "hostdownfail", "posthostdownfail", "savestatefail"]
         args      :
-            sleep : 120
+            sleep : 300
 
     -   name: DISRUPTIVE_UPGRADE_FAIL_POST_SWITCHROOT
         disable : True
