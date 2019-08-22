@@ -2586,7 +2586,8 @@ ionic_lif_identify(struct ionic *ionic)
         VMK_ReturnStatus status;
         struct ionic_dev *idev = &ionic->en_dev.idev;
 	struct identity *ident = &ionic->ident;
-	int i;
+        struct ionic_en_priv_data *priv_data;
+        vmk_uint32 i, max_filters;
         unsigned int nwords;
 
 	vmk_MutexLock(ionic->dev_cmd_lock);
@@ -2600,6 +2601,10 @@ ionic_lif_identify(struct ionic *ionic)
 		return status;
         }
 
+        priv_data = IONIC_CONTAINER_OF(ionic,
+                                       struct ionic_en_priv_data,
+                                       ionic);
+
 	nwords = IONIC_MIN(ARRAY_SIZE(ident->lif.words),
                            ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
@@ -2608,17 +2613,23 @@ ionic_lif_identify(struct ionic *ionic)
 	ionic_en_info("capabilities 0x%lx ", ident->lif.capabilities);
 	ionic_en_info("eth.features 0x%lx ", ident->lif.eth.config.features);
 	ionic_en_info("eth.queue_count[IONIC_QTYPE_ADMINQ] 0x%x ",
-		ident->lif.eth.config.queue_count[IONIC_QTYPE_ADMINQ]);
+                      ident->lif.eth.config.queue_count[IONIC_QTYPE_ADMINQ]);
 	ionic_en_info("eth.queue_count[IONIC_QTYPE_NOTIFYQ] 0x%x ",
-		ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ]);
+                      ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ]);
 	ionic_en_info("eth.queue_count[IONIC_QTYPE_RXQ] 0x%x ",
-		ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ]);
+                      ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ]);
 	ionic_en_info("eth.queue_count[IONIC_QTYPE_TXQ] 0x%x ",
-		ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ]);
+                      ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ]);
 	ionic_en_info("eth.max_ucast_filters 0x%x ",
-		ident->lif.eth.max_ucast_filters);
+                      ident->lif.eth.max_ucast_filters);
 	ionic_en_info("eth.max_mcast_filters 0x%x ",
-		ident->lif.eth.max_mcast_filters);
+                      ident->lif.eth.max_mcast_filters);
+
+        max_filters = IONIC_MIN(ident->lif.eth.max_mcast_filters,
+                                ident->lif.eth.max_ucast_filters);
+
+        priv_data->max_filters = IONIC_MIN(max_filters,
+                                           IONIC_EN_MAX_FILTERS_PER_RX_Q);
 
 	return VMK_OK;
 }

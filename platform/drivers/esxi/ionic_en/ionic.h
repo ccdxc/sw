@@ -162,6 +162,7 @@ struct ionic_en_priv_data {
         vmk_IntrCookie                *intr_cookie_array;
         vmk_WorldID                   dev_recover_world;
         vmk_Bool                      is_lifs_size_compl;
+        vmk_uint32                    max_filters;
 };
 
 

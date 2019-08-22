@@ -2197,7 +2197,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                         }
                         queue_data->type      = VMK_UPLINK_QUEUE_TYPE_RX;
                         // TODO: Figure out the number
-                        queue_data->maxFilters= IONIC_EN_MAX_FILTERS_PER_RX_Q;
+                        queue_data->maxFilters= priv_data->max_filters;
 
                 } else {
                         queue_data->type      = VMK_UPLINK_QUEUE_TYPE_TX;
