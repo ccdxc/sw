@@ -3,6 +3,7 @@ import { Animations } from '@app/animations';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ClusterHost, IClusterHost} from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import {ClusterSmartNICID} from '@sdk/v1/models/generated/cluster/cluster-smart-nicid.model';
@@ -13,7 +14,6 @@ import { required, patternValidator } from '@sdk/v1/utils/validators';
 import { FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { IApiStatus } from '@sdk/v1/models/generated/cluster';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 /**
  * NewhostComponent extends CreationForm

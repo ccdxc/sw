@@ -219,7 +219,7 @@ describe('HostsComponent', () => {
           component.processSmartNics(rowData)[0]['text']
         );  // only works if we for one entry case
       }
-    }, 'edit delete ');
+    }, 'edit delete ', true);
   });
 
   it('should have correct router links', () => {

@@ -15,6 +15,7 @@
                      [actionTemplate]="actionTemplate"
                      [expandTemplate]="expandTemplate"
                      [createTemplate]="createTemplate"
+                     [enableCheckbox]="true"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 </ng-template>
@@ -23,6 +24,13 @@
 <ng-template #captionTemplate let-count="count">
   <app-tableheader title="Hosts" [total]="dataObjects.length" [icon]="headerIcon" width="250px">
   </app-tableheader>
+  <div fxFlex="none" fxLayoutAlign="start center">
+    <!-- TABLE FUNCTION ICONS HERE -->
+    <mat-icon class="global-multi-records-delete-icon"
+              *ngIf="hasSelectedRows()"
+              [matTooltip]="'Delete selected hosts'"
+              (click)="onDeleteSelectedRows($event)">delete</mat-icon>
+  </div>
 </ng-template>
 
 <ng-template #createTemplate>

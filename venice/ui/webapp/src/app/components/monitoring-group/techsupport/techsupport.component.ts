@@ -46,7 +46,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     { field: 'meta.name', header: 'Name', class: 'techsupportrequests-column-name', sortable: true, width: 15 },
     { field: 'meta.mod-time', header: 'Time', class: 'techsupportrequests-column-date', sortable: true, width: '180px' },
     { field: 'spec.node-selector', header: 'Selected Nodes', class: ' techsupportrequests-column-node_selector', sortable: false, width: 35 },
-    { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true },
+    { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true},
   ];
 
   exportFilename: string = 'Venice-tech-support-requests';

@@ -1,21 +1,21 @@
-import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation, Renderer2 } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
+import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
 import { IApiStatus } from '@sdk/v1/models/generated/search';
-import { Table } from 'primeng/table';
-import { Observable, Subscription } from 'rxjs';
-import { TabcontentInterface } from 'web-app-framework';
-import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { LazyLoadEvent } from 'primeng/primeng';
-import { TableCol, RowClickEvent } from '.';
+import { Table } from 'primeng/table';
+import { forkJoin, Observable, Subscription } from 'rxjs';
+import { TabcontentInterface } from 'web-app-framework';
+import { RowClickEvent, TableCol } from '.';
+import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
-import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
-import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { BaseComponent } from '@app/components/base/base.component';
 
 
 /**
@@ -66,6 +66,9 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   @Input() showRowExpand: boolean = false;
   @Input() disableTableWhenRowExpanded: boolean = true;
 
+  @Input() enableCheckbox: boolean = false;
+  @Input() checkboxWidth: number = 40;
+
   // Lazyrender variables
   @Input() data: any[];
   @Input() runDoCheck: boolean = true;
@@ -104,6 +107,8 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   ongoingResize: boolean = false;
   hoveredRowID: string;
 
+  selectedDataObjects: any[] = [];
+
   constructor(protected renderer: Renderer2) {
   }
 
@@ -141,17 +146,22 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
 
   updateWidthPercentages() {
     const tableWidth = $(this.headerRow.nativeElement).innerWidth();
+
     if (tableWidth !== 0) {
       this.actionWidth = this.actionWidthPx / tableWidth; // now converted to percentage
       let sum = 0;
+      if (this.enableCheckbox) {
+        sum += (this.checkboxWidth / tableWidth) * 100;
+      }
       if (tableWidth !== 0) {
         const children = this.headerRow.nativeElement.children;
-        for (let i = 0; i < children.length - 1; i++) {
+        const startIndex  = 1;  // check if checkbox is enabled.
+        for (let i = startIndex; i < children.length - 1; i++) {
           const newWidth = ($(children[i]).outerWidth() * 100) / tableWidth;
-          this.cols[i].width = newWidth;
+          this.cols[i - startIndex].width = newWidth;
           sum += newWidth;
         }
-        this.cols[children.length - 1].width = 100 - sum;
+        this.cols[children.length - 1 - startIndex].width = 100 - sum; // TODO: double check (Per Rishabh)
       }
     }
   }
@@ -187,23 +197,32 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
    * When the user release the click, we should stop the resizing, hence we reset the pressed flag and stop watching mousemove and mouseup.
   */
 
-  onMouseDown(event, index) {
-    this.pressed = true;
-    this.headerIndex = index;
-    this.startX = event.x;
-    this.initResizableColumns();
-    this.headerRowHandler = $(event.target).parent().parent().parent();
-    const children = this.headerRowHandler.children();
+ onMouseDown(event, index) {
+  this.pressed = true;
+  this.headerIndex = index;
+  this.startX = event.x;
+  this.initResizableColumns();
+  this.headerRowHandler = $(event.target).parent().parent().parent();
+  const children = this.headerRowHandler.children();
+  if (this.enableCheckbox) {
+    this.leftCellWidth = $(children[this.headerIndex + 1]).outerWidth();
+    this.rightCellWidth = $(children[this.headerIndex + 2]).outerWidth();
+  } else {
     this.leftCellWidth = $(children[this.headerIndex]).outerWidth();
     this.rightCellWidth = $(children[this.headerIndex + 1]).outerWidth();
   }
+}
 
   getNumber(num: number | string ): number {
     return typeof num === 'number' ? num : null;
   }
 
+  /**
+   * This API compute the column width when resizing.
+   */
   setNewWidths(displacement) {
-    const tableWidth = $(this.headerRowHandler).width();
+    // check if there is a checkbox. If so, compute the width.
+    const tableWidth = $(this.headerRowHandler).width() ;
 
     const leftMinWidth = (this.cols[this.headerIndex].minColumnWidth) ? this.cols[this.headerIndex].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
     let rightMinWidth = (this.cols[this.headerIndex].minColumnWidth) ? this.cols[this.headerIndex + 1].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
@@ -212,7 +231,6 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
     if (this.headerIndex === this.cols.length - 2) {
       rightMinWidth += this.actionWidthPx;
     }
-
     if ( (displacement < 0 && this.leftCellWidth + displacement > leftMinWidth) || (displacement > 0 && this.rightCellWidth - displacement > rightMinWidth) ) {
       let sum = 0;
       // Incase width is defined using strings, we convert it to percentages first.
@@ -407,6 +425,13 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   abstract generateDeleteConfirmMsg(object: T): string;
   abstract generateDeleteSuccessMsg(object: T): string;
 
+  /**
+   * get the selected rows from p-table widget
+   */
+  getSelectedDataObjects(): T[] {
+    return (this.tableContainer) ? this.tableContainer.selectedDataObjects : [];
+  }
+
   createNewObject() {
     // If a row is expanded, we shouldnt be able to open a create new policy form
     if (!this.isRowExpanded()) {
@@ -470,6 +495,93 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
         this.subscriptions.push(sub);
       }
     });
+  }
+
+  /**
+   * Whether there are rows selected in table.
+   */
+  hasSelectedRows(): boolean {
+    return (this.getSelectedDataObjects() && this.getSelectedDataObjects().length > 0);
+  }
+
+  /**
+   * This api deletes multiple records.
+   * 1. build an array observables
+   * 2. use forkJoin techniques to invoke REST API
+   *
+   * @param selectedDataObjects
+   * @param summary
+   * @param msg
+   */
+  deleteMultipleRecords(selectedDataObjects: T[], summary: string, partialSuccessSummary: string, msg: string) {
+    const observables = [];
+    for (let i = 0; selectedDataObjects && i < selectedDataObjects.length; i++) {
+      const observable = this.deleteRecord(selectedDataObjects[i]);
+      observables.push(observable);
+    }
+    this.invokeAPIonMultipleRecords(observables, summary, partialSuccessSummary, msg );
+  }
+
+  /**
+   * This api use forkJoin technique to update multiple records
+   * @param observables
+   * @param allSuccessSummary
+   * @param partialSuccessSummary
+   * @param msg
+   */
+  invokeAPIonMultipleRecords( observables: Observable<T>[], allSuccessSummary: string, partialSuccessSummary: string, msg: string
+    ) {
+    if (observables.length <= 0) {
+      return;
+    }
+    const sub  = forkJoin(observables).subscribe(
+      (results) => {
+      const isAllOK = Utility.isForkjoinResultAllOK(results);
+      if (isAllOK) {
+        this._controllerService.invokeSuccessToaster(allSuccessSummary, msg);
+      } else {
+        const error = Utility.joinErrors(results);
+        this._controllerService.invokeRESTErrorToaster(partialSuccessSummary, error);
+      }
+      // clear the selectedObjects array
+      if (this.tableContainer && this.tableContainer.selectedDataObjects) {
+       this.tableContainer.selectedDataObjects.length = 0;
+      }
+    },
+    this._controllerService.restErrorHandler(allSuccessSummary + ' Failed')
+    );
+    this.subscriptions.push(sub);
+  }
+
+  /**
+   * This API is used in html template. P-table with checkbox enables user to select multiple records. User can delete multiple records.
+   * This function asks for user confirmation and invokes the REST API.
+   */
+  onDeleteSelectedRows($event) {
+    const selectedDataObjects = this.getSelectedDataObjects();
+    this.controllerService.invokeConfirm({
+      header: 'Delete selected ' + selectedDataObjects.length +  ' records?',
+      message: 'This action cannot be reversed',
+      acceptLabel: 'Delete',
+      accept: () => {
+       const allSuccessSummary = 'Delete';
+       const partialSuccessSummary = 'Partially delete';
+       const msg = 'Marked selected ' +  selectedDataObjects.length + ' deleted.';
+       this.invokeDeleteMultipleRecords(allSuccessSummary, partialSuccessSummary, msg);
+      }
+    });
+  }
+
+  /**
+   * This api is used in onDeleteSelectedRows(). It finds all selected objects and invokes DELETE API
+   * Sub-class should override this function to apply business logic.
+   * @param allSuccessSummary
+   * @param partialSuccessSummary
+   * @param msg
+   */
+  invokeDeleteMultipleRecords(allSuccessSummary: string, partialSuccessSummary: string, msg: string) {
+    const selectedDataObjects = this.getSelectedDataObjects();
+    this.deleteMultipleRecords(selectedDataObjects, allSuccessSummary, partialSuccessSummary, msg);
   }
 }
 

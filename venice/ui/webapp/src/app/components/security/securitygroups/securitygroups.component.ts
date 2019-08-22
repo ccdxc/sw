@@ -5,7 +5,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { HttpEventUtility } from '@common/HttpEventUtility';
 import { Utility } from '@common/Utility';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, forkJoin } from 'rxjs';
 import { Animations } from '@app/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';

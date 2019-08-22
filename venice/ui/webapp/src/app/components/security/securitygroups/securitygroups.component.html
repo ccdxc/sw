@@ -15,6 +15,7 @@
                      [actionTemplate]="actionTemplate"
                      [expandTemplate]="expandTemplate"
                      [createTemplate]="createTemplate"
+                     [enableCheckbox]="true"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 </ng-template>
@@ -24,6 +25,13 @@
   <app-tableheader title="Security Groups" [total]="dataObjects.length" [icon]="headerIcon"
                    width="250px">
   </app-tableheader>
+  <div fxFlex="none" fxLayoutAlign="start center">
+    <!-- TABLE FUNCTION ICONS HERE -->
+    <mat-icon class="global-multi-records-delete-icon"
+              *ngIf="hasSelectedRows()"
+              [matTooltip]="'Delete selected security groups'"
+              (click)="onDeleteSelectedRows($event)">delete</mat-icon>
+  </div>
 </ng-template>
 
 <ng-template #createTemplate>

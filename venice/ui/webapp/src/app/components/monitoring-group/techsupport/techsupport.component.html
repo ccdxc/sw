@@ -1,4 +1,4 @@
-<app-pagebody class="techsupportrequests" header="Tech Support" [icon]="bodyicon">
+<app-pagebody class="techsupportrequests" header="Tech Support Requests" [icon]="bodyicon">
   <app-tableviewedit fxLayout="column" class="techsupportrequests-widget"
                      [creatingMode]="creatingMode"
                      [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
@@ -8,6 +8,7 @@
                      [expandTemplate]="expandTemplate"
                      [actionTemplate]="actionTemplate" [createTemplate]="createTemplate"
                      (rowClick)="onTechSupportTableRowClick($event)"
+                     [enableCheckbox]="false"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 

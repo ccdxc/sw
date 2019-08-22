@@ -95,23 +95,26 @@ export class TestingUtility {
       {
         [key: string]:
         (fieldElem: DebugElement, rowData: any, rowIndex: number) => void
-      } = {}, actionColContent = '', hasCheckbox = false) {
+      } = {},
+      actionColContent = '',
+      hasCheckbox: boolean = false) {
 
     const rows = tableElem.queryAll(By.css('tr'));
     expect(rows.length).toBe(data.length, 'Data did not match number of entries in the table');
     rows.forEach((row, rowIndex) => {
       const rowData = data[rowIndex];
-      row.children.forEach((field, fieldIndex) => {
-        const checkboxOffSet = hasCheckbox ? 1 : 0;
+       row.children.forEach((field, fieldIndex) => {
         if (hasCheckbox && fieldIndex === 0) {
           return;
         }
-        if (fieldIndex - checkboxOffSet === columns.length) {
+        // check whether table contains checkbox and reach to action icon column
+        if ( (hasCheckbox && fieldIndex === columns.length + 1) || (!hasCheckbox && fieldIndex === columns.length ) ) {
           // Action col
           expect(field.nativeElement.textContent).toBe(actionColContent, 'action column did not match');
           return;
         }
-        const colData = columns[fieldIndex - checkboxOffSet];
+        const myFieldIndex  = (hasCheckbox) ? fieldIndex - 1 : fieldIndex; // compute the right column index based on whether table contains checkbox.
+        const colData = columns[myFieldIndex];
         if (caseMap[colData.field] != null) {
           // Delegate to supplied function
           const handlerFunction = caseMap[colData.field];

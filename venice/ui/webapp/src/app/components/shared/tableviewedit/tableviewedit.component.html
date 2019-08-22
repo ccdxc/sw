@@ -21,6 +21,7 @@
              [compareSelectionBy]="compareSelectionBy"
              #primengTable
              class="global-primeng-table-lazyload" [responsive]="true"
+             [(selection)]="selectedDataObjects"
              [loading]="tableLoading" [resizableColumns]="false" rowExpandMode="single">
 
       <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
@@ -30,6 +31,10 @@
 
       <ng-template pTemplate="header" let-columns>
         <tr fxLayout="row" #headerRow>
+          <th [style.width]="checkboxWidth + 'px'" *ngIf="enableCheckbox">
+            <p-tableHeaderCheckbox matTooltip="Select/Deselect All Records In Current Page">
+            </p-tableHeaderCheckbox>
+          </th>
           <ng-container
                         *ngFor="let col of cols; let index = index; let first = first; let last = last">
             <ng-container *roleGuard="col.roleGuard ? col.roleGuard : '' ">
@@ -63,6 +68,9 @@
             [style.min-height]="virtualRowHeight + 'px'"
             fxLayout="row"
             (click)="rowClick.emit({event: $event, rowData: rowData})">
+          <td *ngIf="enableCheckbox">
+            <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
+          </td>
           <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
               [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
             <ng-container
