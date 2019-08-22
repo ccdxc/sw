@@ -384,6 +384,7 @@ ionic_open(struct lif *lif)
 
 	ionic_calc_rx_size(lif);
 
+	lif->stop = false;
 	ionic_hw_open(lif);
 	ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	if_link_state_change(ifp, LINK_STATE_UP);
@@ -409,6 +410,7 @@ ionic_stop(struct ifnet *ifp)
 
 	IONIC_NETDEV_INFO(ifp, "stopping interface\n");
 
+	lif->stop = true;
 	lif->netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
 	if_link_state_change(lif->netdev, LINK_STATE_DOWN);
 

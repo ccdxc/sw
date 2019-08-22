@@ -357,6 +357,7 @@ struct lif {
 
 	u64 last_eid;
 	bool link_up;
+	bool stop;
 
 	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
 	u16 link_down_count;
