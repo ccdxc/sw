@@ -11,17 +11,37 @@ import (
 //  element is generated. The finalizer then has an oppurtunity to modify the spec element as needed.
 type Finalizer struct {
 	// Init returns any Messages and Enums to be inserted into the spec.
-	Init      func(reg *descriptor.Registry) ([]*descriptor.Message, []*descriptor.Enum)
-	Spec      func(obj *SwaggerObject, file *descriptor.File, reg *descriptor.Registry) error
-	Method    func(obj *SwaggerPathItemObject, path *string, method *descriptor.Method, reg *descriptor.Registry) error
-	Def       func(obj *SwaggerSchemaObject, message *descriptor.Message, reg *descriptor.Registry) error
-	Field     func(obj *SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry) error
-	FieldName func(field *descriptor.Field) string
+	Init      func(reg *descriptor.Registry, opts Opts) ([]*descriptor.Message, []*descriptor.Enum)
+	Spec      func(obj *SwaggerObject, file *descriptor.File, reg *descriptor.Registry, opts Opts) error
+	Method    func(obj *SwaggerPathItemObject, path *string, method *descriptor.Method, reg *descriptor.Registry, opts Opts) error
+	Def       func(obj *SwaggerSchemaObject, message *descriptor.Message, reg *descriptor.Registry, opts Opts) error
+	Field     func(obj *SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry, opts Opts) error
+	FieldName func(field *descriptor.Field, opts Opts) string
+}
+
+// Opts are generator options that will be passed into all the finalizer methods
+type Opts struct {
+	Mode GeneratorMode
+}
+
+// GeneratorMode is the current mode the finalizer is operating in
+type GeneratorMode int32
+
+const (
+	Internal GeneratorMode = 0
+	External GeneratorMode = 1
+)
+
+// GeneratorModeOptions is a mapping from mode types (string) to their enum value
+var GeneratorModeOptions = map[string]GeneratorMode{
+	"internal": 0,
+	"external": 1,
 }
 
 type param struct {
 	*descriptor.File
-	reg *descriptor.Registry
+	reg  *descriptor.Registry
+	opts Opts
 }
 
 type binding struct {

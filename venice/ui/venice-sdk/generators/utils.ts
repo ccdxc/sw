@@ -12,19 +12,19 @@ export function getSwagggerFiles() {
   const generatedApiFiles = fs.readdirSync(generatedApi);
   generatedApiFiles.forEach( (generatedApiFile) => {
     if (fs.statSync(generatedApi+'/'+generatedApiFile).isDirectory() && 
-        fs.existsSync(generatedApi+'/'+generatedApiFile+'/swagger') &&
-        fs.statSync(generatedApi+'/'+generatedApiFile+'/swagger').isDirectory()) {
+        fs.existsSync(generatedApi+'/'+generatedApiFile+'/swagger/internal') &&
+        fs.statSync(generatedApi+'/'+generatedApiFile+'/swagger/internal').isDirectory()) {
       const folderName = generatedApiFile;
-      const swaggerFiles = fs.readdirSync(generatedApi+'/'+generatedApiFile+'/swagger').filter(function (file) {
+      const swaggerFiles = fs.readdirSync(generatedApi+'/'+generatedApiFile+'/swagger/internal').filter(function (file) {
         return file.startsWith('svc_') && file.endsWith('.swagger.json');
       });
       swaggerFiles.forEach( (swaggerFile) => {
         let config;
         // Search models has special generation to add more helpful UI typing
         if (generatedApiFile === 'search') {
-          config = genConfig('v1', folderName, generatedApi+'/'+generatedApiFile+'/swagger/'+ swaggerFile, true);
+          config = genConfig('v1', folderName, generatedApi+'/'+generatedApiFile+'/swagger/internal/'+ swaggerFile, true);
         } else {
-          config = genConfig('v1', folderName, generatedApi+'/'+generatedApiFile+'/swagger/'+ swaggerFile);
+          config = genConfig('v1', folderName, generatedApi+'/'+generatedApiFile+'/swagger/internal/'+ swaggerFile);
         }
         if (generatedApiFile === 'events') {
           config.swagger.generatorOptions.swaggerFileHook = eventsHook;

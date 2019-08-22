@@ -87,6 +87,8 @@ do
     [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
     echo "++ parsing ${protofiles} for pkg ${pkg}"
 
+    # internal swagger
+    mkdir -p ${curdir}/generated/${pkg}/swagger/internal
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api/protos \
@@ -94,8 +96,19 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --swagger_out=logtostderr=false,v=7,log_dir=${curdir}/tmp:${curdir}/generated/${pkg}/swagger \
-        ${protofiles} || { echo "swagger generation failed" ; exit -1; }
+        --swagger_out=logtostderr=false,mode=internal,v=7,log_dir=${curdir}/tmp:${curdir}/generated/${pkg}/swagger/internal \
+        ${protofiles} || { echo "internal swagger generation failed" ; exit -1; }
+    # external swagger
+    mkdir -p ${curdir}/generated/${pkg}/swagger/external
+    protoc -I/usr/local/include -I. \
+        -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor \
+        --swagger_out=logtostderr=false,mode=external,v=7,log_dir=${curdir}/tmp:${curdir}/generated/${pkg}/swagger/external \
+        ${protofiles} || { echo "external swagger generation failed" ; exit -1; }
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api/protos \

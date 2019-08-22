@@ -8,7 +8,7 @@ function generateUIPermissionsFile(manifestData) {
     var delimiter = '_';
     // Get swagger config function
     // Get manifest data
-    var authPath = path.join(process.cwd(), '../../../api/generated/auth/swagger/svc_auth.swagger.json');
+    var authPath = path.join(process.cwd(), '../../../api/generated/auth/swagger/internal/svc_auth.swagger.json');
     var authSwagger = JSON.parse(fs.readFileSync(authPath, 'utf8').trim());
     var permActions = authSwagger.definitions.authPermission.properties.actions.enum;
     var permEnum = [];

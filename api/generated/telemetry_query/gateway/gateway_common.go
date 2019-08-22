@@ -31,7 +31,7 @@ var wsUpgrader = websocket.Upgrader{}
 const codecSize = 1024 * 1024
 
 func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../api/protos/../generated/telemetry_query/swagger")
+	box, err := rice.FindBox("../../../../api/protos/../generated/telemetry_query/swagger/internal")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err

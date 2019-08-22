@@ -20,12 +20,13 @@ var (
 )
 
 type generator struct {
-	reg *descriptor.Registry
+	reg  *descriptor.Registry
+	opts Opts
 }
 
 // New returns a new generator which generates grpc gateway files.
-func New(reg *descriptor.Registry) gen.Generator {
-	return &generator{reg: reg}
+func New(reg *descriptor.Registry, opts Opts) gen.Generator {
+	return &generator{reg: reg, opts: opts}
 }
 
 var Finalizers []Finalizer
@@ -34,7 +35,7 @@ func (g *generator) Generate(targets []*descriptor.File) ([]*plugin.CodeGenerato
 	var files []*plugin.CodeGeneratorResponse_File
 	for _, file := range targets {
 		glog.V(1).Infof("Processing %s", file.GetName())
-		code, err := applyTemplate(param{File: file, reg: g.reg})
+		code, err := applyTemplate(param{File: file, reg: g.reg, opts: g.opts})
 		if err == errNoTargetService {
 			glog.V(1).Infof("%s: %v", file.GetName(), err)
 			continue

@@ -31,9 +31,9 @@ func getEnumDefault(enum *descriptor.Enum) string {
 }
 
 // messageToQueryParameters converts a message to a list of swagger query parameters.
-func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Registry, pathParams []descriptor.Parameter) (params []SwaggerParameterObject, err error) {
+func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Registry, pathParams []descriptor.Parameter, opts Opts) (params []SwaggerParameterObject, err error) {
 	for _, field := range message.Fields {
-		p, err := queryParams(message, field, "", reg, pathParams)
+		p, err := queryParams(message, field, "", reg, pathParams, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -43,14 +43,14 @@ func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Regis
 }
 
 // queryParams converts a field to a list of swagger query parameters recuresively.
-func queryParams(message *descriptor.Message, field *descriptor.Field, prefix string, reg *descriptor.Registry, pathParams []descriptor.Parameter) (params []SwaggerParameterObject, err error) {
+func queryParams(message *descriptor.Message, field *descriptor.Field, prefix string, reg *descriptor.Registry, pathParams []descriptor.Parameter, opts Opts) (params []SwaggerParameterObject, err error) {
 	// make sure the parameter is not already listed as a path parameter
 	for _, pathParam := range pathParams {
 		if pathParam.Target == field {
 			return nil, nil
 		}
 	}
-	schema := schemaOfField(field, reg)
+	schema := schemaOfField(field, reg, opts)
 	fieldType := field.GetTypeName()
 	if message.File != nil {
 		comments := fieldProtoComments(reg, message, field)
@@ -75,7 +75,7 @@ func queryParams(message *descriptor.Message, field *descriptor.Field, prefix st
 		fldName := field.GetName()
 		for _, fnz := range Finalizers {
 			if fnz.FieldName != nil {
-				fldName = fnz.FieldName(field)
+				fldName = fnz.FieldName(field, opts)
 			}
 		}
 		param := SwaggerParameterObject{
@@ -117,11 +117,11 @@ func queryParams(message *descriptor.Message, field *descriptor.Field, prefix st
 	fldName := field.GetName()
 	for _, fnz := range Finalizers {
 		if fnz.FieldName != nil {
-			fldName = fnz.FieldName(field)
+			fldName = fnz.FieldName(field, opts)
 		}
 	}
 	for _, nestedField := range msg.Fields {
-		p, err := queryParams(msg, nestedField, fldName+".", reg, pathParams)
+		p, err := queryParams(msg, nestedField, fldName+".", reg, pathParams, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +131,7 @@ func queryParams(message *descriptor.Message, field *descriptor.Field, prefix st
 }
 
 // findServicesMessagesAndEnumerations discovers all messages and enums defined in the RPC methods of the service.
-func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descriptor.Registry, m messageMap, e enumMap) {
+func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descriptor.Registry, m messageMap, e enumMap, opts Opts) {
 	for _, svc := range s {
 		for _, meth := range svc.Methods {
 			m[fullyQualifiedNameToSwaggerName(meth.RequestType.FQMN(), reg)] = meth.RequestType
@@ -143,7 +143,7 @@ func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descripto
 	// Apply any initializers that are registered
 	for _, fnz := range Finalizers {
 		if fnz.Init != nil {
-			msgs, enums := fnz.Init(reg)
+			msgs, enums := fnz.Init(reg, opts)
 			for _, im := range msgs {
 				m[fullyQualifiedNameToSwaggerName(im.FQMN(), reg)] = im
 			}
@@ -178,7 +178,7 @@ func findNestedMessagesAndEnumerations(message *descriptor.Message, reg *descrip
 	}
 }
 
-func renderMessagesAsDefinition(messages messageMap, d SwaggerDefinitionsObject, reg *descriptor.Registry) {
+func renderMessagesAsDefinition(messages messageMap, d SwaggerDefinitionsObject, reg *descriptor.Registry, opts Opts) {
 	for name, msg := range messages {
 		switch name {
 		case ".google.protobuf.Timestamp":
@@ -199,7 +199,7 @@ func renderMessagesAsDefinition(messages messageMap, d SwaggerDefinitionsObject,
 
 		for _, f := range msg.Fields {
 			addField := func(fld *descriptor.Field) {
-				fieldValue := schemaOfField(fld, reg)
+				fieldValue := schemaOfField(fld, reg, opts)
 				comments := fieldProtoComments(reg, msg, fld)
 				if err := updateSwaggerDataFromComments(&fieldValue, comments); err != nil {
 					panic(err)
@@ -207,7 +207,7 @@ func renderMessagesAsDefinition(messages messageMap, d SwaggerDefinitionsObject,
 				fldName := fld.GetName()
 				for _, fnz := range Finalizers {
 					if fnz.FieldName != nil {
-						fldName = fnz.FieldName(fld)
+						fldName = fnz.FieldName(fld, opts)
 					}
 				}
 				schema.Properties = append(schema.Properties, KeyVal{fldName, fieldValue})
@@ -228,7 +228,7 @@ func renderMessagesAsDefinition(messages messageMap, d SwaggerDefinitionsObject,
 		// Apply any Finalizers that are registered
 		for _, fnz := range Finalizers {
 			if fnz.Def != nil {
-				fnz.Def(&schema, msg, reg)
+				fnz.Def(&schema, msg, reg, opts)
 			}
 		}
 		d[fullyQualifiedNameToSwaggerName(msg.FQMN(), reg)] = schema
@@ -236,7 +236,7 @@ func renderMessagesAsDefinition(messages messageMap, d SwaggerDefinitionsObject,
 }
 
 // schemaOfField returns a swagger Schema Object for a protobuf field.
-func schemaOfField(f *descriptor.Field, reg *descriptor.Registry) SwaggerSchemaObject {
+func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, opts Opts) SwaggerSchemaObject {
 	const (
 		singular = 0
 		array    = 1
@@ -300,7 +300,7 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry) SwaggerSchemaO
 	// Apply any Finalizers that are registered
 	for _, fnz := range Finalizers {
 		if fnz.Field != nil {
-			fnz.Field(&ret, f, reg)
+			fnz.Field(&ret, f, reg, opts)
 		}
 	}
 	return ret
@@ -489,7 +489,7 @@ func templateToSwaggerPath(path string) string {
 	return strings.Join(parts, "/")
 }
 
-func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, reg *descriptor.Registry) error {
+func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, reg *descriptor.Registry, opts Opts) error {
 	// Correctness of svcIdx and methIdx depends on 'services' containing the services in the same order as the 'file.Service' array.
 	for svcIdx, svc := range services {
 		for methIdx, meth := range svc.Methods {
@@ -535,7 +535,7 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 						}
 					} else {
 						lastField := b.Body.FieldPath[len(b.Body.FieldPath)-1]
-						schema = schemaOfField(lastField.Target, reg)
+						schema = schemaOfField(lastField.Target, reg, opts)
 					}
 
 					desc := ""
@@ -551,7 +551,7 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 					})
 				} else if b.HTTPMethod == "GET" {
 					// add the parameters to the query string
-					queryParams, err := messageToQueryParameters(meth.RequestType, reg, b.PathParams)
+					queryParams, err := messageToQueryParameters(meth.RequestType, reg, b.PathParams, opts)
 					if err != nil {
 						return err
 					}
@@ -561,7 +561,7 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 				path := templateToSwaggerPath(b.PathTmpl.Template)
 				for _, fnz := range Finalizers {
 					if fnz.Method != nil {
-						fnz.Method(nil, &path, meth, reg)
+						fnz.Method(nil, &path, meth, reg, opts)
 					}
 				}
 				pathItemObject, ok := paths[path]
@@ -619,7 +619,7 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 				// Apply any Finalizers that are registered to update the pathItemObject
 				for _, fnz := range Finalizers {
 					if fnz.Method != nil {
-						fnz.Method(&pathItemObject, &path, meth, reg)
+						fnz.Method(&pathItemObject, &path, meth, reg, opts)
 					}
 				}
 				paths[path] = pathItemObject
@@ -651,7 +651,7 @@ func applyTemplate(p param) (string, error) {
 
 	// Loops through all the services and their exposed GET/POST/PUT/DELETE definitions
 	// and create entries for all of them.
-	if err := renderServices(p.Services, s.Paths, p.reg); err != nil {
+	if err := renderServices(p.Services, s.Paths, p.reg, p.opts); err != nil {
 		panic(err)
 	}
 
@@ -659,8 +659,8 @@ func applyTemplate(p param) (string, error) {
 	// write their request and response types out as definition objects.
 	m := messageMap{}
 	e := enumMap{}
-	findServicesMessagesAndEnumerations(p.Services, p.reg, m, e)
-	renderMessagesAsDefinition(m, s.Definitions, p.reg)
+	findServicesMessagesAndEnumerations(p.Services, p.reg, m, e, p.opts)
+	renderMessagesAsDefinition(m, s.Definitions, p.reg, p.opts)
 	renderEnumerationsAsDefinition(e, s.Definitions, p.reg)
 
 	// File itself might have some comments and metadata.
@@ -673,7 +673,7 @@ func applyTemplate(p param) (string, error) {
 	// Call any finalizers registered
 	for _, fn := range Finalizers {
 		if fn.Spec != nil {
-			fn.Spec(&s, p.File, p.reg)
+			fn.Spec(&s, p.File, p.reg, p.opts)
 		}
 
 	}

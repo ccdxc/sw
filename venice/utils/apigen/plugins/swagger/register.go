@@ -14,7 +14,7 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-swagger/plugins"
 
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/apigen/annotations"
+	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
@@ -24,7 +24,52 @@ func reqMutator(req *plugin.CodeGeneratorRequest) {
 	mutator.AddAutoGrpcEndpoints(req)
 }
 
-func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *descriptor.Registry) error {
+func fieldCheck(fields genswagger.SwaggerSchemaObjectProperties) bool {
+	var speccheck, statuscheck, metacheck bool
+	for _, v := range fields {
+		if strings.ToLower(v.Key) == "meta" {
+			metacheck = true
+		} else if strings.ToLower(v.Key) == "spec" {
+			speccheck = true
+		} else if strings.ToLower(v.Key) == "status" {
+			statuscheck = true
+		}
+	}
+	return metacheck && speccheck && statuscheck
+}
+
+func generateCreateUpdateObjects(m map[string]string, str string, obj *genswagger.SwaggerObject) {
+	for _, v := range m {
+		if objGroup, ok := obj.Definitions[v]; ok {
+			indexToRemove := -1
+			objUpdateGroup := objGroup
+			if fieldCheck(objGroup.Properties) {
+				if str == "Update" {
+					objUpdateGroup.Properties = make([]genswagger.KeyVal, len(objGroup.Properties))
+					copy(objUpdateGroup.Properties, objGroup.Properties)
+					for i, v := range objUpdateGroup.Properties {
+						if v.Key == "meta" {
+							v.Value = genswagger.SwaggerSchemaObject{SchemaCore: genswagger.SchemaCore{Ref: fmt.Sprintf("#/definitions/apiObjectMetaUpdate")}}
+							objUpdateGroup.Properties[i].Value = v.Value
+						}
+					}
+				}
+				for i, p := range objUpdateGroup.Properties {
+					if strings.ToLower(p.Key) == "status" {
+						indexToRemove = i
+					}
+				}
+				if indexToRemove != -1 {
+					objUpdateGroup.Properties[indexToRemove] = objUpdateGroup.Properties[len(objGroup.Properties)-1]
+					objUpdateGroup.Properties = objUpdateGroup.Properties[:len(objGroup.Properties)-1]
+				}
+			}
+			obj.Definitions[v+str] = objUpdateGroup
+		}
+	}
+}
+
+func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *descriptor.Registry, opts genswagger.Opts) error {
 	var pkg, version string
 	pkg = strings.Title(file.GoPkg.Name)
 	path := make(genswagger.SwaggerPathsObject)
@@ -59,6 +104,53 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 		},
 	}
 
+	if opts.Mode == genswagger.External {
+		//Creating ApiObjecMetaUpdate object without all properties except labels
+		if metaFin, ok := obj.Definitions["apiObjectMeta"]; ok {
+			indexOfLabels := -1
+			for i, v := range metaFin.Properties {
+				if v.Key == "labels" {
+					indexOfLabels = i
+				}
+			}
+			if indexOfLabels != -1 {
+				metaFin.Properties = metaFin.Properties[indexOfLabels : indexOfLabels+1]
+				obj.Definitions["apiObjectMetaUpdate"] = metaFin
+			}
+		}
+
+		//Creating Update and Create Objects for top level objects
+		var putMap = make(map[string]string)
+		var postMap = make(map[string]string)
+		re := regexp.MustCompile("definitions/(.*)")
+		for _, v := range obj.Paths {
+			if v.Put != nil {
+				putRef := v.Put.Parameters[len(v.Put.Parameters)-1].Schema.Ref
+				match := re.FindStringSubmatch(putRef)
+				putMap[match[1]] = match[1]
+			}
+			if v.Post != nil && v.Post.Parameters != nil && len(v.Post.Parameters) != 0 {
+				postRef := v.Post.Parameters[len(v.Post.Parameters)-1].Schema.Ref
+				match := re.FindStringSubmatch(postRef)
+				postMap[match[1]] = match[1]
+			}
+		}
+
+		generateCreateUpdateObjects(postMap, "Create", obj)
+		generateCreateUpdateObjects(putMap, "Update", obj)
+		// Modifying schema definitions for put and post methods, and creating
+		for _, v := range obj.Paths {
+			if v.Post != nil && v.Post.Parameters != nil && len(v.Post.Parameters) != 0 {
+				v.Post.Parameters[len(v.Post.Parameters)-1].Schema.Ref = v.Post.Parameters[len(v.Post.Parameters)-1].Schema.Ref + "Create"
+			}
+		}
+		for _, v := range obj.Paths {
+			if v.Put != nil && v.Put.Parameters != nil && len(v.Put.Parameters) != 0 {
+				v.Put.Parameters[len(v.Put.Parameters)-1].Schema.Ref = v.Put.Parameters[len(v.Put.Parameters)-1].Schema.Ref + "Update"
+			}
+		}
+	}
+
 	svcs := file.Services
 	for _, s := range svcs {
 		i, err := gwplugins.GetExtension("venice.apiVersion", s)
@@ -83,7 +175,6 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 		if !ok {
 			glog.V(1).Infof("Failed casting to naples rest endpoint object")
 		}
-
 		for _, n := range naplesRestServices {
 			for _, m := range n.Method {
 				if m == "post" || m == "list" {
@@ -284,7 +375,7 @@ var defaultErrorResponses = genswagger.SwaggerResponsesObject{
 	},
 }
 
-func initializer(reg *descriptor.Registry) ([]*descriptor.Message, []*descriptor.Enum) {
+func initializer(reg *descriptor.Registry, opts genswagger.Opts) ([]*descriptor.Message, []*descriptor.Enum) {
 	m, err := reg.LookupMsg("", ".api.Status")
 	if err != nil {
 		panic(fmt.Errorf("could not find status object(%s)", err))
@@ -312,7 +403,7 @@ func initializer(reg *descriptor.Registry) ([]*descriptor.Message, []*descriptor
 	return ret, nil
 }
 
-func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *descriptor.Method, reg *descriptor.Registry) error {
+func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *descriptor.Method, reg *descriptor.Registry, opts genswagger.Opts) error {
 	glog.V(1).Infof("called method Finalizer for %v/%v", *method.Name, *path)
 	var svcPrefix, version string
 	i, err := gwplugins.GetExtension("venice.apiVersion", method.Service)
@@ -398,10 +489,11 @@ func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *
 			}
 		}
 	}
+
 	return nil
 }
 
-func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.Message, reg *descriptor.Registry) error {
+func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.Message, reg *descriptor.Registry, opts genswagger.Opts) error {
 	// Adding the required field
 	req := []string{}
 	del := []int{}
@@ -443,7 +535,7 @@ func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.M
 	return nil
 }
 
-func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry) error {
+func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry, opts genswagger.Opts) error {
 	glog.V(1).Infof("called Field Finalizer for %v", *field.Name)
 	profile, err := common.GenerateVeniceCheckFieldProfile(field, reg)
 	// TODO: Use swagger version instead of all
@@ -494,7 +586,7 @@ func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field
 	return nil
 }
 
-func fieldNameFinalizer(field *descriptor.Field) string {
+func fieldNameFinalizer(field *descriptor.Field, opts genswagger.Opts) string {
 	tag := common.GetJSONTag(field)
 	if tag == "" {
 		return field.GetName()

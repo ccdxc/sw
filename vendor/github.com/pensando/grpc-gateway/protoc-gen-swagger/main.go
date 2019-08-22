@@ -20,6 +20,7 @@ var (
 	importPrefix    = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
 	file            = flag.String("file", "stdin", "where to load data from")
 	allowDeleteBody = flag.Bool("allow_delete_body", false, "unless set, HTTP DELETE methods may not have a body")
+	mode            = flag.String("mode", "internal", "what mode the generation will run in")
 )
 
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
@@ -71,7 +72,18 @@ func main() {
 	for k, v := range pkgMap {
 		reg.AddPkgMap(k, v)
 	}
-	g := genswagger.New(reg)
+
+	var selectedMode genswagger.GeneratorMode
+	selectedMode, ok := genswagger.GeneratorModeOptions[strings.ToLower(*mode)]
+	if !ok {
+		glog.Fatalf("Error parsing mode flag: %s is not a valid value", *mode)
+	}
+
+	opts := genswagger.Opts{
+		Mode: selectedMode,
+	}
+
+	g := genswagger.New(reg, opts)
 
 	if err := reg.Load(req); err != nil {
 		emitError(err)
