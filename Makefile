@@ -332,6 +332,10 @@ ui-container-helper:
 ui-container:
 	docker run -it --network none --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash; \
 
+ui-container-serve:
+	$(MAKE) ui-dependencies
+	docker run -p 4200:4200 --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-serve; \
+
 # update web-app-framework.tgz asset to minio
 ui-update-asset: ui-framework
 	tar czvf asset.tgz venice/ui/web-app-framework/web-app-framework.tgz
@@ -366,23 +370,28 @@ populate-webapp-node-modules:
 	cd ../venice-sdk && tar zxf ../../../bin/venice-sdk-node-modules.tgz ;\
 	cd ../../.. ;\
 
+ui-dependencies:
+	mkdir -p bin
+	if [ ! -z ${UI_FRAMEWORK} ]; then \
+		if [ ! -f bin/web-app-node-modules.tgz ]; then \
+			$(MAKE) populate-web-app-framework-node-modules ;\
+		fi ; \
+	fi; \
+	if [ ! -f bin/webapp-node-modules.tgz ]; then \
+		$(MAKE) populate-webapp-node-modules ;\
+	fi ; \
+	if [ ! -z ${UI_FRAMEWORK} ]; then \
+		docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-framework; \
+	else \
+		cd venice/ui/web-app-framework && tar xf web-app-framework.tgz && cd ../../..; \
+	fi; \
+
+
 fixtures:
 	mkdir -p bin
 	@if [ -z ${BYPASS_UI} ]; then \
-		if [ ! -z ${UI_FRAMEWORK} ]; then \
-			if [ ! -f bin/web-app-node-modules.tgz ]; then \
-				$(MAKE) populate-web-app-framework-node-modules ;\
-			fi ; \
-		fi; \
-		if [ ! -f bin/webapp-node-modules.tgz ]; then \
-			$(MAKE) populate-webapp-node-modules ;\
-		fi ; \
-		if [ ! -z ${UI_FRAMEWORK} ]; then \
-			docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-framework; \
-		else \
-			cd venice/ui/web-app-framework && tar xf web-app-framework.tgz && cd ../../..; \
-		fi; \
-	    echo "+++ building ui sources" ; \
+		$(MAKE) ui-dependencies ;\
+		echo "+++ building ui sources" ; \
 		echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		echo rm -r tools/docker-files/apigw/dist ;\
@@ -589,6 +598,12 @@ ui:
 	$(MAKE) ui-link-framework
 	$(MAKE) ui-venice-sdk
 	cd venice/ui/webapp && yarn run build-prod && ./gzipDist.sh
+
+ui-serve:
+	yarn -v;
+	$(MAKE) ui-link-framework
+	$(MAKE) ui-venice-sdk
+	cd venice/ui/webapp && yarn run dev
 
 ui-mac:
 	@echo "you will need node v10.15.3, yarn installed";
