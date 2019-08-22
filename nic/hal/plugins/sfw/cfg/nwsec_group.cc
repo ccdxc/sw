@@ -1622,47 +1622,7 @@ nwsec_policy_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 hal_ret_t
 nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                      ret = HAL_RET_OK;
-    dllist_ctxt_t                  *lnode = NULL;
-    dhl_entry_t                    *dhl_entry = NULL;
-    nwsec_policy_t                 *policy = NULL;
-    hal_handle_t                   hal_handle = 0;
-
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("invalid cfg_ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-
-    policy = (nwsec_policy_t *) dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
-
-    HAL_TRACE_DEBUG("policy handle {}", hal_handle);
-
-    /*ret = acl::acl_commit(app_ctx->acl_ctx_clone);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
-        goto end;
-    }
-
-    acl::acl_deref(app_ctx->acl_ctx_clone);
-    if (app_ctx->acl_ctx) {
-        HAL_TRACE_DEBUG("deleted acl");
-        acl_deref(app_ctx->acl_ctx);
-        //acl::acl_delete(app_ctx->acl_ctx);
-    }
-    acl::print_ref_count(app_ctx->acl_ctx_clone);
-
-    acl::acl_dump(app_ctx->acl_ctx_clone, 0x01, [] (acl_rule_t *rule) { PRINT_RULE_FIELDS(rule); });*/
-
-    // free the rules in the config db
-    nwsec_policy_rules_free(policy);
-    g_hal_state->nwsec_policy_slab()->free(policy);
-end:
-    return ret;
-
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -1754,6 +1714,8 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
                              nwsec_policy_update_commit_cb,
                              nwsec_policy_update_abort_cb,
                              nwsec_policy_update_cleanup_cb);
+    nwsec_policy_rules_free(policy);
+    g_hal_state->nwsec_policy_slab()->free(policy);
 
 end:
     if (ret == HAL_RET_OK) {
