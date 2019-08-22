@@ -12,9 +12,8 @@ import "github.com/pensando/sw/api/meta.proto";
 //========================================================================================
 // Packet Mirroring
 //========================================================================================
-//-----------------------
-//---- MirrorSessionSpec
-//-----------------------
+
+// MirrorSessionSpec
 message MirrorSessionSpec {
     // PacketSize: Max size of a mirrored packet.
     // PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
@@ -98,9 +97,7 @@ message MatchRule {
     AppProtoSelector   AppProtoSel  = 3 [(gogoproto.jsontag) = "app-protocol-selectors,omitempty"];;
 }
 
-//-------------------------
-//---- MirrorSessionStatus
-//-------------------------
+// MirrorSessionState
 enum MirrorSessionState {
     // ui-hint: None
     NONE                    = 0;    // Mirror session is not processed
@@ -114,14 +111,13 @@ enum MirrorSessionState {
     ERR_NO_MIRROR_SESSION   = 4 [(venice.enumValueStr) = "error-no-mirror-session"];
 }
 
+// MirrorSessionStatus
 message MirrorSessionStatus {
     string State            = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
     api.Timestamp StartedAt = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "started-at,inline"];
 }
 
-//------------------
-//---- MirrorSession
-//------------------
+// MirrorSession
 message MirrorSession {
     option (venice.objectPrefix) = {Collection: "MirrorSession", Path: "/{O.Tenant}"}; // ??? Tenant -> ??
     api.TypeMeta            T       = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];

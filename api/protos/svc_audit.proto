@@ -23,7 +23,7 @@ option (venice.fileApiServerBacked) = false;
 service AuditV1 {
     option (venice.apiVersion) = "v1";
 
-    // Fetches an audit event given its uuid- http://<...>/audit/v1/events/12345
+    // Fetches an audit event given its uuid
     rpc GetEvent (EventRequest) returns (Event) {
         option (google.api.http) = {
         get: "/events/{UUID}"

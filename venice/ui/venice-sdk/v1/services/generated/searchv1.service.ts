@@ -45,10 +45,7 @@ export class Searchv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
   }
   
-  /** In the example below a query like
-   http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
- generates a RPC call Query with the parameter as
- SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
+  /** Structured or free-form search */
   public GetQuery_1(queryParam: any = null):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
     const opts = {
@@ -59,10 +56,7 @@ export class Searchv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }
   
-  /** In the example below a query like
-   http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
- generates a RPC call Query with the parameter as
- SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
+  /** Structured or free-form search */
   public PostQuery(body: ISearchSearchRequest, trimObject: boolean = true):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
     const opts = {

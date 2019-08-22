@@ -18,7 +18,7 @@
   "paths": {
     "/audit/v1/events/{UUID}": {
       "get": {
-        "summary": "Fetches an audit event given its uuid- http://\u003c...\u003e/audit/v1/events/12345",
+        "summary": "Fetches an audit event given its uuid",
         "operationId": "GetGetEvent",
         "responses": {
           "200": {

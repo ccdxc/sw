@@ -20,7 +20,6 @@ export class Eventsv1Service extends AbstractService {
     return this.constructor.name;
   }
 
-  /** http://<...>/events/v1/events */
   public GetGetEvents_1(queryParam: any = null):Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
     const opts = {
@@ -31,7 +30,6 @@ export class Eventsv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IEventsEventList | Error, statusCode: number}>;
   }
   
-  /** http://<...>/events/v1/events */
   public PostGetEvents(body: any, trimObject: boolean = true):Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
     const opts = {
@@ -42,7 +40,7 @@ export class Eventsv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IEventsEventList | Error, statusCode: number}>;
   }
   
-  /** http://<...>/events/v1/events/12345 will be translated to a gRPC query - GetEvent(uuid:"12345") */
+  /** Get specific event */
   public GetGetEvent(UUID, queryParam: any = null):Observable<{body: IEventsEvent | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events/{UUID}';
     url = url.replace('{UUID}', UUID);

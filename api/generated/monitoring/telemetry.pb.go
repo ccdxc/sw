@@ -170,9 +170,7 @@ func (m *FlowExportPolicySpec) GetExports() []ExportConfig {
 	return nil
 }
 
-// ========================================================================================
-//  flow export policy
-// ========================================================================================
+// FlowExportPolicyStatus
 type FlowExportPolicyStatus struct {
 }
 
@@ -268,7 +266,7 @@ func (m *FwlogPolicySpec) GetConfig() *SyslogExportConfig {
 	return nil
 }
 
-//
+// FirewallLog Policy Status
 type FwlogPolicyStatus struct {
 }
 
@@ -342,27 +340,7 @@ func (m *StatsPolicySpec) GetDownSampleRetentionTime() string {
 	return ""
 }
 
-// telemetry policies:
-// -------------------------------------------------------------------------------
-// policy name         |  intended for        |     description                 |
-// -------------------------------------------------------------------------------
-// stats               |  sys admins          |    for all stats other than     |
-//                     |                      |    fwlog/netflow.               |
-//                     |                      |    includes retention,compaction|
-// -------------------------------------------------------------------------------
-// fwlog               |  security admins     |    firewall log policy          |
-//                     |                      |    includes retention,          |
-//                     |                      |    export parameters            |
-// -------------------------------------------------------------------------------
-//                     |                      |                                 |
-// flowexport          |  network admins      |    netflow export policy        |
-//                     |                      |    includes interval,           |
-//                     |                      |    export parameters            |
-// -------------------------------------------------------------------------------
-//
-// =========================================================================================
 //  stats policy
-// =========================================================================================
 type StatsPolicyStatus struct {
 }
 

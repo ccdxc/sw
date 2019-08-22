@@ -20,7 +20,7 @@ export class Auditv1Service extends AbstractService {
     return this.constructor.name;
   }
 
-  /** Fetches an audit event given its uuid- http://<...>/audit/v1/events/12345 */
+  /** Fetches an audit event given its uuid */
   public GetGetEvent(UUID, queryParam: any = null):Observable<{body: IAuditEvent | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/audit/v1/events/{UUID}';
     url = url.replace('{UUID}', UUID);

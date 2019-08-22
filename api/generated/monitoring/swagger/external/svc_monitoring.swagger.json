@@ -14128,7 +14128,7 @@
     },
     "monitoringFlowExportPolicyStatus": {
       "type": "object",
-      "title": "========================================================================================\n flow export policy\n========================================================================================"
+      "title": "FlowExportPolicyStatus"
     },
     "monitoringFlowExportPolicyUpdate": {
       "type": "object",
@@ -14270,7 +14270,8 @@
       "title": "Venice collects fwlog irrespective of the export config"
     },
     "monitoringFwlogPolicyStatus": {
-      "type": "object"
+      "type": "object",
+      "title": "FirewallLog Policy Status"
     },
     "monitoringFwlogPolicyUpdate": {
       "type": "object",
@@ -14428,7 +14429,7 @@
           "$ref": "#/definitions/monitoringMirrorSessionStatus"
         }
       },
-      "title": "------------------\n---- MirrorSession\n------------------"
+      "title": "MirrorSession"
     },
     "monitoringMirrorSessionCreate": {
       "type": "object",
@@ -14449,7 +14450,7 @@
           "$ref": "#/definitions/monitoringMirrorSessionStatus"
         }
       },
-      "title": "------------------\n---- MirrorSession\n------------------"
+      "title": "MirrorSession"
     },
     "monitoringMirrorSessionList": {
       "type": "object",
@@ -14522,7 +14523,7 @@
           }
         }
       },
-      "title": "========================================================================================\nPacket Mirroring\n========================================================================================\n-----------------------\n---- MirrorSessionSpec\n-----------------------"
+      "title": "MirrorSessionSpec"
     },
     "monitoringMirrorSessionStatus": {
       "type": "object",
@@ -14552,7 +14553,8 @@
           "type": "string",
           "format": "date-time"
         }
-      }
+      },
+      "title": "MirrorSessionStatus"
     },
     "monitoringMirrorSessionUpdate": {
       "type": "object",
@@ -14573,7 +14575,7 @@
           "$ref": "#/definitions/monitoringMirrorSessionStatus"
         }
       },
-      "title": "------------------\n---- MirrorSession\n------------------"
+      "title": "MirrorSession"
     },
     "monitoringMirrorStartConditions": {
       "type": "object",
@@ -14724,8 +14726,7 @@
     },
     "monitoringStatsPolicyStatus": {
       "type": "object",
-      "description": "=========================================================================================\n stats policy\n=========================================================================================",
-      "title": "telemetry policies:\n-------------------------------------------------------------------------------\npolicy name         |  intended for        |     description                 |\n-------------------------------------------------------------------------------\nstats               |  sys admins          |    for all stats other than     |\n                    |                      |    fwlog/netflow.               |\n                    |                      |    includes retention,compaction|\n-------------------------------------------------------------------------------\nfwlog               |  security admins     |    firewall log policy          |\n                    |                      |    includes retention,          |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------\n                    |                      |                                 |\nflowexport          |  network admins      |    netflow export policy        |\n                    |                      |    includes interval,           |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------"
+      "title": "stats policy"
     },
     "monitoringStatsPolicyUpdate": {
       "type": "object",
@@ -15017,7 +15018,7 @@
           "$ref": "#/definitions/monitoringTroubleshootingSessionStatus"
         }
       },
-      "title": "----- Troubleshooting session object"
+      "title": "Troubleshooting session object"
     },
     "monitoringTroubleshootingSessionCreate": {
       "type": "object",
@@ -15035,7 +15036,7 @@
           "$ref": "#/definitions/monitoringTroubleshootingSessionSpec"
         }
       },
-      "title": "----- Troubleshooting session object"
+      "title": "Troubleshooting session object"
     },
     "monitoringTroubleshootingSessionList": {
       "type": "object",
@@ -15077,7 +15078,7 @@
           "title": "If packet capture is enabled, a mirror-session will be internally created"
         }
       },
-      "title": "----- Troubleshooting Session Spec"
+      "title": "Troubleshooting Session Spec"
     },
     "monitoringTroubleshootingSessionStatus": {
       "type": "object",
@@ -15107,7 +15108,7 @@
           "title": "report is generated each time troubleshooting session is activated i.e time-window"
         }
       },
-      "title": "----- Troubleshooting Session Status"
+      "title": "Troubleshooting Session Status"
     },
     "monitoringTroubleshootingSessionUpdate": {
       "type": "object",
@@ -15125,7 +15126,7 @@
           "$ref": "#/definitions/monitoringTroubleshootingSessionSpec"
         }
       },
-      "title": "----- Troubleshooting session object"
+      "title": "Troubleshooting session object"
     },
     "monitoringTsResult": {
       "type": "object",

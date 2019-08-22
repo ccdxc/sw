@@ -36,10 +36,7 @@ type SearchV1Client interface {
 	AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SearchV1_AutoWatchSvcSearchV1Client, error)
 	// Security Policy Query
 	PolicyQuery(ctx context.Context, in *PolicySearchRequest, opts ...grpc.CallOption) (*PolicySearchResponse, error)
-	// In the example below a query like
-	//    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
-	//  generates a RPC call Query with the parameter as
-	//  SearchRequest{ QueryString: "XXXXX", MaxResults:100}
+	// Structured or free-form search
 	Query(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*SearchResponse, error)
 }
 
@@ -107,10 +104,7 @@ type SearchV1Server interface {
 	AutoWatchSvcSearchV1(*api.ListWatchOptions, SearchV1_AutoWatchSvcSearchV1Server) error
 	// Security Policy Query
 	PolicyQuery(context.Context, *PolicySearchRequest) (*PolicySearchResponse, error)
-	// In the example below a query like
-	//    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
-	//  generates a RPC call Query with the parameter as
-	//  SearchRequest{ QueryString: "XXXXX", MaxResults:100}
+	// Structured or free-form search
 	Query(context.Context, *SearchRequest) (*SearchResponse, error)
 }
 

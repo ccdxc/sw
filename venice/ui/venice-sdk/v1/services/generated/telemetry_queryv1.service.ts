@@ -20,7 +20,7 @@ export class Telemetry_queryv1Service extends AbstractService {
     return this.constructor.name;
   }
 
-  /** Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs */
+  /** Firewall logs query */
   public GetFwlogs_1(queryParam: any = null):Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/fwlogs';
     const opts = {
@@ -31,7 +31,7 @@ export class Telemetry_queryv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}>;
   }
   
-  /** Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs */
+  /** Firewall logs query */
   public PostFwlogs(body: ITelemetry_queryFwlogsQueryList, trimObject: boolean = true):Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/fwlogs';
     const opts = {
@@ -45,7 +45,7 @@ export class Telemetry_queryv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}>;
   }
   
-  /** Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics */
+  /** telemetry metrics query */
   public GetMetrics_1(queryParam: any = null):Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/metrics';
     const opts = {
@@ -56,7 +56,7 @@ export class Telemetry_queryv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}>;
   }
   
-  /** Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics */
+  /** telemetry metrics query */
   public PostMetrics(body: ITelemetry_queryMetricsQueryList, trimObject: boolean = true):Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/metrics';
     const opts = {

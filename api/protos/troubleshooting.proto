@@ -20,8 +20,7 @@ import "mirror.proto";
 // stats/counters pertaining to the given flow and time-window
 //========================================================================================
 
-// ----- Troubleshooting Report
-// Following information is available in TS report
+// Troubleshooting Policy
 message TsPolicy {
     // Policy and associated rules that affect the flow
     // Parent policy
@@ -70,7 +69,7 @@ message TsReport    {
     TraceRouteInfo      TracedRouteInfo     = 12 [(gogoproto.jsontag) = "traced-route-info,inline"];
 }
 
-// ----- Troubleshooting Session Status
+// Troubleshooting Session Status
 message TroubleshootingSessionStatus {
     string              State       = 1 [(gogoproto.jsontag) = "state,inline", (venice.check) = "StrEnum(TroubleshootingSessionState)"];
     // report is generated each time troubleshooting session is activated i.e time-window
@@ -114,7 +113,7 @@ message TraceRouteInfo {
 }
 
 
-// ----- Troubleshooting Session Spec
+// Troubleshooting Session Spec
 message TroubleshootingSessionSpec {
     MatchRule               FlowSelector        = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "flow-selector,inline"];
     TimeWindow              TimeWindow          = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "time-window,omitempty"];
@@ -130,7 +129,7 @@ message TimeWindow {
     api.Timestamp           StopTime            = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "stop-time,omitempty"];
 }
 
-// ----- Troubleshooting session object
+// Troubleshooting session object
 message TroubleshootingSession {
     option (venice.objectPrefix) = {Collection: "TroubleshootingSession", Path: "/{O.Tenant}"}; // ??? Tenant -> ??
     api.TypeMeta                    T           = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];

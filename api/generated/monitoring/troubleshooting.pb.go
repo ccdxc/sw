@@ -193,7 +193,7 @@ func (m *TraceRouteInfo) String() string            { return proto.CompactTextSt
 func (*TraceRouteInfo) ProtoMessage()               {}
 func (*TraceRouteInfo) Descriptor() ([]byte, []int) { return fileDescriptorTroubleshooting, []int{3} }
 
-// ----- Troubleshooting session object
+// Troubleshooting session object
 type TroubleshootingSession struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
@@ -226,7 +226,7 @@ func (m *TroubleshootingSession) GetStatus() TroubleshootingSessionStatus {
 	return TroubleshootingSessionStatus{}
 }
 
-// ----- Troubleshooting Session Spec
+// Troubleshooting Session Spec
 type TroubleshootingSessionSpec struct {
 	//
 	FlowSelector MatchRule `protobuf:"bytes,1,opt,name=FlowSelector,json=flow-selector,inline" json:"flow-selector,inline"`
@@ -273,7 +273,7 @@ func (m *TroubleshootingSessionSpec) GetEnableMirroring() bool {
 	return false
 }
 
-// ----- Troubleshooting Session Status
+// Troubleshooting Session Status
 type TroubleshootingSessionStatus struct {
 	//
 	State string `protobuf:"bytes,1,opt,name=State,json=state,inline,proto3" json:"state,inline"`
@@ -329,8 +329,7 @@ func (m *TsFlowLogs) String() string            { return proto.CompactTextString
 func (*TsFlowLogs) ProtoMessage()               {}
 func (*TsFlowLogs) Descriptor() ([]byte, []int) { return fileDescriptorTroubleshooting, []int{9} }
 
-// ----- Troubleshooting Report
-// Following information is available in TS report
+// Troubleshooting Policy
 type TsPolicy struct {
 	// Policy and associated rules that affect the flow
 	// Parent policy

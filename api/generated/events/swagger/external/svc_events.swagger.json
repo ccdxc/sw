@@ -18,7 +18,6 @@
   "paths": {
     "/events/v1/events": {
       "get": {
-        "summary": "http://\u003c...\u003e/events/v1/events",
         "operationId": "GetGetEvents_1",
         "responses": {
           "200": {
@@ -147,7 +146,6 @@
         ]
       },
       "post": {
-        "summary": "http://\u003c...\u003e/events/v1/events",
         "operationId": "PostGetEvents",
         "responses": {
           "200": {
@@ -164,7 +162,7 @@
     },
     "/events/v1/events/{UUID}": {
       "get": {
-        "summary": "http://\u003c...\u003e/events/v1/events/12345 will be translated to a gRPC query - GetEvent(uuid:\"12345\")",
+        "summary": "Get specific event",
         "operationId": "GetGetEvent",
         "responses": {
           "200": {

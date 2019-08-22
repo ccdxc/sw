@@ -33,7 +33,7 @@ const _ = grpc.SupportPackageIsVersion4
 
 type AuditV1Client interface {
 	AutoWatchSvcAuditV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuditV1_AutoWatchSvcAuditV1Client, error)
-	// Fetches an audit event given its uuid- http://<...>/audit/v1/events/12345
+	// Fetches an audit event given its uuid
 	GetEvent(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (*Event, error)
 }
 
@@ -90,7 +90,7 @@ func (c *auditV1Client) GetEvent(ctx context.Context, in *EventRequest, opts ...
 
 type AuditV1Server interface {
 	AutoWatchSvcAuditV1(*api.ListWatchOptions, AuditV1_AutoWatchSvcAuditV1Server) error
-	// Fetches an audit event given its uuid- http://<...>/audit/v1/events/12345
+	// Fetches an audit event given its uuid
 	GetEvent(context.Context, *EventRequest) (*Event, error)
 }
 

@@ -35,9 +35,7 @@ var PacketCollectorType_value = map[string]int32{
 
 func (PacketCollectorType) EnumDescriptor() ([]byte, []int) { return fileDescriptorMirror, []int{0} }
 
-// -------------------------
-// ---- MirrorSessionStatus
-// -------------------------
+// MirrorSessionState
 type MirrorSessionState int32
 
 const (
@@ -240,9 +238,7 @@ func (m *MirrorExportConfig) GetDestination() string {
 	return ""
 }
 
-// ------------------
-// ---- MirrorSession
-// ------------------
+// MirrorSession
 type MirrorSession struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
@@ -273,12 +269,7 @@ func (m *MirrorSession) GetStatus() MirrorSessionStatus {
 	return MirrorSessionStatus{}
 }
 
-// ========================================================================================
-// Packet Mirroring
-// ========================================================================================
-// -----------------------
-// ---- MirrorSessionSpec
-// -----------------------
+// MirrorSessionSpec
 type MirrorSessionSpec struct {
 	// PacketSize: Max size of a mirrored packet.
 	// PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
@@ -334,7 +325,7 @@ func (m *MirrorSessionSpec) GetPacketFilters() []string {
 	return nil
 }
 
-//
+// MirrorSessionStatus
 type MirrorSessionStatus struct {
 	//
 	State string `protobuf:"bytes,1,opt,name=State,json=oper-state,inline,proto3" json:"oper-state,inline"`

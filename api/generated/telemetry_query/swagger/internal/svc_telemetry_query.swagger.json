@@ -18,7 +18,7 @@
   "paths": {
     "/telemetry/v1/fwlogs": {
       "get": {
-        "summary": "Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs",
+        "summary": "Firewall logs query",
         "operationId": "GetFwlogs_1",
         "responses": {
           "200": {
@@ -49,7 +49,7 @@
         ]
       },
       "post": {
-        "summary": "Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs",
+        "summary": "Firewall logs query",
         "operationId": "PostFwlogs",
         "responses": {
           "200": {
@@ -76,7 +76,7 @@
     },
     "/telemetry/v1/metrics": {
       "get": {
-        "summary": "Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics",
+        "summary": "telemetry metrics query",
         "operationId": "GetMetrics_1",
         "responses": {
           "200": {
@@ -107,7 +107,7 @@
         ]
       },
       "post": {
-        "summary": "Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics",
+        "summary": "telemetry metrics query",
         "operationId": "PostMetrics",
         "responses": {
           "200": {

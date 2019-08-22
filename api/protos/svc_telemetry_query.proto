@@ -24,7 +24,7 @@ service TelemetryV1 {
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    //  Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics
+    //  telemetry metrics query
     rpc Metrics (MetricsQueryList) returns (MetricsQueryResponse) {
         option (google.api.http) = {
             post: "/metrics"
@@ -34,7 +34,7 @@ service TelemetryV1 {
             }
         };
     }
-    //  Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs
+    //  Firewall logs query
     rpc Fwlogs (FwlogsQueryList) returns (FwlogsQueryResponse) {
         option (google.api.http) = {
             post: "/fwlogs"
