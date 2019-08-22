@@ -1,19 +1,15 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-import { BaseComponent } from '@app/components/base/base.component';
-import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { EventsEventAttributes_severity } from '@sdk/v1/models/generated/events';
-import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
-import { Table } from 'primeng/table';
-
-
-import { Subscription } from 'rxjs';
+import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
+import { SecuritySGPolicy, ISecuritySGPolicy, IApiStatus } from '@sdk/v1/models/generated/security';
+import { Observable } from 'rxjs';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TableCol } from '@app/components/shared/tableviewedit';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-sgpolicies',
@@ -21,29 +17,21 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./sgpolicies.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDestroy {
-  @ViewChild('sgpoliciesTable') sgpoliciesTable: Table;
-  @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
+export class SgpoliciesComponent extends TablevieweditAbstract<ISecuritySGPolicy, SecuritySGPolicy> implements OnInit, OnDestroy {
+  isTabComponent: boolean = false;
+  disableTableWhenRowExpanded: boolean  = true;
+  dataObjects: ReadonlyArray<SecuritySGPolicy> = [];
+  exportFilename: string = 'Venice-sgpolicies';
 
-  subscriptions: Subscription[] = [];
-  severityEnum = EventsEventAttributes_severity;
-
-  // When true, the table displays a loading symbol
-  loading = false;
 
   // Holds all policy objects
-  sgPolicies: ReadonlyArray<SecuritySGPolicy> = [];
   sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
 
-  // holds a subset (possibly all) of this.sgPolicies
-  // This are the sgPolicies that will be displayed
-  filteredSGPolicies: SecuritySGPolicy[] = [];
-
   // All columns are set as not sortable as it isn't currently supported
-  cols: any[] = [
-    { field: 'meta.name', header: 'SG Policy Name', class: 'sgpolicies-column-name', sortable: true },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'sgpolicies-column-date', sortable: true },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'sgpolicies-column-date', sortable: true },
+  cols: TableCol[] = [
+    { field: 'meta.name', header: 'SG Policy Name', class: 'sgpolicies-column-name', sortable: true, width: 'auto' },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'sgpolicies-column-date', sortable: true, width: '180px' },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'sgpolicies-column-date', sortable: true, width: '25' },
   ];
 
   bodyIcon = {
@@ -65,32 +53,37 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected securityService: SecurityService,
+    protected cdr: ChangeDetectorRef,
   ) {
-    super(_controllerService);
+    super(_controllerService, cdr, uiconfigsService);
   }
 
-  ngOnInit() {
-    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'AlerttableComponent', 'state': Eventtypes.COMPONENT_INIT });
+  postNgInit() {
     this.getSGPolicies();
+  }
+
+  setDefaultToolbar() {
+    let buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitysgpolicy_create) && this.uiconfigsService.isFeatureEnabled(Features.createSGPolicy)) {
+      buttons = [{
+        cssClass: 'global-button-primary global-button-padding',
+        text: 'ADD SG POLICY',
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        callback: () => { this.createNewObject(); }
+      }];
+    }
     this._controllerService.setToolbarData({
-      buttons: [],
+      buttons: buttons,
       breadcrumb: [{ label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' }]
     });
   }
 
-  getClassName(): string {
-    return this.constructor.name;
-  }
-
   getSGPolicies() {
     this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
-    this.sgPolicies = this.sgPoliciesEventUtility.array;
+    this.dataObjects = this.sgPoliciesEventUtility.array;
     const subscription = this.securityService.WatchSGPolicy().subscribe(
       response => {
         this.sgPoliciesEventUtility.processEvents(response);
-        // we currently don't support filter searching, so we
-        // set all the policies to be the filtered set
-        this.filteredSGPolicies = this.sgPolicies as any;
       },
       this._controllerService.webSocketErrorHandler('Failed to get SG Policies')
     );
@@ -107,12 +100,15 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
     }
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach(
-      subscription => {
-        subscription.unsubscribe();
-      }
-    );
+  deleteRecord(object: SecuritySGPolicy): Observable<{ body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number }> {
+    return this.securityService.DeleteSGPolicy(object.meta.name);
   }
 
+  generateDeleteConfirmMsg(object: ISecuritySGPolicy) {
+    return 'Are you sure you want to delete SG Policy ' + object.meta.name;
+  }
+
+  generateDeleteSuccessMsg(object: ISecuritySGPolicy) {
+    return 'Deleted SG Policy ' + object.meta.name;
+  }
 }

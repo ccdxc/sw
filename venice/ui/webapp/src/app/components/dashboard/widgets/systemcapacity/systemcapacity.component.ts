@@ -109,7 +109,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     hoverDescription: '',
     isPercentage: true,
     scaleMin: 0,
-    valueFormatter: LinegraphComponent.percentFormatter
+    valueFormatter: MetricsUtility.percentFormatter
   };
   memLineGraphStat: LineGraphStat = {
     title: 'MEMORY',
@@ -123,7 +123,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     hoverDescription: '',
     isPercentage: true,
     scaleMin: 0,
-    valueFormatter: LinegraphComponent.percentFormatter
+    valueFormatter: MetricsUtility.percentFormatter
   };
   storageLineGraphStat: LineGraphStat = {
     title: 'STORAGE',
@@ -137,7 +137,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     hoverDescription: '',
     isPercentage: true,
     scaleMin: 0,
-    valueFormatter: LinegraphComponent.percentFormatter
+    valueFormatter: MetricsUtility.percentFormatter
   };
   networkLineGraphStat: LineGraphStat = {
     title: 'NETWORK',

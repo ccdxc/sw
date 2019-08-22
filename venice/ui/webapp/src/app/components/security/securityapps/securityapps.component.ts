@@ -42,7 +42,6 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
   isTabComponent = false;
   exportFilename: string = 'Security-apps';
 
-  securityApps: ReadonlyArray<SecurityApp> = [];
   selectedSecurityApp: SecurityApp = null;
 
   bodyIcon: any = {
@@ -138,7 +137,6 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
    */
   getSecurityApps() {
     this.securityappsEventUtility = new HttpEventUtility<SecurityApp>(SecurityApp, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
-    this.securityApps = this.securityappsEventUtility.array as ReadonlyArray<SecurityApp>;
     this.dataObjects = this.securityappsEventUtility.array;
     const subscription = this.securityService.WatchApp().subscribe(
       response => {
@@ -146,8 +144,8 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
         // As server  keeps pushing records to UI and UI has a selected securityApp, we have to update the selected one.
         if (this.selectedSecurityApp) {
           let matchedSecurityApp: SecurityApp = null;
-          for (let i = 0; i < this.securityApps.length; i++) {
-            const secApp = this.securityApps[i];
+          for (let i = 0; i < this.dataObjects.length; i++) {
+            const secApp = this.dataObjects[i];
             if (secApp.meta.name === this.selectedSecurityApp.meta.name) {
               matchedSecurityApp = secApp;
             }

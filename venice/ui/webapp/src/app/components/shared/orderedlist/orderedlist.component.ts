@@ -2,9 +2,9 @@ import { Component, OnInit, ViewEncapsulation, TemplateRef, Input, EventEmitter,
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Animations } from '@app/animations';
 
-export interface OrderedItem {
+export interface OrderedItem<T> {
   id: string;
-  data: any;
+  data: T;
   inEdit: boolean;
 }
 
@@ -16,7 +16,7 @@ export interface OrderedItem {
   animations: Animations
 })
 export class OrderedlistComponent implements OnInit {
-  @Input() dataArray: OrderedItem[] = [];
+  @Input() dataArray: OrderedItem<any>[] = [];
   // Variables available in template
   // data, index, first, last, inEdit
   @Input() template: TemplateRef<any>;

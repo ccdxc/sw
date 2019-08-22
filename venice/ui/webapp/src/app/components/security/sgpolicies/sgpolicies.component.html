@@ -1,48 +1,58 @@
 <app-pagebody [icon]="bodyIcon" header="Security Group Policies">
-  <div fxFlex class="sgpolicies-table">
-    <app-lazyrender [data]="filteredSGPolicies" [rows]="28" [virtualRowHeight]="36"
-                    [runDoCheck]="true">
-      <p-table #sgpoliciesTable class="global-primeng-table-lazyload" [columns]="cols"
-               dataKey="meta.name" [responsive]="true"
-               sortField="meta.mod-time" [sortOrder]='-1'
-               [loading]="loading" [resizableColumns]="true">
-        <!-- Table Caption -->
-        <ng-template pTemplate="caption">
-          <app-tableheader title="SG Policies" [count]="filteredSGPolicies.length"
-                           [total]="sgPolicies.length" [icon]="tableIcon" width="250px">
-          </app-tableheader>
-        </ng-template>
-        <!-- Table Header -->
-        <ng-template pTemplate="header" let-columns>
-          <tr>
-            <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''"
-                [class]="col.class">
-              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
-              </app-sorticon>
-            </th>
-          </tr>
-        </ng-template>
-        <!-- Table Body -->
-        <ng-template pTemplate="body" let-rowData>
-          <tr>
-            <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-              <div *ngSwitchCase="'meta.name'">
-                <a routerLink="./{{rowData.meta.name}}">{{rowData.meta.name}}</a>
-              </div>
-              <div *ngSwitchCase="'meta.mod-time'">
-                {{rowData.meta['mod-time'] | PrettyDate }}
-              </div>
-              <div *ngSwitchCase="'meta.creation-time'">
-                {{rowData.meta['creation-time'] | PrettyDate }}
-              </div>
-              <ng-container *ngSwitchDefault>
-                {{displayColumn(rowData, col)}}
-              </ng-container>
-            </td>
-          </tr>
-        </ng-template>
-
-      </p-table>
-    </app-lazyrender>
-  </div>
+  <app-tableviewedit fxLayout="column" class="fwlogpolicies-widget"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [createTemplate]="createTemplate"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
 </app-pagebody>
+
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="SG Policies" [total]="count" [icon]="tableIcon" width="250px">
+  </app-tableheader>
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-newsgpolicy (formClose)="creationFormClose()" fxFlex="none">
+  </app-newsgpolicy>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.name'">
+      <div>
+        <a routerLink="./{{rowData.meta.name}}">{{rowData.meta.name}}</a>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      <div>
+        {{rowData.meta['mod-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      <div>
+        {{rowData.meta['creation-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <!-- <mat-icon *roleGuard="'monitoringfwlogpolicy_update'" matTooltip="Edit policy"
+              class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon> -->
+    <mat-icon *roleGuard="'monitoringfwlogpolicy_delete'" matTooltip="Delete policy"
+              class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  </div>
+</ng-template>

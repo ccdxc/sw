@@ -730,6 +730,9 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
     }
     if (rule['proto-ports'] != null) {
       protoPorts = rule['proto-ports'].map((entry) => {
+        if (entry.ports == null || entry.ports.length === 0) {
+          return entry.protocol;
+        }
         return entry.protocol + '/' + entry.ports;
       });
     }

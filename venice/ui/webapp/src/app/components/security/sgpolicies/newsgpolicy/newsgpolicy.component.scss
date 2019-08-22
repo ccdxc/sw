@@ -1,0 +1,98 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newsgpolicy-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  margin-left: 53px;
+  height: 30px !important;
+}
+
+.newsgpolicy-attach-radio {
+  margin-left: 5px;
+  margin-top: 6px;
+  @include global-mat-radio(12px);
+
+  .mat-radio-label-content {
+    @include primary-font(14px);
+  }
+}
+
+.newsgpolicy-container {
+  padding: 20px 15px;
+  @include primary-font();
+}
+
+.newsgpolicy-multiselect {
+  height: 30px !important;
+}
+
+.newsgpolicy-subtext {
+  margin-top: 2px;
+  @include primary-font(12px, #b2b3b4, 300);
+}
+
+.newsgpolicy-bold {
+  @include primary-font(16px, #383838, 500);
+}
+
+.newsgpolicy-bold-subtext {
+  @include primary-font(16px, #383838);
+}
+
+.newsgpolicy-number {
+  @include primary-font(18px, #97b8df);
+  height: 30px
+}
+
+.newsgpolicy-number-edit {
+  @include primary-font(18px);
+  height: 30px
+}
+
+.newsgpolicy-rule-template {
+  margin-left: 15px;
+}
+
+.newworkload-add-rule {
+  @include primary-font(16px, #6ba0e5, 500);
+  width: 100px;
+  cursor: pointer;
+}
+
+.newsgpolicy-chip {
+  width: 400px;
+  height: 30px;
+}
+
+.newsgpolicy-input {
+  width: 155px;
+  height: 30px;
+}
+
+.newsgpolicy-divider {
+  border-top: #dddddd 1px solid;
+}
+
+.newsgpolicy-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newsgpolicy-rule-template {
+  cursor: pointer;
+
+  .newsgpolicy-edit-hoverbuttons {
+    display: none;
+  }
+
+  &:hover {
+    .newsgpolicy-edit-hoverbuttons {
+      display: inherit;
+    }
+  }
+}
+
+.newsgpolicy-rule-template.newsgpolicy-hide-primeng-panel .newsgpolicy-select-panel {
+  display: none;
+}

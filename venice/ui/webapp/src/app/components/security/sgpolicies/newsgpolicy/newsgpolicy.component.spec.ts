@@ -18,15 +18,15 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 
-import { NewsecuritygroupComponent } from './newsecuritygroup.component';
+import { NewsgpolicyComponent } from './newsgpolicy.component';
 
-describe('NewsecuritygroupComponent', () => {
-  let component: NewsecuritygroupComponent;
-  let fixture: ComponentFixture<NewsecuritygroupComponent>;
+describe('NewsgpolicyComponent', () => {
+  let component: NewsgpolicyComponent;
+  let fixture: ComponentFixture<NewsgpolicyComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NewsecuritygroupComponent ],
+      declarations: [ NewsgpolicyComponent ],
       imports: [
         FormsModule,
         ReactiveFormsModule,
@@ -37,6 +37,7 @@ describe('NewsecuritygroupComponent', () => {
         MaterialdesignModule,
         RouterTestingModule,
         SharedModule,
+        MaterialdesignModule
         ],
       providers: [
         ControllerService,
@@ -54,7 +55,7 @@ describe('NewsecuritygroupComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NewsecuritygroupComponent);
+    fixture = TestBed.createComponent(NewsgpolicyComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

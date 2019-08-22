@@ -21,6 +21,9 @@ import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
 import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
+import { NewsgpolicyComponent } from './newsgpolicy/newsgpolicy.component';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 describe('SgpoliciesComponent', () => {
   let component: SgpoliciesComponent;
@@ -33,13 +36,16 @@ describe('SgpoliciesComponent', () => {
 
   configureTestSuite(() => {
     TestBed.configureTestingModule({
-      declarations: [SgpoliciesComponent, RouterLinkStubDirective],
+      declarations: [SgpoliciesComponent, RouterLinkStubDirective, NewsgpolicyComponent],
       imports: [
         RouterTestingModule,
         NoopAnimationsModule,
         HttpClientTestingModule,
         SharedModule,
         PrimengModule,
+        MaterialdesignModule,
+        FormsModule,
+        ReactiveFormsModule,
       ],
       providers: [
         ControllerService,

@@ -262,6 +262,7 @@
         <div class="usertemplate-rolegroup-header-edit-label">New Roles:</div>
         <p-multiSelect class="user-rolebinding" fxFlex="200px" styleClass="user-rolebinding-select"
                        [options]="rolebindingOptions" [filter]="false" [showToggleAll]="false"
+                       [showHeader]="false"
                        [(ngModel)]="selectedRolebindingsForUsers" dataKey="meta.name">
         </p-multiSelect>
       </div>

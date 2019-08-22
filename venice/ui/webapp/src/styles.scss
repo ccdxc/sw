@@ -6,6 +6,8 @@
 
 @mixin global-styles($theme) {
   $colorPalette: map-get($theme, colors);
+  $horizontal-gutter: 10px;
+  $vertical-gutter: 5px;
 
   %button_base {
     outline: none;
@@ -109,6 +111,14 @@
   .global-button-padding {
     padding-left: 10px;
     padding-right: 10px;
+  }
+
+  .global-add-button {
+    white-space: nowrap;
+    margin-top: 2*$vertical-gutter;
+    color: #6ba0e5;
+    display: inline-block;
+    cursor: pointer;
   }
 
   .global-trash-button {

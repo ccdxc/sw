@@ -42,12 +42,6 @@
                 formControlName="host-name" styleClass="neweventalertpolicy-font"
                 placeholder="select host name..."
                 [options]="hostOptions"></p-dropdown>
-    <!-- <p-multiSelect class="newsgpolicy-multiselect" fxFlex="300px"
-                    appendTo="body" styleClass="newsgpolicy-font"
-                    [filter]="false"
-                    defaultLabel="Select Groups..."
-                    [options]="fakeSecurityGroups"
-                    ></p-multiSelect> -->
   </div>
 </ng-template>
 
@@ -131,7 +125,7 @@
 
       </div>
     </div>
-    <div fxFle="none"
+    <div fxFlex="none"
          (click)="addInterface()"
          class="newworkload-add-interface">+ INTERFACE</div>
   </div>

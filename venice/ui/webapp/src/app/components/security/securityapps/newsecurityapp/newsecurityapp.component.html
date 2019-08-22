@@ -108,7 +108,7 @@
                class="newsecurityapp-fieldtitle newsecurityapp-and">
             <span fxFlex="nogrow"
                   (click)="addProtoTarget()">+ ADD</span>
-            <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
+            <mat-icon fxFlex="nogrow" [style.color]="'#767676'" [style.cursor]="'pointer'"
                       *ngIf="protoandports.length > 1 && !first"
                       (click)="removeProtoTarget(index)">delete</mat-icon>
           </div>

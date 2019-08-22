@@ -7,7 +7,7 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
 import { WorkloadWorkload, IWorkloadWorkload, IApiStatus } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
 import { Subscription, Observable } from 'rxjs';
@@ -111,7 +111,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.workloadworkload_create)) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitysgpolicy_create) && this.uiconfigsService.isFeatureEnabled(Features.createWorkload)) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD WORKLOAD',

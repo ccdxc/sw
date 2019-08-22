@@ -8,6 +8,7 @@ import { PrimengModule } from '@lib/primeng.module';
 import { SgpoliciesComponent } from './sgpolicies.component';
 import { SgpolicydetailComponent } from './sgpolicydetail/sgpolicydetail.component';
 import { SgpoliciesRoutingModule } from '@app/components/security/sgpolicies/sgpolicies.route';
+import { NewsgpolicyComponent } from './newsgpolicy/newsgpolicy.component';
 
 
 @NgModule({
@@ -25,6 +26,6 @@ import { SgpoliciesRoutingModule } from '@app/components/security/sgpolicies/sgp
 
     SgpoliciesRoutingModule
   ],
-  declarations: [SgpoliciesComponent, SgpolicydetailComponent],
+  declarations: [SgpoliciesComponent, SgpolicydetailComponent, NewsgpolicyComponent],
 })
 export class SgpoliciesModule { }

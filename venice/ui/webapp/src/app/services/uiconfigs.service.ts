@@ -13,7 +13,9 @@ import { AuthService } from './auth.service';
 export enum Features {
   securityGroups = 'securityGroups',
   help = 'help',
-  workloadWidgets = 'workloadWidgets'
+  workloadWidgets = 'workloadWidgets',
+  createSGPolicy = 'createSGPolicy',
+  createWorkload = 'createWorkload',
 }
 
 interface UIConfig {

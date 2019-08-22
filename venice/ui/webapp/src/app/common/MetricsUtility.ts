@@ -7,7 +7,6 @@ import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/
 import { IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { MetricsPollingOptions, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { Chart } from 'chart.js';
-import { LinegraphComponent } from '@app/components/shared/linegraph/linegraph.component';
 
 /**
  * serverData is in the following form:
@@ -481,7 +480,7 @@ export class MetricsUtility {
         hoverDescription: '',
         isPercentage: true,
         scaleMin: 0,
-        valueFormatter: LinegraphComponent.percentFormatter
+        valueFormatter: MetricsUtility.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'memory',
@@ -527,7 +526,7 @@ export class MetricsUtility {
         hoverDescription: '',
         isPercentage: true,
         scaleMin: 0,
-        valueFormatter: LinegraphComponent.percentFormatter
+        valueFormatter: MetricsUtility.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'storage',
@@ -573,7 +572,7 @@ export class MetricsUtility {
         hoverDescription: '',
         isPercentage: true,
         scaleMin: 0,
-        valueFormatter: LinegraphComponent.percentFormatter
+        valueFormatter: MetricsUtility.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'cpu',
@@ -618,7 +617,7 @@ export class MetricsUtility {
         hoverDescription: '',
         isPercentage: true,
         scaleMin: 0,
-        valueFormatter: LinegraphComponent.percentFormatter
+        valueFormatter: MetricsUtility.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'memory',
@@ -663,7 +662,7 @@ export class MetricsUtility {
         hoverDescription: '',
         isPercentage: true,
         scaleMin: 0,
-        valueFormatter: LinegraphComponent.percentFormatter
+        valueFormatter: MetricsUtility.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'storage',
@@ -753,5 +752,10 @@ export class MetricsUtility {
     });
   }
 
-
+  public static percentFormatter(val: number): string {
+    if (val == null) {
+      return '';
+    }
+    return val.toFixed(0) + '%';
+  }
 }
