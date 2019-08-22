@@ -65,6 +65,7 @@ static int ionic_set_features(struct lif *lif, uint32_t features);
 struct lif_addr_work {
 	struct work_struct work;
 	struct lif *lif;
+	uint16_t vid;
 	u8 addr[ETH_ALEN];
 	bool add;
 };
@@ -531,8 +532,161 @@ ionic_adminq_isr(int irq, void *data)
 }
 
 /*
- * Handle defer requests.
+ * MAC VLAN
  */
+
+static bool is_cdp_mac(const u8 *addr)
+{
+	return !memcmp(addr, "\x01\x00\x0c\xcc\xcc\xcc", ETH_ALEN);
+}
+
+static bool is_lldp_mac(const u8 *addr)
+{
+	return !memcmp(addr, "\x01\x80\xc2\x00\x00\x00", ETH_ALEN) ||
+		!memcmp(addr, "\x01\x80\xc2\x00\x00\x03", ETH_ALEN) ||
+		!memcmp(addr, "\x01\x80\xc2\x00\x00\x0e", ETH_ALEN);
+}
+
+static int
+_ionic_lif_macvlan_add(struct lif *lif, u16 vid, const u8 *addr)
+{
+	struct rx_filter *f;
+	int err;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.rx_filter_add = {
+			.opcode = CMD_OPCODE_RX_FILTER_ADD,
+			.match = RX_FILTER_MATCH_MAC_VLAN,
+			.mac_vlan.vlan = vid,
+		},
+	};
+
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
+	f = ionic_rx_filter_by_vlan_addr(lif, vid, addr);
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	if (f) {
+		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "VLAN%d duplicate", vid);
+		return EINVAL;
+	}
+
+	memcpy(ctx.cmd.rx_filter_add.mac_vlan.addr, addr, ETH_ALEN);
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err) {
+		IONIC_NETDEV_ADDR_ERROR(lif->netdev, addr, "VLAN%d failed to add, err: %d", vid, err);
+		return err;
+	} else {
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "VLAN%d added (filter id %d)",
+				       vid, ctx.comp.rx_filter_add.filter_id);
+	}
+
+	err = ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
+	if (err)
+		IONIC_NETDEV_ADDR_ERROR(lif->netdev, addr, "VLAN%d failed to save filter (filter id %d)",
+					vid, ctx.comp.rx_filter_add.filter_id);
+
+	return (err);
+}
+
+static int
+_ionic_lif_macvlan_del(struct lif *lif, u16 vid, const u8 *addr)
+{
+	struct rx_filter *f;
+	int err;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.rx_filter_del = {
+			.opcode = CMD_OPCODE_RX_FILTER_DEL,
+		},
+	};
+
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
+	f = ionic_rx_filter_by_addr(lif, addr);
+	if (!f) {
+		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "VLAN%d not present", vid);
+		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+		return ENOENT;
+	}
+
+	if (f->filter_id == 0) {
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "VLAN%d invalid filter id", vid);
+		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+		return EINVAL;
+	}
+
+	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
+	ionic_rx_filter_free(lif, f);
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err)
+		IONIC_NETDEV_ADDR_ERROR(lif->netdev, addr, "VLAN%d failed to delete, err: %d", vid, err);
+	else
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "VLAN%d deleted (filter id: %d)",
+				       vid, ctx.cmd.rx_filter_del.filter_id);
+
+	return err;
+}
+
+static void
+ionic_lif_macvlan_work(struct work_struct *work)
+{
+	struct lif_addr_work *w = container_of(work, struct lif_addr_work, work);
+
+	IONIC_NETDEV_ADDR_INFO(w->lif->netdev, w->addr, "VLAN%d Work start: rx_filter %s Work: %p",
+			   w->vid, w->add ? "add" : "del", w);
+	IONIC_LIF_LOCK(w->lif);
+	if (w->add)
+		_ionic_lif_macvlan_add(w->lif, w->vid, w->addr);
+	else
+		_ionic_lif_macvlan_del(w->lif, w->vid, w->addr);
+	IONIC_LIF_UNLOCK(w->lif);
+
+	free(w, M_IONIC);
+}
+
+static int
+ionic_lif_macvlan(struct lif *lif, u16 vid, const u8 *addr, bool add)
+{
+	struct lif_addr_work *work;
+
+	work = malloc(sizeof(*work), M_IONIC, M_NOWAIT | M_ZERO);
+	if (!work) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate memory for address work.\n");
+		return ENOMEM;
+	}
+
+	INIT_WORK(&work->work, ionic_lif_macvlan_work);
+	work->lif = lif;
+	work->vid = vid;
+	memcpy(work->addr, addr, ETH_ALEN);
+	work->add = add;
+	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "VLAN%d deferred: rx_filter %s ADDR Work: %p",
+			       vid, add ? "add" : "del", work);
+	queue_work(lif->adminq_wq, &work->work);
+
+	return 0;
+}
+
+static int
+ionic_macvlan_add(struct ifnet *ifp, u16 vid, const u8 *addr)
+{
+	struct lif *lif = if_getsoftc(ifp);
+
+	return ionic_lif_macvlan(lif, vid, addr, true);
+}
+
+static int
+ionic_macvlan_del(struct ifnet *ifp, u16 vid, const u8 *addr)
+{
+	struct lif *lif = if_getsoftc(ifp);
+
+	return ionic_lif_macvlan(lif, vid, addr, false);
+}
+
+/*
+ * MAC Filter
+ */
+
 static int
 _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 {
@@ -556,15 +710,17 @@ _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 
 	memcpy(ctx.cmd.rx_filter_add.mac.addr, addr, ETH_ALEN);
 	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err)
-		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to add, err: %d", err);
-	else		
+	if (err) {
+		IONIC_NETDEV_ADDR_ERROR(lif->netdev, addr, "failed to add, err: %d", err);
+		return err;
+	} else {
 		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "added (filter id %d)",
 					ctx.comp.rx_filter_add.filter_id);
+	}
 
 	err = ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 	if (err)
-		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to save filter (filter id %d)",
+		IONIC_NETDEV_ADDR_ERROR(lif->netdev, addr, "failed to save filter (filter id %d)",
 					ctx.comp.rx_filter_add.filter_id);
 
 	return (err);
@@ -602,7 +758,7 @@ _ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
-		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to delete), err: %d", err);
+		IONIC_NETDEV_ADDR_ERROR(lif->netdev, addr, "failed to delete), err: %d", err);
 	else
 		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "deleted (filter id: %d)",
 					ctx.cmd.rx_filter_del.filter_id);
@@ -656,16 +812,32 @@ static int
 ionic_addr_add(struct ifnet *ifp, const u8 *addr)
 {
 	struct lif *lif = if_getsoftc(ifp);
+	int ret;
 
-	return ionic_lif_addr(lif, addr, true);
+	ret = ionic_lif_addr(lif, addr, true);
+
+	if (ionic_cdp_vlan && is_cdp_mac(addr))
+		(void)ionic_macvlan_add(ifp, ionic_cdp_vlan, addr);
+	if (ionic_lldp_vlan && is_lldp_mac(addr))
+		(void)ionic_macvlan_add(ifp, ionic_lldp_vlan, addr);
+
+	return ret;
 }
 
 static int
 ionic_addr_del(struct ifnet *ifp, const u8 *addr)
 {
 	struct lif *lif = if_getsoftc(ifp);
+	int ret;
 
-	return ionic_lif_addr(lif, addr, false);
+	ret = ionic_lif_addr(lif, addr, false);
+
+	if (ionic_cdp_vlan && is_cdp_mac(addr))
+		(void)ionic_macvlan_del(ifp, ionic_cdp_vlan, addr);
+	if (ionic_lldp_vlan && is_lldp_mac(addr))
+		(void)ionic_macvlan_del(ifp, ionic_lldp_vlan, addr);
+
+	return ret;
 }
 
 /*
@@ -936,6 +1108,7 @@ static int
 _ionic_vlan_add(struct ifnet *ifp, u16 vid)
 {
 	struct lif *lif = if_getsoftc(ifp);
+	struct rx_filter *f;
 	int err;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -946,13 +1119,23 @@ _ionic_vlan_add(struct ifnet *ifp, u16 vid)
 		},
 	};
 
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
+	f = ionic_rx_filter_by_vlan(lif, vid);
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	if (f) {
+		IONIC_NETDEV_DEBUG(lif->netdev, "VLAN%d duplicate", vid);
+		return EINVAL;
+	}
+
 	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err)
+	if (err) {
 		IONIC_NETDEV_ERROR(ifp, "failed to add VLAN%d (filter id: %d), error: %d\n",
 			vid, ctx.comp.rx_filter_add.filter_id, err);
-	else
+		return err;
+	} else {
 		IONIC_NETDEV_INFO(ifp, "added VLAN%d (filter id: %d)\n",
 			vid, ctx.comp.rx_filter_add.filter_id);
+	}
 
 	err = ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 	if (err)
@@ -979,18 +1162,21 @@ _ionic_vlan_del(struct ifnet *ifp, u16 vid)
 	};
 
 
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	f = ionic_rx_filter_by_vlan(lif, vid);
 	if (!f) {
 		IONIC_NETDEV_ERROR(ifp, "No VLAN%d filter found\n", vid);
+		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 		return ENOENT;
 	}
 
 	KASSERT(f->filter_id, ("vlan del, filter id(%d) == 0", f->filter_id));
 	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
 	ionic_rx_filter_free(lif, f);
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err) 
+	if (err)
 		IONIC_NETDEV_ERROR(ifp, "failed to del VLAN%d (id %d), error: %d\n",
 			vid, ctx.cmd.rx_filter_del.filter_id, err);
 	else

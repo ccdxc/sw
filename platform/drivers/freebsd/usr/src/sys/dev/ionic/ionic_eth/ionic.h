@@ -94,15 +94,14 @@ MALLOC_DECLARE(M_IONIC);
 		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
 
 /* Print the MAC address. */
-#ifdef __FreeBSD__
-#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 				\
+#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...)				\
 		IONIC_NETDEV_INFO(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
-#define IONIC_NETDEV_ADDR_DEBUG(dev, addr, fmt, ...) 				\
+#define IONIC_NETDEV_ADDR_DEBUG(dev, addr, fmt, ...)				\
 		IONIC_NETDEV_DEBUG(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
-#else
-#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 				\
-		IONIC_NETDEV_INFO(dev, fmt " %pM\n", ##__VA_ARGS__, (addr))
-#endif
+#define IONIC_NETDEV_ADDR_WARN(dev, addr, fmt, ...)				\
+		IONIC_NETDEV_WARN(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
+#define IONIC_NETDEV_ADDR_ERROR(dev, addr, fmt, ...)				\
+		IONIC_NETDEV_ERROR(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
 
 /* Netdevice queue related macros. */
 #define IONIC_QUE_DEBUG(q, fmt, ...)						\
