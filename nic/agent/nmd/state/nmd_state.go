@@ -221,7 +221,10 @@ func NewNMD(pipeline Pipeline,
 			log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)
 		}
 
-		BackupNMDDB()
+		err = utils.BackupNMDDB()
+		if err != nil {
+			log.Errorf("Failed to backup nmd.db. Err : %v", err)
+		}
 	}
 
 	var delClient clientAPI.Client
@@ -1375,42 +1378,11 @@ func (n *NMD) PersistDeviceSpec(fwdMode string, featureProfile device.FeaturePro
 		log.Errorf("Failed to write app start conf. Err: %v", err)
 	}
 
-	err = BackupDeviceConfig()
+	err = utils.BackupDeviceConfig()
 	if err != nil {
-		log.Errorf("Failed to backup device config")
+		log.Errorf("Failed to backup device config. Err : %v", err)
 	}
 	return err
-}
-
-// BackupDeviceConfig backs up the device.conf from config0 to config1
-func BackupDeviceConfig() error {
-	return copyFiles(globals.NaplesModeConfigFile, globals.NaplesModeBackupConfigFile)
-}
-
-// BackupNMDDB backs up nmd.db from config0 to config1
-func BackupNMDDB() error {
-	return copyFiles(globals.NmdDBPath, globals.NmdBackupDBPath)
-}
-
-func copyFiles(src, dst string) error {
-	_, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	input, err := ioutil.ReadFile(src)
-	if err != nil {
-		log.Errorf("Failed to read from %v. Err : %v", src, err)
-		return err
-	}
-
-	err = ioutil.WriteFile(dst, input, 0644)
-	if err != nil {
-		log.Errorf("Failed to write to %v. Err : %v", dst, err)
-		return err
-	}
-
-	return nil
 }
 
 // SetTimeZone sets the timezone of Naples

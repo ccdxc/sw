@@ -55,4 +55,7 @@ const (
 var (
 	// NaplesTrustRootsFile is the location of the file containing Venice trust roots on NAPLES
 	NaplesTrustRootsFile = "/sysconfig/config0/clusterTrustRoots.pem"
+
+	// NaplesTrustRootsBackupFile is the location of the file containing backup of the Venice trust roots on NAPLES
+	NaplesTrustRootsBackupFile = "/sysconfig/config1/clusterTrustRoots.pem"
 )

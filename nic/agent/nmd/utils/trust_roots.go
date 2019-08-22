@@ -15,6 +15,11 @@ import (
 // during the last succesful admission
 func GetNaplesTrustRoots() ([]*x509.Certificate, error) {
 	_, err := os.Stat(globals.NaplesTrustRootsFile)
+	if os.IsNotExist(err) {
+		// If a clusterTrustRoots.pem is not found in /sysconfig/config0 try to restrore it from /sysconfig/config1
+		err = CheckAndRestoreTrustCerts()
+	}
+
 	switch {
 	case err == nil:
 		// trust roots file is present and opened successfully, validate signature
@@ -34,10 +39,20 @@ func GetNaplesTrustRoots() ([]*x509.Certificate, error) {
 
 // ClearNaplesTrustRoots removes persistified trust roots from NAPLES
 func ClearNaplesTrustRoots() error {
-	return os.RemoveAll(globals.NaplesTrustRootsFile)
+	err := os.RemoveAll(globals.NaplesTrustRootsFile)
+	if err != nil {
+		return nil
+	}
+
+	return os.RemoveAll(globals.NaplesTrustRootsBackupFile)
 }
 
 // StoreTrustRoots updates persistified trust roots on NAPLES
 func StoreTrustRoots(trustRoots []*x509.Certificate) error {
-	return certs.SaveCertificates(globals.NaplesTrustRootsFile, trustRoots)
+	err := certs.SaveCertificates(globals.NaplesTrustRootsFile, trustRoots)
+	if err != nil {
+		return err
+	}
+
+	return BackupTrustCerts()
 }
