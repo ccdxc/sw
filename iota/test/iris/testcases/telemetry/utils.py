@@ -99,10 +99,10 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
                                    "ping -c1 %s -I %s" % (destination_ip, collector_w.interface))
     if feature == 'mirror':
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
-                               "tcpdump -nni %s ip proto gre" % (collector_w.interface), background=True)
+                               "tcpdump -c 10 -nni %s ip proto gre" % (collector_w.interface), background=True)
     elif feature == 'flowmon':
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
-                               "tcpdump -nni %s udp and dst port 2055" % (collector_w.interface), background=True)
+                               "tcpdump -c 10 -nni %s udp and dst port 2055" % (collector_w.interface), background=True)
 
     cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
     api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
