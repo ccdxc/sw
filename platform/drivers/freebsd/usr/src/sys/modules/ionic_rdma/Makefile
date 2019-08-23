@@ -19,7 +19,6 @@ CFLAGS+= -I${.CURDIR}/../../dev/ionic/ionic_eth
 CFLAGS+= -DCONFIG_INFINIBAND_USER_MEM
 CFLAGS+= -DINET -DINET6
 #CFLAGS+= -DVIMAGE
-CFLAGS+= -DFREEBSD -DHAPS
 
 .include <bsd.kmod.mk>
 

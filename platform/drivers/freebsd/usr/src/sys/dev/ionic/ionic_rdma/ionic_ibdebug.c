@@ -39,6 +39,14 @@
 static SYSCTL_NODE(_hw, OID_AUTO, ionic_rdma, CTLFLAG_RD, 0,
                    "Pensando RDMA parameters");
 
+bool ionic_dyndbg_enable = false;
+SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dyndbg_enable, CTLFLAG_RWTUN,
+    &ionic_dyndbg_enable, 0, "Print to dmesg for dev_dbg, et al");
+
+bool ionic_dbgfs_enable = true;
+SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dbgfs_enable, CTLFLAG_RDTUN,
+    &ionic_dbgfs_enable, 0, "Expose resource info in debug sysctls");
+
 int ionic_sqcmb_order = 5; /* 32 pages */
 SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, sqcmb_order, CTLFLAG_RWTUN,
     &ionic_sqcmb_order, 0, "Only alloc SQ in CMB if less than order");
@@ -50,6 +58,61 @@ SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, sqcmb_inline, CTLFLAG_RWTUN,
 int ionic_rqcmb_order = 5; /* 32 pages */
 SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, rqcmb_order, CTLFLAG_RWTUN,
     &ionic_rqcmb_order, 0, "Only alloc RQ in CMB if less than order");
+
+u16 ionic_aq_depth = 63;
+SYSCTL_U16(_hw_ionic_rdma, OID_AUTO, aq_depth, CTLFLAG_RDTUN,
+    &ionic_aq_depth, 0, "Min depth for admin queues");
+
+int ionic_aq_count = 4;
+SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, aq_count, CTLFLAG_RDTUN,
+    &ionic_aq_count, 0, "Limit number of admin queues created");
+
+u16 ionic_eq_depth = 511;
+SYSCTL_U16(_hw_ionic_rdma, OID_AUTO, eq_depth, CTLFLAG_RDTUN,
+    &ionic_eq_depth, 0, "Min depth for event queues");
+
+u16 ionic_eq_isr_budget = 10;
+SYSCTL_U16(_hw_ionic_rdma, OID_AUTO, eq_isr_budget, CTLFLAG_RWTUN,
+    &ionic_eq_isr_budget, 0, "Max events to poll per round in isr context");
+
+u16 ionic_eq_work_budget = 1000;
+SYSCTL_U16(_hw_ionic_rdma, OID_AUTO, eq_work_budget, CTLFLAG_RWTUN,
+    &ionic_eq_work_budget, 0, "Max events to poll per round in work context");
+
+int ionic_max_pd = 1024;
+SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, max_pd, CTLFLAG_RDTUN,
+    &ionic_max_pd, 0, "Max number of PDs");
+
+static bool ionic_nosupport = false;
+SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, nosupport,
+    CTLFLAG_RWTUN | CTLFLAG_SKIP,
+    &ionic_nosupport, 0, "Enable unsupported config values");
+
+static int ionic_spec_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	int *spec = oidp->oid_arg1;
+	int tmp, error;
+
+	error = SYSCTL_OUT(req, spec, sizeof(*spec));
+	if (error || !req->newptr)
+		return (error);
+
+	error = SYSCTL_IN(req, &tmp, sizeof(tmp));
+	if (error)
+		return (error);
+	if (tmp != 8 && tmp != 16 && !ionic_nosupport) {
+		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n", tmp);
+		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
+		tmp = 8;
+	}
+
+	*spec = tmp;
+
+	return (0);
+}
+int ionic_spec = 8;
+SYSCTL_PROC(_hw_ionic_rdma, OID_AUTO, spec, CTLFLAG_RWTUN | CTLTYPE_INT,
+    &ionic_spec, 0, ionic_spec_sysctl, "I", "Max SGEs for speculation");
 
 static struct sysctl_oid *ionic_node(struct sysctl_ctx_list *ctx,
 				     struct sysctl_oid_list *parent,

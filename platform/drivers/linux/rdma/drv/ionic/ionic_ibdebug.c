@@ -10,6 +10,10 @@
 #include "ionic_ibdebug.h"
 #include "ionic_ibdev.h"
 
+bool ionic_dbgfs_enable = true;
+module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
+MODULE_PARM_DESC(dbgfs, "Enable debugfs for this driver.");
+
 int ionic_sqcmb_order = 5; /* 32 pages */
 module_param_named(sqcmb_order, ionic_sqcmb_order, int, 0644);
 MODULE_PARM_DESC(sqcmb_order, "Only alloc sq cmb less than order.");
@@ -21,6 +25,60 @@ MODULE_PARM_DESC(sqcmb_inline, "Only alloc sq cmb for inline data capability.");
 int ionic_rqcmb_order = 5; /* 32 pages */
 module_param_named(rqcmb_order, ionic_rqcmb_order, int, 0644);
 MODULE_PARM_DESC(rqcmb_order, "Only alloc rq cmb less than order.");
+
+u16 ionic_aq_depth = 63;
+module_param_named(aq_depth, ionic_aq_depth, ushort, 0444);
+MODULE_PARM_DESC(aq_depth, "Min depth for admin queues.");
+
+int ionic_aq_count = 4;
+module_param_named(ionic_rdma_aq_count, ionic_aq_count, int, 0644);
+MODULE_PARM_DESC(ionic_rdma_aq_count, "Limit number of admin queues created.");
+
+u16 ionic_eq_depth = 511;
+module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
+MODULE_PARM_DESC(eq_depth, "Min depth for event queues.");
+
+u16 ionic_eq_isr_budget = 10;
+module_param_named(isr_budget, ionic_eq_isr_budget, ushort, 0644);
+MODULE_PARM_DESC(isr_budget, "Max events to poll per round in isr context.");
+
+u16 ionic_eq_work_budget = 1000;
+module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
+MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
+
+int ionic_max_pd = 1024;
+module_param_named(max_pd, ionic_max_pd, int, 0444);
+MODULE_PARM_DESC(max_pd, "Max number of PDs.");
+
+static bool ionic_nosupport = false;
+module_param_named(nosupport, ionic_nosupport, bool, 0644);
+MODULE_PARM_DESC(nosupport, "Enable unsupported config values");
+
+static int ionic_set_spec(const char *val, const struct kernel_param *kp)
+{
+	int rc, tmp;
+
+	rc = kstrtoint(val, 0, &tmp);
+	if (rc)
+		return rc;
+
+	if (tmp != 8 && tmp != 16 && !ionic_nosupport) {
+		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n", tmp);
+		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
+		tmp = 8;
+	}
+
+	*(int *)kp->arg = tmp;
+
+	return 0;
+}
+static const struct kernel_param_ops ionic_spec_ops = {
+	.set = ionic_set_spec,
+	.get = param_get_int,
+};
+int ionic_spec = 8;
+module_param_cb(spec, &ionic_spec_ops, &ionic_spec, 0644);
+MODULE_PARM_DESC(spec, "Max SGEs for speculation.");
 
 static void ionic_umem_show(struct seq_file *s, const char *w,
 			    struct ib_umem *umem)

@@ -85,62 +85,7 @@ MODULE_PARM_DESC(ionic_rdma_xxx_aq_dbell, "XXX Enable ringing aq doorbell (to te
 static bool ionic_xxx_qp_dbell = true;
 module_param_named(ionic_rdma_xxx_qp_dbell, ionic_xxx_qp_dbell, bool, 0644);
 MODULE_PARM_DESC(ionic_rdma_xxx_qp_dbell, "XXX Enable ringing qp doorbell (to test handling of dev failure).");
-static int ionic_xxx_qid_skip = 512;
-module_param_named(ionic_rdma_xxx_qid_skip, ionic_xxx_qid_skip, int, 0444);
-MODULE_PARM_DESC(ionic_rdma_xxx_qid_skip, "XXX Skip every N'th qid");
-static bool ionic_xxx_nosupport = false;
-module_param_named(ionic_rdma_xxx_nosupport, ionic_xxx_nosupport, bool, 0644);
-MODULE_PARM_DESC(ionic_rdma_xxx_nosupport, "XXX Enable unsupported features");
 /* XXX remove above section for release */
-
-bool ionic_dyndbg_enable;
-module_param_named(ionic_rdma_dyndbg_enable, ionic_dyndbg_enable, bool, 0644);
-MODULE_PARM_DESC(ionic_rdma_dyndbg_enable, "Print to dmesg for dev_dbg, et al.");
-
-static bool ionic_dbgfs_enable = true; /* XXX false for release */
-module_param_named(ionic_rdma_dbgfs_enable, ionic_dbgfs_enable, bool, 0444);
-MODULE_PARM_DESC(ionic_rdma_dbgfs_enable, "Expose resource info in debugfs.");
-
-static int ionic_spec = 8;
-module_param_named(ionic_rdma_spec, ionic_spec, int, 0644);
-MODULE_PARM_DESC(ionic_rdma_spec, "Max SGEs for speculation.");
-
-/* XXX linuxkpi doesn't have module_param_cb.
- *
- * Instead, validate ionic_spec just prior to use.
- */
-static void ionic_validate_spec(void) {
-	if (ionic_spec != 8 && ionic_spec != 16 && !ionic_xxx_nosupport) {
-		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n",
-			ionic_spec);
-		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
-		ionic_spec = 8;
-	}
-}
-
-static u16 ionic_aq_depth = 0x3f;
-module_param_named(ionic_rdma_aq_depth, ionic_aq_depth, ushort, 0444);
-MODULE_PARM_DESC(ionic_rdma_aq_depth, "Min depth for admin queues.");
-
-static int ionic_aq_count = 0;
-module_param_named(ionic_rdma_aq_count, ionic_aq_count, int, 0644);
-MODULE_PARM_DESC(ionic_rdma_aq_count, "Limit number of admin queues created.");
-
-static u16 ionic_eq_depth = 0x1ff;
-module_param_named(ionic_rdma_eq_depth, ionic_eq_depth, ushort, 0444);
-MODULE_PARM_DESC(ionic_rdma_eq_depth, "Min depth for event queues.");
-
-static u16 ionic_eq_isr_budget = 10;
-module_param_named(ionic_rdma_isr_budget, ionic_eq_isr_budget, ushort, 0644);
-MODULE_PARM_DESC(ionic_rdma_isr_budget, "Max events to poll per round in isr context.");
-
-static u16 ionic_eq_work_budget = 1000;
-module_param_named(ionic_rdma_work_budget, ionic_eq_work_budget, ushort, 0644);
-MODULE_PARM_DESC(ionic_rdma_work_budget, "Max events to poll per round in work context.");
-
-static int ionic_max_pd = 1024;
-module_param_named(ionic_rdma_max_pd, ionic_max_pd, int, 0444);
-MODULE_PARM_DESC(ionic_rdma_max_pd, "Max number of PDs.");
 
 /* work queue for handling network events, managing ib devices */
 static struct workqueue_struct *ionic_dev_workq;
@@ -169,13 +114,14 @@ static void contig_kfree(void *ptr, size_t size)
 		contigfree(ptr, size, M_KMALLOC);
 }
 
-static void ionic_xxx_resid_skip(struct resid_bits *bits)
+static int ionic_qid_skip = 512;
+static void ionic_resid_skip(struct resid_bits *bits)
 {
-	int i = ionic_xxx_qid_skip - 1;
+	int i = ionic_qid_skip - 1;
 
 	while (i < bits->inuse_size) {
 		set_bit(i, bits->inuse);
-		i += ionic_xxx_qid_skip;
+		i += ionic_qid_skip;
 	}
 }
 
@@ -1021,8 +967,7 @@ void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 {
 	int aq_idx;
 
-	/* TODO: Round-robin? Or per-core? */
-	aq_idx = atomic_inc_return(&dev->aq_index) % dev->aq_count;
+	aq_idx = curcpu % dev->aq_count;
 	ionic_admin_post_aq(dev->aq_vec[aq_idx], wr);
 }
 
@@ -1595,7 +1540,6 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	resp.cq_qtype = dev->cq_qtype;
 	resp.admin_qtype = dev->aq_qtype;
 	resp.max_stride = dev->max_stride;
-	ionic_validate_spec();
 	resp.max_spec = ionic_spec;
 
 	rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
@@ -4149,7 +4093,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	unsigned long irqflags;
 	int rc;
 
-	ionic_validate_spec();
 	if (!ctx) {
 		req.sq_spec = ionic_spec;
 		req.rq_spec = ionic_spec;
@@ -5580,7 +5523,6 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	unsigned long irqflags;
 	int rc;
 
-	ionic_validate_spec();
 	if (!ctx) {
 		req.rq_spec = ionic_spec;
 		rc = ionic_validate_udata(udata, 0, 0);
@@ -6411,7 +6353,6 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 	INIT_WORK(&dev->reset_work, ionic_reset_work);
 	INIT_DELAYED_WORK(&dev->admin_dwork, ionic_admin_dwork);
 	spin_lock_init(&dev->dev_lock);
-	atomic_set(&dev->aq_index, 0);
 	dev->admin_state = IONIC_ADMIN_KILLED;
 
 	INIT_LIST_HEAD(&dev->qp_list);
@@ -6465,7 +6406,7 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		goto out;
 	}
 
-	/* For now, create one CQ per AQ. TODO: Is it better to share? */
+	/* Create one CQ per AQ */
 	for (; aq_i < dev->aq_count; ++aq_i) {
 		cq = ionic_create_rdma_admincq(dev, aq_i % eq_i);
 		if (IS_ERR(cq)) {
@@ -6788,9 +6729,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (rc)
 		goto err_qpid;
 
-	if (ionic_xxx_qid_skip > 0) {
-		ionic_xxx_resid_skip(&dev->inuse_qpid);
-		ionic_xxx_resid_skip(&dev->inuse_cqid);
+	if (ionic_qid_skip > 0) {
+		ionic_resid_skip(&dev->inuse_qpid);
+		ionic_resid_skip(&dev->inuse_cqid);
 	}
 
 	/* skip reserved SMI and GSI qpids */
@@ -6929,7 +6870,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->ibdev.get_port_immutable	= ionic_get_port_immutable;
 	dev->ibdev.get_dev_fw_str	= ionic_get_dev_fw_str;
 
-	/* XXX FreeBSD ib_register_device does not set ibdev->dma_device */
 	ibdev->dma_device = ibdev->dev.parent;
 
 	rc = ib_register_device(ibdev, NULL);
@@ -7174,8 +7114,6 @@ static int __init ionic_mod_init(void)
 
 	pr_info("%s ver %s : %s\n",
 		DRIVER_NAME, DRIVER_VERSION, DRIVER_DESCRIPTION);
-
-	ionic_validate_spec();
 
 	ionic_dev_workq = create_singlethread_workqueue(DRIVER_NAME "-dev");
 	if (!ionic_dev_workq) {

@@ -513,4 +513,11 @@ static inline void xa_destroy(struct xarray *xa)
  */
 int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
 
+#ifdef HAVE_RDMA_DRIVER_ID
+#include <rdma/rdma_user_ioctl_cmds.h>
+enum {
+	RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 1,
+};
+#endif
+
 #endif /* IONIC_KCOMPAT */

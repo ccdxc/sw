@@ -64,67 +64,7 @@ MODULE_PARM_DESC(xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling
 static bool ionic_xxx_qp_dbell = true;
 module_param_named(xxx_qp_dbell, ionic_xxx_qp_dbell, bool, 0644);
 MODULE_PARM_DESC(xxx_qp_dbell, "XXX Enable ringing qp doorbell (to test handling of dev failure).");
-static int ionic_xxx_qid_skip = 512;
-module_param_named(xxx_qid_skip, ionic_xxx_qid_skip, int, 0444);
-MODULE_PARM_DESC(xxx_qid_skip, "XXX Skip every N'th qid");
-static bool ionic_xxx_nosupport = false;
-module_param_named(xxx_nosupport, ionic_xxx_nosupport, bool, 0644);
-MODULE_PARM_DESC(xxx_nosupport, "XXX Enable unsupported features");
 /* XXX remove above section for release */
-
-static bool ionic_dbgfs_enable = true; /* XXX false for release */
-module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
-MODULE_PARM_DESC(dbgfs, "Enable debugfs for this driver.");
-
-static int ionic_set_spec(const char *val, const struct kernel_param *kp)
-{
-	int rc, tmp;
-
-	rc = kstrtoint(val, 0, &tmp);
-	if (rc)
-		return rc;
-
-	if (tmp != 8 && tmp != 16 && !ionic_xxx_nosupport) {
-		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n", tmp);
-		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
-		tmp = 8;
-	}
-
-	*(int *)kp->arg = tmp;
-
-	return 0;
-}
-static const struct kernel_param_ops ionic_spec_ops = {
-	.set = ionic_set_spec,
-	.get = param_get_int,
-};
-static int ionic_spec = 8;
-module_param_cb(spec, &ionic_spec_ops, &ionic_spec, 0644);
-MODULE_PARM_DESC(spec, "Max SGEs for speculation.");
-
-static u16 ionic_aq_depth = 0x3f;
-module_param_named(aq_depth, ionic_aq_depth, ushort, 0444);
-MODULE_PARM_DESC(aq_depth, "Min depth for admin queues.");
-
-static int ionic_aq_count = 0;
-module_param_named(ionic_rdma_aq_count, ionic_aq_count, int, 0644);
-MODULE_PARM_DESC(ionic_rdma_aq_count, "Limit number of admin queues created.");
-
-static u16 ionic_eq_depth = 0x1ff;
-module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
-MODULE_PARM_DESC(eq_depth, "Min depth for event queues.");
-
-static u16 ionic_eq_isr_budget = 10;
-module_param_named(isr_budget, ionic_eq_isr_budget, ushort, 0644);
-MODULE_PARM_DESC(isr_budget, "Max events to poll per round in isr context.");
-
-static u16 ionic_eq_work_budget = 1000;
-module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
-MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
-
-static int ionic_max_pd = 1024;
-module_param_named(max_pd, ionic_max_pd, int, 0444);
-MODULE_PARM_DESC(max_pd, "Max number of PDs.");
 
 /* work queue for handling network events, managing ib devices */
 static struct workqueue_struct *ionic_dev_workq;
@@ -135,13 +75,14 @@ static struct workqueue_struct *ionic_evt_workq;
 /* access single-threaded thru ionic_dev_workq */
 static LIST_HEAD(ionic_ibdev_list);
 
-static void ionic_xxx_resid_skip(struct resid_bits *bits)
+static int ionic_qid_skip = 512;
+static void ionic_resid_skip(struct resid_bits *bits)
 {
-	int i = ionic_xxx_qid_skip - 1;
+	int i = ionic_qid_skip - 1;
 
 	while (i < bits->inuse_size) {
 		set_bit(i, bits->inuse);
-		i += ionic_xxx_qid_skip;
+		i += ionic_qid_skip;
 	}
 }
 
@@ -1005,8 +946,7 @@ void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 {
 	int aq_idx;
 
-	/* TODO: Round-robin? Or per-core? */
-	aq_idx = atomic_inc_return(&dev->aq_index) % dev->aq_count;
+	aq_idx = raw_smp_processor_id() % dev->aq_count;
 	ionic_admin_post_aq(dev->aq_vec[aq_idx], wr);
 }
 
@@ -6760,7 +6700,6 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 	INIT_WORK(&dev->reset_work, ionic_reset_work);
 	INIT_DELAYED_WORK(&dev->admin_dwork, ionic_admin_dwork);
 	spin_lock_init(&dev->dev_lock);
-	atomic_set(&dev->aq_index, 0);
 	dev->admin_state = IONIC_ADMIN_KILLED;
 
 	INIT_LIST_HEAD(&dev->qp_list);
@@ -6814,7 +6753,7 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		goto out;
 	}
 
-	/* For now, create one CQ per AQ. TODO: Is it better to share? */
+	/* Create one CQ per AQ */
 	for (; aq_i < dev->aq_count; ++aq_i) {
 		cq = ionic_create_rdma_admincq(dev, aq_i % eq_i);
 		if (IS_ERR(cq)) {
@@ -7228,9 +7167,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (rc)
 		goto err_qpid;
 
-	if (ionic_xxx_qid_skip > 0) {
-		ionic_xxx_resid_skip(&dev->inuse_qpid);
-		ionic_xxx_resid_skip(&dev->inuse_cqid);
+	if (ionic_qid_skip > 0) {
+		ionic_resid_skip(&dev->inuse_qpid);
+		ionic_resid_skip(&dev->inuse_cqid);
 	}
 
 	/* skip reserved SMI and GSI qpids */
@@ -7323,8 +7262,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	rdma_set_device_sysfs_group(ibdev, &ionic_attr_group);
 #endif
 #ifdef HAVE_RDMA_DRIVER_ID
-	/* XXX Yuck. No way to add enum to kernel headers from here. */
-	ibdev->driver_id = RDMA_DRIVER_QIB + 1;
+	ibdev->driver_id = RDMA_DRIVER_IONIC;
 #endif
 #ifdef HAVE_IB_REGISTER_DEVICE_NAME
 #ifdef HAVE_IB_REGISTER_DEVICE_NAME_ONLY

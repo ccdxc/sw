@@ -164,7 +164,6 @@ struct ionic_ibdev {
 	struct delayed_work	admin_dwork;
 	spinlock_t		dev_lock;
 	struct ionic_aq		**aq_vec;
-	atomic_t		aq_index; /* load balancing */
 	int			aq_count;
 
 	enum ionic_admin_state	admin_state;
@@ -525,8 +524,18 @@ int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
 void ionic_ibdev_reset(struct ionic_ibdev *dev);
 
 /* Global config knobs */
+extern bool ionic_dbgfs_enable;
+
 extern int ionic_sqcmb_order;
 extern bool ionic_sqcmb_inline;
 extern int ionic_rqcmb_order;
+
+extern u16 ionic_aq_depth;
+extern int ionic_aq_count;
+extern u16 ionic_eq_depth;
+extern u16 ionic_eq_isr_budget;
+extern u16 ionic_eq_work_budget;
+extern int ionic_max_pd;
+extern int ionic_spec;
 
 #endif /* IONIC_IBDEV_H */
