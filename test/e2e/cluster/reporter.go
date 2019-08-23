@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -47,28 +48,27 @@ func (s *summaryReporter) AfterSuiteDidRun(setupSummary *types.SetupSummary) {}
 
 // SpecSuiteDidEnd callback
 func (s *summaryReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
-	fspec := []string{}
+
+	keys := []string{}
+	for k := range s.spec {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
 	w := new(tabwriter.Writer)
 	// Format in tab-separated columns with a tab stop of 8.
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
-	fmt.Fprintf(w, "\nTest summary: \n")
+	fmt.Fprintf(w, "\n%v%vTest summary:%v \n", "\x1b[32m", "\x1b[1m", "\x1b[0m")
 
-	i := 1
-	for k, s := range s.spec {
-		fmt.Fprintf(w, "%d\t%v\t%v\n", i, k, s)
-		i++
-
-		if s == "FAIL" {
-			fspec = append(fspec, k)
-		}
+	cmap := map[string]string{
+		"PASS": "\x1b[32m",
+		"SKIP": "\x1b[36m",
+		"FAIL": "\x1b[91m",
 	}
 
-	if len(fspec) > 0 {
-		fmt.Fprintf(w, "\nFailed tests:\n")
-		for i, s := range fspec {
-			fmt.Fprintf(w, "%d\t%v\t%v\n", i+1, s, "FAIL")
-		}
+	for i, k := range keys {
+		fmt.Fprintf(w, "%v%d\t%v\t%v%v\n", cmap[s.spec[k]], i+1, k, s.spec[k], "\x1b[0m")
 	}
+
 	w.Flush()
 }
