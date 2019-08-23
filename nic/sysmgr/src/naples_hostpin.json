@@ -8,14 +8,6 @@
         "cpu-affinity": "0x1"
     },
     {
-        "name": "canary1",
-        "command": "/nic/bin/canary /obfl/canary1.log",
-        "dependencies": [],
-        "flags": [],
-        "timeout": 0.0,
-        "cpu-affinity": "0x2"
-    },
-    {
         "name": "canary2",
         "command": "/nic/bin/canary /obfl/canary2.log",
         "dependencies": [],
