@@ -57,6 +57,7 @@
           <div fxLayout="row">
             <app-advanced-search #advancedSearchComponent
                                  [formArray]="fieldFormArray" [cols]="cols"
+                                 [customQueryOptions]="customQueryOptions"
                                  (cancelEmitter)="onCancelSearch($event)"
                                  (searchEmitter)="getSmartNICs()"
                                  kind="SmartNIC"

@@ -17,6 +17,7 @@ import {SearchSearchRequest, SearchSearchRequest_sort_order} from '@sdk/v1/model
 import {ControllerService} from '@app/services/controller.service';
 import {Utility} from '@common/Utility';
 import * as moment from 'moment';
+import { IFieldsRequirement } from '@sdk/v1/models/generated/monitoring';
 
 /**
  * Advanced Search Component
@@ -39,6 +40,18 @@ import * as moment from 'moment';
  * TODO:
  * Handle form validation by using customValueOnBlur.
  */
+
+export interface LocalSearchRequest {
+  query: Array<IFieldsRequirement>;
+  sortBy: string;
+  sortOrder: SearchSearchRequest_sort_order;
+}
+
+export interface LocalSearchResult {
+  searchRes: Array<string>;
+  err: boolean;
+}
+
 @Component({
   selector: 'app-advanced-search',
   templateUrl: './advanced-search.component.html',
@@ -46,6 +59,7 @@ import * as moment from 'moment';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None,
 })
+
 export class AdvancedSearchComponent implements OnInit {
   @ViewChild('fieldRepeater') fieldRepeater: RepeaterComponent;
   @Input() formArray = new FormArray([]);
@@ -55,11 +69,13 @@ export class AdvancedSearchComponent implements OnInit {
   @Input() keytextFormName: string = 'keytextFormName';
   @Input() cols: TableCol[] = [];
   @Input() kind: string;
+  @Input() customQueryOptions: RepeaterData[] = [];
 
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
   @Output() searchEmitter: EventEmitter<any> = new EventEmitter();
   @Output() cancelEmitter: EventEmitter<any> = new EventEmitter();
 
+  localSearchFields: {[key: string]: boolean} = {};
   showAdvancedPanel: boolean = false;
   fieldData: RepeaterData[] = [];
   search: string = '';
@@ -94,8 +110,32 @@ export class AdvancedSearchComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.fieldData = SearchUtil.tableColsToRepeaterData(this.cols, this.kind);
+    this.fieldData = this.generateFieldData(this.customQueryOptions);
     this.genValueLabelToFieldMap();
+  }
+
+  /**
+   * This function generates field Data
+   * It applies any custom options given for this field
+   * @param queryArray
+   */
+  generateFieldData(queryArray: RepeaterData[]): RepeaterData[] {
+    const {repeaterData, localFields} = SearchUtil.tableColsToRepeaterData(this.cols, this.kind);
+    queryArray.forEach(obj => {
+      for (let i = 0; i < repeaterData.length; i++) {
+        if (repeaterData[i].key.value === obj.key.value) {
+          repeaterData[i] = obj;
+          if (obj.valueType === ValueType.singleSelect && (obj.key.value in localFields)) {
+            localFields[obj.key.value].singleSelect = true;
+          }
+          return;
+        }
+      }
+    });
+    Object.values(localFields).forEach(f => {
+      this.localSearchFields[f.field] = f.singleSelect;
+    });
+    return repeaterData;
   }
 
   /**
@@ -276,7 +316,7 @@ export class AdvancedSearchComponent implements OnInit {
   }
 
   /**
-   * This is the request builder function for helping parent component sending request
+   * This is the request builder function for helping parent component sending remote request
    * @param field
    * @param order
    * @param kind
@@ -291,7 +331,7 @@ export class AdvancedSearchComponent implements OnInit {
 
     let searchSearchRequest: SearchSearchRequest = new SearchSearchRequest(null, false);
     const model = this.getValues();
-    const texts = this.generalSearch.split(' ').filter(x => x !== '');
+    const texts = SearchUtil.splitString(this.generalSearch);
     if (model !== null && model.length !== 0) {
       const fields = [];
 
@@ -309,12 +349,13 @@ export class AdvancedSearchComponent implements OnInit {
         } else {
           processedValue = [];
         }
-
-        fields.push({
-          key: ele.keyFormControl,
-          operator: ele.operatorFormControl,
-          values: processedValue
-        });
+        if (!(ele.keyFormControl in this.localSearchFields)) {
+          fields.push({
+            key: ele.keyFormControl,
+            operator: ele.operatorFormControl,
+            values: processedValue
+          });
+        }
       });
       const payload = {
         'query': {
@@ -341,7 +382,6 @@ export class AdvancedSearchComponent implements OnInit {
       };
       searchSearchRequest = new SearchSearchRequest(payload, false);  // we don't to fill default values. So set the second parameter as false;
     }
-
     searchSearchRequest.query.kinds = [kind];
     searchSearchRequest['sort-by'] = field;
     searchSearchRequest['sort-order'] = sortOrder;
@@ -349,6 +389,104 @@ export class AdvancedSearchComponent implements OnInit {
     searchSearchRequest['max-results'] = maxRecords;
     searchSearchRequest['aggregate'] = aggregate;
     return searchSearchRequest;
+  }
+
+  /**
+   * This is the request builder function for generating local request query
+   * @param field
+   * @param order
+   * @returns {LocalSearchRequest}
+   */
+  getLocalSearchResult(field, order, searchObject): LocalSearchResult {
+    let sortOrder = SearchSearchRequest_sort_order.ascending;
+    const localQueryFields: Array<IFieldsRequirement> = [];
+    if (order === -1) {
+      sortOrder = SearchSearchRequest_sort_order.descending;
+    }
+    let localSearchRequest: LocalSearchRequest;
+    const model = this.getValues();
+    if (model !== null && model.length !== 0) {
+
+      const instance = SearchUtil.getModelInfo(Utility.findCategoryByKind(this.kind), this.kind);
+      model.forEach(ele => {
+        // all value post process logic goes here
+        let processedValue;
+        if (field !== '') {
+          const type = Utility.getNestedPropInfo(instance, ele.keyFormControl) ? Utility.getNestedPropInfo(instance, ele.keyFormControl).type : '';
+          if (type === 'Date') {
+            processedValue = ele.valueFormControl.map(e => this.formatDate(e));
+          } else {
+            processedValue = ele.valueFormControl.map(e => e);
+          }
+        } else {
+          processedValue = [];
+        }
+        if (ele.keyFormControl in this.localSearchFields) {
+          localQueryFields.push({
+            key: ele.keyFormControl,
+            operator: ele.operatorFormControl,
+            values: processedValue
+          });
+        }
+      });
+      // We may need to add maxRecords and Aggregate later on
+    }
+    localSearchRequest = {
+      query: localQueryFields,
+      sortBy: field,
+      sortOrder: sortOrder
+    };
+    let localSearchResult: LocalSearchResult = {
+      searchRes: null,
+      err: false
+    };
+    if (localSearchRequest.query != null && localSearchRequest.query.length > 0) {
+      localSearchResult = this.localSearch(localSearchRequest, searchObject);
+    }
+    return localSearchResult;
+  }
+
+  /**
+   * Function to perform local search
+   * @param searchReq Local Search Query
+   * @param searchObj Object which is to be queried
+   */
+  localSearch(searchReq: LocalSearchRequest, searchObj: {[key: string]: any}): LocalSearchResult {
+    const res: LocalSearchResult = {
+      searchRes: [],
+      err: false
+    };
+    searchReq.query.forEach(q => {
+      if (!res.err && q.key in searchObj) {
+        if (this.localSearchFields[q.key] && q.values.length !== 1) {
+          res.err = true;
+        } else {
+          let conditionRes: Array<string> = [];
+          q.values.forEach( value => {
+            const val = value.toLowerCase();
+            const valRes = searchObj[q.key][val];
+            conditionRes = conditionRes.length > 0 ? _.union(conditionRes, valRes) : valRes;
+          });
+          res.searchRes = res.searchRes.length > 0 ? _.intersection(res.searchRes, conditionRes) : conditionRes;
+        }
+      }
+    });
+    return res;
+  }
+
+  /**
+   * Generates aggregate of remote and local search results
+   * @param remoteSearchResult
+   * @param localSearchResult
+   */
+  generateAggregateResults(remoteSearchResult, localSearchResult): Array<string> {
+    let searchResult: Array<string> = [];
+    if (localSearchResult != null) {
+      searchResult = _.intersection(remoteSearchResult, localSearchResult);
+    } else {
+      searchResult = remoteSearchResult;
+    }
+    return searchResult;
   }
 
   onKeydown(event) {

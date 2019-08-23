@@ -1,13 +1,12 @@
 export interface NaplesCondition {
     isHealthy: boolean;
-    condition: NaplesConditionValues;
-
+    condition: string;
 }
 
 export enum NaplesConditionValues {
-    HEALTHY = 'Healthy',
-    UNHEALTHY = 'Unhealthy',
-    UNKNOWN = 'Unknown',
+    HEALTHY = 'healthy',
+    UNHEALTHY = 'unhealthy',
+    UNKNOWN = 'unknown',
     EMPTY = '',
 }
 

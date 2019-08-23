@@ -21,6 +21,9 @@ import {MessageService} from '@app/services/message.service';
 import {By} from '@angular/platform-browser';
 import {TestingUtility} from '@common/TestingUtility';
 import { configureTestSuite } from 'ng-bullet';
+import { NaplesConditionValues } from '@app/components/cluster-group/naples';
+import {ValueType} from 'web-app-framework';
+import { SearchUtil } from '@components/search/SearchUtil';
 
 describe('AdvancedSearchComponent', () => {
   let component: AdvancedSearchComponent;
@@ -72,6 +75,36 @@ describe('AdvancedSearchComponent', () => {
     ];
   }
 
+  function setupNaplesSearch(c: AdvancedSearchComponent) {
+    c.cols = [
+      { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true, kind: 'SmartNIC' },
+      { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-id-name', sortable: true, kind: 'SmartNIC' },
+      { field: 'status.smartNicVersion', header: 'Version', class: 'naples-column-version', sortable: true, kind: 'SmartNIC' },
+      { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false, kind: 'SmartNIC' },
+      { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false, kind: 'SmartNIC' },
+      { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true, localSearch: true, kind: 'SmartNIC'},
+      { field: 'status.host', header: 'Host', class: 'naples-column-host', sortable: true, kind: 'SmartNIC'},
+      { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true, kind: 'SmartNIC' },
+      { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true, kind: 'SmartNIC' },
+    ];
+    c.customQueryOptions = [
+      {
+        key: {label: 'Condition', value: 'Condition'},
+        operators: SearchUtil.stringOperators,
+        valueType: ValueType.multiSelect,
+        values: [
+          { label: 'Healthy', value: NaplesConditionValues.HEALTHY },
+          { label: 'Unhealthy', value: NaplesConditionValues.UNHEALTHY },
+          { label: 'Unknown', value: NaplesConditionValues.UNKNOWN },
+          { label: 'Empty', value: NaplesConditionValues.EMPTY },
+        ],
+      }
+    ];
+    c.fieldData = c.generateFieldData(c.customQueryOptions);
+    c.genValueLabelToFieldMap();
+    c.kind = 'SmartNIC';
+  }
+
   beforeEach(() => {
     fixture = TestBed.createComponent(AdvancedSearchComponent);
     tu = new TestingUtility(fixture);
@@ -91,6 +124,25 @@ describe('AdvancedSearchComponent', () => {
     tu.sendClick(toggleBtn);
     expansion = fixture.debugElement.query(By.css('.advanced-search-expansion'));
     expect(expansion).toBeTruthy();
+  });
+
+  it('should generate correct local search query and results', () => {
+    setupNaplesSearch(component);
+    const input = fixture.debugElement.query(By.css('.advanced-search-bar-input'));
+    tu.setText(input, 'Admitted field:Condition=healthy;');
+    const healthy = NaplesConditionValues.HEALTHY;
+    const unhealthy = NaplesConditionValues.UNHEALTHY;
+    const searchObj = {
+      'status.conditions': {
+        healthy: ['00ae.cd00.1142'],
+        unhealthy: ['00ae.cd00.1146']
+      }};
+    const remReq = component.getSearchRequest('meta.mod-time', -1, 'SmartNIC');
+    const locRes = component.getLocalSearchResult('meta.mod-time', -1, searchObj);
+    expect(remReq.query.texts[0].text).toEqual(['"Admitted"']);
+    expect(remReq.query.fields.requirements.length).toBe(0);
+    expect(locRes.err).toEqual(false);
+    expect(locRes.searchRes).toEqual(['00ae.cd00.1142']);
   });
 
   it('should build field fields without disableSearch', () => {
@@ -161,7 +213,7 @@ describe('AdvancedSearchComponent', () => {
     const input = fixture.debugElement.query(By.css('.advanced-search-bar-input'));
     tu.setText(input, 'hello field:Who=dsadsa; world field:Act On (kind)=1,2; test');
     const req = component.getSearchRequest('', -1, 'AuditEvent');
-    expect(req.query.texts[0].text).toEqual(['hello', 'world', 'test']);
+    expect(req.query.texts[0].text).toEqual(['"hello"', '"world"', '"test"']);
 
     const toggleBtn = fixture.debugElement.query(By.css('.advanced-search-bar-button-toggle'));
     tu.sendClick(toggleBtn);

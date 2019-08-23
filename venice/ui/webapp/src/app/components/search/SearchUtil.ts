@@ -15,6 +15,15 @@ import {RepeaterData, RepeaterItem, ValueType} from 'web-app-framework';
 import {AdvancedSearchExpression} from '@components/shared/advanced-search';
 import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';
 
+export interface LocalFields {
+  field: string;
+  singleSelect: boolean;
+}
+
+interface SearchCols {
+  repeaterData: RepeaterData[];
+  localFields: {[key: string]: LocalFields};
+}
 export class SearchUtil {
   public static LAST_SEARCH_DATA = 'last_search_data';
   public static SEARCH_MAX_RESULT: number = 500;
@@ -230,8 +239,9 @@ export class SearchUtil {
     if (value == null) {
       return value;
     }
+
     let inputstr = value.trim();
-    if (inputstr.indexOf(':') >= 0) {
+    if (inputstr.indexOf(':') >= 0 || inputstr.indexOf('/') >= 0) {
       inputstr = encodeURIComponent(inputstr);
     }
     return inputstr;
@@ -834,13 +844,21 @@ export class SearchUtil {
   }
 
   // Specifying a kind in the tableCol data takes precedence, but if its null it defaults to the kind passed into the function.
-  public static tableColsToRepeaterData(cols: TableCol[], kind?: string): RepeaterData[] {
-    const res: RepeaterData[] = [];
-
+  public static tableColsToRepeaterData(cols: TableCol[], kind?: string): SearchCols {
+    const searchData: SearchCols = {
+      repeaterData: [],
+      localFields: {}
+    };
     cols.forEach(ele => {
       // if user dont allow search, we dont build it in the RepeaterData aray
       if (ele.disableSearch) {
         return;
+      }
+      if (ele.localSearch) {
+        searchData.localFields[ele.header] = {
+          field: ele.field,
+          singleSelect: false
+        };
       }
 
       let kindTemp: string;
@@ -856,13 +874,13 @@ export class SearchUtil {
       // dynamic detect op
       const op = SearchUtil.getOperators(kindTemp, ele.field.split('.'));
 
-      res.push({
+      searchData.repeaterData.push({
         key: {label: ele.header, value: ele.header},
         operators: op,
         valueType: ValueType.inputField
       });
     });
-    return res;
+    return searchData;
   }
 
   public static  parseToExpressionAdvancedSearch(inputString: string): SearchExpression {
@@ -993,6 +1011,27 @@ export class SearchUtil {
     return SearchUtil.buildSearchFieldsLabelsPayloadHelper(obj, false);
   }
 
+  /**
+   * Splits search text
+   * @param str string to split
+   */
+  public static splitString(str: string): string[] {
+    const arr = [], newArr = [];
+    str.split('"').forEach( (substr, i) => {
+      if (substr !== '') {
+        if (i % 2 === 0) {
+          arr.push(...substr.split(' ').filter(x => x !== ''));
+        } else {
+          arr.push(substr);
+        }
+      }
+    });
+    arr.forEach( text => {
+      newArr.push('"' + text + '"');
+    });
+    return newArr;
+  }
+
     /**
    * Build payload for text Search REST-API.
    * @param searched
@@ -1000,6 +1039,22 @@ export class SearchUtil {
   public static buildTextSearchPayload(searched: string) {
     // encode special characters like MAC string 0242.c0a8.1c02
     const texts = (typeof searched === 'string') ? [SearchUtil.searchEncodeText(searched)] : SearchUtil.searchEncodeText(searched);
+    // const texts = (typeof searched === 'string') ? SearchUtil.splitString(searched) : SearchUtil.searchEncodeText(searched);
+    // TODO: Need to add a fix for separating string by [", comma, space] in a sequence
+    /*
+    for query search:
+    'abc, "abc, pqr" efg uvw' =>
+    'query': {
+      'texts': [
+        {
+          'text': ["abc"]
+        },
+        {
+          'text': [""abc, pqr"","efg","uvw"]
+        }
+      ]
+    }
+    */
     return {
       'max-results': SearchUtil.SEARCH_MAX_RESULT,
       'query': {

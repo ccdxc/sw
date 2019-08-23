@@ -1632,22 +1632,22 @@ export class Utility {
 
   public static getNaplesConditionObject(naples: Readonly<ClusterSmartNIC>): NaplesCondition {
     if (!naples || naples.status['admission-phase'] !== ClusterSmartNICStatus_admission_phase.admitted) {
-      return { isHealthy: false, condition: NaplesConditionValues.EMPTY };
+      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.EMPTY)};
     } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
-      return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
+      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
     } else {
       for (const cond of naples.status.conditions) {
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.false)) {
-          return { isHealthy: false, condition: NaplesConditionValues.UNHEALTHY };
+          return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNHEALTHY) };
         }
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.true)) {
-          return { isHealthy: true, condition: NaplesConditionValues.HEALTHY };
+          return { isHealthy: true, condition: _.upperFirst(NaplesConditionValues.HEALTHY) };
         }
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.unknown)) {
-          return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
+          return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
         }
       }
-      return { isHealthy: false, condition: NaplesConditionValues.UNKNOWN };
+      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
     }
   }
 
@@ -1655,7 +1655,7 @@ export class Utility {
     return this.getNaplesConditionObject(naples).isHealthy;
   }
 
-  public static getNaplesCondition(naples: Readonly<ClusterSmartNIC>): NaplesConditionValues {
+  public static getNaplesCondition(naples: Readonly<ClusterSmartNIC>): string {
     return this.getNaplesConditionObject(naples).condition;
   }
 

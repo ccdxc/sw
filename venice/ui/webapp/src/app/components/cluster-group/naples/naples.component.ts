@@ -20,6 +20,9 @@ import { FormArray } from '@angular/forms';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { SearchService } from '@app/services/generated/search.service';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
+import { RepeaterData, ValueType} from 'web-app-framework';
+import { SearchUtil } from '@components/search/SearchUtil';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'app-naples',
@@ -51,6 +54,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
   naplesMap: { [napleName: string]: ClusterSmartNIC };
+  searchObject: { [field: string]: any} = {};
+  conditionNaplesMap: { [condition: string]: Array<string> };
 
   fieldFormArray = new FormArray([]);
   maxRecords: number = 8000;
@@ -61,7 +66,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     { field: 'status.smartNicVersion', header: 'Version', class: 'naples-column-version', sortable: true },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
     { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
-    { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true},
+    { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true, localSearch: true},
     { field: 'status.host', header: 'Host', class: 'naples-column-host', sortable: true},
     { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true },
@@ -115,6 +120,10 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   telemetryKind: string = 'SmartNIC';
 
+  customQueryOptions: RepeaterData[];
+
+  cancelSearch: boolean = false;
+
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
@@ -127,7 +136,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   ngOnInit() {
     this.getNaples();
     this.getMetrics();
-
+    this.provideCustomOptions();
     this.controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [{ label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' }]
@@ -148,8 +157,29 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.selectedNaples = updatedSelectedObjects;
   }
 
+  provideCustomOptions() {
+    this.customQueryOptions = [
+      {
+        key: {label: 'Condition', value: 'Condition'},
+        operators: SearchUtil.stringOperators,
+        valueType: ValueType.multiSelect,
+        values: [
+          { label: 'Healthy', value: NaplesConditionValues.HEALTHY },
+          { label: 'Unhealthy', value: NaplesConditionValues.UNHEALTHY },
+          { label: 'Unknown', value: NaplesConditionValues.UNKNOWN },
+          { label: 'Empty', value: NaplesConditionValues.EMPTY },
+        ],
+      }
+    ];
+  }
+
+  /**
+   * Watches Naples data on KV Store and fetch new nic data
+   * Generates column based search object, currently facilitates condition search
+   */
   getNaples() {
     this.naplesMap = {};
+    this.conditionNaplesMap = {};
     this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
     this.filteredNaples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
@@ -158,10 +188,26 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
         this.naplesEventUtility.processEvents(response);
         for (const naple of this.naples) {
           this.naplesMap[naple.meta.name] = naple;
+          // Create search object for condition
+          switch (this.displayCondition(naple).toLowerCase()) {
+            case NaplesConditionValues.HEALTHY:
+                (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] = [])).push(naple.meta.name);
+                break;
+            case NaplesConditionValues.UNHEALTHY:
+                (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] = [])).push(naple.meta.name);
+                break;
+            case NaplesConditionValues.UNKNOWN:
+                (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] || (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] = [])).push(naple.meta.name);
+                break;
+            case '':
+                (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
+                break;
+          }
         }
         if (this.selectedNaples.length > 0) {
           this.updateSelectedNaples();
         }
+        this.searchObject['status.conditions'] = this.conditionNaplesMap;
       },
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
     );
@@ -179,7 +225,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
 
-  displayCondition(data: ClusterSmartNIC): NaplesConditionValues {
+  displayCondition(data: ClusterSmartNIC): string {
     return Utility.getNaplesCondition(data);
   }
 
@@ -355,12 +401,44 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     return null;
   }
 
+  /**
+   * Generates Local and Remote search queries. Later, calls Local and Remote Search Function
+   * @param field Field by which to sort data
+   * @param order Sort order (ascending = 1/descending = -1)
+   */
   getSmartNICs(field = this.naplesTurboTable.sortField,
     order = this.naplesTurboTable.sortOrder) {
-
     const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'SmartNIC', true, this.maxRecords);
+    const localSearchResult = this.advancedSearchComponent.getLocalSearchResult(field, order, this.searchObject);
+    if (localSearchResult.err) {
+      this.controllerService.invokeInfoToaster('Invalid', 'Length of search values don\'t match with accepted length');
+      return;
+    }
+    if ((searchSearchRequest.query != null &&  (searchSearchRequest.query.fields != null && searchSearchRequest.query.fields.requirements != null
+       && searchSearchRequest.query.fields.requirements.length > 0) || (searchSearchRequest.query.texts != null
+         && searchSearchRequest.query.texts[0].text.length > 0)) || this.cancelSearch) {
+          if (this.cancelSearch) {this.cancelSearch = false; }
+          this._callSearchRESTAPI(searchSearchRequest, localSearchResult.searchRes);
+    } else {
+        // This case executed when only local search is required
+        this.filteredNaples = this.generateFilteredNaples(localSearchResult.searchRes);
+        if (this.filteredNaples.length === 0) {
+          this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
+        }
+    }
+  }
 
-    this._callSearchRESTAPI(searchSearchRequest);
+  /**
+   * Generates aggregate of local and/or remote advanced search filtered naples
+   * @param tempNaples Array of local and/or remote advanced search filtered naples meta.name
+   */
+  generateFilteredNaples(tempNaples: string[]): ClusterSmartNIC[] {
+    let resultNics: ClusterSmartNIC[] = [];
+    this.lastUpdateTime = new Date().toISOString();
+    if (tempNaples != null && tempNaples.length > 0) {
+      resultNics = this.filterNaplesByName(tempNaples);
+    }
+    return resultNics;
   }
 
   populateFieldSelector() {
@@ -373,13 +451,18 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
    */
   onCancelSearch($event) {
     this.populateFieldSelector();
+    this.cancelSearch = true;
     this.getSmartNICs();
-    this.controllerService.invokeInfoToaster('Infomation', 'Cleared search criteria, NICs refreshed.');
+    this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, NICs refreshed.');
   }
 
-  private _callSearchRESTAPI(searchSearchRequest: SearchSearchRequest) {
+  /**
+   * API to perform remote search
+   * @param searchSearchRequest remote search query
+   * @param localSearchResult Array of filtered naples name after local search
+   */
+  private _callSearchRESTAPI(searchSearchRequest: SearchSearchRequest, localSearchResult: Array<string>) {
     const subscription = this.searchService.PostQuery(searchSearchRequest).subscribe(
-
       response => {
         const data: SearchSearchResponse = response.body as SearchSearchResponse;
         let objects = data.entries;
@@ -388,12 +471,13 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
           objects = [];
         }
         const entries = [];
+        const remoteSearchResult = [];
         for (let k = 0; k < objects.length; k++) {
           entries.push(objects[k].object); // objects[k] is a SearchEntry object
+          remoteSearchResult.push(entries[k].meta.name);
         }
-
-        this.lastUpdateTime = new Date().toISOString();
-        this.filteredNaples = this.filterNaplesByName(entries);
+        const searchResult = this.advancedSearchComponent.generateAggregateResults(remoteSearchResult, localSearchResult);
+        this.filteredNaples = this.generateFilteredNaples(searchResult);
       },
       (error) => {
         this.controllerService.invokeRESTErrorToaster('Failed to get naples', error);
@@ -402,11 +486,14 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.subscriptions.push(subscription);
   }
 
-  filterNaplesByName(entries: IClusterSmartNIC[]): ClusterSmartNIC[] {
+  /**
+   * Provides nic objects for nic meta.name
+   * @param entries Array of nic meta.name
+   */
+  filterNaplesByName(entries: string[]): ClusterSmartNIC[] {
     const tmpMap = {};
     entries.forEach(ele => {
-      const key = ele.meta.name;
-      tmpMap[key] = this.naplesMap[key];
+      tmpMap[ele] = this.naplesMap[ele];
     });
     return Object.values(tmpMap);
 }

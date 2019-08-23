@@ -8,6 +8,7 @@ export interface TableCol {
   minColumnWidth?: number;
   exportable?: boolean;
   disableSearch?: boolean;
+  localSearch?: boolean;
   kind?: string;
   roleGuard?: string;
 }
