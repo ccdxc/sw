@@ -29,39 +29,39 @@ apollo_impl_state::apollo_impl_state(pds_state *state) {
     table_params.table_id = P4TBL_ID_KEY_NATIVE;
     table_params.entry_trace_en = true;
     key_native_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(key_native_tbl_ != NULL);
+    SDK_ASSERT(key_native_tbl() != NULL);
 
     memset(&table_params, 0, sizeof(table_params));
     table_params.table_id = P4TBL_ID_KEY_TUNNELED;
     table_params.entry_trace_en = true;
     key_tunneled_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(key_tunneled_tbl_ != NULL);
+    SDK_ASSERT(key_tunneled_tbl() != NULL);
 
     memset(&table_params, 0, sizeof(table_params));
     table_params.table_id = P4TBL_ID_P4I_DROP_STATS;
     table_params.entry_trace_en = true;
     ingress_drop_stats_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(ingress_drop_stats_tbl_ != NULL);
+    SDK_ASSERT(ingress_drop_stats_tbl() != NULL);
 
     memset(&table_params, 0, sizeof(table_params));
     table_params.table_id = P4TBL_ID_P4E_DROP_STATS;
     table_params.entry_trace_en = true;
     egress_drop_stats_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(egress_drop_stats_tbl_ != NULL);
+    SDK_ASSERT(egress_drop_stats_tbl() != NULL);
 
     memset(&table_params, 0, sizeof(table_params));
     table_params.table_id = P4TBL_ID_NACL;
     table_params.entry_trace_en = true;
     nacl_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(nacl_tbl_ != NULL);
+    SDK_ASSERT(nacl_tbl() != NULL);
 }
 
 apollo_impl_state::~apollo_impl_state() {
-    sltcam::destroy(key_native_tbl_);
-    sltcam::destroy(key_tunneled_tbl_);
-    sltcam::destroy(ingress_drop_stats_tbl_);
-    sltcam::destroy(egress_drop_stats_tbl_);
-    sltcam::destroy(nacl_tbl_);
+    sltcam::destroy(key_native_tbl());
+    sltcam::destroy(key_tunneled_tbl());
+    sltcam::destroy(ingress_drop_stats_tbl());
+    sltcam::destroy(egress_drop_stats_tbl());
+    sltcam::destroy(nacl_tbl());
 }
 
 /// \@}

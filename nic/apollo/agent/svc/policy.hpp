@@ -24,6 +24,12 @@ public:
     Status SecurityPolicyUpdate(ServerContext *context,
                                 const pds::SecurityPolicyRequest *req,
                                 pds::SecurityPolicyResponse *rsp) override;
+    Status SecurityPolicyGet(ServerContext *context,
+                             const pds::SecurityPolicyGetRequest *req,
+                             pds::SecurityPolicyGetResponse *rsp) override;
+    Status SecurityPolicyDelete(ServerContext *context,
+                                const pds::SecurityPolicyDeleteRequest *req,
+                                pds::SecurityPolicyDeleteResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_POLICY_HPP__

@@ -43,7 +43,7 @@ pds_vnic_api_handle (api::api_op_t op, pds_vnic_key_t *key,
 static inline vnic_entry *
 pds_vnic_entry_find (pds_vnic_key_t *key)
 {
-    return (vnic_db()->vnic_find(key));
+    return (vnic_db()->find(key));
 }
 
 //----------------------------------------------------------------------------

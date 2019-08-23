@@ -9,9 +9,18 @@
 
 namespace core {
 
+typedef void (*route_table_get_cb_t)(const pds_route_table_info_t *spec, void *ctxt);
+
+typedef struct route_table_db_cb_ctxt_s {
+    route_table_get_cb_t cb;
+    void         *ctxt;
+} route_table_db_cb_ctxt_t;
+
 sdk_ret_t route_table_create(pds_route_table_key_t *key, pds_route_table_spec_t *spec);
 sdk_ret_t route_table_update(pds_route_table_key_t *key, pds_route_table_spec_t *spec);
 sdk_ret_t route_table_delete(pds_route_table_key_t *key);
+sdk_ret_t route_table_get(pds_route_table_key_t *key, pds_route_table_info_t *info);
+sdk_ret_t route_table_get_all(route_table_get_cb_t route_table_get_cb, void *ctxt);
 
 }    // namespace core
 

@@ -542,6 +542,18 @@ agent_state::del_from_route_table_db(pds_route_table_key_t *key) {
 }
 
 sdk_ret_t
+agent_state::route_table_db_walk(route_table_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(route_table);
+    auto it_end = DB_END(route_table);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 agent_state::add_to_policy_db(pds_policy_key_t *key, pds_policy_spec_t *spec) {
     ADD_TO_DB(policy, key, spec);
 }
@@ -551,7 +563,6 @@ agent_state::find_in_policy_db(pds_policy_key_t *key) {
     FIND_IN_DB(policy, key);
 }
 
-#if 0
 sdk_ret_t
 agent_state::policy_db_walk(policy_walk_cb_t cb, void *ctxt) {
     auto it_begin = DB_BEGIN(policy);
@@ -563,7 +574,6 @@ agent_state::policy_db_walk(policy_walk_cb_t cb, void *ctxt) {
 
     return SDK_RET_OK;
 }
-#endif
 
 bool
 agent_state::del_from_policy_db(pds_policy_key_t *key) {

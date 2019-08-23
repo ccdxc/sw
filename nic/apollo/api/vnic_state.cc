@@ -55,7 +55,7 @@ vnic_state::free(vnic_entry *vnic) {
 }
 
 vnic_entry *
-vnic_state::vnic_find(pds_vnic_key_t *vnic_key) const {
+vnic_state::find(pds_vnic_key_t *vnic_key) const {
     return (vnic_entry *)(vnic_ht()->lookup(vnic_key));
 }
 

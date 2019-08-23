@@ -125,17 +125,17 @@ typedef struct pds_vpc_peer_info_s {
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec);
 
-/// \brief     update VPC peering
-/// \param[in] spec specification
-/// \return    #SDK_RET_OK on success, failure status code on error
-/// \remark    A valid VPC specification should be passed
-sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec);
-
 /// \brief      read VPC peering related information
 /// \param[in]  key  key
 /// \param[out] info information
 /// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vpc_peer_read(pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info);
+
+/// \brief     update VPC peering
+/// \param[in] spec specification
+/// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    A valid VPC specification should be passed
+sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec);
 
 /// \brief     delete VPC peering
 /// \param[in] key key

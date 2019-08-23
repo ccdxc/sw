@@ -81,16 +81,28 @@ typedef struct pds_route_table_status_s {
     // TODO : Only base address of the tree stored in HBM is read
 } pds_route_table_status_t;
 
+/// \brief route table statistics
+typedef struct pds_route_table_stats_s {
+
+} pds_route_table_stats_t;
+
 /// \brief route table information
 typedef struct pds_route_table_info_s {
     pds_route_table_spec_t spec;            ///< Specification
     pds_route_table_status_t status;        ///< Status
+    pds_route_table_stats_t stats;          ///< Statistics
 } __PACK__ pds_route_table_info_t;
 
 /// \brief create route table
 /// \param[in] spec route table configuration
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec);
+
+/// \brief read route table
+/// \param[in] key route table key
+/// \param[out] info route table information
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_route_table_read(pds_route_table_key_t *key, pds_route_table_info_t *info);
 
 /// \brief update route table
 /// \param[in] spec route table configuration

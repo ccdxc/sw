@@ -123,4 +123,53 @@ route_table_delete (pds_route_table_key_t *key)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+route_table_get (pds_route_table_key_t *key, pds_route_table_info_t *info)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    pds_route_table_spec_t *spec;
+
+    memset(info, 0, sizeof(pds_route_table_info_t));
+    spec = agent_state::state()->find_in_route_table_db(key);
+    if (spec == NULL) {
+        PDS_TRACE_ERR("Failed to find route_table {} in db", key->id);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    memcpy(&info->spec, spec, sizeof(pds_route_table_spec_t));
+    if (!agent_state::state()->pds_mock_mode()) {
+        ret = pds_route_table_read(key, info);
+    }
+    return ret;
+}
+
+static inline sdk_ret_t
+route_table_get_all_cb (pds_route_table_spec_t *spec, void *ctxt)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    pds_route_table_info_t info;
+    route_table_db_cb_ctxt_t *cb_ctxt = (route_table_db_cb_ctxt_t *)ctxt;
+
+    memset(&info, 0, sizeof(pds_route_table_info_t));
+    memcpy(&info.spec, spec, sizeof(pds_route_table_spec_t));
+    if (!agent_state::state()->pds_mock_mode()) {
+        ret = pds_route_table_read(&spec->key, &info);
+    }
+    if (ret == SDK_RET_OK) {
+        cb_ctxt->cb(&info, cb_ctxt->ctxt);
+    }
+    return ret;
+}
+
+sdk_ret_t
+route_table_get_all (route_table_get_cb_t route_table_get_cb, void *ctxt)
+{
+    route_table_db_cb_ctxt_t cb_ctxt;
+
+    cb_ctxt.cb = route_table_get_cb;
+    cb_ctxt.ctxt = ctxt;
+
+    return agent_state::state()->route_table_db_walk(route_table_get_all_cb, &cb_ctxt);
+}
+
 }    // namespace core

@@ -33,6 +33,8 @@ typedef sdk::sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *
 typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*meter_walk_cb_t)(pds_meter_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*tag_walk_cb_t)(pds_tag_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*policy_walk_cb_t)(pds_policy_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*nh_walk_cb_t)(pds_nexthop_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*mirror_session_walk_cb_t)(pds_mirror_session_spec_t *spec,
@@ -232,6 +234,7 @@ public:
     sdk_ret_t add_to_route_table_db(pds_route_table_key_t *key,
                                     pds_route_table_spec_t *spec);
     bool del_from_route_table_db(pds_route_table_key_t *key);
+    sdk_ret_t route_table_db_walk(route_table_walk_cb_t cb, void *ctxt);
     slab_ptr_t route_table_slab(void) const {
         return cfg_db_->route_table_slab();
     }
@@ -240,7 +243,7 @@ public:
                                pds_policy_spec_t *spec);
     pds_policy_spec_t *find_in_policy_db(pds_policy_key_t *key);
     bool del_from_policy_db(pds_policy_key_t *key);
-    //sdk_ret_t policy_db_walk(policy_walk_cb_t cb, void *ctxt);
+    sdk_ret_t policy_db_walk(policy_walk_cb_t cb, void *ctxt);
     slab_ptr_t policy_slab(void) const { return cfg_db_->policy_slab(); }
 
     pds_vpc_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }

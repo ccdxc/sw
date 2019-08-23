@@ -51,6 +51,36 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
 }
 
 Status
+SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
+                                         const pds::SecurityPolicyGetRequest *proto_req,
+                                         pds::SecurityPolicyGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_policy_key_t key;
+    pds_policy_info_t info;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        key.id = proto_req->id(i);
+        ret = core::policy_get(&key, &info);
+        if (ret != SDK_RET_OK) {
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            break;
+        }
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+        policy_api_info_to_proto(&info, proto_rsp);
+    }
+
+    if (proto_req->id_size() == 0) {
+        ret = core::policy_get_all(policy_api_info_to_proto, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return Status::OK;
+}
+
+Status
 SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
                                             const pds::SecurityPolicyRequest *proto_req,
                                             pds::SecurityPolicyResponse *proto_rsp) {
@@ -86,6 +116,26 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
     } else  {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
+    }
+    return Status::OK;
+}
+
+Status
+SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
+                                            const pds::SecurityPolicyDeleteRequest *proto_req,
+                                            pds::SecurityPolicyDeleteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_policy_key_t key = {0};
+
+    if (proto_req == NULL) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        key.id = proto_req->id(i);
+        ret = core::policy_delete(&key);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
 }

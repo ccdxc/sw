@@ -21,6 +21,9 @@ public:
     Status RouteTableCreate(ServerContext *context,
                             const pds::RouteTableRequest *req,
                             pds::RouteTableResponse *rsp) override;
+    Status RouteTableGet(ServerContext *context,
+                         const pds::RouteTableGetRequest *req,
+                         pds::RouteTableGetResponse *rsp) override;
     Status RouteTableUpdate(ServerContext *context,
                             const pds::RouteTableRequest *req,
                             pds::RouteTableResponse *rsp) override;

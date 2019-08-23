@@ -591,7 +591,7 @@ policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
     } else if (api_spec->direction == RULE_DIR_EGRESS) {
         proto_spec->set_direction(types::RULE_DIR_EGRESS);
     }
-
+#if 0 // We don't store rules in db for now
     for (uint32_t i = 0; i < api_spec->num_rules; i++) {
         pds::SecurityRule *proto_rule = proto_spec->add_rules();
         rule_t *api_rule = &api_spec->rules[i];
@@ -646,8 +646,38 @@ policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(api_rule->match.l4_match.dport_range.port_lo);
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_porthigh(api_rule->match.l4_match.dport_range.port_hi);
     }
+#endif
 
     return;
+}
+
+// populate proto buf status from policy API status
+static inline void
+policy_api_status_to_proto_status (pds::SecurityPolicyStatus *proto_status,
+                                   const pds_policy_status_t *api_status)
+{
+}
+
+// populate proto buf stats from policy API stats
+static inline void
+policy_api_stats_to_proto_stats (pds::SecurityPolicyStats *proto_stats,
+                                 const pds_policy_stats_t *api_stats)
+{
+}
+
+// populate proto buf from policy API info
+static inline void
+policy_api_info_to_proto (const pds_policy_info_t *api_info, void *ctxt)
+{
+    pds::SecurityPolicyGetResponse *proto_rsp = (pds::SecurityPolicyGetResponse *)ctxt;
+    auto policy = proto_rsp->add_response();
+    pds::SecurityPolicySpec *proto_spec = policy->mutable_spec();
+    pds::SecurityPolicyStatus *proto_status = policy->mutable_status();
+    pds::SecurityPolicyStats *proto_stats = policy->mutable_stats();
+
+    policy_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    policy_api_status_to_proto_status(proto_status, &api_info->status);
+    policy_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }
 
 // Build nh API spec from protobuf spec
@@ -814,6 +844,59 @@ pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
     }
 
     return SDK_RET_OK;
+}
+
+// populate proto buf spec from route table API spec
+inline void
+route_table_api_spec_to_proto_spec (pds::RouteTableSpec *proto_spec,
+                                    const pds_route_table_spec_t *api_spec)
+{
+    if (!api_spec || !proto_spec) {
+        return;
+    }
+
+    proto_spec->set_id(api_spec->key.id);
+    if (api_spec->af == IP_AF_IPV4) {
+        proto_spec->set_af(types::IP_AF_INET);
+    } else if (api_spec->af == IP_AF_IPV6) {
+        proto_spec->set_af(types::IP_AF_INET6);
+    }
+#if 0 // We don't store routes in db for now
+    for (uint32_t i = 0; i < api_spec->num_routes; i++) {
+        pds::Route *proto_route = proto_spec->add_routes();
+    }
+#endif
+
+    return;
+}
+
+// populate proto buf status from route table API status
+static inline void
+route_table_api_status_to_proto_status (pds::RouteTableStatus *proto_status,
+                                        const pds_route_table_status_t *api_status)
+{
+}
+
+// populate proto buf stats from route table API stats
+static inline void
+route_table_api_stats_to_proto_stats (pds::RouteTableStats *proto_stats,
+                                      const pds_route_table_stats_t *api_stats)
+{
+}
+
+// populate proto buf from route table API info
+static inline void
+route_table_api_info_to_proto (const pds_route_table_info_t *api_info, void *ctxt)
+{
+    pds::RouteTableGetResponse *proto_rsp = (pds::RouteTableGetResponse *)ctxt;
+    auto route_table = proto_rsp->add_response();
+    pds::RouteTableSpec *proto_spec = route_table->mutable_spec();
+    pds::RouteTableStatus *proto_status = route_table->mutable_status();
+    pds::RouteTableStats *proto_stats = route_table->mutable_stats();
+
+    route_table_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    route_table_api_status_to_proto_status(proto_status, &api_info->status);
+    route_table_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }
 
 static inline void

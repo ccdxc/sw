@@ -161,9 +161,9 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     case OBJ_ID_VNIC:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return vnic_db()->vnic_find(&api_ctxt->api_params->vnic_key);
+            return vnic_db()->find(&api_ctxt->api_params->vnic_key);
         }
-        return vnic_db()->vnic_find(&api_ctxt->api_params->vnic_spec.key);
+        return vnic_db()->find(&api_ctxt->api_params->vnic_spec.key);
 
     case OBJ_ID_ROUTE_TABLE:
         if (api_ctxt->api_op == API_OP_DELETE) {

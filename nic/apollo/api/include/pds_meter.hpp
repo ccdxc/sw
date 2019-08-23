@@ -113,6 +113,7 @@ struct pds_meter_spec_s {
 
 /// \brief meter status
 typedef struct pds_meter_status_s {
+    // TODO : only base address of the tree stored in HBM is read
 } pds_meter_status_t;
 
 /// \brief meter stats
@@ -134,6 +135,12 @@ typedef struct pds_meter_info_s {
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_create(pds_meter_spec_t *spec);
 
+/// \brief      read meter
+/// \param[in]  key key
+/// \param[out] info meter information
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_meter_read(pds_meter_key_t *key, pds_meter_info_t *info);
+
 /// \brief     update meter
 /// \param[in] spec meter configuration
 /// \return    #SDK_RET_OK on success, failure status code on error
@@ -143,12 +150,6 @@ sdk_ret_t pds_meter_update(pds_meter_spec_t *spec);
 /// \param[in] key key
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_delete(pds_meter_key_t *key);
-
-/// \brief      read meter
-/// \param[in]  key key
-/// \param[out] info meter information
-/// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_meter_read(pds_meter_key_t *key, pds_meter_info_t *info);
 
 /// @}
 

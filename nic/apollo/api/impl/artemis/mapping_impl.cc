@@ -533,8 +533,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
     local_ip_mapping_actiondata_t local_ip_mapping_data;
 
     // add entry to LOCAL_IP_MAPPING table for overlay IP
-    vnic_impl_obj =
-        (vnic_impl *)vnic_db()->vnic_find(&spec->vnic)->impl();
+    vnic_impl_obj = (vnic_impl *)vnic_db()->find(&spec->vnic)->impl();
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vpc->hw_id(), &spec->key.ip_addr);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,

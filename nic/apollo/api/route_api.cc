@@ -10,6 +10,8 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/obj_api.hpp"
+#include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/route.hpp"
 
 /**
  * @defgroup PDS_ROUTE_TABLE_API - first level of route table API handling
@@ -43,6 +45,12 @@ pds_route_table_api_handle (api::api_op_t op,
     return SDK_RET_OOM;
 }
 
+static inline route_table *
+pds_route_table_find (pds_route_table_key_t *key)
+{
+    return (route_table_db()->find(key));
+}
+
 /**
  * @brief create a route table
  * @param[in] spec route table configuration
@@ -52,6 +60,22 @@ sdk_ret_t
 pds_route_table_create (_In_ pds_route_table_spec_t *spec)
 {
     return (pds_route_table_api_handle(api::API_OP_CREATE, NULL, spec));
+}
+
+sdk::sdk_ret_t
+pds_route_table_read (pds_route_table_key_t *key, pds_route_table_info_t *info)
+{
+    route_table *entry = NULL;
+
+    if (key == NULL || info == NULL) {
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    if ((entry = pds_route_table_find(key)) == NULL) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    info->spec.key = *key;
+    return entry->read(key, info);
 }
 
 /**

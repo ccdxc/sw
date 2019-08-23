@@ -45,24 +45,24 @@ public:
     static void destroy(pds_impl_state *impl_state);
     pds_impl_state();
     ~pds_impl_state();
-    apollo_impl_state *apollo_impl_db(void) { return apollo_impl_db_; }
-    lif_impl_state *lif_impl_db(void) { return lif_impl_db_; }
-    tep_impl_state *tep_impl_db(void) { return tep_impl_db_; }
-    vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
-    mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
-    route_table_impl_state *route_table_impl_db(void) {
+    apollo_impl_state *apollo_impl_db(void) const { return apollo_impl_db_; }
+    lif_impl_state *lif_impl_db(void) const { return lif_impl_db_; }
+    tep_impl_state *tep_impl_db(void) const { return tep_impl_db_; }
+    vnic_impl_state *vnic_impl_db(void) const { return vnic_impl_db_; }
+    mapping_impl_state *mapping_impl_db(void) const { return mapping_impl_db_; }
+    route_table_impl_state *route_table_impl_db(void) const {
         return route_table_impl_db_;
     }
-    security_policy_impl_state *security_policy_impl_db(void) {
+    security_policy_impl_state *security_policy_impl_db(void) const {
         return security_policy_impl_db_;
     }
-    mirror_impl_state *mirror_impl_db(void) {
+    mirror_impl_state *mirror_impl_db(void) const {
         return mirror_impl_db_;
     }
-    nexthop_impl_state *nexthop_impl_db(void) {
+    nexthop_impl_state *nexthop_impl_db(void) const {
         return nexthop_impl_db_;
     }
-    nexthop_group_impl_state *nexthop_group_impl_db(void) {
+    nexthop_group_impl_state *nexthop_group_impl_db(void) const {
         return nexthop_group_impl_db_;
     }
 

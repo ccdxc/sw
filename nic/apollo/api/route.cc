@@ -108,6 +108,11 @@ route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
+route_table::read(pds_route_table_key_t *key, pds_route_table_info_t *info) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 route_table::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }

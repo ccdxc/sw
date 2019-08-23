@@ -330,8 +330,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     remote_vnic_mapping_tx_swkey_t    remote_vnic_mapping_tx_key = { 0 };
     sdk_table_api_params_t            tparams;
 
-    vnic_impl_obj =
-        (vnic_impl *)vnic_db()->vnic_find(&spec->vnic)->impl();
+    vnic_impl_obj = (vnic_impl *)vnic_db()->find(&spec->vnic)->impl();
 
     // reserve an entry in LOCAL_IP_MAPPING table for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
@@ -726,8 +725,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
     sdk_table_api_params_t              api_params = { 0 };
 
     // add entry to LOCAL_IP_MAPPING table for overlay IP
-    vnic_impl_obj =
-        (vnic_impl *)vnic_db()->vnic_find(&spec->vnic)->impl();
+    vnic_impl_obj = (vnic_impl *)vnic_db()->find(&spec->vnic)->impl();
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
                                          &spec->key.ip_addr, true);

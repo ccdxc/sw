@@ -52,6 +52,36 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
 }
 
 Status
+RouteSvcImpl::RouteTableGet(ServerContext *context,
+                            const pds::RouteTableGetRequest *proto_req,
+                            pds::RouteTableGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_route_table_key_t key;
+    pds_route_table_info_t info;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        key.id = proto_req->id(i);
+        ret = core::route_table_get(&key, &info);
+        if (ret != SDK_RET_OK) {
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            break;
+        }
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+        route_table_api_info_to_proto(&info, proto_rsp);
+    }
+
+    if (proto_req->id_size() == 0) {
+        ret = core::route_table_get_all(route_table_api_info_to_proto, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return Status::OK;
+}
+
+Status
 RouteSvcImpl::RouteTableUpdate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {

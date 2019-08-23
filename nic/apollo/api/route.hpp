@@ -110,6 +110,12 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
+    ///\brief read config
+    ///\param[in]  key Pointer to the key object
+    ///\param[out] info Pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_route_table_key_t *key, pds_route_table_info_t *info);
+
     /**
      * @brief     add given route table to the database
      * @return   SDK_RET_OK on success, failure status code on error

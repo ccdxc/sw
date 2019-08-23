@@ -164,16 +164,16 @@ typedef struct pds_policy_info_s {
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
 
-/// \brief    update policy
-/// \param[in] policy    policy configuration
-/// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_update(pds_policy_spec_t *policy);
-
-/// \brief    read policy, base address of the tree stored in HBM is read
+/// \brief    read policy
 /// \param[in]  key    policy key
 /// \param[out] info    policy information
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_read(pds_policy_key_t *key, pds_policy_info_t *info);
+
+/// \brief    update policy
+/// \param[in] policy    policy configuration
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_update(pds_policy_spec_t *policy);
 
 /// \brief    delete policy
 /// \param[in] key    policy key

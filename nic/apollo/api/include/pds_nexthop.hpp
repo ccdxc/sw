@@ -68,16 +68,16 @@ typedef struct pds_nexthop_info_s {
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_nexthop_create(pds_nexthop_spec_t *spec);
 
-/// \brief     update nexthop
-/// \param[in] spec nexthop specification
-/// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_nexthop_update(pds_nexthop_spec_t *spec);
-
 /// \brief      read a given nexthop
 /// \param[in]  key  key of the nexthop
 /// \param[out] info nexthop information
 /// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_nexthop_read(pds_nexthop_key_t *key, pds_nexthop_info_t *info);
+
+/// \brief     update nexthop
+/// \param[in] spec nexthop specification
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_nexthop_update(pds_nexthop_spec_t *spec);
 
 /// \brief     delete a given nexthop
 /// \param[in] key key of the nexthop

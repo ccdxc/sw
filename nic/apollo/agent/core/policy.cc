@@ -81,7 +81,6 @@ policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec)
     return SDK_RET_OK;
 }
 
-#if 0
 sdk_ret_t
 policy_delete (pds_policy_key_t *key)
 {
@@ -98,9 +97,6 @@ policy_delete (pds_policy_key_t *key)
             return ret;
         }
     }
-    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        agent_state::state()->substrate_policy_id_reset();
-    }
     if (agent_state::state()->del_from_policy_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete policy {} from db", key->id);
         return SDK_RET_ERR;
@@ -111,9 +107,10 @@ policy_delete (pds_policy_key_t *key)
 sdk_ret_t
 policy_get (pds_policy_key_t *key, pds_policy_info_t *info)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_policy_spec_t *spec;
 
+    memset(info, 0, sizeof(pds_policy_info_t));
     spec = agent_state::state()->find_in_policy_db(key);
     if (spec == NULL) {
         PDS_TRACE_ERR("Failed to find policy {} in db", key->id);
@@ -130,10 +127,11 @@ policy_get (pds_policy_key_t *key, pds_policy_info_t *info)
 static inline sdk_ret_t
 policy_get_all_cb (pds_policy_spec_t *spec, void *ctxt)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_policy_info_t info;
     policy_db_cb_ctxt_t *cb_ctxt = (policy_db_cb_ctxt_t *)ctxt;
 
+    memset(&info, 0, sizeof(pds_policy_info_t));
     memcpy(&info.spec, spec, sizeof(pds_policy_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_policy_read(&spec->key, &info);
@@ -154,6 +152,5 @@ policy_get_all (policy_get_cb_t policy_get_cb, void *ctxt)
 
     return agent_state::state()->policy_db_walk(policy_get_all_cb, &cb_ctxt);
 }
-#endif
 
 }    // namespace core
