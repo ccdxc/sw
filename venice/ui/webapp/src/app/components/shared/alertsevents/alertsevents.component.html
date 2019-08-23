@@ -1,4 +1,4 @@
-<div style="height:100%">
+<div style="height:100%" class="alertsevents">
   <!-- Since we are resizing lazy rendered tables manually, it needs to be called
         when tabs change so it knows to resize itself -->
   <mat-tab-group fxFlex [disableRipple]="true"
@@ -63,11 +63,17 @@
                         [(ngModel)]="showDebugEvents" (onChange)="filterEvents()"></p-checkbox>
           </app-tableheader>
         </ng-template>
+        <!-- colgroup config is need to enable column resize.  The "th" config needs pResizableColumn -->
+        <ng-template pTemplate="colgroup" let-columns>
+          <colgroup>
+            <col *ngFor="let col of columns">
+          </colgroup>
+        </ng-template>
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
           <tr>
             <th *ngFor="let col of eventCols" [pSortableColumn]="col.sortable? col.field : ''"
-                [class]="col.class">
+                [class]="col.class" pResizableColumn>
               <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
               </app-sorticon>
             </th>
@@ -189,6 +195,14 @@
 
           </app-tableheader>
         </ng-template>
+
+        <!-- colgroup config is need to enable column resize.  The "th" config needs pResizableColumn -->
+        <ng-template pTemplate="colgroup" let-columns>
+          <colgroup>
+            <col *ngFor="let col of columns">
+          </colgroup>
+        </ng-template>
+
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
           <tr>
@@ -197,6 +211,7 @@
               </p-tableHeaderCheckbox>
             </th>
             <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''"
+                pResizableColumn
                 [class]="col.class"
                 [colSpan]=" col.isLast ? 2 : 1">
               <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
@@ -207,7 +222,7 @@
         <!-- Table Body -->
         <ng-template pTemplate="body" let-rowData>
           <tr class="alertsevents-tablerow">
-            <td *ngIf="alertUpdatable">
+            <td *ngIf="alertUpdatable" style="width: 3em">
               <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
             </td>
             <td *ngFor="let col of alertCols" [ngSwitch]="col.field" [class]="col.class">

@@ -186,3 +186,20 @@ th.alerts-column-source {
 }
 
 /*----- alert table -----*/
+
+
+.alertsevents .ui-table-tbody>tr {
+  /*  style.scss "display: flex;". To enable column resize, VS-121 */
+  width: 100%;
+  display: table-row !important;
+
+  &:hover {
+    /*  table on hover, the table row shows all content */
+    display: contents;
+  }
+
+  >td {
+    padding: 4px 7px;
+    height: inherit;
+  }
+}
