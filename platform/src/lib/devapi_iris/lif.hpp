@@ -9,6 +9,9 @@
 
 namespace iris {
 
+#define MAX_FILTERS_CLASSIC 32
+#define MAX_FILTERS_SMART   4096
+
 class devapi_enic;
 class devapi_l2seg;
 class devapi_vrf;
@@ -80,6 +83,7 @@ public:
 
     sdk_ret_t upd_name(std::string name);
     sdk_ret_t reset(void);
+    static sdk_ret_t get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters);
 
     void remove_macfilters(void);
     void remove_vlanfilters(bool skip_native_vlan = false);

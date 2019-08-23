@@ -1428,8 +1428,8 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
     ident->capabilities = IONIC_LIF_CAP_ETH;
 
     ident->eth.version = 1;
-    ident->eth.max_ucast_filters = 32;
-    ident->eth.max_mcast_filters = 32;
+    dev_api->lif_get_max_filters(&ident->eth.max_ucast_filters,
+                                 &ident->eth.max_mcast_filters);
     ident->eth.rss_ind_tbl_sz = RSS_IND_TBL_SIZE;
     ident->eth.min_frame_size = 64;
     ident->eth.max_frame_size = 9216;

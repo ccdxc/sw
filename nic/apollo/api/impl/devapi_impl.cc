@@ -24,6 +24,8 @@
 namespace api {
 namespace impl {
 
+#define MAX_FILTERS_CLASSIC 32
+
 devapi *
 devapi_impl::factory(void) {
     devapi_impl    *impl;
@@ -142,6 +144,13 @@ devapi_impl::lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
 sdk_ret_t
 devapi_impl::lif_upd_name(uint32_t lif_id, string name) {
     PDS_TRACE_WARN("Not implemented: Revisit");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t 
+devapi_impl::lif_get_max_filters(uint32_t *ucast_filters, 
+                                 uint32_t *mcast_filters) {
+    *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;
     return SDK_RET_OK;
 }
 

@@ -214,6 +214,18 @@ devapi_lif::reset(void)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+devapi_lif::get_max_filters(uint32_t *ucast_filters, 
+                            uint32_t *mcast_filters)
+{
+    if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC) {
+        *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;
+    } else {
+        *ucast_filters = *mcast_filters = MAX_FILTERS_SMART;
+    }
+    return SDK_RET_OK;
+}
+
 void
 devapi_lif::destroy(devapi_lif *lif)
 {

@@ -280,6 +280,15 @@ end:
 }
 
 sdk_ret_t
+devapi_iris::lif_get_max_filters(uint32_t *ucast_filters, 
+                                 uint32_t *mcast_filters)
+{
+    return devapi_lif::get_max_filters(ucast_filters, 
+                                       mcast_filters);
+
+}
+
+sdk_ret_t
 devapi_iris::qos_class_get(uint8_t group, qos_class_info_t *info)
 {
     return devapi_qos::qos_class_get(group, info);

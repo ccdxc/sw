@@ -34,7 +34,8 @@ public:
                                            bool vlan_insert) = 0;
     virtual sdk_ret_t lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                                       bool all_multicast, bool promiscuous) = 0;
-    virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) = 0 ;
+    virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) = 0;
+    virtual sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters) = 0;
 
     // qos APIs
     virtual sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info) = 0;
