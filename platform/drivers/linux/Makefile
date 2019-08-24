@@ -41,6 +41,7 @@ ETH_KOPT += CONFIG_IONIC_MNIC=m
 ETH_KOPT += CONFIG_MNET=m
 ETH_KOPT += CONFIG_MNET_UIO_PDRV_GENIRQ=m
 ETH_KOPT += CROSS_COMPILE=aarch64-linux-gnu-
+ETH_KOPT += ARCH=arm64
 ALL += mnet
 ALL += mnet_uio_pdrv_genirq
 export PATH := $(PATH):$(TOOLCHAIN_DIR)/bin

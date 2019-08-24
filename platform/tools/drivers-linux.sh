@@ -74,6 +74,7 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="modules.order" \
   --exclude="Module.symvers" \
   --exclude=".tmp_versions/" \
+  --exclude="module.mk" \
   "$DRIVERS_SRC/" "$GEN_DIR/drivers"
 
 rsync -r --copy-links \

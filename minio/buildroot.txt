@@ -21,3 +21,4 @@ nic/buildroot/output/host/libexec/*
 nic/buildroot/output/host/sbin/*
 nic/buildroot/output/host/share/*
 nic/buildroot/output/linux-headers/*
+nic/buildroot/output/build/platform-linux.tar.gz
