@@ -26,7 +26,6 @@ type IPClientIf interface {
 
 // IPClient helps to set the IP address of the management interfaces
 type IPClient struct {
-	sync.Mutex
 	intf       netlink.Link
 	nmd        api.NmdAPI
 	dhcpState  *DHCPState
@@ -58,6 +57,6 @@ type DHCPState struct {
 	LeaseDuration time.Duration
 	AckPacket     dhcp4.Packet
 	CurState      string
-	renewCtx      context.Context
-	renewCancel   context.CancelFunc
+	DhcpCtx       context.Context
+	DhcpCancel    context.CancelFunc
 }

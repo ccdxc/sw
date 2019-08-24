@@ -97,7 +97,6 @@ func (c *IPClient) DoDHCPConfig() error {
 		return nil
 	}
 
-	log.Info("First attempt of DHCP config failed. Starting DHCP retry loop.")
 	ticker := time.NewTicker(AdmissionRetryDuration)
 	dhcpCtx, cancel := context.WithCancel(context.Background())
 	if c.dhcpCancel != nil {
@@ -131,9 +130,6 @@ func (c *IPClient) StopDHCPConfig() {
 }
 
 func (c *IPClient) doDHCP() error {
-	c.Lock()
-	defer c.Unlock()
-
 	pktSock, err := dhcp.NewPacketSock(c.intf.Attrs().Index, 68, 67)
 	if err != nil {
 		log.Errorf("Failed to create packet sock Err: %v", err)
@@ -146,17 +142,6 @@ func (c *IPClient) doDHCP() error {
 		pktSock.Close()
 		return err
 	}
-
-	// Close previous clients, if any.
-	if c.dhcpState.Client != nil {
-		log.Info("Closing previous client to free up associated socket.")
-		if c.dhcpState.renewCancel != nil {
-			c.dhcpState.renewCancel()
-			c.dhcpState.renewCancel = nil
-		}
-		c.dhcpState.Client.Close()
-	}
-
 	// Start the control loop and keep polling for err
 	c.dhcpState.Client = client
 
@@ -254,16 +239,6 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	d.LeaseDuration, err = time.ParseDuration(fmt.Sprintf("%ds", binary.BigEndian.Uint32(opts[dhcp4.OptionIPAddressLeaseTime])))
 	// Start renewal routine
 	// Kick off a renewal process.
-	ctx, cancel := context.WithCancel(context.Background())
-	if d.renewCancel != nil {
-		log.Errorf("Stopping previous instance of renewal.")
-		d.renewCancel()
-		d.renewCancel = nil
-	}
-
-	d.renewCancel = cancel
-	d.renewCtx = ctx
-
 	go d.startRenewLoop(d.AckPacket, mgmtLink)
 	// Set NMDIPConfig here and then call static assignments
 	log.Infof("YIADDR: %s", d.IPNet.IP.String())
@@ -310,9 +285,6 @@ func (d *DHCPState) startRenewLoop(ackPacket dhcp4.Packet, mgmtLink netlink.Link
 			if err := d.updateDHCPState(newAck, mgmtLink); err != nil {
 				log.Errorf("Failed to update DHCP State. Err: %v", err)
 			}
-		case <-d.renewCtx.Done():
-			log.Info("Exiting renewal loop as context cancelled.")
-			return
 		}
 	}
 }
