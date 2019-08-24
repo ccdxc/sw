@@ -195,7 +195,7 @@ func validateCluster() {
 	}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
 
 	Eventually(func() string {
-		return ts.tu.LocalCommandOutput(`kubectl get pods -a --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name'`)
+		return ts.tu.LocalCommandOutput(`kubectl get pods --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name'`)
 	}, 95, 1).Should(BeEmpty(), "All pods should be in Ready state")
 
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort

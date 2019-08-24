@@ -354,7 +354,7 @@ var _ = Describe("Objstore Write and read test", func() {
 		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods -o wide --no-headers | grep pen-vos "), "\n")
 		for _, line := range out {
 			fields := strings.Fields(line)
-			if len(fields) == 7 {
+			if len(fields) == 9 {
 				ret = append(ret, fields[6])
 			}
 		}

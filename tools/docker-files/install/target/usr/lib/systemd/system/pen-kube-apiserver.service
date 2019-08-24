@@ -26,6 +26,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
   $KUBELET_CERTFILE \
   $TLS_KEYFILE \
   $TLS_CERTFILE \
+  $MIN_TLS_VERSION \
   $CLIENT_CAFILE \
   $SERVICE_ACCOUNT_KEYFILE \
   $SERVICE_CLUSTER \

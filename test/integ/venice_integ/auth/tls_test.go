@@ -83,7 +83,7 @@ func TestTLSVersion(t *testing.T) {
 	_ = MustCreateCluster(tinfo.apicl)
 	defer MustDeleteCluster(tinfo.apicl)
 
-	minSupportedVersion := tls.VersionTLS11
+	minSupportedVersion := tls.VersionTLS12
 	// start with supported versions first so that by the time we get to the unsupported ones
 	// we know for sure that server is up and running
 	for tlsVersion := tls.VersionTLS12; tlsVersion >= tls.VersionSSL30; tlsVersion-- {

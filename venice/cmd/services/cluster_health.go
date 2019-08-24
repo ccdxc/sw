@@ -526,8 +526,11 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 		if *ref.Controller { // if this reference is the owning object
 			switch ref.Kind {
 			case protos.ModuleSpec_ReplicaSet.String():
-				if index := strings.LastIndex(ref.Name, "-"); index != -1 {
-					refName = ref.Name[:index]
+				// Kubernetes deployments now automatically instantiate replica sets with random names.
+				// The name of an the replica set is included in the pod name, hence Venice services
+				// pod names take the form pen-<svc_name>-<random_str1>-<random_str2>.
+				if s := strings.Split(ref.Name, "-"); len(s) > 2 {
+					refName = fmt.Sprintf("%s-%s", s[0], s[1])
 				}
 			case protos.ModuleSpec_DaemonSet.String():
 				refName = ref.Name

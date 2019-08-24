@@ -349,7 +349,7 @@ var _ = Describe("API Crud tests", func() {
 		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods -o wide --no-headers | grep pen-apiserver "), "\n")
 		for _, line := range out {
 			fields := strings.Fields(line)
-			if len(fields) == 7 {
+			if len(fields) == 9 {
 				restarts, err := strconv.ParseInt(fields[3], 10, 64)
 				if err != nil {
 					return 0, "", "", err

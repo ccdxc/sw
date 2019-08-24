@@ -21,6 +21,7 @@ const (
 
 	serviceClusterIPRange = "10.0.0.0/24" // TODO: What should this be?
 	enableDaemonSet       = "extensions/v1beta1/daemonsets=true"
+	minTLSVersionVal      = "VersionTLS12"
 
 	// Definitions that are common across multiple components
 
@@ -31,6 +32,7 @@ const (
 	clientCAFileVar  = "CLIENT_CAFILE"
 	tlsCertFileVar   = "TLS_CERTFILE"
 	tlsKeyFileVar    = "TLS_KEYFILE"
+	minTLSVersionVar = "MIN_TLS_VERSION"
 
 	// Parameters
 	kubeconfigParam    = "--kubeconfig"
@@ -39,6 +41,7 @@ const (
 	clientCAFileParam  = "--client-ca-file"       // used to validate the cert presented by a client
 	tlsCertFileParam   = "--tls-cert-file"        // used to authenticate to controllers (as a server)
 	tlsKeyFileParam    = "--tls-private-key-file" // used to authenticate to controllers (as a server)
+	minTLSVersionParam = "--tls-min-version"
 )
 
 // generateKubeAPIServerConfig generates the systemd configuration files for Kube API server.
@@ -106,6 +109,7 @@ func generateKubeAPIServerConfig() error {
 	cfgMap[tlsKeyFileVar] = fmt.Sprintf("%s %s", tlsKeyFileParam, apiServerKeyFile)
 	cfgMap[tlsCertFileVar] = fmt.Sprintf("%s %s", tlsCertFileParam, apiServerCertFile)
 	cfgMap[clientCAFileVar] = fmt.Sprintf("%s %s", clientCAFileParam, apiServerCACertFile)
+	cfgMap[minTLSVersionVar] = fmt.Sprintf("%s %s", minTLSVersionParam, minTLSVersionVal)
 	cfgMap[serviceAccountKeyFileVar] = fmt.Sprintf("%s %s", serviceAccountKeyFileParam, serviceAccountKeyFile)
 	cfgMap[serviceClusterVar] = fmt.Sprintf("%s %s", serviceClusterParam, serviceClusterIPRange)
 	cfgMap[runtimeConfigVar] = fmt.Sprintf("%s %s", runtimeConfigParam, enableDaemonSet)

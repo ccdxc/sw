@@ -24,8 +24,7 @@ func generateSystemdKubeletConfig(nodeID string) error {
 	const (
 		// Environment variables
 		kubeletAddressVar       = "KUBELET_ADDRESS"
-		allowPrivilegedVar      = "ALLOW_PRIVILEGED"
-		requireKubeconfigVar    = "REQUIRE_KUBE_CONFIG"
+		failSwapOnVar           = "FAIL_SWAP_ON"
 		cgroupDriverVar         = "CGROUP_DRIVER"
 		nodeIPVar               = "NODEIP"
 		hostNameOverrideVar     = "HOSTNAME_OVERRIDE"
@@ -34,13 +33,12 @@ func generateSystemdKubeletConfig(nodeID string) error {
 		imageGCLowThresholdVar  = "IMAGE_GC_LOW_THRESHOLD"
 
 		// Parameters
-		kubeletAddressParam    = "--address"
-		allowPrivilegedParam   = "--allow-privileged"
-		requireKubeconfigParam = "--require-kubeconfig"
-		cgroupDriverParam      = "--cgroup-driver"
-		nodeIPParam            = "--node-ip"
-		hostNameOverrideParam  = "--hostname-override"
-		readOnlyPortParam      = "--read-only-port"
+		kubeletAddressParam   = "--address"
+		failSwapOnParam       = "--fail-swap-on"
+		cgroupDriverParam     = "--cgroup-driver"
+		nodeIPParam           = "--node-ip"
+		hostNameOverrideParam = "--hostname-override"
+		readOnlyPortParam     = "--read-only-port"
 
 		// Image collection (GC)
 		imageGCHighThresholdParam = "--image-gc-high-threshold" //  the percent of disk usage which triggers image garbage collection. Default is 85%.
@@ -56,9 +54,9 @@ func generateSystemdKubeletConfig(nodeID string) error {
 	cfgMap := make(map[string]string)
 	// TODO: Bind to node IP.
 	cfgMap[kubeletAddressVar] = fmt.Sprintf("%s 0.0.0.0", kubeletAddressParam)
-	cfgMap[allowPrivilegedVar] = allowPrivilegedParam
+	cfgMap[minTLSVersionVar] = fmt.Sprintf("%s %s", minTLSVersionParam, minTLSVersionVal)
+	cfgMap[failSwapOnVar] = fmt.Sprintf("%s=%s", failSwapOnParam, "false")
 	cfgMap[kubeconfigVar] = fmt.Sprintf("%s=%s", kubeconfigParam, path.Join(globals.KubeletConfigDir, kubeconfigFileName))
-	cfgMap[requireKubeconfigVar] = requireKubeconfigParam
 	cfgMap[cgroupDriverVar] = fmt.Sprintf("%s %s", cgroupDriverParam, kubeletCgroupDriver)
 	cfgMap[hostNameOverrideVar] = fmt.Sprintf("%s %s", hostNameOverrideParam, nodeID)
 	// The read-only port is unauthenticated, so it's better to disable it
@@ -76,7 +74,7 @@ func generateSystemdKubeletConfig(nodeID string) error {
 
 	// garbage collection config
 	cfgMap[imageGCHighThresholdVar] = fmt.Sprintf("%s=%d", imageGCHighThresholdParam, 100)
-	cfgMap[imageGCLowThresholdVar] = fmt.Sprintf("%s=%d", imageGCLowThresholdParam, 100)
+	cfgMap[imageGCLowThresholdVar] = fmt.Sprintf("%s=%d", imageGCLowThresholdParam, 99)
 
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.KubeletConfigDir, kubeletSystemdCfgFile))
 }

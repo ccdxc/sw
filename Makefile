@@ -69,7 +69,7 @@ REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.13
 UI_BUILD_CONTAINER ?= pens-ui-bld:v0.28
 DIND_CONTAINER ?= pens-dind:v0.3
-E2E_CONTAINER ?= pens-e2e:v0.4
+E2E_CONTAINER ?= pens-e2e:v0.5
 TARGETS ?= ws-tools pull-assets gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
@@ -297,7 +297,7 @@ clean:
 
 
 helper-containers:
-	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.4 .
+	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.5 .
 	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.4 .
 	@cd tools/docker-files/vinstall; docker build -t ${REGISTRY_URL}/pens-vinstall:v0.1 .
 	@#keep pens-ntp version in sync in tools/scripts/createImage.py
