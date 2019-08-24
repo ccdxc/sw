@@ -401,6 +401,14 @@ apollo_impl::ingress_to_rxdma_init_(void) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
+    data.action_id = INGRESS_TO_RXDMA_P4PLUS_APP_TCP_PROXY_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
+                                       P4PLUS_APPTYPE_TCPTLS,
+                                       NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
     return SDK_RET_OK;
 }
 
@@ -500,6 +508,8 @@ apollo_impl::p4plus_table_init_(void) {
 
     p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx_apphdr);
+    p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
+                                     &tbl_ctx_apphdr_off);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_apphdr.stage;
     prog.stage_tableid = tbl_ctx_apphdr.stage_tableid;

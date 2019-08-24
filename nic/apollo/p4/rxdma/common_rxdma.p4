@@ -1170,7 +1170,11 @@ table eth_rx_rss_indir {
 }
 
 control common_p4plus_stage0 {
-    apply(common_p4plus_stage0_app_header_table);
+    if (app_header.table0_valid == 1) {
+        apply(common_p4plus_stage0_app_header_table_offset_64);
+    } else {
+        apply(common_p4plus_stage0_app_header_table);
+    }
 
     if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
         apply(eth_rx_rss_params);

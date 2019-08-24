@@ -180,6 +180,32 @@ action redirect_to_arm() {
                  capri_p4_intrinsic.packet_len + APOLLO_P4_TO_ARM_HDR_SZ);
 }
 
+action p4plus_app_tcp_proxy() {
+    remove_header(ethernet_1);
+    remove_header(ctag_1);
+    remove_header(ipv4_1);
+    remove_header(ipv6_1);
+    remove_header(tcp);
+    add_header(p4_to_p4plus_tcp_proxy);
+    add_header(p4_to_p4plus_tcp_proxy_sack);
+    modify_field(p4_to_p4plus_tcp_proxy.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
+    modify_field(p4_to_p4plus_tcp_proxy.table0_valid, TRUE);
+
+    if (ipv4_1.valid == TRUE) {
+        modify_field(p4_to_p4plus_tcp_proxy.ecn, ipv4_1.diffserv, 0x3);
+    } else {
+        if (ipv6_1.valid == TRUE) {
+            modify_field(p4_to_p4plus_tcp_proxy.ecn, ipv6_1.trafficClass, 0x3);
+        }
+    }
+
+    add_header(capri_rxdma_intrinsic);
+    modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_TCP_PROXY_HDR_SZ));
+}
+
 @pragma stage 5
 @pragma index_table
 table ingress_to_rxdma {
@@ -190,6 +216,7 @@ table ingress_to_rxdma {
         ingress_to_rxdma;
         classic_nic_app;
         redirect_to_arm;
+        p4plus_app_tcp_proxy;
     }
     size : APP_TABLE_SIZE;
 }

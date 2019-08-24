@@ -11,6 +11,8 @@ action native_ipv4_packet() {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
     }
+    modify_field(p4_to_p4plus_tcp_proxy.payload_len,
+                 (ipv4_1.totalLen - ((ipv4_1.ihl + tcp.dataOffset) * 4)));
     modify_field(key_metadata.proto, ipv4_1.protocol);
     modify_field(control_metadata.mapping_lkp_addr, ipv4_1.srcAddr);
     modify_field(control_metadata.local_l2_mapping_lkp_addr, ethernet_1.srcAddr);

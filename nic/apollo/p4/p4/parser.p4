@@ -46,6 +46,31 @@ header p4plus_to_p4_s1_t p4plus_to_p4;
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 
 @pragma synthetic_header
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.srcPort      tcp.srcPort
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.dstPort      tcp.dstPort
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.seqNo        tcp.seqNo
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.ackNo        tcp.ackNo
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.dataOffset   tcp.dataOffset
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.res          tcp.res
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.flags        tcp.flags
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.window       tcp.window
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.urgentPtr    tcp.urgentPtr
+//@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.ts           tcp_option_timestamp.ts
+//@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.prev_echo_ts tcp_option_timestamp.prev_echo_ts
+header p4_to_p4plus_tcp_proxy_base_header_t p4_to_p4plus_tcp_proxy;
+
+@pragma synthetic_header
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq0 tcp_option_four_sack.first_le
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq0   tcp_option_four_sack.first_re
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq1 tcp_option_four_sack.second_le
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq1   tcp_option_four_sack.second_re
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq2 tcp_option_four_sack.third_le
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq2   tcp_option_four_sack.third_re
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq3 tcp_option_four_sack.fourth_le
+//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq3   tcp_option_four_sack.fourth_re
+header p4_to_p4plus_tcp_proxy_sack_header_t p4_to_p4plus_tcp_proxy_sack;
+
+@pragma synthetic_header
 @pragma pa_field_union ingress p4_to_arm.local_vnic_tag             key_metadata.lkp_id
 @pragma pa_field_union ingress p4_to_arm.l2_1_offset                offset_metadata.l2_1
 @pragma pa_field_union ingress p4_to_arm.l2_2_offset                offset_metadata.l2_2
@@ -96,6 +121,7 @@ header ipv4_t ipv4_2;
 header ipv6_t ipv6_2;
 @pragma pa_header_union xgress udp_2 tcp icmp
 header udp_t udp_2;
+@pragma no_ohi ingress
 header tcp_t tcp;
 header icmp_t icmp;
 
@@ -553,6 +579,9 @@ parser deparse_ingress {
     extract(txdma_to_p4e_header);
     extract(p4_to_txdma_header);
     extract(p4i_apollo_i2e);
+
+    extract(p4_to_p4plus_tcp_proxy);
+    extract(p4_to_p4plus_tcp_proxy_sack);
 
     return parse_packet;
 }
