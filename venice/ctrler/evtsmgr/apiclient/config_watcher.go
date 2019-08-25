@@ -255,15 +255,26 @@ func (c *ConfigWatcher) processAlert(eventType kvstore.WatchEventType, alert *mo
 	c.logger.Debugf("processing alert watch event: {%s} {%#v} ", eventType, alert)
 	switch eventType {
 	case kvstore.Created:
-		return c.memDb.AddObject(alert)
+		if err := c.memDb.AddObject(alert); err != nil {
+			return err
+		}
+		c.memDb.AddOrUpdateAlertToGrps(alert)
 	case kvstore.Updated:
-		return c.memDb.UpdateObject(alert)
+		if err := c.memDb.UpdateObject(alert); err != nil {
+			return err
+		}
+		c.memDb.AddOrUpdateAlertToGrps(alert)
 	case kvstore.Deleted:
-		return c.memDb.DeleteObject(alert)
+		if err := c.memDb.DeleteObject(alert); err != nil {
+			return err
+		}
+		c.memDb.DeleteAlertFromGrps(alert)
 	default:
 		c.logger.Errorf("invalid alert watch event, type %s policy %+v", eventType, alert)
 		return fmt.Errorf("invalid alert watch event")
 	}
+
+	return nil
 }
 
 // helper to process alert destinations

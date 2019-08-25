@@ -27,7 +27,7 @@ func Match(reqs []*fields.Requirement, obj runtime.Object) (bool, []*monitoring.
 		return false, nil
 	}
 
-	reqsWithObservedVal := []*monitoring.MatchedRequirement{}
+	var reqsWithObservedVal []*monitoring.MatchedRequirement
 	for _, req := range reqs {
 		match, observedVal := req.MatchesObjWithObservedValue(obj)
 		if !match {

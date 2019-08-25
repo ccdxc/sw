@@ -1,8 +1,8 @@
 package memdb
 
 import (
-	"reflect"
-	"strings"
+	"fmt"
+	"sync"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -20,7 +20,149 @@ const (
 
 // MemDb in-memory database to store policy objects and alerts
 type MemDb struct {
+	sync.RWMutex
 	*memdb.Memdb
+	alertsByPolicy map[string]map[monitoring.AlertState]*alertsGroup
+}
+
+// local cache alerts group
+type alertsGroup struct {
+	grpByEventURI                 map[string]string
+	grpByEventMessageAndObjectRef map[string]string
+}
+
+// AnyOutstandingAlertsByURI returns true if there an outstanding alert by the given tenant, policy and URI,
+// otherwise false.
+func (m *MemDb) AnyOutstandingAlertsByURI(tenant, policyID, URI string) bool {
+	m.RLock()
+	defer m.RUnlock()
+
+	key := fmt.Sprintf("%s.%s", tenant, policyID)
+
+	if alertsByPolicy, found := m.alertsByPolicy[key]; found {
+		if grp, found := alertsByPolicy[monitoring.AlertState_OPEN]; found {
+			if _, ok := grp.grpByEventURI[URI]; ok {
+				return true
+			}
+		}
+
+		if grp, found := alertsByPolicy[monitoring.AlertState_ACKNOWLEDGED]; found {
+			if _, ok := grp.grpByEventURI[URI]; ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// AnyOutstandingAlertsByMessageAndRef returns true if there an outstanding alert by the given tenant, policy,
+// message and object ref, otherwise false.
+func (m *MemDb) AnyOutstandingAlertsByMessageAndRef(tenant, policyID, message string, objectRef *api.ObjectRef) bool {
+	if objectRef == nil {
+		return false
+	}
+
+	m.RLock()
+	defer m.RUnlock()
+
+	key := fmt.Sprintf("%s.%s", tenant, policyID)
+	evtMessageObjRefKey := fmt.Sprintf("%s.%s", message, objectRef.String())
+
+	if alertsByPolicy, found := m.alertsByPolicy[key]; found {
+		if grp, found := alertsByPolicy[monitoring.AlertState_OPEN]; found {
+			if _, ok := grp.grpByEventMessageAndObjectRef[evtMessageObjRefKey]; ok {
+				return true
+			}
+		}
+
+		if grp, found := alertsByPolicy[monitoring.AlertState_ACKNOWLEDGED]; found {
+			if _, ok := grp.grpByEventMessageAndObjectRef[evtMessageObjRefKey]; ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// AddOrUpdateAlertToGrps adds the given alert to cache groups.
+func (m *MemDb) AddOrUpdateAlertToGrps(alert *monitoring.Alert) {
+	m.Lock()
+	defer m.Unlock()
+
+	alertState := monitoring.AlertState(monitoring.AlertState_vvalue[alert.Spec.State])
+	key := fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)
+
+	var evtMessageObjRefKey string
+	if alert.Status.ObjectRef != nil {
+		evtMessageObjRefKey = fmt.Sprintf("%s.%s", alert.Status.Message, alert.Status.ObjectRef.String())
+	}
+
+	alertsByPolicy, found := m.alertsByPolicy[key]
+	if !found {
+		m.alertsByPolicy[key] = make(map[monitoring.AlertState]*alertsGroup)
+	}
+
+	if alertState != monitoring.AlertState_RESOLVED {
+		// find if the state already exists
+		aGrp, found := alertsByPolicy[alertState]
+		if !found {
+			aGrp = &alertsGroup{grpByEventURI: make(map[string]string), grpByEventMessageAndObjectRef: make(map[string]string)}
+			m.alertsByPolicy[key][alertState] = aGrp
+		}
+		// group by events URI
+		aGrp.grpByEventURI[alert.Status.EventURI] = alert.Name
+
+		// group by event message and object ref
+		if alert.Status.ObjectRef != nil {
+			aGrp.grpByEventMessageAndObjectRef[evtMessageObjRefKey] = alert.Name
+		}
+	}
+
+	// remove it from other groups if it exists
+	for state, aGrp := range alertsByPolicy {
+		if alertState != state {
+			// remove it from the other alert state groups
+			delete(aGrp.grpByEventURI, alert.Status.EventURI)
+
+			if alert.Status.ObjectRef != nil {
+				delete(aGrp.grpByEventMessageAndObjectRef, evtMessageObjRefKey)
+			}
+
+			if len(aGrp.grpByEventURI) == 0 && len(aGrp.grpByEventMessageAndObjectRef) == 0 {
+				delete(m.alertsByPolicy[key], state)
+			}
+		}
+	}
+
+	// delete the policy from cache if there are no entries for it
+	if len(m.alertsByPolicy[key]) == 0 {
+		delete(m.alertsByPolicy, key)
+		return
+	}
+}
+
+// DeleteAlertFromGrps deletes the alert from the cached groups.
+func (m *MemDb) DeleteAlertFromGrps(alert *monitoring.Alert) {
+	m.Lock()
+	defer m.Unlock()
+
+	key := fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)
+	alertState := monitoring.AlertState(monitoring.AlertState_vvalue[alert.Spec.State])
+	if alertsByPolicy, found := m.alertsByPolicy[key]; found {
+		grp, found := alertsByPolicy[alertState]
+		if found {
+			delete(grp.grpByEventURI, alert.Status.EventURI)
+
+			if alert.Status.ObjectRef != nil {
+				evtMessageObjRefKey := fmt.Sprintf("%s.%s", alert.Status.Message, alert.Status.ObjectRef.String())
+				delete(grp.grpByEventMessageAndObjectRef, evtMessageObjRefKey)
+			}
+
+			if len(grp.grpByEventURI) == 0 && len(grp.grpByEventMessageAndObjectRef) == 0 {
+				delete(m.alertsByPolicy, key)
+			}
+		}
+	}
 }
 
 // FilterFn represents various filters that can be applied before returning the list response
@@ -58,83 +200,6 @@ func WithEnabledFilter(enabled bool) FilterFn {
 	}
 }
 
-// WithAlertStateFilter returns a fn() which returns true if the alert object matches one of the given states
-// * applicable only for alert object *
-func WithAlertStateFilter(states []monitoring.AlertState) FilterFn {
-	return func(obj runtime.Object) bool {
-		switch obj.(type) {
-		case *monitoring.Alert:
-			for _, st := range states {
-				if obj.(*monitoring.Alert).Spec.GetState() == st.String() {
-					return true
-				}
-			}
-		}
-		return false
-	}
-}
-
-// WithAlertPolicyIDFilter returns a fn() which returns true if the alert object matches the given policy ID
-// * applicable only for alert object *
-func WithAlertPolicyIDFilter(policyID string) FilterFn {
-	return func(obj runtime.Object) bool {
-		switch obj.(type) {
-		case *monitoring.Alert:
-			return obj.(*monitoring.Alert).Status.Reason.GetPolicyID() == policyID
-		}
-		return false
-	}
-}
-
-// WithObjectRefFilter returns a fn() which returns true if the alert object matches the given object ref
-// * applicable only for alert object *
-func WithObjectRefFilter(objRef *api.ObjectRef) FilterFn {
-	return func(obj runtime.Object) bool {
-		switch obj.(type) {
-		case *monitoring.Alert:
-			alert := obj.(*monitoring.Alert)
-			return reflect.DeepEqual(alert.Status.GetObjectRef(), objRef)
-		}
-		return false
-	}
-}
-
-// WithEventURIFilter returns a fn() which returns true if the alert object matches the given event URI
-// * applicable only for alert object *
-func WithEventURIFilter(eventURI string) FilterFn {
-	return func(obj runtime.Object) bool {
-		switch obj.(type) {
-		case *monitoring.Alert:
-			return obj.(*monitoring.Alert).Status.GetEventURI() == eventURI
-		}
-		return false
-	}
-}
-
-// WithEventMessageFilter returns a fn() which returns true if the alert object matches the given event message
-// * applicable only for alert object *
-func WithEventMessageFilter(eventMessage string) FilterFn {
-	return func(obj runtime.Object) bool {
-		switch obj.(type) {
-		case *monitoring.Alert:
-			return obj.(*monitoring.Alert).Status.GetMessage() == eventMessage
-		}
-		return false
-	}
-}
-
-// WithEventMessageContainsFilter returns a fn() which returns true if the alert message contains the given event message
-// * applicable only for alert object *
-func WithEventMessageContainsFilter(message string) FilterFn {
-	return func(obj runtime.Object) bool {
-		switch obj.(type) {
-		case *monitoring.Alert:
-			return strings.Contains(obj.(*monitoring.Alert).Status.GetMessage(), message)
-		}
-		return false
-	}
-}
-
 // GetAlertPolicies returns the list of alert policies that matches all the given filters
 func (m *MemDb) GetAlertPolicies(filters ...FilterFn) []*monitoring.AlertPolicy {
 	var alertPolicies []*monitoring.AlertPolicy
@@ -161,28 +226,6 @@ func (m *MemDb) GetAlertPolicies(filters ...FilterFn) []*monitoring.AlertPolicy 
 	}
 
 	return alertPolicies
-}
-
-// GetAlerts returns the list of alerts that matches all the given filters
-func (m *MemDb) GetAlerts(filters ...FilterFn) []*monitoring.Alert {
-	var alerts []*monitoring.Alert
-	for _, alert := range m.ListObjects("Alert") {
-		a := alert.(*monitoring.Alert)
-
-		matched := 0
-		for _, filter := range filters { // run through filters
-			if !filter(a) {
-				break
-			}
-			matched++
-		}
-
-		if matched == len(filters) {
-			alerts = append(alerts, a)
-		}
-	}
-
-	return alerts
 }
 
 // GetAlertDestination returns the alert destination matching the given name
@@ -224,7 +267,8 @@ func (m *MemDb) StopWatchVersion(watchChan chan memdb.Event) {
 // NewMemDb creates a new mem DB
 func NewMemDb() *MemDb {
 	amemDb := &MemDb{
-		memdb.NewMemdb(),
+		Memdb:          memdb.NewMemdb(),
+		alertsByPolicy: map[string]map[monitoring.AlertState]*alertsGroup{},
 	}
 
 	return amemDb

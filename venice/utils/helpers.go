@@ -23,12 +23,21 @@ func ExecuteWithRetry(eval Evaluator, retryInterval time.Duration, maxRetries in
 	var err error
 	retryCount := 0
 
+	ctx, cancel := context.WithTimeout(context.Background(), retryInterval)
+	result, err = eval(ctx)
+	cancel()
+	if err == nil {
+		return result, nil
+	}
+
+	ticker := time.NewTicker(retryInterval)
+	defer ticker.Stop()
 retryloop:
 	for {
 		select {
-		case <-time.After(retryInterval):
+		case <-ticker.C:
 			retryCount++
-			ctx, cancel := context.WithTimeout(context.Background(), retryInterval)
+			ctx, cancel = context.WithTimeout(context.Background(), retryInterval)
 			result, err = eval(ctx)
 			cancel()
 			if err != nil {

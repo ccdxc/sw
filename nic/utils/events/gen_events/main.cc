@@ -49,6 +49,12 @@ eventtypes::EventTypes get_random_event_type()
     return static_cast<eventtypes::EventTypes>(rand_evt_type);
 }
 
+// returns a random value from 0..20 as a string
+std::string get_random_alert_str()
+{
+    return std::to_string(rand() % 20);
+}
+
 // records a single event with the given params, adds a retry mechanism.
 int record_event(events_recorder* recorder, eventtypes::EventTypes type, const char* message)
 {
@@ -71,10 +77,14 @@ int record_event(events_recorder* recorder, eventtypes::EventTypes type, const c
 // all the events generated. It will be easy to verify the events using this substr.
 int record_events(events_recorder* recorder, int rps, int total_events, char* message_substr)
 {
+    int num_non_critical_events_recorded = 0;
+    int num_critical_events_recorded = 0;
     int num_events_recorded = 0;
     int num_events_per_iteration = (rps < 5) ? rps : (rps / 5);
-    // 100ms or 10ms accounts for the time to send events
+
+    // 1s or 100ms accounts for the time to send events
     int time_to_sleep = (rps < 5) ? 1000000 : 100000;
+
     while (num_events_recorded < total_events) {
         for (int i = 0; i < num_events_per_iteration; i++) {
             char rand_str[10];
@@ -86,9 +96,22 @@ int record_events(events_recorder* recorder, int rps, int total_events, char* me
                 return ret_val;
             }
         }
-        num_events_recorded += num_events_per_iteration;
+        num_non_critical_events_recorded += num_events_per_iteration;
+
+        // record 1 critical event every second
+        if (num_non_critical_events_recorded % (rps - num_events_per_iteration) == 0) {
+            std::string evt_message = message_substr + std::string(" - alert - ") + get_random_alert_str();
+            int ret_val = record_event(recorder, eventtypes::NAPLES_SERVICE_STOPPED, evt_message.c_str());
+            if (ret_val != 0) {
+                return ret_val;
+            }
+            num_critical_events_recorded++;
+            usleep(100000); // 100ms
+        }
         usleep(time_to_sleep); // 1s or 100ms
-        logger->info("num events recorded so far: {}", num_events_recorded);
+        num_events_recorded = num_non_critical_events_recorded + num_critical_events_recorded;
+        logger->info("num events recorded so far: non-critical - {}, critical - {}, total - {}",
+            num_non_critical_events_recorded, num_critical_events_recorded, num_events_recorded);
     }
 
     return 0;

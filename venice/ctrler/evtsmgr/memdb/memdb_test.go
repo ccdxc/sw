@@ -1,7 +1,10 @@
 package memdb
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -61,6 +64,111 @@ func TestMemDb(t *testing.T) {
 	objs = mDb.ListObjects("AlertDestination")
 	Assert(t, len(objs) == 1, "invalid number of alert destinations, expected: %v, got: %v", 1, len(objs))
 	Assert(t, mDb.GetAlertDestination("dest-1") != nil, "failed to get alert destination")
+
+	Assert(t, !mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, "p1", "dummy"),
+		"expected no outstanding alerts but found")
+	Assert(t, !mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, "p1", "dummy message", nil),
+		"expected no outstanding alerts but found")
+	Assert(t, !mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, "p1", "dummy message", &api.ObjectRef{}),
+		"expected no outstanding alerts but found")
+
+	alert := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5),
+		monitoring.AlertState_OPEN, "test-alert1",
+		&monitoring.AlertPolicy{ObjectMeta: api.ObjectMeta{Name: CreateAlphabetString(5)}},
+		&evtsapi.Event{ObjectMeta: api.ObjectMeta{SelfLink: fmt.Sprintf("/events/v1/events/%s",
+			uuid.NewV4().String())}, EventAttributes: evtsapi.EventAttributes{ObjectRef: &api.ObjectRef{Name: "test-node", Kind: "Node"}}},
+		nil)
+
+	// add new alert to the cache
+	mDb.AddOrUpdateAlertToGrps(alert)
+	Assert(t, mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID,
+		alert.Status.EventURI), "no outstanding alert found, but expected one")
+	Assert(t, mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID,
+		alert.Status.Message, alert.Status.ObjectRef), "no outstanding alert found, but expected one")
+	Assert(t, len(mDb.alertsByPolicy) == 1, "expected 1 alert policy")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)]) == 1,
+		"expected 1 state in cache")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN] != nil,
+		"expected open state in cache")
+
+	// update existing alert to the cache
+	alert.Spec.State = monitoring.AlertState_ACKNOWLEDGED.String()
+	mDb.AddOrUpdateAlertToGrps(alert)
+	Assert(t, mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID,
+		alert.Status.EventURI), "no outstanding alert found, but expected one")
+	Assert(t, mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID,
+		alert.Status.Message, alert.Status.ObjectRef), "no outstanding alert found, but expected one")
+	Assert(t, len(mDb.alertsByPolicy) == 1, "expected 1 alert policy")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)]) == 1,
+		"expected 1 state in cache")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_ACKNOWLEDGED] != nil,
+		"expected acknowledged state in cache")
+
+	// resolve the alert and update cache
+	alert.Spec.State = monitoring.AlertState_RESOLVED.String()
+	mDb.AddOrUpdateAlertToGrps(alert)
+	Assert(t, len(mDb.alertsByPolicy) == 0, "expected 0 alert policy")
+
+	// delete the alert from cache
+	mDb.DeleteAlertFromGrps(alert)
+	Assert(t, !mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID,
+		alert.Status.EventURI), "no outstanding alert expected, but found one")
+	Assert(t, !mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID,
+		alert.Status.Message, alert.Status.ObjectRef), "no outstanding alert expected, but found one")
+	Assert(t, len(mDb.alertsByPolicy) == 0, "expected 0 alert policy")
+
+	// add the same alert again and delete
+	alert.Spec.State = monitoring.AlertState_ACKNOWLEDGED.String()
+	mDb.AddOrUpdateAlertToGrps(alert)
+	Assert(t, len(mDb.alertsByPolicy) == 1, "expected 1 alert policy")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)]) == 1,
+		"expected 1 state in cache")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_ACKNOWLEDGED] != nil,
+		"expected acknowledged state in cache")
+	mDb.DeleteAlertFromGrps(alert)
+	Assert(t, len(mDb.alertsByPolicy) == 0, "expected 0 alert policy")
+
+	// add 2 alerts
+	alert.Spec.State = monitoring.AlertState_OPEN.String()
+	mDb.AddOrUpdateAlertToGrps(alert)
+	alert2 := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5),
+		monitoring.AlertState_OPEN, "test-alert2",
+		&monitoring.AlertPolicy{ObjectMeta: api.ObjectMeta{Name: CreateAlphabetString(5)}},
+		&evtsapi.Event{ObjectMeta: api.ObjectMeta{SelfLink: fmt.Sprintf("/events/v1/events/%s",
+			uuid.NewV4().String())}, EventAttributes: evtsapi.EventAttributes{ObjectRef: &api.ObjectRef{Name: "test-node", Kind: "Node"}}},
+		nil)
+	mDb.AddOrUpdateAlertToGrps(alert2)
+	Assert(t, len(mDb.alertsByPolicy) == 1, "expected 1 alert policy")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)]) == 1,
+		"expected 1 state in cache")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN] != nil,
+		"expected open state in cache")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.
+		AlertState_ACKNOWLEDGED] == nil, "did not expect acknowledged state in the cache")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN].grpByEventMessageAndObjectRef) == 2,
+		"expected 2 entries in the cache")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN].grpByEventURI) == 2,
+		"expected 2 entries in the cache")
+
+	// delete one of the alert and ensure the cache is updated
+	mDb.DeleteAlertFromGrps(alert)
+	Assert(t, len(mDb.alertsByPolicy) == 1, "expected 1 alert policy")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN] != nil,
+		"expected open state in cache")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.
+		AlertState_ACKNOWLEDGED] == nil, "did not expect acknowledged state in the cache")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN].grpByEventMessageAndObjectRef) == 1,
+		"expected 1 entries in the cache")
+	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN].grpByEventURI) == 1,
+		"expected 1 entries in the cache")
+
+	// delete
+	mDb.DeleteAlertFromGrps(alert2)
+	Assert(t, len(mDb.alertsByPolicy) == 0, "expected 1 alert policy")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.AlertState_OPEN] == nil,
+		"did not expect open state in the cache")
+	Assert(t, mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)][monitoring.
+		AlertState_ACKNOWLEDGED] == nil, "did not expect acknowledged state in the cache")
 }
 
 // TestGetAlertPolicies tests GetAlertPolicies(...) with various filters
@@ -101,15 +209,6 @@ func TestGetAlertPolicies(t *testing.T) {
 			filters:             []FilterFn{WithEnabledFilter(false)},
 			expNumAlertPolicies: 0,
 		},
-		// this should have no effect the below filters are applicable only for alert object now
-		{
-			filters:             []FilterFn{WithObjectRefFilter(nil)},
-			expNumAlertPolicies: 0,
-		},
-		{
-			filters:             []FilterFn{WithAlertPolicyIDFilter("n/a")},
-			expNumAlertPolicies: 0,
-		},
 	}
 
 	for _, test := range tests {
@@ -127,122 +226,4 @@ func TestGetAlertPolicies(t *testing.T) {
 
 	objs := mDb.GetAlertPolicies(WithEnabledFilter(false))
 	Assert(t, len(objs) == 1, "invalid number of alert policies, expected: %v, got: %v", 1, len(objs))
-}
-
-// TestGetAlerts tests GetAlerts(...) with various filters
-func TestGetAlerts(t *testing.T) {
-	mDb := NewMemDb()
-
-	// add some objects
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil))
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1",
-		&monitoring.AlertPolicy{
-			ObjectMeta: api.ObjectMeta{
-				UUID: "policy1",
-			},
-		},
-		&evtsapi.Event{
-			EventAttributes: evtsapi.EventAttributes{
-				ObjectRef: &api.ObjectRef{
-					Kind: "Node",
-					Name: "node1",
-				},
-			},
-		}, nil))
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil,
-		&evtsapi.Event{
-			EventAttributes: evtsapi.EventAttributes{
-				ObjectRef: &api.ObjectRef{
-					Kind: "Node",
-					Name: "node1",
-				},
-			},
-		}, nil))
-	mDb.AddObject(policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil))
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert2", nil,
-		&evtsapi.Event{
-			EventAttributes: evtsapi.EventAttributes{
-				ObjectRef: &api.ObjectRef{
-					Kind: "Node",
-					Name: "node2",
-				},
-			},
-		}, nil))
-	tests := []struct {
-		filters      []FilterFn
-		expNumAlerts int
-	}{
-		{
-			filters:      []FilterFn{},
-			expNumAlerts: 5,
-		},
-		{
-			filters:      []FilterFn{WithObjectRefFilter(nil)},
-			expNumAlerts: 2,
-		},
-		{
-			filters:      []FilterFn{WithObjectRefFilter(&api.ObjectRef{})},
-			expNumAlerts: 0,
-		},
-		{
-			filters:      []FilterFn{WithObjectRefFilter(&api.ObjectRef{Kind: "Node", Name: "node1"})},
-			expNumAlerts: 2,
-		},
-		{
-			filters:      []FilterFn{WithObjectRefFilter(&api.ObjectRef{Kind: "Node", Name: "node1"}), WithAlertPolicyIDFilter("policy1")},
-			expNumAlerts: 1,
-		},
-		{
-			filters:      []FilterFn{WithTenantFilter("infra"), WithAlertPolicyIDFilter("")},
-			expNumAlerts: 1,
-		},
-		{
-			filters:      []FilterFn{WithTenantFilter("infra"), WithAlertPolicyIDFilter("")},
-			expNumAlerts: 1,
-		},
-		{
-			filters:      []FilterFn{WithObjectRefFilter(&api.ObjectRef{Kind: "Node", Name: "node1"}), WithAlertPolicyIDFilter("invalid")},
-			expNumAlerts: 0,
-		},
-		{
-			filters:      []FilterFn{WithTenantFilter("invalid")},
-			expNumAlerts: 0,
-		},
-		{
-			filters:      []FilterFn{WithAlertPolicyIDFilter("invalid")},
-			expNumAlerts: 0,
-		},
-		// this should have no effect the below filters are applicable only for alert policy object now
-		{
-			filters:      []FilterFn{WithEnabledFilter(false)},
-			expNumAlerts: 0,
-		},
-		{
-			filters:      []FilterFn{WithResourceFilter("n/a")},
-			expNumAlerts: 0,
-		},
-		{
-			filters:      []FilterFn{WithEventMessageFilter("test-alert1"), WithTenantFilter("infra")},
-			expNumAlerts: 1,
-		},
-		{
-			filters:      []FilterFn{WithEventMessageContainsFilter("alert2"), WithTenantFilter(globals.DefaultTenant)},
-			expNumAlerts: 1,
-		},
-	}
-
-	for i := range tests {
-		objs := mDb.GetAlerts(tests[i].filters...)
-		Assert(t, tests[i].expNumAlerts == len(objs), "invalid number of alerts for tc#%v, expected: %v, got: %v", i, tests[i].expNumAlerts, len(objs))
-	}
-
-	a := policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil)
-	AssertOk(t, mDb.AddObject(a), "failed to add object to mem DB")
-	objs := mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_RESOLVED}))
-	Assert(t, len(objs) == 0, "invalid number of alerts, expected: %v, got: %v", 0, len(objs))
-
-	a.Spec.State = monitoring.AlertState_RESOLVED.String()
-	AssertOk(t, mDb.UpdateObject(a), "failed to update object to mem DB")
-	objs = mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_RESOLVED}))
-	Assert(t, len(objs) == 1, "invalid number of alerts, expected: %v, got: %v", 1, len(objs))
 }
