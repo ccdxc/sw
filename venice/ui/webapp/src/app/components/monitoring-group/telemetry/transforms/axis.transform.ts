@@ -5,6 +5,7 @@ import { ChartYAxe, ChartOptions, LinearTickOptions } from 'chart.js';
 import { getFieldData } from '../utility';
 import { Utility } from '@app/common/Utility';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { DerivativeTransform } from './derivative.transform';
 
 interface CommonAxisFormInf {
   showAxis: boolean;
@@ -137,12 +138,22 @@ export class AxisTransform extends GraphTransform<{}> {
     // Auto detecting label
     let isSameUnit = true;
     let isSameField = true;
+    // Whether they are all derivatives, or all not
+    let isSameRate = true;
+    let isAllDerivative = true;
     let previousUnit;
     let previousField;
+    let previousIsDerivative;
     opts.data.forEach( (d) => {
+      const fieldMetadata = getFieldData(d.measurement, d.field);
+      const isDerivative = DerivativeTransform.doesFieldUseDerivative(fieldMetadata);
       if (previousUnit == null) {
         previousUnit = d.units;
         previousField = d.field;
+        previousIsDerivative = isDerivative;
+        if (!isDerivative) {
+          isAllDerivative = false;
+        }
       }
       if (previousField !== d.field) {
         isSameField = false;
@@ -150,18 +161,30 @@ export class AxisTransform extends GraphTransform<{}> {
       if (previousUnit !== d.units) {
         isSameUnit = false;
       }
+      if (previousIsDerivative !== isDerivative) {
+        isSameRate = false;
+        isAllDerivative = false;
+      }
     });
 
     if (isSameField) {
       // We put the field name as the x axis
       yAxisOptions.scaleLabel.labelString = getFieldData(opts.data[0].measurement, opts.data[0].field).displayName;
+      let unitString = '';
       if (previousUnit === 'Percent') {
-        yAxisOptions.scaleLabel.labelString += ' (%)';
+        unitString = '%';
       } else if (previousUnit != null) {
-        yAxisOptions.scaleLabel.labelString += ' (' + previousUnit + ')';
+        unitString = previousUnit;
       }
+      if (isAllDerivative) {
+        unitString += ' / s';
+      }
+      yAxisOptions.scaleLabel.labelString += ' (' + unitString + ')';
     } else if (isSameUnit && previousUnit != null) {
       yAxisOptions.scaleLabel.labelString = previousUnit;
+      if (isAllDerivative) {
+        yAxisOptions.scaleLabel.labelString += ' / s';
+      }
     } else {
       yAxisOptions.scaleLabel.labelString = '';
     }
@@ -184,10 +207,17 @@ export class AxisTransform extends GraphTransform<{}> {
       }
       label += '  ' + labelVal;
 
-      let units = opts.data[tooltipItem.datasetIndex].units;
+      const dataItem = opts.data[tooltipItem.datasetIndex];
+      const fieldMetadata = getFieldData(dataItem.measurement, dataItem.field);
+      const isDerivative = DerivativeTransform.doesFieldUseDerivative(fieldMetadata);
+
+      let units = dataItem.units;
       if (units != null) {
         if (units === 'Percent') {
           units = '%';
+        }
+        if (isDerivative) {
+          units += ' / s';
         }
         return  label  + ' ' + units;
       }

@@ -24,7 +24,8 @@
 
 
 <ng-template #editView>
-  <app-telemetrychartedit [chartConfig]="telemetryPref.configuredGraphs[editGraphID]"
+  <app-telemetrychartedit fxFlex="100" fxLayout="column"
+                          [chartConfig]="telemetryPref.configuredGraphs[editGraphID]"
                           [selectedTimeRange]="selectedTimeRange"
                           (saveChartReq)="onChartSave($event)"
                           (cancelEdit)="onEditCancel()">

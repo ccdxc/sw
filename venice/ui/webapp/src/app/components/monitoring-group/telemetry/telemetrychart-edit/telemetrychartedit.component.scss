@@ -34,7 +34,8 @@ $vertical-gutter: 5px;
 }
 
 .telemetrychartedit-explore-bottom {
-  border-top: 1px solid #dddddd
+  border-top: 1px solid #dddddd;
+  overflow: scroll;
 }
 
 .telemetrychartedit-container {

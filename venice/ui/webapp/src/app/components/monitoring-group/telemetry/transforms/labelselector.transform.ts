@@ -65,6 +65,10 @@ export class LabelSelectorTransform extends MetricTransform<LabelSelectorTransfo
   }
 
   updateRepeaterOptions() {
+    if (this.measurement == null) {
+      this.labelData = [];
+      return;
+    }
     const objKind = MetricsMetadata[this.measurement].objectKind;
     const labels = this.labelKindMap[objKind];
     if (labels == null) {

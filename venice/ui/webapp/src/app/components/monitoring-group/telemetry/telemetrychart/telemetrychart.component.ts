@@ -30,6 +30,7 @@ import { GraphTitleTransform } from '../transforms/graphtitle.transform';
 import { GroupByTimeTransform } from '../transforms/groupbytime.transform';
 import { RoundCountersTransform } from '../transforms/roundcounters.transform';
 import { debounceTime } from 'rxjs/operators';
+import { DerivativeTransform } from '../transforms/derivative.transform';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -123,6 +124,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   graphTransforms: GraphTransform<any>[] = [
     new GraphTitleTransform(),
     new AxisTransform(),
+    new DerivativeTransform(),
   ];
 
   naples: ReadonlyArray<ClusterSmartNIC> = [];
@@ -464,6 +466,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     const timeRange = this.selectedTimeRange;
     this.dataSources.forEach( (source) => {
       if (source.fields != null && source.fields.length !== 0) {
+        // Fields with counter types go into a second query
         const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
         // Remvoing default group by time
         query.query['group-by-time'] = null;
@@ -502,6 +505,11 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         source.transformQuery({query: query.query});
         queryList.queries.push(query);
       }
+    });
+    this.graphTransforms.forEach( (t) => {
+      t.transformQueries({
+        queries: queryList
+      });
     });
     return queryList;
   }
@@ -546,11 +554,13 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     const queryList: TelemetryPollingMetricQueries = this.generateMetricsQuery();
     if (queryList.queries.length === 0) {
       this.metricData = null;
+      this.lastQuery = queryList;
       this.drawGraph();
       return;
     }
     // If it's the same query we don't need to generate a new query
     if (this.areQueriesEqual(this.lastQuery, queryList) && this.isTimeRangeSame(this.selectedTimeRange, this.lastTimeRange)) {
+      this.drawGraph();
       return;
     }
 
@@ -619,6 +629,14 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       }
     });
 
+    const results = this.metricData.results;
+
+    this.graphTransforms.forEach( (t) => {
+      t.transformMetricData({
+        results: results
+      });
+    });
+
     // Start with a clean array so that we don't accidentally
     // have stale state transfer from the old options
     // All transforms should be relatively stateless
@@ -628,7 +646,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     const allResultsDatasets = [];
 
     const resDataSets: ChartDataSets[] = [];
-    this.metricData.results.forEach( (res, index) => {
+    results.forEach( (res, index) => {
       if (!MetricsUtility.resultHasData(res)) {
         // TODO: add only in legend
         return;

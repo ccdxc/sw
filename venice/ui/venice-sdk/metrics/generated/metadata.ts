@@ -1641,7 +1641,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Percent CPU Used",
       "description": "CPU usage (percent) ",
       "units": "Percent",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -1651,7 +1651,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Disk Free",
       "description": "Disk Free in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1660,7 +1660,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Total Disk Space",
       "description": "Total Disk Space in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1669,7 +1669,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Disk Used",
       "description": "Disk Used in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1678,7 +1678,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Percent disk Used",
       "description": "Disk usage (percent) ",
       "units": "Percent",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -1688,7 +1688,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Interface Rx",
       "description": "Interface Rx in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "counter",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1697,7 +1697,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Interface Tx",
       "description": "Interface Tx in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "counter",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1706,7 +1706,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Memory Free",
       "description": "Memory Free in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1715,7 +1715,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Total Memory Space",
       "description": "Total Memory Space in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1724,7 +1724,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Memory Used",
       "description": "Memory Used in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1733,7 +1733,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Percent Memory Used",
       "description": "Memory usage (percent) ",
       "units": "Percent",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -1762,7 +1762,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Percent CPU Used",
       "description": "CPU usage (percent) ",
       "units": "Percent",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -1772,7 +1772,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Disk Free",
       "description": "Disk Free in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1781,7 +1781,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Total Disk Space",
       "description": "Total Disk Space in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1790,7 +1790,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Disk Used",
       "description": "Disk Used in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1799,7 +1799,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Percent Disk Used",
       "description": "Disk usage (percent) ",
       "units": "Percent",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -1809,7 +1809,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Interface Rx",
       "description": "Interface Rx in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "counter",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1818,7 +1818,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Interface Tx",
       "description": "Interface Tx in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "counter",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1827,7 +1827,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Memory Free",
       "description": "Memory Free in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1836,7 +1836,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Total Memory Space",
       "description": "Total Memory Space in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1845,7 +1845,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Memory Used",
       "description": "Memory Used in bytes",
       "units": "Bytes",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0
     },
@@ -1854,7 +1854,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Percent Memory Used",
       "units": "Percent",
       "description": "Memory usage (percent) ",
-      "baseType": "number",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -1884,7 +1884,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Admitted NICs",
       "description": "Number of admitted NICs",
       "units": "count",
-      "baseType": "Counter",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1896,7 +1896,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Decomissioned NICs",
       "description": "Number of decommissioned NICs",
       "units": "count",
-      "baseType": "Counter",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1908,7 +1908,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Disconnected NICs",
       "description": "Number of disconnected NICs",
       "units": "count",
-      "baseType": "Counter",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1920,7 +1920,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Healthy NICs",
       "description": "Number of healthy NICs",
       "units": "count",
-      "baseType": "Counter",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1932,7 +1932,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Pending NICs",
       "description": "Number of pending NICs",
       "units": "count",
-      "baseType": "Counter",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1944,7 +1944,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Rejected NICs",
       "description": "Number of rejected NICs",
       "units": "count",
-      "baseType": "Counter",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1956,7 +1956,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Unhealthy NICs",
       "description": "Number of unhealthy NICs",
       "units": "count",
-      "baseType": "Counter",
+      "baseType": "gauge",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
