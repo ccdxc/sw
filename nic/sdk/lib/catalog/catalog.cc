@@ -560,15 +560,13 @@ catalog::populate_serdes(char *dir_name, ptree &prop_tree)
 }
 
 card_id_t
-catalog::catalog_card_id_to_sdk_card_id(uint32_t card_id)
+catalog::catalog_board_type_to_sdk_card_id(std::string board_type)
 {
-    switch (card_id) {
-    case 680005:
+    if (board_type.compare("Naples100") == 0) {
+        return CARD_ID_NAPLES100;
+    } else if (board_type.compare("Naples25") == 0) {
         return CARD_ID_NAPLES25;
-
-    case 680003:
-    case 680004:
-    default:
+    } else {
         return CARD_ID_NAPLES100;
     }
 }
@@ -576,8 +574,8 @@ catalog::catalog_card_id_to_sdk_card_id(uint32_t card_id)
 sdk_ret_t
 catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
 {
-    catalog_db_.card_id = catalog_card_id_to_sdk_card_id(
-                                            prop_tree.get<uint32_t>("card_id", 0));
+    catalog_db_.card_id = catalog_board_type_to_sdk_card_id(
+                                            prop_tree.get<std::string>("board_type", ""));
     catalog_db_.max_mpu_per_stage = prop_tree.get<uint32_t>("max_mpu_per_stage", 0);
     catalog_db_.mpu_trace_size = prop_tree.get<uint32_t>("mpu_trace_size", 0);
 

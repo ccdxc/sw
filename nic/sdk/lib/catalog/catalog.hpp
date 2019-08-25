@@ -358,7 +358,7 @@ private:
     catalog_logical_oob_port_t *logical_oob_port_internal(uint32_t port);
     uint32_t  serdes_index_get(uint32_t sbus_addr);
     uint8_t   cable_type_get(std::string cable_type_str);
-    card_id_t catalog_card_id_to_sdk_card_id(uint32_t card_id);
+    card_id_t catalog_board_type_to_sdk_card_id(std::string card_id);
     void logical_port_to_asic_port(uint32_t logical_port,
                                    uint32_t *asic, uint32_t *asic_port);
 };
