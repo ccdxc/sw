@@ -12,14 +12,14 @@
           "Name": "ConnectionsPerSecond",
           "DisplayName": "CPS",
           "Description": "Connections per second",
-          "Units": "Count",
+          "Units": "Gauge",
           "BaseType": "Counter"
         },
         {
           "Name": "MaxConnectionsPerSecond",
           "DisplayName": "Max-CPS",
           "Description": "Max Connections per second",
-          "Units": "Count",
+          "Units": "Gauge",
           "BaseType": "Counter",
           "Tags": [
             "Level7"
@@ -141,7 +141,7 @@
           "Name": "TotalActiveSessions",
           "DisplayName": "Total Active Sessions",
           "Description": "Total Number of active sessions",
-          "Units": "Count",
+          "Units": "Gauge",
           "BaseType": "Counter"
         },
         {

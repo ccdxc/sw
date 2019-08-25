@@ -15,8 +15,8 @@ message FteCPSMetrics {
     };
     fixed64        Key                        = 1;     // FTE ID
 
-    delphi.Counter connections_per_second     = 2  [(venice.metricsField) = {DisplayName: "CPS" Description: "Connections per second"}];
-    delphi.Counter max_connections_per_second = 3  [(venice.metricsField) = {DisplayName: "Max-CPS" Description: "Max Connections per second" Tags:[ Level7 ] }];
+    delphi.Counter connections_per_second     = 2  [(venice.metricsField) = {DisplayName: "CPS" Description: "Connections per second" Units: Gauge } ];
+    delphi.Counter max_connections_per_second = 3  [(venice.metricsField) = {DisplayName: "Max-CPS" Description: "Max Connections per second" Units: Gauge Tags:[ Level7 ] }];
     delphi.Counter packets_per_second         = 4  [(venice.metricsField) = {DisplayName: "PPS" Description: "Packets per second" Tags:[ Level7 ] }];
     delphi.Counter max_packets_per_second     = 5  [(venice.metricsField) = {DisplayName: "Max-PPS" Description: "Max packets per second" Tags:[ Level7 ] }];
 }
@@ -54,7 +54,7 @@ message SessionSummaryMetrics {
     };
     fixed64        Key                       = 1;
    
-    delphi.Counter total_active_sessions         = 2  [(venice.metricsField) = {DisplayName: "Total Active Sessions" Description: "Total Number of active sessions"}];
+    delphi.Counter total_active_sessions         = 2  [(venice.metricsField) = {DisplayName: "Total Active Sessions" Description: "Total Number of active sessions"  Units: Gauge }];
     delphi.Counter num_l2_sessions               = 3  [(venice.metricsField) = {DisplayName: "L2 Sessions" Description: "Total Number of L2 Sessions"}];
     delphi.Counter num_tcp_sessions              = 4  [(venice.metricsField) = {DisplayName: "TCP Sessions" Description: "Total Number of TCP sessions"}];
     delphi.Counter num_udp_sessions              = 5  [(venice.metricsField) = {DisplayName: "UDP Sessions" Description: "Total Number of UDP sessions"}];

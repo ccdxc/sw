@@ -442,7 +442,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "ConnectionsPerSecond",
       "displayName": "CPS",
       "description": "Connections per second",
-      "units": "Count",
+      "units": "Gauge",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -453,7 +453,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "MaxConnectionsPerSecond",
       "displayName": "Max-CPS",
       "description": "Max Connections per second",
-      "units": "Count",
+      "units": "Gauge",
       "baseType": "Counter",
       "tags": [
         "Level7"
@@ -642,7 +642,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "TotalActiveSessions",
       "displayName": "Total Active Sessions",
       "description": "Total Number of active sessions",
-      "units": "Count",
+      "units": "Gauge",
       "baseType": "Counter",
       "tags": [
         "Level4"

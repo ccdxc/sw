@@ -9,6 +9,7 @@ enum MetricUnitType {
     Percentage  = 1;
     Bytes       = 2;
     ID          = 3;
+    Gauge       = 4;
 }
 
 // defines as a hint of type of metric
