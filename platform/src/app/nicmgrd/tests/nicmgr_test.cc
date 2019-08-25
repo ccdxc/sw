@@ -189,6 +189,8 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 
 TEST_F(nicmgr_test, test1)
 {
+    struct rx_filter_add_cmd rx_cmd = {0};
+    uint64_t mac1;
     // Get eth device
     Eth *eth_dev = (Eth *)devmgr->GetDevice("eth0");
     assert(eth_dev != NULL);
@@ -207,6 +209,24 @@ TEST_F(nicmgr_test, test1)
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x12345678ABCD;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x01005e010101;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+#if 0
     struct rx_filter_add_cmd rx_cmd = {0};
     // struct rx_filter_add_comp rx_comp;
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
@@ -300,10 +320,14 @@ TEST_F(nicmgr_test, test1)
     d_cmd = {0};
     d_cmd.cmd.opcode = CMD_OPCODE_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+#endif
 }
 
 TEST_F(nicmgr_test, test2)
 {
+    struct rx_filter_add_cmd rx_cmd;
+    uint64_t mac1;
+
     // Get eth device
     Eth *eth_dev = (Eth *)devmgr->GetDevice("oob_mnic0");
     assert(eth_dev != NULL);
@@ -316,10 +340,29 @@ TEST_F(nicmgr_test, test2)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
-    struct lif_init_cmd init_cmd;
+    struct lif_init_cmd init_cmd = {0};
     init_cmd.opcode = CMD_OPCODE_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x12345678ABCD;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x01005e020202;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+#if 0
 
     struct rx_filter_add_cmd rx_cmd;
     // struct rx_filter_add_comp rx_comp;
@@ -395,6 +438,19 @@ TEST_F(nicmgr_test, test2)
     // RESET
     d_cmd.cmd.opcode = CMD_OPCODE_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+#endif
+}
+
+TEST_F(nicmgr_test, test3)
+{
+    // Enable swm
+    devmgr->swm_update(true, 1, 0, 0);
+
+    // Change swm
+    devmgr->swm_update(true, 1, 10, 0);
+
+    // Disable swm
+    devmgr->swm_update(false, 0, 0, 0);
 }
 
 int main(int argc, char **argv) {

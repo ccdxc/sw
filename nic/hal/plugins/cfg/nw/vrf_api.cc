@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/iris/include/hal_state.hpp"
-#include "nic/hal/plugins/cfg/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 
 namespace hal {
 
@@ -37,5 +37,11 @@ bool
 is_mytep (vrf_t& vrf, const ipvx_addr_t *ipaddr)
 {
     return (memcmp(ipaddr, &vrf.mytep_ip.addr, sizeof(ipvx_addr_t)) == 0);
+}
+
+bool
+vrf_if_is_designated_uplink(vrf_t *vrf, if_t *hal_if) 
+{
+    return (vrf->designated_uplink == hal_if->hal_handle);
 }
 }

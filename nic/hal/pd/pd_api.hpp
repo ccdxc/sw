@@ -178,6 +178,8 @@ typedef struct pd_l2seg_delete_args_s {
 typedef struct pd_l2seg_update_args_s {
     l2seg_t     *l2seg;
     bool        iflist_change;
+    bool        swm_change;
+    block_list  *agg_iflist;
     block_list  *add_iflist;
     block_list  *del_iflist;
 } __PACK__ pd_l2seg_update_args_t;

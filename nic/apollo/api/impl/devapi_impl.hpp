@@ -74,6 +74,12 @@ public:
     virtual sdk_ret_t port_set_config(uint32_t port_num,
                                       port_config_t *config) override;
 
+    // single wire management APIs
+    virtual sdk_ret_t swm_update(bool enable, 
+                                 uint32_t port_num, /* Uplink port number */ 
+                                 uint32_t vlan, /* 0: untag */
+                                 mac_t mac) override;
+
 private:
     devapi_impl() {}
     ~devapi_impl() {}

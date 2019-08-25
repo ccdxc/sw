@@ -9,6 +9,7 @@
 #include "qos.hpp"
 #include "port.hpp"
 #include "accel.hpp"
+#include "swm.hpp"
 
 namespace iris {
 
@@ -285,7 +286,30 @@ devapi_iris::lif_get_max_filters(uint32_t *ucast_filters,
 {
     return devapi_lif::get_max_filters(ucast_filters, 
                                        mcast_filters);
+}
 
+sdk_ret_t
+devapi_iris::swm_update(bool enable, 
+                        uint32_t port_num, uint32_t vlan, mac_t mac)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    if (enable) {
+        ret = devapi_swm::swm_configure(port_num, vlan, mac);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("Failed to configure single wire management. err: {}", ret);
+            goto end;
+        }
+    } else {
+        ret = devapi_swm::swm_unconfigure();
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("Failed to unconfigure single wire management. err: {}", ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
 }
 
 sdk_ret_t

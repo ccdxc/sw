@@ -16,7 +16,8 @@ using sdk::lib::ht_ctxt_t;
 namespace hal {
 namespace pd {
 
-#define HAL_MAX_HW_L2SEGMENTS                        2048
+#define L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF           0x1
+#define HAL_MAX_HW_L2SEGMENTS                       2048
 
 // l2seg pd state
 typedef struct pd_l2seg_s {
@@ -117,6 +118,19 @@ hal_ret_t l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg,
                                                 bool is_upgrade = false);
 hal_ret_t l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg);
 hal_ret_t l2seg_pd_depgm_cpu_tx_inp_prop_tbl (pd_l2seg_t *l2seg_pd);
+hal_ret_t l2seg_pd_repgm_mbr_ifs (block_list *agg_list, l2seg_t *l2seg);
+hal_ret_t l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
+                                                 uint32_t upd_flags,
+                                                 nwsec_profile_t *nwsec_prof,
+                                                 uint32_t num_prom_lifs,
+                                                 if_t *prom_enic_if);
+hal_ret_t l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
+                                           uint32_t upd_flags,
+                                           nwsec_profile_t *nwsec_prof,
+                                           uint32_t num_prom_lifs,
+                                           if_t *prom_enic_if,
+                                           input_properties_actiondata_t &data);
+hal_ret_t l2seg_pd_repgm_enics (l2seg_t *l2seg);
 }   // namespace pd
 }   // namespace hal
 

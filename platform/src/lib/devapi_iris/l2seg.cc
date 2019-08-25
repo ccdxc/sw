@@ -6,6 +6,7 @@
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 #include "l2seg.hpp"
 #include "uplink.hpp"
+#include "enic.hpp"
 #include "utils.hpp"
 #include "devapi_mem.hpp"
 #include "hal_grpc.hpp"
@@ -103,7 +104,7 @@ devapi_l2seg::init_(devapi_vrf *vrf, vlan_t vlan)
 sdk_ret_t
 devapi_l2seg::l2seg_halcreate(void)
 {
-    sdk_ret_t                     ret = SDK_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     grpc::ClientContext                 context;
     grpc::Status                        status;
 
@@ -123,6 +124,7 @@ devapi_l2seg::l2seg_halcreate(void)
     req->set_bcast_fwd_policy(l2segment::BroadcastFwdPolicy::BROADCAST_FWD_POLICY_FLOOD);
     req->mutable_wire_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);
     req->mutable_wire_encap()->set_encap_value(vlan_);
+    req->set_single_wire_management(single_wire_mgmt_);
 
     // status = hal->l2seg_stub_->devapi_l2segCreate(&context, req_msg, &rsp_msg);
     for (auto it = uplink_refs_.begin(); it != uplink_refs_.end(); ++it) {
@@ -247,6 +249,7 @@ devapi_l2seg::trigger_halupdate()
     req->set_bcast_fwd_policy(l2segment::BroadcastFwdPolicy::BROADCAST_FWD_POLICY_FLOOD);
     req->mutable_wire_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);
     req->mutable_wire_encap()->set_encap_value(vlan_);
+    req->set_single_wire_management(single_wire_mgmt_);
 
     for (auto it = uplink_refs_.begin(); it != uplink_refs_.end(); ++it) {
         req->add_if_key_handle()->set_interface_id(it->first);
@@ -308,5 +311,41 @@ devapi_l2seg::del_uplink(devapi_uplink *uplink)
 
     // Sends update to Hal
     return trigger_halupdate();
+}
+
+//-----------------------------------------------------------------------------
+// Adds enic to l2segment
+//-----------------------------------------------------------------------------
+sdk_ret_t
+devapi_l2seg::add_enic(devapi_enic *enic)
+{
+    // Check for the presence of new enic
+    if (enic_refs_.find(enic->get_id()) != enic_refs_.end()) {
+        NIC_LOG_WARN("Duplicate enic add : {}", enic->get_id());
+        return SDK_RET_ERR;
+    }
+
+    // Add new enic to the map
+    enic_refs_[enic->get_id()] = enic;
+
+    return SDK_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Deletes enic to l2segment
+//-----------------------------------------------------------------------------
+sdk_ret_t
+devapi_l2seg::del_enic(devapi_enic *enic)
+{
+    // Check for the presence of enic
+    if (enic_refs_.find(enic->get_id()) == enic_refs_.end()) {
+        NIC_LOG_ERR("Not able to find enic: {}", enic->get_id());
+        return SDK_RET_ERR;
+    }
+
+    // Del enic from the map
+    enic_refs_.erase(enic->get_id());
+
+    return SDK_RET_OK;
 }
 }    // namespace iris

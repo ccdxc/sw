@@ -61,6 +61,12 @@ public:
         return SDK_RET_INVALID_OP;
     }
 
+    // single wire management APIs
+    virtual sdk_ret_t swm_update(bool enable, 
+                                 uint32_t port_num, /* Uplink port number */ 
+                                 uint32_t vlan, /* 0: untag */
+                                 mac_t mac) = 0;
+
     // accel APIs
     virtual sdk_ret_t accel_rgroup_add(string name,
                                        uint64_t metrics_mem_addr,

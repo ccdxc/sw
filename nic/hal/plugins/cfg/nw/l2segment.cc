@@ -10,6 +10,7 @@
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
@@ -522,6 +523,103 @@ l2seg_add_oifs (l2seg_t *l2seg)
 }
 
 //-----------------------------------------------------------------------------
+// SWM: Adding non-designated uplink for it to receive traffic
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+l2seg_add_non_designated_uplink(l2seg_t *l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+    vrf_t           *vrf = NULL;
+    oif_t           oif = {};
+
+    vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+
+    if (l2seg->mbrif_list) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            hal_if = find_if_by_handle(*p_hdl_id);
+            if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
+                HAL_TRACE_DEBUG("Adding non-designtated uplink {} to oiflists",
+                                if_keyhandle_to_str(hal_if));
+                oif.intf = hal_if;
+                oif.l2seg = l2seg;
+                ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), 
+                                       &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to add oif to bcast oiflsit. err : {}",
+                                  ret);
+                }
+                ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), 
+                                       &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to add oif to mcast oiflsit. err : {}",
+                                  ret);
+                }
+                ret = oif_list_add_oif(l2seg_get_prmsc_oif_list(l2seg), 
+                                       &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to add oif to prmc oiflsit. err : {}",
+                                  ret);
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// SWM: Deleting non-designated uplink for it to receive traffic
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+l2seg_del_non_designated_uplink(l2seg_t *l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+    vrf_t           *vrf = NULL;
+    oif_t           oif = {};
+
+    vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+
+    if (l2seg->mbrif_list) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            hal_if = find_if_by_handle(*p_hdl_id);
+            if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
+                HAL_TRACE_DEBUG("Deleting non-designtated uplink {} to oiflists",
+                                if_keyhandle_to_str(hal_if));
+                oif.intf = hal_if;
+                oif.l2seg = l2seg;
+                ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), 
+                                       &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to del oif to bcast oiflsit. err : {}",
+                                  ret);
+                }
+                ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), 
+                                       &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to del oif to mcast oiflsit. err : {}",
+                                  ret);
+                }
+                ret = oif_list_remove_oif(l2seg_get_prmsc_oif_list(l2seg), 
+                                       &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to del oif to prmc oiflsit. err : {}",
+                                  ret);
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+//-----------------------------------------------------------------------------
 // Build oiflists: Create and add oifs.
 //  - Corresponding call to l2seg_cleanup_oiflists
 //-----------------------------------------------------------------------------
@@ -540,7 +638,16 @@ l2seg_build_oiflists (l2seg_t *l2seg)
         HAL_TRACE_ERR("Failed to create OIFlist for l2seg, err : {}", ret);
     }
 
-    if (is_forwarding_mode_smart_switch()) {
+    // Single Wire Management (SWM):
+    // - Add mbr which is not the designated uplink for the vrf of this l2seg
+    if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
+        l2seg->single_wire_mgmt) {
+        ret = l2seg_add_non_designated_uplink(l2seg);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add non-designated uplink. err : {}", 
+                          ret);
+        }
+    } else if (is_forwarding_mode_smart_switch()) {
         // Add oifs to bcast oiflist.
         ret = l2seg_add_oifs(l2seg);
         if (ret != HAL_RET_OK) {
@@ -619,6 +726,14 @@ l2seg_cleanup_oiflists (l2seg_t *l2seg)
         ret = l2seg_delete_oifs(l2seg);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+        }
+    }
+
+    if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
+        ret = l2seg_del_non_designated_uplink(l2seg);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete non-designated OIFs for "
+                          "l2seg, err : {}", ret);
         }
     }
 
@@ -844,14 +959,19 @@ end:
 // Update Mcast oiflist of L2seg
 //----------------------------------------------------------------------------
 hal_ret_t
-l2seg_update_oiflist (block_list *if_list, l2seg_t *l2seg, bool add)
+l2seg_update_oiflist (block_list *if_list, l2seg_t *l2seg, bool add,
+                      bool only_non_designated,
+                      bool update_bcast, bool update_mcast, bool update_prmsc)
 {
     hal_ret_t       ret = HAL_RET_OK;
     if_t            *hal_if = NULL;
     hal_handle_t    *p_hdl_id = NULL;
     oif_t           oif;
+    vrf_t           *vrf = NULL;
 
     if (!if_list) goto end;
+
+    vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
 
     for (const void *ptr : *if_list) {
         p_hdl_id = (hal_handle_t *)ptr;
@@ -862,23 +982,62 @@ l2seg_update_oiflist (block_list *if_list, l2seg_t *l2seg, bool add)
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         }
+        if (only_non_designated && vrf_if_is_designated_uplink(vrf, hal_if)) {
+            continue;
+        }
 
         oif.intf = hal_if;
         oif.l2seg = l2seg;
 
         if (add) {
-            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Add IF to bcast oiflist Failed. ret : {}",
-                              ret);
-                goto end;
+            if (update_bcast) {
+                ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Add IF to bcast oiflist Failed. ret : {}",
+                                  ret);
+                    goto end;
+                }
+            }
+            if (update_mcast) {
+                ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Add IF to mcast oiflist Failed. ret : {}",
+                                  ret);
+                    goto end;
+                }
+            }
+            if (update_prmsc) {
+                ret = oif_list_add_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Add IF to prmsc oiflist Failed. ret : {}",
+                                  ret);
+                    goto end;
+                }
             }
         } else {
-            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Del IF to bcast oiflist"
-                              " Failed. ret : {}", ret);
-                goto end;
+            if (update_bcast) {
+                ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Del IF to bcast oiflist"
+                                  " Failed. ret : {}", ret);
+                    goto end;
+                }
+            }
+            if (update_mcast) {
+                ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Del IF to mcast oiflist"
+                                  " Failed. ret : {}", ret);
+                    goto end;
+                }
+            }
+            if (update_prmsc) {
+                ret = oif_list_remove_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Del IF to prmsc oiflist"
+                                  " Failed. ret : {}", ret);
+                    goto end;
+                }
             }
         }
     }
@@ -1347,9 +1506,9 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
 
     l2seg_ep_learning_update(l2seg, spec);
     l2seg->proxy_arp_enabled = spec.proxy_arp_enabled();
+    l2seg->single_wire_mgmt = spec.single_wire_management();
 
 end:
-
     return ret;
 }
 
@@ -1608,6 +1767,12 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // pd_l2seg_args.l2seg = l2seg;
     pd_l2seg_args.l2seg = l2seg_clone;
     pd_l2seg_args.iflist_change = app_ctxt->iflist_change;
+    pd_l2seg_args.swm_change = app_ctxt->swm_change;
+    if (pd_l2seg_args.swm_change) {
+        l2seg_clone->single_wire_mgmt = app_ctxt->new_single_wire_mgmt;
+    }
+    // pd_l2seg_args.curr_iflist = l2seg->mbrif_list;
+    pd_l2seg_args.agg_iflist = app_ctxt->agg_iflist;
     pd_l2seg_args.add_iflist = app_ctxt->add_iflist;
     pd_l2seg_args.del_iflist = app_ctxt->del_iflist;
     pd_func_args.pd_l2seg_update = &pd_l2seg_args;
@@ -1757,8 +1922,31 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     //  - Packet should never go out on other uplinks
     if (is_forwarding_mode_smart_switch()) {
         // Bcast oiflist update
-        ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, true);
-        ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, false);
+        ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, 
+                                   true, false,
+                                   true, false, false);
+        ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, 
+                                   false, false,
+                                   true, false, false);
+    } else if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
+               l2seg_clone->single_wire_mgmt) {
+        /*
+         * Handling change on non-designated uplinks for SWM
+         * Assumption:
+         * - A non-designated uplink can be added only when we enable swm.
+         * - A non-designated uplink can be removed only when we disable swm.
+         */
+        if (app_ctxt->swm_change) {
+            if (l2seg_clone->single_wire_mgmt) {
+                ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, 
+                                           true, true,
+                                           true, true, true);
+            } else {
+                ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, 
+                                           false, true,
+                                           true, true, true);
+            }
+        }
     }
 
     //  - Update Success:
@@ -1982,6 +2170,13 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to check if list change. ret : {}", ret);
         goto end;
+    }
+
+    // check if swm mode change
+    app_ctxt->swm_change = false;
+    if (l2seg->single_wire_mgmt != spec.single_wire_management()) {
+        app_ctxt->swm_change = true;
+        app_ctxt->new_single_wire_mgmt = spec.single_wire_management();
     }
 
     if (app_ctxt->iflist_change) {
@@ -2511,6 +2706,8 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     rsp->mutable_spec()->set_segment_type(l2seg->segment_type);
     rsp->mutable_spec()->set_mcast_fwd_policy(l2seg->mcast_fwd_policy);
     rsp->mutable_spec()->set_bcast_fwd_policy(l2seg->bcast_fwd_policy);
+    rsp->mutable_spec()->set_proxy_arp_enabled(l2seg->proxy_arp_enabled);
+    rsp->mutable_spec()->set_single_wire_management(l2seg->single_wire_mgmt);
     rsp->mutable_spec()->mutable_wire_encap()->set_encap_type(l2seg->wire_encap.type);
     rsp->mutable_spec()->mutable_wire_encap()->set_encap_value(l2seg->wire_encap.val);
     rsp->mutable_spec()->mutable_tunnel_encap()->set_encap_type(l2seg->tunnel_encap.type);

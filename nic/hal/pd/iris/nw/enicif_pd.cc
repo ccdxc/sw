@@ -1172,24 +1172,28 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (g_hal_state->allow_local_switch_for_promiscuous()) {
-            if (num_prom_lifs == 0) {
-                HAL_TRACE_DEBUG("Num prom lifs: {}", num_prom_lifs);
-                // no need to replicate. just send to uplink.
-                inp_prop.clear_promiscuous_repl = 1;
-            } else if (num_prom_lifs == 1) {
-                HAL_TRACE_DEBUG("L2seg Prom if handle: {}, enic prom if handle: {}",
-                                l2seg_pd->prom_if_handle,
-                                ((if_t *)pd_enicif->pi_if)->hal_handle);
-                if (l2seg_pd->prom_if_handle == ((if_t *)pd_enicif->pi_if)->hal_handle) {
-                    // no need to replicate. pkt is ingress on the one prom lif
+            if (l2seg->single_wire_mgmt) {
+                inp_prop.clear_promiscuous_repl = 0;
+            } else {
+                if (num_prom_lifs == 0) {
+                    HAL_TRACE_DEBUG("Num prom lifs: {}", num_prom_lifs);
+                    // no need to replicate. just send to uplink.
                     inp_prop.clear_promiscuous_repl = 1;
+                } else if (num_prom_lifs == 1) {
+                    HAL_TRACE_DEBUG("L2seg Prom if handle: {}, enic prom if handle: {}",
+                                    l2seg_pd->prom_if_handle,
+                                    ((if_t *)pd_enicif->pi_if)->hal_handle);
+                    if (l2seg_pd->prom_if_handle == ((if_t *)pd_enicif->pi_if)->hal_handle) {
+                        // no need to replicate. pkt is ingress on the one prom lif
+                        inp_prop.clear_promiscuous_repl = 1;
+                    } else {
+                        // need to replicate to the prom lif. pkt is ingress on non-prom lif.
+                        inp_prop.clear_promiscuous_repl = 0;
+                    }
                 } else {
-                    // need to replicate to the prom lif. pkt is ingress on non-prom lif.
+                    // more than 1 prom. lifs => Have to take prom. replication.
                     inp_prop.clear_promiscuous_repl = 0;
                 }
-            } else {
-                // more than 1 prom. lifs => Have to take prom. replication.
-                inp_prop.clear_promiscuous_repl = 0;
             }
         } else {
             HAL_TRACE_DEBUG("No local switching");
@@ -1204,8 +1208,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
         // inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
-    HAL_TRACE_DEBUG("clear_prom_repl: {}, NIC_MODE: {}",
-                    inp_prop.clear_promiscuous_repl, inp_prop.nic_mode);
+    HAL_TRACE_DEBUG("clear_prom_repl: {}, NIC_MODE: {}, swm: {}",
+                    inp_prop.clear_promiscuous_repl, inp_prop.nic_mode, l2seg->single_wire_mgmt);
     if (if_l2seg) {
         vlan_tag_idx = &if_l2seg->inp_prop_idx;
         sband_tag_idx = &if_l2seg->inp_prop_idx_sband;

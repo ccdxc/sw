@@ -435,7 +435,8 @@ static hal_ret_t
 vrf_init_from_spec (vrf_t *vrf, const VrfSpec& spec)
 {
     hal_ret_t          ret;
-    nwsec_profile_t    *sec_prof;
+    nwsec_profile_t    *sec_prof = NULL;
+    if_t               *hal_if = NULL;
 
     vrf->vrf_type             = spec.vrf_type();
     vrf->vrf_id               = spec.key_or_handle().vrf_id();
@@ -474,6 +475,15 @@ vrf_init_from_spec (vrf_t *vrf, const VrfSpec& spec)
                         ipaddr2str(&vrf->mytep_ip),
                         ipaddr2str(&vrf->gipo_prefix.addr),
                         vrf->gipo_prefix.len);
+    }
+
+    // Classic: Each uplink gets a vrf. 
+    if (spec.has_designated_uplink()) {
+        auto if_key_hdl = spec.designated_uplink();
+        hal_if = if_lookup_key_or_handle(if_key_hdl);
+        if (hal_if) {
+            vrf->designated_uplink = hal_if->hal_handle;
+        }
     }
 
     return HAL_RET_OK;
@@ -1041,6 +1051,7 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
     pd::pd_vrf_get_args_t   args   = {0};
     nwsec_profile_t         *sec_prof = NULL;
     pd::pd_func_args_t      pd_func_args = {0};
+    if_t                    *uplink_if = NULL;
 
     // fill config spec of this vrf
     rsp->mutable_spec()->mutable_key_or_handle()->set_vrf_id(vrf->vrf_id);
@@ -1048,6 +1059,11 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
     if (sec_prof != NULL) {
         rsp->mutable_spec()->mutable_security_key_handle()->set_profile_id(sec_prof->profile_id);
     }
+    uplink_if = find_if_by_handle(vrf->designated_uplink);
+    if (uplink_if != NULL) {
+        rsp->mutable_spec()->mutable_designated_uplink()->set_interface_id(uplink_if->if_id);
+    }
+
 
     // fill operational state of this vrf
     rsp->mutable_status()->mutable_key_or_handle()->set_vrf_handle(vrf->hal_handle);
@@ -1059,7 +1075,6 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
     rsp->mutable_stats()->set_num_l4lb_services(vrf->num_l4lb_svc);
     rsp->mutable_stats()->set_num_endpoints(vrf->num_ep);
     rsp->mutable_spec()->set_vrf_type(vrf->vrf_type);
-
 
     // Getting PD information
     args.vrf = vrf;

@@ -14,6 +14,7 @@
 #include "nic/hal/pd/iris/nw/enicif_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 
 namespace hal {
 namespace pd {
@@ -351,7 +352,17 @@ pd_l2seg_update (pd_func_args_t *pd_func_args)
     hal_ret_t   ret = HAL_RET_OK;
     pd_l2seg_update_args_t *args = pd_func_args->pd_l2seg_update;
 
-    if (args->iflist_change) {
+    if (args->swm_change) {
+        // Generally swm change will result change of if list as well.
+
+        // Update existing IFs & Program newly added IFs
+        ret = l2seg_pd_repgm_mbr_ifs(args->agg_iflist, args->l2seg);
+        // Remove deleted IFs
+        ret = l2seg_pd_depgm_mbr_ifs(args->del_iflist, args->l2seg);
+        // Reprogram ENIC's on this l2seg for promiscous flag change
+        ret = l2seg_pd_repgm_enics(args->l2seg);
+
+    } else if (args->iflist_change) {
         HAL_TRACE_DEBUG("If list change: Input props table change. "
                         "add_oifs: {}, del_oifs: {}", args->add_iflist->num_elems(),
                         args->del_iflist->num_elems());
@@ -509,6 +520,7 @@ l2seg_pd_depgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg)
     hal_handle_t    *p_hdl = NULL;
     if_t            *hal_if = NULL;
     intf::IfType    if_type;
+    // vrf_t           *vrf = NULL;
 
     if (!if_list) goto end;
 
@@ -516,6 +528,17 @@ l2seg_pd_depgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg)
         p_hdl = (hal_handle_t *)ptr;
         hal_if = find_if_by_handle(*p_hdl);
         if_type = hal::intf_get_if_type(hal_if);
+
+        // No need of this check. We will depgm if there is an entry created.
+#if 0
+        if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
+            vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+            if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
+                continue;
+            }
+        }
+#endif
+
         HAL_TRACE_DEBUG("Processing if: {}", hal_if->if_id);
 
         switch(if_type) {
@@ -649,32 +672,37 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
         l2seg_is_mgmt(l2seg))) {
         // (hal_if->is_oob_management || is_native))) {
         inp_prop.nic_mode = NIC_MODE_CLASSIC;
-        if (num_prom_lifs == 0) {
-            // No prom. lifs => no promiscuous repl. needed.
-            inp_prop.clear_promiscuous_repl = 1;
-        } else if (num_prom_lifs == 1) {
-            // 1 prom. lif => Get prom lif from inp. props and no prom replication needed
-            SDK_ASSERT(l2seg_pd->prom_if_handle != HAL_HANDLE_INVALID);
-            inp_prop.clear_promiscuous_repl = 1;
-            prom_if = find_if_by_handle(l2seg_pd->prom_if_handle);
-            if (prom_if) {
-                inp_prop.dst_lport = if_get_lport_id(prom_if);
-            } else {
-                // if lookup by handle is a miss, prom if has to be passed
-                pd_enicif = (pd_enicif_t *)prom_enic_if->pd_if;
-                inp_prop.dst_lport = pd_enicif->enic_lport_id;
-            }
-        } else {
-            // More than 1 prom. lifs => Have to take prom. replication.
+        if (l2seg->single_wire_mgmt) {
             inp_prop.clear_promiscuous_repl = 0;
+        } else {
+            if (num_prom_lifs == 0) {
+                // No prom. lifs => no promiscuous repl. needed.
+                inp_prop.clear_promiscuous_repl = 1;
+            } else if (num_prom_lifs == 1) {
+                // 1 prom. lif => Get prom lif from inp. props and no prom replication needed
+                SDK_ASSERT(l2seg_pd->prom_if_handle != HAL_HANDLE_INVALID);
+                inp_prop.clear_promiscuous_repl = 1;
+                prom_if = find_if_by_handle(l2seg_pd->prom_if_handle);
+                if (prom_if) {
+                    inp_prop.dst_lport = if_get_lport_id(prom_if);
+                } else {
+                    // if lookup by handle is a miss, prom if has to be passed
+                    pd_enicif = (pd_enicif_t *)prom_enic_if->pd_if;
+                    inp_prop.dst_lport = pd_enicif->enic_lport_id;
+                }
+            } else {
+                // More than 1 prom. lifs => Have to take prom. replication.
+                inp_prop.clear_promiscuous_repl = 0;
+            }
         }
     } else {
         inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
-    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}, NIC_MODE: {}",
+    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}, NIC_MODE: {}, swm: {}",
                     inp_prop.clear_promiscuous_repl,
-                    inp_prop.dst_lport, inp_prop.nic_mode);
+                    inp_prop.dst_lport, inp_prop.nic_mode,
+                    l2seg->single_wire_mgmt);
 
     if ((is_forwarding_mode_host_pinned()) &&
         (hal::l2seg_get_pinned_uplink(l2seg) != hal::if_get_hal_handle(hal_if))) {
@@ -692,6 +720,92 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     }
 
     return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Update data for input properties table
+// ----------------------------------------------------------------------------
+hal_ret_t
+l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
+                                       uint32_t upd_flags,
+                                       nwsec_profile_t *nwsec_prof,
+                                       uint32_t num_prom_lifs,
+                                       if_t *prom_enic_if)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
+    pd_l2seg_t                  *l2seg_pd;
+    bool                        is_native = FALSE;
+    uint32_t                    uplink_ifpc_id = 0;
+    sdk_hash                    *inp_prop_tbl = NULL;
+    input_properties_actiondata_t data;
+
+    l2seg_uplink_inp_prop_form_data(args->l2seg, args->intf, upd_flags, nwsec_prof,
+                                    num_prom_lifs, prom_enic_if, data);
+
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(args->l2seg);
+    is_native = is_l2seg_native(args->l2seg, args->intf);
+    uplink_ifpc_id = if_get_uplink_ifpc_id(args->intf);
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    if (!is_native) {
+        // Update one entry
+        sdk_ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to program for "
+                          "(l2seg, upif): ({}, {})",
+                          hal::l2seg_get_l2seg_id(args->l2seg),
+                          if_get_if_id(args->intf));
+            goto end;
+        }
+        HAL_TRACE_DEBUG("Programmed: {}, If: {}, Inp.Prop.Idx: {}, uplink_ifpc_id: {}",
+                        l2seg_keyhandle_to_str(args->l2seg),
+                        if_keyhandle_to_str(args->intf),
+                        l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id],
+                        uplink_ifpc_id);
+    } else {
+        // Update Priority tagged entry
+        sdk_ret = inp_prop_tbl->update(
+                l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id], &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program "
+                          "prio. entry for (l2seg, upif): ({}, {})",
+                          hal::l2seg_get_l2seg_id(args->l2seg),
+                          if_get_if_id(args->intf));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed prio. entry "
+                            "table:input_properties index:{} ",
+                            l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id]);
+        }
+
+        // Update Untagged entry
+        sdk_ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program "
+                          "untag entry for (l2seg, upif): ({}, {})",
+                          hal::l2seg_get_l2seg_id(args->l2seg),
+                          if_get_if_id(args->intf));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed untagged entry "
+                            "table:input_properties index:{} ",
+                            l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
+        }
+        HAL_TRACE_DEBUG("Programmed: {}, If: {}, Inp.Prop.Idx: {}, uplink_ifpc_id: {}",
+                        l2seg_keyhandle_to_str(args->l2seg),
+                        if_keyhandle_to_str(args->intf),
+                        l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id],
+                        uplink_ifpc_id);
+    }
+
+end:
+        return ret;
 }
 
 // ----------------------------------------------------------------------------
@@ -921,11 +1035,21 @@ l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg, bool is_upgrade)
     hal_handle_t    *p_hdl = NULL;
     if_t            *hal_if = NULL;
     intf::IfType    if_type;
+    vrf_t           *vrf = NULL;
 
     for (const void *ptr : *if_list) {
         p_hdl = (hal_handle_t *)ptr;
         hal_if = find_if_by_handle(*p_hdl);
         if_type = hal::intf_get_if_type(hal_if);
+
+        // Skip for non-designated 
+        if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
+            l2seg->single_wire_mgmt) {
+            vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+            if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
+                continue;
+            }
+        }
 
         switch(if_type) {
         case intf::IF_TYPE_UPLINK:
@@ -938,6 +1062,98 @@ l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg, bool is_upgrade)
                               "(l2seg:{}, uplink:{}). ret: {}",
                               l2seg->seg_id, hal_if->if_id, ret);
                 goto end;
+            }
+        break;
+        default:
+            SDK_ASSERT(0);
+        }
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
+l2seg_pd_repgm_enics (l2seg_t *l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    *p_hdl_id = NULL;
+    if_t            *hal_if = NULL;
+    intf::IfType    if_type;
+
+    for (const void *ptr : *l2seg->if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl_id);
+        if_type = hal::intf_get_if_type(hal_if);
+        HAL_TRACE_DEBUG("Reprogramming swm_change for IF: {} type: {}", 
+                        if_keyhandle_to_str(hal_if),
+                        if_type);
+        switch(if_type) {
+            case intf::IF_TYPE_ENIC:
+                ret = pd_enicif_upd_inp_prop_l2seg(hal_if, l2seg, 0, 0);
+                break;
+            default:
+                // l2seg's if_list should not have anything except enics
+                SDK_ASSERT(0);
+        }
+    }
+    return ret;
+}
+
+
+hal_ret_t
+l2seg_pd_repgm_mbr_ifs (block_list *agg_list, l2seg_t *l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    *p_hdl = NULL;
+    if_t            *hal_if = NULL;
+    intf::IfType    if_type;
+    vrf_t           *vrf = NULL;
+    uint32_t        uplink_ifpc_id = 0;
+    pd_l2seg_t      *l2seg_pd =  NULL;
+    pd_add_l2seg_uplink_args_t  up_args = {0};
+
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
+
+    for (const void *ptr : *agg_list) {
+        p_hdl = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl);
+        if_type = hal::intf_get_if_type(hal_if);
+
+        // Skip for non-designated 
+        if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
+            l2seg->single_wire_mgmt) {
+            vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+            if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
+                continue;
+            }
+        }
+
+        switch(if_type) {
+        case intf::IF_TYPE_UPLINK:
+        case intf::IF_TYPE_UPLINK_PC:
+            uplink_ifpc_id = if_get_uplink_ifpc_id(hal_if);
+            if (l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id] ==
+                INVALID_INDEXER_INDEX) {
+                ret = l2seg_uplink_pgm_input_properties_tbl(l2seg,
+                                                            hal_if,
+                                                            false);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to program input properties for "
+                                  "(l2seg:{}, uplink:{}). ret: {}",
+                                  l2seg->seg_id, hal_if->if_id, ret);
+                    goto end;
+                }
+            } else {
+                up_args.l2seg = l2seg;
+                up_args.intf = hal_if;
+                ret = l2seg_uplink_upd_input_properties_tbl(&up_args, 0, NULL, 0, NULL);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to update input properties for "
+                                  "(l2seg:{}, uplink:{}). ret: {}",
+                                  l2seg->seg_id, hal_if->if_id, ret);
+                    goto end;
+                }
             }
         break;
         default:

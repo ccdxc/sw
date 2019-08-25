@@ -540,6 +540,9 @@ DeviceManager::HalEventHandler(bool status)
         SetHalClient(dev_api);
 
         init_done = true;
+
+        // Setup swm on native vlan
+        // dev_api->swm_update(true, 1, 0, 0);
     }
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
@@ -564,6 +567,13 @@ DeviceManager::HalEventHandler(bool status)
         }
 #endif //IRIS
     }
+}
+
+void
+DeviceManager::swm_update(bool enable, 
+                          uint32_t port_num, uint32_t vlan, mac_t mac)
+{
+    dev_api->swm_update(enable, port_num, vlan, mac);
 }
 
 void

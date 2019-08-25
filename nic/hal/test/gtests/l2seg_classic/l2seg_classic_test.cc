@@ -206,6 +206,89 @@ TEST_F(l2seg_test, test2)
     ASSERT_TRUE(is_leak == false);
 }
 
+// Single Wire Management Test Case
+TEST_F(l2seg_test, test3)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    VrfSpec             vrf_spec;
+    VrfResponse         vrf_rsp;
+    L2SegmentSpec       spec;
+    L2SegmentResponse   rsp;
+    L2SegmentDeleteRequest  del_req;
+    L2SegmentDeleteResponse del_rsp;
+
+
+    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+
+    // Create uplink
+    create_uplink(UPLINK_IF_ID_OFFSET + 1, 1, 0);
+    create_uplink(UPLINK_IF_ID_OFFSET + 3, 2, 0);
+    // Create Vrf
+    vrf_spec.mutable_key_or_handle()->set_vrf_id(3);
+    vrf_spec.mutable_designated_uplink()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(vrf_spec, &vrf_rsp);
+    hal::hal_cfg_db_close();
+    // Create l2seg with uplink
+    // ret = create_l2seg(3, 1, 8192, UPLINK_IF_ID_OFFSET + 1);
+    // ASSERT_TRUE(ret == HAL_RET_OK);
+
+    spec.mutable_vrf_key_handle()->set_vrf_id(3);
+    spec.mutable_key_or_handle()->set_segment_id(1);
+    spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    spec.mutable_wire_encap()->set_encap_value(8192);
+    spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    spec.Clear();
+    spec.mutable_vrf_key_handle()->set_vrf_id(3);
+    spec.mutable_key_or_handle()->set_segment_id(1);
+    spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    spec.mutable_wire_encap()->set_encap_value(8192);
+    spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
+    spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 3);
+    spec.set_single_wire_management(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    spec.Clear();
+    spec.mutable_vrf_key_handle()->set_vrf_id(3);
+    spec.mutable_key_or_handle()->set_segment_id(1);
+    spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    spec.mutable_wire_encap()->set_encap_value(8192);
+    spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
+    spec.set_single_wire_management(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    spec.Clear();
+    spec.mutable_vrf_key_handle()->set_vrf_id(3);
+    spec.mutable_key_or_handle()->set_segment_id(2);
+    spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    spec.mutable_wire_encap()->set_encap_value(30);
+    spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
+    spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 3);
+    spec.set_single_wire_management(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    del_req.mutable_vrf_key_handle()->set_vrf_id(3);
+    del_req.mutable_key_or_handle()->set_segment_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

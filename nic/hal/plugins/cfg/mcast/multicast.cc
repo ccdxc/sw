@@ -377,6 +377,15 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
 
         hash_table[index] = pi_if->hal_handle;
 
+        if (pi_if->if_type != intf::IF_TYPE_ENIC &&
+            pi_if->if_type != intf::IF_TYPE_UPLINK &&
+            pi_if->if_type != intf::IF_TYPE_UPLINK_PC) {
+            HAL_TRACE_ERR("Only Enics/Uplink/UplinkPC allowed for OIFs");
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+
+#if 0
         if (!is_forwarding_mode_smart_switch()) {
             if (pi_if->if_type != intf::IF_TYPE_ENIC) {
                 HAL_TRACE_ERR("Only Enics allowed for OIFs when not "
@@ -393,6 +402,7 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
                 goto end;
             }
         }
+#endif
 
         HAL_TRACE_DEBUG("Adding if_id:{} type:{} handle:{} to oif.",
                         pi_if->if_id, pi_if->if_type, pi_if->hal_handle);
@@ -1143,6 +1153,9 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
     mc_entry_create_app_ctxt_t  app_ctxt   = {};
     L2SegmentKeyHandle          l2segkh;
     MulticastEntryKeyHandle     mcastkh;
+
+    hal_api_trace(" API Begin: mc entry update ");
+	proto_msg_dump(req);
 
     // validate the request message
     ret = validate_mc_entry_update(req, rsp);

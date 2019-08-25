@@ -131,7 +131,7 @@ l2seg_uplink_pgm_input_properties_tbl(pd_add_l2seg_uplink_args_t *args)
     key.entry_inactive_input_properties = 0;
 
     // form data
-    l2seg_uplink_inp_prop_form_data(args, 0, NULL, 0, NULL, data);
+    l2seg_uplink_inp_prop_form_data(args->l2seg, args->intf, 0, NULL, 0, NULL, data);
 
     if (!is_native) {
         // Install one entry
@@ -289,6 +289,7 @@ l2seg_uplink_depgm_input_properties_tbl (pd_del_l2seg_uplink_args_t *args)
     return ret;
 }
 
+#if 0
 // ----------------------------------------------------------------------------
 // Form data for input properties table
 // TODO: This is redundant code. Resue from l2seg_pd.cc
@@ -475,6 +476,7 @@ l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
 end:
         return ret;
 }
+#endif
 
 }    // namespace pd
 }    // namespace hal

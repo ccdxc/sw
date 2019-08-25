@@ -8,6 +8,7 @@
 #include "utils.hpp"
 #include "l2seg.hpp"
 #include "enic.hpp"
+#include "uplink.hpp"
 #include "devapi_mem.hpp"
 
 namespace iris {
@@ -201,6 +202,9 @@ devapi_mcast::trigger_hal(void)
     for (auto it = enic_refs_.cbegin(); it != enic_refs_.cend(); it++) {
         spec->add_oif_key_handles()->set_interface_id(it->second->get_id());
     }
+    if (l2seg_->undesignated_up()) {
+        spec->add_oif_key_handles()->set_interface_id(l2seg_->undesignated_up()->get_id());
+    }
 
     VERIFY_HAL();
     status = hal->multicast_update(req_msg, rsp_msg);
@@ -222,6 +226,24 @@ devapi_mcast::trigger_hal(void)
 
 end:
     return ret;
+}
+
+sdk_ret_t 
+devapi_mcast::trigger_l2seg_mcast(devapi_l2seg *l2seg)
+{
+    mcast_key_t key;
+    devapi_l2seg *tmp_l2seg = NULL;
+    devapi_mcast *mcast = NULL;
+    for (auto it = mcast_db_.cbegin(); it != mcast_db_.cend(); it++) {
+        key = (mcast_key_t)(it->first);
+        tmp_l2seg = std::get<0>(key);
+        if (tmp_l2seg->get_id() == l2seg->get_id()) {
+            mcast = (devapi_mcast *)(it->second); 
+            mcast->trigger_hal();
+        }
+    }
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

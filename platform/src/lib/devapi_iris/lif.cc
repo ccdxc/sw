@@ -112,28 +112,32 @@ devapi_lif::factory(lif_info_t *info)
                          lif->get_uplink()->get_id());
 
             // Create native l2seg to hal
-            native_l2seg = devapi_l2seg::factory(lif->get_uplink()->get_vrf(),
-                                                 NATIVE_VLAN_ID);
+            native_l2seg = devapi_l2seg::lookup(lif->get_uplink()->get_vrf(),
+                                                NATIVE_VLAN_ID);
             if (!native_l2seg) {
-                NIC_LOG_ERR("Failed to create native l2seg.");
-                ret = SDK_RET_ERR;
-                goto end;
+                native_l2seg = devapi_l2seg::factory(lif->get_uplink()->get_vrf(),
+                                                     NATIVE_VLAN_ID);
+                if (!native_l2seg) {
+                    NIC_LOG_ERR("Failed to create native l2seg.");
+                    ret = SDK_RET_ERR;
+                    goto end;
+                }
+
+                // Update uplink structure with native l2seg
+                lif->get_uplink()->set_native_l2seg(native_l2seg);
+
+                // Update native_l2seg on uplink to hal
+                ret = lif->get_uplink()->update_hal_native_l2seg(native_l2seg->get_id());
+                if (ret != SDK_RET_OK) {
+                    NIC_LOG_ERR("Failed to update uplink with native l2seg. "
+                                "ret: {}", ret);
+                    ret = SDK_RET_ERR;
+                    goto end;
+                }
+
+                // Update l2seg's mbrifs on uplink
+                // native_l2seg->Adddevapi_uplink(lif->get_uplink());
             }
-
-            // Update uplink structure with native l2seg
-            lif->get_uplink()->set_native_l2seg(native_l2seg);
-
-            // Update native_l2seg on uplink to hal
-            ret = lif->get_uplink()->update_hal_native_l2seg(native_l2seg->get_id());
-            if (ret != SDK_RET_OK) {
-                NIC_LOG_ERR("Failed to update uplink with native l2seg. "
-                            "ret: {}", ret);
-                ret = SDK_RET_ERR;
-                goto end;
-            }
-
-            // Update l2seg's mbrifs on uplink
-            // native_l2seg->Adddevapi_uplink(lif->get_uplink());
         }
     }
 
@@ -260,7 +264,9 @@ devapi_lif::destroy(devapi_lif *lif)
             }
         } else {
 
-            if (lif->get_uplink() && (lif->get_uplink()->get_num_lifs() == 0)) {
+            if (lif->get_uplink() && (lif->get_uplink()->get_num_lifs() == 0) &&
+                (!(lif->get_uplink()->get_native_l2seg() &&
+                 lif->get_uplink()->get_native_l2seg()->is_single_wire_mgmt()))) {
                 NIC_LOG_DEBUG("Last lif id: {}, hw_id: {} on uplink {}",
                               lif->get_id(),
                               lif->get_id(),

@@ -49,6 +49,12 @@ public:
     // Generic APIs
     sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode);
 
+    // single wire management APIs
+    sdk_ret_t swm_update(bool enable, 
+                         uint32_t port_num, /* Uplink port number */ 
+                         uint32_t vlan, /* 0: untag */
+                         mac_t mac);
+
     // Port APIs
     sdk_ret_t port_get_status(uint32_t port_num,
                               port_status_t *status);

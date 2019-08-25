@@ -275,6 +275,16 @@ devapi_impl::port_set_config(uint32_t port_num, port_config_t *config) {
 }
 
 sdk_ret_t
+devapi_impl::swm_update(bool enable,
+                        uint32_t port_num,
+                        uint32_t vlan,
+                        mac_t mac)
+{
+    PDS_TRACE_WARN("Not implemented: Revisit");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::lif_program_tx_scheduler_(lif_info_t *info) {
     asicpd_scheduler_lif_params_t   apd_lif;
     sdk_ret_t                       ret = SDK_RET_OK;

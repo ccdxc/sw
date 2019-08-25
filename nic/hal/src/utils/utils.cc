@@ -814,7 +814,7 @@ proto_msg_dump (Message& msg)
         return;
     }
     google::protobuf::util::MessageToJsonString(msg, &msg_str);
-    HAL_TRACE_VERBOSE("{}", msg_str.c_str());
+    HAL_TRACE_DEBUG("{}", msg_str.c_str());
 }
 
 }    // namespace hal

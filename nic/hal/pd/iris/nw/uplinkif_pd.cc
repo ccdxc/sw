@@ -87,6 +87,13 @@ pd_uplinkif_update (pd_if_update_args_t *args)
             // Update clone with new native l2seg
             hal_if_clone->native_l2seg = new_nat_l2seg->seg_id;
             if (l2seg_is_mbr_if(new_nat_l2seg, hal_if->if_id)) {
+                // De-pgm input props entry with old native property
+                ret = l2seg_uplink_depgm_input_properties_tbl(new_nat_l2seg, hal_if_clone);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to deprogram input properties table. ret:{}",
+                                  ret);
+                    goto end;
+                }
                 // Pgm input props entry. Assume clone with have new native l2seg
                 ret = l2seg_uplink_pgm_input_properties_tbl(new_nat_l2seg, hal_if_clone);
                 if (ret != HAL_RET_OK) {

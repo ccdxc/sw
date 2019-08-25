@@ -9,7 +9,7 @@
 #include "nic/hal/pd/iris/nw/cpuif_pd.hpp"
 #include "nic/hal/pd/iris/nw/app_redir_if_pd.hpp"
 #include "nic/hal/pd/iris/nw/tunnelif_pd.hpp"
-#include "nic/hal/pd/iris/nw/l2seg_uplink_pd.hpp"
+#include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
@@ -316,7 +316,7 @@ pd_if_nwsec_update (pd_func_args_t *pd_func_args)
         case intf::IF_TYPE_UPLINK_PC:
             uplink_args.l2seg = args->l2seg;
             uplink_args.intf = args->intf;
-            ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args,
+            ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args, 
                                                         L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF,
                                                         args->nwsec_prof, 0, NULL);
             break;

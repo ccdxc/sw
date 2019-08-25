@@ -97,6 +97,7 @@ typedef struct l2seg_s {
     // PD state
     void                  *pd;                     // all PD specific state
     bool                   proxy_arp_enabled;
+    bool                   single_wire_mgmt;
 
     ht_ctxt_t              uplink_oif_list_ht_ctxt;// hash table for uplink OIF lists
 
@@ -117,6 +118,7 @@ typedef struct l2seg_update_app_ctxt_s {
     bool                bcast_fwd_policy_change;
     bool                nwlist_change;
     bool                iflist_change;
+    bool                swm_change;
 
     MulticastFwdPolicy  new_mcast_fwd_policy;
     BroadcastFwdPolicy  new_bcast_fwd_policy;
@@ -128,6 +130,8 @@ typedef struct l2seg_update_app_ctxt_s {
     block_list          *add_iflist;
     block_list          *del_iflist;
     block_list          *agg_iflist;
+    // swm change
+    bool                new_single_wire_mgmt;
 
 } __PACK__ l2seg_update_app_ctxt_t;
 

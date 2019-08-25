@@ -255,6 +255,7 @@ devapi_enic::add_vlan(vlan_t vlan)
         l2seg_info->l2seg = l2seg;
 
         l2seg_refs_[vlan] = l2seg_info;
+        l2seg->add_enic(this);
 
         // Sends update to Hal
         ret = trigger_halupdate();
@@ -300,8 +301,11 @@ devapi_enic::del_vlan(vlan_t vlan, bool skip_hal)
                 trigger_halupdate();
             }
 
-            // Delete L2seg
-            devapi_l2seg::destroy(l2seg);
+            l2seg->del_enic(this);
+            if (!l2seg->is_single_wire_mgmt() && !l2seg->num_enics()) {
+                // Delete L2seg
+                devapi_l2seg::destroy(l2seg);
+            }
 
             // Free up l2seg_info
             DEVAPI_FREE(DEVAPI_MEM_L2SEG_INFO, l2seg_info);
@@ -310,7 +314,7 @@ devapi_enic::del_vlan(vlan_t vlan, bool skip_hal)
 }
 
 
-uint64_t
+uint32_t
 devapi_enic::get_id(void)
 {
     return id_;

@@ -100,6 +100,10 @@ devapi_vrf::vrf_halcreate(void)
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_vrf_id(id_);
     req->set_vrf_type(type_);
+    if (uplink_) {
+        req->mutable_designated_uplink()->
+            set_interface_id(uplink_->get_id());
+    }
 
     VERIFY_HAL();
     status = hal->vrf_create(req_msg, rsp_msg);

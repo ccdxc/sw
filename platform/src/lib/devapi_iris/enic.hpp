@@ -44,7 +44,7 @@ public:
     sdk_ret_t add_vlan(vlan_t vlan);
     void del_vlan(vlan_t vlan, bool skip_vlan = false);
 
-    uint64_t get_id(void);
+    uint32_t get_id(void);
     devapi_l2seg *get_l2seg(vlan_t vlan);
 };
 

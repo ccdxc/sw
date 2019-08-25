@@ -34,6 +34,7 @@ public:
 
     static sdk_ret_t create_vrfs(void);
     static devapi_uplink *get_uplink(uint32_t port_num);
+    static devapi_uplink *get_oob_uplink(void);
 
     sdk_ret_t update_hal_native_l2seg(uint32_t native_l2seg_id);
     sdk_ret_t create_vrf(void);

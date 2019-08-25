@@ -106,6 +106,7 @@ public:
     std::vector <struct EthDevInfo *> GetEthDevStateInfo();
     void RestoreDevicesState(std::vector <struct EthDevInfo *> eth_dev_info_list);
     bool UpgradeCompatCheck();
+    void swm_update(bool enable, uint32_t port_num, uint32_t vlan, mac_t mac);
 private:
     static DeviceManager *instance;
 

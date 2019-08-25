@@ -47,6 +47,7 @@ typedef struct vrf_s {
     hal_handle_t       nwsec_profile_handle; // security profile handle
     ip_prefix_t        gipo_prefix;          // the prefix to terminate gipo
     ip_addr_t          mytep_ip;             // mytep address for this VRF
+    hal_handle_t       designated_uplink;    // classic: isolated to this upl.
 
     // operational state of vrf
     hal_handle_t       hal_handle;           // HAL allocated handle

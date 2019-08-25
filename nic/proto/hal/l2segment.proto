@@ -60,7 +60,8 @@ message L2SegmentSpec {
   eplearn.EplearnCfg     eplearn_cfg                    = 11;                                               // ep learning config
   kh.InterfaceKeyHandle  pinned_uplink_if_key_handle    = 12 [(gogoproto.moretags) = "venice:ref"];         // The pinned uplink
   bool                   proxy_arp_enabled              = 13;                                               // proxy arp response enabled.
-  repeated kh.InterfaceKeyHandle  if_key_handle         = 14 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}"];         // L2seg Member IFs
+  bool                   single_wire_management         = 14;
+  repeated kh.InterfaceKeyHandle  if_key_handle         = 15 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}"];         // L2seg Member IFs
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request

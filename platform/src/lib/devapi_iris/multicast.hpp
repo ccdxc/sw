@@ -33,6 +33,7 @@ public:
     sdk_ret_t mcast_haldelete(void);
     static devapi_mcast *find_or_create(devapi_l2seg *l2seg, mac_t mac,
                                         bool create);
+    static sdk_ret_t trigger_l2seg_mcast(devapi_l2seg *l2seg);
 
     sdk_ret_t add_enic(devapi_enic *enic);
     sdk_ret_t del_enic(devapi_enic *enic);

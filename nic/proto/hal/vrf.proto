@@ -32,6 +32,7 @@ message VrfSpec {
   types.VrfType                  vrf_type            = 4 [(gogoproto.moretags) = "venice:immutable,venice:mandatory"];
   types.IPAddress                mytep_ip            = 5;    // Local VTEP IP address for vxlan tunnels
   types.IPPrefix                 gipo_prefix         = 6;    // GIPo prefix
+  kh.InterfaceKeyHandle          designated_uplink   = 7;    // vrf isolation per uplink in classic
 }
 
 // VrfRequestMsg is batched add or modify vrf request
