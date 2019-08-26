@@ -54,7 +54,9 @@ var _ validators.DummyVar
 var validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(string, interface{})error)
 {{end}}
 {{if $storageTransformers.Fmap}}
-var storageTransformersMap{{getFileName .Name}} = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error) {{end}}
+var storageTransformersMap{{getFileName .Name}} = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
+var eraseSecretsMap{{getFileName .Name}} = make(map[string] func(i interface{}))
+{{end}}
 {{range .Messages}}{{if (len (getDbKey .)) ne 0}}{{$sep := ", "}}
 // MakeKey generates a KV store key for the object
 func (m *{{.Name}}) MakeKey(prefix string) string {
@@ -338,6 +340,24 @@ func (m *{{$msgname}}) ApplyStorageTransformer(ctx context.Context, toStorage bo
 	return nil
 }
 
+func (m *{{$msgname}}) EraseSecrets() { {{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Transformers)}}{{if $fldv.Repeated}}
+	for _, v := range m.{{$fldk}} {
+		 v.EraseSecrets()
+	} {{else}}{{if isSpecStatusMessage $msg}}
+	m.{{$fldk}}.EraseSecrets()
+	{{else}}
+	{{if $fldv.Pointer}}
+	if m.{{$fldk}} == nil {
+		return
+	}{{end}}
+	m.{{$fldk}}.EraseSecrets()
+	{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
+	if v, ok := eraseSecretsMap{{getFileName $file.Name}}["{{$msgname}}"]; ok {
+		v(m)
+	} {{end}}
+	return
+}
+
 {{if isSpecStatusMessage $msg}}
 type storage{{$msgname}}Transformer struct {}
 var Storage{{$msgname}}Transformer storage{{$msgname}}Transformer
@@ -458,6 +478,18 @@ func init() {
 		{{end}}
 		return err
 	})
+	{{ if eq "Secret" .Fn}}
+	eraseSecretsMap{{getFileName $file.Name}}["{{$msgName}}"] = func (i interface{}) {
+    		m := i.(*{{$msgName}})
+    		{{if $fldv.Repeated}}
+    		m.{{$fldk}} = nil
+    		{{else}}
+    		var data []byte
+    		m.{{$fldk}} = {{$fldv.TypeCast}}(data)
+    		{{end}}
+    		return
+	}
+	{{end}}
 	}
 	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
 {{end}}

@@ -923,6 +923,13 @@ func (m *AuthenticationPolicyList) ApplyStorageTransformer(ctx context.Context, 
 	return nil
 }
 
+func (m *AuthenticationPolicyList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
+
 func (m *AutoMsgAuthenticationPolicyWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Events {
 		c := *v
@@ -932,6 +939,13 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) ApplyStorageTransformer(ctx con
 		m.Events[i] = &c
 	}
 	return nil
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
 }
 
 func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -945,6 +959,16 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) ApplyStorageTransfor
 	return nil
 }
 
+func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
 func (m *AutoMsgUserWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Events {
 		c := *v
@@ -954,6 +978,13 @@ func (m *AutoMsgUserWatchHelper) ApplyStorageTransformer(ctx context.Context, to
 		m.Events[i] = &c
 	}
 	return nil
+}
+
+func (m *AutoMsgUserWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
 }
 
 func (m *AutoMsgUserWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -967,6 +998,16 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.
 	return nil
 }
 
+func (m *AutoMsgUserWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
 func (m *UserList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Items {
 		c := *v
@@ -976,6 +1017,13 @@ func (m *UserList) ApplyStorageTransformer(ctx context.Context, toStorage bool) 
 		m.Items[i] = &c
 	}
 	return nil
+}
+
+func (m *UserList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
 }
 
 func init() {

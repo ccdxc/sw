@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"reflect"
 	"strings"
 
 	"github.com/pensando/sw/api/errors"
@@ -12,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 const (
@@ -39,7 +41,12 @@ func NewRequestObjectPopulator(reqObj interface{}, body bool) EventPopulator {
 			event.RequestObject = string(b)
 		default: // for API server, search, metrics, events
 			if dumpBody {
-				b, err := json.Marshal(reqObj)
+				objCopy := ref.DeepCopy(obj)
+				txfrm := reflect.ValueOf(objCopy).MethodByName("EraseSecrets")
+				if txfrm.IsValid() {
+					txfrm.Call([]reflect.Value{})
+				}
+				b, err := json.Marshal(objCopy)
 				if err != nil {
 					return err
 				}
@@ -69,7 +76,12 @@ func NewResponseObjectPopulator(resObj interface{}, body bool) EventPopulator {
 			event.ResponseObject = string(b)
 		default: // for API server, search, metrics, events
 			if dumpBody {
-				b, err := json.Marshal(resObj)
+				objCopy := ref.DeepCopy(obj)
+				txfrm := reflect.ValueOf(objCopy).MethodByName("EraseSecrets")
+				if txfrm.IsValid() {
+					txfrm.Call([]reflect.Value{})
+				}
+				b, err := json.Marshal(objCopy)
 				if err != nil {
 					return err
 				}

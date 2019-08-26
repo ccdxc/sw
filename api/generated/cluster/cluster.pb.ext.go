@@ -159,6 +159,7 @@ var _ validators.DummyVar
 var validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
 
 var storageTransformersMapCluster = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
+var eraseSecretsMapCluster = make(map[string]func(i interface{}))
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
@@ -1713,6 +1714,12 @@ func (m *Cluster) ApplyStorageTransformer(ctx context.Context, toStorage bool) e
 	return nil
 }
 
+func (m *Cluster) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
+}
+
 type storageClusterTransformer struct{}
 
 var StorageClusterTransformer storageClusterTransformer
@@ -1744,6 +1751,13 @@ func (m *ClusterSpec) ApplyStorageTransformer(ctx context.Context, toStorage boo
 		}
 	}
 	return nil
+}
+
+func (m *ClusterSpec) EraseSecrets() {
+	if v, ok := eraseSecretsMapCluster["ClusterSpec"]; ok {
+		v(m)
+	}
+	return
 }
 
 func init() {
@@ -1908,6 +1922,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapCluster["ClusterSpec"] = func(i interface{}) {
+			m := i.(*ClusterSpec)
+
+			var data []byte
+			m.Key = string(data)
+
+			return
+		}
+
 	}
 
 }

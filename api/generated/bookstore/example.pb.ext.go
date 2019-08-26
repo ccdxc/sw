@@ -91,6 +91,7 @@ var _ validators.DummyVar
 var validatorMapExample = make(map[string]map[string][]func(string, interface{}) error)
 
 var storageTransformersMapExample = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
+var eraseSecretsMapExample = make(map[string]func(i interface{}))
 
 // MakeKey generates a KV store key for the object
 func (m *ApplyDiscountReq) MakeKey(prefix string) string {
@@ -2849,6 +2850,13 @@ func (m *AutoMsgCustomerWatchHelper) ApplyStorageTransformer(ctx context.Context
 	return nil
 }
 
+func (m *AutoMsgCustomerWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
 func (m *AutoMsgCustomerWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
 	if m.Object == nil {
@@ -2860,11 +2868,27 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) ApplyStorageTransformer(ctx cont
 	return nil
 }
 
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
 func (m *Customer) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (m *Customer) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
 }
 
 type storageCustomerTransformer struct{}
@@ -2900,6 +2924,13 @@ func (m *CustomerList) ApplyStorageTransformer(ctx context.Context, toStorage bo
 	return nil
 }
 
+func (m *CustomerList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
+
 func (m *CustomerPersonalInfo) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	if vs, ok := storageTransformersMapExample["CustomerPersonalInfo"]; ok {
 		for _, v := range vs {
@@ -2909,6 +2940,13 @@ func (m *CustomerPersonalInfo) ApplyStorageTransformer(ctx context.Context, toSt
 		}
 	}
 	return nil
+}
+
+func (m *CustomerPersonalInfo) EraseSecrets() {
+	if v, ok := eraseSecretsMapExample["CustomerPersonalInfo"]; ok {
+		v(m)
+	}
+	return
 }
 
 func (m *CustomerSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -2924,6 +2962,16 @@ func (m *CustomerSpec) ApplyStorageTransformer(ctx context.Context, toStorage bo
 		}
 	}
 	return nil
+}
+
+func (m *CustomerSpec) EraseSecrets() {
+
+	m.PasswordRecoveryInfo.EraseSecrets()
+
+	if v, ok := eraseSecretsMapExample["CustomerSpec"]; ok {
+		v(m)
+	}
+	return
 }
 
 func init() {
@@ -3075,6 +3123,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapExample["CustomerPersonalInfo"] = func(i interface{}) {
+			m := i.(*CustomerPersonalInfo)
+
+			var data []byte
+			m.MotherMaidenName = string(data)
+
+			return
+		}
+
 	}
 
 	{
@@ -3097,6 +3155,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapExample["CustomerPersonalInfo"] = func(i interface{}) {
+			m := i.(*CustomerPersonalInfo)
+
+			var data []byte
+			m.SSN = string(data)
+
+			return
+		}
+
 	}
 
 	{
@@ -3119,6 +3187,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapExample["CustomerPersonalInfo"] = func(i interface{}) {
+			m := i.(*CustomerPersonalInfo)
+
+			var data []byte
+			m.SSN = string(data)
+
+			return
+		}
+
 	}
 
 	{
@@ -3150,6 +3228,15 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapExample["CustomerSpec"] = func(i interface{}) {
+			m := i.(*CustomerSpec)
+
+			m.CreditCardNumbers = nil
+
+			return
+		}
+
 	}
 
 	{
@@ -3172,6 +3259,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapExample["CustomerSpec"] = func(i interface{}) {
+			m := i.(*CustomerSpec)
+
+			var data []byte
+			m.Password = []byte(data)
+
+			return
+		}
+
 	}
 
 }

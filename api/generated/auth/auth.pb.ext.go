@@ -222,6 +222,7 @@ var _ validators.DummyVar
 var validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)
 
 var storageTransformersMapAuth = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
+var eraseSecretsMapAuth = make(map[string]func(i interface{}))
 
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicy) MakeKey(prefix string) string {
@@ -2384,6 +2385,14 @@ func (m *AuthenticationPolicy) ApplyStorageTransformer(ctx context.Context, toSt
 	return nil
 }
 
+func (m *AuthenticationPolicy) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	m.Status.EraseSecrets()
+
+	return
+}
+
 type storageAuthenticationPolicyTransformer struct{}
 
 var StorageAuthenticationPolicyTransformer storageAuthenticationPolicyTransformer
@@ -2421,6 +2430,16 @@ func (m *AuthenticationPolicySpec) ApplyStorageTransformer(ctx context.Context, 
 	return nil
 }
 
+func (m *AuthenticationPolicySpec) EraseSecrets() {
+
+	m.Authenticators.EraseSecrets()
+
+	if v, ok := eraseSecretsMapAuth["AuthenticationPolicySpec"]; ok {
+		v(m)
+	}
+	return
+}
+
 func (m *AuthenticationPolicyStatus) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.RadiusServers {
 		c := *v
@@ -2430,6 +2449,13 @@ func (m *AuthenticationPolicyStatus) ApplyStorageTransformer(ctx context.Context
 		m.RadiusServers[i] = &c
 	}
 	return nil
+}
+
+func (m *AuthenticationPolicyStatus) EraseSecrets() {
+	for _, v := range m.RadiusServers {
+		v.EraseSecrets()
+	}
+	return
 }
 
 func (m *Authenticators) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -2450,6 +2476,21 @@ func (m *Authenticators) ApplyStorageTransformer(ctx context.Context, toStorage 
 	return nil
 }
 
+func (m *Authenticators) EraseSecrets() {
+
+	if m.Ldap == nil {
+		return
+	}
+	m.Ldap.EraseSecrets()
+
+	if m.Radius == nil {
+		return
+	}
+	m.Radius.EraseSecrets()
+
+	return
+}
+
 func (m *Ldap) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Domains {
 		c := *v
@@ -2459,6 +2500,13 @@ func (m *Ldap) ApplyStorageTransformer(ctx context.Context, toStorage bool) erro
 		m.Domains[i] = &c
 	}
 	return nil
+}
+
+func (m *Ldap) EraseSecrets() {
+	for _, v := range m.Domains {
+		v.EraseSecrets()
+	}
+	return
 }
 
 func (m *LdapDomain) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -2472,6 +2520,13 @@ func (m *LdapDomain) ApplyStorageTransformer(ctx context.Context, toStorage bool
 	return nil
 }
 
+func (m *LdapDomain) EraseSecrets() {
+	if v, ok := eraseSecretsMapAuth["LdapDomain"]; ok {
+		v(m)
+	}
+	return
+}
+
 func (m *Radius) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Domains {
 		c := *v
@@ -2481,6 +2536,13 @@ func (m *Radius) ApplyStorageTransformer(ctx context.Context, toStorage bool) er
 		m.Domains[i] = &c
 	}
 	return nil
+}
+
+func (m *Radius) EraseSecrets() {
+	for _, v := range m.Domains {
+		v.EraseSecrets()
+	}
+	return
 }
 
 func (m *RadiusDomain) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -2494,6 +2556,13 @@ func (m *RadiusDomain) ApplyStorageTransformer(ctx context.Context, toStorage bo
 	return nil
 }
 
+func (m *RadiusDomain) EraseSecrets() {
+	for _, v := range m.Servers {
+		v.EraseSecrets()
+	}
+	return
+}
+
 func (m *RadiusServer) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	if vs, ok := storageTransformersMapAuth["RadiusServer"]; ok {
 		for _, v := range vs {
@@ -2503,6 +2572,13 @@ func (m *RadiusServer) ApplyStorageTransformer(ctx context.Context, toStorage bo
 		}
 	}
 	return nil
+}
+
+func (m *RadiusServer) EraseSecrets() {
+	if v, ok := eraseSecretsMapAuth["RadiusServer"]; ok {
+		v(m)
+	}
+	return
 }
 
 func (m *RadiusServerStatus) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -2516,11 +2592,27 @@ func (m *RadiusServerStatus) ApplyStorageTransformer(ctx context.Context, toStor
 	return nil
 }
 
+func (m *RadiusServerStatus) EraseSecrets() {
+
+	if m.Server == nil {
+		return
+	}
+	m.Server.EraseSecrets()
+
+	return
+}
+
 func (m *User) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (m *User) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
 }
 
 type storageUserTransformer struct{}
@@ -2554,6 +2646,13 @@ func (m *UserSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) 
 		}
 	}
 	return nil
+}
+
+func (m *UserSpec) EraseSecrets() {
+	if v, ok := eraseSecretsMapAuth["UserSpec"]; ok {
+		v(m)
+	}
+	return
 }
 
 func init() {
@@ -2759,6 +2858,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapAuth["AuthenticationPolicySpec"] = func(i interface{}) {
+			m := i.(*AuthenticationPolicySpec)
+
+			var data []byte
+			m.Secret = []byte(data)
+
+			return
+		}
+
 	}
 
 	{
@@ -2781,6 +2890,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapAuth["LdapDomain"] = func(i interface{}) {
+			m := i.(*LdapDomain)
+
+			var data []byte
+			m.BindPassword = string(data)
+
+			return
+		}
+
 	}
 
 	{
@@ -2803,6 +2922,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapAuth["RadiusServer"] = func(i interface{}) {
+			m := i.(*RadiusServer)
+
+			var data []byte
+			m.Secret = string(data)
+
+			return
+		}
+
 	}
 
 	{
@@ -2825,6 +2954,16 @@ func init() {
 
 				return err
 			})
+
+		eraseSecretsMapAuth["UserSpec"] = func(i interface{}) {
+			m := i.(*UserSpec)
+
+			var data []byte
+			m.Password = string(data)
+
+			return
+		}
+
 	}
 
 }

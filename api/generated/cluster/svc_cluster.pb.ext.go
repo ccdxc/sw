@@ -1054,6 +1054,13 @@ func (m *AutoMsgClusterWatchHelper) ApplyStorageTransformer(ctx context.Context,
 	return nil
 }
 
+func (m *AutoMsgClusterWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
 func (m *AutoMsgClusterWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
 	if m.Object == nil {
@@ -1065,6 +1072,16 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) ApplyStorageTransformer(ctx conte
 	return nil
 }
 
+func (m *AutoMsgClusterWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
 func (m *ClusterList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Items {
 		c := *v
@@ -1074,6 +1091,13 @@ func (m *ClusterList) ApplyStorageTransformer(ctx context.Context, toStorage boo
 		m.Items[i] = &c
 	}
 	return nil
+}
+
+func (m *ClusterList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
 }
 
 func init() {

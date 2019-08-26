@@ -13,6 +13,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
@@ -431,6 +432,246 @@ func TestAuditAuthz(t *testing.T) {
 		fmt.Sprintf("user with auditing permissions should able to retrieve audit logs for its tenant: %#v", resp))
 	_, ok := resp.AggregatedEntries.Tenants[globals.DefaultTenant]
 	Assert(t, !ok, fmt.Sprintf("user should not be able to retrieve audit logs for other tenants: %#v", resp))
+}
+
+func TestSecretsInAuditLogs(t *testing.T) {
+	ti := tInfo{}
+	err := ti.setupElastic()
+	AssertOk(t, err, "setupElastic failed")
+	defer ti.teardownElastic()
+	err = ti.startSpyglass()
+	AssertOk(t, err, "failed to start spyglass")
+	defer ti.fdr.Stop()
+	err = ti.startAPIServer()
+	AssertOk(t, err, "failed to start API server")
+	defer ti.apiServer.Stop()
+	err = ti.startAPIGateway()
+	AssertOk(t, err, "failed to start API Gateway")
+	defer ti.apiGw.Stop()
+
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+		t.Fatalf("auth setupElastic failed")
+	}
+	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+
+	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	AssertOk(t, err, "error creating logged in context")
+	tuser := &auth.User{}
+	tuser.Defaults("all")
+	tuser.Name = "testuser2"
+	tuser.Spec.Password = testPassword
+	tuser.Spec.Email = "testuser2@pensando.io"
+	_, err = ti.restcl.AuthV1().User().Create(superAdminCtx, tuser)
+	AssertOk(t, err, "error creating test user")
+	defer MustDeleteUser(ti.apicl, "testuser2", globals.DefaultTenant)
+	// test auth policy
+	apolicy, err := ti.apicl.AuthV1().AuthenticationPolicy().Get(superAdminCtx, &api.ObjectMeta{})
+	AssertOk(t, err, "unable to fetch auth policy")
+	apolicy.Spec.Authenticators.Ldap = &auth.Ldap{
+		Domains: []*auth.LdapDomain{
+			{
+				BindDN:       "CN=admin, DC=Pensando, DC=io",
+				BindPassword: testPassword,
+			},
+		},
+	}
+	_, err = ti.restcl.AuthV1().AuthenticationPolicy().Update(superAdminCtx, apolicy)
+	AssertOk(t, err, "unable to update auth policy")
+	// test reset password
+	passwdResetReq := &auth.PasswordResetRequest{}
+	passwdResetReq.Defaults("all")
+	passwdResetReq.ObjectMeta.Name = "testuser2"
+	passwdResetReq.ObjectMeta.Tenant = globals.DefaultTenant
+	passwdResetReq.Kind = string(auth.KindUser)
+	tuser, err = ti.restcl.AuthV1().User().PasswordReset(superAdminCtx, passwdResetReq)
+	AssertOk(t, err, "unable to reset testuser2 password")
+	// search for audit events
+	stages := []string{auditapi.Stage_RequestAuthorization.String(), auditapi.Stage_RequestProcessing.String()}
+	for _, stage := range stages {
+		query := &search.SearchRequest{
+			Query: &search.SearchQuery{
+				Kinds: []string{auth.Permission_AuditEvent.String()},
+				Fields: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						{
+							Key:      "action",
+							Operator: "equals",
+							Values:   []string{strings.Title(string(apiintf.CreateOper))},
+						},
+						{
+							Key:      "outcome",
+							Operator: "equals",
+							Values:   []string{auditapi.Outcome_Success.String()},
+						},
+						{
+							Key:      "resource.kind",
+							Operator: "equals",
+							Values:   []string{string(auth.KindUser)},
+						},
+						{
+							Key:      "resource.name",
+							Operator: "equals",
+							Values:   []string{"testuser2"},
+						},
+						{
+							Key:      "stage",
+							Operator: "equals",
+							Values:   []string{stage},
+						},
+					},
+				},
+			},
+			From:       0,
+			MaxResults: 50,
+			Aggregate:  true,
+		}
+		resp := testutils.AuditSearchResponse{}
+		AssertEventually(t, func() (bool, interface{}) {
+			err := Search(superAdminCtx, ti.apiGwAddr, query, &resp)
+			if err != nil {
+				return false, err
+			}
+			if resp.ActualHits == 0 {
+				return false, fmt.Errorf("no audit logs for user create at stage %s", stage)
+			}
+			if resp.ActualHits > 1 {
+				return false, fmt.Errorf("unexpected number of audit logs: %d", resp.ActualHits)
+			}
+			return true, nil
+		}, "error performing audit log search")
+
+		events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+
+		Assert(t, (events[0].Object.Action == strings.Title(auth.Permission_Create.String())) &&
+			(events[0].Object.Resource.Kind == string(auth.KindUser)) &&
+			(events[0].Object.Outcome == auditapi.Outcome_Success.String()) &&
+			(events[0].Object.Stage == stage), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
+		Assert(t, (!strings.Contains(events[0].Object.RequestObject, testPassword)) &&
+			(!strings.Contains(events[0].Object.ResponseObject, testPassword)), fmt.Sprintf("audit event contains password: %#v", events[0].Object))
+
+		// search for auth policy update audit event
+		query = &search.SearchRequest{
+			Query: &search.SearchQuery{
+				Kinds: []string{auth.Permission_AuditEvent.String()},
+				Fields: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						{
+							Key:      "action",
+							Operator: "equals",
+							Values:   []string{strings.Title(string(apiintf.UpdateOper))},
+						},
+						{
+							Key:      "outcome",
+							Operator: "equals",
+							Values:   []string{auditapi.Outcome_Success.String()},
+						},
+						{
+							Key:      "resource.kind",
+							Operator: "equals",
+							Values:   []string{string(auth.KindAuthenticationPolicy)},
+						},
+						{
+							Key:      "stage",
+							Operator: "equals",
+							Values:   []string{stage},
+						},
+					},
+				},
+			},
+			From:       0,
+			MaxResults: 50,
+			Aggregate:  true,
+		}
+		resp = testutils.AuditSearchResponse{}
+		AssertEventually(t, func() (bool, interface{}) {
+			err := Search(superAdminCtx, ti.apiGwAddr, query, &resp)
+			if err != nil {
+				return false, err
+			}
+			if resp.ActualHits == 0 {
+				return false, fmt.Errorf("no audit logs for user create at stage %s", stage)
+			}
+			if resp.ActualHits > 1 {
+				return false, fmt.Errorf("unexpected number of audit logs: %d", resp.ActualHits)
+			}
+			return true, nil
+		}, "error performing audit log search")
+
+		events = resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+
+		Assert(t, (events[0].Object.Action == strings.Title(auth.Permission_Update.String())) &&
+			(events[0].Object.Resource.Kind == string(auth.KindAuthenticationPolicy)) &&
+			(events[0].Object.Outcome == auditapi.Outcome_Success.String()) &&
+			(events[0].Object.Stage == stage) &&
+			(strings.Contains(events[0].Object.RequestObject, "DC=Pensando") || strings.Contains(events[0].Object.ResponseObject, "DC=Pensando")), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
+		Assert(t, (!strings.Contains(events[0].Object.RequestObject, testPassword)) &&
+			(!strings.Contains(events[0].Object.ResponseObject, testPassword)), fmt.Sprintf("audit event contains password: %#v", events[0].Object))
+
+		query = &search.SearchRequest{
+			Query: &search.SearchQuery{
+				Kinds: []string{auth.Permission_AuditEvent.String()},
+				Fields: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						{
+							Key:      "action",
+							Operator: "equals",
+							Values:   []string{"PasswordReset"},
+						},
+						{
+							Key:      "outcome",
+							Operator: "equals",
+							Values:   []string{auditapi.Outcome_Success.String()},
+						},
+						{
+							Key:      "resource.kind",
+							Operator: "equals",
+							Values:   []string{string(auth.KindUser)},
+						},
+						{
+							Key:      "resource.name",
+							Operator: "equals",
+							Values:   []string{"testuser2"},
+						},
+						{
+							Key:      "stage",
+							Operator: "equals",
+							Values:   []string{stage},
+						},
+					},
+				},
+			},
+			From:       0,
+			MaxResults: 50,
+			Aggregate:  true,
+		}
+		resp = testutils.AuditSearchResponse{}
+		AssertEventually(t, func() (bool, interface{}) {
+			err := Search(superAdminCtx, ti.apiGwAddr, query, &resp)
+			if err != nil {
+				return false, err
+			}
+			if resp.ActualHits == 0 {
+				return false, fmt.Errorf("no audit logs for user reset password at stage %s", stage)
+			}
+			if resp.ActualHits > 1 {
+				return false, fmt.Errorf("unexpected number of audit logs: %d", resp.ActualHits)
+			}
+			return true, nil
+		}, "error performing audit log search")
+		events = resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+
+		Assert(t, (events[0].Object.Action == "PasswordReset") &&
+			(events[0].Object.Resource.Kind == string(auth.KindUser)) &&
+			(events[0].Object.Outcome == auditapi.Outcome_Success.String()) &&
+			(events[0].Object.Stage == stage), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
+		Assert(t, !strings.Contains(events[0].Object.ResponseObject, tuser.Spec.Password), fmt.Sprintf("audit event contains password: %#v", events[0].Object))
+	}
 }
 
 // BenchmarkProcessEvents1Rule/auditor.ProcessEvents()-8         	     500	   6800263 ns/op
