@@ -68,6 +68,10 @@ def Trigger(tc):
 
     api.Logger.info("Starting krping_rdma test from %s" % (tc.cmd_descr))
 
+    # Clear the messages
+    for n in tc.nodes:
+       api.Trigger_AddHostCommand(req, n, "dmesg -c 2>&1 > /dev/null")
+
     # load krping or krping_compat on both nodes
     if getattr(tc.iterators, 'compat', None) == 'yes':
         for n in tc.nodes:
@@ -159,6 +163,10 @@ def Trigger(tc):
                            w2.node_name, 
                            w2.workload_name,
                            cmd, timeout = wait_secs)
+
+    # Save the dmesg
+    for n in tc.nodes:
+       api.Trigger_AddHostCommand(req, n, "dmesg")
 
     # check that the test completed ok
     #But check this only when count is less than 1000, beyond that with verbose, demsg will roll out
