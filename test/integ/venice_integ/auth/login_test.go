@@ -725,6 +725,10 @@ func TestLdapChecks(t *testing.T) {
 	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Connect_Failure.String(), "expected ldap connection check to fail")
 	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url,
 		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Domains[0].Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	// check bad request
+	policy.Spec.Authenticators.Ldap.Domains[0].Servers = nil
+	_, err = restcl.AuthV1().AuthenticationPolicy().LdapConnectionCheck(context.TODO(), policy)
+	Assert(t, strings.Contains(err.Error(), "400"), fmt.Sprintf("unexpected status code: %v", err))
 }
 
 func TestRadiusLogin(t *testing.T) {

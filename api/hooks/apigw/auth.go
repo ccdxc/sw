@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"google.golang.org/grpc/codes"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -224,17 +226,37 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 	obj.Status.LdapServers = nil
 	config := obj.Spec.Authenticators.Ldap
 	if config == nil {
-		return ctx, in, true, errors.New("ldap authenticator config not defined")
+		return ctx, in, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"ldap authenticator config not defined"},
+			Code:     int32(codes.InvalidArgument),
+			Result:   api.StatusResult{Str: "Bad Request"},
+		}
 	}
 	if len(config.Domains) == 0 {
-		return ctx, in, true, errors.New("ldap domain not defined")
+		return ctx, in, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"ldap domain not defined"},
+			Code:     int32(codes.InvalidArgument),
+			Result:   api.StatusResult{Str: "Bad Request"},
+		}
 	}
 	if len(config.Domains) > 1 {
-		return ctx, in, true, errors.New("only one ldap domain is supported")
+		return ctx, in, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"only one ldap domain is supported"},
+			Code:     int32(codes.InvalidArgument),
+			Result:   api.StatusResult{Str: "Bad Request"},
+		}
 	}
 	for _, domain := range config.Domains {
 		if len(domain.Servers) == 0 {
-			return ctx, in, true, errors.New("ldap server not defined")
+			return ctx, in, true, &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap server not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			}
 		}
 		for _, server := range domain.Servers {
 			status := &auth.LdapServerStatus{
@@ -276,17 +298,37 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 	obj.Status.LdapServers = nil
 	config := obj.Spec.Authenticators.Ldap
 	if config == nil {
-		return ctx, in, true, errors.New("ldap authenticator config not defined")
+		return ctx, in, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"ldap authenticator config not defined"},
+			Code:     int32(codes.InvalidArgument),
+			Result:   api.StatusResult{Str: "Bad Request"},
+		}
 	}
 	if len(config.Domains) == 0 {
-		return ctx, in, true, errors.New("ldap domain not defined")
+		return ctx, in, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"ldap domain not defined"},
+			Code:     int32(codes.InvalidArgument),
+			Result:   api.StatusResult{Str: "Bad Request"},
+		}
 	}
 	if len(config.Domains) > 1 {
-		return ctx, in, true, errors.New("only one ldap domain is supported")
+		return ctx, in, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"only one ldap domain is supported"},
+			Code:     int32(codes.InvalidArgument),
+			Result:   api.StatusResult{Str: "Bad Request"},
+		}
 	}
 	for _, domain := range config.Domains {
 		if len(domain.Servers) == 0 {
-			return ctx, in, true, errors.New("ldap server not defined")
+			return ctx, in, true, &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap server not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			}
 		}
 		for _, server := range domain.Servers {
 			status := &auth.LdapServerStatus{

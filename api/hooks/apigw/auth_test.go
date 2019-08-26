@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"testing"
 
+	"google.golang.org/grpc/codes"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
@@ -634,7 +636,12 @@ func TestLdapConnectionCheck(t *testing.T) {
 			status: &auth.LdapServerStatus{
 				Result: auth.LdapServerStatus_Connect_Success.String(),
 			},
-			err: errors.New("ldap authenticator config not defined"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap authenticator config not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 		{
 			name: "valid ldap config",
@@ -722,7 +729,12 @@ func TestLdapConnectionCheck(t *testing.T) {
 			status: &auth.LdapServerStatus{
 				Result: auth.LdapServerStatus_Connect_Success.String(),
 			},
-			err: errors.New("ldap server not defined"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap server not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 		{
 			name: "no ldap domains",
@@ -746,7 +758,12 @@ func TestLdapConnectionCheck(t *testing.T) {
 			},
 			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
 			status:      nil,
-			err:         errors.New("ldap domain not defined"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap domain not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 		{
 			name: "more than one ldap domains",
@@ -770,7 +787,12 @@ func TestLdapConnectionCheck(t *testing.T) {
 			},
 			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
 			status:      nil,
-			err:         errors.New("only one ldap domain is supported"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"only one ldap domain is supported"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
@@ -899,7 +921,12 @@ func TestLdapBindCheck(t *testing.T) {
 			status: &auth.LdapServerStatus{
 				Result: auth.LdapServerStatus_Bind_Success.String(),
 			},
-			err: errors.New("ldap authenticator config not defined"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap authenticator config not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 		{
 			name: "no ldap servers",
@@ -938,7 +965,12 @@ func TestLdapBindCheck(t *testing.T) {
 			status: &auth.LdapServerStatus{
 				Result: auth.LdapServerStatus_Bind_Success.String(),
 			},
-			err: errors.New("ldap server not defined"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap server not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 		{
 			name: "valid ldap config",
@@ -1011,7 +1043,12 @@ func TestLdapBindCheck(t *testing.T) {
 			},
 			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
 			status:      nil,
-			err:         errors.New("ldap domain not defined"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"ldap domain not defined"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 		{
 			name: "more than one ldap domains",
@@ -1035,7 +1072,12 @@ func TestLdapBindCheck(t *testing.T) {
 			},
 			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
 			status:      nil,
-			err:         errors.New("only one ldap domain is supported"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"only one ldap domain is supported"},
+				Code:     int32(codes.InvalidArgument),
+				Result:   api.StatusResult{Str: "Bad Request"},
+			},
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")

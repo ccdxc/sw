@@ -528,6 +528,30 @@ func TestHandleRequest(t *testing.T) {
 	if !strings.Contains(buf.String(), "Failure in recording audit event") {
 		t.Errorf("expecting event for auditing failure")
 	}
+	// test api.Status returned by pre-call
+	prof = NewServiceProfile(nil, "", "", apiintf.UnknownOper)
+	s := &api.Status{
+		TypeMeta: api.TypeMeta{Kind: "Status"},
+		Code:     int32(codes.InvalidArgument),
+		Result:   api.StatusResult{Str: "invalid argument"},
+		Message:  []string{"invalid argument"},
+	}
+	mock.retErr = s
+	prof.AddPreCallHook(mock.preCallHook)
+	mock.preCallCnt, mock.postCallCnt, mock.preAuthNCnt, mock.preAuthZCnt = 0, 0, 0, 0
+	called = 0
+	a.skipAuth = true
+	a.skipAuthz = true
+	out, err = a.HandleRequest(ctx, &input, prof, call)
+	if !reflect.DeepEqual(apierrors.AddDetails(s), err) {
+		t.Errorf("expecting api.Status returned from pre call hook")
+	}
+	prof.ClearPreCallHooks()
+	prof.AddPostCallHook(mock.postCallHook)
+	out, err = a.HandleRequest(ctx, &input, prof, call)
+	if !reflect.DeepEqual(apierrors.AddDetails(s), err) {
+		t.Errorf("expecting api.Status returned from post call hook")
+	}
 }
 
 func TestIsSkipped(t *testing.T) {

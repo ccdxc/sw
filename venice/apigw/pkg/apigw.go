@@ -709,7 +709,13 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	for _, h := range precall {
 		nctx, i, skip, err = h(nctx, i)
 		if err != nil {
-			apierr := apierrors.ToGrpcError("Pre condition failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
+			s, sok := err.(*api.Status) // check if pre call hook returns api.Status to support returning custom http status codes
+			var apierr error
+			if sok {
+				apierr = apierrors.AddDetails(s)
+			} else {
+				apierr = apierrors.ToGrpcError("Pre condition failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
+			}
 			a.audit(auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			return nil, apierr
 		}
@@ -727,7 +733,13 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	for _, h := range postCall {
 		nctx, out, err = h(nctx, out)
 		if err != nil {
-			apierr := apierrors.ToGrpcError("Operation failed to complete", []string{err.Error()}, int32(codes.Aborted), "", nil)
+			s, sok := err.(*api.Status) // check if post call hook returns api.Status to support returning custom http status codes
+			var apierr error
+			if sok {
+				apierr = apierrors.AddDetails(s)
+			} else {
+				apierr = apierrors.ToGrpcError("Operation failed to complete", []string{err.Error()}, int32(codes.Aborted), "", nil)
+			}
 			a.audit(auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			return nil, apierr
 		}
