@@ -1232,3 +1232,63 @@ func TestEventsDispatcherDeleteExporter(t *testing.T) {
 	_, err = os.Stat(offsetTrackerFilepath)
 	Assert(t, err != nil && os.IsNotExist(err), "offset tracker file should have been deleted, but still exists. err: %v", err)
 }
+
+// TestEventsSkip ensures events that were recorded with creation time 2000-MM-DD is skipped
+func TestEventsSkip(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
+	eventsStorePath := filepath.Join(eventsDir, t.Name())
+	defer os.RemoveAll(eventsStorePath) // cleanup
+
+	// create dispatcher
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath},
+		nil, logger)
+	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
+	defer dispatcher.Shutdown()
+
+	// create and start exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
+
+	event := *dummyEvt
+	creationTime, _ := types.TimestampProto(time.Now())
+	event.CreationTime = api.Timestamp{Timestamp: *creationTime}
+	dispatcher.Action(event)
+	AssertEventually(t, func() (bool, interface{}) { // ensure the event is received at the exporter
+		if mockExporter.GetTotalEvents() == 1 {
+			return true, nil
+		}
+		return false, nil
+	}, "exporter did not receive event(s)", string("10ms"), string("2s"))
+
+	// send events with time backing to 2000's
+	creationTime, _ = types.TimestampProto(time.Date(2000, time.January, 2, 0, 0, 0, 0, time.UTC))
+
+	event = *dummyEvt
+	event.CreationTime = api.Timestamp{Timestamp: *creationTime}
+	event.Message = "t1"
+	dispatcher.Action(event)
+
+	event = *dummyEvt
+	event.CreationTime = api.Timestamp{Timestamp: *creationTime}
+	event.Message = "t2"
+	dispatcher.Action(event)
+
+	time.Sleep(2 * sendInterval)
+	Assert(t, mockExporter.GetTotalEvents() == 1, "expected event(s) are not skipped")
+
+	event = *dummyEvt
+	creationTime, _ = types.TimestampProto(time.Now())
+	event.CreationTime = api.Timestamp{Timestamp: *creationTime}
+	dispatcher.Action(event)
+	AssertEventually(t, func() (bool, interface{}) { // ensure the event is received at the exporter
+		if mockExporter.GetTotalEvents() == 2 {
+			return true, nil
+		}
+		return false, nil
+	}, "exporter did not receive event(s)", string("10ms"), string("2s"))
+}

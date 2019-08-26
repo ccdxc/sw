@@ -28,6 +28,11 @@ const (
 
 	// defaultDedupInterval to be used if the user given value is invalid <=0
 	defaultDedupInterval = 10 * time.Second
+
+	// defaultYearSetOnNaples to check if the event can be skipped from processing
+	// 2000-01-02 .. default date/time set on NAPLES; clock is set to the correct time
+	// once it establishes a connection with venice.
+	defaultYearSetOnNaples = 2000
 )
 
 // dispatcherImpl implements the `Dispatcher` interface. It is responsible for
@@ -141,6 +146,13 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 	if d.stopped {
 		d.logger.Errorf("dispatcher stopped, cannot process event: {%s}", event.GetSelfLink())
 		return fmt.Errorf("dispatcher stopped, cannot process events")
+	}
+
+	// skip events that were recorded before the clock is set
+	cTime, _ := event.CreationTime.Time()
+	if cTime.Year() == defaultYearSetOnNaples {
+		d.logger.Errorf("received event {%s} that was recorded before the clock is set, skipping", event.Message)
+		return nil // skip processing this event
 	}
 
 	if event.EventAttributes.Source == nil {
