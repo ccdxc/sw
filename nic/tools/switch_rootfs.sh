@@ -135,7 +135,7 @@ update_fwupgrade_state "KILLED ALL PROCESSES EXCEPT INIT"
 save_fwupgrade_state
 
 rm -rf /data/pre-upgrade-logs.tar*
-tar -czf /data/pre-upgrade-logs.tar.gz /var/log/
+tar -czf /data/pre-upgrade-logs.tar.gz /var/log/ /obfl/
 
 echo "Switching filesystem from $cur_image to $new_image"
 

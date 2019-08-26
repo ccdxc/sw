@@ -60,7 +60,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to delete old logs post-upgrade");
             }
-            cmd = "tar -czf /data/post-upgrade-logs.tar.gz /var/log/";
+            cmd = "tar -czf /data/post-upgrade-logs.tar.gz /var/log/ /obfl/";
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to save logs post-upgrade");
             }

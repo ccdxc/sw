@@ -104,6 +104,9 @@ Cmds:
  -
    cmd: delphictl db get UpgApp
    outputfile: upgapp.out
+ -
+   cmd: uptime
+   outputfile: uptime.out
 `
 
 // NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support
