@@ -63,6 +63,11 @@ class TagObject(base.ConfigObjectBase):
 
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = tags_pb2.TagGetRequest()
+        grpcmsg.Id.append(self.TagTblId)
+        return grpcmsg
+
     def Show(self):
         logger.info("TagTbl object:", self)
         logger.info("- %s" % repr(self))
@@ -231,6 +236,16 @@ class TagObjectClient:
             logger.info("Creating TAG Objects in agent")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
             api.client.Create(api.ObjectTypes.TAG, msgs)
+        return
+
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = tags_pb2.TagGetRequest()
+        return grpcmsg
+
+    def ReadObjects(self):
+        if utils.IsPipelineArtemis():
+            msg = self.GetGrpcReadAllMessage()
+            api.client.Get(api.ObjectTypes.TAG, [msg])
         return
 
 client = TagObjectClient()

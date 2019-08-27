@@ -67,6 +67,13 @@ class RemoteMappingObject(base.ConfigObjectBase):
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = mapping_pb2.MappingGetRequest()
+        key = grpcmsg.Id.add()
+        key.VPCId = self.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, key.IPAddr)
+        return grpcmsg
+
     def Show(self):
         logger.info("RemoteMapping object:", self)
         logger.info("- %s" % repr(self))
@@ -115,6 +122,13 @@ class RemoteMappingObjectClient:
             return
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
         api.client.Create(api.ObjectTypes.MAPPING, msgs)
+        return
+
+    def ReadObjects(self):
+        if len(self.__objs) == 0:
+            return
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
+        api.client.Get(api.ObjectTypes.MAPPING, msgs)
         return
 
 client = RemoteMappingObjectClient()

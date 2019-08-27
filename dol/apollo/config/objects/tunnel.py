@@ -157,11 +157,13 @@ class TunnelObjectClient:
         api.client.Create(api.ObjectTypes.TUNNEL, msgs)
         return
 
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = tunnel_pb2.TunnelGetRequest()
+        return grpcmsg
+
     def ReadObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__lobjs))
-        api.client.Get(api.ObjectTypes.TUNNEL, msgs)
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
-        api.client.Get(api.ObjectTypes.TUNNEL, msgs)
+        msg = self.GetGrpcReadAllMessage()
+        api.client.Get(api.ObjectTypes.TUNNEL, [msg])
         return
 
 client = TunnelObjectClient()

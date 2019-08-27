@@ -59,6 +59,11 @@ class MirrorSessionObject(base.ConfigObjectBase):
             assert(0)
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = mirror_pb2.MirrorSessionGetRequest()
+        grpcmsg.Id.append(self.Id)
+        return grpcmsg
+
     def Show(self):
         logger.info("Mirror session Object: %s" % self)
         logger.info("- %s" % repr(self))
@@ -118,6 +123,15 @@ class MirrorSessionObjectClient:
     def CreateObjects(self):
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.MIRROR, msgs)
+        return
+
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = mirror_pb2.MirrorSessionGetRequest()
+        return grpcmsg
+
+    def ReadObjects(self):
+        msg = self.GetGrpcReadAllMessage()
+        api.client.Get(api.ObjectTypes.MIRROR, [msg])
         return
 
 client = MirrorSessionObjectClient()

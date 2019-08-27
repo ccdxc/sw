@@ -238,9 +238,13 @@ class VpcObjectClient:
         subnet.client.CreateObjects()
         return
 
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = vpc_pb2.VPCGetRequest()
+        return grpcmsg
+
     def ReadObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs.values()))
-        api.client.Get(api.ObjectTypes.VPC, msgs)
+        msg = self.GetGrpcReadAllMessage()
+        api.client.Get(api.ObjectTypes.VPC, [msg])
         return
 
 client = VpcObjectClient()

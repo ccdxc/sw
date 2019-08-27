@@ -15,11 +15,15 @@ import apollo.config.resmgr as resmgr
 
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
+import apollo.config.objects.lmapping as lmapping
+import apollo.config.objects.meter as meter
 import apollo.config.objects.mirror as mirror
 import apollo.config.objects.nexthop as nexthop
 import apollo.config.objects.policy as policy
+import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
+import apollo.config.objects.tag as tag
 import apollo.config.objects.tunnel as tunnel
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.vpc as vpc
@@ -101,13 +105,20 @@ def __create():
     return
 
 def __read():
-    # Read all objects which support GET
+    # Read all objects
     device.client.ReadObjects()
     vpc.client.ReadObjects()
     subnet.client.ReadObjects()
     vnic.client.ReadObjects()
     tunnel.client.ReadObjects()
     nexthop.client.ReadObjects()
+    mirror.client.ReadObjects()
+    meter.client.ReadObjects()
+    policy.client.ReadObjects()
+    tag.client.ReadObjects()
+    route.client.ReadObjects()
+    # lmapping.client.ReadObjects()
+    # rmapping.client.ReadObjects()
     return
 
 def Main():

@@ -147,6 +147,11 @@ class MeterObject(base.ConfigObjectBase):
             self.FillMeterRuleSpec(spec, rule)
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = meter_pb2.MeterGetRequest()
+        grpcmsg.Id.append(self.MeterId)
+        return grpcmsg
+
     def Show(self):
         logger.info("Meter object:", self)
         logger.info("- %s" % repr(self))
@@ -311,10 +316,20 @@ class MeterObjectClient:
         self.__num_v6_meter_per_vpc.append(v6_count)
         return
 
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = meter_pb2.MeterGetRequest()
+        return grpcmsg
+
     def CreateObjects(self):
         if utils.IsPipelineArtemis():
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
             api.client.Create(api.ObjectTypes.METER, msgs)
+        return
+
+    def ReadObjects(self):
+        if utils.IsPipelineArtemis():
+            msg = self.GetGrpcReadAllMessage()
+            api.client.Get(api.ObjectTypes.METER, [msg])
         return
 
 client = MeterObjectClient()

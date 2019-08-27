@@ -91,7 +91,7 @@ class VnicObject(base.ConfigObjectBase):
         grpcmsg.VnicId.append(self.VnicId)
         return grpcmsg
 
-    def Validate(self, spec):
+    def ValidateSpec(self, spec):
         if spec.VnicId != self.VnicId:
             return False
         # if spec.SubnetId != self.SUBNET.SubnetId:
@@ -109,6 +109,22 @@ class VnicObject(base.ConfigObjectBase):
         if spec.V6MeterId != self.V6MeterId:
             return False
         return True
+
+    def ValidateStats(self, stats):
+        return True
+
+    def ValidateStatus(self, status):
+        return True
+
+    def Validate(self, resp):
+        return self.ValidateSpec(resp.Spec) and\
+               self.ValidateStats(resp.Stats) and\
+               self.ValidateStatus(resp.Status)
+
+    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
+        msg = self.GetGrpcReadMessage()
+        resp = api.client.Get(api.ObjectTypes.VNIC, [msg])
+        return utils.ValidateRead(self, resp, expRetCode)
 
     def Show(self):
         logger.info("VNIC object:", self)
@@ -184,11 +200,15 @@ class VnicObjectClient:
         lmapping.client.CreateObjects()
         return
 
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = vnic_pb2.VnicGetRequest()
+        return grpcmsg
+
     def ReadObjects(self):
         if len(self.__objs.values()) == 0:
             return
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs.values()))
-        resp = api.client.Get(api.ObjectTypes.VNIC, msgs)
+        msg = self.GetGrpcReadAllMessage()
+        resp = api.client.Get(api.ObjectTypes.VNIC, [msg])
         result = self.ValidateObjects(resp)
         if result is False:
             logger.critical("VNIC object validation failed!!!")
@@ -199,13 +219,13 @@ class VnicObjectClient:
         if GlobalOptions.dryrun:
             return True
         for obj in getResp:
-            if types_pb2.API_STATUS_OK != obj.ApiStatus:
+            if not utils.ValidateGrpcResponse(obj):
                 logger.error("VNIC get request failed for ", obj)
                 return False
             for resp in obj.Response:
                 spec = resp.Spec
                 vnic = self.GetVnicObject(spec.VnicId)
-                if not vnic.Validate(spec):
+                if not vnic.Validate(resp):
                     logger.error("VNIC validation failed for ", obj)
                     vnic.Show()
                     return False

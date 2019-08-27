@@ -181,9 +181,13 @@ class SubnetObjectClient:
         rmapping.client.CreateObjects()
         return
 
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = subnet_pb2.SubnetGetRequest()
+        return grpcmsg
+
     def ReadObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
-        api.client.Get(api.ObjectTypes.SUBNET, msgs)
+        msg = self.GetGrpcReadAllMessage()
+        api.client.Get(api.ObjectTypes.SUBNET, [msg])
         return
 
 client = SubnetObjectClient()

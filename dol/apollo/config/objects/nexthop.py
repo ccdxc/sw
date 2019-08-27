@@ -137,10 +137,14 @@ class NexthopObjectClient:
             api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
         return
 
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = nh_pb2.NexthopGetRequest()
+        return grpcmsg
+
     def ReadObjects(self):
         if utils.IsPipelineArtemis():
-            msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs.values()))
-            api.client.Get(api.ObjectTypes.NEXTHOP, msgs)
+            msg = self.GetGrpcReadAllMessage()
+            api.client.Get(api.ObjectTypes.NEXTHOP, [msg])
         return
 
 client = NexthopObjectClient()

@@ -84,6 +84,16 @@ def GetFilteredObjects(objs, maxlimits, random=True):
         return sample(objs, k=num)
     return objs[0:num]
 
+def ValidateGrpcResponse(resp, expApiStatus=types_pb2.API_STATUS_OK):
+    return expApiStatus == resp.ApiStatus
+
+def ValidateRead(obj, getResp, expApiStatus=types_pb2.API_STATUS_OK):
+    if ValidateGrpcResponse(getResp, expApiStatus):
+        if types_pb2.API_STATUS_OK == getResp.ApiStatus:
+            return obj.Validate(getResp.Response)
+        return True
+    return False
+
 def GetIPProtoByName(protoname):
     """
         returns IP Protocol number for the given protocol name
@@ -230,6 +240,13 @@ def GetRpcEncap(mplsslot, vxlanid, encap):
          encap.value.MPLSTag  = mplsslot
     else:
          encap.value.Vnid  = vxlanid
+
+def GetRpcDirection(direction):
+    if direction == "ingress":
+         return types_pb2.RULE_DIR_INGRESS
+    elif direction == "egress":
+         return types_pb2.RULE_DIR_EGRESS
+    return types_pb2.RULE_DIR_NONE
 
 def GetPortIDfromInterface(interfaceid):
     return INTF2PORT_TBL.get(interfaceid, PortTypes.NONE)

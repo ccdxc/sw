@@ -1,7 +1,9 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
+import sys
 
+from infra.common.glopts import GlobalOptions
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -90,6 +92,29 @@ class RouteObject(base.ConfigObjectBase):
                 rtspec.NexthopId = self.NexthopId
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = route_pb2.RouteTableGetRequest()
+        grpcmsg.Id.append(self.RouteTblId)
+        return grpcmsg
+
+    def ValidateSpec(self, spec):
+        if spec.Id != self.RouteTblId:
+            return False
+        if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
+            return False
+        return True
+
+    def ValidateStats(self, stats):
+        return True
+
+    def ValidateStatus(self, status):
+        return True
+
+    def Validate(self, resp):
+        return self.ValidateSpec(resp.Spec) and\
+               self.ValidateStats(resp.Stats) and\
+               self.ValidateStatus(resp.Status)
+
     def Show(self):
         logger.info("RouteTable object:", self)
         logger.info("- %s" % repr(self))
@@ -135,6 +160,9 @@ class RouteObjectClient:
 
     def Objects(self):
         return self.__objs.values()
+
+    def GetRouteTableObject(self, routetableid):
+        return self.__objs.get(routetableid, None)
 
     def GetRouteV4Tables(self, vpcid):
         return self.__v4objs.get(vpcid, None)
@@ -289,11 +317,39 @@ class RouteObjectClient:
         if self.__v4objs[vpcid]:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
 
-
     def CreateObjects(self):
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.ROUTE, msgs)
         return
+
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = route_pb2.RouteTableGetRequest()
+        return grpcmsg
+
+    def ReadObjects(self):
+        msg = self.GetGrpcReadAllMessage()
+        resp = api.client.Get(api.ObjectTypes.ROUTE, [msg])
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("Route table object validation failed!!!")
+            sys.exit(1)
+        return
+
+    def ValidateObjects(self, getResp):
+        if GlobalOptions.dryrun:
+            return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("Route table get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                routeTable = self.GetRouteTableObject(spec.Id)
+                if not routeTable.Validate(resp):
+                    logger.error("Route table validation failed for ", obj)
+                    routeTable.Show()
+                    return False
+        return True
 
 client = RouteObjectClient()
 

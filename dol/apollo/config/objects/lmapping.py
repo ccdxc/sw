@@ -79,6 +79,13 @@ class LocalMappingObject(base.ConfigObjectBase):
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
         return grpcmsg
 
+    def GetGrpcReadMessage(self):
+        grpcmsg = mapping_pb2.MappingGetRequest()
+        key = grpcmsg.Id.add()
+        key.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, key.IPAddr)
+        return grpcmsg
+
     def GetGrpcSvcMappingCreateMessage(self):
         grpcmsg = service_pb2.SvcMappingRequest()
         spec = grpcmsg.Request.add()
@@ -89,6 +96,13 @@ class LocalMappingObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.IPAddr, spec.PrivateIP)
         utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIP)
         spec.Port = self.LBPort
+        return grpcmsg
+
+    def GetGrpcSvcMappingReadMessage(self):
+        grpcmsg = service_pb2.SvcMappingRequest()
+        key = grpcmsg.Id.add()
+        key.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.SvcIPAddr, key.IPAddr)
         return grpcmsg
 
     def Show(self):
@@ -134,6 +148,15 @@ class LocalMappingObjectClient:
         if utils.IsPipelineArtemis():
             msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(), self.__objs))
             api.client.Create(api.ObjectTypes.SVCMAPPING, msgs)
+        return
+
+    def ReadObjects(self):
+        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
+        api.client.Get(api.ObjectTypes.MAPPING, msgs)
+
+        if utils.IsPipelineArtemis():
+            msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.__objs))
+            api.client.Get(api.ObjectTypes.SVCMAPPING, msgs)
         return
 
 client = LocalMappingObjectClient()

@@ -3,8 +3,10 @@ import pdb
 import copy
 import ipaddress
 import random
+import sys
 
 from infra.common.logging import logger
+from infra.common.glopts import GlobalOptions
 import infra.config.base as base
 
 from apollo.config.store import Store
@@ -159,11 +161,36 @@ class PolicyObject(base.ConfigObjectBase):
         grpcmsg = policy_pb2.SecurityPolicyRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.PolicyId
-        spec.Direction = types_pb2.RULE_DIR_INGRESS if self.Direction == "ingress" else types_pb2.RULE_DIR_EGRESS
-        spec.AddrFamily = types_pb2.IP_AF_INET6 if self.AddrFamily == 'IPV6' else types_pb2.IP_AF_INET
+        spec.Direction = utils.GetRpcDirection(self.Direction)
+        spec.AddrFamily = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.rules:
             self.FillRuleSpec(spec, rule)
         return grpcmsg
+
+    def GetGrpcReadMessage(self):
+        grpcmsg = policy_pb2.SecurityPolicyGetRequest()
+        grpcmsg.Id.append(self.PolicyId)
+        return grpcmsg
+
+    def ValidateSpec(self, spec):
+        if spec.Id != self.PolicyId:
+            return False
+        if spec.Direction != utils.GetRpcDirection(self.Direction):
+            return False
+        if spec.AddrFamily != utils.GetRpcIPAddrFamily(self.AddrFamily):
+            return False
+        return True
+
+    def ValidateStats(self, stats):
+        return True
+
+    def ValidateStatus(self, status):
+        return True
+
+    def Validate(self, resp):
+        return self.ValidateSpec(resp.Spec) and\
+               self.ValidateStats(resp.Stats) and\
+               self.ValidateStatus(resp.Status)
 
     def Show(self):
         logger.info("Policy Object:", self)
@@ -652,6 +679,35 @@ class PolicyObjectClient:
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.POLICY, msgs)
         return
+
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = policy_pb2.SecurityPolicyGetRequest()
+        return grpcmsg
+
+    def ReadObjects(self):
+        msg = self.GetGrpcReadAllMessage()
+        resp = api.client.Get(api.ObjectTypes.POLICY, [msg])
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("Policy object validation failed!!!")
+            sys.exit(1)
+        return
+
+    def ValidateObjects(self, getResp):
+        if GlobalOptions.dryrun:
+            return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("Policy get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                policy = self.GetPolicyObject(spec.Id)
+                if not policy.Validate(resp):
+                    logger.error("Policy validation failed for ", obj)
+                    policy.Show()
+                    return False
+        return True
 
 client = PolicyObjectClient()
 
