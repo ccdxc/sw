@@ -1358,6 +1358,16 @@ func TestGenPkgManifest(t *testing.T) {
 			t.Errorf("manigest files do not match [%v][%v]", p.Files, exp)
 		}
 	}
+
+	_, err = getSwaggerMD(file, filepath)
+	if err != nil {
+		t.Fatalf("could not get swagger MD")
+	}
+
+	_, err = getAPIRefMD(file, filepath)
+	if err != nil {
+		t.Fatalf("could not get API ref MD")
+	}
 }
 
 func TestGetSvcManifest(t *testing.T) {
@@ -1376,6 +1386,14 @@ func TestGetSvcManifest(t *testing.T) {
 				type_name: '.example.Nest2'
 				number: 1
 			>
+			field <
+				name: 'O'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.ObjectMeta'
+				number: 3
+			>
+			options:<[venice.objectPrefix]:{Collection: "prefix", Path:"xx"}>
 		>
 		message_type <
 			name: 'testmsg'
@@ -1391,6 +1409,23 @@ func TestGetSvcManifest(t *testing.T) {
 				label: LABEL_OPTIONAL
 				type: TYPE_STRING
 				number: 3
+			>
+			field <
+				name: 'O'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.ObjectMeta'
+				number: 3
+			>
+			options:<[venice.objectPrefix]:{Collection: "prefix", Path:"xx"}>
+		>
+		message_type <
+			name: 'ObjectMeta'
+			field <
+				name: 'Name'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
 			>
 		>
 		service <
@@ -1463,9 +1498,11 @@ func TestGetSvcManifest(t *testing.T) {
 			"Nest1": {
 				Scopes:      []string{"cluster"},
 				RestMethods: []string{"put", "post"},
+				URI:         "/configs/example/v1/xx/prefix/{O.Name}",
 			},
 			"testmsg": {
 				Scopes: []string{"cluster"},
+				URI:    "/configs/example/v1/xx/prefix/{O.Name}",
 			},
 		},
 	}
@@ -1476,6 +1513,7 @@ func TestGetSvcManifest(t *testing.T) {
 			"Nest1": {
 				Scopes:  []string{"cluster"},
 				Actions: []string{"TestAction"},
+				URI:     "/configs/example/v1/xx/prefix/{O.Name}",
 			},
 		},
 	}
@@ -1487,6 +1525,11 @@ func TestGetSvcManifest(t *testing.T) {
 	}
 	if manifest != string(ret) {
 		t.Errorf("result does not match [%+v] [%v]", manifest, string(ret))
+	}
+
+	_, err = genObjectURIs("nonexistentfile", file)
+	if err != nil {
+		t.Fatalf("could not get ObjectURIs")
 	}
 }
 

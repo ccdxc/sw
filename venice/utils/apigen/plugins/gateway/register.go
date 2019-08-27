@@ -771,7 +771,25 @@ type swaggerFile struct {
 	Path        string `json:"path,omitempty"`
 }
 
-func genSwaggerIndex(desc *descriptor.File, path string) (string, error) {
+var groupDocString = map[string]string{
+	"auth":            "Authentication and Authorization related APIs",
+	"audit":           "Audit logs for the cluster and related APIs",
+	"browser":         "browse configuration objects and relations",
+	"cluster":         "Configure and Manage the Venice cluster, manage nodes in the cluster, SmartNics, Tenants etc.",
+	"diagnostics":     "Diagnostics APIs for the cluster",
+	"events":          "Monitor events on the cluster",
+	"monitoring":      "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies",
+	"network":         "Configure and Manage Networks and Services",
+	"rollout":         "Configure and manage rollout feature to upgrade/downgrade software for the cluster",
+	"search":          "Powerful search API to search configuration policies, events etc.",
+	"security":        "Configure and manage security features like Security Groups, Rules, Certificates etc.",
+	"staging":         "APIS to stage configuration and commit in transactions",
+	"telemetry_query": "Query telemetry information for the cluster",
+	"tokenauth":       "Manage tokens to access nodes in the cluster",
+	"workload":        "Configure and manage Workloads, Endpoints etc.",
+}
+
+func genSwaggerMap(desc *descriptor.File, path string) (map[string]swaggerFile, error) {
 	var index map[string]swaggerFile
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -782,7 +800,7 @@ func genSwaggerIndex(desc *descriptor.File, path string) (string, error) {
 		raw, err := ioutil.ReadFile(path)
 		if err != nil {
 			glog.V(1).Infof("Reading Manifest failed (%s)", err)
-			return "", err
+			return index, err
 		}
 		err = json.Unmarshal(raw, &index)
 		if err != nil {
@@ -800,18 +818,67 @@ func genSwaggerIndex(desc *descriptor.File, path string) (string, error) {
 	if !internal {
 		descStr := strings.Title(desc.GoPkg.Name)
 		descStr = strings.Replace(descStr, "_", " ", -1)
+		docstr := groupDocString[desc.GoPkg.Name]
+		if docstr == "" {
+			docstr = descStr + " API reference"
+		}
 		sf := swaggerFile{
-			Description: descStr + " API reference",
+			Description: docstr,
 			Path:        "/swagger/" + desc.GoPkg.Name,
 		}
 		index[desc.GoPkg.Name] = sf
 	}
+	return index, nil
+}
 
+func genSwaggerIndex(desc *descriptor.File, path string) (string, error) {
+	index, err := genSwaggerMap(desc, path)
+	if err != nil {
+		return "", err
+	}
 	out, err := json.MarshalIndent(index, "  ", "  ")
 	if err != nil {
 		glog.Fatalf("unable to marshall swagger index file")
 	}
 	return string(out), nil
+}
+
+func getSwaggerMD(desc *descriptor.File, path string) (string, error) {
+	index, err := genSwaggerMap(desc, path)
+	if err != nil {
+		return "", err
+	}
+	keys := []string{}
+	for k := range index {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	ret := "\n# Swagger Definitions\n\n|API group   | Description    |\n"
+	ret = ret + "|:---------- |:-------------- |\n"
+	for _, k := range keys {
+		grp := index[k]
+		ret = fmt.Sprintf("%s| [%s](%s) | %s |\n", ret, k, grp.Path, grp.Description)
+	}
+	return ret, nil
+}
+
+func getAPIRefMD(desc *descriptor.File, path string) (string, error) {
+	index, err := genSwaggerMap(desc, path)
+	if err != nil {
+		return "", err
+	}
+	keys := []string{}
+	for k := range index {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	ret := "\n|API group   | Description    |\n"
+	ret = ret + "|:-----------|:---------------|\n"
+	for _, k := range keys {
+		grp := index[k]
+		ret = fmt.Sprintf("%s| [%s](%s) | %s |\n", ret, strings.Title(k), fmt.Sprintf("generated/%s/index.html", k), grp.Description)
+	}
+	return ret, nil
 }
 
 type manifestFile struct {
@@ -940,6 +1007,7 @@ type messageDef struct {
 	Scopes      []string `json:",omitempty"`
 	RestMethods []string `json:",omitempty"`
 	Actions     []string `json:",omitempty"`
+	URI         string
 }
 
 // getServiceManifest retrieves the manifest from file specified in arg
@@ -965,10 +1033,10 @@ func getServiceManifest(filenm string) (map[string]packageDef, error) {
 
 // genServiceManifest generates a service manifest at the location specified.
 //  The manifest is created in an additive fashion since it is called once per protofile.
-func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
+func genServiceManifestInternal(filenm string, file *descriptor.File) (map[string]packageDef, error) {
 	manifest, err := getServiceManifest(filenm)
 	if err != nil {
-		return "", err
+		return manifest, err
 	}
 	pkg := file.GoPkg.Name
 	var pkgdef packageDef
@@ -1018,6 +1086,10 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 				}
 			}
 		}
+		svcParams, err := getSvcParams(svc)
+		if err != nil {
+			glog.V(1).Infof("failed to get svc params for [%v](%s)", *svc.Name, err)
+		}
 		if len(svcdef.Messages) > 0 {
 			for _, m := range svcdef.Messages {
 				mname := fmt.Sprintf(".%s.%s", file.GoPkg.Name, m)
@@ -1025,7 +1097,22 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 					glog.V(1).Infof("Failed to retrieve message %v for svc manifest", mname)
 					continue
 				} else {
-					msgdef := messageDef{}
+					cat, _ := getFileCategory(msg)
+					kc, err := getMsgURI(msg, svcParams.Version, svcParams.Prefix)
+					if err != nil {
+						glog.Fatalf("unable to get URI key for message [%s],(%s", *msg.Name, err)
+					}
+					uri := "/" + cat
+					for _, k := range kc {
+						if k.Type == "prefix" {
+							uri = uri + "/" + k.Val
+						} else {
+							uri = uri + "/{" + k.Val + "}"
+						}
+					}
+					msgdef := messageDef{
+						URI: strings.TrimSuffix(strings.Replace(strings.Replace(uri, "//", "/", -1), "tenant/{Tenant}/", "", -1), "/{Name}"),
+					}
 					if y, _ := isTenanted(msg); y {
 						msgdef.Scopes = append(msgdef.Scopes, "tenant")
 					} else {
@@ -1049,12 +1136,66 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 	if len(pkgdef.Svcs) > 0 {
 		manifest[pkg] = pkgdef
 	}
+	return manifest, nil
+}
+
+// genServiceManifest generates a service manifest at the location specified.
+//  The manifest is created in an additive fashion since it is called once per protofile.
+func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
+	manifest, err := genServiceManifestInternal(filenm, file)
+	if err != nil {
+		glog.Fatalf("failed to Generate service manifest")
+	}
 	ret, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
 		glog.Fatalf("failed to marshal service manifest")
 	}
 
 	return string(ret), nil
+}
+
+func genObjectURIs(filenm string, file *descriptor.File) (string, error) {
+	ret := make(map[string][]string)
+	manifest, err := genServiceManifestInternal(filenm, file)
+	if err != nil {
+		glog.Fatalf("failed to Generate service manifest")
+	}
+	for g, p := range manifest {
+		internal := false
+		for _, v := range common.InternalGroups {
+			if v == g {
+				internal = true
+				break
+			}
+		}
+		if internal {
+			continue
+		}
+		for _, s := range p.Svcs {
+			for k, m := range s.Properties {
+				u := ret[k]
+				u = append(u, m.URI)
+				ret[k] = u
+			}
+		}
+	}
+	keys := []string{}
+	for k := range ret {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	retstr := "| Object | URI |\n"
+	retstr = retstr + "|:---------|:------------|\n"
+	for _, k := range keys {
+		uris := ""
+		sep := ""
+		for _, us := range ret[k] {
+			uris = uris + sep + us
+			sep = ", "
+		}
+		retstr = retstr + fmt.Sprintf("| %s | %v |\n", k, uris)
+	}
+	return retstr, nil
 }
 
 type validateArg struct {
@@ -3130,8 +3271,11 @@ func init() {
 	reg.RegisterFunc("genManifest", genManifest)
 	reg.RegisterFunc("genPkgManifest", genPkgManifest)
 	reg.RegisterFunc("genSvcManifest", genServiceManifest)
+	reg.RegisterFunc("genObjectURIs", genObjectURIs)
 	reg.RegisterFunc("getSvcManifest", getServiceManifest)
 	reg.RegisterFunc("genSwaggerIndex", genSwaggerIndex)
+	reg.RegisterFunc("getSwaggerMD", getSwaggerMD)
+	reg.RegisterFunc("getAPIRefMD", getAPIRefMD)
 	reg.RegisterFunc("addRelations", addRelations)
 	reg.RegisterFunc("genRelMap", genRelMap)
 	reg.RegisterFunc("title", strings.Title)

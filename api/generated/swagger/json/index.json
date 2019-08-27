@@ -1,34 +1,34 @@
 {
     "audit": {
-      "description": "Audit API reference",
+      "description": "Audit logs for the cluster and related APIs",
       "path": "/swagger/audit"
     },
     "auth": {
-      "description": "Auth API reference",
+      "description": "Authentication and Authorization related APIs",
       "path": "/swagger/auth"
     },
     "browser": {
-      "description": "Browser API reference",
+      "description": "browse configuration objects and relations",
       "path": "/swagger/browser"
     },
     "cluster": {
-      "description": "Cluster API reference",
+      "description": "Configure and Manage the Venice cluster, manage nodes in the cluster, SmartNics, Tenants etc.",
       "path": "/swagger/cluster"
     },
     "diagnostics": {
-      "description": "Diagnostics API reference",
+      "description": "Diagnostics APIs for the cluster",
       "path": "/swagger/diagnostics"
     },
     "events": {
-      "description": "Events API reference",
+      "description": "Monitor events on the cluster",
       "path": "/swagger/events"
     },
     "monitoring": {
-      "description": "Monitoring API reference",
+      "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies",
       "path": "/swagger/monitoring"
     },
     "network": {
-      "description": "Network API reference",
+      "description": "Configure and Manage Networks and Services",
       "path": "/swagger/network"
     },
     "objstore": {
@@ -36,31 +36,31 @@
       "path": "/swagger/objstore"
     },
     "rollout": {
-      "description": "Rollout API reference",
+      "description": "Configure and manage rollout feature to upgrade/downgrade software for the cluster",
       "path": "/swagger/rollout"
     },
     "search": {
-      "description": "Search API reference",
+      "description": "Powerful search API to search configuration policies, events etc.",
       "path": "/swagger/search"
     },
     "security": {
-      "description": "Security API reference",
+      "description": "Configure and manage security features like Security Groups, Rules, Certificates etc.",
       "path": "/swagger/security"
     },
     "staging": {
-      "description": "Staging API reference",
+      "description": "APIS to stage configuration and commit in transactions",
       "path": "/swagger/staging"
     },
     "telemetry_query": {
-      "description": "Telemetry query API reference",
+      "description": "Query telemetry information for the cluster",
       "path": "/swagger/telemetry_query"
     },
     "tokenauth": {
-      "description": "Tokenauth API reference",
+      "description": "Manage tokens to access nodes in the cluster",
       "path": "/swagger/tokenauth"
     },
     "workload": {
-      "description": "Workload API reference",
+      "description": "Configure and manage Workloads, Endpoints etc.",
       "path": "/swagger/workload"
     }
   }

@@ -25,7 +25,8 @@
               "LdapConnectionCheck",
               "LdapBindCheck",
               "TokenSecretGenerate"
-            ]
+            ],
+            "URI": "/configs/auth/v1/authn-policy"
           },
           "Role": {
             "Scopes": [
@@ -38,7 +39,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/auth/v1/roles"
           },
           "RoleBinding": {
             "Scopes": [
@@ -51,7 +53,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/auth/v1/role-bindings"
           },
           "User": {
             "Scopes": [
@@ -69,7 +72,8 @@
               "PasswordChange",
               "PasswordReset",
               "IsAuthorized"
-            ]
+            ],
+            "URI": "/configs/auth/v1/users"
           },
           "UserPreference": {
             "Scopes": [
@@ -79,7 +83,8 @@
               "get",
               "put",
               "watch"
-            ]
+            ],
+            "URI": "/configs/auth/v1/user-preferences"
           }
         }
       }
@@ -112,12 +117,14 @@
             ],
             "Actions": [
               "Restock"
-            ]
+            ],
+            "URI": "/configs/bookstore/v1/books"
           },
           "Coupon": {
             "Scopes": [
               "cluster"
-            ]
+            ],
+            "URI": "/configs/bookstore/v1/Coupon"
           },
           "Customer": {
             "Scopes": [
@@ -129,7 +136,8 @@
               "delete",
               "post",
               "list"
-            ]
+            ],
+            "URI": "/configs/bookstore/v1/customers"
           },
           "Order": {
             "Scopes": [
@@ -146,12 +154,14 @@
             "Actions": [
               "applydiscount",
               "cleardiscount"
-            ]
+            ],
+            "URI": "/configs/bookstore/v1/orders"
           },
           "Publisher": {
             "Scopes": [
               "cluster"
-            ]
+            ],
+            "URI": "/configs/bookstore/v1/publishers"
           },
           "Store": {
             "Scopes": [
@@ -165,7 +175,8 @@
             ],
             "Actions": [
               "AddOutage"
-            ]
+            ],
+            "URI": "/configs/bookstore/v1/store"
           }
         }
       }
@@ -199,7 +210,8 @@
             "Actions": [
               "AuthBootstrapComplete",
               "UpdateTLSConfig"
-            ]
+            ],
+            "URI": "/configs/cluster/v1/cluster"
           },
           "Host": {
             "Scopes": [
@@ -212,7 +224,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/cluster/v1/hosts"
           },
           "Node": {
             "Scopes": [
@@ -225,7 +238,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/cluster/v1/nodes"
           },
           "SmartNIC": {
             "Scopes": [
@@ -237,7 +251,8 @@
               "delete",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/cluster/v1/smartnics"
           },
           "Tenant": {
             "Scopes": [
@@ -250,7 +265,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/cluster/v1/tenants"
           },
           "Version": {
             "Scopes": [
@@ -259,7 +275,8 @@
             "RestMethods": [
               "get",
               "watch"
-            ]
+            ],
+            "URI": "/configs/cluster/v1/version"
           }
         }
       }
@@ -289,7 +306,8 @@
             ],
             "Actions": [
               "Debug"
-            ]
+            ],
+            "URI": "/configs/diagnostics/v1/modules"
           }
         }
       }
@@ -324,7 +342,8 @@
               "put",
               "get",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/alerts"
           },
           "AlertDestination": {
             "Scopes": [
@@ -337,7 +356,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/alertDestinations"
           },
           "AlertPolicy": {
             "Scopes": [
@@ -350,7 +370,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/alertPolicies"
           },
           "EventPolicy": {
             "Scopes": [
@@ -363,7 +384,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/event-policy"
           },
           "FlowExportPolicy": {
             "Scopes": [
@@ -376,7 +398,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/flowExportPolicy"
           },
           "FwlogPolicy": {
             "Scopes": [
@@ -389,7 +412,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/fwlogPolicy"
           },
           "MirrorSession": {
             "Scopes": [
@@ -402,7 +426,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/MirrorSession"
           },
           "StatsPolicy": {
             "Scopes": [
@@ -413,7 +438,8 @@
               "put",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/statsPolicy"
           },
           "TechSupportRequest": {
             "Scopes": [
@@ -425,7 +451,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/techsupport"
           },
           "TroubleshootingSession": {
             "Scopes": [
@@ -437,7 +464,8 @@
               "delete",
               "post",
               "list"
-            ]
+            ],
+            "URI": "/configs/monitoring/v1/TroubleshootingSession"
           }
         }
       }
@@ -464,7 +492,8 @@
           "LbPolicy": {
             "Scopes": [
               "tenant"
-            ]
+            ],
+            "URI": "/configs/network/v1/lb-policy"
           },
           "Network": {
             "Scopes": [
@@ -474,7 +503,8 @@
               "get",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/network/v1/networks"
           },
           "NetworkInterface": {
             "Scopes": [
@@ -484,17 +514,20 @@
               "get",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/network/v1/networkinterfaces"
           },
           "Service": {
             "Scopes": [
               "tenant"
-            ]
+            ],
+            "URI": "/configs/network/v1/services"
           },
           "VirtualRouter": {
             "Scopes": [
               "tenant"
-            ]
+            ],
+            "URI": "/configs/network/v1/virtualrouters"
           }
         }
       }
@@ -516,7 +549,8 @@
           "Bucket": {
             "Scopes": [
               "cluster"
-            ]
+            ],
+            "URI": "/configs/v1/buckets"
           },
           "Object": {
             "Scopes": [
@@ -529,7 +563,8 @@
               "list",
               "delete",
               "watch"
-            ]
+            ],
+            "URI": "/configs/v1//{Namespace}/objects"
           }
         }
       }
@@ -561,12 +596,14 @@
               "UpdateRollout",
               "StopRollout",
               "RemoveRollout"
-            ]
+            ],
+            "URI": "/configs/rollout/v1/rollout"
           },
           "RolloutAction": {
             "Scopes": [
               "cluster"
-            ]
+            ],
+            "URI": "/configs/rollout/v1/rolloutAction"
           }
         }
       }
@@ -599,12 +636,14 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/security/v1/apps"
           },
           "Certificate": {
             "Scopes": [
               "tenant"
-            ]
+            ],
+            "URI": "/configs/security/v1/certificates"
           },
           "FirewallProfile": {
             "Scopes": [
@@ -615,7 +654,8 @@
               "put",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/security/v1/firewallprofiles"
           },
           "SGPolicy": {
             "Scopes": [
@@ -628,7 +668,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/security/v1/sgpolicies"
           },
           "SecurityGroup": {
             "Scopes": [
@@ -641,12 +682,14 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/security/v1/security-groups"
           },
           "TrafficEncryptionPolicy": {
             "Scopes": [
               "tenant"
-            ]
+            ],
+            "URI": "/configs/security/v1/trafficEncryptionPolicy"
           }
         }
       }
@@ -677,7 +720,8 @@
             "Actions": [
               "commit",
               "clear"
-            ]
+            ],
+            "URI": "/configs/staging/v1/buffers"
           }
         }
       }
@@ -703,7 +747,8 @@
               "get",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/workload/v1/endpoints"
           },
           "Workload": {
             "Scopes": [
@@ -716,7 +761,8 @@
               "post",
               "list",
               "watch"
-            ]
+            ],
+            "URI": "/configs/workload/v1/workloads"
           }
         }
       }

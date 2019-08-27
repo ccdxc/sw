@@ -1,0 +1,13 @@
+basepath: "src/github.com/pensando/sw"
+files:
+  - input: "api/docs/md/index.md"
+    output: "api/docs/index.html"
+    embed:
+      - "APIREFS"
+      - "OBJURIS"
+  - input: "api/generated/swagger/md/index.md"
+    output: "api/docs/generated/swaggeruri.html"
+  - input: "api/generated/apiref.md"
+    tag: "APIREFS"
+  - input: "api/generated/objuris.md"
+    tag: "OBJURIS"
