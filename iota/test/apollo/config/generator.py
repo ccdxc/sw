@@ -105,6 +105,8 @@ def Main(args):
 
     defs.DOL_PATH = "/iota/"
     api.Logger.info("Generating Configuration for Spec  = %s" % args.spec)
+    if args.spec == 'dummy':
+        return api.types.status.SUCCESS
     cfgpec = parser.ParseFile('test/apollo/config/cfg/', '%s'%args.spec)
     __generate(cfgpec)
 

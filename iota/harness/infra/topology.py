@@ -56,6 +56,8 @@ class Node(object):
         self.__os = getattr(self.__inst, "NodeOs", "linux")
         self.__nic_mgmt_ip = getattr(self.__inst, "NicMgmtIP", None)
         self.__nic_int_mgmt_ip = getattr(self.__inst, "NicIntMgmtIP", "169.254.0.1")
+        self.__nic_console_ip = getattr(self.__inst, "NicConsoleIP", "")
+        self.__nic_console_port = getattr(self.__inst, "NicConsolePort", "")
 
 
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
@@ -121,6 +123,12 @@ class Node(object):
 
     def GetNicIntMgmtIP(self):
         return self.__nic_int_mgmt_ip
+
+    def GetNicConsoleIP(self):
+        return self.__nic_console_ip
+
+    def GetNicConsolePort(self):
+        return self.__nic_console_port
 
     def Name(self):
         return self.__name
@@ -282,7 +290,7 @@ class Node(object):
             else:
                 self.__host_intfs = resp.third_party_nic_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
-        if len(self.__host_intfs) == 0 and  not self.IsVenice():
+        if len(self.__host_intfs) == 0 and  not self.IsVenice() and self.__role not in [topo_pb2.PERSONALITY_NAPLES_BITW, topo_pb2.PERSONALITY_NAPLES_BITW_PERF]:
             if GlobalOptions.dryrun:
                 self.__host_intfs = ["dummy_intf0", "dummy_intf1"]
             else:
@@ -449,6 +457,15 @@ class Topology(object):
 
     def GetNicMgmtIP(self, node_name):
         return self.__nodes[node_name].GetNicMgmtIP()
+
+    def GetNicIntMgmtIP(self, node_name):
+        return self.__nodes[node_name].GetNicIntMgmtIP()
+
+    def GetNicConsoleIP(self, node_name):
+        return self.__nodes[node_name].GetNicConsoleIP()
+
+    def GetNicConsolePort(self, node_name):
+        return self.__nodes[node_name].GetNicConsolePort()
 
     def GetNicIntMgmtIP(self, node_name):
         return self.__nodes[node_name].GetNicIntMgmtIP()

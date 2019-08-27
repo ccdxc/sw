@@ -281,6 +281,12 @@ def GetNodeOs(node_name):
 def GetNicMgmtIP(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicMgmtIP(node_name)
 
+def GetNicConsoleIP(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicConsoleIP(node_name)
+
+def GetNicConsolePort(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicConsolePort(node_name)
+
 def GetNicIntMgmtIP(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicIntMgmtIP(node_name)
 

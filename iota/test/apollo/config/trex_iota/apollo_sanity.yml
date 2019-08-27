@@ -1,0 +1,275 @@
+streams:
+       vnet_out_v4_1vpc_1flow:
+           src_interface: 0
+           dst_interface: 1
+           pkt_len      : 128
+           layers       :
+               outer_ether:
+                   type: Ether
+                   fields: {'src' : '00:00:00:40:08:01', 'dst' : '00:00:00:40:08:02'}
+               outer_dot1q:
+                    type: Dot1Q
+                    fields: {'vlan' : 1}
+               outer_ip:
+                    type: IP
+                    fields: {'src' : '2.0.0.1', dst : '2.0.0.33'}
+               outer_udp:
+                    type: UDP
+                    fields: {'sport': 100, 'dport': 100}
+           outer_loop:
+               count    : 1
+               layers   :
+                   outer_ether:
+                       fields:
+                           src : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                           dst : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                   outer_dot1q:
+                       fields:
+                           vlan : {'op': 'inc', 'step': 1}
+           inner_loop:
+               layers: 
+                   outer_ip:
+                       fields:
+                           dst: {'op': 'inc', 'step': 1, 'count': 1, 'next_var': 'outer_ip_src','name':'outer_ip_dst'}
+                           src: {'op': 'inc', 'step': 1, 'count': 1, 'name':'outer_ip_src'}
+
+       vnet_out_v4_64vpcs_1mflows:
+           src_interface: 0
+           dst_interface: 1
+           pkt_len      : 128
+           layers       :
+               outer_ether:
+                   type: Ether
+                   fields: {'src' : '00:00:00:40:08:01', 'dst' : '00:00:00:40:08:02'}
+               outer_dot1q:
+                   type: Dot1Q
+                   fields: {'vlan' : 1}
+               outer_ip:
+                   type: IP
+                   fields: {'src' : '2.0.0.1', dst : '2.0.0.33'}
+               outer_udp:
+                   type: UDP
+                   fields: {'sport': 100, 'dport': 100}
+           outer_loop:
+               count    : 64
+               layers   :
+                   outer_ether:
+                       fields:
+                           src : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                           dst : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                   outer_dot1q:
+                       fields:
+                           vlan : {'op': 'inc', 'step': 1}
+           inner_loop:
+               layers: 
+                   outer_ip:
+                       fields:
+                           dst: {'op': 'inc', 'step': 1, 'count': 511, 'next_var': 'outer_ip_src','name':'outer_ip_dst'}
+                           src: {'op': 'inc', 'step': 1, 'count': 32, 'name':'outer_ip_src'}
+           expected_pkt:
+               layers:
+                   outer_ether:
+                       type : Ether
+                       fields : {'src': '00:02:01:00:00:01'}
+                   outer_ip:
+                       type : IP
+                       fields : {'src': '1.0.0.2', 'dst':'1.0.0.3'}
+                   outer_udp:
+                       type : UDP
+                       fields : {'dport': 4789}
+                   outer_vxlan:
+                       type : VXLAN
+                       fields : {'vni': 1025}
+                   inner_ether:
+                       type : Ether
+                       fields : {'src': '00:00:00:40:08:01', 'dst': '00:00:00:40:08:02'}
+                   inner_ip:
+                       type : IP
+                       fields : {'src': '2.0.0.1', 'dst': '2.0.0.33'}
+                   inner_udp:
+                       type : UDP
+                       fields : {'sport': '100', 'dport': '100'}
+               outer_loop:
+                   count    : 64
+                   layers   :
+                       inner_ether:
+                           fields:
+                               src : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                               dst : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                       outer_vxlan:
+                           fields:
+                               vni : {'op': 'inc', 'step': 512}
+               inner_loop:
+                   layers: 
+                       outer_ip:
+                           fields:
+                               dst: {'op': 'inc', 'step': 1, 'count': 511, 'name':'outer_ip_dst'}
+                       inner_ip:
+                           fields:
+                               dst: {'op': 'inc', 'step': 1, 'count': 511, 'next_var': 'inner_ip_src','name':'inner_ip_dst'}
+                               src: {'op': 'inc', 'step': 1, 'count': 32, 'name':'inner_ip_src'}
+                       outer_vxlan:
+                           fields:
+                               vni : {'op': 'inc', 'step': 1, 'count': 511,'name':'outer_vxlan_vni'}
+
+       vnet_in_v4_1vpc_1flow:
+           src_interface: 1
+           dst_interface: 0
+           pkt_len      : 128
+           layers       :
+               outer_ether:
+                   type: Ether
+                   fields: {'src' : '00:02:0b:0a:0d:0e', 'dst' : '00:02:01:00:00:01'}
+               outer_ip:
+                   type: IP
+                   fields: {'src' : '1.0.0.3', dst : '1.0.0.2'}
+               outer_udp:
+                   type: UDP
+                   fields: {'dport': 4789}
+               outer_vxlan:
+                   type: VXLAN
+                   fields: {'flags': 0x8, 'vni': 1}
+               inner_ether:
+                   type: Ether
+                   fields: {'src' : '00:00:00:04:08:02', 'dst': '00:00:00:04:08:01'}
+               inner_ip: 
+                   type: IP
+                   fields: {'src' : '2.0.0.33', 'dst' : '2.0.0.1'}
+               inner_udp: 
+                   type: UDP
+                   fields: {'sport' : '100', 'dst' : '100'}
+           outer_loop:
+               count    : 1
+               layers   :
+                   inner_ether:
+                       fields:
+                           src : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                           dst : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                   outer_vxlan:
+                       fields:
+                           vni : {'op': 'inc', 'step': 1}
+           inner_loop:
+               layers: 
+                   outer_ip:
+                       fields:
+                           src: {'op': 'inc', 'step': 1, 'count': 1, 'name':'outer_ip_src','next_var':'inner_ip_dst'}
+                   inner_ip:
+                       fields:
+                           dst: {'op': 'inc', 'step': 1, 'count': 1, 'next_var': 'inner_ip_src','name':'inner_ip_dst'}
+                           src: {'op': 'inc', 'step': 1, 'count': 1, 'name':'inner_ip_src'}
+
+       vnet_in_v4_64vpcs_1mflows:
+           src_interface: 1
+           dst_interface: 0
+           pkt_len      : 128
+           layers       :
+               outer_ether:
+                   type: Ether
+                   fields: {'src' : '00:02:0b:0a:0d:0e', 'dst' : '00:02:01:00:00:01'}
+               outer_ip:
+                   type: IP
+                   fields: {'src' : '1.0.0.3', dst : '1.0.0.2'}
+               outer_udp:
+                   type: UDP
+                   fields: {'dport': 4789}
+               outer_vxlan:
+                   type: VXLAN
+                   fields: {'flags': 0x8, 'vni': 1}
+               inner_ether:
+                   type: Ether
+                   fields: {'src' : '00:00:00:04:08:02', 'dst': '00:00:00:04:08:01'}
+               inner_ip: 
+                   type: IP
+                   fields: {'src' : '2.0.0.33', 'dst' : '2.0.0.1'}
+               inner_udp: 
+                   type: UDP
+                   fields: {'sport' : '100', 'dst' : '100'}
+           outer_loop:
+               count    : 64
+               layers   :
+                   inner_ether:
+                       fields:
+                           src : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                           dst : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                   outer_vxlan:
+                       fields:
+                           vni : {'op': 'inc', 'step': 1}
+           inner_loop:
+               layers: 
+                   outer_ip:
+                       fields:
+                           src: {'op': 'inc', 'step': 1, 'count': 511, 'name':'outer_ip_src','next_var':'inner_ip_dst'}
+                   inner_ip:
+                       fields:
+                           dst: {'op': 'inc', 'step': 1, 'count': 8, 'next_var': 'inner_ip_src','name':'inner_ip_dst'}
+                           src: {'op': 'inc', 'step': 1, 'count': 511, 'name':'inner_ip_src'}
+
+
+       lpm_out_v4_64vpcs_2mflows:
+           src_interface: 0
+           dst_interface: 1
+           pkt_len      : 128
+           layers       :
+               outer_ether:
+                   type: Ether
+                   fields: {'src' : '00:00:00:40:08:01', 'dst' : '00:00:00:40:08:02'}
+               outer_dot1q:
+                   type: Dot1Q
+                   fields: {'vlan' : 1}
+               outer_ip:
+                   type: IP
+                   fields: {'src' : '2.0.0.1', dst : '192.0.0.1'}
+               outer_udp:
+                   type: UDP
+                   fields: {'sport': 100, 'dport': 100}
+           outer_loop:
+               count    : 64
+               layers   :
+                   outer_ether:
+                       fields:
+                           src : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                           dst : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                   outer_dot1q:
+                       fields:
+                           vlan : {'op': 'inc', 'step': 1}
+           inner_loop:
+               layers: 
+                   outer_ip:
+                       fields:
+                           dst: {'op': 'inc', 'step': 256, 'count': 1023, 'next_var': 'outer_ip_src','name':'outer_ip_dst'}
+                           src: {'op': 'inc', 'step': 1, 'count': 32, 'name':'outer_ip_src'}
+
+
+       vnet_out_v4_1vpc_4mflow:
+           src_interface: 0
+           dst_interface: 1
+           pkt_len      : 128
+           layers       :
+               outer_ether:
+                   type: Ether
+                   fields: {'src' : '00:00:00:40:08:01', 'dst' : '00:00:00:40:08:02'}
+               outer_dot1q:
+                   type: Dot1Q
+                   fields: {'vlan' : 1}
+               outer_ip:
+                   type: IP
+                   fields: {'src' : '2.0.0.1', dst : '2.0.0.33'}
+               outer_udp:
+                   type: UDP
+                   fields: {'sport': 100, 'dport': 100}
+           outer_loop:
+               count    : 1
+               layers   :
+                   outer_ether:
+                       fields:
+                           src : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                           dst : {'offset'   : 0, 'len' : 4, 'op': 'inc', 'step': 64}
+                   outer_dot1q:
+                       fields:
+                           vlan : {'op': 'inc', 'step': 1}
+           inner_loop:
+               layers: 
+                   outer_udp:
+                       fields:
+                           sport: {'op': 'inc', 'step': 1, 'count': 1024, 'next_var': 'outer_udp_dport','name':'outer_udp_sport'}
+                           dport: {'op': 'inc', 'step': 1, 'count': 4096, 'name':'outer_udp_dport'}
