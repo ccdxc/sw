@@ -146,17 +146,15 @@ func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 	}
 
 	existingNetwork, err := na.FindNetwork(nt.ObjectMeta)
-	log.Infof("Existing Network: %v", existingNetwork)
-
 	if err != nil {
 		log.Errorf("Network %v not found", nt.ObjectMeta)
 		return err
 	}
 
-	if proto.Equal(nt, existingNetwork) {
-		log.Infof("Nothing to update.")
+	if proto.Equal(&nt.Spec, &existingNetwork.Spec) {
 		return nil
 	}
+
 	// Use the ID that was previously allocated.
 	nt.Status.NetworkID = existingNetwork.Status.NetworkID
 
