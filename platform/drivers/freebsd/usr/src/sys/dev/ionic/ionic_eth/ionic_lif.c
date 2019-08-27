@@ -1097,7 +1097,7 @@ ionic_change_mtu(struct ifnet *ifp, int new_mtu)
 	}
 
 	IONIC_NETDEV_INFO(ifp, "Changed MTU %d > %d MBUF %d > %d\n",
-		if_getmtu(netdev), new_mtu, old_mbuf_size, lif->rx_mbuf_size);
+		if_getmtu(ifp), new_mtu, old_mbuf_size, lif->rx_mbuf_size);
 	if_setmtu(ifp, new_mtu);
 
 	return 0;
@@ -2887,7 +2887,7 @@ ionic_rx_fill(struct rxque *rxq)
 
 	index = 0;
 	/* Fill till there is only one slot left empty which is Q full. */
-	for (; rxq->descs < rxq->num_descs && !IONIC_Q_FULL(rxq); rxq->descs++) {
+	while (!IONIC_Q_FULL(rxq)) {
 		index = rxq->head_index;
 		rxbuf = &rxq->rxbuf[index];
 
@@ -2909,7 +2909,7 @@ ionic_rx_fill(struct rxque *rxq)
 		ionic_rx_ring_doorbell(rxq, index);
 
 	IONIC_RX_TRACE(rxq, "head: %d tail :%d desc_posted: %d\n",
-		rxq->head_index, rxq->tail_index, rxq->descs);
+		rxq->head_index, rxq->tail_index, IONIC_Q_LENGTH(rxq));
 }
 
 /*
@@ -2919,10 +2919,10 @@ static void
 ionic_rx_refill(struct rxque *rxq)
 {
 	struct ionic_rx_buf *rxbuf;
-	int i, count, error;
+	int i, count = 0, error;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
-	for (i = rxq->tail_index, count = 0; count < rxq->descs; i = (i + 1) % rxq->num_descs, count++) {
+	for (i = rxq->tail_index; i != rxq->head_index; i = (i + 1) % rxq->num_descs) {
 		rxbuf = &rxq->rxbuf[i];
 
 		KASSERT(rxbuf->m, ("%s: ionic_rx_refill rxbuf empty for %d", rxq->name, i));
@@ -2933,9 +2933,10 @@ ionic_rx_refill(struct rxque *rxq)
 				i, error);
 			break;
 		}
+		count++;
 	};
 
-	IONIC_RX_TRACE(rxq, "head: %d tail :%d refilled: %d\n",
+	IONIC_RX_TRACE(rxq, "head: %d tail: %d refilled: %d\n",
 		rxq->head_index, rxq->tail_index, count);
 }
 
@@ -2949,8 +2950,8 @@ ionic_rx_empty(struct rxque *rxq)
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	IONIC_RX_TRACE(rxq, "head: %d tail :%d desc_posted: %d\n",
-		rxq->head_index, rxq->tail_index, rxq->descs);
-	for (; rxq->descs; rxq->descs--) {
+		rxq->head_index, rxq->tail_index, IONIC_Q_LENGTH(rxq));
+	while (!IONIC_Q_EMPTY(rxq)) {
 		rxbuf = &rxq->rxbuf[rxq->tail_index];
 
 		KASSERT(rxbuf->m, ("%s: ionic_rx_empty rxbuf empty for %d",
@@ -2961,7 +2962,7 @@ ionic_rx_empty(struct rxque *rxq)
 	};
 
 	IONIC_RX_TRACE(rxq, "head: %d tail :%d desc_posted: %d\n",
-		rxq->head_index, rxq->tail_index, rxq->descs);
+		rxq->head_index, rxq->tail_index, IONIC_Q_LENGTH(rxq));
 }
 
 /*
@@ -2977,14 +2978,15 @@ ionic_rx_clean(struct rxque *rxq , int rx_limit)
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail: %d desc_posted: %d\n",
-		rxq->comp_index, rxq->head_index, rxq->tail_index, rxq->descs);
+		rxq->comp_index, rxq->head_index, rxq->tail_index,
+		IONIC_Q_LENGTH(rxq));
 
 	/* Sync descriptors. */
 	bus_dmamap_sync(rxq->cmd_dma.dma_tag, rxq->cmd_dma.dma_map,
 			BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
 
-	/* Process Rx descriptors for the given limit or till queue is empty. */
-	for (i = 0; i < rx_limit && rxq->descs; i++, rxq->descs--) {
+	/* Process Rx descriptors for the given limit or no more completions. */
+	for (i = 0; i < rx_limit; i++) {
 		comp_index = rxq->comp_index;
 		comp = &rxq->comp_ring[comp_index];
 
@@ -2993,8 +2995,15 @@ ionic_rx_clean(struct rxque *rxq , int rx_limit)
 
 		IONIC_RX_TRACE(rxq, "comp index: %d color: %d done_color: %d nsegs: %d"
 				" len: %d desc_posted: %d\n",
-				comp_index, comp->color, rxq->done_color, comp->num_sg_elems,
-				comp->len, rxq->descs);
+				comp_index, comp->pkt_type_color & IONIC_COMP_COLOR_MASK,
+				rxq->done_color, comp->num_sg_elems,
+				comp->len, IONIC_Q_LENGTH(rxq));
+
+		if (IONIC_Q_EMPTY(rxq)) {
+			IONIC_QUE_ERROR(rxq, "rx completion but the queue is empty!");
+			continue;
+		}
+
 		cmd_index = rxq->tail_index;
 		rxbuf = &rxq->rxbuf[cmd_index];
 		cmd = &rxq->cmd_ring[cmd_index];
@@ -3011,7 +3020,8 @@ ionic_rx_clean(struct rxque *rxq , int rx_limit)
 	}
 
 	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d desc_posted: %d processed: %d\n",
-		rxq->comp_index, rxq->head_index, rxq->tail_index, rxq->descs, i);
+		rxq->comp_index, rxq->head_index, rxq->tail_index,
+		IONIC_Q_LENGTH(rxq), i);
 
 	return (i);
 }
@@ -3401,7 +3411,7 @@ ionic_set_mac(struct ifnet *ifp)
 	}
 
 	IONIC_NETDEV_INFO(lif->netdev, "Changed MAC from %6D to %6D\n",
-		lif->dev_addr, ":", IF_LLADDR(netdev), ":");
+		lif->dev_addr, ":", IF_LLADDR(ifp), ":");
 
 	bcopy(addr, lif->dev_addr, ETHER_ADDR_LEN);
 

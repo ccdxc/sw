@@ -176,7 +176,6 @@ struct rxque {
 
 	struct lif *lif;
 	unsigned int num_descs; /* Max number of descriptors. */
-	uint32_t descs;			/* Descriptors posted in queue. */
 
 	unsigned int pid;
 
@@ -399,9 +398,11 @@ struct lif {
 #define IONIC_RX_LOCK_OWNED(x)		mtx_owned(&(x)->rx_mtx)
 
 #define IONIC_MOD_INC(q, index) (((q)->index + 1) % (q)->num_descs)
-/* Q-full condition, head + 1 == tail. */
-#define IONIC_Q_FULL(q)		((((q)->head_index + 1) % (q)->num_descs) == (q)->tail_index)
-#define IONIC_Q_EMPTY(q)	((q)->tail_index == (q)->head_index)
+
+#define IONIC_Q_EMPTY(q)	((q)->head_index == (q)->tail_index)
+#define IONIC_Q_LENGTH(q)	(((q)->head_index - (q)->tail_index) % (q)->num_descs)
+#define IONIC_Q_REMAINING(q)	((q)->num_descs - IONIC_Q_LENGTH(q) - 1)
+#define IONIC_Q_FULL(q)		(IONIC_Q_REMAINING(q) == 0)
 
 int ionic_stop(struct ifnet *ifp);
 void ionic_open_or_stop(struct lif *lif);

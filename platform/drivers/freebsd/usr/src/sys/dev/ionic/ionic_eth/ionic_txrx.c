@@ -587,7 +587,7 @@ ionic_queue_isr(int irq, void *data)
 	rxstats->isr_count++;
 	work_done = ionic_rx_clean(rxq, ionic_rx_clean_limit);
 	/* Fill the receive ring. */
-	if ((rxq->num_descs - rxq->descs) >= ionic_rx_fill_threshold)
+	if (IONIC_Q_REMAINING(rxq) >= ionic_rx_fill_threshold)
 		ionic_rx_fill(rxq);
 	IONIC_RX_TRACE(rxq, "processed: %d packets\n", work_done);
 	IONIC_RX_UNLOCK(rxq);
@@ -646,7 +646,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
 	 */
 	work_done = ionic_rx_clean(rxq, rxq->num_descs);
 	/* Fill the receive ring. */
-	if ((rxq->num_descs - rxq->descs) >= ionic_rx_fill_threshold)
+	if (IONIC_Q_REMAINING(rxq) >= ionic_rx_fill_threshold)
 		ionic_rx_fill(rxq);
 	IONIC_RX_TRACE(rxq, "processed %d packets\n", work_done);
 	/* Flush LRO only in the end of task handler. */
@@ -1016,7 +1016,6 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	return 0;
 }
 
-#ifdef IONIC_TSO_DEBUG
 /*
  * Validate the TSO descriptors.
  */
@@ -1027,12 +1026,14 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 	struct txq_sg_desc *sg;
 	struct ionic_tx_buf *txbuf;
 	int i, j, len = 0;
+	u8 cmd_opcode, cmd_flags, cmd_nsge;
+	u64 cmd_addr;
 
-	IONIC_TX_TRACE(txq, "TSO: VA: %p nsegs: %d length: %d\n",
+	IONIC_QUE_DEBUG(txq, "TSO: VA: %p nsegs: %d length: %d\n",
 		m, nsegs, m->m_pkthdr.len);
 
 	for (i = 0; i < nsegs; i++) {
-		IONIC_TX_TRACE(txq, "seg[%d] pa: 0x%lx len:%ld\n",
+		IONIC_QUE_DEBUG(txq, "seg[%d] pa: 0x%lx len:%ld\n",
 			i, seg[i].ds_addr, seg[i].ds_len);
 	}
 
@@ -1041,14 +1042,19 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 		desc = &txq->cmd_ring[i];
 		sg = &txq->sg_ring[i];
 		len += desc->len;
-		IONIC_TX_TRACE(txq, "TSO Dump desc[%d] pa: 0x%lx length: %d"
-			" S:%d E:%d mss:%d hdr_len:%d mbuf:%p\n",
-			i, desc->addr, desc->len, desc->S, desc->E,
-			desc->C, desc->mss, desc->hdr_len, txbuf->m);
 
-		for (j = 0; j < desc->num_sg_elems; j++) {
+		decode_txq_desc_cmd(desc->cmd, &cmd_opcode, &cmd_flags, &cmd_nsge, &cmd_addr);
+
+		IONIC_QUE_DEBUG(txq, "TSO Dump desc[%d] pa: 0x%lx length: %d"
+			" S:%d E:%d mss:%d hdr_len:%d mbuf:%p\n",
+			i, cmd_addr, desc->len,
+			(cmd_flags & IONIC_TXQ_DESC_FLAG_TSO_SOT) != 0,
+			(cmd_flags & IONIC_TXQ_DESC_FLAG_TSO_EOT) != 0,
+			desc->mss, desc->hdr_len, txbuf->m);
+
+		for (j = 0; j < cmd_nsge; j++) {
 			len += sg->elems[j].len;
-			IONIC_TX_TRACE(txq, "sg[%d] pa: 0x%lx length: %d\n",
+			IONIC_QUE_DEBUG(txq, "sg[%d] pa: 0x%lx length: %d\n",
 				j, sg->elems[j].addr, sg->elems[j].len);
 		}
 
@@ -1060,7 +1066,6 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 		("TSO packet size mismatch len: %d != actual %d",
 		m->m_pkthdr.len, len));
 }
-#endif
 
 static int
 ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
@@ -1236,9 +1241,8 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	}
 
 	KASSERT(end, ("No end of frame"));
-#ifdef IONIC_TSO_DEBUG
-	ionic_tx_tso_dump(txq, m, seg, nsegs, index);
-#endif
+	if (__IONIC_TSO_DEBUG)
+		ionic_tx_tso_dump(txq, m, seg, nsegs, index);
 	txq->head_index = index;
 	if (txq->head_index % ionic_tx_stride)
 		ionic_tx_ring_doorbell(txq, txq->head_index);

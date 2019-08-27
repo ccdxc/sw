@@ -51,82 +51,104 @@
 #define QUEUE_NAME_MAX_SZ		8
 MALLOC_DECLARE(M_IONIC);
 
-/* Init time debug. */
 #ifdef IONIC_DEBUG
-#define	IONIC_INFO(fmt, ...)							\
-		printf("[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define __IONIC_DEBUG true
 #else
-#define	IONIC_INFO(fmt, ...)
+#define __IONIC_DEBUG false
 #endif
-#define	IONIC_ERROR(fmt, ...)							\
-		printf("[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__);
+
+#ifdef IONIC_ENABLE_TRACING
+#define __IONIC_TRACE true
+#else
+#define __IONIC_TRACE false
+#endif
+
+#ifdef IONIC_TSO_DEBUG
+#define __IONIC_TSO_DEBUG true
+#else
+#define __IONIC_TSO_DEBUG false
+#endif
+
+#define	IONIC_PRINT(fmt, args...)					\
+	printf("[%s:%d] " fmt, __func__, __LINE__, ##args);
+
+#define	IONIC_ERROR		IONIC_PRINT
+#define	IONIC_WARN		IONIC_PRINT
+#define	IONIC_DEBUG		IONIC_PRINT
+
+#define	IONIC_INFO(args...) do {					\
+	if (__IONIC_DEBUG)						\
+		IONIC_PRINT(args);					\
+} while (0)
 
 /* Device related */
-#define	IONIC_DEV_DEBUG(dev, fmt, ...)						\
-		device_printf((dev)->bsddev, fmt, ##__VA_ARGS__);
 
-#ifdef IONIC_DEBUG
-#define IONIC_DEV_INFO(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d] " f, __func__, __LINE__, ## args)
-#else
-#define IONIC_DEV_INFO(d, f, args...)
-#endif
+#define	IONIC_DEV_PRINT(dev, fmt, args...)				\
+	device_printf((dev)->bsddev, "[%s:%d] " fmt,			\
+		      __func__, __LINE__, ##args)
 
-#define IONIC_DEV_WARN(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d] " f, __func__, __LINE__, ## args)
-#define IONIC_DEV_ERROR(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d] " f, __func__, __LINE__, ## args)
+#define IONIC_DEV_ERROR		IONIC_DEV_PRINT
+#define IONIC_DEV_WARN		IONIC_DEV_PRINT
+#define IONIC_DEV_DEBUG		IONIC_DEV_PRINT
+
+#define	IONIC_DEV_INFO(args...) do {					\
+	if (__IONIC_DEBUG)						\
+		IONIC_DEV_PRINT(args);					\
+} while (0)
 
 /* Netdev related. */
-#define IONIC_NETDEV_DEBUG(dev, fmt, ...) 					\
-		if_printf(dev, "[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 
-#ifdef IONIC_DEBUG
-#define IONIC_NETDEV_INFO(dev, fmt, ...) 					\
-		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
-#else
-#define IONIC_NETDEV_INFO(dev, fmt, ...)
-#endif
+#define IONIC_NETDEV_PRINT(ndev, fmt, ...)				\
+	if_printf(ndev, "[%s:%d] " fmt,					\
+		  __func__, __LINE__, ##__VA_ARGS__)
 
-#define IONIC_NETDEV_WARN(dev, fmt, ...) 					\
-		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
-#define IONIC_NETDEV_ERROR(dev, fmt, ...) 					\
-		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_ERROR	IONIC_NETDEV_PRINT
+#define IONIC_NETDEV_WARN	IONIC_NETDEV_PRINT
+#define IONIC_NETDEV_DEBUG	IONIC_NETDEV_PRINT
+
+#define	IONIC_NETDEV_INFO(args...) do {					\
+	if (__IONIC_DEBUG)						\
+		IONIC_NETDEV_PRINT(args);				\
+} while (0)
 
 /* Print the MAC address. */
-#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...)				\
-		IONIC_NETDEV_INFO(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
-#define IONIC_NETDEV_ADDR_DEBUG(dev, addr, fmt, ...)				\
-		IONIC_NETDEV_DEBUG(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
-#define IONIC_NETDEV_ADDR_WARN(dev, addr, fmt, ...)				\
-		IONIC_NETDEV_WARN(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
-#define IONIC_NETDEV_ADDR_ERROR(dev, addr, fmt, ...)				\
-		IONIC_NETDEV_ERROR(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
+
+#define IONIC_NETDEV_ADDR_PRINT(ndev, addr, fmt, args...)		\
+	IONIC_NETDEV_PRINT(ndev, "MAC: %6D " fmt,			\
+			   (addr), ":", ##args)
+
+
+#define IONIC_NETDEV_ADDR_ERROR	IONIC_NETDEV_ADDR_PRINT
+#define IONIC_NETDEV_ADDR_WARN	IONIC_NETDEV_ADDR_PRINT
+#define IONIC_NETDEV_ADDR_DEBUG	IONIC_NETDEV_ADDR_PRINT
+
+#define	IONIC_NETDEV_ADDR_INFO(args...) do {				\
+	if (__IONIC_DEBUG)						\
+		IONIC_NETDEV_ADDR_PRINT(args);				\
+} while (0)
 
 /* Netdevice queue related macros. */
-#define IONIC_QUE_DEBUG(q, fmt, ...)						\
-		if_printf(q->lif->netdev, "[%s:%d] %s: " fmt, 			\
-			__func__, __LINE__, q->name, ##__VA_ARGS__);
 
-#ifdef IONIC_DEBUG
-#define IONIC_QUE_INFO(q, fmt, ...)	 					\
-		IONIC_QUE_DEBUG(q, "info: " fmt, ##__VA_ARGS__)
-#else
-#define IONIC_QUE_INFO(q, fmt, ...)
-#endif
+#define IONIC_QUE_PRINT(q, fmt, args...)				\
+	IONIC_NETDEV_PRINT(q->lif->netdev, "%s: " fmt,			\
+			   q->name, ##args)
 
-#define IONIC_QUE_WARN(q, fmt, ...)						\
-		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
-#define IONIC_QUE_ERROR(q, fmt, ...)						\
-		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
+#define IONIC_QUE_ERROR	IONIC_QUE_PRINT
+#define IONIC_QUE_WARN	IONIC_QUE_PRINT
+#define IONIC_QUE_DEBUG	IONIC_QUE_PRINT
 
-#if defined(IONIC_ENABLE_TRACING)
-#define IONIC_TX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
-#define IONIC_RX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
-#else
-#define IONIC_TX_TRACE(q, fmt, ...)
-#define IONIC_RX_TRACE(q, fmt, ...)
-#endif
+#define	IONIC_QUE_INFO(args...) do {					\
+	if (__IONIC_DEBUG)						\
+		IONIC_QUE_PRINT(args);					\
+} while (0)
+
+#define	IONIC_QUE_TRACE(args...) do {					\
+	if (__IONIC_TRACE)						\
+		IONIC_QUE_PRINT(args);					\
+} while (0)
+
+#define	IONIC_RX_TRACE	IONIC_QUE_TRACE
+#define	IONIC_TX_TRACE	IONIC_QUE_TRACE
 
 struct ionic_dev;
 
