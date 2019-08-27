@@ -124,3 +124,8 @@ func NewConnectionChecker() ConnectionChecker {
 		connGetter: getConnection,
 	}
 }
+
+func init() {
+	// Sets timeout for ldap.Dial and ldap.DialTLS
+	ldap.DefaultTimeout = 5 * time.Second
+}

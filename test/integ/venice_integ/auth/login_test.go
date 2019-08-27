@@ -997,11 +997,11 @@ func TestPasswordReset(t *testing.T) {
 }
 
 func TestAuthOrder(t *testing.T) {
-	config := getACSConfig()
+	radiusConfig := getACSConfig()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
-		Tenant:   config.Tenant,
+		Tenant:   radiusConfig.Tenant,
 	}
 	radiusConf := &auth.Radius{
 		Enabled: true,
@@ -1012,22 +1012,52 @@ func TestAuthOrder(t *testing.T) {
 					Secret:     "incorrect",
 					AuthMethod: auth.Radius_PAP.String(),
 				}},
-				NasID: config.NasID,
+				NasID: radiusConfig.NasID,
+			},
+		},
+	}
+	ldapConfig := getADConfig()
+	ldapConf := &auth.Ldap{
+		Enabled: true,
+		Domains: []*auth.LdapDomain{
+			{
+				Servers: []*auth.LdapServer{
+					{
+						Url: ldapConfig.URL + "1",
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 ldapConfig.ServerName,
+							TrustedCerts:               ldapConfig.TrustedCerts,
+						},
+					},
+				},
+
+				BaseDN:       ldapConfig.BaseDN,
+				BindDN:       ldapConfig.BindDN,
+				BindPassword: ldapConfig.BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             ldapConfig.UserAttribute,
+					UserObjectClass:  ldapConfig.UserObjectClassAttribute,
+					Group:            ldapConfig.GroupAttribute,
+					GroupObjectClass: ldapConfig.GroupObjectClassAttribute,
+					Tenant:           ldapConfig.TenantAttribute,
+				},
 			},
 		},
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, radiusConf, localUserCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, radiusConf, localUserCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
 	radiusUserCred := &auth.PasswordCredential{
-		Username: config.User,
-		Password: config.Password,
+		Username: radiusConfig.User,
+		Password: radiusConfig.Password,
 	}
 	_, err := login.NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, radiusUserCred)
 	Assert(t, err != nil && strings.Contains(err.Error(), "401"), "expected radius login to fail")
-	_, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, localUserCred)
+	_, err = NewLoggedInContextWithTimeout(context.TODO(), tinfo.apiGwAddr, localUserCred, 12*time.Second)
 	AssertOk(t, err, "expected local user login to succeed")
 
 }
