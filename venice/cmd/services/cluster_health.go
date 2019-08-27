@@ -96,7 +96,6 @@ func (c *ClusterHealthMonitor) Start() {
 func (c *ClusterHealthMonitor) Stop() {
 	c.logger.Infof("stopping venice cluster health monitor")
 	c.cancelFunc()
-	close(c.updateCh)
 	c.wg.Wait()
 }
 
