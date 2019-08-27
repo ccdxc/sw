@@ -107,9 +107,21 @@ route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 
+void
+route_table::fill_spec_(pds_route_table_spec_t *spec) {
+    memcpy(&spec->key, &this->key_, sizeof(pds_route_table_key_t));
+    spec->af = af();
+    spec->num_routes = 0;
+    // routes are not stored anywhere
+    spec->routes = NULL;
+    return;
+}
+
 sdk_ret_t
-route_table::read(pds_route_table_key_t *key, pds_route_table_info_t *info) {
-    return SDK_RET_OK;
+route_table::read(pds_route_table_info_t *info) {
+    fill_spec_(&info->spec);
+    return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                          (impl::obj_info_t *)info);
 }
 
 sdk_ret_t

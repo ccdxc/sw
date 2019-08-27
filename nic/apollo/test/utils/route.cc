@@ -108,6 +108,22 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
     }
 }
 
+bool
+route_table_feeder::key_compare(const pds_route_table_key_t *key) const {
+    if (key->id != id)
+        return false;
+    return true;
+}
+
+bool
+route_table_feeder::spec_compare(const pds_route_table_spec_t *spec) const {
+    if (spec->af != af)
+        return false;
+    if (spec->num_routes != 0)
+        return false;
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------

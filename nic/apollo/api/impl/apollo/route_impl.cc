@@ -219,6 +219,20 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 
+void
+route_table_impl::fill_status_(pds_route_table_status_t *status) {
+    status->route_table_base_addr = lpm_root_addr();
+}
+
+sdk_ret_t
+route_table_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+    pds_route_table_info_t *route_table_info = (pds_route_table_info_t *)info;
+
+    fill_status_(&route_table_info->status);
+
+    return SDK_RET_OK;
+}
+
 /// \@}
 
 }    // namespace impl

@@ -144,7 +144,7 @@ struct pds_policy_spec_s {
 
 /// \brief policy status
 typedef struct pds_policy_status_s {
-    // TODO : Only base address of the tree stored in HBM is read
+    mem_addr_t policy_base_addr;    ///< policy base address
 } pds_policy_status_t;
 
 /// \brief policy statistics

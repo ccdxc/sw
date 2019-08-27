@@ -84,6 +84,14 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief      read spec, statistics and status from hw tables
+    /// \param[in]  api_obj  API object
+    /// \param[in]  key  pointer to route table key
+    /// \param[out] info pointer to route table info
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) override;
+
     mem_addr_t lpm_root_addr(void) { return lpm_root_addr_; }
 
 private:
@@ -94,6 +102,10 @@ private:
 
     /// \brief  destructor
     ~route_table_impl() {}
+
+    /// \brief      fill the route table status
+    /// \param[out] status status
+    void fill_status_(pds_route_table_status_t *status);
 
 private:
     mem_addr_t    lpm_root_addr_;   ///< LPM tree's root node address

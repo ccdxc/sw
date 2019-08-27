@@ -7,6 +7,7 @@
 #define __TEST_UTILS_ROUTE_TABLE_HPP__
 
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/route_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -60,11 +61,13 @@ public:
     // Iterate helper routines
     void iter_next(int width = 1);
 
-    bool read_unsupported(void) const { return true; }
-
     // Build routines
     void key_build(pds_route_table_key_t *key) const;
     void spec_build(pds_route_table_spec_t *spec) const;
+
+    // Compare routines
+    bool key_compare(const pds_route_table_key_t *key) const;
+    bool spec_compare(const pds_route_table_spec_t *spec) const;
 };
 
 // Dump prototypes
@@ -77,7 +80,7 @@ operator<<(std::ostream& os, const route_table_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(route_table);
-API_NO_READ(route_table);
+API_READ(route_table);
 API_UPDATE(route_table);
 API_DELETE(route_table);
 

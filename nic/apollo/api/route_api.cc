@@ -74,8 +74,7 @@ pds_route_table_read (pds_route_table_key_t *key, pds_route_table_info_t *info)
     if ((entry = pds_route_table_find(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-    info->spec.key = *key;
-    return entry->read(key, info);
+    return entry->read(info);
 }
 
 /**

@@ -111,10 +111,9 @@ public:
                                       obj_ctxt_t *obj_ctxt) override;
 
     ///\brief read config
-    ///\param[in]  key Pointer to the key object
     ///\param[out] info Pointer to the info object
     ///\return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_route_table_key_t *key, pds_route_table_info_t *info);
+    sdk_ret_t read(pds_route_table_info_t *info);
 
     /**
      * @brief     add given route table to the database
@@ -211,6 +210,10 @@ private:
 
     /**< @brief    destructor */
     ~route_table();
+
+    /// \brief      fill the route table sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_route_table_spec_t *spec);
 
     /**
      * @brief     free h/w resources used by this object, if any

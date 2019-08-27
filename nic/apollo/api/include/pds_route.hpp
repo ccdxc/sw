@@ -13,6 +13,7 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
@@ -78,7 +79,7 @@ struct pds_route_table_spec_s {
 
 /// \brief route table status
 typedef struct pds_route_table_status_s {
-    // TODO : Only base address of the tree stored in HBM is read
+    mem_addr_t route_table_base_addr;       ///< route table base address
 } pds_route_table_status_t;
 
 /// \brief route table statistics
