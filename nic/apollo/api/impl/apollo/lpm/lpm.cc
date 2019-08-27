@@ -88,6 +88,7 @@ lpm_keys_per_table (itree_type_t tree_type)
  */
 typedef struct lpm_stage_info_s {
     mem_addr_t    curr_table_addr;            /**< current table address */
+    mem_addr_t    end_marker_addr;            /**< end of current stage address */
     uint32_t      curr_index;                 /**< current entry (key/key+nh) being populated */
     uint8_t       curr_table[LPM_TABLE_SIZE]; /**< current table being populated */
 } lpm_stage_info_t;
@@ -492,15 +493,70 @@ lpm_write_last_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static sdk_ret_t
-lpm_flush_tables (lpm_stage_meta_t *smeta, uint32_t nstages)
+lpm_flush_tables (lpm_stage_meta_t *smeta, uint32_t nstages,
+                  lpm_itable_t *itable)
 {
     for (uint32_t i = 0; i < (nstages - 1); i++) {
         lpm_write_stage_table(smeta->tree_type, &smeta->stage_info[i]);
     }
 
     if (nstages > 0) {
+        if (itable->num_intervals > 0) {
+            smeta->stage_info[nstages - 1].curr_index =
+                    (smeta->keys_per_table >> 1) - 1;
+            lpm_add_key_to_last_stage(smeta->tree_type,
+                                      &smeta->stage_info[nstages - 1],
+                                      &itable->nodes[itable->num_intervals - 1]);
+        }
         lpm_write_last_stage_table(smeta->tree_type,
                                    &smeta->stage_info[nstages - 1]);
+    }
+
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    Finalizes the stages by programming the last table of each stage
+ *           to the hardware to make sure that the key with all 1's is taken
+ *           care of correctly.
+ * @param[in] smeta                  meta information for the stages
+ * @param[in] nstages                the number of stages
+ * @param[in] itable                 the interval table
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+static sdk_ret_t
+lpm_finalize_stages (lpm_stage_meta_t *smeta, uint32_t nstages,
+                     lpm_itable_t *itable)
+{
+    for (uint32_t i = 0; i < (nstages - 1); i++) {
+        /**< Has the last table in this stage programmed? */
+        if (smeta->stage_info[i].curr_table_addr !=
+            smeta->stage_info[i].end_marker_addr) {
+            /**< If not, program it with all FF's */
+            smeta->stage_info[i].curr_table_addr =
+            smeta->stage_info[i].end_marker_addr - LPM_TABLE_SIZE;
+            lpm_write_stage_table(smeta->tree_type, &smeta->stage_info[i]);
+        }
+    }
+
+    if (nstages > 0 && itable->num_intervals > 0) {
+        /**< Has the last table in this stage programmed? */
+        if (smeta->stage_info[nstages - 1].curr_table_addr !=
+            smeta->stage_info[nstages - 1].end_marker_addr) {
+            /**< If not, program it with all FF's, with the data of the last
+             * key being the data of the last node in the interval table */
+
+            smeta->stage_info[nstages - 1].curr_table_addr =
+            smeta->stage_info[nstages - 1].end_marker_addr - LPM_TABLE_SIZE;
+            smeta->stage_info[nstages - 1].curr_index =
+                    (smeta->keys_per_table >> 1) - 1;
+
+            lpm_add_key_to_last_stage(smeta->tree_type,
+                                      &smeta->stage_info[nstages - 1],
+                                      &itable->nodes[itable->num_intervals - 1]);
+            lpm_write_last_stage_table(smeta->tree_type,
+                                       &smeta->stage_info[nstages - 1]);
+        }
     }
 
     return SDK_RET_OK;
@@ -567,6 +623,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
     for (uint32_t i = 0, ntables = 1; i < nstages; i++) {
         smeta.stage_info[i].curr_table_addr = addr;
         addr += ntables * LPM_TABLE_SIZE;
+        smeta.stage_info[i].end_marker_addr = addr;
         ntables *= (smeta.keys_per_table + 1);
         memset(smeta.stage_info[i].curr_table, 0xFF, LPM_TABLE_SIZE);
     }
@@ -577,7 +634,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
      * last stage has half as many keys as other stages, so divide
      * lpm_keys_per_table() by 2
      */
-    nkeys_per_table = lpm_keys_per_table(itable->tree_type) >> 1;
+    nkeys_per_table = smeta.keys_per_table >> 1;
     last_stage_info = &smeta.stage_info[nstages-1];
     /**< set the default data for the first table */
     lpm_set_default_data(smeta.tree_type, last_stage_info, default_nh);
@@ -600,7 +657,9 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
             }
         }
     }
-    ret = lpm_flush_tables(&smeta, nstages);
+    ret = lpm_flush_tables(&smeta, nstages, itable);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = lpm_finalize_stages(&smeta, nstages, itable);
     SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
