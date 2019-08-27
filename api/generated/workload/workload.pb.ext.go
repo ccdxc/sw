@@ -65,6 +65,7 @@ func (m *Workload) Defaults(ver string) bool {
 		m.Tenant, m.Namespace = "default", "default"
 	}
 	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -155,7 +156,9 @@ func (m *WorkloadStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *WorkloadStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = m.PropagationStatus.Defaults(ver) || ret
+	return ret
 }
 
 // Validators and Requirements

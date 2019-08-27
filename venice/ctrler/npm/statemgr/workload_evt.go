@@ -209,6 +209,7 @@ func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 
 // createEndpoints tries to create all endpoints for a workload
 func (ws *WorkloadState) createEndpoints() error {
+	var ns *NetworkState
 	// find the host for the workload
 	host, err := ws.stateMgr.FindHost("", ws.Workload.Spec.HostName)
 	if err != nil {
@@ -222,7 +223,7 @@ func (ws *WorkloadState) createEndpoints() error {
 	for ii := range ws.Workload.Spec.Interfaces {
 		// check if we have a network for this workload
 		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
-		_, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+		ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
 		if (err != nil) && (ErrIsObjectNotFound(err)) {
 			err = ws.stateMgr.ctrler.Network().Create(&network.Network{
 				TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -287,6 +288,20 @@ func (ws *WorkloadState) createEndpoints() error {
 		}
 		*/
 
+		// check if an endpoint with this mac address already exists in this network
+		epMac := ws.Workload.Spec.Interfaces[ii].MACAddress
+		if ns != nil {
+			mep, err := ns.FindEndpointByMacAddr(epMac)
+			if err == nil && mep.Endpoint.Name != epName {
+				// we found a duplicate mac address
+				log.Errorf("Error creating endpoint %s. Macaddress %s already exists in ep %s", epName, epMac, mep.Endpoint.Name)
+				ws.Workload.Status.PropagationStatus.Status = "Propagation Failed. Duplicate MAC address"
+
+				// write the status back
+				return ws.Workload.Write()
+			}
+		}
+
 		// create the endpoint for the interface
 		epInfo := workload.Endpoint{
 			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -301,7 +316,7 @@ func (ws *WorkloadState) createEndpoints() error {
 				NodeUUID:           nodeUUID,
 				WorkloadName:       ws.Workload.Name,
 				WorkloadAttributes: ws.Workload.Labels,
-				MacAddress:         ws.Workload.Spec.Interfaces[ii].MACAddress,
+				MacAddress:         epMac,
 				HomingHostAddr:     "", // TODO: get host address
 				HomingHostName:     ws.Workload.Spec.HostName,
 				MicroSegmentVlan:   ws.Workload.Spec.Interfaces[ii].MicroSegVlan,

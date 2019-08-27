@@ -245,13 +245,11 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 		return err
 	}
 
-	ns.Lock()
-	defer ns.Unlock()
-
 	if ns.Network.Spec.IPv4Subnet != "" {
 		// allocate an IP address
+		ns.Lock()
 		ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
-
+		ns.Unlock()
 		if err != nil {
 			log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
 			return err
@@ -275,7 +273,9 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 		}
 
 		// write the modified network state to api server
+		ns.Lock()
 		err = ns.Network.Write()
+		ns.Unlock()
 		if err != nil {
 			log.Errorf("Error writing the network object. Err: %v", err)
 			return err
@@ -290,7 +290,7 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 	}
 
 	// save the endpoint in the database
-	ns.endpointDB[eps.endpointKey()] = eps
+	ns.AddEndpoint(eps)
 	sm.mbus.AddObject(convertEndpoint(&epinfo.Endpoint))
 
 	return nil
@@ -318,23 +318,26 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	if err != nil {
 		log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
 	} else {
-		ns.Lock()
-		defer ns.Unlock()
+
 		// free the IPv4 address
 		if eps.Endpoint.Status.IPv4Address != "" {
+			ns.Lock()
 			err = ns.freeIPv4Addr(eps.Endpoint.Status.IPv4Address)
+			ns.Unlock()
 			if err != nil {
 				log.Errorf("Error freeing the endpoint address. Err: %v", err)
 			}
 
 			// write the modified network state to api server
+			ns.Lock()
 			err = ns.Network.Write()
+			ns.Unlock()
 			if err != nil {
 				log.Errorf("Error writing the network object. Err: %v", err)
 			}
 		}
 		// remove it from the database
-		delete(ns.endpointDB, eps.endpointKey())
+		ns.RemoveEndpoint(eps)
 	}
 
 	// delete the endpoint

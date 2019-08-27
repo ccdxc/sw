@@ -1117,6 +1117,122 @@ func TestWorkloadUpdate(t *testing.T) {
 	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testWorkload-0001.0201.0203")
 }
 
+func TestWorkloadWithDuplicateMac(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testSmartNIC",
+		},
+		Spec: cluster.SmartNICSpec{},
+		Status: cluster.SmartNICStatus{
+			PrimaryMAC: "0001.0203.0405",
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testHost",
+		},
+		Spec: cluster.HostSpec{
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "0001.0203.0405",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&host)
+	AssertOk(t, err, "Could not create the host")
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "0001.0203.0405",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create the workload
+	err = stateMgr.ctrler.Workload().Create(&wr)
+	AssertOk(t, err, "Could not create the workload")
+
+	// verify we can find the network for the workload
+	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
+	AssertOk(t, err, "Could not find the network")
+
+	// verify we can find the endpoint associated with the workload
+	foundEp, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
+	Assert(t, ok, "Could not find the endpoint", "testWorkload-0001.0203.0405")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	// try to create second workload with duplicate mac address
+	wr2 := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload2",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "0001.0203.0405",
+					MicroSegVlan: 101,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+	err = stateMgr.ctrler.Workload().Create(&wr2)
+	AssertOk(t, err, "Could not create the second workload")
+
+	// find the second workload
+	fwr2, err := stateMgr.FindWorkload("default", "testWorkload2")
+	AssertOk(t, err, "Could not find the second workload")
+	Assert(t, (fwr2.Workload.Status.PropagationStatus.Status == "Propagation Failed. Duplicate MAC address"), "Invalid workload status", fwr2.Workload.Status.PropagationStatus.Status)
+
+	// verify endpoint is not created
+	_, ok = nw.FindEndpoint("testWorkload2-0001.0203.0405")
+	Assert(t, (ok == false), "Duplicate endpoint still found in network db", "testWorkload2-0001.0203.0405")
+
+	// delete the workload
+	err = stateMgr.ctrler.Workload().Delete(&wr)
+	AssertOk(t, err, "Error deleting the workload")
+
+	// verify endpoint is gone from the database
+	_, ok = nw.FindEndpoint("testWorkload-0001.0203.0405")
+	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testWorkload-0001.0203.0405")
+}
+
 func TestHostCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()

@@ -7,16 +7,23 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { SecurityPropagationStatus, ISecurityPropagationStatus } from './security-propagation-status.model';
 import { WorkloadWorkloadIntfStatus, IWorkloadWorkloadIntfStatus } from './workload-workload-intf-status.model';
 
 export interface IWorkloadWorkloadStatus {
+    'propagation-status'?: ISecurityPropagationStatus;
     'interfaces'?: Array<IWorkloadWorkloadIntfStatus>;
 }
 
 
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
+    'propagation-status': SecurityPropagationStatus = null;
     'interfaces': Array<WorkloadWorkloadIntfStatus> = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadStatus]: PropInfoItem } = {
+        'propagation-status': {
+            required: false,
+            type: 'object'
+        },
         'interfaces': {
             required: false,
             type: 'object'
@@ -45,6 +52,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['propagation-status'] = new SecurityPropagationStatus();
         this['interfaces'] = new Array<WorkloadWorkloadIntfStatus>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
@@ -55,6 +63,11 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values) {
+            this['propagation-status'].setValues(values['propagation-status'], fillDefaults);
+        } else {
+            this['propagation-status'].setValues(null, fillDefaults);
+        }
         if (values) {
             this.fillModelArray<WorkloadWorkloadIntfStatus>(this, 'interfaces', values['interfaces'], WorkloadWorkloadIntfStatus);
         } else {
@@ -67,10 +80,16 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, WorkloadWorkloadStatus.propInfo['propagation-status'].required),
                 'interfaces': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<WorkloadWorkloadIntfStatus>('interfaces', this['interfaces'], WorkloadWorkloadIntfStatus);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('propagation-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('propagation-status').get(field);
+                control.updateValueAndValidity();
+            });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('interfaces') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('interfaces').get(field);
@@ -86,6 +105,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this['propagation-status'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<WorkloadWorkloadIntfStatus>(this, 'interfaces', this['interfaces'], WorkloadWorkloadIntfStatus);
         }
     }
