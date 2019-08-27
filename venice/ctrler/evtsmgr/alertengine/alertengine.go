@@ -397,15 +397,20 @@ func (a *alertEngineImpl) updateAlertPolicy(apCl apiclient.Services, reqID strin
 			return nil, err
 		}
 
+		a.logger.Infof("debug: updating alert policy {%s} counters from {o: %v, t: %v} to {o: %v, t: %v}",
+			ap.Name, ap.Status.OpenAlerts, ap.Status.TotalHits,
+			ap.Status.OpenAlerts+int32(incrementOpenAlertsBy), ap.Status.TotalHits+int32(incrementTotalHitsBy))
+
 		ap.Status.OpenAlerts += int32(incrementOpenAlertsBy)
 		ap.Status.TotalHits += int32(incrementTotalHitsBy)
 
 		ap, err = apCl.MonitoringV1().AlertPolicy().UpdateStatus(ctx, ap) // update the policy
 		if err != nil {
 			errStatus, _ := status.FromError(err)
-			a.logger.Debugf("{req: %s} failed to update alert policy, err: %v: %v", reqID, err, errStatus)
+			a.logger.Debugf("debug: {req: %s} failed to update alert policy, err: %v: %v", reqID, err, errStatus)
 			return nil, err
 		}
+		a.logger.Infof("debug: updated alert policy {%s} counters: {o: %v, t: %v}", ap.Name, ap.Status.OpenAlerts, ap.Status.TotalHits)
 
 		return nil, nil
 	}, 5*time.Second, maxRetry)

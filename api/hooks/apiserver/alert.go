@@ -113,12 +113,15 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 
 func (a *alertHooks) getAlertPolUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc {
 	return func(oldObj runtime.Object) (runtime.Object, error) {
-		if flags.incrementAckAlerts != 0 || flags.incrementOpenAlerts != 0 {
-			alertPolicyObj, ok := oldObj.(*monitoring.AlertPolicy)
-			if !ok {
-				return alertPolicyObj, errInternalError
-			}
+		alertPolicyObj, ok := oldObj.(*monitoring.AlertPolicy)
+		if !ok {
+			return alertPolicyObj, errInternalError
+		}
 
+		a.logger.Infof("debug: updating the alert policy {%s} with {o: %v, a: %v}, original {o: %v, a: %v}",
+			alertPolicyObj.Name, flags.incrementOpenAlerts, flags.incrementAckAlerts,
+			alertPolicyObj.Status.OpenAlerts, alertPolicyObj.Status.AcknowledgedAlerts)
+		if flags.incrementAckAlerts != 0 || flags.incrementOpenAlerts != 0 {
 			alertPolicyObj.Status.AcknowledgedAlerts += flags.incrementAckAlerts
 			alertPolicyObj.Status.OpenAlerts += flags.incrementOpenAlerts
 			return alertPolicyObj, nil
