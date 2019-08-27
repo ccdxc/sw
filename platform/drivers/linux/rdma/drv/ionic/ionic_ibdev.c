@@ -2990,13 +2990,21 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ib_wc *wc)
 	wqe = ionic_queue_at_cons(&qp->rq);
 
 	/* wqe_id must be a valid queue index */
-	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2))
+	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2)) {
+		dev_warn(&qp->ibqp.device->dev,
+			 "flush qp %u recv index %llu invalid\n",
+			 qp->qpid, wqe->base.wqe_id);
 		return -EIO;
+	}
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[wqe->base.wqe_id];
-	if (unlikely(meta->next != IONIC_META_POSTED))
+	if (unlikely(meta->next != IONIC_META_POSTED)) {
+		dev_warn(&qp->ibqp.device->dev,
+			 "flush qp %u recv index %llu not posted\n",
+			 qp->qpid, wqe->base.wqe_id);
 		return -EIO;
+	}
 
 	ionic_queue_consume(&qp->rq);
 
@@ -3085,11 +3093,17 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	if (cqe_qp->has_rq) {
 		qp = cqe_qp;
 	} else {
-		if (unlikely(cqe_qp->is_srq))
+		if (unlikely(cqe_qp->is_srq)) {
+			dev_warn(&dev->ibdev.dev, "cqe_qp %u srq with no rq\n",
+				 cqe_qp->qpid);
 			return -EIO;
+		}
 
-		if (unlikely(!cqe_qp->ibqp.srq))
+		if (unlikely(!cqe_qp->ibqp.srq)) {
+			dev_warn(&dev->ibdev.dev, "cqe_qp %u no rq or srq\n",
+				 cqe_qp->qpid);
 			return -EIO;
+		}
 
 		qp = to_ionic_srq(cqe_qp->ibqp.srq);
 	}
@@ -3110,17 +3124,27 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	}
 
 	/* there had better be something in the recv queue to complete */
-	if (ionic_queue_empty(&qp->rq))
+	if (ionic_queue_empty(&qp->rq)) {
+		dev_warn(&dev->ibdev.dev, "qp %u is empty\n", qp->qpid);
 		return -EIO;
+	}
 
 	/* wqe_id must be a valid queue index */
-	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2))
+	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2)) {
+		dev_warn(&dev->ibdev.dev,
+			 "qp %u recv index %llu invalid\n",
+			 qp->qpid, cqe->recv.wqe_id);
 		return -EIO;
+	}
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[cqe->recv.wqe_id];
-	if (unlikely(meta->next != IONIC_META_POSTED))
+	if (unlikely(meta->next != IONIC_META_POSTED)) {
+		dev_warn(&dev->ibdev.dev,
+			 "qp %u recv index %llu not posted\n",
+			 qp->qpid, cqe->recv.wqe_id);
 		return -EIO;
+	}
 
 	meta->next = qp->rq_meta_head;
 	qp->rq_meta_head = meta;
@@ -3142,6 +3166,13 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 			cq->flush = true;
 			list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
 		}
+
+		dev_warn(&dev->ibdev.dev,
+			 "qp %d recv cqe with error\n",
+			 qp->qpid);
+		print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
+			       cqe, BIT(cq->q.stride_log2), true);
+
 		goto out;
 	}
 
@@ -3326,8 +3357,13 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	rc = ionic_validate_cons(qp->sq_msn_prod,
 				 qp->sq_msn_cons,
 				 cqe_seq, qp->sq.mask);
-	if (rc)
+	if (rc) {
+		dev_warn(&qp->ibqp.device->dev,
+			 "qp %u invalid msn %#x seq %u for prod %u cons %u\n",
+			 qp->qpid, be32_to_cpu(cqe->send.msg_msn),
+			 cqe_seq, qp->sq_msn_prod, qp->sq_msn_cons);
 		return rc;
+	}
 
 	qp->sq_msn_cons = cqe_seq;
 
@@ -3336,6 +3372,12 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 		meta->len = be32_to_cpu(cqe->status_length);
 		meta->ibsts = ionic_to_ib_status(meta->len);
 		meta->remote = false;
+
+		dev_warn(&qp->ibqp.device->dev,
+			 "qp %d msn cqe with error\n",
+			 qp->qpid);
+		print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
+			       cqe, sizeof(*cqe), true);
 	}
 
 	/* remote completion coalesces local requests, too */
@@ -3379,8 +3421,12 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	rc = ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
 				 cqe_seq, qp->sq.mask);
-	if (rc)
+	if (rc) {
+		dev_warn(&qp->ibqp.device->dev,
+			 "qp %u invalid npg seq %u for prod %u cons %u\n",
+			 qp->qpid, cqe_seq, qp->sq.prod, qp->sq_npg_cons);
 		return rc;
+	}
 
 	qp->sq_npg_cons = cqe_seq;
 
@@ -3389,6 +3435,12 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 		meta->len = st_len;
 		meta->ibsts = ionic_to_ib_status(st_len);
 		meta->remote = false;
+
+		dev_warn(&qp->ibqp.device->dev,
+			 "qp %d npg cqe with error\n",
+			 qp->qpid);
+		print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
+			       cqe, sizeof(*cqe), true);
 	}
 
 	return 0;
@@ -3530,8 +3582,8 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 			break;
 
 		default:
-			dev_dbg(&dev->ibdev.dev,
-				"unexpected cqe type %u\n", type);
+			dev_warn(&dev->ibdev.dev,
+				 "unexpected cqe type %u\n", type);
 
 			rc = -EIO;
 			goto out;
