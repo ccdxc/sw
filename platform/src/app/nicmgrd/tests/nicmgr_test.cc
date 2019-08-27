@@ -113,7 +113,7 @@ nicmgr_init()
                               g_fwd_mode, platform_type_t::PLATFORM_TYPE_HW);
     } else {
         devmgr =
-            new DeviceManager("../platform/src/app/nicmgrd/etc/eth-smart.json",
+            new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
                               g_fwd_mode, platform_type_t::PLATFORM_TYPE_HW);
     }
     EXPECT_TRUE(devmgr != NULL);
@@ -124,7 +124,7 @@ nicmgr_init()
     if (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) {
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");
     } else {
-        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth-smart.json");
+        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");
     }
 
     devmgr->HalEventHandler(true);
@@ -210,24 +210,6 @@ TEST_F(nicmgr_test, test1)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
-    mac1 = 0x12345678ABCD;
-    memcpy(rx_cmd.mac.addr, &mac1, 6);
-    memrev(rx_cmd.mac.addr, 6);
-    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
-    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
-
-    rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
-    mac1 = 0x01005e010101;
-    memcpy(rx_cmd.mac.addr, &mac1, 6);
-    memrev(rx_cmd.mac.addr, 6);
-    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
-    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
-#if 0
-    struct rx_filter_add_cmd rx_cmd = {0};
     // struct rx_filter_add_comp rx_comp;
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_VLAN;
@@ -240,7 +222,7 @@ TEST_F(nicmgr_test, test1)
     rx_cmd = {0};
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_MAC;
-    uint64_t mac1 = 0x12345678ABCD;
+    mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
@@ -320,7 +302,6 @@ TEST_F(nicmgr_test, test1)
     d_cmd = {0};
     d_cmd.cmd.opcode = CMD_OPCODE_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
-#endif
 }
 
 TEST_F(nicmgr_test, test2)
@@ -346,25 +327,6 @@ TEST_F(nicmgr_test, test2)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
-    mac1 = 0x12345678ABCD;
-    memcpy(rx_cmd.mac.addr, &mac1, 6);
-    memrev(rx_cmd.mac.addr, 6);
-    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
-    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
-
-    rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
-    mac1 = 0x01005e020202;
-    memcpy(rx_cmd.mac.addr, &mac1, 6);
-    memrev(rx_cmd.mac.addr, 6);
-    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
-    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
-#if 0
-
-    struct rx_filter_add_cmd rx_cmd;
     // struct rx_filter_add_comp rx_comp;
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_VLAN;
@@ -376,7 +338,7 @@ TEST_F(nicmgr_test, test2)
 
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_MAC;
-    uint64_t mac1 = 0x12345678ABCD;
+    mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
@@ -438,11 +400,85 @@ TEST_F(nicmgr_test, test2)
     // RESET
     d_cmd.cmd.opcode = CMD_OPCODE_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
-#endif
 }
 
 TEST_F(nicmgr_test, test3)
 {
+    struct rx_filter_add_cmd rx_cmd = {0};
+    uint64_t mac1;
+    Eth *eth_dev = NULL;
+    union dev_cmd d_cmd;
+    union dev_cmd_comp d_comp;
+    struct lif_init_cmd init_cmd = {0};
+
+
+    // Get eth device
+    eth_dev = (Eth *)devmgr->GetDevice("eth0");
+    assert(eth_dev != NULL);
+
+    // RESET
+    d_cmd = {0};
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // LIF_INIT
+    init_cmd = {0};
+    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x12345678ABCD;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x01005e010101;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+
+    // Get eth device
+    eth_dev = (Eth *)devmgr->GetDevice("oob_mnic0");
+    assert(eth_dev != NULL);
+
+    // RESET
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // LIF_INIT
+    init_cmd = {0};
+    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x12345678ABCD;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd = {0};
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x01005e020202;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+
     // Enable swm
     devmgr->swm_update(true, 1, 0, 0);
 

@@ -416,10 +416,20 @@ def run_nicmgr_gtest(args, standalone=False):
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
     print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
     os.chdir(nic_dir)
+    tcs = ""
+    if args.testcase:
+        tcs = "--gtest_filter="
+        result = [x.strip() for x in args.testcase.split(',')]
+        for tc in result:
+            tcs += "nicmgr_test." + tc + ":"
+        tcs = tcs[:-1]
+
     if args.classic:
-        cmd = [os.path.join(bin_dir, 'nicmgr.gtest'), "--classic"]
+        cmd = [os.path.join(bin_dir, 'nicmgr.gtest'), "--classic", tcs]
     else:
-        cmd = [os.path.join(bin_dir, 'nicmgr.gtest')]
+        cmd = [os.path.join(bin_dir, 'nicmgr.gtest'), tcs]
+
+    print "Running cmd : ", cmd
 
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
