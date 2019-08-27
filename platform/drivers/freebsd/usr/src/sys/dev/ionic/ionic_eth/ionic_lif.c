@@ -3679,6 +3679,7 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 	was_open = false;
 	if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 		was_open = true;
+		lif->stop = true;
 		lif->netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
 	}
 
@@ -3718,6 +3719,7 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 	ionic_reinit_vlan(lif);
 
 	if (was_open) {
+		lif->stop = false;
 		ionic_hw_open(lif);
 		ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	}
