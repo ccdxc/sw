@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -ex
+set -e
+#set -x
 
 # This is a temporary fix till we fix the asset with new directory strucutre.
 check_asic_asset()
@@ -45,7 +46,9 @@ for fname in $(find minio -name '*.txt')
 do
   name=$(basename $fname .txt)
   version=$(grep "${name}" minio/VERSIONS | awk '{ print $2 }')
+  echo asset-pull ${name} ${version}
   asset-pull ${name} ${version} /dev/stdout | tar xz
+  echo
 done
 check_asic_asset
 cp minio/VERSIONS minio/.VERSIONS.orig
