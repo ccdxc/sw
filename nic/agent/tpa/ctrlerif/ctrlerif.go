@@ -27,6 +27,8 @@ type TpClient struct {
 	watchCancel    context.CancelFunc
 }
 
+var syncInterval = time.Minute * 5
+
 // NewTpClient creates telemetry policy client object
 func NewTpClient(name string, state types.CtrlerIntf, srvURL string, resolverClient resolver.Interface) (*TpClient, error) {
 	watchCtx, watchCancel := context.WithCancel(context.Background())
@@ -228,6 +230,52 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 			case api.EventType_DeleteEvent:
 				if err := client.state.DeleteFlowExportPolicy(ctx, event.Policy); err != nil {
 					log.Errorf("delete flow export policy failed %s", err)
+				}
+			}
+
+			// periodic sync
+		case <-time.After(syncInterval):
+			// flow export
+			flowEvent, err := flowExpClient.ListFlowExportPolicy(ctx, &api.ObjectMeta{})
+			if err == nil {
+				ctrlFlowExp := map[string]*tpmproto.FlowExportPolicy{}
+				for _, exp := range flowEvent.EventList {
+					ctrlFlowExp[exp.Policy.GetKey()] = exp.Policy
+				}
+
+				// read policy from agent
+				agFlowExp, err := client.state.ListFlowExportPolicy(ctx)
+				if err == nil {
+					for _, pol := range agFlowExp {
+						if _, ok := ctrlFlowExp[pol.GetKey()]; !ok {
+							log.Infof("sync deleting flowExport policy %v", pol.GetKey())
+							if err := client.state.DeleteFlowExportPolicy(ctx, pol); err != nil {
+								log.Errorf("failed to delete %v, err: %v", pol.GetKey(), err)
+							}
+						}
+					}
+				}
+			}
+
+			// fwlog
+			fwEvent, err := fwlogClient.ListFwlogPolicy(ctx, &api.ObjectMeta{})
+			if err == nil {
+				ctrlFw := map[string]*tpmproto.FwlogPolicy{}
+				for _, fw := range fwEvent.EventList {
+					ctrlFw[fw.Policy.GetKey()] = fw.Policy
+				}
+
+				// read policy from agent
+				agFw, err := client.state.ListFwlogPolicy(ctx)
+				if err == nil {
+					for _, pol := range agFw {
+						if _, ok := ctrlFw[pol.GetKey()]; !ok {
+							log.Infof("sync deleting fwlog policy %v", pol.GetKey())
+							if err := client.state.DeleteFwlogPolicy(ctx, pol); err != nil {
+								log.Errorf("failed to delete %v, err: %v", pol.GetKey(), err)
+							}
+						}
+					}
 				}
 			}
 

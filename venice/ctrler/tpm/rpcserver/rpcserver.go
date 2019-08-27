@@ -1,6 +1,7 @@
 package rpcserver
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -130,6 +131,29 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 	}
 }
 
+func (p *fwlogPolicyRPCServer) ListFwlogPolicy(ctx context.Context, meta *api.ObjectMeta) (*tpmProtos.FwlogPolicyEventList, error) {
+	// track clients
+	peer := ctxutils.GetPeerAddress(ctx)
+	if len(peer) > 0 {
+		p.clients.Store(peer, time.Now().Format(time.RFC3339))
+	}
+
+	ev := &tpmProtos.FwlogPolicyEventList{}
+	for _, obj := range p.policyDb.ListObjects("FwlogPolicy") {
+		if policy, ok := obj.(*apiProtos.FwlogPolicy); ok {
+			ev.EventList = append(ev.EventList, &tpmProtos.FwlogPolicyEvent{
+				EventType: api.EventType_CreateEvent,
+				Policy: &tpmProtos.FwlogPolicy{
+					TypeMeta:   policy.TypeMeta,
+					ObjectMeta: policy.ObjectMeta,
+					Spec:       policy.Spec,
+				},
+			})
+		}
+	}
+	return ev, nil
+}
+
 func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProtos.FwlogPolicyApi_WatchFwlogPolicyServer) error {
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)
@@ -207,6 +231,40 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 	}
 }
 
+func (p *flowExportPolicyRPCServer) ListFlowExportPolicy(ctx context.Context, meta *api.ObjectMeta) (*tpmProtos.FlowExportPolicyEventList, error) {
+	// track clients
+	peer := ctxutils.GetPeerAddress(ctx)
+	if len(peer) > 0 {
+		p.clients.Store(peer, time.Now().Format(time.RFC3339))
+	}
+
+	ev := &tpmProtos.FlowExportPolicyEventList{}
+	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy") {
+		if apiPol, ok := obj.(*apiProtos.FlowExportPolicy); ok {
+			p, err := json.Marshal(apiPol)
+			if err != nil {
+				rpcLog.Errorf("invalid flow export policy from list %+v", obj)
+				continue
+			}
+			fp := &tpmProtos.FlowExportPolicy{}
+
+			if err := json.Unmarshal(p, &fp); err != nil {
+				rpcLog.Errorf("failed to convert flow export policy from list %+v", obj)
+				continue
+			}
+
+			ev.EventList = append(ev.EventList, &tpmProtos.FlowExportPolicyEvent{
+				EventType: api.EventType_CreateEvent,
+				Policy: &tpmProtos.FlowExportPolicy{
+					TypeMeta:   fp.TypeMeta,
+					ObjectMeta: fp.ObjectMeta,
+					Spec:       fp.Spec,
+				},
+			})
+		}
+	}
+	return ev, nil
+}
 func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, out tpmProtos.FlowExportPolicyApi_WatchFlowExportPolicyServer) error {
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)

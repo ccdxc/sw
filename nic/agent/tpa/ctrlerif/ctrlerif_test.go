@@ -6,6 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
+
 	"github.com/golang/mock/gomock"
 
 	"github.com/pensando/sw/api"
@@ -19,6 +23,74 @@ import (
 
 const listenURL = "127.0.0.1:"
 const defaultCollectInterval = "30s"
+
+func TestListFwlogPolicy(t *testing.T) {
+	fp := map[string]*monitoring.FwlogPolicy{
+		"exp-1": {
+			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "exp-1", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
+		},
+		"exp-2": {
+			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "exp-2", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
+		},
+	}
+	policyDb := memdb.NewMemdb()
+
+	for _, p := range fp {
+		err := policyDb.AddObject(p)
+		AssertOk(t, err, fmt.Sprintf("failed to add policy object %+v", p))
+	}
+
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	AssertOk(t, err, "failed to create rpc server")
+	defer f.Stop()
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	handler := mocks.NewMockCtrlerIntf(mockCtrl)
+
+	mockresolver := mock.New()
+	handler.EXPECT().CreateFwlogPolicy(gomock.Any(), gomock.Any()).Times(2).Return(nil)
+	syncInterval = 10 * time.Second
+	client, err := NewTpClient(t.Name(), handler, f.GetListenURL(), mockresolver)
+	AssertOk(t, err, "failed to create telemetry client")
+	Assert(t, client != nil, "invalid telemetry client ")
+	defer client.Stop()
+
+	handler.EXPECT().DeleteFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
+	handler.EXPECT().ListFwlogPolicy(gomock.Any()).Times(1).Return([]*tpmprotos.FwlogPolicy{
+		{
+			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "exp-3", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
+		},
+	}, nil)
+	handler.EXPECT().ListFlowExportPolicy(gomock.Any()).Times(1).Return(nil, nil)
+
+	ct := time.Now()
+	AssertEventually(t, func() (bool, interface{}) {
+		d := f.Debug()
+		ts, ok := d["FwlogPolicy"]
+		if !ok {
+			return false, nil
+		}
+
+		for _, tm := range ts {
+			tt, err := time.Parse(time.RFC3339, tm)
+			if err != nil {
+				return false, err
+			}
+
+			if tt.Sub(ct) > 0 {
+				time.Sleep(time.Second * 2) // delay a bit
+				return true, nil
+			}
+		}
+
+		return false, nil
+
+	}, "sync failed", "2s", "15s")
+}
 
 func TestWatchFwlogPolicy(t *testing.T) {
 	fp := map[string]*monitoring.FwlogPolicy{
@@ -137,6 +209,75 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		return true, contents
 	}, "found pending policy events")
 
+}
+
+func TestListFlowExportPolicy(t *testing.T) {
+	fp := map[string]*monitoring.FlowExportPolicy{
+		"exp-1": {
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "exp-1", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
+		},
+		"exp-2": {
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "exp-2", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
+		},
+	}
+
+	policyDb := memdb.NewMemdb()
+
+	for _, p := range fp {
+		err := policyDb.AddObject(p)
+		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
+	}
+
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	AssertOk(t, err, "failed to create rpc server")
+	defer f.Stop()
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	handler := mocks.NewMockCtrlerIntf(mockCtrl)
+
+	mockresolver := mock.New()
+	handler.EXPECT().CreateFlowExportPolicy(gomock.Any(), gomock.Any()).Times(2).Return(nil)
+	syncInterval = 10 * time.Second
+	client, err := NewTpClient(t.Name(), handler, f.GetListenURL(), mockresolver)
+	AssertOk(t, err, "failed to create telemetry client")
+	Assert(t, client != nil, "invalid telemetry client ")
+	defer client.Stop()
+
+	handler.EXPECT().DeleteFlowExportPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
+	handler.EXPECT().ListFlowExportPolicy(gomock.Any()).Times(1).Return([]*tpmprotos.FlowExportPolicy{
+		{
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "exp-3", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
+		},
+	}, nil)
+	handler.EXPECT().ListFwlogPolicy(gomock.Any()).Times(1).Return(nil, nil)
+
+	ct := time.Now()
+	AssertEventually(t, func() (bool, interface{}) {
+		d := f.Debug()
+		ts, ok := d["FlowExportPolicy"]
+		if !ok {
+			return false, nil
+		}
+
+		for _, tm := range ts {
+			tt, err := time.Parse(time.RFC3339, tm)
+			if err != nil {
+				return false, err
+			}
+
+			if tt.Sub(ct) > 0 {
+				time.Sleep(time.Second * 2) // delay a bit
+				return true, nil
+			}
+		}
+
+		return false, nil
+
+	}, "sync failed", "2s", "15s")
 }
 
 func TestWatchFlowExportPolicy(t *testing.T) {

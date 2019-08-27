@@ -62,6 +62,10 @@ message FwlogPolicyEvent {
     FwlogPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
 }
 
+message FwlogPolicyEventList {
+    repeated FwlogPolicyEvent EventList = 1 [(gogoproto.jsontag) = "event-list,omitempty"];
+}
+
 // FwlogPolicy firewall log Policy object
 message FwlogPolicy {
     api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
@@ -79,6 +83,7 @@ service FwlogPolicyApi {
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
+    rpc ListFwlogPolicy(api.ObjectMeta) returns (FwlogPolicyEventList) {};
     rpc WatchFwlogPolicy (api.ObjectMeta) returns (stream FwlogPolicyEvent) {};
 }
 //============================ flowExportPolicy ==========================================================
@@ -89,6 +94,10 @@ message FlowExportPolicyEvent {
 
     // flow export policy
     FlowExportPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
+}
+
+message FlowExportPolicyEventList {
+    repeated FlowExportPolicyEvent EventList = 1 [(gogoproto.jsontag) = "event-list,omitempty"];
 }
 
 message FlowExportPolicySpec {
@@ -132,5 +141,6 @@ service FlowExportPolicyApi {
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
+    rpc ListFlowExportPolicy (api.ObjectMeta) returns (FlowExportPolicyEventList) {};
     rpc WatchFlowExportPolicy (api.ObjectMeta) returns (stream FlowExportPolicyEvent) {};
 }

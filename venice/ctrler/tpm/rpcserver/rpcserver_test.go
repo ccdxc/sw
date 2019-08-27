@@ -177,6 +177,40 @@ func TestWatchStatsPolicy(t *testing.T) {
 	cancel()
 }
 
+func TestListFwlogPolicy(t *testing.T) {
+	fp := map[string]*monitoring.FwlogPolicy{
+		"pol-1": {
+			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "pol-1"},
+		},
+		"pol-2": {
+			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "pol-2"},
+		},
+	}
+
+	policyDb := memdb.NewMemdb()
+
+	for _, p := range fp {
+		err := policyDb.AddObject(p)
+		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog policy object %+v", p))
+	}
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	tu.AssertOk(t, err, "failed to create rpc server")
+	defer f.Stop()
+
+	grpc, err := rpckit.NewRPCClient("test-client", f.server.GetListenURL(), rpckit.WithLoggerEnabled(true))
+	tu.AssertOk(t, err, "failed to create rpc client")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	fwlogClient := tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+	evList, err := fwlogClient.ListFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
+	tu.AssertOk(t, err, "failed to list fwlog policy")
+	tu.Assert(t, len(evList.EventList) == len(fp), fmt.Sprintf("got %d, expected %d", len(evList.EventList), len(fp)))
+}
+
 func TestWatchFwlogPolicy(t *testing.T) {
 	fp := map[string]*monitoring.FwlogPolicy{
 		"fwlog-1": {
@@ -313,6 +347,53 @@ func TestFwlogError(t *testing.T) {
 	tu.AssertOk(t, err, "failed to watch fwlog policy")
 	_, err = evWatch.Recv()
 	tu.Assert(t, err != nil, "failed to test invalid policy")
+}
+
+func TestListFlowExportPolicy(t *testing.T) {
+	fp := map[string]*monitoring.FlowExportPolicy{
+		"pol-1": {
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "pol-1"},
+			Spec: monitoring.FlowExportPolicySpec{
+				TemplateInterval: "10s",
+			},
+		},
+		"pol-2": {
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "pol-2"},
+			Spec: monitoring.FlowExportPolicySpec{
+				TemplateInterval: "20s",
+			},
+		},
+	}
+
+	policyDb := memdb.NewMemdb()
+
+	for _, p := range fp {
+		err := policyDb.AddObject(p)
+		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog policy object %+v", p))
+	}
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	tu.AssertOk(t, err, "failed to create rpc server")
+	defer f.Stop()
+
+	grpc, err := rpckit.NewRPCClient("test-client", f.server.GetListenURL(), rpckit.WithLoggerEnabled(true))
+	tu.AssertOk(t, err, "failed to create rpc client")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	fwlogClient := tpmProtos.NewFlowExportPolicyApiClient(grpc.ClientConn)
+	evList, err := fwlogClient.ListFlowExportPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
+	tu.AssertOk(t, err, "failed to list policy")
+	tu.Assert(t, len(evList.EventList) == len(fp), fmt.Sprintf("got %d, expected %d", len(evList.EventList), len(fp)))
+
+	for _, p := range evList.EventList {
+		fp, ok := fp[p.Policy.Name]
+		tu.Assert(t, ok == true, "failed to find policy")
+		tu.Assert(t, fp.Spec.TemplateInterval == p.Policy.Spec.TemplateInterval, "failed to match policy %v", p.Policy.Name)
+
+	}
 }
 
 func TestWatchFlowExportPolicy(t *testing.T) {
