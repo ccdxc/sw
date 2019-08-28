@@ -92,7 +92,8 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
         }
         lpm_itable->nodes[i].data = itable->nodes[i].rfc.class_id;
     }
-    ret = lpm_build_tree(lpm_itable, rfc_tree->rfc_table.num_classes - 1,
+    ret = lpm_build_tree(lpm_itable, (lpm_itable->num_intervals > 0) ?
+                                      lpm_itable->nodes[lpm_itable->num_intervals-1].data:0,
                          max_rules, tree_base_addr, mem_size);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC tree type %u, err : %u",
