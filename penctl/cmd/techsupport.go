@@ -322,7 +322,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 
 	if isNaplesReachableOverLocalHost() == nil {
 		fmt.Println("penctl running tar locally on naples")
-		tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir, "/data/", "/var/log/", "/update/", "/var/lib/pensando/events/", "/obfl/")
+		tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir, "/data/post-upgrade-logs.tar.gz", "/data/pre-upgrade-logs.tar.gz", "/data/delphi.dat", "/data/delphi.dat-lock", "/var/log/", "/update/", "/var/lib/pensando/events/", "/obfl/", "/data/core/")
 		return createTechSupportTarBall(destDir, tarFile, tarcmd)
 	}
 
@@ -340,13 +340,10 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	for _, file := range retS {
 		fmt.Println(file)
-		if !strings.Contains(file, "naples-disruptive-upgrade-tech-support") {
-			if strings.HasSuffix(file, "/") || strings.Contains(file, "tar") {
-				continue
-			}
+		if strings.Contains(file, "naples-disruptive-upgrade-tech-support") || strings.Contains(file, "-upgrade-logs") || strings.Contains(file, "delphi.dat") {
+			fmt.Printf(".")
+			copyFileToDest(dataDestDir, "data/", file)
 		}
-		fmt.Printf(".")
-		copyFileToDest(dataDestDir, "data/", file)
 	}
 	fmt.Printf("\ndata directory fetched\n")
 	retSlice = nil

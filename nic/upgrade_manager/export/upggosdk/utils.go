@@ -101,5 +101,10 @@ func rmUpgTechSupportFiles() (string, error) {
 		Executable: "rm",
 		Opts:       strings.Join([]string{"-rf ", "/data/naples-disruptive-upgrade-tech-support*"}, ""),
 	}
+	execCmd(v)
+	v = &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-rf ", "/data/NaplesTechSupport-*"}, ""),
+	}
 	return execCmd(v)
 }
