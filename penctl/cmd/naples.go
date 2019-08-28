@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -309,7 +310,7 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	switch managedBy {
 	case "host":
 		if len(managementNetwork) != 0 || len(controllers) != 0 || len(defaultGW) != 0 || len(dnsServers) != 0 || len(mgmtIP) != 0 || len(priMac) != 0 {
-			err = errors.New("specified options, --managementNetwork, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when NAPLES is managed by host")
+			err = errors.New("specified options, --management-network, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when NAPLES is managed by host")
 			return
 		}
 
@@ -323,6 +324,10 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 		return
 
 	case "network":
+		// Variable to check if an IP address falls in the same subnet as the mgmt IP.
+		checkSubnet := false
+		var mgmtNet *net.IPNet
+
 		if len(managementNetwork) == 0 {
 			err = fmt.Errorf("network management mode needs an accompanying --management-network. Supported values are inband and oob")
 		}
@@ -332,10 +337,33 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
+		if len(mgmtIP) != 0 {
+			if len(controllers) == 0 {
+				err = fmt.Errorf("controllers must be passed when statically configuring management IP. Use --controllers option")
+				return
+			}
+
+			if vldtor.CIDR(mgmtIP) == nil {
+				if len(defaultGW) == 0 {
+					checkSubnet = true
+					_, mgmtNet, _ = net.ParseCIDR(mgmtIP)
+				}
+			} else {
+				err = fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", mgmtIP)
+				return
+			}
+		}
+
 		for _, c := range controllers {
 			if vldtor.HostAddr(c) != nil {
 				err = fmt.Errorf("invalid controller %v specified. Must be either IP Addresses or FQDNs", c)
 				return
+			} else if checkSubnet {
+				controllerIP := net.ParseIP(c)
+				if !mgmtNet.Contains(controllerIP) {
+					err = fmt.Errorf("controller %v is not in the same subnet as the Management IP %v. Add default gateway using --default-gw option", c, mgmtIP)
+					return
+				}
 			}
 		}
 
@@ -349,11 +377,6 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 				err = fmt.Errorf("invalid dns server %v specified. Must be a valid IP Addresses", d)
 				return
 			}
-		}
-
-		if len(mgmtIP) != 0 && vldtor.CIDR(mgmtIP) != nil {
-			err = fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", mgmtIP)
-			return
 		}
 
 		if len(priMac) != 0 {

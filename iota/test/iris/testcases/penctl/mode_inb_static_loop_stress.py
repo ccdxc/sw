@@ -14,7 +14,7 @@ def Trigger(tc):
         n = tc.Nodes[0]
 
         for i in range(0, 6):
-            ret = common.SetNaplesModeInband_Static(n, "1.1.1.1", "2.2.2.2/24")
+            ret = common.SetNaplesModeInband_Static(n, "2.2.2.1", "2.2.2.2/24")
             time.sleep(10)
             mode = common.PenctlGetTransitionPhaseStatus(n)
             if mode != "VENICE_UNREACHABLE":

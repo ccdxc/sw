@@ -9,7 +9,7 @@ import iota.test.iris.testcases.penctl.common as common
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
     tc.venice_ips = ["1.1.1.1", "2.2.2.2", "3.3.3.3"]
-    tc.mgmt_ips = ["11.11.11.11/24", "12.12.12.12/24", "13.13.13.13/24"]
+    tc.mgmt_ips = ["1.1.1.11/24", "2.2.2.2/24", "3.3.3.3/24"]
     tc.mgmt_ip_res = []
     tc.controller_ip_pentcl = []
     return api.types.status.SUCCESS

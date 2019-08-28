@@ -370,6 +370,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 				ID:          "4242.4242.4242",
 				IPConfig: &pencluster.IPConfig{
 					IPAddress: "42.42.42.42/16",
+					DefaultGW: "42.42.42.1",
 				},
 				PrimaryMAC: "4242.4242.4242",
 			},
@@ -572,7 +573,7 @@ func (it *veniceIntegSuite) startCitadel() {
 	cfg := meta.DefaultClusterConfig()
 	nodeUUID := "citadel-node0"
 
-	httpURL := "127.0.0.1:" + globals.CitadelHTTPPort
+	httpURL := "localhost:" + globals.CitadelHTTPPort
 	queryURL := ":" + globals.CitadelQueryRPCPort
 	collectorURL := fmt.Sprintf(":%s", globals.CollectorRPCPort)
 	it.updateResolver(globals.Collector, collectorURL)
@@ -1103,7 +1104,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	time.Sleep(time.Millisecond * 100)
 
 	// create tpm
-	pm, err := tpm.NewPolicyManager(integTestTPMURL, rc, "127.0.0.1:")
+	pm, err := tpm.NewPolicyManager(integTestTPMURL, rc, "localhost:")
 	c.Assert(err, check.IsNil)
 	it.tpm = pm
 

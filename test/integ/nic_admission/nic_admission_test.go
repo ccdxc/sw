@@ -466,10 +466,10 @@ func TestCreateNMDs(t *testing.T) {
 							Spec: proto.NaplesSpec{
 								Mode:        proto.MgmtMode_NETWORK.String(),
 								NetworkMode: proto.NetworkMode_OOB.String(),
-								Controllers: []string{"localhost"},
+								Controllers: []string{"127.0.0.1"},
 								ID:          priMac,
 								IPConfig: &pencluster.IPConfig{
-									IPAddress: "42.42.42.42/16",
+									IPAddress: "127.0.0.10/16",
 								},
 								PrimaryMAC: priMac,
 							},
@@ -915,10 +915,10 @@ func TestNICReadmit(t *testing.T) {
 		Spec: proto.NaplesSpec{
 			Mode:        proto.MgmtMode_NETWORK.String(),
 			NetworkMode: proto.NetworkMode_OOB.String(),
-			Controllers: []string{"localhost"},
+			Controllers: []string{"127.0.0.1"},
 			ID:          priMac,
 			IPConfig: &pencluster.IPConfig{
-				IPAddress: "42.42.42.42/16",
+				IPAddress: "127.0.0.10/16",
 			},
 			PrimaryMAC: priMac,
 		},
@@ -1072,10 +1072,10 @@ func TestNICDecommissionFlow(t *testing.T) {
 		Spec: proto.NaplesSpec{
 			Mode:        proto.MgmtMode_NETWORK.String(),
 			NetworkMode: proto.NetworkMode_OOB.String(),
-			Controllers: []string{"localhost"},
+			Controllers: []string{"127.0.0.1"},
 			ID:          priMac,
 			IPConfig: &pencluster.IPConfig{
-				IPAddress: "42.42.42.42/16",
+				IPAddress: "127.0.0.10/16",
 			},
 			PrimaryMAC: priMac,
 		},

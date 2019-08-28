@@ -14,7 +14,7 @@ def Trigger(tc):
         n = tc.Nodes[0]
 
         common.PenctlGetTransitionPhaseStatus(n)
-        common.SetNaplesModeInband_Static(n, "1.1.1.1","2.2.2.2/24")
+        common.SetNaplesModeInband_Static(n, "1.1.1.1","1.1.1.2/24")
 
         tc.before_reboot_status = common.PenctlGetTransitionPhaseStatus(n)
         #common.PenctlGetControllersStatus(n)[0]

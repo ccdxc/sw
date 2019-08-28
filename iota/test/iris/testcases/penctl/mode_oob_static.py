@@ -12,7 +12,7 @@ def Setup(tc):
 def Trigger(tc):
     for n in tc.Nodes:
         common.SetupRemoteDhcp(n)
-        common.SetNaplesModeOOB_Static(n, "4.4.4.4,5.5.5.5.", "6.6.6.6/24")
+        common.SetNaplesModeOOB_Static(n, "6.6.6.4,6.6.6.5.", "6.6.6.6/24")
 
     return api.types.status.SUCCESS
 

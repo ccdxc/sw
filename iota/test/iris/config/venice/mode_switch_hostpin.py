@@ -17,7 +17,7 @@ def Main(step):
 
         if common.PenctlGetModeStatus(n) != "NETWORK" or common.PenctlGetTransitionPhaseStatus(n) != "VENICE_REGISTRATION_DONE":
             api.Logger.info("Host [{}] is in HOST mode. Initiating mode change.".format(n))
-            ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "2.2.2.2/24")
+            ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "1.1.1.2/24")
             if ret == None:
                 return api.types.status.FAILURE
 

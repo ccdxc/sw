@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -109,28 +110,33 @@ func (ag *TSMClient) isStopped() bool {
 // Start the operation of the techsupport agent
 func (ag *TSMClient) Start() {
 	log.Infof("Starting Tech Support TSMClient")
-
-	if ag.resolverClient != nil {
-		tsGrpcClient, err := rpckit.NewRPCClient(ag.name, globals.Tsm, rpckit.WithBalancer(balancer.New(ag.resolverClient)))
-		if err != nil {
-			log.Errorf("Error creating TSM client %s: %v", ag.name, err)
-
-			if ag.isStopped() {
-				return
-			}
-		}
-		ag.tsGrpcClient = tsGrpcClient
-
-		go ag.runTechSupportWatcher()
-		go ag.RunModuleWatcher()
-		go ag.StartModuleWorker()
-	}
-
 	if ag.restServer != nil {
 		go ag.restServer.Start()
 	}
 
 	go ag.StartWorking()
+
+	if ag.resolverClient != nil {
+		for {
+			tsGrpcClient, err := rpckit.NewRPCClient(ag.name, globals.Tsm, rpckit.WithBalancer(balancer.New(ag.resolverClient)))
+			if err != nil {
+				log.Errorf("Error creating TSM client %s: %v", ag.name, err)
+
+				if ag.isStopped() {
+					return
+				}
+			} else {
+				ag.tsGrpcClient = tsGrpcClient
+				break
+			}
+
+			time.Sleep(time.Second)
+		}
+
+		go ag.runTechSupportWatcher()
+		go ag.RunModuleWatcher()
+		go ag.StartModuleWorker()
+	}
 }
 
 func (ag *TSMClient) isWatching() bool {

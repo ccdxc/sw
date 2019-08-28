@@ -3,8 +3,10 @@ package state
 import (
 	"errors"
 	"fmt"
+	"net"
 
 	nmdProto "github.com/pensando/sw/nic/agent/protos/nmd"
+	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
 func isHostModeValid(spec nmdProto.NaplesSpec) (err error) {
@@ -34,9 +36,39 @@ func isNetworkModeValid(spec nmdProto.NaplesSpec) (err error) {
 
 	case len(spec.NaplesProfile) != 0 && spec.NaplesProfile != "default":
 		return fmt.Errorf("naples profile is not applicable when naples is in network managed mode. Found: %v", spec.NaplesProfile)
-	default:
-		return nil
 	}
+
+	checkSubnet := false
+	var mgmtNet *net.IPNet
+
+	// IPAddress will be non-empty if management IP is passed for statically configuring management port on Naples
+	if spec.IPConfig != nil && len(spec.IPConfig.IPAddress) != 0 {
+		if len(spec.Controllers) == 0 {
+			return fmt.Errorf("controllers must be passed when statically configuring management IP. Use --controllers option")
+		}
+
+		if vldtor.CIDR(spec.IPConfig.IPAddress) == nil {
+			if len(spec.IPConfig.DefaultGW) == 0 {
+				checkSubnet = true
+				_, mgmtNet, _ = net.ParseCIDR(spec.IPConfig.IPAddress)
+			}
+		} else {
+			return fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", spec.IPConfig.IPAddress)
+		}
+	}
+
+	for _, c := range spec.Controllers {
+		if vldtor.HostAddr(c) != nil {
+			return fmt.Errorf("invalid controller %v specified. Must be either IP Addresses or FQDNs", c)
+		} else if checkSubnet {
+			controllerIP := net.ParseIP(c)
+			if !mgmtNet.Contains(controllerIP) {
+				return fmt.Errorf("controller %v is not in the same subnet as the Management IP %v. Add default gateway using --default-gw option", c, spec.IPConfig.IPAddress)
+			}
+		}
+	}
+
+	return nil
 }
 
 func errBadRequest(err error) *ErrBadRequest {

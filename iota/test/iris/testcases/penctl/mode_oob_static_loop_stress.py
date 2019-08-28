@@ -14,7 +14,7 @@ def Trigger(tc):
         n = tc.Nodes[0]
 
         for i in range(0, 6):
-            ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "2.2.2.2/24")
+            ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "1.1.1.2/24")
             time.sleep(10) 
             mode = common.PenctlGetTransitionPhaseStatus(n)
 

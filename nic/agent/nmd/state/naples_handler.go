@@ -279,7 +279,6 @@ func (n *NMD) handleNetworkModeTransition() error {
 			log.Errorf("Static mode transition event failed. Err: %v", err)
 			return fmt.Errorf("static mode transition event failed. Err: %v", err)
 		}
-
 	} else {
 		// Use statically passed controllers if any
 		n.config.Status.Controllers = n.config.Spec.Controllers
