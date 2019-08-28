@@ -3,20 +3,23 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8swatch "k8s.io/apimachinery/pkg/watch"
-	v1 "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 	k8sv1beta1 "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -27,8 +30,11 @@ import (
 
 var (
 	updateInterval = 30 * time.Second
+
 	// buffer time to let the cache populate and reflect current state of the system
 	cacheInitInterval = 30 * time.Second
+
+	maxRetry = 15
 )
 
 // ClusterHealthMonitor represents the cluster health monitor and acts as a local
@@ -39,14 +45,20 @@ type ClusterHealthMonitor struct {
 	cfgWatcherSvc     types.CfgWatcherService // to watch nodes
 	nodeWatcher       kvstore.Watcher         // Node watcher to watch nodes from API server
 	k8sSvc            types.K8sService        // to watch k8s services
-	deploymentWatcher k8swatch.Interface      // k8s deployment watcher
-	daemonSetWatcher  k8swatch.Interface      // k8s daemon set watcher
-	podWatcher        k8swatch.Interface      // k8s pod watcher
+	deploymentWatcher *k8sWatcher             // k8s deployment watcher
+	daemonSetWatcher  *k8sWatcher             // k8s daemon set watcher
+	podWatcher        *k8sWatcher             // k8s pod watcher
 	updateCh          chan struct{}           // sends wake up call to the updater to update cluster health during updates
 	ctx               context.Context         // context
 	cancelFunc        context.CancelFunc      // to stop the health monitor
 	logger            log.Logger              // logger
 	wg                sync.WaitGroup          // to cleanup go routines
+}
+
+// k8s watcher with resource version
+type k8sWatcher struct {
+	k8swatch.Interface
+	lastSyncResourceVersion string
 }
 
 // holds list of nodes and associated health
@@ -72,14 +84,17 @@ func NewClusterHealthMonitor(configWatcher types.CfgWatcherService, k8sSvc types
 	logger log.Logger) types.ClusterHealthMonitor {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &ClusterHealthMonitor{
-		nodesHealth:    &nodes{nodes: make(map[string]bool)},
-		servicesHealth: &k8sServices{services: make(map[string]*instances)},
-		cfgWatcherSvc:  configWatcher,
-		k8sSvc:         k8sSvc,
-		updateCh:       make(chan struct{}),
-		ctx:            ctx,
-		cancelFunc:     cancel,
-		logger:         logger,
+		nodesHealth:       &nodes{nodes: make(map[string]bool)},
+		servicesHealth:    &k8sServices{services: make(map[string]*instances)},
+		cfgWatcherSvc:     configWatcher,
+		k8sSvc:            k8sSvc,
+		updateCh:          make(chan struct{}, 10),
+		deploymentWatcher: &k8sWatcher{},
+		daemonSetWatcher:  &k8sWatcher{},
+		podWatcher:        &k8sWatcher{},
+		ctx:               ctx,
+		cancelFunc:        cancel,
+		logger:            logger,
 	}
 }
 
@@ -102,6 +117,7 @@ func (c *ClusterHealthMonitor) Stop() {
 // starts a node watcher that watches node changes from API server.
 func (c *ClusterHealthMonitor) startNodeWatcher() {
 	defer c.wg.Done()
+
 	var err error
 	opts := api.ListWatchOptions{}
 
@@ -138,7 +154,7 @@ func (c *ClusterHealthMonitor) startNodeWatcher() {
 		select {
 		case event, ok := <-c.nodeWatcher.EventChan():
 			if !ok { // restart this routine
-				c.logger.Errorf("error receiving from node watch channel, restarting the watcher")
+				c.logger.Errorf("error receiving from node watch channel, restarting node watcher")
 				c.restartNodeWatcher()
 				return
 			}
@@ -160,37 +176,63 @@ func (c *ClusterHealthMonitor) startNodeWatcher() {
 // services map accordingly.
 func (c *ClusterHealthMonitor) startServiceWatcher() {
 	defer c.wg.Done()
-	var err error
 
 	// wait for k8s client to be created
 	for {
 		if c.ctx.Err() != nil {
 			return
 		}
-		if c.k8sSvc.GetWatchClient() != nil {
+		if c.k8sSvc.GetClient() != nil && c.k8sSvc.GetWatchClient() != nil {
 			break
 		}
 		c.logger.Infof("waiting for k8s client")
 		time.Sleep(1 * time.Second)
 	}
-	k8sClient := c.k8sSvc.GetWatchClient()
+	k8sClient := c.k8sSvc.GetClient()         // for LIST
+	k8sStrClient := c.k8sSvc.GetWatchClient() // for WATCH
 
+	var err error
 	var selCases []reflect.SelectCase
 	watchList := map[int]string{}
 
 	// watch daemon set
-	c.daemonSetWatcher, err = k8sClient.Extensions().DaemonSets(defaultNS).Watch(k8smeta.ListOptions{})
 	ii := 0
-	for err != nil {
+	var daemonSetList *k8sv1beta1.DaemonSetList
+daemonSetWatch:
+	for {
 		select {
-		case <-time.After(time.Second):
-			c.daemonSetWatcher, err = k8sClient.Extensions().DaemonSets(defaultNS).Watch(k8smeta.ListOptions{})
+		case <-c.ctx.Done():
+			return
+		default:
+			if utils.IsEmpty(c.daemonSetWatcher.lastSyncResourceVersion) {
+				daemonSetList, err = k8sClient.Extensions().DaemonSets(defaultNS).List(k8smeta.ListOptions{})
+				if err != nil {
+					c.logger.Errorf("failed to list daemon sets, err: %v", err)
+					time.Sleep(time.Second)
+					continue
+				}
+				for _, daemonSet := range daemonSetList.Items {
+					c.processDaemonSetEvent(k8swatch.Added, &daemonSet)
+				}
+				c.daemonSetWatcher.lastSyncResourceVersion = daemonSetList.ResourceVersion
+			}
+
+			c.logger.Infof("watch daemon sets from resource version: %v", c.daemonSetWatcher.lastSyncResourceVersion)
+
+			if c.daemonSetWatcher.Interface, err = k8sStrClient.Extensions().DaemonSets(defaultNS).Watch(
+				k8smeta.ListOptions{ResourceVersion: c.daemonSetWatcher.lastSyncResourceVersion}); err == nil {
+				break daemonSetWatch
+			}
+
+			// requested version not available, reset the version; perform list and watch
+			if c.isGone(err) {
+				c.daemonSetWatcher.lastSyncResourceVersion = ""
+			}
 			ii++
 			if ii%10 == 0 {
 				c.logger.Errorf("waiting for daemon set watch to succeed for %v seconds", ii)
 			}
-		case <-c.ctx.Done():
-			return
+			time.Sleep(time.Second)
 		}
 	}
 	watchList[len(selCases)] = "daemonSets"
@@ -200,18 +242,43 @@ func (c *ClusterHealthMonitor) startServiceWatcher() {
 	c.logger.Info("daemon set watcher established")
 
 	// watch deployments
-	c.deploymentWatcher, err = k8sClient.Extensions().Deployments(defaultNS).Watch(k8smeta.ListOptions{})
 	ii = 0
-	for err != nil {
+	var deploymentList *k8sv1beta1.DeploymentList
+deploymentWatch:
+	for {
 		select {
-		case <-time.After(time.Second):
-			c.deploymentWatcher, err = k8sClient.Extensions().Deployments(defaultNS).Watch(k8smeta.ListOptions{})
-			ii++
-			if ii%10 == 0 {
-				c.logger.Errorf("waiting for daemon set watch to succeed for %v seconds", ii)
-			}
 		case <-c.ctx.Done():
 			return
+		default:
+			if utils.IsEmpty(c.deploymentWatcher.lastSyncResourceVersion) {
+				deploymentList, err = k8sClient.Extensions().Deployments(defaultNS).List(k8smeta.ListOptions{})
+				if err != nil {
+					c.logger.Errorf("failed to list deployments, err: %v", err)
+					time.Sleep(time.Second)
+					continue
+				}
+				for _, deployment := range deploymentList.Items {
+					c.processDeploymentEvent(k8swatch.Added, &deployment)
+				}
+				c.deploymentWatcher.lastSyncResourceVersion = deploymentList.ResourceVersion
+			}
+
+			c.logger.Infof("watch deployments from resource version: %v", c.deploymentWatcher.lastSyncResourceVersion)
+
+			if c.deploymentWatcher.Interface, err = k8sStrClient.Extensions().Deployments(defaultNS).Watch(
+				k8smeta.ListOptions{ResourceVersion: c.deploymentWatcher.lastSyncResourceVersion}); err == nil {
+				break deploymentWatch
+			}
+
+			// requested version not available, reset the version; perform list and watch
+			if c.isGone(err) {
+				c.deploymentWatcher.lastSyncResourceVersion = ""
+			}
+			ii++
+			if ii%10 == 0 {
+				c.logger.Errorf("waiting for deployment watch to succeed for %v seconds", ii)
+			}
+			time.Sleep(time.Second)
 		}
 	}
 	watchList[len(selCases)] = "deployment"
@@ -221,18 +288,42 @@ func (c *ClusterHealthMonitor) startServiceWatcher() {
 	c.logger.Info("deployment watcher established")
 
 	// watch pods
-	c.podWatcher, err = k8sClient.CoreV1().Pods(defaultNS).Watch(k8smeta.ListOptions{})
 	ii = 0
-	for err != nil {
+	var podList *v1.PodList
+podWatch:
+	for {
 		select {
-		case <-time.After(time.Second):
-			c.podWatcher, err = k8sClient.CoreV1().Pods(defaultNS).Watch(k8smeta.ListOptions{})
+		case <-c.ctx.Done():
+			return
+		default:
+			if utils.IsEmpty(c.podWatcher.lastSyncResourceVersion) {
+				podList, err = k8sClient.CoreV1().Pods(defaultNS).List(k8smeta.ListOptions{})
+				if err != nil {
+					c.logger.Errorf("failed to list pods, err: %v", err)
+					time.Sleep(time.Second)
+					continue
+				}
+				for _, pod := range podList.Items {
+					c.processPodEvent(k8swatch.Added, &pod)
+				}
+				c.podWatcher.lastSyncResourceVersion = podList.ResourceVersion
+			}
+
+			c.logger.Infof("watch pods from resource version: %v", c.podWatcher.lastSyncResourceVersion)
+
+			if c.podWatcher.Interface, err = k8sStrClient.CoreV1().Pods(defaultNS).Watch(
+				k8smeta.ListOptions{ResourceVersion: c.podWatcher.lastSyncResourceVersion}); err == nil {
+				break podWatch
+			}
+			// requested version not available, reset the version; perform list and watch
+			if c.isGone(err) {
+				c.podWatcher.lastSyncResourceVersion = ""
+			}
 			ii++
 			if ii%10 == 0 {
 				c.logger.Errorf("waiting for pod watch to succeed for %v seconds", ii)
 			}
-		case <-c.ctx.Done():
-			return
+			time.Sleep(time.Second)
 		}
 	}
 	watchList[len(selCases)] = "pod"
@@ -268,14 +359,18 @@ func (c *ClusterHealthMonitor) startServiceWatcher() {
 
 		switch obj := event.Object.(type) {
 		case *k8sv1beta1.DaemonSet:
+			c.daemonSetWatcher.lastSyncResourceVersion = obj.ResourceVersion
 			c.processDaemonSetEvent(event.Type, obj)
 		case *k8sv1beta1.Deployment:
+			c.deploymentWatcher.lastSyncResourceVersion = obj.ResourceVersion
 			c.processDeploymentEvent(event.Type, obj)
 		case *v1.Pod:
+			c.podWatcher.lastSyncResourceVersion = obj.ResourceVersion
 			c.processPodEvent(event.Type, obj)
 		default:
 			c.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
 			c.restartServiceWatchers()
+			return
 		}
 	}
 }
@@ -293,18 +388,13 @@ func (c *ClusterHealthMonitor) runUntilCancel() {
 
 	for {
 		select {
-		case <-ticker.C:
-			healthy, reason := c.checkNodesHealth()
-			if !healthy {
-				c.updateClusterHealth(healthy, reason)
-				continue
-			}
-
-			healthy, reason = c.checkK8sServicesHealth()
-			c.updateClusterHealth(healthy, reason)
 		// kicks in during any node or service failures; this avoids failures from going unnoticed
 		case _, ok := <-c.updateCh:
 			if ok {
+				for len(c.updateCh) > 0 { // drain the channel
+					<-c.updateCh
+				}
+
 				healthy, reason := c.checkNodesHealth()
 				if !healthy {
 					c.updateClusterHealth(healthy, reason)
@@ -314,6 +404,15 @@ func (c *ClusterHealthMonitor) runUntilCancel() {
 				healthy, reason = c.checkK8sServicesHealth()
 				c.updateClusterHealth(healthy, reason)
 			}
+		case <-ticker.C:
+			healthy, reason := c.checkNodesHealth()
+			if !healthy {
+				c.updateClusterHealth(healthy, reason)
+				continue
+			}
+
+			healthy, reason = c.checkK8sServicesHealth()
+			c.updateClusterHealth(healthy, reason)
 		case <-c.ctx.Done():
 			return
 		}
@@ -325,60 +424,61 @@ func (c *ClusterHealthMonitor) updateClusterHealth(healthy bool, reason []string
 	reasonStr := strings.Join(reason, ",")
 	c.logger.Infof("update cluster health with %v, reasons: %v", healthy, reasonStr)
 
-	// wait for API client to be ready
-	for {
+	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		if c.ctx.Err() != nil {
-			return
+			return nil, nil
 		}
-		if c.cfgWatcherSvc.APIClient() != nil {
-			if _, err := c.cfgWatcherSvc.APIClient().Cluster().Get(c.ctx, &api.ObjectMeta{}); err == nil {
+
+		if c.cfgWatcherSvc.APIClient() == nil {
+			return nil, fmt.Errorf("empty API client")
+		}
+		apiClient := c.cfgWatcherSvc.APIClient()
+
+		// get cluster object
+		cluster, err := apiClient.Cluster().Get(ctx, &api.ObjectMeta{})
+		if err != nil {
+			c.logger.Errorf("failed to get cluster, err: %v", err)
+			return nil, err
+		}
+		for _, cond := range cluster.Status.Conditions {
+			if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
+				if (healthy && cond.Status == cmd.ConditionStatus_TRUE.String()) ||
+					(!healthy && cond.Status == cmd.ConditionStatus_FALSE.String() && cond.Reason == reasonStr) {
+					c.logger.Debug("cluster status remains intact, nothing to be updated")
+					return nil, nil // nothing to be updated
+				}
 				break
 			}
 		}
-		c.logger.Debug("waiting for API client to update cluster health")
-		time.Sleep(time.Second)
-	}
-	apiClient := c.cfgWatcherSvc.APIClient()
 
-	// get cluster object
-	cluster, err := apiClient.Cluster().Get(c.ctx, &api.ObjectMeta{})
-	if err != nil {
-		c.logger.Errorf("failed to get cluster, err: %v", err)
-		return
-	}
-	for _, cond := range cluster.Status.Conditions {
-		if cond.Type == cmd.ClusterCondition_HEALTHY.String() {
-			if (healthy && cond.Status == cmd.ConditionStatus_TRUE.String()) ||
-				(!healthy && cond.Status == cmd.ConditionStatus_FALSE.String() && cond.Reason == reasonStr) {
-				c.logger.Debug("cluster status remains intact, nothing to be updated")
-				return // nothing to be updated
-			}
-			break
+		// update cluster health
+		clusterCond := cmd.ClusterCondition{Type: cmd.ClusterCondition_HEALTHY.String(), Reason: reasonStr}
+		if healthy {
+			clusterCond.Status = cmd.ConditionStatus_TRUE.String()
+		} else {
+			clusterCond.Status = cmd.ConditionStatus_FALSE.String()
 		}
-	}
 
-	// update cluster health
-	clusterCond := cmd.ClusterCondition{Type: cmd.ClusterCondition_HEALTHY.String(), Reason: reasonStr}
-	if healthy {
-		clusterCond.Status = cmd.ConditionStatus_TRUE.String()
-	} else {
-		clusterCond.Status = cmd.ConditionStatus_FALSE.String()
-	}
-
-	if len(cluster.Status.Conditions) == 0 {
-		cluster.Status.Conditions = append(cluster.Status.Conditions, clusterCond)
-	} else {
-		for i := range cluster.Status.Conditions {
-			if cluster.Status.Conditions[i].Type == cmd.ClusterCondition_HEALTHY.String() {
-				cluster.Status.Conditions[i] = clusterCond
-				break
+		if len(cluster.Status.Conditions) == 0 {
+			cluster.Status.Conditions = append(cluster.Status.Conditions, clusterCond)
+		} else {
+			for i := range cluster.Status.Conditions {
+				if cluster.Status.Conditions[i].Type == cmd.ClusterCondition_HEALTHY.String() {
+					cluster.Status.Conditions[i] = clusterCond
+					break
+				}
 			}
 		}
-	}
 
-	cluster, err = apiClient.Cluster().UpdateStatus(c.ctx, cluster)
+		cluster, err = apiClient.Cluster().UpdateStatus(ctx, cluster)
+		if err != nil {
+			c.logger.Errorf("failed to update cluster health, err: %v", err)
+			return nil, err
+		}
+		return nil, nil
+	}, time.Second, maxRetry)
 	if err != nil {
-		c.logger.Errorf("failed to update cluster health, err: %v", err)
+		c.logger.Errorf("failed to update cluster health")
 	}
 }
 
@@ -418,8 +518,7 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 
 	var reason []string
 	for svc, instances := range c.servicesHealth.services {
-		// TODO: This check needs to be put properly. For now we err on the healthy side. Refer to VS-675
-		if instances.desiredNumberScheduled > int32(len(instances.list)) {
+		if instances.desiredNumberScheduled != int32(len(instances.list)) {
 			reason = append(reason, fmt.Sprintf("%s(%d/%d) running", svc, len(instances.list),
 				instances.desiredNumberScheduled))
 		}
@@ -435,7 +534,7 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 func (c *ClusterHealthMonitor) processNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
 	c.nodesHealth.Lock()
 
-	c.logger.Debugf("node watcher received %v, %+v", et, node)
+	c.logger.Infof("node watcher received %v, %+v", et, node)
 
 	if _, ok := c.nodesHealth.nodes[node.GetName()]; !ok {
 		c.nodesHealth.nodes[node.GetName()] = false
@@ -609,19 +708,20 @@ func (c *ClusterHealthMonitor) isPodRunning(pod *v1.Pod) bool {
 
 // stops k8s service related watchers
 func (c *ClusterHealthMonitor) stopServiceWatchers() {
-	c.daemonSetWatcher.Stop()
-	c.daemonSetWatcher = nil
+	c.daemonSetWatcher.Interface.Stop()
+	c.daemonSetWatcher.Interface = nil
 
-	c.deploymentWatcher.Stop()
-	c.deploymentWatcher = nil
+	c.deploymentWatcher.Interface.Stop()
+	c.deploymentWatcher.Interface = nil
 
-	c.podWatcher.Stop()
-	c.podWatcher = nil
+	c.podWatcher.Interface.Stop()
+	c.podWatcher.Interface = nil
 }
 
 // restarts the k8s service watchers
 func (c *ClusterHealthMonitor) restartServiceWatchers() {
 	c.stopServiceWatchers()
+
 	c.wg.Add(1)
 	go c.startServiceWatcher()
 }
@@ -630,6 +730,16 @@ func (c *ClusterHealthMonitor) restartServiceWatchers() {
 func (c *ClusterHealthMonitor) restartNodeWatcher() {
 	c.nodeWatcher.Stop()
 	c.nodeWatcher = nil
+
 	c.wg.Add(1)
 	go c.startNodeWatcher()
+}
+
+// returns true if the err is http.StatusGone
+func (c *ClusterHealthMonitor) isGone(err error) bool {
+	switch t := err.(type) {
+	case errors.APIStatus:
+		return t.Status().Code == http.StatusGone
+	}
+	return false
 }

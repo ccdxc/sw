@@ -41,14 +41,17 @@ func setup(t *testing.T) (*ClusterHealthMonitor, *mock.CfgWatcherService, *k8sSe
 	// start cluster health monitor
 	ctx, cancel := context.WithCancel(context.Background())
 	clusterHealthMonitor := &ClusterHealthMonitor{
-		nodesHealth:    &nodes{nodes: make(map[string]bool)},
-		servicesHealth: &k8sServices{services: make(map[string]*instances)},
-		cfgWatcherSvc:  configWatcher,
-		k8sSvc:         k8sSvc,
-		updateCh:       make(chan struct{}),
-		ctx:            ctx,
-		cancelFunc:     cancel,
-		logger:         tLogger,
+		nodesHealth:       &nodes{nodes: make(map[string]bool)},
+		servicesHealth:    &k8sServices{services: make(map[string]*instances)},
+		cfgWatcherSvc:     configWatcher,
+		k8sSvc:            k8sSvc,
+		updateCh:          make(chan struct{}),
+		deploymentWatcher: &k8sWatcher{},
+		daemonSetWatcher:  &k8sWatcher{},
+		podWatcher:        &k8sWatcher{},
+		ctx:               ctx,
+		cancelFunc:        cancel,
+		logger:            tLogger,
 	}
 	clusterHealthMonitor.Start()
 

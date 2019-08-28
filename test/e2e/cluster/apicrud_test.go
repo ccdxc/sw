@@ -347,6 +347,7 @@ func testAPICRUDOps() func() {
 var _ = Describe("API Crud tests", func() {
 	getAPIServerNodeNRestartCount := func() (int64, string, string, error) {
 		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods -o wide --no-headers | grep pen-apiserver "), "\n")
+		By(fmt.Sprintf("kubectl get pods -o wide --no-headers | grep pen-apiserver: %s", out))
 		for _, line := range out {
 			fields := strings.Fields(line)
 			if len(fields) == 9 {
@@ -699,9 +700,11 @@ var _ = Describe("API Crud tests", func() {
 			Expect(grpcClient).ShouldNot(BeNil())
 			Consistently(func() int {
 				newRestarts, _, _, err := getAPIServerNodeNRestartCount()
-				Expect(err).To(BeNil(), "Could not get API server restart count")
+				if err != nil {
+					return 0
+				}
 				return int(newRestarts)
-			}, 30, 1).Should(BeNumerically("==", restarts), "API server should not have restarted again")
+			}, 60, 1).Should(BeNumerically("==", restarts), "API server should not have restarted again")
 			clearSavedConfig(&scfg)
 		})
 	})
