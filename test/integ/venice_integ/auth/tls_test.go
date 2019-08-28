@@ -86,7 +86,7 @@ func TestTLSVersion(t *testing.T) {
 	minSupportedVersion := tls.VersionTLS12
 	// start with supported versions first so that by the time we get to the unsupported ones
 	// we know for sure that server is up and running
-	for tlsVersion := tls.VersionTLS12; tlsVersion >= tls.VersionSSL30; tlsVersion-- {
+	for tlsVersion := tls.VersionTLS13; tlsVersion >= tls.VersionSSL30; tlsVersion-- {
 		client := http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
@@ -113,7 +113,7 @@ func TestTLSVersion(t *testing.T) {
 		} else {
 			resp, err := client.Do(req)
 			Assert(t, resp == nil, "Got non-nil response %+v for request with unsupported TLS version %v", resp, tlsVersion)
-			Assert(t, strings.Contains(err.Error(), "protocol version not supported"),
+			Assert(t, strings.Contains(err.Error(), "protocol version not supported") || strings.Contains(err.Error(), "no supported versions satisfy MinVersion and MaxVersion"),
 				"Got unexpected error \"%v\" for request with unsupported TLS version %v", err, tlsVersion)
 		}
 	}

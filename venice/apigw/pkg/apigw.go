@@ -1075,7 +1075,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // NewRProxyHandler creates a new RProxyHandler
 func NewRProxyHandler(path, trim, prefix, destination string, svcProf apigw.ServiceProfile) (*RProxyHandler, error) {
 	ret := &RProxyHandler{path: path, trim: trim, prefix: prefix, svcProfile: svcProf, destination: destination}
-	durl, err := url.Parse(destination + path)
+	durl, err := url.Parse(destination + "/" + path)
 	if err != nil {
 		return nil, err
 	}
@@ -1085,7 +1085,7 @@ func NewRProxyHandler(path, trim, prefix, destination string, svcProf apigw.Serv
 			ret.useResolver = true
 		} else {
 			// specified as host:port add "https://" by default
-			durl, err = url.Parse("https://" + destination + path)
+			durl, err = url.Parse("https://" + destination + "/" + path)
 			if err != nil {
 				return nil, err
 			}

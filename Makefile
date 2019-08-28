@@ -66,10 +66,10 @@ SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
-BUILD_CONTAINER ?= pens-bld:v0.13
+BUILD_CONTAINER ?= pens-bld:v0.14
 UI_BUILD_CONTAINER ?= pens-ui-bld:v0.28
-DIND_CONTAINER ?= pens-dind:v0.3
-E2E_CONTAINER ?= pens-e2e:v0.5
+DIND_CONTAINER ?= pens-dind:v0.4
+E2E_CONTAINER ?= pens-e2e:v0.6
 TARGETS ?= ws-tools pull-assets gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
@@ -297,17 +297,17 @@ clean:
 
 
 helper-containers:
-	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.5 .
-	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.4 .
+	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.6 .
+	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.5 .
 	@cd tools/docker-files/vinstall; docker build -t ${REGISTRY_URL}/pens-vinstall:v0.1 .
 	@#keep pens-ntp version in sync in tools/scripts/createImage.py
-	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.5 .
+	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.6 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/${DIND_CONTAINER}  .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/${E2E_CONTAINER} .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.12 .
 	@cd tools/docker-files/filebeat; docker build -t ${REGISTRY_URL}/pen-filebeat:v0.2 .
-	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.2 .
+	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.3 .
 
 debug-container:
 	scripts/create-debug-container.sh
@@ -407,7 +407,9 @@ fixtures:
 	fi
 
 shell:
-		docker run -it --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash
+	@mkdir -p ${PWD}/bin/cbin
+	@mkdir -p ${PWD}/bin/pkg
+	docker run -it --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash
 
 container-qcompile:
 	mkdir -p ${PWD}/bin/cbin

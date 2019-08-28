@@ -95,8 +95,7 @@ func Simulate(addr string, hosts, vms int) (string, error) {
 	m.Host = hosts
 	m.Machine = vms
 
-	f := flag.Lookup("httptest.serve")
-	f.Value.Set(addr)
+	flag.Set("httptest.serve", addr)
 	tag := " (govmomi simulator)"
 	m.ServiceContent.About.Name += tag
 	m.ServiceContent.About.OsType = runtime.GOOS + "-" + runtime.GOARCH
@@ -194,8 +193,7 @@ func (s *Inventory) Run(addr string, snicMacs []string, vms int) (string, error)
 	m.Host = len(snicMacs)
 	m.Machine = vms
 
-	f := flag.Lookup("httptest.serve")
-	f.Value.Set(addr)
+	flag.Set("httptest.serve", addr)
 	tag := " (govmomi simulator)"
 	m.ServiceContent.About.Name += tag
 	m.ServiceContent.About.OsType = runtime.GOOS + "-" + runtime.GOARCH

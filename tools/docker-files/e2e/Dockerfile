@@ -1,11 +1,13 @@
-FROM alpine:3.8
+FROM alpine:3.10
+RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/main > /etc/apk/repositories
+RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/community >> /etc/apk/repositories
 RUN apk update
 RUN apk add curl
 RUN curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64.tar.gz  https://storage.googleapis.com/kubernetes-release/release/v1.15.3/kubernetes-server-linux-amd64.tar.gz
 RUN tar xvf /tmp/kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin/kubectl
 RUN chmod 755 kubernetes/server/bin/kubectl
 
-FROM golang:1.11.1-alpine3.8
+FROM golang:1.12.9-alpine3.10
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 RUN apk update
 RUN apk add curl bash git make build-base linux-headers gcc libpcap-dev libtool openssh docker

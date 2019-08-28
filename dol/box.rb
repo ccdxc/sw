@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.33"
+from "registry.test.pensando.io:5000/pensando/nic:1.34"
 
 env GOPATH: "/usr"
 run "yum install tcpdump -y"

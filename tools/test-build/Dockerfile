@@ -1,7 +1,7 @@
-FROM "golang:1.11.1"
+FROM "golang:1.12.9"
 
 # enable jessie-backports
-RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list
+#RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list
 
 # install required utils
 RUN apt-get update && apt-get install rsync libpcap-dev -y && \

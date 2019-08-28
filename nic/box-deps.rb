@@ -110,8 +110,8 @@ run "yum install -y #{PACKAGES.join(" ")}"
 # otherwise protobuf.pc will end up in the wrong spot, required for building protobuf-c
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
-# Install go 1.11
-run "curl -sSL https://dl.google.com/go/go1.11.linux-amd64.tar.gz | tar xz -C /usr/local"
+# Install go 1.12.9
+run "curl -sSL https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/..."
 
 # install docker. This is needed for e2e
@@ -267,7 +267,7 @@ inside BASE_BUILD_DIR do
        && CFLAGS=\"$CFLAGS -fPIC\" ./configure && make && make install"
 end
 
-OPENAPP_VERSION = "9552"
+OPENAPP_VERSION = "10229"
 inside BASE_BUILD_DIR do
   run "wget https://www.snort.org/downloads/openappid/#{OPENAPP_VERSION} \
        && mv #{OPENAPP_VERSION} snort-openappid.tar.gz \
@@ -306,7 +306,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.33"
+tag "pensando/nic:1.34"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
