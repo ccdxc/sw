@@ -188,6 +188,8 @@ mapping_impl::build(pds_mapping_key_t *key) {
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
+    impl->vpc_hw_id_ = vpc->hw_id();
+    memcpy(&impl->key_, &key, sizeof(impl->key_));
     remote_vnic_tx_hdl = api_params.handle;
 
     ret = nexthop_impl_db()->nh_tbl()->retrieve(
@@ -229,6 +231,8 @@ mapping_impl::build(pds_mapping_key_t *key) {
             if (ret != SDK_RET_OK) {
                 goto error;
             }
+            impl->fabric_encap_.val.value = remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id;
+            impl->tep_.ip_addr.addr.v4_addr = tep_data.tep_mpls_udp_action.dipo;
             impl->handle_.remote_.remote_vnic_rx_hdl_ = api_params.handle;
         }
         impl->handle_.remote_.remote_vnic_tx_hdl_ = remote_vnic_tx_hdl;
@@ -259,8 +263,7 @@ mapping_impl::build(pds_mapping_key_t *key) {
         goto error;
     }
 
-    vnic_hw_id =
-        local_vnic_by_slot_rx_data.action_u.local_vnic_by_slot_rx_local_vnic_info_rx.vpc_id;
+    vnic_hw_id = local_vnic_by_slot_rx_data.local_vnic_by_slot_rx_info.local_vnic_tag;
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key, vnic_hw_id,
                                          &key->ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
@@ -271,7 +274,11 @@ mapping_impl::build(pds_mapping_key_t *key) {
     if (ret != SDK_RET_OK) {
         goto error;
     }
-    impl->handle_.local_.overlay_ip_hdl_ = api_params.handle;
+
+    impl->vnic_hw_id_ = vnic_hw_id;
+    memcpy(&impl->key_, key, sizeof(impl->key_));
+    impl->handle_.local_.overlay_ip_hdl_ =  api_params.handle;
+
     if (local_ip_mapping_data.xlate_index != NAT_TX_TBL_RSVD_ENTRY_IDX) {
         // we have public IP for this mapping
         impl->handle_.local_.overlay_ip_to_public_ip_nat_hdl_ =
@@ -516,48 +523,116 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 mapping_impl::nuke_resources(api_base *api_obj) {
-    sdk_table_api_params_t    api_params = { 0 };
+    sdk_table_api_params_t         api_params = { 0 };
+    sdk_ret_t ret = SDK_RET_OK;
+    local_ip_mapping_swkey_t       local_ip_mapping_key = { 0 };
+    remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key = { 0 };
+    remote_vnic_mapping_rx_swkey_t remote_vnic_mapping_rx_key = { 0 };
 
     if (is_local_) {
         if (handle_.local_.overlay_ip_hdl_.valid()) {
-            api_params.handle = handle_.local_.overlay_ip_hdl_;
-            mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
+            PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
+                                                 vnic_hw_id_,
+                                                 &key_.ip_addr, true);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
+                                           NULL, NULL, 0, sdk::table::handle_t::null());
+            ret = mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in LOCAL_IP_MAPPING table "
+                              "for mapping %s, err %u", api_obj->key2str().c_str(),
+                              ret);
+                goto err;
+            }
         }
         if (handle_.local_.overlay_ip_remote_vnic_tx_hdl_.valid()) {
-            api_params.handle = handle_.local_.overlay_ip_remote_vnic_tx_hdl_;
-            mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+            PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
+                                                       vpc_hw_id_,
+                                                       &key_.ip_addr, true);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
+                                           NULL, NULL, 0, sdk::table::handle_t::null());
+            ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX "
+                              "table for mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                goto err;
+            }
         }
         if (handle_.local_.public_ip_hdl_.valid()) {
-            api_params.handle = handle_.local_.public_ip_hdl_;
-            mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
+            PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
+                                                 vnic_hw_id_,
+                                                 &public_ip_, true);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
+                                           NULL, NULL, 0, sdk::table::handle_t::null());
+            ret = mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in LOCAL_IP_MAPPING table "
+                              "for mapping %s, err %u", api_obj->key2str().c_str(),
+                              ret);
+                goto err;
+            }
         }
         if (handle_.local_.public_ip_remote_vnic_tx_hdl_.valid()) {
-            api_params.handle = handle_.local_.public_ip_remote_vnic_tx_hdl_;
-            mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+            PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
+                                                       vpc_hw_id_,
+                                                       &public_ip_, true);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
+                                           NULL, NULL, 0, sdk::table::handle_t::null());
+            ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX "
+                              "table for mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                goto err;
+            }
         }
-
-        // TODO: change the api calls here once DM APIs are standardized
         if (handle_.local_.overlay_ip_to_public_ip_nat_hdl_) {
-            //api_params.handle = handle_.local_.overlay_ip_to_public_ip_nat_hdl_;
-            //mapping_impl_db()->nat_tbl()->release(&api_params);
-            mapping_impl_db()->nat_tbl()->remove(handle_.local_.overlay_ip_to_public_ip_nat_hdl_);
+            ret = mapping_impl_db()->nat_tbl()->remove(handle_.local_.overlay_ip_to_public_ip_nat_hdl_);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in NAT "
+                              "table for private ip mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                goto err;
+            }
         }
         if (handle_.local_.public_ip_to_overlay_ip_nat_hdl_) {
-            //api_params.handle = handle_.local_.public_ip_to_overlay_ip_nat_hdl_;
-            //mapping_impl_db()->nat_tbl()->release(&api_params);
-            mapping_impl_db()->nat_tbl()->remove(handle_.local_.public_ip_to_overlay_ip_nat_hdl_);
+            ret = mapping_impl_db()->nat_tbl()->remove(handle_.local_.public_ip_to_overlay_ip_nat_hdl_);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in NAT "
+                              "table for public ip mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+            }
         }
     } else {
         if (handle_.remote_.remote_vnic_tx_hdl_.valid()) {
-            api_params.handle = handle_.remote_.remote_vnic_tx_hdl_;
-            mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+            PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
+                                                       vpc_hw_id_,
+                                                       &key_.ip_addr, true);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
+                                           NULL, NULL, 0, sdk::table::handle_t::null());
+            ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX "
+                              "table for mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                goto err;
+            }
         }
         if (handle_.remote_.remote_vnic_rx_hdl_.valid()) {
-            api_params.handle = handle_.remote_.remote_vnic_rx_hdl_;
-            mapping_impl_db()->remote_vnic_mapping_rx_tbl()->remove(&api_params);
+            remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id = fabric_encap_.val.mpls_tag;
+            remote_vnic_mapping_rx_key.ipv4_1_srcAddr = tep_.ip_addr.addr.v4_addr;
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_rx_key,
+                                           NULL, NULL, 0, sdk::table::handle_t::null());
+            ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->remove(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in "
+                              "REMOTE_VNIC_MAPPING_RX table for mapping %s, "
+                              "err %u", api_obj->key2str().c_str(), ret);
+            }
         }
     }
-    return SDK_RET_OK;
+err:
+    return ret;
 }
 
 sdk_ret_t

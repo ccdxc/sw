@@ -220,7 +220,15 @@ private:
     sdk_ret_t release_remote_ip_mapping_resources_(api_base *api_obj);
 
 private:
-    bool  is_local_;
+    bool              is_local_;
+    // need to save the below for entry removal as the memhash handle is
+    // not valid b/w the transactions.
+    uint32_t          vnic_hw_id_;
+    uint32_t          vpc_hw_id_;
+    pds_mapping_key_t key_;
+    pds_encap_t       fabric_encap_;
+    pds_tep_key_t     tep_;
+    ip_addr_t         public_ip_;
     union handle_s {
         // table handles for local mapping
         struct local_s {
