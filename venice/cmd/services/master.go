@@ -52,9 +52,14 @@ var (
 		globals.KubeScheduler,
 		globals.KubeControllerManager,
 	}
+
 	// cluster status will be updated every 30 seconds or
 	// when any leader event is observed or when cluster is created/updated
 	ClusterStatusUpdateInterval = 30 * time.Second
+
+	// k8sClientTimeout is the total timeout for Kubernetes ApiServer requests.
+	// It covers the entire round-trip: TCP dial, TLS handshake, server response, reading response body.
+	k8sClientTimeout = 10 * time.Second
 )
 
 type masterService struct {
@@ -528,7 +533,8 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	}
 	m.k8sSvc.Stop()
 	config := &k8srest.Config{
-		Host: fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
+		Host:    fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
+		Timeout: k8sClientTimeout,
 	}
 	tlsClientConfig, err := credentials.GetKubernetesClientTLSConfig()
 	if err == nil {
@@ -538,7 +544,15 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		// do not return in case of failure, try to continue without tls config
 		// we may authenticate in a different way or auth may not be required, for example in tests
 	}
-	m.k8sSvc.Start(k8sclient.NewForConfigOrDie(config), m.isLeader)
+	// strConfig is same as config but with no timeout
+	strConfig := &k8srest.Config{
+		Host: fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
+	}
+	if tlsClientConfig != nil {
+		strConfig.TLSClientConfig = *tlsClientConfig
+	}
+
+	m.k8sSvc.Start(k8sclient.NewForConfigOrDie(config), k8sclient.NewForConfigOrDie(strConfig), m.isLeader)
 	return nil
 }
 

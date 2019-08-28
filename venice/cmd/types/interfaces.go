@@ -224,7 +224,7 @@ type K8sService interface {
 	UnRegister(K8sPodEventObserver)
 
 	// Start the k8s service.
-	Start(client k8sclient.Interface, isLeader bool)
+	Start(client, strClient k8sclient.Interface, isLeader bool)
 
 	// Delete a node from k8s cluster
 	DeleteNode(name string) error
@@ -232,8 +232,11 @@ type K8sService interface {
 	// UpgradeServices upgrades all the deployments and daemonsets in the specified order
 	UpgradeServices(order []string) error
 
-	// GetClient returns the k8s client interface
+	// GetClient returns the k8s client interface for config get/set
 	GetClient() k8sclient.Interface
+
+	// GetWatchClient returns the k8s client interface for watchers
+	GetWatchClient() k8sclient.Interface
 
 	// Stop the k8s service.
 	Stop()

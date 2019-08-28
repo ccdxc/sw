@@ -345,13 +345,18 @@ func (m *K8sService) GetClient() k8sclient.Interface {
 	return nil
 }
 
+// GetWatchClient mock impl.
+func (m *K8sService) GetWatchClient() k8sclient.Interface {
+	return nil
+}
+
 // UpgradeServices is a mock
 func (m *K8sService) UpgradeServices(order []string) error {
 	return nil
 }
 
 // Start is a mock implementation of starting kubernetes service.
-func (m *K8sService) Start(client k8sclient.Interface, isLeader bool) {
+func (m *K8sService) Start(client, strClient k8sclient.Interface, isLeader bool) {
 }
 
 // Stop is a mock implementation of stopping kubernetes service.

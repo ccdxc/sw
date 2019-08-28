@@ -167,13 +167,13 @@ func (c *ClusterHealthMonitor) startServiceWatcher() {
 		if c.ctx.Err() != nil {
 			return
 		}
-		if c.k8sSvc.GetClient() != nil {
+		if c.k8sSvc.GetWatchClient() != nil {
 			break
 		}
 		c.logger.Infof("waiting for k8s client")
 		time.Sleep(1 * time.Second)
 	}
-	k8sClient := c.k8sSvc.GetClient()
+	k8sClient := c.k8sSvc.GetWatchClient()
 
 	var selCases []reflect.SelectCase
 	watchList := map[int]string{}

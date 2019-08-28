@@ -53,7 +53,8 @@ var downwardAPIVars = map[string]string{
 type k8sService struct {
 	sync.Mutex
 	sync.WaitGroup
-	client           k8sclient.Interface
+	client           k8sclient.Interface // client for unary RPCs: GET, POST, etc.
+	strClient        k8sclient.Interface // client for streaming RPCs: Watch
 	ctx              context.Context
 	cancel           context.CancelFunc
 	running          bool
@@ -94,7 +95,7 @@ func NewK8sService(config *K8sServiceConfig) types.K8sService {
 }
 
 // Start starts the kubernetes service.
-func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
+func (k *k8sService) Start(client, strClient k8sclient.Interface, isLeader bool) {
 	// prevent other Start/Stop operations until we are done
 	k.startStopMutex.Lock()
 	defer k.startStopMutex.Unlock()
@@ -111,6 +112,7 @@ func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 	k.running = true
 	log.Infof("Starting k8s service")
 	k.client = client
+	k.strClient = strClient
 	k.isLeader = isLeader
 	k.ctx, k.cancel = context.WithCancel(context.Background())
 
@@ -187,7 +189,7 @@ func (k *k8sService) waitForAPIServerOrCancel() {
 // 3) Periodically checks to see that all desired modules are deployed
 //    and any other services are stopped.
 func (k *k8sService) runUntilCancel() {
-	watcher, err := k.client.CoreV1().Pods(defaultNS).Watch(metav1.ListOptions{})
+	watcher, err := k.strClient.CoreV1().Pods(defaultNS).Watch(metav1.ListOptions{})
 	ii := 0
 	for err != nil {
 		select {
@@ -196,10 +198,10 @@ func (k *k8sService) runUntilCancel() {
 			log.Infof("k8sService main loop runUntilCancel canceled")
 			return
 		case <-time.After(time.Second):
-			watcher, err = k.client.CoreV1().Pods(defaultNS).Watch(metav1.ListOptions{})
+			watcher, err = k.strClient.CoreV1().Pods(defaultNS).Watch(metav1.ListOptions{})
 			ii++
 			if ii%10 == 0 {
-				log.Errorf("Waiting for pod watch to succeed for %v seconds", ii)
+				log.Errorf("Waiting for pod watch to succeed for %v seconds, last err: %v", ii, err)
 			}
 		}
 	}
@@ -635,6 +637,10 @@ func (k *k8sService) Stop() {
 		k.client = nil
 	}
 
+	if k.strClient != nil {
+		k.strClient = nil
+	}
+
 	// release lock so that goroutines can make progress and terminate cleanly
 	k.Unlock()
 
@@ -696,6 +702,10 @@ func (k *k8sService) UpgradeServices(services []string) error {
 
 func (k *k8sService) GetClient() k8sclient.Interface {
 	return k.client
+}
+
+func (k *k8sService) GetWatchClient() k8sclient.Interface {
+	return k.strClient
 }
 
 func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {

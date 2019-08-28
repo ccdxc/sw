@@ -81,7 +81,7 @@ func TestK8sService(t *testing.T) {
 	k8sSvc := newK8sService(nil)
 	k8sSvc.getContainerInfo = func() map[string]utils.ContainerInfo { return map[string]utils.ContainerInfo{} }
 	k8sSvc.Register(po)
-	k8sSvc.Start(client, true)
+	k8sSvc.Start(client, client, true)
 
 	verifyK8sServices(t, client)
 
@@ -322,7 +322,7 @@ func TestRestrictNodeService(t *testing.T) {
 	k8sSvc := newK8sService(nil)
 	k8sSvc.getContainerInfo = func() map[string]utils.ContainerInfo { return map[string]utils.ContainerInfo{} }
 	k8sSvc.Register(po)
-	k8sSvc.Start(client, true)
+	k8sSvc.Start(client, client, true)
 
 	verifyK8sServices(t, client)
 

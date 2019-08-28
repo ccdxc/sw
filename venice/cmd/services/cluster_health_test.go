@@ -36,7 +36,7 @@ func setup(t *testing.T) (*ClusterHealthMonitor, *mock.CfgWatcherService, *k8sSe
 	client := fakek8sclient.NewSimpleClientset()
 	k8sSvc := newK8sService(nil)
 	k8sSvc.getContainerInfo = func() map[string]cmdutils.ContainerInfo { return map[string]cmdutils.ContainerInfo{} }
-	k8sSvc.Start(client, true)
+	k8sSvc.Start(client, client, true)
 
 	// start cluster health monitor
 	ctx, cancel := context.WithCancel(context.Background())
