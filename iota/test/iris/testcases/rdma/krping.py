@@ -19,6 +19,9 @@ def Setup(tc):
 
     tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
+    for n in tc.nodes:
+        if api.GetNodeOs(n) not in [host.OS_TYPE_LINUX, host.OS_TYPE_BSD]:
+            return api.types.status.IGNORED
 
     pairs = api.GetRemoteWorkloadPairs()
     # get workloads from each node
@@ -89,7 +92,7 @@ def Trigger(tc):
                         .format(path=tc.iota_path))
             else:
                 api.Trigger_AddHostCommand(req, n,
-                        "(kldstat | grep -w krping_compat >/dev/null) || " +
+                        "(kldstat | grep -w krping >/dev/null) || " +
                         "kldload {path}/krping/krping.ko"
                         .format(path=tc.iota_path))
 
@@ -168,19 +171,11 @@ def Trigger(tc):
     for n in tc.nodes:
        api.Trigger_AddHostCommand(req, n, "dmesg")
 
-    # check that the test completed ok
-    #But check this only when count is less than 1000, beyond that with verbose, demsg will roll out
-    # Dont check for ping for FR test
-    if size <= 1000 and not fr_test:
-        cmd = "dmesg | tail -20 | grep rdma-ping-{count}:".format(count = count - 1)
-        api.Trigger_AddCommand(req,
-                               w1.node_name,
-                               w1.workload_name,
-                               cmd)
-        api.Trigger_AddCommand(req,
-                               w2.node_name,
-                               w2.workload_name,
-                               cmd)
+    # check that the test completed ok, except in FR test
+    if not fr_test:
+        cmd = "dmesg | tail -20 | grep rdma-ping-{}:".format(count - 1)
+        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd)
+        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, cmd)
 
     # unload krping or krping_compat on both nodes
     if getattr(tc.iterators, 'compat', None) == 'yes':
