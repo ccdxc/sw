@@ -916,7 +916,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	struct mbuf *m;
 	bool offload = false;
 	int i, error, index, nsegs;
-	bus_dma_segment_t  seg[IONIC_MAX_TSO_SG_ENTRIES + 1]; /* Extra for the first segment. */
+	bus_dma_segment_t  seg[IONIC_MAX_TSO_STACK_SG_ENTRIES + 1]; /* Extra for the first segment. */
 	u8 opcode, flags = 0;
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n", txq->head_index, txq->tail_index);
@@ -925,13 +925,12 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	desc = &txq->cmd_ring[index];
 	txbuf = &txq->txbuf[index];
 	sg = &txq->sg_ring[index];
-
-	bzero(desc, sizeof(*desc));
 	bzero(sg, sizeof(*sg));
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
-	if (error == EFBIG) {
+	if ((error == EFBIG) ||
+		(nsegs >= IONIC_TX_MAX_SG_ELEMS)) {
 		struct mbuf *newm;
 
 		stats->mbuf_defrag++;
@@ -948,12 +947,12 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
 
-	if (error || (nsegs > IONIC_MAX_TSO_SG_ENTRIES)) {
+	if (error || (nsegs >= IONIC_TX_MAX_SG_ELEMS)) {
 		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, segs %d/%d, error: %d\n",
-				nsegs, IONIC_MAX_TSO_SG_ENTRIES, error);
+				nsegs, IONIC_TX_MAX_SG_ELEMS, error);
 		/* Too many segments. */
 		error = (error == 0) ? EFBIG : error;
 		return (error);
@@ -1025,46 +1024,60 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 	struct txq_desc *desc;
 	struct txq_sg_desc *sg;
 	struct ionic_tx_buf *txbuf;
-	int i, j, len = 0;
-	u8 cmd_opcode, cmd_flags, cmd_nsge;
-	u64 cmd_addr;
+	int i, j, len;
 
-	IONIC_QUE_DEBUG(txq, "TSO: VA: %p nsegs: %d length: %d\n",
+	IONIC_TX_TRACE(txq, "--------------------------------------\n");
+	IONIC_TX_TRACE(txq, "TSO: mbuf VA: %p nsegs: %d length: %d\n",
 		m, nsegs, m->m_pkthdr.len);
 
 	for (i = 0; i < nsegs; i++) {
-		IONIC_QUE_DEBUG(txq, "seg[%d] pa: 0x%lx len:%ld\n",
+		IONIC_TX_TRACE(txq, "mbuf seg[%d] pa: 0x%lx len:%ld\n",
 			i, seg[i].ds_addr, seg[i].ds_len);
 	}
 
-	for (i = txq->head_index; i < stop_index; i++) {
+	IONIC_TX_TRACE(txq, "start: %d stop: %d\n", txq->head_index, stop_index);
+	len = 0;
+	for (i = txq->head_index; i != stop_index; i = (i+1) % txq->num_descs) {
 		txbuf = &txq->txbuf[i];
 		desc = &txq->cmd_ring[i];
 		sg = &txq->sg_ring[i];
 		len += desc->len;
+		/* Expected SOF */
+		if ((i == txq->head_index) &&
+			((desc->cmd & IONIC_TXQ_DESC_FLAG_TSO_SOT) == 0)) {
+			IONIC_QUE_ERROR(txq, "TSO w/o start of frame\n");
+		}
+		/* Unexpected SOF */
+		if ((i != txq->head_index) &&
+			(desc->cmd & IONIC_TXQ_DESC_FLAG_TSO_SOT)) {
+			IONIC_QUE_ERROR(txq, "TSO unexpected start of frame\n");
+		}
+		/* Expected EOF */
+		if ((((i + 1) % txq->num_descs) == stop_index) &&
+			((desc->cmd & IONIC_TXQ_DESC_FLAG_TSO_EOT) == 0)) {
+			IONIC_QUE_ERROR(txq, "TSO w/o end of frame\n");
+		}
+		/* Unexpected EOF */
+		if ((((i + 1) % txq->num_descs) != stop_index) &&
+			(desc->cmd & IONIC_TXQ_DESC_FLAG_TSO_EOT)) {
+			IONIC_QUE_ERROR(txq, "TSO unexpected end of frame\n");
+		}
 
-		decode_txq_desc_cmd(desc->cmd, &cmd_opcode, &cmd_flags, &cmd_nsge, &cmd_addr);
-
-		IONIC_QUE_DEBUG(txq, "TSO Dump desc[%d] pa: 0x%lx length: %d"
-			" S:%d E:%d mss:%d hdr_len:%d mbuf:%p\n",
-			i, cmd_addr, desc->len,
-			(cmd_flags & IONIC_TXQ_DESC_FLAG_TSO_SOT) != 0,
-			(cmd_flags & IONIC_TXQ_DESC_FLAG_TSO_EOT) != 0,
+		IONIC_TX_TRACE(txq, "TSO desc[%d] length: %d"
+			" cmd:%lx mss:%d hdr_len:%d mbuf:%p\n",
+			i, desc->len, desc->cmd,
 			desc->mss, desc->hdr_len, txbuf->m);
 
-		for (j = 0; j < cmd_nsge; j++) {
+		for (j = 0; j < IONIC_TX_MAX_SG_ELEMS && sg->elems[j].len; j++) {
 			len += sg->elems[j].len;
-			IONIC_QUE_DEBUG(txq, "sg[%d] pa: 0x%lx length: %d\n",
+			IONIC_TX_TRACE(txq, "  TSO sg[%d] pa: 0x%lx length: %d\n",
 				j, sg->elems[j].addr, sg->elems[j].len);
 		}
 
-		KASSERT((i == txq->head_index) == desc->S, ("TSO w/o start of frame"));
-		KASSERT((i == (stop_index - 1)) == desc->E, ("TSO w/o end of frame"));
 	}
-
-	KASSERT(len == m->m_pkthdr.len,
-		("TSO packet size mismatch len: %d != actual %d",
-		m->m_pkthdr.len, len));
+	if (len != m->m_pkthdr.len)
+		IONIC_QUE_ERROR(txq, "descriptor length mismatch %d(actual: %d)\n",
+				len, m->m_pkthdr.len);
 }
 
 static int
@@ -1077,13 +1090,13 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	struct txq_desc *desc;
 	struct txq_sg_desc *sg;
 	uint16_t eth_type;
-	int i, j, index, hdr_len, proto, error, nsegs;
+	int i, j, index, hdr_len, proto, error, nsegs, num_descs;
 	uint32_t frag_offset, desc_len, remain_len, frag_remain_len, desc_max_size;
-	bus_dma_segment_t  seg[IONIC_MAX_TSO_SG_ENTRIES + 1]; /* Extra for the first segment. */
+	bus_dma_segment_t  seg[IONIC_MAX_TSO_STACK_SG_ENTRIES + 1]; /* Extra for the first segment. */
 	dma_addr_t addr;
 	uint8_t flags;
 	uint16_t len;
-	bool start = false, end = false, has_vlan = false;
+	bool start, end, has_vlan;
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
 		txq->head_index, txq->tail_index);
@@ -1107,6 +1120,10 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
+	/*
+	* Don't check for nsegs since anyway we are responsible for creating
+	* fragments.
+	*/
 	if (error == EFBIG) {
 		struct mbuf *newm;
 
@@ -1124,38 +1141,40 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
 
-	if (error || (nsegs > IONIC_MAX_TSO_SG_ENTRIES)) {
+	if (error || (nsegs > IONIC_MAX_TSO_STACK_SG_ENTRIES)) {
 		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, seg %d/%d , error: %d\n",
-				nsegs, IONIC_MAX_TSO_SG_ENTRIES, error);
+				nsegs, IONIC_MAX_TSO_STACK_SG_ENTRIES, error);
 		/* Too many fragments. */
 		error = (error == 0) ? EFBIG : error;
 
 		return (error);
 	}
 
-	if (!ionic_tx_avail(txq, nsegs)) {
+	m = *m_headp;
+	remain_len = m->m_pkthdr.len;
+	mss = m->m_pkthdr.tso_segsz;
+	/* Calculate the number of descriptors we need for whole TSO segment. */
+	num_descs = (remain_len + mss - 1) / mss;
+	if (!ionic_tx_avail(txq, num_descs)) {
 		stats->no_descs++;
+		bus_dmamap_unload(txq->buf_tag, first_txbuf->dma_map);
 		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs :%d\n",
 			txq->head_index, txq->tail_index, nsegs);
 		return (ENOSPC);
 	}
 
-	m = *m_headp;
-	mss = m->m_pkthdr.tso_segsz;
-
 	bus_dmamap_sync(txq->buf_tag, first_txbuf->dma_map, BUS_DMASYNC_PREWRITE);
 	stats->tso_max_size = max(stats->tso_max_size, m->m_pkthdr.len);
 
-	remain_len = m->m_pkthdr.len;
 	index = txq->head_index;
 	frag_offset = 0;
 	frag_remain_len = seg[0].ds_len;
 
 	has_vlan = (m->m_flags & M_VLANTAG) ? 1 : 0;
-
+	start = true;
 	/*
 	 * Loop through all segments of mbuf and create mss size descriptors.
 	 * First descriptor points to header.
@@ -1164,27 +1183,13 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		desc = &txq->cmd_ring[index];
 		txbuf = &txq->txbuf[index];
 		sg = &txq->sg_ring[index];
+		bzero(sg, sizeof(*sg));
 
-		start = (i == 0) ? 1 : 0;
 		desc_max_size = start ? (mss + hdr_len) : mss;
-		end = (remain_len <= desc_max_size) ? 1 : 0;
-
 		desc_len = min(frag_remain_len, desc_max_size);
 		frag_remain_len -= desc_len;
-
 		addr = seg[i].ds_addr + frag_offset;
 		len = desc_len;
-
-		/* Tx completion will use the last descriptor. */
-		if (end) {
-			txbuf->pa_addr = addr;
-			txbuf->m = m;
-			txbuf->dma_map = first_txbuf->dma_map;
-			txbuf->timestamp = rdtsc();
-		} else {
-			txbuf->m = NULL;
-			txbuf->pa_addr = 0;
-		}
 
 		/* Check if anything left to transmit from this fragment. */
 		if (frag_remain_len <= 0) {
@@ -1200,7 +1205,7 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		/*
 		 * Now populate SG list, with the remaining fragments upto MSS size.
 		 */
-		for (j = 0; j < IONIC_MAX_TSO_SG_ENTRIES && (i < nsegs) && desc_len < desc_max_size; j++) {
+		for (j = 0; j < IONIC_TX_MAX_SG_ELEMS && (i < nsegs) && desc_len < desc_max_size; j++) {
 			sg->elems[j].addr = seg[i].ds_addr + frag_offset;
 			sg->elems[j].len = min(frag_remain_len, (desc_max_size - desc_len));
 
@@ -1217,6 +1222,19 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 			}
 		}
 
+		remain_len -= desc_len;
+		end = remain_len ? 0 : 1;
+		/* Tx completion will use the last descriptor. */
+		if (end) {
+			txbuf->pa_addr = addr;
+			txbuf->m = m;
+			txbuf->dma_map = first_txbuf->dma_map;
+			txbuf->timestamp = rdtsc();
+		} else {
+			txbuf->m = NULL;
+			txbuf->pa_addr = 0;
+		}
+
 		flags = 0;
 		flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
 		flags |= start ? IONIC_TXQ_DESC_FLAG_TSO_SOT : 0;
@@ -1229,7 +1247,8 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		desc->hdr_len = hdr_len;
 		desc->mss = mss;
 
-		remain_len -= desc_len;
+		/* Toggle the start flag. */
+		start = false;
 
 		stats->tso_max_sg = max(stats->tso_max_sg, j);
 		stats->pkts++;
@@ -1801,8 +1820,6 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	struct port_status *port_status;
 	union port_config *port_config;
 	struct xcvr_status *xcvr;
-	struct qsfp_sprom_data *qsfp;
-	struct sfp_sprom_data *sfp;
 	struct sbuf *sb;
 	struct ionic *ionic;
 	struct ionic_dev *idev;
@@ -1867,7 +1884,6 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	case XCVR_PID_QSFP_40GBASE_SR4:
 	case XCVR_PID_QSFP_40GBASE_LR4:
 	case XCVR_PID_QSFP_40GBASE_AOC:
-		qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
 		if (xcvr->sprom[SFF_8436_ID] == 0) {
 			/* Older firmware sends page1 info in page0 space */
 			sbuf_printf(sb, "    QSFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
@@ -1895,7 +1911,6 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	case XCVR_PID_SFP_10GBASE_ER:
 	case XCVR_PID_SFP_10GBASE_AOC:
 	case XCVR_PID_SFP_10GBASE_CU:
-		sfp = (struct sfp_sprom_data *)xcvr->sprom;
 		sbuf_printf(sb, "    SFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
 			16, &xcvr->sprom[SFF_8472_VENDOR_START],
 			16, &xcvr->sprom[SFF_8472_PN_START],

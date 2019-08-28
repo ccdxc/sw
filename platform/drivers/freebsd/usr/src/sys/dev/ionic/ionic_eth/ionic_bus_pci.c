@@ -221,6 +221,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_unmap_bars;
 	}
 
+	snprintf(ionic->sx_name, sizeof(ionic->sx_name), "ionic-%s", device_get_nameunit(dev->bsddev));
 	IONIC_DEV_LOCK_INIT(ionic);
 	/* Configure the device */
 	err = ionic_dev_setup(ionic);
