@@ -44,14 +44,16 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 		log.Errorf("Failed to find the vrf %v", tun.Spec.VrfName)
 		return err
 	}
-
-	// Tunnel IDs and Interface IDs must be unique in the datapath as tunnel is modeled as an interface in HAL.
-	tunnelID, err := na.Store.GetNextID(types.InterfaceID)
-	if err != nil {
-		log.Errorf("Could not allocate tunnel id. {%+v}", err)
-		return err
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if tun.Status.TunnelID == 0 {
+		// Tunnel IDs and Interface IDs must be unique in the datapath as tunnel is modeled as an interface in HAL.
+		tunnelID, err := na.Store.GetNextID(types.InterfaceID)
+		if err != nil {
+			log.Errorf("Could not allocate tunnel id. {%+v}", err)
+			return err
+		}
+		tun.Status.TunnelID = tunnelID + types.UplinkOffset + types.TunnelOffset
 	}
-	tun.Status.TunnelID = tunnelID + types.UplinkOffset + types.TunnelOffset
 
 	// create it in datapath
 	err = na.Datapath.CreateTunnel(tun, vrf)
@@ -79,7 +81,8 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 	na.Lock()
 	na.TunnelDB[key] = tun
 	na.Unlock()
-	err = na.Store.Write(tun)
+	dat, _ := tun.Marshal()
+	err = na.Store.RawWrite(tun.GetKind(), tun.GetKey(), dat)
 
 	return err
 }
@@ -224,7 +227,7 @@ func (na *Nagent) DeleteTunnel(tn, namespace, name string) error {
 	na.Lock()
 	delete(na.TunnelDB, key)
 	na.Unlock()
-	err = na.Store.Delete(tun)
+	err = na.Store.RawDelete(tun.GetKind(), tun.GetKey())
 
 	return err
 }

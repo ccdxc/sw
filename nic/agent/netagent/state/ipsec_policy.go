@@ -33,7 +33,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 			return errors.New("IPSec policy already exists")
 		}
 
-		log.Infof("Received duplicate IPSec policy create {%+v}", ipSec)
+		log.Infof("Received duplicate IPSec policy create {%+v}", ipSec.ObjectMeta)
 		return nil
 	}
 
@@ -103,7 +103,10 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 		}
 	}
 
-	ipSec.Status.IPSecPolicyID, err = na.Store.GetNextID(types.IPSecPolicyID)
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if ipSec.Status.IPSecPolicyID == 0 {
+		ipSec.Status.IPSecPolicyID, err = na.Store.GetNextID(types.IPSecPolicyID)
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate IPSec policy id. {%+v}", err)

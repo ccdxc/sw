@@ -33,7 +33,7 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 			return errors.New("network already exists")
 		}
 
-		log.Infof("Received duplicate network create for ep {%+v}", nt)
+		log.Infof("Received duplicate network create for ep {%+v}", nt.ObjectMeta)
 		return nil
 	}
 	// find the corresponding namespace
@@ -61,12 +61,15 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
-	networkID, err := na.Store.GetNextID(types.NetworkID)
-	if err != nil {
-		log.Errorf("Could not allocate network id. {%+v}", err)
-		return err
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if nt.Status.NetworkID == 0 {
+		networkID, err := na.Store.GetNextID(types.NetworkID)
+		if err != nil {
+			log.Errorf("Could not allocate network id. {%+v}", err)
+			return err
+		}
+		nt.Status.NetworkID = networkID + types.NetworkOffset
 	}
-	nt.Status.NetworkID = networkID + types.NetworkOffset
 
 	uplinks := na.getUplinks()
 
@@ -96,7 +99,8 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	na.Lock()
 	na.NetworkDB[key] = nt
 	na.Unlock()
-	err = na.Store.Write(nt)
+	dat, _ := nt.Marshal()
+	err = na.Store.RawWrite(nt.GetKind(), nt.GetKey(), dat)
 
 	return err
 }
@@ -139,7 +143,7 @@ func (na *Nagent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 // UpdateNetwork updates a network. ToDo implement network updates in datapath
 func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 	// find the corresponding namespace
-	log.Infof("Update Network: %v", nt)
+	log.Infof("Update Network: %v", nt.ObjectMeta)
 	_, err := na.FindNamespace(nt.ObjectMeta)
 	if err != nil {
 		return err
@@ -244,7 +248,7 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 	na.Lock()
 	delete(na.NetworkDB, key)
 	na.Unlock()
-	err = na.Store.Delete(nt)
+	err = na.Store.RawDelete(nt.GetKind(), nt.GetKey())
 
 	return err
 }

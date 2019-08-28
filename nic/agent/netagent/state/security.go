@@ -41,7 +41,10 @@ func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 		return err
 	}
 
-	sg.Status.SecurityGroupID, err = na.Store.GetNextID(types.SecurityGroupID)
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if sg.Status.SecurityGroupID == 0 {
+		sg.Status.SecurityGroupID, err = na.Store.GetNextID(types.SecurityGroupID)
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate security group id. {%+v}", err)

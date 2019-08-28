@@ -31,7 +31,7 @@ const (
 	TunnelOffset = UplinkOffset + 20000
 
 	// VrfOffset will ensure that agent will allocate VRF IDs starting from 65.i.e. NETAGENT_VRF_ID_MIN
-	VrfOffset = 64
+	VrfOffset = 65
 
 	// NetworkOffset will ensure that agent will allocate VRD IDs starting from 16 i.e NETAGENT_L2SEG_ID_MIN
 	NetworkOffset = 100

@@ -34,23 +34,21 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	tenantID, err := na.Store.GetNextID(types.TenantID)
-	if err != nil {
-		log.Errorf("Could not allocate tenant id. {%+v}", err)
-		return err
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if tn.Status.TenantID == 0 {
+		tenantID, err := na.Store.GetNextID(types.TenantID)
+		if err != nil {
+			log.Errorf("Could not allocate tenant id. {%+v}", err)
+			return err
+		}
+		tn.Status.TenantID = tenantID
 	}
-	tn.Status.TenantID = tenantID
 
 	// save it in db
 	key := na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	na.TenantDB[key] = tn
 	na.Unlock()
-	err = na.Store.Write(tn)
-	if err != nil {
-		log.Errorf("Could not persist tenant object to the store. %v", err)
-		return err
-	}
 
 	c, _ := gogoproto.TimestampProto(time.Now())
 	// Create a default namespace for every tenant
@@ -66,6 +64,7 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 				Timestamp: *c,
 			},
 		},
+		Status: netproto.NamespaceStatus{NamespaceID: 1},
 	}
 	return na.CreateNamespace(defaultNS)
 }
@@ -126,7 +125,8 @@ func (na *Nagent) UpdateTenant(tn *netproto.Tenant) error {
 	na.Lock()
 	na.TenantDB[key] = tn
 	na.Unlock()
-	err = na.Store.Write(tn)
+	dat, _ := tn.Marshal()
+	err = na.Store.RawWrite(tn.GetKind(), tn.GetKey(), dat)
 	return err
 }
 
@@ -181,8 +181,6 @@ func (na *Nagent) DeleteTenant(unused1, unused2, name string) error {
 	na.Lock()
 	delete(na.TenantDB, key)
 	na.Unlock()
-	err = na.Store.Delete(tn)
-
 	return err
 }
 

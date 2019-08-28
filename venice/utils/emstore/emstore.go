@@ -48,12 +48,34 @@ type Emstore interface {
 	Delete(obj Object) error
 	Close() error
 	GetNextID(r ResourceType) (uint64, error)
+	RawWrite(kind, key string, data []byte) error
+	RawList(kind string) ([][]byte, error)
+	RawDelete(kind, key string) error
 }
 
 // BoltdbStore hold bolt db instance members
 type BoltdbStore struct {
 	dbPath string   // file path
 	boltDb *bolt.DB // boltdb instance
+}
+
+// RawDelete deletes an object from the store
+func (bdb *BoltdbStore) RawDelete(kind, key string) error {
+
+	// delete from boltdb
+	err := bdb.boltDb.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(kind))
+		if b == nil {
+			return ErrTableNotFound
+		}
+		derr := b.Delete([]byte(key))
+		return derr
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // kindStore stores all keys for a kind
@@ -66,6 +88,21 @@ type MemStore struct {
 	sync.Mutex
 	kindStoreMap map[string]*kindStore // map of kinds
 	resID        *resourceIDAllocator  //Map of resource id allocations
+}
+
+// RawDelete is not needed for mem store
+func (mdb *MemStore) RawDelete(kind, key string) error {
+	return nil
+}
+
+// RawWrite is not needed for mem store
+func (mdb *MemStore) RawWrite(kind, key string, data []byte) error {
+	return nil
+}
+
+// RawList is not needed for mem store
+func (mdb *MemStore) RawList(kind string) ([][]byte, error) {
+	return nil, nil
 }
 
 // getObjectKey return an object key for the object
@@ -171,6 +208,29 @@ func (bdb *BoltdbStore) List(obj Object) ([]Object, error) {
 	return list, err
 }
 
+// RawList lists objects by kind without any marshalling/unmarshaling.
+func (bdb *BoltdbStore) RawList(kind string) ([][]byte, error) {
+	var objects [][]byte
+	err := bdb.boltDb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(kind))
+		if b == nil {
+			return ErrTableNotFound
+		}
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			objects = append(objects, v)
+		}
+		return nil
+	})
+
+	if err != nil && err != ErrTableNotFound {
+		log.Errorf("Failed to list objects of kind %s", kind)
+		return nil, fmt.Errorf("failed to list objects of kind %s", kind)
+	}
+	return objects, nil
+}
+
 // Create creates an object in emstore
 func (bdb *BoltdbStore) Create(obj Object) error {
 	return bdb.Write(obj)
@@ -181,8 +241,8 @@ func (bdb *BoltdbStore) Update(obj Object) error {
 	return bdb.Write(obj)
 }
 
-// rawWrite raw write to db
-func (bdb *BoltdbStore) rawWrite(kind string, key, data []byte) error {
+// RawWrite raw write to db
+func (bdb *BoltdbStore) RawWrite(kind, key string, data []byte) error {
 	// write to db
 	err := bdb.boltDb.Update(func(tx *bolt.Tx) error {
 		var terr error
@@ -193,7 +253,7 @@ func (bdb *BoltdbStore) rawWrite(kind string, key, data []byte) error {
 				return fmt.Errorf("Error creating bucket: %s", terr)
 			}
 		}
-		perr := b.Put(key, data)
+		perr := b.Put([]byte(key), data)
 		return perr
 	})
 	if err != nil {
@@ -212,7 +272,7 @@ func (bdb *BoltdbStore) Write(obj Object) error {
 	}
 
 	// write to db
-	return bdb.rawWrite(obj.GetObjectKind(), getObjectKey(obj), data)
+	return bdb.RawWrite(obj.GetObjectKind(), string(getObjectKey(obj)), data)
 }
 
 // Delete deletes an object from db

@@ -32,11 +32,11 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	if err == nil {
 		// check if the contents are same
 		if !proto.Equal(oldSgp, sgp) {
-			log.Infof("SGPolicy %+v already exists", oldSgp)
+			log.Infof("SGPolicy %+v already exists", oldSgp.ObjectMeta)
 			return na.UpdateSGPolicy(sgp)
 		}
 
-		log.Infof("Received duplicate security group policy create {%+v}", sgp)
+		log.Infof("Received duplicate security group policy create {%+v}", sgp.ObjectMeta)
 		return nil
 	}
 
@@ -103,7 +103,10 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 		}
 	}
 
-	sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if sgp.Status.SGPolicyID == 0 {
+		sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate security group policy id. {%+v}", err)
@@ -168,7 +171,8 @@ func (na *Nagent) saveSGPolicy(sgp *netproto.SGPolicy) error {
 		}
 	}
 
-	err := na.Store.Write(sgp)
+	dat, _ := sgp.Marshal()
+	err := na.Store.RawWrite(sgp.GetKind(), sgp.GetKey(), dat)
 
 	return err
 }
@@ -194,7 +198,7 @@ func (na *Nagent) discardSGPolicy(sgp *netproto.SGPolicy) error {
 		}
 	}
 
-	return na.Store.Delete(sgp)
+	return na.Store.RawDelete(sgp.GetKind(), sgp.GetKey())
 }
 
 // FindSGPolicy finds a security group policy in local db
@@ -291,7 +295,7 @@ func (na *Nagent) performSGPolicyUpdate(sgp *netproto.SGPolicy) error {
 
 	err = na.Datapath.UpdateSGPolicy(sgp, vrf.Status.VrfID, &ruleIDAppLUT)
 	if err != nil {
-		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", sgp, err)
+		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", sgp.ObjectMeta, err)
 		return err
 	}
 

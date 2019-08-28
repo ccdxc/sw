@@ -156,7 +156,7 @@ func TestAppCreateICMPWithProtocolSpecified(t *testing.T) {
 	Assert(t, p.Name == "ping", "App names did not match", icmpApp)
 }
 
-func TestAppUpdate(t *testing.T) {
+func TestAppUpdateDNS(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -200,6 +200,55 @@ func TestAppUpdate(t *testing.T) {
 
 }
 
+func TestAppUpdateICMP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// app
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"icmp"},
+			ALG: &netproto.ALG{
+				ICMP: &netproto.ICMP{
+					Type: 13,
+					Code: 6,
+				},
+			},
+		},
+	}
+
+	// create app
+	err := ag.CreateApp(&app)
+	AssertOk(t, err, "Error creating app")
+	p, err := ag.FindApp(app.ObjectMeta)
+	AssertOk(t, err, "App not found in DB")
+	Assert(t, p.Name == "testApp", "App names did not match", app)
+
+	appSpec := netproto.AppSpec{
+		ProtoPorts: []string{"icmp"},
+		ALG: &netproto.ALG{
+			ICMP: &netproto.ICMP{
+				Type: 13,
+				Code: 6,
+			},
+		},
+		AppIdleTimeout: "1m",
+	}
+
+	app.Spec = appSpec
+
+	err = ag.UpdateApp(&app)
+	AssertOk(t, err, "Error updating app")
+
+}
 func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
 	// create netagent
 	ag, _, dp := createNetAgent(t)

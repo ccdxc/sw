@@ -32,16 +32,14 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 		return nil
 	}
 
-	namespaceID, err := na.Store.GetNextID(types.NamespaceID)
-	if err != nil {
-		log.Errorf("Could not allocate namespace id. {%+v}", err)
-		return err
-	}
-	ns.Status.NamespaceID = namespaceID
-
-	if err != nil {
-		log.Errorf("Could not allocate namespace id. {%+v}", err)
-		return err
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if ns.Status.NamespaceID == 0 {
+		namespaceID, err := na.Store.GetNextID(types.NamespaceID)
+		if err != nil {
+			log.Errorf("Could not allocate namespace id. {%+v}", err)
+			return err
+		}
+		ns.Status.NamespaceID = namespaceID
 	}
 
 	tn, err := na.FindTenant(ns.ObjectMeta)
@@ -62,8 +60,6 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 	na.Lock()
 	na.NamespaceDB[key] = ns
 	na.Unlock()
-	err = na.Store.Write(ns)
-
 	return err
 }
 
@@ -173,7 +169,6 @@ func (na *Nagent) DeleteNamespace(tn, unused, name string) error {
 	na.Lock()
 	delete(na.NamespaceDB, key)
 	na.Unlock()
-	err = na.Store.Delete(ns)
 
 	return err
 }

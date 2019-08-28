@@ -47,7 +47,10 @@ func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 
 	// validate nat pool message
 
-	np.Status.NatPoolID, err = na.Store.GetNextID(types.NatPoolID)
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if np.Status.NatPoolID == 0 {
+		np.Status.NatPoolID, err = na.Store.GetNextID(types.NatPoolID)
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate nat pool id. {%+v}", err)

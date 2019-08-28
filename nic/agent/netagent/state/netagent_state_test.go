@@ -155,7 +155,7 @@ var (
 	}
 )
 
-func TestNetAgentCfgPersistence(t *testing.T) {
+func TestNetAgentCfgPreCreatedObjects(t *testing.T) {
 	db, err := ioutil.TempFile("", "netagent.db")
 	defer os.Remove(db.Name())
 	AssertOk(t, err, "Failed to create temp file")
@@ -176,7 +176,7 @@ func TestNetAgentCfgPersistence(t *testing.T) {
 
 	defVrf, err := ag.FindVrf(oMeta)
 	AssertOk(t, err, "Failed to find default VRF")
-	AssertEquals(t, uint64(types.VrfOffset+1), defVrf.Status.VrfID, "VRF ID did not match")
+	AssertEquals(t, uint64(types.VrfOffset), defVrf.Status.VrfID, "VRF ID did not match")
 	err = ag.Stop()
 	AssertOk(t, err, "Failed to stop agent")
 
@@ -189,7 +189,186 @@ func TestNetAgentCfgPersistence(t *testing.T) {
 
 	defVrf1, err := newAg.FindVrf(oMeta)
 	AssertOk(t, err, "Failed to find default VRF")
-	AssertEquals(t, uint64(types.VrfOffset+1), defVrf1.Status.VrfID, "VRF ID did not match")
+	AssertEquals(t, uint64(types.VrfOffset), defVrf1.Status.VrfID, "VRF ID did not match")
+}
+
+func TestNetAgentConfigPersistence(t *testing.T) {
+	db, err := ioutil.TempFile("", "netagent.db")
+	defer os.Remove(db.Name())
+	AssertOk(t, err, "Failed to create temp file")
+	dp, err := hal.NewHalDatapath("mock")
+	AssertOk(t, err, "Failed to instantiate mock datapath")
+
+	ag, err := NewNetAgent(dp, db.Name(), nil)
+
+	AssertOk(t, err, "Failed to create new netagent: ")
+
+	network := &netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "skynet",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			VlanID: 42,
+		},
+	}
+
+	endpoint := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "skynet",
+			MacAddress:   "4242.4242.4242",
+		},
+	}
+
+	dns := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "dns",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"udp/53"},
+			ALG: &netproto.ALG{
+				DNS: &netproto.DNS{
+					DropLargeDomainPackets: true,
+					DropMultiZonePackets:   true,
+					QueryResponseTimeout:   "30s",
+				},
+			},
+		},
+	}
+
+	ftp := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "ftp",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"tcp/21"},
+			ALG: &netproto.ALG{
+				FTP: &netproto.FTP{
+					AllowMismatchIPAddresses: true,
+				},
+			},
+		},
+	}
+
+	sgPolicy := &netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+					},
+					AppName: "dns",
+				},
+			},
+		},
+	}
+
+	tun := netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testTunnel",
+		},
+		Spec: netproto.TunnelSpec{
+			Type:        "VXLAN",
+			AdminStatus: "UP",
+			Src:         "10.1.1.1",
+			Dst:         "192.168.1.1",
+		},
+	}
+
+	err = ag.CreateNetwork(network)
+	AssertOk(t, err, "Failed to create network")
+
+	err = ag.CreateEndpoint(endpoint)
+	AssertOk(t, err, "Failed to create endpoint")
+
+	err = ag.CreateApp(&dns)
+	AssertOk(t, err, "Failed to create app")
+
+	err = ag.CreateApp(&ftp)
+	AssertOk(t, err, "Failed to create app")
+
+	err = ag.CreateSGPolicy(sgPolicy)
+	AssertOk(t, err, "Failed to create sg policy")
+
+	err = ag.CreateTunnel(&tun)
+	AssertOk(t, err, "Error creating tunnel")
+
+	// Ensure that they are present in the state
+	_, err = ag.FindNetwork(network.ObjectMeta)
+	AssertOk(t, err, "Failed to find network")
+
+	_, err = ag.FindEndpoint(endpoint.ObjectMeta)
+	AssertOk(t, err, "Failed to find endpoint")
+
+	_, err = ag.FindApp(dns.ObjectMeta)
+	AssertOk(t, err, "Failed to find dns app")
+
+	_, err = ag.FindApp(ftp.ObjectMeta)
+	AssertOk(t, err, "Failed to find ftp app")
+
+	_, err = ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "Failed to find sg policy")
+
+	tunnel, err := ag.FindTunnel(tun.ObjectMeta)
+	AssertOk(t, err, "Tunnel was not found in DB")
+	Assert(t, tunnel.Name == "testTunnel", "Tunnel names did not match", tunnel)
+
+	// Stop the agent
+	ag.Stop()
+
+	newAgent, err := NewNetAgent(dp, db.Name(), nil)
+	AssertOk(t, err, "Failed to create new netagent: ")
+
+	// Ensure that they are present in the state
+	_, err = newAgent.FindNetwork(network.ObjectMeta)
+	AssertOk(t, err, "Failed to find network")
+
+	_, err = newAgent.FindEndpoint(endpoint.ObjectMeta)
+	AssertOk(t, err, "Failed to find endpoint")
+
+	_, err = newAgent.FindApp(dns.ObjectMeta)
+	AssertOk(t, err, "Failed to find app")
+
+	_, err = newAgent.FindApp(ftp.ObjectMeta)
+	AssertOk(t, err, "Failed to find app")
+
+	_, err = newAgent.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "Failed to find sg policy")
+
+	tunnel, err = ag.FindTunnel(tun.ObjectMeta)
+	AssertOk(t, err, "Tunnel was not found in DB")
+	Assert(t, tunnel.Name == "testTunnel", "Tunnel names did not match", tunnel)
+
 }
 
 func TestNaplesPurgeConfigs(t *testing.T) {

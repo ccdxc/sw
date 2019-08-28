@@ -91,7 +91,7 @@ func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVr
 			log.Errorf("Error creating IPSec Encrypt SA Rule. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
@@ -306,7 +306,7 @@ func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVr
 			log.Errorf("Error creating IPSec Decrypt SA Rule. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
@@ -457,7 +457,7 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto
 			log.Errorf("EError creating IPSec Policy. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}

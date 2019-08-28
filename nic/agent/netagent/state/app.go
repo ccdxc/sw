@@ -3,6 +3,7 @@
 package state
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -32,7 +33,7 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 			return errors.New("app already exists")
 		}
 
-		log.Infof("Received duplicate app create for {%+v}", app)
+		log.Infof("Received duplicate app create for {%+v}", app.ObjectMeta)
 		return nil
 	}
 	// Validate App Idle Timeout is parseable.
@@ -138,7 +139,9 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 	// don't support multiple ALG configurations in the same object
 
 	if (algMapper & -algMapper) != algMapper {
-		log.Errorf("Multiple ALG configurations specified in a single app object. %v", app)
+		a, _ := json.MarshalIndent(app, "", "   ")
+		fmt.Println(string(a))
+		//log.Errorf("Multiple ALG configurations specified in a single app object. %v", string(a))
 		return fmt.Errorf("multiple ALG configurations specified in a single app object. %v", app)
 	}
 	// find the corresponding namespace
@@ -181,7 +184,8 @@ func (na *Nagent) saveApp(app *netproto.App) error {
 	}
 
 	// write to emstore
-	err := na.Store.Write(app)
+	dat, _ := app.Marshal()
+	err := na.Store.RawWrite(app.GetKind(), app.GetKey(), dat)
 	return err
 }
 
@@ -207,7 +211,7 @@ func (na *Nagent) discardApp(app *netproto.App) error {
 		}
 	}
 
-	err := na.Store.Delete(app)
+	err := na.Store.RawDelete(app.GetKind(), app.GetKey())
 
 	return err
 }

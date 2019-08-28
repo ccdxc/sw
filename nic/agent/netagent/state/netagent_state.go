@@ -46,98 +46,8 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 	na.Mode = "host-managed"
 	na.DelphiClient = delphiClient
 
-	tn := netproto.Tenant{
-		TypeMeta: api.TypeMeta{Kind: "Tenant"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "default",
-		},
-	}
-
-	_, err = emdb.Read(&tn)
-
-	// Blank slate. Persist config and do init stuff
-	if err != nil {
-		// We need to create a default tenant and default namespace at startup.
-		err = na.createDefaultTenant()
-		if err != nil {
-			log.Errorf("Failed to create default tenant. Err: %v", err)
-			emdb.Close()
-			return nil, err
-		}
-		// We need to create a default vrf in the datapath at startup
-		err = na.createDefaultVrf()
-		if err != nil {
-			emdb.Close()
-			return nil, err
-		}
-	} else {
-		// update netagent state. This is a temporary fix till we decide on flash perf implications of a full config replay
-		c, _ := gogoproto.TimestampProto(time.Now())
-
-		tn := netproto.Tenant{
-			TypeMeta: api.TypeMeta{Kind: "Tenant"},
-			ObjectMeta: api.ObjectMeta{
-				Name: "default",
-				CreationTime: api.Timestamp{
-					Timestamp: *c,
-				},
-				ModTime: api.Timestamp{
-					Timestamp: *c,
-				},
-			},
-			Status: netproto.TenantStatus{
-				TenantID: 1,
-			},
-		}
-
-		defNS := netproto.Namespace{
-			TypeMeta: api.TypeMeta{Kind: "Namespace"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant: "default",
-				Name:   "default",
-				CreationTime: api.Timestamp{
-					Timestamp: *c,
-				},
-				ModTime: api.Timestamp{
-					Timestamp: *c,
-				},
-			},
-			Status: netproto.NamespaceStatus{
-				NamespaceID: 1,
-			},
-		}
-
-		defVrf := netproto.Vrf{
-			TypeMeta: api.TypeMeta{Kind: "Vrf"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      "default",
-				CreationTime: api.Timestamp{
-					Timestamp: *c,
-				},
-				ModTime: api.Timestamp{
-					Timestamp: *c,
-				},
-			},
-			Spec: netproto.VrfSpec{
-				VrfType: "CUSTOMER",
-			},
-			Status: netproto.VrfStatus{
-				VrfID: types.VrfOffset + 1,
-			},
-		}
-		na.Lock()
-		na.TenantDB[na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)] = &tn
-		na.VrfDB[na.Solver.ObjectKey(defVrf.ObjectMeta, defVrf.TypeMeta)] = &defVrf
-		na.NamespaceDB[na.Solver.ObjectKey(defNS.ObjectMeta, defNS.TypeMeta)] = &defNS
-		na.Unlock()
-	}
-
-	err = na.GetUUID()
-	err = na.GetHwInterfaces()
-	if err != nil {
-		return nil, err
+	if err := na.replayConfigs(); err != nil {
+		log.Errorf("Failed to replay configs from boltDB. Err: %v", err)
 	}
 
 	err = dp.SetAgent(&na)
@@ -198,6 +108,9 @@ func (na *Nagent) createDefaultTenant() error {
 				Timestamp: *c,
 			},
 		},
+		Status: netproto.TenantStatus{
+			TenantID: 1,
+		},
 	}
 	return na.CreateTenant(&tn)
 }
@@ -219,6 +132,9 @@ func (na *Nagent) createDefaultVrf() error {
 		},
 		Spec: netproto.VrfSpec{
 			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: 65,
 		},
 	}
 	err := na.CreateVrf(&defVrf)
@@ -264,20 +180,6 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	}
 }
 
-// GetUUID gets the naples uuid from the datapath
-func (na *Nagent) GetUUID() error {
-
-	uuid, err := na.Datapath.GetUUID()
-	if err != nil {
-		log.Errorf("HAL System GetUUID failed. %v", err)
-		return fmt.Errorf("hal get fru uuid failed. %v", err)
-	}
-
-	na.NodeUUID = uuid
-	log.Infof("Got UUID:. %v", na.NodeUUID)
-	return nil
-}
-
 // PurgeConfigs deletes all netagent configs. This is called during decommission workflow where the NAPLES is moved to host managed mode
 func (na *Nagent) PurgeConfigs() error {
 	// Perform ordered deletes of venice objects
@@ -312,5 +214,106 @@ func (na *Nagent) PurgeConfigs() error {
 		}
 	}
 
+	return nil
+}
+
+// replay configs replays the persisted configs from bolt DB
+func (na *Nagent) replayConfigs() error {
+	if err := na.createDefaultTenant(); err != nil {
+		log.Errorf("Failed to create default tenant. Err: %v", err)
+	}
+
+	if err := na.createDefaultVrf(); err != nil {
+		log.Errorf("Failed to create default vrf. Err: %v", err)
+	}
+
+	if err := na.GetHwInterfaces(); err != nil {
+		log.Errorf("Failed to program HW Interfaces. Err: %v", err)
+		return err
+	}
+
+	// Replay Network Object
+	networks, err := na.Store.RawList("Network")
+	if err == nil {
+		for _, o := range networks {
+			log.Info("Replaying persisted Network objects")
+
+			var network netproto.Network
+			err := network.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Network. Err: %v", err)
+			}
+			if err := na.CreateNetwork(&network); err != nil {
+				log.Errorf("Failed to recreate Network: %v. Err: %v", network.GetKey(), err)
+			}
+		}
+	}
+
+	// Replay Endpoint Object
+	endpoints, err := na.Store.RawList("Endpoint")
+	if err == nil {
+		for _, o := range endpoints {
+			log.Info("Replaying persisted Endpoint objects")
+
+			var endpoint netproto.Endpoint
+			err := endpoint.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Endpoint. Err: %v", err)
+			}
+			if err := na.CreateEndpoint(&endpoint); err != nil {
+				log.Errorf("Failed to recreate Endpoint: %v. Err: %v", endpoint.GetKey(), err)
+			}
+		}
+	}
+
+	// Replay Tunnel Object
+	tunnels, err := na.Store.RawList("Tunnel")
+	if err == nil {
+		for _, o := range tunnels {
+			log.Info("Replaying persisted Tunnel objects")
+			var tunnel netproto.Tunnel
+			err := tunnel.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Tunnel. Err: %v", err)
+			}
+			if err := na.CreateTunnel(&tunnel); err != nil {
+				log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tunnel.GetKey(), err)
+			}
+		}
+	}
+
+	// Replay App Object
+	apps, err := na.Store.RawList("App")
+	if err == nil {
+		for _, o := range apps {
+			log.Info("Replaying persisted App objects")
+
+			var app netproto.App
+			err := app.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to App. Err: %v", err)
+			}
+			if err := na.CreateApp(&app); err != nil {
+				log.Errorf("Failed to recreate App: %v. Err: %v", app.GetKey(), err)
+			}
+		}
+	}
+
+	// Replay SGPolicy Object
+	policies, err := na.Store.RawList("SGPolicy")
+	if err == nil {
+		for _, o := range policies {
+			log.Info("Replaying persisted SGPolicy objects")
+
+			var sgp netproto.SGPolicy
+			err := sgp.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to SGPolicy. Err: %v", err)
+			}
+			if err := na.CreateSGPolicy(&sgp); err != nil {
+				log.Errorf("Failed to recreate SGPolicy: %v. Err: %v", sgp.GetKey(), err)
+			}
+		}
+	}
 	return nil
 }

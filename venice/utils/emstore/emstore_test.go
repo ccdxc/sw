@@ -169,7 +169,7 @@ func TestBoltdbBenchmark(t *testing.T) {
 	// write raw bytes and see how long it takes
 	startTime = time.Now()
 	for k, v := range rawBytes {
-		err = db.(*BoltdbStore).rawWrite("testObj", []byte(k), v)
+		err = db.(*BoltdbStore).RawWrite("testObj", k, v)
 		AssertOk(t, err, "Error writing to db")
 	}
 	logrus.Infof("Raw Writing %d objects took %v ", numIteration, time.Since(startTime).String())

@@ -41,8 +41,11 @@ func (na *Nagent) CreateVrf(vrf *netproto.Vrf) error {
 		return err
 	}
 
-	vrf.Status.VrfID, err = na.Store.GetNextID(types.VrfID)
-	vrf.Status.VrfID += types.VrfOffset
+	// Allocate ID only on first object creates and use existing ones during config replay
+	if vrf.Status.VrfID == 0 {
+		vrf.Status.VrfID, err = na.Store.GetNextID(types.VrfID)
+		vrf.Status.VrfID += types.VrfOffset
+	}
 
 	if err != nil {
 		log.Errorf("Could not allocate vrf id. {%+v}", err)
@@ -68,7 +71,8 @@ func (na *Nagent) CreateVrf(vrf *netproto.Vrf) error {
 	na.Lock()
 	na.VrfDB[key] = vrf
 	na.Unlock()
-	err = na.Store.Write(vrf)
+	dat, _ := vrf.Marshal()
+	err = na.Store.RawWrite(vrf.GetKind(), vrf.GetKey(), dat)
 
 	return err
 }
@@ -196,6 +200,6 @@ func (na *Nagent) DeleteVrf(tn, namespace, name string) error {
 	na.Lock()
 	delete(na.VrfDB, key)
 	na.Unlock()
-	err = na.Store.Delete(vrf)
+	err = na.Store.RawDelete(vrf.GetKind(), vrf.GetKey())
 	return err
 }

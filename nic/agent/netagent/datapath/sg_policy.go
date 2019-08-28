@@ -71,10 +71,10 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyCreate(context.Background(), sgPolicyReqMsg)
 		if err != nil {
-			log.Errorf("Error creating nat pool. Err: %v", err)
+			log.Errorf("Error creating security policy. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}

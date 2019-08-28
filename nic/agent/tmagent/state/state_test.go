@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -648,7 +649,6 @@ func TestValidateFwlogPolicy(t *testing.T) {
 }
 
 func TestFwPolicyOps(t *testing.T) {
-
 	genPolicy := map[int]*tpmprotos.FwlogPolicy{}
 
 	for i := 0; i < 8; i++ {
@@ -717,6 +717,9 @@ func TestFwPolicyOps(t *testing.T) {
 		//match collectors
 		m, ok := ps.getCollector(vrf)
 		Assert(t, ok == true, "didn't get collector for vrf %+v", vrf)
+
+		vrfs, _ := json.MarshalIndent(ag.ListVrf(), "", "   ")
+		fmt.Println(string(vrfs))
 
 		for k := range m {
 			_, ok := cmap[k]

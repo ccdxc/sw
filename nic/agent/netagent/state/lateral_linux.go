@@ -164,21 +164,21 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 		},
 	}
 
-	log.Infof("Creating internal network %v", nw)
+	log.Infof("Creating internal network %v", nw.ObjectMeta)
 
 	if err := na.CreateNetwork(nw); err != nil {
 		log.Errorf("Failed to create an untagged network. Err: %v", err)
 		return err
 	}
 
-	log.Infof("Creating internal endpoint %v", ep)
+	log.Infof("Creating internal endpoint %v", ep.ObjectMeta)
 	if err := na.CreateEndpoint(ep); err != nil {
 		log.Errorf("Failed to create TEP EP. Err: %v", err)
 		return err
 	}
 
 	if tunnelOp {
-		log.Infof("Creating internal tunnel %v", tun)
+		log.Infof("Creating internal tunnel %v", tun.ObjectMeta)
 		if err := na.CreateTunnel(tun); err != nil {
 			log.Errorf("Failed to create tunnel. Err: %v", err)
 			return err
