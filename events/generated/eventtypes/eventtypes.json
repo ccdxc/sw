@@ -146,6 +146,13 @@
    "Desc": "Quorum size is below supported minimum"
   }
  ],
+ "config": [
+  {
+   "Name": "CONFIG_FAIL",
+   "Severity": "warn",
+   "Desc": "Configuration failed"
+  }
+ ],
  "network": [
   {
    "Name": "LINK_DOWN",

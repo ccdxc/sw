@@ -2,8 +2,13 @@ package ctrlerif
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/pensando/sw/api"
 	tpmproto "github.com/pensando/sw/nic/agent/protos/tpmprotos"
@@ -28,6 +33,8 @@ type TpClient struct {
 }
 
 var syncInterval = time.Minute * 5
+
+const maxRetry = 3
 
 // NewTpClient creates telemetry policy client object
 func NewTpClient(name string, state types.CtrlerIntf, srvURL string, resolverClient resolver.Interface) (*TpClient, error) {
@@ -196,20 +203,33 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 			}
 
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
-			switch event.EventType {
-			case api.EventType_CreateEvent:
-				if err := client.state.CreateFwlogPolicy(ctx, event.Policy); err != nil {
-					log.Errorf("create fwlog policy failed %s", err)
+
+			func() {
+				var err error
+				for iter := 0; iter < maxRetry; iter++ {
+					switch event.EventType {
+					case api.EventType_CreateEvent:
+						if err = client.state.CreateFwlogPolicy(ctx, event.Policy); err != nil {
+							log.Errorf("create fwlog policy failed %s", err)
+						}
+					case api.EventType_UpdateEvent:
+						if err = client.state.UpdateFwlogPolicy(ctx, event.Policy); err != nil {
+							log.Errorf("update fwlog policy failed %s", err)
+						}
+					case api.EventType_DeleteEvent:
+						if err = client.state.DeleteFwlogPolicy(ctx, event.Policy); err != nil {
+							log.Errorf("delete fwlog policy failed %s", err)
+						}
+					}
+
+					if err == nil {
+						return
+					}
+					time.Sleep(time.Second * 5)
 				}
-			case api.EventType_UpdateEvent:
-				if err := client.state.UpdateFwlogPolicy(ctx, event.Policy); err != nil {
-					log.Errorf("update fwlog policy failed %s", err)
-				}
-			case api.EventType_DeleteEvent:
-				if err := client.state.DeleteFwlogPolicy(ctx, event.Policy); err != nil {
-					log.Errorf("delete fwlog policy failed %s", err)
-				}
-			}
+				recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
+					strings.Split(strings.ToLower(event.EventType.String()), "-event")[0], event.Policy.Kind, event.Policy.Name), nil)
+			}()
 
 		case event, ok := <-wc.flowExpChan:
 			if !ok {
@@ -218,20 +238,34 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 			}
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
 
-			switch event.EventType {
-			case api.EventType_CreateEvent:
-				if err := client.state.CreateFlowExportPolicy(ctx, event.Policy); err != nil {
-					log.Errorf("create flow export policy failed %s", err)
+			func() {
+				var err error
+				for iter := 0; iter < maxRetry; iter++ {
+					switch event.EventType {
+
+					case api.EventType_CreateEvent:
+						if err = client.state.CreateFlowExportPolicy(ctx, event.Policy); err != nil {
+							log.Errorf("create flow export policy failed %s", err)
+						}
+					case api.EventType_UpdateEvent:
+						if err = client.state.UpdateFlowExportPolicy(ctx, event.Policy); err != nil {
+							log.Errorf("update flow export policy failed %s", err)
+						}
+					case api.EventType_DeleteEvent:
+						if err = client.state.DeleteFlowExportPolicy(ctx, event.Policy); err != nil {
+							log.Errorf("delete flow export policy failed %s", err)
+						}
+					}
+
+					if err == nil {
+						return
+					}
+
+					time.Sleep(time.Second * 5)
 				}
-			case api.EventType_UpdateEvent:
-				if err := client.state.UpdateFlowExportPolicy(ctx, event.Policy); err != nil {
-					log.Errorf("update flow export policy failed %s", err)
-				}
-			case api.EventType_DeleteEvent:
-				if err := client.state.DeleteFlowExportPolicy(ctx, event.Policy); err != nil {
-					log.Errorf("delete flow export policy failed %s", err)
-				}
-			}
+				recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
+					strings.Split(strings.ToLower(event.EventType.String()), "-event")[0], event.Policy.Kind, event.Policy.Name), nil)
+			}()
 
 			// periodic sync
 		case <-time.After(syncInterval):

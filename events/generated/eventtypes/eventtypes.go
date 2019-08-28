@@ -285,6 +285,12 @@ func init() {
 		Category: "rollout",
 		Desc:     "Rollout suspended"}
 
+	eventTypes[CONFIG_FAIL] = &EventTypeAttributes{
+		EType:    CONFIG_FAIL.String(),
+		Severity: "warn",
+		Category: "config",
+		Desc:     "Configuration failed"}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

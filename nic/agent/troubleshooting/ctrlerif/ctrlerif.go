@@ -3,8 +3,12 @@ package ctrlerif
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/pensando/sw/venice/globals"
 
@@ -30,6 +34,8 @@ type TsClient struct {
 	//debugStats     *debug.Stats
 	startTime time.Time
 }
+
+const maxRetry = 3
 
 func objectKey(meta api.ObjectMeta) string {
 	return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
@@ -101,18 +107,34 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 			}
 
 			log.Infof("CtrlerIf: agent %s got mirror session watch eventlist: {%+v}", client.getAgentName(), evtList)
-			go func() {
+
+			func() {
 				for _, evt := range evtList.MirrorSessionEvents {
-					switch evt.EventType {
-					case api.EventType_CreateEvent:
-						client.tsagent.CreateMirrorSession(&evt.MirrorSession)
-					case api.EventType_UpdateEvent:
-						client.tsagent.UpdateMirrorSession(&evt.MirrorSession)
-					case api.EventType_DeleteEvent:
-						client.tsagent.DeleteMirrorSession(&evt.MirrorSession)
-					default:
-						log.Errorf("Invalid mirror event type: {%+v}", evt.EventType)
+					for iter := 0; iter < maxRetry; iter++ {
+						var err error
+
+						switch evt.EventType {
+						case api.EventType_CreateEvent:
+							err = client.tsagent.CreateMirrorSession(&evt.MirrorSession)
+						case api.EventType_UpdateEvent:
+							err = client.tsagent.UpdateMirrorSession(&evt.MirrorSession)
+						case api.EventType_DeleteEvent:
+							err = client.tsagent.DeleteMirrorSession(&evt.MirrorSession)
+						default:
+							log.Errorf("Invalid mirror event type: {%+v}", evt.EventType)
+							return
+						}
+
+						if err == nil { // return on success
+							return
+						}
+
+						log.Errorf("failed to apply %v %v, error: %v", evt.MirrorSession.GetName(), evt.EventType, err)
+						time.Sleep(time.Second * 5)
 					}
+
+					recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
+						strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.MirrorSession.Kind, evt.MirrorSession.Name), nil)
 				}
 			}()
 		}

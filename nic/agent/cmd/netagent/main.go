@@ -12,6 +12,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/events/recorder"
+
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/tpa"
@@ -77,6 +79,13 @@ func main() {
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
 	defer logger.Close()
+
+	// create events recorder
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{Component: globals.Tmagent}, logger)
+	if err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+	defer evtsRecorder.Close()
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)

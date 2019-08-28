@@ -197,4 +197,9 @@ enum EventTypes {
     ROLLOUT_SUSPENDED               = 704 [(category) = Rollout,
                                            (severity) = INFO,
                                            (desc)     = "Rollout suspended"];
+    // ------------------------------ Config events -------------------------- //
+    CONFIG_FAIL                     = 801 [(category) = Config,
+                                           (severity) = WARN,
+                                           (desc)     = "Configuration failed"];
+
 }

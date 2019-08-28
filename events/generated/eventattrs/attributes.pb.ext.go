@@ -38,6 +38,7 @@ var Category_normal = map[string]string{
 	"system":  "System",
 	"network": "Network",
 	"rollout": "Rollout",
+	"config":  "Config",
 }
 
 // Category_vname is a map from value to the venice name
@@ -46,6 +47,7 @@ var Category_vname = map[int32]string{
 	1: "network",
 	2: "system",
 	3: "rollout",
+	4: "config",
 }
 
 // Category_vvalue is a map from venice name to the value

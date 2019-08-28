@@ -38,6 +38,9 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'QUORUM_UNHEALTHY',
     'UNSUPPORTED_QUORUM_SIZE',
   ],
+  config: [
+    'CONFIG_FAIL',
+  ],
   network: [
     'LINK_DOWN',
     'LINK_UP',
@@ -204,6 +207,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "UNSUPPORTED_QUORUM_SIZE",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Quorum size is below supported minimum",
+  },
+  'CONFIG_FAIL' : {
+      "Name": "CONFIG_FAIL",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Configuration failed",
   },
   'LINK_DOWN' : {
       "Name": "LINK_DOWN",

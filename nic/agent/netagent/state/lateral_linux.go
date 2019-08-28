@@ -113,6 +113,7 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 			time.Sleep(time.Second * 1)
 		}
 		log.Errorf("failed to find resolve MAC despite retries for %s", destIP)
+		return fmt.Errorf("failed to find resolve MAC despite retries for %s", destIP)
 	}
 
 	nw := &netproto.Network{

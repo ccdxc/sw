@@ -55,6 +55,7 @@ export enum EventsEvent_type {
     'QUORUM_MEMBER_UNHEALTHY' = "QUORUM_MEMBER_UNHEALTHY",
     'QUORUM_UNHEALTHY' = "QUORUM_UNHEALTHY",
     'UNSUPPORTED_QUORUM_SIZE' = "UNSUPPORTED_QUORUM_SIZE",
+    'CONFIG_FAIL' = "CONFIG_FAIL",
     'LINK_DOWN' = "LINK_DOWN",
     'LINK_UP' = "LINK_UP",
     'ROLLOUT_FAILED' = "ROLLOUT_FAILED",
@@ -75,6 +76,7 @@ export enum EventsEvent_category {
     'network' = "network",
     'system' = "system",
     'rollout' = "rollout",
+    'config' = "config",
 }
 
 export enum EventsEventAttributes_severity {
@@ -89,6 +91,7 @@ export enum EventsEventAttributes_category {
     'network' = "network",
     'system' = "system",
     'rollout' = "rollout",
+    'config' = "config",
 }
 
 
