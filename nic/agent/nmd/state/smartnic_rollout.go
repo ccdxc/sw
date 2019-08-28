@@ -23,6 +23,11 @@ func (n *NMD) CreateUpdateSmartNICRollout(sro *protos.SmartNICRollout) error {
 	n.Lock()
 	defer n.Unlock()
 
+	if n.ro.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp || len(n.ro.OpStatus) != 0 {
+		log.Errorf("A previously issued Rollout %v state exists. Please DELETE it before proceeding.", n.ro)
+		return fmt.Errorf("delete previous rollout before proceeding")
+	}
+
 	n.objectMeta = sro.ObjectMeta
 	n.updateOps(sro.Spec.Ops)
 	n.issueNextPendingOp()
