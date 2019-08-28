@@ -38,11 +38,16 @@ func SetQuorumInstanceAuth(c *quorum.Config, csrSigner certs.CSRSigner, trustRoo
 	ipAddrs := []net.IP{}
 	// Etcd only binds to IP addresses, so to keep it simple clients also use IP addresses to connect
 	// If user gave a hostname, we need to put corresponding address in the certificate
-	addrs, err := net.LookupIP(c.MemberName)
-	if err == nil {
-		ipAddrs = append(ipAddrs, addrs[0])
+	//
+	// Workaround for https://github.com/kubernetes/kubernetes/issues/72102
+	// Include IPs for all quorum etcds in certificate
+	for _, member := range c.Members {
+		addrs, err := net.LookupIP(member.Name)
+		if err == nil {
+			ipAddrs = append(ipAddrs, addrs[0])
+		}
+		dnsNames, ipAddrs = certs.AddNodeSANIDs(member.Name, dnsNames, ipAddrs)
 	}
-	dnsNames, ipAddrs = certs.AddNodeSANIDs(c.MemberName, dnsNames, ipAddrs)
 
 	// When an Etcd instance tries to connect to another, the server checks that either:
 	// - the IP address is present in the IP SANs of the certificates provided by the client

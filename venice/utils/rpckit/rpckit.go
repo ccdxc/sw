@@ -450,7 +450,9 @@ func (srv *RPCServer) run() {
 		if grpcServer != nil && listener != nil {
 			srv.logger.Infof("gRpc server %s Listening on %s", srv.mysvcName, srv.listenURL)
 			srv.Unlock()
-			srv.DoneCh <- grpcServer.Serve(listener)
+			err := grpcServer.Serve(listener)
+			srv.logger.Infof("gRpc server %s Listening on %s terminating with err: %v", srv.mysvcName, srv.listenURL, err)
+			srv.DoneCh <- err
 			return
 		}
 		srv.Unlock()

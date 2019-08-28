@@ -55,9 +55,9 @@ func main() {
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,
-			MaxSize:    10, // TODO: These needs to be part of Service Config Object
-			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
-			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+			MaxSize:    10, // MB    TODO: These needs to be part of Service Config Object
+			MaxBackups: 10, // files TODO: These needs to be part of Service Config Object
+			MaxAge:     30, // days  TODO: These needs to be part of Service Config Object
 		},
 	}
 
