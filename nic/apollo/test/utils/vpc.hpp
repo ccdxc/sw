@@ -7,6 +7,7 @@
 #define __TEST_UTILS_VPC_HPP__
 
 #include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/api/vpc_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 

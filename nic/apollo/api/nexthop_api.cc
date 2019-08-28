@@ -40,24 +40,6 @@ pds_nexthop_api_handle (api::api_op_t op, pds_nexthop_key_t *key,
     return SDK_RET_OOM;
 }
 
-static inline sdk_ret_t
-pds_nexthop_stats_fill (nexthop *entry, pds_nexthop_stats_t *stats)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_nexthop_status_fill (nexthop *entry, pds_nexthop_status_t *status)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_nexthop_spec_fill (nexthop *entry, pds_nexthop_spec_t *spec)
-{
-    return SDK_RET_OK;
-}
-
 static inline nexthop *
 pds_nexthop_find (pds_nexthop_key_t *key)
 {

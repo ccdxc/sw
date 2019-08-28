@@ -29,4 +29,9 @@ export PATH=${PATH}:${BUILD_DIR}/bin
 echo "Running policy test"
 $GDB apollo_policy_test -c hal.json -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_policy_test.xml" > /dev/null
 [[ $? -ne 0 ]] && echo "apollo_policy_test failed!" && exit 1
+
+echo "Running rfc rte bitmap test"
+$GDB apollo_rte_bitmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_rte_bitmap_test.xml" > apollo_rte_bitmap_test_log.txt
+[[ $? -ne 0 ]] && echo "apollo_rte_bitmap_test failed!" && exit 1
+
 echo "Success"
