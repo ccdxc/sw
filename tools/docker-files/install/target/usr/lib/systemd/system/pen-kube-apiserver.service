@@ -2,6 +2,7 @@
 Description=Kubernetes API Server
 
 [Service]
+SyslogIdentifier=pen-kube-apiserver
 EnvironmentFile=-/etc/pensando/shared/common/venice.conf
 EnvironmentFile=-/etc/pensando/shared/common/registry.conf
 EnvironmentFile=-/etc/pensando/kubernetes/pen-kube-apiserver/kube-apiserver.conf

@@ -2,6 +2,7 @@
 Description=ETC kvstore daemon
 
 [Service]
+SyslogIdentifier=pen-etcd
 EnvironmentFile=-/etc/pensando/shared/common/venice.conf
 EnvironmentFile=-/etc/pensando/shared/common/registry.conf
 EnvironmentFile=-/etc/pensando/pen-etcd/etcd.conf

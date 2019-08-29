@@ -3,5 +3,6 @@ Description=Pensando kubelet configuration script
 Documentation=http://pensando.io/
 
 [Service]
+SyslogIdentifier=pen-kubeletconfig
 ExecStart=/bin/sh -c '/usr/bin/systemctl restart pen-kubelet ; exit 0'
 Type=oneshot

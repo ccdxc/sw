@@ -2,6 +2,7 @@
 Description=Kubelet
 
 [Service]
+SyslogIdentifier=pen-kubelet
 User=root
 EnvironmentFile=-/etc/pensando/kubernetes/pen-kubelet/kubelet.conf
 

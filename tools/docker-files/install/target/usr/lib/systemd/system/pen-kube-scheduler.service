@@ -2,6 +2,7 @@
 Description=Kubernetes Scheduler
 
 [Service]
+SyslogIdentifier=pen-kube-scheduler
 EnvironmentFile=-/etc/pensando/shared/common/venice.conf
 EnvironmentFile=-/etc/pensando/shared/common/registry.conf
 EnvironmentFile=-/etc/pensando/kubernetes/pen-kube-scheduler/kube-scheduler.conf

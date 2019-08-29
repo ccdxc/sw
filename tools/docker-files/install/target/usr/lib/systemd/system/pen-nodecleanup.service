@@ -3,6 +3,7 @@ Description=Pensando node cleanup script to reset node
 Documentation=http://pensando.io/
 
 [Service]
+SyslogIdentifier=pen-nodecleanup
 ExecStartPre=/bin/sh -c '/bin/rm -fr /etc/pensando/pen*/* /etc/pensando/kube* /var/lib/kubelet/* /etc/kubernetes/* ; exit 0'
 ExecStartPre=/bin/sh -c '/bin/cp -fr /etc/pensando/configs/* /etc/pensando/ ; exit 0'
 ExecStartPre=/bin/sh -c 'cat /proc/mounts | awk "{print $2}" | grep "/var/lib/kubelet" | xargs umount >/dev/null 2>&1 ; exit 0'
