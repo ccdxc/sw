@@ -349,6 +349,10 @@ func TestNetAgentConfigPersistence(t *testing.T) {
 	newAgent, err := NewNetAgent(dp, db.Name(), nil)
 	AssertOk(t, err, "Failed to create new netagent: ")
 
+	// Make an explicit call to replay configs. In real HW this will be triggered by the mode switch
+	err = newAgent.ReplayConfigs()
+	AssertOk(t, err, "Failed to replay configs")
+
 	// Ensure that they are present in the state
 	_, err = newAgent.FindNetwork(network.ObjectMeta)
 	AssertOk(t, err, "Failed to find network")

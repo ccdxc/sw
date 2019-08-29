@@ -46,8 +46,16 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 	na.Mode = "host-managed"
 	na.DelphiClient = delphiClient
 
-	if err := na.replayConfigs(); err != nil {
-		log.Errorf("Failed to replay configs from boltDB. Err: %v", err)
+	if err := na.createDefaultTenant(); err != nil {
+		log.Errorf("Failed to create default tenant. Err: %v", err)
+	}
+
+	if err := na.createDefaultVrf(); err != nil {
+		log.Errorf("Failed to create default vrf. Err: %v", err)
+	}
+
+	if err := na.GetHwInterfaces(); err != nil {
+		log.Errorf("Failed to program HW Interfaces. Err: %v", err)
 	}
 
 	err = dp.SetAgent(&na)
@@ -217,21 +225,8 @@ func (na *Nagent) PurgeConfigs() error {
 	return nil
 }
 
-// replay configs replays the persisted configs from bolt DB
-func (na *Nagent) replayConfigs() error {
-	if err := na.createDefaultTenant(); err != nil {
-		log.Errorf("Failed to create default tenant. Err: %v", err)
-	}
-
-	if err := na.createDefaultVrf(); err != nil {
-		log.Errorf("Failed to create default vrf. Err: %v", err)
-	}
-
-	if err := na.GetHwInterfaces(); err != nil {
-		log.Errorf("Failed to program HW Interfaces. Err: %v", err)
-		return err
-	}
-
+// ReplayConfigs replays the persisted configs from bolt DB
+func (na *Nagent) ReplayConfigs() error {
 	// Replay Network Object
 	networks, err := na.Store.RawList("Network")
 	if err == nil {

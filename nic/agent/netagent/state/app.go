@@ -3,7 +3,6 @@
 package state
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -139,9 +138,7 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 	// don't support multiple ALG configurations in the same object
 
 	if (algMapper & -algMapper) != algMapper {
-		a, _ := json.MarshalIndent(app, "", "   ")
-		fmt.Println(string(a))
-		//log.Errorf("Multiple ALG configurations specified in a single app object. %v", string(a))
+		log.Errorf("Multiple ALG configurations specified in a single app object. %v", app)
 		return fmt.Errorf("multiple ALG configurations specified in a single app object. %v", app)
 	}
 	// find the corresponding namespace

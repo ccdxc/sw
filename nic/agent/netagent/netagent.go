@@ -198,6 +198,14 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		defer ag.Unlock()
 		var controllers []string
 
+		// set Node UUID from FRU mac addr
+		ag.NetworkAgent.NodeUUID = obj.SmartNicName
+		ag.mgmtIPAddr = obj.MgmtIP
+
+		// Replay stored network mode configs
+		if err := ag.NetworkAgent.ReplayConfigs(); err != nil {
+			log.Errorf("Failed to replay configs from boltDB. Err: %v", err)
+		}
 		for _, ip := range obj.Controllers {
 			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDGRPCAuthPort))
 		}
@@ -211,10 +219,6 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			ag.ResolverClient.UpdateServers(controllers)
 			log.Infof("Updating Venice Co-ordinates with %v", controllers)
 		}
-
-		// set Node UUID from FRU mac addr
-		ag.NetworkAgent.NodeUUID = obj.SmartNicName
-		ag.mgmtIPAddr = obj.MgmtIP
 
 		if isNewResolver {
 			// Lock netagent state
