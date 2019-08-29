@@ -62,12 +62,12 @@ func portpcieShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - pcie
 //rootCmd =
-//longHelpStr = Metrics for pciemgr
-//shortHelpStr =
+//longHelpStr = Metrics for Pcie Subsystem
+//shortHelpStr = Metrics for Pcie Subsystem
 var pcieShowCmd = &cobra.Command{
 	Use:   "pcie",
-	Short: "",
-	Long:  "\n---------------------------------\n Metrics for pciemgr\n---------------------------------\n",
+	Short: "Metrics for Pcie Subsystem",
+	Long:  "\n---------------------------------\n Metrics for Pcie Subsystem\n---------------------------------\n",
 }
 
 func init() {
@@ -78,8 +78,8 @@ func init() {
 
 	//cmd - pcie
 	//rootCmd =
-	//longHelpStr = Metrics for pciemgr
-	//shortHelpStr =
+	//longHelpStr = Metrics for Pcie Subsystem
+	//shortHelpStr = Metrics for Pcie Subsystem
 
 	metricsShowCmd.AddCommand(pcieShowCmd)
 

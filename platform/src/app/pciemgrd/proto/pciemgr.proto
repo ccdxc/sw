@@ -10,7 +10,8 @@ import "metrics_annotations.proto";
 message PciemgrPenctlRootCmd {
     option (venice.penctlParentCmd) = {
         Cmd:     "pcie",
-        HelpStr: "Metrics for pciemgr"
+        ShortHelpStr: "Metrics for Pcie Subsystem",
+        HelpStr: "Metrics for Pcie Subsystem"
     };
 }
 
