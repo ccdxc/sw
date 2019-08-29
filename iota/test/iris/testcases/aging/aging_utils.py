@@ -129,7 +129,7 @@ def get_tickleinfo(cmd):
     if cmd.stdout == '' or cmd.stdout.find('API_STATUS_NOT_FOUND') != -1:
        return 0, 0, 0, 0
 
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     print(type(yaml_out))
     for data in yaml_out:
         if data is not None:
@@ -146,7 +146,7 @@ def get_tickleinfo(cmd):
     return 0, 0, 0, 0
 
 def get_haltimeout(timeout, cmd):
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     print(type(yaml_out))
     for data in yaml_out:
         if data is not None:
@@ -171,7 +171,7 @@ def get_haltimeout(timeout, cmd):
            return 0
 
 def get_sess_handle(cmd):
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     print(type(yaml_out))
     for data in yaml_out:
         if data is not None:

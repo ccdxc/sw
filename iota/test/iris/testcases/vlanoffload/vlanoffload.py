@@ -115,7 +115,7 @@ def Trigger(tc):
             if api.IsApiResponseOk(tc.toggle_resp):
                 cmd =  tc.toggle_resp.commands[0]
                 if cmd.stdout is not None:
-                    yml_loaded = yaml.load_all(cmd.stdout)
+                    yml_loaded = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
                     for spec in yml_loaded:
                         if spec is not None:
                             name = spec["spec"]["name"]

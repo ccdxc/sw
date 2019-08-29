@@ -116,7 +116,7 @@ def GetNwsecYaml(workload):
     if not cmd.stdout:
         return None
 
-    yml_loaded = yaml.load_all(cmd.stdout)
+    yml_loaded = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     for yml in yml_loaded:
         if yml is not None:
             return yml

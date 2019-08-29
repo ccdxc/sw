@@ -36,7 +36,7 @@ def Verify(tc):
 #Below section is applicable for Napls. TBD - comamnds for other NIC and TOR side
         perPortOutput = cmd.stdout.split("---") #split output of halctl. Each entry will hold information about a port
         for portInfo in perPortOutput:            
-            testobj = yaml.load(portInfo)#parse the YAML
+            testobj = yaml.load(portInfo, Loader=yaml.FullLoader)#parse the YAML
             if bool(testobj):#last split is always empty - skip it. Otherwise process it
                  portId=testobj['spec']['keyorhandle']['keyorhandle']['portid']
                  portStatus=testobj['status']['operstatus']

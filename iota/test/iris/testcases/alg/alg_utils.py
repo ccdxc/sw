@@ -67,7 +67,7 @@ def get_timeout(timeout):
     return 0
 
 def get_sess_handle(cmd):
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     for data in yaml_out:
         if data is not None and isinstance(data, list):
              return data['status']['sessionhandle']
@@ -158,7 +158,7 @@ def update_app(app, timeout, field=None, val=None, isstring=False):
 
 def get_meminfo(cmd, name):
     meminfo = []
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     print(type(yaml_out))
     for data in yaml_out:
         if data is not None:
@@ -170,7 +170,7 @@ def get_meminfo(cmd, name):
 
 def get_alginfo(cmd, alg):
     alg_info = []
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     print(type(yaml_out))
     for data in yaml_out:
         if data is not None:

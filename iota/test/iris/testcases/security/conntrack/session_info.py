@@ -13,7 +13,7 @@ class TcpState(IntEnum):
     RESET = 7
 
 def get_conntrackinfo(cmd):
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     print(type(yaml_out))
     for data in yaml_out:
         if data is not None:
@@ -37,7 +37,7 @@ def get_conntrackinfo(cmd):
     return 0,0,0,0,0,0,0,0
 
 def get_yaml(cmd):
-    yaml_out = yaml.load_all(cmd.stdout)
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     for data in yaml_out:
         if data is not None:
             return data

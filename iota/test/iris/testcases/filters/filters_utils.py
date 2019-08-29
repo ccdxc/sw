@@ -125,7 +125,7 @@ def getNaplesHALEndPoints(naples_node):
     perEPOutput = cmd.stdout.split("---")
 
     for ep in perEPOutput:
-        epObj = yaml.load(ep)
+        epObj = yaml.load(ep, Loader=yaml.FullLoader)
         if epObj is not None:
             macAddr = epObj['spec']['keyorhandle']['keyorhandle']['endpointkey']['endpointl2l3key']['l2key']['macaddress']
             segmentid = epObj['spec']['keyorhandle']['keyorhandle']['endpointkey']['endpointl2l3key']['l2key']['l2segmentkeyhandle']['keyorhandle']['segmentid']
@@ -215,7 +215,7 @@ def getAllIntfPktFilter(naples_node):
     perLifOutput = cmd.stdout.split("---")
 
     for lif in perLifOutput:
-        lifObj = yaml.load(lif)
+        lifObj = yaml.load(lif, Loader=yaml.FullLoader)
         if lifObj is not None:
             intfName = lifObj['spec']['name']
             #TODO: mnic interface names are appended with "/lif<lif_id>"
@@ -290,7 +290,7 @@ def getNaplesHALmcastEndPoints(naples_node):
     perEPOutput = cmd.stdout.split("---")
 
     for ep in perEPOutput:
-        epObj = yaml.load(ep)
+        epObj = yaml.load(ep, Loader=yaml.FullLoader)
         if epObj is not None:
             macAddr = epObj['spec']['keyorhandle']['keyorhandle']['key']['ipormac']['mac']['group']
             mac_addr_str = address_utils.formatMacAddr(macAddr)

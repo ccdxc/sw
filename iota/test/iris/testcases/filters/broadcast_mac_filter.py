@@ -62,7 +62,7 @@ def GetLifBCFramesTxRxStats(naples_node, lif_id):
     perLifOutput = cmd.stdout.split("---")
 
     for lif in perLifOutput:
-        lifObj = yaml.load(lif)
+        lifObj = yaml.load(lif, Loader=yaml.FullLoader)
         if lifObj is not None:
             lifid = lifObj['spec']['keyorhandle']['keyorhandle']['lifid']
             if lif_id == lifid:
