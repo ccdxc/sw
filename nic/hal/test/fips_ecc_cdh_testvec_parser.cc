@@ -538,13 +538,13 @@ void fips_testvec_ecc_cdh_parser::print_group_testvec(FILE *fp, fips_ecc_cdh_gro
 
     for (int idx = 0; idx < group.entry_count; idx++) {
         fprintf(fp, "COUNT = %d\n", idx);
-        fips_testvec_hex_output(fp, "QCAVSx",
-                group.entries[idx].qcavsx,
-                group.key_size_bytes);
-        fips_testvec_hex_output(fp, "QCAVSy",
-                group.entries[idx].qcavsy,
-                group.key_size_bytes);
         if (group.key_size_bytes == 66) {
+            fips_testvec_hex_output(fp, "QCAVSx",
+                    group.entries[idx].qcavsx,
+                    group.key_size_bytes+2);
+            fips_testvec_hex_output(fp, "QCAVSy",
+                    group.entries[idx].qcavsy,
+                    group.key_size_bytes+2);
             fips_testvec_hex_output_padded(fp, "QIUTx",
                     group.entries[idx].qiutx,
                     group.key_size_bytes, 2);
@@ -553,6 +553,12 @@ void fips_testvec_ecc_cdh_parser::print_group_testvec(FILE *fp, fips_ecc_cdh_gro
                     group.key_size_bytes, 2);
         }
         else {
+            fips_testvec_hex_output(fp, "QCAVSx",
+                    group.entries[idx].qcavsx,
+                    group.key_size_bytes);
+            fips_testvec_hex_output(fp, "QCAVSy",
+                    group.entries[idx].qcavsy,
+                    group.key_size_bytes);
             fips_testvec_hex_output(fp, "QIUTx",
                     group.entries[idx].qiutx,
                     group.key_size_bytes);
