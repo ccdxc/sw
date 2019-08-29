@@ -54,16 +54,6 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t free_hw_id(uint16_t hw_id);
 
-    /// \brief  API to initiate transaction over all the table manamgement
-    ///         library instances
-    /// \return SDK_RET_OK on success, failure status code on error
-    sdk_ret_t table_transaction_begin(void);
-
-    /// \brief  API to end transaction over all the table manamgement
-    ///         library instances
-    /// \return SDK_RET_OK on success, failure status code on error
-    sdk_ret_t table_transaction_end(void);
-
 private:
     friend class mirror_impl;    ///< friend of mirror_impl_state
 

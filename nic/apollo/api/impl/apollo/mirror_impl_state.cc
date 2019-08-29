@@ -77,16 +77,6 @@ mirror_impl_state::free_hw_id(uint16_t hw_id) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-mirror_impl_state::table_transaction_begin(void) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-mirror_impl_state::table_transaction_end(void) {
-    return SDK_RET_OK;
-}
-
 /// \@}
 
 }    // namespace impl

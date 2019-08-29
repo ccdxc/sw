@@ -122,9 +122,6 @@ public:
     /// \brief          initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;
 
-    /// \brief          return the mirror session's key
-    pds_mirror_session_key_t key(void) const { return key_; }
-
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
         return "ms-" + std::to_string(key_.id);
@@ -135,43 +132,6 @@ public:
     ///\param[out] info Pointer to the info object
     ///\return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t read(pds_mirror_session_key_t *key, pds_mirror_session_info_t *info);
-
-
-    /// \brief     return impl instance of this mirror session object
-    /// \return    impl instance of the mirror session object
-    impl_base *impl(void) { return impl_; }
-
-    /// \brief          helper function to get key given mirror session entry
-    /// \param[in]      entry    pointer to mirror session instance
-    /// \return         pointer to the mirror session instance's key
-    static void *mirror_session_key_func_get(void *entry) {
-        mirror_session *mirror_session_entry = (mirror_session *)entry;
-        return (void *)&(mirror_session_entry->key_);
-    }
-
-    /// \brief          helper function to compute hash value for given
-    ///                 mirror session key
-    /// \param[in]      key        mirror session's key
-    /// \param[in]      ht_size    hash table size
-    /// \return         hash value
-    static uint32_t mirror_session_hash_func_compute(void *key,
-                                                     uint32_t ht_size) {
-        return hash_algo::fnv_hash(key,
-                                   sizeof(pds_mirror_session_key_t)) % ht_size;
-    }
-
-    /// \brief          helper function to compare two mirror session keys
-    /// \param[in]      key1        pointer to mirror session's key
-    /// \param[in]      key2        pointer to mirror sessions's key
-    /// \return         0 if keys are same or else non-zero value
-    static bool mirror_session_key_func_compare(void *key1, void *key2) {
-        SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(pds_mirror_session_key_t))) {
-            return true;
-        }
-
-        return false;
-    }
 
 private:
     /// \brief constructor
