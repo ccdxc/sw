@@ -136,6 +136,9 @@
                          [maxChipLength]="15"
                          [addOnBlur]="true"
                          [addOnTab]="true"
+                         [useAutoComplete]="true"
+                         [autoCompleteField]="'ip'"
+                         [autoCompleteOptions]="ipOptions"
                          formControlName="from-ip-addresses">
                 <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
                   <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
@@ -145,8 +148,14 @@
                               (click)="cancelFunc($event)">close</mat-icon>
                   </div>
                 </ng-template>
+                <ng-template let-item pTemplate="itemAutoComplete">
+                  <div fxLayout="row" fxLayoutAlign="start center">
+                    <div fxFlex="none" class="ui-chips-token-item-text">{{item.ip}}</div>
+                    <div fxFlex="20px"></div>
+                    <div fxFlex="none">{{item.workload}}</div>
+                  </div>
+                </ng-template>
               </app-chips>
-
             </div>
           </div>
 
@@ -190,6 +199,9 @@
                          [maxChipLength]="15"
                          [addOnBlur]="true"
                          [addOnTab]="true"
+                         [useAutoComplete]="true"
+                         [autoCompleteField]="'ip'"
+                         [autoCompleteOptions]="ipOptions"
                          formControlName="to-ip-addresses">
                 <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
                   <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
@@ -199,8 +211,14 @@
                               (click)="cancelFunc($event)">close</mat-icon>
                   </div>
                 </ng-template>
+                <ng-template let-item pTemplate="itemAutoComplete">
+                  <div fxLayout="row" fxLayoutAlign="start center">
+                    <div fxFlex="none" class="ui-chips-token-item-text">{{item.ip}}</div>
+                    <div fxFlex="20px"></div>
+                    <div fxFlex="none">{{item.workload}}</div>
+                  </div>
+                </ng-template>
               </app-chips>
-
             </div>
           </div>
 

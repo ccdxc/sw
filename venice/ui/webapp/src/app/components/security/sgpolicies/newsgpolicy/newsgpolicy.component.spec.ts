@@ -19,6 +19,7 @@ import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 import { NewsgpolicyComponent } from './newsgpolicy.component';
+import { WorkloadService } from '@app/services/generated/workload.service';
 
 describe('NewsgpolicyComponent', () => {
   let component: NewsgpolicyComponent;
@@ -48,7 +49,8 @@ describe('NewsgpolicyComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         SecurityService,
-        MessageService
+        MessageService,
+        WorkloadService
       ]
     })
     .compileComponents();

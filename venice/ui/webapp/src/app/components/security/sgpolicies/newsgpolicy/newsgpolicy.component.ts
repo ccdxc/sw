@@ -11,6 +11,8 @@ import { SelectItem } from 'primeng/api';
 import { IPUtility } from '@app/common/IPUtility';
 import { FormArray, FormControl } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { WorkloadService } from '@app/services/generated/workload.service';
 
 @Component({
   selector: 'app-newsgpolicy',
@@ -35,6 +37,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecuritySGPolicy, Securi
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected securityService: SecurityService,
+    protected workloadService: WorkloadService,
   ) {
     super(_controllerService, uiconfigsService, SecuritySGPolicy);
   }
@@ -89,6 +92,11 @@ export class NewsgpolicyComponent extends CreationForm<ISecuritySGPolicy, Securi
   securityGroupsEventUtility: HttpEventUtility<SecuritySecurityGroup>;
   securityGroups: ReadonlyArray<SecuritySecurityGroup> = [];
   securityGroupOptions: SelectItem[] = [];
+  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
+  workloads: ReadonlyArray<WorkloadWorkload> = [];
+
+  // Map from IP to workload name
+  ipOptions: any[] = [];
 
 
   getClassName() {
@@ -98,12 +106,43 @@ export class NewsgpolicyComponent extends CreationForm<ISecuritySGPolicy, Securi
   // Empty Hook
   postNgInit() {
     this.getSecurityApps();
+    this.getWorkloads();
     this.getSecuritygroups();
     if (this.rules.length === 0) {
       this.addRule();
     }
     // Add a default protocol port if its the default option
     // if (this.selectedProtoAppOption === this.PROTO_PORTS_OPTION)
+  }
+
+  getWorkloads() {
+    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
+    this.workloads = this.workloadEventUtility.array;
+    const subscription = this.workloadService.WatchWorkload().subscribe(
+      (response) => {
+        this.workloadEventUtility.processEvents(response);
+        this.buildIPMap();
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
+    );
+    this.subscriptions.push(subscription);
+  }
+
+  buildIPMap() {
+    const ipMap = {};
+    this.ipOptions = [];
+    // Taking IPs from spec, since status isn't always filled out currently
+    // TODO: Take IPs from status
+    this.workloads.forEach( (w) => {
+      w.spec.interfaces.forEach( (intf) => {
+        intf['ip-addresses'].forEach( (ip) => {
+          ipMap[ip] = w.meta.name;
+        });
+      });
+    });
+    Object.keys(ipMap).forEach( ip => {
+      this.ipOptions.push({ip: ip, workload: ipMap[ip]});
+    });
   }
 
   getSecurityApps() {

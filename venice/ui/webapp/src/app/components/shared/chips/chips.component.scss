@@ -1,15 +1,68 @@
 $matchColor : #6ba0e5;
 $errorColor : #e57553;
 
+// This must be outside ui-chips if using appendTo="body"
+.ui-autocomplete-panel {
+  .ui-autocomplete-list {
+    padding: 0px;
+  }
+
+  .ui-autocomplete-list-item {
+    padding-left: 10px;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .ui-state-highlight {
+    box-shadow: inset 5px 0 0 0 $matchColor !important;
+  }
+}
+
+.ui-autocomplete .ui-inputtext:not(.ui-dropdown-filter) {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0px !important;
+  border: none !important;
+}
+
+
 .ui-chips {
+  >ul.ui-inputtext {
+    overflow: visible;
+  }
+
+  .ui-autocomplete-panel {
+    .ui-autocomplete-list {
+      padding: 0px;
+    }
+
+    .ui-autocomplete-list-item {
+      padding-left: 10px;
+      border-radius: 0;
+      margin: 0;
+    }
+
+    .ui-state-highlight {
+      box-shadow: inset 5px 0 0 0 $matchColor !important;
+    }
+  }
+
+  .ui-autocomplete .ui-inputtext:not(.ui-dropdown-filter) {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0px !important;
+    border: none !important;
+  }
+
+
   .ui-inputtext:not(.ui-dropdown-filter) {
     font-size: 16px;
     font-family: "Fira Sans Condensed" !important;
     line-height: normal !important;
     box-shadow: none !important;
     background: rgb(247, 247, 247);
-    padding: 0px 10px;
-    border-radius: 2px;
+    padding: 0px 10px !important;
+    border-radius: 2px !important;
     resize: none;
   }
 

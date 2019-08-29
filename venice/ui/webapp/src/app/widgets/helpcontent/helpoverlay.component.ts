@@ -118,21 +118,18 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.helpOverlayRef.attach(this.helpShell);
     }  else {
       this.helpOverlayRef.detach();
-      this.cleanHistory();
     }
   }
 
   closeHelp() {
     if (this.helpOverlayRef.hasAttached()) {
       this.helpOverlayRef.detach();
-      this.cleanHistory();
     }
   }
 
   openHelp() {
     if (!this.helpOverlayRef.hasAttached()) {
       this.helpOverlayRef.attach(this.helpShell);
-      this.cleanHistory();
     }
   }
 
