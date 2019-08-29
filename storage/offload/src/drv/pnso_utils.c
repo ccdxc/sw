@@ -13,6 +13,10 @@
 #include "pnso_chain.h"
 #include "pnso_seq.h"
 
+extern uint64_t cp_scratch_buffer_1;
+extern uint64_t cp_scratch_buffer_2;
+extern uint64_t dc_scratch_buffer;
+
 pnso_error_t
 ring_spec_info_fill(struct sonic_accel_ring *ring,
 		    struct ring_spec *spec,
@@ -29,6 +33,260 @@ ring_spec_info_fill(struct sonic_accel_ring *ring,
 	spec->rs_num_descs = num_descs;
 
 	return PNSO_OK;
+}
+
+static uint64_t
+set_scratch_buffer(const struct service_buf_list *svc_blist,
+		uint64_t src_buf_pa, uint32_t len)
+{
+	char *p;
+
+	/*
+	 * TODO: First SGE of user input buffer list is assumed to be always
+	 * 4KB for NetApp, remove this assumption
+	 *
+	 */
+	p = (char *) svc_blist->blist->buffer_0_va;
+	return (p[PAGE_SIZE-CPDC_SCRATCH_BUFFER_LEN]) ?
+		cp_scratch_buffer_1 : cp_scratch_buffer_2;
+}
+
+pnso_error_t
+putil_get_cp_prepad_packed_sgl(const struct per_core_resource *pcr,
+		const struct service_buf_list *svc_blist,
+		uint32_t block_size,
+		enum mem_pool_type mpool_type,
+		struct service_cpdc_sgl *svc_sgl)
+{
+	pnso_error_t err;
+	struct buffer_list_iter buffer_list_iter;
+	struct buffer_list_iter *iter;
+	struct cpdc_sgl *sgl_prev = NULL;
+	struct cpdc_sgl *sgl;
+	struct buffer_addr_len addr_len;
+	uint32_t total_len, magic_byte;
+
+	struct cpdc_sgl *first_sgl = NULL;
+	bool use_iter = true;
+
+	if (!svc_blist->blist || svc_blist->blist->count == 0) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer list null/empty! err: %d", err);
+		return err;
+	}
+
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist,
+			svc_blist->len);
+
+	if (iter) {
+		OSAL_LOG_DEBUG("svc_blist->len: %u", svc_blist->len);
+
+		/* prefetch the magic/hack page */
+		magic_byte = PAGE_SIZE-CPDC_SCRATCH_BUFFER_LEN;
+		iter->user_block = (char *) svc_blist->blist->buffer_0_va;
+		if (iter->user_block) {
+			__builtin_prefetch(&iter->user_block[magic_byte], 0, 1);
+			OSAL_LOG_DEBUG("iter->user_block: 0x" PRIx64 " magic_byte: %d",
+					(uint64_t) iter->user_block,
+					iter->user_block[magic_byte]);
+		}
+	}
+
+	svc_sgl->mpool_type = mpool_type;
+	svc_sgl->sgl = NULL;
+	total_len = 0;
+	while (iter) {
+		sgl = pc_res_mpool_object_get(pcr, mpool_type);
+		if (!sgl) {
+			err = EAGAIN;
+			OSAL_LOG_DEBUG("cannot obtain sgl_vec from pool, current_len %u err: %d",
+				       total_len, err);
+			goto out;
+		}
+		memset(sgl, 0, sizeof(*sgl));
+
+		if (!first_sgl) {
+			first_sgl = sgl;
+
+			/* set to any one of the CP scratch buffers */
+			first_sgl->cs_addr_0 = cp_scratch_buffer_1;
+			first_sgl->cs_len_0 = CPDC_SCRATCH_BUFFER_LEN;
+
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+		} else {
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_0, sgl->cs_len_0,
+					addr_len);
+		}
+
+		if (iter) {
+			if (!use_iter) {
+				iter = buffer_list_iter_addr_len_get(iter,
+						block_size, &addr_len);
+			} else
+				use_iter = false;
+
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_1, sgl->cs_len_1,
+					addr_len);
+		}
+		if (iter) {
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_2, sgl->cs_len_2,
+					addr_len);
+		}
+
+		/*
+		 * See comments in crypto_aol_packed_get() regarding dropping
+		 * AOL when ca_len_0 == 0. The same logic applies here.
+		 */
+		if (!sgl->cs_addr_0) {
+			pc_res_mpool_object_put(pcr, svc_sgl->mpool_type, sgl);
+			break;
+		}
+		total_len += sgl->cs_len_0 + sgl->cs_len_1 + sgl->cs_len_2;
+
+		if (!svc_sgl->sgl)
+			svc_sgl->sgl = sgl;
+		else {
+			sgl_prev->cs_next = sonic_virt_to_phy(sgl);
+			CPDC_SGL_SWLINK_SET(sgl_prev, sgl);
+		}
+		sgl_prev = sgl;
+	}
+
+	if (first_sgl) {
+		OSAL_LOG_DEBUG("=== total_len: %u scratch_len: %u",
+				total_len, first_sgl->cs_len_0);
+
+		first_sgl->cs_addr_0 = set_scratch_buffer(svc_blist,
+				first_sgl->cs_addr_1, first_sgl->cs_len_1);
+	}
+
+	/*
+	 * Caller must have ensured that svc_blist had non-zero length to begin with.
+	 */
+	if (!total_len) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
+		goto out;
+	}
+
+	return PNSO_OK;
+out:
+	pc_res_sgl_put(pcr, svc_sgl);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
+	return err;
+}
+
+pnso_error_t
+putil_get_dc_prepad_packed_sgl(const struct per_core_resource *pcr,
+		      const struct service_buf_list *svc_blist,
+		      uint32_t block_size,
+		      enum mem_pool_type mpool_type,
+		      struct service_cpdc_sgl *svc_sgl)
+{
+	struct buffer_list_iter buffer_list_iter;
+	struct buffer_list_iter *iter;
+	struct cpdc_sgl *sgl_prev = NULL;
+	struct cpdc_sgl *sgl;
+	struct buffer_addr_len addr_len;
+	uint32_t total_len;
+	pnso_error_t err;
+
+	struct cpdc_sgl *first_sgl = NULL;
+	bool use_iter = true;
+
+	if (!svc_blist->blist || svc_blist->blist->count == 0) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer list null/empty! err: %d", err);
+		return err;
+	}
+
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist,
+			svc_blist->len);
+
+	svc_sgl->mpool_type = mpool_type;
+	svc_sgl->sgl = NULL;
+	total_len = 0;
+	while (iter) {
+		sgl = pc_res_mpool_object_get(pcr, mpool_type);
+		if (!sgl) {
+			err = EAGAIN;
+			OSAL_LOG_DEBUG("cannot obtain sgl_vec from pool, current_len %u err: %d",
+				       total_len, err);
+			goto out;
+		}
+		memset(sgl, 0, sizeof(*sgl));
+
+		if (!first_sgl) {
+			first_sgl = sgl;
+
+			first_sgl->cs_addr_0 = dc_scratch_buffer;
+			first_sgl->cs_len_0 = CPDC_SCRATCH_BUFFER_LEN;
+
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+		} else {
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_0, sgl->cs_len_0,
+					addr_len);
+		}
+
+		if (iter) {
+			if (!use_iter) {
+				iter = buffer_list_iter_addr_len_get(iter,
+						block_size, &addr_len);
+			} else
+				use_iter = false;
+
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_1, sgl->cs_len_1,
+					addr_len);
+		}
+		if (iter) {
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_2, sgl->cs_len_2,
+					addr_len);
+		}
+
+		/*
+		 * See comments in crypto_aol_packed_get() regarding dropping
+		 * AOL when ca_len_0 == 0. The same logic applies here.
+		 */
+		if (!sgl->cs_addr_0) {
+			pc_res_mpool_object_put(pcr, svc_sgl->mpool_type, sgl);
+			break;
+		}
+		total_len += sgl->cs_len_0 + sgl->cs_len_1 + sgl->cs_len_2;
+
+		if (!svc_sgl->sgl)
+			svc_sgl->sgl = sgl;
+		else {
+			sgl_prev->cs_next = sonic_virt_to_phy(sgl);
+			CPDC_SGL_SWLINK_SET(sgl_prev, sgl);
+		}
+		sgl_prev = sgl;
+	}
+
+	/*
+	 * Caller must have ensured that svc_blist had non-zero length to begin with.
+	 */
+	if (!total_len) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
+		goto out;
+	}
+
+	return PNSO_OK;
+out:
+	pc_res_sgl_put(pcr, svc_sgl);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
+	return err;
 }
 
 pnso_error_t
@@ -61,8 +319,8 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 	while (iter) {
 		sgl = pc_res_mpool_object_get(pcr, mpool_type);
 		if (!sgl) {
-			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain sgl_vec from pool, current_len %u err: %d",
+			err = EAGAIN;
+			OSAL_LOG_DEBUG("cannot obtain sgl_vec from pool, current_len %u err: %d",
 				       total_len, err);
 			goto out;
 		}
@@ -111,9 +369,11 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
 		goto out;
 	}
+
 	return PNSO_OK;
 out:
 	pc_res_sgl_put(pcr, svc_sgl);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -176,8 +436,8 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 		pc_res_mpool_object_get_with_num_vec_elems(pcr, vec_type,
 				&num_vec_elems, &elem_size);
 	if (!svc_sgl->sgl) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s err: %d",
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("cannot obtain sgl_vec from pool %s err: %d",
 			       mpool_get_type_str(vec_type), err);
 		goto out;
 	}
@@ -258,9 +518,11 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
 		goto out;
 	}
+
 	return PNSO_OK;
 out:
 	pc_res_sgl_put(pcr, svc_sgl);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -606,11 +868,12 @@ svc_poll_expiry_check(uint64_t start_ts, uint64_t cur_ts)
 	return false;
 }
 
-pnso_error_t
+static pnso_error_t
 svc_batch_seq_desc_setup(struct service_info *svc_info,
 			 void *seq_desc,
 			 uint32_t desc_size)
 {
+	pnso_error_t err;
 	struct service_batch_info *svc_batch_info;
 	struct batch_page *page;
 	uint32_t batch_size, remaining;
@@ -656,14 +919,12 @@ svc_batch_seq_desc_setup(struct service_info *svc_info,
 	svc_info->si_seq_info.sqi_batch_mode = true;
 	svc_info->si_seq_info.sqi_batch_size = batch_size;
 
-	svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-			seq_desc, desc_size);
-	if (!svc_info->si_seq_info.sqi_desc) {
-		OSAL_LOG_ERROR("failed to setup sequencer desc!");
-		return EINVAL;
-	}
+	err = seq_setup_desc(svc_info, seq_desc, desc_size,
+			&svc_info->si_seq_info.sqi_desc);
+	if (err)
+		OSAL_LOG_DEBUG("failed to setup sequencer desc!");
 
-	return PNSO_OK;
+	return err;
 }
 
 pnso_error_t
@@ -677,7 +938,7 @@ svc_seq_desc_setup(struct service_info *svc_info,
 	if (chn_service_is_batch_starter(svc_info)) {
 		err = svc_batch_seq_desc_setup(svc_info, seq_desc, desc_size);
 		if (err)
-			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
+			OSAL_LOG_DEBUG("failed to setup batch sequencer desc! err: %d",
 					err);
 		goto out;
 	}
@@ -688,10 +949,9 @@ svc_seq_desc_setup(struct service_info *svc_info,
 			svc_info->si_seq_info.sqi_batch_size = num_tags;
 		}
 
-		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-				seq_desc, desc_size);
-		if (!svc_info->si_seq_info.sqi_desc) {
-			err = EINVAL;
+		err = seq_setup_desc(svc_info, seq_desc, desc_size,
+				&svc_info->si_seq_info.sqi_desc);
+		if (err) {
 			OSAL_LOG_DEBUG("failed to setup sequencer desc! num_tags: %d flags: %d err: %d",
 						num_tags, svc_info->si_flags, err);
 			goto out;
@@ -771,7 +1031,7 @@ pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pcr,
 				 mpool_get_object_pad_size(mpool);
 		obj = mpool_get_object(mpool);
 		if (!obj && !mpool_type_is_soft_get_error(type))
-			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",
+			OSAL_LOG_DEBUG("cannot obtain pcr object from pool %s",
 					mpool_get_type_str(type));
 	}
 

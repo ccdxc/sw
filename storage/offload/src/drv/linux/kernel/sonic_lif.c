@@ -940,7 +940,7 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 	spin_lock_init(&lif->deferred.lock);
 	INIT_LIST_HEAD(&lif->deferred.list);
 	INIT_DELAYED_WORK(&lif->deferred.dwork, sonic_lif_deferred_work);
-	lif->deferred.wq = osal_create_workqueue_fast(lif->name, 1);
+	lif->deferred.wq = osal_create_workqueue_fast(lif->name, 1, -1);
 	if (!lif->deferred.wq) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("Failed to allocate LIF deferred workqueue");
@@ -1963,6 +1963,7 @@ sonic_crypto_statusqs_reinit(struct per_core_resource *res)
 
 static int per_core_resource_request_irq(struct per_core_resource *res)
 {
+	int err;
 #ifndef __FreeBSD__
 	struct device *dev = res->lif->sonic->dev;
 #endif
@@ -1978,8 +1979,25 @@ static int per_core_resource_request_irq(struct per_core_resource *res)
 	snprintf(intr->name, sizeof(intr->name),
 		 "%d", res->idx);//q->name);
 #endif
-	return devm_request_irq(dev, intr->vector, sonic_async_ev_isr,
-				0, intr->name, res->evl);
+	err = devm_request_irq(dev, intr->vector, sonic_async_ev_isr,
+			       0, intr->name, res->evl);
+	if (err)
+		return err;
+
+#ifdef __FreeBSD__
+#ifndef NBIND_IRQ
+	/* Assumes res->idx is the same as core id */
+	if (res->idx >= 0 && res->idx < osal_get_core_count()) {
+		err = bind_irq_to_cpu(intr->vector, res->idx);
+		if (err) {
+			OSAL_LOG_ERROR("failed to bind irq to core %d, err %d",
+				       res->idx, err);
+		}
+	}
+#endif
+#endif
+
+	return err;
 }
 
 static int sonic_ev_intr_init(struct per_core_resource *res, int ev_count)
@@ -2011,7 +2029,7 @@ static int sonic_ev_intr_init(struct per_core_resource *res, int ev_count)
 	sonic_intr_coal_set(&res->intr, 0);
 	err = per_core_resource_request_irq(res);
 	if (err) {
-		OSAL_LOG_ERROR("Failed to request irq");
+		OSAL_LOG_ERROR("Failed to request irq, err %d", err);
 		goto done;
 	}
 
@@ -2351,13 +2369,20 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 			      lif->res.core_to_res_map[core_id], core_id);
 		return 0;
 	}
-	free_res_id = find_first_zero_bit(lif->res.pc_res_bmp,
-			lif->sonic->num_per_core_resources);
-	if (free_res_id >= lif->sonic->num_per_core_resources) {
-		spin_unlock(&lif->res.lock);
-		OSAL_LOG_ERROR("Per core resource exhausted for core_id %d",
-				core_id);
-		return err;
+	/* First try to use core_id == res_id */
+	if (core_id < lif->sonic->num_per_core_resources &&
+	    test_bit(core_id, lif->res.pc_res_bmp) == 0) {
+		free_res_id = core_id;
+	} else {
+		/* Find some other free bit */
+		free_res_id = find_first_zero_bit(lif->res.pc_res_bmp,
+						  lif->sonic->num_per_core_resources);
+		if (free_res_id >= lif->sonic->num_per_core_resources) {
+			spin_unlock(&lif->res.lock);
+			OSAL_LOG_ERROR("Per core resource exhausted for core_id %d",
+				       core_id);
+			return err;
+		}
 	}
 	set_bit(free_res_id, lif->res.pc_res_bmp);
 	OSAL_ASSERT(lif->res.pc_res[free_res_id]->core_id == -1);

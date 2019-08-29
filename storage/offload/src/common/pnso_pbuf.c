@@ -237,6 +237,7 @@ out:
 
 uint32_t
 pbuf_copy_buffer_list(const struct pnso_buffer_list *src_buf_list,
+		      uint32_t src_offset,
 		      struct pnso_buffer_list *dst_buf_list)
 {
 	uint32_t ret;
@@ -261,6 +262,15 @@ pbuf_copy_buffer_list(const struct pnso_buffer_list *src_buf_list,
 	for (src_i = 0; src_i < src_buf_list->count; src_i++) {
 		src_buf = &src_buf_list->buffers[src_i];
 		src_buf_offset = 0;
+		if (src_offset) {
+			/* Skip offset bytes */
+			if (src_offset >= src_buf->len) {
+				src_offset -= src_buf->len;
+				continue;
+			}
+			src_buf_offset += src_offset;
+			src_offset = 0;
+		}
 		while (src_buf_offset < src_buf->len) {
 			copy_len = src_buf->len - src_buf_offset;
 			if (copy_len > (dst_buf->len - dst_buf_offset))
@@ -440,9 +450,9 @@ pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 		p = (char *)flat_buf->buf;
 
 		/* print only limited number of characters */
-		OSAL_LOG_INFO("#%2d: flat_buf: 0x" PRIx64 " len: %d buf: %c%c%c%c\n",
-				i, (uint64_t)flat_buf, flat_buf->len,
-				p[0], p[1], p[2], p[3]);
+		OSAL_LOG_INFO("#%2d: flat_buf: 0x" PRIx64 " len: %d buf: 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+			      i, (uint64_t)flat_buf, flat_buf->len,
+			      p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
 
 		/*
 		 * note: break here is intentional to emit just 0th fbuf.

@@ -22,6 +22,9 @@
 #define SGL_PDMA_PPRINT(d)	pprint_chain_sgl_pdma(d)
 #endif
 
+#define CPDC_SCRATCH_BUFFER_LEN 256
+#define CPDC_MIN_USER_BUFFER_LEN 8192
+
 struct buffer_list_iter {
 	enum service_buf_list_type blist_type;
 	const struct pnso_flat_buffer *cur_list;
@@ -29,6 +32,7 @@ struct buffer_list_iter {
 	uint32_t cur_count;
 	uint32_t cur_len;
 	uint64_t cur_addr;
+	char *user_block;
 };
 
 /*
@@ -60,11 +64,25 @@ pnso_error_t ring_spec_info_fill(struct sonic_accel_ring *ring,
 				 void *desc,
 				 uint32_t num_descs);
 pnso_error_t
+putil_get_cp_prepad_packed_sgl(const struct per_core_resource *pcr,
+		      const struct service_buf_list *svc_blist,
+		      uint32_t block_size,
+		      enum mem_pool_type mpool_type,
+		      struct service_cpdc_sgl *svc_sgl);
+pnso_error_t
+putil_get_dc_prepad_packed_sgl(const struct per_core_resource *pcr,
+		      const struct service_buf_list *svc_blist,
+		      uint32_t block_size,
+		      enum mem_pool_type mpool_type,
+		      struct service_cpdc_sgl *svc_sgl);
+
+pnso_error_t
 pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 		      const struct service_buf_list *svc_blist,
 		      uint32_t block_size,
 		      enum mem_pool_type mpool_type,
 		      struct service_cpdc_sgl *svc_sgl);
+
 void pc_res_sgl_put(const struct per_core_resource *pcr,
 		    struct service_cpdc_sgl *svc_sgl);
 pnso_error_t
@@ -109,10 +127,6 @@ svc_poll_expiry_start(const struct service_info *svc_info,
 
 bool svc_poll_expiry_check(uint64_t start_ts, uint64_t cur_ts);
 
-pnso_error_t
-svc_batch_seq_desc_setup(struct service_info *svc_info,
-			 void *seq_desc,
-			 uint32_t desc_size);
 pnso_error_t
 svc_seq_desc_setup(struct service_info *svc_info,
 		   void *seq_desc,

@@ -151,7 +151,7 @@ cpdc_desc_data_len_set_eval(enum pnso_service_type svc_type,
 	case PNSO_SVC_TYPE_DECOMPRESS:
 	case PNSO_SVC_TYPE_HASH:
 	case PNSO_SVC_TYPE_CHKSUM:
-		if (data_len == MAX_CPDC_DST_BUF_LEN)
+		if (data_len >= MAX_CPDC_DST_BUF_LEN)
 			data_len = 0;
 		break;
 	default:

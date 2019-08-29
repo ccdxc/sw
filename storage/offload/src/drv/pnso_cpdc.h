@@ -38,6 +38,11 @@ extern "C" {
 
 #define MAX_CPDC_SRC_BUF_LEN	(1 << 16)
 #define MAX_CPDC_DST_BUF_LEN	MAX_CPDC_SRC_BUF_LEN
+/*
+ * this arbitrary len is to handle the case of prepadded scratch buffer len
+ * cuasing DC output exceeding beyond 64K
+ */
+#define MAX_CPDC_DST_BUF_LEN_EX	(1024 * 60)
 
 /**
  * struct cpdc_sgl - represents scatter-gather list (sgl) of buffers for

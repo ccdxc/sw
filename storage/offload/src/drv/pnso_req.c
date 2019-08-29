@@ -253,8 +253,17 @@ validate_req_source_buffer(enum pnso_service_type svc_type,
 				sgl->count, err);
 		goto out;
 	}
-
 	len = pbuf_get_buffer_list_len(sgl);
+
+	if ((svc_type == PNSO_SVC_TYPE_COMPRESS) &&
+			(len >= CPDC_MIN_USER_BUFFER_LEN)) {
+		if (!sgl->buffer_0_va) {
+			OSAL_LOG_DEBUG("invalid base/flat buffer virtual address specified! sgl: 0x" PRIx64 " err: %d",
+					(uint64_t) sgl, err);
+			goto out;
+		}
+	}
+
 	switch (svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 		break;
@@ -262,6 +271,9 @@ validate_req_source_buffer(enum pnso_service_type svc_type,
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_DECOMPRESS:
+		if (len == 0 || len > MAX_CPDC_DST_BUF_LEN_EX)
+			goto out_len;
+		break;
 	case PNSO_SVC_TYPE_HASH:
 	case PNSO_SVC_TYPE_CHKSUM:
 		if (len == 0 || len > MAX_CPDC_SRC_BUF_LEN)
@@ -278,7 +290,7 @@ validate_req_source_buffer(enum pnso_service_type svc_type,
 	return err;
 
 out_len:
-	OSAL_LOG_DEBUG("invalid src buf len specified! svc_type: %d len: %zu err: %d",
+	OSAL_LOG_ERROR("invalid src buf len specified! svc_type: %d len: %zu err: %d",
 					svc_type, len, err);
 out:
 	return err;
@@ -523,13 +535,20 @@ validate_res_status(struct pnso_service_status *status)
 	}
 
 	len = pbuf_get_buffer_list_len(sgl);
-	if (len == 0 || len > MAX_CPDC_DST_BUF_LEN) {
-		OSAL_LOG_DEBUG("invalid len in res sgl specified! len: %zu err: %d",
-				len, err);
-		goto out;
+	if (((status->svc_type == PNSO_SVC_TYPE_COMPRESS) ||
+		(status->svc_type == PNSO_SVC_TYPE_DECOMPRESS)) &&
+			((len == 0) || (len > MAX_CPDC_DST_BUF_LEN_EX))) {
+		goto out_len;
+	} else {
+		if (len == 0 || len > MAX_CPDC_DST_BUF_LEN)
+			goto out_len;
 	}
 
 	err = PNSO_OK;
+	return err;
+out_len:
+	OSAL_LOG_ERROR("invalid src buf len specified! svc_type: %d len: %zu err: %d",
+					status->svc_type, len, err);
 out:
 	return err;
 }

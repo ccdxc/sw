@@ -158,8 +158,9 @@ struct seq_crypto_status_desc1 {
 	uint64_t		rsvd4;
 }  __attribute__((__packed__));
 
-void *seq_setup_desc(struct service_info *svc_info, const void *src_desc,
-		size_t desc_size);
+pnso_error_t seq_setup_desc(struct service_info *svc_info, const void *src_desc,
+		size_t desc_size, void **seq_desc_new);
+
 void seq_cleanup_desc(struct service_info *svc_info);
 
 pnso_error_t seq_ring_db(struct service_info *svc_info);

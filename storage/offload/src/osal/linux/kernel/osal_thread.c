@@ -123,7 +123,7 @@ bool osal_thread_should_stop(osal_thread_t* osal_thread)
 	return (bool) kthread_should_stop();
 }
 
-struct workqueue_struct *osal_create_workqueue_fast(char *name, int max_active)
+struct workqueue_struct *osal_create_workqueue_fast(char *name, int max_active, int cpu_id)
 {
 #ifdef _KERNEL
 	int err;
@@ -146,7 +146,16 @@ struct workqueue_struct *osal_create_workqueue_fast(char *name, int max_active)
 		return NULL;
 	}
 	atomic_set(&wq->draining, 0);
-	err = taskqueue_start_threads(&wq->taskqueue, 1 /*max_active*/, PI_NET, "%s cq", name);
+	if (cpu_id >= 0 && cpu_id < osal_get_core_count()) {
+		cpuset_t        cpu_mask;
+
+		CPU_SETOF(cpu_id, &cpu_mask);
+		err = taskqueue_start_threads_cpuset(&wq->taskqueue, 1 /*max_active*/,
+				PI_NET, &cpu_mask, "%s cq", name);
+	} else {
+		err = taskqueue_start_threads(&wq->taskqueue, 1 /*max_active*/,
+				PI_NET, "%s cq", name);
+	}
 	if (err) {
 		OSAL_LOG_ERROR("Failed to start taskqueue threads\n");
 		taskqueue_free(wq->taskqueue);

@@ -21,6 +21,11 @@
 #include "pnso_utils.h"
 
 uint64_t pad_buffer;
+uint64_t cpdc_scratch_buffer;	/* 4K page shared for CP/DC scratch buffers */
+uint64_t cp_scratch_buffer_1;	/* 256-bytes filled with 0s */
+uint64_t cp_scratch_buffer_2;	/* 256-bytes filled with 0xFFs */
+uint64_t dc_scratch_buffer;	/* 256-bytes filled with 0s */
+
 static bool pnso_initialized;
 static struct pc_res_init_params pc_initialized_params;
 
@@ -100,11 +105,33 @@ pnso_init(struct pnso_init_params *pnso_init)
 	pad_buffer = osal_rmem_aligned_calloc(PNSO_MEM_ALIGN_PAGE,
 					      pnso_init->block_size);
 	if (!osal_rmem_addr_valid(pad_buffer)) {
-		OSAL_LOG_ERROR("failed to allocate global pad buffer!");
 		err = ENOMEM;
+		OSAL_LOG_ERROR("failed to allocate global pad buffer! err: %d",
+				err);
 		goto out;
 	}
 	OSAL_LOG_DEBUG("pad buffer allocated: 0x" PRIx64, pad_buffer);
+
+	cpdc_scratch_buffer = osal_rmem_aligned_calloc(PNSO_MEM_ALIGN_PAGE,
+			pnso_init->block_size);
+	if (!osal_rmem_addr_valid(cpdc_scratch_buffer)) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("failed to allocate global 1st CP scratch buffer! err: %d",
+				err);
+		goto out;
+	}
+	cp_scratch_buffer_1 = cpdc_scratch_buffer;
+	OSAL_LOG_DEBUG("cp scratch buffer with 0s allocated: 0x" PRIx64,
+			cp_scratch_buffer_1);
+
+	cp_scratch_buffer_2 = cpdc_scratch_buffer + CPDC_SCRATCH_BUFFER_LEN;
+	osal_rmem_set(cp_scratch_buffer_2, 0xFF, CPDC_SCRATCH_BUFFER_LEN);
+	OSAL_LOG_DEBUG("cp scratch buffer with 0xFFs  allocated: 0x" PRIx64,
+			cp_scratch_buffer_2);
+
+	dc_scratch_buffer = cpdc_scratch_buffer + (CPDC_SCRATCH_BUFFER_LEN * 2);
+	OSAL_LOG_DEBUG("dc scratch buffer allocated: 0x" PRIx64,
+			dc_scratch_buffer);
 
 	pc_initialized_params.max_seq_sq_descs =
 		max((uint32_t)pnso_init->per_core_qdepth,
@@ -231,6 +258,10 @@ pnso_deinit(void)
 		}
 		pc_res_deinit(pcr);
 	}
+
+	if (osal_rmem_addr_valid(cpdc_scratch_buffer))
+		osal_rmem_free(cpdc_scratch_buffer,
+				pc_initialized_params.pnso_init.block_size);
 
 	if (osal_rmem_addr_valid(pad_buffer))
 		osal_rmem_free(pad_buffer,

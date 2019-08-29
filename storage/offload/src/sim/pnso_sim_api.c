@@ -16,11 +16,16 @@
 
 #ifndef ENABLE_PNSO_SONIC_TEST
 OSAL_LICENSE("Dual BSD/GPL");
+#define SIM_EXPORT(fn) OSAL_EXPORT_SYMBOL(fn)
+#define SIM_EXPORT_API(fn) OSAL_EXPORT_SYMBOL(SIM_API(fn))
+#else
+#define SIM_EXPORT(fn)
+#define SIM_EXPORT_API(fn)
 #endif
 
-struct pnso_init_params g_init_params;
+static struct pnso_init_params g_init_params;
 
-pnso_error_t pnso_init(struct pnso_init_params *init_params)
+pnso_error_t SIM_API(init)(struct pnso_init_params *init_params)
 {
 	pnso_error_t rc = PNSO_OK;
 
@@ -39,13 +44,14 @@ pnso_error_t pnso_init(struct pnso_init_params *init_params)
 	    PNSO_OK) {
 		return rc;
 	}
+
 	rc = sim_key_store_init(SIM_KEY_STORE_SZ);
 
 	return rc;
 }
-OSAL_EXPORT_SYMBOL(pnso_init);
+SIM_EXPORT_API(init);
 
-pnso_error_t pnso_register_compression_header_format(
+pnso_error_t SIM_API(register_compression_header_format)(
 		struct pnso_compression_header_format *cp_hdr_fmt,
 		uint16_t hdr_fmt_idx)
 {
@@ -84,18 +90,9 @@ pnso_error_t pnso_register_compression_header_format(
 	format->fmt = *cp_hdr_fmt;
 
 
-	/* Allocate static header */
-	if (format->static_hdr && (total_hdr_len > format->total_hdr_sz)) {
-		/* Avoid memory leak of previously allocated format */
-		osal_free(format->static_hdr);
-		format->static_hdr = NULL;
-		format->total_hdr_sz = 0;
-	}
-	if (total_hdr_len && !format->static_hdr) {
-		format->static_hdr = osal_alloc(total_hdr_len);
-		if (!format->static_hdr) {
-			return ENOMEM;
-		}
+	/* Generate static header */
+	if (total_hdr_len > SIM_MAX_CP_HDR_SZ) {
+		return ENOMEM;
 	}
 	format->total_hdr_sz = total_hdr_len;
 
@@ -112,10 +109,10 @@ pnso_error_t pnso_register_compression_header_format(
 
 	return PNSO_OK;
 }
-OSAL_EXPORT_SYMBOL(pnso_register_compression_header_format);
+SIM_EXPORT_API(register_compression_header_format);
 
 /* Assumes mapping is 1:1 */
-pnso_error_t pnso_add_compression_algo_mapping(
+pnso_error_t SIM_API(add_compression_algo_mapping)(
 		enum pnso_compression_type pnso_algo,
 		uint32_t header_algo)
 {
@@ -125,20 +122,21 @@ pnso_error_t pnso_add_compression_algo_mapping(
 	sim_set_algo_mapping(pnso_algo, header_algo);
 	return PNSO_OK;
 }
-OSAL_EXPORT_SYMBOL(pnso_add_compression_algo_mapping);
+SIM_EXPORT_API(add_compression_algo_mapping);
 
 pnso_error_t pnso_sim_thread_init(int core_id)
 {
 	pnso_error_t rc;
 
-	rc = sim_init_session(core_id);
+	rc = sim_init_session(core_id, &g_init_params);
 	if (rc != PNSO_OK) {
 		return rc;
 	}
 	rc = sim_start_worker_thread(core_id);
+
 	return rc;
 }
-OSAL_EXPORT_SYMBOL(pnso_sim_thread_init);
+SIM_EXPORT(pnso_sim_thread_init);
 
 void pnso_sim_thread_finit(int core_id)
 {
@@ -146,7 +144,7 @@ void pnso_sim_thread_finit(int core_id)
 		sim_finit_session(core_id);
 	}
 }
-OSAL_EXPORT_SYMBOL(pnso_sim_thread_finit);
+SIM_EXPORT(pnso_sim_thread_finit);
 
 /* Free resources used by sim.  Assumes no worker threads running. */
 void pnso_sim_finit(void)
@@ -158,11 +156,13 @@ void pnso_sim_finit(void)
 	}
 
 	sim_key_store_finit();
-	/* TODO: free request memory */
-}
-OSAL_EXPORT_SYMBOL(pnso_sim_finit);
 
-pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
+	sim_finit_worker_pool();
+	sim_finit_req_pool();
+}
+SIM_EXPORT(pnso_sim_finit);
+
+pnso_error_t SIM_API(add_to_batch)(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res)
 {
 	pnso_error_t rc;
@@ -177,9 +177,9 @@ pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
 	return sim_sq_enqueue(core_id, svc_req, svc_res,
 			      NULL, NULL, NULL, false);
 }
-OSAL_EXPORT_SYMBOL(pnso_add_to_batch);
+SIM_EXPORT_API(add_to_batch);
 
-pnso_error_t pnso_flush_batch(completion_cb_t cb,
+pnso_error_t SIM_API(flush_batch)(completion_cb_t cb,
 		void *cb_ctx,
 		pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx)
@@ -197,7 +197,11 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
 		rc = sim_sq_flush(core_id, pnso_sim_sync_completion_cb,
 				  (void *) (uint64_t) core_id, NULL);
 		if (rc == PNSO_OK) {
+#ifdef PNSO_SIM_THREADLESS
+			pnso_sim_run_worker_once(sim_lookup_worker_ctx(core_id));
+#else
 			rc = pnso_sim_sync_wait(core_id);
+#endif
 		}
 	} else {
 		rc = sim_sq_flush(core_id, cb, cb_ctx, pnso_poll_ctx);
@@ -206,11 +210,12 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
 	if (pnso_poll_fn) {
 		*pnso_poll_fn = pnso_sim_poll;
 	}
+
 	return rc;
 }
-OSAL_EXPORT_SYMBOL(pnso_flush_batch);
+SIM_EXPORT_API(flush_batch);
 
-pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
+pnso_error_t SIM_API(submit_request)(struct pnso_service_request *svc_req,
 				 struct pnso_service_result *svc_res,
 				 completion_cb_t cb,
 				 void *cb_ctx,
@@ -234,7 +239,11 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 				    (void *) (uint64_t) core_id,
 				    NULL, true);
 		if (rc == PNSO_OK) {
+#ifdef PNSO_SIM_THREADLESS
+			pnso_sim_run_worker_once(sim_lookup_worker_ctx(core_id));
+#else
 			rc = pnso_sim_sync_wait(core_id);
+#endif
 		}
 	} else {
 		rc = sim_sq_enqueue(core_id, svc_req, svc_res,
@@ -246,8 +255,7 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 
 	return rc;
 }
-OSAL_EXPORT_SYMBOL(pnso_submit_request);
-
+SIM_EXPORT_API(submit_request);
 
 #ifdef __KERNEL__
 #ifndef ENABLE_PNSO_SONIC_TEST

@@ -259,7 +259,7 @@ void sim_key_store_finit(void)
 	g_sim_key_list.slab = NULL;
 }
 
-pnso_error_t pnso_set_key_desc_idx(const void *key1,
+pnso_error_t SIM_API(set_key_desc_idx)(const void *key1,
 				   const void *key2,
 				   uint32_t key_size, uint32_t key_idx)
 {
@@ -285,7 +285,9 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 
 	return PNSO_OK;
 }
-OSAL_EXPORT_SYMBOL(pnso_set_key_desc_idx);
+#ifndef ENABLE_PNSO_SONIC_TEST
+OSAL_EXPORT_SYMBOL(SIM_API(set_key_desc_idx));
+#endif
 
 pnso_error_t sim_get_key_desc_idx(void **key1,
 				  void **key2,

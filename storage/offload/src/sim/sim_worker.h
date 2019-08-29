@@ -56,6 +56,7 @@ pnso_error_t pnso_sim_sync_wait(int core_id);
 void pnso_sim_sync_completion_cb(void *cb_ctx, struct pnso_service_result *svc_res);
 
 /* Worker thread */
+struct sim_worker_ctx *sim_lookup_worker_ctx(int core_id);
 struct sim_worker_ctx *sim_get_worker_ctx(int core_id);
 pnso_error_t sim_start_worker_thread(int core_id);
 pnso_error_t sim_stop_worker_thread(int core_id);
@@ -65,7 +66,10 @@ void sim_workers_spinlock(void);
 void sim_workers_spinunlock(void);
 
 pnso_error_t sim_init_req_pool(uint32_t max_reqs);
+void sim_finit_req_pool(void);
+
 pnso_error_t sim_init_worker_pool(uint32_t max_q_depth);
+void sim_finit_worker_pool(void);
 
 int pnso_sim_run_worker_loop(void *opaque);
 void pnso_sim_run_worker_once(struct sim_worker_ctx *wctx);

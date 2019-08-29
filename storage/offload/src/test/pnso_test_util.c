@@ -252,6 +252,37 @@ int safe_strncmp(const char *str1, const char *str2, uint32_t len)
 	return strncmp(str1, str2, len);
 }
 
+/* Mem compare which returns mismatched offset */
+int safe_memcmp(const uint8_t *blob1, const uint8_t *blob2, uint32_t *cmp_len)
+{
+	uint32_t offset;
+	int ret;
+
+	if (!blob1 || !blob2 || *cmp_len == 0) {
+		*cmp_len = 0;
+		return -1;
+	}
+
+	/* common case */
+	if (0 == memcmp(blob1, blob2, *cmp_len))
+		return 0;
+
+	/* manually find non-matching byte offset */
+	ret = 0;
+	for (offset = 0; offset < *cmp_len; offset++) {
+		if (blob1[offset] < blob2[offset]) {
+			ret = -1;
+			break;
+		} else if (blob1[offset] > blob2[offset]) {
+			ret = 1;
+			break;
+		}
+	}
+
+	*cmp_len = offset;
+	return ret;
+}
+
 static inline unsigned int char2val(char c)
 {
 	if (c >= '0' && c <= '9')

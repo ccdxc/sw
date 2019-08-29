@@ -239,6 +239,7 @@ struct per_core_resource {
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];
 	void *batch_ctx;
+
 	struct pnso_api_stats api_stats;
 };
 

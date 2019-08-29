@@ -23,8 +23,13 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    tc.skip = True
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
+        os = api.GetNodeOs(n)
+        if os not in tc.os:
+            continue
+        tc.skip = False
         cmd = "./pnsotest_%s.py --cfg blocksize.yml globals.yml --test %s" % (api.GetNodeOs(n), tc.args.test)
         if getattr(tc.args, "failtest", False):
             cmd += " --failure-test"
@@ -32,7 +37,6 @@ def Trigger(tc):
         api.Trigger_AddHostCommand(req, n, "dmesg -c > /dev/null")
         api.Trigger_AddHostCommand(req, n, cmd)
         # api.Trigger_AddHostCommand(req, n, "dmesg")
-        os = api.GetNodeOs(n)
         if os == 'linux':
             for c in range(1, 5):
                 api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/%d" % c)
@@ -42,10 +46,13 @@ def Trigger(tc):
         api.Trigger_AddHostCommand(req, n, "dmesg > dmesg.log")
         api.Logger.info("Running PNSO test %s" % cmd)
 
-    tc.resp = api.Trigger(req)
+    if tc.skip is False:
+        tc.resp = api.Trigger(req)
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if tc.skip is True:
+        return api.types.status.SUCCESS
     if tc.resp is None:
         return api.types.status.FAILURE
 

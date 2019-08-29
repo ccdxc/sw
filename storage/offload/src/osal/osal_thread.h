@@ -44,7 +44,7 @@ int osal_thread_stop(osal_thread_t *osal_thread);
 bool osal_thread_is_running(osal_thread_t* osal_thread);
 bool osal_thread_should_stop(osal_thread_t* osal_thread);
 
-struct workqueue_struct *osal_create_workqueue_fast(char *name, int max_active);
+struct workqueue_struct *osal_create_workqueue_fast(char *name, int max_active, int cpu_id);
 #define osal_destroy_workqueue destroy_workqueue
 
 #ifdef __cplusplus

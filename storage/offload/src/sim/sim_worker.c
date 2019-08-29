@@ -44,7 +44,9 @@ static struct sim_q_request *g_req_entries;
 
 static osal_atomic_int_t g_worker_count;
 static osal_atomic_int_t g_worker_lock;
+#ifndef PNSO_SIM_THREADLESS
 static osal_thread_t g_worker_threads[SIM_MAX_SESSIONS];
+#endif
 static struct sim_worker_ctx g_worker_ctxs[SIM_MAX_SESSIONS];
 
 static struct sim_worker_ctx *g_per_core_worker_ctx[SIM_MAX_CPU_CORES];
@@ -124,7 +126,7 @@ static struct sim_worker_ctx *sim_alloc_worker_ctx(void)
 	return &g_worker_ctxs[worker_id];
 }
 
-static struct sim_worker_ctx *sim_lookup_worker_ctx(int core_id)
+struct sim_worker_ctx *sim_lookup_worker_ctx(int core_id)
 {
 	return g_per_core_worker_ctx[core_id];
 }
@@ -164,7 +166,11 @@ static inline bool is_worker_stopping(int core_id)
 	if (!wctx) {
 		return true;
 	}
+#ifdef PNSO_SIM_THREADLESS
+	return false;
+#else
 	return osal_thread_should_stop(wctx->worker);
+#endif
 }
 
 bool sim_is_worker_running(int core_id)
@@ -174,7 +180,11 @@ bool sim_is_worker_running(int core_id)
 	if (!wctx) {
 		return false;
 	}
+#ifdef PNSO_SIM_THREADLESS
+	return true;
+#else
 	return osal_thread_is_running(wctx->worker);
+#endif
 }
 
 /* Global initialization */
@@ -218,6 +228,16 @@ pnso_error_t sim_init_req_pool(uint32_t max_reqs)
 	return PNSO_OK;
 }
 
+void sim_finit_req_pool(void)
+{
+	if (g_req_entries) {
+		osal_free(g_req_entries);
+		g_req_entries = NULL;
+		g_req_entries_count = 0;
+	}
+
+}
+
 static struct sim_q *sim_alloc_queue(uint16_t depth)
 {
 	struct sim_q *q;
@@ -244,6 +264,14 @@ static struct sim_q *sim_alloc_queue(uint16_t depth)
 	return q;
 }
 
+static void sim_free_queue(struct sim_q *q)
+{
+	if (!q)
+		return;
+
+	osal_free(q);
+}
+
 pnso_error_t sim_init_worker_pool(uint32_t max_q_depth)
 {
 	size_t i;
@@ -257,8 +285,10 @@ pnso_error_t sim_init_worker_pool(uint32_t max_q_depth)
 		if (!g_worker_ctxs[i].req_q) {
 			return ENOMEM;
 		}
+#ifndef PNSO_SIM_THREADLESS
 		memset(&g_worker_threads[i], 0, sizeof(g_worker_threads[i]));
 		g_worker_ctxs[i].worker = &g_worker_threads[i];
+#endif
 		g_worker_ctxs[i].sess = NULL;
 	}
 	memset(g_per_core_worker_ctx, 0, sizeof(g_per_core_worker_ctx));
@@ -267,6 +297,16 @@ pnso_error_t sim_init_worker_pool(uint32_t max_q_depth)
 	osal_atomic_init(&g_worker_lock, 0);
 
 	return PNSO_OK;
+}
+
+void sim_finit_worker_pool(void)
+{
+	size_t i;
+
+	for (i = 0; i < SIM_MAX_SESSIONS; i++) {
+		sim_free_queue(g_worker_ctxs[i].req_q);
+		g_worker_ctxs[i].req_q = NULL;
+	}
 }
 
 pnso_error_t sim_sq_enqueue(int core_id,
@@ -586,12 +626,17 @@ int pnso_sim_run_worker_loop(void *opaque)
 
 pnso_error_t sim_start_worker_thread(int core_id)
 {
+#ifndef PNSO_SIM_THREADLESS
 	pnso_error_t rc;
+#endif
 	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
 
 	if (!wctx) {
 		return EINVAL;
 	}
+#ifdef PNSO_SIM_THREADLESS
+	return 0;
+#else
 	if ((rc = osal_thread_create(wctx->worker,
 				     pnso_sim_run_worker_loop,
 				     (void *) (uint64_t) core_id)) == 0) {
@@ -600,6 +645,7 @@ pnso_error_t sim_start_worker_thread(int core_id)
 		}
 	}
 	return rc;
+#endif
 }
 
 pnso_error_t sim_stop_worker_thread(int core_id)
@@ -609,6 +655,10 @@ pnso_error_t sim_stop_worker_thread(int core_id)
 	if (!wctx) {
 		return EINVAL;
 	}
+#ifdef PNSO_SIM_THREADLESS
+	return 0;
+#else
 	return osal_thread_stop(wctx->worker);
+#endif
 }
 

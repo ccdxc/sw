@@ -133,7 +133,7 @@ uint32_t algo_gen_adler32(unsigned char *msg, size_t bytes)
 static uint32_t integer_modulus128(uint128_t a, uint32_t b)
 {
 	/* Use "Russian Peasant" method */
-	uint32_t x = b;
+	uint128_t x = b;
 
 	if (b == 0) {
 		return 0;
@@ -142,6 +142,7 @@ static uint32_t integer_modulus128(uint128_t a, uint32_t b)
 	while (x <= a/2) {
 		x <<= 1;
 	}
+
 	while (a >= b) {
 		if (a >= x) {
 			a -= x;
@@ -186,7 +187,7 @@ uint32_t algo_gen_madler_with_pad(unsigned char* msg, size_t bytes)
 
 uint32_t algo_gen_crc32c(uint8_t *data, uint32_t length)
 {
-	return calculate_crc32c(0, data, length);
+	return calculate_crc32c(0xffffffff, data, length) ^ 0xffffffff;
 }
 
 const uint64_t MCRC64_POLY = 0x9a6c9329ac4bc9b5ULL;

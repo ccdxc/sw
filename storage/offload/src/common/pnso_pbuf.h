@@ -135,6 +135,7 @@ struct pnso_buffer_list *pbuf_clone_buffer_list(
  * pbuf_copy_buffer_list() - copies data from src buflist to dst buflist, and
  * returns the count of bytes copied.
  * @src_buf_list:	[in]	specifies the pointer to a pnso_buffer_list.
+ * @src_offset:		[in]	specifies the start offset into src_buf_list.
  * @dst_buf_list:	[out]	specifies the pointer to a pnso_buffer_list.
  *
  * Return Value:
@@ -143,6 +144,7 @@ struct pnso_buffer_list *pbuf_clone_buffer_list(
  *
  */
 uint32_t pbuf_copy_buffer_list(const struct pnso_buffer_list *src_buf_list,
+			       uint32_t src_offset,
 			       struct pnso_buffer_list *dst_buf_list);
 
 /**

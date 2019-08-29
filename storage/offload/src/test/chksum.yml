@@ -11,7 +11,7 @@ svc_chains:
         - chksum:
             algo_type: '$chksum_algo'
             flags: 0
-            output_file: '%chain_id%_chksum_full.bin'
+            output_file: '%test_id%_chksum_full.bin'
 svc_chains:
   - svc_chain:
       idx: 2
@@ -23,7 +23,7 @@ svc_chains:
         - chksum:
             algo_type: '$chksum_algo'
             flags: 'per_block'
-            output_file: '%chain_id%_chksum_per_block.bin'
+            output_file: '%test_id%_chksum_per_block.bin'
 
 tests:
   - test:
@@ -33,8 +33,13 @@ tests:
       validations:
         - size_compare:
             idx: 1
-            file1: '%chain_id%_chksum_full.bin'
+            file1: '%test_id%_chksum_full.bin'
             val: 8
+        - data_compare:
+            idx: 3
+            file1: '%test_id%_chksum_full.bin'
+            pattern: 0xcbda25f100000000
+            len: 8
   - test:
       idx: 2
       svc_chains: 2
@@ -42,5 +47,26 @@ tests:
       validations:
         - size_compare:
             idx: 1
-            file1: '%chain_id%_chksum_per_block.bin'
+            file1: '%test_id%_chksum_per_block.bin'
             val: 16
+  - test:
+      idx: 3
+      svc_chains: 1
+      repeat: '$iter_low'
+      #repeat: 0xffffffff
+      mode: 'sim'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - size_compare:
+            idx: 2
+            file1: '%test_id%_chksum_full.bin'
+            val: 8
+        - data_compare:
+            idx: 3
+            file1: '%test_id%_chksum_full.bin'
+            file2: '1_chksum_full.bin'
+            #pattern: 0xcbda25f100000000
+            len: 8

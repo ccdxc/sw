@@ -12,8 +12,10 @@ int fill_io_ctx(struct io_ctx *io, char *name, int seed)
 	io->tchain.current_thread = 0;
 	for (int i = 0; i < THREAD_TYPE_MAX; i++) {
 		io->tchain.threads[i] = i;
-		io->src_buflist[i] = malloc(sizeof(struct pnso_buffer_list));
-		io->dst_buflist[i] = malloc(sizeof(struct pnso_buffer_list));
+		io->src_buflist[i] = calloc(sizeof(struct pnso_buffer_list) +
+					    sizeof(struct pnso_flat_buffer), 1);
+		io->dst_buflist[i] = calloc(sizeof(struct pnso_buffer_list) +
+					    sizeof(struct pnso_flat_buffer), 1);
 		io->src_buflist[i]->count = 1;
 		io->dst_buflist[i]->count = 1;
 		if (i > 0) {

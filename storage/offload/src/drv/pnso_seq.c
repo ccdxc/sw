@@ -14,11 +14,12 @@ const struct sequencer_ops *g_sequencer_ops = &model_seq_ops;
 const struct sequencer_ops *g_sequencer_ops = &hw_seq_ops;
 #endif
 
-void *
+pnso_error_t
 seq_setup_desc(struct service_info *svc_info, const void *src_desc,
-		size_t desc_size)
+		size_t desc_size, void **seq_desc_new)
 {
-	return g_sequencer_ops->setup_desc(svc_info, src_desc, desc_size);
+	return g_sequencer_ops->setup_desc(svc_info, src_desc,
+			desc_size, seq_desc_new);
 }
 
 void

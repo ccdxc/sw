@@ -8,7 +8,11 @@
 #include "osal_mem.h"
 
 /*#include "LZR_model.h"*/
+#ifdef PNSO_SIM_MODEL
+#include "third-party/sim_smooth_lzrw1a/lzrw.h"
+#else
 #include "lzrw.h"
+#endif
 
 #include "sim.h"
 #include "sim_chain.h"
@@ -48,7 +52,8 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 #define SCRATCH_MIN_PER_SESSION (CMD_SCRATCH_SZ + (2 * SCRATCH_MIN_DATA_SZ))
 
 
-pnso_error_t sim_init_session(int core_id)
+pnso_error_t sim_init_session(int core_id,
+			      const struct pnso_init_params *init_params)
 {
 	struct sim_worker_ctx *worker_ctx = sim_get_worker_ctx(core_id);
 	struct sim_session *sess;
@@ -131,8 +136,8 @@ pnso_error_t sim_init_session(int core_id)
 	sess->scratch.data[0] = scratch;
 	sess->scratch.data[1] = scratch + (scratch_sz / 2);
 
-	sess->block_sz = g_init_params.block_size;
-	sess->q_depth = g_init_params.per_core_qdepth;
+	sess->block_sz = init_params->block_size;
+	sess->q_depth = init_params->per_core_qdepth;
 	osal_atomic_set(&sess->is_valid, 1);
 
 	return 0;
@@ -140,7 +145,7 @@ pnso_error_t sim_init_session(int core_id)
 
 void sim_finit_session(int core_id)
 {
-	struct sim_worker_ctx *worker_ctx = sim_get_worker_ctx(core_id);
+	struct sim_worker_ctx *worker_ctx = sim_lookup_worker_ctx(core_id);
 	struct sim_session *sess;
 
 	if (!worker_ctx || !worker_ctx->sess) {
@@ -390,14 +395,13 @@ static uint32_t get_ctx_chksum(struct sim_svc_ctx *ctx)
 /* Assumption: hdr is large enough buffer to contain the header */
 static void construct_cp_hdr(struct sim_svc_ctx *ctx,
 			     struct sim_cp_header_format *fmt,
-			     uint32_t cp_len,
+			     uint32_t cp_len, uint32_t chksum,
 			     uint8_t *hdr)
 {
 	size_t i;
-	uint64_t chksum = 0;
 
 	/* Validation */
-	if (!fmt->static_hdr || !fmt->total_hdr_sz) {
+	if (!fmt->total_hdr_sz) {
 		/* Nothing to do */
 		return;
 	}
@@ -406,7 +410,7 @@ static void construct_cp_hdr(struct sim_svc_ctx *ctx,
 	memcpy(hdr, fmt->static_hdr, fmt->total_hdr_sz);
 
 	/* Get previously calculated checksum, if needed */
-	if (fmt->type_mask & (1 << PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM)) {
+	if (!chksum && (fmt->type_mask & (1 << PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM))) {
 		chksum = get_ctx_chksum(ctx->prev_ctx);
 	}
 
@@ -469,14 +473,19 @@ static void parse_cp_hdr(struct sim_svc_ctx *ctx,
 
 static pnso_error_t svc_exec_compress_lzrw1a(struct sim_svc_ctx *ctx,
 					     uint32_t hdr_len,
-					     uint32_t dst_len)
+					     uint32_t dst_len,
+					     uint32_t *chksum)
 {
 	pnso_error_t rc;
 
 	/* Compress data */
 	if (lzrw1a_compress(COMPRESS_ACTION_COMPRESS, ctx->sess->scratch.cmd,
 	     (uint8_t *) ctx->input.buf, ctx->input.len,
-	     (uint8_t *) ctx->output.buf + hdr_len, &dst_len)) {
+	     (uint8_t *) ctx->output.buf + hdr_len, &dst_len
+#ifdef LZR_MODEL
+			    , dst_len, chksum
+#endif
+			    )) {
 		ctx->output.len = dst_len + hdr_len;
 		rc = PNSO_OK;
 		return rc;
@@ -486,13 +495,22 @@ static pnso_error_t svc_exec_compress_lzrw1a(struct sim_svc_ctx *ctx,
 
 static pnso_error_t svc_exec_decompress_lzrw1a(struct sim_svc_ctx *ctx,
 					       uint32_t hdr_len,
-					       uint32_t data_len)
+					       uint32_t data_len,
+					       uint32_t *chksum)
 {
 	uint32_t dst_len = ctx->sess->scratch.data_sz;
 
+#ifdef LZR_MODEL
+	lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, ctx->sess->scratch.cmd,
+			(uint8_t *) ctx->input.buf + hdr_len, data_len,
+			(uint8_t *) ctx->output.buf, &dst_len,
+			dst_len, chksum);
+	if (dst_len) {
+#else
 	if (lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, ctx->sess->scratch.cmd,
 			(uint8_t *) ctx->input.buf + hdr_len, data_len,
-			     (uint8_t *) ctx->output.buf, &dst_len)) {
+			(uint8_t *) ctx->output.buf, &dst_len)) {
+#endif
 		ctx->output.len = dst_len;
 		return PNSO_OK;
 	}
@@ -506,6 +524,7 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 	struct sim_cp_header_format *hdr_fmt = NULL;
 	uint32_t hdr_len = 0;
 	uint32_t dst_len = ctx->sess->scratch.data_sz;
+	uint32_t chksum = 0;
 
 	/* Lookup compression header format */
 	if ((ctx->cmd.u.cp_desc.flags & PNSO_CP_DFLAG_INSERT_HEADER) &&
@@ -537,7 +556,7 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 		rc = svc_exec_noop(ctx, opaque);
 		break;
 	case PNSO_COMPRESSION_TYPE_LZRW1A:
-		rc = svc_exec_compress_lzrw1a(ctx, hdr_len, dst_len);
+		rc = svc_exec_compress_lzrw1a(ctx, hdr_len, dst_len, &chksum);
 		if (rc != PNSO_OK) {
 			goto cp_error;
 		}
@@ -551,7 +570,7 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 	/* Construct compression header */
 	if (rc == PNSO_OK && hdr_len) {
 		construct_cp_hdr(ctx, hdr_fmt, ctx->output.len - hdr_len,
-				 (uint8_t *) ctx->output.buf);
+				 chksum, (uint8_t *) ctx->output.buf);
 	}
 
 	/* Remember unpadded length */
@@ -590,6 +609,7 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 	uint64_t hdr_chksum = 0;
 	uint32_t hdr_algo_type = 0;
 	uint32_t pnso_algo_type = 0;
+	uint32_t chksum = 0;
 
 	ctx->is_chksum_present = 0;
 
@@ -643,7 +663,8 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 	case PNSO_COMPRESSION_TYPE_LZRW1A:
 		rc = svc_exec_decompress_lzrw1a(ctx, hdr_len,
 						hdr_data_len ? hdr_data_len :
-						ctx->input.len);
+						ctx->input.len,
+						&chksum);
 		break;
 	default:
 		svc_exec_noop(ctx, opaque);
@@ -1023,7 +1044,11 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 						hdr_cp_len ? hdr_cp_len :
 						wafl_data->wpd_len,
 						(uint8_t *) ctx->output.buf,
-						&dst_len);
+						&dst_len
+#ifdef LZR_MODEL
+						, dst_len, (uint32_t *) &hdr_chksum
+#endif
+						);
 				ctx->output.len = dst_len;
 			} else {
 				/* Uncompressed.  Just copy. */

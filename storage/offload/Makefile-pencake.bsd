@@ -23,13 +23,27 @@ third-party/libyaml/src/reader.c \
 third-party/libyaml/src/scanner.c \
 third-party/libyaml/src/writer.c \
 src/test/pnso_test_parse.c \
+src/sim/pnso_sim_api.c \
+src/sim/sim_algo.c \
+src/sim/sim_chain.c \
+src/sim/sim_crypto.c \
+src/sim/sim_util.c \
+src/sim/sim_worker.c \
+third-party/sim_smooth_lzrw1a/lzrw1-a.c \
+third-party/freebsd-crypto/src/crc32.c \
+third-party/freebsd-crypto/src/rijndael-alg-fst.c \
+third-party/freebsd-crypto/src/rijndael-api.c \
+third-party/freebsd-crypto/src/rijndael-api-fst.c \
+third-party/freebsd-crypto/src/sha256c.c \
+third-party/freebsd-crypto/src/sha512c.c \
+third-party/freebsd-crypto/src/xform_aes_xts.c \
 device_if.h bus_if.h vnode_if.h pci_if.h 
 
 
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include -I${SRCTOP}/sys/compat/linuxkpi/common/include/linux -I${SRCTOP}/sys/sys
-INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include
+INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include third-party/freebsd-crypto/src src/sim
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
-CFLAGS+= -D__KERNEL__
+CFLAGS+= -D__KERNEL__ -DPNSO_DUAL_MODE -DENABLE_PNSO_SONIC_TEST -DPNSO_SIM_THREADLESS -DPNSO_SIM_MODEL
 
 .include <bsd.kmod.mk>
 

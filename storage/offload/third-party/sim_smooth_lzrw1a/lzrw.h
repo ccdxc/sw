@@ -10,9 +10,13 @@
 //
 #ifndef LZR_MODEL
 #define LZR_MODEL
-typedef unsigned char uint8_t;
+
+#ifndef __KERNEL__
+#include <stdint.h>
+#endif
+//typedef unsigned char uint8_t;
 typedef unsigned char byte;
-typedef unsigned int  uint32_t;
+//typedef unsigned int  uint32_t;
 
 #define COMPRESS_ACTION_COMPRESS   1
 #define COMPRESS_ACTION_DECOMPRESS 2

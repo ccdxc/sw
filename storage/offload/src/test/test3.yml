@@ -17,6 +17,7 @@ svc_chains:
             flags: 'header_present'
             hdr_fmt_idx: 1
             output_file: 'main_decompressed.bin'
+            output_len: '$1block'
         - compress:
             flags: 'zero_pad,insert_header'
             hdr_fmt_idx: 1
@@ -62,6 +63,7 @@ svc_chains:
             flags: 'header_present'
             hdr_fmt_idx: 1
             output_file: '%test_id%_%chain_id%_dc.bin'
+            output_len: '$1block'
 tests:
   - test:
       idx: 1

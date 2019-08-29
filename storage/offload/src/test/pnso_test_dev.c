@@ -26,7 +26,7 @@ static struct cdevsw pnso_test_cdevsw = {
 	.d_write = pnso_test_write,
 	.d_name = DEVNAME,
 };
-#define BUFFERSIZE 40960
+#define BUFFERSIZE (128*1024)
 
 /*
  * XXX: Fix me for multi device support using device softc.

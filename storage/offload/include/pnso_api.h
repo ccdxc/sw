@@ -121,6 +121,7 @@ struct pnso_flat_buffer {
 
 /**
  * struct pnso_buffer_list - describes a scatter/gather buffer list.
+ * @buffer_0_va: specifies the virtual address of first flat buffer.
  * @count: specifies the number of buffers in the list.
  * @buffers: specifies an unbounded array of flat buffers as defined by 'count'.
  *
@@ -129,6 +130,7 @@ struct pnso_flat_buffer {
  *
  */
 struct pnso_buffer_list {
+	uint64_t buffer_0_va;
 	uint32_t count;
 	struct pnso_flat_buffer buffers[0];
 };

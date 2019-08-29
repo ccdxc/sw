@@ -12,6 +12,7 @@
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_utils.h"
 
 /*
  * TODO-cpdc:

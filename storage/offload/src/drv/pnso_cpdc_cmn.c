@@ -605,8 +605,8 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
 		sgl = cpdc_get_sgl(svc_info->si_pcr, true);
 		if (!sgl) {
-			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain sgl from pool! err: %d",
+			err = EAGAIN;
+			OSAL_LOG_DEBUG("cannot obtain sgl from pool! err: %d",
 					err);
 			goto out;
 		}
@@ -628,8 +628,8 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
 			bof_sgl = cpdc_get_sgl(svc_info->si_pcr, true);
 			if (!bof_sgl) {
-				err = ENOMEM;
-				OSAL_LOG_ERROR("cannot obtain pb/bof sgl from pool! err: %d",
+				err = EAGAIN;
+				OSAL_LOG_DEBUG("cannot obtain pb/bof sgl from pool! err: %d",
 						err);
 				goto out;
 			}
@@ -700,7 +700,55 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
+	return err;
+}
+
+static pnso_error_t
+update_service_info_prepad_src_sgl(struct service_info *svc_info)
+{
+	struct service_info *svc_prev;
+	pnso_error_t err;
+
+	/*
+	 * P4+ chainer always expects a vector of SGLs (post CP/DC) for
+	 * ease of modification and this is true regardless of whether
+	 * the next service is operating per-block or full block.
+	 *
+	 * When a service is first in chain, there are no constraints
+	 * and it can use any types of SGL.
+	 *
+	 * Note also that if the parent service is not CP/DC, then
+	 * SGL modifications wouldn't be applicable so the current
+	 * service can also use any types of SGL.
+	 */
+	if (chn_service_is_starter(svc_info) ||
+	    !chn_service_prev_svc_type_is_cpdc(svc_info)) {
+		if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
+				(svc_info->si_src_blist.len >=
+				 CPDC_MIN_USER_BUFFER_LEN)) {
+			err = putil_get_cp_prepad_packed_sgl(svc_info->si_pcr,
+					&svc_info->si_src_blist,
+					CPDC_SGL_TUPLE_LEN_MAX,
+					MPOOL_TYPE_CPDC_SGL,
+					&svc_info->si_src_sgl);
+		} else {
+			err = pc_res_sgl_packed_get(svc_info->si_pcr,
+					&svc_info->si_src_blist,
+					CPDC_SGL_TUPLE_LEN_MAX,
+					MPOOL_TYPE_CPDC_SGL,
+					&svc_info->si_src_sgl);
+		}
+	} else {
+		svc_prev = chn_service_prev_svc_get(svc_info);
+		err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
+				&svc_info->si_src_blist,
+				svc_info->si_block_size,
+				MPOOL_TYPE_CPDC_SGL_VECTOR,
+				&svc_info->si_src_sgl,
+				chn_service_is_cp_padding_applic(svc_prev));
+	}
+
 	return err;
 }
 
@@ -730,7 +778,14 @@ cpdc_update_service_info_src_sgl(struct service_info *svc_info)
 				&svc_info->si_src_sgl);
 	} else {
 		svc_prev = chn_service_prev_svc_get(svc_info);
-		err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
+		err = ((svc_prev->si_type == PNSO_SVC_TYPE_DECOMPRESS) &&
+				(svc_prev->si_dst_blist.len >=
+				 CPDC_MIN_USER_BUFFER_LEN)) ?
+			pc_res_sgl_packed_get(svc_info->si_pcr,
+				&svc_info->si_src_blist,
+				CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+				&svc_info->si_src_sgl) :
+			pc_res_sgl_vec_packed_get(svc_info->si_pcr,
 				&svc_info->si_src_blist,
 				svc_info->si_block_size,
 				MPOOL_TYPE_CPDC_SGL_VECTOR,
@@ -754,10 +809,19 @@ cpdc_update_service_info_dst_sgl(struct service_info *svc_info)
 				MPOOL_TYPE_CPDC_SGL_VECTOR,
 				&svc_info->si_dst_sgl, false);
 	} else {
-		err = pc_res_sgl_packed_get(svc_info->si_pcr,
-				&svc_info->si_dst_blist,
-				CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
-				&svc_info->si_dst_sgl);
+		err = ((svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS) &&
+				(svc_info->si_dst_blist.len >=
+				 CPDC_MIN_USER_BUFFER_LEN)) ?
+			putil_get_dc_prepad_packed_sgl(svc_info->si_pcr,
+					&svc_info->si_dst_blist,
+					CPDC_SGL_TUPLE_LEN_MAX,
+					MPOOL_TYPE_CPDC_SGL,
+					&svc_info->si_dst_sgl) :
+			pc_res_sgl_packed_get(svc_info->si_pcr,
+					&svc_info->si_dst_blist,
+					CPDC_SGL_TUPLE_LEN_MAX,
+					MPOOL_TYPE_CPDC_SGL,
+					&svc_info->si_dst_sgl);
 	}
 
 	return err;
@@ -768,7 +832,7 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 {
 	pnso_error_t err;
 
-	err = cpdc_update_service_info_src_sgl(svc_info);
+	err = update_service_info_prepad_src_sgl(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
 		goto out;
@@ -1026,7 +1090,7 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 		cpdc_chain->ccp_cmd.ccpc_intr_en = 1;
 		err = seq_setup_cpdc_chain_status_desc(svc_info);
 		if (err != PNSO_OK)
-			OSAL_LOG_ERROR("failed setup chain status desc: err %d",
+			OSAL_LOG_DEBUG("failed setup chain status desc: err %d",
 					err);
 	} else {
 		chain->sc_async_evid = sonic_intr_get_ev_id(pcr,

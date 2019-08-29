@@ -34,6 +34,8 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	uint32_t src_buf_len = svc_info->si_src_blist.len;
 	uint32_t dst_buf_len = svc_info->si_dst_blist.len;
 	uint64_t aligned_addr;
+	struct cpdc_sgl *sgl;
+	uint32_t scratch_buf_len = 0;
 	pnso_error_t err;
 
 	memset(desc, 0, sizeof(*desc));
@@ -55,10 +57,15 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
+	sgl = svc_info->si_dst_sgl.sgl;
+	if (sgl->cs_len_0 == CPDC_SCRATCH_BUFFER_LEN)
+		scratch_buf_len = CPDC_SCRATCH_BUFFER_LEN;
+
 	desc->cd_datain_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 							  src_buf_len);
-	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
-							     dst_buf_len);
+	desc->cd_threshold_len =
+		cpdc_desc_data_len_set_eval(svc_info->si_type,
+				dst_buf_len + scratch_buf_len);
 
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
 			&aligned_addr, CPDC_STATUS_INTEG_CLEAR_SZ);
@@ -90,15 +97,15 @@ decompress_setup(struct service_info *svc_info,
 
 	dc_desc = cpdc_get_desc(svc_info, false);
 	if (!dc_desc) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("cannot obtain dc desc from pool! err: %d", err);
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("cannot obtain dc desc from pool! err: %d", err);
 		goto out;
 	}
 	svc_info->si_desc = dc_desc;
 
 	err = cpdc_setup_status_desc(svc_info, false);
 	if (err) {
-		OSAL_LOG_ERROR("cannot obtain dc status desc from pool! err: %d",
+		OSAL_LOG_DEBUG("cannot obtain dc status desc from pool! err: %d",
 				err);
 		goto out;
 	}
@@ -131,7 +138,7 @@ decompress_setup(struct service_info *svc_info,
 
 	err = svc_seq_desc_setup(svc_info, dc_desc, sizeof(*dc_desc), 0);
 	if (err) {
-		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+		OSAL_LOG_DEBUG("failed to setup sequencer desc! err: %d", err);
 		goto out;
 	}
 
@@ -143,7 +150,7 @@ decompress_setup(struct service_info *svc_info,
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -292,6 +299,9 @@ decompress_write_result(struct service_info *svc_info)
 	struct cpdc_desc *dc_desc;
 	struct cpdc_status_desc *status_desc;
 
+	struct cpdc_sgl *sgl;
+	uint32_t scratch_buf_len = 0;
+
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
@@ -325,9 +335,20 @@ decompress_write_result(struct service_info *svc_info)
 		goto pass_err;
 	}
 
-	svc_status->u.dst.data_len =
+	sgl = svc_info->si_dst_sgl.sgl;
+	if (sgl->cs_len_0 == CPDC_SCRATCH_BUFFER_LEN)
+		scratch_buf_len = CPDC_SCRATCH_BUFFER_LEN;
+
+	svc_status->u.dst.data_len = scratch_buf_len ?
+		cpdc_desc_data_len_get_eval(svc_info->si_type,
+				status_desc->csd_output_data_len) -
+				scratch_buf_len :
 		cpdc_desc_data_len_get_eval(svc_info->si_type,
 				status_desc->csd_output_data_len);
+	OSAL_LOG_DEBUG("scratch_buf_len: %u csd_output_data_len: %u svc_status->u.dst.data_len: %u",
+			scratch_buf_len, status_desc->csd_output_data_len,
+			svc_status->u.dst.data_len);
+
 	chn_service_deps_data_len_set(svc_info, svc_status->u.dst.data_len);
 
 	PAS_INC_NUM_DC_BYTES_OUT(svc_info->si_pcr,

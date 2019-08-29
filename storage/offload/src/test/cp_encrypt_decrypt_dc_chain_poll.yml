@@ -30,6 +30,7 @@ svc_chains:
             flags: 'header_present'
             hdr_fmt_idx: 1
             output_file: '%chain_id%_decompressed.bin'
+            output_len: '$2block'
 tests:
   - test:
       idx: 1

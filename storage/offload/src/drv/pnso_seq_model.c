@@ -8,11 +8,11 @@
 
 #include "pnso_seq_ops.h"
 
-static void *
+static pnso_error_t
 model_setup_desc(struct service_info *svc_info, const void *src_desc,
-		size_t desc_size)
+		size_t desc_size, void **seq_desc_new)
 {
-	return NULL;	/* EOPNOTSUPP */
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t

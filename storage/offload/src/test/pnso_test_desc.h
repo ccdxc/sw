@@ -102,8 +102,9 @@ struct test_crypto_key {
 };
 
 #define TEST_MAX_NAME_LEN 64
-#define TEST_MAX_PATTERN_LEN 8196
-#define TEST_MAX_BIN_PATTERN_LEN (TEST_MAX_PATTERN_LEN/2)
+#define TEST_MAX_PATTERN_LEN 65536 //((4 * 4096) + 8) //8196
+//#define TEST_MAX_BIN_PATTERN_LEN (TEST_MAX_PATTERN_LEN/2)
+#define TEST_MAX_BIN_PATTERN_LEN TEST_MAX_PATTERN_LEN
 #define TEST_MAX_PATH_LEN 128
 #define TEST_MAX_REASON_LEN 128
 #define TEST_MAX_FILE_PREFIX_LEN 32
@@ -121,6 +122,11 @@ enum {
 	FILE_FORMAT_PATTERN,
 };
 
+struct test_blob {
+	uint32_t len;
+	uint8_t *data;
+};
+
 struct test_input_desc {
 	uint16_t format; /* FILE_FORMAT_* */
 	uint32_t offset;
@@ -130,7 +136,8 @@ struct test_input_desc {
 	uint32_t block_count;
 	uint32_t random_seed;
 	uint32_t random_len;
-	char pattern[TEST_MAX_PATTERN_LEN];
+	//char pattern[TEST_MAX_PATTERN_LEN];
+	struct test_blob pattern;
 	char pathname[TEST_MAX_PATH_LEN];
 	char output_path[TEST_MAX_PATH_LEN];
 };
@@ -180,7 +187,9 @@ static inline struct pnso_service *get_cur_svc(struct test_node *node)
 	VALIDATION_TYPE(DATA_COMPARE), \
 	VALIDATION_TYPE(SIZE_COMPARE), \
 	VALIDATION_TYPE(RETCODE_COMPARE), \
-	VALIDATION_TYPE(DATA_LEN_COMPARE)
+	VALIDATION_TYPE(DATA_LEN_COMPARE), \
+	VALIDATION_TYPE(DATA_INPUT_COMPARE), \
+	VALIDATION_TYPE(DATA_OUTPUT_COMPARE)
 
 #undef VALIDATION_TYPE
 #define VALIDATION_TYPE(name) VALIDATION_##name
@@ -194,7 +203,9 @@ enum {
 static inline bool validation_is_per_req(uint16_t type)
 {
 	return (type == VALIDATION_RETCODE_COMPARE) ||
-		(type == VALIDATION_DATA_LEN_COMPARE);
+		(type == VALIDATION_DATA_LEN_COMPARE) ||
+		(type == VALIDATION_DATA_INPUT_COMPARE) ||
+		(type == VALIDATION_DATA_OUTPUT_COMPARE);
 }
 
 enum {
@@ -216,6 +227,15 @@ enum {
 	DYN_OFFSET_START = DYN_OFFSET_EOB,
 };
 
+enum {
+	RANDOM_SEED_START_TIME = 0xffffffff,
+	RANDOM_SEED_REQ_ID     = 0xfffffffe,
+	RANDOM_SEED_REQ_TIME   = 0xfffffffd,
+
+	/* Must equal last entry */
+	RANDOM_SEED_START = RANDOM_SEED_REQ_TIME
+};
+
 #define VALIDATION_FLAG_CHECK_RETCODE     0x01
 #define VALIDATION_FLAG_CHECK_REQ_RETCODE 0x02
 
@@ -227,10 +247,12 @@ struct test_validation {
 	uint16_t flags;
 	char file1[TEST_MAX_PATH_LEN];
 	char file2[TEST_MAX_PATH_LEN];
-	char pattern[TEST_MAX_PATTERN_LEN];
+	//char pattern[TEST_MAX_PATTERN_LEN];
+	struct test_blob pattern;
 	uint32_t offset;
 	uint32_t len;
 	uint32_t svc_chain_idx;
+	uint32_t svc_idx;
 	pnso_error_t retcode;
 	pnso_error_t req_retcode;
 	uint32_t svc_count;
@@ -257,6 +279,7 @@ enum {
 	SYNC_MODE_SYNC,
 	SYNC_MODE_ASYNC,
 	SYNC_MODE_POLL,
+	SYNC_MODE_SIM,
 
 	/* Must be last */
 	SYNC_MODE_MAX
@@ -278,11 +301,11 @@ struct test_testcase {
 };
 
 #define TEST_ALIAS_MAX_NAME_LEN 32
-#define TEST_ALIAS_MAX_VAL_LEN 80
+#define TEST_ALIAS_MAX_VAL_LEN 65536
 struct test_alias {
 	struct test_node node;
 	char name[TEST_ALIAS_MAX_NAME_LEN];
-	char val[TEST_ALIAS_MAX_VAL_LEN];
+	struct test_blob val;
 };
 
 struct test_desc {

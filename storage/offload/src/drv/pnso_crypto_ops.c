@@ -234,11 +234,13 @@ crypto_src_dst_aol_fill(struct service_info *svc_info)
 	}
 
 	if (src_err) {
-		OSAL_LOG_ERROR("failed to build crypto src_aol");
+		OSAL_LOG_DEBUG("failed to build crypto src_aol! err: %d",
+				src_err);
 		return src_err;
 	}
 	if (dst_err) {
-		OSAL_LOG_ERROR("failed to build crypto dst_aol");
+		OSAL_LOG_DEBUG("failed to build crypto dst_aol! err: %d",
+				dst_err);
 		return dst_err;
 	}
 

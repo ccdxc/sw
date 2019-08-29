@@ -82,6 +82,7 @@ def Setup(tc):
     tc.tcdir = "%s/%s" % (api.GetTopDir(), pnsodefs.PNSO_TCDIR)
     tc.tmpdir = "/tmp/%s_%d" % (os.environ["USER"], os.getpid())
     tc.ymldir = "%s/%s" % (api.GetTopDir(), pnsodefs.YMLDIR)
+    tc.os = __get_param(tc, 'os', [ 'linux', 'freebsd', 'esx' ] )
 
     inputlen = __get_param(tc, 'inputlen', pnsodefs.PNSO_TEST_DEFAULT_INPUT_LEN)
     tc.args.x2inputlen = inputlen * 2

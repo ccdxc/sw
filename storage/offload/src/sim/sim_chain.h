@@ -46,13 +46,15 @@ struct sim_svc_ctx {
 	struct pnso_flat_buffer output;
 };
 
+#define SIM_MAX_CP_HDR_SZ 16
+
 struct sim_cp_header_format {
 	uint32_t fmt_idx;
 	uint32_t total_hdr_sz;
 	uint16_t flags;
 	uint16_t type_mask;
 	enum pnso_compression_type pnso_algo;
-	uint8_t *static_hdr;
+	uint8_t static_hdr[SIM_MAX_CP_HDR_SZ];
 	struct pnso_compression_header_format fmt;
 };
 
@@ -60,7 +62,8 @@ struct sim_cp_header_format {
 struct sim_worker_ctx;
 
 void sim_init_globals(void);
-pnso_error_t sim_init_session(int core_id);
+pnso_error_t sim_init_session(int core_id,
+			      const struct pnso_init_params *init_params);
 void sim_finit_session(int core_id);
 
 void sim_set_algo_mapping(enum pnso_compression_type pnso_algo,

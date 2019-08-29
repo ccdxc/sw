@@ -152,6 +152,14 @@ static void free_cp_hdr_mapping(struct test_cp_hdr_mapping *mapping)
 	TEST_FREE(mapping);
 }
 
+static void free_alias(struct test_alias *alias)
+{
+	if (alias->val.data) {
+		TEST_FREE(alias->val.data);
+	}
+	TEST_FREE(alias);
+}
+
 static void free_svc(struct test_svc *svc)
 {
 	if (svc->svc.svc_type == PNSO_SVC_TYPE_ENCRYPT ||
@@ -170,11 +178,18 @@ static void free_svc_chain(struct test_svc_chain *chain)
 	FOR_EACH_NODE_SAFE(chain->svcs) {
 		free_svc((struct test_svc *) node);
 	}
+	if (chain->input.pattern.data) {
+		TEST_FREE(chain->input.pattern.data);
+	}
 	TEST_FREE(chain);
 }
 
 static void free_validation(struct test_validation *validation)
 {
+	if (validation->pattern.data) {
+		TEST_FREE(validation->pattern.data);
+	}
+
 	TEST_FREE(validation);
 }
 
@@ -199,7 +214,7 @@ void test_free_desc(struct test_desc *desc)
 	}
 
 	FOR_EACH_NODE_SAFE(desc->aliases) {
-		TEST_FREE(node);
+		free_alias((struct test_alias *) node);
 	}
 	FOR_EACH_NODE_SAFE(desc->svc_chains) {
 		free_svc_chain((struct test_svc_chain *) node);
@@ -234,6 +249,11 @@ static const char *yaml_event_type_to_string(int event_type)
 	return type_strs[event_type];
 }
 #endif
+
+static bool is_hex_prefix(const char *str)
+{
+	return (str && str[0] == '0' && (str[1] == 'x' || str[1] == 'X'));
+}
 
 static void dump_svc(struct test_svc *svc)
 {
@@ -302,8 +322,8 @@ static void dump_svc_chain(struct test_svc_chain *svc_chain)
 	if (svc_chain->input.len) {
 		PNSO_LOG("      length %u\n", svc_chain->input.len);
 	}
-	if (svc_chain->input.pattern[0]) {
-		PNSO_LOG("      pattern %s\n", svc_chain->input.pattern);
+	if (svc_chain->input.pattern.data) {
+		PNSO_LOG("      pattern %s\n", svc_chain->input.pattern.data);
 	}
 	if (svc_chain->input.pathname[0]) {
 		PNSO_LOG("      filename %s\n", svc_chain->input.pathname);
@@ -338,8 +358,8 @@ static void dump_validation(struct test_validation *validation)
 	if (validation->file2[0]) {
 		PNSO_LOG("        File2 %s\n", validation->file2);
 	}
-	if (validation->pattern[0]) {
-		PNSO_LOG("        Pattern %s\n", validation->pattern);
+	if (validation->pattern.data) {
+		PNSO_LOG("        Pattern %s\n", validation->pattern.data);
 	}
 	if (validation->offset) {
 		PNSO_LOG("        Offset %u\n", validation->offset);
@@ -407,7 +427,7 @@ void test_dump_desc(struct test_desc *desc)
 		PNSO_LOG("Aliases:\n");
 		FOR_EACH_NODE(desc->aliases) {
 			struct test_alias *alias = (struct test_alias *) node;
-			PNSO_LOG("  %s=%s\n", alias->name, alias->val);
+			PNSO_LOG("  %s=%s\n", alias->name, (const char *) alias->val.data);
 		}
 	}
 
@@ -556,6 +576,8 @@ struct svc_param_desc {
 	{ #name, sizeof(#name)-1, 0, SYNC_MODE_##name }
 #define CMP_TYPE_DESC(name) \
 	{ #name, sizeof(#name)-1, 0, COMPARE_TYPE_##name }
+#define RANDOM_SEED_DESC(name) \
+	{ #name, sizeof(#name)-1, 0, RANDOM_SEED_##name }
 
 /* Keep alphabetized */
 static struct svc_param_desc g_dflag_map[] = {
@@ -610,6 +632,7 @@ static struct svc_param_desc g_cp_hdr_field_map[] = {
 static struct svc_param_desc g_sync_mode_map[] = {
 	SYNC_MODE_DESC(ASYNC),
 	SYNC_MODE_DESC(POLL),
+	SYNC_MODE_DESC(SIM),
 	SYNC_MODE_DESC(SYNC),
 
 	/* Must be last */
@@ -633,6 +656,16 @@ static struct svc_param_desc g_cmp_type_map[] = {
 static struct svc_param_desc g_dyn_offset_map[] = {
 	{ "eob", 3, 0, DYN_OFFSET_EOB },
 	{ "eof", 3, 0, DYN_OFFSET_EOF },
+
+	/* Must be last */
+	{ NULL, 0, 0, 0 }
+};
+
+/* Keep alphabetized */
+static struct svc_param_desc g_random_seed_map[] = {
+	RANDOM_SEED_DESC(REQ_ID),
+	RANDOM_SEED_DESC(REQ_TIME),
+	RANDOM_SEED_DESC(START_TIME),
 
 	/* Must be last */
 	{ NULL, 0, 0, 0 }
@@ -695,7 +728,7 @@ static const char *lookup_alias_val(struct test_desc *desc, const char *name, ui
 		return NULL;
 	}
 
-	return found_alias->val;
+	return (const char *) found_alias->val.data;
 }
 
 static struct svc_param_desc *lookup_svc_param(struct svc_param_desc *param_map,
@@ -837,6 +870,50 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 	return EINVAL; \
 }
 
+#define FUNC_SET_BLOB(fname, field, maxlen) \
+static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
+			  const char *val) \
+{ \
+	uint32_t len; \
+	pnso_error_t err; \
+ \
+	ALIAS_SWAP(root, val); \
+	PNSO_LOG_TRACE("Calling %s(%s)\n", #fname, val ? val : ""); \
+	if ((field)->data) { \
+		TEST_FREE((field)->data); \
+		(field)->data = 0; \
+		(field)->len = 0; \
+	} \
+	if (is_hex_prefix(val)) { \
+		len = maxlen; \
+		err = parse_hex(val, NULL, &len); \
+		if (err) return EINVAL; \
+		(field)->data = TEST_ALLOC(len + 1); \
+		if (!(field)->data) { \
+			PNSO_LOG_ERROR("Failed to alloc hex blob of len %u", len); \
+			return EINVAL; \
+		} \
+		parse_hex(val, (field)->data, &len); \
+		(field)->data[len] = 0; \
+		(field)->len = len; \
+	} else { \
+		len = strlen(val); \
+		if (len > maxlen) { \
+			PNSO_LOG_ERROR("Invalid string length %u in %s, max %u\n", \
+				       len, #fname, maxlen); \
+			return EINVAL; \
+		} \
+		(field)->data = TEST_ALLOC(len + 1); \
+		if (!(field)->data) { \
+			PNSO_LOG_ERROR("Failed to alloc ascii blob of len %u", len); \
+			return EINVAL; \
+		} \
+		(field)->len = len; \
+		safe_strcpy((char*)(field)->data, val, len + 1); \
+	} \
+	return PNSO_OK; \
+}
+
 #define FUNC_SET_STATIC(fname, field, static_val) \
 static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 			  const char *val) \
@@ -904,16 +981,17 @@ FUNC_SET_INT(test_set_idx, parent->idx, 1, UINT_MAX)
 FUNC_SET_STRING(test_set_svc_chain_name, ((struct test_svc_chain *)parent)->name,
 		TEST_MAX_NAME_LEN)
 FUNC_SET_INT(test_set_svc_chain_batch_weight, ((struct test_svc_chain *)parent)->batch_weight, 1, TEST_MAX_BATCH_DEPTH)
-FUNC_SET_INT(test_set_input_random, ((struct test_svc_chain *)parent)->input.random_seed, 0, UINT_MAX)
+FUNC_SET_PARAM(test_set_input_random, ((struct test_svc_chain *)parent)->input.random_seed,
+		g_random_seed_map, 0, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_random_len, ((struct test_svc_chain *)parent)->input.random_len, 0, TEST_MAX_RANDOM_LEN)
-FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 1, UINT_MAX)
+FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_len, ((struct test_svc_chain *)parent)->input.len, 1, UINT_MAX)
 FUNC_SET_INT(test_set_input_min_block, ((struct test_svc_chain *)parent)->input.min_block_size, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_max_block, ((struct test_svc_chain *)parent)->input.max_block_size, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_block_count, ((struct test_svc_chain *)parent)->input.block_count, 0, 1024)
 FUNC_SET_STRING(test_set_input_file, ((struct test_svc_chain *)parent)->input.pathname, TEST_MAX_PATH_LEN)
 FUNC_SET_STRING(test_set_input_output_file, ((struct test_svc_chain *)parent)->input.output_path, TEST_MAX_PATH_LEN)
-FUNC_SET_STRING(test_set_input_pattern, ((struct test_svc_chain *)parent)->input.pattern, TEST_MAX_PATTERN_LEN)
+FUNC_SET_BLOB(test_set_input_pattern, &((struct test_svc_chain *)parent)->input.pattern, TEST_MAX_PATTERN_LEN)
 FUNC_SET_STRING(test_set_output_file, ((struct test_svc *)parent)->output_path, TEST_MAX_PATH_LEN)
 
 FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat, 0, LLONG_MAX)
@@ -930,7 +1008,7 @@ FUNC_SET_STRING(test_set_validation_file1, ((struct test_validation *)parent)->f
 		TEST_MAX_PATH_LEN)
 FUNC_SET_STRING(test_set_validation_file2, ((struct test_validation *)parent)->file2,
 		TEST_MAX_PATH_LEN)
-FUNC_SET_STRING(test_set_validation_pattern, ((struct test_validation *)parent)->pattern, TEST_MAX_PATTERN_LEN)
+FUNC_SET_BLOB(test_set_validation_pattern, &((struct test_validation *)parent)->pattern, TEST_MAX_PATTERN_LEN)
 FUNC_SET_PARAM(test_set_compare_type, ((struct test_validation *)parent)->cmp_type,
 	       g_cmp_type_map, 0, 0, COMPARE_TYPE_MAX-1)
 
@@ -939,6 +1017,7 @@ FUNC_SET_PARAM(test_set_validation_data_offset, ((struct test_validation *)paren
 FUNC_SET_PARAM(test_set_validation_data_len, ((struct test_validation *)parent)->len,
 	       g_dyn_offset_map, 0, 0, UINT_MAX)
 FUNC_SET_INT(test_set_validation_svc_chain, ((struct test_validation *)parent)->svc_chain_idx, 0, UINT_MAX)
+FUNC_SET_INT(test_set_validation_svc_idx, ((struct test_validation *)parent)->svc_idx, 0, UINT_MAX)
 FUNC_SET_INT_EXT(test_set_validation_retcode, ((struct test_validation *)parent)->retcode, 0, UINT_MAX,
 		 ((struct test_validation *)parent)->flags |= VALIDATION_FLAG_CHECK_RETCODE)
 FUNC_SET_INT_EXT(test_set_validation_req_retcode, ((struct test_validation *)parent)->req_retcode, 0, UINT_MAX,
@@ -1003,11 +1082,24 @@ static pnso_error_t test_set_alias(struct test_desc *root,
 		memcpy(alias->name, alias_name, name_len);
 		alias->name[name_len] = '\0';
 		test_node_insert(&root->aliases, &alias->node);
+	} else {
+		/* Cleanup old value */
+		if (alias->val.data) {
+			TEST_FREE(alias->val.data);
+			alias->val.data = NULL;
+		}
+		alias->val.len = 0;
 	}
 
 	/* Set new value string */
-	memcpy(alias->val, alias_val, val_len);
-	alias->val[val_len] = '\0';
+	alias->val.data = TEST_ALLOC(val_len + 1);
+	if (!alias->val.data) {
+		PNSO_LOG_ERROR("Failed to alloc alias val of len %u", val_len);
+		return EINVAL;
+	}
+	memcpy(alias->val.data, alias_val, val_len);
+	alias->val.data[val_len] = 0;
+	alias->val.len = val_len;
 
 	return PNSO_OK;
 }
@@ -1093,7 +1185,10 @@ static inline uint32_t xtoint(char c)
 	return 0;
 }
 
-/* Parse input data such as "03 a7 2b 80 ff" */
+/*
+ * Parse input data such as "03 a7 2b 80 ff or 0x03 0x07 0x2b"
+ * If dst == NULL, just set the dst_len
+ */
 pnso_error_t parse_hex(const char *src, uint8_t *dst, uint32_t *dst_len)
 {
 	uint32_t max_len = *dst_len;
@@ -1101,6 +1196,10 @@ pnso_error_t parse_hex(const char *src, uint8_t *dst, uint32_t *dst_len)
 	while (*src) {
 		if (isspace(*src)) {
 			src++;
+			continue;
+		}
+		if (is_hex_prefix(src)) {
+			src += 2;
 			continue;
 		}
 		if (!isxdigit(*src) || !isxdigit(*(src+1))) {
@@ -1111,9 +1210,11 @@ pnso_error_t parse_hex(const char *src, uint8_t *dst, uint32_t *dst_len)
 				       "parse_hex\n", max_len);
 			return EINVAL;
 		}
-		*dst = (xtoint(*src) << 4) | xtoint(*(src+1));
+		if (dst) {
+			*dst = (xtoint(*src) << 4) | xtoint(*(src+1));
+			dst++;
+		}
 		(*dst_len)++;
-		dst++;
 		src += 2;
 	}
 
@@ -1826,6 +1927,8 @@ CHILD_NODE_DESC(tests_test_validations, data_compare,    test_create_validation,
 CHILD_NODE_DESC(tests_test_validations, size_compare,    test_create_validation, NULL, (void*)VALIDATION_SIZE_COMPARE) \
 CHILD_NODE_DESC(tests_test_validations, retcode_compare, test_create_validation, NULL, (void*)VALIDATION_RETCODE_COMPARE) \
 CHILD_NODE_DESC(tests_test_validations, data_len_compare, test_create_validation, NULL, (void*)VALIDATION_DATA_LEN_COMPARE) \
+CHILD_NODE_DESC(tests_test_validations, data_input_compare, test_create_validation, NULL, (void*)VALIDATION_DATA_INPUT_COMPARE) \
+CHILD_NODE_DESC(tests_test_validations, data_output_compare, test_create_validation, NULL, (void*)VALIDATION_DATA_OUTPUT_COMPARE) \
 \
 CHILD_NODE_DESC(tests_test_validations_data_compare, idx,          NULL, test_set_idx, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_compare, type,         NULL, test_set_compare_type, NULL) \
@@ -1855,6 +1958,23 @@ CHILD_NODE_DESC(tests_test_validations_data_len_compare, type,         NULL, tes
 CHILD_NODE_DESC(tests_test_validations_data_len_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_len_compare, val,          NULL, test_set_validation_data_len, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_len_compare, svc_vals,     NULL, test_set_validation_svc_retcodes, NULL) \
+\
+CHILD_NODE_DESC(tests_test_validations_data_input_compare, idx,          NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_input_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_input_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_input_compare, file1,        NULL, test_set_validation_file1, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_input_compare, pattern,      NULL, test_set_validation_pattern, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_input_compare, offset,       NULL, test_set_validation_data_offset, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_input_compare, len,          NULL, test_set_validation_data_len, NULL) \
+\
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, idx,          NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, svc_idx,      NULL, test_set_validation_svc_idx, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, file1,        NULL, test_set_validation_file1, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, pattern,      NULL, test_set_validation_pattern, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, offset,       NULL, test_set_validation_data_offset, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_output_compare, len,          NULL, test_set_validation_data_len, NULL) \
 \
 CHILD_NODE_DESC(cp_hdr_formats, format,        test_create_cp_hdr_format, NULL, NULL) \
 CHILD_NODE_DESC(cp_hdr_formats_format, idx,           NULL,  test_set_idx, NULL) \

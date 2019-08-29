@@ -17,8 +17,9 @@ extern "C" {
 #endif
 
 struct sequencer_ops {
-	void * (*setup_desc)(struct service_info *svc_info,
-			const void *src_desc, size_t desc_size);
+	pnso_error_t (*setup_desc)(struct service_info *svc_info,
+			const void *src_desc, size_t desc_size,
+			void **seq_desc_new);
 
 	void (*cleanup_desc)(struct service_info *svc_info);
 

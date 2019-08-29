@@ -20,7 +20,7 @@
 #include "pnso_pbuf.h"
 #include "pnso_util.h"
 
-#ifdef PNSO_SIM
+#if defined(PNSO_SIM) || defined(PNSO_DUAL_MODE)
 #include "sim.h"
 #endif
 
@@ -31,6 +31,7 @@ static osal_atomic_int_t g_shutdown_complete;
 
 static osal_atomic_int_t g_testcase_active_refcnt; /* ref count for below */
 static struct testcase_context *g_active_test_ctx;
+static uint64_t g_testcase_start_ns;
 
 #define TESTCASE_WORKER_IDLE_TIMEOUT (5 * OSAL_NSEC_PER_SEC)
 #define TESTCASE_CONTROL_IDLE_TIMEOUT (2 * TESTCASE_WORKER_IDLE_TIMEOUT)
@@ -76,7 +77,8 @@ static struct test_file_table g_output_file_tbl;
 static void free_file_node(struct test_node_file *fnode);
 static pnso_error_t read_file_node_input(struct test_file_table *table,
 					 const char *filename,
-					 struct pnso_buffer_list *buflist);
+					 uint32_t file_offset,
+					 struct buffer_context *input_ctx);
 
 
 static struct test_file_table *test_get_output_file_table(void)
@@ -203,64 +205,108 @@ error:
 	return EINVAL;
 }
 
+#if 0
 static uint8_t g_normalized_data[TEST_MAX_BIN_PATTERN_LEN];
+
+/* Assumption: this runs in only one thread at a time */
+static inline
+const uint8_t *_get_normalized_pattern(const char *pat,
+				       uint8_t *dst,
+				       uint32_t *dst_len)
+{
+	if (!pat) {
+		*dst_len = 0;
+		return NULL;
+	}
+
+	if (pat[0] == '0' && (pat[1] == 'x' || pat[1] == 'X')) {
+		if (parse_hex(pat+2, dst, dst_len) == PNSO_OK) {
+			return dst;
+		}
+	}
+
+	*dst_len = strnlen(pat, TEST_MAX_PATTERN_LEN);
+	return (const uint8_t *) pat;
+}
 
 /* Assumption: this runs in only one thread at a time */
 static const uint8_t *get_normalized_pattern(const char *pat,
 					     uint32_t *dst_len)
 {
-	uint8_t *dst = g_normalized_data;
-
-	OSAL_ASSERT(*dst_len <= sizeof(g_normalized_data));
-
-	if (pat[0] == '0' && (pat[1] == 'x' || pat[1] == 'X')) {
-		uint32_t tmp = *dst_len - 1;
-
-		if (parse_hex(pat+2, dst, &tmp) == PNSO_OK) {
-			*dst_len = tmp;
-			return dst;
-		}
-	}
-
-	*dst_len = strlen(pat);
-	return (const uint8_t *) pat;
+	*dst_len = TEST_MAX_BIN_PATTERN_LEN;
+	return _get_normalized_pattern(pat, g_normalized_data, dst_len);
 }
+
+static uint32_t get_normalized_pattern_len(const char *pat)
+{
+	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
+
+	_get_normalized_pattern(pat, NULL, &bin_len);
+
+	return bin_len;
+}
+#endif
 
 /* Fill buffer by repeating the given pattern */
 static pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
-			       const char *pat, uint32_t pat_len)
+			       const uint8_t *pat, uint32_t pat_len)
 {
-	const uint8_t *pat_data;
-	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
-
-	pat_data = get_normalized_pattern(pat, &bin_len);
-
-	test_fill_buflist(buflist, pat_data, bin_len);
+	test_fill_buflist(buflist, pat, pat_len);
 
 	return PNSO_OK;
+}
+
+/*
+ * Return index of buffer containing the given offset.
+ * Output params bytes_skipped in previous buffers.
+ */
+static uint32_t find_buflist_idx(const struct pnso_buffer_list *buflist,
+				 uint32_t offset, uint32_t *bytes_skipped)
+{
+	uint32_t i;
+	const struct pnso_flat_buffer *buf;
+
+	*bytes_skipped = 0;
+
+	for (i = 0; i < buflist->count; i++) {
+		buf = &buflist->buffers[i];
+		if (offset < buf->len)
+			break; /* found */
+		offset -= buf->len;
+		*bytes_skipped += buf->len;
+	}
+
+	return i;
 }
 
 /* Compare buffer to the given repeating pattern */
 static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 			    uint32_t offset, uint32_t len,
-			    const char *pat, uint32_t pat_len,
+			    const uint8_t *pat, uint32_t pat_len,
 			    uint32_t *total_len)
 {
 	int ret = -1;
 	size_t i, j, pat_i;
 	const struct pnso_flat_buffer *buf;
-	const uint8_t *pat_data;
+	uint32_t buflist_len;
 	uint8_t *dst;
-	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
 
 	*total_len = 0;
-	pat_data = get_normalized_pattern(pat, &bin_len);
+
+	buflist_len = pbuf_get_buffer_list_len(buflist);
+	if (offset >= buflist_len)
+		return -1;
 
 	if (!len)
-		len = pbuf_get_buffer_list_len(buflist);
+		len = buflist_len - offset;
+
+	/* Skip past initial buffers */
+	i = find_buflist_idx(buflist, offset, total_len);
+	if (i >= buflist->count)
+		return -1;
 
 	pat_i = 0;
-	for (i = 0; i < buflist->count && *total_len < (offset+len); i++) {
+	for (; i < buflist->count && *total_len < (offset+len); i++) {
 		buf = &buflist->buffers[i];
 
 		if (!buf->len) {
@@ -270,23 +316,23 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 		/* Skip past offset bytes */
 		j = 0;
 		if (*total_len < offset) {
-			if (buf->len <= offset - *total_len) {
-				*total_len += buf->len;
-				continue;
-			} else {
-				j = offset - *total_len;
-				*total_len = offset;
-			}
+			j = offset - *total_len;
+			*total_len = offset;
 		}
 
 		dst = (uint8_t *) buflist->buffers[i].buf;
 		for (; j < buf->len && *total_len < (offset+len); j++) {
-			ret = (int) (dst[j] - pat_data[pat_i % bin_len]);
+			ret = (int) (dst[j] - pat[pat_i % pat_len]);
 			pat_i++;
 			(*total_len)++;
 			if (ret)
 				return ret;
 		}
+	}
+
+	if (*total_len < (offset + len)) {
+		/* data too short */
+		return -1;
 	}
 
 	return ret;
@@ -298,20 +344,40 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
  */
 static pnso_error_t test_read_input(const char *path,
 				    const struct test_input_desc *input_desc,
-				    struct pnso_buffer_list *buflist)
+				    struct buffer_context *input_ctx,
+				    uint32_t input_idx)
 {
 	pnso_error_t err = PNSO_OK;
+	struct pnso_buffer_list *buflist = input_ctx->va_buflist;
+
+	input_ctx->uncompressed_sz = 0;
 	if (path && *path) {
-		/* TODO: what about offset and len? */
 		//err = test_read_file(path, buflist, input_desc->offset, input_desc->len);
 		err = read_file_node_input(test_get_output_file_table(),
 					   path,
-					   buflist);
-	} else if (input_desc->pattern[0]) {
-		uint32_t pat_len = strnlen(input_desc->pattern, TEST_MAX_PATTERN_LEN);
-		err = test_fill_pattern(buflist, input_desc->pattern, pat_len);
+					   input_desc->offset,
+					   input_ctx);
+	} else if (input_desc->pattern.data) {
+		err = test_fill_pattern(buflist, input_desc->pattern.data, input_desc->pattern.len);
 	} else {
-		err = test_fill_random(buflist, input_desc->random_seed, input_desc->random_len);
+		uint32_t seed = input_desc->random_seed;
+
+		if (seed >= RANDOM_SEED_START) {
+			switch (seed) {
+			case RANDOM_SEED_START_TIME:
+				seed = (uint32_t) g_testcase_start_ns;
+				break;
+			case RANDOM_SEED_REQ_ID:
+				seed = (uint32_t) input_idx;
+				break;
+			case RANDOM_SEED_REQ_TIME:
+				seed = (uint32_t) osal_get_clock_nsec() + input_idx;
+				break;
+			default:
+				break;
+			}
+		}
+		err = test_fill_random(buflist, seed, input_desc->random_len);
 	}
 	return err;
 }
@@ -503,6 +569,10 @@ static pnso_error_t alloc_buffer_ctx(struct buffer_context *buf_ctx,
 	}
 	OSAL_ASSERT(remain_len == 0);
 
+	if (count)
+		buf_ctx->pa_buflist->buffer_0_va =
+			buf_ctx->va_buflist->buffers[0].buf;
+
 	return PNSO_OK;
 
 no_mem:
@@ -589,8 +659,9 @@ static int cmp_file_node_metadata(struct test_node_file *fnode1, struct test_nod
  * total_len is set to offset at which last comparison took place.
  */
 static int cmp_buflists(const struct pnso_buffer_list *buflist1,
+			uint32_t buflist1_offset,
 			const struct pnso_buffer_list *buflist2,
-			uint32_t offset,
+			uint32_t buflist2_offset,
 			uint32_t len,
 			uint32_t *total_len)
 {
@@ -598,27 +669,50 @@ static int cmp_buflists(const struct pnso_buffer_list *buflist1,
 	size_t i1, i2;
 	uint32_t offset1;
 	uint32_t offset2;
+	uint32_t skipped_bytes;
 	uint32_t cmp_len;
+	uint32_t buflist1_len, buflist2_len;
 	const struct pnso_flat_buffer *buf1;
 	const struct pnso_flat_buffer *buf2;
 
 	*total_len = 0;
+
+	buflist1_len = pbuf_get_buffer_list_len(buflist1);
+	buflist2_len = pbuf_get_buffer_list_len(buflist2);
+	if (buflist1_offset >= buflist1_len)
+		return -1;
+	if (buflist2_offset >= buflist2_len)
+		return 1;
+	buflist1_len -= buflist1_offset;
+	buflist2_len -= buflist2_offset;
+
 	if (!len) {
-		len = pbuf_get_buffer_list_len(buflist1);
-		if (len != pbuf_get_buffer_list_len(buflist2))
-			return -1;
-		if (!len)
-			return 0;
+		/* Pick the shorter len */
+		len = buflist1_len < buflist2_len ? buflist1_len : buflist2_len;
 	}
 
-	/* TODO: ignore offset for now */
-
-	i2 = 0;
+	/* Skip to appropriate buffer of buflist2 */
+	i2 = find_buflist_idx(buflist2, buflist2_offset, &skipped_bytes);
+	if (i2 >= buflist2->count)
+		return -1;
 	buf2 = &buflist2->buffers[i2++];
-	offset2 = 0;
-	for (i1 = 0; i1 < buflist1->count; i1++) {
+	offset2 = buflist2_offset - skipped_bytes;
+
+	/* Skip to appropriate buffer of buflist1 */
+	i1 = find_buflist_idx(buflist1, buflist1_offset, &skipped_bytes);
+	if (i1 >= buflist1->count)
+		return 1;
+	buflist1_offset -= skipped_bytes;
+
+	/* Compare bytes */
+	for (; i1 < buflist1->count; i1++) {
 		buf1 = &buflist1->buffers[i1];
 		offset1 = 0;
+		if (buflist1_offset) {
+			/* Skip offset bytes */
+			offset1 = buflist1_offset;
+			buflist1_offset = 0;
+		}
 		while (offset1 < buf1->len) {
 			cmp_len = buf1->len - offset1;
 			if (cmp_len > (buf2->len - offset2))
@@ -626,9 +720,9 @@ static int cmp_buflists(const struct pnso_buffer_list *buflist1,
 			if (cmp_len > (len - *total_len))
 				cmp_len = len - *total_len;
 			if (cmp_len) {
-				ret = memcmp((void*)buf1->buf+offset1,
-					     (void*)buf2->buf+offset2,
-					     cmp_len);
+				ret = safe_memcmp((void*)buf1->buf+offset1,
+						  (void*)buf2->buf+offset2,
+						  &cmp_len);
 				*total_len += cmp_len;
 				if (ret || *total_len >= len)
 					return ret;
@@ -640,25 +734,32 @@ static int cmp_buflists(const struct pnso_buffer_list *buflist1,
 					if (i2 >= buflist2->count ||
 					    buf2->len == 0) {
 						/* nothing left to compare */
-						return ret;
+						break;
 					}
 				}
 			}
 		}
 	}
 
+	if (*total_len < len) {
+		/* Not enough bytes */
+		return -1;
+	}
 
 	return ret;
 }
 
-static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_file *fnode2,
-			      uint32_t offset, uint32_t len)
+static int cmp_file_node_data(struct test_node_file *fnode1, uint32_t fnode1_offset,
+			      struct test_node_file *fnode2, uint32_t fnode2_offset,
+			      uint32_t *len)
 {
 	int ret;
 	uint32_t cmp_len = 0;
 
-	if (!fnode1 || !fnode2)
+	if (!fnode1 || !fnode2) {
+		*len = 0;
 		return -1;
+	}
 
 	if (fnode1 == fnode2)
 		return 0;
@@ -676,9 +777,10 @@ static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_fi
 	ret = cmp_file_node_metadata(fnode1, fnode2);
 	if (ret != 0) {
 		/* Only compare data if we have to */
-		ret = cmp_buflists(fnode1->buflist,
-				   fnode2->buflist,
-				   offset, len, &cmp_len);
+		ret = cmp_buflists(fnode1->buflist, fnode1_offset,
+				   fnode2->buflist, fnode2_offset,
+				   *len, &cmp_len);
+		*len = cmp_len;
 	}
 
 	/* Unlock in reverse order */
@@ -694,15 +796,16 @@ static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_fi
 }
 
 #define MAX_FILE_PPRINT_LEN 64
+#define PPRINT_BYTES_PER_LINE 64
 
 static void pprint_file_node(struct test_node_file *fnode, uint32_t offset)
 {
 	struct test_node_file fnode_dup;
 	char *file_data = NULL;
 	uint32_t file_data_sz, i, out_len;
-	char hexstr[129] = "";
+	char hexstr[(PPRINT_BYTES_PER_LINE * 2) + 1] = "";
 
-	if (g_osal_log_level < OSAL_LOG_LEVEL_DEBUG)
+	if (g_osal_log_level < OSAL_LOG_LEVEL_INFO)
 		return;
 
 	file_data_sz = fnode->file_size;
@@ -720,15 +823,15 @@ static void pprint_file_node(struct test_node_file *fnode, uint32_t offset)
 		memcpy(file_data, fnode->data, file_data_sz);
 	osal_atomic_unlock(&fnode->lock);
 
-	OSAL_LOG_DEBUG("File node: name %s, size %u, padded_size %u\n",
+	OSAL_LOG_INFO("File node: name %s, size %u, padded_size %u\n",
 		       fnode_dup.filename, fnode_dup.file_size,
 		       fnode_dup.padded_size);
 	if (file_data_sz > offset) {
 		out_len = 0;
-		for (i = offset; i < file_data_sz; i += 64) {
-			safe_bintohex(hexstr, 128, file_data+i, 64);
-			OSAL_LOG_DEBUG("  data[%u]: 0x%s\n", i, hexstr);
-			out_len += 64;
+		for (i = offset; i < file_data_sz; i += PPRINT_BYTES_PER_LINE) {
+			safe_bintohex(hexstr, sizeof(hexstr) - 1, file_data+i, PPRINT_BYTES_PER_LINE);
+			OSAL_LOG_INFO("  data[%u]: 0x%s\n", i, hexstr);
+			out_len += PPRINT_BYTES_PER_LINE;
 			if (out_len >= MAX_FILE_PPRINT_LEN)
 				break;
 		}
@@ -736,6 +839,16 @@ static void pprint_file_node(struct test_node_file *fnode, uint32_t offset)
 
 	if (file_data)
 		TEST_FREE(file_data);
+}
+
+static void pprint_buffer_list(struct pnso_buffer_list *sgl, uint32_t offset, uint32_t len)
+{
+	if (g_osal_log_level < OSAL_LOG_LEVEL_INFO)
+		return;
+
+	/* TODO */
+
+	pbuf_pprint_buffer_list(sgl);
 }
 
 static struct test_node_file *lookup_file_node(struct test_file_table *table,
@@ -801,10 +914,12 @@ static void free_file_node(struct test_node_file *fnode)
 
 static pnso_error_t read_file_node_input(struct test_file_table *table,
 					 const char *filename,
-					 struct pnso_buffer_list *buflist)
+					 uint32_t file_offset,
+					 struct buffer_context *input_ctx)
 {
 	struct test_node_file *fnode;
 	uint32_t len;
+	struct pnso_buffer_list *buflist = input_ctx->va_buflist;
 
 	fnode = lookup_file_node(table, filename, false);
 	if (!fnode) {
@@ -813,7 +928,8 @@ static pnso_error_t read_file_node_input(struct test_file_table *table,
 	}
 
 	osal_atomic_lock(&fnode->lock);
-	len = pbuf_copy_buffer_list(fnode->buflist, buflist);	
+	len = pbuf_copy_buffer_list(fnode->buflist, file_offset, buflist);
+	input_ctx->uncompressed_sz = fnode->uncompressed_size;
 	osal_atomic_unlock(&fnode->lock);
 
 	PNSO_LOG_DEBUG("Copied %u input bytes from file %s\n",
@@ -878,7 +994,7 @@ static pnso_error_t copy_file_node_data(struct test_node_file *fnode,
 	fbuf->len = len - (fnode->block_size * (blk_count - 1));	
 
 	/* Copy data */
-	pbuf_copy_buffer_list(buflist, fnode->buflist);
+	pbuf_copy_buffer_list(buflist, 0, fnode->buflist);
 
 	return PNSO_OK;
 
@@ -902,6 +1018,7 @@ static pnso_error_t update_file_node(struct test_file_table *table,
 				     uint64_t padded_checksum,
 				     uint32_t padded_size,
 				     uint32_t blk_sz,
+				     uint32_t uncompressed_size,
 				     const struct pnso_buffer_list *buflist)
 {
 	pnso_error_t err = PNSO_OK;
@@ -925,6 +1042,7 @@ static pnso_error_t update_file_node(struct test_file_table *table,
 		fnode->padded_checksum = padded_checksum;
 		fnode->padded_size = padded_size;
 		fnode->block_size = blk_sz;
+		fnode->uncompressed_size = uncompressed_size;
 		err = copy_file_node_data(fnode, buflist);
 	}
 
@@ -1021,7 +1139,7 @@ static void output_results(struct request_context *req_ctx,
 						output_path, checksum,
 						file_size,
 						padded_checksum, padded_size,
-						blk_sz,
+						blk_sz, 0,
 						&buflist.bl);
 				}
 			} else if (svc_status->u.dst.sgl) {
@@ -1048,6 +1166,8 @@ static void output_results(struct request_context *req_ctx,
 					file_size,
 					padded_checksum, padded_size,
 					blk_sz,
+					svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS ?
+						req_ctx->input->buf.len : 0,
 					buflist);
 			}
 			if (err != PNSO_OK) {
@@ -1176,11 +1296,46 @@ done:
 	osal_atomic_fetch_sub(&g_testcase_active_refcnt, 1);
 }
 
+struct pnso_api_fns {
+	pnso_error_t (*add_to_batch)(struct pnso_service_request *svc_req,
+				     struct pnso_service_result *svc_res);
+	pnso_error_t (*flush_batch)(completion_cb_t cb,
+				    void *cb_ctx,
+				    pnso_poll_fn_t *pnso_poll_fn,
+				    void **pnso_poll_ctx);
+	pnso_error_t (*submit_request)(struct pnso_service_request *svc_req,
+				       struct pnso_service_result *svc_res,
+				       completion_cb_t cb,
+				       void *cb_ctx,
+				       pnso_poll_fn_t *poll_fn,
+				       void **poll_ctx);
+
+};
+
+const static struct pnso_api_fns hw_fns = {
+	.add_to_batch = pnso_add_to_batch,
+	.flush_batch = pnso_flush_batch,
+	.submit_request = pnso_submit_request
+};
+
+const static struct pnso_api_fns sim_fns = {
+#ifdef PNSO_DUAL_MODE
+	.add_to_batch = pnso_sim_add_to_batch,
+	.flush_batch = pnso_sim_flush_batch,
+	.submit_request = pnso_sim_submit_request
+#else
+	.add_to_batch = pnso_add_to_batch,
+	.flush_batch = pnso_flush_batch,
+	.submit_request = pnso_submit_request
+#endif
+};
+
 static pnso_error_t test_submit_request(struct request_context *req_ctx,
 					uint16_t sync_mode,
 					bool is_batched,
 					bool flush)
 {
+	const struct pnso_api_fns *submit_fns;
 	pnso_error_t rc = PNSO_OK;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	completion_cb_t cb;
@@ -1192,13 +1347,22 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 			(uint32_t) sync_mode);
 
 	switch (sync_mode) {
+	case SYNC_MODE_SIM:
+		submit_fns = &sim_fns;
+		cb = NULL;
+		cb_ctx = NULL;
+		poll_fn = NULL;
+		poll_ctx = NULL;
+		break;
 	case SYNC_MODE_SYNC:
+		submit_fns = &hw_fns;
 		cb = NULL;
 		cb_ctx = NULL;
 		poll_fn = NULL;
 		poll_ctx = NULL;
 		break;
 	case SYNC_MODE_POLL:
+		submit_fns = &hw_fns;
 		cb = batch_completion_safe_cb;
 		cb_ctx = (void *) batch_ctx->cb_ctx.val;
 		poll_fn = &batch_ctx->poll_fn;
@@ -1206,6 +1370,7 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 		break;
 	case SYNC_MODE_ASYNC:
 	default:
+		submit_fns = &hw_fns;
 		cb = batch_completion_safe_cb;
 		cb_ctx = (void *) batch_ctx->cb_ctx.val;
 		poll_fn = NULL;
@@ -1214,19 +1379,19 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 	}
 
 	if (is_batched) {
-		rc = pnso_add_to_batch(&req_ctx->svc_req, &req_ctx->svc_res);
+		rc = submit_fns->add_to_batch(&req_ctx->svc_req, &req_ctx->svc_res);
 		if (flush && rc == PNSO_OK) {
 			PNSO_LOG_DEBUG("calling flush_batch with cb_ctx=0x%llx\n",
 				       (unsigned long long) cb_ctx);
 			req_ctx->batch_ctx->start_time = osal_get_clock_nsec();
-			rc = pnso_flush_batch(cb, cb_ctx,
+			rc = submit_fns->flush_batch(cb, cb_ctx,
 					      poll_fn, poll_ctx);
 		}
 	} else {
 		PNSO_LOG_DEBUG("calling submit_request with cb_ctx=0x%llx\n",
 			       (unsigned long long) cb_ctx);
 		req_ctx->batch_ctx->start_time = osal_get_clock_nsec();
-		rc = pnso_submit_request(&req_ctx->svc_req,
+		rc = submit_fns->submit_request(&req_ctx->svc_req,
 					 &req_ctx->svc_res,
 					 cb, cb_ctx,
 					 poll_fn, poll_ctx);
@@ -1236,6 +1401,7 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 }
 
 static pnso_error_t init_input_context(struct buffer_context *input,
+				       uint32_t input_idx,
 				       struct testcase_context *test_ctx,
 				       const struct test_svc_chain *svc_chain)
 {
@@ -1245,7 +1411,7 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 	uint32_t min_buf_count, buf_count;
 	char input_path[TEST_MAX_FULL_PATH_LEN] = "";
 
-	OSAL_ASSERT(!input->initialized);
+	OSAL_ASSERT(!input->initialized || !test_ctx->testcase->turbo);
 
 	/* construct input filename */
 	if (svc_chain->input.pathname[0]) {
@@ -1264,7 +1430,6 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 			input_len = lookup_file_node_size(
 					test_ctx->output_file_tbl,
 					input_path);
-
 			/* TODO: separate file table for input files */
 #if 0
 			input_len = test_file_size(input_path);
@@ -1273,8 +1438,14 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 				PNSO_LOG_ERROR("Invalid input file %s\n", input_path);
 				return EINVAL;
 			}
-		} else if (svc_chain->input.pattern[0]) {
-			input_len = strlen(svc_chain->input.pattern);
+			if (input_len < svc_chain->input.offset) {
+				PNSO_LOG_ERROR("Input file %s size %u smaller than configured offset %u\n",
+					       input_path, input_len, svc_chain->input.offset);
+				return EINVAL;
+			}
+			input_len -= svc_chain->input.offset;
+		} else if (svc_chain->input.pattern.data) {
+			input_len = svc_chain->input.pattern.len;
 		} else {
 			input_len = test_ctx->desc->init_params.block_size;
 		}
@@ -1337,7 +1508,8 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 	}
 
 	/* populate input buffer */
-	err = test_read_input(input_path, &svc_chain->input, input->va_buflist);
+	err = test_read_input(input_path, &svc_chain->input, input,
+			      input_idx);
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("Failed to read input from %s\n", input_path);
 		return err;
@@ -1345,6 +1517,28 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 
 	input->svc_chain_idx = svc_chain->node.idx;
 	input->initialized = true;
+
+	/* output the generated data if necessary */
+	if (svc_chain->input.output_path[0]) {
+		char output_path[TEST_MAX_FULL_PATH_LEN] = "";
+		struct buffer_context *buf_ctx = input;
+		uint64_t checksum = 0;
+		uint32_t file_size = pbuf_get_buffer_list_len(
+					buf_ctx->va_buflist);
+
+		construct_filename(test_ctx->desc, test_ctx->vars,
+				   output_path,
+				   svc_chain->input.output_path);
+		if (!test_ctx->testcase->turbo) {
+			checksum = compute_checksum(NULL,
+					(uint8_t *) buf_ctx->buf.buf,
+					file_size);
+		}
+		update_file_node(test_ctx->output_file_tbl,
+				 output_path, checksum, file_size, 0, 0,
+				 test_ctx->desc->init_params.block_size, 0,
+				 buf_ctx->va_buflist);
+	}
 
 	return PNSO_OK;
 }
@@ -1416,7 +1610,14 @@ static pnso_error_t setup_request(struct request_context *req_ctx,
 		svc_status->svc_type = svc->svc.svc_type; /* TODO: needed? */
 		if (svc->output_path[0]) {
 			uint32_t output_len = get_max_output_len_by_svc(
-							svc, input_len);
+							svc, input_len,
+							req_ctx->input->uncompressed_sz);
+
+			if (!output_len) {
+				PNSO_LOG_ERROR("Cannot deduce output_len for svc_type %u",
+					       svc->svc.svc_type);
+				return EINVAL;
+			}
 
 			if (svc->svc.svc_type == PNSO_SVC_TYPE_HASH ||
 			    svc->svc.svc_type == PNSO_SVC_TYPE_CHKSUM) {
@@ -1742,6 +1943,22 @@ static void update_validation_stats(struct testcase_context *test_ctx,
 	}
 }
 
+#define DEBUG_DATA_SCRATCH_SIZE 32
+
+static void buflist_to_debug_data(const struct pnso_buffer_list *buflist, char *scratch)
+{
+	if (buflist && buflist->count) {
+		scratch[0] = '0';
+		scratch[1] = 'x';
+		safe_bintohex(scratch + 2, DEBUG_DATA_SCRATCH_SIZE - 2,
+			      (const uint8_t *) buflist->buffers[0].buf, 8);
+	} else {
+		scratch[0] = 'N';
+		scratch[1] = 'A';
+		scratch[2] = '\0';
+	}
+}
+
 static pnso_error_t run_data_validation(struct batch_context *ctx,
 					const struct test_testcase *testcase,
 					struct test_validation *validation)
@@ -1757,11 +1974,12 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 	uint32_t offset = validation->offset;
 	uint32_t len = validation->len;
 	uint32_t file_len, file2_len;
+	char scratch_str[DEBUG_DATA_SCRATCH_SIZE];
 
 	if (ctx->req_rc != PNSO_OK) {
 		snprintf(reason, TEST_MAX_REASON_LEN,
-			 "unexpected req_retcode %d",
-			 ctx->req_rc);
+			 "unexpected req_retcode %d, batch_id %u",
+			 ctx->req_rc, ctx->batch_id);
 		err = ctx->req_rc;
 		goto done;
 	}
@@ -1814,8 +2032,8 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 			/* Try to compare just local metadata */
 			fnode1 = lookup_file_node(test_ctx->output_file_tbl, path1, false);
 			fnode2 = lookup_file_node(test_ctx->output_file_tbl, path2, false);
-			cmp = cmp_file_node_data(fnode1, fnode2,
-						 offset, len);
+			cmp = cmp_file_node_data(fnode1, offset,
+						 fnode2, offset, &len);
 #if 0 //#ifndef __KERNEL__
 			/* Metadata not available or inconclusive, do full file compare */
 			if (cmp != 0) {
@@ -1832,13 +2050,14 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 						 "missing file2");
 				} else {
 					snprintf(reason, TEST_MAX_REASON_LEN,
-						 "file1 mismatches file2");
+						 "file1 mismatches file2 at offset %u, batch_id %u",
+						 len, ctx->batch_id);
 				}
 			}
-		} else if (validation->pattern[0] && (path1[0] || path2[0])) {
+		} else if (validation->pattern.data && (path1[0] || path2[0])) {
 			char *path = path1;
-			const char *pat = validation->pattern;
-			uint32_t pat_len = strlen(validation->pattern);
+			const uint8_t *pat = validation->pattern.data;
+			uint32_t pat_len = validation->pattern.len;
 
 			if (!path1[0])
 				path = path2;
@@ -1851,9 +2070,12 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 				osal_atomic_unlock(&fnode1->lock);
 				if (!is_compare_true(validation->cmp_type, cmp)) {
 					pprint_file_node(fnode1, offset);
+					buflist_to_debug_data(fnode1->buflist, scratch_str);
 					snprintf(reason, TEST_MAX_REASON_LEN,
-						 "file mismatches pattern at offset %u",
-						 cmp_len);
+						 "file mismatches pattern at offset %u, batch_id %u, data[0]=%s",
+						 cmp_len,
+						 ctx->batch_id,
+						 scratch_str);
 				}
 			} else {
 				snprintf(reason, TEST_MAX_REASON_LEN,
@@ -1891,8 +2113,8 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 			cmp = (int) file_len - (int) file2_len;
 			if (!is_compare_true(validation->cmp_type, cmp)) {
 				snprintf(reason, TEST_MAX_REASON_LEN,
-					 "file1 len %u mismatches file2 len %u",
-					 file_len, file2_len);
+					 "file1 len %u mismatches file2 len %u, batch_id %u",
+					 file_len, file2_len, ctx->batch_id);
 			}
 		} else {
 			/* Test static length */
@@ -1901,8 +2123,8 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 			cmp = (int) file_len - (int) len;
 			if (!is_compare_true(validation->cmp_type, cmp)) {
 				snprintf(reason, TEST_MAX_REASON_LEN,
-					 "file1 len %u mismatches %u",
-					 file_len, len);
+					 "file1 len %u mismatches %u, batch_id %u",
+					 file_len, len, ctx->batch_id);
 			}
 		}
 		break;
@@ -1936,10 +2158,11 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 		cmp = (int) batch_ctx->req_rc - (int) validation->req_retcode;
 		if (!is_compare_true(validation->cmp_type, cmp)) {
 			snprintf(reason, TEST_MAX_REASON_LEN,
-				 "expected req_retcode %s %u, got %u",
+				 "expected req_retcode %s %u, got %u, req_id %llu",
 				 get_compare_type_str(validation->cmp_type),
 				 validation->req_retcode,
-				 batch_ctx->req_rc);
+				 batch_ctx->req_rc,
+				 (unsigned long long) req_ctx->req_id);
 			goto done;
 		}
 	}
@@ -1948,8 +2171,9 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 		if ((validation->flags & VALIDATION_FLAG_CHECK_RETCODE) ||
 		    validation->svc_count) {
 			snprintf(reason, TEST_MAX_REASON_LEN,
-				 "unexpected req_retcode %u",
-				 batch_ctx->req_rc);
+				 "unexpected req_retcode %u, req_id %llu",
+				 batch_ctx->req_rc,
+				 (unsigned long long) req_ctx->req_id);
 			err = EINVAL;
 		}
 		goto done;
@@ -1959,10 +2183,11 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 		cmp = (int) req_ctx->svc_res.err - (int) validation->retcode;
 		if (!is_compare_true(validation->cmp_type, cmp)) {
 			snprintf(reason, TEST_MAX_REASON_LEN,
-				 "expected retcode %s %u, got %u",
+				 "expected retcode %s %u, got %u, req_id %llu",
 				 get_compare_type_str(validation->cmp_type),
 				 validation->retcode,
-				 req_ctx->svc_res.err);
+				 req_ctx->svc_res.err,
+				 (unsigned long long) req_ctx->req_id);
 			goto done;
 		}
 	}
@@ -1981,10 +2206,11 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 			(int) validation->svc_retcodes[i];
 		if (!is_compare_true(validation->cmp_type, cmp)) {
 			snprintf(reason, TEST_MAX_REASON_LEN,
-				 "expected svc_retcode[%u] %s %u, got %u",
+				 "expected svc_retcode[%u] %s %u, got %u, req_id %llu",
 				 i, get_compare_type_str(validation->cmp_type),
 				 validation->svc_retcodes[i],
-				 req_ctx->svc_res.svc[i].err);
+				 req_ctx->svc_res.svc[i].err,
+				 (unsigned long long) req_ctx->req_id);
 			break;
 		}
 		/* TODO: how to handle "type: ne" for multiple svcs? */
@@ -2010,8 +2236,9 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 	if (batch_ctx->req_rc != PNSO_OK) {
 		err = batch_ctx->req_rc;
 		snprintf(reason, TEST_MAX_REASON_LEN,
-			 "unexpected req_retcode %u",
-			 batch_ctx->req_rc);
+			 "unexpected req_retcode %u, req_id %llu",
+			 batch_ctx->req_rc,
+			 (unsigned long long) req_ctx->req_id);
 		goto done;
 	}
 
@@ -2025,9 +2252,10 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 		if (cmp != 0) {
 			if (!is_compare_true(validation->cmp_type, cmp)) {
 				snprintf(reason, TEST_MAX_REASON_LEN,
-					 "expected total data_len %s %u, got %u",
+					 "expected total data_len %s %u, got %u, req_id %llu",
 					 get_compare_type_str(validation->cmp_type),
-					 validation->len, len);
+					 validation->len, len,
+					 (unsigned long long) req_ctx->req_id);
 			}
 			goto done;
 		}
@@ -2048,12 +2276,124 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 		if (cmp != 0) {
 			if (!is_compare_true(validation->cmp_type, cmp)) {
 				snprintf(reason, TEST_MAX_REASON_LEN,
-					 "expected svc[%u] data_len %s %d, got %u",
+					 "expected svc[%u] data_len %s %d, got %u, req_id %llu",
 					 i, get_compare_type_str(validation->cmp_type),
-					 validation->svc_retcodes[i], len);
+					 validation->svc_retcodes[i], len,
+					 (unsigned long long) req_ctx->req_id);
 			}
 			break;
 		}
+	}
+
+done:
+	update_validation_stats(test_ctx, validation, cmp, err, reason);
+	return err;
+}
+
+static pnso_error_t run_req_data_validation(struct request_context *req_ctx,
+					    const struct test_testcase *testcase,
+					    struct test_validation *validation)
+{
+	pnso_error_t err = PNSO_OK;
+	int cmp = 0;
+	uint32_t cmp_len = 0;
+	uint32_t offset = validation->offset;
+	uint32_t len = validation->len;
+	struct pnso_buffer_list *sgl = NULL;
+	struct batch_context *batch_ctx = req_ctx->batch_ctx;
+	struct testcase_context *test_ctx = batch_ctx->test_ctx;
+	char path1[TEST_MAX_FULL_PATH_LEN] = "";
+	char reason[TEST_MAX_REASON_LEN] = "";
+	char scratch_str[DEBUG_DATA_SCRATCH_SIZE];
+
+	/* Get SGL to compare against */
+	if (validation->type == VALIDATION_DATA_INPUT_COMPARE) {
+		sgl = req_ctx->input->va_buflist; //req_ctx->svc_req.sgl;
+		if (!len)
+			len = pbuf_get_buffer_list_len(sgl);
+	} else { /* VALIDATION_DATA_OUTPUT_COMPARE */
+		if (batch_ctx->req_rc != PNSO_OK) {
+			err = batch_ctx->req_rc;
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "unexpected req_retcode %u, batch_id %u",
+				 batch_ctx->req_rc, batch_ctx->batch_id);
+			goto done;
+		}
+
+		if (validation->svc_idx >= req_ctx->svc_res.num_services) {
+			err = EINVAL;
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "bad svc_idx %u config, max is %u for this request",
+				 validation->svc_idx, req_ctx->svc_res.num_services - 1);
+			goto done;
+		}
+
+		sgl = req_ctx->outputs[validation->svc_idx].va_buflist;
+		if (!len)
+			len = get_svc_status_data_len(
+				&req_ctx->svc_res.svc[validation->svc_idx]);
+	}
+
+	if (!len) {
+		err = EINVAL;
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "buffer len is 0");
+		goto done;
+	}
+
+	/* File compare */
+	if (validation->file1[0]) {
+		struct test_node_file *fnode1;
+
+		/* construct dynamic pathname */
+		err = construct_filename(batch_ctx->desc, req_ctx->vars,
+					 path1, validation->file1);
+		if (err != PNSO_OK) {
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "construct_filename err %d",
+				 err);
+			goto done;
+		}
+
+		/* lookup file */
+		fnode1 = lookup_file_node(test_ctx->output_file_tbl, path1, false);
+		if (fnode1) {
+			osal_atomic_lock(&fnode1->lock);
+			cmp = cmp_buflists(sgl, offset,
+					   fnode1->buflist, offset,
+					   len, &cmp_len);
+			osal_atomic_unlock(&fnode1->lock);
+			if (!is_compare_true(validation->cmp_type, cmp)) {
+				pprint_buffer_list(sgl, offset, cmp_len);
+				buflist_to_debug_data(sgl, scratch_str);
+				snprintf(reason, TEST_MAX_REASON_LEN,
+					 "data mismatches file at offset %u, req_id %llu, data[0]=%s",
+					 cmp_len,
+					 (unsigned long long) req_ctx->req_id,
+					 scratch_str);
+			}
+		} else {
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "missing file");
+			cmp = -1;
+		}
+	} else if (validation->pattern.data) {
+		/* Pattern compare */
+		cmp = test_cmp_pattern(sgl, offset, len, validation->pattern.data,
+				       validation->pattern.len, &cmp_len);
+		if (!is_compare_true(validation->cmp_type, cmp)) {
+			pprint_buffer_list(sgl, offset, cmp_len);
+			buflist_to_debug_data(sgl, scratch_str);
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "data mismatches pattern at offset %u, req_id %llu, data[0]=%s",
+				 cmp_len,
+				 (unsigned long long) req_ctx->req_id,
+				 scratch_str);
+		}
+	} else {
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "invalid cfg");
+		err = EINVAL;
 	}
 
 done:
@@ -2096,6 +2436,11 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 			break;
 		case VALIDATION_DATA_LEN_COMPARE:
 			run_data_len_validation(req_ctx, testcase, validation);
+			break;
+		case VALIDATION_DATA_INPUT_COMPARE:
+		case VALIDATION_DATA_OUTPUT_COMPARE:
+			if (!testcase->turbo)
+				run_req_data_validation(req_ctx, testcase, validation);
 			break;
 		default:
 			PNSO_LOG_ERROR("Unknown validation type %u\n", validation->type);
@@ -2203,13 +2548,16 @@ static pnso_error_t setup_batch(struct batch_context *batch_ctx)
 	struct request_context *req_ctx = NULL;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 	const struct test_testcase *testcase = test_ctx->testcase;
+	struct buffer_context *input_ctx;
+	uint64_t req_id;
 	uint32_t i, chain_i, lb_idx;
 
 	batch_ctx->vars[TEST_VAR_ID] = testcase->node.idx;
 
 	/* init each request, alternating svc_chain */
+	req_id = batch_ctx->first_req_id;
 	lb_idx = batch_ctx->first_req_id % test_ctx->chain_lb_table_count;
-	for (i = 0; i < batch_ctx->req_count; i++, lb_idx++) {
+	for (i = 0; i < batch_ctx->req_count; i++, lb_idx++, req_id++) {
 		/* get svc_chain */
 		chain_i = test_ctx->chain_lb_table[lb_idx % test_ctx->chain_lb_table_count];
 		chain_ctx = test_ctx->chain_ctxs[chain_i];
@@ -2230,9 +2578,22 @@ static pnso_error_t setup_batch(struct batch_context *batch_ctx)
 			err = EINVAL;
 			goto error;
 		}
+		if (testcase->turbo) {
+			/* Input buffers are pre-allocated */
+			input_ctx = &chain_ctx->inputs[i % chain_ctx->input_count];
+		} else {
+			input_ctx = &req_ctx->input_data;
+			err = init_input_context(input_ctx, req_id,
+						 test_ctx, svc_chain);
+			if (err != PNSO_OK) {
+				PNSO_LOG_ERROR("Failed to allocate input buffer context for testcase %u",
+					       testcase->node.idx);
+				return err;
+			}
+		}
 		init_req_context(req_ctx, batch_ctx, svc_chain,
-				 &chain_ctx->inputs[i % chain_ctx->input_count],
-				 batch_ctx->first_req_id + i);
+				 input_ctx,
+				 req_id);
 		err = setup_request(req_ctx, testcase, i, batch_ctx->req_count);
 		if (err != PNSO_OK) {
 			goto error;
@@ -2281,7 +2642,8 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 	}
 
 	/* Special handling for SYNC and POLL */
-	if (testcase->sync_mode == SYNC_MODE_SYNC) {
+	if (testcase->sync_mode == SYNC_MODE_SYNC ||
+	    testcase->sync_mode == SYNC_MODE_SIM) {
 		/* Manually call completion callback */
 		batch_completion_cb((void *) batch_ctx->cb_ctx.val,
 				    req_ctx ? &req_ctx->svc_res : NULL);
@@ -2317,7 +2679,8 @@ error:
 	batch_ctx->stats.io_stats[0].failures++;
 	batch_ctx->poll_fn = NULL; /* prevent polling on error */
 	/* Manually call completion callback */
-	if (testcase->sync_mode != SYNC_MODE_SYNC) {
+	if (testcase->sync_mode != SYNC_MODE_SYNC &&
+	    testcase->sync_mode != SYNC_MODE_SIM) {
 		batch_completion_safe_cb((void *) batch_ctx->cb_ctx.val,
 			req_ctx ? &req_ctx->svc_res : NULL);
 	} else {
@@ -2355,6 +2718,7 @@ static void free_req_context(struct request_context *ctx)
 	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
 		free_buffer_ctx(&ctx->outputs[i]);
 	}
+	free_buffer_ctx(&ctx->input_data);
 
 	TEST_FREE(ctx);
 }
@@ -2676,6 +3040,7 @@ static pnso_error_t init_testcase_svc_chains(struct testcase_context *test_ctx)
 	const struct test_testcase *testcase = test_ctx->testcase;
 	uint32_t i, chain_i, lb_i;
 	uint32_t max_inputs = testcase->batch_depth;
+	uint32_t total_input_count = 0;
 	struct chain_context *chain_ctx;
 	uint16_t weight;
 
@@ -2689,47 +3054,29 @@ static pnso_error_t init_testcase_svc_chains(struct testcase_context *test_ctx)
 			max_inputs = chain_ctx->batch_weight;
 		}
 
-		chain_ctx->inputs = TEST_ALLOC(sizeof(*chain_ctx->inputs) *
-					       max_inputs);
-		if (!chain_ctx->inputs) {
-			PNSO_LOG_ERROR("Failed to alloc chain_ctx->inputs\n");
-			err = ENOMEM;
-			goto done;
-		}
-		memset(chain_ctx->inputs, 0,
-		       sizeof(*chain_ctx->inputs) * max_inputs);
-		for (i = 0; i < max_inputs; i++) {
-			/* Initialize input buffer */
-			err = init_input_context(&chain_ctx->inputs[i], test_ctx,
-						 chain_ctx->svc_chain);
-			if (err != PNSO_OK) {
-				PNSO_LOG_ERROR("Failed to init input context, testcase %u svc_chain %u\n",
-					       testcase->node.idx, chain_ctx->svc_chain->node.idx);
+		if (testcase->turbo) {
+			/* Preallocate input buffers for turbo mode */
+			chain_ctx->inputs = TEST_ALLOC(sizeof(*chain_ctx->inputs) *
+						       max_inputs);
+			if (!chain_ctx->inputs) {
+				PNSO_LOG_ERROR("Failed to alloc chain_ctx->inputs\n");
+				err = ENOMEM;
 				goto done;
 			}
-			chain_ctx->input_count = i + 1;
-		}
-
-		/* output the generated data if necessary */
-		if (chain_ctx->svc_chain->input.output_path[0]) {
-			char output_path[TEST_MAX_FULL_PATH_LEN] = "";
-			struct buffer_context *buf_ctx = &chain_ctx->inputs[0];
-			uint64_t checksum = 0;
-			uint32_t file_size = pbuf_get_buffer_list_len(
-						buf_ctx->va_buflist);
-
-			construct_filename(test_ctx->desc, test_ctx->vars,
-					output_path,
-					chain_ctx->svc_chain->input.output_path);
-			if (!test_ctx->testcase->turbo) {
-				checksum = compute_checksum(NULL,
-						(uint8_t *) buf_ctx->buf.buf,
-						file_size);
+			memset(chain_ctx->inputs, 0,
+			       sizeof(*chain_ctx->inputs) * max_inputs);
+			for (i = 0; i < max_inputs; i++) {
+				/* Initialize input buffer */
+				total_input_count++;
+				err = init_input_context(&chain_ctx->inputs[i], total_input_count,
+							 test_ctx, chain_ctx->svc_chain);
+				if (err != PNSO_OK) {
+					PNSO_LOG_ERROR("Failed to init input context, testcase %u svc_chain %u\n",
+						       testcase->node.idx, chain_ctx->svc_chain->node.idx);
+					goto done;
+				}
+				chain_ctx->input_count = i + 1;
 			}
-			update_file_node(test_ctx->output_file_tbl,
-				output_path, checksum, file_size, 0, 0,
-				test_ctx->desc->init_params.block_size,
-				buf_ctx->va_buflist);
 		}
 	}
 
@@ -3042,6 +3389,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	PNSO_LOG_DEBUG("enter pnso_test_run_testcase(%u) ...\n",
 		       testcase ? testcase->node.idx : 0);
 
+	g_testcase_start_ns = osal_get_clock_nsec();
 	ctx = alloc_testcase_context(desc, testcase);
 	if (!ctx) {
 		PNSO_LOG_ERROR("Cannot allocate context for testcase %u\n",
@@ -3304,7 +3652,14 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 		PNSO_LOG_ERROR("pnso_init failed with rc = %d\n", err);
 		return err;
 	}
-#ifdef PNSO_SIM
+#ifdef PNSO_DUAL_MODE
+	err = pnso_sim_init(&init_params);
+	if (err != PNSO_OK) {
+		PNSO_LOG_ERROR("pnso_sim_init failed with rc = %d\n", err);
+		return err;
+	}
+#endif
+#if defined(PNSO_SIM) || defined (PNSO_DUAL_MODE)
 	err = pnso_sim_thread_init(osal_get_coreid());
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("pnso_thread_init failed with rc = %d\n", err);
@@ -3323,6 +3678,16 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 				       cp_hdr->node.idx, err);
 			return err;
 		}
+#ifdef PNSO_DUAL_MODE
+		err = pnso_sim_register_compression_header_format(&cp_hdr->fmt,
+							      cp_hdr->node.idx);
+		if (err != PNSO_OK) {
+			PNSO_LOG_ERROR("pnso_sim_register_compression_header_format"
+				       "(%u) failed with rc = %d\n",
+				       cp_hdr->node.idx, err);
+			return err;
+		}
+#endif
 	}
 
 	/* Initialize compression algo mapping */
@@ -3337,6 +3702,17 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 				       err);
 			return err;
 		}
+#ifdef PNSO_DUAL_MODE
+		err = pnso_sim_add_compression_algo_mapping(mapping->pnso_algo,
+							mapping->hdr_algo);
+		if (err != PNSO_OK) {
+			PNSO_LOG_ERROR("pnso_sim_add_compression_algo_mapping"
+				       "(%u,%u) failed with rc = %d\n",
+				       mapping->pnso_algo, mapping->hdr_algo,
+				       err);
+			return err;
+		}
+#endif
 	}
 
 	/* Initialize key store */
@@ -3348,6 +3724,14 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 				       key->node.idx, err);
 			return err;
 		}
+#ifdef PNSO_DUAL_MODE
+		err = pnso_sim_set_key_desc_idx(key->key1, key->key2, key->key1_len, key->node.idx);
+		if (err != PNSO_OK) {
+			PNSO_LOG_ERROR("pnso_sim_set_key_desc_idx(%u) failed with rc = %d\n",
+				       key->node.idx, err);
+			return err;
+		}
+#endif
 #ifdef PNSO_SIM
 		if (key->key1_len) {
 			char *tmp_key = NULL;
@@ -3414,6 +3798,10 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 #endif
 	test_free_output_file_table();
 
+#if defined(PNSO_SIM) || defined (PNSO_DUAL_MODE)
+	pnso_sim_finit();
+#endif
+
 	return err;
 }
 
@@ -3462,8 +3850,9 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 			goto done;
 		}
 		if (i >= 1) {
-			if (0 != cmp_buflists(buf_ctxs[i-1].va_buflist, buf_ctxs[i].va_buflist,
-					      0, UNIT_TEST_BUFLIST_SIZE, &cmp_len)) {
+			if (0 != cmp_buflists(buf_ctxs[i-1].va_buflist, 0,
+					      buf_ctxs[i].va_buflist, 0,
+					      UNIT_TEST_BUFLIST_SIZE, &cmp_len)) {
 				err = EINVAL;
 				safe_strcpy(reason, "cmp_buflists",
 					    sizeof(reason));

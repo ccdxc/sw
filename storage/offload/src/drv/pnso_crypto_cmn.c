@@ -112,7 +112,7 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 	struct crypto_aol *aol;
 	struct buffer_addr_len addr_len;
 	uint32_t total_len;
-	pnso_error_t err = ENOMEM;
+	pnso_error_t err;
 
 	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, total_len_max);
 	svc_aol->mpool_type = MPOOL_TYPE_CRYPTO_AOL;
@@ -121,8 +121,9 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 	while (iter) {
 		aol = pc_res_mpool_object_get(pcr, svc_aol->mpool_type);
 		if (!aol) {
-			OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool, current_len %u",
-				       total_len);
+			err = EAGAIN;
+			OSAL_LOG_DEBUG("cannot obtain crypto aol_vec from pool! current_len %u err: %d",
+				       total_len, err);
 			goto out;
 		}
 		memset(aol, 0, sizeof(*aol));
@@ -174,13 +175,15 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 	 *
 	 */
 	if (!total_len) {
-		OSAL_LOG_ERROR("buffer_list is empty");
 		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
 		goto out;
 	}
+
 	return PNSO_OK;
 out:
 	crypto_aol_put(pcr, svc_aol);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -200,14 +203,16 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 	uint32_t elem_size;
 	uint32_t cur_count;
 	uint32_t total_len;
-	pnso_error_t err = ENOMEM;
+	pnso_error_t err;
 
 	OSAL_ASSERT(is_power_of_2(block_size));
 	svc_aol->mpool_type = MPOOL_TYPE_CRYPTO_AOL_VECTOR;
 	svc_aol->aol = pc_res_mpool_object_get_with_num_vec_elems(pcr,
 				svc_aol->mpool_type, &num_vec_elems, &elem_size);
 	if (!svc_aol->aol) {
-		OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool");
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("cannot obtain crypto aol_vec from pool! err: %d",
+				err);
 		goto out;
 	}
 
@@ -244,9 +249,9 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 		 * must be a full block size.
 		 */
 		if (aol_vec->ca_len_0 != block_size) {
-			OSAL_LOG_ERROR("Sparse AOL fails to make full block_size %u",
-					block_size);
 			err = EINVAL;
+			OSAL_LOG_ERROR("Sparse AOL fails to make full block_size %u err: %d",
+					block_size, err);
 			goto out;
 		}
 
@@ -270,14 +275,15 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 	 * Caller must have ensured that svc_blist had non-zero length to begin with.
 	 */
 	if (!total_len) {
-		OSAL_LOG_ERROR("buffer_list is empty");
 		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
 		goto out;
 	}
 
 	return PNSO_OK;
 out:
 	crypto_aol_put(pcr, svc_aol);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 

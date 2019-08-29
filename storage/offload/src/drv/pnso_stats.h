@@ -8,7 +8,6 @@
 
 #include <linux/atomic.h>
 #include "pnso_api.h"
-#include "osal_atomic.h"
 #include "osal_time.h"
 
 #ifdef __cplusplus
@@ -16,7 +15,7 @@ extern "C" {
 #endif
 
 /* Non-atomic versions */
-#if 0
+#ifndef __KERNEL__
 #define PNSO_DECLARE_STAT(s) int64_t s;
 #define PNSO_STAT_INC(pcr, s) pcr->api_stats.s++
 #define PNSO_STAT_ADD(pcr, s, count) pcr->api_stats.s += count
@@ -24,6 +23,17 @@ extern "C" {
 #define PNSO_STAT_READ_BY_ID(stats, id) ((int64_t*)(stats))[id]
 #else
 /* Atomic versions */
+#ifdef __FreeBSD__
+#include <machine/atomic.h>
+#define PNSO_DECLARE_STAT(s) int64_t s;
+#define PNSO_STAT_INC(pcr, s) \
+	atomic_add_64((uint64_t*)&pcr->api_stats.s, 1)
+#define PNSO_STAT_ADD(pcr, s, count) \
+	atomic_add_64((uint64_t*)&pcr->api_stats.s, count)
+#define PNSO_STAT_READ(stats, s) (uint64_t) atomic_load_64((uint64_t*)&(stats)->s)
+#define PNSO_STAT_READ_BY_ID(stats, id) \
+	(uint64_t) atomic_load_64(&((uint64_t*)(stats))[id])
+#else
 #define PNSO_DECLARE_STAT(s) atomic64_t s;
 #define PNSO_STAT_INC(pcr, s) \
 	atomic64_inc_return(&pcr->api_stats.s)
@@ -32,6 +42,7 @@ extern "C" {
 #define PNSO_STAT_READ(stats, s) (uint64_t)atomic64_read(&(stats)->s)
 #define PNSO_STAT_READ_BY_ID(stats, id) \
 	(uint64_t)atomic64_read(&((atomic64_t*)(stats))[id])
+#endif
 #endif
 
 #define PNSO_ENUM_STAT(s) pas_ ## s,
@@ -187,6 +198,16 @@ struct pnso_api_stats {
 	PNSO_STAT_ADD(pcr, num_chksums, count)
 
 /* for measuring the time spent in both software and hardware */
+#ifdef NDEBUG
+#define PAS_DECL_SW_PERF()
+#define PAS_START_SW_PERF(x)
+#define PAS_END_SW_PERF(pcr)
+#define PAS_SET_SW_PERF(x)
+#define PAS_DECL_HW_PERF()
+#define PAS_START_HW_PERF(x)
+#define PAS_END_HW_PERF(pcr)
+#define PAS_SET_HW_PERF(x)
+#else
 #define PAS_DECL_SW_PERF()	uint64_t s = 0
 #define PAS_START_SW_PERF(x)	x = s = osal_get_clock_nsec()
 #define PAS_END_SW_PERF(pcr)						\
@@ -199,6 +220,7 @@ struct pnso_api_stats {
 #define PAS_END_HW_PERF(pcr)						\
 	PNSO_STAT_ADD(pcr, total_hw_latency, (osal_get_clock_nsec() - h))
 #define PAS_SET_HW_PERF(x)	h = x
+#endif /* NDEBUG */
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->api_stats);
 

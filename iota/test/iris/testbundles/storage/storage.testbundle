@@ -21,6 +21,7 @@ aliases:
     - &CPDC_PAD_TEST_YML cpdc_pad.yml
     - &CP_FAIL_TEST_YML cp_fail.yml
     - &DC_FAIL_TEST_YML dc_fail.yml
+    - &CPDC_TEST_IPCORES_YML cpdc_ipcores_bug.yml
     - &HASH_TEST_YML hash.yml
     - &CHKSUM_TEST_YML chksum.yml
     - &CRYPTO_TEST_YML crypto.yml
@@ -132,6 +133,21 @@ testcases:
             wait    : '1.0'
             cfg     : [ 4k.yml, globals.yml ]
             test    : *DC_FAIL_TEST_YML
+
+    -   name: CpIPCoresBug
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : [ 1 ]
+            batch_depth : [ 1 ]
+            mode        : *MODE_ITER_LIST_COMBO3
+            inputlen    : [ 8192 ]
+            os          : [ 'freebsd' ]
+        args    :
+            wait        : '30.0'
+            test        : *CPDC_TEST_IPCORES_YML
+            cpflags     : *CPFLAGS_WITH_HEADER
+            dcflags     : *DCFLAGS_WITH_HEADER
 
     -   name        : Hash4K8KSha2_256
         testcase    : testcases.storage.ymltest2

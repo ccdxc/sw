@@ -36,7 +36,8 @@ enum {
 #define MAX_CP_HDR_LEN 8
 
 static inline uint32_t get_max_output_len_by_svc(const struct test_svc *svc,
-						 uint32_t input_len)
+						 uint32_t input_len,
+						 uint32_t uncompressed_size)
 {
 	uint32_t hdr_len;
 
@@ -77,11 +78,16 @@ static inline uint32_t get_max_output_len_by_svc(const struct test_svc *svc,
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
-		} else if ((svc->output_flags & TEST_OUTPUT_FLAG_JUMBO) ||
-			   (input_len * MAX_COMPRESSION_FACTOR > MAX_OUTPUT_BUF_LEN)) {
+		} else if (svc->output_flags & TEST_OUTPUT_FLAG_JUMBO) {
+			return MAX_OUTPUT_BUF_LEN;
+		} else if (uncompressed_size) {
+			return uncompressed_size;
+		} else if ((input_len * MAX_COMPRESSION_FACTOR > MAX_OUTPUT_BUF_LEN)) {
 			return MAX_OUTPUT_BUF_LEN;
 		} else {
-			return input_len * MAX_COMPRESSION_FACTOR;
+			/* Cannot deduce */
+			return 0;
+			//return input_len * MAX_COMPRESSION_FACTOR;
 		}
 	case PNSO_SVC_TYPE_HASH:
 		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
@@ -108,6 +114,7 @@ static inline uint32_t get_max_output_len_by_svc(const struct test_svc *svc,
 struct buffer_context {
 	bool initialized;
 	uint32_t svc_chain_idx;
+	uint32_t uncompressed_sz;
 	uint32_t buf_alloc_sz;
 	uint32_t buflist_alloc_count;
 	struct pnso_buffer_list *va_buflist;
@@ -128,7 +135,8 @@ struct request_context {
 	const struct test_svc_chain *svc_chain;
 	uint64_t req_id;
 
-	struct buffer_context *input; /* reference from chain_context */
+	struct buffer_context *input; /* reference to chain_context or input_data */
+	struct buffer_context input_data;
 
 	struct buffer_context outputs[PNSO_SVC_TYPE_MAX];
 
@@ -397,6 +405,7 @@ struct test_node_file {
 	uint32_t padded_size;
 	uint32_t alloc_size;
 	uint32_t block_size;
+	uint32_t uncompressed_size;
 	char filename[TEST_MAX_FULL_PATH_LEN+1];
 
 	struct pnso_buffer_list *buflist;

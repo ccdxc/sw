@@ -606,9 +606,9 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 	desc1->options.desc_vec_push_en = cmd->ccpc_desc_vec_push_en;
 }
 
-static void *
+static pnso_error_t
 hw_setup_desc(struct service_info *svc_info, const void *src_desc,
-		size_t desc_size)
+		size_t desc_size, void **seq_desc_new)
 {
 	pnso_error_t err = EINVAL;
 	struct sonic_accel_ring *ring;
@@ -639,8 +639,8 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	seq_desc = sonic_q_consume_entry(svc_info->si_seq_info.sqi_seq_q,
 			&index);
 	if (!seq_desc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("failed to obtain sequencer desc! err: %d", err);
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("failed to obtain sequencer desc! err: %d", err);
 		goto out;
 	}
 	svc_info->si_seq_info.sqi_index = index;
@@ -681,12 +681,14 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	PPRINT_SEQUENCER_ACCOUNTING(&svc_info->si_seq_info);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
+	*seq_desc_new = (void *) seq_desc;
+
 	OSAL_LOG_DEBUG("exit!");
-	return seq_desc;
+	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
-	return NULL;
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
+	return err;
 }
 
 static bool is_db_rung(struct service_info *svc_info)
@@ -811,8 +813,8 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	seq_status_desc = (uint8_t *) sonic_q_consume_entry(
 			seq_spec->sqs_seq_status_q, &index);
 	if (!seq_status_desc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("failed to obtain sequencer statusq desc! err: %d",
 				err);
 		goto out;
 	}
@@ -878,7 +880,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -909,8 +911,8 @@ hw_setup_cpdc_chain(struct service_info *svc_info,
 		(uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q,
 						 &statusq_index);
 	if (!seq_info->sqi_status_desc) {
-		OSAL_LOG_ERROR("failed to obtain cpdc sequencer statusq desc");
-		return EPERM;
+		OSAL_LOG_DEBUG("failed to obtain cpdc sequencer statusq desc");
+		return EAGAIN;
 	}
 	svc_info->si_seq_info.sqi_status_total_takes++;
 	desc->cd_db_addr = sonic_get_lif_local_dbaddr();
@@ -961,8 +963,8 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	seq_status_desc = (uint8_t *) sonic_q_consume_entry(
 			seq_spec->sqs_seq_status_q, &index);
 	if (!seq_status_desc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("failed to obtain sequencer statusq desc! err: %d",
 				err);
 		goto out;
 	}
@@ -1019,7 +1021,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -1032,6 +1034,7 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 	struct ring_spec *ring_spec;
 	struct service_info *svc_prev = chn_service_prev_svc_get(svc_info);
+	bool scratch_buf_in_use;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -1054,7 +1057,21 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 
 	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
 
-	chain_params->ccp_cmd.ccpc_sgl_update_en = 1;
+	/*
+	 * P4+ should not be updating sgl, header length, and vector push,
+	 * if DC in the chain has SGLs prepadded with scratch buffer
+	 *
+	 */
+	scratch_buf_in_use = (chn_service_type_is_dc(svc_prev) &&
+				(svc_prev->si_dst_blist.len >=
+				 CPDC_MIN_USER_BUFFER_LEN)) ? true : false;
+
+	if (!scratch_buf_in_use)
+		chain_params->ccp_cmd.ccpc_sgl_update_en = 1;
+
+	if (scratch_buf_in_use)
+		chain_params->ccp_cmd.ccpc_data_len_from_desc = 1;
+
 	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
 		chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
 
@@ -1067,9 +1084,12 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 		 * indicate to P4+ to push a vector of descriptors
 		 *
 		 */
-		chain_params->ccp_cmd.ccpc_desc_vec_push_en = 1;
-	} else
-		chain_params->ccp_cmd.desc_dlen_update_en = 1;
+		if (!scratch_buf_in_use)
+			chain_params->ccp_cmd.ccpc_desc_vec_push_en = 1;
+	} else {
+		if (!scratch_buf_in_use)
+			chain_params->ccp_cmd.desc_dlen_update_en = 1;
+	}
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
@@ -1142,8 +1162,8 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 		(uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q,
 						 &statusq_index);
 	if (!seq_info->sqi_status_desc) {
-		OSAL_LOG_ERROR("failed to obtain crypto sequencer statusq desc");
-		return EPERM;
+		OSAL_LOG_DEBUG("failed to obtain crypto sequencer statusq desc");
+		return EAGAIN;
 	}
 	svc_info->si_seq_info.sqi_status_total_takes++;
 	desc->cd_db_addr = sonic_get_lif_local_dbaddr();

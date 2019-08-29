@@ -58,18 +58,23 @@ get_cp_header(struct service_info *svc_info)
 	 * si_dst_blist.
 	 */
 	dst_sgl = svc_info->si_dst_sgl.sgl;
-	if (svc_info->si_sgl_pdma) {
-		tuple = &svc_info->si_sgl_pdma->tuple[0];
-		if (tuple->len >= sizeof(*cp_hdr))
-			cp_hdr = sonic_phy_to_virt(tuple->addr);
-	} else if (svc_info->si_dst_blist.type ==
-			SERVICE_BUF_LIST_TYPE_HOST) {
-		if (dst_sgl->cs_len_0 >= sizeof(*cp_hdr))
-			cp_hdr = (struct pnso_compression_header *)
-				sonic_phy_to_virt(dst_sgl->cs_addr_0);
+	if (svc_info->si_dst_blist.blist->buffer_0_va) {
+		cp_hdr = (struct pnso_compression_header *)
+			svc_info->si_dst_blist.blist->buffer_0_va;
+	} else {
+		if (svc_info->si_sgl_pdma) {
+			tuple = &svc_info->si_sgl_pdma->tuple[0];
+			if (tuple->len >= sizeof(*cp_hdr))
+				cp_hdr = sonic_phy_to_virt(tuple->addr);
+		} else if (svc_info->si_dst_blist.type ==
+				SERVICE_BUF_LIST_TYPE_HOST) {
+			if (dst_sgl->cs_len_0 >= sizeof(*cp_hdr))
+				cp_hdr = (struct pnso_compression_header *)
+					sonic_phy_to_virt(dst_sgl->cs_addr_0);
+		}
 	}
 
-	OSAL_LOG_DEBUG("dst_sgl=0x" PRIx64 ", cs_addr_0=0x" PRIx64 ", cp_hdr-0x" PRIx64 "\n",
+	OSAL_LOG_DEBUG("dst_sgl: 0x" PRIx64 " cs_addr_0: 0x" PRIx64 " cp_hdr: 0x" PRIx64,
 		       (uint64_t) dst_sgl, (uint64_t) dst_sgl->cs_addr_0,
 		       (uint64_t) cp_hdr);
 
@@ -100,6 +105,8 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 {
 	uint64_t aligned_addr;
 	pnso_error_t err;
+	struct cpdc_sgl *sgl;
+	uint32_t scratch_buf_len = 0;
 
 	memset(desc, 0, sizeof(*desc));
 
@@ -116,8 +123,13 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
-	desc->cd_datain_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
-					svc_info->si_src_blist.len);
+	sgl = svc_info->si_src_sgl.sgl;
+	if (sgl->cs_len_0 == CPDC_SCRATCH_BUFFER_LEN)
+		scratch_buf_len = CPDC_SCRATCH_BUFFER_LEN;
+
+	desc->cd_datain_len = 
+		cpdc_desc_data_len_set_eval(svc_info->si_type,
+				svc_info->si_src_blist.len + scratch_buf_len);
 
 	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 					threshold_len);
@@ -156,15 +168,15 @@ compress_setup(struct service_info *svc_info,
 
 	cp_desc = cpdc_get_desc(svc_info, false);
 	if (!cp_desc) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("cannot obtain cp desc from pool! err: %d", err);
+		err = EAGAIN;
+		OSAL_LOG_DEBUG("cannot obtain cp desc from pool! err: %d", err);
 		goto out;
 	}
 	svc_info->si_desc = cp_desc;
 
 	err = cpdc_setup_status_desc(svc_info, false);
 	if (err) {
-		OSAL_LOG_ERROR("cannot obtain cp status desc from pool! err: %d",
+		OSAL_LOG_DEBUG("cannot obtain cp status desc from pool! err: %d",
 				err);
 		goto out;
 	}
@@ -197,7 +209,7 @@ compress_setup(struct service_info *svc_info,
 
 	err = svc_seq_desc_setup(svc_info, cp_desc, sizeof(*cp_desc), 0);
 	if (err) {
-		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+		OSAL_LOG_DEBUG("failed to setup sequencer desc! err: %d", err);
 		goto out;
 	}
 
@@ -211,7 +223,7 @@ compress_setup(struct service_info *svc_info,
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -269,7 +281,7 @@ compress_chain(struct chain_entry *centry)
 
 	err = seq_setup_cpdc_chain_status_desc(svc_info);
 	if (err) {
-		OSAL_LOG_ERROR("failed to setup sequencer status desc! err: %d",
+		OSAL_LOG_DEBUG("failed to setup sequencer status desc! err: %d",
 				err);
 		goto out;
 	}

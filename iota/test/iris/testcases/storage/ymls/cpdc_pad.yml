@@ -20,6 +20,7 @@ svc_chains:
                 flags       : 'param::dcflags'
                 hdr_fmt_idx : 1
                 output_file : '%chain_id%_decompressed.bin'
+                output_len  : 'param::inputlen'
 
 tests:
   - test:

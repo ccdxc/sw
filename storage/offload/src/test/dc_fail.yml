@@ -22,6 +22,7 @@ svc_chains:
             flags: 'header_present'
             hdr_fmt_idx: 1
             output_file: '%chain_id%_dc_fail.bin'
+            output_len: '$2block'
   #- svc_chain:
   #    idx: 2
   #    name: "TODO: NOT WORKING. Decompression bad input no header"
@@ -33,6 +34,7 @@ svc_chains:
   #          flags: 0
   #          hdr_fmt_idx: 1
   #          output_file: '%chain_id%_dc_fail.bin'
+  #          output_len: '$2block'
   - svc_chain:
       idx: 3
       name: "Decompression output too large"

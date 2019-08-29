@@ -19,6 +19,10 @@
 #include "sonic_interrupt.h"
 #include "sonic_api_int.h"
 
+#ifndef ACCESS_ONCE
+#define ACCESS_ONCE READ_ONCE
+#endif
+
 #define evid_to_db_pa(evl, id) (evl->db_base_pa + (sizeof(struct sonic_db_data) * (id)))
 #define db_pa_to_evid(evl, addr) (((dma_addr_t)(addr) - evl->db_base_pa) / sizeof(struct sonic_db_data))
 #define evid_to_db_va(evl, id) (volatile struct sonic_db_data *)(evl->db_base + (sizeof(struct sonic_db_data) * (id)))
@@ -130,8 +134,14 @@ sonic_intr_db_fired_chk(volatile struct sonic_db_data *db_data,
 static inline bool
 sonic_intr_db_expired_chk(volatile struct sonic_db_data *db_data, uint64_t cur_ts)
 {
-	if (cur_ts && db_data->db_timestamp) {
-		return (osal_clock_delta(cur_ts, db_data->db_timestamp) > SONIC_EV_WORK_EXPIRED_TIMEOUT);
+	uint64_t timestamp;
+
+	if (cur_ts) {
+		timestamp = db_data->db_timestamp;
+		if (timestamp) {
+			return (osal_clock_delta(cur_ts, timestamp) >
+				SONIC_EV_WORK_EXPIRED_TIMEOUT);
+		}
 	}
 
 	return false;
@@ -170,6 +180,7 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 	int found_zero_data = 0;
 	unsigned long irqflags;
 	bool b_wrapped = false;
+	bool b_flushing = ACCESS_ONCE(evl->flushing);
 
 	spin_lock_irqsave(&evl->inuse_lock, irqflags);
 	first_id = evl->next_used_evid;
@@ -205,7 +216,7 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 				}
 				found++;
 				work->found_work = true;
-			} else if (READ_ONCE(evl->flushing) ||
+			} else if (b_flushing ||
 				   sonic_intr_db_expired_chk(db_data, cur_ts)) {
 				work->ev_data[found].evid = id;
 				work->ev_data[found].data = usr_data;
@@ -308,6 +319,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	int used_count = 0;
 	int npolled = 0;
 	pnso_error_t err;
+	bool b_flushing = ACCESS_ONCE(evl->flushing);
 
 	if (!evl->enable)
 		return;
@@ -325,7 +337,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		err = pnso_request_poller((void *) evd->data);
 		if (err == EBUSY && evd->expired) {
 			if (!sonic_error_reset_recovery_en_get() ||
-			    READ_ONCE(evl->flushing)) {
+			    b_flushing) {
 				/* Timeout request immediately */
 				err = pnso_request_poll_timeout((void *) evd->data);
 			} else {
@@ -615,6 +627,7 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 	struct sonic_event_list *evl = NULL;
 	struct device *dev = pc_res->lif->sonic->dev;
 	int rc = 0;
+	int bind_cpu = -1;
 
 	if (ev_count > MAX_PER_CORE_EVENTS) {
 		OSAL_LOG_INFO("Truncating event count from %u to %u",
@@ -658,7 +671,11 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 	sprintf(evl->name, "sonic_async%u", pc_res->idx);
 	//evl->wq = create_workqueue(evl->name);
 	//evl->wq = create_singlethread_workqueue(evl->name);
-	evl->wq = osal_create_workqueue_fast(evl->name, SONIC_ASYNC_BUDGET);
+#ifndef NBIND_IRQ
+	/* Assumes pc_res->idx matches core id */
+	bind_cpu = pc_res->idx;
+#endif
+	evl->wq = osal_create_workqueue_fast(evl->name, 1, bind_cpu);
 	if (!evl->wq) {
 		OSAL_LOG_ERROR("Failed to create_workqueue");
 		rc = -ENOMEM;
