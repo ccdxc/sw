@@ -25,7 +25,7 @@ type SmartNICState struct {
 func (sm *Statemgr) handleSmartNICEvent(et kvstore.WatchEventType, smartNIC *cluster.SmartNIC) {
 	switch et {
 	case kvstore.Created, kvstore.Updated:
-		log.Infof("SetSmartNICState - %s\n", smartNIC.Name)
+		log.Infof("SetSmartNICState - {%+v}\n", smartNIC)
 		err := sm.SetSmartNICState(smartNIC)
 		if err != nil {
 			log.Errorf("Error SetSmartNICState SmartNIC {%+v}. Err: %v", smartNIC, err)
