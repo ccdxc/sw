@@ -216,40 +216,26 @@ redirect_to_arm:
 .align
 p4plus_app_tcp_proxy:
     /*
-    phvwr           p.gre_1_valid, FALSE
-    phvwr           p.ipv4_1_valid, FALSE
-
-    phvwr           p.ipv6_1_valid, FALSE
-    phvwr           p.ctag_1_valid, FALSE
-    phvwr           p.ethernet_1_valid, FALSE
     phvwr           p.p4_to_p4plus_tcp_proxy_sack_valid, TRUE
-
     phvwr           p.p4_to_p4plus_tcp_proxy_valid, TRUE
     phvwr           p.p4i_apollo_i2e_valid, FALSE
     phvwr           p.p4_to_txdma_header_valid, FALSE
     phvwr           p.txdma_to_p4e_header_valid, FALSE
-
     phvwr           p.p4_to_arm_valid, FALSE
     phvwr           p.p4_to_p4plus_classic_nic_ip_valid, FALSE
     phvwr           p.p4_to_p4plus_classic_nic_valid, FALSE
     phvwr           p.predicate_header2_valid, FALSE
-
     phvwr           p.predicate_header_valid, FALSE
     phvwr           p.p4_to_rxdma_header_valid, TRUE
     phvwr           p.p4plus_to_p4_vlan_valid, FALSE
     phvwr           p.p4plus_to_p4_valid, FALSE
-
     phvwr           p.capri_txdma_intrinsic_valid, FALSE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.service_header_valid, FALSE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     */
-    phvwr           p.{gre_1_valid, \
-                       ipv4_1_valid, \
-                       ipv6_1_valid, \
-                       ctag_1_valid, \
-                       ethernet_1_valid, \
-                       p4_to_p4plus_tcp_proxy_sack_valid, \
+    phvwr           p.{icmp_valid...ethernet_1_valid}, 0
+    phvwri          p.{p4_to_p4plus_tcp_proxy_sack_valid, \
                        p4_to_p4plus_tcp_proxy_valid, \
                        p4i_apollo_i2e_valid, \
                        p4_to_txdma_header_valid, \
@@ -265,7 +251,7 @@ p4plus_app_tcp_proxy:
                        capri_txdma_intrinsic_valid, \
                        capri_rxdma_intrinsic_valid, \
                        service_header_valid, \
-                       capri_p4_intrinsic_valid}, 0x018005
+                       capri_p4_intrinsic_valid}, 0x18005
     phvwr           p.p4_to_p4plus_tcp_proxy_table0_valid, 1
     phvwr.e         p.tcp_valid, 0
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \

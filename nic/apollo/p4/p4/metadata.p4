@@ -4,6 +4,7 @@ header_type capri_deparser_len_t {
         ipv4_0_hdr_len      : 16;
         ipv4_1_hdr_len      : 16;
         ipv4_2_hdr_len      : 16;
+        l4_payload_len      : 16;
     }
 }
 
@@ -130,6 +131,8 @@ header_type scratch_metadata_t {
         nexthop_index       : 12;
         num_nexthops        : 4;
         pad6                : 6;
+        update_ip_chksum    : 1;
+        update_l4_chksum    : 1;
 
         subnet_id           : 16;
         snat                : 1;

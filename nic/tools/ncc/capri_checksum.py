@@ -771,12 +771,12 @@ class Checksum:
                         self.csum_verify_logger.debug(\
                             'Checksum %s Csum Profile# %d, Csum# %d ' \
                               'OhiStart %d OhiLen %d' % \
-                            (calfldobj.dstField, \
+                            (calfldobj.dstField,
                              calfldobj.ParserCsumProfileGet().CsumProfileUnitNumGet(),
                              calfldobj.ParserCsumObjGet().CsumUnitNumGet(),
                              calfldobj.ParserCsumObjGet().CsumOhiStartSelGet(),
                              calfldobj.ParserCsumObjGet().CsumOhiLenSelGet()))
-                        self.csum_verify_logger.debug('\n')
+                        self.csum_verify_logger.debug('')
                         csum_objects.remove(calfldobj)
                     elif calfldobj.payload_checksum:
                         #In order to associate right phdr, maintain
@@ -833,20 +833,16 @@ class Checksum:
                             self.csum_verify_logger.debug(\
                                 'Checksum %s Phdr %s Phdr Profile#' \
                                 ' %d, CsumProfile# %d Csum# %d ' \
-                                'OhiStart %d OhiLen %d TotalLen/PayloadLen' % \
-                                (pl_calfldobj.dstField, \
-                                 pl_calfldobj.phdr_name, \
-                                 pl_calfldobj.ParserPhdrProfileGet().\
-                                            CsumPhdrProfileUnitNumGet(), \
-                                 pl_calfldobj.ParserCsumProfileGet().\
-                                            CsumProfileUnitNumGet(), \
-                                 pl_calfldobj.ParserCsumObjGet().\
-                                            CsumUnitNumGet(),
-                                 pl_calfldobj.ParserCsumObjGet().\
-                                            CsumOhiLenSelGet(),
-                                 pl_calfldobj.ParserCsumObjGet().\
-                                            CsumOhiTotalLenGet()))
-                            self.csum_verify_logger.debug('\n')
+                                'OhiStart %d OhiLen %d TotalLen/PayloadLen %d' % \
+                                (pl_calfldobj.dstField,
+                                 pl_calfldobj.phdr_name,
+                                 pl_calfldobj.ParserPhdrProfileGet().CsumPhdrProfileUnitNumGet(),
+                                 pl_calfldobj.ParserCsumProfileGet().CsumProfileUnitNumGet(),
+                                 pl_calfldobj.ParserCsumObjGet().CsumUnitNumGet(),
+                                 pl_calfldobj.ParserCsumObjGet().CsumOhiStartSelGet(),
+                                 pl_calfldobj.ParserCsumObjGet().CsumOhiLenSelGet(),
+                                 pl_calfldobj.ParserCsumObjGet().CsumOhiTotalLenGet()))
+                            self.csum_verify_logger.debug('')
                             csum_objects.remove(pl_calfldobj)
                 if not len(csum_objects):
                     break
