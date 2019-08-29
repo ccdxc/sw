@@ -63,6 +63,7 @@ function disableNTP() {
 }
 
 function clockSettings() {
+     vmware-toolbox-cmd timesync disable || echo
      timedatectl set-local-rtc 0
      hwclock -wu
 }
