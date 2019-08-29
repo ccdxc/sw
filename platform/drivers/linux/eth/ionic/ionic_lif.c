@@ -1830,6 +1830,7 @@ static void ionic_lif_handle_fw_down(struct lif *lif)
 {
 	struct ionic *ionic = lif->ionic;
 
+	ionic_stop(lif->netdev);
 	clear_bit(LIF_F_FW_READY, lif->state);
 	ionic_lifs_unregister(ionic);
 	ionic_lifs_deinit(ionic);
