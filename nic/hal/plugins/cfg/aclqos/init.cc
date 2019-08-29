@@ -324,7 +324,7 @@ hal_eplearn_acl_config_init (void)
 static hal_ret_t
 hal_acl_config_init (void)
 {
-    hal_ret_t ret;
+    hal_ret_t     ret = HAL_RET_OK;
     AclSpec       spec;
     AclResponse   rsp;
     AclSelector   *match;
@@ -341,6 +341,7 @@ hal_acl_config_init (void)
         }
     }
 
+#if 0
     {
         spec.Clear();
         match = spec.mutable_match();
@@ -371,6 +372,7 @@ hal_acl_config_init (void)
         }
         HAL_TRACE_DEBUG("Quiesce acl entry created");
     }
+#endif
 
     if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_CLASSIC) {
         ret = hal_eplearn_acl_config_init();

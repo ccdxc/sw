@@ -145,9 +145,11 @@ init (hal_cfg_t *hal_cfg)
     // default set to local switch prom. for DOLs to pass
     g_hal_state->set_allow_local_switch_for_promiscuous(true);
 
-    // create cpu interface
-    ret = hal_cpu_if_create(HAL_LIF_CPU);
-    HAL_ABORT(ret == HAL_RET_OK);
+    if (hal_cfg->device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) {
+        // create cpu interface
+        ret = hal_cpu_if_create(HAL_LIF_CPU);
+        HAL_ABORT(ret == HAL_RET_OK);
+    }
 
     // Create FTE span. Only for iris pipeline
     if (hal_cfg->features == hal::HAL_FEATURE_SET_IRIS) {
