@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
+	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -37,7 +38,7 @@ func RunUnauthServer(clusterMgmtURL, certsURL, nicRegURL string, stopChannel cha
 		log.Fatalf("Error creating NIC Registration server at %s: %v", nicRegURL, err)
 	}
 	env.SmartNICRegRPCServer = smartNICRegRPCServer
-	RegisterSmartNICRegistrationServer(env.StateMgr)
+	grpc.RegisterSmartNICRegistrationServer(env.SmartNICRegRPCServer.GrpcServer, env.NICService.(*smartnic.RPCServer))
 
 	// start RPC servers
 	certsRPCServer.Start()

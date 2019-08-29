@@ -11,18 +11,15 @@ import (
 
 	context "golang.org/x/net/context"
 
-	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/grpc/server/health"
-	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
-	rolloututils "github.com/pensando/sw/venice/ctrler/rollout/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -477,41 +474,4 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 	}
 
 	return &grpc.ClusterDisjoinResp{}, err
-}
-
-// RegisterSmartNICRegistrationServer creates and register smartNIC server with retries
-func RegisterSmartNICRegistrationServer(smgr *cache.Statemgr) {
-
-	// Start smartNIC gRPC server
-	for i := 0; i < maxIters; i++ {
-
-		// create new smartNIC server
-		nicServer, err := smartnic.NewRPCServer(
-			smartnic.HealthWatchInterval,
-			smartnic.DeadInterval,
-			globals.NmdRESTPort,
-			smgr,
-			rolloututils.VersionChecker{})
-		if err != nil {
-			time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
-			continue
-		}
-
-		// Update NIC service
-		env.NICService = nicServer
-		// Launch go routine to monitor health updates of smartNIC objects and update status
-		if cluster, err := utils.GetCluster(); err == nil && cluster != nil {
-			// only start here if cmd is getting restarted and is already part of cluster.
-			// If its not yet part of cluster, then MonitorHealth() is done as part of ClusterCreateOP/ClusterJoin
-			go func() {
-				env.NICService.MonitorHealth()
-			}()
-		}
-
-		// Register smartNIC gRPC server
-		log.Debugf("Registering SmartNIC RPCserver")
-		grpc.RegisterSmartNICRegistrationServer(env.SmartNICRegRPCServer.GrpcServer, nicServer)
-		return
-	}
-	log.Fatalf("Failed to register SmartNIC RPCserver, apiClient not up")
 }

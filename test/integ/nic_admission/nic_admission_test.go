@@ -175,7 +175,7 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	cmdenv.StateMgr = tInfo.stateMgr
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = smartnic.NewRPCServer(
+	tInfo.smartNICServer = smartnic.NewRPCServer(
 		smartnic.HealthWatchInterval,
 		nicDeadIntvl,
 		globals.NmdRESTPort,

@@ -129,7 +129,7 @@ type NICAdmissionVersionChecker interface {
 }
 
 // NewRPCServer returns a SmartNIC RPC server object
-func NewRPCServer(healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr, nicVersionChecker NICAdmissionVersionChecker) (*RPCServer, error) {
+func NewRPCServer(healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr, nicVersionChecker NICAdmissionVersionChecker) *RPCServer {
 	return &RPCServer{
 		HealthWatchIntvl: healthInvl,
 		DeadIntvl:        deadInvl,
@@ -137,7 +137,7 @@ func NewRPCServer(healthInvl, deadInvl time.Duration, restPort string, stateMgr 
 		RetryNicDB:       make(map[string]*cluster.SmartNIC),
 		stateMgr:         stateMgr,
 		versionChecker:   nicVersionChecker,
-	}, nil
+	}
 }
 
 func (s *RPCServer) getNicKey(nic *cluster.SmartNIC) string {

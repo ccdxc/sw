@@ -29,7 +29,7 @@ func Run(options *options.ServerRunOptions) {
 	localCertsURL := globals.Localhost + ":" + options.UnauthCertAPIPort
 	nicRegURL := ":" + options.SmartNICRegistrationPort
 
-	grpcserver.RunUnauthServer(clusterMgmtURL, localCertsURL, nicRegURL, nil)
+	go grpcserver.RunUnauthServer(clusterMgmtURL, localCertsURL, nicRegURL, nil)
 	log.Infof("gRPC Endpoints: ClusterMgmt API %s, Local Certs API %s, SmartNIC registration: %s",
 		clusterMgmtURL, localCertsURL, nicRegURL)
 

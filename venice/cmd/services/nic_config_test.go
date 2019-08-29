@@ -111,16 +111,12 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	cmdenv.SmartNICRegRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = smartnic.NewRPCServer(
+	tInfo.smartNICServer = smartnic.NewRPCServer(
 		healthInterval,
 		deadtimeInterval,
 		getRESTPort(1),
 		cmdenv.StateMgr,
 		tInfo)
-	if err != nil {
-		fmt.Printf("Error creating SmartNIC RPC server: %v", err)
-		return nil, err
-	}
 
 	grpc.RegisterSmartNICRegistrationServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 	rpcServer.Start()

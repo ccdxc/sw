@@ -294,7 +294,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	cmdenv.StateMgr = cache.NewStatemgr(cw)
 
 	// create and register the RPC handler for SmartNIC service
-	it.smartNICServer, err = smartnic.NewRPCServer(
+	it.smartNICServer = smartnic.NewRPCServer(
 		smartnic.HealthWatchInterval,
 		smartnic.DeadInterval,
 		globals.NmdRESTPort,

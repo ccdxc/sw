@@ -144,11 +144,7 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 	cmdenv.SmartNICRegRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = NewRPCServer(healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr, tInfo)
-	if err != nil {
-		fmt.Printf("Error creating SmartNIC RPC server: %v", err)
-		return nil, err
-	}
+	tInfo.smartNICServer = NewRPCServer(healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr, tInfo)
 
 	// Register self as rpc handler for both NIC registration and watch/updates on the server.
 	// In reality, CMD uses two different servers because watches and updates APIs are

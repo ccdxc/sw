@@ -152,4 +152,8 @@ func main() {
 
 	env.Logger.Infof("Launching server %s(ver:%s) (commit:%s) (builddate:%s) is running", globals.Cmd, GitVersion, GitCommit, BuildDate)
 	server.Run(env.Options)
+
+	// Wait forever
+	waitCh := make(chan bool)
+	<-waitCh
 }

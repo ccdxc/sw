@@ -14,9 +14,11 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/grpc/server/health"
+	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
+	rolloututils "github.com/pensando/sw/venice/ctrler/rollout/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -308,6 +310,16 @@ func OnStart() {
 	env.StateMgr = cache.NewStatemgr(env.CfgWatcherService)
 	env.ClusterBootstrapService = services.NewClusterBootstrapService(":" + env.Options.RESTPort)
 
+	// Instantiate handler for NIC registration and updates.
+	// Actual server instantiation, registration and start is done at a later time,
+	// after we know if we are part of a cluster and if we are leader.
+	env.NICService = smartnic.NewRPCServer(
+		smartnic.HealthWatchInterval,
+		smartnic.DeadInterval,
+		globals.NmdRESTPort,
+		env.StateMgr,
+		rolloututils.VersionChecker{})
+
 	var cluster *utils.Cluster
 	var err error
 	if cluster, err = utils.GetCluster(); err != nil || cluster == nil {
@@ -338,6 +350,11 @@ func OnStart() {
 	// update config watcher with node service and quorum nodes
 	env.CfgWatcherService.SetNodeService(env.NodeService)
 	env.CfgWatcherService.SetClusterQuorumNodes(env.QuorumNodes)
+
+	// start SmartNIC monitoring routine
+	go func() {
+		env.NICService.MonitorHealth()
+	}()
 
 	quorumMember, _ := isQuorumMember(cluster)
 	if !quorumMember {
