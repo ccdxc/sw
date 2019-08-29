@@ -51,21 +51,16 @@
 #define QUEUE_NAME_MAX_SZ		8
 MALLOC_DECLARE(M_IONIC);
 
-#ifdef IONIC_DEBUG
-#define __IONIC_DEBUG true
+#ifndef IONIC_NDEBUG
+extern int ionic_debug;
+extern int ionic_trace;
+extern int ionic_tso_debug;
+#define __IONIC_DEBUG ionic_debug
+#define __IONIC_TRACE ionic_trace
+#define __IONIC_TSO_DEBUG ionic_tso_debug
 #else
 #define __IONIC_DEBUG false
-#endif
-
-#ifdef IONIC_ENABLE_TRACING
-#define __IONIC_TRACE true
-#else
 #define __IONIC_TRACE false
-#endif
-
-#ifdef IONIC_TSO_DEBUG
-#define __IONIC_TSO_DEBUG true
-#else
 #define __IONIC_TSO_DEBUG false
 #endif
 

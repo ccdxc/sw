@@ -313,17 +313,16 @@ static int ionic_api_do_devcmd(struct lif* lif, struct ionic_admin_ctx *ctx)
 	IONIC_ADMIN_LOCK(adminq);
 	lif->num_dev_cmds++;
 
-#ifdef IONIC_DEBUG
-	IONIC_NETDEV_INFO(lif->netdev, "post admin dev command:\n");
-	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &ctx->cmd, sizeof(ctx->cmd), true);
-#endif
+	if (__IONIC_DEBUG) {
+		IONIC_NETDEV_INFO(lif->netdev, "post admin dev command:\n");
+		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+				     &ctx->cmd, sizeof(ctx->cmd), true);
+	}
 
 	if (ctx->side_data) {
-#ifdef IONIC_DEBUG
-		print_hex_dump_debug("data ", DUMP_PREFIX_OFFSET, 16, 1,
-				     ctx->side_data, ctx->side_data_len, true);
-#endif
+		if (__IONIC_DEBUG)
+			print_hex_dump_debug("data ", DUMP_PREFIX_OFFSET, 16, 1,
+					     ctx->side_data, ctx->side_data_len, true);
 		err = SBD_put(idev, ctx->side_data, ctx->side_data_len);
 		if (err) {
 			IONIC_NETDEV_ERROR(lif->netdev, "SBD_put failed, error: %d\n", err);
@@ -346,17 +345,16 @@ static int ionic_api_do_devcmd(struct lif* lif, struct ionic_admin_ctx *ctx)
 			IONIC_NETDEV_ERROR(lif->netdev, "SBD_get failed, error: %d\n", err);
 			goto err_out;
 		}
-#ifdef IONIC_DEBUG
-		print_hex_dump_debug("data readback ", DUMP_PREFIX_OFFSET, 16, 1,
-				     ctx->side_data, ctx->side_data_len, true);
-#endif
+		if (__IONIC_DEBUG)
+			print_hex_dump_debug("data readback ", DUMP_PREFIX_OFFSET, 16, 1,
+					     ctx->side_data, ctx->side_data_len, true);
 	}
 
-#ifdef IONIC_DEBUG
-	IONIC_NETDEV_INFO(lif->netdev, "comp admin dev command:\n");
-	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &ctx->comp, sizeof(ctx->comp), true);
-#endif
+	if (__IONIC_DEBUG) {
+		IONIC_NETDEV_INFO(lif->netdev, "comp admin dev command:\n");
+		print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+				     &ctx->comp, sizeof(ctx->comp), true);
+	}
 
 err_out:
 	IONIC_ADMIN_UNLOCK(adminq);
@@ -391,10 +389,9 @@ static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
 
 	IONIC_QUE_INFO(adminq, "post admin queue command %d@%d:\n",
 		cmd->opcode, adminq->head_index);
-#ifdef IONIC_DEBUG
-	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &ctx->cmd, sizeof(ctx->cmd), true);
-#endif
+	if (__IONIC_DEBUG)
+		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+				     &ctx->cmd, sizeof(ctx->cmd), true);
 
 	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
 	ionic_adminq_ring_doorbell(adminq, adminq->head_index);

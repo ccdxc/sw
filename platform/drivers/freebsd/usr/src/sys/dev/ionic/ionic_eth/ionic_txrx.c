@@ -196,6 +196,27 @@ TUNABLE_INT("hw.ionic.lldp_vlan", &ionic_lldp_vlan);
 SYSCTL_INT(_hw_ionic, OID_AUTO, lldp_vlan, CTLFLAG_RDTUN,
     &ionic_lldp_vlan, 0, "Receive LLDP tagged with this vlan");
 
+#ifndef IONIC_NDEBUG
+int ionic_debug = 0;
+TUNABLE_INT("hw.ionic.debug", &ionic_debug);
+SYSCTL_INT(_hw_ionic, OID_AUTO, debug, CTLFLAG_RWTUN,
+    &ionic_debug, 0, "Enable IONIC_INFO debug messages");
+#endif
+
+#ifndef IONIC_NDEBUG
+int ionic_trace = 0;
+TUNABLE_INT("hw.ionic.trace", &ionic_trace);
+SYSCTL_INT(_hw_ionic, OID_AUTO, trace, CTLFLAG_RWTUN,
+    &ionic_trace, 0, "Enable IONIC_TRACE debug messages");
+#endif
+
+#ifndef IONIC_NDEBUG
+int ionic_tso_debug = 0;
+TUNABLE_INT("hw.ionic.tso_debug", &ionic_tso_debug);
+SYSCTL_INT(_hw_ionic, OID_AUTO, tso_debug, CTLFLAG_RWTUN,
+    &ionic_tso_debug, 0, "Enable IONIC_TSO_DEBUG messages");
+#endif
+
 static inline bool
 ionic_is_rx_tcp(uint8_t pkt_type)
 {
@@ -383,22 +404,22 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 		return;
 	}
 
-#ifdef IONIC_DEBUG
-	if (comp->len > ETHER_MAX_FRAME(ifp, ETHERTYPE_VLAN, 1)) {
-		IONIC_QUE_INFO(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
-		stats->length_err++;
-		m_freem(m);
-		rxbuf->m = NULL;
-		return;
+	if (__IONIC_DEBUG) {
+		if (comp->len > ETHER_MAX_FRAME(ifp, ETHERTYPE_VLAN, 1)) {
+			IONIC_QUE_INFO(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
+			stats->length_err++;
+			m_freem(m);
+			rxbuf->m = NULL;
+			return;
+		}
+		if (comp->len < ETHER_HDR_LEN + ETHER_CRC_LEN) {
+			IONIC_QUE_INFO(rxq, "Malformed ethernet packet!  comp->len %d\n", comp->len);
+			stats->length_err++;
+			m_freem(m);
+			rxbuf->m = NULL;
+			return;
+		}
 	}
-	if (comp->len < ETHER_HDR_LEN + ETHER_CRC_LEN) {
-		IONIC_QUE_INFO(rxq, "Malformed ethernet packet!  comp->len %d\n", comp->len);
-		stats->length_err++;
-		m_freem(m);
-		rxbuf->m = NULL;
-		return;
-	}
-#endif
 
 	stats->pkts++;
 	stats->bytes += comp->len;

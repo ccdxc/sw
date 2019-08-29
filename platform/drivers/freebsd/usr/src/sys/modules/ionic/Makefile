@@ -17,10 +17,8 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
 
 # NetApp physical port
 #CFLAGS+= -DNETAPP_PATCH
-# To enable debugging at init time.
-#CFLAGS+= -DIONIC_DEBUG
-# Enable to print packet level debugging details.
-#CFLAGS+= -DIONIC_ENABLE_TRACING
+# To disable debugging, with no option to enable at runtime
+#CFLAGS+= -DIONIC_NDEBUG
 
 CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include

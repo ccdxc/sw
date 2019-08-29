@@ -492,10 +492,9 @@ ionic_adminq_clean(struct adminq* adminq, int limit)
 		}
 
 		IONIC_NETDEV_INFO(adminq->lif->netdev, "admin comp:\n");
-#ifdef IONIC_DEBUG
-		print_hex_dump_debug("admin comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			     comp, sizeof(struct admin_comp), true);
-#endif
+		if (__IONIC_DEBUG)
+			print_hex_dump_debug("admin comp ", DUMP_PREFIX_OFFSET, 16, 1,
+					     comp, sizeof(struct admin_comp), true);
 		adminq->comp_index = IONIC_MOD_INC(adminq, comp_index);
 		adminq->tail_index = IONIC_MOD_INC(adminq, tail_index);
 		/* Roll over condition, flip color. */
@@ -2676,10 +2675,9 @@ ionic_notifyq_clean(struct notifyq* notifyq)
 	lif->last_eid = comp->event.eid;
 
 	IONIC_NETDEV_INFO(lif->netdev, " notifyq event:\n");
-#ifdef IONIC_DEBUG
-	print_hex_dump_debug("event ", DUMP_PREFIX_OFFSET, 16, 1,
-			comp, sizeof(union notifyq_comp), true);
-#endif
+	if (__IONIC_DEBUG)
+		print_hex_dump_debug("event ", DUMP_PREFIX_OFFSET, 16, 1,
+				     comp, sizeof(union notifyq_comp), true);
 
 	ionic_process_event(notifyq, comp);
 
