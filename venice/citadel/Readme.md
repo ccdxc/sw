@@ -136,6 +136,10 @@ Here are some curl commands that can be used to access the tsdb cluster:
 # Create database
 curl -i -XPOST 'http://localhost:7086/db?db=mydb'
 
+# create database with 1h retention
+curl -XPOST "http://localhost:7086/db?db=default&retention=1h"
+
+
 # Read databases
 curl -s 'http://localhost:7086/db'
 

@@ -115,9 +115,21 @@ func unknownAction(w http.ResponseWriter, r *http.Request) {
 // createdbReqHandler creates a database
 func (hsrv *HTTPServer) createdbReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
+	if database == "" {
+		return nil, fmt.Errorf("invalid db")
+	}
+
+	retention := uint64(0)
+	if rt := r.URL.Query().Get("retention"); rt != "" {
+		d, err := time.ParseDuration(rt)
+		if err != nil {
+			return nil, err
+		}
+		retention = uint64(d)
+	}
 
 	// create db
-	err := hsrv.broker.CreateDatabase(context.Background(), database)
+	err := hsrv.broker.CreateDatabaseWithRetention(context.Background(), database, retention)
 	if err != nil {
 		log.Errorf("Error creating the database %s. Err: %v", database, err)
 		return nil, err

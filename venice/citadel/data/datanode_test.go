@@ -680,6 +680,43 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 	for _, shard := range cl.ShardMap.Shards {
 		// walk all replicas in the shard
 		for _, repl := range shard.Replicas {
+			if repl.IsPrimary {
+
+				dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
+				AssertOk(t, rerr, "Error getting datanode client")
+
+				dbreq := tproto.DatabaseReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Database:    "db1",
+				}
+
+				// create db in primary
+				_, err = dnclient.CreateDatabase(context.Background(), &dbreq)
+				AssertOk(t, err, "Error making the create database call")
+
+				data := fmt.Sprintf("cpu,host=serverB,svc=nginx value1=11,value2=12  %v\n"+
+					"cpu,host=serverC,svc=nginx value1=21,value2=22  %v\n", time.Now().UnixNano(), time.Now().UnixNano())
+
+				req := tproto.PointsWriteReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Database:    "db1",
+					Points:      data,
+				}
+
+				// force db creation in non-primary during point write
+				_, err = dnclient.PointsWrite(context.Background(), &req)
+				AssertOk(t, err, "Error writing points")
+			}
+		}
+	}
+
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
 			dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
 			AssertOk(t, rerr, "Error getting datanode client")
 

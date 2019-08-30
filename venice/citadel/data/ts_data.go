@@ -48,7 +48,7 @@ func (dn *DNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 
 	retentionPeriod := time.Duration(req.RetentionPeriod)
 
-	// set cluster default if duration is below or unlimited
+	// set cluster default if duration is below minimum or unlimited (0)
 	if retentionPeriod < meta2.MinRetentionPolicyDuration {
 		retentionPeriod = dn.clusterCfg.RetentionPeriod
 	}
@@ -59,8 +59,7 @@ func (dn *DNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 	}
 
 	// create the database in the datastore
-	err := shard.store.CreateDatabase(req.Database, rp)
-	if err != nil {
+	if err := shard.store.CreateDatabase(req.Database, rp); err != nil {
 		dn.logger.Errorf("Error creating the database in %s. Err: %v", req.Database, err)
 		return &resp, err
 	}
@@ -311,14 +310,31 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 	}
 
 	// write points to datastore
-	err = shard.store.WritePoints(req.Database, points)
-	if err != nil {
-		dn.logger.Errorf("Error writing the points to db. Err: %v", err)
-		resp.Status = err.Error()
-		return &resp, err
+	if err = shard.store.WritePoints(req.Database, points); err == nil {
+		return &resp, nil
 	}
 
-	return &resp, nil
+	dn.logger.Errorf("Error writing the points to db. Err: %v", err)
+	if strings.Contains(err.Error(), "database not found") {
+		dn.logger.Errorf("creating database %v in replica %v shard %v",
+			req.Database, req.ReplicaID, req.ShardID)
+		if _, dbErr := dn.CreateDatabase(ctx, &tproto.DatabaseReq{
+			ClusterType:     req.ClusterType,
+			ReplicaID:       req.ReplicaID,
+			ShardID:         req.ShardID,
+			Database:        req.Database,
+			RetentionPeriod: uint64(dn.clusterCfg.RetentionPeriod),
+		}); dbErr != nil {
+			dn.logger.Errorf("failed to create database %s, %v", req.Database, dbErr)
+		} else {
+			if err = shard.store.WritePoints(req.Database, points); err == nil {
+				return &resp, nil
+			}
+		}
+	}
+
+	resp.Status = err.Error()
+	return &resp, err
 }
 
 // ExecuteQuery executes a query on the data node

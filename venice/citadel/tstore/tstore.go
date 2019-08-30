@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/influxdata/influxdb/services/retention"
+
 	"github.com/influxdata/influxdb/coordinator"
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
@@ -22,6 +24,7 @@ import (
 
 // Tstore is a timeseries store instance
 type Tstore struct {
+	service       *retention.Service             // tsdb services
 	dbPath        string                         // directory where files are stored
 	tsdb          *tsdb.Store                    // tsdb store instance
 	stmtExecutor  *coordinator.StatementExecutor // statement executor
@@ -76,6 +79,7 @@ func NewTstore(dbPath string) (*Tstore, error) {
 }
 
 func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
+	svc := retention.NewService(retention.NewConfig())
 
 	// local meta
 	cfg := meta.NewConfig()
@@ -115,12 +119,19 @@ func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
 
 	// create a tstore instance
 	s := Tstore{
+		service:       svc,
 		dbPath:        dbPath,
 		tsdb:          ts,
 		stmtExecutor:  &stEx,
 		queryExecutor: qEx,
 		pointsWriter:  pwr,
 		metaClient:    localMeta,
+	}
+	svc.TSDBStore = ts
+	svc.MetaClient = localMeta
+
+	if err := s.service.Open(); err != nil {
+		return nil, fmt.Errorf("open service: %s", err)
 	}
 
 	return &s, nil
@@ -133,10 +144,26 @@ func (ts *Tstore) CreateDatabase(database string, spec *meta.RetentionPolicySpec
 		return fmt.Errorf("invalid retention policy")
 	}
 
-	// create the database with retention policy
-	_, err := ts.metaClient.CreateDatabaseWithRetentionPolicy(database, spec)
-	if err != nil {
-		return err
+	dbinfo := ts.metaClient.Database(database)
+	if dbinfo == nil {
+		// create the database with retention policy
+		if _, err := ts.metaClient.CreateDatabaseWithRetentionPolicy(database, spec); err != nil {
+			return err
+		}
+
+	} else {
+		// update retention policy
+		sgd := time.Duration(0)
+		rpu := &meta.RetentionPolicyUpdate{
+			Name:               &spec.Name,
+			Duration:           spec.Duration,
+			ShardGroupDuration: &sgd, // will be normalized by influxdb
+		}
+
+		log.Infof("update [%v] retention to %v", ts.dbPath, rpu.Duration)
+		if err := ts.metaClient.UpdateRetentionPolicy(database, spec.Name, rpu, true); err != nil {
+			return fmt.Errorf("failed to update retention policy %v", err)
+		}
 	}
 
 	return nil
@@ -296,6 +323,7 @@ func (ta *tstoreAuth) AuthorizeSeriesWrite(database string, measurement []byte, 
 
 // Close closes the tstore
 func (ts *Tstore) Close() error {
+	ts.service.Close()
 	ts.pointsWriter.Close()
 	ts.queryExecutor.Close()
 	ts.metaClient.Close()

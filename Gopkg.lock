@@ -2919,6 +2919,7 @@
     "github.com/influxdata/influxdb/query",
     "github.com/influxdata/influxdb/services/httpd",
     "github.com/influxdata/influxdb/services/meta",
+    "github.com/influxdata/influxdb/services/retention",
     "github.com/influxdata/influxdb/toml",
     "github.com/influxdata/influxdb/tsdb",
     "github.com/influxdata/influxdb/tsdb/engine",
