@@ -73,6 +73,7 @@ class SystemObject(base.ConfigObjectBase):
         return super().IsFilterMatch(spec.filters)
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.request = system_pb2.SYSTEM_GET_ALL_STATS
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):

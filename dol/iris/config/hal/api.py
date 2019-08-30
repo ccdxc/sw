@@ -40,7 +40,7 @@ HAL_MAX_BATCH_SIZE = 64
 
 HalChannel = None
 def __process_response(resp_msg, req_msg, req_objs, respcb):
-    if req_msg is None:
+    if req_msg is None or req_msg.DESCRIPTOR.name == "SystemGetRequest":
         for idx in range(len(req_objs)):
             req_obj = req_objs[idx]
             resp_spec = resp_msg
@@ -99,6 +99,8 @@ def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
             if (req_msg.DESCRIPTOR.fields_by_name["request"].label == 3):
                 req_spec = req_msg.request.add()
                 getattr(obj,reqcb)(req_spec)
+            elif (req_msg.DESCRIPTOR.name == "SystemGetRequest"):
+                getattr(obj,reqcb)(req_msg)
             else:
                 getattr(obj,reqcb)(req_msg.request)
         req_objs.append(obj)
@@ -802,7 +804,7 @@ def ConfigureGftFlows(objlist):
 def GetSystem(objlist):
     if not IsConfigAllowed(objlist): return
     stub = system_pb2.SystemStub(HalChannel)
-    __get(objlist, None, stub.SystemGet)
+    __get(objlist, system_pb2.SystemGetRequest, stub.SystemGet)
     return
 
 def ConfigureDropMonitorRules(objlist):

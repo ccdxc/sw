@@ -54,7 +54,7 @@ func (mr *MockSystemClientMockRecorder) ApiStatsGet(ctx, in interface{}, opts ..
 }
 
 // SystemGet mocks base method
-func (m *MockSystemClient) SystemGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SystemResponse, error) {
+func (m *MockSystemClient) SystemGet(ctx context.Context, in *SystemGetRequest, opts ...grpc.CallOption) (*SystemResponse, error) {
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
@@ -288,7 +288,7 @@ func (mr *MockSystemServerMockRecorder) ApiStatsGet(arg0, arg1 interface{}) *gom
 }
 
 // SystemGet mocks base method
-func (m *MockSystemServer) SystemGet(arg0 context.Context, arg1 *Empty) (*SystemResponse, error) {
+func (m *MockSystemServer) SystemGet(arg0 context.Context, arg1 *SystemGetRequest) (*SystemResponse, error) {
 	ret := m.ctrl.Call(m, "SystemGet", arg0, arg1)
 	ret0, _ := ret[0].(*SystemResponse)
 	ret1, _ := ret[1].(error)

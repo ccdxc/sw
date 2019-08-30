@@ -313,8 +313,12 @@ func handleSystemQueueStatsCmd(cmd *cobra.Command, args []string, inputQueue boo
 	}
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SystemGet(context.Background(), empty)
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_PB_STATS,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
@@ -492,8 +496,12 @@ func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	client := halproto.NewSystemClient(c)
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SystemGet(context.Background(), empty)
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_ALL_STATS,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
@@ -563,8 +571,12 @@ func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SystemGet(context.Background(), empty)
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_DROP_STATS,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
@@ -1305,8 +1317,12 @@ func systemPbQueueStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewSystemClient(c)
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SystemGet(context.Background(), empty)
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_PB_STATS,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
@@ -1372,8 +1388,12 @@ func systemPbDetailStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewSystemClient(c)
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SystemGet(context.Background(), empty)
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_PB_STATS,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
@@ -1414,8 +1434,12 @@ func systemPbStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewSystemClient(c)
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SystemGet(context.Background(), empty)
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_PB_STATS,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
@@ -1473,20 +1497,37 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	pb := false
 	intf := false
 	fteTxRx := false
+	systemGet := true
+
+	var req *halproto.SystemGetRequest
 
 	if len(args) > 0 {
 		if strings.Compare(args[0], "table") == 0 {
 			table = true
+			req = &halproto.SystemGetRequest{
+				Request: halproto.SystemGetType_SYSTEM_GET_TABLE_STATS,
+			}
 		} else if strings.Compare(args[0], "fte") == 0 {
 			fte = true
+			req = &halproto.SystemGetRequest{
+				Request: halproto.SystemGetType_SYSTEM_GET_FTE_STATS,
+			}
 		} else if strings.Compare(args[0], "api") == 0 {
 			api = true
+			systemGet = false
 		} else if strings.Compare(args[0], "pb") == 0 {
 			pb = true
+			req = &halproto.SystemGetRequest{
+				Request: halproto.SystemGetType_SYSTEM_GET_PB_STATS,
+			}
 		} else if strings.Compare(args[0], "intf") == 0 {
 			intf = true
+			systemGet = false
 		} else if strings.Compare(args[0], "fte-txrx") == 0 {
 			fteTxRx = true
+			req = &halproto.SystemGetRequest{
+				Request: halproto.SystemGetType_SYSTEM_GET_FTE_TXRX_STATS,
+			}
 		} else if strings.Compare(args[0], "all") == 0 {
 			table = true
 			fte = true
@@ -1494,6 +1535,9 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			pb = true
 			intf = true
 			fteTxRx = true
+			req = &halproto.SystemGetRequest{
+				Request: halproto.SystemGetType_SYSTEM_GET_ALL_STATS,
+			}
 		} else {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -1505,6 +1549,9 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		pb = true
 		intf = true
 		fteTxRx = true
+		req = &halproto.SystemGetRequest{
+			Request: halproto.SystemGetType_SYSTEM_GET_ALL_STATS,
+		}
 	}
 
 	if intf {
@@ -1514,30 +1561,78 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewSystemClient(c)
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SystemGet(context.Background(), empty)
-	if err != nil {
-		fmt.Printf("Getting System Stats failed. %v\n", err)
-		return
-	}
+	if systemGet {
+		resp, err := client.SystemGet(context.Background(), req)
+		if err != nil {
+			fmt.Printf("Getting System Stats failed. %v\n", err)
+			return
+		}
 
-	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
-		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
-		return
-	}
+		if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+			return
+		}
 
-	if table {
-		// Print Header
-		fmt.Println("\nSystem Table Stats:")
-		systemTableStatsShowHeader()
+		if table {
+			// Print Header
+			fmt.Println("\nSystem Table Stats:")
+			systemTableStatsShowHeader()
 
-		// Print Table Stats
-		for _, entry := range resp.GetStats().GetTableStats().TableStats {
-			systemTableStatsShowEntry(entry)
+			// Print Table Stats
+			for _, entry := range resp.GetStats().GetTableStats().TableStats {
+				systemTableStatsShowEntry(entry)
+			}
+		}
+
+		if fte {
+			fmt.Println("\nFTE Stats:")
+			fteStatsShow(resp.GetStats())
+
+			fmt.Println("\nSession Summary Stats:")
+			sessionSummaryStatsShow(resp.GetStats())
+		}
+
+		if fteTxRx {
+			//fmt.Println("\nFTE TxRx Stats: Disabled")
+			fteTxRxStatsShow(resp.GetStats())
+		}
+
+		if pb {
+			var dmaIn uint32
+			var dmaOut uint32
+			var ingIn uint32
+			var ingOut uint32
+			var egrIn uint32
+			var egrOut uint32
+			uplinkIn := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+			uplinkOut := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+			for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
+				if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_DMA {
+					dmaIn = entry.GetBufferStats().GetSopCountIn()
+					dmaOut = entry.GetBufferStats().GetSopCountOut()
+				} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4IG {
+					ingIn = entry.GetBufferStats().GetSopCountIn()
+					ingOut = entry.GetBufferStats().GetSopCountOut()
+				} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4EG {
+					egrIn = entry.GetBufferStats().GetSopCountIn()
+					egrOut = entry.GetBufferStats().GetSopCountOut()
+				} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_UPLINK {
+					uplinkIn[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountIn()
+					uplinkOut[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountOut()
+				}
+			}
+
+			pbStatsShow(dmaIn, dmaOut,
+				ingIn, ingOut,
+				egrIn, egrOut,
+				uplinkIn, uplinkOut)
+
 		}
 	}
 
 	if api {
+		var empty *halproto.Empty
 		respMsg, err := client.ApiStatsGet(context.Background(), empty)
 		if err != nil {
 			fmt.Printf("Getting API Stats failed. %v\n", err)
@@ -1553,51 +1648,6 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if fte {
-		fmt.Println("\nFTE Stats:")
-		fteStatsShow(resp.GetStats())
-
-		fmt.Println("\nSession Summary Stats:")
-		sessionSummaryStatsShow(resp.GetStats())
-	}
-
-	if fteTxRx {
-		//fmt.Println("\nFTE TxRx Stats: Disabled")
-		fteTxRxStatsShow(resp.GetStats())
-	}
-
-	if pb {
-		var dmaIn uint32
-		var dmaOut uint32
-		var ingIn uint32
-		var ingOut uint32
-		var egrIn uint32
-		var egrOut uint32
-		uplinkIn := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
-		uplinkOut := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
-
-		for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
-			if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_DMA {
-				dmaIn = entry.GetBufferStats().GetSopCountIn()
-				dmaOut = entry.GetBufferStats().GetSopCountOut()
-			} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4IG {
-				ingIn = entry.GetBufferStats().GetSopCountIn()
-				ingOut = entry.GetBufferStats().GetSopCountOut()
-			} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4EG {
-				egrIn = entry.GetBufferStats().GetSopCountIn()
-				egrOut = entry.GetBufferStats().GetSopCountOut()
-			} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_UPLINK {
-				uplinkIn[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountIn()
-				uplinkOut[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountOut()
-			}
-		}
-
-		pbStatsShow(dmaIn, dmaOut,
-			ingIn, ingOut,
-			egrIn, egrOut,
-			uplinkIn, uplinkOut)
-
-	}
 }
 
 func systemClockShowCmdHandler(cmd *cobra.Command, args []string) {

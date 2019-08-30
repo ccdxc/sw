@@ -26,13 +26,13 @@ SystemServiceImpl::ApiStatsGet(ServerContext *context,
 
 Status
 SystemServiceImpl::SystemGet(ServerContext *context,
-                             const Empty *request,
+                             const SystemGetRequest *request,
                              SystemResponse *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd System Get Request");
     //Revisit to see if we need this lock for system get
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    hal::system_get(rsp);
+    hal::system_get(request, rsp);
     hal::hal_cfg_db_close();
 
     return Status::OK;

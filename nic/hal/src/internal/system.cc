@@ -482,14 +482,16 @@ system_uuid_get (SystemResponse *rsp)
 // process a system get request
 //------------------------------------------------------------------------------
 hal_ret_t
-system_get (SystemResponse *rsp)
+system_get (const SystemGetRequest *req, SystemResponse *rsp)
 {
     hal_ret_t                           ret = HAL_RET_OK;
     pd::pd_system_args_t                pd_system_args = { 0 };
     pd::pd_drop_stats_get_args_t        d_args;
     pd::pd_egress_drop_stats_get_args_t ed_args;
     pd::pd_table_stats_get_args_t       t_args;
+    pd::pd_pb_stats_get_args_t          pb_args;
     pd::pd_func_args_t                  pd_func_args = {0};
+    auto                                req_type = req->request();
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("Querying Drop Stats:");
@@ -498,67 +500,84 @@ system_get (SystemResponse *rsp)
     pd::pd_system_args_init(&pd_system_args);
     pd_system_args.rsp = rsp;
 
-
-    d_args.pd_sys_args = &pd_system_args;
-    pd_func_args.pd_drop_stats_get = &d_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_STATS_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
+    if ((req_type == sys::SYSTEM_GET_DROP_STATS) ||
+        (req_type == sys::SYSTEM_GET_ALL_STATS)) {
+        d_args.pd_sys_args = &pd_system_args;
+        pd_func_args.pd_drop_stats_get = &d_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+            goto end;
+        }
+        ed_args.pd_sys_args = &pd_system_args;
+        pd_func_args.pd_egress_drop_stats_get = &ed_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_EGRESS_DROP_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get egress drop stats, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+            goto end;
+        }
     }
 
-    ed_args.pd_sys_args = &pd_system_args;
-    pd_func_args.pd_egress_drop_stats_get = &ed_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EGRESS_DROP_STATS_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get egress drop stats, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
+    if ((req_type == sys::SYSTEM_GET_TABLE_STATS) ||
+        (req_type == sys::SYSTEM_GET_ALL_STATS)) {
+        t_args.pd_sys_args = &pd_system_args;
+        pd_func_args.pd_table_stats_get = &t_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_TABLE_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+            goto end;
+        }
     }
 
-    t_args.pd_sys_args = &pd_system_args;
-    pd_func_args.pd_table_stats_get = &t_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TABLE_STATS_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
+    if ((req_type == sys::SYSTEM_GET_PB_STATS) ||
+        (req_type == sys::SYSTEM_GET_DROP_STATS) ||
+        (req_type == sys::SYSTEM_GET_ALL_STATS)) {
+        pb_args.pd_sys_args = &pd_system_args;
+        pd_func_args.pd_pb_stats_get = &pb_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_PB_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get packet buffer stats, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+            goto end;
+        }
     }
 
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_PB_STATS_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get packet buffer stats, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
-    }
     //unlock the cfg_db as fte dont need it, if needed fte has to take the lock again
     hal::hal_cfg_db_close();
 
     if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
         (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
 
-        // FTE stats get
-        system_fte_stats_get(rsp);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
-            rsp->set_api_status(types::API_STATUS_ERR);
-            goto end;
+        if ((req_type == sys::SYSTEM_GET_FTE_STATS) ||
+            (req_type == sys::SYSTEM_GET_ALL_STATS)) {
+            // FTE stats get
+            system_fte_stats_get(rsp);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+                rsp->set_api_status(types::API_STATUS_ERR);
+                goto end;
+            }
+
+            // Session Summary get
+            system_session_summary_get(rsp);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to get session summary get, err : {}", ret);
+                rsp->set_api_status(types::API_STATUS_ERR);
+                goto end;
+            }
         }
 
-        system_fte_txrx_stats_get(rsp);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
-            rsp->set_api_status(types::API_STATUS_ERR);
-            goto end;
-        }
-
-        // Session Summary get
-        system_session_summary_get(rsp);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to get session summary get, err : {}", ret);
-            rsp->set_api_status(types::API_STATUS_ERR);
-            goto end;
+        if ((req_type == sys::SYSTEM_GET_FTE_TXRX_STATS) ||
+            (req_type == sys::SYSTEM_GET_ALL_STATS)) {
+            system_fte_txrx_stats_get(rsp);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+                rsp->set_api_status(types::API_STATUS_ERR);
+                goto end;
+            }
         }
     }
 

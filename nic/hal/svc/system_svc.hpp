@@ -10,6 +10,7 @@ using grpc::ServerContext;
 using grpc::Status;
 
 using sys::System;
+using sys::SystemGetRequest;
 using sys::SystemResponse;
 using sys::ApiStatsResponse;
 using sys::FeatureProfileResponse;
@@ -22,7 +23,7 @@ public:
                        const Empty *request,
                        ApiStatsResponse *rsp) override;
     Status SystemGet(ServerContext *context,
-                     const Empty *request,
+                     const SystemGetRequest *request,
                      SystemResponse *rsp) override;
     Status SystemUuidGet(ServerContext *context,
                          const Empty *request,

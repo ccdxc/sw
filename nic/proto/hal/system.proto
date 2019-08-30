@@ -21,7 +21,7 @@ package sys;
 service System {
   // System related APIs
   rpc ApiStatsGet(types.Empty) returns (ApiStatsResponse) {}
-  rpc SystemGet(types.Empty) returns (SystemResponse) {}
+  rpc SystemGet(SystemGetRequest) returns (SystemResponse) {}
   rpc SystemUuidGet(types.Empty) returns (SystemResponse) {}
   rpc ClearIngressDropStats(types.Empty) returns (types.Empty) {}
   rpc ClearEgressDropStats(types.Empty) returns (types.Empty) {}
@@ -253,6 +253,19 @@ message PacketBufferStats {
 // Status captures the operating status of various components in the HAL
 // including "ready" status, thread health etc.
 message Status {
+}
+
+enum SystemGetType {
+  SYSTEM_GET_FTE_STATS      = 0;
+  SYSTEM_GET_FTE_TXRX_STATS = 1;
+  SYSTEM_GET_TABLE_STATS    = 2;
+  SYSTEM_GET_PB_STATS       = 3;
+  SYSTEM_GET_DROP_STATS     = 4;
+  SYSTEM_GET_ALL_STATS      = 5;
+}
+
+message SystemGetRequest {
+  SystemGetType request = 1;
 }
 
 // Global system object

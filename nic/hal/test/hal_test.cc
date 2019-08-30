@@ -149,6 +149,7 @@ using port::PortDeleteResponse;
 using sys::ApiStatsResponse;
 using sys::ApiStatsEntry;
 using sys::System;
+using sys::SystemGetRequest;
 using sys::SystemResponse;
 using sys::Stats;
 using sys::DropStats;
@@ -585,7 +586,7 @@ public:
 
     int system_get() {
         ClientContext       context;
-        Empty               request;
+        SystemGetRequest    request;
         SystemResponse      response;
         Status              status;
         Stats               stats;
@@ -596,6 +597,7 @@ public:
         int                 count;
 
         std::cout << "System Get\n";
+        request.set_request(sys::SYSTEM_GET_ALL_STATS);
         status = system_stub_->SystemGet(&context, request, &response);
         if (status.ok() && (response.api_status() == types::API_STATUS_OK)) {
             // Get Statistics

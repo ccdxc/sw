@@ -1216,6 +1216,7 @@ It has these top-level messages:
 	PacketBufferPortStats
 	PacketBufferStats
 	Status
+	SystemGetRequest
 	SystemResponse
 	Stats
 	DropStats
