@@ -8,7 +8,7 @@ import { BaseComponent } from '@components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 
 import { Utility } from '@common/Utility';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -71,14 +71,14 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   { field: 'message', header: 'Message', class: 'rolloutstatus-column rolloutstatus-column-message', sortable: false, width: 40 }
   ];
 
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
-// During progressing rollout, WatchSmartNIC may fail resulting in this.naples to be set to empty.
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+// During progressing rollout, WatchDistributedServiceCard may fail resulting in this.naples to be set to empty.
 // This affects the "name" column of the NICs table (see getNICID func).
 // Hence we keep the last valid copy of naples as naplesCopy, which is used to render NIC names.
-  naplesCopy: ReadonlyArray<ClusterSmartNIC> = [];
+  naplesCopy: ReadonlyArray<ClusterDistributedServiceCard> = [];
 
   // Used for processing the stream events
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
 
   labelSelectorsStrings: string[] = null;
 
@@ -171,9 +171,9 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         this.naplesCopy = this.naples;

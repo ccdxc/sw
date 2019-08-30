@@ -46,8 +46,8 @@ type NMD struct {
 	Upgmgr         nmdapi.UpgMgrAPI      // Upgrade Manager API
 	resolverClient resolver.Interface    // Resolver client instance
 
-	config       nmd.Naples    // Naples config received via REST
-	nic          *cmd.SmartNIC // SmartNIC object
+	config       nmd.Naples                  // Naples config received via REST
+	nic          *cmd.DistributedServiceCard // DistributedServiceCard object
 	DelphiClient clientAPI.Client
 	IPClient     *ipif.IPClient
 
@@ -70,7 +70,7 @@ type NMD struct {
 	certsProxy      *certsproxy.CertsProxy            // the CertsProxy instance
 	tlsProvider     *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
 	// Rollout related stuff
-	completedOps map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
+	completedOps map[roprotos.DSCOpSpec]bool // the ops that were requested by spec and got completed
 	ro           nmd.NaplesRollout
 	objectMeta   api.ObjectMeta
 	profiles     []*nmd.NaplesProfile

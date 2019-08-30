@@ -14976,7 +14976,7 @@
             "$ref": "#/definitions/monitoringTechSupportNodeResult"
           }
         },
-        "smartnic-node-results": {
+        "dsc-results": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/monitoringTechSupportNodeResult"

@@ -69,7 +69,7 @@ var (
 // Mock platform agent
 type mockAgent struct {
 	sync.Mutex
-	nicDB map[string]*cmd.SmartNIC
+	nicDB map[string]*cmd.DistributedServiceCard
 }
 
 // RegisterNMD registers NMD with PlatformAgent
@@ -78,7 +78,7 @@ func (m *mockAgent) RegisterNMD(nmdapi nmdapi.NmdPlatformAPI) error {
 }
 
 // CreateSmartNIC creates a smart NIC object
-func (m *mockAgent) CreateSmartNIC(nic *cmd.SmartNIC) error {
+func (m *mockAgent) CreateSmartNIC(nic *cmd.DistributedServiceCard) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -88,7 +88,7 @@ func (m *mockAgent) CreateSmartNIC(nic *cmd.SmartNIC) error {
 }
 
 // UpdateSmartNIC updates a smart NIC object
-func (m *mockAgent) UpdateSmartNIC(nic *cmd.SmartNIC) error {
+func (m *mockAgent) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -98,7 +98,7 @@ func (m *mockAgent) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 }
 
 // DeleteSmartNIC deletes a smart NIC object
-func (m *mockAgent) DeleteSmartNIC(nic *cmd.SmartNIC) error {
+func (m *mockAgent) DeleteSmartNIC(nic *cmd.DistributedServiceCard) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -107,22 +107,22 @@ func (m *mockAgent) DeleteSmartNIC(nic *cmd.SmartNIC) error {
 	return nil
 }
 
-func (m *mockAgent) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
+func (m *mockAgent) GetPlatformCertificate(nic *cmd.DistributedServiceCard) ([]byte, error) {
 	return nil, nil
 }
 
-func (m *mockAgent) GetPlatformSigner(nic *cmd.SmartNIC) (crypto.Signer, error) {
+func (m *mockAgent) GetPlatformSigner(nic *cmd.DistributedServiceCard) (crypto.Signer, error) {
 	return nil, nil
 }
 
 type mockCtrler struct {
 	sync.Mutex
-	nicDB                     map[string]*cmd.SmartNIC
+	nicDB                     map[string]*cmd.DistributedServiceCard
 	numUpdateSmartNICReqCalls int
 	smartNICWatcherRunning    bool
 }
 
-func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
+func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.DistributedServiceCard) (grpc.RegisterNICResponse, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -141,7 +141,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 		}
 		resp := grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase: cmd.SmartNICStatus_ADMITTED.String(),
+				Phase: cmd.DistributedServiceCardStatus_ADMITTED.String(),
 				ClusterCert: &certapi.CertificateSignResp{
 					Certificate: &certapi.Certificate{
 						Certificate: cert.Raw,
@@ -169,20 +169,20 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 	if strings.HasPrefix(nic.Spec.ID, nicKey2) {
 		return grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase: cmd.SmartNICStatus_PENDING.String(),
+				Phase: cmd.DistributedServiceCardStatus_PENDING.String(),
 			},
 		}, nil
 	}
 
 	return grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase:  cmd.SmartNICStatus_REJECTED.String(),
+			Phase:  cmd.DistributedServiceCardStatus_REJECTED.String(),
 			Reason: string("Invalid Cert"),
 		},
 	}, nil
 }
 
-func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) error {
+func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.DistributedServiceCard) error {
 	m.Lock()
 	defer m.Unlock()
 	m.numUpdateSmartNICReqCalls++
@@ -208,7 +208,7 @@ func (m *mockCtrler) IsSmartNICWatcherRunning() bool {
 	return m.smartNICWatcherRunning
 }
 
-func (m *mockCtrler) GetNIC(meta *api.ObjectMeta) *cmd.SmartNIC {
+func (m *mockCtrler) GetNIC(meta *api.ObjectMeta) *cmd.DistributedServiceCard {
 	m.Lock()
 	defer m.Unlock()
 
@@ -224,17 +224,17 @@ func (m *mockCtrler) GetNumUpdateSmartNICReqCalls() int {
 
 type mockRolloutCtrler struct {
 	sync.Mutex
-	status                 []roprotos.SmartNICOpStatus
+	status                 []roprotos.DSCOpStatus
 	smartNICWatcherRunning bool
 }
 
-func (f *mockRolloutCtrler) UpdateSmartNICRolloutStatus(status *roprotos.SmartNICRolloutStatusUpdate) error {
+func (f *mockRolloutCtrler) UpdateDSCRolloutStatus(status *roprotos.DSCRolloutStatusUpdate) error {
 	f.status = status.Status.OpStatus
 	log.Errorf("Got status %#v", f.status)
 	return nil
 }
 
-func (f *mockRolloutCtrler) WatchSmartNICRolloutUpdates() error {
+func (f *mockRolloutCtrler) WatchDSCRolloutUpdates() error {
 	f.Lock()
 	defer f.Unlock()
 	f.smartNICWatcherRunning = true
@@ -307,10 +307,10 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 	}
 
 	ag := &mockAgent{
-		nicDB: make(map[string]*cmd.SmartNIC),
+		nicDB: make(map[string]*cmd.DistributedServiceCard),
 	}
 	ct := &mockCtrler{
-		nicDB: make(map[string]*cmd.SmartNIC),
+		nicDB: make(map[string]*cmd.DistributedServiceCard),
 	}
 	roC := &mockRolloutCtrler{}
 	upgAgt := &mockUpgAgent{}
@@ -389,7 +389,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 	defer stopNMD(t, nm, false)
 
 	// NIC message
-	nic := cmd.SmartNIC{
+	nic := cmd.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
 			Name: nicKey1,
@@ -404,10 +404,10 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 	Assert(t, n.ObjectMeta.Name == nicKey1, "NIC name did not match", n)
 
 	// update smartNIC
-	nic.Status = cmd.SmartNICStatus{
-		Conditions: []cmd.SmartNICCondition{
+	nic.Status = cmd.DistributedServiceCardStatus{
+		Conditions: []cmd.DSCCondition{
 			{
-				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Type:   cmd.DSCCondition_HEALTHY.String(),
 				Status: cmd.ConditionStatus_TRUE.String(),
 			},
 		},
@@ -436,12 +436,12 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	defer stopNMD(t, nm, true)
 
 	// NIC message
-	nic := cmd.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	nic := cmd.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: nicKey1,
 		},
-		Spec: cmd.SmartNICSpec{
+		Spec: cmd.DistributedServiceCardSpec{
 			ID: nicKey1,
 		},
 	}
@@ -449,13 +449,13 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	// create smartNIC
 	resp, err := nm.RegisterSmartNICReq(&nic)
 	AssertOk(t, err, "Error registering nic")
-	Assert(t, resp.AdmissionResponse.Phase == cmd.SmartNICStatus_ADMITTED.String(), "NIC is not admitted", nic)
+	Assert(t, resp.AdmissionResponse.Phase == cmd.DistributedServiceCardStatus_ADMITTED.String(), "NIC is not admitted", nic)
 
 	// update smartNIC
-	nic.Status = cmd.SmartNICStatus{
-		Conditions: []cmd.SmartNICCondition{
+	nic.Status = cmd.DistributedServiceCardStatus{
+		Conditions: []cmd.DSCCondition{
 			{
-				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Type:   cmd.DSCCondition_HEALTHY.String(),
 				Status: cmd.ConditionStatus_TRUE.String(),
 			},
 		},
@@ -641,7 +641,7 @@ func TestNaplesNetworkMode(t *testing.T) {
 	// Simulate de-admit re-admit
 	nic, err := nm.GetSmartNIC()
 	AssertOk(t, err, "NIC not found in nicDB")
-	nic.Status.AdmissionPhase = cmd.SmartNICStatus_PENDING.String()
+	nic.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_PENDING.String()
 	nm.StopManagedMode()
 	nm.RegisterCMD(cm)
 	nm.RegisterROCtrlClient(ro)
@@ -652,7 +652,7 @@ func TestNaplesNetworkMode(t *testing.T) {
 		AssertOk(t, err, "NIC not found in nicDB")
 
 		// Verify NIC admission
-		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
+		if nic.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_ADMITTED.String() {
 			log.Errorf("NIC is not admitted")
 			return false, nil
 		}
@@ -723,7 +723,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 			PrimaryMAC: nicKey1,
 		},
 		Status: nmd.NaplesStatus{
-			AdmissionPhase: cmd.SmartNICStatus_ADMITTED.String(),
+			AdmissionPhase: cmd.DistributedServiceCardStatus_ADMITTED.String(),
 		},
 	}
 
@@ -827,8 +827,8 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 			return false, nil
 		}
 
-		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_PENDING.String() {
-			log.Errorf("NIC is not pending, expected %v, found %v", cmd.SmartNICStatus_PENDING.String(), nic.Status.AdmissionPhase)
+		if nic.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_PENDING.String() {
+			log.Errorf("NIC is not pending, expected %v, found %v", cmd.DistributedServiceCardStatus_PENDING.String(), nic.Status.AdmissionPhase)
 			return false, nil
 		}
 
@@ -898,7 +898,7 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 			return false, nil
 		}
 
-		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_REJECTED.String() {
+		if nic.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_REJECTED.String() {
 			log.Errorf("NIC is not rejected")
 			return false, nil
 		}
@@ -1029,17 +1029,17 @@ func TestNaplesRollout(t *testing.T) {
 	Assert(t, (upgAg != nil), "Failed to create nmd", nm)
 	Assert(t, (roCtrl != nil), "Failed to create nmd", nm)
 
-	sro := roprotos.SmartNICRollout{
+	sro := roprotos.DSCRollout{
 		TypeMeta: api.TypeMeta{
-			Kind: "SmartNICRollout",
+			Kind: "DSCRollout",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: nm.GetPrimaryMAC(),
 		},
-		Spec: roprotos.SmartNICRolloutSpec{
-			Ops: []roprotos.SmartNICOpSpec{
+		Spec: roprotos.DSCRolloutSpec{
+			Ops: []roprotos.DSCOpSpec{
 				{
-					Op:      roprotos.SmartNICOp_SmartNICPreCheckForDisruptive,
+					Op:      roprotos.DSCOp_DSCPreCheckForDisruptive,
 					Version: "ver1",
 				},
 			},
@@ -1047,12 +1047,12 @@ func TestNaplesRollout(t *testing.T) {
 	}
 
 	t.Log("Create ver1 PreCheckForDisruptive")
-	err := nm.CreateUpdateSmartNICRollout(&sro)
-	Assert(t, (err == nil), "CreateSmartNICRollout Failed")
+	err := nm.CreateUpdateDSCRollout(&sro)
+	Assert(t, (err == nil), "CreateDSCRollout Failed")
 
 	// When venice asks for one Op, we expect that status should reflect that Op to be successful
 	f1 := func() (bool, interface{}) {
-		if len(roCtrl.status) == 1 && roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive &&
+		if len(roCtrl.status) == 1 && roCtrl.status[0].Op == roprotos.DSCOp_DSCPreCheckForDisruptive &&
 			roCtrl.status[0].Version == "ver1" {
 			return true, nil
 		}
@@ -1064,17 +1064,17 @@ func TestNaplesRollout(t *testing.T) {
 	// we expect that status should reflect the second Op to be successful
 	// and the status should contain both the Ops as success
 	t.Log("ver1 DoDisruptive")
-	sro.Spec.Ops = append(sro.Spec.Ops, roprotos.SmartNICOpSpec{
-		Op:      roprotos.SmartNICOp_SmartNICDisruptiveUpgrade,
+	sro.Spec.Ops = append(sro.Spec.Ops, roprotos.DSCOpSpec{
+		Op:      roprotos.DSCOp_DSCDisruptiveUpgrade,
 		Version: "ver1",
 	})
-	err = nm.CreateUpdateSmartNICRollout(&sro)
-	Assert(t, (err == nil), "CreateUpdateSmartNICRollout with Op: SmartNICOp_SmartNICDisruptiveUpgrade Failed")
+	err = nm.CreateUpdateDSCRollout(&sro)
+	Assert(t, (err == nil), "CreateUpdateDSCRollout with Op: DSCOp_DSCDisruptiveUpgrade Failed")
 
 	f2 := func() (bool, interface{}) {
 		if len(roCtrl.status) == 2 &&
-			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver1" &&
-			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver1" {
+			roCtrl.status[0].Op == roprotos.DSCOp_DSCPreCheckForDisruptive && roCtrl.status[0].Version == "ver1" &&
+			roCtrl.status[1].Op == roprotos.DSCOp_DSCDisruptiveUpgrade && roCtrl.status[1].Version == "ver1" {
 			return true, nil
 		}
 		return false, nil
@@ -1084,29 +1084,29 @@ func TestNaplesRollout(t *testing.T) {
 	// venice can always update with the same Spec as already informed before. This can happen say when the controller
 	// restarts before persisting status update from NIC. In such a case we expect the status to continue to succeed
 	t.Log("Updated spec with same contents again")
-	err = nm.CreateUpdateSmartNICRollout(&sro)
-	Assert(t, (err == nil), "CreateUpdateSmartNICRollout Spec with Same contents Failed")
+	err = nm.CreateUpdateDSCRollout(&sro)
+	Assert(t, (err == nil), "CreateUpdateDSCRollout Spec with Same contents Failed")
 
 	f3 := func() (bool, interface{}) {
 		if len(roCtrl.status) == 2 &&
-			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver1" &&
-			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver1" {
+			roCtrl.status[0].Op == roprotos.DSCOp_DSCPreCheckForDisruptive && roCtrl.status[0].Version == "ver1" &&
+			roCtrl.status[1].Op == roprotos.DSCOp_DSCDisruptiveUpgrade && roCtrl.status[1].Version == "ver1" {
 			return true, nil
 		}
 		return false, nil
 	}
-	AssertConsistently(t, f3, "SmartNICRollout second time with same Spec failed during NonDisruptive Upgrade", "100ms", "500ms")
+	AssertConsistently(t, f3, "DSCRollout second time with same Spec failed during NonDisruptive Upgrade", "100ms", "500ms")
 
 	t.Log("Update with ver2 Precheck and doUpgrade")
 	sro.Spec.Ops[0].Version = "ver2"
 	sro.Spec.Ops[1].Version = "ver2"
-	err = nm.CreateUpdateSmartNICRollout(&sro)
-	Assert(t, (err == nil), "Failed to update SmartNICRollout with new version in Spec")
+	err = nm.CreateUpdateDSCRollout(&sro)
+	Assert(t, (err == nil), "Failed to update DSCRollout with new version in Spec")
 
 	f5 := func() (bool, interface{}) {
 		if len(roCtrl.status) == 2 &&
-			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver2" && roCtrl.status[0].OpStatus == "success" &&
-			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver2" && roCtrl.status[1].OpStatus == "success" {
+			roCtrl.status[0].Op == roprotos.DSCOp_DSCPreCheckForDisruptive && roCtrl.status[0].Version == "ver2" && roCtrl.status[0].OpStatus == "success" &&
+			roCtrl.status[1].Op == roprotos.DSCOp_DSCDisruptiveUpgrade && roCtrl.status[1].Version == "ver2" && roCtrl.status[1].OpStatus == "success" {
 			return true, nil
 		}
 		return false, nil
@@ -1118,13 +1118,13 @@ func TestNaplesRollout(t *testing.T) {
 
 	sro.Spec.Ops[0].Version = "ver3"
 	sro.Spec.Ops[1].Version = "ver3"
-	err = nm.CreateUpdateSmartNICRollout(&sro)
-	Assert(t, (err == nil), "Failed to update SmartNICRollout with new version in Spec")
+	err = nm.CreateUpdateDSCRollout(&sro)
+	Assert(t, (err == nil), "Failed to update DSCRollout with new version in Spec")
 
 	f6 := func() (bool, interface{}) {
 		if len(roCtrl.status) == 2 &&
-			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver3" && roCtrl.status[0].OpStatus == "failure" && roCtrl.status[0].Message == "ForceFailpreCheckDisruptive" &&
-			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver3" && roCtrl.status[1].OpStatus == "failure" && roCtrl.status[1].Message == "ForceFailDisruptive" {
+			roCtrl.status[0].Op == roprotos.DSCOp_DSCPreCheckForDisruptive && roCtrl.status[0].Version == "ver3" && roCtrl.status[0].OpStatus == "failure" && roCtrl.status[0].Message == "ForceFailpreCheckDisruptive" &&
+			roCtrl.status[1].Op == roprotos.DSCOp_DSCDisruptiveUpgrade && roCtrl.status[1].Version == "ver3" && roCtrl.status[1].OpStatus == "failure" && roCtrl.status[1].Message == "ForceFailDisruptive" {
 			return true, nil
 		}
 		return false, nil
@@ -1136,8 +1136,8 @@ func TestNaplesRollout(t *testing.T) {
 	// Finally a delete of Smartnic Rollout object should succeed
 	t.Log("Delete VeniceRollout")
 
-	err = nm.DeleteSmartNICRollout(&sro)
-	Assert(t, (err == nil), "DeleteSmartNICRollout Failed")
+	err = nm.DeleteDSCRollout(&sro)
+	Assert(t, (err == nil), "DeleteDSCRollout Failed")
 
 }
 

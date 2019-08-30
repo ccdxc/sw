@@ -184,12 +184,12 @@ func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity eve
 }
 
 // CreateSmartNIC helper function to create smart NIC object with the given params.
-func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICCondition) *cluster.SmartNIC {
+func CreateSmartNIC(mac, phase, node string, condition *cluster.DSCCondition) *cluster.DistributedServiceCard {
 	creationTime, _ := types.TimestampProto(time.Now())
 
-	return &cluster.SmartNIC{
+	return &cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
-			Kind:       "SmartNIC",
+			Kind:       "DistributedServiceCard",
 			APIVersion: "v1",
 		},
 		ObjectMeta: api.ObjectMeta{
@@ -205,18 +205,18 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICConditio
 				"Location": "us-west-zone3",
 			},
 		},
-		Spec: cluster.SmartNICSpec{
+		Spec: cluster.DistributedServiceCardSpec{
 			ID: node,
 			IPConfig: &cluster.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},
-			MgmtMode:    cluster.SmartNICSpec_NETWORK.String(),
-			NetworkMode: cluster.SmartNICSpec_OOB.String(),
+			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
 		},
-		Status: cluster.SmartNICStatus{
+		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: phase,
 			PrimaryMAC:     mac,
-			Conditions: []cluster.SmartNICCondition{
+			Conditions: []cluster.DSCCondition{
 				*condition,
 			},
 		},

@@ -1748,9 +1748,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ]
 },
-  SmartNIC: {
-  "name": "SmartNIC",
-  "objectKind": "SmartNIC",
+  DistributedServiceCard: {
+  "name": "DistributedServiceCard",
+  "objectKind": "DistributedServiceCard",
   "displayName": "Naples",
   "description": "Contains metrics reported from the Naples",
   "tags": [

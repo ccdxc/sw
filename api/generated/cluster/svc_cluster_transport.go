@@ -25,38 +25,38 @@ var _ api.ObjectMeta
 type grpcServerClusterV1 struct {
 	Endpoints EndpointsClusterV1Server
 
-	AuthBootstrapCompleteHdlr grpctransport.Handler
-	AutoAddClusterHdlr        grpctransport.Handler
-	AutoAddHostHdlr           grpctransport.Handler
-	AutoAddNodeHdlr           grpctransport.Handler
-	AutoAddSmartNICHdlr       grpctransport.Handler
-	AutoAddTenantHdlr         grpctransport.Handler
-	AutoAddVersionHdlr        grpctransport.Handler
-	AutoDeleteClusterHdlr     grpctransport.Handler
-	AutoDeleteHostHdlr        grpctransport.Handler
-	AutoDeleteNodeHdlr        grpctransport.Handler
-	AutoDeleteSmartNICHdlr    grpctransport.Handler
-	AutoDeleteTenantHdlr      grpctransport.Handler
-	AutoDeleteVersionHdlr     grpctransport.Handler
-	AutoGetClusterHdlr        grpctransport.Handler
-	AutoGetHostHdlr           grpctransport.Handler
-	AutoGetNodeHdlr           grpctransport.Handler
-	AutoGetSmartNICHdlr       grpctransport.Handler
-	AutoGetTenantHdlr         grpctransport.Handler
-	AutoGetVersionHdlr        grpctransport.Handler
-	AutoListClusterHdlr       grpctransport.Handler
-	AutoListHostHdlr          grpctransport.Handler
-	AutoListNodeHdlr          grpctransport.Handler
-	AutoListSmartNICHdlr      grpctransport.Handler
-	AutoListTenantHdlr        grpctransport.Handler
-	AutoListVersionHdlr       grpctransport.Handler
-	AutoUpdateClusterHdlr     grpctransport.Handler
-	AutoUpdateHostHdlr        grpctransport.Handler
-	AutoUpdateNodeHdlr        grpctransport.Handler
-	AutoUpdateSmartNICHdlr    grpctransport.Handler
-	AutoUpdateTenantHdlr      grpctransport.Handler
-	AutoUpdateVersionHdlr     grpctransport.Handler
-	UpdateTLSConfigHdlr       grpctransport.Handler
+	AuthBootstrapCompleteHdlr            grpctransport.Handler
+	AutoAddClusterHdlr                   grpctransport.Handler
+	AutoAddDistributedServiceCardHdlr    grpctransport.Handler
+	AutoAddHostHdlr                      grpctransport.Handler
+	AutoAddNodeHdlr                      grpctransport.Handler
+	AutoAddTenantHdlr                    grpctransport.Handler
+	AutoAddVersionHdlr                   grpctransport.Handler
+	AutoDeleteClusterHdlr                grpctransport.Handler
+	AutoDeleteDistributedServiceCardHdlr grpctransport.Handler
+	AutoDeleteHostHdlr                   grpctransport.Handler
+	AutoDeleteNodeHdlr                   grpctransport.Handler
+	AutoDeleteTenantHdlr                 grpctransport.Handler
+	AutoDeleteVersionHdlr                grpctransport.Handler
+	AutoGetClusterHdlr                   grpctransport.Handler
+	AutoGetDistributedServiceCardHdlr    grpctransport.Handler
+	AutoGetHostHdlr                      grpctransport.Handler
+	AutoGetNodeHdlr                      grpctransport.Handler
+	AutoGetTenantHdlr                    grpctransport.Handler
+	AutoGetVersionHdlr                   grpctransport.Handler
+	AutoListClusterHdlr                  grpctransport.Handler
+	AutoListDistributedServiceCardHdlr   grpctransport.Handler
+	AutoListHostHdlr                     grpctransport.Handler
+	AutoListNodeHdlr                     grpctransport.Handler
+	AutoListTenantHdlr                   grpctransport.Handler
+	AutoListVersionHdlr                  grpctransport.Handler
+	AutoUpdateClusterHdlr                grpctransport.Handler
+	AutoUpdateDistributedServiceCardHdlr grpctransport.Handler
+	AutoUpdateHostHdlr                   grpctransport.Handler
+	AutoUpdateNodeHdlr                   grpctransport.Handler
+	AutoUpdateTenantHdlr                 grpctransport.Handler
+	AutoUpdateVersionHdlr                grpctransport.Handler
+	UpdateTLSConfigHdlr                  grpctransport.Handler
 }
 
 // MakeGRPCServerClusterV1 creates a GRPC server for ClusterV1 service
@@ -81,6 +81,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCluster", logger)))...,
 		),
 
+		AutoAddDistributedServiceCardHdlr: grpctransport.NewServer(
+			endpoints.AutoAddDistributedServiceCardEndpoint,
+			DecodeGrpcReqDistributedServiceCard,
+			EncodeGrpcRespDistributedServiceCard,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddDistributedServiceCard", logger)))...,
+		),
+
 		AutoAddHostHdlr: grpctransport.NewServer(
 			endpoints.AutoAddHostEndpoint,
 			DecodeGrpcReqHost,
@@ -93,13 +100,6 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNode", logger)))...,
-		),
-
-		AutoAddSmartNICHdlr: grpctransport.NewServer(
-			endpoints.AutoAddSmartNICEndpoint,
-			DecodeGrpcReqSmartNIC,
-			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSmartNIC", logger)))...,
 		),
 
 		AutoAddTenantHdlr: grpctransport.NewServer(
@@ -123,6 +123,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCluster", logger)))...,
 		),
 
+		AutoDeleteDistributedServiceCardHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteDistributedServiceCardEndpoint,
+			DecodeGrpcReqDistributedServiceCard,
+			EncodeGrpcRespDistributedServiceCard,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteDistributedServiceCard", logger)))...,
+		),
+
 		AutoDeleteHostHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteHostEndpoint,
 			DecodeGrpcReqHost,
@@ -135,13 +142,6 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNode", logger)))...,
-		),
-
-		AutoDeleteSmartNICHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteSmartNICEndpoint,
-			DecodeGrpcReqSmartNIC,
-			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSmartNIC", logger)))...,
 		),
 
 		AutoDeleteTenantHdlr: grpctransport.NewServer(
@@ -165,6 +165,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCluster", logger)))...,
 		),
 
+		AutoGetDistributedServiceCardHdlr: grpctransport.NewServer(
+			endpoints.AutoGetDistributedServiceCardEndpoint,
+			DecodeGrpcReqDistributedServiceCard,
+			EncodeGrpcRespDistributedServiceCard,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetDistributedServiceCard", logger)))...,
+		),
+
 		AutoGetHostHdlr: grpctransport.NewServer(
 			endpoints.AutoGetHostEndpoint,
 			DecodeGrpcReqHost,
@@ -177,13 +184,6 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNode", logger)))...,
-		),
-
-		AutoGetSmartNICHdlr: grpctransport.NewServer(
-			endpoints.AutoGetSmartNICEndpoint,
-			DecodeGrpcReqSmartNIC,
-			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSmartNIC", logger)))...,
 		),
 
 		AutoGetTenantHdlr: grpctransport.NewServer(
@@ -207,6 +207,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCluster", logger)))...,
 		),
 
+		AutoListDistributedServiceCardHdlr: grpctransport.NewServer(
+			endpoints.AutoListDistributedServiceCardEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespDistributedServiceCardList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListDistributedServiceCard", logger)))...,
+		),
+
 		AutoListHostHdlr: grpctransport.NewServer(
 			endpoints.AutoListHostEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -219,13 +226,6 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNodeList,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNode", logger)))...,
-		),
-
-		AutoListSmartNICHdlr: grpctransport.NewServer(
-			endpoints.AutoListSmartNICEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespSmartNICList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSmartNIC", logger)))...,
 		),
 
 		AutoListTenantHdlr: grpctransport.NewServer(
@@ -249,6 +249,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCluster", logger)))...,
 		),
 
+		AutoUpdateDistributedServiceCardHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateDistributedServiceCardEndpoint,
+			DecodeGrpcReqDistributedServiceCard,
+			EncodeGrpcRespDistributedServiceCard,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateDistributedServiceCard", logger)))...,
+		),
+
 		AutoUpdateHostHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateHostEndpoint,
 			DecodeGrpcReqHost,
@@ -261,13 +268,6 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNode", logger)))...,
-		),
-
-		AutoUpdateSmartNICHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateSmartNICEndpoint,
-			DecodeGrpcReqSmartNIC,
-			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSmartNIC", logger)))...,
 		),
 
 		AutoUpdateTenantHdlr: grpctransport.NewServer(
@@ -329,6 +329,24 @@ func decodeHTTPrespClusterV1AutoAddCluster(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoAddDistributedServiceCard(ctx oldcontext.Context, req *DistributedServiceCard) (*DistributedServiceCard, error) {
+	_, resp, err := s.AutoAddDistributedServiceCardHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoAddDistributedServiceCard).V
+	return &r, resp.(respClusterV1AutoAddDistributedServiceCard).Err
+}
+
+func decodeHTTPrespClusterV1AutoAddDistributedServiceCard(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DistributedServiceCard
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoAddHost(ctx oldcontext.Context, req *Host) (*Host, error) {
 	_, resp, err := s.AutoAddHostHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -361,24 +379,6 @@ func decodeHTTPrespClusterV1AutoAddNode(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp Node
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerClusterV1) AutoAddSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
-	_, resp, err := s.AutoAddSmartNICHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respClusterV1AutoAddSmartNIC).V
-	return &r, resp.(respClusterV1AutoAddSmartNIC).Err
-}
-
-func decodeHTTPrespClusterV1AutoAddSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SmartNIC
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -437,6 +437,24 @@ func decodeHTTPrespClusterV1AutoDeleteCluster(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoDeleteDistributedServiceCard(ctx oldcontext.Context, req *DistributedServiceCard) (*DistributedServiceCard, error) {
+	_, resp, err := s.AutoDeleteDistributedServiceCardHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoDeleteDistributedServiceCard).V
+	return &r, resp.(respClusterV1AutoDeleteDistributedServiceCard).Err
+}
+
+func decodeHTTPrespClusterV1AutoDeleteDistributedServiceCard(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DistributedServiceCard
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoDeleteHost(ctx oldcontext.Context, req *Host) (*Host, error) {
 	_, resp, err := s.AutoDeleteHostHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -469,24 +487,6 @@ func decodeHTTPrespClusterV1AutoDeleteNode(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Node
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerClusterV1) AutoDeleteSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
-	_, resp, err := s.AutoDeleteSmartNICHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respClusterV1AutoDeleteSmartNIC).V
-	return &r, resp.(respClusterV1AutoDeleteSmartNIC).Err
-}
-
-func decodeHTTPrespClusterV1AutoDeleteSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SmartNIC
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -545,6 +545,24 @@ func decodeHTTPrespClusterV1AutoGetCluster(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoGetDistributedServiceCard(ctx oldcontext.Context, req *DistributedServiceCard) (*DistributedServiceCard, error) {
+	_, resp, err := s.AutoGetDistributedServiceCardHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoGetDistributedServiceCard).V
+	return &r, resp.(respClusterV1AutoGetDistributedServiceCard).Err
+}
+
+func decodeHTTPrespClusterV1AutoGetDistributedServiceCard(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DistributedServiceCard
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoGetHost(ctx oldcontext.Context, req *Host) (*Host, error) {
 	_, resp, err := s.AutoGetHostHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -577,24 +595,6 @@ func decodeHTTPrespClusterV1AutoGetNode(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp Node
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerClusterV1) AutoGetSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
-	_, resp, err := s.AutoGetSmartNICHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respClusterV1AutoGetSmartNIC).V
-	return &r, resp.(respClusterV1AutoGetSmartNIC).Err
-}
-
-func decodeHTTPrespClusterV1AutoGetSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SmartNIC
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -653,6 +653,24 @@ func decodeHTTPrespClusterV1AutoListCluster(_ context.Context, r *http.Response)
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoListDistributedServiceCard(ctx oldcontext.Context, req *api.ListWatchOptions) (*DistributedServiceCardList, error) {
+	_, resp, err := s.AutoListDistributedServiceCardHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoListDistributedServiceCard).V
+	return &r, resp.(respClusterV1AutoListDistributedServiceCard).Err
+}
+
+func decodeHTTPrespClusterV1AutoListDistributedServiceCard(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DistributedServiceCardList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoListHost(ctx oldcontext.Context, req *api.ListWatchOptions) (*HostList, error) {
 	_, resp, err := s.AutoListHostHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -685,24 +703,6 @@ func decodeHTTPrespClusterV1AutoListNode(_ context.Context, r *http.Response) (i
 		return nil, errorDecoder(r)
 	}
 	var resp NodeList
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerClusterV1) AutoListSmartNIC(ctx oldcontext.Context, req *api.ListWatchOptions) (*SmartNICList, error) {
-	_, resp, err := s.AutoListSmartNICHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respClusterV1AutoListSmartNIC).V
-	return &r, resp.(respClusterV1AutoListSmartNIC).Err
-}
-
-func decodeHTTPrespClusterV1AutoListSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SmartNICList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -761,6 +761,24 @@ func decodeHTTPrespClusterV1AutoUpdateCluster(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoUpdateDistributedServiceCard(ctx oldcontext.Context, req *DistributedServiceCard) (*DistributedServiceCard, error) {
+	_, resp, err := s.AutoUpdateDistributedServiceCardHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoUpdateDistributedServiceCard).V
+	return &r, resp.(respClusterV1AutoUpdateDistributedServiceCard).Err
+}
+
+func decodeHTTPrespClusterV1AutoUpdateDistributedServiceCard(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DistributedServiceCard
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoUpdateHost(ctx oldcontext.Context, req *Host) (*Host, error) {
 	_, resp, err := s.AutoUpdateHostHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -793,24 +811,6 @@ func decodeHTTPrespClusterV1AutoUpdateNode(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Node
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerClusterV1) AutoUpdateSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
-	_, resp, err := s.AutoUpdateSmartNICHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respClusterV1AutoUpdateSmartNIC).V
-	return &r, resp.(respClusterV1AutoUpdateSmartNIC).Err
-}
-
-func decodeHTTPrespClusterV1AutoUpdateSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SmartNIC
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -885,8 +885,8 @@ func (s *grpcServerClusterV1) AutoWatchHost(in *api.ListWatchOptions, stream Clu
 	return s.Endpoints.AutoWatchHost(in, stream)
 }
 
-func (s *grpcServerClusterV1) AutoWatchSmartNIC(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSmartNICServer) error {
-	return s.Endpoints.AutoWatchSmartNIC(in, stream)
+func (s *grpcServerClusterV1) AutoWatchDistributedServiceCard(in *api.ListWatchOptions, stream ClusterV1_AutoWatchDistributedServiceCardServer) error {
+	return s.Endpoints.AutoWatchDistributedServiceCard(in, stream)
 }
 
 func (s *grpcServerClusterV1) AutoWatchTenant(in *api.ListWatchOptions, stream ClusterV1_AutoWatchTenantServer) error {
@@ -928,6 +928,40 @@ func EncodeGrpcRespClusterList(ctx context.Context, response interface{}) (inter
 
 // DecodeGrpcRespClusterList decodes the GRPC response
 func DecodeGrpcRespClusterList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPDistributedServiceCardList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDistributedServiceCardList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DistributedServiceCardList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDistributedServiceCardList encodes GRPC request
+func EncodeGrpcReqDistributedServiceCardList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardList)
+	return req, nil
+}
+
+// DecodeGrpcReqDistributedServiceCardList decodes GRPC request
+func DecodeGrpcReqDistributedServiceCardList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardList)
+	return req, nil
+}
+
+// EncodeGrpcRespDistributedServiceCardList endodes the GRPC response
+func EncodeGrpcRespDistributedServiceCardList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDistributedServiceCardList decodes the GRPC response
+func DecodeGrpcRespDistributedServiceCardList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -996,40 +1030,6 @@ func EncodeGrpcRespNodeList(ctx context.Context, response interface{}) (interfac
 
 // DecodeGrpcRespNodeList decodes the GRPC response
 func DecodeGrpcRespNodeList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSmartNICList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNICList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNICList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNICList encodes GRPC request
-func EncodeGrpcReqSmartNICList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICList)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNICList decodes GRPC request
-func DecodeGrpcReqSmartNICList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICList)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNICList endodes the GRPC response
-func EncodeGrpcRespSmartNICList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNICList decodes the GRPC response
-func DecodeGrpcRespSmartNICList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

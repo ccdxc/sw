@@ -515,10 +515,11 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			return ret, nil
 		}),
 
-		"cluster.ClusterCondition": apisrvpkg.NewMessage("cluster.ClusterCondition"),
-		"cluster.ClusterSpec":      apisrvpkg.NewMessage("cluster.ClusterSpec"),
-		"cluster.ClusterStatus":    apisrvpkg.NewMessage("cluster.ClusterStatus"),
-		"cluster.DockerInfo":       apisrvpkg.NewMessage("cluster.DockerInfo"),
+		"cluster.ClusterCondition":         apisrvpkg.NewMessage("cluster.ClusterCondition"),
+		"cluster.ClusterSpec":              apisrvpkg.NewMessage("cluster.ClusterSpec"),
+		"cluster.ClusterStatus":            apisrvpkg.NewMessage("cluster.ClusterStatus"),
+		"cluster.DistributedServiceCardID": apisrvpkg.NewMessage("cluster.DistributedServiceCardID"),
+		"cluster.DockerInfo":               apisrvpkg.NewMessage("cluster.DockerInfo"),
 		"cluster.Host": apisrvpkg.NewMessage("cluster.Host").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := cluster.Host{}
@@ -1090,7 +1091,6 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		"cluster.QuorumMemberCondition": apisrvpkg.NewMessage("cluster.QuorumMemberCondition"),
 		"cluster.QuorumMemberStatus":    apisrvpkg.NewMessage("cluster.QuorumMemberStatus"),
 		"cluster.QuorumStatus":          apisrvpkg.NewMessage("cluster.QuorumStatus"),
-		"cluster.SmartNICID":            apisrvpkg.NewMessage("cluster.SmartNICID"),
 		"cluster.StorageDeviceInfo":     apisrvpkg.NewMessage("cluster.StorageDeviceInfo"),
 		"cluster.StorageInfo":           apisrvpkg.NewMessage("cluster.StorageInfo"),
 		"cluster.UpdateTLSConfigRequest": apisrvpkg.NewMessage("cluster.UpdateTLSConfigRequest").WithKeyGenerator(func(i interface{}, prefix string) string {

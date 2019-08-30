@@ -77,14 +77,14 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 
 	// smartNIC Watcher
-	smartNICWatcher, err := apicl.ClusterV1().SmartNIC().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"ObjectMeta.Labels", "Spec", "Status.AdmissionPhase", "Status.Conditions[0].Status", "Status.Conditions[1].Status", "Status"}})
+	smartNICWatcher, err := apicl.ClusterV1().DistributedServiceCard().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"ObjectMeta.Labels", "Spec", "Status.AdmissionPhase", "Status.Conditions[0].Status", "Status.Conditions[1].Status", "Status"}})
 	if err != nil {
 		log.Errorf("Failed to start node watcher (%s)\n", err)
 		return
 	}
 	defer smartNICWatcher.Stop()
 
-	snics, err := apicl.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+	snics, err := apicl.ClusterV1().DistributedServiceCard().List(ctx, &api.ListWatchOptions{})
 	if err != nil {
 		log.Errorf("Failed to list smartNICs (%s)\n", err)
 		return

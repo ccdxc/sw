@@ -12,8 +12,8 @@ import (
 	"github.com/pensando/sw/venice/cli/gen"
 )
 
-// CreateSmartNICFlags specifies flags for SmartNIC create operation
-var CreateSmartNICFlags = []gen.CliFlag{
+// CreateDistributedServiceCardFlags specifies flags for DistributedServiceCard create operation
+var CreateDistributedServiceCardFlags = []gen.CliFlag{
 	{
 		ID:     "admit",
 		Type:   "Bool",
@@ -58,13 +58,13 @@ var CreateSmartNICFlags = []gen.CliFlag{
 	},
 }
 
-func removeSmartNICOper(obj interface{}) error {
-	if v, ok := obj.(*cluster.SmartNIC); ok {
+func removeDistributedServiceCardOper(obj interface{}) error {
+	if v, ok := obj.(*cluster.DistributedServiceCard); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
 		v.CreationTime = api.Timestamp{}
 		v.ModTime = api.Timestamp{}
-		v.Status = cluster.SmartNICStatus{}
+		v.Status = cluster.DistributedServiceCardStatus{}
 	}
 	return nil
 }
@@ -72,7 +72,7 @@ func removeSmartNICOper(obj interface{}) error {
 func init() {
 	cl := gen.GetInfo()
 
-	cl.AddCliInfo("cluster.SmartNIC", "create", CreateSmartNICFlags)
-	cl.AddRemoveObjOperFunc("cluster.SmartNIC", removeSmartNICOper)
+	cl.AddCliInfo("cluster.DistributedServiceCard", "create", CreateDistributedServiceCardFlags)
+	cl.AddRemoveObjOperFunc("cluster.DistributedServiceCard", removeDistributedServiceCardOper)
 
 }

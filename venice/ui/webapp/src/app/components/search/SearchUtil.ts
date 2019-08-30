@@ -304,7 +304,7 @@ export class SearchUtil {
           searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs[1] : searchSpec[strs[0]] + ',' + strs[1];
         } else {
           if (this.hasOperatorInString(listStr)) {
-            // case like  is:SmartNIC has:meta.name=~4444.4444.0002
+            // case like  is:DistributedServiceCard has:meta.name=~4444.4444.0002
             searchGrammarItem.type = strs[0];
             const idx = listStr.indexOf(':'); // has: <- ":"
             const strs2 = listStr.substr(idx + 1); // get meta.name=~4444.4444.0002

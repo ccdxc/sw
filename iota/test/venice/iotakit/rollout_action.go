@@ -196,7 +196,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		status := rollout.Status.GetSmartNICsStatus()
+		status := rollout.Status.GetDSCsStatus()
 		log.Infof("ts:%s Precheck smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
 		var numNodes int
 		if len(status) == 0 {
@@ -330,7 +330,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		status := rollout.Status.GetSmartNICsStatus()
+		status := rollout.Status.GetDSCsStatus()
 		log.Infof("ts:%s Rollout smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
 		var numNodes int
 		if len(status) == 0 {

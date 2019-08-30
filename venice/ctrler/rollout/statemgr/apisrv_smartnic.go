@@ -16,13 +16,13 @@ import (
 // SmartNICState - Internal state for SmartNIC
 type SmartNICState struct {
 	Mutex sync.Mutex
-	*cluster.SmartNIC
+	*cluster.DistributedServiceCard
 	*Statemgr
 
 	// Local information
 }
 
-func (sm *Statemgr) handleSmartNICEvent(et kvstore.WatchEventType, smartNIC *cluster.SmartNIC) {
+func (sm *Statemgr) handleSmartNICEvent(et kvstore.WatchEventType, smartNIC *cluster.DistributedServiceCard) {
 	switch et {
 	case kvstore.Created, kvstore.Updated:
 		log.Infof("SetSmartNICState - {%+v}\n", smartNIC)
@@ -39,7 +39,7 @@ func (sm *Statemgr) handleSmartNICEvent(et kvstore.WatchEventType, smartNIC *clu
 }
 
 // SetSmartNICState to create a SmartNIC Object/update smartNIC isf it already exists in statemgr
-func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.SmartNIC) error {
+func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.DistributedServiceCard) error {
 	if smartNIC.GetObjectKind() != kindSmartNIC {
 		return fmt.Errorf("unexpected object kind %s", smartNIC.GetObjectKind())
 	}
@@ -83,7 +83,7 @@ func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.SmartNIC) error {
 		}
 	}
 
-	smartNICState.SmartNIC = smartNIC
+	smartNICState.DistributedServiceCard = smartNIC
 	smartNICState.Mutex.Unlock()
 
 	sm.memDB.AddObject(smartNICState)
@@ -127,14 +127,14 @@ func (sm *Statemgr) GetSmartNICState(tenant, name string) (*SmartNICState, error
 }
 
 // DeleteSmartNICState - delete smartNIC
-func (sm *Statemgr) DeleteSmartNICState(sn *cluster.SmartNIC) {
+func (sm *Statemgr) DeleteSmartNICState(sn *cluster.DistributedServiceCard) {
 	smartnicState, err := sm.GetSmartNICState(sn.Tenant, sn.Name)
 	if err != nil {
 		log.Debugf("Error deleting non-existent smartNIC {%+v}. Err: %v", sn, err)
 		return
 	}
 
-	log.Infof("Deleting SmartNIC %v", smartnicState.SmartNIC.Name)
+	log.Infof("Deleting SmartNIC %v", smartnicState.DistributedServiceCard.Name)
 
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
 

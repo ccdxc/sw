@@ -311,7 +311,7 @@
             "type": "string"
           },
           {
-            "name": "status.smart-nic",
+            "name": "status.dsc",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2234,7 +2234,7 @@
         "oper-status"
       ],
       "properties": {
-        "smart-nic": {
+        "dsc": {
           "type": "string"
         },
         "type": {

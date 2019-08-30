@@ -19,10 +19,10 @@ func TestCfgenPolicyGen(t *testing.T) {
 	cfg.NumDNSAlgs = 10
 
 	// create smartnic macs from a template
-	smartnics := []*cluster.SmartNIC{}
+	smartnics := []*cluster.DistributedServiceCard{}
 	snicsFile := os.Getenv("SNICS_FILE")
 	if snicsFile != "" {
-		smnicList := &cluster.SmartNICList{}
+		smnicList := &cluster.DistributedServiceCardList{}
 		jdata, err := ioutil.ReadFile(snicsFile)
 		if err != nil {
 			panic(fmt.Sprintf("file %s, error %s", snicsFile, err))
@@ -38,7 +38,7 @@ func TestCfgenPolicyGen(t *testing.T) {
 		smnic := smartNicTemplate
 		smnicCtx := newIterContext()
 		for ii := 0; ii < 128; ii++ {
-			tSmartNIC := smnicCtx.transform(smnic).(*cluster.SmartNIC)
+			tSmartNIC := smnicCtx.transform(smnic).(*cluster.DistributedServiceCard)
 			smartnics = append(smartnics, tSmartNIC)
 		}
 	}

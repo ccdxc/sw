@@ -60,7 +60,7 @@ enum NetworkMode {
 // NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
 message NaplesSpec {
 
-    // PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
+    // PrimaryMAC is the MAC address of the primary PF exposed by DSC
     string PrimaryMAC               = 1 [(gogoproto.jsontag) = "primary-mac,omitempty"];
 
     // ID is used as a user friendly identifier in logs/events
@@ -104,7 +104,7 @@ message NaplesStatus {
     }
     // Current phase of the NIC adapter in the system
     string    AdmissionPhase                = 1 [(gogoproto.jsontag) = "phase,omitempty",
-                                                 (venice.check) = "StrEnum(cluster.SmartNICStatus.Phase)"];
+                                                 (venice.check) = "StrEnum(cluster.DistributedServiceCardStatus.Phase)"];
 
     cluster.IPConfig IPConfig       	    = 2 [(gogoproto.jsontag) = "ip-config,omitempty"];
 
@@ -120,13 +120,13 @@ message NaplesStatus {
     // FRU information read from FRU.json
     NaplesFru Fru                = 7  [(gogoproto.jsontag) = "fru,omitempty"];
 
-    // Naples generated SmartNIC name which should be used as UUID for Naples
-    string SmartNicName           = 8 [(gogoproto.jsontag) = "smartnic-name,omitempty"];
+    // Naples generated DSC name which should be used as UUID for Naples
+    string DSCName           = 8 [(gogoproto.jsontag) = "dsc-name,omitempty"];
 
     // TimeZone
     string TimeZone                 = 9 [(gogoproto.jsontag) = "timezone,omitempty", (venice.default)="UTC"];
 
-    // The reason why the SmartNIC is not in admitted phase, if known
+    // The reason why the DSC is not in admitted phase, if known
     string AdmissionPhaseReason     = 10 [(gogoproto.jsontag) = "adm-phase-reason,omitempty"];
 }
 

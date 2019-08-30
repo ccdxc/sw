@@ -7,17 +7,17 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { ClusterSmartNICID, IClusterSmartNICID } from './cluster-smart-nicid.model';
+import { ClusterDistributedServiceCardID, IClusterDistributedServiceCardID } from './cluster-distributed-service-card-id.model';
 
 export interface IClusterHostSpec {
-    'smart-nics'?: Array<IClusterSmartNICID>;
+    'dscs'?: Array<IClusterDistributedServiceCardID>;
 }
 
 
 export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
-    'smart-nics': Array<ClusterSmartNICID> = null;
+    'dscs': Array<ClusterDistributedServiceCardID> = null;
     public static propInfo: { [prop in keyof IClusterHostSpec]: PropInfoItem } = {
-        'smart-nics': {
+        'dscs': {
             required: false,
             type: 'object'
         },
@@ -45,7 +45,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['smart-nics'] = new Array<ClusterSmartNICID>();
+        this['dscs'] = new Array<ClusterDistributedServiceCardID>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -56,9 +56,9 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<ClusterSmartNICID>(this, 'smart-nics', values['smart-nics'], ClusterSmartNICID);
+            this.fillModelArray<ClusterDistributedServiceCardID>(this, 'dscs', values['dscs'], ClusterDistributedServiceCardID);
         } else {
-            this['smart-nics'] = [];
+            this['dscs'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -67,13 +67,13 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'smart-nics': new FormArray([]),
+                'dscs': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterSmartNICID>('smart-nics', this['smart-nics'], ClusterSmartNICID);
+            this.fillFormArray<ClusterDistributedServiceCardID>('dscs', this['dscs'], ClusterDistributedServiceCardID);
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('smart-nics') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('smart-nics').get(field);
+            Object.keys((this._formGroup.get('dscs') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('dscs').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -86,7 +86,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<ClusterSmartNICID>(this, 'smart-nics', this['smart-nics'], ClusterSmartNICID);
+            this.fillModelArray<ClusterDistributedServiceCardID>(this, 'dscs', this['dscs'], ClusterDistributedServiceCardID);
         }
     }
 }

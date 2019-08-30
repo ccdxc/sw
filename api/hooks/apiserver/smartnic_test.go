@@ -41,22 +41,22 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	kv, err := store.New(config)
 	AssertOk(t, err, "Error instantiating KVStore")
 
-	nic := cluster.SmartNIC{
+	nic := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
-			Kind: "SmartNIC",
+			Kind: "DistributedServiceCard",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "00ae.cd01.0001",
 		},
-		Spec: cluster.SmartNICSpec{
+		Spec: cluster.DistributedServiceCardSpec{
 			ID: "hostname",
 			IPConfig: &cluster.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},
-			MgmtMode:    cluster.SmartNICSpec_NETWORK.String(),
-			NetworkMode: cluster.SmartNICSpec_OOB.String(),
+			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
 		},
-		Status: cluster.SmartNICStatus{
+		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: "UNKNOWN",
 			SerialNum:      "TestNIC",
 			PrimaryMAC:     "00ae.cd01.0001",
@@ -66,7 +66,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		},
 	}
 
-	var decomNICUpd cluster.SmartNIC
+	var decomNICUpd cluster.DistributedServiceCard
 	nic.Clone(&decomNICUpd)
 
 	ctx := context.TODO()
@@ -80,7 +80,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	modules := diagnostics.NewNaplesModules(nic.Name, "", "V1")
 	kv.Create(ctx, modules[0].MakeKey(string(apiclient.GroupDiagnostics)), modules[0])
 
-	for _, phase := range cluster.SmartNICStatus_Phase_name {
+	for _, phase := range cluster.DistributedServiceCardStatus_Phase_name {
 		nic.Status.AdmissionPhase = phase
 		err = kv.Update(ctx, key, &nic)
 		AssertOk(t, err, fmt.Sprintf("Error updating object in KVStore, phase: %s", phase))
@@ -99,16 +99,16 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		// MgmtMode change only goes through if phase == ADMITTED
 		txn = kv.NewTxn()
 		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.UpdateOper, false, decomNICUpd)
-		Assert(t, r == true && (err == nil || phase != cluster.SmartNICStatus_ADMITTED.String()),
+		Assert(t, r == true && (err == nil || phase != cluster.DistributedServiceCardStatus_ADMITTED.String()),
 			"smartNICPreCommitHook returned unexpected result on mode change, op: UPDATE, phase: %s, err: %v", phase, err)
 		Assert(t, !txn.IsEmpty(), "transaction should contain module object")
 
 		// delete only goes through if phase != ADMITTED
 		txn = kv.NewTxn()
 		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.DeleteOper, false, nil)
-		Assert(t, r == true && (err == nil || phase == cluster.SmartNICStatus_ADMITTED.String()),
+		Assert(t, r == true && (err == nil || phase == cluster.DistributedServiceCardStatus_ADMITTED.String()),
 			"smartNICPreCommitHook returned unexpected result, op: DELETE, phase: %s, err: %v", phase, err)
-		Assert(t, phase == cluster.SmartNICStatus_ADMITTED.String() || !txn.IsEmpty(), "transaction should contain module object")
+		Assert(t, phase == cluster.DistributedServiceCardStatus_ADMITTED.String() || !txn.IsEmpty(), "transaction should contain module object")
 	}
 	// Test unsupported Spec modifications
 	tlsKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -119,28 +119,41 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	Assert(t, apiutils.IsUserRequestCtx(userCtx), "userCtx is not a user request context")
 
 	otherCtx := context.TODO()
-	nic.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+	nic.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_PENDING.String()
 	err = kv.Update(ctx, key, &nic)
 	AssertOk(t, err, "Error updating NIC")
 
 	type ModTest struct {
 		fieldName string
-		fieldTx   func(cluster.SmartNIC) cluster.SmartNIC
+		fieldTx   func(cluster.DistributedServiceCard) cluster.DistributedServiceCard
 	}
 
 	modTests := []ModTest{
-		{"ID", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.ID = "NewID"; return n }},
-		{"IPConfig", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.IPConfig.IPAddress = "1.2.3.4"; return n }},
-		{"NetworkMode", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.NetworkMode = "INBAND"; return n }},
-		{"MgmtVlan", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.MgmtVlan = 1; return n }},
-		{"Controllers", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.Controllers = []string{"abc"}; return n }},
-		{"ID, MgmtVlan", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.ID = "NewID2"; n.Spec.MgmtVlan = 2; return n }},
+		{"ID", func(n cluster.DistributedServiceCard) cluster.DistributedServiceCard { n.Spec.ID = "NewID"; return n }},
+		{"IPConfig", func(n cluster.DistributedServiceCard) cluster.DistributedServiceCard {
+			n.Spec.IPConfig.IPAddress = "1.2.3.4"
+			return n
+		}},
+		{"NetworkMode", func(n cluster.DistributedServiceCard) cluster.DistributedServiceCard {
+			n.Spec.NetworkMode = "INBAND"
+			return n
+		}},
+		{"MgmtVlan", func(n cluster.DistributedServiceCard) cluster.DistributedServiceCard { n.Spec.MgmtVlan = 1; return n }},
+		{"Controllers", func(n cluster.DistributedServiceCard) cluster.DistributedServiceCard {
+			n.Spec.Controllers = []string{"abc"}
+			return n
+		}},
+		{"ID, MgmtVlan", func(n cluster.DistributedServiceCard) cluster.DistributedServiceCard {
+			n.Spec.ID = "NewID2"
+			n.Spec.MgmtVlan = 2
+			return n
+		}},
 	}
 
 	for _, mt := range modTests {
 		for _, ctx := range []context.Context{userCtx, otherCtx} {
 			for _, oper := range []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper} {
-				var updNIC cluster.SmartNIC
+				var updNIC cluster.DistributedServiceCard
 				nic.Clone(&updNIC)
 				_, r, err := hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, oper, false, mt.fieldTx(updNIC))
 				if ctx == otherCtx || oper == apiintf.CreateOper || oper == apiintf.DeleteOper {

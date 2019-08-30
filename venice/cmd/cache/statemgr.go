@@ -30,8 +30,8 @@ type Statemgr struct {
 	// Implement APIClientGetter interface for ApiServer access
 	clientGetter APIClientGetter
 
-	// hostnameToSmartNICMap is a cache of known SmartNIC objects indexed by hostname
-	hostnameToSmartNICMap     map[string]*cluster.SmartNIC
+	// hostnameToSmartNICMap is a cache of known DistributedServiceCard objects indexed by hostname
+	hostnameToSmartNICMap     map[string]*cluster.DistributedServiceCard
 	hostnameToSmartNICMapLock sync.RWMutex
 }
 
@@ -77,7 +77,7 @@ func NewStatemgr(clientGetter APIClientGetter) *Statemgr {
 	statemgr := &Statemgr{
 		memDB:                 memdb.NewMemdb(),
 		clientGetter:          clientGetter,
-		hostnameToSmartNICMap: make(map[string]*cluster.SmartNIC),
+		hostnameToSmartNICMap: make(map[string]*cluster.DistributedServiceCard),
 	}
 
 	return statemgr

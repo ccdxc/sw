@@ -106,8 +106,8 @@ func (r *TechSupportRPCServer) nodeSelectorMatch(nodeName, kind string, selector
 }
 
 func getTechSupportNodeResult(tsr *monitoring.TechSupportRequest, nodeName, nodeKind string) *monitoring.TechSupportNodeResult {
-	if nodeKind == statemgr.KindSmartNICNode && tsr.Status.SmartNICNodeResults != nil {
-		return tsr.Status.SmartNICNodeResults[nodeName]
+	if nodeKind == statemgr.KindSmartNICNode && tsr.Status.DSCResults != nil {
+		return tsr.Status.DSCResults[nodeName]
 	} else if nodeKind == statemgr.KindControllerNode && tsr.Status.ControllerNodeResults != nil {
 		return tsr.Status.ControllerNodeResults[nodeName]
 	}
@@ -158,7 +158,7 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 
 	switch nodeKind {
 	case statemgr.KindSmartNICNode:
-		tsr.Status.SmartNICNodeResults[nodeName] = updResult
+		tsr.Status.DSCResults[nodeName] = updResult
 	case statemgr.KindControllerNode:
 		tsr.Status.ControllerNodeResults[nodeName] = updResult
 	default:
@@ -180,9 +180,9 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 		log.Infof("No state found for object %s, cannot close context.", tsr.GetObjectMeta().Name)
 	}
 
-	if isComplete(tsr.Status.SmartNICNodeResults) && isComplete(tsr.Status.ControllerNodeResults) {
+	if isComplete(tsr.Status.DSCResults) && isComplete(tsr.Status.ControllerNodeResults) {
 		for _, key := range tsr.Spec.NodeSelector.Names {
-			_, okSN := tsr.Status.SmartNICNodeResults[key]
+			_, okSN := tsr.Status.DSCResults[key]
 			_, okCN := tsr.Status.ControllerNodeResults[key]
 
 			if !okSN && !okCN {

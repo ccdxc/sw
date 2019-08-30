@@ -36,19 +36,19 @@ import (
 type mockAgent struct {
 	name string
 	sync.Mutex
-	nic        *cmd.SmartNIC
-	nicAdded   map[string]*cmd.SmartNIC
-	nicUpdated map[string]*cmd.SmartNIC
-	nicDeleted map[string]*cmd.SmartNIC
+	nic        *cmd.DistributedServiceCard
+	nicAdded   map[string]*cmd.DistributedServiceCard
+	nicUpdated map[string]*cmd.DistributedServiceCard
+	nicDeleted map[string]*cmd.DistributedServiceCard
 	keyMgr     *keymgr.KeyMgr
 }
 
 func createMockAgent(name string) *mockAgent {
 	return &mockAgent{
 		name:       name,
-		nicAdded:   make(map[string]*cmd.SmartNIC),
-		nicUpdated: make(map[string]*cmd.SmartNIC),
-		nicDeleted: make(map[string]*cmd.SmartNIC),
+		nicAdded:   make(map[string]*cmd.DistributedServiceCard),
+		nicUpdated: make(map[string]*cmd.DistributedServiceCard),
+		nicDeleted: make(map[string]*cmd.DistributedServiceCard),
 	}
 }
 func (ag *mockAgent) RegisterCMD(cmd nmdapi.CmdAPI) error {
@@ -79,34 +79,34 @@ func (ag *mockAgent) GetControllerIps() []string {
 	return []string{"1.1.1.1"}
 }
 
-func (ag *mockAgent) CreateSmartNIC(n *cmd.SmartNIC) error {
+func (ag *mockAgent) CreateSmartNIC(n *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.nicAdded[objectKey(n.ObjectMeta)] = n
 	return nil
 }
 
-func (ag *mockAgent) UpdateSmartNIC(n *cmd.SmartNIC) error {
+func (ag *mockAgent) UpdateSmartNIC(n *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.nicUpdated[objectKey(n.ObjectMeta)] = n
 	return nil
 }
 
-func (ag *mockAgent) DeleteSmartNIC(n *cmd.SmartNIC) error {
+func (ag *mockAgent) DeleteSmartNIC(n *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.nicDeleted[objectKey(n.ObjectMeta)] = n
 	return nil
 }
 
-func (ag *mockAgent) GetSmartNIC() (*cmd.SmartNIC, error) {
+func (ag *mockAgent) GetSmartNIC() (*cmd.DistributedServiceCard, error) {
 	ag.Lock()
 	defer ag.Unlock()
 	return ag.nic, nil
 }
 
-func (ag *mockAgent) SetSmartNIC(nic *cmd.SmartNIC) error {
+func (ag *mockAgent) SetSmartNIC(nic *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.nic = nic
@@ -118,11 +118,11 @@ func (ag *mockAgent) GenClusterKeyPair() (*keymgr.KeyPair, error) {
 	return keymgr.NewKeyPairObject("mock-agent-key", key), err
 }
 
-func (ag *mockAgent) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
+func (ag *mockAgent) GetPlatformCertificate(nic *cmd.DistributedServiceCard) ([]byte, error) {
 	return nil, nil
 }
 
-func (ag *mockAgent) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte, []byte, error) {
+func (ag *mockAgent) GenChallengeResponse(nic *cmd.DistributedServiceCard, challenge []byte) ([]byte, []byte, error) {
 	return nil, nil, nil
 }
 
@@ -144,7 +144,7 @@ func (ag *mockAgent) SetVeniceIPs(veniceIPs []string) {
 
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
-	nicdb      map[string]*cmd.SmartNIC
+	nicdb      map[string]*cmd.DistributedServiceCard
 	stop       chan bool
 }
 
@@ -160,7 +160,7 @@ func createRPCServer(t *testing.T) *mockRPCServer {
 	// create fake rpc server
 	srv := mockRPCServer{
 		grpcServer: grpcServer,
-		nicdb:      make(map[string]*cmd.SmartNIC),
+		nicdb:      make(map[string]*cmd.DistributedServiceCard),
 		stop:       make(chan bool),
 	}
 
@@ -236,7 +236,7 @@ func (srv *mockRPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterN
 	// send admission response
 	resp := &grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase: cmd.SmartNICStatus_ADMITTED.String(),
+			Phase: cmd.DistributedServiceCardStatus_ADMITTED.String(),
 		},
 	}
 	stream.Send(resp)
@@ -325,8 +325,8 @@ func TestCmdClient(t *testing.T) {
 	defer srv.Stop()
 
 	// create a nic
-	nic := cmd.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	nic := cmd.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "1111.1111.1111",
 		},
@@ -349,10 +349,10 @@ func TestCmdClient(t *testing.T) {
 	AssertOk(t, err, "Error making smartNIC register request")
 
 	// verify update rpc call
-	nic.Status = cmd.SmartNICStatus{
-		Conditions: []cmd.SmartNICCondition{
+	nic.Status = cmd.DistributedServiceCardStatus{
+		Conditions: []cmd.DSCCondition{
 			{
-				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Type:   cmd.DSCCondition_HEALTHY.String(),
 				Status: cmd.ConditionStatus_TRUE.String(),
 			},
 		},
@@ -373,8 +373,8 @@ func TestCmdClientWatch(t *testing.T) {
 	defer srv.Stop()
 
 	// create a nic
-	nic := cmd.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	nic := cmd.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "1111.1111.1111",
 		},
@@ -428,8 +428,8 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	defer srv.Stop()
 
 	// create a nic
-	nic := cmd.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	nic := cmd.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "1111.1111.1111",
 		},

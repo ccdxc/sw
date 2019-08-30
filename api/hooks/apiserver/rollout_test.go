@@ -36,17 +36,17 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Name: rolloutName,
 		},
 		Spec: rollout.RolloutSpec{
-			Version:                     "2.8",
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    rollout.RolloutSpec_LINEAR.String(),
-			MaxParallel:                 0,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               false,
-			SmartNICMustMatchConstraint: true, // hence venice upgrade only
-			UpgradeType:                 rollout.RolloutSpec_Disruptive.String(),
+			Version:                   "2.8",
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
+			MaxParallel:               0,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  false,
+			DSCMustMatchConstraint:    true, // hence venice upgrade only
+			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
 		},
 		Status: rollout.RolloutActionStatus{
 			OperationalState: rollout.RolloutPhase_PROGRESSING.String(),
@@ -60,17 +60,17 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Name: rolloutName,
 		},
 		Spec: rollout.RolloutSpec{
-			Version:                     "2.8",
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    rollout.RolloutSpec_LINEAR.String(),
-			MaxParallel:                 0,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               false,
-			SmartNICMustMatchConstraint: true, // hence venice upgrade only
-			UpgradeType:                 rollout.RolloutSpec_Disruptive.String(),
+			Version:                   "2.8",
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
+			MaxParallel:               0,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  false,
+			DSCMustMatchConstraint:    true, // hence venice upgrade only
+			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
 		},
 	}
 
@@ -106,17 +106,17 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Name: rolloutParallelName,
 		},
 		Spec: rollout.RolloutSpec{
-			Version:                     "2.8",
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    rollout.RolloutSpec_LINEAR.String(),
-			MaxParallel:                 0,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               false,
-			SmartNICMustMatchConstraint: true, // hence venice upgrade only
-			UpgradeType:                 rollout.RolloutSpec_Disruptive.String(),
+			Version:                   "2.8",
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
+			MaxParallel:               0,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  false,
+			DSCMustMatchConstraint:    true, // hence venice upgrade only
+			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
 		},
 	}
 	ret, skip, err = hooks.doRolloutAction(context.TODO(), kvs, txn, "", apiintf.CreateOper, false, req2)
@@ -149,7 +149,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			MaxNICFailuresBeforeAbort: 0,
 			OrderConstraints:          nil,
 			Suspend:                   false,
-			SmartNICsOnly:             false,
+			DSCsOnly:                  false,
 			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
 		},
 	}

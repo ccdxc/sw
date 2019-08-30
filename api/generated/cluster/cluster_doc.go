@@ -13,6 +13,7 @@ The following Messages are defined.
   ClusterCondition
   ClusterSpec
   ClusterStatus
+  DistributedServiceCardID
   DockerInfo
   Host
   HostSpec
@@ -29,7 +30,6 @@ The following Messages are defined.
   QuorumMemberCondition
   QuorumMemberStatus
   QuorumStatus
-  SmartNICID
   StorageDeviceInfo
   StorageInfo
   UpdateTLSConfigRequest

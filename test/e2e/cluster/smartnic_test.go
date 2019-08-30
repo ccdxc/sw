@@ -22,7 +22,7 @@ import (
 	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
-func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface, expectedNumNICS int, status cmd.ConditionStatus) {
+func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1DistributedServiceCardInterface, expectedNumNICS int, status cmd.ConditionStatus) {
 	Eventually(func() bool {
 		snics, err := snIf.List(ctx, &api.ListWatchOptions{})
 		if err != nil {
@@ -32,10 +32,10 @@ func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface,
 		numMatchingNICs := 0
 		for _, snic := range snics {
 			for _, cond := range snic.Status.Conditions {
-				if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
+				if cond.Type == cmd.DSCCondition_HEALTHY.String() &&
 					cond.Status == status.String() {
 					numMatchingNICs++
-					By(fmt.Sprintf("SmartNIC [%s] is %s", snic.Name, status.String()))
+					By(fmt.Sprintf("DistributedServiceCard [%s] is %s", snic.Name, status.String()))
 				}
 			}
 		}
@@ -43,9 +43,9 @@ func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface,
 			By(fmt.Sprintf("Found %d NICS with expected health status %s, want: %d", numMatchingNICs, status.String(), expectedNumNICS))
 			return false
 		}
-		By(fmt.Sprintf("ts:%s SmartNIC health status check validated for [%d] nics", time.Now().String(), numMatchingNICs))
+		By(fmt.Sprintf("ts:%s DistributedServiceCard health status check validated for [%d] nics", time.Now().String(), numMatchingNICs))
 		return true
-	}, 90, 1).Should(BeTrue(), "SmartNIC health status check failed")
+	}, 90, 1).Should(BeTrue(), "DistributedServiceCard health status check failed")
 }
 
 func getNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType eventtypes.EventType) *es.SearchResult {
@@ -75,10 +75,10 @@ func validateNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evt
 			return fmt.Errorf("could not find %d events of type %s, got %+v", numExpectedHits, evtType, res.TotalHits())
 		}
 		return nil
-	}, 60, 1).Should(BeNil(), fmt.Sprintf("failed to validate %d SmartNIC Health events of type %s, err: %v", numExpectedHits, evtType, err))
+	}, 60, 1).Should(BeNil(), fmt.Sprintf("failed to validate %d DistributedServiceCard Health events of type %s, err: %v", numExpectedHits, evtType, err))
 }
 
-func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface, totalNumNICs int64) {
+func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1DistributedServiceCardInterface, totalNumNICs int64) {
 	// Create telemetry client
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
@@ -94,20 +94,20 @@ func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface
 		refMetrics = cmdtypes.GetSmartNICMetricsZeroMap()
 		for _, snic := range snics {
 			switch snic.Status.AdmissionPhase {
-			case cmd.SmartNICStatus_ADMITTED.String():
+			case cmd.DistributedServiceCardStatus_ADMITTED.String():
 				refMetrics["AdmittedNICs"]++
-			case cmd.SmartNICStatus_PENDING.String():
+			case cmd.DistributedServiceCardStatus_PENDING.String():
 				refMetrics["PendingNICs"]++
-			case cmd.SmartNICStatus_REJECTED.String():
+			case cmd.DistributedServiceCardStatus_REJECTED.String():
 				refMetrics["RejectedNICs"]++
-			case cmd.SmartNICStatus_DECOMMISSIONED.String():
+			case cmd.DistributedServiceCardStatus_DECOMMISSIONED.String():
 				refMetrics["DecommissionedNICs"]++
 			default:
-				panic(fmt.Sprintf("Unknown SmartNIC AdmissionPhase value: %+v", snic.Status.AdmissionPhase))
+				panic(fmt.Sprintf("Unknown DistributedServiceCard AdmissionPhase value: %+v", snic.Status.AdmissionPhase))
 			}
-			if snic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
+			if snic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String() {
 				for _, cond := range snic.Status.Conditions {
-					if cond.Type == cmd.SmartNICCondition_HEALTHY.String() {
+					if cond.Type == cmd.DSCCondition_HEALTHY.String() {
 						switch cond.Status {
 						case cmd.ConditionStatus_TRUE.String():
 							refMetrics["HealthyNICs"]++
@@ -116,7 +116,7 @@ func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface
 						case cmd.ConditionStatus_UNKNOWN.String():
 							refMetrics["DisconnectedNICs"]++
 						default:
-							panic(fmt.Sprintf("Unknown SmartNIC condition value: %+v", cond.Status))
+							panic(fmt.Sprintf("Unknown DistributedServiceCard condition value: %+v", cond.Status))
 						}
 					}
 					break
@@ -172,22 +172,22 @@ func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface
 			}
 		}
 		return reflect.DeepEqual(refMetrics, actualMetrics)
-	}, 90, 10).Should(BeTrue(), fmt.Sprintf("SmartNIC metrics do not match cluster state. Have: %+v, want: %+v", actualMetrics, refMetrics))
+	}, 90, 10).Should(BeTrue(), fmt.Sprintf("DistributedServiceCard metrics do not match cluster state. Have: %+v, want: %+v", actualMetrics, refMetrics))
 }
 
-var _ = Describe("SmartNIC tests", func() {
+var _ = Describe("DistributedServiceCard tests", func() {
 
-	Context("SmartNIC object creation & nic-admission validation test", func() {
+	Context("DistributedServiceCard object creation & nic-admission validation test", func() {
 		var (
-			snics []*cmd.SmartNIC
+			snics []*cmd.DistributedServiceCard
 			err   error
-			snIf  cmd.ClusterV1SmartNICInterface
+			snIf  cmd.ClusterV1DistributedServiceCardInterface
 		)
 		BeforeEach(func() {
-			snIf = ts.tu.APIClient.ClusterV1().SmartNIC()
+			snIf = ts.tu.APIClient.ClusterV1().DistributedServiceCard()
 		})
 
-		It("SmartNIC should be created and admitted", func() {
+		It("DistributedServiceCard should be created and admitted", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			ctx := context.Background()
 			// Validate smartNIC object creation
@@ -197,26 +197,26 @@ var _ = Describe("SmartNIC tests", func() {
 					By(fmt.Sprintf("Expected %v, Found %v, nics: %+v", ts.tu.NumNaplesHosts, len(snics), snics))
 					return false
 				}
-				By(fmt.Sprintf("ts:%s SmartNIC creation validated for [%d] nics", time.Now().String(), len(snics)))
+				By(fmt.Sprintf("ts:%s DistributedServiceCard creation validated for [%d] nics", time.Now().String(), len(snics)))
 				return true
-			}, 90, 1).Should(BeTrue(), "SmartNIC object creation failed")
+			}, 90, 1).Should(BeTrue(), "DistributedServiceCard object creation failed")
 
 			// Validate nic-admission status
 			Eventually(func() bool {
 				numAdmittedNICs := 0
 				for _, snic := range snics {
-					if snic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
+					if snic.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_ADMITTED.String() {
 						return false
 					}
 					numAdmittedNICs++
-					By(fmt.Sprintf("SmartNIC [%s] is created & admitted, MAC: %s", snic.Name, snic.Status.PrimaryMAC))
+					By(fmt.Sprintf("DistributedServiceCard [%s] is created & admitted, MAC: %s", snic.Name, snic.Status.PrimaryMAC))
 				}
 				if numAdmittedNICs != ts.tu.NumNaplesHosts {
 					return false
 				}
-				By(fmt.Sprintf("ts:%s SmartNIC admission validated for [%d] nics", time.Now().String(), numAdmittedNICs))
+				By(fmt.Sprintf("ts:%s DistributedServiceCard admission validated for [%d] nics", time.Now().String(), numAdmittedNICs))
 				return true
-			}, 90, 1).Should(BeTrue(), "SmartNIC nic-admission check failed")
+			}, 90, 1).Should(BeTrue(), "DistributedServiceCard nic-admission check failed")
 			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// Validate MAC Addresses. Each NIC should have a valid, unique Pensando MAC address
@@ -225,7 +225,7 @@ var _ = Describe("SmartNIC tests", func() {
 				mac := snic.Status.PrimaryMAC
 				Expect(netutils.IsPensandoMACAddress(mac)).Should(BeTrue(), fmt.Sprintf("Invalid MAC Address: %s", mac))
 				_, ok := nicMACMap[mac]
-				Expect(ok).Should(BeFalse(), fmt.Sprintf("SmartNIC %s had duplicate MAC Address: %s, NIC with same MAC: %s", snic.Name, mac, nicMACMap[mac]))
+				Expect(ok).Should(BeFalse(), fmt.Sprintf("DistributedServiceCard %s had duplicate MAC Address: %s, NIC with same MAC: %s", snic.Name, mac, nicMACMap[mac]))
 				nicMACMap[mac] = snic.Name
 			}
 
@@ -245,28 +245,28 @@ var _ = Describe("SmartNIC tests", func() {
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(len(snics)).To(Equal(ts.tu.NumNaplesHosts))
 						for _, snic := range snics {
-							if admit != (snic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String()) {
-								By(fmt.Sprintf("ts:%s SmartNIC %s admission phase is not as expected. Have: %v, want: %v",
-									time.Now().String(), snic.Name, admit, snic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String()))
+							if admit != (snic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String()) {
+								By(fmt.Sprintf("ts:%s DistributedServiceCard %s admission phase is not as expected. Have: %v, want: %v",
+									time.Now().String(), snic.Name, admit, snic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String()))
 								return false
 							}
 						}
 						return true
-					}, 60, 3).Should(BeTrue(), fmt.Sprintf("SmartNIC de-admission and re-admission check failed: %+v", snics))
+					}, 60, 3).Should(BeTrue(), fmt.Sprintf("DistributedServiceCard de-admission and re-admission check failed: %+v", snics))
 					validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 				}
 			}
 		})
 	})
 
-	Context("SmartNIC health status and periodic updates test", func() {
+	Context("DistributedServiceCard health status and periodic updates test", func() {
 		var (
 			err      error
-			snIf     cmd.ClusterV1SmartNICInterface
+			snIf     cmd.ClusterV1DistributedServiceCardInterface
 			esClient elastic.ESClient
 		)
 		BeforeEach(func() {
-			snIf = ts.tu.APIClient.ClusterV1().SmartNIC()
+			snIf = ts.tu.APIClient.ClusterV1().DistributedServiceCard()
 
 			esAddr := fmt.Sprintf("%s:%s", ts.tu.FirstVeniceIP, globals.ElasticsearchRESTPort)
 			Eventually(func() error {
@@ -276,7 +276,7 @@ var _ = Describe("SmartNIC tests", func() {
 			}, 30, 1).Should(BeNil(), "failed to initialize elastic client")
 		})
 
-		It("CMD should receive SmartNIC health updates and flag unresponsive NICs", func() {
+		It("CMD should receive DistributedServiceCard health updates and flag unresponsive NICs", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			ctx := context.Background()
 			// Validate nic is healthy
@@ -319,17 +319,17 @@ var _ = Describe("SmartNIC tests", func() {
 					for _, condition := range snic.Status.Conditions {
 						curr, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
 						if err != nil {
-							By(fmt.Sprintf("ts:%s SmartNIC [%s] invalid LastTransitionTime %v", time.Now().String(), snic.Name, condition.LastTransitionTime))
+							By(fmt.Sprintf("ts:%s DistributedServiceCard [%s] invalid LastTransitionTime %v", time.Now().String(), snic.Name, condition.LastTransitionTime))
 							return false
 						}
 						if curr.Sub(wakeTime) <= 0 {
-							By(fmt.Sprintf("ts:%s SmartNIC [%s] invalid LastTransitionTime %v, ref: %v", time.Now().String(), snic.Name, curr, wakeTime))
+							By(fmt.Sprintf("ts:%s DistributedServiceCard [%s] invalid LastTransitionTime %v, ref: %v", time.Now().String(), snic.Name, curr, wakeTime))
 							return false
 						}
 					}
 				}
 				return true
-			}, 30, 1).Should(BeTrue(), "SmartNIC condition condition.LastTransitionTime check failed")
+			}, 30, 1).Should(BeTrue(), "DistributedServiceCard condition condition.LastTransitionTime check failed")
 			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// check that events were generated

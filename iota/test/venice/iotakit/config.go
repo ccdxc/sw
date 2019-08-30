@@ -692,7 +692,7 @@ func (tb *TestBed) GetVeniceNode(name string) (n *cluster.Node, err error) {
 }
 
 // GetSmartNIC returns venice smartnic object
-func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
+func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.DistributedServiceCard, err error) {
 	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
@@ -707,7 +707,7 @@ func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
 	}
 
 	for _, restcl := range restcls {
-		sn, err = restcl.ClusterV1().SmartNIC().Get(ctx, &meta)
+		sn, err = restcl.ClusterV1().DistributedServiceCard().Get(ctx, &meta)
 		if err == nil {
 			break
 		}
@@ -717,7 +717,7 @@ func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
 }
 
 // ListSmartNIC gets a list of smartnics
-func (tb *TestBed) ListSmartNIC() (snl []*cluster.SmartNIC, err error) {
+func (tb *TestBed) ListSmartNIC() (snl []*cluster.DistributedServiceCard, err error) {
 	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
@@ -730,7 +730,7 @@ func (tb *TestBed) ListSmartNIC() (snl []*cluster.SmartNIC, err error) {
 	opts := api.ListWatchOptions{}
 
 	for _, restcl := range restcls {
-		snl, err = restcl.ClusterV1().SmartNIC().List(ctx, &opts)
+		snl, err = restcl.ClusterV1().DistributedServiceCard().List(ctx, &opts)
 		if err == nil {
 			break
 		}
@@ -740,7 +740,7 @@ func (tb *TestBed) ListSmartNIC() (snl []*cluster.SmartNIC, err error) {
 }
 
 // GetSmartNICInMacRange returns a smartnic object in mac address range
-func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.SmartNIC, err error) {
+func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.DistributedServiceCard, err error) {
 	const maxMacDiff = 24
 	snicList, err := tb.ListSmartNIC()
 	if err != nil {
@@ -760,7 +760,7 @@ func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.SmartNIC, 
 }
 
 // GetSmartNICByName returns a smartnic object by its name
-func (tb *TestBed) GetSmartNICByName(snicName string) (sn *cluster.SmartNIC, err error) {
+func (tb *TestBed) GetSmartNICByName(snicName string) (sn *cluster.DistributedServiceCard, err error) {
 	snicList, err := tb.ListSmartNIC()
 	if err != nil {
 		return nil, err

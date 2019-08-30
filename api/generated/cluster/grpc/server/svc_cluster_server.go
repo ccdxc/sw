@@ -50,57 +50,57 @@ type eClusterV1Endpoints struct {
 	Svc                     sclusterSvc_clusterBackend
 	fnAutoWatchSvcClusterV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
-	fnAuthBootstrapComplete func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddCluster        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddHost           func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddNode           func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddSmartNIC       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddTenant         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddVersion        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteCluster     func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteHost        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteNode        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteSmartNIC    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteTenant      func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteVersion     func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetCluster        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetHost           func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetNode           func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetSmartNIC       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetTenant         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetVersion        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListCluster       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListHost          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListNode          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListSmartNIC      func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListTenant        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListVersion       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateCluster     func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateHost        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateNode        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateSmartNIC    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateTenant      func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateVersion     func(ctx context.Context, t interface{}) (interface{}, error)
-	fnUpdateTLSConfig       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAuthBootstrapComplete            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddCluster                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddDistributedServiceCard    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddHost                      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddNode                      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddTenant                    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddVersion                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteCluster                func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteDistributedServiceCard func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteHost                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteNode                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteTenant                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteVersion                func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetCluster                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetDistributedServiceCard    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetHost                      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetNode                      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetTenant                    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetVersion                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListCluster                  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListDistributedServiceCard   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListHost                     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListNode                     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListTenant                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListVersion                  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateCluster                func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateDistributedServiceCard func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateHost                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateNode                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateTenant                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateVersion                func(ctx context.Context, t interface{}) (interface{}, error)
+	fnUpdateTLSConfig                  func(ctx context.Context, t interface{}) (interface{}, error)
 
-	fnAutoWatchCluster  func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchNode     func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchHost     func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchSmartNIC func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchTenant   func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchVersion  func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchCluster                func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchNode                   func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchHost                   func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchDistributedServiceCard func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchTenant                 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchVersion                func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 	l.Infof("registering message for sclusterSvc_clusterBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"cluster.AutoMsgClusterWatchHelper":  apisrvpkg.NewMessage("cluster.AutoMsgClusterWatchHelper"),
-		"cluster.AutoMsgHostWatchHelper":     apisrvpkg.NewMessage("cluster.AutoMsgHostWatchHelper"),
-		"cluster.AutoMsgNodeWatchHelper":     apisrvpkg.NewMessage("cluster.AutoMsgNodeWatchHelper"),
-		"cluster.AutoMsgSmartNICWatchHelper": apisrvpkg.NewMessage("cluster.AutoMsgSmartNICWatchHelper"),
-		"cluster.AutoMsgTenantWatchHelper":   apisrvpkg.NewMessage("cluster.AutoMsgTenantWatchHelper"),
-		"cluster.AutoMsgVersionWatchHelper":  apisrvpkg.NewMessage("cluster.AutoMsgVersionWatchHelper"),
+		"cluster.AutoMsgClusterWatchHelper":                apisrvpkg.NewMessage("cluster.AutoMsgClusterWatchHelper"),
+		"cluster.AutoMsgDistributedServiceCardWatchHelper": apisrvpkg.NewMessage("cluster.AutoMsgDistributedServiceCardWatchHelper"),
+		"cluster.AutoMsgHostWatchHelper":                   apisrvpkg.NewMessage("cluster.AutoMsgHostWatchHelper"),
+		"cluster.AutoMsgNodeWatchHelper":                   apisrvpkg.NewMessage("cluster.AutoMsgNodeWatchHelper"),
+		"cluster.AutoMsgTenantWatchHelper":                 apisrvpkg.NewMessage("cluster.AutoMsgTenantWatchHelper"),
+		"cluster.AutoMsgVersionWatchHelper":                apisrvpkg.NewMessage("cluster.AutoMsgVersionWatchHelper"),
 		"cluster.ClusterList": apisrvpkg.NewMessage("cluster.ClusterList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := cluster.ClusterList{}
@@ -129,6 +129,32 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return r, nil
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.ClusterList)
+			return &r
+		}),
+		"cluster.DistributedServiceCardList": apisrvpkg.NewMessage("cluster.DistributedServiceCardList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cluster.DistributedServiceCardList{}
+			into.Kind = "DistributedServiceCardList"
+			r := cluster.DistributedServiceCard{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.DistributedServiceCard")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.DistributedServiceCardList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.DistributedServiceCardList)
 			return &r
 		}),
 		"cluster.HostList": apisrvpkg.NewMessage("cluster.HostList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -181,32 +207,6 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return r, nil
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.NodeList)
-			return &r
-		}),
-		"cluster.SmartNICList": apisrvpkg.NewMessage("cluster.SmartNICList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := cluster.SmartNICList{}
-			into.Kind = "SmartNICList"
-			r := cluster.SmartNIC{}
-			r.ObjectMeta = options.ObjectMeta
-			key := r.MakeKey(prefix)
-
-			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.SmartNIC")
-			err := kvs.ListFiltered(ctx, key, &into, *options)
-			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
-				return nil, err
-			}
-			return into, nil
-		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
-			r := i.(cluster.SmartNICList)
-			r.APIVersion = ver
-			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
-			}
-			return r, nil
-		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
-			r := i.(cluster.SmartNICList)
 			return &r
 		}),
 		"cluster.TenantList": apisrvpkg.NewMessage("cluster.TenantList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -291,6 +291,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoAddDistributedServiceCard = srv.AddMethod("AutoAddDistributedServiceCard",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.DistributedServiceCard"], pkgMessages["cluster.DistributedServiceCard"], "cluster", "AutoAddDistributedServiceCard")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoAddHost = srv.AddMethod("AutoAddHost",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoAddHost")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
@@ -307,11 +312,6 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsClusterV1.fnAutoAddSmartNIC = srv.AddMethod("AutoAddSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoAddSmartNIC")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddTenant = srv.AddMethod("AutoAddTenant",
@@ -333,6 +333,15 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoDeleteDistributedServiceCard = srv.AddMethod("AutoDeleteDistributedServiceCard",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.DistributedServiceCard"], pkgMessages["cluster.DistributedServiceCard"], "cluster", "AutoDeleteDistributedServiceCard")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cluster.DistributedServiceCard)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/distributedservicecards/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoDeleteHost = srv.AddMethod("AutoDeleteHost",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoDeleteHost")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
@@ -349,15 +358,6 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsClusterV1.fnAutoDeleteSmartNIC = srv.AddMethod("AutoDeleteSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoDeleteSmartNIC")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(cluster.SmartNIC)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteTenant = srv.AddMethod("AutoDeleteTenant",
@@ -379,6 +379,15 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoGetDistributedServiceCard = srv.AddMethod("AutoGetDistributedServiceCard",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.DistributedServiceCard"], pkgMessages["cluster.DistributedServiceCard"], "cluster", "AutoGetDistributedServiceCard")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cluster.DistributedServiceCard)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/distributedservicecards/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoGetHost = srv.AddMethod("AutoGetHost",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoGetHost")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
@@ -395,15 +404,6 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsClusterV1.fnAutoGetSmartNIC = srv.AddMethod("AutoGetSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoGetSmartNIC")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(cluster.SmartNIC)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetTenant = srv.AddMethod("AutoGetTenant",
@@ -425,6 +425,15 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoListDistributedServiceCard = srv.AddMethod("AutoListDistributedServiceCard",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.DistributedServiceCardList"], "cluster", "AutoListDistributedServiceCard")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/distributedservicecards/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoListHost = srv.AddMethod("AutoListHost",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.HostList"], "cluster", "AutoListHost")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
@@ -441,15 +450,6 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsClusterV1.fnAutoListSmartNIC = srv.AddMethod("AutoListSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.SmartNICList"], "cluster", "AutoListSmartNIC")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(api.ListWatchOptions)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListTenant = srv.AddMethod("AutoListTenant",
@@ -471,6 +471,15 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoUpdateDistributedServiceCard = srv.AddMethod("AutoUpdateDistributedServiceCard",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.DistributedServiceCard"], pkgMessages["cluster.DistributedServiceCard"], "cluster", "AutoUpdateDistributedServiceCard")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cluster.DistributedServiceCard)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/distributedservicecards/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoUpdateHost = srv.AddMethod("AutoUpdateHost",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoUpdateHost")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
@@ -487,15 +496,6 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsClusterV1.fnAutoUpdateSmartNIC = srv.AddMethod("AutoUpdateSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoUpdateSmartNIC")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(cluster.SmartNIC)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateTenant = srv.AddMethod("AutoUpdateTenant",
@@ -523,7 +523,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoWatchHost = pkgMessages["cluster.Host"].WatchFromKv
 
-		s.endpointsClusterV1.fnAutoWatchSmartNIC = pkgMessages["cluster.SmartNIC"].WatchFromKv
+		s.endpointsClusterV1.fnAutoWatchDistributedServiceCard = pkgMessages["cluster.DistributedServiceCard"].WatchFromKv
 
 		s.endpointsClusterV1.fnAutoWatchTenant = pkgMessages["cluster.Tenant"].WatchFromKv
 
@@ -536,7 +536,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := cluster.MakeClusterV1ServerEndpoints(s.endpointsClusterV1, logger)
 		server := cluster.MakeGRPCServerClusterV1(ctx, endpoints, logger)
 		cluster.RegisterClusterV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"Cluster", "Node", "Host", "SmartNIC", "Tenant", "Version"}
+		svcObjs := []string{"Cluster", "Node", "Host", "DistributedServiceCard", "Tenant", "Version"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("cluster", "ClusterV1", svcObjs)
 	}
 }
@@ -870,13 +870,13 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			}
 		})
 
-		pkgMessages["cluster.SmartNIC"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := cluster.SmartNIC{}
+		pkgMessages["cluster.DistributedServiceCard"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := cluster.DistributedServiceCard{}
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
-			wstream := stream.(cluster.ClusterV1_AutoWatchSmartNICServer)
+			wstream := stream.(cluster.ClusterV1_AutoWatchDistributedServiceCardServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
 			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
@@ -885,11 +885,11 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.SmartNIC")
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.SmartNIC")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.DistributedServiceCard")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.DistributedServiceCard")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.DistributedServiceCard")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -897,25 +897,25 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				<-timer.C
 			}
 			running := false
-			events := &cluster.AutoMsgSmartNICWatchHelper{}
+			events := &cluster.AutoMsgDistributedServiceCardWatchHelper{}
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.DistributedServiceCard")
 					return err
 				}
-				events = &cluster.AutoMsgSmartNICWatchHelper{}
+				events = &cluster.AutoMsgDistributedServiceCardWatchHelper{}
 				return nil
 			}
-			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.SmartNIC")
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.DistributedServiceCard")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.SmartNIC")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.DistributedServiceCard")
 						return nil
 					}
-					evin, ok := ev.Object.(*cluster.SmartNIC)
+					evin, ok := ev.Object.(*cluster.DistributedServiceCard)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -928,21 +928,21 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 					if err != nil {
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
-					in := cin.(*cluster.SmartNIC)
+					in := cin.(*cluster.DistributedServiceCard)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
 
-					strEvent := &cluster.AutoMsgSmartNICWatchHelper_WatchEvent{
+					strEvent := &cluster.AutoMsgDistributedServiceCardWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "received SmartNIC watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received DistributedServiceCard watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "SmartNIC", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.SmartNIC")
+							l.ErrorLog("msg", "Failed to transform message", "type", "DistributedServiceCard", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.DistributedServiceCard")
 							break
 						}
-						strEvent.Object = i.(*cluster.SmartNIC)
+						strEvent.Object = i.(*cluster.DistributedServiceCard)
 					}
 					events.Events = append(events.Events, strEvent)
 					if !running {
@@ -964,7 +964,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.SmartNIC")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.DistributedServiceCard")
 					return wstream.Context().Err()
 				}
 			}
@@ -1205,6 +1205,14 @@ func (e *eClusterV1Endpoints) AutoAddCluster(ctx context.Context, t cluster.Clus
 	return cluster.Cluster{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoAddDistributedServiceCard(ctx context.Context, t cluster.DistributedServiceCard) (cluster.DistributedServiceCard, error) {
+	r, err := e.fnAutoAddDistributedServiceCard(ctx, t)
+	if err == nil {
+		return r.(cluster.DistributedServiceCard), err
+	}
+	return cluster.DistributedServiceCard{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoAddHost(ctx context.Context, t cluster.Host) (cluster.Host, error) {
 	r, err := e.fnAutoAddHost(ctx, t)
 	if err == nil {
@@ -1219,14 +1227,6 @@ func (e *eClusterV1Endpoints) AutoAddNode(ctx context.Context, t cluster.Node) (
 		return r.(cluster.Node), err
 	}
 	return cluster.Node{}, err
-
-}
-func (e *eClusterV1Endpoints) AutoAddSmartNIC(ctx context.Context, t cluster.SmartNIC) (cluster.SmartNIC, error) {
-	r, err := e.fnAutoAddSmartNIC(ctx, t)
-	if err == nil {
-		return r.(cluster.SmartNIC), err
-	}
-	return cluster.SmartNIC{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoAddTenant(ctx context.Context, t cluster.Tenant) (cluster.Tenant, error) {
@@ -1253,6 +1253,14 @@ func (e *eClusterV1Endpoints) AutoDeleteCluster(ctx context.Context, t cluster.C
 	return cluster.Cluster{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoDeleteDistributedServiceCard(ctx context.Context, t cluster.DistributedServiceCard) (cluster.DistributedServiceCard, error) {
+	r, err := e.fnAutoDeleteDistributedServiceCard(ctx, t)
+	if err == nil {
+		return r.(cluster.DistributedServiceCard), err
+	}
+	return cluster.DistributedServiceCard{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoDeleteHost(ctx context.Context, t cluster.Host) (cluster.Host, error) {
 	r, err := e.fnAutoDeleteHost(ctx, t)
 	if err == nil {
@@ -1267,14 +1275,6 @@ func (e *eClusterV1Endpoints) AutoDeleteNode(ctx context.Context, t cluster.Node
 		return r.(cluster.Node), err
 	}
 	return cluster.Node{}, err
-
-}
-func (e *eClusterV1Endpoints) AutoDeleteSmartNIC(ctx context.Context, t cluster.SmartNIC) (cluster.SmartNIC, error) {
-	r, err := e.fnAutoDeleteSmartNIC(ctx, t)
-	if err == nil {
-		return r.(cluster.SmartNIC), err
-	}
-	return cluster.SmartNIC{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoDeleteTenant(ctx context.Context, t cluster.Tenant) (cluster.Tenant, error) {
@@ -1301,6 +1301,14 @@ func (e *eClusterV1Endpoints) AutoGetCluster(ctx context.Context, t cluster.Clus
 	return cluster.Cluster{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoGetDistributedServiceCard(ctx context.Context, t cluster.DistributedServiceCard) (cluster.DistributedServiceCard, error) {
+	r, err := e.fnAutoGetDistributedServiceCard(ctx, t)
+	if err == nil {
+		return r.(cluster.DistributedServiceCard), err
+	}
+	return cluster.DistributedServiceCard{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoGetHost(ctx context.Context, t cluster.Host) (cluster.Host, error) {
 	r, err := e.fnAutoGetHost(ctx, t)
 	if err == nil {
@@ -1315,14 +1323,6 @@ func (e *eClusterV1Endpoints) AutoGetNode(ctx context.Context, t cluster.Node) (
 		return r.(cluster.Node), err
 	}
 	return cluster.Node{}, err
-
-}
-func (e *eClusterV1Endpoints) AutoGetSmartNIC(ctx context.Context, t cluster.SmartNIC) (cluster.SmartNIC, error) {
-	r, err := e.fnAutoGetSmartNIC(ctx, t)
-	if err == nil {
-		return r.(cluster.SmartNIC), err
-	}
-	return cluster.SmartNIC{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoGetTenant(ctx context.Context, t cluster.Tenant) (cluster.Tenant, error) {
@@ -1349,6 +1349,14 @@ func (e *eClusterV1Endpoints) AutoListCluster(ctx context.Context, t api.ListWat
 	return cluster.ClusterList{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoListDistributedServiceCard(ctx context.Context, t api.ListWatchOptions) (cluster.DistributedServiceCardList, error) {
+	r, err := e.fnAutoListDistributedServiceCard(ctx, t)
+	if err == nil {
+		return r.(cluster.DistributedServiceCardList), err
+	}
+	return cluster.DistributedServiceCardList{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoListHost(ctx context.Context, t api.ListWatchOptions) (cluster.HostList, error) {
 	r, err := e.fnAutoListHost(ctx, t)
 	if err == nil {
@@ -1363,14 +1371,6 @@ func (e *eClusterV1Endpoints) AutoListNode(ctx context.Context, t api.ListWatchO
 		return r.(cluster.NodeList), err
 	}
 	return cluster.NodeList{}, err
-
-}
-func (e *eClusterV1Endpoints) AutoListSmartNIC(ctx context.Context, t api.ListWatchOptions) (cluster.SmartNICList, error) {
-	r, err := e.fnAutoListSmartNIC(ctx, t)
-	if err == nil {
-		return r.(cluster.SmartNICList), err
-	}
-	return cluster.SmartNICList{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoListTenant(ctx context.Context, t api.ListWatchOptions) (cluster.TenantList, error) {
@@ -1397,6 +1397,14 @@ func (e *eClusterV1Endpoints) AutoUpdateCluster(ctx context.Context, t cluster.C
 	return cluster.Cluster{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoUpdateDistributedServiceCard(ctx context.Context, t cluster.DistributedServiceCard) (cluster.DistributedServiceCard, error) {
+	r, err := e.fnAutoUpdateDistributedServiceCard(ctx, t)
+	if err == nil {
+		return r.(cluster.DistributedServiceCard), err
+	}
+	return cluster.DistributedServiceCard{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoUpdateHost(ctx context.Context, t cluster.Host) (cluster.Host, error) {
 	r, err := e.fnAutoUpdateHost(ctx, t)
 	if err == nil {
@@ -1411,14 +1419,6 @@ func (e *eClusterV1Endpoints) AutoUpdateNode(ctx context.Context, t cluster.Node
 		return r.(cluster.Node), err
 	}
 	return cluster.Node{}, err
-
-}
-func (e *eClusterV1Endpoints) AutoUpdateSmartNIC(ctx context.Context, t cluster.SmartNIC) (cluster.SmartNIC, error) {
-	r, err := e.fnAutoUpdateSmartNIC(ctx, t)
-	if err == nil {
-		return r.(cluster.SmartNIC), err
-	}
-	return cluster.SmartNIC{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoUpdateTenant(ctx context.Context, t cluster.Tenant) (cluster.Tenant, error) {
@@ -1455,8 +1455,8 @@ func (e *eClusterV1Endpoints) AutoWatchNode(in *api.ListWatchOptions, stream clu
 func (e *eClusterV1Endpoints) AutoWatchHost(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchHostServer) error {
 	return e.fnAutoWatchHost(in, stream, "cluster")
 }
-func (e *eClusterV1Endpoints) AutoWatchSmartNIC(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchSmartNICServer) error {
-	return e.fnAutoWatchSmartNIC(in, stream, "cluster")
+func (e *eClusterV1Endpoints) AutoWatchDistributedServiceCard(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchDistributedServiceCardServer) error {
+	return e.fnAutoWatchDistributedServiceCard(in, stream, "cluster")
 }
 func (e *eClusterV1Endpoints) AutoWatchTenant(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchTenantServer) error {
 	return e.fnAutoWatchTenant(in, stream, "cluster")

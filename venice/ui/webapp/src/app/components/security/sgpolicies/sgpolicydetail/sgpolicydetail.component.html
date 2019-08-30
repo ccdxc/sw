@@ -26,7 +26,7 @@
           <!-- Commented out as creator is not available currently -->
           <!-- <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
             <div class="sgpolicy-summary-panel-content-value">{{creator}}</div> -->
-          <!--VS-126 add sgPolicy-vs-Naples statistics  -->
+          <!--VS-126 add sgPolicy-vs-DSC statistics  -->
           <div class="sgpolicy-summary-panel-content-label"> Propagation: </div>
           <div class="sgpolicy-summary-panel-content-value sgpolicy-summary-panel-content-value-warning"
                *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] != selectedPolicy?.meta['generation-id']">
@@ -34,7 +34,7 @@
           <div class="sgpolicy-summary-panel-content-value  sgpolicy-summary-panel-content-value-warning sgpolicy-summary-panel-content-value-link"
                *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending>0"
                (click)="viewPendingNaplesList()"
-               [matTooltip]="viewPendingNaples ? 'Click to hide Pending Naples List' : 'Click to view Pending Naples List'">
+               [matTooltip]="viewPendingNaples ? 'Click to hide Pending Distributed Services Card List' : 'Click to view Pending Distributed Services Cards List'">
             {{selectedPolicy.status['propagation-status'].pending}} Out Of
             {{selectedPolicy.status['propagation-status'].pending + selectedPolicy.status['propagation-status'].updated }}
             Pending
@@ -51,10 +51,10 @@
       </div>
       <!-- Displays pending naples on which the policy couldn't be propagated -->
       <div [@slideInOut] class="sgpolicy-summary-panel-content-pendingNaples"
-           *ngIf="selectedPolicy?.status['propagation-status']['pending-smartnics'].length>0 && viewPendingNaples">
+           *ngIf="selectedPolicy?.status['propagation-status']['pending-dscs'].length>0 && viewPendingNaples">
         <div class="sgpolicy-summary-panel-content-pendingNaples-grid">
           <div
-               *ngFor="let nicMac of selectedPolicy?.status['propagation-status']['pending-smartnics']">
+               *ngFor="let nicMac of selectedPolicy?.status['propagation-status']['pending-dscs']">
             <a routerLink="/cluster/naples/{{nicMac}}"
                class="sgpolicy-summary-panel-content-nic-div-link">{{getNaplesName(nicMac)}}</a>
           </div>

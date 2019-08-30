@@ -205,17 +205,17 @@ var _ = Describe("Rollout object tests", func() {
 					Name: rolloutName,
 				},
 				Spec: rollout.RolloutSpec{
-					Version:                     version,
-					ScheduledStartTime:          scheduledStartTime,
-					Duration:                    "",
-					Strategy:                    "LINEAR",
-					MaxParallel:                 0,
-					MaxNICFailuresBeforeAbort:   0,
-					OrderConstraints:            nil,
-					Suspend:                     false,
-					SmartNICsOnly:               false,
-					SmartNICMustMatchConstraint: true, // hence venice upgrade only
-					UpgradeType:                 "Disruptive",
+					Version:                   version,
+					ScheduledStartTime:        scheduledStartTime,
+					Duration:                  "",
+					Strategy:                  "LINEAR",
+					MaxParallel:               0,
+					MaxNICFailuresBeforeAbort: 0,
+					OrderConstraints:          nil,
+					Suspend:                   false,
+					DSCsOnly:                  false,
+					DSCMustMatchConstraint:    true, // hence venice upgrade only
+					UpgradeType:               "Disruptive",
 				},
 			}
 			// Verify creation for rollout object
@@ -405,17 +405,17 @@ var _ = Describe("Rollout object tests", func() {
 					Name: rolloutSuspendName,
 				},
 				Spec: rollout.RolloutSpec{
-					Version:                     version,
-					ScheduledStartTime:          nil,
-					Duration:                    "",
-					Strategy:                    "LINEAR",
-					MaxParallel:                 0,
-					MaxNICFailuresBeforeAbort:   0,
-					OrderConstraints:            nil,
-					Suspend:                     false,
-					SmartNICsOnly:               false,
-					SmartNICMustMatchConstraint: true, // hence venice upgrade only
-					UpgradeType:                 "Disruptive",
+					Version:                   version,
+					ScheduledStartTime:        nil,
+					Duration:                  "",
+					Strategy:                  "LINEAR",
+					MaxParallel:               0,
+					MaxNICFailuresBeforeAbort: 0,
+					OrderConstraints:          nil,
+					Suspend:                   false,
+					DSCsOnly:                  false,
+					DSCMustMatchConstraint:    true, // hence venice upgrade only
+					UpgradeType:               "Disruptive",
 				},
 			}
 

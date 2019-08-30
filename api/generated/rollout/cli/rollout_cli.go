@@ -15,6 +15,20 @@ import (
 // CreateRolloutFlags specifies flags for Rollout create operation
 var CreateRolloutFlags = []gen.CliFlag{
 	{
+		ID:     "dsc-must-match-constraint",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "dscs-only",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "duration",
 		Type:   "String",
 		Help:   "",
@@ -31,20 +45,6 @@ var CreateRolloutFlags = []gen.CliFlag{
 	{
 		ID:     "max-parallel",
 		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "smartnic-must-match-constraint",
-		Type:   "Bool",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "smartnics-only",
-		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
@@ -93,6 +93,20 @@ func removeRolloutOper(obj interface{}) error {
 // CreateRolloutActionFlags specifies flags for RolloutAction create operation
 var CreateRolloutActionFlags = []gen.CliFlag{
 	{
+		ID:     "dsc-must-match-constraint",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "dscs-only",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "duration",
 		Type:   "String",
 		Help:   "",
@@ -109,20 +123,6 @@ var CreateRolloutActionFlags = []gen.CliFlag{
 	{
 		ID:     "max-parallel",
 		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "smartnic-must-match-constraint",
-		Type:   "Bool",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "smartnics-only",
-		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

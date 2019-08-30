@@ -117,11 +117,11 @@ func TestUpdateFilterBaseCases(t *testing.T) {
 
 func TestUpdateFilterWithObjects(t *testing.T) {
 
-	nicJSON := []byte(`{"kind":"SmartNIC","api-version":"v1","meta":{"name":"4444.4444.0002","generation-id":"10","resource-version":"114790","uuid":"ec38f54d-c4d5-4709-9860-26f6fe24dfb1","creation-time":"2018-12-19T23:56:41.743152915Z","mod-time":"2018-12-20T17:59:19.218143088Z","self-link":"/configs/cluster/v1/smartnics/4444.4444.0002"},"spec":{"admit":true,"hostname":"naples1-host-new","mgmt-mode":"NETWORK"},"status":{"admission-phase":"ADMITTED","conditions":[{"type":"HEALTHY","status":"TRUE","last-transition-time":"2018-12-20T17:59:18Z"}],"serial-num":"0x0123456789ABCDEFghijk","primary-mac":"4444.4444.0002"}}`)
+	nicJSON := []byte(`{"kind":"DistributedServiceCard","api-version":"v1","meta":{"name":"4444.4444.0002","generation-id":"10","resource-version":"114790","uuid":"ec38f54d-c4d5-4709-9860-26f6fe24dfb1","creation-time":"2018-12-19T23:56:41.743152915Z","mod-time":"2018-12-20T17:59:19.218143088Z","self-link":"/configs/cluster/v1/smartnics/4444.4444.0002"},"spec":{"admit":true,"hostname":"naples1-host-new","mgmt-mode":"NETWORK"},"status":{"admission-phase":"ADMITTED","conditions":[{"type":"HEALTHY","status":"TRUE","last-transition-time":"2018-12-20T17:59:18Z"}],"serial-num":"0x0123456789ABCDEFghijk","primary-mac":"4444.4444.0002"}}`)
 
 	// create identical but independent instances of the NIC object to start from
-	var nicObj, nicObjCopy, updateObj, unhealthyNICObj, noCondObj1, noCondObj2 cluster.SmartNIC
-	for _, obj := range []*cluster.SmartNIC{&nicObj, &nicObjCopy, &updateObj, &unhealthyNICObj, &noCondObj1, &noCondObj2} {
+	var nicObj, nicObjCopy, updateObj, unhealthyNICObj, noCondObj1, noCondObj2 cluster.DistributedServiceCard
+	for _, obj := range []*cluster.DistributedServiceCard{&nicObj, &nicObjCopy, &updateObj, &unhealthyNICObj, &noCondObj1, &noCondObj2} {
 		err := json.Unmarshal(nicJSON, obj)
 		AssertOk(t, err, "Error unmarshaling nicJSON")
 	}
@@ -134,9 +134,9 @@ func TestUpdateFilterWithObjects(t *testing.T) {
 	unhealthyNICObj.Status.Conditions[0].LastTransitionTime = "2018-12-20T17:59:19Z"
 
 	// this is an incremental update similar to what agent would send
-	healthyUpdateDelta := cluster.SmartNIC{
-		Status: cluster.SmartNICStatus{
-			Conditions: []cluster.SmartNICCondition{
+	healthyUpdateDelta := cluster.DistributedServiceCard{
+		Status: cluster.DistributedServiceCardStatus{
+			Conditions: []cluster.DSCCondition{
 				{
 					LastTransitionTime: "2018-12-20T17:59:19Z",
 				},
@@ -145,9 +145,9 @@ func TestUpdateFilterWithObjects(t *testing.T) {
 	}
 
 	// same as healthyUpdate, except for health status
-	unhealthyUpdateDelta := cluster.SmartNIC{
-		Status: cluster.SmartNICStatus{
-			Conditions: []cluster.SmartNICCondition{
+	unhealthyUpdateDelta := cluster.DistributedServiceCard{
+		Status: cluster.DistributedServiceCardStatus{
+			Conditions: []cluster.DSCCondition{
 				{
 					LastTransitionTime: "2018-12-20T17:59:19Z",
 					Status:             "unknown",
@@ -158,7 +158,7 @@ func TestUpdateFilterWithObjects(t *testing.T) {
 
 	// noCondObj do not have conditions
 	noCondObj1.Status.Conditions = nil
-	noCondObj2.Status.Conditions = []cluster.SmartNICCondition{}
+	noCondObj2.Status.Conditions = []cluster.DSCCondition{}
 
 	tcs := []filterUpdateTestcase{
 		// full object update cases
@@ -167,7 +167,7 @@ func TestUpdateFilterWithObjects(t *testing.T) {
 		{nicObj, updateObj, []string{"LastTransitionTime"}, nil, true},        // LastTransitionTime is different but ignored
 		{nicObj, unhealthyNICObj, []string{"LastTransitionTime"}, nil, false}, // health status is different, need to update
 		// delta update cases
-		{nicObj, cluster.SmartNIC{}, nil, nil, true},                                               // empty update
+		{nicObj, cluster.DistributedServiceCard{}, nil, nil, true},                                 // empty update
 		{nicObj, healthyUpdateDelta, nil, nil, false},                                              // LastTransitionTime is different and not ignored
 		{nicObj, healthyUpdateDelta, []string{"LastTransitionTime"}, nil, true},                    // LastTransitionTime is different but ignored
 		{nicObj, healthyUpdateDelta, []string{"LastTransitionTime"}, []string{"Conditions"}, true}, // LastTransitionTime is different but ignored

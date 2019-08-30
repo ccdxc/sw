@@ -8,17 +8,17 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
-export interface IClusterSmartNICID {
+export interface IClusterDistributedServiceCardID {
     'id'?: string;
     'mac-address'?: string;
 }
 
 
-export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
+export class ClusterDistributedServiceCardID extends BaseModel implements IClusterDistributedServiceCardID {
     'id': string = null;
     /** should be a valid MAC address */
     'mac-address': string = null;
-    public static propInfo: { [prop in keyof IClusterSmartNICID]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterDistributedServiceCardID]: PropInfoItem } = {
         'id': {
             required: false,
             type: 'string'
@@ -32,19 +32,19 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterSmartNICID.propInfo[propName];
+        return ClusterDistributedServiceCardID.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterSmartNICID.propInfo;
+        return ClusterDistributedServiceCardID.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterSmartNICID.propInfo[prop] != null &&
-                        ClusterSmartNICID.propInfo[prop].default != null);
+        return (ClusterDistributedServiceCardID.propInfo[prop] != null &&
+                        ClusterDistributedServiceCardID.propInfo[prop].default != null);
     }
 
     /**
@@ -64,15 +64,15 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['id'] != null) {
             this['id'] = values['id'];
-        } else if (fillDefaults && ClusterSmartNICID.hasDefaultValue('id')) {
-            this['id'] = ClusterSmartNICID.propInfo['id'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardID.hasDefaultValue('id')) {
+            this['id'] = ClusterDistributedServiceCardID.propInfo['id'].default;
         } else {
             this['id'] = null
         }
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
-        } else if (fillDefaults && ClusterSmartNICID.hasDefaultValue('mac-address')) {
-            this['mac-address'] = ClusterSmartNICID.propInfo['mac-address'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardID.hasDefaultValue('mac-address')) {
+            this['mac-address'] = ClusterDistributedServiceCardID.propInfo['mac-address'].default;
         } else {
             this['mac-address'] = null
         }
@@ -83,8 +83,8 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'id': CustomFormControl(new FormControl(this['id']), ClusterSmartNICID.propInfo['id']),
-                'mac-address': CustomFormControl(new FormControl(this['mac-address']), ClusterSmartNICID.propInfo['mac-address']),
+                'id': CustomFormControl(new FormControl(this['id']), ClusterDistributedServiceCardID.propInfo['id']),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), ClusterDistributedServiceCardID.propInfo['mac-address']),
             });
         }
         return this._formGroup;

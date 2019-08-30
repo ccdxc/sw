@@ -28,8 +28,8 @@ type RoClient struct {
 	resolverClient    resolver.Interface // resolver Interface
 	rpcClient         *rpckit.RPCClient  // RPC client for NIC watches and updates
 	nmd               nmdapi.RolloutAPI
-	smartNICRPCClient protos.SmartNICRolloutApiClient
-	statusUpdateChan  chan protos.SmartNICRolloutStatusUpdate
+	smartNICRPCClient protos.DSCRolloutApiClient
+	statusUpdateChan  chan protos.DSCRolloutStatusUpdate
 	stopped           bool
 	watcherRunning    bool
 }
@@ -51,7 +51,7 @@ func newRoClient(nmd nmdapi.RolloutAPI, resolverClient resolver.Interface) (*RoC
 		watchCtx:         watchCtx,
 		watchCancel:      watchCancel,
 		nmd:              nmd,
-		statusUpdateChan: make(chan protos.SmartNICRolloutStatusUpdate, 16),
+		statusUpdateChan: make(chan protos.DSCRolloutStatusUpdate, 16),
 	}
 
 	err := nmd.RegisterROCtrlClient(&client)
@@ -64,14 +64,14 @@ func newRoClient(nmd nmdapi.RolloutAPI, resolverClient resolver.Interface) (*RoC
 	return &client, nil
 }
 
-// WatchSmartNICRolloutUpdates sets up the watch
-func (client *RoClient) WatchSmartNICRolloutUpdates() error {
+// WatchDSCRolloutUpdates sets up the watch
+func (client *RoClient) WatchDSCRolloutUpdates() error {
 	client.Lock()
 	defer client.Unlock()
 	client.Add(1)
 	// start watching objects
 	client.watcherRunning = true
-	go client.runSmartNICRolloutWatcher(client.watchCtx)
+	go client.runDSCRolloutWatcher(client.watchCtx)
 	return nil
 }
 
@@ -94,7 +94,7 @@ func (client *RoClient) statusUpdater() {
 					continue
 				}
 				ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
-				_, err := rpcClient.UpdateSmartNICRolloutStatus(ctx, &status)
+				_, err := rpcClient.UpdateDSCRolloutStatus(ctx, &status)
 				cancel()
 				if err != nil {
 					log.Errorf("Error updating  smartNIC rollout status: Err: %v ", err)
@@ -106,8 +106,8 @@ func (client *RoClient) statusUpdater() {
 	}
 }
 
-// UpdateSmartNICRolloutStatus is called by NMD to inform rollout ctrler about the status of the rollout
-func (client *RoClient) UpdateSmartNICRolloutStatus(status *protos.SmartNICRolloutStatusUpdate) error {
+// UpdateDSCRolloutStatus is called by NMD to inform rollout ctrler about the status of the rollout
+func (client *RoClient) UpdateDSCRolloutStatus(status *protos.DSCRolloutStatusUpdate) error {
 	client.Lock()
 	defer client.Unlock()
 	log.Infof("Sending rollout update status: %v to venice", *status)
@@ -133,7 +133,7 @@ func (client *RoClient) initRPC() error {
 	if err != nil {
 		log.Errorf("Error connecting to grpc server for NIC updates, URL: %v Err: %v", rolloutURL, err)
 	} else {
-		client.smartNICRPCClient = protos.NewSmartNICRolloutApiClient(client.rpcClient.ClientConn)
+		client.smartNICRPCClient = protos.NewDSCRolloutApiClient(client.rpcClient.ClientConn)
 	}
 	return err
 }
@@ -178,7 +178,7 @@ func (client *RoClient) IsSmartNICWatcherRunning() bool {
 }
 
 // runSmartNICWatcher runs smartNIC watcher loop
-func (client *RoClient) runSmartNICRolloutWatcher(ctx context.Context) {
+func (client *RoClient) runDSCRolloutWatcher(ctx context.Context) {
 	defer client.Done()
 
 	// Outer loop gets a valid grpc client. In the inner loop, run a watcher
@@ -207,7 +207,7 @@ func (client *RoClient) runSmartNICRolloutWatcher(ctx context.Context) {
 		log.Errorf("starting rollout watch with ID %s", id)
 
 		// Start the watch on SmartNIC object
-		stream, err := client.smartNICRPCClient.WatchSmartNICRollout(ctx, &api.ObjectMeta{Name: id})
+		stream, err := client.smartNICRPCClient.WatchDSCRollout(ctx, &api.ObjectMeta{Name: id})
 		if err != nil {
 			log.Errorf("Error watching smartNIC: Err: %v watchCtx.Err: %v",
 				err, client.watchCtx.Err())
@@ -247,7 +247,7 @@ func (client *RoClient) runSmartNICRolloutWatcher(ctx context.Context) {
 			switch evt.EventType {
 			case api.EventType_CreateEvent, api.EventType_UpdateEvent:
 				// create the nic
-				err = client.nmd.CreateUpdateSmartNICRollout(&evt.SmartNICRollout)
+				err = client.nmd.CreateUpdateDSCRollout(&evt.DSCRollout)
 				if err != nil {
 					log.Errorf("Error creating the smartNIC {%+v}. Err: %v", evt, err)
 				}
@@ -255,7 +255,7 @@ func (client *RoClient) runSmartNICRolloutWatcher(ctx context.Context) {
 			case api.EventType_DeleteEvent:
 
 				// delete the nic
-				err = client.nmd.DeleteSmartNICRollout(&evt.SmartNICRollout)
+				err = client.nmd.DeleteDSCRollout(&evt.DSCRollout)
 				if err != nil {
 					log.Errorf("Error deleting the smartNIC {%+v}. Err: %v", evt, err)
 				}

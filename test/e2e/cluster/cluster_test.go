@@ -28,7 +28,7 @@ var _ = Describe("cluster tests", func() {
 			obj                  api.ObjectMeta
 			cl                   *cmd.Cluster
 			clusterIf            cmd.ClusterV1ClusterInterface
-			smartNICIf           cmd.ClusterV1SmartNICInterface
+			smartNICIf           cmd.ClusterV1DistributedServiceCardInterface
 			err                  error
 			oldLeader, newLeader string
 			oldLeaderIP          string
@@ -44,7 +44,7 @@ var _ = Describe("cluster tests", func() {
 			apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
 			Expect(err).ShouldNot(HaveOccurred())
 			clusterIf = apiClient.ClusterV1().Cluster()
-			smartNICIf = apiClient.ClusterV1().SmartNIC()
+			smartNICIf = apiClient.ClusterV1().DistributedServiceCard()
 			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 			obj = api.ObjectMeta{Name: "testCluster"}
 			cl, err = clusterIf.Get(ctx, &obj)

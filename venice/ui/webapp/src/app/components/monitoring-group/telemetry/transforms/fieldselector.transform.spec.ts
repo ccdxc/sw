@@ -49,11 +49,11 @@ describe('Field Selector transform', () => {
     expect(transform.stringForm).toBe('Percent CPU Used >= 2');
 
     // Switching measurement
-    transform.measurement = 'SmartNIC';
+    transform.measurement = 'DistributedServiceCard';
     transform.onMeasurementChange();
 
     // Verifying repeater data
-    verifyFieldData('SmartNIC', true);
+    verifyFieldData('DistributedServiceCard', true);
 
     // Verifying currValue and stringValue are updated when the
     // control is changed
@@ -104,7 +104,7 @@ describe('Field Selector transform', () => {
   it('transform query', () => {
     transform = new FieldSelectorTransform();
     reqMetricsSpy = spyOn(transform, 'requestMetrics');
-    transform.measurement = 'SmartNIC';
+    transform.measurement = 'DistributedServiceCard';
 
     // Query should remain unmodified
     let opts: any = {

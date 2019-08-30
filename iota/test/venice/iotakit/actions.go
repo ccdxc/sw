@@ -110,7 +110,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 		log.Debugf("Got smartnic object: %+v", snic)
 
-		if snic.Status.AdmissionPhase != cluster.SmartNICStatus_ADMITTED.String() {
+		if snic.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", np.iotaNode.Name, snic.Status)
 		}
@@ -118,7 +118,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("No naples status reported for naples %v", np.iotaNode.Name)
 		}
-		if snic.Status.Conditions[0].Type != cluster.SmartNICCondition_HEALTHY.String() {
+		if snic.Status.Conditions[0].Type != cluster.DSCCondition_HEALTHY.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Status.Conditions[0].Type, np.iotaNode.Name)
 		}

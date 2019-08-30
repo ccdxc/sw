@@ -13,7 +13,7 @@ import { ClusterCPUInfo, IClusterCPUInfo } from './cluster-cpu-info.model';
 import { ClusterMemInfo, IClusterMemInfo } from './cluster-mem-info.model';
 import { ClusterStorageInfo, IClusterStorageInfo } from './cluster-storage-info.model';
 
-export interface IClusterSmartNICInfo {
+export interface IClusterDSCInfo {
     'bios-info'?: IClusterBiosInfo;
     'os-info'?: IClusterOsInfo;
     'cpu-info'?: IClusterCPUInfo;
@@ -22,13 +22,13 @@ export interface IClusterSmartNICInfo {
 }
 
 
-export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICInfo {
+export class ClusterDSCInfo extends BaseModel implements IClusterDSCInfo {
     'bios-info': ClusterBiosInfo = null;
     'os-info': ClusterOsInfo = null;
     'cpu-info': ClusterCPUInfo = null;
     'memory-info': ClusterMemInfo = null;
     'storage-info': ClusterStorageInfo = null;
-    public static propInfo: { [prop in keyof IClusterSmartNICInfo]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterDSCInfo]: PropInfoItem } = {
         'bios-info': {
             required: false,
             type: 'object'
@@ -52,19 +52,19 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterSmartNICInfo.propInfo[propName];
+        return ClusterDSCInfo.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterSmartNICInfo.propInfo;
+        return ClusterDSCInfo.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterSmartNICInfo.propInfo[prop] != null &&
-                        ClusterSmartNICInfo.propInfo[prop].default != null);
+        return (ClusterDSCInfo.propInfo[prop] != null &&
+                        ClusterDSCInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -119,11 +119,11 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'bios-info': CustomFormGroup(this['bios-info'].$formGroup, ClusterSmartNICInfo.propInfo['bios-info'].required),
-                'os-info': CustomFormGroup(this['os-info'].$formGroup, ClusterSmartNICInfo.propInfo['os-info'].required),
-                'cpu-info': CustomFormGroup(this['cpu-info'].$formGroup, ClusterSmartNICInfo.propInfo['cpu-info'].required),
-                'memory-info': CustomFormGroup(this['memory-info'].$formGroup, ClusterSmartNICInfo.propInfo['memory-info'].required),
-                'storage-info': CustomFormGroup(this['storage-info'].$formGroup, ClusterSmartNICInfo.propInfo['storage-info'].required),
+                'bios-info': CustomFormGroup(this['bios-info'].$formGroup, ClusterDSCInfo.propInfo['bios-info'].required),
+                'os-info': CustomFormGroup(this['os-info'].$formGroup, ClusterDSCInfo.propInfo['os-info'].required),
+                'cpu-info': CustomFormGroup(this['cpu-info'].$formGroup, ClusterDSCInfo.propInfo['cpu-info'].required),
+                'memory-info': CustomFormGroup(this['memory-info'].$formGroup, ClusterDSCInfo.propInfo['memory-info'].required),
+                'storage-info': CustomFormGroup(this['storage-info'].$formGroup, ClusterDSCInfo.propInfo['storage-info'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('bios-info') as FormGroup).controls).forEach(field => {

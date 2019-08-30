@@ -7,28 +7,28 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { ClusterSmartNICStatus_admission_phase,  ClusterSmartNICStatus_admission_phase_uihint  } from './enums';
-import { ClusterSmartNICCondition, IClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
+import { ClusterDistributedServiceCardStatus_admission_phase,  ClusterDistributedServiceCardStatus_admission_phase_uihint  } from './enums';
+import { ClusterDSCCondition, IClusterDSCCondition } from './cluster-dsc-condition.model';
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
-import { ClusterSmartNICInfo, IClusterSmartNICInfo } from './cluster-smart-nic-info.model';
+import { ClusterDSCInfo, IClusterDSCInfo } from './cluster-dsc-info.model';
 
-export interface IClusterSmartNICStatus {
-    'admission-phase': ClusterSmartNICStatus_admission_phase;
-    'conditions'?: Array<IClusterSmartNICCondition>;
+export interface IClusterDistributedServiceCardStatus {
+    'admission-phase': ClusterDistributedServiceCardStatus_admission_phase;
+    'conditions'?: Array<IClusterDSCCondition>;
     'serial-num'?: string;
     'primary-mac'?: string;
     'ip-config'?: IClusterIPConfig;
-    'system-info'?: IClusterSmartNICInfo;
+    'system-info'?: IClusterDSCInfo;
     'interfaces'?: Array<string>;
-    'smartNicVersion'?: string;
-    'smartNicSku'?: string;
+    'DSCVersion'?: string;
+    'DSCSku'?: string;
     'host'?: string;
     'adm-phase-reason'?: string;
 }
 
 
-export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNICStatus {
-    /** Current admission phase of the SmartNIC.
+export class ClusterDistributedServiceCardStatus extends BaseModel implements IClusterDistributedServiceCardStatus {
+    /** Current admission phase of the DistributedServiceCard.
     When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED
     by CMD for validated NICs.
     When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING
@@ -36,23 +36,23 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     To admit the NIC as a part of manual admission, user is expected to
     set Spec.Admit to true for the NICs that are in NIC_PENDING
     state. Note : Whitelist mode is not supported yet. */
-    'admission-phase': ClusterSmartNICStatus_admission_phase = null;
-    'conditions': Array<ClusterSmartNICCondition> = null;
+    'admission-phase': ClusterDistributedServiceCardStatus_admission_phase = null;
+    'conditions': Array<ClusterDSCCondition> = null;
     'serial-num': string = null;
     /** should be a valid MAC address */
     'primary-mac': string = null;
     'ip-config': ClusterIPConfig = null;
-    'system-info': ClusterSmartNICInfo = null;
+    'system-info': ClusterDSCInfo = null;
     'interfaces': Array<string> = null;
-    'smartNicVersion': string = null;
-    'smartNicSku': string = null;
+    'DSCVersion': string = null;
+    'DSCSku': string = null;
     'host': string = null;
     'adm-phase-reason': string = null;
-    public static propInfo: { [prop in keyof IClusterSmartNICStatus]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterDistributedServiceCardStatus]: PropInfoItem } = {
         'admission-phase': {
-            enum: ClusterSmartNICStatus_admission_phase_uihint,
+            enum: ClusterDistributedServiceCardStatus_admission_phase_uihint,
             default: 'unknown',
-            description:  'Current admission phase of the SmartNIC. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
+            description:  'Current admission phase of the DistributedServiceCard. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
             required: true,
             type: 'string'
         },
@@ -82,11 +82,11 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             required: false,
             type: 'Array<string>'
         },
-        'smartNicVersion': {
+        'DSCVersion': {
             required: false,
             type: 'string'
         },
-        'smartNicSku': {
+        'DSCSku': {
             required: false,
             type: 'string'
         },
@@ -101,19 +101,19 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterSmartNICStatus.propInfo[propName];
+        return ClusterDistributedServiceCardStatus.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterSmartNICStatus.propInfo;
+        return ClusterDistributedServiceCardStatus.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterSmartNICStatus.propInfo[prop] != null &&
-                        ClusterSmartNICStatus.propInfo[prop].default != null);
+        return (ClusterDistributedServiceCardStatus.propInfo[prop] != null &&
+                        ClusterDistributedServiceCardStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -122,9 +122,9 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['conditions'] = new Array<ClusterSmartNICCondition>();
+        this['conditions'] = new Array<ClusterDSCCondition>();
         this['ip-config'] = new ClusterIPConfig();
-        this['system-info'] = new ClusterSmartNICInfo();
+        this['system-info'] = new ClusterDSCInfo();
         this['interfaces'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
@@ -137,27 +137,27 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     setValues(values: any, fillDefaults = true): void {
         if (values && values['admission-phase'] != null) {
             this['admission-phase'] = values['admission-phase'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('admission-phase')) {
-            this['admission-phase'] = <ClusterSmartNICStatus_admission_phase>  ClusterSmartNICStatus.propInfo['admission-phase'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('admission-phase')) {
+            this['admission-phase'] = <ClusterDistributedServiceCardStatus_admission_phase>  ClusterDistributedServiceCardStatus.propInfo['admission-phase'].default;
         } else {
             this['admission-phase'] = null
         }
         if (values) {
-            this.fillModelArray<ClusterSmartNICCondition>(this, 'conditions', values['conditions'], ClusterSmartNICCondition);
+            this.fillModelArray<ClusterDSCCondition>(this, 'conditions', values['conditions'], ClusterDSCCondition);
         } else {
             this['conditions'] = [];
         }
         if (values && values['serial-num'] != null) {
             this['serial-num'] = values['serial-num'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('serial-num')) {
-            this['serial-num'] = ClusterSmartNICStatus.propInfo['serial-num'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('serial-num')) {
+            this['serial-num'] = ClusterDistributedServiceCardStatus.propInfo['serial-num'].default;
         } else {
             this['serial-num'] = null
         }
         if (values && values['primary-mac'] != null) {
             this['primary-mac'] = values['primary-mac'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('primary-mac')) {
-            this['primary-mac'] = ClusterSmartNICStatus.propInfo['primary-mac'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('primary-mac')) {
+            this['primary-mac'] = ClusterDistributedServiceCardStatus.propInfo['primary-mac'].default;
         } else {
             this['primary-mac'] = null
         }
@@ -173,36 +173,36 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         }
         if (values && values['interfaces'] != null) {
             this['interfaces'] = values['interfaces'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('interfaces')) {
-            this['interfaces'] = [ ClusterSmartNICStatus.propInfo['interfaces'].default];
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('interfaces')) {
+            this['interfaces'] = [ ClusterDistributedServiceCardStatus.propInfo['interfaces'].default];
         } else {
             this['interfaces'] = [];
         }
-        if (values && values['smartNicVersion'] != null) {
-            this['smartNicVersion'] = values['smartNicVersion'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('smartNicVersion')) {
-            this['smartNicVersion'] = ClusterSmartNICStatus.propInfo['smartNicVersion'].default;
+        if (values && values['DSCVersion'] != null) {
+            this['DSCVersion'] = values['DSCVersion'];
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('DSCVersion')) {
+            this['DSCVersion'] = ClusterDistributedServiceCardStatus.propInfo['DSCVersion'].default;
         } else {
-            this['smartNicVersion'] = null
+            this['DSCVersion'] = null
         }
-        if (values && values['smartNicSku'] != null) {
-            this['smartNicSku'] = values['smartNicSku'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('smartNicSku')) {
-            this['smartNicSku'] = ClusterSmartNICStatus.propInfo['smartNicSku'].default;
+        if (values && values['DSCSku'] != null) {
+            this['DSCSku'] = values['DSCSku'];
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('DSCSku')) {
+            this['DSCSku'] = ClusterDistributedServiceCardStatus.propInfo['DSCSku'].default;
         } else {
-            this['smartNicSku'] = null
+            this['DSCSku'] = null
         }
         if (values && values['host'] != null) {
             this['host'] = values['host'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('host')) {
-            this['host'] = ClusterSmartNICStatus.propInfo['host'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('host')) {
+            this['host'] = ClusterDistributedServiceCardStatus.propInfo['host'].default;
         } else {
             this['host'] = null
         }
         if (values && values['adm-phase-reason'] != null) {
             this['adm-phase-reason'] = values['adm-phase-reason'];
-        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('adm-phase-reason')) {
-            this['adm-phase-reason'] = ClusterSmartNICStatus.propInfo['adm-phase-reason'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('adm-phase-reason')) {
+            this['adm-phase-reason'] = ClusterDistributedServiceCardStatus.propInfo['adm-phase-reason'].default;
         } else {
             this['adm-phase-reason'] = null
         }
@@ -213,20 +213,20 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admission-phase': CustomFormControl(new FormControl(this['admission-phase'], [required, enumValidator(ClusterSmartNICStatus_admission_phase), ]), ClusterSmartNICStatus.propInfo['admission-phase']),
+                'admission-phase': CustomFormControl(new FormControl(this['admission-phase'], [required, enumValidator(ClusterDistributedServiceCardStatus_admission_phase), ]), ClusterDistributedServiceCardStatus.propInfo['admission-phase']),
                 'conditions': new FormArray([]),
-                'serial-num': CustomFormControl(new FormControl(this['serial-num']), ClusterSmartNICStatus.propInfo['serial-num']),
-                'primary-mac': CustomFormControl(new FormControl(this['primary-mac']), ClusterSmartNICStatus.propInfo['primary-mac']),
-                'ip-config': CustomFormGroup(this['ip-config'].$formGroup, ClusterSmartNICStatus.propInfo['ip-config'].required),
-                'system-info': CustomFormGroup(this['system-info'].$formGroup, ClusterSmartNICStatus.propInfo['system-info'].required),
-                'interfaces': CustomFormControl(new FormControl(this['interfaces']), ClusterSmartNICStatus.propInfo['interfaces']),
-                'smartNicVersion': CustomFormControl(new FormControl(this['smartNicVersion']), ClusterSmartNICStatus.propInfo['smartNicVersion']),
-                'smartNicSku': CustomFormControl(new FormControl(this['smartNicSku']), ClusterSmartNICStatus.propInfo['smartNicSku']),
-                'host': CustomFormControl(new FormControl(this['host']), ClusterSmartNICStatus.propInfo['host']),
-                'adm-phase-reason': CustomFormControl(new FormControl(this['adm-phase-reason']), ClusterSmartNICStatus.propInfo['adm-phase-reason']),
+                'serial-num': CustomFormControl(new FormControl(this['serial-num']), ClusterDistributedServiceCardStatus.propInfo['serial-num']),
+                'primary-mac': CustomFormControl(new FormControl(this['primary-mac']), ClusterDistributedServiceCardStatus.propInfo['primary-mac']),
+                'ip-config': CustomFormGroup(this['ip-config'].$formGroup, ClusterDistributedServiceCardStatus.propInfo['ip-config'].required),
+                'system-info': CustomFormGroup(this['system-info'].$formGroup, ClusterDistributedServiceCardStatus.propInfo['system-info'].required),
+                'interfaces': CustomFormControl(new FormControl(this['interfaces']), ClusterDistributedServiceCardStatus.propInfo['interfaces']),
+                'DSCVersion': CustomFormControl(new FormControl(this['DSCVersion']), ClusterDistributedServiceCardStatus.propInfo['DSCVersion']),
+                'DSCSku': CustomFormControl(new FormControl(this['DSCSku']), ClusterDistributedServiceCardStatus.propInfo['DSCSku']),
+                'host': CustomFormControl(new FormControl(this['host']), ClusterDistributedServiceCardStatus.propInfo['host']),
+                'adm-phase-reason': CustomFormControl(new FormControl(this['adm-phase-reason']), ClusterDistributedServiceCardStatus.propInfo['adm-phase-reason']),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterSmartNICCondition>('conditions', this['conditions'], ClusterSmartNICCondition);
+            this.fillFormArray<ClusterDSCCondition>('conditions', this['conditions'], ClusterDSCCondition);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('conditions') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('conditions').get(field);
@@ -253,14 +253,14 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['admission-phase'].setValue(this['admission-phase']);
-            this.fillModelArray<ClusterSmartNICCondition>(this, 'conditions', this['conditions'], ClusterSmartNICCondition);
+            this.fillModelArray<ClusterDSCCondition>(this, 'conditions', this['conditions'], ClusterDSCCondition);
             this._formGroup.controls['serial-num'].setValue(this['serial-num']);
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this['ip-config'].setFormGroupValuesToBeModelValues();
             this['system-info'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['interfaces'].setValue(this['interfaces']);
-            this._formGroup.controls['smartNicVersion'].setValue(this['smartNicVersion']);
-            this._formGroup.controls['smartNicSku'].setValue(this['smartNicSku']);
+            this._formGroup.controls['DSCVersion'].setValue(this['DSCVersion']);
+            this._formGroup.controls['DSCSku'].setValue(this['DSCSku']);
             this._formGroup.controls['host'].setValue(this['host']);
             this._formGroup.controls['adm-phase-reason'].setValue(this['adm-phase-reason']);
         }

@@ -17,7 +17,7 @@ import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
 import { FieldSelectorTransform } from '../transforms/fieldselector.transform';
 import { FieldValueTransform, ValueMap, QueryMap } from '../transforms/fieldvalue.transform';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ClusterSmartNIC, ClusterNode } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { LabelSelectorTransform } from '../transforms/labelselector.transform';
@@ -127,10 +127,10 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     new DerivativeTransform(),
   ];
 
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   nodes: ReadonlyArray<ClusterNode> = [];
   // Used for processing the stream events
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   nodeEventUtility: HttpEventUtility<ClusterNode>;
 
   macAddrToName: { [key: string]: string; } = {};
@@ -242,7 +242,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     };
     Object.keys(MetricsMetadata).forEach( (m) => {
       const measurement = MetricsMetadata[m];
-      if (measurement.objectKind === 'SmartNIC') {
+      if (measurement.objectKind === 'DistributedServiceCard') {
         this.fieldQueryMap[measurement.name] = queryMapNaplesReporterID;
         this.fieldValueMap[measurement.name] = valueMapNaplesReporterID;
       }
@@ -316,12 +316,12 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
-        this.labelMap['SmartNIC'] = Utility.getLabels(this.naples as any[]);
+        this.labelMap['DistributedServiceCard'] = Utility.getLabels(this.naples as any[]);
         // mac-address to name map
         this.macAddrToName = {};
         this.nameToMacAddr = {};

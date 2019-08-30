@@ -121,7 +121,7 @@ type Cfgen struct {
 	FlowExportPolicyParams
 
 	// user also inputs the SmartNICs in the cluster
-	Smartnics []*cluster.SmartNIC
+	Smartnics []*cluster.DistributedServiceCard
 
 	// generated objects
 	WPairs      []*WPair
@@ -166,7 +166,7 @@ func (cfgen *Cfgen) genHosts() []*cluster.Host {
 	hostCtx := newIterContext()
 	for ii := 0; ii < len(cfgen.Smartnics); ii++ {
 		tHost := hostCtx.transform(h).(*cluster.Host)
-		tHost.Spec.SmartNICs[0].MACAddress = cfgen.Smartnics[ii].Status.PrimaryMAC
+		tHost.Spec.DSCs[0].MACAddress = cfgen.Smartnics[ii].Status.PrimaryMAC
 
 		hosts = append(hosts, tHost)
 	}

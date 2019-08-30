@@ -366,6 +366,28 @@ func (m *ClusterStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *DistributedServiceCardID) Clone(into interface{}) (interface{}, error) {
+	var out *DistributedServiceCardID
+	var ok bool
+	if into == nil {
+		out = &DistributedServiceCardID{}
+	} else {
+		out, ok = into.(*DistributedServiceCardID)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*DistributedServiceCardID))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DistributedServiceCardID) Defaults(ver string) bool {
+	var ret bool
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *DockerInfo) Clone(into interface{}) (interface{}, error) {
 	var out *DockerInfo
 	var ok bool
@@ -433,8 +455,8 @@ func (m *HostSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *HostSpec) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.SmartNICs {
-		i := m.SmartNICs[k]
+	for k := range m.DSCs {
+		i := m.DSCs[k]
 		ret = i.Defaults(ver) || ret
 	}
 	return ret
@@ -778,28 +800,6 @@ func (m *QuorumStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *SmartNICID) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICID
-	var ok bool
-	if into == nil {
-		out = &SmartNICID{}
-	} else {
-		out, ok = into.(*SmartNICID)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SmartNICID))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICID) Defaults(ver string) bool {
-	var ret bool
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *StorageDeviceInfo) Clone(into interface{}) (interface{}, error) {
 	var out *StorageDeviceInfo
 	var ok bool
@@ -1098,6 +1098,32 @@ func (m *ClusterStatus) Normalize() {
 
 }
 
+func (m *DistributedServiceCardID) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *DistributedServiceCardID) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapCluster["DistributedServiceCardID"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapCluster["DistributedServiceCardID"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *DistributedServiceCardID) Normalize() {
+
+}
+
 func (m *DockerInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1175,12 +1201,12 @@ func (m *HostSpec) References(tenant string, path string, resp map[string]apiint
 
 func (m *HostSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
-	for k, v := range m.SmartNICs {
+	for k, v := range m.DSCs {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sSmartNICs[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sDSCs[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1190,9 +1216,9 @@ func (m *HostSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 func (m *HostSpec) Normalize() {
 
-	for k, v := range m.SmartNICs {
+	for k, v := range m.DSCs {
 		v.Normalize()
-		m.SmartNICs[k] = v
+		m.DSCs[k] = v
 
 	}
 
@@ -1578,32 +1604,6 @@ func (m *QuorumStatus) Normalize() {
 
 }
 
-func (m *SmartNICID) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	if vs, ok := validatorMapCluster["SmartNICID"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapCluster["SmartNICID"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *SmartNICID) Normalize() {
-
-}
-
 func (m *StorageDeviceInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1800,6 +1800,16 @@ func init() {
 		return nil
 	})
 
+	validatorMapCluster["DistributedServiceCardID"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapCluster["DistributedServiceCardID"]["all"] = append(validatorMapCluster["DistributedServiceCardID"]["all"], func(path string, i interface{}) error {
+		m := i.(*DistributedServiceCardID)
+		if err := validators.EmptyOr(validators.MacAddr, m.MACAddress, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MACAddress", err.Error())
+		}
+		return nil
+	})
+
 	validatorMapCluster["InterfaceInfo"] = make(map[string][]func(string, interface{}) error)
 
 	validatorMapCluster["InterfaceInfo"]["all"] = append(validatorMapCluster["InterfaceInfo"]["all"], func(path string, i interface{}) error {
@@ -1888,16 +1898,6 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
-		}
-		return nil
-	})
-
-	validatorMapCluster["SmartNICID"] = make(map[string][]func(string, interface{}) error)
-
-	validatorMapCluster["SmartNICID"]["all"] = append(validatorMapCluster["SmartNICID"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICID)
-		if err := validators.EmptyOr(validators.MacAddr, m.MACAddress, nil); err != nil {
-			return fmt.Errorf("%v failed validation: %s", path+"."+"MACAddress", err.Error())
 		}
 		return nil
 	})

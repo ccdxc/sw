@@ -28,6 +28,36 @@ export enum ClusterClusterCondition_status {
     'false' = "false",
 }
 
+export enum ClusterDSCCondition_type {
+    'healthy' = "healthy",
+    'nic_health_unknown' = "nic_health_unknown",
+}
+
+export enum ClusterDSCCondition_status {
+    'unknown' = "unknown",
+    'true' = "true",
+    'false' = "false",
+}
+
+export enum ClusterDistributedServiceCardSpec_mgmt_mode {
+    'host' = "host",
+    'network' = "network",
+}
+
+export enum ClusterDistributedServiceCardSpec_network_mode {
+    'oob' = "oob",
+    'inband' = "inband",
+}
+
+export enum ClusterDistributedServiceCardStatus_admission_phase {
+    'unknown' = "unknown",
+    'registering' = "registering",
+    'rejected' = "rejected",
+    'pending' = "pending",
+    'admitted' = "admitted",
+    'decommissioned' = "decommissioned",
+}
+
 export enum ClusterMemInfo_type {
     'unknown' = "unknown",
     'hbm' = "hbm",
@@ -62,36 +92,6 @@ export enum ClusterQuorumMemberCondition_status {
     'false' = "false",
 }
 
-export enum ClusterSmartNICCondition_type {
-    'healthy' = "healthy",
-    'nic_health_unknown' = "nic_health_unknown",
-}
-
-export enum ClusterSmartNICCondition_status {
-    'unknown' = "unknown",
-    'true' = "true",
-    'false' = "false",
-}
-
-export enum ClusterSmartNICSpec_mgmt_mode {
-    'host' = "host",
-    'network' = "network",
-}
-
-export enum ClusterSmartNICSpec_network_mode {
-    'oob' = "oob",
-    'inband' = "inband",
-}
-
-export enum ClusterSmartNICStatus_admission_phase {
-    'unknown' = "unknown",
-    'registering' = "registering",
-    'rejected' = "rejected",
-    'pending' = "pending",
-    'admitted' = "admitted",
-    'decommissioned' = "decommissioned",
-}
-
 
 export enum ApiListWatchOptions_sort_order_uihint {
     'by-creation-time' = "By Creation Time",
@@ -112,6 +112,36 @@ export enum ClusterClusterCondition_type_uihint {
 export enum ClusterClusterCondition_status_uihint {
     'false' = "False",
     'true' = "True",
+    'unknown' = "Unknown",
+}
+
+export enum ClusterDSCCondition_type_uihint {
+    'healthy' = "Healthy",
+    'nic_health_unknown' = "Not Reachable",
+}
+
+export enum ClusterDSCCondition_status_uihint {
+    'false' = "False",
+    'true' = "True",
+    'unknown' = "Unknown",
+}
+
+export enum ClusterDistributedServiceCardSpec_mgmt_mode_uihint {
+    'host' = "Host",
+    'network' = "Network",
+}
+
+export enum ClusterDistributedServiceCardSpec_network_mode_uihint {
+    'inband' = "Inband",
+    'oob' = "Out of Band",
+}
+
+export enum ClusterDistributedServiceCardStatus_admission_phase_uihint {
+    'admitted' = "Admitted",
+    'decommissioned' = "Decommissioned",
+    'pending' = "Pending",
+    'registering' = "Registering",
+    'rejected' = "Rejected",
     'unknown' = "Unknown",
 }
 
@@ -140,36 +170,6 @@ export enum ClusterQuorumMemberCondition_type_uihint {
 export enum ClusterQuorumMemberCondition_status_uihint {
     'false' = "False",
     'true' = "True",
-    'unknown' = "Unknown",
-}
-
-export enum ClusterSmartNICCondition_type_uihint {
-    'healthy' = "Healthy",
-    'nic_health_unknown' = "Not Reachable",
-}
-
-export enum ClusterSmartNICCondition_status_uihint {
-    'false' = "False",
-    'true' = "True",
-    'unknown' = "Unknown",
-}
-
-export enum ClusterSmartNICSpec_mgmt_mode_uihint {
-    'host' = "Host",
-    'network' = "Network",
-}
-
-export enum ClusterSmartNICSpec_network_mode_uihint {
-    'inband' = "Inband",
-    'oob' = "Out of Band",
-}
-
-export enum ClusterSmartNICStatus_admission_phase_uihint {
-    'admitted' = "Admitted",
-    'decommissioned' = "Decommissioned",
-    'pending' = "Pending",
-    'registering' = "Registering",
-    'rejected' = "Rejected",
     'unknown' = "Unknown",
 }
 
@@ -207,29 +207,29 @@ export class AllEnums {
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     ClusterClusterCondition_type = ClusterClusterCondition_type;
     ClusterClusterCondition_status = ClusterClusterCondition_status;
+    ClusterDSCCondition_type = ClusterDSCCondition_type;
+    ClusterDSCCondition_status = ClusterDSCCondition_status;
+    ClusterDistributedServiceCardSpec_mgmt_mode = ClusterDistributedServiceCardSpec_mgmt_mode;
+    ClusterDistributedServiceCardSpec_network_mode = ClusterDistributedServiceCardSpec_network_mode;
+    ClusterDistributedServiceCardStatus_admission_phase = ClusterDistributedServiceCardStatus_admission_phase;
     ClusterMemInfo_type = ClusterMemInfo_type;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
     ClusterNodeStatus_phase = ClusterNodeStatus_phase;
     ClusterQuorumMemberCondition_type = ClusterQuorumMemberCondition_type;
     ClusterQuorumMemberCondition_status = ClusterQuorumMemberCondition_status;
-    ClusterSmartNICCondition_type = ClusterSmartNICCondition_type;
-    ClusterSmartNICCondition_status = ClusterSmartNICCondition_status;
-    ClusterSmartNICSpec_mgmt_mode = ClusterSmartNICSpec_mgmt_mode;
-    ClusterSmartNICSpec_network_mode = ClusterSmartNICSpec_network_mode;
-    ClusterSmartNICStatus_admission_phase = ClusterSmartNICStatus_admission_phase;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     ClusterClusterCondition_type_uihint = ClusterClusterCondition_type_uihint;
     ClusterClusterCondition_status_uihint = ClusterClusterCondition_status_uihint;
+    ClusterDSCCondition_type_uihint = ClusterDSCCondition_type_uihint;
+    ClusterDSCCondition_status_uihint = ClusterDSCCondition_status_uihint;
+    ClusterDistributedServiceCardSpec_mgmt_mode_uihint = ClusterDistributedServiceCardSpec_mgmt_mode_uihint;
+    ClusterDistributedServiceCardSpec_network_mode_uihint = ClusterDistributedServiceCardSpec_network_mode_uihint;
+    ClusterDistributedServiceCardStatus_admission_phase_uihint = ClusterDistributedServiceCardStatus_admission_phase_uihint;
     ClusterNodeCondition_type_uihint = ClusterNodeCondition_type_uihint;
     ClusterNodeCondition_status_uihint = ClusterNodeCondition_status_uihint;
     ClusterNodeStatus_phase_uihint = ClusterNodeStatus_phase_uihint;
     ClusterQuorumMemberCondition_type_uihint = ClusterQuorumMemberCondition_type_uihint;
     ClusterQuorumMemberCondition_status_uihint = ClusterQuorumMemberCondition_status_uihint;
-    ClusterSmartNICCondition_type_uihint = ClusterSmartNICCondition_type_uihint;
-    ClusterSmartNICCondition_status_uihint = ClusterSmartNICCondition_status_uihint;
-    ClusterSmartNICSpec_mgmt_mode_uihint = ClusterSmartNICSpec_mgmt_mode_uihint;
-    ClusterSmartNICSpec_network_mode_uihint = ClusterSmartNICSpec_network_mode_uihint;
-    ClusterSmartNICStatus_admission_phase_uihint = ClusterSmartNICStatus_admission_phase_uihint;
 }

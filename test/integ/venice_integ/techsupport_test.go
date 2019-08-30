@@ -31,7 +31,7 @@ const (
 	// kindControllerNode  is the kind of Node objects in string form
 	kindControllerNode = string(cluster.KindNode)
 	// kindSmartNICNode is the kind of SmartNIC objects in string form
-	kindSmartNICNode = string(cluster.KindSmartNIC)
+	kindSmartNICNode = string(cluster.KindDistributedServiceCard)
 	// kindTechSupportRequest is the kind of SmartNIC objects in string form
 	kindTechSupportRequest = string(monitoring.KindTechSupportRequest)
 )
@@ -160,8 +160,8 @@ func (it *veniceIntegSuite) deleteTechSupportRequest(ctx context.Context, o *api
 	return err
 }
 
-func (it *veniceIntegSuite) createSmartNICNode(ctx context.Context, node *cluster.SmartNIC) error {
-	_, err := it.apisrvClient.ClusterV1().SmartNIC().Create(ctx, node)
+func (it *veniceIntegSuite) createSmartNICNode(ctx context.Context, node *cluster.DistributedServiceCard) error {
+	_, err := it.apisrvClient.ClusterV1().DistributedServiceCard().Create(ctx, node)
 	if err != nil {
 		log.Errorf("Error creating SmartNIC node %+v: %v", node, err)
 		return err
@@ -179,21 +179,21 @@ func (it *veniceIntegSuite) createControllerNode(ctx context.Context, node *clus
 }
 
 func (it *veniceIntegSuite) deleteSmartNICNode(ctx context.Context, meta *api.ObjectMeta) error {
-	n, err := it.apisrvClient.ClusterV1().SmartNIC().Get(ctx, meta)
+	n, err := it.apisrvClient.ClusterV1().DistributedServiceCard().Get(ctx, meta)
 	if err != nil {
 		log.Errorf("Error getting SmartNIC node %+v: %v", meta, err)
 		return err
 	}
 	n.Spec.Admit = false
-	n.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, n)
+	n.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_PENDING.String()
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, n)
 	if err != nil {
-		log.Errorf("Error updating SmartNIC node %+v: %v", meta, err)
+		log.Errorf("Error updating DistributedServiceCard node %+v: %v", meta, err)
 		return err
 	}
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Delete(ctx, meta)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Delete(ctx, meta)
 	if err != nil {
-		log.Errorf("Error deleting SmartNIC node %+v: %v", n, err)
+		log.Errorf("Error deleting DistributedServiceCard node %+v: %v", n, err)
 		return err
 	}
 	return err
@@ -241,12 +241,12 @@ func newTechSupportAgent(name, kind string, matchingRequests []*monitoring.TechS
 	return tsa
 }
 
-func newSmartNICNode(name string, label map[string]string) *cluster.SmartNIC {
+func newSmartNICNode(name string, label map[string]string) *cluster.DistributedServiceCard {
 	nic := policygen.CreateSmartNIC(name,
-		cluster.SmartNICStatus_ADMITTED.String(),
+		cluster.DistributedServiceCardStatus_ADMITTED.String(),
 		"esx-1",
-		&cluster.SmartNICCondition{
-			Type:   cluster.SmartNICCondition_HEALTHY.String(),
+		&cluster.DSCCondition{
+			Type:   cluster.DSCCondition_HEALTHY.String(),
 			Status: cluster.ConditionStatus_FALSE.String(),
 		})
 	nic.ObjectMeta.Labels = label
@@ -320,8 +320,8 @@ func clearNotifications(c *C, agents map[string]*techSupportAgent) {
 }
 
 func getTechSupportNodeResult(req *monitoring.TechSupportRequest, nodeName string) *monitoring.TechSupportNodeResult {
-	if req.Status.SmartNICNodeResults != nil && req.Status.SmartNICNodeResults[nodeName] != nil {
-		return req.Status.SmartNICNodeResults[nodeName]
+	if req.Status.DSCResults != nil && req.Status.DSCResults[nodeName] != nil {
+		return req.Status.DSCResults[nodeName]
 	} else if req.Status.ControllerNodeResults != nil && req.Status.ControllerNodeResults[nodeName] != nil {
 		return req.Status.ControllerNodeResults[nodeName]
 	}
@@ -338,7 +338,7 @@ func (it *veniceIntegSuite) checkTechSupportNodeStatus(ctx context.Context, c *C
 			fmt.Printf("Error getting TechSupportRequest %s: %v", reqName, err)
 			return false, err
 		}
-		lenResults := len(req.Status.SmartNICNodeResults) + len(req.Status.ControllerNodeResults)
+		lenResults := len(req.Status.DSCResults) + len(req.Status.ControllerNodeResults)
 		if lenResults != len(agentNames) {
 			fmt.Printf("Number of results does not match. Have: %d, want: %d", lenResults, len(agentNames))
 			return false, fmt.Errorf("Number of results does not match. Have: %d, want: %d", lenResults, len(agentNames))
@@ -472,7 +472,7 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 	ctx, err := authntestutils.NewLoggedInContext(context.Background(), it.apiGwAddr, it.userCred)
 	AssertOk(c, err, "Error creating logged in context")
 
-	smartNICNodes := map[string]*cluster.SmartNIC{
+	smartNICNodes := map[string]*cluster.DistributedServiceCard{
 		"00ae.cd02.0011": newSmartNICNode("00ae.cd02.0011", map[string]string{"group": "red", "type": "prod"}),
 		"00ae.cd02.0012": newSmartNICNode("00ae.cd02.0012", map[string]string{"group": "blue", "type": "prod"}),
 		"00ae.cd02.0013": newSmartNICNode("00ae.cd02.0013", map[string]string{"group": "blue", "type": "dev"}),
@@ -526,7 +526,7 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 	smartNIC2 := smartNICNodes["00ae.cd02.0012"]
 	delete(smartNIC2.ObjectMeta.Labels, "group")
 	smartNIC2.ObjectMeta.ResourceVersion = ""
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC2)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, smartNIC2)
 	AssertOk(c, err, "Error updating labels for node 00ae.cd02.0012")
 	agent2 := agents["00ae.cd02.0012"]
 	delete(agent2.matchingRequests, "NIC1OrBlue")
@@ -534,7 +534,7 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 	smartNIC4 := smartNICNodes["00ae.cd02.0014"]
 	smartNIC4.ObjectMeta.Labels = map[string]string{"star": "no"}
 	smartNIC4.ObjectMeta.ResourceVersion = ""
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC4)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, smartNIC4)
 	AssertOk(c, err, "Error updating labels for node 00ae.cd02.0014")
 	agent4 := agents["00ae.cd02.0014"]
 	agent4.matchingRequests["LblStar"] = tsrs["LblStar"]
@@ -629,13 +629,13 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 	}
 
 	// count pre-existing nodes, if any
-	oldNodes, err := it.apisrvClient.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+	oldNodes, err := it.apisrvClient.ClusterV1().DistributedServiceCard().List(ctx, &api.ListWatchOptions{})
 	AssertOk(c, err, "Error getting nodes list")
 	numOldNodes := len(oldNodes)
 
 	// create some initial nodes
 	numNodes := 1 + rand.Intn(20)
-	nodes := []*cluster.SmartNIC{}
+	nodes := []*cluster.DistributedServiceCard{}
 	for i := 0; i < numNodes; i++ {
 		n := newSmartNICNode(fmt.Sprintf("00ae.cd99.%04d", i), nil)
 		err := it.createSmartNICNode(ctx, n)

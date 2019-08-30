@@ -11,10 +11,10 @@ var (
 
 // These object kids are in the statemgr
 const (
-	kindVeniceRollout   = "VeniceRollout"
-	kindServiceRollout  = "ServiceRollout"
-	kindSmartNICRollout = "SmartNICRollout"
-	kindNode            = "Node"
-	kindRollout         = "Rollout"
-	kindSmartNIC        = "SmartNIC"
+	kindVeniceRollout  = "VeniceRollout"
+	kindServiceRollout = "ServiceRollout"
+	kindDSCRollout     = "DSCRollout"
+	kindNode           = "Node"
+	kindRollout        = "Rollout"
+	kindSmartNIC       = "DistributedServiceCard"
 )

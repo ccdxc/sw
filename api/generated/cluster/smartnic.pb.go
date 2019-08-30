@@ -18,94 +18,94 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// These are valid conditions of a SmartNIC
-type SmartNICCondition_ConditionType int32
+// These are valid conditions of a DistributedServiceCard
+type DSCCondition_ConditionType int32
 
 const (
 	// ui-hint: Healthy
-	SmartNICCondition_HEALTHY SmartNICCondition_ConditionType = 0
+	DSCCondition_HEALTHY DSCCondition_ConditionType = 0
 	// ui-hint: Not Reachable
-	SmartNICCondition_NIC_HEALTH_UNKNOWN SmartNICCondition_ConditionType = 1
+	DSCCondition_NIC_HEALTH_UNKNOWN DSCCondition_ConditionType = 1
 )
 
-var SmartNICCondition_ConditionType_name = map[int32]string{
+var DSCCondition_ConditionType_name = map[int32]string{
 	0: "HEALTHY",
 	1: "NIC_HEALTH_UNKNOWN",
 }
-var SmartNICCondition_ConditionType_value = map[string]int32{
+var DSCCondition_ConditionType_value = map[string]int32{
 	"HEALTHY":            0,
 	"NIC_HEALTH_UNKNOWN": 1,
 }
 
-func (SmartNICCondition_ConditionType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorSmartnic, []int{4, 0}
+func (DSCCondition_ConditionType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorSmartnic, []int{1, 0}
 }
 
 // MgmtModes defines the valid management modes
-type SmartNICSpec_MgmtModes int32
+type DistributedServiceCardSpec_MgmtModes int32
 
 const (
 	// ui-hint: Host
-	SmartNICSpec_HOST SmartNICSpec_MgmtModes = 0
+	DistributedServiceCardSpec_HOST DistributedServiceCardSpec_MgmtModes = 0
 	// ui-hint: Network
-	SmartNICSpec_NETWORK SmartNICSpec_MgmtModes = 1
+	DistributedServiceCardSpec_NETWORK DistributedServiceCardSpec_MgmtModes = 1
 )
 
-var SmartNICSpec_MgmtModes_name = map[int32]string{
+var DistributedServiceCardSpec_MgmtModes_name = map[int32]string{
 	0: "HOST",
 	1: "NETWORK",
 }
-var SmartNICSpec_MgmtModes_value = map[string]int32{
+var DistributedServiceCardSpec_MgmtModes_value = map[string]int32{
 	"HOST":    0,
 	"NETWORK": 1,
 }
 
-func (SmartNICSpec_MgmtModes) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorSmartnic, []int{6, 0}
+func (DistributedServiceCardSpec_MgmtModes) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorSmartnic, []int{4, 0}
 }
 
 // NetworkModes - is only applicable if the MgmtMode is NETWORK
-type SmartNICSpec_NetworkModes int32
+type DistributedServiceCardSpec_NetworkModes int32
 
 const (
 	// ui-hint: Out of Band
-	SmartNICSpec_OOB SmartNICSpec_NetworkModes = 0
+	DistributedServiceCardSpec_OOB DistributedServiceCardSpec_NetworkModes = 0
 	// ui-hint: Inband
-	SmartNICSpec_INBAND SmartNICSpec_NetworkModes = 1
+	DistributedServiceCardSpec_INBAND DistributedServiceCardSpec_NetworkModes = 1
 )
 
-var SmartNICSpec_NetworkModes_name = map[int32]string{
+var DistributedServiceCardSpec_NetworkModes_name = map[int32]string{
 	0: "OOB",
 	1: "INBAND",
 }
-var SmartNICSpec_NetworkModes_value = map[string]int32{
+var DistributedServiceCardSpec_NetworkModes_value = map[string]int32{
 	"OOB":    0,
 	"INBAND": 1,
 }
 
-func (SmartNICSpec_NetworkModes) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorSmartnic, []int{6, 1}
+func (DistributedServiceCardSpec_NetworkModes) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorSmartnic, []int{4, 1}
 }
 
-// Various phases in lifecycle of a SmartNIC
-type SmartNICStatus_Phase int32
+// Various phases in lifecycle of a DistributedServiceCard
+type DistributedServiceCardStatus_Phase int32
 
 const (
 	// ui-hint: Unknown
-	SmartNICStatus_UNKNOWN SmartNICStatus_Phase = 0
+	DistributedServiceCardStatus_UNKNOWN DistributedServiceCardStatus_Phase = 0
 	// ui-hint: Registering
-	SmartNICStatus_REGISTERING SmartNICStatus_Phase = 1
+	DistributedServiceCardStatus_REGISTERING DistributedServiceCardStatus_Phase = 1
 	// ui-hint: Rejected
-	SmartNICStatus_REJECTED SmartNICStatus_Phase = 2
+	DistributedServiceCardStatus_REJECTED DistributedServiceCardStatus_Phase = 2
 	// ui-hint: Pending
-	SmartNICStatus_PENDING SmartNICStatus_Phase = 3
+	DistributedServiceCardStatus_PENDING DistributedServiceCardStatus_Phase = 3
 	// ui-hint: Admitted
-	SmartNICStatus_ADMITTED SmartNICStatus_Phase = 4
+	DistributedServiceCardStatus_ADMITTED DistributedServiceCardStatus_Phase = 4
 	// ui-hint: Decommissioned
-	SmartNICStatus_DECOMMISSIONED SmartNICStatus_Phase = 5
+	DistributedServiceCardStatus_DECOMMISSIONED DistributedServiceCardStatus_Phase = 5
 )
 
-var SmartNICStatus_Phase_name = map[int32]string{
+var DistributedServiceCardStatus_Phase_name = map[int32]string{
 	0: "UNKNOWN",
 	1: "REGISTERING",
 	2: "REJECTED",
@@ -113,7 +113,7 @@ var SmartNICStatus_Phase_name = map[int32]string{
 	4: "ADMITTED",
 	5: "DECOMMISSIONED",
 }
-var SmartNICStatus_Phase_value = map[string]int32{
+var DistributedServiceCardStatus_Phase_value = map[string]int32{
 	"UNKNOWN":        0,
 	"REGISTERING":    1,
 	"REJECTED":       2,
@@ -122,8 +122,8 @@ var SmartNICStatus_Phase_value = map[string]int32{
 	"DECOMMISSIONED": 5,
 }
 
-func (SmartNICStatus_Phase) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorSmartnic, []int{7, 0}
+func (DistributedServiceCardStatus_Phase) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorSmartnic, []int{5, 0}
 }
 
 // BIOS information
@@ -171,20 +171,369 @@ func (m *BiosInfo) GetFwMinorVersion() string {
 	return ""
 }
 
-// IPConfig defines the static IP configuration for a SmartNIC
+// DSCCondition describes the state of a DistributedServiceCard at a certain point.
+type DSCCondition struct {
+	// Type indicates a certain NIC condition
+	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
+	// Condition Status
+	Status string `protobuf:"bytes,2,opt,name=Status,json=status,omitempty,proto3" json:"status,omitempty"`
+	// The last time the condition transitioned
+	LastTransitionTime string `protobuf:"bytes,3,opt,name=LastTransitionTime,json=last-transition-time,omitempty,proto3" json:"last-transition-time,omitempty"`
+	// The reason for the condition's last transition
+	Reason string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
+	// A detailed message indicating details about the transition.
+	Message string `protobuf:"bytes,5,opt,name=Message,json=message,omitempty,proto3" json:"message,omitempty"`
+}
+
+func (m *DSCCondition) Reset()                    { *m = DSCCondition{} }
+func (m *DSCCondition) String() string            { return proto.CompactTextString(m) }
+func (*DSCCondition) ProtoMessage()               {}
+func (*DSCCondition) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{1} }
+
+func (m *DSCCondition) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *DSCCondition) GetStatus() string {
+	if m != nil {
+		return m.Status
+	}
+	return ""
+}
+
+func (m *DSCCondition) GetLastTransitionTime() string {
+	if m != nil {
+		return m.LastTransitionTime
+	}
+	return ""
+}
+
+func (m *DSCCondition) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
+func (m *DSCCondition) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+// Distributed service card (DSC) subsystem information
+type DSCInfo struct {
+	// BIOS details
+	BiosInfo *BiosInfo `protobuf:"bytes,1,opt,name=BiosInfo,json=bios-info,omitempty" json:"bios-info,omitempty"`
+	// OS details
+	OsInfo *OsInfo `protobuf:"bytes,2,opt,name=OsInfo,json=os-info,omitempty" json:"os-info,omitempty"`
+	// CPU details
+	CpuInfo *CPUInfo `protobuf:"bytes,3,opt,name=CpuInfo,json=cpu-info,omitempty" json:"cpu-info,omitempty"`
+	// RAM/Memory details
+	MemoryInfo *MemInfo `protobuf:"bytes,4,opt,name=MemoryInfo,json=memory-info,omitempty" json:"memory-info,omitempty"`
+	// Storage details
+	StorageInfo *StorageInfo `protobuf:"bytes,5,opt,name=StorageInfo,json=storage-info,omitempty" json:"storage-info,omitempty"`
+}
+
+func (m *DSCInfo) Reset()                    { *m = DSCInfo{} }
+func (m *DSCInfo) String() string            { return proto.CompactTextString(m) }
+func (*DSCInfo) ProtoMessage()               {}
+func (*DSCInfo) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{2} }
+
+func (m *DSCInfo) GetBiosInfo() *BiosInfo {
+	if m != nil {
+		return m.BiosInfo
+	}
+	return nil
+}
+
+func (m *DSCInfo) GetOsInfo() *OsInfo {
+	if m != nil {
+		return m.OsInfo
+	}
+	return nil
+}
+
+func (m *DSCInfo) GetCpuInfo() *CPUInfo {
+	if m != nil {
+		return m.CpuInfo
+	}
+	return nil
+}
+
+func (m *DSCInfo) GetMemoryInfo() *MemInfo {
+	if m != nil {
+		return m.MemoryInfo
+	}
+	return nil
+}
+
+func (m *DSCInfo) GetStorageInfo() *StorageInfo {
+	if m != nil {
+		return m.StorageInfo
+	}
+	return nil
+}
+
+// ------------------------------------ Distributed Service Card  -------------------------------------------
+//
+// DistributedServiceCard represents the Naples I/O subsystem
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o CMD
+//              - created as part of NIC registration, Admittance
+//      Modify:
+//          o CMD
+//              - update spec attributes
+//              - update status attributes
+//      Delete:
+//          o CMD
+//              - aging out stale or rejected NICs (TBD)
+//          o NetOps, SecOps
+//              - Decomission a NIC (TBD)
+//
+type DistributedServiceCard struct {
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	// Object name is Serial-Number of the DistributedServiceCard
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
+	// DistributedServiceCardSpec contains the configuration of the network adapter.
+	Spec DistributedServiceCardSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// DistributedServiceCardStatus contains the current state of the network adapter.
+	Status DistributedServiceCardStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+}
+
+func (m *DistributedServiceCard) Reset()                    { *m = DistributedServiceCard{} }
+func (m *DistributedServiceCard) String() string            { return proto.CompactTextString(m) }
+func (*DistributedServiceCard) ProtoMessage()               {}
+func (*DistributedServiceCard) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{3} }
+
+func (m *DistributedServiceCard) GetSpec() DistributedServiceCardSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return DistributedServiceCardSpec{}
+}
+
+func (m *DistributedServiceCard) GetStatus() DistributedServiceCardStatus {
+	if m != nil {
+		return m.Status
+	}
+	return DistributedServiceCardStatus{}
+}
+
+// DistributedServiceCardSpec contains configuration of the DistributedServiceCard (Naples I/O subsystem)
+type DistributedServiceCardSpec struct {
+	// Admit allows a DistributedServiceCard to join the cluster
+	Admit bool `protobuf:"varint,1,opt,name=Admit,json=admit,omitempty,proto3" json:"admit,omitempty"`
+	// ID is used as a user friendly identifier in logs/events
+	ID string `protobuf:"bytes,2,opt,name=ID,json=id,omitempty,proto3" json:"id,omitempty"`
+	// IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
+	IPConfig *IPConfig `protobuf:"bytes,3,opt,name=IPConfig,json=ip-config,omitempty" json:"ip-config,omitempty"`
+	// MgmtMode defines the management mode of the DistributedServiceCard
+	MgmtMode string `protobuf:"bytes,4,opt,name=MgmtMode,json=mgmt-mode,omitempty,proto3" json:"mgmt-mode,omitempty"`
+	// MgmtMode defines the management mode of the DistributedServiceCard
+	NetworkMode string `protobuf:"bytes,5,opt,name=NetworkMode,json=network-mode,omitempty,proto3" json:"network-mode,omitempty"`
+	// MgmtVlan defines the vlan to be used in network managed mode. The default of 0
+	// means we use untagged-vlan for doing inband management
+	MgmtVlan uint32 `protobuf:"varint,6,opt,name=MgmtVlan,json=mgmt-vlan,omitempty,proto3" json:"mgmt-vlan,omitempty"`
+	// Controllers contains the list of remote controllers IP addresses or hostnames
+	Controllers []string `protobuf:"bytes,7,rep,name=Controllers,json=controllers,omitempty" json:"controllers,omitempty"`
+}
+
+func (m *DistributedServiceCardSpec) Reset()         { *m = DistributedServiceCardSpec{} }
+func (m *DistributedServiceCardSpec) String() string { return proto.CompactTextString(m) }
+func (*DistributedServiceCardSpec) ProtoMessage()    {}
+func (*DistributedServiceCardSpec) Descriptor() ([]byte, []int) {
+	return fileDescriptorSmartnic, []int{4}
+}
+
+func (m *DistributedServiceCardSpec) GetAdmit() bool {
+	if m != nil {
+		return m.Admit
+	}
+	return false
+}
+
+func (m *DistributedServiceCardSpec) GetID() string {
+	if m != nil {
+		return m.ID
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardSpec) GetIPConfig() *IPConfig {
+	if m != nil {
+		return m.IPConfig
+	}
+	return nil
+}
+
+func (m *DistributedServiceCardSpec) GetMgmtMode() string {
+	if m != nil {
+		return m.MgmtMode
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardSpec) GetNetworkMode() string {
+	if m != nil {
+		return m.NetworkMode
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardSpec) GetMgmtVlan() uint32 {
+	if m != nil {
+		return m.MgmtVlan
+	}
+	return 0
+}
+
+func (m *DistributedServiceCardSpec) GetControllers() []string {
+	if m != nil {
+		return m.Controllers
+	}
+	return nil
+}
+
+// DistributedServiceCardStatus contains current status of a DistributedServiceCard
+type DistributedServiceCardStatus struct {
+	// Current admission phase of the DistributedServiceCard.
+	// When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED
+	// by CMD for validated NICs.
+	// When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING
+	// by CMD for validated NICs since it requires manual approval.
+	// To admit the NIC as a part of manual admission, user is expected to
+	// set Spec.Admit to true for the NICs that are in NIC_PENDING
+	// state. Note : Whitelist mode is not supported yet.
+	AdmissionPhase string `protobuf:"bytes,1,opt,name=AdmissionPhase,json=admission-phase,omitempty,proto3" json:"admission-phase,omitempty"`
+	// List of current NIC conditions
+	Conditions []DSCCondition `protobuf:"bytes,2,rep,name=Conditions,json=conditions,omitempty" json:"conditions,omitempty"`
+	// Serial number
+	SerialNum string `protobuf:"bytes,3,opt,name=SerialNum,json=serial-num,omitempty,proto3" json:"serial-num,omitempty"`
+	// PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard
+	PrimaryMAC string `protobuf:"bytes,4,opt,name=PrimaryMAC,json=primary-mac,omitempty,proto3" json:"primary-mac,omitempty"`
+	// IPConfig is the ip address related configuration obtained from DHCP
+	IPConfig *IPConfig `protobuf:"bytes,5,opt,name=IPConfig,json=ip-config,omitempty" json:"ip-config,omitempty"`
+	// Distributed service card system info
+	SystemInfo *DSCInfo `protobuf:"bytes,6,opt,name=SystemInfo,json=system-info,omitempty" json:"system-info,omitempty"`
+	// Network Interfaces
+	Interfaces []string `protobuf:"bytes,7,rep,name=Interfaces,json=interfaces,omitempty" json:"interfaces,omitempty"`
+	// DSC Version
+	DSCVersion string `protobuf:"bytes,8,opt,name=DSCVersion,json=DSCVersion,omitempty,proto3" json:"DSCVersion,omitempty"`
+	// DSC SKU
+	DSCSku string `protobuf:"bytes,9,opt,name=DSCSku,json=DSCSku,omitempty,proto3" json:"DSCSku,omitempty"`
+	// The name of the host this DistributedServiceCard is plugged into
+	Host string `protobuf:"bytes,10,opt,name=Host,json=host,omitempty,proto3" json:"host,omitempty"`
+	// The reason why the DistributedServiceCard is not in ADMITTED state
+	AdmissionPhaseReason string `protobuf:"bytes,11,opt,name=AdmissionPhaseReason,json=adm-phase-reason,omitempty,proto3" json:"adm-phase-reason,omitempty"`
+}
+
+func (m *DistributedServiceCardStatus) Reset()         { *m = DistributedServiceCardStatus{} }
+func (m *DistributedServiceCardStatus) String() string { return proto.CompactTextString(m) }
+func (*DistributedServiceCardStatus) ProtoMessage()    {}
+func (*DistributedServiceCardStatus) Descriptor() ([]byte, []int) {
+	return fileDescriptorSmartnic, []int{5}
+}
+
+func (m *DistributedServiceCardStatus) GetAdmissionPhase() string {
+	if m != nil {
+		return m.AdmissionPhase
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardStatus) GetConditions() []DSCCondition {
+	if m != nil {
+		return m.Conditions
+	}
+	return nil
+}
+
+func (m *DistributedServiceCardStatus) GetSerialNum() string {
+	if m != nil {
+		return m.SerialNum
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardStatus) GetPrimaryMAC() string {
+	if m != nil {
+		return m.PrimaryMAC
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardStatus) GetIPConfig() *IPConfig {
+	if m != nil {
+		return m.IPConfig
+	}
+	return nil
+}
+
+func (m *DistributedServiceCardStatus) GetSystemInfo() *DSCInfo {
+	if m != nil {
+		return m.SystemInfo
+	}
+	return nil
+}
+
+func (m *DistributedServiceCardStatus) GetInterfaces() []string {
+	if m != nil {
+		return m.Interfaces
+	}
+	return nil
+}
+
+func (m *DistributedServiceCardStatus) GetDSCVersion() string {
+	if m != nil {
+		return m.DSCVersion
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardStatus) GetDSCSku() string {
+	if m != nil {
+		return m.DSCSku
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardStatus) GetHost() string {
+	if m != nil {
+		return m.Host
+	}
+	return ""
+}
+
+func (m *DistributedServiceCardStatus) GetAdmissionPhaseReason() string {
+	if m != nil {
+		return m.AdmissionPhaseReason
+	}
+	return ""
+}
+
+// IPConfig defines the static IP configuration for a DistributedServiceCard
 type IPConfig struct {
-	// IPAddress contains the Management IP address of the SmartNIC in CIDR format
+	// IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format
 	IPAddress string `protobuf:"bytes,1,opt,name=IPAddress,json=ip-address,omitempty,proto3" json:"ip-address,omitempty"`
 	// DefaultGW contains the default gateway's IP address
 	DefaultGW string `protobuf:"bytes,2,opt,name=DefaultGW,json=default-gw,omitempty,proto3" json:"default-gw,omitempty"`
-	// DNSServers contains a list of DNS Servers that can be used on SmartNIC
+	// DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard
 	DNSServers []string `protobuf:"bytes,3,rep,name=DNSServers,json=dns-servers,omitempty" json:"dns-servers,omitempty"`
 }
 
 func (m *IPConfig) Reset()                    { *m = IPConfig{} }
 func (m *IPConfig) String() string            { return proto.CompactTextString(m) }
 func (*IPConfig) ProtoMessage()               {}
-func (*IPConfig) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{1} }
+func (*IPConfig) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{6} }
 
 func (m *IPConfig) GetIPAddress() string {
 	if m != nil {
@@ -218,7 +567,7 @@ type MacRange struct {
 func (m *MacRange) Reset()                    { *m = MacRange{} }
 func (m *MacRange) String() string            { return proto.CompactTextString(m) }
 func (*MacRange) ProtoMessage()               {}
-func (*MacRange) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{2} }
+func (*MacRange) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{7} }
 
 func (m *MacRange) GetStart() string {
 	if m != nil {
@@ -234,364 +583,19 @@ func (m *MacRange) GetEnd() string {
 	return ""
 }
 
-// ------------------------------------ SMART NIC  -------------------------------------------
-//
-// SmartNIC represents the Naples I/O subsystem
-//
-// Entity responsible & scenarios involved in managing this object:
-//
-//      Create:
-//          o CMD
-//              - created as part of NIC registration, Admittance
-//      Modify:
-//          o CMD
-//              - update spec attributes
-//              - update status attributes
-//      Delete:
-//          o CMD
-//              - aging out stale or rejected NICs (TBD)
-//          o NetOps, SecOps
-//              - Decomission a NIC (TBD)
-//
-type SmartNIC struct {
-	//
-	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Object name is Serial-Number of the SmartNIC
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// SmartNICSpec contains the configuration of the network adapter.
-	Spec SmartNICSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// SmartNICStatus contains the current state of the network adapter.
-	Status SmartNICStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
-}
-
-func (m *SmartNIC) Reset()                    { *m = SmartNIC{} }
-func (m *SmartNIC) String() string            { return proto.CompactTextString(m) }
-func (*SmartNIC) ProtoMessage()               {}
-func (*SmartNIC) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{3} }
-
-func (m *SmartNIC) GetSpec() SmartNICSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return SmartNICSpec{}
-}
-
-func (m *SmartNIC) GetStatus() SmartNICStatus {
-	if m != nil {
-		return m.Status
-	}
-	return SmartNICStatus{}
-}
-
-// SmartNICCondition describes the state of a SmartNIC at a certain point.
-type SmartNICCondition struct {
-	// Type indicates a certain NIC condition
-	Type string `protobuf:"bytes,1,opt,name=Type,json=type,omitempty,proto3" json:"type,omitempty"`
-	// Condition Status
-	Status string `protobuf:"bytes,2,opt,name=Status,json=status,omitempty,proto3" json:"status,omitempty"`
-	// The last time the condition transitioned
-	LastTransitionTime string `protobuf:"bytes,3,opt,name=LastTransitionTime,json=last-transition-time,omitempty,proto3" json:"last-transition-time,omitempty"`
-	// The reason for the condition's last transition
-	Reason string `protobuf:"bytes,4,opt,name=Reason,json=reason,omitempty,proto3" json:"reason,omitempty"`
-	// A detailed message indicating details about the transition.
-	Message string `protobuf:"bytes,5,opt,name=Message,json=message,omitempty,proto3" json:"message,omitempty"`
-}
-
-func (m *SmartNICCondition) Reset()                    { *m = SmartNICCondition{} }
-func (m *SmartNICCondition) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICCondition) ProtoMessage()               {}
-func (*SmartNICCondition) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{4} }
-
-func (m *SmartNICCondition) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *SmartNICCondition) GetStatus() string {
-	if m != nil {
-		return m.Status
-	}
-	return ""
-}
-
-func (m *SmartNICCondition) GetLastTransitionTime() string {
-	if m != nil {
-		return m.LastTransitionTime
-	}
-	return ""
-}
-
-func (m *SmartNICCondition) GetReason() string {
-	if m != nil {
-		return m.Reason
-	}
-	return ""
-}
-
-func (m *SmartNICCondition) GetMessage() string {
-	if m != nil {
-		return m.Message
-	}
-	return ""
-}
-
-// Naples I/O (SmartNIC) subsystem information
-type SmartNICInfo struct {
-	// BIOS details
-	BiosInfo *BiosInfo `protobuf:"bytes,1,opt,name=BiosInfo,json=bios-info,omitempty" json:"bios-info,omitempty"`
-	// OS details
-	OsInfo *OsInfo `protobuf:"bytes,2,opt,name=OsInfo,json=os-info,omitempty" json:"os-info,omitempty"`
-	// CPU details
-	CpuInfo *CPUInfo `protobuf:"bytes,3,opt,name=CpuInfo,json=cpu-info,omitempty" json:"cpu-info,omitempty"`
-	// RAM/Memory details
-	MemoryInfo *MemInfo `protobuf:"bytes,4,opt,name=MemoryInfo,json=memory-info,omitempty" json:"memory-info,omitempty"`
-	// Storage details
-	StorageInfo *StorageInfo `protobuf:"bytes,5,opt,name=StorageInfo,json=storage-info,omitempty" json:"storage-info,omitempty"`
-}
-
-func (m *SmartNICInfo) Reset()                    { *m = SmartNICInfo{} }
-func (m *SmartNICInfo) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICInfo) ProtoMessage()               {}
-func (*SmartNICInfo) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{5} }
-
-func (m *SmartNICInfo) GetBiosInfo() *BiosInfo {
-	if m != nil {
-		return m.BiosInfo
-	}
-	return nil
-}
-
-func (m *SmartNICInfo) GetOsInfo() *OsInfo {
-	if m != nil {
-		return m.OsInfo
-	}
-	return nil
-}
-
-func (m *SmartNICInfo) GetCpuInfo() *CPUInfo {
-	if m != nil {
-		return m.CpuInfo
-	}
-	return nil
-}
-
-func (m *SmartNICInfo) GetMemoryInfo() *MemInfo {
-	if m != nil {
-		return m.MemoryInfo
-	}
-	return nil
-}
-
-func (m *SmartNICInfo) GetStorageInfo() *StorageInfo {
-	if m != nil {
-		return m.StorageInfo
-	}
-	return nil
-}
-
-// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
-type SmartNICSpec struct {
-	// Admit allows a SmartNIC to join the cluster
-	Admit bool `protobuf:"varint,1,opt,name=Admit,json=admit,omitempty,proto3" json:"admit,omitempty"`
-	// ID is used as a user friendly identifier in logs/events
-	ID string `protobuf:"bytes,2,opt,name=ID,json=id,omitempty,proto3" json:"id,omitempty"`
-	// IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
-	IPConfig *IPConfig `protobuf:"bytes,3,opt,name=IPConfig,json=ip-config,omitempty" json:"ip-config,omitempty"`
-	// MgmtMode defines the management mode of the SmartNIC
-	MgmtMode string `protobuf:"bytes,4,opt,name=MgmtMode,json=mgmt-mode,omitempty,proto3" json:"mgmt-mode,omitempty"`
-	// MgmtMode defines the management mode of the SmartNIC
-	NetworkMode string `protobuf:"bytes,5,opt,name=NetworkMode,json=network-mode,omitempty,proto3" json:"network-mode,omitempty"`
-	// MgmtVlan defines the vlan to be used in network managed mode. The default of 0
-	// means we use untagged-vlan for doing inband management
-	MgmtVlan uint32 `protobuf:"varint,6,opt,name=MgmtVlan,json=mgmt-vlan,omitempty,proto3" json:"mgmt-vlan,omitempty"`
-	// Controllers contains the list of remote controllers IP addresses or hostnames
-	Controllers []string `protobuf:"bytes,7,rep,name=Controllers,json=controllers,omitempty" json:"controllers,omitempty"`
-}
-
-func (m *SmartNICSpec) Reset()                    { *m = SmartNICSpec{} }
-func (m *SmartNICSpec) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICSpec) ProtoMessage()               {}
-func (*SmartNICSpec) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{6} }
-
-func (m *SmartNICSpec) GetAdmit() bool {
-	if m != nil {
-		return m.Admit
-	}
-	return false
-}
-
-func (m *SmartNICSpec) GetID() string {
-	if m != nil {
-		return m.ID
-	}
-	return ""
-}
-
-func (m *SmartNICSpec) GetIPConfig() *IPConfig {
-	if m != nil {
-		return m.IPConfig
-	}
-	return nil
-}
-
-func (m *SmartNICSpec) GetMgmtMode() string {
-	if m != nil {
-		return m.MgmtMode
-	}
-	return ""
-}
-
-func (m *SmartNICSpec) GetNetworkMode() string {
-	if m != nil {
-		return m.NetworkMode
-	}
-	return ""
-}
-
-func (m *SmartNICSpec) GetMgmtVlan() uint32 {
-	if m != nil {
-		return m.MgmtVlan
-	}
-	return 0
-}
-
-func (m *SmartNICSpec) GetControllers() []string {
-	if m != nil {
-		return m.Controllers
-	}
-	return nil
-}
-
-// SmartNICStatus contains current status of a SmartNIC
-type SmartNICStatus struct {
-	// Current admission phase of the SmartNIC.
-	// When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED
-	// by CMD for validated NICs.
-	// When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING
-	// by CMD for validated NICs since it requires manual approval.
-	// To admit the NIC as a part of manual admission, user is expected to
-	// set Spec.Admit to true for the NICs that are in NIC_PENDING
-	// state. Note : Whitelist mode is not supported yet.
-	AdmissionPhase string `protobuf:"bytes,1,opt,name=AdmissionPhase,json=admission-phase,omitempty,proto3" json:"admission-phase,omitempty"`
-	// List of current NIC conditions
-	Conditions []SmartNICCondition `protobuf:"bytes,2,rep,name=Conditions,json=conditions,omitempty" json:"conditions,omitempty"`
-	// Serial number
-	SerialNum string `protobuf:"bytes,3,opt,name=SerialNum,json=serial-num,omitempty,proto3" json:"serial-num,omitempty"`
-	// PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
-	PrimaryMAC string `protobuf:"bytes,4,opt,name=PrimaryMAC,json=primary-mac,omitempty,proto3" json:"primary-mac,omitempty"`
-	// IPConfig is the ip address related configuration obtained from DHCP
-	IPConfig *IPConfig `protobuf:"bytes,5,opt,name=IPConfig,json=ip-config,omitempty" json:"ip-config,omitempty"`
-	// Naples I/O system info
-	SystemInfo *SmartNICInfo `protobuf:"bytes,6,opt,name=SystemInfo,json=system-info,omitempty" json:"system-info,omitempty"`
-	// Network Interfaces
-	Interfaces []string `protobuf:"bytes,7,rep,name=Interfaces,json=interfaces,omitempty" json:"interfaces,omitempty"`
-	// SmartNIC Version
-	SmartNICVersion string `protobuf:"bytes,8,opt,name=SmartNICVersion,json=smartNicVersion,omitempty,proto3" json:"smartNicVersion,omitempty"`
-	// SmartNIC SKU
-	SmartNICSku string `protobuf:"bytes,9,opt,name=SmartNICSku,json=smartNicSku,omitempty,proto3" json:"smartNicSku,omitempty"`
-	// The name of the host this SmartNIC is plugged into
-	Host string `protobuf:"bytes,10,opt,name=Host,json=host,omitempty,proto3" json:"host,omitempty"`
-	// The reason why the SmartNIC is not in ADMITTED state
-	AdmissionPhaseReason string `protobuf:"bytes,11,opt,name=AdmissionPhaseReason,json=adm-phase-reason,omitempty,proto3" json:"adm-phase-reason,omitempty"`
-}
-
-func (m *SmartNICStatus) Reset()                    { *m = SmartNICStatus{} }
-func (m *SmartNICStatus) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICStatus) ProtoMessage()               {}
-func (*SmartNICStatus) Descriptor() ([]byte, []int) { return fileDescriptorSmartnic, []int{7} }
-
-func (m *SmartNICStatus) GetAdmissionPhase() string {
-	if m != nil {
-		return m.AdmissionPhase
-	}
-	return ""
-}
-
-func (m *SmartNICStatus) GetConditions() []SmartNICCondition {
-	if m != nil {
-		return m.Conditions
-	}
-	return nil
-}
-
-func (m *SmartNICStatus) GetSerialNum() string {
-	if m != nil {
-		return m.SerialNum
-	}
-	return ""
-}
-
-func (m *SmartNICStatus) GetPrimaryMAC() string {
-	if m != nil {
-		return m.PrimaryMAC
-	}
-	return ""
-}
-
-func (m *SmartNICStatus) GetIPConfig() *IPConfig {
-	if m != nil {
-		return m.IPConfig
-	}
-	return nil
-}
-
-func (m *SmartNICStatus) GetSystemInfo() *SmartNICInfo {
-	if m != nil {
-		return m.SystemInfo
-	}
-	return nil
-}
-
-func (m *SmartNICStatus) GetInterfaces() []string {
-	if m != nil {
-		return m.Interfaces
-	}
-	return nil
-}
-
-func (m *SmartNICStatus) GetSmartNICVersion() string {
-	if m != nil {
-		return m.SmartNICVersion
-	}
-	return ""
-}
-
-func (m *SmartNICStatus) GetSmartNICSku() string {
-	if m != nil {
-		return m.SmartNICSku
-	}
-	return ""
-}
-
-func (m *SmartNICStatus) GetHost() string {
-	if m != nil {
-		return m.Host
-	}
-	return ""
-}
-
-func (m *SmartNICStatus) GetAdmissionPhaseReason() string {
-	if m != nil {
-		return m.AdmissionPhaseReason
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterType((*BiosInfo)(nil), "cluster.BiosInfo")
+	proto.RegisterType((*DSCCondition)(nil), "cluster.DSCCondition")
+	proto.RegisterType((*DSCInfo)(nil), "cluster.DSCInfo")
+	proto.RegisterType((*DistributedServiceCard)(nil), "cluster.DistributedServiceCard")
+	proto.RegisterType((*DistributedServiceCardSpec)(nil), "cluster.DistributedServiceCardSpec")
+	proto.RegisterType((*DistributedServiceCardStatus)(nil), "cluster.DistributedServiceCardStatus")
 	proto.RegisterType((*IPConfig)(nil), "cluster.IPConfig")
 	proto.RegisterType((*MacRange)(nil), "cluster.MacRange")
-	proto.RegisterType((*SmartNIC)(nil), "cluster.SmartNIC")
-	proto.RegisterType((*SmartNICCondition)(nil), "cluster.SmartNICCondition")
-	proto.RegisterType((*SmartNICInfo)(nil), "cluster.SmartNICInfo")
-	proto.RegisterType((*SmartNICSpec)(nil), "cluster.SmartNICSpec")
-	proto.RegisterType((*SmartNICStatus)(nil), "cluster.SmartNICStatus")
-	proto.RegisterEnum("cluster.SmartNICCondition_ConditionType", SmartNICCondition_ConditionType_name, SmartNICCondition_ConditionType_value)
-	proto.RegisterEnum("cluster.SmartNICSpec_MgmtModes", SmartNICSpec_MgmtModes_name, SmartNICSpec_MgmtModes_value)
-	proto.RegisterEnum("cluster.SmartNICSpec_NetworkModes", SmartNICSpec_NetworkModes_name, SmartNICSpec_NetworkModes_value)
-	proto.RegisterEnum("cluster.SmartNICStatus_Phase", SmartNICStatus_Phase_name, SmartNICStatus_Phase_value)
+	proto.RegisterEnum("cluster.DSCCondition_ConditionType", DSCCondition_ConditionType_name, DSCCondition_ConditionType_value)
+	proto.RegisterEnum("cluster.DistributedServiceCardSpec_MgmtModes", DistributedServiceCardSpec_MgmtModes_name, DistributedServiceCardSpec_MgmtModes_value)
+	proto.RegisterEnum("cluster.DistributedServiceCardSpec_NetworkModes", DistributedServiceCardSpec_NetworkModes_name, DistributedServiceCardSpec_NetworkModes_value)
+	proto.RegisterEnum("cluster.DistributedServiceCardStatus_Phase", DistributedServiceCardStatus_Phase_name, DistributedServiceCardStatus_Phase_value)
 }
 func (m *BiosInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -631,6 +635,355 @@ func (m *BiosInfo) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.FwMinorVersion)))
 		i += copy(dAtA[i:], m.FwMinorVersion)
+	}
+	return i, nil
+}
+
+func (m *DSCCondition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DSCCondition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if len(m.Status) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Status)))
+		i += copy(dAtA[i:], m.Status)
+	}
+	if len(m.LastTransitionTime) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.LastTransitionTime)))
+		i += copy(dAtA[i:], m.LastTransitionTime)
+	}
+	if len(m.Reason) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Reason)))
+		i += copy(dAtA[i:], m.Reason)
+	}
+	if len(m.Message) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
+	}
+	return i, nil
+}
+
+func (m *DSCInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DSCInfo) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.BiosInfo != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.BiosInfo.Size()))
+		n1, err := m.BiosInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	if m.OsInfo != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.OsInfo.Size()))
+		n2, err := m.OsInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	if m.CpuInfo != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.CpuInfo.Size()))
+		n3, err := m.CpuInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if m.MemoryInfo != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.MemoryInfo.Size()))
+		n4, err := m.MemoryInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if m.StorageInfo != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.StorageInfo.Size()))
+		n5, err := m.StorageInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	return i, nil
+}
+
+func (m *DistributedServiceCard) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DistributedServiceCard) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintSmartnic(dAtA, i, uint64(m.TypeMeta.Size()))
+	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSmartnic(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n7, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSmartnic(dAtA, i, uint64(m.Spec.Size()))
+	n8, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintSmartnic(dAtA, i, uint64(m.Status.Size()))
+	n9, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n9
+	return i, nil
+}
+
+func (m *DistributedServiceCardSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DistributedServiceCardSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Admit {
+		dAtA[i] = 0x8
+		i++
+		if m.Admit {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.ID) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.ID)))
+		i += copy(dAtA[i:], m.ID)
+	}
+	if m.IPConfig != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.IPConfig.Size()))
+		n10, err := m.IPConfig.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	if len(m.MgmtMode) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.MgmtMode)))
+		i += copy(dAtA[i:], m.MgmtMode)
+	}
+	if len(m.NetworkMode) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.NetworkMode)))
+		i += copy(dAtA[i:], m.NetworkMode)
+	}
+	if m.MgmtVlan != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.MgmtVlan))
+	}
+	if len(m.Controllers) > 0 {
+		for _, s := range m.Controllers {
+			dAtA[i] = 0x3a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
+func (m *DistributedServiceCardStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DistributedServiceCardStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.AdmissionPhase) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.AdmissionPhase)))
+		i += copy(dAtA[i:], m.AdmissionPhase)
+	}
+	if len(m.Conditions) > 0 {
+		for _, msg := range m.Conditions {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintSmartnic(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.SerialNum) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.SerialNum)))
+		i += copy(dAtA[i:], m.SerialNum)
+	}
+	if len(m.PrimaryMAC) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.PrimaryMAC)))
+		i += copy(dAtA[i:], m.PrimaryMAC)
+	}
+	if m.IPConfig != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.IPConfig.Size()))
+		n11, err := m.IPConfig.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	if m.SystemInfo != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(m.SystemInfo.Size()))
+		n12, err := m.SystemInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	if len(m.Interfaces) > 0 {
+		for _, s := range m.Interfaces {
+			dAtA[i] = 0x3a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	if len(m.DSCVersion) > 0 {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.DSCVersion)))
+		i += copy(dAtA[i:], m.DSCVersion)
+	}
+	if len(m.DSCSku) > 0 {
+		dAtA[i] = 0x4a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.DSCSku)))
+		i += copy(dAtA[i:], m.DSCSku)
+	}
+	if len(m.Host) > 0 {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Host)))
+		i += copy(dAtA[i:], m.Host)
+	}
+	if len(m.AdmissionPhaseReason) > 0 {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.AdmissionPhaseReason)))
+		i += copy(dAtA[i:], m.AdmissionPhaseReason)
 	}
 	return i, nil
 }
@@ -710,355 +1063,6 @@ func (m *MacRange) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SmartNIC) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SmartNIC) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintSmartnic(dAtA, i, uint64(m.TypeMeta.Size()))
-	n1, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintSmartnic(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n2, err := m.ObjectMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintSmartnic(dAtA, i, uint64(m.Spec.Size()))
-	n3, err := m.Spec.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n3
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintSmartnic(dAtA, i, uint64(m.Status.Size()))
-	n4, err := m.Status.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	return i, nil
-}
-
-func (m *SmartNICCondition) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SmartNICCondition) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if len(m.Status) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
-	}
-	if len(m.LastTransitionTime) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.LastTransitionTime)))
-		i += copy(dAtA[i:], m.LastTransitionTime)
-	}
-	if len(m.Reason) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Reason)))
-		i += copy(dAtA[i:], m.Reason)
-	}
-	if len(m.Message) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Message)))
-		i += copy(dAtA[i:], m.Message)
-	}
-	return i, nil
-}
-
-func (m *SmartNICInfo) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SmartNICInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.BiosInfo != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.BiosInfo.Size()))
-		n5, err := m.BiosInfo.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
-	}
-	if m.OsInfo != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.OsInfo.Size()))
-		n6, err := m.OsInfo.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n6
-	}
-	if m.CpuInfo != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.CpuInfo.Size()))
-		n7, err := m.CpuInfo.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n7
-	}
-	if m.MemoryInfo != nil {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.MemoryInfo.Size()))
-		n8, err := m.MemoryInfo.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
-	if m.StorageInfo != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.StorageInfo.Size()))
-		n9, err := m.StorageInfo.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n9
-	}
-	return i, nil
-}
-
-func (m *SmartNICSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SmartNICSpec) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Admit {
-		dAtA[i] = 0x8
-		i++
-		if m.Admit {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if len(m.ID) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.ID)))
-		i += copy(dAtA[i:], m.ID)
-	}
-	if m.IPConfig != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.IPConfig.Size()))
-		n10, err := m.IPConfig.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n10
-	}
-	if len(m.MgmtMode) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.MgmtMode)))
-		i += copy(dAtA[i:], m.MgmtMode)
-	}
-	if len(m.NetworkMode) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.NetworkMode)))
-		i += copy(dAtA[i:], m.NetworkMode)
-	}
-	if m.MgmtVlan != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.MgmtVlan))
-	}
-	if len(m.Controllers) > 0 {
-		for _, s := range m.Controllers {
-			dAtA[i] = 0x3a
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	return i, nil
-}
-
-func (m *SmartNICStatus) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SmartNICStatus) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.AdmissionPhase) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.AdmissionPhase)))
-		i += copy(dAtA[i:], m.AdmissionPhase)
-	}
-	if len(m.Conditions) > 0 {
-		for _, msg := range m.Conditions {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintSmartnic(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if len(m.SerialNum) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.SerialNum)))
-		i += copy(dAtA[i:], m.SerialNum)
-	}
-	if len(m.PrimaryMAC) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.PrimaryMAC)))
-		i += copy(dAtA[i:], m.PrimaryMAC)
-	}
-	if m.IPConfig != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.IPConfig.Size()))
-		n11, err := m.IPConfig.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n11
-	}
-	if m.SystemInfo != nil {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(m.SystemInfo.Size()))
-		n12, err := m.SystemInfo.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n12
-	}
-	if len(m.Interfaces) > 0 {
-		for _, s := range m.Interfaces {
-			dAtA[i] = 0x3a
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	if len(m.SmartNICVersion) > 0 {
-		dAtA[i] = 0x42
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.SmartNICVersion)))
-		i += copy(dAtA[i:], m.SmartNICVersion)
-	}
-	if len(m.SmartNICSku) > 0 {
-		dAtA[i] = 0x4a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.SmartNICSku)))
-		i += copy(dAtA[i:], m.SmartNICSku)
-	}
-	if len(m.Host) > 0 {
-		dAtA[i] = 0x52
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.Host)))
-		i += copy(dAtA[i:], m.Host)
-	}
-	if len(m.AdmissionPhaseReason) > 0 {
-		dAtA[i] = 0x5a
-		i++
-		i = encodeVarintSmartnic(dAtA, i, uint64(len(m.AdmissionPhaseReason)))
-		i += copy(dAtA[i:], m.AdmissionPhaseReason)
-	}
-	return i, nil
-}
-
 func encodeVarintSmartnic(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1090,55 +1094,7 @@ func (m *BiosInfo) Size() (n int) {
 	return n
 }
 
-func (m *IPConfig) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.IPAddress)
-	if l > 0 {
-		n += 1 + l + sovSmartnic(uint64(l))
-	}
-	l = len(m.DefaultGW)
-	if l > 0 {
-		n += 1 + l + sovSmartnic(uint64(l))
-	}
-	if len(m.DNSServers) > 0 {
-		for _, s := range m.DNSServers {
-			l = len(s)
-			n += 1 + l + sovSmartnic(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MacRange) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Start)
-	if l > 0 {
-		n += 1 + l + sovSmartnic(uint64(l))
-	}
-	l = len(m.End)
-	if l > 0 {
-		n += 1 + l + sovSmartnic(uint64(l))
-	}
-	return n
-}
-
-func (m *SmartNIC) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovSmartnic(uint64(l))
-	l = m.ObjectMeta.Size()
-	n += 1 + l + sovSmartnic(uint64(l))
-	l = m.Spec.Size()
-	n += 1 + l + sovSmartnic(uint64(l))
-	l = m.Status.Size()
-	n += 1 + l + sovSmartnic(uint64(l))
-	return n
-}
-
-func (m *SmartNICCondition) Size() (n int) {
+func (m *DSCCondition) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Type)
@@ -1164,7 +1120,7 @@ func (m *SmartNICCondition) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICInfo) Size() (n int) {
+func (m *DSCInfo) Size() (n int) {
 	var l int
 	_ = l
 	if m.BiosInfo != nil {
@@ -1190,7 +1146,21 @@ func (m *SmartNICInfo) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICSpec) Size() (n int) {
+func (m *DistributedServiceCard) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSmartnic(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovSmartnic(uint64(l))
+	l = m.Spec.Size()
+	n += 1 + l + sovSmartnic(uint64(l))
+	l = m.Status.Size()
+	n += 1 + l + sovSmartnic(uint64(l))
+	return n
+}
+
+func (m *DistributedServiceCardSpec) Size() (n int) {
 	var l int
 	_ = l
 	if m.Admit {
@@ -1224,7 +1194,7 @@ func (m *SmartNICSpec) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICStatus) Size() (n int) {
+func (m *DistributedServiceCardStatus) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.AdmissionPhase)
@@ -1259,11 +1229,11 @@ func (m *SmartNICStatus) Size() (n int) {
 			n += 1 + l + sovSmartnic(uint64(l))
 		}
 	}
-	l = len(m.SmartNICVersion)
+	l = len(m.DSCVersion)
 	if l > 0 {
 		n += 1 + l + sovSmartnic(uint64(l))
 	}
-	l = len(m.SmartNICSku)
+	l = len(m.DSCSku)
 	if l > 0 {
 		n += 1 + l + sovSmartnic(uint64(l))
 	}
@@ -1272,6 +1242,40 @@ func (m *SmartNICStatus) Size() (n int) {
 		n += 1 + l + sovSmartnic(uint64(l))
 	}
 	l = len(m.AdmissionPhaseReason)
+	if l > 0 {
+		n += 1 + l + sovSmartnic(uint64(l))
+	}
+	return n
+}
+
+func (m *IPConfig) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.IPAddress)
+	if l > 0 {
+		n += 1 + l + sovSmartnic(uint64(l))
+	}
+	l = len(m.DefaultGW)
+	if l > 0 {
+		n += 1 + l + sovSmartnic(uint64(l))
+	}
+	if len(m.DNSServers) > 0 {
+		for _, s := range m.DNSServers {
+			l = len(s)
+			n += 1 + l + sovSmartnic(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MacRange) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Start)
+	if l > 0 {
+		n += 1 + l + sovSmartnic(uint64(l))
+	}
+	l = len(m.End)
 	if l > 0 {
 		n += 1 + l + sovSmartnic(uint64(l))
 	}
@@ -1435,6 +1439,1203 @@ func (m *BiosInfo) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.FwMinorVersion = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSmartnic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DSCCondition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSmartnic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DSCCondition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DSCCondition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Status = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastTransitionTime", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LastTransitionTime = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reason = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSmartnic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DSCInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSmartnic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DSCInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DSCInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BiosInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BiosInfo == nil {
+				m.BiosInfo = &BiosInfo{}
+			}
+			if err := m.BiosInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OsInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.OsInfo == nil {
+				m.OsInfo = &OsInfo{}
+			}
+			if err := m.OsInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpuInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CpuInfo == nil {
+				m.CpuInfo = &CPUInfo{}
+			}
+			if err := m.CpuInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MemoryInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MemoryInfo == nil {
+				m.MemoryInfo = &MemInfo{}
+			}
+			if err := m.MemoryInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StorageInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.StorageInfo == nil {
+				m.StorageInfo = &StorageInfo{}
+			}
+			if err := m.StorageInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSmartnic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DistributedServiceCard) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSmartnic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DistributedServiceCard: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DistributedServiceCard: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSmartnic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DistributedServiceCardSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSmartnic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DistributedServiceCardSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DistributedServiceCardSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admit", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Admit = bool(v != 0)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IPConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.IPConfig == nil {
+				m.IPConfig = &IPConfig{}
+			}
+			if err := m.IPConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MgmtMode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MgmtMode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NetworkMode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NetworkMode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MgmtVlan", wireType)
+			}
+			m.MgmtVlan = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MgmtVlan |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Controllers", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Controllers = append(m.Controllers, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSmartnic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DistributedServiceCardStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSmartnic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DistributedServiceCardStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DistributedServiceCardStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdmissionPhase", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AdmissionPhase = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Conditions = append(m.Conditions, DSCCondition{})
+			if err := m.Conditions[len(m.Conditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerialNum", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SerialNum = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PrimaryMAC", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PrimaryMAC = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IPConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.IPConfig == nil {
+				m.IPConfig = &IPConfig{}
+			}
+			if err := m.IPConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SystemInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SystemInfo == nil {
+				m.SystemInfo = &DSCInfo{}
+			}
+			if err := m.SystemInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interfaces", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Interfaces = append(m.Interfaces, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DSCVersion", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DSCVersion = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DSCSku", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DSCSku = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Host", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Host = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdmissionPhaseReason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSmartnic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSmartnic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AdmissionPhaseReason = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1702,1203 +2903,6 @@ func (m *MacRange) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SmartNIC) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSmartnic
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNIC: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNIC: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSmartnic(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SmartNICCondition) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSmartnic
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICCondition: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICCondition: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LastTransitionTime", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LastTransitionTime = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Reason = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Message = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSmartnic(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SmartNICInfo) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSmartnic
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICInfo: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICInfo: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BiosInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.BiosInfo == nil {
-				m.BiosInfo = &BiosInfo{}
-			}
-			if err := m.BiosInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OsInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.OsInfo == nil {
-				m.OsInfo = &OsInfo{}
-			}
-			if err := m.OsInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CpuInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.CpuInfo == nil {
-				m.CpuInfo = &CPUInfo{}
-			}
-			if err := m.CpuInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MemoryInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.MemoryInfo == nil {
-				m.MemoryInfo = &MemInfo{}
-			}
-			if err := m.MemoryInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StorageInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.StorageInfo == nil {
-				m.StorageInfo = &StorageInfo{}
-			}
-			if err := m.StorageInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSmartnic(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SmartNICSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSmartnic
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admit", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Admit = bool(v != 0)
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ID = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPConfig", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.IPConfig == nil {
-				m.IPConfig = &IPConfig{}
-			}
-			if err := m.IPConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MgmtMode", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MgmtMode = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NetworkMode", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.NetworkMode = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MgmtVlan", wireType)
-			}
-			m.MgmtVlan = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MgmtVlan |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Controllers", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Controllers = append(m.Controllers, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSmartnic(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SmartNICStatus) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSmartnic
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICStatus: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICStatus: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AdmissionPhase", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AdmissionPhase = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Conditions = append(m.Conditions, SmartNICCondition{})
-			if err := m.Conditions[len(m.Conditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SerialNum", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SerialNum = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PrimaryMAC", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.PrimaryMAC = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPConfig", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.IPConfig == nil {
-				m.IPConfig = &IPConfig{}
-			}
-			if err := m.IPConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SystemInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.SystemInfo == nil {
-				m.SystemInfo = &SmartNICInfo{}
-			}
-			if err := m.SystemInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Interfaces", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Interfaces = append(m.Interfaces, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SmartNICVersion", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SmartNICVersion = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SmartNICSku", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SmartNICSku = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 10:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Host", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Host = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 11:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AdmissionPhaseReason", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSmartnic
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AdmissionPhaseReason = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSmartnic(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSmartnic
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func skipSmartnic(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3007,101 +3011,102 @@ var (
 func init() { proto.RegisterFile("smartnic.proto", fileDescriptorSmartnic) }
 
 var fileDescriptorSmartnic = []byte{
-	// 1530 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4f, 0x6f, 0xdb, 0x46,
-	0x16, 0x37, 0x2d, 0xd9, 0x96, 0x47, 0xfe, 0x23, 0x4f, 0x6c, 0x47, 0x32, 0x12, 0x2b, 0xe0, 0x62,
-	0x01, 0x65, 0x37, 0x94, 0x0c, 0x27, 0x1b, 0x20, 0x39, 0x2c, 0xd6, 0x92, 0x98, 0x98, 0x71, 0x44,
-	0x39, 0xa2, 0xe2, 0xec, 0x6e, 0xff, 0x04, 0x63, 0x6a, 0xac, 0x30, 0x11, 0x87, 0x2c, 0x67, 0x64,
-	0xc3, 0xf7, 0xd6, 0xdf, 0xa0, 0x5f, 0xc2, 0xc7, 0xde, 0x7b, 0xcf, 0xa9, 0x08, 0x7a, 0xe8, 0x51,
-	0x28, 0x7c, 0x2a, 0xf4, 0x09, 0x7a, 0x2c, 0x66, 0x48, 0x4a, 0x94, 0x48, 0xb5, 0x3d, 0xf4, 0xa6,
-	0xf9, 0xbd, 0xf7, 0x7e, 0x33, 0xef, 0xf1, 0xfd, 0x13, 0x58, 0xa3, 0x36, 0xf2, 0x18, 0xb1, 0xcc,
-	0xb2, 0xeb, 0x39, 0xcc, 0x81, 0x4b, 0x66, 0xaf, 0x4f, 0x19, 0xf6, 0x76, 0xee, 0x74, 0x1d, 0xa7,
-	0xdb, 0xc3, 0x15, 0xe4, 0x5a, 0x15, 0x44, 0x88, 0xc3, 0x10, 0xb3, 0x1c, 0x42, 0x7d, 0xb5, 0x1d,
-	0xb5, 0x6b, 0xb1, 0x77, 0xfd, 0xd3, 0xb2, 0xe9, 0xd8, 0x15, 0x17, 0x13, 0x8a, 0x48, 0xc7, 0xa9,
-	0xd0, 0x8b, 0xca, 0x39, 0x26, 0x96, 0x89, 0x2b, 0x7d, 0x66, 0xf5, 0x28, 0x37, 0xed, 0x62, 0x12,
-	0xb5, 0xae, 0x58, 0xc4, 0xec, 0xf5, 0x3b, 0x38, 0xa4, 0x51, 0x22, 0x34, 0x5d, 0xa7, 0xeb, 0x54,
-	0x04, 0x7c, 0xda, 0x3f, 0x13, 0x27, 0x71, 0x10, 0xbf, 0x02, 0xf5, 0xbf, 0xcf, 0xb8, 0x95, 0xbf,
-	0xd1, 0xc6, 0x0c, 0x05, 0x6a, 0xab, 0x81, 0x0f, 0xfe, 0x51, 0xfe, 0x76, 0x1e, 0x64, 0xaa, 0x96,
-	0x43, 0x35, 0x72, 0xe6, 0xc0, 0xc7, 0x60, 0xf1, 0x04, 0x93, 0x8e, 0xe3, 0xe5, 0xa5, 0x7b, 0x52,
-	0x69, 0xb9, 0xba, 0x39, 0x1c, 0x14, 0x73, 0xe7, 0x02, 0x79, 0xe0, 0xd8, 0x16, 0xc3, 0xb6, 0xcb,
-	0x2e, 0x5b, 0x31, 0x04, 0x3e, 0x01, 0x4b, 0x27, 0xd8, 0xa3, 0x96, 0x43, 0xf2, 0xf3, 0xc2, 0x70,
-	0x6b, 0x38, 0x28, 0x6e, 0x9c, 0xfb, 0x50, 0xc4, 0x32, 0x0e, 0xc1, 0x17, 0x60, 0xed, 0xd9, 0x45,
-	0x03, 0xbd, 0x77, 0xbc, 0x90, 0x21, 0x25, 0x18, 0x76, 0x86, 0x83, 0xe2, 0xf6, 0xd9, 0x85, 0x62,
-	0x73, 0x91, 0x72, 0x8e, 0xa3, 0x0f, 0x98, 0x81, 0x07, 0x5c, 0x16, 0x19, 0x73, 0xa5, 0x27, 0xb9,
-	0xb8, 0x28, 0x89, 0x2b, 0x8e, 0xcb, 0x3f, 0x49, 0x20, 0xa3, 0x1d, 0xd7, 0x1c, 0x72, 0x66, 0x75,
-	0xe1, 0x01, 0x58, 0xd6, 0x8e, 0x0f, 0x3a, 0x1d, 0x0f, 0x53, 0x1a, 0x84, 0x26, 0x3f, 0x1c, 0x14,
-	0x37, 0x2d, 0x57, 0x41, 0x3e, 0x1a, 0x61, 0x4c, 0x44, 0x39, 0x45, 0x1d, 0x9f, 0xa1, 0x7e, 0x8f,
-	0x3d, 0x7f, 0x13, 0x04, 0x49, 0x50, 0x74, 0x7c, 0x50, 0xe9, 0x5e, 0x44, 0x29, 0x92, 0x50, 0x58,
-	0x07, 0xa0, 0xae, 0x1b, 0x06, 0xf6, 0x78, 0x14, 0xf3, 0xa9, 0x7b, 0xa9, 0xd2, 0x72, 0xb5, 0x30,
-	0x1c, 0x14, 0xb7, 0x3a, 0x84, 0x2a, 0xd4, 0x87, 0x23, 0x24, 0xc9, 0xb0, 0x7c, 0x2d, 0x81, 0x4c,
-	0x03, 0x99, 0x2d, 0x44, 0xba, 0x18, 0xbe, 0x02, 0x0b, 0x06, 0x43, 0x1e, 0x0b, 0x9c, 0x52, 0xae,
-	0xaf, 0x0a, 0x50, 0xe5, 0x6a, 0x4d, 0xaf, 0xd4, 0x40, 0x26, 0x77, 0xb9, 0x74, 0xff, 0xfe, 0x70,
-	0x50, 0xbc, 0x65, 0x23, 0x53, 0xa1, 0x5c, 0x35, 0x72, 0x43, 0x12, 0x08, 0x8f, 0x40, 0x4a, 0x25,
-	0x9d, 0xc0, 0xc5, 0x7f, 0xce, 0x24, 0xdc, 0xe0, 0xb6, 0x98, 0x74, 0xa2, 0xd9, 0x11, 0x83, 0xe4,
-	0xef, 0xe7, 0x41, 0xc6, 0xe0, 0x35, 0xa8, 0x6b, 0x35, 0xf8, 0x18, 0x48, 0x6d, 0xf1, 0xd0, 0xec,
-	0xfe, 0x6a, 0x19, 0xb9, 0x56, 0xb9, 0x7d, 0xe9, 0xe2, 0x06, 0x66, 0xa8, 0x7a, 0xeb, 0xe3, 0xa0,
-	0x38, 0xf7, 0x69, 0x50, 0x94, 0x86, 0x83, 0xe2, 0xd2, 0x03, 0x8b, 0xf4, 0x2c, 0x82, 0x5b, 0xe1,
-	0x0f, 0xf8, 0x0c, 0x48, 0x4d, 0xf1, 0x9e, 0xec, 0xfe, 0xba, 0xb0, 0x6b, 0x9e, 0xbe, 0xc7, 0x26,
-	0x13, 0x96, 0x3b, 0x11, 0xcb, 0x35, 0x5e, 0x25, 0x91, 0xf7, 0x4c, 0x9d, 0xe1, 0x11, 0x48, 0x1b,
-	0x2e, 0x36, 0x45, 0x82, 0x66, 0xf7, 0xb7, 0xca, 0x61, 0x21, 0x85, 0x0f, 0xe4, 0xc2, 0xea, 0x36,
-	0x27, 0xe4, 0x64, 0xd4, 0xc5, 0x66, 0x94, 0x6c, 0xf2, 0x0c, 0x0d, 0xb0, 0x68, 0x30, 0xc4, 0xfa,
-	0x54, 0xe4, 0x68, 0x76, 0xff, 0x76, 0x9c, 0x4e, 0x88, 0xab, 0xf9, 0x80, 0x30, 0x47, 0xc5, 0x39,
-	0x5a, 0x87, 0xd3, 0xc8, 0xd3, 0xf5, 0x1f, 0xbf, 0x29, 0x64, 0xe1, 0x72, 0xd8, 0xb5, 0xa8, 0xfc,
-	0x43, 0x0a, 0x6c, 0x84, 0x7c, 0x35, 0x87, 0x74, 0x2c, 0xde, 0x68, 0xe0, 0xe7, 0x20, 0xcd, 0x43,
-	0x17, 0x7c, 0xf4, 0x7f, 0x5f, 0x5f, 0x15, 0x4a, 0x06, 0xf3, 0x54, 0xd2, 0xb7, 0x4b, 0x31, 0xe5,
-	0xf2, 0xe8, 0x17, 0x37, 0xe1, 0x5f, 0x6e, 0x8d, 0x5d, 0xba, 0x38, 0xea, 0xd9, 0xe4, 0x19, 0xb6,
-	0x46, 0x9e, 0xf9, 0x39, 0xb0, 0x77, 0x7d, 0x55, 0xc8, 0x87, 0xfc, 0x23, 0x36, 0x5f, 0xe5, 0xfe,
-	0x9f, 0x73, 0x0c, 0x7e, 0x09, 0xe0, 0x4b, 0x44, 0x59, 0xdb, 0x43, 0x84, 0xfa, 0x8f, 0xb1, 0x6c,
-	0x1c, 0x74, 0x0a, 0x79, 0x38, 0x28, 0xee, 0xf6, 0x10, 0x65, 0x0a, 0x1b, 0x89, 0x15, 0x66, 0xd9,
-	0xd1, 0x37, 0xfe, 0x81, 0x9c, 0x37, 0xbe, 0x16, 0x46, 0x74, 0xd4, 0x31, 0x44, 0xe3, 0xf3, 0x04,
-	0x12, 0x7d, 0xd7, 0x34, 0xc2, 0x1b, 0x5f, 0x03, 0x53, 0x8a, 0xba, 0x38, 0xbf, 0x30, 0x6e, 0x7c,
-	0xb6, 0x0f, 0x4d, 0xa4, 0xf6, 0x34, 0x24, 0x3f, 0x02, 0xab, 0x13, 0xa1, 0x85, 0x59, 0xb0, 0x74,
-	0xa8, 0x1e, 0xbc, 0x6c, 0x1f, 0xfe, 0x2f, 0x37, 0x07, 0xb7, 0x01, 0xd4, 0xb5, 0xda, 0x5b, 0x1f,
-	0x78, 0xfb, 0x5a, 0x3f, 0xd2, 0x9b, 0x6f, 0xf4, 0x9c, 0x24, 0x7f, 0x97, 0x02, 0x2b, 0xe1, 0x37,
-	0x12, 0x2d, 0xfb, 0xd5, 0xb8, 0x7d, 0x07, 0xb5, 0xb1, 0x31, 0xca, 0xa4, 0x50, 0x50, 0xbd, 0xcd,
-	0x2b, 0xf8, 0xd4, 0x72, 0xa8, 0x62, 0x91, 0x33, 0x27, 0x5a, 0xc1, 0x09, 0x20, 0xd4, 0xc0, 0x62,
-	0xd3, 0x27, 0x0c, 0x8b, 0x26, 0x24, 0xf4, 0x61, 0xdf, 0xc9, 0x38, 0x59, 0x1c, 0x82, 0x0d, 0xb0,
-	0x54, 0x73, 0xfb, 0x82, 0xcb, 0xaf, 0x9a, 0xdc, 0x88, 0xab, 0x76, 0xfc, 0x5a, 0x90, 0x6d, 0x0f,
-	0x07, 0x45, 0x68, 0xba, 0xfd, 0x69, 0xb6, 0x04, 0x0c, 0x9e, 0x00, 0xd0, 0xc0, 0xb6, 0xe3, 0x5d,
-	0x0a, 0xc6, 0xf4, 0x14, 0x63, 0x03, 0xdb, 0x82, 0x51, 0xf4, 0x44, 0x5b, 0xe8, 0x4d, 0x93, 0x26,
-	0xc3, 0xf0, 0x0b, 0x90, 0x35, 0x98, 0xe3, 0xa1, 0x2e, 0x16, 0xc4, 0x0b, 0x82, 0x78, 0x73, 0x5c,
-	0x91, 0x63, 0x99, 0x3f, 0x4b, 0xa8, 0x0f, 0x4c, 0xb3, 0xcf, 0xc0, 0xe5, 0x5f, 0xd3, 0xe3, 0x8f,
-	0xc6, 0x9b, 0x04, 0x7c, 0x08, 0x16, 0x0e, 0x3a, 0xb6, 0xe5, 0xb7, 0xdd, 0x4c, 0xf5, 0xd6, 0x70,
-	0x50, 0x5c, 0x47, 0x1c, 0x88, 0x90, 0x4d, 0x03, 0xf0, 0x1f, 0x60, 0x5e, 0xab, 0x07, 0x35, 0x95,
-	0x1b, 0x0e, 0x8a, 0x2b, 0x56, 0xb4, 0x79, 0x4e, 0x9c, 0x78, 0x56, 0x84, 0xc3, 0x2b, 0x08, 0xfc,
-	0x38, 0x2b, 0x42, 0x81, 0x9f, 0x15, 0x96, 0xab, 0x98, 0xe2, 0x18, 0xcd, 0x8a, 0x04, 0x10, 0x22,
-	0x90, 0x69, 0x74, 0x6d, 0xd6, 0x70, 0x3a, 0x38, 0x28, 0x92, 0xa7, 0xd7, 0x57, 0x85, 0xe2, 0x74,
-	0xe3, 0xe0, 0xfe, 0x95, 0x43, 0x45, 0xea, 0x8f, 0x8e, 0xae, 0xcd, 0x14, 0xdb, 0xe9, 0xe0, 0x89,
-	0xd1, 0x11, 0x07, 0xa1, 0x0d, 0xb2, 0x3a, 0x66, 0x17, 0x8e, 0xf7, 0x41, 0xdc, 0xe2, 0x57, 0xd4,
-	0x7f, 0xae, 0xaf, 0x0a, 0x72, 0xe2, 0x2d, 0x11, 0x5d, 0x71, 0xd1, 0x36, 0xf1, 0x81, 0xe9, 0xbb,
-	0x66, 0xe0, 0xb0, 0xe5, 0x7b, 0x74, 0xd2, 0x43, 0x24, 0xbf, 0x78, 0x4f, 0x2a, 0xad, 0x8a, 0x71,
-	0x95, 0xd3, 0x08, 0x13, 0xc3, 0xb1, 0xb4, 0xf7, 0xe0, 0xd1, 0xde, 0x93, 0x7f, 0x8d, 0x5d, 0x38,
-	0xef, 0x21, 0x12, 0x73, 0x61, 0x12, 0x84, 0x2a, 0xc8, 0xd6, 0x1c, 0xc2, 0x3c, 0xa7, 0xd7, 0xe3,
-	0x43, 0x7a, 0x69, 0x3c, 0xa4, 0xcd, 0x31, 0x1c, 0x4d, 0xc8, 0x44, 0x58, 0x96, 0xc1, 0xf2, 0x28,
-	0x86, 0x30, 0x03, 0xd2, 0x87, 0x4d, 0xa3, 0x9d, 0x9b, 0xe3, 0x2d, 0x42, 0x57, 0xdb, 0x6f, 0x9a,
-	0xad, 0xa3, 0x9c, 0x24, 0xff, 0x0d, 0xac, 0x44, 0x23, 0x00, 0x97, 0x40, 0xaa, 0xd9, 0xac, 0xe6,
-	0xe6, 0x20, 0x00, 0x8b, 0x9a, 0x5e, 0x3d, 0xd0, 0xeb, 0x39, 0x49, 0xfe, 0x3a, 0x03, 0xd6, 0x26,
-	0x07, 0x0a, 0xfc, 0x0a, 0xac, 0xf1, 0xe4, 0xa3, 0x7c, 0x41, 0x3a, 0x7e, 0x87, 0x68, 0x74, 0x0e,
-	0xdc, 0x8d, 0x05, 0x5a, 0xd8, 0x94, 0x85, 0x1e, 0x8f, 0x44, 0x01, 0x85, 0xa6, 0x8a, 0xcb, 0xb1,
-	0x88, 0x2b, 0xb3, 0x45, 0xf0, 0x14, 0x80, 0x51, 0xaf, 0xe3, 0x63, 0x21, 0x55, 0xca, 0xee, 0xef,
-	0xc4, 0x06, 0xde, 0x48, 0xa5, 0x7a, 0x27, 0x98, 0x79, 0x9b, 0xe6, 0xc8, 0x2a, 0xba, 0x1d, 0x25,
-	0xa1, 0x7c, 0xc1, 0x32, 0xb0, 0x67, 0xa1, 0x9e, 0xde, 0xb7, 0x83, 0xc9, 0x20, 0x16, 0x2c, 0x2a,
-	0x40, 0x85, 0xf4, 0xed, 0x28, 0x45, 0x12, 0x0a, 0xff, 0x0f, 0xc0, 0xb1, 0x67, 0xd9, 0xc8, 0xbb,
-	0x6c, 0x1c, 0xd4, 0x82, 0x24, 0xaf, 0xcc, 0xdc, 0x60, 0xb6, 0x5c, 0x5f, 0x57, 0xb1, 0x51, 0x74,
-	0xd0, 0x27, 0xc3, 0x13, 0x15, 0xb9, 0xf0, 0xd7, 0x54, 0xe4, 0x67, 0x00, 0x18, 0x97, 0x94, 0xf9,
-	0x5d, 0x4f, 0x64, 0x70, 0xd2, 0x56, 0x32, 0x6e, 0x89, 0x54, 0x28, 0xc7, 0x5a, 0x62, 0x22, 0x0c,
-	0xab, 0x00, 0x68, 0x84, 0x61, 0xef, 0x0c, 0x99, 0x38, 0xcc, 0x63, 0x7f, 0xe7, 0x1d, 0xa1, 0x13,
-	0x3b, 0x6f, 0x02, 0x0a, 0x5f, 0x81, 0xf5, 0xf0, 0x15, 0xe1, 0x42, 0x9e, 0x11, 0x41, 0xbd, 0xcb,
-	0x33, 0x49, 0x6c, 0x29, 0xba, 0x65, 0x9e, 0xc4, 0xfe, 0x26, 0xcc, 0x16, 0xf1, 0xfa, 0x1a, 0xa5,
-	0xe6, 0x87, 0x7e, 0x7e, 0x59, 0xd0, 0xf9, 0xde, 0x05, 0x36, 0xc6, 0x87, 0xfe, 0x84, 0x77, 0x49,
-	0x30, 0xdc, 0x03, 0xe9, 0x43, 0x87, 0xb2, 0x3c, 0x10, 0xf6, 0x90, 0x6f, 0x35, 0xef, 0x1c, 0x1a,
-	0x6d, 0xbf, 0x53, 0x67, 0xf8, 0x5f, 0xb0, 0x39, 0x59, 0x35, 0xc1, 0xbe, 0x90, 0x15, 0x0c, 0xbb,
-	0xc3, 0x41, 0x71, 0x07, 0x75, 0x6c, 0x3f, 0xf3, 0x95, 0xd8, 0xe6, 0xf0, 0x3b, 0x32, 0xf9, 0x14,
-	0x2c, 0x08, 0x42, 0x5e, 0xdd, 0xe1, 0xa0, 0x9f, 0x83, 0xeb, 0x20, 0xdb, 0x52, 0x9f, 0x6b, 0x46,
-	0x5b, 0x6d, 0x69, 0xfa, 0xf3, 0x9c, 0x04, 0x57, 0x40, 0xa6, 0xa5, 0xbe, 0x50, 0x6b, 0x6d, 0xb5,
-	0x9e, 0x9b, 0xe7, 0xba, 0xc7, 0xaa, 0x5e, 0xe7, 0xa2, 0x14, 0x17, 0x1d, 0xd4, 0x1b, 0x5a, 0x9b,
-	0x8b, 0xd2, 0x10, 0x82, 0xb5, 0xba, 0x5a, 0x6b, 0x36, 0x1a, 0x9a, 0x61, 0x68, 0x4d, 0x5d, 0xad,
-	0xe7, 0x16, 0xaa, 0xb9, 0x8f, 0x37, 0xbb, 0xd2, 0xa7, 0x9b, 0x5d, 0xe9, 0xe7, 0x9b, 0x5d, 0xe9,
-	0x97, 0x9b, 0xdd, 0xb9, 0x63, 0xe9, 0x74, 0x51, 0xfc, 0x01, 0x7c, 0xf8, 0x5b, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x6d, 0xfa, 0xfa, 0xd2, 0xe5, 0x0e, 0x00, 0x00,
+	// 1538 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x97, 0xcf, 0x6f, 0x1a, 0x47,
+	0x14, 0xc7, 0xbd, 0xc6, 0x18, 0x7b, 0xb0, 0x1d, 0x32, 0xfe, 0x11, 0xb0, 0x52, 0x13, 0x11, 0x45,
+	0x22, 0x4d, 0x16, 0xac, 0x24, 0x8d, 0x94, 0xde, 0xcc, 0x8f, 0xc4, 0x24, 0x01, 0x1c, 0x96, 0xd8,
+	0x4d, 0xa5, 0x34, 0x1a, 0xef, 0x8e, 0xc9, 0x26, 0xec, 0x0c, 0xda, 0x19, 0x6c, 0x59, 0x3d, 0xf4,
+	0x54, 0xff, 0x07, 0xfd, 0x07, 0x7a, 0x44, 0xea, 0x7f, 0xd1, 0x43, 0x8e, 0x51, 0x0f, 0x3d, 0xa2,
+	0xca, 0xa7, 0x8a, 0x7b, 0xa5, 0x1e, 0xab, 0x99, 0x5d, 0x96, 0x01, 0x96, 0x24, 0x87, 0xde, 0x98,
+	0xcf, 0xbc, 0xf7, 0x9d, 0x9d, 0x37, 0xef, 0xbd, 0x19, 0xc0, 0x1a, 0x73, 0x90, 0xcb, 0x89, 0x6d,
+	0xe6, 0x3a, 0x2e, 0xe5, 0x14, 0xc6, 0xcc, 0x76, 0x97, 0x71, 0xec, 0x6e, 0x5f, 0x6f, 0x51, 0xda,
+	0x6a, 0xe3, 0x3c, 0xea, 0xd8, 0x79, 0x44, 0x08, 0xe5, 0x88, 0xdb, 0x94, 0x30, 0xcf, 0x6c, 0xbb,
+	0xdc, 0xb2, 0xf9, 0xdb, 0xee, 0x71, 0xce, 0xa4, 0x4e, 0xbe, 0x83, 0x09, 0x43, 0xc4, 0xa2, 0x79,
+	0x76, 0x96, 0x3f, 0xc5, 0xc4, 0x36, 0x71, 0xbe, 0xcb, 0xed, 0x36, 0x13, 0xae, 0x2d, 0x4c, 0x54,
+	0xef, 0xbc, 0x4d, 0xcc, 0x76, 0xd7, 0xc2, 0x43, 0x19, 0x5d, 0x91, 0x69, 0xd1, 0x16, 0xcd, 0x4b,
+	0x7c, 0xdc, 0x3d, 0x91, 0x23, 0x39, 0x90, 0xbf, 0x7c, 0xf3, 0x5b, 0x33, 0x56, 0x15, 0xdf, 0xe8,
+	0x60, 0x8e, 0x7c, 0xb3, 0x55, 0x7f, 0x0f, 0xde, 0x30, 0xf3, 0xcb, 0x3c, 0x58, 0x2a, 0xd8, 0x94,
+	0x55, 0xc8, 0x09, 0x85, 0x0f, 0xc1, 0xe2, 0x21, 0x26, 0x16, 0x75, 0x93, 0xda, 0x0d, 0x2d, 0xbb,
+	0x5c, 0xd8, 0x18, 0xf4, 0xd3, 0x89, 0x53, 0x49, 0xee, 0x52, 0xc7, 0xe6, 0xd8, 0xe9, 0xf0, 0xf3,
+	0xc6, 0x14, 0x81, 0x8f, 0x40, 0xec, 0x10, 0xbb, 0xcc, 0xa6, 0x24, 0x39, 0x2f, 0x1d, 0x37, 0x07,
+	0xfd, 0xf4, 0xd5, 0x53, 0x0f, 0x29, 0x9e, 0xd3, 0x08, 0x3e, 0x05, 0x6b, 0x8f, 0xcf, 0xaa, 0xe8,
+	0x1d, 0x75, 0x87, 0x0a, 0x11, 0xa9, 0xb0, 0x3d, 0xe8, 0xa7, 0xb7, 0x4e, 0xce, 0x74, 0x47, 0x4c,
+	0xe9, 0xa7, 0x58, 0xfd, 0x80, 0x19, 0xdc, 0xd7, 0xb2, 0xc9, 0x48, 0x6b, 0x61, 0x5c, 0x4b, 0x4c,
+	0x85, 0x69, 0x4d, 0xf3, 0xcc, 0xef, 0x11, 0xb0, 0x52, 0x32, 0x8a, 0x45, 0x4a, 0x2c, 0x5b, 0x9c,
+	0x0e, 0x3c, 0x02, 0x0b, 0xcd, 0xf3, 0x0e, 0xf6, 0x23, 0xf3, 0xa8, 0x77, 0x91, 0xba, 0x69, 0x70,
+	0xb7, 0x4c, 0xba, 0x4e, 0x56, 0xb5, 0xcb, 0x05, 0xbf, 0x84, 0xf5, 0xed, 0x41, 0x3f, 0xbd, 0xc6,
+	0xcf, 0x3b, 0x58, 0x59, 0x71, 0x62, 0x0c, 0x1b, 0x60, 0xd1, 0xe0, 0x88, 0x77, 0x99, 0x1f, 0xbb,
+	0xdd, 0xde, 0x45, 0x2a, 0x39, 0x94, 0x0e, 0xd4, 0x3c, 0x13, 0xa1, 0x97, 0x60, 0xf2, 0xa7, 0x7a,
+	0x20, 0x93, 0x04, 0xfe, 0x00, 0xe0, 0x73, 0xc4, 0x78, 0xd3, 0x45, 0x84, 0x79, 0x1f, 0x63, 0x3b,
+	0xd8, 0x8f, 0x6c, 0x66, 0xd0, 0x4f, 0xef, 0xb4, 0x11, 0xe3, 0x3a, 0x0f, 0xa6, 0x75, 0x6e, 0x3b,
+	0xea, 0x37, 0x7e, 0x66, 0x5e, 0x24, 0x4a, 0x03, 0x23, 0x16, 0x44, 0x58, 0x26, 0x8a, 0x2b, 0x89,
+	0xfa, 0x5d, 0x93, 0x44, 0x24, 0x4a, 0x15, 0x33, 0x86, 0x5a, 0x38, 0x19, 0x1d, 0x25, 0x8a, 0xe3,
+	0x21, 0x35, 0x51, 0xa6, 0x50, 0xe6, 0x01, 0x58, 0x1d, 0x0b, 0x2d, 0x8c, 0x83, 0xd8, 0x7e, 0x79,
+	0xef, 0x79, 0x73, 0xff, 0x55, 0x62, 0x0e, 0x6e, 0x01, 0x58, 0xab, 0x14, 0xdf, 0x78, 0xe0, 0xcd,
+	0xcb, 0xda, 0xb3, 0x5a, 0xfd, 0xa8, 0x96, 0xd0, 0x32, 0xbf, 0x45, 0x40, 0xac, 0x64, 0x14, 0x65,
+	0x76, 0xbf, 0x18, 0x65, 0xba, 0x3c, 0xc5, 0xf8, 0xbd, 0xab, 0xb9, 0x61, 0x31, 0x0c, 0x27, 0x0a,
+	0xd7, 0x06, 0xfd, 0xf4, 0xfa, 0xb1, 0x4d, 0x99, 0x6e, 0x93, 0x13, 0xaa, 0x7c, 0x52, 0x18, 0x84,
+	0x15, 0xb0, 0x58, 0xf7, 0x04, 0xe7, 0xa5, 0xe0, 0x95, 0x40, 0xd0, 0xc3, 0xde, 0xfe, 0xa6, 0xc5,
+	0xa6, 0x11, 0xac, 0x82, 0x58, 0xb1, 0xd3, 0x95, 0x5a, 0x11, 0xa9, 0x95, 0x08, 0xb4, 0x8a, 0x07,
+	0x2f, 0xa5, 0xd8, 0xd6, 0xa0, 0x9f, 0x86, 0x66, 0xa7, 0x3b, 0xa9, 0x16, 0xc2, 0xe0, 0x21, 0x00,
+	0x55, 0xec, 0x50, 0xf7, 0x5c, 0x2a, 0x2e, 0x4c, 0x28, 0x56, 0xb1, 0x23, 0x15, 0x53, 0x83, 0x7e,
+	0x7a, 0xd3, 0x91, 0x76, 0x93, 0xa2, 0xe1, 0x18, 0xbe, 0x06, 0x71, 0x83, 0x53, 0x17, 0xb5, 0xb0,
+	0x14, 0x8e, 0x4a, 0xe1, 0x8d, 0x40, 0x58, 0x99, 0xf3, 0xca, 0x8e, 0x79, 0x60, 0x52, 0x7d, 0x06,
+	0xcf, 0xfc, 0x33, 0x0f, 0xb6, 0x4a, 0x36, 0xe3, 0xae, 0x7d, 0xdc, 0xe5, 0xd8, 0x32, 0xb0, 0x7b,
+	0x6a, 0x9b, 0xb8, 0x88, 0x5c, 0x0b, 0x3e, 0x04, 0x5a, 0xd3, 0x3f, 0xb7, 0xd5, 0x1c, 0xea, 0xd8,
+	0x39, 0x91, 0x05, 0x55, 0xcc, 0x51, 0x61, 0xfd, 0x43, 0x3f, 0x3d, 0xf7, 0xb1, 0x9f, 0xd6, 0x06,
+	0xfd, 0x74, 0xec, 0xae, 0x4d, 0xda, 0x36, 0xc1, 0x8d, 0xe1, 0x0f, 0xf8, 0x18, 0x68, 0xf5, 0xe0,
+	0x78, 0x84, 0x5f, 0xfd, 0xf8, 0x1d, 0x36, 0xb9, 0xf4, 0xdc, 0x56, 0x3c, 0xd7, 0x44, 0x93, 0x54,
+	0xeb, 0x74, 0x7c, 0x0c, 0x5f, 0x81, 0x05, 0xa3, 0x83, 0x4d, 0xff, 0x74, 0x6e, 0x06, 0x5b, 0x0e,
+	0xff, 0x5c, 0x61, 0x5a, 0xd8, 0x12, 0xf2, 0x42, 0x9a, 0x75, 0xb0, 0xa9, 0x4a, 0x8f, 0x8f, 0x21,
+	0x0a, 0x5a, 0x80, 0x77, 0x50, 0xb7, 0x3e, 0x27, 0x2e, 0x8d, 0x0b, 0x49, 0x5f, 0xfe, 0x0b, 0x3a,
+	0xc2, 0xb7, 0x5f, 0xfd, 0xf1, 0x73, 0x2a, 0x05, 0xaf, 0x59, 0x23, 0x3d, 0xe6, 0xe9, 0x99, 0xc8,
+	0xb5, 0x58, 0xe6, 0xd7, 0x28, 0xd8, 0x9e, 0xbd, 0x11, 0x78, 0x1f, 0x44, 0xf7, 0x2c, 0xc7, 0xe6,
+	0x32, 0xfe, 0x4b, 0x85, 0xf5, 0x41, 0x3f, 0x7d, 0x05, 0x09, 0xa0, 0xac, 0x39, 0x09, 0xe0, 0xd7,
+	0x60, 0xbe, 0x52, 0xf2, 0x9b, 0x5a, 0x62, 0xd0, 0x4f, 0xaf, 0xd8, 0x96, 0x62, 0x3e, 0x36, 0x12,
+	0xb5, 0x59, 0x39, 0x28, 0x52, 0x72, 0x62, 0xb7, 0xfc, 0x00, 0x8f, 0x6a, 0x73, 0x38, 0xe1, 0xd5,
+	0xa6, 0xdd, 0xd1, 0x4d, 0x39, 0x54, 0x6b, 0x33, 0x04, 0x42, 0x0a, 0x96, 0xaa, 0x2d, 0x87, 0x57,
+	0xa9, 0x85, 0xfd, 0x2e, 0xb5, 0xdf, 0xbb, 0x48, 0xe9, 0x41, 0xd3, 0x9e, 0xb9, 0xdb, 0xdc, 0xd0,
+	0x4d, 0xb6, 0xdb, 0x75, 0xa7, 0xe5, 0x70, 0xdd, 0xa1, 0x96, 0xda, 0x9f, 0xc2, 0x20, 0xfc, 0x11,
+	0xc4, 0x6b, 0x98, 0x9f, 0x51, 0xf7, 0xbd, 0x5c, 0xd3, 0x6b, 0x70, 0xb5, 0xde, 0x45, 0x6a, 0xf7,
+	0x0b, 0xd6, 0x54, 0x3c, 0xe5, 0xb2, 0x5b, 0xc4, 0x03, 0x93, 0x2b, 0xcf, 0xe0, 0xb0, 0xe1, 0xed,
+	0xf6, 0xb0, 0x8d, 0x48, 0x72, 0xf1, 0x86, 0x96, 0x5d, 0x2d, 0xdc, 0xe9, 0x5d, 0xa4, 0x12, 0x15,
+	0xc2, 0x1b, 0x88, 0xb4, 0x70, 0x76, 0xf7, 0xee, 0x83, 0xdd, 0x47, 0xdf, 0x8c, 0x36, 0x74, 0xda,
+	0x46, 0x64, 0x6a, 0x43, 0xe3, 0x10, 0x96, 0x41, 0xbc, 0x48, 0x09, 0x77, 0x69, 0xbb, 0x8d, 0x5d,
+	0x96, 0x8c, 0xdd, 0x88, 0x64, 0x97, 0xbd, 0x96, 0x61, 0x8e, 0xb0, 0xda, 0x32, 0x42, 0x71, 0x26,
+	0x03, 0x96, 0x83, 0x88, 0xc2, 0x25, 0xb0, 0xb0, 0x5f, 0x37, 0x9a, 0x89, 0x39, 0xd1, 0xbf, 0x6b,
+	0xe5, 0xe6, 0x51, 0xbd, 0xf1, 0x2c, 0xa1, 0x65, 0x6e, 0x82, 0x15, 0x35, 0x02, 0x30, 0x06, 0x22,
+	0xf5, 0x7a, 0x21, 0x31, 0x07, 0x01, 0x58, 0xac, 0xd4, 0x0a, 0x7b, 0xb5, 0x52, 0x42, 0xcb, 0xfc,
+	0x1b, 0x03, 0xd7, 0x3f, 0x55, 0x10, 0xf0, 0x27, 0xb0, 0x26, 0xd2, 0x94, 0x89, 0xbb, 0xff, 0xe0,
+	0x2d, 0x62, 0xc3, 0xdb, 0xfa, 0x79, 0xef, 0x22, 0x75, 0xe7, 0x33, 0x87, 0x20, 0x15, 0x72, 0xd2,
+	0x4b, 0x44, 0x29, 0x85, 0x86, 0x42, 0x7a, 0x47, 0x30, 0x65, 0x9b, 0xb3, 0xa7, 0xe0, 0x6b, 0x00,
+	0x82, 0x4b, 0x4a, 0xdc, 0xe7, 0x91, 0x6c, 0xfc, 0xde, 0xe6, 0xa8, 0x98, 0x95, 0x77, 0x42, 0xe1,
+	0xba, 0x5f, 0xbc, 0x1b, 0x66, 0xe0, 0xa0, 0xac, 0x11, 0x4a, 0xe1, 0x1e, 0x58, 0x36, 0xb0, 0x6b,
+	0xa3, 0x76, 0xad, 0xeb, 0xf8, 0xb7, 0x79, 0x52, 0x48, 0x30, 0x09, 0x75, 0xd2, 0x75, 0x54, 0x89,
+	0x30, 0x0a, 0xbf, 0x07, 0xe0, 0xc0, 0xb5, 0x1d, 0xe4, 0x9e, 0x57, 0xf7, 0x8a, 0x7e, 0x5d, 0xe4,
+	0x7b, 0x17, 0x29, 0x58, 0x16, 0xd3, 0x75, 0x37, 0x5b, 0x45, 0xe6, 0x9e, 0x65, 0xb9, 0xd9, 0xdb,
+	0x22, 0x0a, 0x9b, 0x1d, 0xcf, 0x56, 0x77, 0x90, 0xda, 0xbf, 0xc2, 0xf1, 0x58, 0x11, 0x47, 0xff,
+	0x9f, 0x22, 0x3e, 0x04, 0xc0, 0x38, 0x67, 0xdc, 0xbb, 0xae, 0x64, 0x62, 0xab, 0xd7, 0x98, 0x7f,
+	0xb3, 0x7b, 0x39, 0xc9, 0xa4, 0xdd, 0xd4, 0x35, 0x16, 0x8a, 0x61, 0x01, 0x80, 0x0a, 0xe1, 0xd8,
+	0x3d, 0x41, 0x26, 0x1e, 0x66, 0xb6, 0x0c, 0xa5, 0x1d, 0x50, 0x35, 0x94, 0x61, 0x54, 0x68, 0x94,
+	0x8c, 0xe2, 0xf0, 0xa9, 0xb9, 0x34, 0x3a, 0x8e, 0x11, 0x55, 0x35, 0xc2, 0xa8, 0x78, 0x48, 0x95,
+	0x8c, 0xa2, 0xf1, 0xbe, 0x9b, 0x5c, 0x1e, 0x3d, 0xa4, 0x3c, 0xa2, 0xb6, 0xf3, 0x49, 0x02, 0x77,
+	0xc1, 0xc2, 0x3e, 0x65, 0x3c, 0x09, 0xa4, 0x17, 0x14, 0x77, 0xcc, 0x5b, 0xca, 0xd4, 0x76, 0x3c,
+	0x31, 0x86, 0xdf, 0x81, 0x8d, 0xf1, 0xda, 0xf0, 0x1f, 0x70, 0x71, 0xa9, 0xb0, 0x33, 0xe8, 0xa7,
+	0xb7, 0x91, 0xe5, 0x78, 0x19, 0xad, 0x4f, 0x3d, 0xe5, 0x3e, 0x31, 0x97, 0x39, 0x06, 0x51, 0x29,
+	0x28, 0x2a, 0x7a, 0xf8, 0xf2, 0x9a, 0x83, 0x57, 0x40, 0xbc, 0x51, 0x7e, 0x52, 0x31, 0x9a, 0xe5,
+	0x46, 0xa5, 0xf6, 0x24, 0xa1, 0xc1, 0x15, 0xb0, 0xd4, 0x28, 0x3f, 0x2d, 0x17, 0x9b, 0xe5, 0x52,
+	0x62, 0x5e, 0xd8, 0x1e, 0x94, 0x6b, 0x25, 0x31, 0x15, 0x11, 0x53, 0x7b, 0xa5, 0x6a, 0xa5, 0x29,
+	0xa6, 0x16, 0x20, 0x04, 0x6b, 0xa5, 0x72, 0xb1, 0x5e, 0xad, 0x56, 0x0c, 0xa3, 0x52, 0xaf, 0x95,
+	0x4b, 0x89, 0x68, 0xe6, 0x4f, 0x6d, 0x94, 0x5b, 0xa2, 0x0c, 0x2a, 0x07, 0x22, 0x49, 0x31, 0x63,
+	0x7e, 0x85, 0x7b, 0x67, 0xd7, 0xd1, 0x91, 0x47, 0xc7, 0xce, 0x2e, 0x84, 0x0a, 0x89, 0x12, 0x3e,
+	0x41, 0xdd, 0x36, 0x7f, 0x72, 0xe4, 0x5f, 0x51, 0x52, 0xc2, 0xf2, 0xa0, 0xde, 0x3a, 0x53, 0x25,
+	0xc2, 0x28, 0x2c, 0x01, 0x50, 0xaa, 0x19, 0xa2, 0x85, 0x88, 0xe6, 0x18, 0x19, 0x35, 0x47, 0x8b,
+	0x30, 0x9d, 0x79, 0x58, 0x4d, 0xc4, 0x50, 0x9c, 0xe9, 0x69, 0x60, 0xa9, 0x8a, 0x4c, 0xd9, 0xa4,
+	0xe1, 0x0b, 0x10, 0x35, 0x38, 0x72, 0xb9, 0xbf, 0x29, 0x7d, 0x66, 0x5d, 0xae, 0x3b, 0xc8, 0xd4,
+	0x99, 0x30, 0x1d, 0xeb, 0xe1, 0xd3, 0x10, 0x3e, 0x03, 0x91, 0x32, 0xb1, 0xfc, 0x2d, 0xde, 0x99,
+	0x29, 0x78, 0x55, 0xf8, 0x62, 0x62, 0x8d, 0xbd, 0xc1, 0x27, 0x51, 0x21, 0xf1, 0xe1, 0x72, 0x47,
+	0xfb, 0x78, 0xb9, 0xa3, 0xfd, 0x75, 0xb9, 0xa3, 0xfd, 0x7d, 0xb9, 0x33, 0x77, 0xa0, 0x1d, 0x2f,
+	0xca, 0xff, 0x91, 0xf7, 0xff, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x77, 0xb4, 0x22, 0x78, 0x2c, 0x0f,
+	0x00, 0x00,
 }

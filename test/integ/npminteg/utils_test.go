@@ -344,19 +344,19 @@ func (it *integTestSuite) DeleteWorkload(tenant, namespace, name string) error {
 // CreateHost creates a host and an associated smart nic
 func (it *integTestSuite) CreateHost(name, macAddr string) error {
 	// smartNic params
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
 		},
-		Spec: cluster.SmartNICSpec{
+		Spec: cluster.DistributedServiceCardSpec{
 			MgmtMode:    "NETWORK",
 			NetworkMode: "OOB",
 		},
-		Status: cluster.SmartNICStatus{
+		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: "ADMITTED",
 			PrimaryMAC:     macAddr,
-			Conditions: []cluster.SmartNICCondition{
+			Conditions: []cluster.DSCCondition{
 				{
 					Type:   "HEALTHY",
 					Status: cluster.ConditionStatus_TRUE.String(),
@@ -365,7 +365,7 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 		},
 	}
 
-	_, err := it.apisrvClient.ClusterV1().SmartNIC().Create(context.Background(), &snic)
+	_, err := it.apisrvClient.ClusterV1().DistributedServiceCard().Create(context.Background(), &snic)
 	if err != nil {
 		return err
 	}
@@ -377,7 +377,7 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 			Name: name,
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: macAddr,
 				},
@@ -407,27 +407,27 @@ func (it *integTestSuite) DeleteHost(name string) error {
 	}
 
 	// smartNic object
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
 		},
-		Spec: cluster.SmartNICSpec{
+		Spec: cluster.DistributedServiceCardSpec{
 			Admit:       false,
-			MgmtMode:    cluster.SmartNICSpec_NETWORK.String(),
-			NetworkMode: cluster.SmartNICSpec_OOB.String(),
+			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
 		},
-		Status: cluster.SmartNICStatus{
-			AdmissionPhase: cluster.SmartNICStatus_PENDING.String(),
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: cluster.DistributedServiceCardStatus_PENDING.String(),
 		},
 	}
 
 	// need to de-admit before deleting
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), &snic)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), &snic)
 	if err != nil {
 		return err
 	}
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Delete(context.Background(), &snic.ObjectMeta)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Delete(context.Background(), &snic.ObjectMeta)
 
 	return err
 }

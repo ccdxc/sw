@@ -249,7 +249,7 @@ func (it *veniceIntegSuite) createHostObjects() {
 				Name: hostName,
 			},
 			Spec: pencluster.HostSpec{
-				SmartNICs: []pencluster.SmartNICID{
+				DSCs: []pencluster.DistributedServiceCardID{
 					{
 						MACAddress: it.getNaplesMac(i),
 					},
@@ -414,7 +414,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			}
 
 			// Verify NIC is admitted
-			if nic.Status.AdmissionPhase != pencluster.SmartNICStatus_ADMITTED.String() {
+			if nic.Status.AdmissionPhase != pencluster.DistributedServiceCardStatus_ADMITTED.String() {
 				log.Errorf("NIC is not admitted, phase: %s", nic.Status.AdmissionPhase)
 				return false, nil
 			}
@@ -782,9 +782,9 @@ func (it *veniceIntegSuite) startAgent() {
 		agent.RestServer = restServer
 
 		// report node metrics
-		node := &cluster.SmartNIC{
+		node := &cluster.DistributedServiceCard{
 			TypeMeta: api.TypeMeta{
-				Kind: "SmartNIC",
+				Kind: "DistributedServiceCard",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Name: agent.NetworkAgent.NodeUUID,
@@ -938,7 +938,7 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 		if err != nil {
 			return false, err
 		}
-		snicList, err := it.apisrvClient.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+		snicList, err := it.apisrvClient.ClusterV1().DistributedServiceCard().List(ctx, &api.ListWatchOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -946,7 +946,7 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 			return false, snicList
 		}
 		for _, snic := range snicList {
-			if snic.Status.AdmissionPhase != cluster.SmartNICStatus_ADMITTED.String() {
+			if snic.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
 				return false, snicList
 			}
 		}

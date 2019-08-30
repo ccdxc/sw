@@ -6,7 +6,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { HttpEventUtility } from '@common/HttpEventUtility';
 import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
-import { ClusterSmartNIC, IApiStatus } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, IApiStatus } from '@sdk/v1/models/generated/cluster';
 import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import { Observable, Subscription } from 'rxjs';
 import { Animations } from '@app/animations';
@@ -42,8 +42,8 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   hostsEventUtility: HttpEventUtility<ClusterHost>;
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<ClusterHost>;
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
 
@@ -51,7 +51,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     {field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 20},
     {field: 'meta.mod-time', header: 'Modification Time', class: 'hosts-column-date', sortable: true, width: '180px'},
     {field: 'meta.creation-time', header: 'Creation Time', class: 'hosts-column-date', sortable: true, width: '180px'},
-    {field: 'spec.smart-nics', header: 'DSC', class: 'hosts-column-smart-nics', sortable: false},
+    {field: 'spec.dscs', header: 'DSC', class: 'hosts-column-dscs', sortable: false},
   ];
 
   exportFilename: string = 'Venice-hosts';
@@ -79,9 +79,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         // name to mac-address map
@@ -119,7 +119,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   }
 
   // This func is only working for when
-  // spec.smart-nics and status.admitted-smart-nics will only be of length one, and that if status has an entry it's referring to the one in spec.
+  // spec.dscs and status.admitted-dscs will only be of length one, and that if status has an entry it's referring to the one in spec.
   isAdmitted(specValue, statusValue): boolean {
     return specValue.length === 1 && statusValue.length === 1;
   }
@@ -135,9 +135,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   }
 
   processSmartNics(exportData) {
-    const fields = 'spec.smart-nics'.split('.');
+    const fields = 'spec.dscs'.split('.');
     const value = Utility.getObjectValueByPropertyPath(exportData, fields);
-    const statusValue = Utility.getObjectValueByPropertyPath(exportData, 'status.admitted-smart-nics'.split('.'));
+    const statusValue = Utility.getObjectValueByPropertyPath(exportData, 'status.admitted-dscs'.split('.'));
 
     // We only have one entry at this point
     return value.map(v => {

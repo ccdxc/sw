@@ -213,22 +213,22 @@ func (tinfo *Info) createMiscObjects() {
 	// SmartNICs
 	for i := 0; i < 5; i++ {
 		// smartNic params
-		snic := cluster.SmartNIC{
-			TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		snic := cluster.DistributedServiceCard{
+			TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 			ObjectMeta: api.ObjectMeta{
 				Name: fmt.Sprintf("snic-host-%d", i),
 			},
-			Spec: cluster.SmartNICSpec{
+			Spec: cluster.DistributedServiceCardSpec{
 				MgmtMode:    "NETWORK",
 				NetworkMode: "OOB",
 			},
-			Status: cluster.SmartNICStatus{
+			Status: cluster.DistributedServiceCardStatus{
 				AdmissionPhase: "ADMITTED",
 				PrimaryMAC:     fmt.Sprintf("00ae.dd%x%x.%x%x%x%x", i, i, i, i, i, i),
 			},
 		}
 
-		_, err := tinfo.apicl.ClusterV1().SmartNIC().Create(context.Background(), &snic)
+		_, err := tinfo.apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), &snic)
 		if err != nil {
 			tinfo.l.Fatalf("unable to create smartnic object: err %s,\n%+v", err, snic)
 		}

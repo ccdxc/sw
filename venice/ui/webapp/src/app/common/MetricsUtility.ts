@@ -4,7 +4,7 @@ import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResul
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
-import { IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { MetricsPollingOptions, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { Chart } from 'chart.js';
 
@@ -673,7 +673,7 @@ export class MetricsUtility {
     };
   }
 
-  public static generateNaplesReporterId(naples: IClusterSmartNIC) {
+  public static generateNaplesReporterId(naples: IClusterDistributedServiceCard) {
     return naples.meta.name;
   }
 

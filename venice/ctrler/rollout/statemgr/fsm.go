@@ -237,7 +237,7 @@ func fsmAcCreated(ros *RolloutState) {
 		ros.setStartTime()
 	}
 
-	if ros.Spec.SmartNICsOnly {
+	if ros.Spec.DSCsOnly {
 		ros.eventChan <- fsmEvVeniceBypass
 	} else {
 		ros.startRolloutTimer()
@@ -361,7 +361,7 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 	if ros.Status.StartTime == nil {
 		ros.setStartTime()
 	}
-	if ros.Spec.SmartNICsOnly {
+	if ros.Spec.DSCsOnly {
 		ros.eventChan <- fsmEvVeniceBypass
 		return
 	}

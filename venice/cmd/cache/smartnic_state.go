@@ -18,7 +18,7 @@ import (
 // SmartNICState security policy state
 type SmartNICState struct {
 	*sync.RWMutex
-	*cluster.SmartNIC // smartnic policy object
+	*cluster.DistributedServiceCard // smartnic policy object
 }
 
 // SmartNICStateFromObj converts from memdb object to SmartNIC state
@@ -33,11 +33,11 @@ func SmartNICStateFromObj(obj memdb.Object) (*SmartNICState, error) {
 }
 
 // NewSmartNICState creates a new security policy state object
-func NewSmartNICState(sn *cluster.SmartNIC) (*SmartNICState, error) {
+func NewSmartNICState(sn *cluster.DistributedServiceCard) (*SmartNICState, error) {
 	// create smartnic state object
 	sns := SmartNICState{
-		SmartNIC: sn,
-		RWMutex:  new(sync.RWMutex),
+		DistributedServiceCard: sn,
+		RWMutex:                new(sync.RWMutex),
 	}
 
 	return &sns, nil
@@ -46,7 +46,7 @@ func NewSmartNICState(sn *cluster.SmartNIC) (*SmartNICState, error) {
 // FindSmartNIC finds smartNIC object by name
 func (sm *Statemgr) FindSmartNIC(name string) (*SmartNICState, error) {
 	// find the object
-	obj, err := sm.FindObject("SmartNIC", "", name)
+	obj, err := sm.FindObject("DistributedServiceCard", "", name)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (sm *Statemgr) FindSmartNIC(name string) (*SmartNICState, error) {
 
 // ListSmartNICs lists all smartNIC objects
 func (sm *Statemgr) ListSmartNICs() ([]*SmartNICState, error) {
-	objs := sm.memDB.ListObjects("SmartNIC")
+	objs := sm.memDB.ListObjects("DistributedServiceCard")
 
 	var sgs []*SmartNICState
 	for _, obj := range objs {
@@ -72,7 +72,7 @@ func (sm *Statemgr) ListSmartNICs() ([]*SmartNICState, error) {
 }
 
 // CreateSmartNIC creates a smartNIC object
-func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*SmartNICState, error) {
+func (sm *Statemgr) CreateSmartNIC(sn *cluster.DistributedServiceCard, writeback bool) (*SmartNICState, error) {
 	// see if we already have it
 	esn, err := sm.FindSmartNIC(sn.ObjectMeta.Name)
 	if err == nil {
@@ -103,7 +103,7 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 
 	// Rejected SmartNIC objects can have duplicate hostnames.
 	// In this case we don't update the map
-	if sn.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+	if sn.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_REJECTED.String() {
 		sm.hostnameToSmartNICMapLock.Lock()
 		nic, ok := sm.hostnameToSmartNICMap[sn.Spec.ID]
 		if ok || nic != nil {
@@ -126,7 +126,7 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 		// if we fail to create the SmartNIC object then we need to return an error to NMD
 		// and have it retry
 		f := func(ctx context.Context) (interface{}, error) {
-			nic, err := sm.APIClient().SmartNIC().Create(ctx, sn)
+			nic, err := sm.APIClient().DistributedServiceCard().Create(ctx, sn)
 			return nic, err
 		}
 		_, err := utils.ExecuteWithRetry(f, apiServerRPCTimeout, maxAPIServerWriteRetries)
@@ -142,8 +142,8 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 
 // UpdateSmartNIC updates a smartNIC object
 // Caller is responsible for acquiring the lock before invocation and releasing it afterwards
-func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) error {
-	obj, err := sm.FindObject("SmartNIC", "", updObj.ObjectMeta.Name)
+func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, writeback bool) error {
+	obj, err := sm.FindObject("DistributedServiceCard", "", updObj.ObjectMeta.Name)
 	if err != nil {
 		log.Errorf("Can not find the smartnic %s err: %v", updObj.ObjectMeta.Name, err)
 		return fmt.Errorf("SmartNIC not found")
@@ -163,7 +163,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 
 	sm.hostnameToSmartNICMapLock.Lock()
 	if cachedState.Spec.ID != updObj.Spec.ID &&
-		cachedState.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+		cachedState.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_REJECTED.String() {
 		_, ok := sm.hostnameToSmartNICMap[cachedState.Spec.ID]
 		if !ok || cachedState.Spec.ID == "" {
 			log.Errorf("Error updating hostnameToSmartNICMap, key %s does not exist or is empty", cachedState.Spec.ID)
@@ -173,12 +173,12 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 	}
 	// update hostnameToSmartNICMap entry even if there is no hostname change so the map
 	// and the cache stay in sync and we don't keep old objects around
-	if updObj.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+	if updObj.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_REJECTED.String() {
 		sm.hostnameToSmartNICMap[updObj.Spec.ID] = updObj
 	}
 	sm.hostnameToSmartNICMapLock.Unlock()
 
-	cachedState.SmartNIC = updObj
+	cachedState.DistributedServiceCard = updObj
 
 	// store it in local DB
 	err = sm.memDB.UpdateObject(cachedState)
@@ -192,7 +192,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
-			_, err = sm.APIClient().SmartNIC().Update(ctx, nicObj)
+			_, err = sm.APIClient().DistributedServiceCard().Update(ctx, nicObj)
 			if err == nil {
 				ok = true
 				cancel()
@@ -201,7 +201,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 			}
 			log.Errorf("Error updating SmartNIC object %+v: %v", nicObj.ObjectMeta, err)
 			// Write error -- fetch updated Spec + Meta and retry
-			updObj, err := sm.APIClient().SmartNIC().Get(ctx, &nicObj.ObjectMeta)
+			updObj, err := sm.APIClient().DistributedServiceCard().Get(ctx, &nicObj.ObjectMeta)
 			if err == nil {
 				updObj.Status = nicObj.Status
 				nicObj = updObj
@@ -219,8 +219,8 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 }
 
 // DeleteSmartNIC deletes a smartNIC state
-func (sm *Statemgr) DeleteSmartNIC(sn *cluster.SmartNIC) error {
-	if sn.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+func (sm *Statemgr) DeleteSmartNIC(sn *cluster.DistributedServiceCard) error {
+	if sn.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_REJECTED.String() {
 		sm.hostnameToSmartNICMapLock.Lock()
 		_, ok := sm.hostnameToSmartNICMap[sn.Spec.ID]
 		if !ok || sn.Spec.ID == "" {
@@ -244,7 +244,7 @@ func (sm *Statemgr) DeleteSmartNIC(sn *cluster.SmartNIC) error {
 }
 
 // GetSmartNICByID returns the SmartNIC object for a given hostname
-func (sm *Statemgr) GetSmartNICByID(hostname string) *cluster.SmartNIC {
+func (sm *Statemgr) GetSmartNICByID(hostname string) *cluster.DistributedServiceCard {
 	sm.hostnameToSmartNICMapLock.RLock()
 	defer sm.hostnameToSmartNICMapLock.RUnlock()
 	return sm.hostnameToSmartNICMap[hostname]

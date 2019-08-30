@@ -74,12 +74,12 @@ var typesMapTechsupport = map[string]*api.Struct{
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"names":            api.CLIInfo{Path: "Spec.NodeSelector.Names", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"reason":           api.CLIInfo{Path: "Status.SmartNICNodeResults[].Reason", Skip: false, Insert: "", Help: ""},
+			"reason":           api.CLIInfo{Path: "Status.DSCResults[].Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"status":           api.CLIInfo{Path: "Status.SmartNICNodeResults[].Status", Skip: false, Insert: "", Help: ""},
+			"status":           api.CLIInfo{Path: "Status.DSCResults[].Status", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"uri":              api.CLIInfo{Path: "Status.SmartNICNodeResults[].URI", Skip: false, Insert: "", Help: ""},
+			"uri":              api.CLIInfo{Path: "Status.DSCResults[].URI", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"verbosity":        api.CLIInfo{Path: "Spec.Verbosity", Skip: false, Insert: "", Help: ""},
 		},
@@ -111,7 +111,7 @@ var typesMapTechsupport = map[string]*api.Struct{
 
 			"ControllerNodeResults": api.Field{Name: "ControllerNodeResults", CLITag: api.CLIInfo{ID: "ctrlr-node-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ctrlr-node-results", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
 
-			"SmartNICNodeResults": api.Field{Name: "SmartNICNodeResults", CLITag: api.CLIInfo{ID: "smartnic-node-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartnic-node-results", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
+			"DSCResults": api.Field{Name: "DSCResults", CLITag: api.CLIInfo{ID: "dsc-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-results", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
 		},
 	},
 	"monitoring.TechSupportRequestStatus.ControllerNodeResultsEntry": &api.Struct{
@@ -121,7 +121,7 @@ var typesMapTechsupport = map[string]*api.Struct{
 			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TechSupportNodeResult"},
 		},
 	},
-	"monitoring.TechSupportRequestStatus.SmartNICNodeResultsEntry": &api.Struct{
+	"monitoring.TechSupportRequestStatus.DSCResultsEntry": &api.Struct{
 		Fields: map[string]api.Field{
 			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

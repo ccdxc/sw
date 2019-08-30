@@ -10,9 +10,9 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "cluster.proto";
 
-//------------------------------------ SMART NIC  -------------------------------------------
+//------------------------------------ Distributed Service Card  -------------------------------------------
 //
-// SmartNIC represents the Naples I/O subsystem
+// DistributedServiceCard represents the Naples I/O subsystem
 //
 // Entity responsible & scenarios involved in managing this object:
 //
@@ -29,32 +29,32 @@ import "cluster.proto";
 //          o NetOps, SecOps
 //              - Decomission a NIC (TBD)
 //
-message SmartNIC {
+message DistributedServiceCard {
 
-    option (venice.objectPrefix) = {Collection: "smartnics"};
+    option (venice.objectPrefix) = {Collection: "distributedservicecards"};
 
     api.TypeMeta T          = 1 [(gogoproto.embed) = true,
                                 (gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = ",inline"];
 
-    //Object name is Serial-Number of the SmartNIC
+    //Object name is Serial-Number of the DistributedServiceCard
     api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
                                 (gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = "meta,omitempty"];
 
-    // SmartNICSpec contains the configuration of the network adapter.
-    SmartNICSpec Spec       = 3 [(gogoproto.nullable) = false,
+    // DistributedServiceCardSpec contains the configuration of the network adapter.
+    DistributedServiceCardSpec Spec       = 3 [(gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = "spec,omitempty"];
 
-    // SmartNICStatus contains the current state of the network adapter.
-    SmartNICStatus Status   = 4 [(gogoproto.nullable) = false,
+    // DistributedServiceCardStatus contains the current state of the network adapter.
+    DistributedServiceCardStatus Status   = 4 [(gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
-message SmartNICSpec {
+// DistributedServiceCardSpec contains configuration of the DistributedServiceCard (Naples I/O subsystem)
+message DistributedServiceCardSpec {
 
-    // Admit allows a SmartNIC to join the cluster
+    // Admit allows a DistributedServiceCard to join the cluster
     bool Admit                      = 1 [(gogoproto.jsontag) = "admit,omitempty"];
 
     // ID is used as a user friendly identifier in logs/events
@@ -66,13 +66,13 @@ message SmartNICSpec {
     // MgmtModes defines the valid management modes
     enum MgmtModes {
         // ui-hint: Host
-        HOST    = 0; // Host manages SmartNIC
+        HOST    = 0; // Host manages DistributedServiceCard
         // ui-hint: Network
-        NETWORK = 1; // Network controller manages SmartNIC
+        NETWORK = 1; // Network controller manages DistributedServiceCard
     }
 
-    // MgmtMode defines the management mode of the SmartNIC
-    string MgmtMode                 = 4 [(venice.check) = "StrEnum(SmartNICSpec.MgmtModes)",
+    // MgmtMode defines the management mode of the DistributedServiceCard
+    string MgmtMode                 = 4 [(venice.check) = "StrEnum(DistributedServiceCardSpec.MgmtModes)",
                                         (gogoproto.jsontag) = "mgmt-mode,omitempty"];
 
     // NetworkModes - is only applicable if the MgmtMode is NETWORK
@@ -83,8 +83,8 @@ message SmartNICSpec {
         INBAND  = 1;
     }
 
-    // MgmtMode defines the management mode of the SmartNIC
-    string NetworkMode              = 5 [(venice.check) = "StrEnum(SmartNICSpec.NetworkModes)",
+    // MgmtMode defines the management mode of the DistributedServiceCard
+    string NetworkMode              = 5 [(venice.check) = "StrEnum(DistributedServiceCardSpec.NetworkModes)",
                                         (gogoproto.jsontag) = "network-mode,omitempty"];
 
 
@@ -97,22 +97,22 @@ message SmartNICSpec {
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 }
 
-// IPConfig defines the static IP configuration for a SmartNIC
+// IPConfig defines the static IP configuration for a DistributedServiceCard
 message IPConfig {
-    // IPAddress contains the Management IP address of the SmartNIC in CIDR format
+    // IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format
     string IPAddress            = 1 [(gogoproto.jsontag) = "ip-address,omitempty"];
 
     // DefaultGW contains the default gateway's IP address
     string DefaultGW            = 2 [(gogoproto.jsontag) = "default-gw,omitempty"];
 
-    // DNSServers contains a list of DNS Servers that can be used on SmartNIC
+    // DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard
     repeated string DNSServers  = 3 [(gogoproto.jsontag) = "dns-servers,omitempty"];
 }
 
-// SmartNICStatus contains current status of a SmartNIC
-message SmartNICStatus {
+// DistributedServiceCardStatus contains current status of a DistributedServiceCard
+message DistributedServiceCardStatus {
 
-    // Various phases in lifecycle of a SmartNIC
+    // Various phases in lifecycle of a DistributedServiceCard
     enum Phase {
         // ui-hint: Unknown
         UNKNOWN        = 0; // Unknown status, initial state.
@@ -128,7 +128,7 @@ message SmartNICStatus {
         DECOMMISSIONED = 5; // NIC has been removed from the cluster
     }
     
-    // Current admission phase of the SmartNIC.
+    // Current admission phase of the DistributedServiceCard.
     // When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED
     // by CMD for validated NICs.
     // When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING
@@ -136,45 +136,45 @@ message SmartNICStatus {
     // To admit the NIC as a part of manual admission, user is expected to
     // set Spec.Admit to true for the NICs that are in NIC_PENDING
     // state. Note : Whitelist mode is not supported yet.
-    string AdmissionPhase                   = 1 [(venice.check) = "StrEnum(SmartNICStatus.Phase)",
+    string AdmissionPhase                   = 1 [(venice.check) = "StrEnum(DistributedServiceCardStatus.Phase)",
                                                 (gogoproto.jsontag) = "admission-phase,omitempty"];
     
     // List of current NIC conditions
-    repeated SmartNICCondition Conditions   = 2 [(gogoproto.nullable) = false,
+    repeated DSCCondition Conditions   = 2 [(gogoproto.nullable) = false,
                                                 (gogoproto.jsontag) = "conditions,omitempty"];
 
     // Serial number
     string SerialNum                        = 3 [(gogoproto.jsontag) = "serial-num,omitempty"];
 
-    // PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
+    // PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard
     string PrimaryMAC                       = 4 [(gogoproto.jsontag) = "primary-mac,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
 
     // IPConfig is the ip address related configuration obtained from DHCP
     IPConfig IPConfig                       = 5 [(gogoproto.jsontag) = "ip-config,omitempty"];
 
-    // Naples I/O system info
-    SmartNICInfo SystemInfo                 = 6 [(gogoproto.jsontag) = "system-info,omitempty"];
+    // Distributed service card system info
+    DSCInfo SystemInfo                 = 6 [(gogoproto.jsontag) = "system-info,omitempty"];
 
     // Network Interfaces
     repeated string Interfaces              = 7 [(gogoproto.jsontag) = "interfaces,omitempty"];
 
-    // SmartNIC Version 
-    string SmartNICVersion                  = 8 [(gogoproto.jsontag) = "smartNicVersion,omitempty"];
+    // DSC Version 
+    string DSCVersion                  = 8 [(gogoproto.jsontag) = "DSCVersion,omitempty"];
 
-    // SmartNIC SKU
-    string SmartNICSku                      = 9 [(gogoproto.jsontag) = "smartNicSku,omitempty"];
+    // DSC SKU
+    string DSCSku                      = 9 [(gogoproto.jsontag) = "DSCSku,omitempty"];
 
-    // The name of the host this SmartNIC is plugged into
+    // The name of the host this DistributedServiceCard is plugged into
     string Host                             = 10 [(gogoproto.jsontag) = "host,omitempty"];
 
-    // The reason why the SmartNIC is not in ADMITTED state
+    // The reason why the DistributedServiceCard is not in ADMITTED state
     string AdmissionPhaseReason             = 11 [(gogoproto.jsontag) = "adm-phase-reason,omitempty"];
 }
 
-// SmartNICCondition describes the state of a SmartNIC at a certain point.
-message SmartNICCondition {
+// DSCCondition describes the state of a DistributedServiceCard at a certain point.
+message DSCCondition {
 
-    // These are valid conditions of a SmartNIC
+    // These are valid conditions of a DistributedServiceCard
     enum ConditionType {
         // ui-hint: Healthy
         HEALTHY             = 0; // NIC is healthy
@@ -183,7 +183,7 @@ message SmartNICCondition {
     }
 
     // Type indicates a certain NIC condition
-    string Type                     = 1 [(venice.check) = "StrEnum(SmartNICCondition.ConditionType)",
+    string Type                     = 1 [(venice.check) = "StrEnum(DSCCondition.ConditionType)",
                                         (gogoproto.jsontag) = "type,omitempty"];
 
     // Condition Status
@@ -208,8 +208,8 @@ message MacRange {
                         (gogoproto.jsontag) = "mac-end,omitempty"];
 }
 
-// Naples I/O (SmartNIC) subsystem information
-message SmartNICInfo {
+// Distributed service card (DSC) subsystem information
+message DSCInfo {
 
     // BIOS details
     BiosInfo BiosInfo       = 1 [(gogoproto.jsontag) = "bios-info,omitempty"];

@@ -80,24 +80,24 @@ func (x RolloutSpec_StrategyType) String() string {
 	return RolloutSpec_StrategyType_vname[int32(x)]
 }
 
-// RolloutSpec_SmartNICUpgradeType_normal is a map of normalized values for the enum
-var RolloutSpec_SmartNICUpgradeType_normal = map[string]string{
+// RolloutSpec_DSCUpgradeType_normal is a map of normalized values for the enum
+var RolloutSpec_DSCUpgradeType_normal = map[string]string{
 	"disruptive":     "disruptive",
 	"on-next-reboot": "on-next-reboot",
 }
 
-var RolloutSpec_SmartNICUpgradeType_vname = map[int32]string{
+var RolloutSpec_DSCUpgradeType_vname = map[int32]string{
 	0: "disruptive",
 	1: "on-next-reboot",
 }
 
-var RolloutSpec_SmartNICUpgradeType_vvalue = map[string]int32{
+var RolloutSpec_DSCUpgradeType_vvalue = map[string]int32{
 	"disruptive":     0,
 	"on-next-reboot": 1,
 }
 
-func (x RolloutSpec_SmartNICUpgradeType) String() string {
-	return RolloutSpec_SmartNICUpgradeType_vname[int32(x)]
+func (x RolloutSpec_DSCUpgradeType) String() string {
+	return RolloutSpec_DSCUpgradeType_vname[int32(x)]
 }
 
 // RolloutStatus_RolloutOperationalState_normal is a map of normalized values for the enum
@@ -332,9 +332,9 @@ func (m *RolloutStatus) Defaults(ver string) bool {
 			ret = i.Defaults(ver) || ret
 		}
 	}
-	for k := range m.SmartNICsStatus {
-		if m.SmartNICsStatus[k] != nil {
-			i := m.SmartNICsStatus[k]
+	for k := range m.DSCsStatus {
+		if m.DSCsStatus[k] != nil {
+			i := m.DSCsStatus[k]
 			ret = i.Defaults(ver) || ret
 		}
 	}
@@ -591,7 +591,7 @@ func (m *RolloutSpec) Normalize() {
 
 	m.Strategy = RolloutSpec_StrategyType_normal[strings.ToLower(m.Strategy)]
 
-	m.UpgradeType = RolloutSpec_SmartNICUpgradeType_normal[strings.ToLower(m.UpgradeType)]
+	m.UpgradeType = RolloutSpec_DSCUpgradeType_normal[strings.ToLower(m.UpgradeType)]
 
 }
 
@@ -621,12 +621,12 @@ func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 			ret = append(ret, errs...)
 		}
 	}
-	for k, v := range m.SmartNICsStatus {
+	for k, v := range m.DSCsStatus {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sSmartNICsStatus[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sDSCsStatus[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -663,14 +663,14 @@ func (m *RolloutStatus) Normalize() {
 		}
 	}
 
-	m.OperationalState = RolloutStatus_RolloutOperationalState_normal[strings.ToLower(m.OperationalState)]
-
-	for k, v := range m.SmartNICsStatus {
+	for k, v := range m.DSCsStatus {
 		if v != nil {
 			v.Normalize()
-			m.SmartNICsStatus[k] = v
+			m.DSCsStatus[k] = v
 		}
 	}
+
+	m.OperationalState = RolloutStatus_RolloutOperationalState_normal[strings.ToLower(m.OperationalState)]
 
 }
 
@@ -742,9 +742,9 @@ func init() {
 	validatorMapRollout["RolloutSpec"]["all"] = append(validatorMapRollout["RolloutSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutSpec)
 
-		if _, ok := RolloutSpec_SmartNICUpgradeType_vvalue[m.UpgradeType]; !ok {
+		if _, ok := RolloutSpec_DSCUpgradeType_vvalue[m.UpgradeType]; !ok {
 			vals := []string{}
-			for k1, _ := range RolloutSpec_SmartNICUpgradeType_vvalue {
+			for k1, _ := range RolloutSpec_DSCUpgradeType_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"UpgradeType", vals)

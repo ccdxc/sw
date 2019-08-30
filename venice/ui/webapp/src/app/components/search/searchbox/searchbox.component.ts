@@ -49,7 +49,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
  *  B.
  *  User can type in search string, UI will exam the current search context to build suggestion accordingly.
  *  For example:
- *    input is [in:cluster is:]  UI will figure out user wants to search on "cluster" category and try to find objects of cluster. UI will load "Node, SmartNic, etc.."
+ *    input is [in:cluster is:]  UI will figure out user wants to search on "cluster" category and try to find objects of cluster. UI will load "Node, DSC, etc.."
  *
  *  User hits [ENTER] key, UI will build search payload and invoke SEARCH REST API.
  *

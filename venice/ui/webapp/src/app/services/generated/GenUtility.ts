@@ -161,7 +161,7 @@ export class GenServiceUtility {
 
   public isAllowed(eventPayloadID: any) {
     // checking maintenance mode (but get version object)
-    const blockCondition = (Utility.getInstance().getMaintenanceMode() && eventPayloadID !== 'WatchVersion' && eventPayloadID !== 'WatchRollout' && eventPayloadID !== 'GetRollout' && eventPayloadID !== 'WatchSmartNIC' && eventPayloadID !== 'StopRollout' ) ;
+    const blockCondition = (Utility.getInstance().getMaintenanceMode() && eventPayloadID !== 'WatchVersion' && eventPayloadID !== 'WatchRollout' && eventPayloadID !== 'GetRollout' && eventPayloadID !== 'WatchDistributedServiceCard' && eventPayloadID !== 'StopRollout' ) ;
 
     if (blockCondition) {
       return false;

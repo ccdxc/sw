@@ -32,7 +32,7 @@ func (it *veniceIntegSuite) TestScale(c *C) {
 	AssertOk(c, err, "Error creating logged in context")
 
 	// get the list of smartNICs
-	snicList, err := it.apisrvClient.ClusterV1().SmartNIC().List(loginCtx, &api.ListWatchOptions{})
+	snicList, err := it.apisrvClient.ClusterV1().DistributedServiceCard().List(loginCtx, &api.ListWatchOptions{})
 	AssertOk(c, err, "Couldn't get the list of naples")
 	fmt.Printf("Discovered %d SNICs\n", len(snicList))
 

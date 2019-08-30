@@ -20,14 +20,14 @@ import { LabelsSelector } from '@sdk/v1/models/generated/security';
 import { SearchUtil } from '@app/components/search/SearchUtil';
 import { SearchService } from '@app/services/generated/search.service';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 
 export class RolloutOrder {
   id: string;
   data: FormGroup;
   orderSummary: string = '';
-  matchedSmartNICs: string[] = [];
+  matchedDistributedServiceCards: string[] = [];
   inEdit: boolean = false;
   duplicatesWith: number[] = [];
   incomplete: boolean = true;
@@ -104,9 +104,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     matIcon: 'update'
   };
 
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
-  naplesIdMap: { [id: string]: ClusterSmartNIC } = {};
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  naplesIdMap: { [id: string]: ClusterDistributedServiceCard } = {};
   naplesRuleMap: { [rule: string]: Set<string> } = {};
   duplicateMatchMap: { [nicid: string]: number[] } = {};
 
@@ -148,9 +148,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     this.minDate = new Date();
   }
 
-  // When we get a response containing all SmartNICs objects, we build labelData to be used for the label selector.
-  // We also generate a Map of each label-rule to all the matchedSmartNICs.
-  handleReadSmartNICsResponse(response) {
+  // When we get a response containing all DistributedServiceCards objects, we build labelData to be used for the label selector.
+  // We also generate a Map of each label-rule to all the matchedDistributedServiceCards.
+  handleReadDistributedServiceCardsResponse(response) {
     this.orderConstraintslabelData = [];
     this.naplesEventUtility.processEvents(response);
     this.generateRuleAndIdMap();
@@ -188,11 +188,11 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   getNaplesLabelsKeyValues() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
-        this.handleReadSmartNICsResponse(response);
+        this.handleReadDistributedServiceCardsResponse(response);
       },
       this.controllerService.webSocketErrorHandler('Failed to get labels')
     );
@@ -270,7 +270,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   countMatchedNICs() {
     let count = 0;
     for (const order of this.orders) {
-      count += order.matchedSmartNICs.length;
+      count += order.matchedDistributedServiceCards.length;
     }
     return count;
   }
@@ -280,13 +280,13 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   isAllInputsValidated(): boolean {
-    if (this.newRollout.$formGroup['smartnic-must-match-constraint'] && this.countMatchedNICs() !== 0) {
+    if (this.newRollout.$formGroup['dsc-must-match-constraint'] && this.countMatchedNICs() !== 0) {
       return false;
     }
     if (!this.newRollout || !this.newRollout.$formGroup) {
       return false;
     }
-    if (this.newRollout.$formGroup.get(['spec', 'smartnic-must-match-constraint']).value) {
+    if (this.newRollout.$formGroup.get(['spec', 'dsc-must-match-constraint']).value) {
 
       const orders = this.getOrderConstraints();
       for ( let ix = 0; ix < orders.length; ix++) {
@@ -388,7 +388,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   addRollout() {
-    if (this.newRollout.$formGroup.value.spec['smartnic-must-match-constraint']) {
+    if (this.newRollout.$formGroup.value.spec['dsc-must-match-constraint']) {
       let duplicate = false;
       for (const order of this.orders) {
         if (order.duplicatesWith.length > 0) {
@@ -422,7 +422,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    * Build rollout JSON.
    * according to RolloutUtil.getRolloutNaplesVeniceType() rules
    * sample working rollout ( upgrade some Naples)
-   * {"kind":"rollout","api-version":null,"meta":{"name":"jeff-vs529-3"},"spec":{"version":"0.11.0-55","scheduled-start-time":"2019-06-25T22:56:21.145Z","strategy":"LINEAR","max-parallel":2,"max-nic-failures-before-abort":1,"order-constraints":[{"requirements":[{"key":"number","operator":"equals","values":["1"]}]}],"smartnics-only":false,"smartnic-must-match-constraint":true,"upgrade-type":"Disruptive"}}
+   * {"kind":"rollout","api-version":null,"meta":{"name":"jeff-vs529-3"},"spec":{"version":"0.11.0-55","scheduled-start-time":"2019-06-25T22:56:21.145Z","strategy":"LINEAR","max-parallel":2,"max-nic-failures-before-abort":1,"order-constraints":[{"requirements":[{"key":"number","operator":"equals","values":["1"]}]}],"dscs-only":false,"dsc-must-match-constraint":true,"upgrade-type":"Disruptive"}}
    */
   buildRollout(): IRolloutRollout {
     const rollout: IRolloutRollout = this.newRollout.getFormGroupValues();
@@ -434,14 +434,14 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_VENICE_ONLY) {
       rollout.spec['max-nic-failures-before-abort'] = null;
       rollout.spec['order-constraints'] = [];
-      rollout.spec['smartnic-must-match-constraint'] = true;
-      rollout.spec['smartnics-only'] = false;
+      rollout.spec['dsc-must-match-constraint'] = true;
+      rollout.spec['dscs-only'] = false;
     } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY) {
-      rollout.spec['smartnics-only'] = true;
+      rollout.spec['dscs-only'] = true;
       this.setSpecOrderConstrains(rollout);
       rollout.spec['max-parallel'] = null;
     } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE) {
-      rollout.spec['smartnics-only'] = false;
+      rollout.spec['dscs-only'] = false;
       this.setSpecOrderConstrains(rollout);
     }
     return rollout;
@@ -464,7 +464,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    * }
    */
   private setSpecOrderConstrains(rollout: IRolloutRollout) {
-    if (rollout.spec['smartnic-must-match-constraint']) {
+    if (rollout.spec['dsc-must-match-constraint']) {
       const orderConstraints = [];
       const orders = this.getOrderConstraints();
       for ( let ix = 0; ix < orders.length; ix++) {
@@ -593,7 +593,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    * This API serves html template
    */
   isToShowNicOrderDiv(): boolean {
-    return this.newRollout.$formGroup.get(['spec', 'smartnic-must-match-constraint']).value;
+    return this.newRollout.$formGroup.get(['spec', 'dsc-must-match-constraint']).value;
   }
 
   /**
@@ -769,7 +769,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       }
     }
 
-    if (naplesNICSet === null) { this.orders[index].matchedSmartNICs = []; } else { this.orders[index].matchedSmartNICs = naplesNICSet; }
+    if (naplesNICSet === null) { this.orders[index].matchedDistributedServiceCards = []; } else { this.orders[index].matchedDistributedServiceCards = naplesNICSet; }
   }
 
   // If there are no labels added (for any of the NICs), the upgrade using labels toggle button is hidden.
@@ -796,7 +796,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     for (let ix = 0; ix < this.orders.length; ix++) {
       const order = this.orders[ix];
       this.orders[ix].duplicatesWith = [];
-      for (const match of order.matchedSmartNICs) {
+      for (const match of order.matchedDistributedServiceCards) {
         if ( !(match in this.duplicateMatchMap) ) {
           this.duplicateMatchMap[match] = [ix];
         } else {

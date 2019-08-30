@@ -193,7 +193,7 @@
           "Cluster",
           "Node",
           "Host",
-          "SmartNIC",
+          "DistributedServiceCard",
           "Tenant",
           "Version"
         ],
@@ -212,6 +212,19 @@
               "UpdateTLSConfig"
             ],
             "URI": "/configs/cluster/v1/cluster"
+          },
+          "DistributedServiceCard": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "list",
+              "watch"
+            ],
+            "URI": "/configs/cluster/v1/distributedservicecards"
           },
           "Host": {
             "Scopes": [
@@ -240,19 +253,6 @@
               "watch"
             ],
             "URI": "/configs/cluster/v1/nodes"
-          },
-          "SmartNIC": {
-            "Scopes": [
-              "cluster"
-            ],
-            "RestMethods": [
-              "put",
-              "get",
-              "delete",
-              "list",
-              "watch"
-            ],
-            "URI": "/configs/cluster/v1/smartnics"
           },
           "Tenant": {
             "Scopes": [

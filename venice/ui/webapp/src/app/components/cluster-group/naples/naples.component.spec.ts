@@ -17,7 +17,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { MatIconRegistry } from '@angular/material';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
-import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { AuthService } from '@app/services/auth.service';
@@ -53,7 +53,7 @@ describe('NaplesComponent', () => {
       },
       'primary-mac': '00ae.cd00.1142',
       'admission-phase': 'pending',
-      'smartNicVersion': '1.0E',
+      'DSCVersion': '1.0E',
     }
   };
 
@@ -76,7 +76,7 @@ describe('NaplesComponent', () => {
       },
       'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'admitted',
-      'smartNicVersion': '1.0E',
+      'DSCVersion': '1.0E',
     }
   };
 
@@ -99,7 +99,7 @@ describe('NaplesComponent', () => {
       },
       'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'rejected',
-      'smartNicVersion': '1.0E',
+      'DSCVersion': '1.0E',
     }
   };
 
@@ -139,7 +139,7 @@ describe('NaplesComponent', () => {
     fixture = TestBed.createComponent(NaplesComponent);
     component = fixture.componentInstance;
     const service = TestBed.get(ClusterService);
-    spyOn(service, 'WatchSmartNIC').and.returnValue(
+    spyOn(service, 'WatchDistributedServiceCard').and.returnValue(
       TestingUtility.createWatchEventsSubject([naples1, naples2, naples3])
     );
   });
@@ -149,11 +149,11 @@ describe('NaplesComponent', () => {
     fixture.detectChanges();
     // check table header
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
-    expect(title.nativeElement.textContent).toContain('Naples (3)');
+    expect(title.nativeElement.textContent).toContain('Distributed Services Cards (3)');
     // check table contents
     const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
     expect(tableBody).toBeTruthy();
-    TestingUtility.verifyTable([new ClusterSmartNIC(naples1), new ClusterSmartNIC(naples2), new ClusterSmartNIC(naples3)], component.cols, tableBody, {}, '', true);
+    TestingUtility.verifyTable([new ClusterDistributedServiceCard(naples1), new ClusterDistributedServiceCard(naples2), new ClusterDistributedServiceCard(naples3)], component.cols, tableBody, {}, '', true);
   });
 
   describe('RBAC', () => {

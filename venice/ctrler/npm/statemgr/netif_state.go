@@ -14,7 +14,7 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 		TypeMeta:   agentNetif.TypeMeta,
 		ObjectMeta: agentNetif.ObjectMeta,
 		Status: network.NetworkInterfaceStatus{
-			SmartNIC: nodeID,
+			DSC: nodeID,
 			// TBD: PrimaryMac: "tbf",
 		},
 	}

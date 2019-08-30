@@ -188,9 +188,9 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 	default:
 		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
 		naplesStatus := delphiProto.NaplesStatus{
-			NaplesMode:   naplesMode,
-			ID:           naplesConfig.Spec.ID,
-			SmartNicName: naplesConfig.Status.SmartNicName,
+			NaplesMode: naplesMode,
+			ID:         naplesConfig.Spec.ID,
+			DSCName:    naplesConfig.Status.DSCName,
 			Fru: &delphiProto.NaplesFru{
 				ManufacturingDate: naplesConfig.Status.Fru.ManufacturingDate,
 				Manufacturer:      naplesConfig.Status.Fru.Manufacturer,
@@ -216,7 +216,7 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 		TransitionPhase: transitionPhase,
 		MgmtIP:          mgmtIP,
 		ID:              naplesConfig.Spec.ID,
-		SmartNicName:    naplesConfig.Status.SmartNicName,
+		DSCName:         naplesConfig.Status.DSCName,
 		Fru: &delphiProto.NaplesFru{
 			ManufacturingDate: naplesConfig.Status.Fru.ManufacturingDate,
 			Manufacturer:      naplesConfig.Status.Fru.Manufacturer,

@@ -1458,15 +1458,15 @@ func (ct *ctrlerCtx) Host() HostAPI {
 	return &hostAPI{ct: ct}
 }
 
-// SmartNIC is a wrapper object that implements additional functionality
-type SmartNIC struct {
+// DistributedServiceCard is a wrapper object that implements additional functionality
+type DistributedServiceCard struct {
 	sync.Mutex
-	cluster.SmartNIC
+	cluster.DistributedServiceCard
 	HandlerCtx interface{} // additional state handlers can store
 	ctrler     *ctrlerCtx  // reference back to the controller instance
 }
 
-func (obj *SmartNIC) Write() error {
+func (obj *DistributedServiceCard) Write() error {
 	// if there is no API server to connect to, we are done
 	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
 		return nil
@@ -1478,13 +1478,13 @@ func (obj *SmartNIC) Write() error {
 		return err
 	}
 
-	obj.ctrler.stats.Counter("SmartNIC_Writes").Inc()
+	obj.ctrler.stats.Counter("DistributedServiceCard_Writes").Inc()
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ClusterV1().SmartNIC().UpdateStatus(context.Background(), &obj.SmartNIC)
+			_, err = apicl.ClusterV1().DistributedServiceCard().UpdateStatus(context.Background(), &obj.DistributedServiceCard)
 			if err == nil {
 				break
 			}
@@ -1492,25 +1492,25 @@ func (obj *SmartNIC) Write() error {
 		}
 	} else {
 		//  create
-		_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), &obj.SmartNIC)
+		_, err = apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), &obj.DistributedServiceCard)
 	}
 
 	return nil
 }
 
-// SmartNICHandler is the event handler for SmartNIC object
-type SmartNICHandler interface {
-	OnSmartNICCreate(obj *SmartNIC) error
-	OnSmartNICUpdate(oldObj *SmartNIC, newObj *cluster.SmartNIC) error
-	OnSmartNICDelete(obj *SmartNIC) error
+// DistributedServiceCardHandler is the event handler for DistributedServiceCard object
+type DistributedServiceCardHandler interface {
+	OnDistributedServiceCardCreate(obj *DistributedServiceCard) error
+	OnDistributedServiceCardUpdate(oldObj *DistributedServiceCard, newObj *cluster.DistributedServiceCard) error
+	OnDistributedServiceCardDelete(obj *DistributedServiceCard) error
 }
 
-// handleSmartNICEvent handles SmartNIC events from watcher
-func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
+// handleDistributedServiceCardEvent handles DistributedServiceCard events from watcher
+func (ct *ctrlerCtx) handleDistributedServiceCardEvent(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
-	case *cluster.SmartNIC:
-		eobj := evt.Object.(*cluster.SmartNIC)
-		kind := "SmartNIC"
+	case *cluster.DistributedServiceCard:
+		eobj := evt.Object.(*cluster.DistributedServiceCard)
+		kind := "DistributedServiceCard"
 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
@@ -1519,7 +1519,7 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
-		smartnicHandler := handler.(SmartNICHandler)
+		distributedservicecardHandler := handler.(DistributedServiceCardHandler)
 		// handle based on event type
 		switch evt.Type {
 		case kvstore.Created:
@@ -1527,17 +1527,17 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Updated:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				obj := &SmartNIC{
-					SmartNIC:   *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
+				obj := &DistributedServiceCard{
+					DistributedServiceCard: *eobj,
+					HandlerCtx:             nil,
+					ctrler:                 ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("SmartNIC_Created_Events").Inc()
+				ct.stats.Counter("DistributedServiceCard_Created_Events").Inc()
 
 				// call the event handler
 				obj.Lock()
-				err = smartnicHandler.OnSmartNICCreate(obj)
+				err = distributedservicecardHandler.OnDistributedServiceCardCreate(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1545,13 +1545,13 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				obj := fobj.(*SmartNIC)
+				obj := fobj.(*DistributedServiceCard)
 
-				ct.stats.Counter("SmartNIC_Updated_Events").Inc()
+				ct.stats.Counter("DistributedServiceCard_Updated_Events").Inc()
 
 				// call the event handler
 				obj.Lock()
-				err = smartnicHandler.OnSmartNICUpdate(obj, eobj)
+				err = distributedservicecardHandler.OnDistributedServiceCardUpdate(obj, eobj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1565,13 +1565,13 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 				return err
 			}
 
-			obj := fobj.(*SmartNIC)
+			obj := fobj.(*DistributedServiceCard)
 
-			ct.stats.Counter("SmartNIC_Deleted_Events").Inc()
+			ct.stats.Counter("DistributedServiceCard_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
-			err = smartnicHandler.OnSmartNICDelete(obj)
+			err = distributedservicecardHandler.OnDistributedServiceCardDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
@@ -1580,18 +1580,18 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SmartNIC watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on DistributedServiceCard watch channel", tp)
 	}
 
 	return nil
 }
 
-// handleSmartNICEventParallel handles SmartNIC events from watcher
-func (ct *ctrlerCtx) handleSmartNICEventParallel(evt *kvstore.WatchEvent) error {
+// handleDistributedServiceCardEventParallel handles DistributedServiceCard events from watcher
+func (ct *ctrlerCtx) handleDistributedServiceCardEventParallel(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
-	case *cluster.SmartNIC:
-		eobj := evt.Object.(*cluster.SmartNIC)
-		kind := "SmartNIC"
+	case *cluster.DistributedServiceCard:
+		eobj := evt.Object.(*cluster.DistributedServiceCard)
+		kind := "DistributedServiceCard"
 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
@@ -1600,7 +1600,7 @@ func (ct *ctrlerCtx) handleSmartNICEventParallel(evt *kvstore.WatchEvent) error 
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
-		smartnicHandler := handler.(SmartNICHandler)
+		distributedservicecardHandler := handler.(DistributedServiceCardHandler)
 		// handle based on event type
 		switch evt.Type {
 		case kvstore.Created:
@@ -1608,28 +1608,28 @@ func (ct *ctrlerCtx) handleSmartNICEventParallel(evt *kvstore.WatchEvent) error 
 		case kvstore.Updated:
 			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*cluster.SmartNIC)
+				eobj := userCtx.(*cluster.DistributedServiceCard)
 				fobj, err := ct.findObject(kind, eobj.GetKey())
 				if err != nil {
-					obj := &SmartNIC{
-						SmartNIC:   *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
+					obj := &DistributedServiceCard{
+						DistributedServiceCard: *eobj,
+						HandlerCtx:             nil,
+						ctrler:                 ct,
 					}
 					ct.addObject(kind, obj.GetKey(), obj)
-					ct.stats.Counter("SmartNIC_Created_Events").Inc()
+					ct.stats.Counter("DistributedServiceCard_Created_Events").Inc()
 					obj.Lock()
-					err = smartnicHandler.OnSmartNICCreate(obj)
+					err = distributedservicecardHandler.OnDistributedServiceCardCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.SmartNIC.GetKey())
+						ct.delObject(kind, obj.DistributedServiceCard.GetKey())
 					}
 				} else {
-					obj := fobj.(*SmartNIC)
-					ct.stats.Counter("SmartNIC_Updated_Events").Inc()
+					obj := fobj.(*DistributedServiceCard)
+					ct.stats.Counter("DistributedServiceCard_Updated_Events").Inc()
 					obj.Lock()
-					err = smartnicHandler.OnSmartNICUpdate(obj, eobj)
+					err = distributedservicecardHandler.OnDistributedServiceCardUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1637,82 +1637,82 @@ func (ct *ctrlerCtx) handleSmartNICEventParallel(evt *kvstore.WatchEvent) error 
 				}
 				return err
 			}
-			ct.runJob("SmartNIC", eobj, workFunc)
+			ct.runJob("DistributedServiceCard", eobj, workFunc)
 		case kvstore.Deleted:
 			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*cluster.SmartNIC)
+				eobj := userCtx.(*cluster.DistributedServiceCard)
 				fobj, err := ct.findObject(kind, eobj.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
 				}
-				obj := fobj.(*SmartNIC)
-				ct.stats.Counter("SmartNIC_Deleted_Events").Inc()
+				obj := fobj.(*DistributedServiceCard)
+				ct.stats.Counter("DistributedServiceCard_Deleted_Events").Inc()
 				obj.Lock()
-				err = smartnicHandler.OnSmartNICDelete(obj)
+				err = distributedservicecardHandler.OnDistributedServiceCardDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.SmartNIC.GetKey())
+				ct.delObject(kind, obj.DistributedServiceCard.GetKey())
 				return nil
 			}
-			ct.runJob("SmartNIC", eobj, workFunc)
+			ct.runJob("DistributedServiceCard", eobj, workFunc)
 		}
 	default:
-		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SmartNIC watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on DistributedServiceCard watch channel", tp)
 	}
 
 	return nil
 }
 
-// diffSmartNIC does a diff of SmartNIC objects between local cache and API server
-func (ct *ctrlerCtx) diffSmartNIC(apicl apiclient.Services) {
+// diffDistributedServiceCard does a diff of DistributedServiceCard objects between local cache and API server
+func (ct *ctrlerCtx) diffDistributedServiceCard(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
 
 	// get a list of all objects from API server
-	objlist, err := apicl.ClusterV1().SmartNIC().List(context.Background(), &opts)
+	objlist, err := apicl.ClusterV1().DistributedServiceCard().List(context.Background(), &opts)
 	if err != nil {
 		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
-	ct.logger.Infof("diffSmartNIC(): SmartNICList returned %d objects", len(objlist))
+	ct.logger.Infof("diffDistributedServiceCard(): DistributedServiceCardList returned %d objects", len(objlist))
 
 	// build an object map
-	objmap := make(map[string]*cluster.SmartNIC)
+	objmap := make(map[string]*cluster.DistributedServiceCard)
 	for _, obj := range objlist {
 		objmap[obj.GetKey()] = obj
 	}
 
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.SmartNIC().List() {
+	for _, obj := range ct.DistributedServiceCard().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
-			ct.logger.Infof("diffSmartNIC(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			ct.logger.Infof("diffDistributedServiceCard(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
-				Object: &obj.SmartNIC,
+				Object: &obj.DistributedServiceCard,
 			}
-			ct.handleSmartNICEvent(&evt)
+			ct.handleDistributedServiceCardEvent(&evt)
 		}
 	}
 
 	// trigger create event for all others
 	for _, obj := range objlist {
-		ct.logger.Infof("diffSmartNIC(): Adding object %#v", obj.GetKey())
+		ct.logger.Infof("diffDistributedServiceCard(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
 			Object: obj,
 		}
-		ct.handleSmartNICEvent(&evt)
+		ct.handleDistributedServiceCardEvent(&evt)
 	}
 }
 
-func (ct *ctrlerCtx) runSmartNICWatcher() {
-	kind := "SmartNIC"
+func (ct *ctrlerCtx) runDistributedServiceCardWatcher() {
+	kind := "DistributedServiceCard"
 
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
@@ -1725,12 +1725,12 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
-	logger := ct.logger.WithContext("submodule", "SmartNICWatcher")
+	logger := ct.logger.WithContext("submodule", "DistributedServiceCardWatcher")
 
 	// create a grpc client
 	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 	if err == nil {
-		ct.diffSmartNIC(apiclt)
+		ct.diffDistributedServiceCard(apiclt)
 	}
 
 	// setup wait group
@@ -1739,8 +1739,8 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 	// start a goroutine
 	go func() {
 		defer ct.waitGrp.Done()
-		ct.stats.Counter("SmartNIC_Watch").Inc()
-		defer ct.stats.Counter("SmartNIC_Watch").Dec()
+		ct.stats.Counter("DistributedServiceCard_Watch").Inc()
+		defer ct.stats.Counter("DistributedServiceCard_Watch").Dec()
 
 		// loop forever
 		for {
@@ -1748,12 +1748,12 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 			if err != nil {
 				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-				ct.stats.Counter("SmartNIC_ApiClientErr").Inc()
+				ct.stats.Counter("DistributedServiceCard_ApiClientErr").Inc()
 			} else {
 				logger.Infof("API client connected {%+v}", apicl)
 
-				// SmartNIC object watcher
-				wt, werr := apicl.ClusterV1().SmartNIC().Watch(ctx, &opts)
+				// DistributedServiceCard object watcher
+				wt, werr := apicl.ClusterV1().DistributedServiceCard().Watch(ctx, &opts)
 				if werr != nil {
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
@@ -1767,7 +1767,7 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
-				ct.diffSmartNIC(apicl)
+				ct.diffDistributedServiceCard(apicl)
 
 				// handle api server watch events
 			innerLoop:
@@ -1777,12 +1777,12 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 					case evt, ok := <-wt.EventChan():
 						if !ok {
 							logger.Error("Error receiving from apisrv watcher")
-							ct.stats.Counter("SmartNIC_WatchErrors").Inc()
+							ct.stats.Counter("DistributedServiceCard_WatchErrors").Inc()
 							break innerLoop
 						}
 
 						// handle event in parallel
-						ct.handleSmartNICEventParallel(evt)
+						ct.handleDistributedServiceCardEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -1800,16 +1800,16 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 	}()
 }
 
-// WatchSmartNIC starts watch on SmartNIC object
-func (ct *ctrlerCtx) WatchSmartNIC(handler SmartNICHandler) error {
-	kind := "SmartNIC"
+// WatchDistributedServiceCard starts watch on DistributedServiceCard object
+func (ct *ctrlerCtx) WatchDistributedServiceCard(handler DistributedServiceCardHandler) error {
+	kind := "DistributedServiceCard"
 
 	// see if we already have a watcher
 	ct.Lock()
 	_, ok := ct.watchers[kind]
 	ct.Unlock()
 	if ok {
-		return fmt.Errorf("SmartNIC watcher already exists")
+		return fmt.Errorf("DistributedServiceCard watcher already exists")
 	}
 
 	// save handler
@@ -1817,29 +1817,29 @@ func (ct *ctrlerCtx) WatchSmartNIC(handler SmartNICHandler) error {
 	ct.handlers[kind] = handler
 	ct.Unlock()
 
-	// run SmartNIC watcher in a go routine
-	ct.runSmartNICWatcher()
+	// run DistributedServiceCard watcher in a go routine
+	ct.runDistributedServiceCardWatcher()
 
 	return nil
 }
 
-// SmartNICAPI returns
-type SmartNICAPI interface {
-	Create(obj *cluster.SmartNIC) error
-	Update(obj *cluster.SmartNIC) error
-	Delete(obj *cluster.SmartNIC) error
-	Find(meta *api.ObjectMeta) (*SmartNIC, error)
-	List() []*SmartNIC
-	Watch(handler SmartNICHandler) error
+// DistributedServiceCardAPI returns
+type DistributedServiceCardAPI interface {
+	Create(obj *cluster.DistributedServiceCard) error
+	Update(obj *cluster.DistributedServiceCard) error
+	Delete(obj *cluster.DistributedServiceCard) error
+	Find(meta *api.ObjectMeta) (*DistributedServiceCard, error)
+	List() []*DistributedServiceCard
+	Watch(handler DistributedServiceCardHandler) error
 }
 
-// dummy struct that implements SmartNICAPI
-type smartnicAPI struct {
+// dummy struct that implements DistributedServiceCardAPI
+type distributedservicecardAPI struct {
 	ct *ctrlerCtx
 }
 
-// Create creates SmartNIC object
-func (api *smartnicAPI) Create(obj *cluster.SmartNIC) error {
+// Create creates DistributedServiceCard object
+func (api *distributedservicecardAPI) Create(obj *cluster.DistributedServiceCard) error {
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1847,18 +1847,18 @@ func (api *smartnicAPI) Create(obj *cluster.SmartNIC) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), obj)
+		_, err = apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), obj)
+			_, err = apicl.ClusterV1().DistributedServiceCard().Update(context.Background(), obj)
 		}
 		return err
 	}
 
-	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
-// Update triggers update on SmartNIC object
-func (api *smartnicAPI) Update(obj *cluster.SmartNIC) error {
+// Update triggers update on DistributedServiceCard object
+func (api *distributedservicecardAPI) Update(obj *cluster.DistributedServiceCard) error {
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1866,15 +1866,15 @@ func (api *smartnicAPI) Update(obj *cluster.SmartNIC) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), obj)
+		_, err = apicl.ClusterV1().DistributedServiceCard().Update(context.Background(), obj)
 		return err
 	}
 
-	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
-// Delete deletes SmartNIC object
-func (api *smartnicAPI) Delete(obj *cluster.SmartNIC) error {
+// Delete deletes DistributedServiceCard object
+func (api *distributedservicecardAPI) Delete(obj *cluster.DistributedServiceCard) error {
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1882,58 +1882,58 @@ func (api *smartnicAPI) Delete(obj *cluster.SmartNIC) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().SmartNIC().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.ClusterV1().DistributedServiceCard().Delete(context.Background(), &obj.ObjectMeta)
 		return err
 	}
 
-	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
 // Find returns an object by meta
-func (api *smartnicAPI) Find(meta *api.ObjectMeta) (*SmartNIC, error) {
+func (api *distributedservicecardAPI) Find(meta *api.ObjectMeta) (*DistributedServiceCard, error) {
 	// find the object
-	obj, err := api.ct.FindObject("SmartNIC", meta)
+	obj, err := api.ct.FindObject("DistributedServiceCard", meta)
 	if err != nil {
 		return nil, err
 	}
 
 	// asset type
 	switch obj.(type) {
-	case *SmartNIC:
-		hobj := obj.(*SmartNIC)
+	case *DistributedServiceCard:
+		hobj := obj.(*DistributedServiceCard)
 		return hobj, nil
 	default:
 		return nil, errors.New("incorrect object type")
 	}
 }
 
-// List returns a list of all SmartNIC objects
-func (api *smartnicAPI) List() []*SmartNIC {
-	var objlist []*SmartNIC
+// List returns a list of all DistributedServiceCard objects
+func (api *distributedservicecardAPI) List() []*DistributedServiceCard {
+	var objlist []*DistributedServiceCard
 
-	objs := api.ct.ListObjects("SmartNIC")
+	objs := api.ct.ListObjects("DistributedServiceCard")
 	for _, obj := range objs {
 		switch tp := obj.(type) {
-		case *SmartNIC:
-			eobj := obj.(*SmartNIC)
+		case *DistributedServiceCard:
+			eobj := obj.(*DistributedServiceCard)
 			objlist = append(objlist, eobj)
 		default:
-			log.Fatalf("Got invalid object type %v while looking for SmartNIC", tp)
+			log.Fatalf("Got invalid object type %v while looking for DistributedServiceCard", tp)
 		}
 	}
 
 	return objlist
 }
 
-// Watch sets up a event handlers for SmartNIC object
-func (api *smartnicAPI) Watch(handler SmartNICHandler) error {
-	api.ct.startWorkerPool("SmartNIC")
-	return api.ct.WatchSmartNIC(handler)
+// Watch sets up a event handlers for DistributedServiceCard object
+func (api *distributedservicecardAPI) Watch(handler DistributedServiceCardHandler) error {
+	api.ct.startWorkerPool("DistributedServiceCard")
+	return api.ct.WatchDistributedServiceCard(handler)
 }
 
-// SmartNIC returns SmartNICAPI
-func (ct *ctrlerCtx) SmartNIC() SmartNICAPI {
-	return &smartnicAPI{ct: ct}
+// DistributedServiceCard returns DistributedServiceCardAPI
+func (ct *ctrlerCtx) DistributedServiceCard() DistributedServiceCardAPI {
+	return &distributedservicecardAPI{ct: ct}
 }
 
 // Tenant is a wrapper object that implements additional functionality

@@ -406,7 +406,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 				Name: n.Name,
 			},
 			Spec: cluster.HostSpec{
-				SmartNICs: []cluster.SmartNICID{{MACAddress: n.Uuid}},
+				DSCs: []cluster.DistributedServiceCardID{{MACAddress: n.Uuid}},
 			},
 		}
 		hosts = append(hosts, &host)

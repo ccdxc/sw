@@ -27,7 +27,7 @@ import { NaplesdetailComponent } from './naplesdetail.component';
 import { Utility } from '@app/common/Utility';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
-import { IClusterSmartNIC, ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
+import { IClusterDistributedServiceCard, ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 import { AuthService } from '@app/services/auth.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
@@ -60,7 +60,7 @@ describe('NaplesdetailComponent', () => {
   let naples2;
   let naples3;
 
-  function verifyMeta(naples: IClusterSmartNIC) {
+  function verifyMeta(naples: IClusterDistributedServiceCard) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
     expect(fields.length).toBe(8); // there are 8 columns defined in naplesdetail.c.ts
     if (naples.status['primary-mac'] != null) {
@@ -79,7 +79,7 @@ describe('NaplesdetailComponent', () => {
       expect(fields[2].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.status['admission-phase'] != null) {
-      expect(fields[3].nativeElement.textContent).toContain(ClusterSmartNICStatus_admission_phase_uihint[naples.status['admission-phase']]);
+      expect(fields[3].nativeElement.textContent).toContain(ClusterDistributedServiceCardStatus_admission_phase_uihint[naples.status['admission-phase']]);
       const icon = fields[3].query(By.css('.naplesdetail-phase-icon'));
       if (naples.status['admission-phase'] !== 'admitted') {
         expect(icon).toBeTruthy();
@@ -95,7 +95,7 @@ describe('NaplesdetailComponent', () => {
       expect(fields[3].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.status['serial-num'] != null) {
-      expect(fields[5].nativeElement.textContent).toContain(naples.status['smartNicVersion']);
+      expect(fields[5].nativeElement.textContent).toContain(naples.status['DSCVersion']);
     } else {
       expect(fields[5].nativeElement.textContent.trim()).toBe('');
     }
@@ -172,7 +172,7 @@ describe('NaplesdetailComponent', () => {
     const clusterService = TestBed.get(ClusterService);
 
     naples1 = {
-      'kind': 'SmartNIC',
+      'kind': 'DistributedServiceCard',
       'api-version': 'v1',
       'meta': {
         'name': '4444.4444.0002',
@@ -181,7 +181,7 @@ describe('NaplesdetailComponent', () => {
         'uuid': '11b1912f-c513-4f19-8183-5e17e60f024f',
         'creation-time': '2018-12-12T20:03:01.157939359Z',
         'mod-time': '2018-12-13T01:21:16.38343108Z',
-        'self-link': '/configs/cluster/v1/smartnics/4444.4444.0002'
+        'self-link': '/configs/cluster/v1/distributedservicecards/4444.4444.0002'
       },
       'spec': {
         'admit': true,
@@ -200,12 +200,12 @@ describe('NaplesdetailComponent', () => {
         ],
         'serial-num': '0x0123456789ABCDEFghijk',
         'primary-mac': '4444.4444.0002',
-        'smartNicVersion': '1.0E'
+        'DSCVersion': '1.0E'
       }
     };
 
-    naples2 = new ClusterSmartNIC({
-      'kind': 'SmartNIC',
+    naples2 = new ClusterDistributedServiceCard({
+      'kind': 'DistributedServiceCard',
       'api-version': 'v1',
       'meta': {
         'name': '3333.3333.0002',
@@ -214,7 +214,7 @@ describe('NaplesdetailComponent', () => {
         'uuid': '11b1912f-c513-4f19-8183-5e17e60f024f',
         'creation-time': '2018-12-12T20:03:01.157939359Z',
         'mod-time': '2018-12-13T01:21:16.38343108Z',
-        'self-link': '/configs/cluster/v1/smartnics/4444.4444.0002'
+        'self-link': '/configs/cluster/v1/distributedservicecards/4444.4444.0002'
       },
       'spec': {},
       'status': {
@@ -223,8 +223,8 @@ describe('NaplesdetailComponent', () => {
       }
     });
 
-    naples3 = new ClusterSmartNIC({
-      'kind': 'SmartNIC',
+    naples3 = new ClusterDistributedServiceCard({
+      'kind': 'DistributedServiceCard',
       'api-version': 'v1',
       'meta': {
         'name': '3333.3333.0003',
@@ -233,7 +233,7 @@ describe('NaplesdetailComponent', () => {
         'uuid': '11b1912f-c513-4f19-8183-5e17e60f024f',
         'creation-time': '2018-12-12T20:03:01.157939359Z',
         'mod-time': '2018-12-13T01:21:16.38343108Z',
-        'self-link': '/configs/cluster/v1/smartnics/4444.4444.0002'
+        'self-link': '/configs/cluster/v1/distributedservicecards/4444.4444.0002'
       },
       'spec': {},
       'status': {
@@ -250,10 +250,10 @@ describe('NaplesdetailComponent', () => {
         }
       ]
     });
-    naplesWatchSpy = spyOn(clusterService, 'WatchSmartNIC').and.returnValue(
+    naplesWatchSpy = spyOn(clusterService, 'WatchDistributedServiceCard').and.returnValue(
       naplesObserver
     );
-    naplesGetSpy = spyOn(clusterService, 'GetSmartNIC').and.returnValue(
+    naplesGetSpy = spyOn(clusterService, 'GetDistributedServiceCard').and.returnValue(
       new BehaviorSubject({
         body: naples2
       })
@@ -409,7 +409,7 @@ describe('NaplesdetailComponent', () => {
 
     // View should now be of missing overlay, and data should be cleared
     fixture.detectChanges();
-    const emptyNaples = new ClusterSmartNIC();
+    const emptyNaples = new ClusterDistributedServiceCard();
     emptyNaples.status['admission-phase'] = null;
     verifyMeta(emptyNaples);
     expect(getOverlay()).toBeTruthy();

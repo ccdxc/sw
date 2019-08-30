@@ -73,7 +73,7 @@ type Controller interface {
 	Cluster() ClusterAPI                                 // return Cluster API interface
 	Node() NodeAPI                                       // return Node API interface
 	Host() HostAPI                                       // return Host API interface
-	SmartNIC() SmartNICAPI                               // return SmartNIC API interface
+	DistributedServiceCard() DistributedServiceCardAPI   // return DistributedServiceCard API interface
 	Tenant() TenantAPI                                   // return Tenant API interface
 	Version() VersionAPI                                 // return Version API interface
 	Module() ModuleAPI                                   // return Module API interface

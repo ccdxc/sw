@@ -28,7 +28,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"PendingNaples": api.Field{Name: "PendingNaples", CLITag: api.CLIInfo{ID: "pending-smartnics", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending-smartnics", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"PendingNaples": api.Field{Name: "PendingNaples", CLITag: api.CLIInfo{ID: "pending-dscs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending-dscs", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.ProtoPort": &api.Struct{
@@ -90,7 +90,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 			"name":                 api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":            api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"pending":              api.CLIInfo{Path: "Status.PropagationStatus.Pending", Skip: false, Insert: "", Help: ""},
-			"pending-smartnics":    api.CLIInfo{Path: "Status.PropagationStatus.PendingNaples", Skip: false, Insert: "", Help: ""},
+			"pending-dscs":         api.CLIInfo{Path: "Status.PropagationStatus.PendingNaples", Skip: false, Insert: "", Help: ""},
 			"ports":                api.CLIInfo{Path: "Spec.Rules[].ProtoPorts[].Ports", Skip: false, Insert: "", Help: ""},
 			"protocol":             api.CLIInfo{Path: "Spec.Rules[].ProtoPorts[].Protocol", Skip: false, Insert: "", Help: ""},
 			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},

@@ -317,23 +317,23 @@ func (k *CfgWatcherService) runUntilCancel() {
 	k.logger.Infof("Cluster config watcher established, client: %p", k.svcsClient)
 
 	// Init SmartNIC watcher
-	k.smartNICWatcher, err = k.svcsClient.ClusterV1().SmartNIC().Watch(k.ctx, &opts)
+	k.smartNICWatcher, err = k.svcsClient.ClusterV1().DistributedServiceCard().Watch(k.ctx, &opts)
 	ii = 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.smartNICWatcher, err = k.svcsClient.ClusterV1().SmartNIC().Watch(k.ctx, &opts)
+			k.smartNICWatcher, err = k.svcsClient.ClusterV1().DistributedServiceCard().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
-				k.logger.Errorf("Waiting for SmartNIC watch to succeed for %v seconds", ii)
+				k.logger.Errorf("Waiting for DistributedServiceCard watch to succeed for %v seconds", ii)
 			}
 		case <-k.ctx.Done():
 			k.stopWatchers()
 			return
 		}
 	}
-	k.logger.Infof("SmartNIC config watcher established, client: %p", k.svcsClient)
+	k.logger.Infof("DistributedServiceCard config watcher established, client: %p", k.svcsClient)
 
 	// Init Host watcher
 	k.hostWatcher, err = k.svcsClient.ClusterV1().Host().Watch(k.ctx, &opts)
@@ -406,9 +406,9 @@ func (k *CfgWatcherService) runUntilCancel() {
 				return
 			}
 			k.logger.Debugf("cfgWatcher Received %+v", event)
-			snic, ok := event.Object.(*cmd.SmartNIC)
+			snic, ok := event.Object.(*cmd.DistributedServiceCard)
 			if !ok {
-				k.logger.Infof("SmartNIC Watcher failed to get SmartNIC Object")
+				k.logger.Infof("DistributedServiceCard Watcher failed to get DistributedServiceCard Object")
 				break
 			}
 			if k.smartNICEventHandler != nil {

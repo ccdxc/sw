@@ -118,7 +118,7 @@ func NewNMD(pipeline Pipeline,
 
 	fru := ReadFruFromJSON()
 
-	// TODO : Add more information into SmartNICRollout
+	// TODO : Add more information into DSCRollout
 	ro := nmd.NaplesRollout{
 		TypeMeta: api.TypeMeta{
 			Kind: "NaplesRollout",
@@ -126,8 +126,8 @@ func NewNMD(pipeline Pipeline,
 		ObjectMeta: api.ObjectMeta{
 			Name: fru.MacStr,
 		},
-		InProgressOp: roprotos.SmartNICOpSpec{
-			Op: roprotos.SmartNICOp_SmartNICNoOp,
+		InProgressOp: roprotos.DSCOpSpec{
+			Op: roprotos.DSCOp_DSCNoOp,
 		},
 	}
 	tempRO := nmd.NaplesRollout{
@@ -194,9 +194,9 @@ func NewNMD(pipeline Pipeline,
 			},
 		},
 		Status: nmd.NaplesStatus{
-			Fru:          fru,
-			TimeZone:     "UTC",
-			SmartNicName: fru.MacStr,
+			Fru:      fru,
+			TimeZone: "UTC",
+			DSCName:  fru.MacStr,
 		},
 	}
 	// List available NaplesProfiles
@@ -251,7 +251,7 @@ func NewNMD(pipeline Pipeline,
 		stopNICReg:         make(chan bool, 1),
 		stopNICUpd:         make(chan bool, 1),
 		config:             config,
-		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
+		completedOps:       make(map[roprotos.DSCOpSpec]bool),
 		ro:                 ro,
 		revProxy:           revProxy,
 		metrics:            nil,
@@ -484,7 +484,7 @@ func (n *NMD) NaplesProfileDeleteHandler(r *http.Request) (interface{}, error) {
 
 // NaplesRolloutHandler is the REST handler for Naples Config POST operation
 func (n *NMD) NaplesRolloutHandler(r *http.Request) (interface{}, error) {
-	snicRollout := roprotos.SmartNICRollout{}
+	snicRollout := roprotos.DSCRollout{}
 	resp := NaplesConfigResp{}
 	content, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -500,7 +500,7 @@ func (n *NMD) NaplesRolloutHandler(r *http.Request) (interface{}, error) {
 	}
 
 	log.Infof("Naples Rollout Config Request: %+v", snicRollout)
-	err = n.CreateUpdateSmartNICRollout(&snicRollout)
+	err = n.CreateUpdateDSCRollout(&snicRollout)
 
 	if err != nil {
 		resp.ErrorMsg = err.Error()
@@ -517,7 +517,7 @@ func (n *NMD) NaplesRolloutGetHandler(r *http.Request) (interface{}, error) {
 		n.metrics.GetCalls.Inc()
 	}
 
-	st := n.GetSmartNICRolloutStatus()
+	st := n.GetDSCRolloutStatus()
 	log.Debugf("Naples Rollout Get Response: %+v", st)
 	return st, nil
 }
@@ -528,7 +528,7 @@ func (n *NMD) NaplesRolloutDeleteHandler(r *http.Request) (interface{}, error) {
 	ioutil.ReadAll(r.Body)
 
 	log.Infof("Naples Rollout Delete Request")
-	err := n.DeleteSmartNICRollout(&roprotos.SmartNICRollout{})
+	err := n.DeleteDSCRollout(&roprotos.DSCRollout{})
 
 	if err != nil {
 		resp.ErrorMsg = err.Error()
@@ -1179,7 +1179,7 @@ func (n *NMD) GetNaplesConfig() nmd.Naples {
 }
 
 // SetSmartNIC intializes the smartNIC object
-func (n *NMD) SetSmartNIC(nic *cluster.SmartNIC) error {
+func (n *NMD) SetSmartNIC(nic *cluster.DistributedServiceCard) error {
 	n.Lock()
 	defer n.Unlock()
 
@@ -1188,7 +1188,7 @@ func (n *NMD) SetSmartNIC(nic *cluster.SmartNIC) error {
 }
 
 // GetSmartNIC returns the smartNIC object
-func (n *NMD) GetSmartNIC() (*cluster.SmartNIC, error) {
+func (n *NMD) GetSmartNIC() (*cluster.DistributedServiceCard, error) {
 	n.Lock()
 	defer n.Unlock()
 

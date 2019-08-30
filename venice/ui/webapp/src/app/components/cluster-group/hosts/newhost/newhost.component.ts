@@ -6,7 +6,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ClusterHost, IClusterHost} from '@sdk/v1/models/generated/cluster/cluster-host.model';
-import {ClusterSmartNICID} from '@sdk/v1/models/generated/cluster/cluster-smart-nicid.model';
+import {ClusterDistributedServiceCardID} from '@sdk/v1/models/generated/cluster/cluster-distributed-service-card-id.model';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { Utility } from '@app/common/Utility';
@@ -20,7 +20,7 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
  * It enable adding and updating host object.  User must specify to use "ID" or "MAC" in UI-html
  * Internally, 'radioValue' holds the selected value (ID or MAC)
  *
- *  postNgInit() -> getPreSelectedSmartNICID() // when in edit mode, we compute the radio value from data
+ *  postNgInit() -> getPreSelectedDistributedServiceCardID() // when in edit mode, we compute the radio value from data
  *
  * In createObjct() and updateObject(), we clean up data using clearOtherRadios()
  */
@@ -63,14 +63,14 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
   postNgInit() {
     if (this.objectData != null) {
       // in edit mode.  We compute the radio (ID/MAC) value
-      this.getPreSelectedSmartNICID();
+      this.getPreSelectedDSCID();
     }
 
     this.newHostForm = this.newObject.$formGroup;
-    const smartNICIDs: any = this.newHostForm.get(['spec', 'smart-nics']);
+    const smartNICIDs: any = this.newHostForm.get(['spec', 'dscs']);
 
     if (smartNICIDs.controls.length === 0) {
-      this.addSmartNICID();
+      this.addDSCID();
     }
 
     if (this.isInline) {
@@ -78,34 +78,34 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
       this.newObject.$formGroup.get(['meta', 'name']).disable();
     }
 
-    this.smartNICIDs = (<any>this.newHostForm.get(['spec', 'smart-nics'])).controls;
+    this.smartNICIDs = (<any>this.newHostForm.get(['spec', 'dscs'])).controls;
 
     // gets the options for the radio buttons
-    this.smartNICIDOptions = Object.keys((<any>this.newHostForm.get(['spec', 'smart-nics', 0])).controls);
+    this.smartNICIDOptions = Object.keys((<any>this.newHostForm.get(['spec', 'dscs', 0])).controls);
 
     this.newObject.$formGroup.get(['meta', 'name']).setValidators([
       this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isNewHostNameValid(this.existingObjects) ]);
 
-    this.newObject.$formGroup.get(['spec', 'smart-nics', 0, 'mac-address']).setValidators([
+    this.newObject.$formGroup.get(['spec', 'dscs', 0, 'mac-address']).setValidators([
       patternValidator(NewhostComponent.MACADDRESS_REGEX, NewhostComponent.MACADDRESS_MESSAGE) ]);
 
   }
 
 
-  getPreSelectedSmartNICID() {
+  getPreSelectedDSCID() {
     // sets radio when editing
 
-    if (this.newObject.spec['smart-nics'].length !== 0) {
-      const clusterSmartNICID: ClusterSmartNICID = this.newObject.spec['smart-nics'][0];
+    if (this.newObject.spec['dscs'].length !== 0) {
+      const clusterDSCID: ClusterDistributedServiceCardID = this.newObject.spec['dscs'][0];
 
-      if ( clusterSmartNICID[NewhostComponent.KEYS_ID] !== null) {
+      if ( clusterDSCID[NewhostComponent.KEYS_ID] !== null) {
         this.radioValue = NewhostComponent.KEYS_ID;
       }
-      if ( clusterSmartNICID[NewhostComponent.KEYS_MACADDRESS] !== null) {
+      if ( clusterDSCID[NewhostComponent.KEYS_MACADDRESS] !== null) {
         this.radioValue =  NewhostComponent.KEYS_MACADDRESS;
       }
-      if ( clusterSmartNICID[NewhostComponent.KEYS_ID] === null && clusterSmartNICID[NewhostComponent.KEYS_MACADDRESS] === null) {
+      if ( clusterDSCID[NewhostComponent.KEYS_ID] === null && clusterDSCID[NewhostComponent.KEYS_MACADDRESS] === null) {
         this.radioValue = '';
       }
     }
@@ -125,10 +125,10 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
   }
 
 
-  addSmartNICID() {
+  addDSCID() {
     // updates the form
-    const smartNICIDs = this.newHostForm.get(['spec', 'smart-nics']) as FormArray;
-    smartNICIDs.insert(0, new ClusterSmartNICID().$formGroup);
+    const smartNICIDs = this.newHostForm.get(['spec', 'dscs']) as FormArray;
+    smartNICIDs.insert(0, new ClusterDistributedServiceCardID().$formGroup);
   }
 
   onRadioButtonChange($event) {
@@ -142,8 +142,8 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
    */
   clearOtherRadios(): IClusterHost {
     const host: IClusterHost = this.newObject.getFormGroupValues();
-    for (let i = 0; i < host.spec['smart-nics'].length; i++) {
-      const config = host.spec['smart-nics'][i];
+    for (let i = 0; i < host.spec['dscs'].length; i++) {
+      const config = host.spec['dscs'][i];
       const keys = Object.keys(config);
       for (let j = 0; j < keys.length; j++) {
         const key = keys[j];
@@ -158,8 +158,8 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
   isFormValid(): boolean {
     // checks that the ADD NAPLES BY field is filled out
     if (this.radioValue !== '') {
-      if (!Utility.isEmpty(this.newHostForm.get(['spec', 'smart-nics', 0, this.radioValue]).value)
-      && this.newHostForm.get(['spec', 'smart-nics', 0, this.radioValue]).valid) {
+      if (!Utility.isEmpty(this.newHostForm.get(['spec', 'dscs', 0, this.radioValue]).value)
+      && this.newHostForm.get(['spec', 'dscs', 0, this.radioValue]).valid) {
         return true;
       }
     }

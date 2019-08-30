@@ -299,7 +299,7 @@ type NodeEventHandler func(et kvstore.WatchEventType, node *cluster.Node)
 type ClusterEventHandler func(et kvstore.WatchEventType, cluster *cluster.Cluster)
 
 // SmartNICEventHandler handles watch events for SmartNIC object
-type SmartNICEventHandler func(et kvstore.WatchEventType, nic *cluster.SmartNIC)
+type SmartNICEventHandler func(et kvstore.WatchEventType, nic *cluster.DistributedServiceCard)
 
 // HostEventHandler handles watch events for Host object
 type HostEventHandler func(et kvstore.WatchEventType, nic *cluster.Host)
@@ -346,14 +346,14 @@ type SmartNICService interface {
 
 	// InitiateNICRegistration initiates post to naples config to switch to
 	// managed mode
-	InitiateNICRegistration(nic *cluster.SmartNIC)
+	InitiateNICRegistration(nic *cluster.DistributedServiceCard)
 
 	// UpdateNicInRetryDB adds or updates a smartNIC in RetryDB that has NICs in
 	// active retry for initiating NIC registration to switch to managed mode
-	UpdateNicInRetryDB(nic *cluster.SmartNIC)
+	UpdateNicInRetryDB(nic *cluster.DistributedServiceCard)
 
 	// DeleteNicFromRetryDB removes a smartNIC from RetryDB
-	DeleteNicFromRetryDB(nic *cluster.SmartNIC)
+	DeleteNicFromRetryDB(nic *cluster.DistributedServiceCard)
 }
 
 // ServiceTracker tracks location of a service

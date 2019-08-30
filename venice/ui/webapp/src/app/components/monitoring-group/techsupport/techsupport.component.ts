@@ -244,7 +244,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
             .. // another nic's MAC
           }
         }
-   techsupport url looks like: https://10.7.100.21:10001/objstore/v1/downloads/tenant/default/techsupport/ts-1-b91bd56b-060a-48dc-ad9b-fa2c62d7b621-SmartNIC-00ae.cd00.1142
+   techsupport url looks like: https://10.7.100.21:10001/objstore/v1/downloads/tenant/default/techsupport/ts-1-b91bd56b-060a-48dc-ad9b-fa2c62d7b621-DistributedServiceCard-00ae.cd00.1142
   */
 
 

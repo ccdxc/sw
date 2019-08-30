@@ -24,7 +24,7 @@ import (
 )
 
 // RegisterSmartNICReq registers a NIC with CMD
-func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
+func (n *NMD) RegisterSmartNICReq(nic *cmd.DistributedServiceCard) (grpc.RegisterNICResponse, error) {
 
 	if n.cmd == nil {
 		log.Errorf("Failed to register NIC, mac: %s cmd not ready", nic.ObjectMeta.Name)
@@ -39,7 +39,7 @@ func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, 
 }
 
 // UpdateSmartNICReq registers a NIC with CMD/Venice cluster
-func (n *NMD) UpdateSmartNICReq(nic *cmd.SmartNIC) error {
+func (n *NMD) UpdateSmartNICReq(nic *cmd.DistributedServiceCard) error {
 
 	if n.cmd == nil {
 		log.Errorf("Failed to update NIC, mac: %s cmd not ready", nic.ObjectMeta.Name)
@@ -56,7 +56,7 @@ func (n *NMD) UpdateSmartNICReq(nic *cmd.SmartNIC) error {
 }
 
 // CreateSmartNIC creates a local smartNIC object
-func (n *NMD) CreateSmartNIC(nic *cmd.SmartNIC) error {
+func (n *NMD) CreateSmartNIC(nic *cmd.DistributedServiceCard) error {
 
 	log.Infof("SmartNIC create, mac: %s", nic.ObjectMeta.Name)
 
@@ -75,7 +75,7 @@ func (n *NMD) CreateSmartNIC(nic *cmd.SmartNIC) error {
 
 // UpdateSmartNIC updates the local smartNIC object
 // Only meant to be called when receiving events from SmartNIC watcher
-func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
+func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 
 	log.Infof("SmartNIC update, mac: %s, phase: %s, mgmt mode: %s", nic.ObjectMeta.Name, nic.Status.AdmissionPhase, nic.Spec.MgmtMode)
 
@@ -98,11 +98,11 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 	// notifications from CMD before we actually shut down the updates channel and we
 	// don't want to do react to each of them.
 	if oldNic != nil {
-		decommission := oldNic.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() &&
-			nic.Spec.MgmtMode == cmd.SmartNICSpec_HOST.String()
+		decommission := oldNic.Spec.MgmtMode == cmd.DistributedServiceCardSpec_NETWORK.String() &&
+			nic.Spec.MgmtMode == cmd.DistributedServiceCardSpec_HOST.String()
 
-		deAdmission := oldNic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() &&
-			nic.Status.AdmissionPhase == cmd.SmartNICStatus_PENDING.String()
+		deAdmission := oldNic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String() &&
+			nic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_PENDING.String()
 
 		if decommission || deAdmission {
 			n.metrics = nil
@@ -137,8 +137,8 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 					if err := n.UpdateNaplesConfig(cfg); err != nil {
 						log.Errorf("Failed to revert to host managed mode during decommissioning")
 					}
-					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_DECOMMISSIONED.String()
-					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
+					n.config.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_DECOMMISSIONED.String()
+					n.config.Status.AdmissionPhaseReason = "DistributedServiceCard management mode changed to HOST"
 					log.Infof("Naples successfully decommissioned and moved to HOST mode.")
 				} else {
 					recorder.Event(eventtypes.DSC_DEADMITTED, fmt.Sprintf("DSC %s(%s) de-admitted from the cluster", nic.Spec.ID, nic.Name), nic)
@@ -219,7 +219,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 }
 
 // DeleteSmartNIC deletes the local smartNIC object
-func (n *NMD) DeleteSmartNIC(nic *cmd.SmartNIC) error {
+func (n *NMD) DeleteSmartNIC(nic *cmd.DistributedServiceCard) error {
 
 	log.Infof("SmartNIC delete, mac: %s", nic.ObjectMeta.Name)
 

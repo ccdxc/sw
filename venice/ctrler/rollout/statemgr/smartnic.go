@@ -14,28 +14,28 @@ import (
 	"github.com/pensando/sw/venice/utils/memdb"
 )
 
-// SmartNICRolloutState - Internal state for Rollout
-type SmartNICRolloutState struct {
+// DSCRolloutState - Internal state for Rollout
+type DSCRolloutState struct {
 	Mutex sync.Mutex
-	*protos.SmartNICRollout
+	*protos.DSCRollout
 	*Statemgr
 	ros    *RolloutState
-	status map[protos.SmartNICOp]protos.SmartNICOpStatus
+	status map[protos.DSCOp]protos.DSCOpStatus
 }
 
-// CreateSmartNICRolloutState to create a SmartNICRollout Object in statemgr
-func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *RolloutState, snicStatus *roproto.RolloutPhase) error {
-	_, err := sm.FindObject(kindSmartNICRollout, ro.Tenant, ro.Name)
+// CreateDSCRolloutState to create a DSCRollout Object in statemgr
+func (sm *Statemgr) CreateDSCRolloutState(ro *protos.DSCRollout, ros *RolloutState, snicStatus *roproto.RolloutPhase) error {
+	_, err := sm.FindObject(kindDSCRollout, ro.Tenant, ro.Name)
 	if err == nil {
-		log.Errorf("SmartNICRollout {+%v} exists", ro)
+		log.Errorf("DSCRollout {+%v} exists", ro)
 		return fmt.Errorf("smartNICRollout already exists")
 	}
 
-	sros := SmartNICRolloutState{
-		SmartNICRollout: ro,
-		Statemgr:        sm,
-		ros:             ros,
-		status:          make(map[protos.SmartNICOp]protos.SmartNICOpStatus),
+	sros := DSCRolloutState{
+		DSCRollout: ro,
+		Statemgr:   sm,
+		ros:        ros,
+		status:     make(map[protos.DSCOp]protos.DSCOpStatus),
 	}
 
 	if snicStatus != nil {
@@ -43,20 +43,20 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 		log.Infof("Spec for building is %+v", ros.Spec)
 		log.Infof("SmartNIC Status %+v", snicStatus)
 
-		var op, nextOp protos.SmartNICOp
+		var op, nextOp protos.DSCOp
 		switch ros.Spec.UpgradeType {
 		case roproto.RolloutSpec_Disruptive.String():
-			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
-			nextOp = protos.SmartNICOp_SmartNICDisruptiveUpgrade
+			op = protos.DSCOp_DSCPreCheckForDisruptive
+			nextOp = protos.DSCOp_DSCDisruptiveUpgrade
 		case roproto.RolloutSpec_OnNextHostReboot.String():
-			op = protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot
-			nextOp = protos.SmartNICOp_SmartNICUpgOnNextHostReboot
+			op = protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot
+			nextOp = protos.DSCOp_DSCUpgOnNextHostReboot
 		default:
-			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
-			nextOp = protos.SmartNICOp_SmartNICDisruptiveUpgrade
+			op = protos.DSCOp_DSCPreCheckForDisruptive
+			nextOp = protos.DSCOp_DSCDisruptiveUpgrade
 		}
 
-		st := protos.SmartNICOpStatus{
+		st := protos.DSCOpStatus{
 			Op:       op,
 			Version:  ros.Rollout.Spec.Version,
 			OpStatus: "success",
@@ -64,11 +64,11 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 		sros.status[op] = st
 
 		if snicStatus.Phase == roproto.RolloutPhase_PROGRESSING.String() {
-			sros.Spec.Ops = append(sros.Spec.Ops, protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
+			sros.Spec.Ops = append(sros.Spec.Ops, protos.DSCOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
 		}
 		if snicStatus.Phase == roproto.RolloutPhase_COMPLETE.String() {
-			sros.Spec.Ops = append(sros.Spec.Ops, protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
-			stNext := protos.SmartNICOpStatus{
+			sros.Spec.Ops = append(sros.Spec.Ops, protos.DSCOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
+			stNext := protos.DSCOpStatus{
 				Op:       nextOp,
 				Version:  ros.Rollout.Spec.Version,
 				OpStatus: "success",
@@ -81,7 +81,7 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 
 	sros.Mutex.Lock()
 	// XXX validate parameters -
-	if sros.GetObjectKind() != kindSmartNICRollout {
+	if sros.GetObjectKind() != kindDSCRollout {
 		sros.Mutex.Unlock()
 		return fmt.Errorf("unexpected object kind %s", sros.GetObjectKind())
 	}
@@ -91,47 +91,47 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 	return nil
 }
 
-// GetSmartNICRolloutState : Get the specified rollout state
-func (sm *Statemgr) GetSmartNICRolloutState(tenant, name string) (*SmartNICRolloutState, error) {
-	dbMs, err := sm.FindObject(kindSmartNICRollout, tenant, name)
+// GetDSCRolloutState : Get the specified rollout state
+func (sm *Statemgr) GetDSCRolloutState(tenant, name string) (*DSCRolloutState, error) {
+	dbMs, err := sm.FindObject(kindDSCRollout, tenant, name)
 	if err != nil {
 		return nil, err
 	}
-	return dbMs.(*SmartNICRolloutState), nil
+	return dbMs.(*DSCRolloutState), nil
 }
 
-// DeleteSmartNICRolloutState - delete rollout
-func (sm *Statemgr) DeleteSmartNICRolloutState(ro *protos.SmartNICRollout) {
-	ros, err := sm.GetSmartNICRolloutState(ro.Tenant, ro.Name)
+// DeleteDSCRolloutState - delete rollout
+func (sm *Statemgr) DeleteDSCRolloutState(ro *protos.DSCRollout) {
+	ros, err := sm.GetDSCRolloutState(ro.Tenant, ro.Name)
 	if err != nil {
-		log.Debugf("non-existent SmartNICRollout {%+v}. Err: %v", ro, err)
+		log.Debugf("non-existent DSCRollout {%+v}. Err: %v", ro, err)
 		return
 	}
 
-	log.Infof("Deleting SmartNICRollout %v", ros.SmartNICRollout.Name)
+	log.Infof("Deleting DSCRollout %v", ros.DSCRollout.Name)
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
 
 	// delete rollout state from DB
 	_ = sm.memDB.DeleteObject(ros)
 }
 
-// SmartNICRolloutStateFromObj converts from memdb object to SmartNICRollout state
-func SmartNICRolloutStateFromObj(obj memdb.Object) (*SmartNICRolloutState, error) {
+// DSCRolloutStateFromObj converts from memdb object to DSCRollout state
+func DSCRolloutStateFromObj(obj memdb.Object) (*DSCRolloutState, error) {
 	switch nsobj := obj.(type) {
-	case *SmartNICRolloutState:
+	case *DSCRolloutState:
 		return nsobj, nil
 	default:
 		return nil, ErrIncorrectObjectType
 	}
 }
 
-// ListSmartNICRollouts lists all SmartNICRollout objects
-func (sm *Statemgr) ListSmartNICRollouts() ([]*SmartNICRolloutState, error) {
-	objs := sm.memDB.ListObjects(kindSmartNICRollout)
+// ListDSCRollouts lists all DSCRollout objects
+func (sm *Statemgr) ListDSCRollouts() ([]*DSCRolloutState, error) {
+	objs := sm.memDB.ListObjects(kindDSCRollout)
 
-	var smartNICUpdateStates []*SmartNICRolloutState
+	var smartNICUpdateStates []*DSCRolloutState
 	for _, obj := range objs {
-		nso, err := SmartNICRolloutStateFromObj(obj)
+		nso, err := DSCRolloutStateFromObj(obj)
 		if err != nil {
 			return smartNICUpdateStates, err
 		}
@@ -143,10 +143,10 @@ func (sm *Statemgr) ListSmartNICRollouts() ([]*SmartNICRolloutState, error) {
 	return smartNICUpdateStates, nil
 }
 
-// UpdateSmartNICRolloutStatus - update status
-func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *protos.SmartNICRolloutStatus) {
+// UpdateDSCRolloutStatus - update status
+func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRolloutStatus) {
 
-	log.Infof("Updating status %+v of SmartNICRollout %v", newStatus, snicState.SmartNICRollout.Name)
+	log.Infof("Updating status %+v of DSCRollout %v", newStatus, snicState.DSCRollout.Name)
 	version := snicState.ros.Rollout.Spec.Version
 
 	var phase roproto.RolloutPhase_Phases
@@ -178,44 +178,44 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 		updateStatus = true
 		if s.OpStatus == "success" || s.OpStatus == "skipped" {
 			switch s.Op {
-			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
+			case protos.DSCOp_DSCPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgSuccess
 				phase = roproto.RolloutPhase_WAITING_FOR_TURN
-			case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
+			case protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgSuccess
 				phase = roproto.RolloutPhase_WAITING_FOR_TURN
-			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
+			case protos.DSCOp_DSCUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICUpgSuccess
 				phase = roproto.RolloutPhase_COMPLETE
 				snicState.ros.Status.CompletionPercentage += uint32(snicState.ros.completionDelta)
-			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
+			case protos.DSCOp_DSCDisruptiveUpgrade:
 				evt = fsmEvOneSmartNICUpgSuccess
 				phase = roproto.RolloutPhase_COMPLETE
 				snicState.ros.Status.CompletionPercentage += uint32(snicState.ros.completionDelta)
 			default:
-				log.Errorf("Success for unknown Op %d from %s ", s.Op, snicState.SmartNICRollout.Name)
+				log.Errorf("Success for unknown Op %d from %s ", s.Op, snicState.DSCRollout.Name)
 				return
 			}
 		} else {
 			switch s.Op {
-			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
+			case protos.DSCOp_DSCPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
 				phase = roproto.RolloutPhase_FAIL
-			case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
+			case protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
 				phase = roproto.RolloutPhase_FAIL
-			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
+			case protos.DSCOp_DSCUpgOnNextHostReboot:
 				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
 				phase = roproto.RolloutPhase_FAIL
-			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
+			case protos.DSCOp_DSCDisruptiveUpgrade:
 				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
 				phase = roproto.RolloutPhase_FAIL
 			default:
-				log.Errorf("Failure for unknown Op %d from %s ", s.Op, snicState.SmartNICRollout.Name)
+				log.Errorf("Failure for unknown Op %d from %s ", s.Op, snicState.DSCRollout.Name)
 				return
 			}
 		}
@@ -237,7 +237,7 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 	}
 }
 
-func (snicState *SmartNICRolloutState) anyPendingOp() bool {
+func (snicState *DSCRolloutState) anyPendingOp() bool {
 	snicState.Mutex.Lock()
 	defer snicState.Mutex.Unlock()
 
@@ -249,7 +249,7 @@ func (snicState *SmartNICRolloutState) anyPendingOp() bool {
 	return false
 }
 
-func (snicState *SmartNICRolloutState) addSpecOp(version string, op protos.SmartNICOp) {
+func (snicState *DSCRolloutState) addSpecOp(version string, op protos.DSCOp) {
 
 	snicState.Mutex.Lock()
 	log.Infof("version %s and op %s update %+v", version, op, snicState.Spec.Ops)
@@ -260,7 +260,7 @@ func (snicState *SmartNICRolloutState) addSpecOp(version string, op protos.Smart
 			return // version and op already exist
 		}
 	}
-	snicState.Spec.Ops = []protos.SmartNICOpSpec{{Op: op, Version: version}}
+	snicState.Spec.Ops = []protos.DSCOpSpec{{Op: op, Version: version}}
 	log.Infof("version %s and op %s update %+v", version, op, snicState.Spec.Ops)
 	snicState.Mutex.Unlock()
 

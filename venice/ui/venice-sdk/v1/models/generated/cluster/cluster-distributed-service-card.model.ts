@@ -8,27 +8,27 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { ClusterSmartNICSpec, IClusterSmartNICSpec } from './cluster-smart-nic-spec.model';
-import { ClusterSmartNICStatus, IClusterSmartNICStatus } from './cluster-smart-nic-status.model';
+import { ClusterDistributedServiceCardSpec, IClusterDistributedServiceCardSpec } from './cluster-distributed-service-card-spec.model';
+import { ClusterDistributedServiceCardStatus, IClusterDistributedServiceCardStatus } from './cluster-distributed-service-card-status.model';
 
-export interface IClusterSmartNIC {
+export interface IClusterDistributedServiceCard {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: IClusterSmartNICSpec;
-    'status'?: IClusterSmartNICStatus;
+    'spec'?: IClusterDistributedServiceCardSpec;
+    'status'?: IClusterDistributedServiceCardStatus;
 }
 
 
-export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
+export class ClusterDistributedServiceCard extends BaseModel implements IClusterDistributedServiceCard {
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    /** SmartNICSpec contains the configuration of the network adapter. */
-    'spec': ClusterSmartNICSpec = null;
-    /** SmartNICStatus contains the current state of the network adapter. */
-    'status': ClusterSmartNICStatus = null;
-    public static propInfo: { [prop in keyof IClusterSmartNIC]: PropInfoItem } = {
+    /** DistributedServiceCardSpec contains the configuration of the network adapter. */
+    'spec': ClusterDistributedServiceCardSpec = null;
+    /** DistributedServiceCardStatus contains the current state of the network adapter. */
+    'status': ClusterDistributedServiceCardStatus = null;
+    public static propInfo: { [prop in keyof IClusterDistributedServiceCard]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'
@@ -42,31 +42,31 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
             type: 'object'
         },
         'spec': {
-            description:  'SmartNICSpec contains the configuration of the network adapter.',
+            description:  'DistributedServiceCardSpec contains the configuration of the network adapter.',
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'SmartNICStatus contains the current state of the network adapter.',
+            description:  'DistributedServiceCardStatus contains the current state of the network adapter.',
             required: false,
             type: 'object'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterSmartNIC.propInfo[propName];
+        return ClusterDistributedServiceCard.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterSmartNIC.propInfo;
+        return ClusterDistributedServiceCard.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterSmartNIC.propInfo[prop] != null &&
-                        ClusterSmartNIC.propInfo[prop].default != null);
+        return (ClusterDistributedServiceCard.propInfo[prop] != null &&
+                        ClusterDistributedServiceCard.propInfo[prop].default != null);
     }
 
     /**
@@ -76,8 +76,8 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new ClusterSmartNICSpec();
-        this['status'] = new ClusterSmartNICStatus();
+        this['spec'] = new ClusterDistributedServiceCardSpec();
+        this['status'] = new ClusterDistributedServiceCardStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -89,15 +89,15 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (fillDefaults && ClusterSmartNIC.hasDefaultValue('kind')) {
-            this['kind'] = ClusterSmartNIC.propInfo['kind'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCard.hasDefaultValue('kind')) {
+            this['kind'] = ClusterDistributedServiceCard.propInfo['kind'].default;
         } else {
             this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (fillDefaults && ClusterSmartNIC.hasDefaultValue('api-version')) {
-            this['api-version'] = ClusterSmartNIC.propInfo['api-version'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCard.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterDistributedServiceCard.propInfo['api-version'].default;
         } else {
             this['api-version'] = null
         }
@@ -123,11 +123,11 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ClusterSmartNIC.propInfo['kind']),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterSmartNIC.propInfo['api-version']),
-                'meta': CustomFormGroup(this['meta'].$formGroup, ClusterSmartNIC.propInfo['meta'].required),
-                'spec': CustomFormGroup(this['spec'].$formGroup, ClusterSmartNIC.propInfo['spec'].required),
-                'status': CustomFormGroup(this['status'].$formGroup, ClusterSmartNIC.propInfo['status'].required),
+                'kind': CustomFormControl(new FormControl(this['kind']), ClusterDistributedServiceCard.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterDistributedServiceCard.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, ClusterDistributedServiceCard.propInfo['meta'].required),
+                'spec': CustomFormGroup(this['spec'].$formGroup, ClusterDistributedServiceCard.propInfo['spec'].required),
+                'status': CustomFormGroup(this['status'].$formGroup, ClusterDistributedServiceCard.propInfo['status'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {

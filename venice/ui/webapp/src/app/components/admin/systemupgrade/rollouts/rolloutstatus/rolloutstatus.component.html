@@ -56,7 +56,7 @@
             {{selectedRollout?.spec["upgrade-type"] }}</div>
         </div>
       </div>
-      <!-- If rollout does not involve Naples, we don't want to display rollout NIC configures -->
+      <!-- If rollout does not involve Distributed Services Cards, we don't want to display rollout NIC configures -->
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label"> Max DSC Updated In Parallel:

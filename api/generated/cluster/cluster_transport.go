@@ -221,6 +221,40 @@ func DecodeGrpcRespClusterStatus(ctx context.Context, response interface{}) (int
 	return response, nil
 }
 
+func encodeHTTPDistributedServiceCardID(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDistributedServiceCardID(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DistributedServiceCardID
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDistributedServiceCardID encodes GRPC request
+func EncodeGrpcReqDistributedServiceCardID(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardID)
+	return req, nil
+}
+
+// DecodeGrpcReqDistributedServiceCardID decodes GRPC request
+func DecodeGrpcReqDistributedServiceCardID(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardID)
+	return req, nil
+}
+
+// EncodeGrpcRespDistributedServiceCardID encodes GRC response
+func EncodeGrpcRespDistributedServiceCardID(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDistributedServiceCardID decodes GRPC response
+func DecodeGrpcRespDistributedServiceCardID(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPDockerInfo(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -762,40 +796,6 @@ func EncodeGrpcRespQuorumStatus(ctx context.Context, response interface{}) (inte
 
 // DecodeGrpcRespQuorumStatus decodes GRPC response
 func DecodeGrpcRespQuorumStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSmartNICID(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNICID(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNICID
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNICID encodes GRPC request
-func EncodeGrpcReqSmartNICID(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICID)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNICID decodes GRPC request
-func DecodeGrpcReqSmartNICID(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICID)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNICID encodes GRC response
-func EncodeGrpcRespSmartNICID(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNICID decodes GRPC response
-func DecodeGrpcRespSmartNICID(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

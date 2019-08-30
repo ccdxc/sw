@@ -64,7 +64,7 @@ message NaplesStatus {
     // IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
     string                      MgmtIP       = 7;
 
-    string SmartNicName                      = 8;
+    string DSCName                      = 8;
 
     NaplesFru                   Fru          = 9;
 }

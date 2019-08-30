@@ -19,7 +19,7 @@ import "github.com/pensando/sw/api/protos/sgpolicy.proto";
 //        Cluster
 //        Node
 //        Host
-//        SmartNIC
+//        DistributedServiceCard
 //        Rollout
 //        Tenant
 //
@@ -245,7 +245,7 @@ message TenantPreview {
 //  7. Find all Network objects with type=vlan
 //     kind:Network field:spec.type=vlan
 //  8. Find all Naples nodes with admission-phase = pending or rejected
-//     kind:SmartNIC field:spec.phase in (pending, rejected)
+//     kind:DistributedServiceCard field:spec.phase in (pending, rejected)
 //  9. Find all events with text matching “disconnected”
 //     category:events disconnected
 // 10. Find all Critical events for Network objects
@@ -254,7 +254,7 @@ message TenantPreview {
 //     category:alerts field:status.source.node=MAC1
 //     category:alerts MAC1
 // 12. Find all Naples nodes with metric filter : mem>90 && cpu>90
-//     category:metrics kind:SmartNIC field:metric.mem>90,metric.cpu>90
+//     category:metrics kind:DistributedServiceCard field:metric.mem>90,metric.cpu>90
 // 13. Find all Endpoints with label Tier=Web with counter1>=100
 //     category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 > 100
 // 14. Find all Endpoints objects with label target=prod with crc-error-count != 0

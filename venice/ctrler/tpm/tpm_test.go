@@ -222,7 +222,7 @@ func (m mockClusterV1) Version() cluster.ClusterV1VersionInterface {
 	return nil
 }
 
-func (m mockClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface {
+func (m mockClusterV1) DistributedServiceCard() cluster.ClusterV1DistributedServiceCardInterface {
 	return nil
 }
 

@@ -15,7 +15,7 @@ import (
 type RPCServer struct {
 	stateMgr              *statemgr.Statemgr // reference to state manager
 	grpcServer            *rpckit.RPCServer  // gRPC server instance
-	smartNICRolloutServer *SmartNICRolloutRPCServer
+	smartNICRolloutServer *DSCRolloutRPCServer
 	veniceRolloutServer   *VeniceRolloutRPCServer
 	serviceRolloutServer  *ServiceRolloutRPCServer
 }
@@ -38,9 +38,9 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, diagSvc diagnos
 	if err != nil {
 		log.Fatalf("Error creating VeniceRollout rpc server. Err; %v", err)
 	}
-	smartNICRolloutServer, err := NewSmartNICRolloutRPCServer(stateMgr)
+	smartNICRolloutServer, err := NewDSCRolloutRPCServer(stateMgr)
 	if err != nil {
-		log.Fatalf("Error creating SmartNICRollout rpc server. Err; %v", err)
+		log.Fatalf("Error creating DSCRollout rpc server. Err; %v", err)
 	}
 	serviceRolloutServer, err := NewServiceRolloutRPCServer(stateMgr)
 	if err != nil {
@@ -48,7 +48,7 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, diagSvc diagnos
 	}
 
 	// register the RPC handlers and start the server
-	protos.RegisterSmartNICRolloutApiServer(grpcServer.GrpcServer, smartNICRolloutServer)
+	protos.RegisterDSCRolloutApiServer(grpcServer.GrpcServer, smartNICRolloutServer)
 	protos.RegisterVeniceRolloutApiServer(grpcServer.GrpcServer, veniceRolloutServer)
 	protos.RegisterServiceRolloutApiServer(grpcServer.GrpcServer, serviceRolloutServer)
 	if diagSvc != nil {

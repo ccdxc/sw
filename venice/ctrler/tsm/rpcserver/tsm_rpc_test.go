@@ -251,7 +251,7 @@ func checkNodeResult(t *testing.T, nodeName, nodeKind string, request *monitorin
 	var nodeResults map[string]*monitoring.TechSupportNodeResult
 	switch nodeKind {
 	case statemgr.KindSmartNICNode:
-		nodeResults = request.Status.SmartNICNodeResults
+		nodeResults = request.Status.DSCResults
 	case statemgr.KindControllerNode:
 		nodeResults = request.Status.ControllerNodeResults
 	default:
@@ -263,8 +263,8 @@ func checkNodeResult(t *testing.T, nodeName, nodeKind string, request *monitorin
 	Assert(t, result == expectedResult.String(), fmt.Sprintf("Unexpected result in TechSupportRequest, node: %s, have: %s, want: %s", nodeName, result, expectedResult.String()))
 }
 
-func makeTechSupportSmartNICNodeObject(name string, labels map[string]string) *cluster.SmartNIC {
-	return &cluster.SmartNIC{
+func makeTechSupportSmartNICNodeObject(name string, labels map[string]string) *cluster.DistributedServiceCard {
+	return &cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
 			Kind: statemgr.KindSmartNICNode,
 		},

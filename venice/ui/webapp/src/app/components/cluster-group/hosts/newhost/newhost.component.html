@@ -12,7 +12,7 @@
         <div fxFlex="25px"></div>
 
         <div formGroupName="spec">
-          <div formArrayName="smart-nics">
+          <div formArrayName="dscs">
             <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
                  *ngFor="let smartNICID of smartNICIDs; let index = index; let first = first"
                  [formGroupName]="index">
@@ -44,7 +44,7 @@
 <ng-template #newHostCreation let-index="index">
 
   <div fxflex="nogrow" fxlayout="column" class="newhost-sNI-choose"
-       [formGroup]="newHostForm.get(['spec','smart-nics', index])">
+       [formGroup]="newHostForm.get(['spec','dscs', index])">
     <div class="newhost-radio-button-row">
 
       <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"

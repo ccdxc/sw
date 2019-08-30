@@ -59,7 +59,7 @@ message NetworkInterfaceStatus {
         // TB Added for SR-IOV: HOST_VF
     }
 
-    string SmartNIC                             = 1 [(gogoproto.jsontag) = "smart-nic,omitempty"];
+    string DSC                                  = 1 [(gogoproto.jsontag) = "dsc,omitempty"];
     string Type                                 = 2 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFType)",
                                                    (gogoproto.jsontag) = "type,omitempty"];
     string OperStatus                           = 3 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFStatus)",

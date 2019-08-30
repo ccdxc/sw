@@ -108,21 +108,21 @@ func TestGetKvs(t *testing.T) {
 }
 
 func TestGetKvsSmartNIC(t *testing.T) {
-	ctx := &cliContext{subcmd: "smartnic"}
+	ctx := &cliContext{subcmd: "distributedservicecard"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
 
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: fmt.Sprintf("snic-host-23"),
 		},
-		Spec: cluster.SmartNICSpec{
+		Spec: cluster.DistributedServiceCardSpec{
 			MgmtMode:    "NETWORK",
 			NetworkMode: "OOB",
 		},
-		Status: cluster.SmartNICStatus{
+		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: "ADMITTED",
 			PrimaryMAC:     "00ae.ed33.3333",
 		},

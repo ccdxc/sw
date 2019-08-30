@@ -148,7 +148,7 @@ func getSmartNicCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
-	cfg := cluster.SmartNIC{}
+	cfg := cluster.DistributedServiceCard{}
 	json.Unmarshal(resp, &cfg)
 	fmt.Println(cfg)
 	return nil

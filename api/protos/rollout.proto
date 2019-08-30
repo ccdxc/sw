@@ -41,46 +41,46 @@ message RolloutSpec {
                                                      (venice.check) = "StrEnum(RolloutSpec.StrategyType)"];
 
     // MaxParallel is the maximum number of nodes getting updated at any time
-    // This setting is applicable only to SmartNICs.
+    // This setting is applicable only to DistributedServiceCards.
     // Controller nodes are always upgraded one after another.
     uint32 MaxParallel                          = 5 [(venice.default)="2", (gogoproto.jsontag) = "max-parallel"];
 
     // After these many failures are observed during NIC upgrade, the rollout process stops
     // This setting applies to smartNICs only.
-    // The controller nodes are rollout first and any failure there stops the rollout of SmartNICs
+    // The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards
     uint32 MaxNICFailuresBeforeAbort           = 6 [(gogoproto.jsontag) = "max-nic-failures-before-abort"];
 
-    // If specified, this is the sequence in which the SmartNICs are upgraded based on their labels.
-    // if a SmartNIC matches multiple constraints, the first one is used.
-    //  Any SmartNIC which does not match the constraints is upgraded at the end.
+    // If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
+    // if a DistributedServiceCard matches multiple constraints, the first one is used.
+    //  Any DistributedServiceCard which does not match the constraints is upgraded at the end.
     // This order is mainly for the smartNICs on Hosts
     // Controller nodes are always rollout one after other
     repeated labels.Selector OrderConstraints   = 7 [(gogoproto.jsontag) = "order-constraints,omitempty"];
 
-    // When Set to true, the current rollout is suspended. Existing Nodes/Services/SmartNICs in the middle of rollout continue
-    //  rollout execution but any Nodes/Services/SmartNICs which has not started Rollout will not be scheduled one.
+    // When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
+    //  rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one.
     bool Suspend                                = 8 [(gogoproto.jsontag) = "suspend,omitempty"];
 
-    // Dont upgrade Controller but only upgrade SmartNICs
-    bool SmartNICsOnly                          = 9 [(gogoproto.jsontag) = "smartnics-only,omitempty"];
+    // Dont upgrade Controller but only upgrade DistributedServiceCards
+    bool DSCsOnly                          = 9 [(gogoproto.jsontag) = "dscs-only,omitempty"];
 
-    // When SmartNICMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout
-    bool SmartNICMustMatchConstraint            = 10 [(gogoproto.jsontag) = "smartnic-must-match-constraint,omitempty"];
+    // When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout
+    bool DSCMustMatchConstraint            = 10 [(gogoproto.jsontag) = "dsc-must-match-constraint,omitempty"];
 
     // By default the upgrade is Disruptive. However the API can specify the type of upgrade
-    enum SmartNICUpgradeType {
+    enum DSCUpgradeType {
         //ui-hint: Disruptive
         Disruptive          = 0;
         //ui-hint: OnNextHostReboot
         OnNextHostReboot    = 1 [(venice.enumValueStr) = "on-next-reboot"];
     }
     string UpgradeType                          = 11 [(gogoproto.jsontag) = "upgrade-type",
-                                                    (venice.check) = "StrEnum(RolloutSpec.SmartNICUpgradeType)"];
+                                                    (venice.check) = "StrEnum(RolloutSpec.DSCUpgradeType)"];
 }
 
-// RolloutPhase gives details of status of Rollout on each Node/Service/SmartNIC
+// RolloutPhase gives details of status of Rollout on each Node/Service/DistributedServiceCard
 message RolloutPhase {
-    // Name of the Node, Service or SmartNIC
+    // Name of the Node, Service or DistributedServiceCard
     string Name                         = 1 [ (gogoproto.jsontag) = "name,inline"];
 
     // These are valid conditions of rollout component (node or service)
@@ -145,10 +145,10 @@ message RolloutStatus {
     repeated RolloutPhase ControllerServicesStatus      = 2 [(gogoproto.nullable) = true,
                                                              (gogoproto.jsontag) = "controller-services-status,omitempty"];
 
-    // Rollout status of SmartNICs in the cluster. Has entries for SmartNICs on Controller nodes as well as workload nodes
+    // Rollout status of DistributedServiceCards in the cluster. Has entries for DistributedServiceCards on Controller nodes as well as workload nodes
     // The entries are group by parallelism based on the order-constraints and max-parallel specified by the user.
-    repeated RolloutPhase SmartNICsStatus               = 3 [(gogoproto.nullable) = true,
-                                                             (gogoproto.jsontag) = "smartnics-status,omitempty"];
+    repeated RolloutPhase DSCsStatus               = 3 [(gogoproto.nullable) = true,
+                                                             (gogoproto.jsontag) = "dscs-status,omitempty"];
 
     // Current overall state of rollout
     enum RolloutOperationalState {

@@ -105,7 +105,7 @@ func (sm *Statemgr) runWatcher() {
 				// Since the channel is within the same controller process... no need to restart it
 				return
 			}
-			sn := evt.Object.(*cluster.SmartNIC)
+			sn := evt.Object.(*cluster.DistributedServiceCard)
 
 			log.Infof("Watcher: Got SmartNIC  watch event(%s): %v", evt.Type, sn.Name)
 			sm.handleSmartNICEvent(evt.Type, sn)
@@ -173,12 +173,12 @@ func (sm *Statemgr) deleteRollouts() {
 		}
 	}
 
-	smartNICROs, err := sm.ListSmartNICRollouts()
+	smartNICROs, err := sm.ListDSCRollouts()
 	if err != nil {
-		log.Errorf("Error %v listing SmartNICRollouts", err)
+		log.Errorf("Error %v listing DSCRollouts", err)
 	} else {
 		for _, v := range smartNICROs {
-			sm.DeleteSmartNICRolloutState(v.SmartNICRollout)
+			sm.DeleteDSCRolloutState(v.DSCRollout)
 		}
 	}
 
@@ -196,7 +196,7 @@ func (a bySROSName) Len() int           { return len(a) }
 func (a bySROSName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 func (a bySROSName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
-type bySNICROSName []*SmartNICRolloutState
+type bySNICROSName []*DSCRolloutState
 
 func (a bySNICROSName) Len() int           { return len(a) }
 func (a bySNICROSName) Less(i, j int) bool { return a[i].Name < a[j].Name }

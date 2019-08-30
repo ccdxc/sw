@@ -101,7 +101,7 @@
                 <div fxFlex></div>
                 <div *ngIf="enableUpgradeByLabel()" fxFlex="auto"
                      class="newrollout-NicConstraints-div" fxLayout="row">
-                  <mat-slide-toggle formControlName="smartnic-must-match-constraint" fxFlex='30px'
+                  <mat-slide-toggle formControlName="dsc-must-match-constraint" fxFlex='30px'
                                     class="newrollout-toggle newrollout-fieldtitle"
                                     (change)="onNICsConstraintsChange($event)"></mat-slide-toggle>
                   <div fxFlex="nogrow" class="newrollout-text">Upgrade DSCs by labels</div>
@@ -191,7 +191,7 @@
         <div fxFlex="5px"></div>
         <div>
           <span class="newrollout-order-matchcount"
-                [matTooltip]="'Matched Naples'">{{orders[index].matchedSmartNICs.length}}</span>
+                [matTooltip]="'Matched Distributed Services Cards'">{{orders[index].matchedDistributedServiceCards.length}}</span>
         </div>
       </div>
     </div>

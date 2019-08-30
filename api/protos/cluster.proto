@@ -498,18 +498,18 @@ message Host {
 // HostSpec contains the configuration of the Host.
 message HostSpec {
 
-    // SmartNICs contains the information about all SmartNICs on a host
-    repeated SmartNICID SmartNICs    = 1 [(gogoproto.nullable) = false,
-                                         (gogoproto.jsontag) = "smart-nics,omitempty"];
+    // DSCs contains the information about all DistributedServiceCards on a host
+    repeated DistributedServiceCardID DSCs    = 1 [(gogoproto.nullable) = false,
+                                         (gogoproto.jsontag) = "dscs,omitempty"];
 }
 
-// SmartNICID contains the identifying information of a SmartNIC
-message SmartNICID {
+// DistributedServiceCardID contains the identifying information of a DistributedServiceCard
+message DistributedServiceCardID {
 
-    // Name contains the name of the SmartNIC on a host
+    // Name contains the name of the DistributedServiceCard on a host
     string ID = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
-    // MACAddress contains the primary MAC address of a SmartNIC
+    // MACAddress contains the primary MAC address of a DistributedServiceCard
     string MACAddress = 2 [(gogoproto.jsontag) = "mac-address,omitempty",
                             (venice.check) = "EmptyOr(MacAddr())"];
 }
@@ -517,6 +517,6 @@ message SmartNICID {
 // HostStatus contains the current state of the Host.
 message HostStatus {
 
-    // AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host
-    repeated string AdmittedSmartNICs         = 1 [(gogoproto.jsontag) = "admitted-smart-nics,omitempty"];
+    // AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host
+    repeated string AdmittedDSCs         = 1 [(gogoproto.jsontag) = "admitted-dscs,omitempty"];
 }

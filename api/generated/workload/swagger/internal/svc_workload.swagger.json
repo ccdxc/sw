@@ -1208,7 +1208,7 @@
             "type": "string"
           },
           {
-            "name": "propagation-status.pending-smartnics",
+            "name": "propagation-status.pending-dscs",
             "description": "list of smartnics where propagation did not complete.",
             "in": "query",
             "required": false,
@@ -2427,7 +2427,7 @@
             "type": "string"
           },
           {
-            "name": "propagation-status.pending-smartnics",
+            "name": "propagation-status.pending-dscs",
             "description": "list of smartnics where propagation did not complete.",
             "in": "query",
             "required": false,
@@ -2909,7 +2909,7 @@
           "type": "string",
           "title": "Textual description of propagation status"
         },
-        "pending-smartnics": {
+        "pending-dscs": {
           "type": "array",
           "items": {
             "type": "string"

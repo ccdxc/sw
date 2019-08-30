@@ -36,7 +36,7 @@ func (m *mockClusterV1) Host() cluster.ClusterV1HostInterface {
 	return nil
 }
 
-func (m *mockClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface {
+func (m *mockClusterV1) DistributedServiceCard() cluster.ClusterV1DistributedServiceCardInterface {
 	return nil
 }
 func (m *mockClusterV1) Tenant() cluster.ClusterV1TenantInterface {

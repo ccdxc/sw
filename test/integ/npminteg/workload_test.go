@@ -331,7 +331,7 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 				Name: hostName,
 			},
 			Spec: cluster.HostSpec{
-				SmartNICs: []cluster.SmartNICID{
+				DSCs: []cluster.DistributedServiceCardID{
 					{
 						MACAddress: invSnicMac,
 					},
@@ -372,7 +372,7 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 				Name: hostName,
 			},
 			Spec: cluster.HostSpec{
-				SmartNICs: []cluster.SmartNICID{
+				DSCs: []cluster.DistributedServiceCardID{
 					{
 						MACAddress: snicMac,
 					},

@@ -26,7 +26,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 	"monitoring.PingStats": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PingStats{}) },
 		Fields: map[string]api.Field{
-			"SmartNIC": api.Field{Name: "SmartNIC", CLITag: api.CLIInfo{ID: "smart-nic", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smart-nic", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"DSC": api.Field{Name: "DSC", CLITag: api.CLIInfo{ID: "dsc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"PacketsTx": api.Field{Name: "PacketsTx", CLITag: api.CLIInfo{ID: "packets-sent", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packets-sent", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 

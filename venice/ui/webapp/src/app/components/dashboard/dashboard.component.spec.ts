@@ -122,7 +122,7 @@ describe('DashboardComponent', () => {
     });
 
     it('naples card', () => {
-      TestingUtility.addPermissions([UIRolePermissions.clustersmartnic_read]);
+      TestingUtility.addPermissions([UIRolePermissions.clusterdistributedservicecard_read]);
       fixture.detectChanges();
       // metrics should be hidden
       const cards = fixture.debugElement.queryAll(By.css('app-flip'));

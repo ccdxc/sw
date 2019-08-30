@@ -16,22 +16,22 @@ import "github.com/pensando/sw/api/common.proto";
 
 //============================ smartnic update ==========================================================
 
-enum SmartNICOp {
-    SmartNICNoOp			    = 0;
-    SmartNICPreCheckForUpgOnNextHostReboot  = 1;
-    SmartNICPreCheckForDisruptive           = 2;
-    SmartNICUpgOnNextHostReboot             = 3;
-    SmartNICDisruptiveUpgrade               = 4;
-    SmartNICImageDownload                   = 5;
+enum DSCOp {
+    DSCNoOp			    = 0;
+    DSCPreCheckForUpgOnNextHostReboot  = 1;
+    DSCPreCheckForDisruptive           = 2;
+    DSCUpgOnNextHostReboot             = 3;
+    DSCDisruptiveUpgrade               = 4;
+    DSCImageDownload                   = 5;
 }
 
-message SmartNICOpSpec {
-  SmartNICOp Op  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = "op,omitempty"];
+message DSCOpSpec {
+  DSCOp Op  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = "op,omitempty"];
   string Version   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = "ver,omitempty"];
 }
 
-message SmartNICRolloutSpec {
-  repeated SmartNICOpSpec Ops = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag)  = "ops,omitempty"];
+message DSCRolloutSpec {
+  repeated DSCOpSpec Ops = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag)  = "ops,omitempty"];
 }
 
 enum AllowedStatus {
@@ -40,37 +40,37 @@ enum AllowedStatus {
   InProgress    = 2;
 }
 
-message SmartNICOpStatus {
-  SmartNICOp Op  = 1;
+message DSCOpStatus {
+  DSCOp Op  = 1;
   string Version   = 2;
   string OpStatus  = 3 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(AllowedStatus)", (gogoproto.jsontag)  = "opstatus,omitempty"];
   string Message   = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = ",omitempty"];
 }
 
-message SmartNICRolloutStatus {
-  repeated SmartNICOpStatus OpStatus    = 1[(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+message DSCRolloutStatus {
+  repeated DSCOpStatus OpStatus    = 1[(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-message SmartNICRollout {
+message DSCRollout {
     api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    SmartNICRolloutSpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    DSCRolloutSpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
 }
 
-message SmartNICRolloutEvent {
+message DSCRolloutEvent {
     api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    SmartNICRollout SmartNICRollout = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+    DSCRollout DSCRollout = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
 }
 
-message SmartNICRolloutStatusUpdate {
+message DSCRolloutStatusUpdate {
   api.ObjectMeta          ObjectMeta  = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"]; 
-  SmartNICRolloutStatus   Status      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+  DSCRolloutStatus   Status      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
 }
 
-// SmartNICRolloutApi is used by NodeUpdateMgr to update each Naples SmartNIC
-service SmartNICRolloutApi {
-    rpc WatchSmartNICRollout (api.ObjectMeta) returns (stream SmartNICRolloutEvent) {};
-    rpc UpdateSmartNICRolloutStatus (SmartNICRolloutStatusUpdate) returns (api.Empty) {};
+// DSCRolloutApi is used by NodeUpdateMgr to update each Naples DSC
+service DSCRolloutApi {
+    rpc WatchDSCRollout (api.ObjectMeta) returns (stream DSCRolloutEvent) {};
+    rpc UpdateDSCRolloutStatus (DSCRolloutStatusUpdate) returns (api.Empty) {};
 }
 
 // === VeniceRollout : Rollout of each of the Venice nodes =========

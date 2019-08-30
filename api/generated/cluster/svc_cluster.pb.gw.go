@@ -151,6 +151,64 @@ func request_ClusterV1_AutoAddTenant_0(ctx context.Context, marshaler runtime.Ma
 }
 
 var (
+	filter_ClusterV1_AutoDeleteDistributedServiceCard_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_ClusterV1_AutoDeleteDistributedServiceCard_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &DistributedServiceCard{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteDistributedServiceCard_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteDistributedServiceCard(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_ClusterV1_AutoDeleteHost_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -267,64 +325,6 @@ func request_ClusterV1_AutoDeleteNode_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
-	filter_ClusterV1_AutoDeleteSmartNIC_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_ClusterV1_AutoDeleteSmartNIC_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SmartNIC{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteSmartNIC_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoDeleteSmartNIC(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_ClusterV1_AutoDeleteTenant_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -415,6 +415,64 @@ func request_ClusterV1_AutoGetCluster_0(ctx context.Context, marshaler runtime.M
 	}
 
 	msg, err := client.AutoGetCluster(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_ClusterV1_AutoGetDistributedServiceCard_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_ClusterV1_AutoGetDistributedServiceCard_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &DistributedServiceCard{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoGetDistributedServiceCard_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetDistributedServiceCard(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -536,64 +594,6 @@ func request_ClusterV1_AutoGetNode_0(ctx context.Context, marshaler runtime.Mars
 }
 
 var (
-	filter_ClusterV1_AutoGetSmartNIC_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_ClusterV1_AutoGetSmartNIC_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SmartNIC{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoGetSmartNIC_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoGetSmartNIC(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_ClusterV1_AutoGetTenant_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -689,6 +689,43 @@ func request_ClusterV1_AutoGetVersion_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
+	filter_ClusterV1_AutoListDistributedServiceCard_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_ClusterV1_AutoListDistributedServiceCard_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoListDistributedServiceCard_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListDistributedServiceCard(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_ClusterV1_AutoListHost_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -763,43 +800,6 @@ func request_ClusterV1_AutoListNode_0(ctx context.Context, marshaler runtime.Mar
 }
 
 var (
-	filter_ClusterV1_AutoListSmartNIC_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_ClusterV1_AutoListSmartNIC_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &api.ListWatchOptions{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoListSmartNIC_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoListSmartNIC(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_ClusterV1_AutoListTenant_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -861,6 +861,56 @@ func request_ClusterV1_AutoUpdateCluster_0(ctx context.Context, marshaler runtim
 	}
 
 	msg, err := client.AutoUpdateCluster(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_ClusterV1_AutoUpdateDistributedServiceCard_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &DistributedServiceCard{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateDistributedServiceCard(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -965,56 +1015,6 @@ func request_ClusterV1_AutoUpdateNode_0(ctx context.Context, marshaler runtime.M
 
 }
 
-func request_ClusterV1_AutoUpdateSmartNIC_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SmartNIC{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	msg, err := client.AutoUpdateSmartNIC(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
 func request_ClusterV1_AutoUpdateTenant_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Tenant{}
 	var smetadata runtime.ServerMetadata
@@ -1111,6 +1111,51 @@ func request_ClusterV1_AutoWatchCluster_0(ctx context.Context, marshaler runtime
 }
 
 var (
+	filter_ClusterV1_AutoWatchDistributedServiceCard_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_ClusterV1_AutoWatchDistributedServiceCard_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (ClusterV1_AutoWatchDistributedServiceCardClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoWatchDistributedServiceCard_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchDistributedServiceCard(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
 	filter_ClusterV1_AutoWatchHost_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -1188,51 +1233,6 @@ func request_ClusterV1_AutoWatchNode_0(ctx context.Context, marshaler runtime.Ma
 	}
 
 	stream, err := client.AutoWatchNode(ctx, protoReq)
-	if err != nil {
-		return nil, smetadata, err
-	}
-	header, err := stream.Header()
-	if err != nil {
-		return nil, smetadata, err
-	}
-	smetadata.HeaderMD = header
-	return stream, smetadata, nil
-
-}
-
-var (
-	filter_ClusterV1_AutoWatchSmartNIC_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_ClusterV1_AutoWatchSmartNIC_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (ClusterV1_AutoWatchSmartNICClient, runtime.ServerMetadata, error) {
-	protoReq := &api.ListWatchOptions{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoWatchSmartNIC_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	stream, err := client.AutoWatchSmartNIC(ctx, protoReq)
 	if err != nil {
 		return nil, smetadata, err
 	}
@@ -1512,6 +1512,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("DELETE", pattern_ClusterV1_AutoDeleteDistributedServiceCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoDeleteDistributedServiceCard_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoDeleteDistributedServiceCard_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_ClusterV1_AutoDeleteHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1565,34 +1593,6 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_ClusterV1_AutoDeleteNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("DELETE", pattern_ClusterV1_AutoDeleteSmartNIC_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_ClusterV1_AutoDeleteSmartNIC_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ClusterV1_AutoDeleteSmartNIC_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1652,6 +1652,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_ClusterV1_AutoGetDistributedServiceCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoGetDistributedServiceCard_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoGetDistributedServiceCard_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ClusterV1_AutoGetHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1705,34 +1733,6 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_ClusterV1_AutoGetNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_ClusterV1_AutoGetSmartNIC_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_ClusterV1_AutoGetSmartNIC_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ClusterV1_AutoGetSmartNIC_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1792,6 +1792,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_ClusterV1_AutoListDistributedServiceCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoListDistributedServiceCard_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoListDistributedServiceCard_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ClusterV1_AutoListHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1845,34 +1873,6 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_ClusterV1_AutoListNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_ClusterV1_AutoListSmartNIC_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_ClusterV1_AutoListSmartNIC_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ClusterV1_AutoListSmartNIC_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1932,6 +1932,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("PUT", pattern_ClusterV1_AutoUpdateDistributedServiceCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoUpdateDistributedServiceCard_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoUpdateDistributedServiceCard_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_ClusterV1_AutoUpdateHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1985,34 +2013,6 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_ClusterV1_AutoUpdateNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("PUT", pattern_ClusterV1_AutoUpdateSmartNIC_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_ClusterV1_AutoUpdateSmartNIC_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ClusterV1_AutoUpdateSmartNIC_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2094,6 +2094,61 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			} else {
 				forward_ClusterV1_AutoWatchCluster_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
+		}
+
+	})
+
+	mux.Handle("GET", pattern_ClusterV1_AutoWatchDistributedServiceCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_ClusterV1_AutoWatchDistributedServiceCard_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ClusterV1_AutoWatchDistributedServiceCard_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			}
 		}
 
@@ -2204,61 +2259,6 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			} else {
 				forward_ClusterV1_AutoWatchNode_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-			}
-		}
-
-	})
-
-	mux.Handle("GET", pattern_ClusterV1_AutoWatchSmartNIC_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		ws := false
-		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
-		if websocket.IsWebSocketUpgrade(req) {
-			ws = true
-			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
-			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
-			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
-		}
-		resp, md, err := request_ClusterV1_AutoWatchSmartNIC_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		if ws {
-			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
-			if !ok {
-				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
-				return
-			}
-			conn := ic.(*websocket.Conn)
-			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-		} else {
-			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
-			if !ok {
-				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
-				return
-			}
-			if bs.(bool) {
-				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-			} else {
-				forward_ClusterV1_AutoWatchSmartNIC_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			}
 		}
 
@@ -2414,51 +2414,51 @@ var (
 
 	pattern_ClusterV1_AutoAddTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"tenants"}, ""))
 
+	pattern_ClusterV1_AutoDeleteDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"distributedservicecards", "O.Name"}, ""))
+
 	pattern_ClusterV1_AutoDeleteHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"hosts", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoDeleteNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
-
-	pattern_ClusterV1_AutoDeleteSmartNIC_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"smartnics", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoDeleteTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenants", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoGetCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
 
+	pattern_ClusterV1_AutoGetDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"distributedservicecards", "O.Name"}, ""))
+
 	pattern_ClusterV1_AutoGetHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"hosts", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoGetNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
-
-	pattern_ClusterV1_AutoGetSmartNIC_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"smartnics", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoGetTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenants", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoGetVersion_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"version"}, ""))
 
+	pattern_ClusterV1_AutoListDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"distributedservicecards"}, ""))
+
 	pattern_ClusterV1_AutoListHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"hosts"}, ""))
 
 	pattern_ClusterV1_AutoListNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"nodes"}, ""))
-
-	pattern_ClusterV1_AutoListSmartNIC_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"smartnics"}, ""))
 
 	pattern_ClusterV1_AutoListTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"tenants"}, ""))
 
 	pattern_ClusterV1_AutoUpdateCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
 
+	pattern_ClusterV1_AutoUpdateDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"distributedservicecards", "O.Name"}, ""))
+
 	pattern_ClusterV1_AutoUpdateHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"hosts", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoUpdateNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
-
-	pattern_ClusterV1_AutoUpdateSmartNIC_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"smartnics", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoUpdateTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenants", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoWatchCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "cluster"}, ""))
 
+	pattern_ClusterV1_AutoWatchDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "distributedservicecards"}, ""))
+
 	pattern_ClusterV1_AutoWatchHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "hosts"}, ""))
 
 	pattern_ClusterV1_AutoWatchNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "nodes"}, ""))
-
-	pattern_ClusterV1_AutoWatchSmartNIC_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "smartnics"}, ""))
 
 	pattern_ClusterV1_AutoWatchTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "tenants"}, ""))
 
@@ -2476,51 +2476,51 @@ var (
 
 	forward_ClusterV1_AutoAddTenant_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterV1_AutoDeleteDistributedServiceCard_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterV1_AutoDeleteHost_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoDeleteNode_0 = runtime.ForwardResponseMessage
-
-	forward_ClusterV1_AutoDeleteSmartNIC_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoDeleteTenant_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoGetCluster_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterV1_AutoGetDistributedServiceCard_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterV1_AutoGetHost_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoGetNode_0 = runtime.ForwardResponseMessage
-
-	forward_ClusterV1_AutoGetSmartNIC_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoGetTenant_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoGetVersion_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterV1_AutoListDistributedServiceCard_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterV1_AutoListHost_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoListNode_0 = runtime.ForwardResponseMessage
-
-	forward_ClusterV1_AutoListSmartNIC_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoListTenant_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoUpdateCluster_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterV1_AutoUpdateDistributedServiceCard_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterV1_AutoUpdateHost_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoUpdateNode_0 = runtime.ForwardResponseMessage
-
-	forward_ClusterV1_AutoUpdateSmartNIC_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoUpdateTenant_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoWatchCluster_0 = runtime.ForwardResponseStream
 
+	forward_ClusterV1_AutoWatchDistributedServiceCard_0 = runtime.ForwardResponseStream
+
 	forward_ClusterV1_AutoWatchHost_0 = runtime.ForwardResponseStream
 
 	forward_ClusterV1_AutoWatchNode_0 = runtime.ForwardResponseStream
-
-	forward_ClusterV1_AutoWatchSmartNIC_0 = runtime.ForwardResponseStream
 
 	forward_ClusterV1_AutoWatchTenant_0 = runtime.ForwardResponseStream
 

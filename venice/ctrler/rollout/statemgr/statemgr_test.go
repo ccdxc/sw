@@ -117,8 +117,8 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 			MaxNICFailuresBeforeAbort: 0,
 			OrderConstraints:          nil,
 			Suspend:                   false,
-			SmartNICsOnly:             false,
-			//SmartNICMustMatchConstraint: true, // hence venice upgrade only
+			DSCsOnly:                  false,
+			//DSCsMustMatchConstraint: true, // hence venice upgrade only
 		},
 		Status: roproto.RolloutStatus{
 			ControllerNodesStatus: []*roproto.RolloutPhase{
@@ -137,7 +137,7 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 					Phase: roproto.RolloutPhase_COMPLETE.String(),
 				},
 			},
-			SmartNICsStatus: []*roproto.RolloutPhase{
+			DSCsStatus: []*roproto.RolloutPhase{
 				{
 					Name:  "naples1",
 					Phase: roproto.RolloutPhase_PROGRESSING.String(),
@@ -158,13 +158,13 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 	AssertEventually(t, checkVeniceOutstandingReq("node2", protos.VeniceOp_VeniceRunVersion), "Expected node1 spec to have outstanding RunVersion Op")
 	AssertEventually(t, checkServiceOutstandingReq(protos.ServiceOp_ServiceRunVersion), "Expected spec to have outstanding Service RunVersion Op")
 	// Test that there is no request issued for any smartNIC
-	checkNoSmartNICReq := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	checkNoSmartNICReq := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
-			ret, i := checkNoPendingSmartNICOp(t, stateMgr, snic, op, version)
+			ret, i := checkNoPendingDSCOp(t, stateMgr, snic, op, version)
 			return ret, i
 		}
 	}
-	AssertConsistently(t, checkNoSmartNICReq("naples2", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
+	AssertConsistently(t, checkNoSmartNICReq("naples2", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
 }
 
 func TestSmartNICWatch(t *testing.T) {
@@ -179,21 +179,21 @@ func TestSmartNICWatch(t *testing.T) {
 
 	// start a watch
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	err = stateMgr.WatchObjects("SmartNIC", watchChan)
+	err = stateMgr.WatchObjects("DistributedServiceCard", watchChan)
 	AssertOk(t, err, "Error creating the Watch for VeniceRollout")
 
 	// Create SmartNICObject and see that its properly created and that watchers see the updates to the object
-	sn := cluster.SmartNIC{
+	sn := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
-			Kind: "SmartNIC",
+			Kind: "DistributedServiceCard",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:   "naples1",
 			Tenant: "default",
 			Labels: map[string]string{"l1": "n1"},
 		},
-		Status: cluster.SmartNICStatus{
-			AdmissionPhase: cluster.SmartNICStatus_ADMITTED.String(),
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: cluster.DistributedServiceCardStatus_ADMITTED.String(),
 		},
 	}
 	stateMgr.handleSmartNICEvent(kvstore.Created, &sn)
@@ -203,13 +203,13 @@ func TestSmartNICWatch(t *testing.T) {
 	case wnt, ok := <-watchChan:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
-		Assert(t, wnt.Obj.GetObjectKind() == "SmartNIC", "Received invalid Kind SmartNIC", wnt)
+		Assert(t, wnt.Obj.GetObjectKind() == "DistributedServiceCard", "Received invalid Kind SmartNIC", wnt)
 
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out while waiting for channel event")
 	}
 
-	sn.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+	sn.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_PENDING.String()
 	stateMgr.handleSmartNICEvent(kvstore.Updated, &sn)
 
 	// verify we get a watch event
@@ -217,7 +217,7 @@ func TestSmartNICWatch(t *testing.T) {
 	case wnt, ok := <-watchChan:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
-		Assert(t, wnt.Obj.GetObjectKind() == "SmartNIC", "Received invalid Kind SmartNIC", wnt)
+		Assert(t, wnt.Obj.GetObjectKind() == "DistributedServiceCard", "Received invalid Kind DistributedServiceCard", wnt)
 
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out while waiting for channel event")
@@ -230,7 +230,7 @@ func TestSmartNICWatch(t *testing.T) {
 	case wnt, ok := <-watchChan:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
-		Assert(t, wnt.Obj.GetObjectKind() == "SmartNIC", "Received invalid Kind SmartNIC", wnt)
+		Assert(t, wnt.Obj.GetObjectKind() == "DistributedServiceCard", "Received invalid Kind DistributedServiceCard", wnt)
 
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out while waiting for channel event")
@@ -426,11 +426,11 @@ func addServiceResponseFilter(t *testing.T, stateMgr *Statemgr, version string) 
 
 }
 
-// 	checkNoPendingSmartNICOp returns true if the Op has not been issued (or it has been issued, then should have status)
+// 	checkNoPendingDSCOp returns true if the Op has not been issued (or it has been issued, then should have status)
 //		returns false if the Op is present in Spec and Not in Status
-func checkNoPendingSmartNICOp(t *testing.T, stateMgr *Statemgr, node string, op protos.SmartNICOp, version string) (opNotIssued bool, smartnicRollout interface{}) {
-	sros, err := stateMgr.ListSmartNICRollouts()
-	AssertOk(t, err, "Error Listing SmartNICRollouts")
+func checkNoPendingDSCOp(t *testing.T, stateMgr *Statemgr, node string, op protos.DSCOp, version string) (opNotIssued bool, smartnicRollout interface{}) {
+	sros, err := stateMgr.ListDSCRollouts()
+	AssertOk(t, err, "Error Listing DSCRollouts")
 	for _, sro := range sros {
 		if sro.Name != node {
 			continue
@@ -453,11 +453,11 @@ func checkNoPendingSmartNICOp(t *testing.T, stateMgr *Statemgr, node string, op 
 }
 
 // 	Add a response on node if op is present in the Spec and not present in Status
-func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op protos.SmartNICOp, version, status string) (statusUpdated bool, smartnicRollout interface{}) {
-	sros, err := stateMgr.ListSmartNICRollouts()
-	AssertOk(t, err, "Error Listing SmartNICRollouts")
+func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op protos.DSCOp, version, status string) (statusUpdated bool, smartnicRollout interface{}) {
+	sros, err := stateMgr.ListDSCRollouts()
+	AssertOk(t, err, "Error Listing DSCRollouts")
 	for _, sro := range sros {
-		log.Debugf("SmartNICRollout Object: %v", sro)
+		log.Debugf("DSCRollout Object: %v", sro)
 		if sro.Name != snic {
 			continue
 		}
@@ -475,20 +475,20 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 			return false, "Status also present"
 		}
 
-		var newOpStatus []protos.SmartNICOpStatus
+		var newOpStatus []protos.DSCOpStatus
 		for _, s := range sro.status {
 			newOpStatus = append(newOpStatus, s)
 		}
-		newOpStatus = append(newOpStatus, protos.SmartNICOpStatus{
+		newOpStatus = append(newOpStatus, protos.DSCOpStatus{
 			Op:       op,
 			Version:  version,
 			OpStatus: status,
 			Message:  status + " op in venice",
 		})
-		status := protos.SmartNICRolloutStatus{
+		status := protos.DSCRolloutStatus{
 			OpStatus: newOpStatus,
 		}
-		sro.UpdateSmartNICRolloutStatus(&status)
+		sro.UpdateDSCRolloutStatus(&status)
 		log.Debugf("Update Rollout Object OpStatus %v", spew.Sdump(sro.status[op]))
 		return true, sro
 
@@ -497,17 +497,17 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 }
 
 func createSNICHelper(stateMgr *Statemgr, name string, lbls map[string]string) {
-	sn := cluster.SmartNIC{
+	sn := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
-			Kind: "SmartNIC",
+			Kind: "DistributedServiceCard",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
 			Tenant: "default",
 			Labels: lbls,
 		},
-		Status: cluster.SmartNICStatus{
-			AdmissionPhase: cluster.SmartNICStatus_ADMITTED.String(),
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: cluster.DistributedServiceCardStatus_ADMITTED.String(),
 		},
 	}
 	stateMgr.handleSmartNICEvent(kvstore.Created, &sn)
@@ -573,16 +573,16 @@ func TestVeniceOnlyRollout(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    "",
-			MaxParallel:                 3,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               false,
-			SmartNICMustMatchConstraint: true, // hence venice upgrade only
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  false,
+			DSCMustMatchConstraint:    true, // hence venice upgrade only
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -624,8 +624,8 @@ func TestVeniceOnlyRollout(t *testing.T) {
 
 	// Test that there is no request issued for any smartNIC
 	checkNoVeniceSmartNICReq := func() (bool, interface{}) {
-		sros, err := stateMgr.ListSmartNICRollouts()
-		AssertOk(t, err, "Error Listing SmartNICRollouts")
+		sros, err := stateMgr.ListDSCRollouts()
+		AssertOk(t, err, "Error Listing DSCRollouts")
 		if len(sros) == 0 {
 			return true, nil
 		}
@@ -734,9 +734,9 @@ func TestSNICOnlyRollout(t *testing.T) {
 	createSNIC("naples1", map[string]string{"l1": "n1"})
 	createSNIC("naples0", map[string]string{"l1": "n0"})
 
-	sn := cluster.SmartNIC{
+	sn := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
-			Kind: "SmartNIC",
+			Kind: "DistributedServiceCard",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:   "naples0",
@@ -754,16 +754,16 @@ func TestSNICOnlyRollout(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    "",
-			MaxParallel:                 3,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               true,
-			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -779,22 +779,22 @@ func TestSNICOnlyRollout(t *testing.T) {
 
 	AssertConsistently(t, checkNoVeniceReq, "Expected no venice rollouts", "100ms", "1s")
 
-	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
 
 	// Test that there is no request issued for any smartNIC
-	checkNoSmartNICReq := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	checkNoSmartNICReq := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
-			ret, i := checkNoPendingSmartNICOp(t, stateMgr, snic, op, version)
+			ret, i := checkNoPendingDSCOp(t, stateMgr, snic, op, version)
 			return ret, i
 		}
 	}
-	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
+	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutSuccess) }, "Expecting Rollout to be succesfull state")
 
 	// Deleting the rollout should delete all the venice/service/smartnic rollout objects
@@ -832,17 +832,17 @@ func TestFutureRollout(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          ts,
-			Duration:                    "",
-			Strategy:                    "",
-			MaxParallel:                 3,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               true,
-			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
-			UpgradeType:                 roproto.RolloutSpec_Disruptive.String(),
+			Version:                   version,
+			ScheduledStartTime:        ts,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
+			UpgradeType:               roproto.RolloutSpec_Disruptive.String(),
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -851,22 +851,22 @@ func TestFutureRollout(t *testing.T) {
 	}
 	stateMgr.RolloutWatcher <- evt
 
-	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
 
 	// Test that there is no request issued for any smartNIC
-	checkNoSmartNICReq := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	checkNoSmartNICReq := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
-			ret, i := checkNoPendingSmartNICOp(t, stateMgr, snic, op, version)
+			ret, i := checkNoPendingDSCOp(t, stateMgr, snic, op, version)
 			return ret, i
 		}
 	}
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
-	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec not to have PreCheck till timeout", "100ms", "2s")
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec not to have PreCheck till timeout", "100ms", "2s")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
 
 }
 
@@ -898,16 +898,16 @@ func TestPreUpgFail(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    "",
-			MaxParallel:                 3,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               true,
-			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -916,13 +916,13 @@ func TestPreUpgFail(t *testing.T) {
 	}
 	stateMgr.RolloutWatcher <- evt
 
-	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "fail")
 		}
 	}
 
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
 }
 
@@ -962,16 +962,16 @@ func TestPreUpgTimeout(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    "",
-			MaxParallel:                 3,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               true,
-			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -980,13 +980,13 @@ func TestPreUpgTimeout(t *testing.T) {
 	}
 	stateMgr.RolloutWatcher <- evt
 
-	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
 
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
 }
 
@@ -1021,16 +1021,16 @@ func TestMaxFailuresNotHit(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    "",
-			MaxParallel:                 3,
-			MaxNICFailuresBeforeAbort:   1,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               true,
-			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 1,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -1039,20 +1039,20 @@ func TestMaxFailuresNotHit(t *testing.T) {
 	}
 	stateMgr.RolloutWatcher <- evt
 
-	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
-	addSmartNICFailResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICFailResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "failure")
 		}
 	}
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
-	AssertEventually(t, addSmartNICResponse("naples0", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples0 spec to have outstanding Precheck Op")
-	AssertEventually(t, addSmartNICResponse("naples0", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
-	AssertEventually(t, addSmartNICFailResponse("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples0 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Fail state", "100ms", "2s")
 }
 
@@ -1087,16 +1087,16 @@ func TestMaxFailuresHit(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    "",
-			MaxParallel:                 3,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               true,
-			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -1105,20 +1105,20 @@ func TestMaxFailuresHit(t *testing.T) {
 	}
 	stateMgr.RolloutWatcher <- evt
 
-	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
-	addSmartNICFailResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICFailResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "failure")
 		}
 	}
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
-	AssertEventually(t, addSmartNICResponse("naples0", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples0 spec to have outstanding Precheck Op")
-	AssertEventually(t, addSmartNICResponse("naples0", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
-	AssertEventually(t, addSmartNICFailResponse("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples0 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
 }
 
@@ -1140,9 +1140,9 @@ func TestExponentialRollout(t *testing.T) {
 	createSNIC("naples1", map[string]string{"l1": "n1"})
 	createSNIC("naples0", map[string]string{"l1": "n0"})
 
-	sn := cluster.SmartNIC{
+	sn := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
-			Kind: "SmartNIC",
+			Kind: "DistributedServiceCard",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:   "naples0",
@@ -1160,16 +1160,16 @@ func TestExponentialRollout(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: roproto.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          nil,
-			Duration:                    "",
-			Strategy:                    roproto.RolloutSpec_EXPONENTIAL.String(),
-			MaxParallel:                 0,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               true,
-			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  roproto.RolloutSpec_EXPONENTIAL.String(),
+			MaxParallel:               0,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -1185,54 +1185,54 @@ func TestExponentialRollout(t *testing.T) {
 
 	AssertConsistently(t, checkNoVeniceReq, "Expected no venice rollouts", "100ms", "1s")
 
-	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
 			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
 
 	// Test that there is no request issued for any smartNIC
-	checkNoSmartNICReq := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+	checkNoSmartNICReq := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
-			ret, i := checkNoPendingSmartNICOp(t, stateMgr, snic, op, version)
+			ret, i := checkNoPendingDSCOp(t, stateMgr, snic, op, version)
 			return ret, i
 		}
 	}
 	ros, err := stateMgr.GetRolloutState("default", t.Name())
 	AssertOk(t, err, "GetRolloutstate should succeed")
-	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
+	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if len(ros.Status.SmartNICsStatus) == 0 {
+		if len(ros.Status.DSCsStatus) == 0 {
 			return false, nil
 		}
-		if ros.Status.SmartNICsStatus[0].Phase == roproto.RolloutPhase_PRE_CHECK.String() {
+		if ros.Status.DSCsStatus[0].Phase == roproto.RolloutPhase_PRE_CHECK.String() {
 			return true, nil
 		}
-		return false, ros.Status.SmartNICsStatus[0].Phase
+		return false, ros.Status.DSCsStatus[0].Phase
 	}, "Status should be in PRE_CHECK")
 
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if len(ros.Status.SmartNICsStatus) == 0 {
+		if len(ros.Status.DSCsStatus) == 0 {
 			return false, nil
 		}
-		if ros.Status.SmartNICsStatus[0].Phase == roproto.RolloutPhase_PROGRESSING.String() {
+		if ros.Status.DSCsStatus[0].Phase == roproto.RolloutPhase_PROGRESSING.String() {
 			return true, nil
 		}
-		return false, ros.Status.SmartNICsStatus[0].Phase
+		return false, ros.Status.DSCsStatus[0].Phase
 	}, "Status should be in PROGRESSING")
 
-	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
 	AssertEventually(t, func() (bool, interface{}) {
-		if len(ros.Status.SmartNICsStatus) == 0 {
+		if len(ros.Status.DSCsStatus) == 0 {
 			return false, nil
 		}
-		if ros.Status.SmartNICsStatus[0].Phase == roproto.RolloutPhase_COMPLETE.String() {
+		if ros.Status.DSCsStatus[0].Phase == roproto.RolloutPhase_COMPLETE.String() {
 			return true, nil
 		}
-		return false, ros.Status.SmartNICsStatus[0].Phase
+		return false, ros.Status.DSCsStatus[0].Phase
 	}, "Status should be in Complete")
 
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutSuccess) }, "Expecting Rollout to be successful state")

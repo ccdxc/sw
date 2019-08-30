@@ -8,7 +8,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
-import { ClusterSmartNIC, IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { Table } from 'primeng/table';
 import { Subscription, forkJoin } from 'rxjs';
@@ -34,7 +34,7 @@ import * as _ from 'lodash';
 /**
  * Added advanced search to naples table.
  *
- * When WatchSmartNIC sends a response, we create a map mapping naples name (spec.id) to the naples object.
+ * When WatchDistributedServiceCard sends a response, we create a map mapping naples name (spec.id) to the naples object.
  * Whenever advanced search is used, a new searchrequest is created using this.advancedSearchComponent.getSearchRequest
  * Then we make an api call to get all the matching NICs using _callSearchRESTAPI.
  * These results do not contain spec information, so we lookup the original naples object from the naplesMap.
@@ -45,15 +45,15 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   @ViewChild('naplesTable') naplesTurboTable: Table;
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
-  filteredNaples: ReadonlyArray<ClusterSmartNIC> = [];
-  selectedNaples: ClusterSmartNIC[] = [];
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  filteredNaples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  selectedNaples: ClusterDistributedServiceCard[] = [];
   inLabelEditMode: boolean = false;
   labelEditorMetaData: LabelEditorMetadataModel;
 
   // Used for processing the stream events
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
-  naplesMap: { [napleName: string]: ClusterSmartNIC };
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
+  naplesMap: { [napleName: string]: ClusterDistributedServiceCard };
   searchObject: { [field: string]: any} = {};
   conditionNaplesMap: { [condition: string]: Array<string> };
 
@@ -63,7 +63,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   cols: any[] = [
     { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true },
     { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-id-name', sortable: true },
-    { field: 'status.smartNicVersion', header: 'Version', class: 'naples-column-version', sortable: true },
+    { field: 'status.DSCVersion', header: 'Version', class: 'naples-column-version', sortable: true },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
     { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
     { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true, localSearch: true},
@@ -118,7 +118,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   avgDayData: ITelemetry_queryMetricsQueryResult;
   maxObjData: ITelemetry_queryMetricsQueryResult;
 
-  telemetryKind: string = 'SmartNIC';
+  telemetryKind: string = 'DistributedServiceCard';
 
   customQueryOptions: RepeaterData[];
 
@@ -139,16 +139,16 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.provideCustomOptions();
     this.controllerService.setToolbarData({
       buttons: [],
-      breadcrumb: [{ label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' }]
+      breadcrumb: [{ label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/naples' }]
     });
   }
 
   updateSelectedNaples() {
-    const tempMap = new Map<string, ClusterSmartNIC>();
+    const tempMap = new Map<string, ClusterDistributedServiceCard>();
     for (const obj of this.naples) {
       tempMap[obj.meta.name] = obj;
     }
-    const updatedSelectedObjects: ClusterSmartNIC[] = [];
+    const updatedSelectedObjects: ClusterDistributedServiceCard[] = [];
     for (const selObj of this.selectedNaples) {
       if (selObj.meta.name in tempMap) {
         updatedSelectedObjects.push(tempMap[selObj.meta.name]);
@@ -174,16 +174,16 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
   /**
-   * Watches Naples data on KV Store and fetch new nic data
+   * Watches NapDistributed Services Cards data on KV Store and fetch new nic data
    * Generates column based search object, currently facilitates condition search
    */
   getNaples() {
     this.naplesMap = {};
     this.conditionNaplesMap = {};
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    this.filteredNaples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    this.filteredNaples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         for (const naple of this.naples) {
@@ -225,22 +225,22 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
 
-  displayCondition(data: ClusterSmartNIC): string {
+  displayCondition(data: ClusterDistributedServiceCard): string {
     return Utility.getNaplesCondition(data);
   }
 
-  isNICHealthy(data: ClusterSmartNIC): boolean {
+  isNICHealthy(data: ClusterDistributedServiceCard): boolean {
     if (Utility.isNaplesNICHealthy(data)) {
       return true;
     }
     return false;
   }
 
-  displayReasons(data: ClusterSmartNIC): any {
+  displayReasons(data: ClusterDistributedServiceCard): any {
     return Utility.displayReasons(data);
   }
 
-  isNICNotAdmitted(data: ClusterSmartNIC): boolean {
+  isNICNotAdmitted(data: ClusterDistributedServiceCard): boolean {
     if (Utility.isNICConditionEmpty(data)) {
       return true;
     }
@@ -263,7 +263,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
    * When you query for 5 min intervals, they are automatically aligned by the hour
    * We always round down to the last completed 5 min interval.
    *
-   * Naples overview level display
+   * Distributed Services Cards overview level display
    *  - Time series graph of all the nodes averaged together, avg into 5 min buckets
    *  - Current avg of last 5 min
    *  - Average of past day
@@ -391,7 +391,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     }
   }
 
-  getNaplesByKey(name: string): ClusterSmartNIC {
+  getNaplesByKey(name: string): ClusterDistributedServiceCard {
     for (let index = 0; index < this.naples.length; index++) {
       const naple = this.naples[index];
       if (naple.meta.name === name) {
@@ -406,9 +406,9 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
    * @param field Field by which to sort data
    * @param order Sort order (ascending = 1/descending = -1)
    */
-  getSmartNICs(field = this.naplesTurboTable.sortField,
+  getDistributedServiceCards(field = this.naplesTurboTable.sortField,
     order = this.naplesTurboTable.sortOrder) {
-    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'SmartNIC', true, this.maxRecords);
+    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'DistributedServiceCard', true, this.maxRecords);
     const localSearchResult = this.advancedSearchComponent.getLocalSearchResult(field, order, this.searchObject);
     if (localSearchResult.err) {
       this.controllerService.invokeInfoToaster('Invalid', 'Length of search values don\'t match with accepted length');
@@ -432,8 +432,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
    * Generates aggregate of local and/or remote advanced search filtered naples
    * @param tempNaples Array of local and/or remote advanced search filtered naples meta.name
    */
-  generateFilteredNaples(tempNaples: string[]): ClusterSmartNIC[] {
-    let resultNics: ClusterSmartNIC[] = [];
+  generateFilteredNaples(tempNaples: string[]): ClusterDistributedServiceCard[] {
+    let resultNics: ClusterDistributedServiceCard[] = [];
     this.lastUpdateTime = new Date().toISOString();
     if (tempNaples != null && tempNaples.length > 0) {
       resultNics = this.filterNaplesByName(tempNaples);
@@ -452,7 +452,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   onCancelSearch($event) {
     this.populateFieldSelector();
     this.cancelSearch = true;
-    this.getSmartNICs();
+    this.getDistributedServiceCards();
     this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, NICs refreshed.');
   }
 
@@ -490,7 +490,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
    * Provides nic objects for nic meta.name
    * @param entries Array of nic meta.name
    */
-  filterNaplesByName(entries: string[]): ClusterSmartNIC[] {
+  filterNaplesByName(entries: string[]): ClusterDistributedServiceCard[] {
     const tmpMap = {};
     entries.forEach(ele => {
       tmpMap[ele] = this.naplesMap[ele];
@@ -518,11 +518,11 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     const observables = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
-      const sub = this.clusterService.UpdateSmartNIC(name, naplesObject, '', this.naplesMap[name].$inputValue);
+      const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue);
       observables.push(sub);
     }
 
-    const summary = 'Naples update';
+    const summary = 'Distributed Services Card update';
 
     forkJoin(observables).subscribe(
       (results: any[]) => {
@@ -554,7 +554,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   // The save emitter from labeleditor returns the updated objects here.
   // We use forkjoin to update all the naples.
-  handleEditSave(updatedNaples: ClusterSmartNIC[]) {
+  handleEditSave(updatedNaples: ClusterDistributedServiceCard[]) {
     this.updateWithForkjoin(updatedNaples);
   }
 

@@ -170,26 +170,26 @@ func createPolicy(s *Statemgr, name, version string) error {
 	return s.ctrler.SGPolicy().Create(&sgp)
 }
 
-func createSmartNic(s *Statemgr, name string) (*cluster.SmartNIC, error) {
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+func createSmartNic(s *Statemgr, name string) (*cluster.DistributedServiceCard, error) {
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      name,
 			Namespace: "default",
 			Tenant:    "default",
 		},
-		Spec: cluster.SmartNICSpec{},
-		Status: cluster.SmartNICStatus{
-			Conditions: []cluster.SmartNICCondition{
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			Conditions: []cluster.DSCCondition{
 				{
-					Type:   cluster.SmartNICCondition_HEALTHY.String(),
+					Type:   cluster.DSCCondition_HEALTHY.String(),
 					Status: cluster.ConditionStatus_TRUE.String(),
 				},
 			},
 		},
 	}
 
-	return &snic, s.ctrler.SmartNIC().Create(&snic)
+	return &snic, s.ctrler.DistributedServiceCard().Create(&snic)
 }
 
 func getPolicyVersionForNode(s *Statemgr, policyname, nodename string) (string, error) {
@@ -290,7 +290,7 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 
 	// mark the smartnic as unhealthy
 	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_UNKNOWN.String()
-	stateMgr.ctrler.SmartNIC().Update(snic2)
+	stateMgr.ctrler.DistributedServiceCard().Update(snic2)
 
 	// verify propagation status
 	AssertEventually(t, func() (bool, interface{}) {
@@ -309,7 +309,7 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 
 	// mark the smartnic as healthy
 	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_TRUE.String()
-	stateMgr.ctrler.SmartNIC().Update(snic2)
+	stateMgr.ctrler.DistributedServiceCard().Update(snic2)
 
 	// verify propagation status
 	AssertEventually(t, func() (bool, interface{}) {
@@ -370,7 +370,7 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 	}, "SGPolicy propagation state incorrect", "300ms", "10s")
 
 	// delete smartnic
-	err = stateMgr.ctrler.SmartNIC().Delete(snic2)
+	err = stateMgr.ctrler.DistributedServiceCard().Delete(snic2)
 	AssertOk(t, err, "Couldn't update smartnic")
 
 	// verify propagation status
@@ -389,7 +389,7 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 	}, "SGPolicy propagation state incorrect", "300ms", "10s")
 
 	// delete smartnic
-	err = stateMgr.ctrler.SmartNIC().Delete(snic1)
+	err = stateMgr.ctrler.DistributedServiceCard().Delete(snic1)
 	AssertOk(t, err, "Couldn't delete smartnic")
 
 	// verify propagation status

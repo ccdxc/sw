@@ -588,7 +588,7 @@
           },
           {
             "name": "spec.max-parallel",
-            "description": "MaxParallel is the maximum number of nodes getting updated at any time\nThis setting is applicable only to SmartNICs.\nController nodes are always upgraded one after another.",
+            "description": "MaxParallel is the maximum number of nodes getting updated at any time\nThis setting is applicable only to DistributedServiceCards.\nController nodes are always upgraded one after another.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -596,7 +596,7 @@
           },
           {
             "name": "spec.max-nic-failures-before-abort",
-            "description": "After these many failures are observed during NIC upgrade, the rollout process stops\nThis setting applies to smartNICs only.\nThe controller nodes are rollout first and any failure there stops the rollout of SmartNICs.",
+            "description": "After these many failures are observed during NIC upgrade, the rollout process stops\nThis setting applies to smartNICs only.\nThe controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -604,23 +604,23 @@
           },
           {
             "name": "spec.suspend",
-            "description": "When Set to true, the current rollout is suspended. Existing Nodes/Services/SmartNICs in the middle of rollout continue\n rollout execution but any Nodes/Services/SmartNICs which has not started Rollout will not be scheduled one.",
+            "description": "When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue\n rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one.",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "spec.smartnics-only",
-            "description": "Dont upgrade Controller but only upgrade SmartNICs.",
+            "name": "spec.dscs-only",
+            "description": "Dont upgrade Controller but only upgrade DistributedServiceCards.",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "spec.smartnic-must-match-constraint",
-            "description": "When SmartNICMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.",
+            "name": "spec.dsc-must-match-constraint",
+            "description": "When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -1422,7 +1422,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "title": "Name of the Node, Service or SmartNIC"
+          "title": "Name of the Node, Service or DistributedServiceCard"
         },
         "phase": {
           "type": "string",
@@ -1464,7 +1464,7 @@
           "description": "A detailed message indicating details about the transition."
         }
       },
-      "title": "RolloutPhase gives details of status of Rollout on each Node/Service/SmartNIC"
+      "title": "RolloutPhase gives details of status of Rollout on each Node/Service/DistributedServiceCard"
     },
     "rolloutRolloutSpec": {
       "type": "object",
@@ -1504,34 +1504,34 @@
           "type": "integer",
           "format": "int64",
           "default": "2",
-          "description": "MaxParallel is the maximum number of nodes getting updated at any time\nThis setting is applicable only to SmartNICs.\nController nodes are always upgraded one after another."
+          "description": "MaxParallel is the maximum number of nodes getting updated at any time\nThis setting is applicable only to DistributedServiceCards.\nController nodes are always upgraded one after another."
         },
         "max-nic-failures-before-abort": {
           "type": "integer",
           "format": "int64",
-          "title": "After these many failures are observed during NIC upgrade, the rollout process stops\nThis setting applies to smartNICs only.\nThe controller nodes are rollout first and any failure there stops the rollout of SmartNICs"
+          "title": "After these many failures are observed during NIC upgrade, the rollout process stops\nThis setting applies to smartNICs only.\nThe controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards"
         },
         "order-constraints": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/labelsSelector"
           },
-          "title": "If specified, this is the sequence in which the SmartNICs are upgraded based on their labels.\nif a SmartNIC matches multiple constraints, the first one is used.\n Any SmartNIC which does not match the constraints is upgraded at the end.\nThis order is mainly for the smartNICs on Hosts\nController nodes are always rollout one after other"
+          "title": "If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.\nif a DistributedServiceCard matches multiple constraints, the first one is used.\n Any DistributedServiceCard which does not match the constraints is upgraded at the end.\nThis order is mainly for the smartNICs on Hosts\nController nodes are always rollout one after other"
         },
         "suspend": {
           "type": "boolean",
           "format": "boolean",
-          "description": "When Set to true, the current rollout is suspended. Existing Nodes/Services/SmartNICs in the middle of rollout continue\n rollout execution but any Nodes/Services/SmartNICs which has not started Rollout will not be scheduled one."
+          "description": "When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue\n rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one."
         },
-        "smartnics-only": {
+        "dscs-only": {
           "type": "boolean",
           "format": "boolean",
-          "title": "Dont upgrade Controller but only upgrade SmartNICs"
+          "title": "Dont upgrade Controller but only upgrade DistributedServiceCards"
         },
-        "smartnic-must-match-constraint": {
+        "dsc-must-match-constraint": {
           "type": "boolean",
           "format": "boolean",
-          "title": "When SmartNICMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout"
+          "title": "When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout"
         },
         "upgrade-type": {
           "type": "string",
@@ -1568,12 +1568,12 @@
           },
           "title": "Rollout status of Various Controller Services"
         },
-        "smartnics-status": {
+        "dscs-status": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/rolloutRolloutPhase"
           },
-          "description": "Rollout status of SmartNICs in the cluster. Has entries for SmartNICs on Controller nodes as well as workload nodes\nThe entries are group by parallelism based on the order-constraints and max-parallel specified by the user."
+          "description": "Rollout status of DistributedServiceCards in the cluster. Has entries for DistributedServiceCards on Controller nodes as well as workload nodes\nThe entries are group by parallelism based on the order-constraints and max-parallel specified by the user."
         },
         "state": {
           "type": "string",

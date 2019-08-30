@@ -41,7 +41,7 @@ describe('NewworkloadComponent', () => {
       'self-link': '/configs/cluster/v1/hosts/naples1-host'
     },
     'spec': {
-      'smart-nics': [
+      'dscs': [
         {
           'mac-address': '0242.c0a8.1c02'
         }

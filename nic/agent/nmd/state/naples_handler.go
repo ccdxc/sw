@@ -34,7 +34,7 @@ import (
 const (
 	// ConfigURL is URL to configure a nic
 	ConfigURL = "/api/v1/naples/"
-	// RolloutURL is URL to configure SmartNICRollout object
+	// RolloutURL is URL to configure DSCRollout object
 	RolloutURL = "/api/v1/naples/rollout/"
 	// MonitoringURL is URL to fetch logs and other diags from nic
 	MonitoringURL = "/monitoring/v1/naples/"
@@ -439,13 +439,13 @@ func (n *NMD) reconcileIPClient() error {
 func (n *NMD) setRegistrationErrorStatus(reason string) {
 	nicObj, err := n.GetSmartNIC()
 	if err == nil {
-		nicObj.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
+		nicObj.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_REGISTERING.String()
 		nicObj.Status.AdmissionPhaseReason = reason
 		n.SetSmartNIC(nicObj)
 	} else {
 		log.Errorf("Error getting SmartNIC object: %v", err)
 	}
-	n.config.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
+	n.config.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_REGISTERING.String()
 	n.config.Status.AdmissionPhaseReason = reason
 }
 
@@ -557,14 +557,14 @@ func (n *NMD) AdmitNaples() {
 				log.Infof("Received register response, phase: %+v", resp.Phase)
 				switch resp.Phase {
 
-				case cmd.SmartNICStatus_REJECTED.String():
+				case cmd.DistributedServiceCardStatus_REJECTED.String():
 
 					// Rule #2 - abort retry, clear registration status flag
 					log.Errorf("Invalid NIC, Admission rejected, mac: %s reason: %s", mac, resp.Reason)
 					n.setRegStatus(false)
 					return
 
-				case cmd.SmartNICStatus_PENDING.String():
+				case cmd.DistributedServiceCardStatus_PENDING.String():
 
 					// Rule #3 - needs slower exponential retry
 					// Cap the retry interval at 3 mins
@@ -576,31 +576,31 @@ func (n *NMD) AdmitNaples() {
 					if len(resp.RolloutVersion) > 0 {
 						log.Infof("NIC (mac %s) running version is incompatible. Request rollout to version %s", mac, resp.RolloutVersion)
 						// Create rollout object for version
-						snicRollout := protos.SmartNICRollout{
+						snicRollout := protos.DSCRollout{
 							TypeMeta: api.TypeMeta{
-								Kind: "SmartNICRollout"},
+								Kind: "DSCRollout"},
 							ObjectMeta: api.ObjectMeta{
 								Name:   n.config.Status.Fru.MacStr,
 								Tenant: n.config.Tenant,
 							},
-							Spec: protos.SmartNICRolloutSpec{
-								Ops: []protos.SmartNICOpSpec{
+							Spec: protos.DSCRolloutSpec{
+								Ops: []protos.DSCOpSpec{
 									{
-										Op:      protos.SmartNICOp_SmartNICImageDownload,
+										Op:      protos.DSCOp_DSCImageDownload,
 										Version: resp.RolloutVersion,
 									},
 									{
-										Op:      protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot,
+										Op:      protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot,
 										Version: resp.RolloutVersion,
 									},
 									{
-										Op:      protos.SmartNICOp_SmartNICUpgOnNextHostReboot,
+										Op:      protos.DSCOp_DSCUpgOnNextHostReboot,
 										Version: resp.RolloutVersion,
 									},
 								},
 							}}
 
-						err := n.CreateUpdateSmartNICRollout(&snicRollout)
+						err := n.CreateUpdateDSCRollout(&snicRollout)
 						if err != nil {
 							log.Errorf("Error creating smartNICRollout during NIC Version check {%+v}", err)
 						}
@@ -609,7 +609,7 @@ func (n *NMD) AdmitNaples() {
 							mac, resp.Reason)
 					}
 
-				case cmd.SmartNICStatus_ADMITTED.String():
+				case cmd.DistributedServiceCardStatus_ADMITTED.String():
 					metrics := &NMDMetricsMeta{}
 					metrics.TypeMeta.Kind = "NMDMetrics"
 					metrics.ObjectMeta.Name = "nmd_" + n.GetAgentID()
@@ -678,7 +678,7 @@ func (n *NMD) AdmitNaples() {
 
 					// start watching objects
 					go n.cmd.WatchSmartNICUpdates()
-					go n.rollout.WatchSmartNICRolloutUpdates()
+					go n.rollout.WatchDSCRolloutUpdates()
 
 					// Start goroutine to send periodic NIC updates
 					n.Add(1)
@@ -719,7 +719,7 @@ func (n *NMD) AdmitNaples() {
 					}
 
 					return
-				case cmd.SmartNICStatus_UNKNOWN.String():
+				case cmd.DistributedServiceCardStatus_UNKNOWN.String():
 					// Not an expected response
 					log.Errorf("Unknown response, nic: %+v phase: %v", nicObj, resp)
 
@@ -748,14 +748,14 @@ func (n *NMD) SendNICUpdates() error {
 			nicObj := n.nic
 
 			// Skip until NIC is admitted
-			if nicObj.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
+			if nicObj.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_ADMITTED.String() {
 				log.Infof("Skipping health update, phase %v", nicObj.Status.AdmissionPhase)
 				continue
 			}
 
 			// TODO : Get status from platform and fill nic Status
-			nicObj.Status = cmd.SmartNICStatus{
-				AdmissionPhase: cmd.SmartNICStatus_ADMITTED.String(),
+			nicObj.Status = cmd.DistributedServiceCardStatus{
+				AdmissionPhase: cmd.DistributedServiceCardStatus_ADMITTED.String(),
 				Conditions:     n.UpdateNaplesHealth(),
 			}
 
@@ -848,12 +848,12 @@ func (n *NMD) StopClassicMode(shutdown bool) error {
 }
 
 // GetPlatformCertificate returns the certificate containing the NIC identity and public key
-func (n *NMD) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
+func (n *NMD) GetPlatformCertificate(nic *cmd.DistributedServiceCard) ([]byte, error) {
 	return n.Platform.GetPlatformCertificate(nic)
 }
 
 // GenChallengeResponse returns the response to a challenge issued by CMD to authenticate this NAPLES
-func (n *NMD) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte, []byte, error) {
+func (n *NMD) GenChallengeResponse(nic *cmd.DistributedServiceCard, challenge []byte) ([]byte, []byte, error) {
 	signer, err := n.Platform.GetPlatformSigner(nic)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting platform signer: %v", err)

@@ -420,109 +420,109 @@ func (mr *MockClusterV1HostInterfaceMockRecorder) Allowed(oper interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Allowed), oper)
 }
 
-// MockClusterV1SmartNICInterface is a mock of (cluster.ClusterV1SmartNICInterface)interface
-type MockClusterV1SmartNICInterface struct {
+// MockClusterV1DistributedServiceCardInterface is a mock of ClusterV1DistributedServiceCardInterface interface
+type MockClusterV1DistributedServiceCardInterface struct {
 	ctrl     *gomock.Controller
-	recorder *MockClusterV1SmartNICInterfaceMockRecorder
+	recorder *MockClusterV1DistributedServiceCardInterfaceMockRecorder
 }
 
-// MockClusterV1SmartNICInterfaceMockRecorder is the mock recorder for MockClusterV1SmartNICInterface
-type MockClusterV1SmartNICInterfaceMockRecorder struct {
-	mock *MockClusterV1SmartNICInterface
+// MockClusterV1DistributedServiceCardInterfaceMockRecorder is the mock recorder for MockClusterV1DistributedServiceCardInterface
+type MockClusterV1DistributedServiceCardInterfaceMockRecorder struct {
+	mock *MockClusterV1DistributedServiceCardInterface
 }
 
-// NewMockClusterV1SmartNICInterface creates a new mock instance
-func NewMockClusterV1SmartNICInterface(ctrl *gomock.Controller) *MockClusterV1SmartNICInterface {
-	mock := &MockClusterV1SmartNICInterface{ctrl: ctrl}
-	mock.recorder = &MockClusterV1SmartNICInterfaceMockRecorder{mock}
+// NewMockClusterV1DistributedServiceCardInterface creates a new mock instance
+func NewMockClusterV1DistributedServiceCardInterface(ctrl *gomock.Controller) *MockClusterV1DistributedServiceCardInterface {
+	mock := &MockClusterV1DistributedServiceCardInterface{ctrl: ctrl}
+	mock.recorder = &MockClusterV1DistributedServiceCardInterfaceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockClusterV1SmartNICInterface) EXPECT() *MockClusterV1SmartNICInterfaceMockRecorder {
+func (m *MockClusterV1DistributedServiceCardInterface) EXPECT() *MockClusterV1DistributedServiceCardInterfaceMockRecorder {
 	return m.recorder
 }
 
 // Create mocks base method
-func (m *MockClusterV1SmartNICInterface) Create(ctx context.Context, in *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+func (m *MockClusterV1DistributedServiceCardInterface) Create(ctx context.Context, in *cluster.DistributedServiceCard) (*cluster.DistributedServiceCard, error) {
 	ret := m.ctrl.Call(m, "Create", ctx, in)
-	ret0, _ := ret[0].(*cluster.SmartNIC)
+	ret0, _ := ret[0].(*cluster.DistributedServiceCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).Create), ctx, in)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).Create), ctx, in)
 }
 
 // Update mocks base method
-func (m *MockClusterV1SmartNICInterface) Update(ctx context.Context, in *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+func (m *MockClusterV1DistributedServiceCardInterface) Update(ctx context.Context, in *cluster.DistributedServiceCard) (*cluster.DistributedServiceCard, error) {
 	ret := m.ctrl.Call(m, "Update", ctx, in)
-	ret0, _ := ret[0].(*cluster.SmartNIC)
+	ret0, _ := ret[0].(*cluster.DistributedServiceCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Update indicates an expected call of Update
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).Update), ctx, in)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).Update), ctx, in)
 }
 
 // UpdateStatus mocks base method
-func (m *MockClusterV1SmartNICInterface) UpdateStatus(ctx context.Context, in *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+func (m *MockClusterV1DistributedServiceCardInterface) UpdateStatus(ctx context.Context, in *cluster.DistributedServiceCard) (*cluster.DistributedServiceCard, error) {
 	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
-	ret0, _ := ret[0].(*cluster.SmartNIC)
+	ret0, _ := ret[0].(*cluster.DistributedServiceCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateStatus indicates an expected call of UpdateStatus
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).UpdateStatus), ctx, in)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method
-func (m *MockClusterV1SmartNICInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SmartNIC, error) {
+func (m *MockClusterV1DistributedServiceCardInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DistributedServiceCard, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
-	ret0, _ := ret[0].(*cluster.SmartNIC)
+	ret0, _ := ret[0].(*cluster.DistributedServiceCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).Get), ctx, objMeta)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).Get), ctx, objMeta)
 }
 
 // Delete mocks base method
-func (m *MockClusterV1SmartNICInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SmartNIC, error) {
+func (m *MockClusterV1DistributedServiceCardInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DistributedServiceCard, error) {
 	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
-	ret0, _ := ret[0].(*cluster.SmartNIC)
+	ret0, _ := ret[0].(*cluster.DistributedServiceCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Delete indicates an expected call of Delete
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).Delete), ctx, objMeta)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).Delete), ctx, objMeta)
 }
 
 // List mocks base method
-func (m *MockClusterV1SmartNICInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.SmartNIC, error) {
+func (m *MockClusterV1DistributedServiceCardInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.DistributedServiceCard, error) {
 	ret := m.ctrl.Call(m, "List", ctx, options)
-	ret0, _ := ret[0].([]*cluster.SmartNIC)
+	ret0, _ := ret[0].([]*cluster.DistributedServiceCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).List), ctx, options)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).List), ctx, options)
 }
 
 // Watch mocks base method
-func (m *MockClusterV1SmartNICInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (m *MockClusterV1DistributedServiceCardInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	ret := m.ctrl.Call(m, "Watch", ctx, options)
 	ret0, _ := ret[0].(kvstore.Watcher)
 	ret1, _ := ret[1].(error)
@@ -530,20 +530,20 @@ func (m *MockClusterV1SmartNICInterface) Watch(ctx context.Context, options *api
 }
 
 // Watch indicates an expected call of Watch
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).Watch), ctx, options)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).Watch), ctx, options)
 }
 
 // Allowed mocks base method
-func (m *MockClusterV1SmartNICInterface) Allowed(oper interfaces.APIOperType) bool {
+func (m *MockClusterV1DistributedServiceCardInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // Allowed indicates an expected call of Allowed
-func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).Allowed), oper)
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).Allowed), oper)
 }
 
 // MockClusterV1TenantInterface is a mock of (cluster.ClusterV1TenantInterface)interface
@@ -857,16 +857,16 @@ func (mr *MockClusterV1InterfaceMockRecorder) Host() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Host", reflect.TypeOf((*MockClusterV1Interface)(nil).Host))
 }
 
-// SmartNIC mocks base method
-func (m *MockClusterV1Interface) SmartNIC() cluster.ClusterV1SmartNICInterface {
-	ret := m.ctrl.Call(m, "SmartNIC")
-	ret0, _ := ret[0].(cluster.ClusterV1SmartNICInterface)
+// DistributedServiceCard mocks base method
+func (m *MockClusterV1Interface) DistributedServiceCard() cluster.ClusterV1DistributedServiceCardInterface {
+	ret := m.ctrl.Call(m, "DistributedServiceCard")
+	ret0, _ := ret[0].(cluster.ClusterV1DistributedServiceCardInterface)
 	return ret0
 }
 
-// SmartNIC indicates an expected call of SmartNIC
-func (mr *MockClusterV1InterfaceMockRecorder) SmartNIC() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SmartNIC", reflect.TypeOf((*MockClusterV1Interface)(nil).SmartNIC))
+// DistributedServiceCard indicates an expected call of DistributedServiceCard
+func (mr *MockClusterV1InterfaceMockRecorder) DistributedServiceCard() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DistributedServiceCard", reflect.TypeOf((*MockClusterV1Interface)(nil).DistributedServiceCard))
 }
 
 // Tenant mocks base method

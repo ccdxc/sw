@@ -51,7 +51,7 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 		for name, s := range snics {
 			if ls.Matches(labels.Set(s.ObjectMeta.Labels)) {
 				log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
-				if s.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+				if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
 					curbin = append(curbin, s)
 					delete(snics, name)
 				}
@@ -66,7 +66,7 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 		// add the remaining SNICs
 		for _, s := range snics {
 			log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
-			if s.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+			if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
 				curbin = append(curbin, s)
 			}
 		}
@@ -313,7 +313,7 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 	return true, err
 }
 
-func (sm *Statemgr) smartNICWorkers(workCh chan *SmartNICState, wg *sync.WaitGroup, ros *RolloutState, op protos.SmartNICOp) {
+func (sm *Statemgr) smartNICWorkers(workCh chan *SmartNICState, wg *sync.WaitGroup, ros *RolloutState, op protos.DSCOp) {
 	version := ros.Spec.Version
 
 	defer wg.Done()
@@ -340,10 +340,10 @@ Loop:
 
 				watchChan := make(chan memdb.Event, memdb.WatchLen)
 				defer close(watchChan)
-				sm.WatchObjects("SmartNICRollout", watchChan)
-				defer sm.StopWatchObjects("SmartNICRollout", watchChan)
+				sm.WatchObjects("DSCRollout", watchChan)
+				defer sm.StopWatchObjects("DSCRollout", watchChan)
 
-				snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
+				snicROState, err := sm.GetDSCRolloutState(snicState.Tenant, snicState.Name)
 				if err == nil {
 					if st := snicROState.status[op]; st.OpStatus != "" {
 						log.Infof("smartnic %v already has status for version %s op %s", snicState.Name, version, op)
@@ -353,16 +353,16 @@ Loop:
 					}
 				} else {
 					// smartNICRollout Object does not exist. Create it
-					snicRollout := protos.SmartNICRollout{
+					snicRollout := protos.DSCRollout{
 						TypeMeta: api.TypeMeta{
-							Kind: kindSmartNICRollout,
+							Kind: kindDSCRollout,
 						},
 						ObjectMeta: api.ObjectMeta{
 							Name:   snicState.Name,
 							Tenant: snicState.Tenant,
 						},
-						Spec: protos.SmartNICRolloutSpec{
-							Ops: []protos.SmartNICOpSpec{
+						Spec: protos.DSCRolloutSpec{
+							Ops: []protos.DSCOpSpec{
 								{
 									Op:      op,
 									Version: version,
@@ -371,14 +371,14 @@ Loop:
 						},
 					}
 					log.Infof("Creating smartNICRolloutState %#v", snicRollout)
-					err = sm.CreateSmartNICRolloutState(&snicRollout, ros, nil)
+					err = sm.CreateDSCRolloutState(&snicRollout, ros, nil)
 					if err != nil {
 						log.Errorf("Error %v creating smartnic rollout state", err)
 						continue
 					}
 				}
 				var phase roproto.RolloutPhase_Phases
-				if op == protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot || op == protos.SmartNICOp_SmartNICPreCheckForDisruptive {
+				if op == protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot || op == protos.DSCOp_DSCPreCheckForDisruptive {
 					phase = roproto.RolloutPhase_PRE_CHECK
 				} else {
 					phase = roproto.RolloutPhase_PROGRESSING
@@ -389,10 +389,10 @@ Loop:
 					log.Infof("Condition Status %+v Type %v", condition.Status, condition.Type)
 					if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_UNKNOWN.String() {
 
-						snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
+						snicROState, err := sm.GetDSCRolloutState(snicState.Tenant, snicState.Name)
 						if err == nil {
-							snicROState.UpdateSmartNICRolloutStatus(&protos.SmartNICRolloutStatus{
-								OpStatus: []protos.SmartNICOpStatus{
+							snicROState.UpdateDSCRolloutStatus(&protos.DSCRolloutStatus{
+								OpStatus: []protos.DSCOpStatus{
 									{
 										Op:       op,
 										Version:  version,
@@ -423,7 +423,7 @@ Loop:
 							break Loop
 						}
 
-						snRolloutState, err := SmartNICRolloutStateFromObj(evt.Obj)
+						snRolloutState, err := DSCRolloutStateFromObj(evt.Obj)
 						if err != nil {
 							log.Errorf("Error getting smartNICRollout from statemgr. Err: %v", err)
 							break WaitLoop
@@ -440,10 +440,10 @@ Loop:
 						}
 					case <-timer.C:
 						log.Debugf("Timeout waiting for status update of smartNIC %s", snicState.Name)
-						snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
+						snicROState, err := sm.GetDSCRolloutState(snicState.Tenant, snicState.Name)
 						if err == nil {
-							snicROState.UpdateSmartNICRolloutStatus(&protos.SmartNICRolloutStatus{
-								OpStatus: []protos.SmartNICOpStatus{
+							snicROState.UpdateDSCRolloutStatus(&protos.DSCRolloutStatus{
+								OpStatus: []protos.DSCOpStatus{
 									{
 										Op:       op,
 										Version:  version,
@@ -464,20 +464,20 @@ Loop:
 func (ros *RolloutState) preUpgradeSmartNICs() {
 	sm := ros.Statemgr
 
-	var op protos.SmartNICOp
+	var op protos.DSCOp
 	switch ros.Spec.UpgradeType {
 	case roproto.RolloutSpec_Disruptive.String():
-		op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+		op = protos.DSCOp_DSCPreCheckForDisruptive
 	case roproto.RolloutSpec_OnNextHostReboot.String():
-		op = protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot
+		op = protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot
 	default:
-		op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+		op = protos.DSCOp_DSCPreCheckForDisruptive
 	}
 
 	log.Infof("starting smartNIC Rollout Preupgrade")
 	snStatusList := make(map[string]string)
 
-	for _, snicStatus := range ros.Status.SmartNICsStatus {
+	for _, snicStatus := range ros.Status.DSCsStatus {
 		log.Infof("Adding smartNIC Status to the List %s", snicStatus.Name)
 		snStatusList[snicStatus.Name] = snicStatus.Reason
 	}
@@ -487,21 +487,21 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 		log.Errorf("Error %v listing smartNICs", err)
 		return
 	}
-	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
+	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates)
 
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
 		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {
-			ros.issueSmartNICOpExponential(s, op, snStatusList)
+			ros.issueDSCOpExponential(s, op, snStatusList)
 		} else {
-			ros.issueSmartNICOpLinear(s, op, snStatusList)
+			ros.issueDSCOpLinear(s, op, snStatusList)
 		}
 	}
 
 	log.Infof("completed smartNIC Rollout Preupgrade")
 }
 
-func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, op protos.SmartNICOp, snStatusList map[string]string) {
+func (ros *RolloutState) issueDSCOpLinear(snStates []*SmartNICState, op protos.DSCOp, snStatusList map[string]string) {
 	sm := ros.Statemgr
 
 	numParallel := ros.Spec.MaxParallel
@@ -537,7 +537,7 @@ func min(a, b int) int {
 	return b
 }
 
-func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, op protos.SmartNICOp, snStatusList map[string]string) {
+func (ros *RolloutState) issueDSCOpExponential(snStates []*SmartNICState, op protos.DSCOp, snStatusList map[string]string) {
 	sm := ros.Statemgr
 
 	numParallel := int(ros.Spec.MaxParallel) // if numParallel is 0 then unlimited parallelism
@@ -614,7 +614,7 @@ func (ros *RolloutState) computeProgressDelta() {
 
 	numVenice := 0
 	numNaples := 0
-	if !ros.Spec.SmartNICsOnly {
+	if !ros.Spec.DSCsOnly {
 		nodeStates, err := ros.Statemgr.ListNodes()
 		if err != nil {
 			log.Infof("Failed to get venice nodes")
@@ -628,7 +628,7 @@ func (ros *RolloutState) computeProgressDelta() {
 		return
 	}
 
-	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
+	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates)
 
 	for _, s := range sn {
 		log.Infof("Status %s", spew.Sdump(s))
@@ -644,19 +644,19 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 	log.Infof("starting smartNIC Rollout")
 	snStatusList := make(map[string]string)
 
-	for _, snicStatus := range ros.Status.SmartNICsStatus {
+	for _, snicStatus := range ros.Status.DSCsStatus {
 		log.Infof("Adding smartNIC Status to the List %s", snicStatus.Name)
 		snStatusList[snicStatus.Name] = snicStatus.Name
 	}
 
-	var op protos.SmartNICOp
+	var op protos.DSCOp
 	switch ros.Spec.UpgradeType {
 	case roproto.RolloutSpec_Disruptive.String():
-		op = protos.SmartNICOp_SmartNICDisruptiveUpgrade
+		op = protos.DSCOp_DSCDisruptiveUpgrade
 	case roproto.RolloutSpec_OnNextHostReboot.String():
-		op = protos.SmartNICOp_SmartNICUpgOnNextHostReboot
+		op = protos.DSCOp_DSCUpgOnNextHostReboot
 	default:
-		op = protos.SmartNICOp_SmartNICDisruptiveUpgrade
+		op = protos.DSCOp_DSCDisruptiveUpgrade
 	}
 
 	snStates, err := sm.ListSmartNICs()
@@ -665,13 +665,13 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 		return
 	}
 
-	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
+	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates)
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
 		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {
-			ros.issueSmartNICOpExponential(s, op, snStatusList)
+			ros.issueDSCOpExponential(s, op, snStatusList)
 		} else {
-			ros.issueSmartNICOpLinear(s, op, snStatusList)
+			ros.issueDSCOpLinear(s, op, snStatusList)
 		}
 	}
 	log.Infof("completed smartNIC Rollout")

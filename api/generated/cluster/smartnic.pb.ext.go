@@ -28,68 +28,68 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// SmartNICCondition_ConditionType_normal is a map of normalized values for the enum
-var SmartNICCondition_ConditionType_normal = map[string]string{
+// DSCCondition_ConditionType_normal is a map of normalized values for the enum
+var DSCCondition_ConditionType_normal = map[string]string{
 	"healthy":            "healthy",
 	"nic_health_unknown": "nic_health_unknown",
 }
 
-var SmartNICCondition_ConditionType_vname = map[int32]string{
+var DSCCondition_ConditionType_vname = map[int32]string{
 	0: "healthy",
 	1: "nic_health_unknown",
 }
 
-var SmartNICCondition_ConditionType_vvalue = map[string]int32{
+var DSCCondition_ConditionType_vvalue = map[string]int32{
 	"healthy":            0,
 	"nic_health_unknown": 1,
 }
 
-func (x SmartNICCondition_ConditionType) String() string {
-	return SmartNICCondition_ConditionType_vname[int32(x)]
+func (x DSCCondition_ConditionType) String() string {
+	return DSCCondition_ConditionType_vname[int32(x)]
 }
 
-// SmartNICSpec_MgmtModes_normal is a map of normalized values for the enum
-var SmartNICSpec_MgmtModes_normal = map[string]string{
+// DistributedServiceCardSpec_MgmtModes_normal is a map of normalized values for the enum
+var DistributedServiceCardSpec_MgmtModes_normal = map[string]string{
 	"host":    "host",
 	"network": "network",
 }
 
-var SmartNICSpec_MgmtModes_vname = map[int32]string{
+var DistributedServiceCardSpec_MgmtModes_vname = map[int32]string{
 	0: "host",
 	1: "network",
 }
 
-var SmartNICSpec_MgmtModes_vvalue = map[string]int32{
+var DistributedServiceCardSpec_MgmtModes_vvalue = map[string]int32{
 	"host":    0,
 	"network": 1,
 }
 
-func (x SmartNICSpec_MgmtModes) String() string {
-	return SmartNICSpec_MgmtModes_vname[int32(x)]
+func (x DistributedServiceCardSpec_MgmtModes) String() string {
+	return DistributedServiceCardSpec_MgmtModes_vname[int32(x)]
 }
 
-// SmartNICSpec_NetworkModes_normal is a map of normalized values for the enum
-var SmartNICSpec_NetworkModes_normal = map[string]string{
+// DistributedServiceCardSpec_NetworkModes_normal is a map of normalized values for the enum
+var DistributedServiceCardSpec_NetworkModes_normal = map[string]string{
 	"inband": "inband",
 	"oob":    "oob",
 }
 
-var SmartNICSpec_NetworkModes_vname = map[int32]string{
+var DistributedServiceCardSpec_NetworkModes_vname = map[int32]string{
 	0: "oob",
 	1: "inband",
 }
 
-var SmartNICSpec_NetworkModes_vvalue = map[string]int32{
+var DistributedServiceCardSpec_NetworkModes_vvalue = map[string]int32{
 	"oob":    0,
 	"inband": 1,
 }
 
-func (x SmartNICSpec_NetworkModes) String() string {
-	return SmartNICSpec_NetworkModes_vname[int32(x)]
+func (x DistributedServiceCardSpec_NetworkModes) String() string {
+	return DistributedServiceCardSpec_NetworkModes_vname[int32(x)]
 }
 
-// SmartNICStatus_Phase_normal is a map of normalized values for the enum
-var SmartNICStatus_Phase_normal = map[string]string{
+// DistributedServiceCardStatus_Phase_normal is a map of normalized values for the enum
+var DistributedServiceCardStatus_Phase_normal = map[string]string{
 	"admitted":       "admitted",
 	"decommissioned": "decommissioned",
 	"pending":        "pending",
@@ -98,7 +98,7 @@ var SmartNICStatus_Phase_normal = map[string]string{
 	"unknown":        "unknown",
 }
 
-var SmartNICStatus_Phase_vname = map[int32]string{
+var DistributedServiceCardStatus_Phase_vname = map[int32]string{
 	0: "unknown",
 	1: "registering",
 	2: "rejected",
@@ -107,7 +107,7 @@ var SmartNICStatus_Phase_vname = map[int32]string{
 	5: "decommissioned",
 }
 
-var SmartNICStatus_Phase_vvalue = map[string]int32{
+var DistributedServiceCardStatus_Phase_vvalue = map[string]int32{
 	"unknown":        0,
 	"registering":    1,
 	"rejected":       2,
@@ -116,21 +116,21 @@ var SmartNICStatus_Phase_vvalue = map[string]int32{
 	"decommissioned": 5,
 }
 
-func (x SmartNICStatus_Phase) String() string {
-	return SmartNICStatus_Phase_vname[int32(x)]
+func (x DistributedServiceCardStatus_Phase) String() string {
+	return DistributedServiceCardStatus_Phase_vname[int32(x)]
 }
 
 var _ validators.DummyVar
 var validatorMapSmartnic = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
-func (m *SmartNIC) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "smartnics/", m.Name)
+func (m *DistributedServiceCard) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "distributedservicecards/", m.Name)
 }
 
-func (m *SmartNIC) MakeURI(cat, ver, prefix string) string {
+func (m *DistributedServiceCard) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/smartnics/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/distributedservicecards/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -152,6 +152,143 @@ func (m *BiosInfo) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *BiosInfo) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *DSCCondition) Clone(into interface{}) (interface{}, error) {
+	var out *DSCCondition
+	var ok bool
+	if into == nil {
+		out = &DSCCondition{}
+	} else {
+		out, ok = into.(*DSCCondition)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*DSCCondition))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DSCCondition) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Status = "unknown"
+		m.Type = "healthy"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *DSCInfo) Clone(into interface{}) (interface{}, error) {
+	var out *DSCInfo
+	var ok bool
+	if into == nil {
+		out = &DSCInfo{}
+	} else {
+		out, ok = into.(*DSCInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*DSCInfo))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DSCInfo) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *DistributedServiceCard) Clone(into interface{}) (interface{}, error) {
+	var out *DistributedServiceCard
+	var ok bool
+	if into == nil {
+		out = &DistributedServiceCard{}
+	} else {
+		out, ok = into.(*DistributedServiceCard)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*DistributedServiceCard))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DistributedServiceCard) Defaults(ver string) bool {
+	var ret bool
+	m.Kind = "DistributedServiceCard"
+	ret = m.Tenant != "" || m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
+	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *DistributedServiceCardSpec) Clone(into interface{}) (interface{}, error) {
+	var out *DistributedServiceCardSpec
+	var ok bool
+	if into == nil {
+		out = &DistributedServiceCardSpec{}
+	} else {
+		out, ok = into.(*DistributedServiceCardSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*DistributedServiceCardSpec))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DistributedServiceCardSpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.MgmtMode = "host"
+		m.NetworkMode = "oob"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *DistributedServiceCardStatus) Clone(into interface{}) (interface{}, error) {
+	var out *DistributedServiceCardStatus
+	var ok bool
+	if into == nil {
+		out = &DistributedServiceCardStatus{}
+	} else {
+		out, ok = into.(*DistributedServiceCardStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*DistributedServiceCardStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DistributedServiceCardStatus) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Conditions {
+		i := m.Conditions[k]
+		ret = i.Defaults(ver) || ret
+	}
+	ret = true
+	switch ver {
+	default:
+		m.AdmissionPhase = "unknown"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -197,143 +334,6 @@ func (m *MacRange) Defaults(ver string) bool {
 	return ret
 }
 
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNIC
-	var ok bool
-	if into == nil {
-		out = &SmartNIC{}
-	} else {
-		out, ok = into.(*SmartNIC)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SmartNIC))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNIC) Defaults(ver string) bool {
-	var ret bool
-	m.Kind = "SmartNIC"
-	ret = m.Tenant != "" || m.Namespace != ""
-	if ret {
-		m.Tenant, m.Namespace = "", ""
-	}
-	ret = m.Spec.Defaults(ver) || ret
-	ret = m.Status.Defaults(ver) || ret
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICCondition) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICCondition
-	var ok bool
-	if into == nil {
-		out = &SmartNICCondition{}
-	} else {
-		out, ok = into.(*SmartNICCondition)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SmartNICCondition))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICCondition) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Status = "unknown"
-		m.Type = "healthy"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICInfo) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICInfo
-	var ok bool
-	if into == nil {
-		out = &SmartNICInfo{}
-	} else {
-		out, ok = into.(*SmartNICInfo)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SmartNICInfo))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICInfo) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICSpec) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICSpec
-	var ok bool
-	if into == nil {
-		out = &SmartNICSpec{}
-	} else {
-		out, ok = into.(*SmartNICSpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SmartNICSpec))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICSpec) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.MgmtMode = "host"
-		m.NetworkMode = "oob"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICStatus) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICStatus
-	var ok bool
-	if into == nil {
-		out = &SmartNICStatus{}
-	} else {
-		out, ok = into.(*SmartNICStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SmartNICStatus))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICStatus) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Conditions {
-		i := m.Conditions[k]
-		ret = i.Defaults(ver) || ret
-	}
-	ret = true
-	switch ver {
-	default:
-		m.AdmissionPhase = "unknown"
-	}
-	return ret
-}
-
 // Validators and Requirements
 
 func (m *BiosInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -349,32 +349,19 @@ func (m *BiosInfo) Normalize() {
 
 }
 
-func (m *IPConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *DSCCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
 
-func (m *IPConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *DSCCondition) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
-	return ret
-}
-
-func (m *IPConfig) Normalize() {
-
-}
-
-func (m *MacRange) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *MacRange) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	if vs, ok := validatorMapSmartnic["MacRange"][ver]; ok {
+	if vs, ok := validatorMapSmartnic["DSCCondition"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapSmartnic["MacRange"]["all"]; ok {
+	} else if vs, ok := validatorMapSmartnic["DSCCondition"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -384,22 +371,56 @@ func (m *MacRange) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 	return ret
 }
 
-func (m *MacRange) Normalize() {
+func (m *DSCCondition) Normalize() {
+
+	m.Status = ConditionStatus_normal[strings.ToLower(m.Status)]
+
+	m.Type = DSCCondition_ConditionType_normal[strings.ToLower(m.Type)]
 
 }
 
-func (m *SmartNIC) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *DSCInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
 
-func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *DSCInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.MemoryInfo != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "MemoryInfo"
+			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *DSCInfo) Normalize() {
+
+	if m.MemoryInfo != nil {
+		m.MemoryInfo.Normalize()
+	}
+
+}
+
+func (m *DistributedServiceCard) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *DistributedServiceCard) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for SmartNIC"))
+		ret = append(ret, errors.New("Tenant not allowed for DistributedServiceCard"))
 	}
 	if m.Namespace != "" {
-		ret = append(ret, errors.New("Namespace not allowed for SmartNIC"))
+		ret = append(ret, errors.New("Namespace not allowed for DistributedServiceCard"))
 	}
 
 	{
@@ -450,7 +471,7 @@ func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 	return ret
 }
 
-func (m *SmartNIC) Normalize() {
+func (m *DistributedServiceCard) Normalize() {
 
 	m.ObjectMeta.Normalize()
 
@@ -460,19 +481,19 @@ func (m *SmartNIC) Normalize() {
 
 }
 
-func (m *SmartNICCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *DistributedServiceCardSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
 
-func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *DistributedServiceCardSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
-	if vs, ok := validatorMapSmartnic["SmartNICCondition"][ver]; ok {
+	if vs, ok := validatorMapSmartnic["DistributedServiceCardSpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapSmartnic["SmartNICCondition"]["all"]; ok {
+	} else if vs, ok := validatorMapSmartnic["DistributedServiceCardSpec"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -482,79 +503,19 @@ func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool, ignore
 	return ret
 }
 
-func (m *SmartNICCondition) Normalize() {
+func (m *DistributedServiceCardSpec) Normalize() {
 
-	m.Status = ConditionStatus_normal[strings.ToLower(m.Status)]
+	m.MgmtMode = DistributedServiceCardSpec_MgmtModes_normal[strings.ToLower(m.MgmtMode)]
 
-	m.Type = SmartNICCondition_ConditionType_normal[strings.ToLower(m.Type)]
-
-}
-
-func (m *SmartNICInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+	m.NetworkMode = DistributedServiceCardSpec_NetworkModes_normal[strings.ToLower(m.NetworkMode)]
 
 }
 
-func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-
-	if m.MemoryInfo != nil {
-		{
-			dlmtr := "."
-			if path == "" {
-				dlmtr = ""
-			}
-			npath := path + dlmtr + "MemoryInfo"
-			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-				ret = append(ret, errs...)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *SmartNICInfo) Normalize() {
-
-	if m.MemoryInfo != nil {
-		m.MemoryInfo.Normalize()
-	}
+func (m *DistributedServiceCardStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
 
-func (m *SmartNICSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	if vs, ok := validatorMapSmartnic["SmartNICSpec"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapSmartnic["SmartNICSpec"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *SmartNICSpec) Normalize() {
-
-	m.MgmtMode = SmartNICSpec_MgmtModes_normal[strings.ToLower(m.MgmtMode)]
-
-	m.NetworkMode = SmartNICSpec_NetworkModes_normal[strings.ToLower(m.NetworkMode)]
-
-}
-
-func (m *SmartNICStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *DistributedServiceCardStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Conditions {
 		dlmtr := "."
@@ -579,13 +540,13 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpe
 			}
 		}
 	}
-	if vs, ok := validatorMapSmartnic["SmartNICStatus"][ver]; ok {
+	if vs, ok := validatorMapSmartnic["DistributedServiceCardStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapSmartnic["SmartNICStatus"]["all"]; ok {
+	} else if vs, ok := validatorMapSmartnic["DistributedServiceCardStatus"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -595,9 +556,9 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpe
 	return ret
 }
 
-func (m *SmartNICStatus) Normalize() {
+func (m *DistributedServiceCardStatus) Normalize() {
 
-	m.AdmissionPhase = SmartNICStatus_Phase_normal[strings.ToLower(m.AdmissionPhase)]
+	m.AdmissionPhase = DistributedServiceCardStatus_Phase_normal[strings.ToLower(m.AdmissionPhase)]
 
 	for k, v := range m.Conditions {
 		v.Normalize()
@@ -611,15 +572,142 @@ func (m *SmartNICStatus) Normalize() {
 
 }
 
+func (m *IPConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *IPConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *IPConfig) Normalize() {
+
+}
+
+func (m *MacRange) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *MacRange) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapSmartnic["MacRange"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapSmartnic["MacRange"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *MacRange) Normalize() {
+
+}
+
 // Transformers
 
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
-		&SmartNIC{},
+		&DistributedServiceCard{},
 	)
 
 	validatorMapSmartnic = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapSmartnic["DSCCondition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSmartnic["DSCCondition"]["all"] = append(validatorMapSmartnic["DSCCondition"]["all"], func(path string, i interface{}) error {
+		m := i.(*DSCCondition)
+
+		if _, ok := ConditionStatus_vvalue[m.Status]; !ok {
+			vals := []string{}
+			for k1, _ := range ConditionStatus_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["DSCCondition"]["all"] = append(validatorMapSmartnic["DSCCondition"]["all"], func(path string, i interface{}) error {
+		m := i.(*DSCCondition)
+
+		if _, ok := DSCCondition_ConditionType_vvalue[m.Type]; !ok {
+			vals := []string{}
+			for k1, _ := range DSCCondition_ConditionType_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["DistributedServiceCardSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSmartnic["DistributedServiceCardSpec"]["all"] = append(validatorMapSmartnic["DistributedServiceCardSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*DistributedServiceCardSpec)
+
+		if _, ok := DistributedServiceCardSpec_MgmtModes_vvalue[m.MgmtMode]; !ok {
+			vals := []string{}
+			for k1, _ := range DistributedServiceCardSpec_MgmtModes_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"MgmtMode", vals)
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["DistributedServiceCardSpec"]["all"] = append(validatorMapSmartnic["DistributedServiceCardSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*DistributedServiceCardSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "4095")
+
+		if err := validators.IntRange(m.MgmtVlan, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MgmtVlan", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["DistributedServiceCardSpec"]["all"] = append(validatorMapSmartnic["DistributedServiceCardSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*DistributedServiceCardSpec)
+
+		if _, ok := DistributedServiceCardSpec_NetworkModes_vvalue[m.NetworkMode]; !ok {
+			vals := []string{}
+			for k1, _ := range DistributedServiceCardSpec_NetworkModes_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"NetworkMode", vals)
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["DistributedServiceCardStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSmartnic["DistributedServiceCardStatus"]["all"] = append(validatorMapSmartnic["DistributedServiceCardStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*DistributedServiceCardStatus)
+
+		if _, ok := DistributedServiceCardStatus_Phase_vvalue[m.AdmissionPhase]; !ok {
+			vals := []string{}
+			for k1, _ := range DistributedServiceCardStatus_Phase_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AdmissionPhase", vals)
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["DistributedServiceCardStatus"]["all"] = append(validatorMapSmartnic["DistributedServiceCardStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*DistributedServiceCardStatus)
+		if err := validators.EmptyOr(validators.MacAddr, m.PrimaryMAC, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"PrimaryMAC", err.Error())
+		}
+		return nil
+	})
 
 	validatorMapSmartnic["MacRange"] = make(map[string][]func(string, interface{}) error)
 
@@ -635,94 +723,6 @@ func init() {
 		m := i.(*MacRange)
 		if err := validators.EmptyOr(validators.MacAddr, m.Start, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"Start", err.Error())
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["SmartNICCondition"] = make(map[string][]func(string, interface{}) error)
-	validatorMapSmartnic["SmartNICCondition"]["all"] = append(validatorMapSmartnic["SmartNICCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICCondition)
-
-		if _, ok := ConditionStatus_vvalue[m.Status]; !ok {
-			vals := []string{}
-			for k1, _ := range ConditionStatus_vvalue {
-				vals = append(vals, k1)
-			}
-			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["SmartNICCondition"]["all"] = append(validatorMapSmartnic["SmartNICCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICCondition)
-
-		if _, ok := SmartNICCondition_ConditionType_vvalue[m.Type]; !ok {
-			vals := []string{}
-			for k1, _ := range SmartNICCondition_ConditionType_vvalue {
-				vals = append(vals, k1)
-			}
-			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["SmartNICSpec"] = make(map[string][]func(string, interface{}) error)
-	validatorMapSmartnic["SmartNICSpec"]["all"] = append(validatorMapSmartnic["SmartNICSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICSpec)
-
-		if _, ok := SmartNICSpec_MgmtModes_vvalue[m.MgmtMode]; !ok {
-			vals := []string{}
-			for k1, _ := range SmartNICSpec_MgmtModes_vvalue {
-				vals = append(vals, k1)
-			}
-			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"MgmtMode", vals)
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["SmartNICSpec"]["all"] = append(validatorMapSmartnic["SmartNICSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICSpec)
-		args := make([]string, 0)
-		args = append(args, "0")
-		args = append(args, "4095")
-
-		if err := validators.IntRange(m.MgmtVlan, args); err != nil {
-			return fmt.Errorf("%v failed validation: %s", path+"."+"MgmtVlan", err.Error())
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["SmartNICSpec"]["all"] = append(validatorMapSmartnic["SmartNICSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICSpec)
-
-		if _, ok := SmartNICSpec_NetworkModes_vvalue[m.NetworkMode]; !ok {
-			vals := []string{}
-			for k1, _ := range SmartNICSpec_NetworkModes_vvalue {
-				vals = append(vals, k1)
-			}
-			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"NetworkMode", vals)
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["SmartNICStatus"] = make(map[string][]func(string, interface{}) error)
-	validatorMapSmartnic["SmartNICStatus"]["all"] = append(validatorMapSmartnic["SmartNICStatus"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICStatus)
-
-		if _, ok := SmartNICStatus_Phase_vvalue[m.AdmissionPhase]; !ok {
-			vals := []string{}
-			for k1, _ := range SmartNICStatus_Phase_vvalue {
-				vals = append(vals, k1)
-			}
-			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AdmissionPhase", vals)
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["SmartNICStatus"]["all"] = append(validatorMapSmartnic["SmartNICStatus"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICStatus)
-		if err := validators.EmptyOr(validators.MacAddr, m.PrimaryMAC, nil); err != nil {
-			return fmt.Errorf("%v failed validation: %s", path+"."+"PrimaryMAC", err.Error())
 		}
 		return nil
 	})

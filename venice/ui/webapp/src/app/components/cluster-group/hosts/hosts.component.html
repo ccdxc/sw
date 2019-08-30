@@ -48,13 +48,14 @@
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
-    <ng-container *ngSwitchCase="'spec.smart-nics'">
+    <ng-container *ngSwitchCase="'spec.dscs'">
       <div *ngFor="let v of rowData['processedSmartNics']">
-        <ng-container *roleGuard="'clusterSmartnic_read'">
+        <ng-container *roleGuard="'clusterDistributedservicecard_read'">
           <a *ngIf="v.mac != ''" routerLink="/cluster/naples/{{v.mac}}">{{v.text}}</a>
           <a *ngIf="v.mac == ''">{{v.text}}</a>
         </ng-container>
-        <ng-container *roleGuard="{req: 'clusterSmartnic_read', checkUnauthorized: true }">
+        <ng-container
+                      *roleGuard="{req: 'clusterDistributedservicecard_read', checkUnauthorized: true }">
           <a>{{v.text}}</a>
         </ng-container>
         <mat-icon class="not_admitted_icon" [inline]="true" *ngIf="!v.admitted"

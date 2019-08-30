@@ -258,7 +258,7 @@ export class MockDataUtil {
           }
         },
         {
-          'kind': 'SmartNIC',
+          'kind': 'DistributedServiceCard',
           'api-version': 'v1',
           'meta': {
             'name': '02:42:c0:a8:1c:02',
@@ -356,10 +356,10 @@ export class MockDataUtil {
                       }
                     ]
                   },
-                  'SmartNIC': {
+                  'DistributedServiceCard': {
                     'entries': [
                       {
-                        'kind': 'SmartNIC',
+                        'kind': 'DistributedServiceCard',
                         'api-version': 'v1',
                         'meta': {
                           'name': '02:42:c0:a8:1c:02',

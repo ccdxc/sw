@@ -21,15 +21,15 @@ import (
 type NMD struct {
 	Name string
 	sync.Mutex
-	Nic           *cmd.SmartNIC
-	NicAdded      map[string]*cmd.SmartNIC
-	NicUpdated    map[string]*cmd.SmartNIC
-	NicDeleted    map[string]*cmd.SmartNIC
+	Nic           *cmd.DistributedServiceCard
+	NicAdded      map[string]*cmd.DistributedServiceCard
+	NicUpdated    map[string]*cmd.DistributedServiceCard
+	NicDeleted    map[string]*cmd.DistributedServiceCard
 	Naples        *nmd.Naples
 	IPConfig      *cmd.IPConfig
 	keyMgr        *keymgr.KeyMgr
-	Rollout       *protos.SmartNICRollout
-	RolloutStatus *protos.SmartNICRolloutStatusUpdate
+	Rollout       *protos.DSCRollout
+	RolloutStatus *protos.DSCRolloutStatusUpdate
 	Profiles      []*nmd.NaplesProfile
 }
 
@@ -57,9 +57,9 @@ func (ag *NMD) GetControllerIps() []string {
 func CreateMockNMD(name string) *NMD {
 	return &NMD{
 		Name:       name,
-		NicAdded:   make(map[string]*cmd.SmartNIC),
-		NicUpdated: make(map[string]*cmd.SmartNIC),
-		NicDeleted: make(map[string]*cmd.SmartNIC),
+		NicAdded:   make(map[string]*cmd.DistributedServiceCard),
+		NicUpdated: make(map[string]*cmd.DistributedServiceCard),
+		NicDeleted: make(map[string]*cmd.DistributedServiceCard),
 		Naples: &nmd.Naples{
 			TypeMeta: api.TypeMeta{Kind: "NaplesConfig"},
 			ObjectMeta: api.ObjectMeta{
@@ -80,18 +80,18 @@ func objectKey(meta api.ObjectMeta) string {
 	return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
 }
 
-// GetSmartNICRolloutStatus gets the rollout status
-func (ag *NMD) GetSmartNICRolloutStatus() (ro protos.SmartNICRolloutStatusUpdate, err error) {
+// GetDSCRolloutStatus gets the rollout status
+func (ag *NMD) GetDSCRolloutStatus() (ro protos.DSCRolloutStatusUpdate, err error) {
 	return
 }
 
-// CreateUpdateSmartNICRollout creates the rollout object
-func (ag *NMD) CreateUpdateSmartNICRollout(sro *protos.SmartNICRollout) error {
+// CreateUpdateDSCRollout creates the rollout object
+func (ag *NMD) CreateUpdateDSCRollout(sro *protos.DSCRollout) error {
 	return nil
 }
 
-// DeleteSmartNICRollout deletes the smart nic rollout
-func (ag *NMD) DeleteSmartNICRollout(sro *protos.SmartNICRollout) error {
+// DeleteDSCRollout deletes the smart nic rollout
+func (ag *NMD) DeleteDSCRollout(sro *protos.DSCRollout) error {
 	return nil
 }
 
@@ -111,7 +111,7 @@ func (ag *NMD) SetVeniceIPs(veniceIPs []string) {
 }
 
 // CreateSmartNIC creates smart NIC
-func (ag *NMD) CreateSmartNIC(n *cmd.SmartNIC) error {
+func (ag *NMD) CreateSmartNIC(n *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.NicAdded[objectKey(n.ObjectMeta)] = n
@@ -119,7 +119,7 @@ func (ag *NMD) CreateSmartNIC(n *cmd.SmartNIC) error {
 }
 
 // UpdateSmartNIC updates smart NIC
-func (ag *NMD) UpdateSmartNIC(n *cmd.SmartNIC) error {
+func (ag *NMD) UpdateSmartNIC(n *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.NicUpdated[objectKey(n.ObjectMeta)] = n
@@ -127,7 +127,7 @@ func (ag *NMD) UpdateSmartNIC(n *cmd.SmartNIC) error {
 }
 
 // DeleteSmartNIC deltes the smart NIC
-func (ag *NMD) DeleteSmartNIC(n *cmd.SmartNIC) error {
+func (ag *NMD) DeleteSmartNIC(n *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.NicDeleted[objectKey(n.ObjectMeta)] = n
@@ -135,7 +135,7 @@ func (ag *NMD) DeleteSmartNIC(n *cmd.SmartNIC) error {
 }
 
 // GetSmartNIC returns the smart NIC
-func (ag *NMD) GetSmartNIC() (*cmd.SmartNIC, error) {
+func (ag *NMD) GetSmartNIC() (*cmd.DistributedServiceCard, error) {
 	ag.Lock()
 	defer ag.Unlock()
 	return ag.Nic, nil
@@ -149,14 +149,14 @@ func (ag *NMD) GetNaplesConfig() (*nmd.Naples, error) {
 }
 
 // GetNaplesRollout gets the current rollout
-func (ag *NMD) GetNaplesRollout() (rollout *protos.SmartNICRolloutStatusUpdate, err error) {
+func (ag *NMD) GetNaplesRollout() (rollout *protos.DSCRolloutStatusUpdate, err error) {
 	ag.Lock()
 	defer ag.Unlock()
 	return ag.RolloutStatus, nil
 }
 
 // CreateNaplesRollout creates naples rollout
-func (ag *NMD) CreateNaplesRollout(rollout *protos.SmartNICRollout) (err error) {
+func (ag *NMD) CreateNaplesRollout(rollout *protos.DSCRollout) (err error) {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.Rollout = rollout
@@ -171,7 +171,7 @@ func (ag *NMD) GetPrimaryMAC() string {
 }
 
 // DeleteNaplesRollout deletes naples rollout
-func (ag *NMD) DeleteNaplesRollout(rollout *protos.SmartNICRollout) (err error) {
+func (ag *NMD) DeleteNaplesRollout(rollout *protos.DSCRollout) (err error) {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.Rollout = nil
@@ -260,7 +260,7 @@ func (ag *NMD) SetIPConfig(cfg *cmd.IPConfig) {
 }
 
 // SetSmartNIC sets the smart nic
-func (ag *NMD) SetSmartNIC(nic *cmd.SmartNIC) error {
+func (ag *NMD) SetSmartNIC(nic *cmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.Nic = nic
@@ -274,11 +274,11 @@ func (ag *NMD) GenClusterKeyPair() (*keymgr.KeyPair, error) {
 }
 
 // GetPlatformCertificate gets the platform certificate
-func (ag *NMD) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
+func (ag *NMD) GetPlatformCertificate(nic *cmd.DistributedServiceCard) ([]byte, error) {
 	return nil, nil
 }
 
 // GenChallengeResponse generates a challenge response
-func (ag *NMD) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte, []byte, error) {
+func (ag *NMD) GenChallengeResponse(nic *cmd.DistributedServiceCard, challenge []byte) ([]byte, []byte, error) {
 	return nil, nil, nil
 }

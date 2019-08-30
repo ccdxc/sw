@@ -51,6 +51,176 @@ func DecodeGrpcRespBiosInfo(ctx context.Context, response interface{}) (interfac
 	return response, nil
 }
 
+func encodeHTTPDSCCondition(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDSCCondition(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DSCCondition
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDSCCondition encodes GRPC request
+func EncodeGrpcReqDSCCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DSCCondition)
+	return req, nil
+}
+
+// DecodeGrpcReqDSCCondition decodes GRPC request
+func DecodeGrpcReqDSCCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DSCCondition)
+	return req, nil
+}
+
+// EncodeGrpcRespDSCCondition encodes GRC response
+func EncodeGrpcRespDSCCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDSCCondition decodes GRPC response
+func DecodeGrpcRespDSCCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPDSCInfo(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDSCInfo(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DSCInfo
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDSCInfo encodes GRPC request
+func EncodeGrpcReqDSCInfo(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DSCInfo)
+	return req, nil
+}
+
+// DecodeGrpcReqDSCInfo decodes GRPC request
+func DecodeGrpcReqDSCInfo(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DSCInfo)
+	return req, nil
+}
+
+// EncodeGrpcRespDSCInfo encodes GRC response
+func EncodeGrpcRespDSCInfo(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDSCInfo decodes GRPC response
+func DecodeGrpcRespDSCInfo(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPDistributedServiceCard(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDistributedServiceCard(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DistributedServiceCard
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDistributedServiceCard encodes GRPC request
+func EncodeGrpcReqDistributedServiceCard(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCard)
+	return req, nil
+}
+
+// DecodeGrpcReqDistributedServiceCard decodes GRPC request
+func DecodeGrpcReqDistributedServiceCard(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCard)
+	return req, nil
+}
+
+// EncodeGrpcRespDistributedServiceCard encodes GRC response
+func EncodeGrpcRespDistributedServiceCard(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDistributedServiceCard decodes GRPC response
+func DecodeGrpcRespDistributedServiceCard(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPDistributedServiceCardSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDistributedServiceCardSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DistributedServiceCardSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDistributedServiceCardSpec encodes GRPC request
+func EncodeGrpcReqDistributedServiceCardSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqDistributedServiceCardSpec decodes GRPC request
+func DecodeGrpcReqDistributedServiceCardSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespDistributedServiceCardSpec encodes GRC response
+func EncodeGrpcRespDistributedServiceCardSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDistributedServiceCardSpec decodes GRPC response
+func DecodeGrpcRespDistributedServiceCardSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPDistributedServiceCardStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDistributedServiceCardStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DistributedServiceCardStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDistributedServiceCardStatus encodes GRPC request
+func EncodeGrpcReqDistributedServiceCardStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqDistributedServiceCardStatus decodes GRPC request
+func DecodeGrpcReqDistributedServiceCardStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DistributedServiceCardStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespDistributedServiceCardStatus encodes GRC response
+func EncodeGrpcRespDistributedServiceCardStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDistributedServiceCardStatus decodes GRPC response
+func DecodeGrpcRespDistributedServiceCardStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPIPConfig(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -116,175 +286,5 @@ func EncodeGrpcRespMacRange(ctx context.Context, response interface{}) (interfac
 
 // DecodeGrpcRespMacRange decodes GRPC response
 func DecodeGrpcRespMacRange(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSmartNIC(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNIC(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNIC
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNIC encodes GRPC request
-func EncodeGrpcReqSmartNIC(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNIC)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNIC decodes GRPC request
-func DecodeGrpcReqSmartNIC(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNIC)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNIC encodes GRC response
-func EncodeGrpcRespSmartNIC(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNIC decodes GRPC response
-func DecodeGrpcRespSmartNIC(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSmartNICCondition(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNICCondition(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNICCondition
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNICCondition encodes GRPC request
-func EncodeGrpcReqSmartNICCondition(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICCondition)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNICCondition decodes GRPC request
-func DecodeGrpcReqSmartNICCondition(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICCondition)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNICCondition encodes GRC response
-func EncodeGrpcRespSmartNICCondition(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNICCondition decodes GRPC response
-func DecodeGrpcRespSmartNICCondition(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSmartNICInfo(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNICInfo(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNICInfo
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNICInfo encodes GRPC request
-func EncodeGrpcReqSmartNICInfo(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICInfo)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNICInfo decodes GRPC request
-func DecodeGrpcReqSmartNICInfo(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICInfo)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNICInfo encodes GRC response
-func EncodeGrpcRespSmartNICInfo(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNICInfo decodes GRPC response
-func DecodeGrpcRespSmartNICInfo(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSmartNICSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNICSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNICSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNICSpec encodes GRPC request
-func EncodeGrpcReqSmartNICSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNICSpec decodes GRPC request
-func DecodeGrpcReqSmartNICSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNICSpec encodes GRC response
-func EncodeGrpcRespSmartNICSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNICSpec decodes GRPC response
-func DecodeGrpcRespSmartNICSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSmartNICStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSmartNICStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SmartNICStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSmartNICStatus encodes GRPC request
-func EncodeGrpcReqSmartNICStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqSmartNICStatus decodes GRPC request
-func DecodeGrpcReqSmartNICStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SmartNICStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespSmartNICStatus encodes GRC response
-func EncodeGrpcRespSmartNICStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSmartNICStatus decodes GRPC response
-func DecodeGrpcRespSmartNICStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

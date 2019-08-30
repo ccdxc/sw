@@ -47,35 +47,35 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 	l.Infof("registering message for sclusterSmartnicBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"cluster.BiosInfo": apisrvpkg.NewMessage("cluster.BiosInfo"),
-		"cluster.IPConfig": apisrvpkg.NewMessage("cluster.IPConfig"),
-		"cluster.MacRange": apisrvpkg.NewMessage("cluster.MacRange"),
-		"cluster.SmartNIC": apisrvpkg.NewMessage("cluster.SmartNIC").WithKeyGenerator(func(i interface{}, prefix string) string {
+		"cluster.BiosInfo":     apisrvpkg.NewMessage("cluster.BiosInfo"),
+		"cluster.DSCCondition": apisrvpkg.NewMessage("cluster.DSCCondition"),
+		"cluster.DSCInfo":      apisrvpkg.NewMessage("cluster.DSCInfo"),
+		"cluster.DistributedServiceCard": apisrvpkg.NewMessage("cluster.DistributedServiceCard").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
-				r := cluster.SmartNIC{}
+				r := cluster.DistributedServiceCard{}
 				return r.MakeKey(prefix)
 			}
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(cluster.SmartNIC)
-			r.Kind = "SmartNIC"
+			r := i.(cluster.DistributedServiceCard)
+			r.Kind = "DistributedServiceCard"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			key := r.MakeKey(prefix)
-			r.Kind = "SmartNIC"
+			r.Kind = "DistributedServiceCard"
 			var err error
 			if create {
 				if updateFn != nil {
-					upd := &cluster.SmartNIC{}
+					upd := &cluster.DistributedServiceCard{}
 					n, err := updateFn(upd)
 					if err != nil {
 						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
-					new := n.(*cluster.SmartNIC)
+					new := n.(*cluster.DistributedServiceCard)
 					new.TypeMeta = r.TypeMeta
 					new.GenerationID = "1"
 					new.UUID = r.UUID
@@ -91,14 +91,14 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 				}
 			} else {
 				if updateFn != nil {
-					into := &cluster.SmartNIC{}
+					into := &cluster.DistributedServiceCard{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
 						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
-					var cur cluster.SmartNIC
+					var cur cluster.DistributedServiceCard
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
 						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
@@ -120,18 +120,18 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
 				if updatefn != nil {
-					upd := &cluster.SmartNIC{}
+					upd := &cluster.DistributedServiceCard{}
 					n, err := updatefn(upd)
 					if err != nil {
 						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
-					new := n.(*cluster.SmartNIC)
+					new := n.(*cluster.DistributedServiceCard)
 					new.TypeMeta = r.TypeMeta
 					new.GenerationID = "1"
 					new.UUID = r.UUID
@@ -147,7 +147,7 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 				}
 			} else {
 				if updatefn != nil {
-					var cur cluster.SmartNIC
+					var cur cluster.DistributedServiceCard
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
 						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
@@ -158,10 +158,10 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
-					r = *robj.(*cluster.SmartNIC)
+					r = *robj.(*cluster.DistributedServiceCard)
 					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 				} else {
-					var cur cluster.SmartNIC
+					var cur cluster.DistributedServiceCard
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
 						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
@@ -185,11 +185,11 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			r.UUID = uuid.NewV4().String()
 			return r, nil
 		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			var err error
 			ts, err := types.TimestampProto(time.Now())
 			if err == nil {
@@ -197,7 +197,7 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			}
 			return r, err
 		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			var err error
 			ts, err := types.TimestampProto(time.Now())
 			if err == nil {
@@ -205,18 +205,18 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			}
 			return r, err
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			r.SelfLink = path
 			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := cluster.SmartNIC{}
+			r := cluster.DistributedServiceCard{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
 				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := cluster.SmartNIC{}
+			r := cluster.DistributedServiceCard{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
 				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
@@ -229,27 +229,27 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 			r.Normalize()
 			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
-			r := i.(cluster.SmartNIC)
+			r := i.(cluster.DistributedServiceCard)
 
 			tenant := ""
 			r.References(tenant, "", ret)
 			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
-			var n *cluster.SmartNIC
-			if v, ok := i.(cluster.SmartNIC); ok {
+			var n *cluster.DistributedServiceCard
+			if v, ok := i.(cluster.DistributedServiceCard); ok {
 				n = &v
-			} else if v, ok := i.(*cluster.SmartNIC); ok {
+			} else if v, ok := i.(*cluster.DistributedServiceCard); ok {
 				n = v
 			} else {
 				return nil
@@ -269,7 +269,7 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 				if oldObj == nil {
 					return nil, errors.New("nil object")
 				}
-				o := oldObj.(*cluster.SmartNIC)
+				o := oldObj.(*cluster.DistributedServiceCard)
 				n.UUID, n.CreationTime, n.Namespace, n.GenerationID = o.UUID, o.CreationTime, o.Namespace, o.GenerationID
 				ts, err := types.TimestampProto(time.Now())
 				if err != nil {
@@ -279,10 +279,10 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 				return n, nil
 			}
 		}).WithReplaceSpecFunction(func(ctx context.Context, i interface{}) kvstore.UpdateFunc {
-			var n *cluster.SmartNIC
-			if v, ok := i.(cluster.SmartNIC); ok {
+			var n *cluster.DistributedServiceCard
+			if v, ok := i.(cluster.DistributedServiceCard); ok {
 				n = &v
-			} else if v, ok := i.(*cluster.SmartNIC); ok {
+			} else if v, ok := i.(*cluster.DistributedServiceCard); ok {
 				n = v
 			} else {
 				return nil
@@ -290,12 +290,12 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			dryRun := cache.IsDryRun(ctx)
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if oldObj == nil {
-					rete := &cluster.SmartNIC{}
+					rete := &cluster.DistributedServiceCard{}
 					rete.TypeMeta, rete.ObjectMeta, rete.Spec = n.TypeMeta, n.ObjectMeta, n.Spec
 					rete.GenerationID = "1"
 					return rete, nil
 				}
-				if ret, ok := oldObj.(*cluster.SmartNIC); ok {
+				if ret, ok := oldObj.(*cluster.DistributedServiceCard); ok {
 					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
@@ -312,16 +312,16 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 				return nil, errors.New("invalid object")
 			}
 		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
-			var n *cluster.SmartNIC
-			if v, ok := i.(cluster.SmartNIC); ok {
+			var n *cluster.DistributedServiceCard
+			if v, ok := i.(cluster.DistributedServiceCard); ok {
 				n = &v
-			} else if v, ok := i.(*cluster.SmartNIC); ok {
+			} else if v, ok := i.(*cluster.DistributedServiceCard); ok {
 				n = v
 			} else {
 				return nil
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
-				if ret, ok := oldObj.(*cluster.SmartNIC); ok {
+				if ret, ok := oldObj.(*cluster.DistributedServiceCard); ok {
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -329,10 +329,10 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			}
 		}),
 
-		"cluster.SmartNICCondition": apisrvpkg.NewMessage("cluster.SmartNICCondition"),
-		"cluster.SmartNICInfo":      apisrvpkg.NewMessage("cluster.SmartNICInfo"),
-		"cluster.SmartNICSpec":      apisrvpkg.NewMessage("cluster.SmartNICSpec"),
-		"cluster.SmartNICStatus":    apisrvpkg.NewMessage("cluster.SmartNICStatus"),
+		"cluster.DistributedServiceCardSpec":   apisrvpkg.NewMessage("cluster.DistributedServiceCardSpec"),
+		"cluster.DistributedServiceCardStatus": apisrvpkg.NewMessage("cluster.DistributedServiceCardStatus"),
+		"cluster.IPConfig":                     apisrvpkg.NewMessage("cluster.IPConfig"),
+		"cluster.MacRange":                     apisrvpkg.NewMessage("cluster.MacRange"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

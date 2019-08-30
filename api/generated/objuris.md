@@ -9,6 +9,7 @@
 | Buffer | /configs/staging/v1/buffers |
 | Certificate | /configs/security/v1/certificates |
 | Cluster | /configs/cluster/v1/cluster |
+| DistributedServiceCard | /configs/cluster/v1/distributedservicecards |
 | Endpoint | /configs/workload/v1/endpoints |
 | EventPolicy | /configs/monitoring/v1/event-policy |
 | FirewallProfile | /configs/security/v1/firewallprofiles |
@@ -29,7 +30,6 @@
 | SGPolicy | /configs/security/v1/sgpolicies |
 | SecurityGroup | /configs/security/v1/security-groups |
 | Service | /configs/network/v1/services |
-| SmartNIC | /configs/cluster/v1/smartnics |
 | StatsPolicy | /configs/monitoring/v1/statsPolicy |
 | TechSupportRequest | /configs/monitoring/v1/techsupport |
 | Tenant | /configs/cluster/v1/tenants |

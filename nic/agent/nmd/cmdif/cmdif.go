@@ -283,7 +283,7 @@ func (client *CmdClient) Stop() {
 	log.Info("Stopped CMD Client")
 }
 
-func makeErrorResp(err error, str string, nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error) {
+func makeErrorResp(err error, str string, nic *cluster.DistributedServiceCard) (grpc.RegisterNICResponse, error) {
 	name := ""
 	if nic != nil {
 		name = nic.Name
@@ -295,7 +295,7 @@ func makeErrorResp(err error, str string, nic *cluster.SmartNIC) (grpc.RegisterN
 }
 
 // RegisterSmartNICReq send a register request for SmartNIC to CMD
-func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error) {
+func (client *CmdClient) RegisterSmartNICReq(nic *cluster.DistributedServiceCard) (grpc.RegisterNICResponse, error) {
 
 	// initialize rpc client
 	err := client.initRegistrationRPC()
@@ -425,7 +425,7 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 }
 
 // UpdateSmartNICReq send a status update of SmartNIC to CMD
-func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) error {
+func (client *CmdClient) UpdateSmartNICReq(nic *cluster.DistributedServiceCard) error {
 
 	if client.getUpdatesRPCClient() == nil {
 		// initialize rpc client

@@ -294,7 +294,7 @@ package state
 //		TransitionPhase: transitionPhase,
 //		MgmtIP:          mgmtIP,
 //		ID:              c.nmdState.config.Spec.ID,
-//		SmartNicName:    c.nmdState.config.Status.SmartNicName,
+//		DSCName:    c.nmdState.config.Status.DSCName,
 //		Fru: &delphiProto.NaplesFru{
 //			ManufacturingDate: c.nmdState.config.Status.Fru.ManufacturingDate,
 //			Manufacturer:      c.nmdState.config.Status.Fru.Manufacturer,
@@ -351,7 +351,7 @@ package state
 //func (c *IPClient) updateNaplesStatus(controllers []string) error {
 //	log.Infof("Found Controllers: %v", controllers)
 //
-//	c.nmdState.config.Status.SmartNicName = c.nmdState.config.Status.Fru.MacStr
+//	c.nmdState.config.Status.DSCName = c.nmdState.config.Status.Fru.MacStr
 //
 //	// TODO : Reenable these lines
 //	// Disable any updates to Naples Admission once Naples has been admitted into a Venice Cluster.

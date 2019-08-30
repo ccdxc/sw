@@ -16,11 +16,11 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
-import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterSmartNICCondition_type, ClusterNode } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
 import { NaplesCondition, NaplesConditionValues, NodeConditionValues } from '@app/components/cluster-group/naples/index.ts';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
-import { ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterSmartNICStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
+import { ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
 
 
 
@@ -999,7 +999,7 @@ export class Utility {
       case 'Cluster':
       case 'Node':
         return cat + '/cluster';
-      case 'SmartNIC':
+      case 'DistributedServiceCard':
         return cat + '/naples';
       case 'Host':
         return cat + '/hosts';
@@ -1630,20 +1630,20 @@ export class Utility {
     }
   }
 
-  public static getNaplesConditionObject(naples: Readonly<ClusterSmartNIC>): NaplesCondition {
-    if (!naples || naples.status['admission-phase'] !== ClusterSmartNICStatus_admission_phase.admitted) {
+  public static getNaplesConditionObject(naples: Readonly<ClusterDistributedServiceCard>): NaplesCondition {
+    if (!naples || naples.status['admission-phase'] !== ClusterDistributedServiceCardStatus_admission_phase.admitted) {
       return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.EMPTY)};
     } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
       return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
     } else {
       for (const cond of naples.status.conditions) {
-        if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.false)) {
+        if ((cond) && (cond.type === ClusterDSCCondition_type.healthy) && (cond.status === ClusterDSCCondition_status.false)) {
           return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNHEALTHY) };
         }
-        if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.true)) {
+        if ((cond) && (cond.type === ClusterDSCCondition_type.healthy) && (cond.status === ClusterDSCCondition_status.true)) {
           return { isHealthy: true, condition: _.upperFirst(NaplesConditionValues.HEALTHY) };
         }
-        if ((cond) && (cond.type === ClusterSmartNICCondition_type.healthy) && (cond.status === ClusterSmartNICCondition_status.unknown)) {
+        if ((cond) && (cond.type === ClusterDSCCondition_type.healthy) && (cond.status === ClusterDSCCondition_status.unknown)) {
           return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
         }
       }
@@ -1651,17 +1651,17 @@ export class Utility {
     }
   }
 
-  public static isNaplesNICHealthy(naples: Readonly<ClusterSmartNIC>): boolean {
+  public static isNaplesNICHealthy(naples: Readonly<ClusterDistributedServiceCard>): boolean {
     return this.getNaplesConditionObject(naples).isHealthy;
   }
 
-  public static getNaplesCondition(naples: Readonly<ClusterSmartNIC>): string {
+  public static getNaplesCondition(naples: Readonly<ClusterDistributedServiceCard>): string {
     return this.getNaplesConditionObject(naples).condition;
   }
 
 
 
-  public static displayReasons(naples: Readonly<ClusterSmartNIC>): string {
+  public static displayReasons(naples: Readonly<ClusterDistributedServiceCard>): string {
     const reasonarray: string[] = [];
     if (naples.status.conditions != null) {
       for (let i = 0; i < naples.status['conditions'].length; i++) {
@@ -1682,11 +1682,11 @@ export class Utility {
   }
 
 
-  public static isNICConditionEmpty(naples: Readonly<ClusterSmartNIC>): boolean { // If NIC not admitted, condition in table is left blank
+  public static isNICConditionEmpty(naples: Readonly<ClusterDistributedServiceCard>): boolean { // If NIC not admitted, condition in table is left blank
     return this.getNaplesCondition(naples) === NaplesConditionValues.EMPTY;
   }
 
-  public static formatDateWithinString(cond: ClusterSmartNICCondition): string {
+  public static formatDateWithinString(cond: ClusterDSCCondition): string {
     const words: any[] = cond.reason.split(' ');
     for (let j = 0; j < words.length; j++) {    // parsing reason string to check for and format date/time events
       const w = words[j];

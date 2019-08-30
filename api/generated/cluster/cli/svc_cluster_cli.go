@@ -252,7 +252,7 @@ func restPutHost(hostname, token string, obj interface{}) error {
 
 }
 
-func restGetSmartNIC(hostname, tenant, token string, obj interface{}) error {
+func restGetDistributedServiceCard(hostname, tenant, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -261,17 +261,17 @@ func restGetSmartNIC(hostname, tenant, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*cluster.SmartNIC); ok {
-		nv, err := restcl.ClusterV1().SmartNIC().Get(loginCtx, &v.ObjectMeta)
+	if v, ok := obj.(*cluster.DistributedServiceCard); ok {
+		nv, err := restcl.ClusterV1().DistributedServiceCard().Get(loginCtx, &v.ObjectMeta)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 	}
 
-	if v, ok := obj.(*cluster.SmartNICList); ok {
+	if v, ok := obj.(*cluster.DistributedServiceCardList); ok {
 		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
-		nv, err := restcl.ClusterV1().SmartNIC().List(loginCtx, &opts)
+		nv, err := restcl.ClusterV1().DistributedServiceCard().List(loginCtx, &opts)
 		if err != nil {
 			return err
 		}
@@ -281,7 +281,7 @@ func restGetSmartNIC(hostname, tenant, token string, obj interface{}) error {
 
 }
 
-func restDeleteSmartNIC(hostname, token string, obj interface{}) error {
+func restDeleteDistributedServiceCard(hostname, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -290,8 +290,8 @@ func restDeleteSmartNIC(hostname, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*cluster.SmartNIC); ok {
-		nv, err := restcl.ClusterV1().SmartNIC().Delete(loginCtx, &v.ObjectMeta)
+	if v, ok := obj.(*cluster.DistributedServiceCard); ok {
+		nv, err := restcl.ClusterV1().DistributedServiceCard().Delete(loginCtx, &v.ObjectMeta)
 		if err != nil {
 			return err
 		}
@@ -301,11 +301,11 @@ func restDeleteSmartNIC(hostname, token string, obj interface{}) error {
 
 }
 
-func restPostSmartNIC(hostname, token string, obj interface{}) error {
-	return fmt.Errorf("create operation not supported for SmartNIC object")
+func restPostDistributedServiceCard(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for DistributedServiceCard object")
 }
 
-func restPutSmartNIC(hostname, token string, obj interface{}) error {
+func restPutDistributedServiceCard(hostname, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -314,8 +314,8 @@ func restPutSmartNIC(hostname, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*cluster.SmartNIC); ok {
-		nv, err := restcl.ClusterV1().SmartNIC().Update(loginCtx, v)
+	if v, ok := obj.(*cluster.DistributedServiceCard); ok {
+		nv, err := restcl.ClusterV1().DistributedServiceCard().Update(loginCtx, v)
 		if err != nil {
 			return err
 		}
@@ -474,9 +474,9 @@ func init() {
 	cl.AddRestPutFunc("cluster.Host", "v1", restPutHost)
 	cl.AddRestGetFunc("cluster.Host", "v1", restGetHost)
 
-	cl.AddRestDeleteFunc("cluster.SmartNIC", "v1", restDeleteSmartNIC)
-	cl.AddRestPutFunc("cluster.SmartNIC", "v1", restPutSmartNIC)
-	cl.AddRestGetFunc("cluster.SmartNIC", "v1", restGetSmartNIC)
+	cl.AddRestDeleteFunc("cluster.DistributedServiceCard", "v1", restDeleteDistributedServiceCard)
+	cl.AddRestPutFunc("cluster.DistributedServiceCard", "v1", restPutDistributedServiceCard)
+	cl.AddRestGetFunc("cluster.DistributedServiceCard", "v1", restGetDistributedServiceCard)
 
 	cl.AddRestPostFunc("cluster.Tenant", "v1", restPostTenant)
 	cl.AddRestDeleteFunc("cluster.Tenant", "v1", restDeleteTenant)

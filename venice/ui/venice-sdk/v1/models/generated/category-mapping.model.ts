@@ -6,7 +6,7 @@ import { AuthUserPreference } from './auth';
 import { ClusterCluster } from './cluster';
 import { ClusterNode } from './cluster';
 import { ClusterHost } from './cluster';
-import { ClusterSmartNIC } from './cluster';
+import { ClusterDistributedServiceCard } from './cluster';
 import { ClusterTenant } from './cluster';
 import { ClusterVersion } from './cluster';
 import { DiagnosticsModule } from './diagnostics';
@@ -94,8 +94,8 @@ export const CategoryMapping: CatMap  = {
       scopes: [ 'cluster', ] ,
       actions:  [] ,
     },
-    "SmartNIC" : {
-      instance: new ClusterSmartNIC(),
+    "DistributedServiceCard" : {
+      instance: new ClusterDistributedServiceCard(),
       scopes: [ 'cluster', ] ,
       actions:  [] ,
     },

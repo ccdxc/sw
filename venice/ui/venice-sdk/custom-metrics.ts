@@ -121,8 +121,8 @@ export const customMetrics  = [
     ]
   },
   {
-    name: 'SmartNIC',
-    objectKind: 'SmartNIC',
+    name: 'DistributedServiceCard',
+    objectKind: 'DistributedServiceCard',
     displayName: 'Naples',
     description: 'Contains metrics reported from the Naples',
     tags: [

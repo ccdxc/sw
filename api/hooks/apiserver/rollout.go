@@ -51,8 +51,8 @@ func updateRolloutObj(ctx context.Context, kv kvstore.Interface, key string, cur
 		rObj.Spec.MaxNICFailuresBeforeAbort = cur.Spec.MaxNICFailuresBeforeAbort
 		rObj.Spec.MaxParallel = cur.Spec.MaxParallel
 		rObj.Spec.OrderConstraints = cur.Spec.OrderConstraints
-		rObj.Spec.SmartNICMustMatchConstraint = cur.Spec.SmartNICMustMatchConstraint
-		rObj.Spec.SmartNICsOnly = cur.Spec.SmartNICsOnly
+		rObj.Spec.DSCMustMatchConstraint = cur.Spec.DSCMustMatchConstraint
+		rObj.Spec.DSCsOnly = cur.Spec.DSCsOnly
 		rObj.Spec.Strategy = cur.Spec.Strategy
 		rObj.Spec.UpgradeType = cur.Spec.UpgradeType
 		if rolloutOp == stopRolloutOp || cur.Spec.Suspend {
@@ -77,8 +77,8 @@ func updateRolloutActionObj(rolloutActionObj *rollout.RolloutAction, buf *rollou
 	rolloutActionObj.Spec.MaxNICFailuresBeforeAbort = buf.Spec.MaxNICFailuresBeforeAbort
 	rolloutActionObj.Spec.MaxParallel = buf.Spec.MaxParallel
 	rolloutActionObj.Spec.OrderConstraints = buf.Spec.OrderConstraints
-	rolloutActionObj.Spec.SmartNICMustMatchConstraint = buf.Spec.SmartNICMustMatchConstraint
-	rolloutActionObj.Spec.SmartNICsOnly = buf.Spec.SmartNICsOnly
+	rolloutActionObj.Spec.DSCMustMatchConstraint = buf.Spec.DSCMustMatchConstraint
+	rolloutActionObj.Spec.DSCsOnly = buf.Spec.DSCsOnly
 	rolloutActionObj.Spec.Strategy = buf.Spec.Strategy
 	rolloutActionObj.Spec.UpgradeType = buf.Spec.UpgradeType
 	ts, err := types.TimestampProto(time.Now())

@@ -9,7 +9,7 @@ import { LazyLoadEvent, OverlayPanel } from 'primeng/primeng';
 import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
@@ -50,9 +50,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   startingSortField: string = 'time';
   startingSortOrder: number = -1;
 
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   // Used for processing the stream events
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   macAddrToName: { [key: string]: string; } = {};
 
   // Used for rule details shows on hover
@@ -238,9 +238,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         // mac-address to name map

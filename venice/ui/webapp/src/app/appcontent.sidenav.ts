@@ -31,7 +31,7 @@ export const sideNavMenu: SideNavItem[] = [
     },
     roleGuard: {
       opt: [
-        UIRolePermissions.clustercluster_read, UIRolePermissions.clustersmartnic_read
+        UIRolePermissions.clustercluster_read, UIRolePermissions.clusterdistributedservicecard_read
       ]
     },
     children: [
@@ -44,11 +44,11 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/cluster', 'cluster']
       },
       {
-        label: 'NAPLES',
+        label: 'Distributed Services Cards',
         icon: {
           cssClass: 'app-l-side-nav-cluster-naples'
         },
-        roleGuard: UIRolePermissions.clustersmartnic_read,
+        roleGuard: UIRolePermissions.clusterdistributedservicecard_read,
         link: ['/cluster/', 'naples']
       },
       {

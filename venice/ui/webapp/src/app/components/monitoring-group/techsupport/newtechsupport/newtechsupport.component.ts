@@ -7,7 +7,7 @@ import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { ClusterNode } from '@sdk/v1/models/generated/cluster';
 
@@ -37,8 +37,8 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
   cslabelFormArray = new FormArray([]);
   nmlabelFormArray = new FormArray([]);
 
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
 
 
   nodes: ReadonlyArray<ClusterNode> = [];
@@ -106,9 +106,9 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         this.populateNaples();
@@ -144,7 +144,7 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
   populateNaples() {
     this.sourceNaples.length = 0;
     this.targetNaples.length = 0;
-    this.naples.forEach ( (naple: ClusterSmartNIC) => {
+    this.naples.forEach ( (naple: ClusterDistributedServiceCard) => {
       this.sourceNaples.push({
         label: naple.spec.id,  // naple name
         value: naple,

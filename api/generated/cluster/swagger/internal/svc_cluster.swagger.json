@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Cluster API reference",
-    "description": "Configure and manage the Venice cluster.\n\n API Objects are: Cluster Host Node SmartNIC Tenant Version ",
+    "description": "Configure and manage the Venice cluster.\n\n API Objects are: Cluster DistributedServiceCard Host Node Tenant Version ",
     "version": "v1"
   },
   "schemes": [
@@ -407,6 +407,687 @@
         ]
       }
     },
+    "/configs/cluster/v1/distributedservicecards": {
+      "get": {
+        "summary": "List DistributedServiceCard objects",
+        "operationId": "ListDistributedServiceCard",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterDistributedServiceCardList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
+    "/configs/cluster/v1/distributedservicecards/{O.Name}": {
+      "get": {
+        "summary": "Get DistributedServiceCard object",
+        "operationId": "GetDistributedServiceCard",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterDistributedServiceCard"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.admit",
+            "description": "Admit allows a DistributedServiceCard to join the cluster.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "spec.id",
+            "description": "ID is used as a user friendly identifier in logs/events.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.ip-address",
+            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.default-gw",
+            "description": "DefaultGW contains the default gateway's IP address.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.dns-servers",
+            "description": "DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "spec.mgmt-mode",
+            "description": "MgmtMode defines the management mode of the DistributedServiceCard.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.network-mode",
+            "description": "MgmtMode defines the management mode of the DistributedServiceCard.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.mgmt-vlan",
+            "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management. value should be between 0 and 4095",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.controllers",
+            "description": "Controllers contains the list of remote controllers IP addresses or hostnames.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.admission-phase",
+            "description": "Current admission phase of the DistributedServiceCard.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.serial-num",
+            "description": "Serial number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.primary-mac",
+            "description": "PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard. should be a valid MAC address",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.ip-address",
+            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.default-gw",
+            "description": "DefaultGW contains the default gateway's IP address.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.dns-servers",
+            "description": "DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bios-info.vendor",
+            "description": "Vendor name.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bios-info.version",
+            "description": "BIOS version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bios-info.fw-major-ver",
+            "description": "Firmware major release info.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bios-info.fw-minor-ver",
+            "description": "Firmware minor release info.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.type",
+            "description": "OS Name\nEg: GNU/Linux.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.kernel-relase",
+            "description": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.kernel-version",
+            "description": "Kernel version\nEg: #1 SMP Fri Mar 3 00:04:05 UTC 2017.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.processor",
+            "description": "Processor Info\nEg: x86_64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cpu-info.speed",
+            "description": "CPU speed per core, eg: 2099998101.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cpu-info.num-sockets",
+            "description": "Number of CPU sockets, eg: 2, 4.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "cpu-info.num-cores",
+            "description": "Number of physical CPU cores per socket, eg: 36.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "cpu-info.num-threads",
+            "description": "Number of threads per core, eg: 2.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "memory-info.type",
+            "description": "Type.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "memory-info.size",
+            "description": "Memory size in bytes, eg: 274760318976.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.interfaces",
+            "description": "Network Interfaces.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.DSCVersion",
+            "description": "DSC Version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.DSCSku",
+            "description": "DSC SKU.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.host",
+            "description": "The name of the host this DistributedServiceCard is plugged into.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.adm-phase-reason",
+            "description": "The reason why the DistributedServiceCard is not in ADMITTED state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete DistributedServiceCard object",
+        "operationId": "DeleteDistributedServiceCard",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterDistributedServiceCard"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      },
+      "put": {
+        "summary": "Update DistributedServiceCard object",
+        "operationId": "UpdateDistributedServiceCard",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterDistributedServiceCard"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterDistributedServiceCard"
+            }
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
     "/configs/cluster/v1/hosts": {
       "get": {
         "summary": "List Host objects",
@@ -763,8 +1444,8 @@
             "type": "string"
           },
           {
-            "name": "status.admitted-smart-nics",
-            "description": "AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host.",
+            "name": "status.admitted-dscs",
+            "description": "AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1398,687 +2079,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterNode"
-            }
-          }
-        ],
-        "tags": [
-          "cluster/v1"
-        ]
-      }
-    },
-    "/configs/cluster/v1/smartnics": {
-      "get": {
-        "summary": "List SmartNIC objects",
-        "operationId": "ListSmartNIC",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/clusterSmartNICList"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "label-selector",
-            "description": "LabelSelector to select on labels in list or watch results.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-selector",
-            "description": "FieldSelector to select on field values in list or watch results.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-change-selector",
-            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort-order",
-            "description": "order to sort List results in.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "cluster/v1"
-        ]
-      }
-    },
-    "/configs/cluster/v1/smartnics/{O.Name}": {
-      "get": {
-        "summary": "Get SmartNIC object",
-        "operationId": "GetSmartNIC",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/clusterSmartNIC"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "T.kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "T.api-version",
-            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.admit",
-            "description": "Admit allows a SmartNIC to join the cluster.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.id",
-            "description": "ID is used as a user friendly identifier in logs/events.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ip-config.ip-address",
-            "description": "IPAddress contains the Management IP address of the SmartNIC in CIDR format.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ip-config.default-gw",
-            "description": "DefaultGW contains the default gateway's IP address.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ip-config.dns-servers",
-            "description": "DNSServers contains a list of DNS Servers that can be used on SmartNIC.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "spec.mgmt-mode",
-            "description": "MgmtMode defines the management mode of the SmartNIC.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.network-mode",
-            "description": "MgmtMode defines the management mode of the SmartNIC.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.mgmt-vlan",
-            "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management. value should be between 0 and 4095",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "spec.controllers",
-            "description": "Controllers contains the list of remote controllers IP addresses or hostnames.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status.admission-phase",
-            "description": "Current admission phase of the SmartNIC.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.serial-num",
-            "description": "Serial number.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.primary-mac",
-            "description": "PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC. should be a valid MAC address",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ip-config.ip-address",
-            "description": "IPAddress contains the Management IP address of the SmartNIC in CIDR format.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ip-config.default-gw",
-            "description": "DefaultGW contains the default gateway's IP address.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "ip-config.dns-servers",
-            "description": "DNSServers contains a list of DNS Servers that can be used on SmartNIC.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "bios-info.vendor",
-            "description": "Vendor name.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "bios-info.version",
-            "description": "BIOS version.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "bios-info.fw-major-ver",
-            "description": "Firmware major release info.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "bios-info.fw-minor-ver",
-            "description": "Firmware minor release info.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "os-info.type",
-            "description": "OS Name\nEg: GNU/Linux.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "os-info.kernel-relase",
-            "description": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "os-info.kernel-version",
-            "description": "Kernel version\nEg: #1 SMP Fri Mar 3 00:04:05 UTC 2017.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "os-info.processor",
-            "description": "Processor Info\nEg: x86_64.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "cpu-info.speed",
-            "description": "CPU speed per core, eg: 2099998101.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "cpu-info.num-sockets",
-            "description": "Number of CPU sockets, eg: 2, 4.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "cpu-info.num-cores",
-            "description": "Number of physical CPU cores per socket, eg: 36.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "cpu-info.num-threads",
-            "description": "Number of threads per core, eg: 2.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "memory-info.type",
-            "description": "Type.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "memory-info.size",
-            "description": "Memory size in bytes, eg: 274760318976.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.interfaces",
-            "description": "Network Interfaces.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status.smartNicVersion",
-            "description": "SmartNIC Version.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.smartNicSku",
-            "description": "SmartNIC SKU.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.host",
-            "description": "The name of the host this SmartNIC is plugged into.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.adm-phase-reason",
-            "description": "The reason why the SmartNIC is not in ADMITTED state.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "cluster/v1"
-        ]
-      },
-      "delete": {
-        "summary": "Delete SmartNIC object",
-        "operationId": "DeleteSmartNIC",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/clusterSmartNIC"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "cluster/v1"
-        ]
-      },
-      "put": {
-        "summary": "Update SmartNIC object",
-        "operationId": "UpdateSmartNIC",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/clusterSmartNIC"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterSmartNIC"
             }
           }
         ],
@@ -2910,6 +2910,173 @@
         ]
       }
     },
+    "/configs/cluster/v1/watch/distributedservicecards": {
+      "get": {
+        "summary": "Watch DistributedServiceCard objects. Supports WebSockets or HTTP long poll",
+        "operationId": "WatchDistributedServiceCard",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/clusterAutoMsgDistributedServiceCardWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
     "/configs/cluster/v1/watch/hosts": {
       "get": {
         "summary": "Watch Host objects. Supports WebSockets or HTTP long poll",
@@ -3086,173 +3253,6 @@
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/clusterAutoMsgNodeWatchHelper"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "label-selector",
-            "description": "LabelSelector to select on labels in list or watch results.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-selector",
-            "description": "FieldSelector to select on field values in list or watch results.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-change-selector",
-            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort-order",
-            "description": "order to sort List results in.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "cluster/v1"
-        ]
-      }
-    },
-    "/configs/cluster/v1/watch/smartnics": {
-      "get": {
-        "summary": "Watch SmartNIC objects. Supports WebSockets or HTTP long poll",
-        "operationId": "WatchSmartNIC",
-        "responses": {
-          "200": {
-            "description": "(streaming responses)",
-            "schema": {
-              "$ref": "#/definitions/clusterAutoMsgSmartNICWatchHelper"
             }
           },
           "400": {
@@ -4069,6 +4069,29 @@
         }
       }
     },
+    "clusterAutoMsgDistributedServiceCardWatchHelper": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgDistributedServiceCardWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "AutoMsgDistributedServiceCardWatchHelper is a wrapper object for watch events for DistributedServiceCard objects"
+    },
+    "clusterAutoMsgDistributedServiceCardWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/clusterDistributedServiceCard"
+        }
+      }
+    },
     "clusterAutoMsgHostWatchHelper": {
       "type": "object",
       "properties": {
@@ -4112,29 +4135,6 @@
         },
         "object": {
           "$ref": "#/definitions/clusterNode"
-        }
-      }
-    },
-    "clusterAutoMsgSmartNICWatchHelper": {
-      "type": "object",
-      "properties": {
-        "events": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterAutoMsgSmartNICWatchHelperWatchEvent"
-          }
-        }
-      },
-      "title": "AutoMsgSmartNICWatchHelper is a wrapper object for watch events for SmartNIC objects"
-    },
-    "clusterAutoMsgSmartNICWatchHelperWatchEvent": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "object": {
-          "$ref": "#/definitions/clusterSmartNIC"
         }
       }
     },
@@ -4408,6 +4408,287 @@
       },
       "description": "ClusterStatus contains the current state of the Cluster."
     },
+    "clusterDSCCondition": {
+      "type": "object",
+      "required": [
+        "type",
+        "status"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "healthy",
+            "nic_health_unknown"
+          ],
+          "default": "healthy",
+          "x-ui-hints": {
+            "healthy": "Healthy",
+            "nic_health_unknown": "Not Reachable"
+          },
+          "title": "Type indicates a certain NIC condition"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "true",
+            "false"
+          ],
+          "default": "unknown",
+          "x-ui-hints": {
+            "false": "False",
+            "true": "True",
+            "unknown": "Unknown"
+          },
+          "title": "Condition Status"
+        },
+        "last-transition-time": {
+          "type": "string",
+          "title": "The last time the condition transitioned"
+        },
+        "reason": {
+          "type": "string",
+          "title": "The reason for the condition's last transition"
+        },
+        "message": {
+          "type": "string",
+          "description": "A detailed message indicating details about the transition."
+        }
+      },
+      "description": "DSCCondition describes the state of a DistributedServiceCard at a certain point."
+    },
+    "clusterDSCInfo": {
+      "type": "object",
+      "properties": {
+        "bios-info": {
+          "$ref": "#/definitions/clusterBiosInfo",
+          "title": "BIOS details"
+        },
+        "os-info": {
+          "$ref": "#/definitions/clusterOsInfo",
+          "title": "OS details"
+        },
+        "cpu-info": {
+          "$ref": "#/definitions/clusterCPUInfo",
+          "title": "CPU details"
+        },
+        "memory-info": {
+          "$ref": "#/definitions/clusterMemInfo",
+          "title": "RAM/Memory details"
+        },
+        "storage-info": {
+          "$ref": "#/definitions/clusterStorageInfo",
+          "title": "Storage details"
+        }
+      },
+      "title": "Distributed service card (DSC) subsystem information"
+    },
+    "clusterDistributedServiceCard": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "Object name is Serial-Number of the DistributedServiceCard"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterDistributedServiceCardSpec",
+          "description": "DistributedServiceCardSpec contains the configuration of the network adapter."
+        },
+        "status": {
+          "$ref": "#/definitions/clusterDistributedServiceCardStatus",
+          "description": "DistributedServiceCardStatus contains the current state of the network adapter."
+        }
+      },
+      "description": "DistributedServiceCard represents the Naples I/O subsystem\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o CMD\n             - created as part of NIC registration, Admittance\n     Modify:\n         o CMD\n             - update spec attributes\n             - update status attributes\n     Delete:\n         o CMD\n             - aging out stale or rejected NICs (TBD)\n         o NetOps, SecOps\n             - Decomission a NIC (TBD)",
+      "title": "------------------------------------ Distributed Service Card  -------------------------------------------"
+    },
+    "clusterDistributedServiceCardID": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Name contains the name of the DistributedServiceCard on a host"
+        },
+        "mac-address": {
+          "type": "string",
+          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
+          "description": "should be a valid MAC address",
+          "title": "MACAddress contains the primary MAC address of a DistributedServiceCard"
+        }
+      },
+      "title": "DistributedServiceCardID contains the identifying information of a DistributedServiceCard"
+    },
+    "clusterDistributedServiceCardList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterDistributedServiceCard"
+          },
+          "title": "List of DistributedServiceCard objects"
+        }
+      },
+      "title": "DistributedServiceCardList is a container object for list of DistributedServiceCard objects"
+    },
+    "clusterDistributedServiceCardSpec": {
+      "type": "object",
+      "required": [
+        "mgmt-mode",
+        "network-mode",
+        "mgmt-vlan"
+      ],
+      "properties": {
+        "admit": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Admit allows a DistributedServiceCard to join the cluster"
+        },
+        "id": {
+          "type": "string",
+          "title": "ID is used as a user friendly identifier in logs/events"
+        },
+        "ip-config": {
+          "$ref": "#/definitions/clusterIPConfig",
+          "title": "IPConfig defines the static IP configuration. If not specified, DHCP will be attempted"
+        },
+        "mgmt-mode": {
+          "type": "string",
+          "enum": [
+            "host",
+            "network"
+          ],
+          "default": "host",
+          "x-ui-hints": {
+            "host": "Host",
+            "network": "Network"
+          },
+          "title": "MgmtMode defines the management mode of the DistributedServiceCard"
+        },
+        "network-mode": {
+          "type": "string",
+          "enum": [
+            "oob",
+            "inband"
+          ],
+          "default": "oob",
+          "x-ui-hints": {
+            "inband": "Inband",
+            "oob": "Out of Band"
+          },
+          "title": "MgmtMode defines the management mode of the DistributedServiceCard"
+        },
+        "mgmt-vlan": {
+          "type": "integer",
+          "format": "int64",
+          "maximum": 4095,
+          "description": "value should be between 0 and 4095",
+          "title": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management"
+        },
+        "controllers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Controllers contains the list of remote controllers IP addresses or hostnames"
+        }
+      },
+      "title": "DistributedServiceCardSpec contains configuration of the DistributedServiceCard (Naples I/O subsystem)"
+    },
+    "clusterDistributedServiceCardStatus": {
+      "type": "object",
+      "required": [
+        "admission-phase"
+      ],
+      "properties": {
+        "admission-phase": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "registering",
+            "rejected",
+            "pending",
+            "admitted",
+            "decommissioned"
+          ],
+          "default": "unknown",
+          "x-ui-hints": {
+            "admitted": "Admitted",
+            "decommissioned": "Decommissioned",
+            "pending": "Pending",
+            "registering": "Registering",
+            "rejected": "Rejected",
+            "unknown": "Unknown"
+          },
+          "description": "Current admission phase of the DistributedServiceCard.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterDSCCondition"
+          },
+          "title": "List of current NIC conditions"
+        },
+        "serial-num": {
+          "type": "string",
+          "title": "Serial number"
+        },
+        "primary-mac": {
+          "type": "string",
+          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
+          "description": "should be a valid MAC address",
+          "title": "PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard"
+        },
+        "ip-config": {
+          "$ref": "#/definitions/clusterIPConfig",
+          "title": "IPConfig is the ip address related configuration obtained from DHCP"
+        },
+        "system-info": {
+          "$ref": "#/definitions/clusterDSCInfo",
+          "title": "Distributed service card system info"
+        },
+        "interfaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Network Interfaces"
+        },
+        "DSCVersion": {
+          "type": "string",
+          "title": "DSC Version"
+        },
+        "DSCSku": {
+          "type": "string",
+          "title": "DSC SKU"
+        },
+        "host": {
+          "type": "string",
+          "title": "The name of the host this DistributedServiceCard is plugged into"
+        },
+        "adm-phase-reason": {
+          "type": "string",
+          "title": "The reason why the DistributedServiceCard is not in ADMITTED state"
+        }
+      },
+      "title": "DistributedServiceCardStatus contains current status of a DistributedServiceCard"
+    },
     "clusterHost": {
       "type": "object",
       "properties": {
@@ -4457,12 +4738,12 @@
     "clusterHostSpec": {
       "type": "object",
       "properties": {
-        "smart-nics": {
+        "dscs": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/clusterSmartNICID"
+            "$ref": "#/definitions/clusterDistributedServiceCardID"
           },
-          "title": "SmartNICs contains the information about all SmartNICs on a host"
+          "title": "DSCs contains the information about all DistributedServiceCards on a host"
         }
       },
       "description": "HostSpec contains the configuration of the Host."
@@ -4470,12 +4751,12 @@
     "clusterHostStatus": {
       "type": "object",
       "properties": {
-        "admitted-smart-nics": {
+        "admitted-dscs": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host"
+          "title": "AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host"
         }
       },
       "description": "HostStatus contains the current state of the Host."
@@ -4485,7 +4766,7 @@
       "properties": {
         "ip-address": {
           "type": "string",
-          "title": "IPAddress contains the Management IP address of the SmartNIC in CIDR format"
+          "title": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format"
         },
         "default-gw": {
           "type": "string",
@@ -4496,10 +4777,10 @@
           "items": {
             "type": "string"
           },
-          "title": "DNSServers contains a list of DNS Servers that can be used on SmartNIC"
+          "title": "DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard"
         }
       },
-      "title": "IPConfig defines the static IP configuration for a SmartNIC"
+      "title": "IPConfig defines the static IP configuration for a DistributedServiceCard"
     },
     "clusterMemInfo": {
       "type": "object",
@@ -4765,287 +5046,6 @@
         }
       },
       "title": "QuorumStatus contains the current state of the quorum, including registered members and health"
-    },
-    "clusterSmartNIC": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "Object name is Serial-Number of the SmartNIC"
-        },
-        "spec": {
-          "$ref": "#/definitions/clusterSmartNICSpec",
-          "description": "SmartNICSpec contains the configuration of the network adapter."
-        },
-        "status": {
-          "$ref": "#/definitions/clusterSmartNICStatus",
-          "description": "SmartNICStatus contains the current state of the network adapter."
-        }
-      },
-      "description": "SmartNIC represents the Naples I/O subsystem\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o CMD\n             - created as part of NIC registration, Admittance\n     Modify:\n         o CMD\n             - update spec attributes\n             - update status attributes\n     Delete:\n         o CMD\n             - aging out stale or rejected NICs (TBD)\n         o NetOps, SecOps\n             - Decomission a NIC (TBD)",
-      "title": "------------------------------------ SMART NIC  -------------------------------------------"
-    },
-    "clusterSmartNICCondition": {
-      "type": "object",
-      "required": [
-        "type",
-        "status"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "healthy",
-            "nic_health_unknown"
-          ],
-          "default": "healthy",
-          "x-ui-hints": {
-            "healthy": "Healthy",
-            "nic_health_unknown": "Not Reachable"
-          },
-          "title": "Type indicates a certain NIC condition"
-        },
-        "status": {
-          "type": "string",
-          "enum": [
-            "unknown",
-            "true",
-            "false"
-          ],
-          "default": "unknown",
-          "x-ui-hints": {
-            "false": "False",
-            "true": "True",
-            "unknown": "Unknown"
-          },
-          "title": "Condition Status"
-        },
-        "last-transition-time": {
-          "type": "string",
-          "title": "The last time the condition transitioned"
-        },
-        "reason": {
-          "type": "string",
-          "title": "The reason for the condition's last transition"
-        },
-        "message": {
-          "type": "string",
-          "description": "A detailed message indicating details about the transition."
-        }
-      },
-      "description": "SmartNICCondition describes the state of a SmartNIC at a certain point."
-    },
-    "clusterSmartNICID": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "title": "Name contains the name of the SmartNIC on a host"
-        },
-        "mac-address": {
-          "type": "string",
-          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
-          "description": "should be a valid MAC address",
-          "title": "MACAddress contains the primary MAC address of a SmartNIC"
-        }
-      },
-      "title": "SmartNICID contains the identifying information of a SmartNIC"
-    },
-    "clusterSmartNICInfo": {
-      "type": "object",
-      "properties": {
-        "bios-info": {
-          "$ref": "#/definitions/clusterBiosInfo",
-          "title": "BIOS details"
-        },
-        "os-info": {
-          "$ref": "#/definitions/clusterOsInfo",
-          "title": "OS details"
-        },
-        "cpu-info": {
-          "$ref": "#/definitions/clusterCPUInfo",
-          "title": "CPU details"
-        },
-        "memory-info": {
-          "$ref": "#/definitions/clusterMemInfo",
-          "title": "RAM/Memory details"
-        },
-        "storage-info": {
-          "$ref": "#/definitions/clusterStorageInfo",
-          "title": "Storage details"
-        }
-      },
-      "title": "Naples I/O (SmartNIC) subsystem information"
-    },
-    "clusterSmartNICList": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "list-meta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterSmartNIC"
-          },
-          "title": "List of SmartNIC objects"
-        }
-      },
-      "title": "SmartNICList is a container object for list of SmartNIC objects"
-    },
-    "clusterSmartNICSpec": {
-      "type": "object",
-      "required": [
-        "mgmt-mode",
-        "network-mode",
-        "mgmt-vlan"
-      ],
-      "properties": {
-        "admit": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Admit allows a SmartNIC to join the cluster"
-        },
-        "id": {
-          "type": "string",
-          "title": "ID is used as a user friendly identifier in logs/events"
-        },
-        "ip-config": {
-          "$ref": "#/definitions/clusterIPConfig",
-          "title": "IPConfig defines the static IP configuration. If not specified, DHCP will be attempted"
-        },
-        "mgmt-mode": {
-          "type": "string",
-          "enum": [
-            "host",
-            "network"
-          ],
-          "default": "host",
-          "x-ui-hints": {
-            "host": "Host",
-            "network": "Network"
-          },
-          "title": "MgmtMode defines the management mode of the SmartNIC"
-        },
-        "network-mode": {
-          "type": "string",
-          "enum": [
-            "oob",
-            "inband"
-          ],
-          "default": "oob",
-          "x-ui-hints": {
-            "inband": "Inband",
-            "oob": "Out of Band"
-          },
-          "title": "MgmtMode defines the management mode of the SmartNIC"
-        },
-        "mgmt-vlan": {
-          "type": "integer",
-          "format": "int64",
-          "maximum": 4095,
-          "description": "value should be between 0 and 4095",
-          "title": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management"
-        },
-        "controllers": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Controllers contains the list of remote controllers IP addresses or hostnames"
-        }
-      },
-      "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
-    },
-    "clusterSmartNICStatus": {
-      "type": "object",
-      "required": [
-        "admission-phase"
-      ],
-      "properties": {
-        "admission-phase": {
-          "type": "string",
-          "enum": [
-            "unknown",
-            "registering",
-            "rejected",
-            "pending",
-            "admitted",
-            "decommissioned"
-          ],
-          "default": "unknown",
-          "x-ui-hints": {
-            "admitted": "Admitted",
-            "decommissioned": "Decommissioned",
-            "pending": "Pending",
-            "registering": "Registering",
-            "rejected": "Rejected",
-            "unknown": "Unknown"
-          },
-          "description": "Current admission phase of the SmartNIC.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
-        },
-        "conditions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterSmartNICCondition"
-          },
-          "title": "List of current NIC conditions"
-        },
-        "serial-num": {
-          "type": "string",
-          "title": "Serial number"
-        },
-        "primary-mac": {
-          "type": "string",
-          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
-          "description": "should be a valid MAC address",
-          "title": "PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC"
-        },
-        "ip-config": {
-          "$ref": "#/definitions/clusterIPConfig",
-          "title": "IPConfig is the ip address related configuration obtained from DHCP"
-        },
-        "system-info": {
-          "$ref": "#/definitions/clusterSmartNICInfo",
-          "title": "Naples I/O system info"
-        },
-        "interfaces": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Network Interfaces"
-        },
-        "smartNicVersion": {
-          "type": "string",
-          "title": "SmartNIC Version"
-        },
-        "smartNicSku": {
-          "type": "string",
-          "title": "SmartNIC SKU"
-        },
-        "host": {
-          "type": "string",
-          "title": "The name of the host this SmartNIC is plugged into"
-        },
-        "adm-phase-reason": {
-          "type": "string",
-          "title": "The reason why the SmartNIC is not in ADMITTED state"
-        }
-      },
-      "title": "SmartNICStatus contains current status of a SmartNIC"
     },
     "clusterStorageDeviceInfo": {
       "type": "object",

@@ -141,7 +141,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		n.evtServices.start(networkMode, n.upgClient.IsUpgradeInProcess())
 		n.upgClient.RegisterEvtsProxy(n.evtServices.eps)
 	} else {
-		n.evtServices.nodeName = obj.GetSmartNicName() // use smart nic name for reporting events in host mode
+		n.evtServices.nodeName = obj.GetDSCName() // use smart nic name for reporting events in host mode
 		if n.evtServices.running {
 			n.logger.Infof("changing mode to {%s}", hostMode)
 			n.evtServices.stopNetworkModeServices()
@@ -432,7 +432,7 @@ func (e *evtServices) stop() {
 
 // returns the default object ref for events
 func getDefaultObjectRef(nodeName string) *api.ObjectRef {
-	nic := &cluster.SmartNIC{}
+	nic := &cluster.DistributedServiceCard{}
 	nic.Defaults("all")
 	return &api.ObjectRef{
 		Kind:      nic.GetKind(),

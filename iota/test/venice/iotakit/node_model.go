@@ -32,7 +32,7 @@ type Host struct {
 type Naples struct {
 	iotaNode *iota.Node
 	testNode *TestNode
-	smartNic *cluster.SmartNIC
+	smartNic *cluster.DistributedServiceCard
 	sm       *SysModel // pointer back to the model
 }
 
@@ -121,7 +121,7 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 			Name: n.NodeName,
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: naples.smartNic.Status.PrimaryMAC,
 				},
@@ -554,7 +554,7 @@ func (sm *SysModel) AssociateHosts() error {
 	for _, n := range sm.naples {
 		nodeMac := strings.Replace(n.iotaNode.GetNodeUuid(), ":", "", -1)
 		for _, obj := range objs {
-			objMac := strings.Replace(obj.GetSpec().SmartNICs[0].MACAddress, ".", "", -1)
+			objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
 			if objMac == nodeMac {
 				log.Infof("Associating host %v(ip:%v) with %v(ip:%v)\n", obj.GetName(),
 					n.iotaNode.GetIpAddress(), n.iotaNode.Name,

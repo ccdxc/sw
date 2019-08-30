@@ -99,8 +99,8 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 			MaxNICFailuresBeforeAbort: 0,
 			OrderConstraints:          nil,
 			Suspend:                   false,
-			SmartNICsOnly:             false,
-			//SmartNICMustMatchConstraint: true, // hence venice upgrade only
+			DSCsOnly:             false,
+			//DSCMustMatchConstraint: true, // hence venice upgrade only
 			UpgradeType: "Disruptive",
 		},
 	}, nil

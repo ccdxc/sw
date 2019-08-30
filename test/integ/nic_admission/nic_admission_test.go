@@ -134,7 +134,7 @@ func getHost(index int) *pencluster.Host {
 			Name: fmt.Sprintf("e2e-host-%02d", index),
 		},
 		Spec: pencluster.HostSpec{
-			SmartNICs: []pencluster.SmartNICID{
+			DSCs: []pencluster.DistributedServiceCardID{
 				{
 					MACAddress: getSmartNICMAC(index),
 				},
@@ -510,7 +510,7 @@ func TestCreateNMDs(t *testing.T) {
 						}
 
 						// Verify NIC is admitted
-						if nic.Status.AdmissionPhase != pencluster.SmartNICStatus_ADMITTED.String() {
+						if nic.Status.AdmissionPhase != pencluster.DistributedServiceCardStatus_ADMITTED.String() {
 							log.Errorf("NIC is not admitted, %+v", nic)
 							return false, nil
 						}
@@ -529,45 +529,45 @@ func TestCreateNMDs(t *testing.T) {
 					}
 					hostMeta := &host.ObjectMeta
 
-					// Validate SmartNIC object is created
+					// Validate DistributedServiceCard object is created
 					f5 := func() (bool, interface{}) {
 
-						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicMeta)
+						nicObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), nicMeta)
 						if err != nil || nicObj == nil {
-							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", priMac, err)
+							log.Errorf("Failed to GET DistributedServiceCard object, mac:%s, %v", priMac, err)
 							return false, nil
 						}
 
 						return true, nil
 					}
-					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("100ms"), string("30s"))
+					AssertEventually(t, f5, "Failed to verify creation of required DistributedServiceCard object", string("100ms"), string("30s"))
 
 					// Validate Host object is created and paired
 					checkHostNICPair(t, hostMeta, nicMeta, true)
 
 					// modify the host obj spec to break the pair
-					setHostSmartNICIDs(t, hostMeta, []pencluster.SmartNICID{{MACAddress: getSmartNICMAC(99)}})
+					setHostSmartNICIDs(t, hostMeta, []pencluster.DistributedServiceCardID{{MACAddress: getSmartNICMAC(99)}})
 					checkHostNICPair(t, hostMeta, nicMeta, false)
 
 					// form the pair again
-					setHostSmartNICIDs(t, hostMeta, []pencluster.SmartNICID{{MACAddress: priMac}})
+					setHostSmartNICIDs(t, hostMeta, []pencluster.DistributedServiceCardID{{MACAddress: priMac}})
 					checkHostNICPair(t, hostMeta, nicMeta, true)
 
 					// delete host object
 					tInfo.apiClient.ClusterV1().Host().Delete(context.Background(), hostMeta)
 					f6 := func() (bool, interface{}) {
-						nic, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicMeta)
+						nic, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), nicMeta)
 						if err != nil {
-							log.Errorf("Failed to GET SmartNIC object:%s, %v", nicMeta.Name, err)
+							log.Errorf("Failed to GET DistributedServiceCard object:%s, %v", nicMeta.Name, err)
 							return false, nil
 						}
 						if nic.Status.Host != "" {
-							log.Errorf("Host not cleaned up from SmartNIC object as expected: %+v", nic)
+							log.Errorf("Host not cleaned up from DistributedServiceCard object as expected: %+v", nic)
 							return false, nil
 						}
 						return true, nil
 					}
-					AssertEventually(t, f6, "Failed to verify update of SmartNIC object", string("100ms"), string("30s"))
+					AssertEventually(t, f6, "Failed to verify update of DistributedServiceCard object", string("100ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
 						tcName, priMac, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
@@ -601,28 +601,28 @@ func getAgentRESTClient(t *testing.T, auth bool) (*netutils.HTTPClient, error) {
 	return client, nil
 }
 
-// setNICAdmitState sets the value for the SmartNIC.Spec.Admit field in ApiServer
+// setNICAdmitState sets the value for the DistributedServiceCard.Spec.Admit field in ApiServer
 func setNICAdmitState(t *testing.T, meta *api.ObjectMeta, admit bool) {
-	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
+	nicObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), meta)
 	AssertOk(t, err, "Error getting NIC from ApiServer")
 	nicObj.Spec.Admit = admit
-	nicObj, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), nicObj)
+	nicObj, err = tInfo.apiClient.ClusterV1().DistributedServiceCard().Update(context.Background(), nicObj)
 	AssertOk(t, err, "Error updating NIC in ApiServer")
 }
 
-// setNICMgmtMode sets the value for the SmartNIC.Spec.MgmtMode field in ApiServer
+// setNICMgmtMode sets the value for the DistributedServiceCard.Spec.MgmtMode field in ApiServer
 func setNICMgmtMode(t *testing.T, meta *api.ObjectMeta, mode string) {
-	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
+	nicObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), meta)
 	AssertOk(t, err, "Error getting NIC from ApiServer")
 	nicObj.Spec.MgmtMode = mode
-	nicObj, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), nicObj)
+	nicObj, err = tInfo.apiClient.ClusterV1().DistributedServiceCard().Update(context.Background(), nicObj)
 	AssertOk(t, err, "Error updating NIC in ApiServer")
 }
 
-func setHostSmartNICIDs(t *testing.T, meta *api.ObjectMeta, ids []pencluster.SmartNICID) {
+func setHostSmartNICIDs(t *testing.T, meta *api.ObjectMeta, ids []pencluster.DistributedServiceCardID) {
 	hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), meta)
 	AssertOk(t, err, "Error getting host object")
-	hostObj.Spec.SmartNICs = ids
+	hostObj.Spec.DSCs = ids
 	_, err = tInfo.apiClient.ClusterV1().Host().Update(context.Background(), hostObj)
 	AssertOk(t, err, "Error updating Host %+v in ApiServer", hostObj)
 }
@@ -670,24 +670,24 @@ func checkNAPLESConfigMode(t *testing.T, nmdURL, mode string) {
 
 func checkHealthStatus(t *testing.T, meta *api.ObjectMeta, admPhase string) {
 	f := func() (bool, interface{}) {
-		apiSrvObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
+		apiSrvObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), meta)
 		AssertOk(t, err, "Failed to retrieve NIC from ApiServer")
 
 		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(meta.Name)
 		AssertOk(t, err, "Failed to retrieve NIC from local cache")
 
-		for index, nicObj := range []*pencluster.SmartNIC{apiSrvObj, cmdObj.SmartNIC} {
+		for index, nicObj := range []*pencluster.DistributedServiceCard{apiSrvObj, cmdObj.DistributedServiceCard} {
 			if nicObj.Status.AdmissionPhase != admPhase {
 				log.Errorf("NIC not in expected admission phase. Have: %s, want: %s, index: %d", nicObj.Status.AdmissionPhase, admPhase, index)
 				return false, nil
 			}
-			if admPhase == pencluster.SmartNICStatus_ADMITTED.String() {
+			if admPhase == pencluster.DistributedServiceCardStatus_ADMITTED.String() {
 				if len(nicObj.Status.Conditions) == 0 {
 					log.Errorf("NIC Object does not have any condition, nic:%s, %v, index: %d", meta.Name, nicObj.Status, index)
 					return false, nil
 				}
 				hc := nicObj.Status.Conditions[0]
-				if hc.Type != pencluster.SmartNICCondition_HEALTHY.String() || hc.Status != pencluster.ConditionStatus_TRUE.String() || hc.LastTransitionTime == "" {
+				if hc.Type != pencluster.DSCCondition_HEALTHY.String() || hc.Status != pencluster.ConditionStatus_TRUE.String() || hc.LastTransitionTime == "" {
 					log.Errorf("NIC Object is not healthy, name:%s, %+v, index: %d", meta.Name, nicObj.Status, index)
 					return false, nil
 				}
@@ -711,7 +711,7 @@ func checkReverseProxy(t *testing.T, nmd *nmdstate.NMD, admPhase string) error {
 	if revProxyURL == "" {
 		return fmt.Errorf("nmd.GetReverseProxyListenURL returned empty URL")
 	}
-	auth := (admPhase == pencluster.SmartNICStatus_ADMITTED.String())
+	auth := (admPhase == pencluster.DistributedServiceCardStatus_ADMITTED.String())
 	client, err := getAgentRESTClient(t, auth)
 	if err != nil {
 		return fmt.Errorf("Error getting REST client: %v", err)
@@ -754,13 +754,13 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 	var expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus bool
 
 	switch admPhase {
-	case pencluster.SmartNICStatus_ADMITTED.String():
+	case pencluster.DistributedServiceCardStatus_ADMITTED.String():
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = false, true, true, true
-	case pencluster.SmartNICStatus_PENDING.String():
+	case pencluster.DistributedServiceCardStatus_PENDING.String():
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = true, false, false, false
-	case pencluster.SmartNICStatus_DECOMMISSIONED.String():
+	case pencluster.DistributedServiceCardStatus_DECOMMISSIONED.String():
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = false, false, false, false
-	case pencluster.SmartNICStatus_REGISTERING.String():
+	case pencluster.DistributedServiceCardStatus_REGISTERING.String():
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = true, false, false, false
 	default:
 		panic(fmt.Sprintf("Unexpected admission phase %s, NMD: %+v", admPhase, nmd))
@@ -777,15 +777,15 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 		if err != nil {
 			return false, fmt.Errorf("NIC %s not found in CMD local state, phase: %s", name, admPhase)
 		}
-		apiSrvObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nmdObj.GetObjectMeta())
+		apiSrvObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), nmdObj.GetObjectMeta())
 		if err != nil {
 			return false, fmt.Sprintf("NIC %s not found in ApiServer, phase: %s", name, admPhase)
 		}
 
 		// Phase on CMD must match phase on NMD, except for the "registering case", where Venice has admitted but
 		// NAPLES refused to join and stays in REGISTERING
-		if admPhase != pencluster.SmartNICStatus_REGISTERING.String() {
-			for i, nicObj := range []*pencluster.SmartNIC{nmdObj, cmdObj.SmartNIC, apiSrvObj} {
+		if admPhase != pencluster.DistributedServiceCardStatus_REGISTERING.String() {
+			for i, nicObj := range []*pencluster.DistributedServiceCard{nmdObj, cmdObj.DistributedServiceCard, apiSrvObj} {
 				if nicObj.Status.AdmissionPhase != admPhase {
 					log.Errorf("NIC not in expected admission phase, index: %d, have: %s, want: %s", i, nicObj.Status.AdmissionPhase, admPhase)
 					return false, nil
@@ -841,7 +841,7 @@ func setAutoAdmit(v bool) error {
 
 func checkHostNICPair(t *testing.T, hostMeta, nicMeta *api.ObjectMeta, established bool) {
 	var host *pencluster.Host
-	var nic *pencluster.SmartNIC
+	var nic *pencluster.DistributedServiceCard
 	var err error
 
 	f := func() (bool, interface{}) {
@@ -850,14 +850,14 @@ func checkHostNICPair(t *testing.T, hostMeta, nicMeta *api.ObjectMeta, establish
 			log.Errorf("Failed to GET Host object:%s, %v", hostMeta.Name, err)
 			return false, nil
 		}
-		nic, err = tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicMeta)
+		nic, err = tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), nicMeta)
 		if err != nil {
-			log.Errorf("Failed to GET SmartNIC object:%s, %v", nicMeta.Name, err)
+			log.Errorf("Failed to GET DistributedServiceCard object:%s, %v", nicMeta.Name, err)
 			return false, nil
 		}
 		nicInHostStatus := false
-		for ii := range host.Status.AdmittedSmartNICs {
-			if host.Status.AdmittedSmartNICs[ii] == nic.Name {
+		for ii := range host.Status.AdmittedDSCs {
+			if host.Status.AdmittedDSCs[ii] == nic.Name {
 				nicInHostStatus = true
 				break
 			}
@@ -872,7 +872,7 @@ func checkHostNICPair(t *testing.T, hostMeta, nicMeta *api.ObjectMeta, establish
 		}
 		return true, nil
 	}
-	AssertEventually(t, f, fmt.Sprintf("Failed to validate Host-NIC pairing. Host: %+v, SmartNIC: %+v, err: %+v", host, nic, err))
+	AssertEventually(t, f, fmt.Sprintf("Failed to validate Host-NIC pairing. Host: %+v, DistributedServiceCard: %+v, err: %+v", host, nic, err))
 }
 
 // TestNICReadmit tests the flow in which a NIC is first admitted, then explicitly de-amitted and the re-admitted.
@@ -946,21 +946,21 @@ func TestNICReadmit(t *testing.T) {
 
 	// Validate SmartNIC object is created in ApiServer and CMD local state
 	fmt.Println("Validating for the initial admit")
-	checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
+	checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_ADMITTED.String())
 
 	// Turn off auto-admit
 	err = setAutoAdmit(false)
 	AssertOk(t, err, "Failed to set autoAdmit to false")
 
 	//Verify that Status info (except phase, host and conditions) does not change in apiServer as NIC gets admitted/de-admitted
-	validateStatus := func(refObj *pencluster.SmartNIC) {
-		obj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
+	validateStatus := func(refObj *pencluster.DistributedServiceCard) {
+		obj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &meta)
 		AssertOk(t, err, "Error getting NIC from ApiServer")
 		eq := runtime.FilterUpdate(obj.Status, refObj.Status, []string{"Conditions", "AdmissionPhase", "Host"}, nil)
 		Assert(t, eq, "NIC immutable information should not change with admission status. Have:\n%+v, want:\n%+v", obj.Status, refObj.Status)
 	}
 
-	refObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
+	refObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &meta)
 	AssertOk(t, err, "Error getting reference object")
 	fmt.Println("RefObj: ", refObj)
 
@@ -971,12 +971,12 @@ func TestNICReadmit(t *testing.T) {
 
 		// Verify that NMD responds to de-admission (stop watchers, stop sending updates, restart registration loop)
 		fmt.Println("Verifying if the smartnic is in pending state")
-		checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
+		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_PENDING.String())
 
 		// Verify health updates are NOT received on CMD and the NIC is not marked as UNKNOWN
 		time.Sleep(2 * nicDeadIntvl)
 		fmt.Println("Verifying if the smartnic health is in pending state")
-		checkHealthStatus(t, &meta, pencluster.SmartNICStatus_PENDING.String())
+		checkHealthStatus(t, &meta, pencluster.DistributedServiceCardStatus_PENDING.String())
 
 		// Verify that status information was preserved
 		validateStatus(refObj)
@@ -987,10 +987,10 @@ func TestNICReadmit(t *testing.T) {
 
 		// Verify that NIC gets readmitted, NMD exits registration loop and starts sending updates again
 		fmt.Println("Verifying if the smartnic is in admitted state")
-		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
+		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_ADMITTED.String())
 
 		// Verify health updates are received on CMD
-		checkHealthStatus(t, &meta, pencluster.SmartNICStatus_ADMITTED.String())
+		checkHealthStatus(t, &meta, pencluster.DistributedServiceCardStatus_ADMITTED.String())
 
 		// Verify that status information was preserved
 		validateStatus(refObj)
@@ -1000,7 +1000,7 @@ func TestNICReadmit(t *testing.T) {
 	// If later on the NIC performs a new admission sequence (for example after a reboot) and finds a different Venice
 	// (as identified by the Venice CA trust chain) it must refuse to join.
 	setNICAdmitState(t, &meta, false)
-	checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
+	checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_PENDING.String())
 
 	err = nmdutils.StoreTrustRoots(cmdenv.CertMgr.Ca().TrustRoots())
 	AssertOk(t, err, "Error updating trust roots file")
@@ -1012,7 +1012,7 @@ func TestNICReadmit(t *testing.T) {
 	defer tmpCertMgr.Close()
 
 	setNICAdmitState(t, &meta, true)
-	checkE2EState(t, nmd, pencluster.SmartNICStatus_REGISTERING.String())
+	checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_REGISTERING.String())
 
 	// Make sure that proper error message is present both in object and config
 	nicObj, err := nmd.GetSmartNIC()
@@ -1029,7 +1029,7 @@ func TestNICReadmit(t *testing.T) {
 
 	// Now switch back to the original CA. This time it should go through.
 	cmdenv.CertMgr = origCertMgr
-	checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
+	checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_ADMITTED.String())
 }
 
 // TestNICDecommissionFlow tests the sequence in which a NIC is first admitted in the cluster, then decommissioned
@@ -1100,52 +1100,52 @@ func TestNICDecommissionFlow(t *testing.T) {
 	checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
 	time.Sleep(time.Second * 5)
 	// Validate SmartNIC object is created in ApiServer and CMD local state
-	checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
+	checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_PENDING.String())
 
 	for i := 0; i < 6; i++ {
 		setNICAdmitState(t, &meta, true)
 		// check NIC is admitted in NMD
-		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
+		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_ADMITTED.String())
 
 		// check that NIC cannot be deleted in this state
-		_, err = tInfo.apiClient.ClusterV1().SmartNIC().Delete(context.Background(), &meta)
-		Assert(t, err != nil, "Did not get expected error deleting SmartNIC object in ADMITTED phase")
+		_, err = tInfo.apiClient.ClusterV1().DistributedServiceCard().Delete(context.Background(), &meta)
+		Assert(t, err != nil, "Did not get expected error deleting DistributedServiceCard object in ADMITTED phase")
 
 		// Switch to host-managed mode
-		setNICMgmtMode(t, &meta, pencluster.SmartNICSpec_HOST.String())
-		checkE2EState(t, nmd, pencluster.SmartNICStatus_DECOMMISSIONED.String())
+		setNICMgmtMode(t, &meta, pencluster.DistributedServiceCardSpec_HOST.String())
+		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_DECOMMISSIONED.String())
 		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_HOST.String())
 
 		// Switch to network-managed mode
 		setNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
-		// We should go to ADMITTED, because the SmartNIC.Spec.Admit = true
-		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
+		// We should go to ADMITTED, because the DistributedServiceCard.Spec.Admit = true
+		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_ADMITTED.String())
 		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
 
 		// Decommission again
-		setNICMgmtMode(t, &meta, pencluster.SmartNICSpec_HOST.String())
-		checkE2EState(t, nmd, pencluster.SmartNICStatus_DECOMMISSIONED.String())
+		setNICMgmtMode(t, &meta, pencluster.DistributedServiceCardSpec_HOST.String())
+		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_DECOMMISSIONED.String())
 		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_HOST.String())
 
 		_, err := tInfo.apiClient.DiagnosticsV1().Module().Get(context.TODO(), &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", meta.Name, globals.Netagent)})
 		AssertOk(t, err, "Error retrieving module object")
-		// Delete SmartNIC object
-		_, err = tInfo.apiClient.ClusterV1().SmartNIC().Delete(context.Background(), &meta)
-		AssertOk(t, err, "Error deleting SmartNIC object")
+		// Delete DistributedServiceCard object
+		_, err = tInfo.apiClient.ClusterV1().DistributedServiceCard().Delete(context.Background(), &meta)
+		AssertOk(t, err, "Error deleting DistributedServiceCard object")
 		_, err = tInfo.apiClient.DiagnosticsV1().Module().Get(context.TODO(), &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", meta.Name, globals.Netagent)})
 		Assert(t, err != nil, "expected module object to be deleted")
 		// Switch again to network-managed mode
 		setNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
 		// We should go to PENDING, because the Cluster.Spec.AutoAdmitNICs = false
-		checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
+		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_PENDING.String())
 		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
 
 		// Try to swtch to host-managed mode. It should fail because NIC is not admitted
-		n, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
+		n, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &meta)
 		AssertOk(t, err, "Error getting NIC from ApiServer")
-		n.Spec.MgmtMode = pencluster.SmartNICSpec_HOST.String()
-		n, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), n)
-		Assert(t, err != nil, "Did not get expected error changing mode form SmartNIC object in PENDING phase")
+		n.Spec.MgmtMode = pencluster.DistributedServiceCardSpec_HOST.String()
+		n, err = tInfo.apiClient.ClusterV1().DistributedServiceCard().Update(context.Background(), n)
+		Assert(t, err != nil, "Did not get expected error changing mode form DistributedServiceCard object in PENDING phase")
 	}
 }
 

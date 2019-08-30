@@ -13,7 +13,7 @@ import { NetworkNetworkInterfaceHostStatus, INetworkNetworkInterfaceHostStatus }
 import { NetworkNetworkInterfaceUplinkStatus, INetworkNetworkInterfaceUplinkStatus } from './network-network-interface-uplink-status.model';
 
 export interface INetworkNetworkInterfaceStatus {
-    'smart-nic'?: string;
+    'dsc'?: string;
     'type': NetworkNetworkInterfaceStatus_type;
     'oper-status': NetworkNetworkInterfaceStatus_oper_status;
     'primary-mac'?: string;
@@ -23,7 +23,7 @@ export interface INetworkNetworkInterfaceStatus {
 
 
 export class NetworkNetworkInterfaceStatus extends BaseModel implements INetworkNetworkInterfaceStatus {
-    'smart-nic': string = null;
+    'dsc': string = null;
     'type': NetworkNetworkInterfaceStatus_type = null;
     'oper-status': NetworkNetworkInterfaceStatus_oper_status = null;
     /** should be a valid MAC address */
@@ -31,7 +31,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     'if-host-status': NetworkNetworkInterfaceHostStatus = null;
     'if-uplink-status': NetworkNetworkInterfaceUplinkStatus = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceStatus]: PropInfoItem } = {
-        'smart-nic': {
+        'dsc': {
             required: false,
             type: 'string'
         },
@@ -96,12 +96,12 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['smart-nic'] != null) {
-            this['smart-nic'] = values['smart-nic'];
-        } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('smart-nic')) {
-            this['smart-nic'] = NetworkNetworkInterfaceStatus.propInfo['smart-nic'].default;
+        if (values && values['dsc'] != null) {
+            this['dsc'] = values['dsc'];
+        } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('dsc')) {
+            this['dsc'] = NetworkNetworkInterfaceStatus.propInfo['dsc'].default;
         } else {
-            this['smart-nic'] = null
+            this['dsc'] = null
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
@@ -141,7 +141,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'smart-nic': CustomFormControl(new FormControl(this['smart-nic']), NetworkNetworkInterfaceStatus.propInfo['smart-nic']),
+                'dsc': CustomFormControl(new FormControl(this['dsc']), NetworkNetworkInterfaceStatus.propInfo['dsc']),
                 'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(NetworkNetworkInterfaceStatus_type), ]), NetworkNetworkInterfaceStatus.propInfo['type']),
                 'oper-status': CustomFormControl(new FormControl(this['oper-status'], [required, enumValidator(NetworkNetworkInterfaceStatus_oper_status), ]), NetworkNetworkInterfaceStatus.propInfo['oper-status']),
                 'primary-mac': CustomFormControl(new FormControl(this['primary-mac']), NetworkNetworkInterfaceStatus.propInfo['primary-mac']),
@@ -168,7 +168,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['smart-nic'].setValue(this['smart-nic']);
+            this._formGroup.controls['dsc'].setValue(this['dsc']);
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['oper-status'].setValue(this['oper-status']);
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);

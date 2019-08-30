@@ -13,7 +13,7 @@ import { RolloutRolloutStatus_state,  } from './enums';
 export interface IRolloutRolloutStatus {
     'controller-nodes-status'?: Array<IRolloutRolloutPhase>;
     'controller-services-status'?: Array<IRolloutRolloutPhase>;
-    'smartnics-status'?: Array<IRolloutRolloutPhase>;
+    'dscs-status'?: Array<IRolloutRolloutPhase>;
     'state': RolloutRolloutStatus_state;
     'completion-percent'?: number;
     'start-time'?: Date;
@@ -25,9 +25,9 @@ export interface IRolloutRolloutStatus {
 export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutStatus {
     'controller-nodes-status': Array<RolloutRolloutPhase> = null;
     'controller-services-status': Array<RolloutRolloutPhase> = null;
-    /** Rollout status of SmartNICs in the cluster. Has entries for SmartNICs on Controller nodes as well as workload nodes
+    /** Rollout status of DistributedServiceCards in the cluster. Has entries for DistributedServiceCards on Controller nodes as well as workload nodes
     The entries are group by parallelism based on the order-constraints and max-parallel specified by the user. */
-    'smartnics-status': Array<RolloutRolloutPhase> = null;
+    'dscs-status': Array<RolloutRolloutPhase> = null;
     'state': RolloutRolloutStatus_state = null;
     'completion-percent': number = null;
     'start-time': Date = null;
@@ -42,8 +42,8 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             required: false,
             type: 'object'
         },
-        'smartnics-status': {
-            description:  'Rollout status of SmartNICs in the cluster. Has entries for SmartNICs on Controller nodes as well as workload nodes The entries are group by parallelism based on the order-constraints and max-parallel specified by the user.',
+        'dscs-status': {
+            description:  'Rollout status of DistributedServiceCards in the cluster. Has entries for DistributedServiceCards on Controller nodes as well as workload nodes The entries are group by parallelism based on the order-constraints and max-parallel specified by the user.',
             required: false,
             type: 'object'
         },
@@ -95,7 +95,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         super();
         this['controller-nodes-status'] = new Array<RolloutRolloutPhase>();
         this['controller-services-status'] = new Array<RolloutRolloutPhase>();
-        this['smartnics-status'] = new Array<RolloutRolloutPhase>();
+        this['dscs-status'] = new Array<RolloutRolloutPhase>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -116,9 +116,9 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             this['controller-services-status'] = [];
         }
         if (values) {
-            this.fillModelArray<RolloutRolloutPhase>(this, 'smartnics-status', values['smartnics-status'], RolloutRolloutPhase);
+            this.fillModelArray<RolloutRolloutPhase>(this, 'dscs-status', values['dscs-status'], RolloutRolloutPhase);
         } else {
-            this['smartnics-status'] = [];
+            this['dscs-status'] = [];
         }
         if (values && values['state'] != null) {
             this['state'] = values['state'];
@@ -164,7 +164,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             this._formGroup = new FormGroup({
                 'controller-nodes-status': new FormArray([]),
                 'controller-services-status': new FormArray([]),
-                'smartnics-status': new FormArray([]),
+                'dscs-status': new FormArray([]),
                 'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(RolloutRolloutStatus_state), ]), RolloutRolloutStatus.propInfo['state']),
                 'completion-percent': CustomFormControl(new FormControl(this['completion-percent']), RolloutRolloutStatus.propInfo['completion-percent']),
                 'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutStatus.propInfo['start-time']),
@@ -176,7 +176,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             // generate FormArray control elements
             this.fillFormArray<RolloutRolloutPhase>('controller-services-status', this['controller-services-status'], RolloutRolloutPhase);
             // generate FormArray control elements
-            this.fillFormArray<RolloutRolloutPhase>('smartnics-status', this['smartnics-status'], RolloutRolloutPhase);
+            this.fillFormArray<RolloutRolloutPhase>('dscs-status', this['dscs-status'], RolloutRolloutPhase);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('controller-nodes-status') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('controller-nodes-status').get(field);
@@ -188,8 +188,8 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('smartnics-status') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('smartnics-status').get(field);
+            Object.keys((this._formGroup.get('dscs-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('dscs-status').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -204,7 +204,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         if (this._formGroup) {
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-nodes-status', this['controller-nodes-status'], RolloutRolloutPhase);
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-services-status', this['controller-services-status'], RolloutRolloutPhase);
-            this.fillModelArray<RolloutRolloutPhase>(this, 'smartnics-status', this['smartnics-status'], RolloutRolloutPhase);
+            this.fillModelArray<RolloutRolloutPhase>(this, 'dscs-status', this['dscs-status'], RolloutRolloutPhase);
             this._formGroup.controls['state'].setValue(this['state']);
             this._formGroup.controls['completion-percent'].setValue(this['completion-percent']);
             this._formGroup.controls['start-time'].setValue(this['start-time']);

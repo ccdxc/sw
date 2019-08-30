@@ -77,15 +77,15 @@ describe('AdvancedSearchComponent', () => {
 
   function setupNaplesSearch(c: AdvancedSearchComponent) {
     c.cols = [
-      { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true, kind: 'SmartNIC' },
-      { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-id-name', sortable: true, kind: 'SmartNIC' },
-      { field: 'status.smartNicVersion', header: 'Version', class: 'naples-column-version', sortable: true, kind: 'SmartNIC' },
-      { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false, kind: 'SmartNIC' },
-      { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false, kind: 'SmartNIC' },
-      { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true, localSearch: true, kind: 'SmartNIC'},
-      { field: 'status.host', header: 'Host', class: 'naples-column-host', sortable: true, kind: 'SmartNIC'},
-      { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true, kind: 'SmartNIC' },
-      { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true, kind: 'SmartNIC' },
+      { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true, kind: 'DistributedServiceCard' },
+      { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-id-name', sortable: true, kind: 'DistributedServiceCard' },
+      { field: 'status.DSCVersion', header: 'Version', class: 'naples-column-version', sortable: true, kind: 'DistributedServiceCard' },
+      { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false, kind: 'DistributedServiceCard' },
+      { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false, kind: 'DistributedServiceCard' },
+      { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true, localSearch: true, kind: 'DistributedServiceCard'},
+      { field: 'status.host', header: 'Host', class: 'naples-column-host', sortable: true, kind: 'DistributedServiceCard'},
+      { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true, kind: 'DistributedServiceCard' },
+      { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true, kind: 'DistributedServiceCard' },
     ];
     c.customQueryOptions = [
       {
@@ -102,7 +102,7 @@ describe('AdvancedSearchComponent', () => {
     ];
     c.fieldData = c.generateFieldData(c.customQueryOptions);
     c.genValueLabelToFieldMap();
-    c.kind = 'SmartNIC';
+    c.kind = 'DistributedServiceCard';
   }
 
   beforeEach(() => {
@@ -137,7 +137,7 @@ describe('AdvancedSearchComponent', () => {
         healthy: ['00ae.cd00.1142'],
         unhealthy: ['00ae.cd00.1146']
       }};
-    const remReq = component.getSearchRequest('meta.mod-time', -1, 'SmartNIC');
+    const remReq = component.getSearchRequest('meta.mod-time', -1, 'DistributedServiceCard');
     const locRes = component.getLocalSearchResult('meta.mod-time', -1, searchObj);
     expect(remReq.query.texts[0].text).toEqual(['"Admitted"']);
     expect(remReq.query.fields.requirements.length).toBe(0);

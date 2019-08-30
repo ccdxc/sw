@@ -100,10 +100,10 @@ func (it *veniceIntegSuite) TestModuleWatch(c *C) {
 	for i := 0; i < 9; i++ {
 		name := fmt.Sprintf("00ae.cd33.000%d", i)
 		n := policygen.CreateSmartNIC(name,
-			cluster.SmartNICStatus_PENDING.String(),
+			cluster.DistributedServiceCardStatus_PENDING.String(),
 			"esx-1",
-			&cluster.SmartNICCondition{
-				Type:   cluster.SmartNICCondition_HEALTHY.String(),
+			&cluster.DSCCondition{
+				Type:   cluster.DSCCondition_HEALTHY.String(),
 				Status: cluster.ConditionStatus_FALSE.String(),
 			})
 		err := it.createSmartNICNode(context.TODO(), n)

@@ -266,7 +266,7 @@ func (r *recorderImpl) Event(eventType eventtypes.EventType, message string, obj
 
 		// update the user friendly name of nic in object-ref
 		if r.isNicKind(objRefKind) {
-			if nic, ok := objRef.(*cluster.SmartNIC); ok {
+			if nic, ok := objRef.(*cluster.DistributedServiceCard); ok {
 				event.ObjectRef.Name = nic.Spec.ID
 			}
 		}
@@ -457,7 +457,7 @@ func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 
 // isNicKind returns true if the given kind matches the smart nic kind
 func (r *recorderImpl) isNicKind(kind string) bool {
-	nic := &cluster.SmartNIC{}
+	nic := &cluster.DistributedServiceCard{}
 	nic.Defaults("all")
 	return nic.GetKind() == kind
 }

@@ -288,7 +288,7 @@ var _ = Describe("telemetry tests", func() {
 		if ts.tu.NumNaplesHosts == 0 {
 			Skip("No Naples node to report metrics")
 		}
-		testQueryingMetrics("SmartNIC")
+		testQueryingMetrics("DistributedServiceCard")
 	})
 	It("telemetry Fwlogs query ", func() {
 		testQueryingFwlogs()
@@ -318,7 +318,7 @@ var _ = Describe("telemetry tests", func() {
 			smartnics := map[string]int{}
 			Eventually(func() bool {
 				ctx := ts.tu.MustGetLoggedInContext(context.Background())
-				snic, err := apiClient.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+				snic, err := apiClient.ClusterV1().DistributedServiceCard().List(ctx, &api.ListWatchOptions{})
 				if err != nil {
 					By(fmt.Sprintf("failed to get smartnics %v", err))
 					return false
@@ -438,7 +438,7 @@ var _ = Describe("telemetry tests", func() {
 							Queries: []*telemetry_query.MetricsQuerySpec{
 								{
 									TypeMeta: api.TypeMeta{
-										Kind: "SmartNIC",
+										Kind: "DistributedServiceCard",
 									},
 									StartTime: stime,
 									Selector: &fields.Selector{

@@ -23,7 +23,7 @@ service ClusterV1 {
     option(venice.apiGrpcCrudService) = "Cluster";
     option(venice.apiGrpcCrudService) = "Node";
     option(venice.apiGrpcCrudService) = "Host";
-    option(venice.apiGrpcCrudService) = "SmartNIC";
+    option(venice.apiGrpcCrudService) = "DistributedServiceCard";
     option(venice.apiGrpcCrudService) = "Tenant";
     option(venice.apiGrpcCrudService) = "Version";
 
@@ -60,7 +60,7 @@ service ClusterV1 {
     };
 
     option (venice.apiRestService) = {
-        Object: "SmartNIC"
+        Object: "DistributedServiceCard"
         Method: ["put", "get", "delete", "list", "watch"]
     };
 

@@ -133,7 +133,7 @@ service SmartNICUpdates {
 
 // NMD --> CMD
 message NICAdmissionRequest {
-	cluster.SmartNIC Nic         = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.DistributedServiceCard Nic         = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 
 	// Factory Certificates
 	repeated bytes Certs         = 2 [(gogoproto.jsontag) = "certificates,omitempty"];
@@ -214,7 +214,7 @@ message RegisterNICResponse {
 message UpdateNICRequest {
 
 	// SmartNIC object
-	cluster.SmartNIC Nic = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.DistributedServiceCard Nic = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 }
 
 // Update NIC response
@@ -225,7 +225,7 @@ message UpdateNICResponse {
 // SmartNIC watch event
 message SmartNICEvent {
 	api.EventType EventType = 1 [(gogoproto.jsontag) = "eventType,omitempty"];
-	cluster.SmartNIC  Nic       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.DistributedServiceCard  Nic       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 }
 
 service NodeHeartbeat {

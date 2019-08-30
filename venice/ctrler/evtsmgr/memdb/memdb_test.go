@@ -30,16 +30,16 @@ func TestMemDb(t *testing.T) {
 	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil))
 	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert2", nil, nil, nil))
 
-	mDb.AddObject(policygen.CreateSmartNIC("0014.2201.2345", cluster.SmartNICStatus_ADMITTED.String(), "esx-1",
-		&cluster.SmartNICCondition{Type: cluster.SmartNICCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
-	mDb.AddObject(policygen.CreateSmartNIC("0014.2201.2334", cluster.SmartNICStatus_ADMITTED.String(), "esx-2",
-		&cluster.SmartNICCondition{Type: cluster.SmartNICCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
+	mDb.AddObject(policygen.CreateSmartNIC("0014.2201.2345", cluster.DistributedServiceCardStatus_ADMITTED.String(), "esx-1",
+		&cluster.DSCCondition{Type: cluster.DSCCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
+	mDb.AddObject(policygen.CreateSmartNIC("0014.2201.2334", cluster.DistributedServiceCardStatus_ADMITTED.String(), "esx-2",
+		&cluster.DSCCondition{Type: cluster.DSCCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
 
 	objs := mDb.ListObjects("AlertPolicy")
 	Assert(t, len(objs) == 4, "invalid number of alert policies, expected: %v, got: %v", 4, len(objs))
 	objs = mDb.ListObjects("Alert")
 	Assert(t, len(objs) == 2, "invalid number of alerts objects, expected: %v, got: %v", 2, len(objs))
-	objs = mDb.ListObjects("SmartNIC")
+	objs = mDb.ListObjects("DistributedServiceCard")
 	Assert(t, len(objs) == 2, "invalid number of Smart NIC objects, expected: %v, got: %v", 2, len(objs))
 
 	// test update

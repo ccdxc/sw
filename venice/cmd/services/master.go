@@ -647,7 +647,7 @@ func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *c
 }
 
 // handleSmartNIC handles SmartNIC updates
-func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *cmd.SmartNIC) {
+func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *cmd.DistributedServiceCard) {
 
 	isLeader := env.LeaderService != nil && env.LeaderService.IsLeader()
 	log.Infof("SmartNIC update: isLeader: %v, NIC: %+v event type: %v", isLeader, *evtNIC, et)
@@ -688,14 +688,14 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 		nicState.Lock()
 		defer nicState.Unlock()
 
-		nic := nicState.SmartNIC
+		nic := nicState.DistributedServiceCard
 		err = env.StateMgr.UpdateHostPairingStatus(kvstore.Created, nic, nil)
 		if err != nil {
 			log.Errorf("Error updating NIC-Host pairing: %v", err)
 		}
 		// Initiate NIC registration only in cases where Phase is unknown or empty
 		// For Naples initiated case, the phase will be set to REGISTERING initially
-		if nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "" {
+		if nic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "" {
 			go env.NICService.InitiateNICRegistration(nic)
 		}
 
@@ -709,13 +709,13 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 		nicState.Lock()
 		defer nicState.Unlock()
 
-		if evtNIC.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() &&
-			evtNIC.Spec.Admit == false && evtNIC.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
+		if evtNIC.Spec.MgmtMode == cmd.DistributedServiceCardSpec_NETWORK.String() &&
+			evtNIC.Spec.Admit == false && evtNIC.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String() {
 			log.Infof("De-admitting NIC: %+v", evtNIC)
 			// NIC has been de-admitted by user.
 			// Set admission phase to PENDING and reset condtions, as the card is no longer part
 			// of the cluster and will not send any update.
-			evtNIC.Status.AdmissionPhase = cmd.SmartNICStatus_PENDING.String()
+			evtNIC.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_PENDING.String()
 			evtNIC.Status.Conditions = nil
 
 			// Override local state and Propagate changes back to API Server
@@ -734,12 +734,12 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 
 		// If user has switched mode from network-managed to host-managed, we need to decommission
 		// and trigger the mode change on NAPLES
-		if nicState.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() && evtNIC.Spec.MgmtMode == cmd.SmartNICSpec_HOST.String() {
+		if nicState.Spec.MgmtMode == cmd.DistributedServiceCardSpec_NETWORK.String() && evtNIC.Spec.MgmtMode == cmd.DistributedServiceCardSpec_HOST.String() {
 			log.Infof("Decommissioning NIC: %s", evtNIC.Name)
 			// reset status
-			evtNIC.Status = cmd.SmartNICStatus{
-				AdmissionPhase:       cmd.SmartNICStatus_DECOMMISSIONED.String(),
-				AdmissionPhaseReason: "SmartNIC management mode changed to HOST",
+			evtNIC.Status = cmd.DistributedServiceCardStatus{
+				AdmissionPhase:       cmd.DistributedServiceCardStatus_DECOMMISSIONED.String(),
+				AdmissionPhaseReason: "DistributedServiceCard management mode changed to HOST",
 			}
 			// Override local state and Propagate changes back to API Server
 			err = env.StateMgr.UpdateSmartNIC(evtNIC, true)
@@ -755,10 +755,10 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 		}
 
 		// Make a copy before proceeding
-		var oldNIC cmd.SmartNIC
-		_, err = nicState.SmartNIC.Clone(&oldNIC)
+		var oldNIC cmd.DistributedServiceCard
+		_, err = nicState.DistributedServiceCard.Clone(&oldNIC)
 		if err != nil {
-			log.Errorf("Error cloning SmartNIC: %v", err)
+			log.Errorf("Error cloning DistributedServiceCard: %v", err)
 			// try to continue
 		}
 
@@ -768,8 +768,8 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 		// When we receive an health update from the SmartNIC, we record the timestamp in the local cache.
 		// If locally we have a more recent health condition then ApiServer, as determined by timestamps,
 		// we should not override it.
-		evtHealthCond := cmdutils.GetNICCondition(nic, cmd.SmartNICCondition_HEALTHY)
-		localHealthCond := cmdutils.GetNICCondition(&oldNIC, cmd.SmartNICCondition_HEALTHY)
+		evtHealthCond := cmdutils.GetNICCondition(nic, cmd.DSCCondition_HEALTHY)
+		localHealthCond := cmdutils.GetNICCondition(&oldNIC, cmd.DSCCondition_HEALTHY)
 		if evtHealthCond != nil && localHealthCond != nil {
 			evtLastTransitionTime, err1 := time.Parse(time.RFC3339, evtHealthCond.LastTransitionTime)
 			localLastTransitionTime, err2 := time.Parse(time.RFC3339, localHealthCond.LastTransitionTime)
@@ -794,8 +794,8 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 
 		// Initiate NIC registration only in cases where Phase is unknown or empty
 		// For Naples initiated case, the phase will be set to REGISTERING initially
-		if nic.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() &&
-			(nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "") {
+		if nic.Spec.MgmtMode == cmd.DistributedServiceCardSpec_NETWORK.String() &&
+			(nic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "") {
 			go env.NICService.InitiateNICRegistration(nic)
 		}
 

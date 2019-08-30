@@ -38,7 +38,7 @@ var scaleCfgenParams = &Cfgen{
 				Name: "host-{{iter:hostid}}",
 			},
 			Spec: cluster.HostSpec{
-				SmartNICs: []cluster.SmartNICID{
+				DSCs: []cluster.DistributedServiceCardID{
 					{
 						MACAddress: "{{mac}}",
 					},
@@ -154,14 +154,14 @@ var scaleCfgenParams = &Cfgen{
 	FlowExportPolicyParams: FlowExportPolicyParams{},
 }
 
-var smartNicTemplate = &cluster.SmartNIC{
+var smartNicTemplate = &cluster.DistributedServiceCard{
 	TypeMeta: api.TypeMeta{
-		Kind: "SmartNIC",
+		Kind: "DistributedServiceCard",
 	},
 	ObjectMeta: api.ObjectMeta{
 		Name: "{{mac:00.ac.dd}}",
 	},
-	Spec: cluster.SmartNICSpec{
+	Spec: cluster.DistributedServiceCardSpec{
 		ID: "host-{{iter}}",
 		IPConfig: &cluster.IPConfig{
 			IPAddress: "0.0.0.0/0",
@@ -169,7 +169,7 @@ var smartNicTemplate = &cluster.SmartNIC{
 		MgmtMode:    "NETWORK",
 		NetworkMode: "OOB",
 	},
-	Status: cluster.SmartNICStatus{
+	Status: cluster.DistributedServiceCardStatus{
 		AdmissionPhase: "ADMITTED",
 		PrimaryMAC:     "{{mac:00.ac.dd}}",
 	},

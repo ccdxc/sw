@@ -44,7 +44,7 @@ describe('HostsComponent', () => {
       'self-link': '/configs/cluster/v1/hosts/naples1-host'
     },
     'spec': {
-      'smart-nics': [
+      'dscs': [
         {
           'mac-address': '0242.c0a8.1c02'
         }
@@ -65,7 +65,7 @@ describe('HostsComponent', () => {
       'self-link': '/configs/cluster/v1/hosts/test-host'
     },
     'spec': {
-      'smart-nics': [
+      'dscs': [
         {
           'id': 'test'
         }
@@ -87,7 +87,7 @@ describe('HostsComponent', () => {
       'self-link': '/configs/cluster/v1/hosts/test-host1'
     },
     'spec': {
-      'smart-nics': [
+      'dscs': [
         {
           'id': 'test3'
         }
@@ -98,7 +98,7 @@ describe('HostsComponent', () => {
 
   // id test => mac address 00ae.cd00.1142
   const naple1 = {
-    'kind': 'SmartNIC',
+    'kind': 'DistributedServiceCard',
     'api-version': 'v1',
     'meta': {
       'name': '00ae.cd00.1142',
@@ -107,7 +107,7 @@ describe('HostsComponent', () => {
       'uuid': '96fa49f5-ccb8-40ac-a314-41dd798fae78',
       'creation-time': '2019-04-02T18:09:39.17373748Z',
       'mod-time': '2019-04-09T07:15:59.574423516Z',
-      'self-link': '/configs/cluster/v1/smartnics/00ae.cd00.1142'
+      'self-link': '/configs/cluster/v1/distributedservicecards/00ae.cd00.1142'
     },
     'spec': {
       'admit': true,
@@ -157,7 +157,7 @@ describe('HostsComponent', () => {
         'eth1',
         'eth2'
       ],
-      'smartNicVersion': '1.0E',
+      'DSCVersion': '1.0E',
       'smartNicSku': '68-0003-02 01',
       'host': 'test-name5'
     }
@@ -214,7 +214,7 @@ describe('HostsComponent', () => {
     expect(tableBody).toBeTruthy();
 
     TestingUtility.verifyTable([new ClusterHost(host2), new ClusterHost(host1)], component.cols, tableBody, {
-      'spec.smart-nics': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+      'spec.dscs': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
         expect(fieldElem.nativeElement.textContent).toContain(
           component.processSmartNics(rowData)[0]['text']
         );  // only works if we for one entry case
@@ -231,7 +231,7 @@ describe('HostsComponent', () => {
       ])
     );
 
-    spyOn(service, 'WatchSmartNIC').and.returnValue(
+    spyOn(service, 'WatchDistributedServiceCard').and.returnValue(
       TestingUtility.createWatchEventsSubject([
         naple1
       ])
@@ -259,7 +259,7 @@ describe('HostsComponent', () => {
         ])
       );
 
-      spyOn(service, 'WatchSmartNIC').and.returnValue(
+      spyOn(service, 'WatchDistributedServiceCard').and.returnValue(
         TestingUtility.createWatchEventsSubject([
           naple1
         ])
@@ -268,7 +268,7 @@ describe('HostsComponent', () => {
 
     it('naples read permission', () => {
       TestingUtility.addPermissions(
-        [UIRolePermissions.clustersmartnic_read]
+        [UIRolePermissions.clusterdistributedservicecard_read]
       );
       fixture.detectChanges();
     const linkDes = fixture.debugElement

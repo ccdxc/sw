@@ -262,19 +262,19 @@ func TestEndpointStaleDelete(t *testing.T) {
 	}
 
 	// smartNic params
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testSmartNIC",
+			Name: "testDistributedServiceCard",
 		},
-		Spec: cluster.SmartNICSpec{},
-		Status: cluster.SmartNICStatus{
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
 	// create the smartNic
-	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	// host params
@@ -284,7 +284,7 @@ func TestEndpointStaleDelete(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: "0001.0203.0405",
 				},
@@ -886,19 +886,19 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	}
 
 	// smartNic params
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testSmartNIC",
+			Name: "testDistributedServiceCard",
 		},
-		Spec: cluster.SmartNICSpec{},
-		Status: cluster.SmartNICStatus{
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
 	// create the smartNic
-	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	// host params
@@ -908,7 +908,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: "0001.0203.0405",
 				},
@@ -971,19 +971,19 @@ func TestWorkloadUpdate(t *testing.T) {
 	}
 
 	// smartNic params
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testSmartNIC",
+			Name: "testDistributedServiceCard",
 		},
-		Spec: cluster.SmartNICSpec{},
-		Status: cluster.SmartNICStatus{
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
 	// create the smartNic
-	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	// host params
@@ -993,7 +993,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: "0001.0203.0405",
 				},
@@ -1126,19 +1126,19 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 	}
 
 	// smartNic params
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "testSmartNIC",
 		},
-		Spec: cluster.SmartNICSpec{},
-		Status: cluster.SmartNICStatus{
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
 	// create the smartNic
-	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	// host params
@@ -1148,7 +1148,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: "0001.0203.0405",
 				},
@@ -1248,7 +1248,7 @@ func TestHostCreateDelete(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: "0001.0203.0405",
 				},
@@ -1263,7 +1263,7 @@ func TestHostCreateDelete(t *testing.T) {
 	// verify we can find the endpoint associated with the host
 	foundHost, err := stateMgr.FindHost("default", "testHost")
 	AssertOk(t, err, "Could not find the host")
-	Assert(t, (len(foundHost.Host.Spec.SmartNICs) == 1), "host params did not match")
+	Assert(t, (len(foundHost.Host.Spec.DSCs) == 1), "host params did not match")
 
 	// delete the host
 	err = stateMgr.ctrler.Host().Delete(&host)
@@ -1289,7 +1289,7 @@ func TestHostUpdates(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: "0001.0203.0405",
 				},
@@ -1334,21 +1334,21 @@ func TestHostUpdates(t *testing.T) {
 	Assert(t, err != nil, "Endpoint got created without smartnic")
 
 	// create the smartnic
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testSmartNIC",
+			Name: "testDistributedServiceCard",
 		},
-		Spec: cluster.SmartNICSpec{
+		Spec: cluster.DistributedServiceCardSpec{
 			ID: "test-snic",
 		},
-		Status: cluster.SmartNICStatus{
+		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
 	// create the smartNic
-	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	foundEP, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
@@ -1357,7 +1357,7 @@ func TestHostUpdates(t *testing.T) {
 
 	// change host's mac address
 	nhst := ref.DeepCopy(host).(cluster.Host)
-	nhst.Spec.SmartNICs[0].MACAddress = "0002.0406.0800"
+	nhst.Spec.DSCs[0].MACAddress = "0002.0406.0800"
 	err = stateMgr.ctrler.Host().Update(&nhst)
 	AssertOk(t, err, "Error updating the host")
 
@@ -1367,8 +1367,8 @@ func TestHostUpdates(t *testing.T) {
 
 	// now associate by name
 	nhst = ref.DeepCopy(nhst).(cluster.Host)
-	nhst.Spec.SmartNICs[0].MACAddress = ""
-	nhst.Spec.SmartNICs[0].ID = "test-snic"
+	nhst.Spec.DSCs[0].MACAddress = ""
+	nhst.Spec.DSCs[0].ID = "test-snic"
 	err = stateMgr.ctrler.Host().Update(&nhst)
 	AssertOk(t, err, "Error updating the host")
 
@@ -1378,7 +1378,7 @@ func TestHostUpdates(t *testing.T) {
 	Assert(t, foundEP.Endpoint.Status.NodeUUID == snic.Name, "Endpoint nodeUUID did not match")
 
 	// delete the host
-	err = stateMgr.ctrler.SmartNIC().Delete(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Delete(&snic)
 	AssertOk(t, err, "Error deleting the host")
 
 	// verify endpoint is gone from the database
@@ -1395,34 +1395,34 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	}
 
 	// smartNic params
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testSmartNIC",
+			Name: "testDistributedServiceCard",
 		},
-		Status: cluster.SmartNICStatus{
+		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
 	// create the smartNic
-	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	// verify we can find the endpoint associated with the smartNic
-	foundSmartNIC, err := stateMgr.FindSmartNIC("default", "testSmartNIC")
+	foundDistributedServiceCard, err := stateMgr.FindDistributedServiceCard("default", "testDistributedServiceCard")
 	AssertOk(t, err, "Could not find the smartNic")
-	Assert(t, (foundSmartNIC.SmartNIC.Status.PrimaryMAC == "0001.0203.0405"), "smartNic params did not match")
+	Assert(t, (foundDistributedServiceCard.DistributedServiceCard.Status.PrimaryMAC == "0001.0203.0405"), "smartNic params did not match")
 
-	foundSmartNIC, err = stateMgr.FindSmartNICByMacAddr("0001.0203.0405")
+	foundDistributedServiceCard, err = stateMgr.FindDistributedServiceCardByMacAddr("0001.0203.0405")
 	AssertOk(t, err, "Could not find the smartNic")
 
 	// delete the smartNic
-	err = stateMgr.ctrler.SmartNIC().Delete(&snic)
+	err = stateMgr.ctrler.DistributedServiceCard().Delete(&snic)
 	AssertOk(t, err, "Error deleting the smartNic")
 
 	// verify endpoint is gone from the database
-	_, err = stateMgr.FindSmartNIC("default", "testSmartNIC")
+	_, err = stateMgr.FindDistributedServiceCard("default", "testDistributedServiceCard")
 	Assert(t, (err != nil), "Deleted smartNic still found in db")
 }
 
@@ -1444,7 +1444,7 @@ func TestNetworkInterfaceConvert(t *testing.T) {
 	if cNetif == nil {
 		t.Fatalf("Unable to convert netif object")
 	}
-	if cNetif.Status.SmartNIC != "testNode" {
+	if cNetif.Status.DSC != "testNode" {
 		t.Fatalf("smartnic not set correctly %+v", cNetif)
 	}
 }

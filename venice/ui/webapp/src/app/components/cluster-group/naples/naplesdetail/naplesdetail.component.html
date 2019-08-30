@@ -54,7 +54,7 @@
 <ng-template #detailsTable>
   <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-node-table-container">
     <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-details">
-      <!-- <div fxFlex="none" class="cluster-details-title"> Naples Detail </div> -->
+      <!-- <div fxFlex="none" class="cluster-details-title"> Distributed Services Card Detail </div> -->
       <div fxFlex="none" fxLayout="row">
         <div fxFlex="none" fxLayout="column">
           <div fxFlex="none" fxLayout="row">
@@ -96,7 +96,7 @@
                     Labels:
                     <mat-icon matTooltip="Edit Label" class="global-table-action-icon"
                               (click)="editLabels($event)"
-                              *roleGuard="'clustersmartnic_update'">edit
+                              *roleGuard="'clusterdistributedservicecard_update'">edit
                     </mat-icon>
                   </div>
                 </div>
@@ -155,7 +155,7 @@
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-version">
-                  {{ selectedObj?.status['smartNicVersion'] }}
+                  {{ selectedObj?.status['DSCVersion'] }}
                 </div>
               </div>
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"

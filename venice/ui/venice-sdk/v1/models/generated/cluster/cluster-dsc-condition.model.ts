@@ -7,34 +7,34 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { ClusterSmartNICCondition_type,  ClusterSmartNICCondition_type_uihint  } from './enums';
-import { ClusterSmartNICCondition_status,  ClusterSmartNICCondition_status_uihint  } from './enums';
+import { ClusterDSCCondition_type,  ClusterDSCCondition_type_uihint  } from './enums';
+import { ClusterDSCCondition_status,  ClusterDSCCondition_status_uihint  } from './enums';
 
-export interface IClusterSmartNICCondition {
-    'type': ClusterSmartNICCondition_type;
-    'status': ClusterSmartNICCondition_status;
+export interface IClusterDSCCondition {
+    'type': ClusterDSCCondition_type;
+    'status': ClusterDSCCondition_status;
     'last-transition-time'?: string;
     'reason'?: string;
     'message'?: string;
 }
 
 
-export class ClusterSmartNICCondition extends BaseModel implements IClusterSmartNICCondition {
-    'type': ClusterSmartNICCondition_type = null;
-    'status': ClusterSmartNICCondition_status = null;
+export class ClusterDSCCondition extends BaseModel implements IClusterDSCCondition {
+    'type': ClusterDSCCondition_type = null;
+    'status': ClusterDSCCondition_status = null;
     'last-transition-time': string = null;
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
-    public static propInfo: { [prop in keyof IClusterSmartNICCondition]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterDSCCondition]: PropInfoItem } = {
         'type': {
-            enum: ClusterSmartNICCondition_type_uihint,
+            enum: ClusterDSCCondition_type_uihint,
             default: 'healthy',
             required: true,
             type: 'string'
         },
         'status': {
-            enum: ClusterSmartNICCondition_status_uihint,
+            enum: ClusterDSCCondition_status_uihint,
             default: 'unknown',
             required: true,
             type: 'string'
@@ -55,19 +55,19 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterSmartNICCondition.propInfo[propName];
+        return ClusterDSCCondition.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterSmartNICCondition.propInfo;
+        return ClusterDSCCondition.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterSmartNICCondition.propInfo[prop] != null &&
-                        ClusterSmartNICCondition.propInfo[prop].default != null);
+        return (ClusterDSCCondition.propInfo[prop] != null &&
+                        ClusterDSCCondition.propInfo[prop].default != null);
     }
 
     /**
@@ -87,36 +87,36 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('type')) {
-            this['type'] = <ClusterSmartNICCondition_type>  ClusterSmartNICCondition.propInfo['type'].default;
+        } else if (fillDefaults && ClusterDSCCondition.hasDefaultValue('type')) {
+            this['type'] = <ClusterDSCCondition_type>  ClusterDSCCondition.propInfo['type'].default;
         } else {
             this['type'] = null
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('status')) {
-            this['status'] = <ClusterSmartNICCondition_status>  ClusterSmartNICCondition.propInfo['status'].default;
+        } else if (fillDefaults && ClusterDSCCondition.hasDefaultValue('status')) {
+            this['status'] = <ClusterDSCCondition_status>  ClusterDSCCondition.propInfo['status'].default;
         } else {
             this['status'] = null
         }
         if (values && values['last-transition-time'] != null) {
             this['last-transition-time'] = values['last-transition-time'];
-        } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('last-transition-time')) {
-            this['last-transition-time'] = ClusterSmartNICCondition.propInfo['last-transition-time'].default;
+        } else if (fillDefaults && ClusterDSCCondition.hasDefaultValue('last-transition-time')) {
+            this['last-transition-time'] = ClusterDSCCondition.propInfo['last-transition-time'].default;
         } else {
             this['last-transition-time'] = null
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
-        } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('reason')) {
-            this['reason'] = ClusterSmartNICCondition.propInfo['reason'].default;
+        } else if (fillDefaults && ClusterDSCCondition.hasDefaultValue('reason')) {
+            this['reason'] = ClusterDSCCondition.propInfo['reason'].default;
         } else {
             this['reason'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('message')) {
-            this['message'] = ClusterSmartNICCondition.propInfo['message'].default;
+        } else if (fillDefaults && ClusterDSCCondition.hasDefaultValue('message')) {
+            this['message'] = ClusterDSCCondition.propInfo['message'].default;
         } else {
             this['message'] = null
         }
@@ -127,11 +127,11 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterSmartNICCondition_type), ]), ClusterSmartNICCondition.propInfo['type']),
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(ClusterSmartNICCondition_status), ]), ClusterSmartNICCondition.propInfo['status']),
-                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), ClusterSmartNICCondition.propInfo['last-transition-time']),
-                'reason': CustomFormControl(new FormControl(this['reason']), ClusterSmartNICCondition.propInfo['reason']),
-                'message': CustomFormControl(new FormControl(this['message']), ClusterSmartNICCondition.propInfo['message']),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterDSCCondition_type), ]), ClusterDSCCondition.propInfo['type']),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(ClusterDSCCondition_status), ]), ClusterDSCCondition.propInfo['status']),
+                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), ClusterDSCCondition.propInfo['last-transition-time']),
+                'reason': CustomFormControl(new FormControl(this['reason']), ClusterDSCCondition.propInfo['reason']),
+                'message': CustomFormControl(new FormControl(this['message']), ClusterDSCCondition.propInfo['message']),
             });
         }
         return this._formGroup;

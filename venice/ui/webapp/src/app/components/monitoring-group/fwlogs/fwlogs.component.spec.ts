@@ -65,7 +65,7 @@ describe('fwlogsComponent', () => {
   });
 
   const naple1 = {
-    'kind': 'SmartNIC',
+    'kind': 'DistributedServiceCard',
     'api-version': 'v1',
     'meta': {
       'name': '00ae.cd00.1142',
@@ -124,7 +124,7 @@ describe('fwlogsComponent', () => {
         'eth1',
         'eth2'
       ],
-      'smartNicVersion': '1.0E',
+      'DSCVersion': '1.0E',
       'smartNicSku': '68-0003-02 01',
       'host': 'test-name5'
     }
@@ -221,7 +221,7 @@ describe('fwlogsComponent', () => {
     spyOn(telemetryService, 'PostFwlogs').and.returnValue(
       new BehaviorSubject({body: fwlog})
     );
-    spyOn(clusterService, 'WatchSmartNIC').and.returnValue(
+    spyOn(clusterService, 'WatchDistributedServiceCard').and.returnValue(
       TestingUtility.createWatchEventsSubject([
         naple1
       ])

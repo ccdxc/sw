@@ -61,7 +61,7 @@ export class UIConfigsService {
     },
     'cluster/naples': {
       requiredPerm: [
-        UIRolePermissions.clustersmartnic_read,
+        UIRolePermissions.clusterdistributedservicecard_read,
       ],
     },
     'cluster/hosts': {

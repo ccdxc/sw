@@ -53,14 +53,14 @@ type ClusterV1HostInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
-// ClusterV1SmartNICInterface exposes the CRUD methods for SmartNIC
-type ClusterV1SmartNICInterface interface {
-	Create(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
-	Update(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
-	UpdateStatus(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*SmartNIC, error)
+// ClusterV1DistributedServiceCardInterface exposes the CRUD methods for DistributedServiceCard
+type ClusterV1DistributedServiceCardInterface interface {
+	Create(ctx context.Context, in *DistributedServiceCard) (*DistributedServiceCard, error)
+	Update(ctx context.Context, in *DistributedServiceCard) (*DistributedServiceCard, error)
+	UpdateStatus(ctx context.Context, in *DistributedServiceCard) (*DistributedServiceCard, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*DistributedServiceCard, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*DistributedServiceCard, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*DistributedServiceCard, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiintf.APIOperType) bool
 }
@@ -94,7 +94,7 @@ type ClusterV1Interface interface {
 	Cluster() ClusterV1ClusterInterface
 	Node() ClusterV1NodeInterface
 	Host() ClusterV1HostInterface
-	SmartNIC() ClusterV1SmartNICInterface
+	DistributedServiceCard() ClusterV1DistributedServiceCardInterface
 	Tenant() ClusterV1TenantInterface
 	Version() ClusterV1VersionInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)

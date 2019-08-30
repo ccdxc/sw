@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IClusterCluster,ClusterCluster,IApiStatus,ApiStatus,ClusterClusterAuthBootstrapRequest,IClusterClusterAuthBootstrapRequest,ClusterUpdateTLSConfigRequest,IClusterUpdateTLSConfigRequest,IClusterHostList,ClusterHostList,IClusterHost,ClusterHost,IClusterNodeList,ClusterNodeList,IClusterNode,ClusterNode,IClusterSmartNICList,ClusterSmartNICList,IClusterSmartNIC,ClusterSmartNIC,IClusterTenantList,ClusterTenantList,IClusterTenant,ClusterTenant,IClusterVersion,ClusterVersion,IClusterAutoMsgClusterWatchHelper,ClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,ClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,ClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,ClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper,ClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper,ClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
+import { IClusterCluster,ClusterCluster,IApiStatus,ApiStatus,ClusterClusterAuthBootstrapRequest,IClusterClusterAuthBootstrapRequest,ClusterUpdateTLSConfigRequest,IClusterUpdateTLSConfigRequest,IClusterDistributedServiceCardList,ClusterDistributedServiceCardList,IClusterDistributedServiceCard,ClusterDistributedServiceCard,IClusterHostList,ClusterHostList,IClusterHost,ClusterHost,IClusterNodeList,ClusterNodeList,IClusterNode,ClusterNode,IClusterTenantList,ClusterTenantList,IClusterTenant,ClusterTenant,IClusterVersion,ClusterVersion,IClusterAutoMsgClusterWatchHelper,ClusterAutoMsgClusterWatchHelper,IClusterAutoMsgDistributedServiceCardWatchHelper,ClusterAutoMsgDistributedServiceCardWatchHelper,IClusterAutoMsgHostWatchHelper,ClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,ClusterAutoMsgNodeWatchHelper,IClusterAutoMsgTenantWatchHelper,ClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper,ClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
 
 @Injectable()
 export class Clusterv1Service extends AbstractService {
@@ -85,6 +85,72 @@ export class Clusterv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new ClusterUpdateTLSConfigRequest(body))
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List DistributedServiceCard objects */
+  public ListDistributedServiceCard(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterDistributedServiceCardList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/distributedservicecards';
+    const opts = {
+      eventID: 'ListDistributedServiceCard',
+      objType: 'ClusterDistributedServiceCardList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterDistributedServiceCardList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get DistributedServiceCard object */
+  public GetDistributedServiceCard(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterDistributedServiceCard | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/distributedservicecards/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetDistributedServiceCard',
+      objType: 'ClusterDistributedServiceCard',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterDistributedServiceCard | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete DistributedServiceCard object */
+  public DeleteDistributedServiceCard(O_Name, stagingID: string = ""):Observable<{body: IClusterDistributedServiceCard | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/distributedservicecards/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'DeleteDistributedServiceCard',
+      objType: 'ClusterDistributedServiceCard',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IClusterDistributedServiceCard | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update DistributedServiceCard object */
+  public UpdateDistributedServiceCard(O_Name, body: IClusterDistributedServiceCard, stagingID: string = "", previousVal: IClusterDistributedServiceCard = null, trimObject: boolean = true):Observable<{body: IClusterDistributedServiceCard | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/distributedservicecards/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'UpdateDistributedServiceCard',
+      objType: 'ClusterDistributedServiceCard',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ClusterDistributedServiceCard(body), previousVal)
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterDistributedServiceCard | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Host objects */
@@ -255,72 +321,6 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** List SmartNIC objects */
-  public ListSmartNIC(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterSmartNICList | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics';
-    const opts = {
-      eventID: 'ListSmartNIC',
-      objType: 'ClusterSmartNICList',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterSmartNICList | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Get SmartNIC object */
-  public GetSmartNIC(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'GetSmartNIC',
-      objType: 'ClusterSmartNIC',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Delete SmartNIC object */
-  public DeleteSmartNIC(O_Name, stagingID: string = ""):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'DeleteSmartNIC',
-      objType: 'ClusterSmartNIC',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Update SmartNIC object */
-  public UpdateSmartNIC(O_Name, body: IClusterSmartNIC, stagingID: string = "", previousVal: IClusterSmartNIC = null, trimObject: boolean = true):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'UpdateSmartNIC',
-      objType: 'ClusterSmartNIC',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ClusterSmartNIC(body), previousVal)
-    }
-    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** List Tenant objects */
   public ListTenant(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterTenantList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/tenants';
@@ -435,6 +435,21 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Watch DistributedServiceCard objects. Supports WebSockets or HTTP long poll */
+  public WatchDistributedServiceCard(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterAutoMsgDistributedServiceCardWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/distributedservicecards';
+    const opts = {
+      eventID: 'WatchDistributedServiceCard',
+      objType: 'ClusterAutoMsgDistributedServiceCardWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterAutoMsgDistributedServiceCardWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch Host objects. Supports WebSockets or HTTP long poll */
   public WatchHost(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterAutoMsgHostWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/hosts';
@@ -463,21 +478,6 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterAutoMsgNodeWatchHelper | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Watch SmartNIC objects. Supports WebSockets or HTTP long poll */
-  public WatchSmartNIC(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/smartnics';
-    const opts = {
-      eventID: 'WatchSmartNIC',
-      objType: 'ClusterAutoMsgSmartNICWatchHelper',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Tenant objects. Supports WebSockets or HTTP long poll */

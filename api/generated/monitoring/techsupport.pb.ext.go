@@ -192,9 +192,9 @@ func (m *TechSupportRequestStatus) Defaults(ver string) bool {
 			ret = i.Defaults(ver) || ret
 		}
 	}
-	for k := range m.SmartNICNodeResults {
-		if m.SmartNICNodeResults[k] != nil {
-			i := m.SmartNICNodeResults[k]
+	for k := range m.DSCResults {
+		if m.DSCResults[k] != nil {
+			i := m.DSCResults[k]
 			ret = i.Defaults(ver) || ret
 		}
 	}
@@ -401,12 +401,12 @@ func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool,
 			ret = append(ret, errs...)
 		}
 	}
-	for k, v := range m.SmartNICNodeResults {
+	for k, v := range m.DSCResults {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sSmartNICNodeResults[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sDSCResults[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -436,10 +436,10 @@ func (m *TechSupportRequestStatus) Normalize() {
 		}
 	}
 
-	for k, v := range m.SmartNICNodeResults {
+	for k, v := range m.DSCResults {
 		if v != nil {
 			v.Normalize()
-			m.SmartNICNodeResults[k] = v
+			m.DSCResults[k] = v
 		}
 	}
 

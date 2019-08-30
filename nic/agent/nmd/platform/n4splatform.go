@@ -35,22 +35,22 @@ func (np *NaplesPlatformAgent) RegisterNMD(nmd api.NmdPlatformAPI) error {
 }
 
 // CreateSmartNIC creates a SmartNIC in platform
-func (np *NaplesPlatformAgent) CreateSmartNIC(nw *cluster.SmartNIC) error {
+func (np *NaplesPlatformAgent) CreateSmartNIC(nw *cluster.DistributedServiceCard) error {
 	return nil
 }
 
 // UpdateSmartNIC updates a SmartNIC in platform
-func (np *NaplesPlatformAgent) UpdateSmartNIC(nw *cluster.SmartNIC) error {
+func (np *NaplesPlatformAgent) UpdateSmartNIC(nw *cluster.DistributedServiceCard) error {
 	return nil
 }
 
 // DeleteSmartNIC deletes a SmartNIC from platform
-func (np *NaplesPlatformAgent) DeleteSmartNIC(nw *cluster.SmartNIC) error {
+func (np *NaplesPlatformAgent) DeleteSmartNIC(nw *cluster.DistributedServiceCard) error {
 	return nil
 }
 
 // GetPlatformCertificate returns the certificate containing the NIC identity and public key
-func (np *NaplesPlatformAgent) GetPlatformCertificate(nic *cluster.SmartNIC) ([]byte, error) {
+func (np *NaplesPlatformAgent) GetPlatformCertificate(nic *cluster.DistributedServiceCard) ([]byte, error) {
 	np.Lock()
 	defer np.Unlock()
 	if np.certificate == nil {
@@ -60,7 +60,7 @@ func (np *NaplesPlatformAgent) GetPlatformCertificate(nic *cluster.SmartNIC) ([]
 }
 
 // GetPlatformSigner returns a handle to the NIC private key that can be used for attestation
-func (np *NaplesPlatformAgent) GetPlatformSigner(nic *cluster.SmartNIC) (crypto.Signer, error) {
+func (np *NaplesPlatformAgent) GetPlatformSigner(nic *cluster.DistributedServiceCard) (crypto.Signer, error) {
 	np.Lock()
 	defer np.Unlock()
 	if np.key == nil {

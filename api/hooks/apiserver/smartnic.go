@@ -19,7 +19,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
-func (cl *clusterHooks) checkNonUserModifiableSmartNICFields(updObj, curObj *cluster.SmartNIC) []string {
+func (cl *clusterHooks) checkNonUserModifiableSmartNICFields(updObj, curObj *cluster.DistributedServiceCard) []string {
 	NUMFields := []string{"ID", "IPConfig", "NetworkMode", "MgmtVlan", "Controllers"}
 
 	var errs []string
@@ -40,7 +40,7 @@ func (cl *clusterHooks) checkNonUserModifiableSmartNICFields(updObj, curObj *clu
 func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 
 	if oper == apiintf.CreateOper {
-		nic, ok := i.(cluster.SmartNIC)
+		nic, ok := i.(cluster.DistributedServiceCard)
 		if !ok {
 			return i, true, errInvalidInputType
 		}
@@ -63,19 +63,19 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 		return i, false, fmt.Errorf("smartNICPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
 	}
 
-	curNIC := &cluster.SmartNIC{}
+	curNIC := &cluster.DistributedServiceCard{}
 	err := kvs.Get(ctx, key, curNIC)
 	if err != nil {
-		cl.logger.Errorf("Error getting SmartNIC with key [%s] in API server smartNICPreCommitHook pre-commit hook", key)
+		cl.logger.Errorf("Error getting DistributedServiceCard with key [%s] in API server smartNICPreCommitHook pre-commit hook", key)
 		return i, false, fmt.Errorf("Error getting object: %v", err)
 	}
 
-	admitted := curNIC.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String()
+	admitted := curNIC.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String()
 	switch oper {
 	case apiintf.DeleteOper:
-		// Prevent deletion of SmartNIC object if Phase = ADMITTED
+		// Prevent deletion of DistributedServiceCard object if Phase = ADMITTED
 		if admitted {
-			errStr := fmt.Sprintf("Cannot delete SmartNIC Object because it is in %s phase. Please de-admit or decommission before deleting.", cluster.SmartNICStatus_ADMITTED.String())
+			errStr := fmt.Sprintf("Cannot delete DistributedServiceCard Object because it is in %s phase. Please de-admit or decommission before deleting.", cluster.DistributedServiceCardStatus_ADMITTED.String())
 			cl.logger.Errorf(errStr)
 			return i, true, fmt.Errorf(errStr)
 		}
@@ -98,7 +98,7 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			cl.logger.DebugLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("deleting module: %s", modObj.Name))
 		}
 	case apiintf.UpdateOper:
-		updNIC, ok := i.(cluster.SmartNIC)
+		updNIC, ok := i.(cluster.DistributedServiceCard)
 		if !ok {
 			cl.logger.ErrorLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
 			return i, true, errInvalidInputType
@@ -126,8 +126,8 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 
 		// Prevent mode change (decommissioning) if NIC is NOT admitted
 		if !admitted {
-			if updNIC.Spec.MgmtMode != cluster.SmartNICSpec_NETWORK.String() {
-				errStr := fmt.Sprintf("Management mode change not allowed for SmartNIC because it is not in %s phase", cluster.SmartNICStatus_ADMITTED.String())
+			if updNIC.Spec.MgmtMode != cluster.DistributedServiceCardSpec_NETWORK.String() {
+				errStr := fmt.Sprintf("Management mode change not allowed for DistributedServiceCard because it is not in %s phase", cluster.DistributedServiceCardStatus_ADMITTED.String())
 				cl.logger.Errorf(errStr)
 				return i, true, fmt.Errorf(errStr)
 			}

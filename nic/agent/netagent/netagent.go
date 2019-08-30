@@ -199,7 +199,7 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		var controllers []string
 
 		// set Node UUID from FRU mac addr
-		ag.NetworkAgent.NodeUUID = obj.SmartNicName
+		ag.NetworkAgent.NodeUUID = obj.DSCName
 		ag.mgmtIPAddr = obj.MgmtIP
 
 		// Replay stored network mode configs

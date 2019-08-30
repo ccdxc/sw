@@ -80,20 +80,20 @@ func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile
 func (sm *Statemgr) updatePropogationStatus(genID string,
 	current *security.PropagationStatus, nodeVersions map[string]string) *security.PropagationStatus {
 
-	objs := sm.ListObjects("SmartNIC")
+	objs := sm.ListObjects("DistributedServiceCard")
 	newProp := &security.PropagationStatus{GenerationID: genID}
 
 	pendingNodes := []string{}
 	for _, obj := range objs {
-		snic, err := SmartNICStateFromObj(obj)
-		if err != nil || !sm.isSmartNICHealthy(&snic.SmartNIC.SmartNIC) {
+		snic, err := DistributedServiceCardStateFromObj(obj)
+		if err != nil || !sm.isDistributedServiceCardHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
 			continue
 		}
 
-		if ver, ok := nodeVersions[snic.SmartNIC.Name]; ok && ver == genID {
+		if ver, ok := nodeVersions[snic.DistributedServiceCard.Name]; ok && ver == genID {
 			newProp.Updated++
 		} else {
-			pendingNodes = append(pendingNodes, snic.SmartNIC.Name)
+			pendingNodes = append(pendingNodes, snic.DistributedServiceCard.Name)
 			newProp.Pending++
 			if current.MinVersion == "" || versionToInt(ver) < versionToInt(newProp.MinVersion) {
 				newProp.MinVersion = ver

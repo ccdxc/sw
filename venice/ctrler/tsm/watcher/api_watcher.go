@@ -59,9 +59,9 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 
 	// Do not watch for changes in Status.Phase, as NICs that are
 	// not admitted should not have any active connection to Venice.
-	smartNICNodeWatcher, err := apicl.ClusterV1().SmartNIC().Watch(ctx1, &smartNICOpts)
+	smartNICNodeWatcher, err := apicl.ClusterV1().DistributedServiceCard().Watch(ctx1, &smartNICOpts)
 	if err != nil {
-		log.Errorf("Failed to start SmartNIC nodes watch (%s)\n", err)
+		log.Errorf("Failed to start DistributedServiceCard nodes watch (%s)\n", err)
 		return
 	}
 	defer smartNICNodeWatcher.Stop()
@@ -109,7 +109,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 
 		case evt, ok := <-smartNICNodeWatcher.EventChan():
 			if !ok {
-				log.Errorf("Error receiving from apisrv SmartNIC watcher")
+				log.Errorf("Error receiving from apisrv DistributedServiceCard watcher")
 				return
 			}
 			w.statemgr.TechSupportWatcher <- *evt
@@ -167,7 +167,7 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 			if err == nil {
 				w.statemgr.PurgeDeletedTechSupportObjects(vnList)
 			}
-			nnList, err := apicl.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+			nnList, err := apicl.ClusterV1().DistributedServiceCard().List(ctx, &api.ListWatchOptions{})
 			if err == nil {
 				w.statemgr.PurgeDeletedTechSupportObjects(nnList)
 			}

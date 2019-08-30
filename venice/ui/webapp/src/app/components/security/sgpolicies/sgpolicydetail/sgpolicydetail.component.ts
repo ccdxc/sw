@@ -20,7 +20,7 @@ import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_funct
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { SelectItem } from 'primeng/api';
 import { MetricsUtility } from '@app/common/MetricsUtility';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { Animations } from '@app/animations';
 import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -93,8 +93,8 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
   searchPolicyInvoked: boolean = false;  // avoid loop caused by invokeSearchPolicy
   subscriptions = [];
   macToNameMap: { [key: string]: string } = {};
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   viewPendingNaples: boolean = false;
 
   cols: TableCol[] = [
@@ -252,9 +252,9 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         // mac-address to Name map

@@ -8,30 +8,30 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
-import { ClusterSmartNICSpec_mgmt_mode,  ClusterSmartNICSpec_mgmt_mode_uihint  } from './enums';
-import { ClusterSmartNICSpec_network_mode,  ClusterSmartNICSpec_network_mode_uihint  } from './enums';
+import { ClusterDistributedServiceCardSpec_mgmt_mode,  ClusterDistributedServiceCardSpec_mgmt_mode_uihint  } from './enums';
+import { ClusterDistributedServiceCardSpec_network_mode,  ClusterDistributedServiceCardSpec_network_mode_uihint  } from './enums';
 
-export interface IClusterSmartNICSpec {
+export interface IClusterDistributedServiceCardSpec {
     'admit'?: boolean;
     'id'?: string;
     'ip-config'?: IClusterIPConfig;
-    'mgmt-mode': ClusterSmartNICSpec_mgmt_mode;
-    'network-mode': ClusterSmartNICSpec_network_mode;
+    'mgmt-mode': ClusterDistributedServiceCardSpec_mgmt_mode;
+    'network-mode': ClusterDistributedServiceCardSpec_network_mode;
     'mgmt-vlan': number;
     'controllers'?: Array<string>;
 }
 
 
-export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSpec {
+export class ClusterDistributedServiceCardSpec extends BaseModel implements IClusterDistributedServiceCardSpec {
     'admit': boolean = null;
     'id': string = null;
     'ip-config': ClusterIPConfig = null;
-    'mgmt-mode': ClusterSmartNICSpec_mgmt_mode = null;
-    'network-mode': ClusterSmartNICSpec_network_mode = null;
+    'mgmt-mode': ClusterDistributedServiceCardSpec_mgmt_mode = null;
+    'network-mode': ClusterDistributedServiceCardSpec_network_mode = null;
     /** value should be between 0 and 4095 */
     'mgmt-vlan': number = null;
     'controllers': Array<string> = null;
-    public static propInfo: { [prop in keyof IClusterSmartNICSpec]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IClusterDistributedServiceCardSpec]: PropInfoItem } = {
         'admit': {
             required: false,
             type: 'boolean'
@@ -45,13 +45,13 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             type: 'object'
         },
         'mgmt-mode': {
-            enum: ClusterSmartNICSpec_mgmt_mode_uihint,
+            enum: ClusterDistributedServiceCardSpec_mgmt_mode_uihint,
             default: 'host',
             required: true,
             type: 'string'
         },
         'network-mode': {
-            enum: ClusterSmartNICSpec_network_mode_uihint,
+            enum: ClusterDistributedServiceCardSpec_network_mode_uihint,
             default: 'oob',
             required: true,
             type: 'string'
@@ -68,19 +68,19 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterSmartNICSpec.propInfo[propName];
+        return ClusterDistributedServiceCardSpec.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterSmartNICSpec.propInfo;
+        return ClusterDistributedServiceCardSpec.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterSmartNICSpec.propInfo[prop] != null &&
-                        ClusterSmartNICSpec.propInfo[prop].default != null);
+        return (ClusterDistributedServiceCardSpec.propInfo[prop] != null &&
+                        ClusterDistributedServiceCardSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -102,15 +102,15 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     setValues(values: any, fillDefaults = true): void {
         if (values && values['admit'] != null) {
             this['admit'] = values['admit'];
-        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('admit')) {
-            this['admit'] = ClusterSmartNICSpec.propInfo['admit'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('admit')) {
+            this['admit'] = ClusterDistributedServiceCardSpec.propInfo['admit'].default;
         } else {
             this['admit'] = null
         }
         if (values && values['id'] != null) {
             this['id'] = values['id'];
-        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('id')) {
-            this['id'] = ClusterSmartNICSpec.propInfo['id'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('id')) {
+            this['id'] = ClusterDistributedServiceCardSpec.propInfo['id'].default;
         } else {
             this['id'] = null
         }
@@ -121,29 +121,29 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         }
         if (values && values['mgmt-mode'] != null) {
             this['mgmt-mode'] = values['mgmt-mode'];
-        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-mode')) {
-            this['mgmt-mode'] = <ClusterSmartNICSpec_mgmt_mode>  ClusterSmartNICSpec.propInfo['mgmt-mode'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('mgmt-mode')) {
+            this['mgmt-mode'] = <ClusterDistributedServiceCardSpec_mgmt_mode>  ClusterDistributedServiceCardSpec.propInfo['mgmt-mode'].default;
         } else {
             this['mgmt-mode'] = null
         }
         if (values && values['network-mode'] != null) {
             this['network-mode'] = values['network-mode'];
-        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('network-mode')) {
-            this['network-mode'] = <ClusterSmartNICSpec_network_mode>  ClusterSmartNICSpec.propInfo['network-mode'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('network-mode')) {
+            this['network-mode'] = <ClusterDistributedServiceCardSpec_network_mode>  ClusterDistributedServiceCardSpec.propInfo['network-mode'].default;
         } else {
             this['network-mode'] = null
         }
         if (values && values['mgmt-vlan'] != null) {
             this['mgmt-vlan'] = values['mgmt-vlan'];
-        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-vlan')) {
-            this['mgmt-vlan'] = ClusterSmartNICSpec.propInfo['mgmt-vlan'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('mgmt-vlan')) {
+            this['mgmt-vlan'] = ClusterDistributedServiceCardSpec.propInfo['mgmt-vlan'].default;
         } else {
             this['mgmt-vlan'] = null
         }
         if (values && values['controllers'] != null) {
             this['controllers'] = values['controllers'];
-        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('controllers')) {
-            this['controllers'] = [ ClusterSmartNICSpec.propInfo['controllers'].default];
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('controllers')) {
+            this['controllers'] = [ ClusterDistributedServiceCardSpec.propInfo['controllers'].default];
         } else {
             this['controllers'] = [];
         }
@@ -154,13 +154,13 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admit': CustomFormControl(new FormControl(this['admit']), ClusterSmartNICSpec.propInfo['admit']),
-                'id': CustomFormControl(new FormControl(this['id']), ClusterSmartNICSpec.propInfo['id']),
-                'ip-config': CustomFormGroup(this['ip-config'].$formGroup, ClusterSmartNICSpec.propInfo['ip-config'].required),
-                'mgmt-mode': CustomFormControl(new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]), ClusterSmartNICSpec.propInfo['mgmt-mode']),
-                'network-mode': CustomFormControl(new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]), ClusterSmartNICSpec.propInfo['network-mode']),
-                'mgmt-vlan': CustomFormControl(new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]), ClusterSmartNICSpec.propInfo['mgmt-vlan']),
-                'controllers': CustomFormControl(new FormControl(this['controllers']), ClusterSmartNICSpec.propInfo['controllers']),
+                'admit': CustomFormControl(new FormControl(this['admit']), ClusterDistributedServiceCardSpec.propInfo['admit']),
+                'id': CustomFormControl(new FormControl(this['id']), ClusterDistributedServiceCardSpec.propInfo['id']),
+                'ip-config': CustomFormGroup(this['ip-config'].$formGroup, ClusterDistributedServiceCardSpec.propInfo['ip-config'].required),
+                'mgmt-mode': CustomFormControl(new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterDistributedServiceCardSpec_mgmt_mode), ]), ClusterDistributedServiceCardSpec.propInfo['mgmt-mode']),
+                'network-mode': CustomFormControl(new FormControl(this['network-mode'], [required, enumValidator(ClusterDistributedServiceCardSpec_network_mode), ]), ClusterDistributedServiceCardSpec.propInfo['network-mode']),
+                'mgmt-vlan': CustomFormControl(new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]), ClusterDistributedServiceCardSpec.propInfo['mgmt-vlan']),
+                'controllers': CustomFormControl(new FormControl(this['controllers']), ClusterDistributedServiceCardSpec.propInfo['controllers']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('ip-config') as FormGroup).controls).forEach(field => {

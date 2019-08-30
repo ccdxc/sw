@@ -446,10 +446,10 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	}
 
 	// find smartnic object
-	snic, err := sm.FindSmartNIC(tenant, nodeuuid)
+	snic, err := sm.FindDistributedServiceCard(tenant, nodeuuid)
 	if err == nil {
 		// if smartnic is not healthy, dont update
-		if !sm.isSmartNICHealthy(&snic.SmartNIC.SmartNIC) {
+		if !sm.isDistributedServiceCardHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
 			return
 		}
 	}

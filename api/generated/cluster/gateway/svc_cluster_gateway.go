@@ -107,6 +107,33 @@ func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.C
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoAddDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddDistributedServiceCard", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddDistributedServiceCard")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "DistributedServiceCard", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DistributedServiceCard)
+		return a.service.AutoAddDistributedServiceCard(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DistributedServiceCard), err
+}
+
 func (a adapterClusterV1) AutoAddHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -159,33 +186,6 @@ func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node
 		return nil, err
 	}
 	return ret.(*cluster.Node), err
-}
-
-func (a adapterClusterV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
-	// Not using options for now. Will be passed through context as needed.
-	trackTime := time.Now()
-	defer func() {
-		hdr.Record("apigw.ClusterV1AutoAddSmartNIC", time.Since(trackTime))
-	}()
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoAddSmartNIC")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.CreateOper))
-
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
-	ctx = apigwpkg.NewContextWithOperations(ctx, op)
-
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*cluster.SmartNIC)
-		return a.service.AutoAddSmartNIC(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*cluster.SmartNIC), err
 }
 
 func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
@@ -269,6 +269,33 @@ func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluste
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoDeleteDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteDistributedServiceCard", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteDistributedServiceCard")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "DistributedServiceCard", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DistributedServiceCard)
+		return a.service.AutoDeleteDistributedServiceCard(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DistributedServiceCard), err
+}
+
 func (a adapterClusterV1) AutoDeleteHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -321,33 +348,6 @@ func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.N
 		return nil, err
 	}
 	return ret.(*cluster.Node), err
-}
-
-func (a adapterClusterV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
-	// Not using options for now. Will be passed through context as needed.
-	trackTime := time.Now()
-	defer func() {
-		hdr.Record("apigw.ClusterV1AutoDeleteSmartNIC", time.Since(trackTime))
-	}()
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSmartNIC")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.DeleteOper))
-
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
-	ctx = apigwpkg.NewContextWithOperations(ctx, op)
-
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*cluster.SmartNIC)
-		return a.service.AutoDeleteSmartNIC(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*cluster.SmartNIC), err
 }
 
 func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
@@ -431,6 +431,33 @@ func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.C
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoGetDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetDistributedServiceCard", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetDistributedServiceCard")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "DistributedServiceCard", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DistributedServiceCard)
+		return a.service.AutoGetDistributedServiceCard(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DistributedServiceCard), err
+}
+
 func (a adapterClusterV1) AutoGetHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -483,33 +510,6 @@ func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node
 		return nil, err
 	}
 	return ret.(*cluster.Node), err
-}
-
-func (a adapterClusterV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
-	// Not using options for now. Will be passed through context as needed.
-	trackTime := time.Now()
-	defer func() {
-		hdr.Record("apigw.ClusterV1AutoGetSmartNIC", time.Since(trackTime))
-	}()
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoGetSmartNIC")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.GetOper))
-
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
-	ctx = apigwpkg.NewContextWithOperations(ctx, op)
-
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*cluster.SmartNIC)
-		return a.service.AutoGetSmartNIC(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*cluster.SmartNIC), err
 }
 
 func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
@@ -596,6 +596,36 @@ func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.List
 	return ret.(*cluster.ClusterList), err
 }
 
+func (a adapterClusterV1) AutoListDistributedServiceCard(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.DistributedServiceCardList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListDistributedServiceCard", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListDistributedServiceCard")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "DistributedServiceCard", t.Tenant, t.Namespace, "cluster", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListDistributedServiceCard(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DistributedServiceCardList), err
+}
+
 func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.HostList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -654,36 +684,6 @@ func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWat
 		return nil, err
 	}
 	return ret.(*cluster.NodeList), err
-}
-
-func (a adapterClusterV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.SmartNICList, error) {
-	// Not using options for now. Will be passed through context as needed.
-	trackTime := time.Now()
-	defer func() {
-		hdr.Record("apigw.ClusterV1AutoListSmartNIC", time.Since(trackTime))
-	}()
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoListSmartNIC")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-
-	t.Tenant = ""
-	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", "", strings.Title(string(apiintf.ListOper))
-
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
-	ctx = apigwpkg.NewContextWithOperations(ctx, op)
-
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
-		return a.service.AutoListSmartNIC(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*cluster.SmartNICList), err
 }
 
 func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.TenantList, error) {
@@ -773,6 +773,33 @@ func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluste
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoUpdateDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateDistributedServiceCard", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateDistributedServiceCard")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "DistributedServiceCard", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DistributedServiceCard)
+		return a.service.AutoUpdateDistributedServiceCard(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DistributedServiceCard), err
+}
+
 func (a adapterClusterV1) AutoUpdateHost(oldctx oldcontext.Context, t *cluster.Host, options ...grpc.CallOption) (*cluster.Host, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -825,33 +852,6 @@ func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.N
 		return nil, err
 	}
 	return ret.(*cluster.Node), err
-}
-
-func (a adapterClusterV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *cluster.SmartNIC, options ...grpc.CallOption) (*cluster.SmartNIC, error) {
-	// Not using options for now. Will be passed through context as needed.
-	trackTime := time.Now()
-	defer func() {
-		hdr.Record("apigw.ClusterV1AutoUpdateSmartNIC", time.Since(trackTime))
-	}()
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSmartNIC")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.UpdateOper))
-
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
-	ctx = apigwpkg.NewContextWithOperations(ctx, op)
-
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*cluster.SmartNIC)
-		return a.service.AutoUpdateSmartNIC(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*cluster.SmartNIC), err
 }
 
 func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
@@ -1160,16 +1160,16 @@ func (a adapterClusterV1) AutoWatchHost(oldctx oldcontext.Context, in *api.ListW
 	return ret.(cluster.ClusterV1_AutoWatchHostClient), err
 }
 
-func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSmartNICClient, error) {
+func (a adapterClusterV1) AutoWatchDistributedServiceCard(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchDistributedServiceCardClient, error) {
 	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSmartNIC")
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchDistributedServiceCard")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiintf.WatchOper, "SmartNIC", in.Tenant, in.Namespace, "cluster"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "DistributedServiceCard", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1193,7 +1193,7 @@ func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.L
 			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
 			conn.SetCloseHandler(func(code int, text string) error {
 				cancel()
-				log.Infof("received close notification on websocket [AutoWatchSmartNIC] (%v/%v)", code, text)
+				log.Infof("received close notification on websocket [AutoWatchDistributedServiceCard] (%v/%v)", code, text)
 				return nil
 			})
 			// start a dummy reciever
@@ -1208,13 +1208,13 @@ func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.L
 				}
 			}()
 		}
-		return a.service.AutoWatchSmartNIC(ctx, in)
+		return a.service.AutoWatchDistributedServiceCard(ctx, in)
 	}
 	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
 	if ret == nil {
 		return nil, err
 	}
-	return ret.(cluster.ClusterV1_AutoWatchSmartNICClient), err
+	return ret.(cluster.ClusterV1_AutoWatchDistributedServiceCardClient), err
 }
 
 func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchTenantClient, error) {
@@ -1344,51 +1344,51 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.CreateOper)
 
+	e.svcProf["AutoDeleteDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.DeleteOper)
+
 	e.svcProf["AutoDeleteHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.DeleteOper)
-
-	e.svcProf["AutoDeleteSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.DeleteOper)
 
 	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.GetOper)
 
+	e.svcProf["AutoGetDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.GetOper)
+
 	e.svcProf["AutoGetHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.GetOper)
-
-	e.svcProf["AutoGetSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetVersion"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Version", "cluster", apiintf.GetOper)
 
+	e.svcProf["AutoListDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCardList", "cluster", apiintf.ListOper)
+
 	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "HostList", "cluster", apiintf.ListOper)
 
 	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NodeList", "cluster", apiintf.ListOper)
-
-	e.svcProf["AutoListSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNICList", "cluster", apiintf.ListOper)
 
 	e.svcProf["AutoListTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TenantList", "cluster", apiintf.ListOper)
 
 	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.UpdateOper)
 
+	e.svcProf["AutoUpdateDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.UpdateOper)
+
 	e.svcProf["AutoUpdateHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.UpdateOper)
-
-	e.svcProf["AutoUpdateSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgClusterWatchHelper", "cluster", apiintf.WatchOper)
 
+	e.svcProf["AutoWatchDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgDistributedServiceCardWatchHelper", "cluster", apiintf.WatchOper)
+
 	e.svcProf["AutoWatchHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgHostWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNodeWatchHelper", "cluster", apiintf.WatchOper)
-
-	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSmartNICWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTenantWatchHelper", "cluster", apiintf.WatchOper)
 

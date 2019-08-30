@@ -8,22 +8,22 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
-import { ClusterSmartNIC, IClusterSmartNIC } from './cluster-smart-nic.model';
+import { ClusterDistributedServiceCard, IClusterDistributedServiceCard } from './cluster-distributed-service-card.model';
 
-export interface IClusterSmartNICList {
+export interface IClusterDistributedServiceCardList {
     'kind'?: string;
     'api-version'?: string;
     'list-meta'?: IApiListMeta;
-    'items'?: Array<IClusterSmartNIC>;
+    'items'?: Array<IClusterDistributedServiceCard>;
 }
 
 
-export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICList {
+export class ClusterDistributedServiceCardList extends BaseModel implements IClusterDistributedServiceCardList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    'items': Array<ClusterSmartNIC> = null;
-    public static propInfo: { [prop in keyof IClusterSmartNICList]: PropInfoItem } = {
+    'items': Array<ClusterDistributedServiceCard> = null;
+    public static propInfo: { [prop in keyof IClusterDistributedServiceCardList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'
@@ -43,19 +43,19 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterSmartNICList.propInfo[propName];
+        return ClusterDistributedServiceCardList.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterSmartNICList.propInfo;
+        return ClusterDistributedServiceCardList.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterSmartNICList.propInfo[prop] != null &&
-                        ClusterSmartNICList.propInfo[prop].default != null);
+        return (ClusterDistributedServiceCardList.propInfo[prop] != null &&
+                        ClusterDistributedServiceCardList.propInfo[prop].default != null);
     }
 
     /**
@@ -65,7 +65,7 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['list-meta'] = new ApiListMeta();
-        this['items'] = new Array<ClusterSmartNIC>();
+        this['items'] = new Array<ClusterDistributedServiceCard>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -77,15 +77,15 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
     setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (fillDefaults && ClusterSmartNICList.hasDefaultValue('kind')) {
-            this['kind'] = ClusterSmartNICList.propInfo['kind'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardList.hasDefaultValue('kind')) {
+            this['kind'] = ClusterDistributedServiceCardList.propInfo['kind'].default;
         } else {
             this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (fillDefaults && ClusterSmartNICList.hasDefaultValue('api-version')) {
-            this['api-version'] = ClusterSmartNICList.propInfo['api-version'].default;
+        } else if (fillDefaults && ClusterDistributedServiceCardList.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterDistributedServiceCardList.propInfo['api-version'].default;
         } else {
             this['api-version'] = null
         }
@@ -95,7 +95,7 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
             this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
-            this.fillModelArray<ClusterSmartNIC>(this, 'items', values['items'], ClusterSmartNIC);
+            this.fillModelArray<ClusterDistributedServiceCard>(this, 'items', values['items'], ClusterDistributedServiceCard);
         } else {
             this['items'] = [];
         }
@@ -106,13 +106,13 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ClusterSmartNICList.propInfo['kind']),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterSmartNICList.propInfo['api-version']),
-                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, ClusterSmartNICList.propInfo['list-meta'].required),
+                'kind': CustomFormControl(new FormControl(this['kind']), ClusterDistributedServiceCardList.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterDistributedServiceCardList.propInfo['api-version']),
+                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, ClusterDistributedServiceCardList.propInfo['list-meta'].required),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterSmartNIC>('items', this['items'], ClusterSmartNIC);
+            this.fillFormArray<ClusterDistributedServiceCard>('items', this['items'], ClusterDistributedServiceCard);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('list-meta') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('list-meta').get(field);
@@ -136,7 +136,7 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
             this['list-meta'].setFormGroupValuesToBeModelValues();
-            this.fillModelArray<ClusterSmartNIC>(this, 'items', this['items'], ClusterSmartNIC);
+            this.fillModelArray<ClusterDistributedServiceCard>(this, 'items', this['items'], ClusterDistributedServiceCard);
         }
     }
 }

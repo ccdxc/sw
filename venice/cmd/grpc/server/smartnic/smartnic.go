@@ -70,21 +70,21 @@ var (
 	StateMgrWarmupInterval = 60 * time.Second
 )
 
-func updateCounters(nic *cluster.SmartNIC, m map[string]int64) {
+func updateCounters(nic *cluster.DistributedServiceCard, m map[string]int64) {
 	switch nic.Status.AdmissionPhase {
-	case cluster.SmartNICStatus_ADMITTED.String():
+	case cluster.DistributedServiceCardStatus_ADMITTED.String():
 		m["AdmittedNICs"]++
-	case cluster.SmartNICStatus_PENDING.String():
+	case cluster.DistributedServiceCardStatus_PENDING.String():
 		m["PendingNICs"]++
-	case cluster.SmartNICStatus_REJECTED.String():
+	case cluster.DistributedServiceCardStatus_REJECTED.String():
 		m["RejectedNICs"]++
-	case cluster.SmartNICStatus_DECOMMISSIONED.String():
+	case cluster.DistributedServiceCardStatus_DECOMMISSIONED.String():
 		m["DecommissionedNICs"]++
 	default:
-		log.Errorf("Unexpected SmartNIC AdmissionPhase value: %+v", nic.Status.AdmissionPhase)
+		log.Errorf("Unexpected DistributedServiceCard AdmissionPhase value: %+v", nic.Status.AdmissionPhase)
 	}
 
-	healthCond := cmdutils.GetNICCondition(nic, cluster.SmartNICCondition_HEALTHY)
+	healthCond := cmdutils.GetNICCondition(nic, cluster.DSCCondition_HEALTHY)
 	if healthCond != nil {
 		switch healthCond.Status {
 		case cluster.ConditionStatus_TRUE.String():
@@ -94,12 +94,12 @@ func updateCounters(nic *cluster.SmartNIC, m map[string]int64) {
 		case cluster.ConditionStatus_UNKNOWN.String():
 			m["DisconnectedNICs"]++
 		default:
-			log.Errorf("Unexpected SmartNIC HEALTHY condition value: %+v", healthCond)
+			log.Errorf("Unexpected DistributedServiceCard HEALTHY condition value: %+v", healthCond)
 		}
 	}
 }
 
-// RPCServer implements SmartNIC gRPC service.
+// RPCServer implements DistributedServiceCard gRPC service.
 type RPCServer struct {
 	sync.Mutex
 
@@ -115,7 +115,7 @@ type RPCServer struct {
 	// Map of smartNICs in active retry, which are
 	// marked unreachable due to failure to post naples
 	// config to the NMD agent.
-	RetryNicDB map[string]*cluster.SmartNIC
+	RetryNicDB map[string]*cluster.DistributedServiceCard
 
 	// reference to state manager
 	stateMgr *cache.Statemgr
@@ -128,31 +128,31 @@ type NICAdmissionVersionChecker interface {
 	CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string)
 }
 
-// NewRPCServer returns a SmartNIC RPC server object
+// NewRPCServer returns a DistributedServiceCard RPC server object
 func NewRPCServer(healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr, nicVersionChecker NICAdmissionVersionChecker) *RPCServer {
 	return &RPCServer{
 		HealthWatchIntvl: healthInvl,
 		DeadIntvl:        deadInvl,
 		RestPort:         restPort,
-		RetryNicDB:       make(map[string]*cluster.SmartNIC),
+		RetryNicDB:       make(map[string]*cluster.DistributedServiceCard),
 		stateMgr:         stateMgr,
 		versionChecker:   nicVersionChecker,
 	}
 }
 
-func (s *RPCServer) getNicKey(nic *cluster.SmartNIC) string {
+func (s *RPCServer) getNicKey(nic *cluster.DistributedServiceCard) string {
 	return fmt.Sprintf("%s|%s", nic.Tenant, nic.Name)
 }
 
 // UpdateNicInRetryDB updates NIC entry in RetryDB
-func (s *RPCServer) UpdateNicInRetryDB(nic *cluster.SmartNIC) {
+func (s *RPCServer) UpdateNicInRetryDB(nic *cluster.DistributedServiceCard) {
 	s.Lock()
 	defer s.Unlock()
 	s.RetryNicDB[s.getNicKey(nic)] = nic
 }
 
 // NicExistsInRetryDB checks whether NIC exists in RetryDB
-func (s *RPCServer) NicExistsInRetryDB(nic *cluster.SmartNIC) bool {
+func (s *RPCServer) NicExistsInRetryDB(nic *cluster.DistributedServiceCard) bool {
 	s.Lock()
 	defer s.Unlock()
 	_, exists := s.RetryNicDB[s.getNicKey(nic)]
@@ -160,14 +160,14 @@ func (s *RPCServer) NicExistsInRetryDB(nic *cluster.SmartNIC) bool {
 }
 
 // DeleteNicFromRetryDB deletes NIC from RetryDB
-func (s *RPCServer) DeleteNicFromRetryDB(nic *cluster.SmartNIC) {
+func (s *RPCServer) DeleteNicFromRetryDB(nic *cluster.DistributedServiceCard) {
 	s.Lock()
 	defer s.Unlock()
 	delete(s.RetryNicDB, s.getNicKey(nic))
 }
 
 // GetNicInRetryDB returns NIC object with match key
-func (s *RPCServer) GetNicInRetryDB(key string) *cluster.SmartNIC {
+func (s *RPCServer) GetNicInRetryDB(key string) *cluster.DistributedServiceCard {
 	s.Lock()
 	defer s.Unlock()
 	nicObj, ok := s.RetryNicDB[key]
@@ -179,13 +179,13 @@ func (s *RPCServer) GetNicInRetryDB(key string) *cluster.SmartNIC {
 
 // validateNICPlatformCert validates the certificate provided by NAPLES in the admission request
 // It only checks the certificate. It does not check possession of the private key.
-func validateNICPlatformCert(cert *x509.Certificate, nic *cluster.SmartNIC) error {
+func validateNICPlatformCert(cert *x509.Certificate, nic *cluster.DistributedServiceCard) error {
 	if cert == nil {
 		return fmt.Errorf("No certificate provided")
 	}
 
 	if nic == nil {
-		return fmt.Errorf("No SmartNIC object provided")
+		return fmt.Errorf("No DistributedServiceCard object provided")
 	}
 
 	// TODO: use only Pensando PKI certs, do not accept self-signed!
@@ -227,10 +227,10 @@ func validateNICPlatformCert(cert *x509.Certificate, nic *cluster.SmartNIC) erro
 }
 
 // UpdateSmartNIC creates or updates the smartNIC object
-func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+func (s *RPCServer) UpdateSmartNIC(updObj *cluster.DistributedServiceCard) (*cluster.DistributedServiceCard, error) {
 	var err error
-	var refObj *cluster.SmartNIC // reference object (before update)
-	var retObj *cluster.SmartNIC // return object (after update)
+	var refObj *cluster.DistributedServiceCard // reference object (before update)
+	var retObj *cluster.DistributedServiceCard // return object (after update)
 
 	// Check if object exists.
 	// If it doesn't exist, do not create it, as it might have been deleted by user.
@@ -239,7 +239,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	if nicState != nil && err == nil {
 		nicState.Lock()
 		defer nicState.Unlock()
-		refObj = nicState.SmartNIC
+		refObj = nicState.DistributedServiceCard
 	} else {
 		return nil, fmt.Errorf("Error retrieving reference object for NIC update. Err: %v, update: %+v", err, updObj)
 	}
@@ -249,8 +249,8 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	// decide whether to send to ApiServer or not before we make any adjustment
 	updateAPIServer := !runtime.FilterUpdate(refObj.Status, updObj.Status, []string{"LastTransitionTime"}, []string{"Conditions"})
 
-	refHealthCond := cmdutils.GetNICCondition(refObj, cluster.SmartNICCondition_HEALTHY)
-	updHealthCond := cmdutils.GetNICCondition(updObj, cluster.SmartNICCondition_HEALTHY)
+	refHealthCond := cmdutils.GetNICCondition(refObj, cluster.DSCCondition_HEALTHY)
+	updHealthCond := cmdutils.GetNICCondition(updObj, cluster.DSCCondition_HEALTHY)
 
 	// generate event if there was a health transition
 	if updHealthCond != nil && (refHealthCond == nil || refHealthCond.Status != updHealthCond.Status) {
@@ -261,11 +261,11 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 		switch updHealthCond.Status {
 		case cluster.ConditionStatus_TRUE.String():
 			evtType = eventtypes.DSC_HEALTHY
-			msg = fmt.Sprintf("DSC %s(%s) is %s", updObj.Spec.ID, nicName, cluster.SmartNICCondition_HEALTHY.String())
+			msg = fmt.Sprintf("DSC %s(%s) is %s", updObj.Spec.ID, nicName, cluster.DSCCondition_HEALTHY.String())
 
 		case cluster.ConditionStatus_FALSE.String():
 			evtType = eventtypes.DSC_UNHEALTHY
-			msg = fmt.Sprintf("DSC %s(%s) is not %s", updObj.Spec.ID, nicName, cluster.SmartNICCondition_HEALTHY.String())
+			msg = fmt.Sprintf("DSC %s(%s) is not %s", updObj.Spec.ID, nicName, cluster.DSCCondition_HEALTHY.String())
 
 		default:
 			// this should not happen
@@ -295,7 +295,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	return refObj, err
 }
 
-func (s *RPCServer) isHostnameUnique(subj *cluster.SmartNIC) bool {
+func (s *RPCServer) isHostnameUnique(subj *cluster.DistributedServiceCard) bool {
 	nic := s.stateMgr.GetSmartNICByID(subj.Spec.ID)
 	// no need to lock nic for reading as Name is immutable
 	return nic == nil || nic.Name == subj.Name
@@ -311,28 +311,28 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 	// Canned responses in case of error
 	authErrResp := &grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase:  cluster.SmartNICStatus_REJECTED.String(),
+			Phase:  cluster.DistributedServiceCardStatus_REJECTED.String(),
 			Reason: string("Authentication error"),
 		},
 	}
 
 	intErrResp := &grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
+			Phase:  cluster.DistributedServiceCardStatus_UNKNOWN.String(),
 			Reason: string("Internal error"),
 		},
 	}
 
 	noClusterErrResp := &grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
+			Phase:  cluster.DistributedServiceCardStatus_UNKNOWN.String(),
 			Reason: string("Controller node is not part of a cluster"),
 		},
 	}
 
 	protoErrResp := &grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
+			Phase:  cluster.DistributedServiceCardStatus_UNKNOWN.String(),
 			Reason: string("Internal error"),
 		},
 	}
@@ -444,7 +444,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return intErrResp, errors.Wrapf(err, "Error getting Cluster object")
 		}
 
-		var nicObj *cluster.SmartNIC
+		var nicObj *cluster.DistributedServiceCard
 		var smartNICObjExists bool // does the SmartNIC object already exist ?
 		nicObjState, err := s.stateMgr.FindSmartNIC(name)
 		if err != nil {
@@ -459,8 +459,8 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			defer nicObjState.Unlock()
 			// we need to work on a copy of the cached object, as opposed to making modifications in-place, because
 			// UpdateSmartNIC has logic that triggers only if the updated object differs from the cached one
-			updNIC := cluster.SmartNIC{}
-			_, err = nicObjState.SmartNIC.Clone(&updNIC)
+			updNIC := cluster.DistributedServiceCard{}
+			_, err = nicObjState.DistributedServiceCard.Clone(&updNIC)
 			nicObj = &updNIC
 			smartNICObjExists = true
 		}
@@ -474,7 +474,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 
 		// If hostname supplied by NAPLES is not unique, reject but still create SmartNIC object
 		if !s.isHostnameUnique(&naplesNIC) {
-			nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_REJECTED.String()
+			nicObj.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_REJECTED.String()
 			nicObj.Status.AdmissionPhaseReason = "Hostname is not unique"
 			nicObj.Status.Conditions = nil
 		} else {
@@ -487,20 +487,20 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 
 			// mark as admitted or pending based on current value of Spec.Admit
 			if nicObj.Spec.Admit == true {
-				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
+				nicObj.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_ADMITTED.String()
 				nicObj.Status.AdmissionPhaseReason = ""
 				// If the NIC is admitted, override all spec parameters with the new supplied values,
 				// except those that are owned by Venice.
 				nicObj.Spec = naplesNIC.Spec
 				nicObj.Spec.Admit = true
 			} else {
-				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+				nicObj.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_PENDING.String()
 				nicObj.Status.AdmissionPhaseReason = "SmartNIC waiting for manual admission"
 			}
 		}
 
 		// If NIC was decommissioned from Venice, override previous Spec.MgmtMode
-		nicObj.Spec.MgmtMode = cluster.SmartNICSpec_NETWORK.String()
+		nicObj.Spec.MgmtMode = cluster.DistributedServiceCardSpec_NETWORK.String()
 
 		// Create or update SmartNIC object in ApiServer
 		if smartNICObjExists {
@@ -517,13 +517,13 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return intErrResp, errors.Wrapf(err, "Error updating smartNIC object")
 		}
 
-		if nicObj.Status.AdmissionPhase == cluster.SmartNICStatus_REJECTED.String() {
+		if nicObj.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_REJECTED.String() {
 			recorder.Event(eventtypes.DSC_REJECTED,
 				fmt.Sprintf("Admission for DSC %s(%s) was rejected, reason: %s", nicObj.Spec.ID, nicObj.Name, nicObj.Status.AdmissionPhaseReason), nicObj)
 
 			return &grpc.RegisterNICResponse{
 				AdmissionResponse: &grpc.NICAdmissionResponse{
-					Phase:  cluster.SmartNICStatus_REJECTED.String(),
+					Phase:  cluster.DistributedServiceCardStatus_REJECTED.String(),
 					Reason: nicObj.Status.AdmissionPhaseReason,
 				},
 			}, nil
@@ -537,7 +537,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			},
 		}
 
-		if nicObj.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+		if nicObj.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
 			okResp.AdmissionResponse.ClusterCert = &certapi.CertificateSignResp{
 				Certificate: &certapi.Certificate{
 					Certificate: clusterCert.Raw,
@@ -547,9 +547,9 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			okResp.AdmissionResponse.TrustRoots = cmdcertutils.GetTrustRoots(env.CertMgr)
 		}
 
-		status, version := s.versionChecker.CheckNICVersionForAdmission(nicObj.Status.GetSmartNICSku(), nicObj.Status.GetSmartNICVersion())
+		status, version := s.versionChecker.CheckNICVersionForAdmission(nicObj.Status.GetDSCSku(), nicObj.Status.GetDSCVersion())
 		if status != "" {
-			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s because %s. Skip temporarily.", name, nicObj.Status.GetSmartNICSku(), nicObj.Status.GetSmartNICVersion(), version, status)
+			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s because %s. Skip temporarily.", name, nicObj.Status.GetDSCSku(), nicObj.Status.GetDSCVersion(), version, status)
 		}
 		return okResp, nil
 	}
@@ -572,7 +572,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 	if resp != nil {
 		regNICResp := resp.(*grpc.RegisterNICResponse)
 		stream.Send(regNICResp)
-		if strings.ToLower(regNICResp.AdmissionResponse.Phase) == strings.ToLower(cluster.SmartNICStatus_ADMITTED.String()) {
+		if strings.ToLower(regNICResp.AdmissionResponse.Phase) == strings.ToLower(cluster.DistributedServiceCardStatus_ADMITTED.String()) {
 			log.Infof("SmartNIC %s is admitted to the cluster", name)
 		}
 	}
@@ -599,8 +599,8 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 }
 
 //ListSmartNICs lists all smartNICs matching object selector
-func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]*cluster.SmartNIC, error) {
-	var niclist []*cluster.SmartNIC
+func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]*cluster.DistributedServiceCard, error) {
+	var niclist []*cluster.DistributedServiceCard
 	// get all smartnics
 	nics, err := s.stateMgr.ListSmartNICs()
 	if err != nil {
@@ -610,7 +610,7 @@ func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]*
 	// walk all smartnics and add it to the list
 	for _, nic := range nics {
 		if sel.GetName() == nic.GetName() {
-			niclist = append(niclist, nic.SmartNIC)
+			niclist = append(niclist, nic.DistributedServiceCard)
 		}
 	}
 
@@ -622,8 +622,8 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 	// watch for changes
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)
-	s.stateMgr.WatchObjects("SmartNIC", watchChan)
-	defer s.stateMgr.StopWatchObjects("SmartNIC", watchChan)
+	s.stateMgr.WatchObjects("DistributedServiceCard", watchChan)
+	defer s.stateMgr.StopWatchObjects("DistributedServiceCard", watchChan)
 
 	// first get a list of all smartnics
 	nics, err := s.ListSmartNICs(context.Background(), sel)
@@ -684,7 +684,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 			// construct the smartnic event object
 			watchEvt := grpc.SmartNICEvent{
 				EventType: etype,
-				Nic:       *nic.SmartNIC,
+				Nic:       *nic.DistributedServiceCard,
 			}
 			nic.Unlock()
 			send := !runtime.FilterUpdate(sentEvent, watchEvt, []string{"LastTransitionTime"}, nil)
@@ -744,12 +744,12 @@ func (s *RPCServer) MonitorHealth() {
 			// Iterate on smartNIC objects
 			for _, nicState := range nicStates {
 				nicState.Lock()
-				nic := nicState.SmartNIC
-				if nic.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+				nic := nicState.DistributedServiceCard
+				if nic.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
 					for i := 0; i < len(nic.Status.Conditions); i++ {
 						condition := nic.Status.Conditions[i]
 						// Inspect HEALTH condition with status that is marked healthy or unhealthy (i.e not unknown)
-						if condition.Type == cluster.SmartNICCondition_HEALTHY.String() && condition.Status != cluster.ConditionStatus_UNKNOWN.String() {
+						if condition.Type == cluster.DSCCondition_HEALTHY.String() && condition.Status != cluster.ConditionStatus_UNKNOWN.String() {
 							// parse the last reported time
 							t, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
 							if err != nil {
@@ -771,7 +771,7 @@ func (s *RPCServer) MonitorHealth() {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}
 								recorder.Event(eventtypes.DSC_UNREACHABLE,
-									fmt.Sprintf("DSC %s(%s) is %s", nic.Spec.ID, nic.Name, eventtypes.DSC_UNREACHABLE.String()), nicState.SmartNIC)
+									fmt.Sprintf("DSC %s(%s) is %s", nic.Spec.ID, nic.Name, eventtypes.DSC_UNREACHABLE.String()), nicState.DistributedServiceCard)
 							}
 							break
 						}
@@ -796,7 +796,7 @@ func (s *RPCServer) MonitorHealth() {
 // UNREACHABLE.
 // Further retries for UNREACHABLE nics will be handled by
 // NIC health watcher which runs periodically.
-func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
+func (s *RPCServer) InitiateNICRegistration(nic *cluster.DistributedServiceCard) {
 
 	var retryInterval time.Duration
 	retryInterval = 1
@@ -837,7 +837,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 				TypeMeta:   api.TypeMeta{Kind: "Naples"},
 				Spec: nmd.NaplesSpec{
 					Mode:        nmd.MgmtMode_NETWORK.String(),
-					NetworkMode: cluster.SmartNICSpec_NetworkModes_name[cluster.SmartNICSpec_NetworkModes_vvalue[nicObj.Spec.NetworkMode]],
+					NetworkMode: cluster.DistributedServiceCardSpec_NetworkModes_name[cluster.DistributedServiceCardSpec_NetworkModes_vvalue[nicObj.Spec.NetworkMode]],
 					PrimaryMAC:  nicObj.Name,
 					Controllers: []string{controller},
 					ID:          nicObj.Spec.ID,
@@ -862,13 +862,13 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 			// the REST port would have been shutdown (hence unreachable) after it is
 			// admitted in managed mode.
 			log.Errorf("Retrying, failed to post naples config, nic: %s err: %+v resp: %+v", nic.Name, err, resp)
-			nic := cluster.SmartNIC{
+			nic := cluster.DistributedServiceCard{
 				TypeMeta:   nicObj.TypeMeta,
 				ObjectMeta: nicObj.ObjectMeta,
-				Status: cluster.SmartNICStatus{
-					Conditions: []cluster.SmartNICCondition{
+				Status: cluster.DistributedServiceCardStatus{
+					Conditions: []cluster.DSCCondition{
 						{
-							Type:               cluster.SmartNICCondition_NIC_HEALTH_UNKNOWN.String(),
+							Type:               cluster.DSCCondition_NIC_HEALTH_UNKNOWN.String(),
 							Status:             cluster.ConditionStatus_TRUE.String(),
 							LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 							Reason:             fmt.Sprintf("Failed to post naples config after several attempts, response: %+v", resp),

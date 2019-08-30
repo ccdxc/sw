@@ -7,18 +7,18 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { ClusterSmartNIC, IClusterSmartNIC } from './cluster-smart-nic.model';
+import { ClusterDistributedServiceCard, IClusterDistributedServiceCard } from './cluster-distributed-service-card.model';
 
-export interface IClusterAutoMsgSmartNICWatchHelperWatchEvent {
+export interface IClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent {
     'type'?: string;
-    'object'?: IClusterSmartNIC;
+    'object'?: IClusterDistributedServiceCard;
 }
 
 
-export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgSmartNICWatchHelperWatchEvent {
+export class ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent {
     'type': string = null;
-    'object': ClusterSmartNIC = null;
-    public static propInfo: { [prop in keyof IClusterAutoMsgSmartNICWatchHelperWatchEvent]: PropInfoItem } = {
+    'object': ClusterDistributedServiceCard = null;
+    public static propInfo: { [prop in keyof IClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'
@@ -30,19 +30,19 @@ export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel imple
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo[propName];
+        return ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo;
+        return ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo[prop] != null &&
-                        ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo[prop].default != null);
+        return (ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.propInfo[prop] != null &&
+                        ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.propInfo[prop].default != null);
     }
 
     /**
@@ -51,7 +51,7 @@ export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel imple
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['object'] = new ClusterSmartNIC();
+        this['object'] = new ClusterDistributedServiceCard();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -63,8 +63,8 @@ export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel imple
     setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (fillDefaults && ClusterAutoMsgSmartNICWatchHelperWatchEvent.hasDefaultValue('type')) {
-            this['type'] = ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo['type'].default;
+        } else if (fillDefaults && ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.propInfo['type'].default;
         } else {
             this['type'] = null
         }
@@ -80,8 +80,8 @@ export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel imple
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo['type']),
-                'object': CustomFormGroup(this['object'].$formGroup, ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo['object'].required),
+                'type': CustomFormControl(new FormControl(this['type']), ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.propInfo['type']),
+                'object': CustomFormGroup(this['object'].$formGroup, ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.propInfo['object'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('object') as FormGroup).controls).forEach(field => {

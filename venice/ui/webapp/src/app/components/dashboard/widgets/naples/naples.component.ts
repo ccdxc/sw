@@ -8,7 +8,7 @@ import { ChartOptions, ChartData } from 'chart.js';
 import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase, IClusterSmartNICList } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCardList } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ControllerService } from '@app/services/controller.service';
 import { Subscription } from 'rxjs';
@@ -31,17 +31,17 @@ import {Router} from '@angular/router';
 export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @ViewChild('lineGraph') lineGraphComponent: LinegraphComponent;
   subscriptions: Subscription[] = [];
-  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   // Used for processing the stream events
-  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
 
   hasHover: boolean = false;
   cardStates = CardStates;
 
-  title: string = 'Naples ';
+  title: string = 'Distributed Services Cards';
   firstStat: Stat = {
     value: '',
-    description: 'TOTAL NAPLES',
+    description: 'TOTAL DSC',
     arrowDirection: StatArrowDirection.HIDDEN,
     statColor: '#b592e3'
   };
@@ -66,7 +66,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
 
 
   totalNaplesStat: LineGraphStat = {
-    title: 'ADMITTED NAPLES',
+    title: 'ADMITTED DSC',
     data: [],
     statColor: '#b592e3',
     gradientStart: 'rgba(181,146, 227,1)',
@@ -74,12 +74,12 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     graphId: 'dsbdnaples-totalNaples',
     defaultValue: 0,
     defaultDescription: 'Avg',
-    hoverDescription: 'Naples',
+    hoverDescription: 'Distributed Service Card',
     isPercentage: false,
     scaleMin: 0,
   };
   rejectedNaplesStat: LineGraphStat = {
-    title: 'REJECTED NAPLES',
+    title: 'REJECTED DSC',
     data: [],
     statColor: '#e57553',
     gradientStart: 'rgba(229, 117, 83, 1)',
@@ -87,12 +87,12 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     graphId: 'dsbdnaples-rejectedNaples',
     defaultValue: 0,
     defaultDescription: 'Avg',
-    hoverDescription: 'Naples',
+    hoverDescription: 'Distributed Services Cards',
     isPercentage: false,
     scaleMin: 0,
   };
   pendingNaplesStat: LineGraphStat = {
-    title: 'PENDING NAPLES',
+    title: 'PENDING DSC',
     data: [],
     statColor: '#97b8df',
     gradientStart: 'rgba(151, 184, 223, 1)',
@@ -100,7 +100,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     graphId: 'dsbdnaples-pendingNaples',
     defaultValue: 0,
     defaultDescription: 'Avg',
-    hoverDescription: 'Naples',
+    hoverDescription: 'Distributed Services Cards',
     isPercentage: false,
     scaleMin: 0,
   };
@@ -205,11 +205,11 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
             const val: any = dataset.data[tooltipItem.index];
             const rounded: any = Math.round(val * 10) / 10;
             if (label === 'Healthy') {
-              return rounded + '% of Naples are healthy';
+              return rounded + '% of DSCs are healthy';
             } else if (label === 'Unhealthy') {
-              return rounded + '% of Naples have critical errors';
+              return rounded + '% of DSCs have critical errors';
             } else {
-              return rounded + '% of Naples are not reachable';
+              return rounded + '% of NSCs are not reachable';
             }
           }
         }
@@ -295,7 +295,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       );
       this.menuItems.push(
         {
-          text: 'Navigate to Naples', onClick: () => {
+          text: 'Navigate to DSCs', onClick: () => {
             this.goToNaples();
           }
         }
@@ -392,9 +392,9 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   getNaples() {
     // We perform a get as well as a watch so that we can know to set the card state
     // in case the number of workloads is 0
-    this.clusterService.ListSmartNIC().subscribe(
+    this.clusterService.ListDistributedServiceCard().subscribe(
       (resp) => {
-        const body: IClusterSmartNICList = resp.body as any;
+        const body: IClusterDistributedServiceCardList = resp.body as any;
         if (body.items == null || body.items.length === 0) {
           // Watch won't have any events
           this.calculateNaplesStatus();
@@ -405,9 +405,9 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         this.frontCardState = CardStates.FAILED;
       }
     );
-    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
-    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         this.calculateNaplesStatus();
@@ -435,13 +435,13 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         admittedNics.push(naple);
       }
       switch (naple.status['admission-phase']) {
-        case ClusterSmartNICStatus_admission_phase.admitted:
+        case ClusterDistributedServiceCardStatus_admission_phase.admitted:
           admitted += 1;
           break;
-        case ClusterSmartNICStatus_admission_phase.rejected:
+        case ClusterDistributedServiceCardStatus_admission_phase.rejected:
           rejected += 1;
           break;
-        case ClusterSmartNICStatus_admission_phase.pending:
+        case ClusterDistributedServiceCardStatus_admission_phase.pending:
           pending += 1;
           break;
       }

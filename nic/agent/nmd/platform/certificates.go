@@ -20,7 +20,7 @@ import (
 // Code in this file is meant to go away once we have APIs to read
 // the platform certificate and sign data using the platform key
 
-func (np *NaplesPlatformAgent) initPlatformCredentials(nic *cluster.SmartNIC) error {
+func (np *NaplesPlatformAgent) initPlatformCredentials(nic *cluster.DistributedServiceCard) error {
 	// For the moment, create a private key and a self-signed certificate
 	key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 	if err != nil {

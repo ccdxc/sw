@@ -8,13 +8,13 @@
 		rollout.proto
 
 	It has these top-level messages:
-		SmartNICOpSpec
-		SmartNICRolloutSpec
-		SmartNICOpStatus
-		SmartNICRolloutStatus
-		SmartNICRollout
-		SmartNICRolloutEvent
-		SmartNICRolloutStatusUpdate
+		DSCOpSpec
+		DSCRolloutSpec
+		DSCOpStatus
+		DSCRolloutStatus
+		DSCRollout
+		DSCRolloutEvent
+		DSCRolloutStatusUpdate
 		VeniceOpSpec
 		VeniceRolloutSpec
 		VeniceOpStatus
@@ -59,38 +59,38 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-type SmartNICOp int32
+type DSCOp int32
 
 const (
-	SmartNICOp_SmartNICNoOp                           SmartNICOp = 0
-	SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot SmartNICOp = 1
-	SmartNICOp_SmartNICPreCheckForDisruptive          SmartNICOp = 2
-	SmartNICOp_SmartNICUpgOnNextHostReboot            SmartNICOp = 3
-	SmartNICOp_SmartNICDisruptiveUpgrade              SmartNICOp = 4
-	SmartNICOp_SmartNICImageDownload                  SmartNICOp = 5
+	DSCOp_DSCNoOp                           DSCOp = 0
+	DSCOp_DSCPreCheckForUpgOnNextHostReboot DSCOp = 1
+	DSCOp_DSCPreCheckForDisruptive          DSCOp = 2
+	DSCOp_DSCUpgOnNextHostReboot            DSCOp = 3
+	DSCOp_DSCDisruptiveUpgrade              DSCOp = 4
+	DSCOp_DSCImageDownload                  DSCOp = 5
 )
 
-var SmartNICOp_name = map[int32]string{
-	0: "SmartNICNoOp",
-	1: "SmartNICPreCheckForUpgOnNextHostReboot",
-	2: "SmartNICPreCheckForDisruptive",
-	3: "SmartNICUpgOnNextHostReboot",
-	4: "SmartNICDisruptiveUpgrade",
-	5: "SmartNICImageDownload",
+var DSCOp_name = map[int32]string{
+	0: "DSCNoOp",
+	1: "DSCPreCheckForUpgOnNextHostReboot",
+	2: "DSCPreCheckForDisruptive",
+	3: "DSCUpgOnNextHostReboot",
+	4: "DSCDisruptiveUpgrade",
+	5: "DSCImageDownload",
 }
-var SmartNICOp_value = map[string]int32{
-	"SmartNICNoOp":                           0,
-	"SmartNICPreCheckForUpgOnNextHostReboot": 1,
-	"SmartNICPreCheckForDisruptive":          2,
-	"SmartNICUpgOnNextHostReboot":            3,
-	"SmartNICDisruptiveUpgrade":              4,
-	"SmartNICImageDownload":                  5,
+var DSCOp_value = map[string]int32{
+	"DSCNoOp":                           0,
+	"DSCPreCheckForUpgOnNextHostReboot": 1,
+	"DSCPreCheckForDisruptive":          2,
+	"DSCUpgOnNextHostReboot":            3,
+	"DSCDisruptiveUpgrade":              4,
+	"DSCImageDownload":                  5,
 }
 
-func (x SmartNICOp) String() string {
-	return proto.EnumName(SmartNICOp_name, int32(x))
+func (x DSCOp) String() string {
+	return proto.EnumName(DSCOp_name, int32(x))
 }
-func (SmartNICOp) EnumDescriptor() ([]byte, []int) { return fileDescriptorRollout, []int{0} }
+func (DSCOp) EnumDescriptor() ([]byte, []int) { return fileDescriptorRollout, []int{0} }
 
 type AllowedStatus int32
 
@@ -156,168 +156,166 @@ func (x ServiceOp) String() string {
 }
 func (ServiceOp) EnumDescriptor() ([]byte, []int) { return fileDescriptorRollout, []int{3} }
 
-type SmartNICOpSpec struct {
-	Op      SmartNICOp `protobuf:"varint,1,opt,name=Op,proto3,enum=protos.SmartNICOp" json:"op,omitempty"`
-	Version string     `protobuf:"bytes,2,opt,name=Version,proto3" json:"ver,omitempty"`
+type DSCOpSpec struct {
+	Op      DSCOp  `protobuf:"varint,1,opt,name=Op,proto3,enum=protos.DSCOp" json:"op,omitempty"`
+	Version string `protobuf:"bytes,2,opt,name=Version,proto3" json:"ver,omitempty"`
 }
 
-func (m *SmartNICOpSpec) Reset()                    { *m = SmartNICOpSpec{} }
-func (m *SmartNICOpSpec) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICOpSpec) ProtoMessage()               {}
-func (*SmartNICOpSpec) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{0} }
+func (m *DSCOpSpec) Reset()                    { *m = DSCOpSpec{} }
+func (m *DSCOpSpec) String() string            { return proto.CompactTextString(m) }
+func (*DSCOpSpec) ProtoMessage()               {}
+func (*DSCOpSpec) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{0} }
 
-func (m *SmartNICOpSpec) GetOp() SmartNICOp {
+func (m *DSCOpSpec) GetOp() DSCOp {
 	if m != nil {
 		return m.Op
 	}
-	return SmartNICOp_SmartNICNoOp
+	return DSCOp_DSCNoOp
 }
 
-func (m *SmartNICOpSpec) GetVersion() string {
+func (m *DSCOpSpec) GetVersion() string {
 	if m != nil {
 		return m.Version
 	}
 	return ""
 }
 
-type SmartNICRolloutSpec struct {
-	Ops []SmartNICOpSpec `protobuf:"bytes,1,rep,name=Ops" json:"ops,omitempty"`
+type DSCRolloutSpec struct {
+	Ops []DSCOpSpec `protobuf:"bytes,1,rep,name=Ops" json:"ops,omitempty"`
 }
 
-func (m *SmartNICRolloutSpec) Reset()                    { *m = SmartNICRolloutSpec{} }
-func (m *SmartNICRolloutSpec) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICRolloutSpec) ProtoMessage()               {}
-func (*SmartNICRolloutSpec) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{1} }
+func (m *DSCRolloutSpec) Reset()                    { *m = DSCRolloutSpec{} }
+func (m *DSCRolloutSpec) String() string            { return proto.CompactTextString(m) }
+func (*DSCRolloutSpec) ProtoMessage()               {}
+func (*DSCRolloutSpec) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{1} }
 
-func (m *SmartNICRolloutSpec) GetOps() []SmartNICOpSpec {
+func (m *DSCRolloutSpec) GetOps() []DSCOpSpec {
 	if m != nil {
 		return m.Ops
 	}
 	return nil
 }
 
-type SmartNICOpStatus struct {
-	Op       SmartNICOp `protobuf:"varint,1,opt,name=Op,proto3,enum=protos.SmartNICOp" json:"Op,omitempty"`
-	Version  string     `protobuf:"bytes,2,opt,name=Version,proto3" json:"Version,omitempty"`
-	OpStatus string     `protobuf:"bytes,3,opt,name=OpStatus,proto3" json:"opstatus,omitempty"`
-	Message  string     `protobuf:"bytes,4,opt,name=Message,proto3" json:",omitempty"`
+type DSCOpStatus struct {
+	Op       DSCOp  `protobuf:"varint,1,opt,name=Op,proto3,enum=protos.DSCOp" json:"Op,omitempty"`
+	Version  string `protobuf:"bytes,2,opt,name=Version,proto3" json:"Version,omitempty"`
+	OpStatus string `protobuf:"bytes,3,opt,name=OpStatus,proto3" json:"opstatus,omitempty"`
+	Message  string `protobuf:"bytes,4,opt,name=Message,proto3" json:",omitempty"`
 }
 
-func (m *SmartNICOpStatus) Reset()                    { *m = SmartNICOpStatus{} }
-func (m *SmartNICOpStatus) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICOpStatus) ProtoMessage()               {}
-func (*SmartNICOpStatus) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{2} }
+func (m *DSCOpStatus) Reset()                    { *m = DSCOpStatus{} }
+func (m *DSCOpStatus) String() string            { return proto.CompactTextString(m) }
+func (*DSCOpStatus) ProtoMessage()               {}
+func (*DSCOpStatus) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{2} }
 
-func (m *SmartNICOpStatus) GetOp() SmartNICOp {
+func (m *DSCOpStatus) GetOp() DSCOp {
 	if m != nil {
 		return m.Op
 	}
-	return SmartNICOp_SmartNICNoOp
+	return DSCOp_DSCNoOp
 }
 
-func (m *SmartNICOpStatus) GetVersion() string {
+func (m *DSCOpStatus) GetVersion() string {
 	if m != nil {
 		return m.Version
 	}
 	return ""
 }
 
-func (m *SmartNICOpStatus) GetOpStatus() string {
+func (m *DSCOpStatus) GetOpStatus() string {
 	if m != nil {
 		return m.OpStatus
 	}
 	return ""
 }
 
-func (m *SmartNICOpStatus) GetMessage() string {
+func (m *DSCOpStatus) GetMessage() string {
 	if m != nil {
 		return m.Message
 	}
 	return ""
 }
 
-type SmartNICRolloutStatus struct {
-	OpStatus []SmartNICOpStatus `protobuf:"bytes,1,rep,name=OpStatus" json:"status,omitempty"`
+type DSCRolloutStatus struct {
+	OpStatus []DSCOpStatus `protobuf:"bytes,1,rep,name=OpStatus" json:"status,omitempty"`
 }
 
-func (m *SmartNICRolloutStatus) Reset()                    { *m = SmartNICRolloutStatus{} }
-func (m *SmartNICRolloutStatus) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICRolloutStatus) ProtoMessage()               {}
-func (*SmartNICRolloutStatus) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{3} }
+func (m *DSCRolloutStatus) Reset()                    { *m = DSCRolloutStatus{} }
+func (m *DSCRolloutStatus) String() string            { return proto.CompactTextString(m) }
+func (*DSCRolloutStatus) ProtoMessage()               {}
+func (*DSCRolloutStatus) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{3} }
 
-func (m *SmartNICRolloutStatus) GetOpStatus() []SmartNICOpStatus {
+func (m *DSCRolloutStatus) GetOpStatus() []DSCOpStatus {
 	if m != nil {
 		return m.OpStatus
 	}
 	return nil
 }
 
-type SmartNICRollout struct {
+type DSCRollout struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=TypeMeta,embedded=TypeMeta" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=ObjectMeta,embedded=ObjectMeta" json:"meta,omitempty"`
-	Spec           SmartNICRolloutSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	Spec           DSCRolloutSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
 }
 
-func (m *SmartNICRollout) Reset()                    { *m = SmartNICRollout{} }
-func (m *SmartNICRollout) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICRollout) ProtoMessage()               {}
-func (*SmartNICRollout) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{4} }
+func (m *DSCRollout) Reset()                    { *m = DSCRollout{} }
+func (m *DSCRollout) String() string            { return proto.CompactTextString(m) }
+func (*DSCRollout) ProtoMessage()               {}
+func (*DSCRollout) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{4} }
 
-func (m *SmartNICRollout) GetSpec() SmartNICRolloutSpec {
+func (m *DSCRollout) GetSpec() DSCRolloutSpec {
 	if m != nil {
 		return m.Spec
 	}
-	return SmartNICRolloutSpec{}
+	return DSCRolloutSpec{}
 }
 
-type SmartNICRolloutEvent struct {
-	EventType       api.EventType   `protobuf:"varint,1,opt,name=EventType,proto3,enum=api.EventType" json:"event-type,omitempty"`
-	SmartNICRollout SmartNICRollout `protobuf:"bytes,2,opt,name=SmartNICRollout" json:",omitempty"`
+type DSCRolloutEvent struct {
+	EventType  api.EventType `protobuf:"varint,1,opt,name=EventType,proto3,enum=api.EventType" json:"event-type,omitempty"`
+	DSCRollout DSCRollout    `protobuf:"bytes,2,opt,name=DSCRollout" json:",omitempty"`
 }
 
-func (m *SmartNICRolloutEvent) Reset()                    { *m = SmartNICRolloutEvent{} }
-func (m *SmartNICRolloutEvent) String() string            { return proto.CompactTextString(m) }
-func (*SmartNICRolloutEvent) ProtoMessage()               {}
-func (*SmartNICRolloutEvent) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{5} }
+func (m *DSCRolloutEvent) Reset()                    { *m = DSCRolloutEvent{} }
+func (m *DSCRolloutEvent) String() string            { return proto.CompactTextString(m) }
+func (*DSCRolloutEvent) ProtoMessage()               {}
+func (*DSCRolloutEvent) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{5} }
 
-func (m *SmartNICRolloutEvent) GetEventType() api.EventType {
+func (m *DSCRolloutEvent) GetEventType() api.EventType {
 	if m != nil {
 		return m.EventType
 	}
 	return api.EventType_CreateEvent
 }
 
-func (m *SmartNICRolloutEvent) GetSmartNICRollout() SmartNICRollout {
+func (m *DSCRolloutEvent) GetDSCRollout() DSCRollout {
 	if m != nil {
-		return m.SmartNICRollout
+		return m.DSCRollout
 	}
-	return SmartNICRollout{}
+	return DSCRollout{}
 }
 
-type SmartNICRolloutStatusUpdate struct {
-	ObjectMeta api.ObjectMeta        `protobuf:"bytes,1,opt,name=ObjectMeta" json:",omitempty"`
-	Status     SmartNICRolloutStatus `protobuf:"bytes,2,opt,name=Status" json:",omitempty"`
+type DSCRolloutStatusUpdate struct {
+	ObjectMeta api.ObjectMeta   `protobuf:"bytes,1,opt,name=ObjectMeta" json:",omitempty"`
+	Status     DSCRolloutStatus `protobuf:"bytes,2,opt,name=Status" json:",omitempty"`
 }
 
-func (m *SmartNICRolloutStatusUpdate) Reset()         { *m = SmartNICRolloutStatusUpdate{} }
-func (m *SmartNICRolloutStatusUpdate) String() string { return proto.CompactTextString(m) }
-func (*SmartNICRolloutStatusUpdate) ProtoMessage()    {}
-func (*SmartNICRolloutStatusUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptorRollout, []int{6}
-}
+func (m *DSCRolloutStatusUpdate) Reset()                    { *m = DSCRolloutStatusUpdate{} }
+func (m *DSCRolloutStatusUpdate) String() string            { return proto.CompactTextString(m) }
+func (*DSCRolloutStatusUpdate) ProtoMessage()               {}
+func (*DSCRolloutStatusUpdate) Descriptor() ([]byte, []int) { return fileDescriptorRollout, []int{6} }
 
-func (m *SmartNICRolloutStatusUpdate) GetObjectMeta() api.ObjectMeta {
+func (m *DSCRolloutStatusUpdate) GetObjectMeta() api.ObjectMeta {
 	if m != nil {
 		return m.ObjectMeta
 	}
 	return api.ObjectMeta{}
 }
 
-func (m *SmartNICRolloutStatusUpdate) GetStatus() SmartNICRolloutStatus {
+func (m *DSCRolloutStatusUpdate) GetStatus() DSCRolloutStatus {
 	if m != nil {
 		return m.Status
 	}
-	return SmartNICRolloutStatus{}
+	return DSCRolloutStatus{}
 }
 
 type VeniceOpSpec struct {
@@ -649,13 +647,13 @@ func (m *ServiceRolloutStatusUpdate) GetStatus() ServiceRolloutStatus {
 }
 
 func init() {
-	proto.RegisterType((*SmartNICOpSpec)(nil), "protos.SmartNICOpSpec")
-	proto.RegisterType((*SmartNICRolloutSpec)(nil), "protos.SmartNICRolloutSpec")
-	proto.RegisterType((*SmartNICOpStatus)(nil), "protos.SmartNICOpStatus")
-	proto.RegisterType((*SmartNICRolloutStatus)(nil), "protos.SmartNICRolloutStatus")
-	proto.RegisterType((*SmartNICRollout)(nil), "protos.SmartNICRollout")
-	proto.RegisterType((*SmartNICRolloutEvent)(nil), "protos.SmartNICRolloutEvent")
-	proto.RegisterType((*SmartNICRolloutStatusUpdate)(nil), "protos.SmartNICRolloutStatusUpdate")
+	proto.RegisterType((*DSCOpSpec)(nil), "protos.DSCOpSpec")
+	proto.RegisterType((*DSCRolloutSpec)(nil), "protos.DSCRolloutSpec")
+	proto.RegisterType((*DSCOpStatus)(nil), "protos.DSCOpStatus")
+	proto.RegisterType((*DSCRolloutStatus)(nil), "protos.DSCRolloutStatus")
+	proto.RegisterType((*DSCRollout)(nil), "protos.DSCRollout")
+	proto.RegisterType((*DSCRolloutEvent)(nil), "protos.DSCRolloutEvent")
+	proto.RegisterType((*DSCRolloutStatusUpdate)(nil), "protos.DSCRolloutStatusUpdate")
 	proto.RegisterType((*VeniceOpSpec)(nil), "protos.VeniceOpSpec")
 	proto.RegisterType((*VeniceRolloutSpec)(nil), "protos.VeniceRolloutSpec")
 	proto.RegisterType((*VeniceOpStatus)(nil), "protos.VeniceOpStatus")
@@ -670,7 +668,7 @@ func init() {
 	proto.RegisterType((*ServiceRollout)(nil), "protos.ServiceRollout")
 	proto.RegisterType((*ServiceRolloutEvent)(nil), "protos.ServiceRolloutEvent")
 	proto.RegisterType((*ServiceRolloutStatusUpdate)(nil), "protos.ServiceRolloutStatusUpdate")
-	proto.RegisterEnum("protos.SmartNICOp", SmartNICOp_name, SmartNICOp_value)
+	proto.RegisterEnum("protos.DSCOp", DSCOp_name, DSCOp_value)
 	proto.RegisterEnum("protos.AllowedStatus", AllowedStatus_name, AllowedStatus_value)
 	proto.RegisterEnum("protos.VeniceOp", VeniceOp_name, VeniceOp_value)
 	proto.RegisterEnum("protos.ServiceOp", ServiceOp_name, ServiceOp_value)
@@ -684,27 +682,27 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for SmartNICRolloutApi service
+// Client API for DSCRolloutApi service
 
-type SmartNICRolloutApiClient interface {
-	WatchSmartNICRollout(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (SmartNICRolloutApi_WatchSmartNICRolloutClient, error)
-	UpdateSmartNICRolloutStatus(ctx context.Context, in *SmartNICRolloutStatusUpdate, opts ...grpc.CallOption) (*api1.Empty, error)
+type DSCRolloutApiClient interface {
+	WatchDSCRollout(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (DSCRolloutApi_WatchDSCRolloutClient, error)
+	UpdateDSCRolloutStatus(ctx context.Context, in *DSCRolloutStatusUpdate, opts ...grpc.CallOption) (*api1.Empty, error)
 }
 
-type smartNICRolloutApiClient struct {
+type dSCRolloutApiClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewSmartNICRolloutApiClient(cc *grpc.ClientConn) SmartNICRolloutApiClient {
-	return &smartNICRolloutApiClient{cc}
+func NewDSCRolloutApiClient(cc *grpc.ClientConn) DSCRolloutApiClient {
+	return &dSCRolloutApiClient{cc}
 }
 
-func (c *smartNICRolloutApiClient) WatchSmartNICRollout(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (SmartNICRolloutApi_WatchSmartNICRolloutClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_SmartNICRolloutApi_serviceDesc.Streams[0], c.cc, "/protos.SmartNICRolloutApi/WatchSmartNICRollout", opts...)
+func (c *dSCRolloutApiClient) WatchDSCRollout(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (DSCRolloutApi_WatchDSCRolloutClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_DSCRolloutApi_serviceDesc.Streams[0], c.cc, "/protos.DSCRolloutApi/WatchDSCRollout", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &smartNICRolloutApiWatchSmartNICRolloutClient{stream}
+	x := &dSCRolloutApiWatchDSCRolloutClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -714,95 +712,95 @@ func (c *smartNICRolloutApiClient) WatchSmartNICRollout(ctx context.Context, in 
 	return x, nil
 }
 
-type SmartNICRolloutApi_WatchSmartNICRolloutClient interface {
-	Recv() (*SmartNICRolloutEvent, error)
+type DSCRolloutApi_WatchDSCRolloutClient interface {
+	Recv() (*DSCRolloutEvent, error)
 	grpc.ClientStream
 }
 
-type smartNICRolloutApiWatchSmartNICRolloutClient struct {
+type dSCRolloutApiWatchDSCRolloutClient struct {
 	grpc.ClientStream
 }
 
-func (x *smartNICRolloutApiWatchSmartNICRolloutClient) Recv() (*SmartNICRolloutEvent, error) {
-	m := new(SmartNICRolloutEvent)
+func (x *dSCRolloutApiWatchDSCRolloutClient) Recv() (*DSCRolloutEvent, error) {
+	m := new(DSCRolloutEvent)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *smartNICRolloutApiClient) UpdateSmartNICRolloutStatus(ctx context.Context, in *SmartNICRolloutStatusUpdate, opts ...grpc.CallOption) (*api1.Empty, error) {
+func (c *dSCRolloutApiClient) UpdateDSCRolloutStatus(ctx context.Context, in *DSCRolloutStatusUpdate, opts ...grpc.CallOption) (*api1.Empty, error) {
 	out := new(api1.Empty)
-	err := grpc.Invoke(ctx, "/protos.SmartNICRolloutApi/UpdateSmartNICRolloutStatus", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/protos.DSCRolloutApi/UpdateDSCRolloutStatus", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for SmartNICRolloutApi service
+// Server API for DSCRolloutApi service
 
-type SmartNICRolloutApiServer interface {
-	WatchSmartNICRollout(*api.ObjectMeta, SmartNICRolloutApi_WatchSmartNICRolloutServer) error
-	UpdateSmartNICRolloutStatus(context.Context, *SmartNICRolloutStatusUpdate) (*api1.Empty, error)
+type DSCRolloutApiServer interface {
+	WatchDSCRollout(*api.ObjectMeta, DSCRolloutApi_WatchDSCRolloutServer) error
+	UpdateDSCRolloutStatus(context.Context, *DSCRolloutStatusUpdate) (*api1.Empty, error)
 }
 
-func RegisterSmartNICRolloutApiServer(s *grpc.Server, srv SmartNICRolloutApiServer) {
-	s.RegisterService(&_SmartNICRolloutApi_serviceDesc, srv)
+func RegisterDSCRolloutApiServer(s *grpc.Server, srv DSCRolloutApiServer) {
+	s.RegisterService(&_DSCRolloutApi_serviceDesc, srv)
 }
 
-func _SmartNICRolloutApi_WatchSmartNICRollout_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _DSCRolloutApi_WatchDSCRollout_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(api.ObjectMeta)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(SmartNICRolloutApiServer).WatchSmartNICRollout(m, &smartNICRolloutApiWatchSmartNICRolloutServer{stream})
+	return srv.(DSCRolloutApiServer).WatchDSCRollout(m, &dSCRolloutApiWatchDSCRolloutServer{stream})
 }
 
-type SmartNICRolloutApi_WatchSmartNICRolloutServer interface {
-	Send(*SmartNICRolloutEvent) error
+type DSCRolloutApi_WatchDSCRolloutServer interface {
+	Send(*DSCRolloutEvent) error
 	grpc.ServerStream
 }
 
-type smartNICRolloutApiWatchSmartNICRolloutServer struct {
+type dSCRolloutApiWatchDSCRolloutServer struct {
 	grpc.ServerStream
 }
 
-func (x *smartNICRolloutApiWatchSmartNICRolloutServer) Send(m *SmartNICRolloutEvent) error {
+func (x *dSCRolloutApiWatchDSCRolloutServer) Send(m *DSCRolloutEvent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _SmartNICRolloutApi_UpdateSmartNICRolloutStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SmartNICRolloutStatusUpdate)
+func _DSCRolloutApi_UpdateDSCRolloutStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DSCRolloutStatusUpdate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SmartNICRolloutApiServer).UpdateSmartNICRolloutStatus(ctx, in)
+		return srv.(DSCRolloutApiServer).UpdateDSCRolloutStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/protos.SmartNICRolloutApi/UpdateSmartNICRolloutStatus",
+		FullMethod: "/protos.DSCRolloutApi/UpdateDSCRolloutStatus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SmartNICRolloutApiServer).UpdateSmartNICRolloutStatus(ctx, req.(*SmartNICRolloutStatusUpdate))
+		return srv.(DSCRolloutApiServer).UpdateDSCRolloutStatus(ctx, req.(*DSCRolloutStatusUpdate))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _SmartNICRolloutApi_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "protos.SmartNICRolloutApi",
-	HandlerType: (*SmartNICRolloutApiServer)(nil),
+var _DSCRolloutApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "protos.DSCRolloutApi",
+	HandlerType: (*DSCRolloutApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "UpdateSmartNICRolloutStatus",
-			Handler:    _SmartNICRolloutApi_UpdateSmartNICRolloutStatus_Handler,
+			MethodName: "UpdateDSCRolloutStatus",
+			Handler:    _DSCRolloutApi_UpdateDSCRolloutStatus_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "WatchSmartNICRollout",
-			Handler:       _SmartNICRolloutApi_WatchSmartNICRollout_Handler,
+			StreamName:    "WatchDSCRollout",
+			Handler:       _DSCRolloutApi_WatchDSCRollout_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -1059,7 +1057,7 @@ var _ServiceRolloutApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "rollout.proto",
 }
 
-func (m *SmartNICOpSpec) Marshal() (dAtA []byte, err error) {
+func (m *DSCOpSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1069,7 +1067,7 @@ func (m *SmartNICOpSpec) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SmartNICOpSpec) MarshalTo(dAtA []byte) (int, error) {
+func (m *DSCOpSpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1088,7 +1086,7 @@ func (m *SmartNICOpSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SmartNICRolloutSpec) Marshal() (dAtA []byte, err error) {
+func (m *DSCRolloutSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1098,7 +1096,7 @@ func (m *SmartNICRolloutSpec) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SmartNICRolloutSpec) MarshalTo(dAtA []byte) (int, error) {
+func (m *DSCRolloutSpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1118,7 +1116,7 @@ func (m *SmartNICRolloutSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SmartNICOpStatus) Marshal() (dAtA []byte, err error) {
+func (m *DSCOpStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1128,7 +1126,7 @@ func (m *SmartNICOpStatus) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SmartNICOpStatus) MarshalTo(dAtA []byte) (int, error) {
+func (m *DSCOpStatus) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1159,7 +1157,7 @@ func (m *SmartNICOpStatus) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SmartNICRolloutStatus) Marshal() (dAtA []byte, err error) {
+func (m *DSCRolloutStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1169,7 +1167,7 @@ func (m *SmartNICRolloutStatus) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SmartNICRolloutStatus) MarshalTo(dAtA []byte) (int, error) {
+func (m *DSCRolloutStatus) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1189,7 +1187,7 @@ func (m *SmartNICRolloutStatus) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SmartNICRollout) Marshal() (dAtA []byte, err error) {
+func (m *DSCRollout) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1199,7 +1197,7 @@ func (m *SmartNICRollout) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SmartNICRollout) MarshalTo(dAtA []byte) (int, error) {
+func (m *DSCRollout) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1231,7 +1229,7 @@ func (m *SmartNICRollout) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SmartNICRolloutEvent) Marshal() (dAtA []byte, err error) {
+func (m *DSCRolloutEvent) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1241,7 +1239,7 @@ func (m *SmartNICRolloutEvent) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SmartNICRolloutEvent) MarshalTo(dAtA []byte) (int, error) {
+func (m *DSCRolloutEvent) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1253,8 +1251,8 @@ func (m *SmartNICRolloutEvent) MarshalTo(dAtA []byte) (int, error) {
 	}
 	dAtA[i] = 0x12
 	i++
-	i = encodeVarintRollout(dAtA, i, uint64(m.SmartNICRollout.Size()))
-	n4, err := m.SmartNICRollout.MarshalTo(dAtA[i:])
+	i = encodeVarintRollout(dAtA, i, uint64(m.DSCRollout.Size()))
+	n4, err := m.DSCRollout.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
@@ -1262,7 +1260,7 @@ func (m *SmartNICRolloutEvent) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SmartNICRolloutStatusUpdate) Marshal() (dAtA []byte, err error) {
+func (m *DSCRolloutStatusUpdate) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1272,7 +1270,7 @@ func (m *SmartNICRolloutStatusUpdate) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SmartNICRolloutStatusUpdate) MarshalTo(dAtA []byte) (int, error) {
+func (m *DSCRolloutStatusUpdate) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1779,7 +1777,7 @@ func encodeVarintRollout(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *SmartNICOpSpec) Size() (n int) {
+func (m *DSCOpSpec) Size() (n int) {
 	var l int
 	_ = l
 	if m.Op != 0 {
@@ -1792,7 +1790,7 @@ func (m *SmartNICOpSpec) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICRolloutSpec) Size() (n int) {
+func (m *DSCRolloutSpec) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Ops) > 0 {
@@ -1804,7 +1802,7 @@ func (m *SmartNICRolloutSpec) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICOpStatus) Size() (n int) {
+func (m *DSCOpStatus) Size() (n int) {
 	var l int
 	_ = l
 	if m.Op != 0 {
@@ -1825,7 +1823,7 @@ func (m *SmartNICOpStatus) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICRolloutStatus) Size() (n int) {
+func (m *DSCRolloutStatus) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.OpStatus) > 0 {
@@ -1837,7 +1835,7 @@ func (m *SmartNICRolloutStatus) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICRollout) Size() (n int) {
+func (m *DSCRollout) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -1849,18 +1847,18 @@ func (m *SmartNICRollout) Size() (n int) {
 	return n
 }
 
-func (m *SmartNICRolloutEvent) Size() (n int) {
+func (m *DSCRolloutEvent) Size() (n int) {
 	var l int
 	_ = l
 	if m.EventType != 0 {
 		n += 1 + sovRollout(uint64(m.EventType))
 	}
-	l = m.SmartNICRollout.Size()
+	l = m.DSCRollout.Size()
 	n += 1 + l + sovRollout(uint64(l))
 	return n
 }
 
-func (m *SmartNICRolloutStatusUpdate) Size() (n int) {
+func (m *DSCRolloutStatusUpdate) Size() (n int) {
 	var l int
 	_ = l
 	l = m.ObjectMeta.Size()
@@ -2065,7 +2063,7 @@ func sovRollout(x uint64) (n int) {
 func sozRollout(x uint64) (n int) {
 	return sovRollout(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *SmartNICOpSpec) Unmarshal(dAtA []byte) error {
+func (m *DSCOpSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2088,10 +2086,10 @@ func (m *SmartNICOpSpec) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICOpSpec: wiretype end group for non-group")
+			return fmt.Errorf("proto: DSCOpSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICOpSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DSCOpSpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2108,7 +2106,7 @@ func (m *SmartNICOpSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Op |= (SmartNICOp(b) & 0x7F) << shift
+				m.Op |= (DSCOp(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2163,7 +2161,7 @@ func (m *SmartNICOpSpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SmartNICRolloutSpec) Unmarshal(dAtA []byte) error {
+func (m *DSCRolloutSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2186,10 +2184,10 @@ func (m *SmartNICRolloutSpec) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICRolloutSpec: wiretype end group for non-group")
+			return fmt.Errorf("proto: DSCRolloutSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICRolloutSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DSCRolloutSpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2218,7 +2216,7 @@ func (m *SmartNICRolloutSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Ops = append(m.Ops, SmartNICOpSpec{})
+			m.Ops = append(m.Ops, DSCOpSpec{})
 			if err := m.Ops[len(m.Ops)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2244,7 +2242,7 @@ func (m *SmartNICRolloutSpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SmartNICOpStatus) Unmarshal(dAtA []byte) error {
+func (m *DSCOpStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2267,10 +2265,10 @@ func (m *SmartNICOpStatus) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICOpStatus: wiretype end group for non-group")
+			return fmt.Errorf("proto: DSCOpStatus: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICOpStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DSCOpStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2287,7 +2285,7 @@ func (m *SmartNICOpStatus) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Op |= (SmartNICOp(b) & 0x7F) << shift
+				m.Op |= (DSCOp(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2400,7 +2398,7 @@ func (m *SmartNICOpStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SmartNICRolloutStatus) Unmarshal(dAtA []byte) error {
+func (m *DSCRolloutStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2423,10 +2421,10 @@ func (m *SmartNICRolloutStatus) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICRolloutStatus: wiretype end group for non-group")
+			return fmt.Errorf("proto: DSCRolloutStatus: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICRolloutStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DSCRolloutStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2455,7 +2453,7 @@ func (m *SmartNICRolloutStatus) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OpStatus = append(m.OpStatus, SmartNICOpStatus{})
+			m.OpStatus = append(m.OpStatus, DSCOpStatus{})
 			if err := m.OpStatus[len(m.OpStatus)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2481,7 +2479,7 @@ func (m *SmartNICRolloutStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SmartNICRollout) Unmarshal(dAtA []byte) error {
+func (m *DSCRollout) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2504,10 +2502,10 @@ func (m *SmartNICRollout) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICRollout: wiretype end group for non-group")
+			return fmt.Errorf("proto: DSCRollout: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICRollout: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DSCRollout: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2621,7 +2619,7 @@ func (m *SmartNICRollout) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SmartNICRolloutEvent) Unmarshal(dAtA []byte) error {
+func (m *DSCRolloutEvent) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2644,10 +2642,10 @@ func (m *SmartNICRolloutEvent) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICRolloutEvent: wiretype end group for non-group")
+			return fmt.Errorf("proto: DSCRolloutEvent: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICRolloutEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DSCRolloutEvent: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2671,7 +2669,7 @@ func (m *SmartNICRolloutEvent) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SmartNICRollout", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DSCRollout", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2695,7 +2693,7 @@ func (m *SmartNICRolloutEvent) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SmartNICRollout.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DSCRollout.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2720,7 +2718,7 @@ func (m *SmartNICRolloutEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SmartNICRolloutStatusUpdate) Unmarshal(dAtA []byte) error {
+func (m *DSCRolloutStatusUpdate) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2743,10 +2741,10 @@ func (m *SmartNICRolloutStatusUpdate) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SmartNICRolloutStatusUpdate: wiretype end group for non-group")
+			return fmt.Errorf("proto: DSCRolloutStatusUpdate: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SmartNICRolloutStatusUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DSCRolloutStatusUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4468,80 +4466,80 @@ var (
 func init() { proto.RegisterFile("rollout.proto", fileDescriptorRollout) }
 
 var fileDescriptorRollout = []byte{
-	// 1185 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xdd, 0x4e, 0xe3, 0x46,
-	0x18, 0xcd, 0x04, 0xba, 0xb0, 0x1f, 0x24, 0x6b, 0x86, 0xc0, 0x26, 0xe1, 0xdf, 0x55, 0x5b, 0x8a,
-	0x58, 0x52, 0xa5, 0xab, 0xaa, 0x37, 0xdd, 0x6a, 0xc3, 0x02, 0x4b, 0x0b, 0x04, 0x85, 0x85, 0x5e,
-	0x1b, 0x67, 0x6a, 0xdc, 0x26, 0x9e, 0x91, 0x3d, 0x81, 0xa2, 0xde, 0xf7, 0x55, 0xaa, 0xfe, 0xec,
-	0xc5, 0x5e, 0xf4, 0x1d, 0xb8, 0xa8, 0x2a, 0x9e, 0x00, 0x55, 0x54, 0x55, 0xa5, 0x7d, 0x8a, 0xca,
-	0x63, 0x3b, 0x1e, 0x3b, 0x93, 0x80, 0xb4, 0x48, 0xbb, 0x57, 0xc4, 0xce, 0xf9, 0xce, 0x9c, 0xef,
-	0xf8, 0x9b, 0xe3, 0x09, 0x90, 0x73, 0x69, 0xab, 0x45, 0x3b, 0x7c, 0x8d, 0xb9, 0x94, 0x53, 0x7c,
-	0x4f, 0xfc, 0xf1, 0xca, 0xb3, 0x16, 0xa5, 0x56, 0x8b, 0x54, 0x0c, 0x66, 0x57, 0x0c, 0xc7, 0xa1,
-	0xdc, 0xe0, 0x36, 0x75, 0xbc, 0x00, 0x55, 0xde, 0xb0, 0x6c, 0x7e, 0xd2, 0x39, 0x5e, 0x33, 0x69,
-	0xbb, 0xc2, 0x88, 0xe3, 0x19, 0x4e, 0x93, 0x56, 0xbc, 0xb3, 0xca, 0x29, 0x71, 0x6c, 0x93, 0x54,
-	0x3a, 0xdc, 0x6e, 0x79, 0x7e, 0xa9, 0x45, 0x1c, 0xb9, 0xba, 0x62, 0x3b, 0x66, 0xab, 0xd3, 0x24,
-	0x11, 0xcd, 0x23, 0x89, 0xc6, 0xa2, 0x16, 0xad, 0x88, 0xdb, 0xc7, 0x9d, 0x6f, 0xc5, 0x95, 0xb8,
-	0x10, 0x9f, 0x42, 0xf8, 0x07, 0x7d, 0x56, 0xf5, 0x35, 0xb6, 0x09, 0x37, 0x42, 0xd8, 0x47, 0x03,
-	0x60, 0x26, 0x6d, 0xb7, 0xa9, 0x13, 0x00, 0xf5, 0x1f, 0x21, 0x7f, 0xd0, 0x36, 0x5c, 0xbe, 0xb7,
-	0xbd, 0x5e, 0x67, 0x07, 0x8c, 0x98, 0xf8, 0x73, 0xc8, 0xd6, 0x59, 0x11, 0x2d, 0xa2, 0xe5, 0x7c,
-	0x15, 0x07, 0x28, 0x6f, 0x2d, 0xc6, 0xd4, 0x0a, 0x17, 0x57, 0x0b, 0xe8, 0xf5, 0xd5, 0xc2, 0x38,
-	0x65, 0xab, 0xb4, 0x6d, 0x73, 0xd2, 0x66, 0xfc, 0xbc, 0x91, 0xad, 0x33, 0x5c, 0x81, 0x91, 0x23,
-	0xe2, 0x7a, 0x36, 0x75, 0x8a, 0xd9, 0x45, 0xb4, 0x7c, 0xbf, 0x36, 0x15, 0x42, 0x73, 0xa7, 0xc4,
-	0x95, 0xb0, 0x11, 0x4a, 0x3f, 0x82, 0xc9, 0x88, 0xb8, 0x11, 0x3c, 0x01, 0xa1, 0xe0, 0x4b, 0x18,
-	0xaa, 0x33, 0xaf, 0x88, 0x16, 0x87, 0x96, 0xc7, 0xaa, 0xd3, 0xbd, 0x12, 0x7c, 0x90, 0xe0, 0xce,
-	0xf8, 0xdc, 0x94, 0x79, 0x12, 0xb7, 0x5f, 0xa9, 0x5f, 0x22, 0xd0, 0x24, 0x38, 0x37, 0x78, 0xc7,
-	0xc3, 0xfa, 0xe0, 0xbe, 0x44, 0x07, 0xc5, 0x54, 0x07, 0x5d, 0xa9, 0x78, 0x1f, 0x46, 0x23, 0xa6,
-	0xe2, 0x90, 0x68, 0xee, 0xf1, 0xaf, 0x3f, 0x95, 0xa6, 0x0f, 0xb8, 0xbb, 0xe1, 0x74, 0xda, 0xcb,
-	0x4f, 0x5b, 0x2d, 0x7a, 0x46, 0x9a, 0x01, 0xe0, 0xe3, 0xb0, 0x6d, 0x4c, 0x99, 0x27, 0x6e, 0x48,
-	0xfa, 0xba, 0x2c, 0x78, 0x15, 0x46, 0x76, 0x89, 0xe7, 0x19, 0x16, 0x29, 0x0e, 0x0b, 0x42, 0x1c,
-	0x96, 0x81, 0x6c, 0x55, 0x08, 0xd1, 0x2d, 0x98, 0x4a, 0x5b, 0x15, 0xd0, 0xec, 0x49, 0xc2, 0x02,
-	0xc7, 0x8a, 0x0a, 0xc7, 0xc4, 0xf7, 0xb5, 0x62, 0xe8, 0x99, 0xd6, 0x5f, 0x96, 0xfe, 0x1f, 0x82,
-	0x07, 0xa9, 0x95, 0xf0, 0x13, 0x18, 0x7d, 0x71, 0xce, 0xc8, 0x2e, 0xe1, 0x86, 0x30, 0x70, 0xac,
-	0x9a, 0x5b, 0x33, 0x98, 0xbd, 0x16, 0xdd, 0xac, 0x4d, 0xfa, 0xc4, 0x97, 0x81, 0xfc, 0x91, 0x55,
-	0xdb, 0x69, 0xd9, 0x0e, 0x69, 0x74, 0x6b, 0xf0, 0xd7, 0x00, 0xf5, 0xe3, 0xef, 0x88, 0xc9, 0x05,
-	0x43, 0x56, 0x30, 0x3c, 0x10, 0x0c, 0xf1, 0xed, 0x5a, 0x59, 0xe2, 0xc8, 0xfb, 0xa3, 0x2c, 0xc9,
-	0x93, 0xca, 0xf1, 0x16, 0x0c, 0xfb, 0x03, 0x20, 0x9e, 0xc2, 0x58, 0x75, 0x26, 0xdd, 0xac, 0x34,
-	0x48, 0xb5, 0xe9, 0xb0, 0xdf, 0xbc, 0xc7, 0x88, 0x29, 0xd1, 0x09, 0x02, 0xfd, 0x0f, 0x04, 0x85,
-	0x54, 0xd5, 0xc6, 0x29, 0x71, 0x38, 0xde, 0x84, 0xfb, 0xe2, 0x83, 0xaf, 0x3f, 0x1c, 0x98, 0xbc,
-	0x50, 0xdb, 0xbd, 0x5b, 0x2b, 0xbe, 0xbe, 0x5a, 0x28, 0x10, 0xff, 0xf2, 0x11, 0x3f, 0x67, 0x44,
-	0xe2, 0x8e, 0x4b, 0xf1, 0x61, 0x8f, 0x93, 0x61, 0xef, 0x0f, 0xfb, 0x88, 0x16, 0x23, 0x90, 0x49,
-	0x8d, 0x40, 0x9a, 0x43, 0x7f, 0x89, 0x60, 0x46, 0x39, 0x0b, 0x87, 0xac, 0x69, 0x70, 0x82, 0xd7,
-	0x13, 0x6e, 0x23, 0xb5, 0xdb, 0xaa, 0x95, 0x64, 0x97, 0xb7, 0xe1, 0x5e, 0x38, 0x54, 0x81, 0xe4,
-	0xb9, 0x7e, 0x3e, 0x07, 0x93, 0xa5, 0xa2, 0x0b, 0x09, 0xf4, 0xaf, 0x60, 0xfc, 0x48, 0x64, 0x62,
-	0x18, 0x30, 0x8b, 0xd2, 0x46, 0xd4, 0x22, 0xda, 0x08, 0x31, 0x78, 0x1b, 0xea, 0x0d, 0x98, 0x08,
-	0x90, 0x72, 0x5e, 0x7c, 0x21, 0xe7, 0x45, 0x21, 0xcd, 0x78, 0x63, 0x5a, 0xfc, 0x89, 0x20, 0xdf,
-	0x05, 0x07, 0x9b, 0xea, 0x0d, 0x24, 0xbe, 0xf5, 0xa4, 0x30, 0x61, 0x32, 0x69, 0x51, 0x40, 0xb2,
-	0xd3, 0x93, 0x13, 0xd3, 0x3d, 0x4e, 0xdd, 0x3e, 0x25, 0xfe, 0x41, 0x90, 0x4b, 0xac, 0xf2, 0x6e,
-	0x65, 0xc4, 0x46, 0x22, 0x23, 0x4a, 0xc9, 0x46, 0x6f, 0x9f, 0x10, 0x2f, 0x11, 0xe0, 0x44, 0xcd,
-	0xdd, 0xe6, 0x43, 0x3d, 0xe5, 0x61, 0xd8, 0xf5, 0x94, 0x52, 0xae, 0x72, 0x8b, 0x25, 0xeb, 0xf5,
-	0x5f, 0x10, 0x94, 0x14, 0xcf, 0xfe, 0x2e, 0x73, 0x61, 0x2b, 0x95, 0x0b, 0x33, 0x6a, 0x6f, 0x6f,
-	0x4e, 0x85, 0x1d, 0xc8, 0x1d, 0x10, 0xf7, 0x34, 0x8e, 0x85, 0x25, 0x69, 0xcf, 0x4d, 0x74, 0xd3,
-	0x26, 0x82, 0xdc, 0x90, 0x0b, 0x2f, 0x00, 0x87, 0x50, 0x39, 0x18, 0x9e, 0xc8, 0xc1, 0x30, 0xd5,
-	0xc3, 0x79, 0x63, 0x32, 0xfc, 0xe5, 0xbf, 0x0b, 0xbb, 0xe8, 0x60, 0x1f, 0xbd, 0x89, 0xcc, 0xb7,
-	0x9e, 0x0d, 0x04, 0x0a, 0x29, 0x9b, 0x02, 0x96, 0xdd, 0x9e, 0x70, 0x78, 0xd8, 0xeb, 0xd6, 0xed,
-	0xd3, 0xe1, 0x5f, 0x04, 0xf9, 0xe4, 0x3a, 0xef, 0x56, 0x3c, 0x6c, 0x26, 0xe2, 0xa1, 0x9c, 0x6a,
-	0xf5, 0xf6, 0xf9, 0xf0, 0x0a, 0xc1, 0x64, 0xb2, 0xe8, 0x6e, 0x03, 0xa2, 0x91, 0xb6, 0x31, 0x6c,
-	0x7c, 0x5a, 0xad, 0x58, 0xb9, 0xdf, 0x52, 0x0c, 0xfa, 0x6f, 0x08, 0xca, 0xaa, 0x19, 0xb8, 0xcb,
-	0x90, 0x78, 0x9e, 0x0a, 0x89, 0xd9, 0x3e, 0x0e, 0xdf, 0x98, 0x12, 0x2b, 0x17, 0x08, 0x20, 0x3e,
-	0xc6, 0x62, 0x0d, 0xc6, 0xa3, 0xab, 0x3d, 0x5a, 0x67, 0x5a, 0x06, 0xaf, 0xc0, 0x87, 0xd1, 0x9d,
-	0x7d, 0x97, 0xac, 0x9f, 0x10, 0xf3, 0xfb, 0x4d, 0xea, 0x1e, 0x32, 0xab, 0xee, 0xec, 0x91, 0x1f,
-	0xf8, 0x73, 0xea, 0xf1, 0x06, 0x39, 0xa6, 0x94, 0x6b, 0x08, 0x2f, 0xc1, 0x9c, 0x02, 0xfb, 0xcc,
-	0xf6, 0xdc, 0x0e, 0xe3, 0xf6, 0x29, 0xd1, 0xb2, 0x78, 0x21, 0x3e, 0x5a, 0xa9, 0x38, 0x86, 0xf0,
-	0x1c, 0x94, 0x22, 0x40, 0x5c, 0x78, 0xc8, 0x2c, 0xd7, 0x68, 0x12, 0x6d, 0x18, 0x97, 0xe2, 0x63,
-	0xfa, 0x76, 0xdb, 0xb0, 0xc8, 0x33, 0x7a, 0xe6, 0xb4, 0xa8, 0xd1, 0xd4, 0xde, 0x5b, 0xf9, 0x0c,
-	0x72, 0x89, 0xfd, 0x8d, 0xc7, 0x60, 0xe4, 0xa0, 0x63, 0x9a, 0xc4, 0xf3, 0xb4, 0x0c, 0x1e, 0x85,
-	0xe1, 0x4d, 0xc3, 0x6e, 0x69, 0x08, 0xe7, 0x01, 0xb6, 0x9d, 0x7d, 0x97, 0x5a, 0xae, 0xff, 0x4d,
-	0x76, 0xe5, 0x31, 0x8c, 0x46, 0x2f, 0x68, 0x8c, 0xa3, 0x93, 0x4a, 0xa4, 0x5f, 0xcb, 0xe0, 0x02,
-	0x68, 0x61, 0xf6, 0x76, 0x9c, 0x30, 0x67, 0x34, 0xb4, 0xa2, 0xc3, 0xfd, 0xee, 0xce, 0xc5, 0x53,
-	0x30, 0x11, 0x39, 0x1f, 0x63, 0x32, 0xd5, 0x57, 0x08, 0x70, 0xea, 0x38, 0xf7, 0x94, 0xd9, 0x78,
-	0x1b, 0x0a, 0xdf, 0x18, 0xdc, 0x3c, 0x49, 0xff, 0x0a, 0x48, 0x8f, 0x41, 0x79, 0xb6, 0xcf, 0x99,
-	0x50, 0x0c, 0xb0, 0x9e, 0xf9, 0x04, 0xe1, 0x7d, 0x98, 0x09, 0xe6, 0x4a, 0xfd, 0xdb, 0xe5, 0xfd,
-	0x81, 0x87, 0xca, 0xa0, 0xb2, 0x0c, 0xc1, 0xce, 0xf1, 0xc7, 0x42, 0xcf, 0x54, 0x7f, 0x46, 0xdd,
-	0x76, 0x63, 0xc5, 0x1b, 0x80, 0x85, 0xe2, 0xe4, 0x89, 0xa4, 0x47, 0x6f, 0x59, 0xf9, 0xae, 0x8a,
-	0xd5, 0xee, 0x40, 0x29, 0x58, 0x53, 0x75, 0x7e, 0x5a, 0x1a, 0xf0, 0xa2, 0x53, 0x2a, 0xfd, 0x1d,
-	0xc5, 0xae, 0xc7, 0x52, 0xb7, 0x60, 0x32, 0x30, 0x37, 0x19, 0x8f, 0x3d, 0x5a, 0x67, 0xd4, 0x5b,
-	0x26, 0x16, 0xbb, 0x07, 0xe5, 0xd0, 0x5a, 0x55, 0xa0, 0xeb, 0x83, 0x76, 0x9c, 0x4a, 0x6e, 0x6d,
-	0xfc, 0xe2, 0x7a, 0x1e, 0x5d, 0x5e, 0xcf, 0xa3, 0xbf, 0xaf, 0xe7, 0xd1, 0x3e, 0x3a, 0x0e, 0xfe,
-	0x09, 0xf2, 0xe9, 0xff, 0x01, 0x00, 0x00, 0xff, 0xff, 0x61, 0xdb, 0x1f, 0x81, 0x1c, 0x11, 0x00,
-	0x00,
+	// 1186 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcb, 0x6e, 0xdb, 0x46,
+	0x1b, 0xd5, 0xc8, 0x4e, 0x6c, 0x7f, 0x8e, 0x64, 0x66, 0x2c, 0x2b, 0xb4, 0xe2, 0xdf, 0x17, 0x02,
+	0xc1, 0xef, 0x1a, 0x8e, 0x55, 0x28, 0x41, 0x17, 0x05, 0x9a, 0x22, 0x92, 0xac, 0xc4, 0xad, 0x6d,
+	0x19, 0x52, 0x9c, 0xae, 0xba, 0xa0, 0xa9, 0x29, 0xcd, 0x56, 0xe2, 0x4c, 0xc9, 0x91, 0x5d, 0xbf,
+	0x40, 0x9f, 0xa1, 0xdb, 0xa2, 0x28, 0x8a, 0xde, 0x16, 0x7d, 0x89, 0x22, 0x8b, 0xa2, 0xc8, 0x0b,
+	0xd4, 0x28, 0x5c, 0x74, 0x93, 0xa7, 0x28, 0x38, 0x43, 0x89, 0x43, 0x8a, 0xbe, 0x00, 0x31, 0x90,
+	0xac, 0x22, 0x0e, 0xcf, 0x77, 0xe6, 0xcc, 0x99, 0xf9, 0x0e, 0x27, 0x86, 0x9c, 0x47, 0xbb, 0x5d,
+	0xda, 0xe7, 0x1b, 0xcc, 0xa3, 0x9c, 0xe2, 0x9b, 0xe2, 0x1f, 0xbf, 0xb4, 0x60, 0x53, 0x6a, 0x77,
+	0x49, 0xd9, 0x64, 0x4e, 0xd9, 0x74, 0x5d, 0xca, 0x4d, 0xee, 0x50, 0xd7, 0x97, 0xa8, 0xd2, 0xa6,
+	0xed, 0xf0, 0xc3, 0xfe, 0xc1, 0x86, 0x45, 0x7b, 0x65, 0x46, 0x5c, 0xdf, 0x74, 0x3b, 0xb4, 0xec,
+	0x1f, 0x97, 0x8f, 0x88, 0xeb, 0x58, 0xa4, 0xdc, 0xe7, 0x4e, 0xd7, 0x0f, 0x4a, 0x6d, 0xe2, 0xaa,
+	0xd5, 0x65, 0xc7, 0xb5, 0xba, 0xfd, 0x0e, 0x19, 0xd0, 0xdc, 0x57, 0x68, 0x6c, 0x6a, 0xd3, 0xb2,
+	0x18, 0x3e, 0xe8, 0x7f, 0x26, 0x9e, 0xc4, 0x83, 0xf8, 0x15, 0xc2, 0xef, 0x9d, 0x33, 0x6b, 0xa0,
+	0xb1, 0x47, 0xb8, 0x19, 0xc2, 0xfe, 0x7f, 0x01, 0xcc, 0xa2, 0xbd, 0x1e, 0x75, 0x25, 0xd0, 0xf8,
+	0x12, 0xa6, 0xea, 0xed, 0x5a, 0x93, 0xb5, 0x19, 0xb1, 0xf0, 0x03, 0xc8, 0x36, 0x99, 0x8e, 0x96,
+	0xd1, 0x6a, 0xbe, 0x92, 0x93, 0x00, 0x7f, 0x43, 0xbc, 0xae, 0x16, 0x5e, 0x9c, 0x2e, 0xa1, 0x57,
+	0xa7, 0x4b, 0xb7, 0x28, 0x5b, 0xa7, 0x3d, 0x87, 0x93, 0x1e, 0xe3, 0x27, 0xad, 0x6c, 0x93, 0xe1,
+	0x32, 0x4c, 0x3c, 0x27, 0x9e, 0xef, 0x50, 0x57, 0xcf, 0x2e, 0xa3, 0xd5, 0xa9, 0xea, 0x5c, 0x08,
+	0xcd, 0x1d, 0x11, 0x4f, 0xc1, 0x0e, 0x50, 0xc6, 0x36, 0xe4, 0xeb, 0xed, 0x5a, 0x4b, 0x5a, 0x2e,
+	0xe6, 0x7d, 0x1f, 0xc6, 0x9a, 0xcc, 0xd7, 0xd1, 0xf2, 0xd8, 0xea, 0x74, 0xe5, 0x76, 0x6c, 0xe2,
+	0xe0, 0xbd, 0x60, 0xcc, 0x04, 0x8c, 0x94, 0xf9, 0x0a, 0x63, 0x50, 0x64, 0xfc, 0x8e, 0x60, 0x5a,
+	0x22, 0xb9, 0xc9, 0xfb, 0x3e, 0xfe, 0xdf, 0xb9, 0x6b, 0x10, 0x6a, 0xf5, 0x84, 0xda, 0xa1, 0x2c,
+	0xbc, 0x07, 0x93, 0x03, 0x12, 0x7d, 0x4c, 0x2c, 0xe4, 0xe1, 0x4f, 0x5f, 0xcf, 0x17, 0xdb, 0xdc,
+	0xdb, 0x74, 0xfb, 0xbd, 0xd5, 0xc7, 0xdd, 0x2e, 0x3d, 0x26, 0x1d, 0x09, 0x78, 0x27, 0x5c, 0x22,
+	0xa6, 0xcc, 0x17, 0x03, 0x8a, 0xaa, 0x21, 0x0b, 0x5e, 0x87, 0x89, 0x1d, 0xe2, 0xfb, 0xa6, 0x4d,
+	0xf4, 0x71, 0x41, 0x88, 0xc3, 0x32, 0x50, 0x6d, 0x09, 0x21, 0xc6, 0xa7, 0xa0, 0x29, 0xb6, 0x48,
+	0x86, 0x2d, 0x45, 0x93, 0x74, 0x67, 0x36, 0xee, 0x8e, 0x78, 0x55, 0xd5, 0x43, 0x7f, 0xb4, 0xf3,
+	0xc5, 0x18, 0x7f, 0x21, 0x80, 0x88, 0x1f, 0x3f, 0x82, 0xc9, 0x67, 0x27, 0x8c, 0xec, 0x10, 0x6e,
+	0x0a, 0xb3, 0xa6, 0x2b, 0xb9, 0x0d, 0x93, 0x39, 0x1b, 0x83, 0xc1, 0xea, 0x6c, 0xc0, 0xf9, 0x52,
+	0xea, 0x9d, 0x58, 0x77, 0xdc, 0xae, 0xe3, 0x92, 0xd6, 0xb0, 0x06, 0x7f, 0x0c, 0xd0, 0x3c, 0xf8,
+	0x9c, 0x58, 0x5c, 0x30, 0x64, 0x05, 0xc3, 0x8c, 0x60, 0x88, 0x86, 0xab, 0x25, 0x85, 0x23, 0x1f,
+	0x9c, 0x4e, 0x45, 0x99, 0x52, 0x8e, 0xab, 0x30, 0x1e, 0xec, 0xb3, 0xb0, 0x7d, 0xba, 0x52, 0x54,
+	0x96, 0xa8, 0x9c, 0x92, 0x6a, 0x31, 0x5c, 0x65, 0xde, 0x67, 0xc4, 0x52, 0x98, 0x44, 0xad, 0xf1,
+	0x2d, 0x82, 0x99, 0xa8, 0x60, 0xf3, 0x88, 0xb8, 0x1c, 0x37, 0x60, 0x4a, 0xfc, 0x08, 0x54, 0x87,
+	0x47, 0x22, 0x2f, 0x34, 0x0e, 0x47, 0xab, 0xfa, 0xab, 0xd3, 0xa5, 0x02, 0x09, 0x1e, 0xef, 0xf3,
+	0x13, 0x46, 0x14, 0xda, 0xa8, 0x14, 0x37, 0x54, 0xeb, 0xc2, 0xc5, 0xe2, 0x51, 0x95, 0x62, 0x7f,
+	0x33, 0x89, 0xfd, 0x55, 0x2a, 0x8d, 0xef, 0x10, 0x14, 0x93, 0x7b, 0xbc, 0xcf, 0x3a, 0x26, 0x27,
+	0xb8, 0x16, 0xf3, 0x13, 0xa5, 0xfb, 0x99, 0xca, 0xaf, 0xf8, 0x58, 0x87, 0x9b, 0xe1, 0x61, 0x91,
+	0x1a, 0xf5, 0x14, 0x27, 0xe5, 0x89, 0x49, 0x63, 0x0a, 0x6b, 0x8d, 0x8f, 0xe0, 0xd6, 0x73, 0x91,
+	0x61, 0x61, 0x2a, 0x2c, 0x2b, 0x1d, 0xa5, 0x0d, 0x18, 0x07, 0x88, 0x8b, 0x9b, 0xca, 0x68, 0xc1,
+	0x6d, 0x89, 0x54, 0xdb, 0xfd, 0x03, 0xb5, 0xdd, 0x0b, 0x49, 0xc6, 0x4b, 0x3b, 0xfe, 0x0f, 0x04,
+	0xf9, 0x21, 0x58, 0xf6, 0xc9, 0x6b, 0x48, 0x7c, 0xe3, 0x7d, 0x6f, 0xc1, 0x6c, 0xdc, 0x22, 0x49,
+	0xb2, 0x3d, 0xd2, 0xfa, 0xc5, 0x11, 0xa7, 0xae, 0xde, 0xfd, 0xff, 0x20, 0xc8, 0xc5, 0x66, 0x79,
+	0xbb, 0x02, 0x60, 0x33, 0x16, 0x00, 0xf3, 0xf1, 0x85, 0x5e, 0x3d, 0x03, 0x7e, 0x45, 0x80, 0x63,
+	0x35, 0xd7, 0x1b, 0x03, 0xcd, 0x84, 0x87, 0xe1, 0xaa, 0xe7, 0x52, 0xe5, 0xa6, 0xb6, 0x58, 0xbc,
+	0xde, 0xf8, 0x11, 0xc1, 0x7c, 0xca, 0xde, 0x5f, 0x67, 0x24, 0x3c, 0x49, 0x44, 0xc2, 0xdd, 0x74,
+	0x6f, 0x2f, 0x4f, 0x85, 0x6d, 0xc8, 0xb5, 0x89, 0x77, 0x14, 0xc5, 0xc2, 0x8a, 0xd2, 0x73, 0xc3,
+	0x6f, 0xf6, 0x10, 0x72, 0x49, 0x2e, 0x3c, 0x03, 0x1c, 0x42, 0xd5, 0x60, 0x78, 0xa4, 0x06, 0xc3,
+	0xdc, 0x08, 0xe7, 0xa5, 0xc9, 0xf0, 0x27, 0x82, 0x99, 0x08, 0x2d, 0xfb, 0xe8, 0x75, 0x64, 0xbe,
+	0xf1, 0x6c, 0x20, 0x50, 0x48, 0xd8, 0x24, 0x59, 0x76, 0x46, 0xc2, 0xe1, 0xce, 0xa8, 0x5b, 0x57,
+	0x4f, 0x87, 0x7f, 0x11, 0xe4, 0xe3, 0xf3, 0xbc, 0x5d, 0xf1, 0xd0, 0x88, 0xc5, 0x43, 0x29, 0xb1,
+	0xd4, 0xab, 0xe7, 0xc3, 0x6f, 0x08, 0x66, 0xe3, 0x45, 0xd7, 0x1b, 0x10, 0xad, 0xa4, 0x8d, 0xe1,
+	0xc2, 0x8b, 0xe9, 0x8a, 0x53, 0xfb, 0x2d, 0xc1, 0x60, 0xfc, 0x8c, 0xa0, 0x94, 0x76, 0x06, 0xae,
+	0x33, 0x24, 0x9e, 0x26, 0x42, 0x62, 0xe1, 0x1c, 0x87, 0x2f, 0x4d, 0x89, 0xb5, 0xef, 0x11, 0xdc,
+	0x10, 0x37, 0x53, 0x3c, 0x0d, 0x13, 0xf5, 0x76, 0x6d, 0x97, 0x36, 0x99, 0x96, 0xc1, 0xf7, 0x60,
+	0xa5, 0xde, 0xae, 0xed, 0x79, 0xa4, 0x76, 0x48, 0xac, 0x2f, 0x1a, 0xd4, 0xdb, 0x67, 0x76, 0xd3,
+	0xdd, 0x25, 0x5f, 0xf1, 0xa7, 0xd4, 0xe7, 0x2d, 0x72, 0x40, 0x29, 0xd7, 0x10, 0x5e, 0x00, 0x3d,
+	0x0e, 0xab, 0x3b, 0xbe, 0xd7, 0x67, 0xdc, 0x39, 0x22, 0x5a, 0x16, 0x97, 0xc4, 0xe5, 0x29, 0xad,
+	0x72, 0x0c, 0xeb, 0x50, 0xa8, 0xb7, 0x6b, 0x11, 0x7c, 0x9f, 0xd9, 0x9e, 0xd9, 0x21, 0xda, 0x38,
+	0x2e, 0x88, 0x6b, 0xf5, 0x56, 0xcf, 0xb4, 0x49, 0x9d, 0x1e, 0xbb, 0x5d, 0x6a, 0x76, 0xb4, 0x1b,
+	0x6b, 0xef, 0x41, 0x2e, 0xd6, 0xbc, 0x81, 0xdc, 0x76, 0xdf, 0xb2, 0x88, 0xef, 0x6b, 0x19, 0x3c,
+	0x09, 0xe3, 0x0d, 0xd3, 0xe9, 0x6a, 0x08, 0xe7, 0x01, 0xb6, 0xdc, 0x3d, 0x8f, 0xda, 0x5e, 0xf0,
+	0x26, 0xbb, 0xf6, 0x10, 0x26, 0x07, 0x5f, 0x5f, 0x8c, 0x07, 0xd7, 0x90, 0x81, 0x60, 0x2d, 0x13,
+	0xcc, 0x16, 0x06, 0x6b, 0xdf, 0x0d, 0x43, 0x44, 0x43, 0x6b, 0x06, 0x4c, 0x0d, 0xdb, 0x12, 0xcf,
+	0xc1, 0xed, 0x81, 0xad, 0x11, 0x26, 0x53, 0xf9, 0x06, 0x41, 0x2e, 0xba, 0xa6, 0x3d, 0x66, 0x0e,
+	0xfe, 0x10, 0x66, 0x3e, 0x31, 0xb9, 0x75, 0xa8, 0xdc, 0xda, 0x93, 0x3b, 0x5b, 0xba, 0x33, 0x7a,
+	0xc3, 0x13, 0xc7, 0xd1, 0xc8, 0xbc, 0x8b, 0x70, 0x03, 0x8a, 0xf2, 0x94, 0x8c, 0xfc, 0xbf, 0x62,
+	0xf1, 0xbc, 0x8b, 0xa1, 0xc4, 0x97, 0x40, 0x9e, 0xfe, 0x60, 0x6b, 0x8d, 0x4c, 0xe5, 0x07, 0x34,
+	0x5c, 0x55, 0xa4, 0x6e, 0x13, 0xb0, 0x50, 0x17, 0xbf, 0x55, 0x8c, 0x08, 0x2c, 0xa5, 0x7e, 0x6f,
+	0x22, 0x8d, 0xdb, 0x30, 0x2f, 0xe7, 0x4c, 0xbb, 0x03, 0xad, 0x5c, 0xf0, 0xb1, 0x4a, 0x55, 0xfa,
+	0x0b, 0x8a, 0xcc, 0x8d, 0xa4, 0x3e, 0x81, 0x59, 0x21, 0x35, 0x11, 0x71, 0x23, 0x5a, 0xef, 0xa6,
+	0x1f, 0xfb, 0x48, 0xec, 0x2e, 0x94, 0xe4, 0xb4, 0xa9, 0xa1, 0x6c, 0x5c, 0xd4, 0x35, 0x69, 0x72,
+	0xab, 0xb7, 0x5e, 0x9c, 0x2d, 0xa2, 0x97, 0x67, 0x8b, 0xe8, 0xef, 0xb3, 0x45, 0xb4, 0x87, 0x0e,
+	0xe4, 0x1f, 0x1e, 0x1e, 0xfc, 0x17, 0x00, 0x00, 0xff, 0xff, 0x64, 0xd1, 0xf2, 0xd8, 0x90, 0x10,
+	0x00, 0x00,
 }

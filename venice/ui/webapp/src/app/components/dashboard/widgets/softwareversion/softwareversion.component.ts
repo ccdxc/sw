@@ -13,7 +13,7 @@ export class SoftwareversionComponent implements OnInit, OnDestroy, OnChanges {
   features: any[] = [
     {
       name: 'Enterprise License',
-      detail: 'Up to 5000 Naples'
+      detail: 'Up to 5000 Distributed Services Cards'
     },
     {
       name: 'Premium support',

@@ -2,7 +2,7 @@ import {Component, OnInit, OnDestroy} from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Animations } from '@app/animations';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint, IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { MetricsUtility } from '@app/common/MetricsUtility';
@@ -47,13 +47,13 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   };
   // Id of the object the user has navigated to
   selectedId: string;
-  selectedObj: Readonly<ClusterSmartNIC>;
+  selectedObj: Readonly<ClusterDistributedServiceCard>;
 
   showExpandedDetailsCard: boolean;
 
   // Holds all objects, should be only one item in the array
-  objList: ReadonlyArray<IClusterSmartNIC>;
-  objEventUtility: HttpEventUtility<IClusterSmartNIC>;
+  objList: ReadonlyArray<IClusterDistributedServiceCard>;
+  objEventUtility: HttpEventUtility<IClusterDistributedServiceCard>;
 
   // Whether we show a deletion overlay
   showDeletionScreen: boolean;
@@ -69,7 +69,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   diskChartData: HeroCardOptions = MetricsUtility.detailLevelDiskHeroCard(this.cardColor, this.cardIcon);
 
-  admissionPhaseEnum = ClusterSmartNICStatus_admission_phase_uihint;
+  admissionPhaseEnum = ClusterDistributedServiceCardStatus_admission_phase_uihint;
 
   heroCards = [
     this.cpuChartData,
@@ -82,7 +82,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   avgDayData: ITelemetry_queryMetricsQueryResult;
   clusterAvgData: ITelemetry_queryMetricsQueryResult;
 
-  telemetryKind: string = 'SmartNIC';
+  telemetryKind: string = 'DistributedServiceCard';
 
   alertseventsSelector: AlertsEventsSelector;
 
@@ -116,7 +116,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this._controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [
-        { label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' },
+        { label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/naples' },
         { label: nicName, url: Utility.getBaseUIUrl() + 'cluster/naples/' + id }
       ]
     });
@@ -156,7 +156,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     // looking for exists or not.
     // Adding ':' as a temporary workaround of ApiGw not being able to
     // correctly parse smartNic names without it.
-    const getSubscription = this.clusterService.GetSmartNIC(this.selectedId + ':').subscribe(
+    const getSubscription = this.clusterService.GetDistributedServiceCard(this.selectedId + ':').subscribe(
       response => {
         // We do nothing, and wait for the callback of the watch to populate the view
       },
@@ -170,9 +170,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       }
     );
     this.subscriptions.push(getSubscription);
-    this.objEventUtility = new HttpEventUtility<IClusterSmartNIC>();
+    this.objEventUtility = new HttpEventUtility<IClusterDistributedServiceCard>();
     this.objList = this.objEventUtility.array;
-    const subscription = this.clusterService.WatchSmartNIC({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
+    const subscription = this.clusterService.WatchDistributedServiceCard({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
       response => {
         this.objEventUtility.processEvents(response);
         if (this.objList.length > 1) {
@@ -184,20 +184,20 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             this.objList.map((naples) => naples.meta.name).join(', '));
         }
         if (this.selectedObj != null && this.objList.length > 0) {
-          this.selectedObj = new ClusterSmartNIC(this.objList[0]);
+          this.selectedObj = new ClusterDistributedServiceCard(this.objList[0]);
         } else if (this.selectedObj == null && this.objList.length > 0) {
           // In case object was deleted and then readded while we are on the same screen
           this.showDeletionScreen = false;
           // In case object wasn't created yet and then was added while we are on the same screen
           this.showMissingScreen = false;
-          this.selectedObj = new ClusterSmartNIC(this.objList[0]);
+          this.selectedObj = new ClusterDistributedServiceCard(this.objList[0]);
           this.alertseventsSelector = {
             eventSelector: {
-              selector: 'object-ref.name=' + this.selectedObj.spec.id + ',object-ref.kind=SmartNIC',
+              selector: 'object-ref.name=' + this.selectedObj.spec.id + ',object-ref.kind=DistributedServiceCard',
               name: this.selectedObj.spec.id,
             },
             alertSelector: {
-              selector: 'status.object-ref.name=' + this.selectedObj.spec.id + ',status.object-ref.kind=SmartNIC',
+              selector: 'status.object-ref.name=' + this.selectedObj.spec.id + ',status.object-ref.kind=DistributedServiceCard',
               name: this.selectedObj.spec.id
             }
           };
@@ -399,10 +399,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.inLabelEditMode = false;
   }
 
-  handleEditSave(newObjects: ClusterSmartNIC[]) {
+  handleEditSave(newObjects: ClusterDistributedServiceCard[]) {
     if (newObjects.length > 0) {
       const name = newObjects[0].meta.name;
-      const sub = this.clusterService.UpdateSmartNIC(name, newObjects[0], '',  this.objList[0]).subscribe(response => {
+      const sub = this.clusterService.UpdateDistributedServiceCard(name, newObjects[0], '',  this.objList[0]).subscribe(response => {
         this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${name}'s labels`);
       }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
       this.subscriptions.push(sub);
@@ -432,22 +432,22 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.showExpandedDetailsCard = !this.showExpandedDetailsCard;
   }
 
-  helpDisplayCondition(data: Readonly<ClusterSmartNIC>): string {
+  helpDisplayCondition(data: Readonly<ClusterDistributedServiceCard>): string {
     return Utility.getNaplesCondition(data);
   }
 
-  helpDisplayReasons(data: Readonly<ClusterSmartNIC>): any {
+  helpDisplayReasons(data: Readonly<ClusterDistributedServiceCard>): any {
     return Utility.displayReasons(data);
   }
 
-  isNICHealthy(data: Readonly<ClusterSmartNIC>): boolean {
+  isNICHealthy(data: Readonly<ClusterDistributedServiceCard>): boolean {
   if (Utility.isNaplesNICHealthy(data)) {
       return true;
     }
     return false;
   }
 
-  isNICNotAdmitted(data: Readonly<ClusterSmartNIC>): boolean {
+  isNICNotAdmitted(data: Readonly<ClusterDistributedServiceCard>): boolean {
     if (Utility.isNICConditionEmpty(data)) {
       return true;
     }

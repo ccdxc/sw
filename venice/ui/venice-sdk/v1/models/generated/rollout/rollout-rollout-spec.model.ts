@@ -20,8 +20,8 @@ export interface IRolloutRolloutSpec {
     'max-nic-failures-before-abort'?: number;
     'order-constraints'?: Array<ILabelsSelector>;
     'suspend'?: boolean;
-    'smartnics-only'?: boolean;
-    'smartnic-must-match-constraint'?: boolean;
+    'dscs-only'?: boolean;
+    'dsc-must-match-constraint'?: boolean;
     'upgrade-type': RolloutRolloutSpec_upgrade_type;
 }
 
@@ -34,16 +34,16 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     'duration': string = null;
     'strategy': RolloutRolloutSpec_strategy = null;
     /** MaxParallel is the maximum number of nodes getting updated at any time
-    This setting is applicable only to SmartNICs.
+    This setting is applicable only to DistributedServiceCards.
     Controller nodes are always upgraded one after another. */
     'max-parallel': number = null;
     'max-nic-failures-before-abort': number = null;
     'order-constraints': Array<LabelsSelector> = null;
-    /** When Set to true, the current rollout is suspended. Existing Nodes/Services/SmartNICs in the middle of rollout continue
-     rollout execution but any Nodes/Services/SmartNICs which has not started Rollout will not be scheduled one. */
+    /** When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
+     rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one. */
     'suspend': boolean = null;
-    'smartnics-only': boolean = null;
-    'smartnic-must-match-constraint': boolean = null;
+    'dscs-only': boolean = null;
+    'dsc-must-match-constraint': boolean = null;
     'upgrade-type': RolloutRolloutSpec_upgrade_type = null;
     public static propInfo: { [prop in keyof IRolloutRolloutSpec]: PropInfoItem } = {
         'version': {
@@ -68,7 +68,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         },
         'max-parallel': {
             default: parseInt('2'),
-            description:  'MaxParallel is the maximum number of nodes getting updated at any time This setting is applicable only to SmartNICs. Controller nodes are always upgraded one after another.',
+            description:  'MaxParallel is the maximum number of nodes getting updated at any time This setting is applicable only to DistributedServiceCards. Controller nodes are always upgraded one after another.',
             required: false,
             type: 'number'
         },
@@ -81,15 +81,15 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
             type: 'object'
         },
         'suspend': {
-            description:  'When Set to true, the current rollout is suspended. Existing Nodes/Services/SmartNICs in the middle of rollout continue  rollout execution but any Nodes/Services/SmartNICs which has not started Rollout will not be scheduled one.',
+            description:  'When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue  rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one.',
             required: false,
             type: 'boolean'
         },
-        'smartnics-only': {
+        'dscs-only': {
             required: false,
             type: 'boolean'
         },
-        'smartnic-must-match-constraint': {
+        'dsc-must-match-constraint': {
             required: false,
             type: 'boolean'
         },
@@ -187,19 +187,19 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         } else {
             this['suspend'] = null
         }
-        if (values && values['smartnics-only'] != null) {
-            this['smartnics-only'] = values['smartnics-only'];
-        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('smartnics-only')) {
-            this['smartnics-only'] = RolloutRolloutSpec.propInfo['smartnics-only'].default;
+        if (values && values['dscs-only'] != null) {
+            this['dscs-only'] = values['dscs-only'];
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('dscs-only')) {
+            this['dscs-only'] = RolloutRolloutSpec.propInfo['dscs-only'].default;
         } else {
-            this['smartnics-only'] = null
+            this['dscs-only'] = null
         }
-        if (values && values['smartnic-must-match-constraint'] != null) {
-            this['smartnic-must-match-constraint'] = values['smartnic-must-match-constraint'];
-        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('smartnic-must-match-constraint')) {
-            this['smartnic-must-match-constraint'] = RolloutRolloutSpec.propInfo['smartnic-must-match-constraint'].default;
+        if (values && values['dsc-must-match-constraint'] != null) {
+            this['dsc-must-match-constraint'] = values['dsc-must-match-constraint'];
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('dsc-must-match-constraint')) {
+            this['dsc-must-match-constraint'] = RolloutRolloutSpec.propInfo['dsc-must-match-constraint'].default;
         } else {
-            this['smartnic-must-match-constraint'] = null
+            this['dsc-must-match-constraint'] = null
         }
         if (values && values['upgrade-type'] != null) {
             this['upgrade-type'] = values['upgrade-type'];
@@ -223,8 +223,8 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
                 'max-nic-failures-before-abort': CustomFormControl(new FormControl(this['max-nic-failures-before-abort']), RolloutRolloutSpec.propInfo['max-nic-failures-before-abort']),
                 'order-constraints': new FormArray([]),
                 'suspend': CustomFormControl(new FormControl(this['suspend']), RolloutRolloutSpec.propInfo['suspend']),
-                'smartnics-only': CustomFormControl(new FormControl(this['smartnics-only']), RolloutRolloutSpec.propInfo['smartnics-only']),
-                'smartnic-must-match-constraint': CustomFormControl(new FormControl(this['smartnic-must-match-constraint']), RolloutRolloutSpec.propInfo['smartnic-must-match-constraint']),
+                'dscs-only': CustomFormControl(new FormControl(this['dscs-only']), RolloutRolloutSpec.propInfo['dscs-only']),
+                'dsc-must-match-constraint': CustomFormControl(new FormControl(this['dsc-must-match-constraint']), RolloutRolloutSpec.propInfo['dsc-must-match-constraint']),
                 'upgrade-type': CustomFormControl(new FormControl(this['upgrade-type'], [required, enumValidator(RolloutRolloutSpec_upgrade_type), ]), RolloutRolloutSpec.propInfo['upgrade-type']),
             });
             // generate FormArray control elements
@@ -252,8 +252,8 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
             this._formGroup.controls['max-nic-failures-before-abort'].setValue(this['max-nic-failures-before-abort']);
             this.fillModelArray<LabelsSelector>(this, 'order-constraints', this['order-constraints'], LabelsSelector);
             this._formGroup.controls['suspend'].setValue(this['suspend']);
-            this._formGroup.controls['smartnics-only'].setValue(this['smartnics-only']);
-            this._formGroup.controls['smartnic-must-match-constraint'].setValue(this['smartnic-must-match-constraint']);
+            this._formGroup.controls['dscs-only'].setValue(this['dscs-only']);
+            this._formGroup.controls['dsc-must-match-constraint'].setValue(this['dsc-must-match-constraint']);
             this._formGroup.controls['upgrade-type'].setValue(this['upgrade-type']);
         }
     }

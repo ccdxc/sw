@@ -7,7 +7,7 @@ import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {MaterialdesignModule} from '@lib/materialdesign.module';
 import {PrimengModule} from '@lib/primeng.module';
 import {FormsModule} from '@angular/forms';
-import {ClusterSmartNIC} from '@sdk/v1/models/generated/cluster';
+import {ClusterDistributedServiceCard} from '@sdk/v1/models/generated/cluster';
 import { configureTestSuite } from 'ng-bullet';
 import {By} from '@angular/platform-browser';
 import {TestingUtility} from '@common/TestingUtility';
@@ -34,7 +34,7 @@ describe('LabeleditorComponent', () => {
       },
       'primary-mac': '00ae.cd00.1142',
       'admission-phase': 'PENDING',
-      'smartNicVersion': '1.0E',
+      'DSCVersion': '1.0E',
     }
   };
 
@@ -57,7 +57,7 @@ describe('LabeleditorComponent', () => {
     fixture = TestBed.createComponent(LabeleditorComponent);
     component = fixture.componentInstance;
     component.objects = [];
-    component.objects.push(new ClusterSmartNIC(naples1));
+    component.objects.push(new ClusterDistributedServiceCard(naples1));
     component.inLabelEditMode = true;
     tu = new TestingUtility(fixture);
     fixture.detectChanges();

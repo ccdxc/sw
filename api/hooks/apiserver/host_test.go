@@ -28,7 +28,7 @@ func makeHostObj(hostName, macAddr, nicName string) *cluster.Host {
 			APIVersion: "v1",
 		},
 		Spec: cluster.HostSpec{
-			SmartNICs: []cluster.SmartNICID{
+			DSCs: []cluster.DistributedServiceCardID{
 				{
 					MACAddress: macAddr,
 					ID:         nicName,
@@ -103,7 +103,7 @@ func TestHostObjectValidation(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: cluster.HostSpec{
-					SmartNICs: []cluster.SmartNICID{
+					DSCs: []cluster.DistributedServiceCardID{
 						{
 							MACAddress: "01-02-03-04-05-06",
 						},
@@ -126,7 +126,7 @@ func TestHostObjectValidation(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: cluster.HostSpec{
-					SmartNICs: []cluster.SmartNICID{
+					DSCs: []cluster.DistributedServiceCardID{
 						{
 							MACAddress: "01-02-03-04-05-06",
 						},

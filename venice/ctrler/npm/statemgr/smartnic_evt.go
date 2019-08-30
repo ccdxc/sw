@@ -12,20 +12,20 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-// SmartNICState is a wrapper for smartNic object
-type SmartNICState struct {
-	SmartNIC *ctkit.SmartNIC `json:"-"` // smartNic object
-	stateMgr *Statemgr       // pointer to state manager
+// DistributedServiceCardState is a wrapper for smartNic object
+type DistributedServiceCardState struct {
+	DistributedServiceCard *ctkit.DistributedServiceCard `json:"-"` // smartNic object
+	stateMgr               *Statemgr                     // pointer to state manager
 }
 
-// SmartNICStateFromObj conerts from memdb object to smartNic state
-func SmartNICStateFromObj(obj runtime.Object) (*SmartNICState, error) {
+// DistributedServiceCardStateFromObj conerts from memdb object to smartNic state
+func DistributedServiceCardStateFromObj(obj runtime.Object) (*DistributedServiceCardState, error) {
 	switch obj.(type) {
-	case *ctkit.SmartNIC:
-		sobj := obj.(*ctkit.SmartNIC)
+	case *ctkit.DistributedServiceCard:
+		sobj := obj.(*ctkit.DistributedServiceCard)
 		switch sobj.HandlerCtx.(type) {
-		case *SmartNICState:
-			nsobj := sobj.HandlerCtx.(*SmartNICState)
+		case *DistributedServiceCardState:
+			nsobj := sobj.HandlerCtx.(*DistributedServiceCardState)
 			return nsobj, nil
 		default:
 			return nil, ErrIncorrectObjectType
@@ -35,42 +35,42 @@ func SmartNICStateFromObj(obj runtime.Object) (*SmartNICState, error) {
 	}
 }
 
-// NewSmartNICState creates new smartNic state object
-func NewSmartNICState(smartNic *ctkit.SmartNIC, stateMgr *Statemgr) (*SmartNICState, error) {
-	hs := &SmartNICState{
-		SmartNIC: smartNic,
-		stateMgr: stateMgr,
+// NewDistributedServiceCardState creates new smartNic state object
+func NewDistributedServiceCardState(smartNic *ctkit.DistributedServiceCard, stateMgr *Statemgr) (*DistributedServiceCardState, error) {
+	hs := &DistributedServiceCardState{
+		DistributedServiceCard: smartNic,
+		stateMgr:               stateMgr,
 	}
 	smartNic.HandlerCtx = hs
 
 	return hs, nil
 }
 
-// OnSmartNICCreate handles smartNic creation
-func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
+// OnDistributedServiceCardCreate handles smartNic creation
+func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedServiceCard) error {
 	// see if we already have the smartNic
-	sns, err := sm.FindSmartNIC(smartNic.Tenant, smartNic.Name)
+	sns, err := sm.FindDistributedServiceCard(smartNic.Tenant, smartNic.Name)
 	if err == nil {
-		sns.SmartNIC = smartNic
+		sns.DistributedServiceCard = smartNic
 		return nil
 	}
 
 	log.Infof("Creating smart nic: %+v", smartNic)
 
 	// create new smartNic object
-	sns, err = NewSmartNICState(smartNic, sm)
+	sns, err = NewDistributedServiceCardState(smartNic, sm)
 	if err != nil {
 		log.Errorf("Error creating smartNic %+v. Err: %v", smartNic, err)
 		return err
 	}
 
 	// see if smartnic is haelthy
-	if sm.isSmartNICHealthy(&smartNic.SmartNIC) {
+	if sm.isDistributedServiceCardHealthy(&smartNic.DistributedServiceCard) {
 		// Update SGPolicies
 		policies, _ := sm.ListSgpolicies()
 		for _, policy := range policies {
-			if _, ok := policy.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
-				policy.NodeVersions[smartNic.SmartNIC.Name] = ""
+			if _, ok := policy.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
+				policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
 				sm.PeriodicUpdaterPush(policy)
 			}
 		}
@@ -78,8 +78,8 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 		// Update FirewallProfiles
 		fwprofiles, _ := sm.ListFirewallProfiles()
 		for _, fwprofile := range fwprofiles {
-			if _, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
-				fwprofile.NodeVersions[smartNic.SmartNIC.Name] = ""
+			if _, ok := fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
+				fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
 				sm.PeriodicUpdaterPush(fwprofile)
 			}
 		}
@@ -88,8 +88,8 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 	// walk all hosts and see if they need to be associated to this snic
 	for _, host := range sm.ctrler.Host().List() {
 		associated := false
-		for _, snid := range host.Spec.SmartNICs {
-			if (snid.ID == smartNic.SmartNIC.Spec.ID) || (snid.MACAddress == smartNic.SmartNIC.Status.PrimaryMAC) {
+		for _, snid := range host.Spec.DSCs {
+			if (snid.ID == smartNic.DistributedServiceCard.Spec.ID) || (snid.MACAddress == smartNic.DistributedServiceCard.Status.PrimaryMAC) {
 				associated = true
 			}
 		}
@@ -119,21 +119,21 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 	return nil
 }
 
-// OnSmartNICUpdate handles update event on smartnic
-func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.SmartNIC) error {
+// OnDistributedServiceCardUpdate handles update event on smartnic
+func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) error {
 	// see if we already have the smartNic
-	hs, err := SmartNICStateFromObj(smartNic)
+	hs, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Error finding smartnic. Err: %v", err)
 		return err
 	}
 
-	hs.SmartNIC.SmartNIC = *nsnic
+	hs.DistributedServiceCard.DistributedServiceCard = *nsnic
 
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		if sm.isSmartNICHealthy(nsnic) {
+		if sm.isDistributedServiceCardHealthy(nsnic) {
 			if _, ok := policy.NodeVersions[nsnic.Name]; !ok {
 				policy.NodeVersions[nsnic.Name] = ""
 				sm.PeriodicUpdaterPush(policy)
@@ -150,7 +150,7 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 	// update firewall profiles
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
-		if sm.isSmartNICHealthy(nsnic) {
+		if sm.isDistributedServiceCardHealthy(nsnic) {
 			if _, ok := fwprofile.NodeVersions[nsnic.Name]; ok == false {
 				fwprofile.NodeVersions[nsnic.Name] = ""
 				sm.PeriodicUpdaterPush(fwprofile)
@@ -168,10 +168,10 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 	return nil
 }
 
-// OnSmartNICDelete handles smartNic deletion
-func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
+// OnDistributedServiceCardDelete handles smartNic deletion
+func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedServiceCard) error {
 	// see if we have the smartNic
-	hs, err := SmartNICStateFromObj(smartNic)
+	hs, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Could not find the smartNic %v. Err: %v", smartNic, err)
 		return err
@@ -182,18 +182,18 @@ func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		_, ok := policy.NodeVersions[hs.SmartNIC.Name]
+		_, ok := policy.NodeVersions[hs.DistributedServiceCard.Name]
 		if ok {
-			delete(policy.NodeVersions, hs.SmartNIC.Name)
+			delete(policy.NodeVersions, hs.DistributedServiceCard.Name)
 			sm.PeriodicUpdaterPush(policy)
 		}
 	}
 
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
-		_, ok := fwprofile.NodeVersions[hs.SmartNIC.Name]
+		_, ok := fwprofile.NodeVersions[hs.DistributedServiceCard.Name]
 		if ok {
-			delete(fwprofile.NodeVersions, hs.SmartNIC.Name)
+			delete(fwprofile.NodeVersions, hs.DistributedServiceCard.Name)
 			sm.PeriodicUpdaterPush(fwprofile)
 		}
 	}
@@ -201,8 +201,8 @@ func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	// walk all hosts and see if they need to be dis-associated to this snic
 	for _, host := range sm.ctrler.Host().List() {
 		associated := false
-		for _, snid := range host.Spec.SmartNICs {
-			if (snid.ID == smartNic.SmartNIC.Spec.ID) || (snid.MACAddress == smartNic.SmartNIC.Status.PrimaryMAC) {
+		for _, snid := range host.Spec.DSCs {
+			if (snid.ID == smartNic.DistributedServiceCard.Spec.ID) || (snid.MACAddress == smartNic.DistributedServiceCard.Status.PrimaryMAC) {
 				associated = true
 			}
 		}
@@ -231,28 +231,28 @@ func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	return nil
 }
 
-// FindSmartNIC finds a smartNic
-func (sm *Statemgr) FindSmartNIC(tenant, name string) (*SmartNICState, error) {
+// FindDistributedServiceCard finds a smartNic
+func (sm *Statemgr) FindDistributedServiceCard(tenant, name string) (*DistributedServiceCardState, error) {
 	// find the object
-	obj, err := sm.FindObject("SmartNIC", "", "", name)
+	obj, err := sm.FindObject("DistributedServiceCard", "", "", name)
 	if err != nil {
 		return nil, err
 	}
 
-	return SmartNICStateFromObj(obj)
+	return DistributedServiceCardStateFromObj(obj)
 }
 
-// FindSmartNICByMacAddr finds the smart nic by mac addr
-func (sm *Statemgr) FindSmartNICByMacAddr(macAddr string) (*SmartNICState, error) {
-	objs := sm.ListObjects("SmartNIC")
+// FindDistributedServiceCardByMacAddr finds the smart nic by mac addr
+func (sm *Statemgr) FindDistributedServiceCardByMacAddr(macAddr string) (*DistributedServiceCardState, error) {
+	objs := sm.ListObjects("DistributedServiceCard")
 
 	for _, obj := range objs {
-		snic, err := SmartNICStateFromObj(obj)
+		snic, err := DistributedServiceCardStateFromObj(obj)
 		if err != nil {
 			return nil, err
 		}
 
-		if snic.SmartNIC.Status.PrimaryMAC == macAddr {
+		if snic.DistributedServiceCard.Status.PrimaryMAC == macAddr {
 			return snic, nil
 		}
 	}
@@ -260,17 +260,17 @@ func (sm *Statemgr) FindSmartNICByMacAddr(macAddr string) (*SmartNICState, error
 	return nil, fmt.Errorf("Smartnic not found for mac addr %v", macAddr)
 }
 
-// FindSmartNICByHname finds smart nic by used given name
-func (sm *Statemgr) FindSmartNICByHname(hname string) (*SmartNICState, error) {
-	objs := sm.ListObjects("SmartNIC")
+// FindDistributedServiceCardByHname finds smart nic by used given name
+func (sm *Statemgr) FindDistributedServiceCardByHname(hname string) (*DistributedServiceCardState, error) {
+	objs := sm.ListObjects("DistributedServiceCard")
 
 	for _, obj := range objs {
-		snic, err := SmartNICStateFromObj(obj)
+		snic, err := DistributedServiceCardStateFromObj(obj)
 		if err != nil {
 			return nil, err
 		}
 
-		if snic.SmartNIC.Spec.ID == hname {
+		if snic.DistributedServiceCard.Spec.ID == hname {
 			return snic, nil
 		}
 	}
@@ -278,12 +278,12 @@ func (sm *Statemgr) FindSmartNICByHname(hname string) (*SmartNICState, error) {
 	return nil, fmt.Errorf("Smartnic not found for name %v", hname)
 }
 
-// isSmartNICHealthy returns true if smartnic is in healthry condition
-func (sm *Statemgr) isSmartNICHealthy(nsnic *cluster.SmartNIC) bool {
+// isDistributedServiceCardHealthy returns true if smartnic is in healthry condition
+func (sm *Statemgr) isDistributedServiceCardHealthy(nsnic *cluster.DistributedServiceCard) bool {
 	isHealthy := false
 	if len(nsnic.Status.Conditions) > 0 {
 		for _, cond := range nsnic.Status.Conditions {
-			if cond.Type == cluster.SmartNICCondition_HEALTHY.String() && cond.Status == cluster.ConditionStatus_TRUE.String() {
+			if cond.Type == cluster.DSCCondition_HEALTHY.String() && cond.Status == cluster.ConditionStatus_TRUE.String() {
 				isHealthy = true
 			}
 		}

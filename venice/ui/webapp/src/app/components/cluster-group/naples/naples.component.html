@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyicon" header="Naples Overview">
+<app-pagebody [icon]="bodyicon" header="Distributed Services Cards Overview">
   <div fxFlex="none" fxLayout="row">
     <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container">
       <ng-container *ngFor="let cardData of heroCards">
@@ -35,7 +35,8 @@
       <ng-template pTemplate="caption">
         <div fxFlex fxLayout="column">
           <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
-            <app-tableheader title="Naples" [total]="filteredNaples.length" [icon]="naplesIcon">
+            <app-tableheader title="Distributed Services Cards" [total]="filteredNaples.length"
+                             [icon]="naplesIcon">
             </app-tableheader>
 
             <div fxFlex="none" fxLayoutAlign="start center">
@@ -59,8 +60,8 @@
                                  [formArray]="fieldFormArray" [cols]="cols"
                                  [customQueryOptions]="customQueryOptions"
                                  (cancelEmitter)="onCancelSearch($event)"
-                                 (searchEmitter)="getSmartNICs()"
-                                 kind="SmartNIC"
+                                 (searchEmitter)="getDistributedServiceCards()"
+                                 kind="DistributedServiceCard"
                                  fxFlex="grow">
             </app-advanced-search>
           </div>
@@ -96,8 +97,8 @@
             <div *ngSwitchCase="'meta.creation-time'">
               {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
-            <div *ngSwitchCase="'status.smartNicVersion'">
-              {{rowData.status["smartNicVersion"]}}
+            <div *ngSwitchCase="'status.DSCVersion'">
+              {{rowData.status["DSCVersion"]}}
             </div>
             <div *ngSwitchCase="'status.host'">
               <a routerLink="/cluster/hosts"> {{rowData.status["host"]}}</a>

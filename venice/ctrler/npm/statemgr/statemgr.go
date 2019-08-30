@@ -149,7 +149,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	if err != nil {
 		logger.Fatalf("Error watching firewall profile")
 	}
-	err = ctrler.SmartNIC().Watch(statemgr)
+	err = ctrler.DistributedServiceCard().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching smartnic")
 	}

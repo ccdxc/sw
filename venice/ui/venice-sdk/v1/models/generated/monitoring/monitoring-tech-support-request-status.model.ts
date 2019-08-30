@@ -13,7 +13,7 @@ export interface IMonitoringTechSupportRequestStatus {
     'instance-id'?: string;
     'status': MonitoringTechSupportRequestStatus_status;
     'ctrlr-node-results'?: object;
-    'smartnic-node-results'?: object;
+    'dsc-results'?: object;
 }
 
 
@@ -21,7 +21,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     'instance-id': string = null;
     'status': MonitoringTechSupportRequestStatus_status = null;
     'ctrlr-node-results': object = null;
-    'smartnic-node-results': object = null;
+    'dsc-results': object = null;
     public static propInfo: { [prop in keyof IMonitoringTechSupportRequestStatus]: PropInfoItem } = {
         'instance-id': {
             required: false,
@@ -37,7 +37,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
             required: false,
             type: 'object'
         },
-        'smartnic-node-results': {
+        'dsc-results': {
             required: false,
             type: 'object'
         },
@@ -95,12 +95,12 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
         } else {
             this['ctrlr-node-results'] = null
         }
-        if (values && values['smartnic-node-results'] != null) {
-            this['smartnic-node-results'] = values['smartnic-node-results'];
-        } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('smartnic-node-results')) {
-            this['smartnic-node-results'] = MonitoringTechSupportRequestStatus.propInfo['smartnic-node-results'].default;
+        if (values && values['dsc-results'] != null) {
+            this['dsc-results'] = values['dsc-results'];
+        } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('dsc-results')) {
+            this['dsc-results'] = MonitoringTechSupportRequestStatus.propInfo['dsc-results'].default;
         } else {
-            this['smartnic-node-results'] = null
+            this['dsc-results'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -112,7 +112,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
                 'instance-id': CustomFormControl(new FormControl(this['instance-id']), MonitoringTechSupportRequestStatus.propInfo['instance-id']),
                 'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportRequestStatus_status), ]), MonitoringTechSupportRequestStatus.propInfo['status']),
                 'ctrlr-node-results': CustomFormControl(new FormControl(this['ctrlr-node-results']), MonitoringTechSupportRequestStatus.propInfo['ctrlr-node-results']),
-                'smartnic-node-results': CustomFormControl(new FormControl(this['smartnic-node-results']), MonitoringTechSupportRequestStatus.propInfo['smartnic-node-results']),
+                'dsc-results': CustomFormControl(new FormControl(this['dsc-results']), MonitoringTechSupportRequestStatus.propInfo['dsc-results']),
             });
         }
         return this._formGroup;
@@ -127,7 +127,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
             this._formGroup.controls['instance-id'].setValue(this['instance-id']);
             this._formGroup.controls['status'].setValue(this['status']);
             this._formGroup.controls['ctrlr-node-results'].setValue(this['ctrlr-node-results']);
-            this._formGroup.controls['smartnic-node-results'].setValue(this['smartnic-node-results']);
+            this._formGroup.controls['dsc-results'].setValue(this['dsc-results']);
         }
     }
 }

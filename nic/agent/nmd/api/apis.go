@@ -23,10 +23,10 @@ import (
 type CmdAPI interface {
 
 	// SmartNIC register api
-	RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error)
+	RegisterSmartNICReq(nic *cluster.DistributedServiceCard) (grpc.RegisterNICResponse, error)
 
 	// SmartNIC update api
-	UpdateSmartNICReq(nic *cluster.SmartNIC) error
+	UpdateSmartNICReq(nic *cluster.DistributedServiceCard) error
 
 	// WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
 	WatchSmartNICUpdates()
@@ -47,13 +47,13 @@ type NmdAPI interface {
 	GetAgentID() string
 	GetPrimaryMAC() string
 	GetControllerIps() []string
-	GetSmartNIC() (*cluster.SmartNIC, error)
-	SetSmartNIC(*cluster.SmartNIC) error
-	CreateSmartNIC(nic *cluster.SmartNIC) error
-	UpdateSmartNIC(nic *cluster.SmartNIC) error
-	DeleteSmartNIC(nic *cluster.SmartNIC) error
-	GetPlatformCertificate(nic *cluster.SmartNIC) ([]byte, error)
-	GenChallengeResponse(nic *cluster.SmartNIC, challenge []byte) ([]byte, []byte, error)
+	GetSmartNIC() (*cluster.DistributedServiceCard, error)
+	SetSmartNIC(*cluster.DistributedServiceCard) error
+	CreateSmartNIC(nic *cluster.DistributedServiceCard) error
+	UpdateSmartNIC(nic *cluster.DistributedServiceCard) error
+	DeleteSmartNIC(nic *cluster.DistributedServiceCard) error
+	GetPlatformCertificate(nic *cluster.DistributedServiceCard) ([]byte, error)
+	GenChallengeResponse(nic *cluster.DistributedServiceCard, challenge []byte) ([]byte, []byte, error)
 	GetIPConfig() *cluster.IPConfig
 	SetIPConfig(cfg *cluster.IPConfig)
 	SetVeniceIPs(veniceIPs []string)
@@ -63,21 +63,21 @@ type NmdAPI interface {
 // PlatformAPI is the API provided by PlatformAgent to NMD
 type PlatformAPI interface {
 	RegisterNMD(nmd NmdPlatformAPI) error
-	CreateSmartNIC(nic *cluster.SmartNIC) error
-	UpdateSmartNIC(nic *cluster.SmartNIC) error
-	DeleteSmartNIC(nic *cluster.SmartNIC) error
-	GetPlatformCertificate(nic *cluster.SmartNIC) ([]byte, error)
-	GetPlatformSigner(nic *cluster.SmartNIC) (crypto.Signer, error)
+	CreateSmartNIC(nic *cluster.DistributedServiceCard) error
+	UpdateSmartNIC(nic *cluster.DistributedServiceCard) error
+	DeleteSmartNIC(nic *cluster.DistributedServiceCard) error
+	GetPlatformCertificate(nic *cluster.DistributedServiceCard) ([]byte, error)
+	GetPlatformSigner(nic *cluster.DistributedServiceCard) (crypto.Signer, error)
 }
 
 // NmdPlatformAPI is the API provided by NMD to Platform agent
 type NmdPlatformAPI interface {
 
 	// SmartNIC register api
-	RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error)
+	RegisterSmartNICReq(nic *cluster.DistributedServiceCard) (grpc.RegisterNICResponse, error)
 
 	// SmartNIC update api
-	UpdateSmartNICReq(nic *cluster.SmartNIC) error
+	UpdateSmartNICReq(nic *cluster.DistributedServiceCard) error
 }
 
 // ==================================================================================
@@ -92,8 +92,8 @@ type NmdPlatformAPI interface {
 type RolloutAPI interface {
 	GetPrimaryMAC() string
 	RegisterROCtrlClient(RolloutCtrlAPI) error
-	CreateUpdateSmartNICRollout(sro *protos.SmartNICRollout) error
-	DeleteSmartNICRollout(sro *protos.SmartNICRollout) error
+	CreateUpdateDSCRollout(sro *protos.DSCRollout) error
+	DeleteDSCRollout(sro *protos.DSCRollout) error
 }
 
 // UpgMgrAPI is used by NMD for calling upgmgr in naples
@@ -117,10 +117,10 @@ type NmdRolloutAPI interface {
 
 // RolloutCtrlAPI is the API provided by Rollout Ctrler to NMD
 type RolloutCtrlAPI interface {
-	// WatchSmartNICRolloutUpdates establishes a watch on updates of SmartNICRollout objects
-	WatchSmartNICRolloutUpdates() error
-	// UpdateSmartNICRolloutStatus
-	UpdateSmartNICRolloutStatus(status *protos.SmartNICRolloutStatusUpdate) error
+	// WatchDSCRolloutUpdates establishes a watch on updates of DSCRollout objects
+	WatchDSCRolloutUpdates() error
+	// UpdateDSCRolloutStatus
+	UpdateDSCRolloutStatus(status *protos.DSCRolloutStatusUpdate) error
 	// Stop the watcher, client and free up any resources
 	Stop()
 	// IsSmartNICWatcherRunning returns true if there is active SmartNIC watch on CMD

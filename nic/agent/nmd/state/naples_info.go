@@ -352,16 +352,16 @@ func updateStorageInfo() *cmd.StorageInfo {
 }
 
 // UpdateNaplesHealth - queries sysmanager and gets the current health of Naples
-func (n *NMD) UpdateNaplesHealth() []cmd.SmartNICCondition {
+func (n *NMD) UpdateNaplesHealth() []cmd.DSCCondition {
 	log.Info("updating Health Info in SmartNIC object")
-	health := cmd.SmartNICCondition_HEALTHY.String()
+	health := cmd.DSCCondition_HEALTHY.String()
 	status := cmd.ConditionStatus_TRUE.String()
 	reason := ""
 
 	if n.Pipeline != nil {
 		status, reason = n.Pipeline.GetSysmgrSystemStatus()
 	}
-	Conditions := []cmd.SmartNICCondition{
+	Conditions := []cmd.DSCCondition{
 		{
 			Type:               health,
 			Status:             status,
@@ -374,8 +374,8 @@ func (n *NMD) UpdateNaplesHealth() []cmd.SmartNICCondition {
 }
 
 // UpdateNaplesInfo - updates all the information related to Naples
-func UpdateNaplesInfo() *cmd.SmartNICInfo {
-	SystemInfo := &cmd.SmartNICInfo{}
+func UpdateNaplesInfo() *cmd.DSCInfo {
+	SystemInfo := &cmd.DSCInfo{}
 
 	SystemInfo.OsInfo = updateOSInfo()
 	SystemInfo.CpuInfo = updateCPUInfo()
@@ -414,8 +414,8 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	if nic != nil {
 
 		// Update smartNIC object
-		nic.TypeMeta.Kind = "SmartNIC"
-		nic.ObjectMeta.Name = n.config.Status.SmartNicName
+		nic.TypeMeta.Kind = "DistributedServiceCard"
+		nic.ObjectMeta.Name = n.config.Status.DSCName
 		nic.Spec.IPConfig = n.config.Spec.IPConfig
 		nic.Spec.ID = n.config.Spec.ID
 		nic.Spec.MgmtMode = n.config.Spec.Mode
@@ -429,17 +429,17 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 		nic.Status.PrimaryMAC = n.config.Status.Fru.MacStr
 		nic.Status.IPConfig = n.config.Status.IPConfig
 		nic.Status.Interfaces = listInterfaces()
-		nic.Status.SmartNICVersion = ver
-		nic.Status.SmartNICSku = n.config.Status.Fru.PartNum
+		nic.Status.DSCVersion = ver
+		nic.Status.DSCSku = n.config.Status.Fru.PartNum
 	} else {
 
 		// Construct new smartNIC object
-		nic = &cmd.SmartNIC{
-			TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		nic = &cmd.DistributedServiceCard{
+			TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 			ObjectMeta: api.ObjectMeta{
-				Name: n.config.Status.SmartNicName,
+				Name: n.config.Status.DSCName,
 			},
-			Spec: cmd.SmartNICSpec{
+			Spec: cmd.DistributedServiceCardSpec{
 				ID:          n.config.Spec.ID,
 				IPConfig:    n.config.Spec.IPConfig,
 				MgmtMode:    n.config.Spec.Mode,
@@ -448,16 +448,16 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 				Controllers: n.config.Spec.Controllers,
 			},
 			// TODO: get these from platform
-			Status: cmd.SmartNICStatus{
-				AdmissionPhase:  n.config.Status.AdmissionPhase,
-				Conditions:      nil,
-				SerialNum:       n.config.Status.Fru.SerialNum,
-				PrimaryMAC:      n.config.Status.Fru.MacStr,
-				IPConfig:        n.config.Status.IPConfig,
-				SystemInfo:      nil,
-				Interfaces:      listInterfaces(),
-				SmartNICVersion: ver,
-				SmartNICSku:     n.config.Status.Fru.PartNum,
+			Status: cmd.DistributedServiceCardStatus{
+				AdmissionPhase: n.config.Status.AdmissionPhase,
+				Conditions:     nil,
+				SerialNum:      n.config.Status.Fru.SerialNum,
+				PrimaryMAC:     n.config.Status.Fru.MacStr,
+				IPConfig:       n.config.Status.IPConfig,
+				SystemInfo:     nil,
+				Interfaces:     listInterfaces(),
+				DSCVersion:     ver,
+				DSCSku:         n.config.Status.Fru.PartNum,
 			},
 		}
 	}

@@ -13,7 +13,7 @@ describe('Label Selector transform', () => {
         'test': ['node3']
       }
     },
-    'SmartNIC': {
+    'DistributedServiceCard': {
       'env': {
         'prod': ['naples1', 'naples2', 'naples3'],
         'test': ['naples4', 'naples5'],
@@ -65,11 +65,11 @@ describe('Label Selector transform', () => {
     expect(transform.stringForm).toBe('env = prod');
 
     // Switching measurement
-    transform.measurement = 'SmartNIC';
+    transform.measurement = 'DistributedServiceCard';
     transform.onMeasurementChange();
 
     // Verifying repeater data
-    verifyLabelData('SmartNIC');
+    verifyLabelData('DistributedServiceCard');
 
     // Verifying currValue and stringValue are updated when the
     // control is changed
@@ -120,7 +120,7 @@ describe('Label Selector transform', () => {
   it('transform query', () => {
     transform = new LabelSelectorTransform(labelKindMap);
     reqMetricsSpy = spyOn(transform, 'requestMetrics');
-    transform.measurement = 'SmartNIC';
+    transform.measurement = 'DistributedServiceCard';
 
     // Query should remain unmodified
     let opts: any = {

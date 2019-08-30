@@ -82,14 +82,14 @@ func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
 func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	log.Infof("Tmagent reactor called with %v", obj)
 	s.tmagent.mode = obj.NaplesMode.String()
-	s.tmagent.nodeUUID = obj.GetSmartNicName()
+	s.tmagent.nodeUUID = obj.GetDSCName()
 	log.Infof("tmagent uuid: %s", s.tmagent.nodeUUID)
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
 		var err error
 
 		s.tmagent.tpState.UpdateHostName(obj.GetID())
-		s.tmagent.restServer.SetNodeUUID(obj.GetSmartNicName())
+		s.tmagent.restServer.SetNodeUUID(obj.GetDSCName())
 		for _, ip := range obj.Controllers {
 			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDResolverPort))
 		}
@@ -124,7 +124,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 	} else {
 		log.Infof("switching to host mode")
-		s.tmagent.tpState.UpdateHostName(obj.GetSmartNicName())
+		s.tmagent.tpState.UpdateHostName(obj.GetDSCName())
 		if err := s.tmagent.tpState.Reset(); err != nil {
 			log.Errorf("failed to delete the existing policies, err: %v", err)
 		}
@@ -165,9 +165,9 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface, dclient clientApi.Client) error {
 	// report node metrics
-	node := &cluster.SmartNIC{
+	node := &cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{
-			Kind: "SmartNIC",
+			Kind: "DistributedServiceCard",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: ta.nodeUUID,

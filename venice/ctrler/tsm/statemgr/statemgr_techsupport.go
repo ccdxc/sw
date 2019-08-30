@@ -25,7 +25,7 @@ const (
 	// KindControllerNode  is the kind of Node objects in string form
 	KindControllerNode = string(cluster.KindNode)
 	// KindSmartNICNode is the kind of SmartNIC objects in string form
-	KindSmartNICNode = string(cluster.KindSmartNIC)
+	KindSmartNICNode = string(cluster.KindDistributedServiceCard)
 )
 
 /* *** TECHSUPPORT CONTROLLER CONCURRENCY MODEL ***
@@ -86,7 +86,7 @@ type ControllerNodeState struct {
 // SmartNICNodeState is the internal state for a tech-support request
 type SmartNICNodeState struct {
 	*sync.Mutex
-	*cluster.SmartNIC
+	*cluster.DistributedServiceCard
 }
 
 // newTechSupportObjectState returns a new state wrapper for the supplied TechSupport object
@@ -107,8 +107,8 @@ func (sm *Statemgr) newTechSupportObjectState(obj TechSupportObject) TechSupport
 		}
 	case KindSmartNICNode:
 		return &SmartNICNodeState{
-			Mutex:    &sync.Mutex{},
-			SmartNIC: obj.(*cluster.SmartNIC),
+			Mutex:                  &sync.Mutex{},
+			DistributedServiceCard: obj.(*cluster.DistributedServiceCard),
 		}
 	default:
 		log.Errorf("Unknown kind: %s", kind)
@@ -125,7 +125,7 @@ func (sm *Statemgr) updateTechSupportObjectState(state TechSupportObjectState, o
 	case KindControllerNode:
 		state.(*ControllerNodeState).Node = obj.(*cluster.Node)
 	case KindSmartNICNode:
-		state.(*SmartNICNodeState).SmartNIC = obj.(*cluster.SmartNIC)
+		state.(*SmartNICNodeState).DistributedServiceCard = obj.(*cluster.DistributedServiceCard)
 	default:
 		log.Errorf("Unknown kind: %s", kind)
 		state = nil
@@ -186,7 +186,7 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 		}
 
 		state.Lock()
-		if tsr.Status.Status != monitoring.TechSupportJobStatus_Completed.String() && (isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.SmartNICNodeResults)) {
+		if tsr.Status.Status != monitoring.TechSupportJobStatus_Completed.String() && (isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.DSCResults)) {
 			tsr.Status.Status = monitoring.TechSupportJobStatus_TimeOut.String()
 			sm.writer.WriteTechSupportRequest(tsr)
 		}
@@ -210,12 +210,12 @@ func (sm *Statemgr) getNodesAndAdmittedSmartNICs(tsr *monitoring.TechSupportRequ
 
 		for _, nodeState := range smartNICStateList {
 			nodeState.Lock()
-			if nodeState.(*SmartNICNodeState).SmartNIC.Spec.ID == nodeName {
-				if nodeState.(*SmartNICNodeState).SmartNIC.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+			if nodeState.(*SmartNICNodeState).DistributedServiceCard.Spec.ID == nodeName {
+				if nodeState.(*SmartNICNodeState).DistributedServiceCard.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
 					names = append(names, nodeName)
 					log.Infof("Found SmartNIC %v in the techsupport DB.", nodeName)
 				} else {
-					log.Errorf("SmartNIC %v is not Admitted into the cluster. Its state is %v. Cannot collect Techsupport for it. Skipping.", nodeName, nodeState.(*SmartNICNodeState).SmartNIC.Status.AdmissionPhase)
+					log.Errorf("SmartNIC %v is not Admitted into the cluster. Its state is %v. Cannot collect Techsupport for it. Skipping.", nodeName, nodeState.(*SmartNICNodeState).DistributedServiceCard.Status.AdmissionPhase)
 				}
 
 				nodeState.Unlock()
@@ -245,8 +245,8 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 			if tsr.Status.ControllerNodeResults == nil {
 				tsr.Status.ControllerNodeResults = make(map[string]*monitoring.TechSupportNodeResult)
 			}
-			if tsr.Status.SmartNICNodeResults == nil {
-				tsr.Status.SmartNICNodeResults = make(map[string]*monitoring.TechSupportNodeResult)
+			if tsr.Status.DSCResults == nil {
+				tsr.Status.DSCResults = make(map[string]*monitoring.TechSupportNodeResult)
 			}
 			if tsr.Status.InstanceID == "" {
 				tsr.Status.InstanceID = uuid.NewV4().String()
@@ -372,7 +372,7 @@ func (sm *Statemgr) PurgeDeletedTechSupportObjects(objList interface{}) {
 		for _, obj := range objs {
 			objNameMap[obj.GetObjectMeta().Name] = true
 		}
-	case []*cluster.SmartNIC:
+	case []*cluster.DistributedServiceCard:
 		kind = KindSmartNICNode
 		for _, obj := range objs {
 			objNameMap[obj.GetObjectMeta().Name] = true

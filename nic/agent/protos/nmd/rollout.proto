@@ -20,11 +20,11 @@ message NaplesRollout {
                             (gogoproto.nullable) = false,
                             (gogoproto.jsontag) = "meta,omitempty"];
 
-    repeated protos.SmartNICOpSpec PendingOps = 3 [(gogoproto.nullable) = false, 
+    repeated protos.DSCOpSpec PendingOps = 3 [(gogoproto.nullable) = false, 
                                                    (gogoproto.jsontag) = "pending,omitempty"];
-    repeated protos.SmartNICOpStatus OpStatus = 4 [(gogoproto.nullable) = false,
+    repeated protos.DSCOpStatus OpStatus = 4 [(gogoproto.nullable) = false,
                                                    (gogoproto.jsontag) = "completed,omitempty"];
-    protos.SmartNICOpSpec InProgressOp = 5 [(gogoproto.nullable) = false,
+    protos.DSCOpSpec InProgressOp = 5 [(gogoproto.nullable) = false,
                                             (gogoproto.jsontag) = "inprogress,omitempty"];
 }
 

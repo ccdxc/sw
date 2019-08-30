@@ -159,16 +159,16 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 		}
 	}
 
-	for _, snicStatus := range ro.Status.SmartNICsStatus {
+	for _, snicStatus := range ro.Status.DSCsStatus {
 
-		var op protos.SmartNICOp
+		var op protos.DSCOp
 		switch ros.Spec.UpgradeType {
 		case roproto.RolloutSpec_Disruptive.String():
-			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+			op = protos.DSCOp_DSCPreCheckForDisruptive
 		case roproto.RolloutSpec_OnNextHostReboot.String():
-			op = protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot
+			op = protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot
 		default:
-			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+			op = protos.DSCOp_DSCPreCheckForDisruptive
 		}
 
 		snStates, err := sm.ListSmartNICs()
@@ -176,7 +176,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 			log.Errorf("Error %v listing smartNICs", err)
 			return err
 		}
-		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
+		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates)
 
 		for _, s := range sn {
 			for _, snicState := range s {
@@ -187,16 +187,16 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 				}
 
 				log.Infof("Creating smartNICRollout State for %s snicState %+v Tenant %s", snicStatus.Name, snicState, snicState.Tenant)
-				snicRollout := protos.SmartNICRollout{
+				snicRollout := protos.DSCRollout{
 					TypeMeta: api.TypeMeta{
-						Kind: kindSmartNICRollout,
+						Kind: kindDSCRollout,
 					},
 					ObjectMeta: api.ObjectMeta{
 						Name:   snicState.Name,
 						Tenant: snicState.Tenant,
 					},
-					Spec: protos.SmartNICRolloutSpec{
-						Ops: []protos.SmartNICOpSpec{
+					Spec: protos.DSCRolloutSpec{
+						Ops: []protos.DSCOpSpec{
 							{
 								Op:      op,
 								Version: ros.Rollout.Spec.Version,
@@ -207,7 +207,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 
 				log.Infof("Creating smartNICRolloutState %#v", snicRollout)
 
-				err = sm.CreateSmartNICRolloutState(&snicRollout, &ros, snicStatus)
+				err = sm.CreateDSCRolloutState(&snicRollout, &ros, snicStatus)
 				if err != nil {
 					log.Errorf("Error %v creating smartnic rollout state", err)
 					return err
@@ -512,7 +512,7 @@ func (ros *RolloutState) setServicePhase(name, reason, message string, phase rop
 func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
 	ros.Mutex.Lock()
 	index := -1
-	for i, curStatus := range ros.Status.SmartNICsStatus {
+	for i, curStatus := range ros.Status.DSCsStatus {
 		if curStatus.Name == name {
 			index = i
 		}
@@ -522,21 +522,21 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 		rp := roproto.RolloutPhase{
 			Name: name,
 		}
-		ros.Status.SmartNICsStatus = append(ros.Status.SmartNICsStatus, &rp)
-		index = len(ros.Status.SmartNICsStatus) - 1
+		ros.Status.DSCsStatus = append(ros.Status.DSCsStatus, &rp)
+		index = len(ros.Status.DSCsStatus) - 1
 	}
 
 	switch phase {
 	case roproto.RolloutPhase_PROGRESSING:
 		startTime := api.Timestamp{}
 		startTime.SetTime(time.Now())
-		ros.Status.SmartNICsStatus[index].StartTime = &startTime
+		ros.Status.DSCsStatus[index].StartTime = &startTime
 
 	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
-		if ros.Status.SmartNICsStatus[index].StartTime != nil {
+		if ros.Status.DSCsStatus[index].StartTime != nil {
 			endTime := api.Timestamp{}
 			endTime.SetTime(time.Now())
-			ros.Status.SmartNICsStatus[index].EndTime = &endTime
+			ros.Status.DSCsStatus[index].EndTime = &endTime
 		}
 
 	case roproto.RolloutPhase_PRE_CHECK:
@@ -544,9 +544,9 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 	case roproto.RolloutPhase_WAITING_FOR_TURN:
 
 	}
-	ros.Status.SmartNICsStatus[index].Reason = reason
-	ros.Status.SmartNICsStatus[index].Message = message
-	ros.Status.SmartNICsStatus[index].Phase = phase.String()
+	ros.Status.DSCsStatus[index].Reason = reason
+	ros.Status.DSCsStatus[index].Message = message
+	ros.Status.DSCsStatus[index].Phase = phase.String()
 	ros.saveStatus()
 	ros.Mutex.Unlock()
 }

@@ -400,7 +400,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	// TBD - override default-policy
 	// cfg.SGPolicyParams.SGPolicyTemplate.ObjectMeta.Name = "default-policy"
 
-	smartnics := []*cluster.SmartNIC{}
+	smartnics := []*cluster.DistributedServiceCard{}
 	realHostNames := make(map[string]bool)
 	for _, naples := range sm.naples {
 		smartnics = append(smartnics, naples.smartNic)

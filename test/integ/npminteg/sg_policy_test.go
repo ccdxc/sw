@@ -317,10 +317,10 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	}, "SgPolicy status was not updated after adding new smartnic", "100ms", it.pollTimeout())
 
 	// mark the smartnic as unhealthy
-	snic, err := it.apisrvClient.ClusterV1().SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
+	snic, err := it.apisrvClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
 	AssertOk(c, err, "Error finding new snic")
 	snic.Status.Conditions[0].Status = "UNKNOWN"
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), snic)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), snic)
 	AssertOk(c, err, "Error updating new snic")
 	agent.nagent.Stop()
 
@@ -338,10 +338,10 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	}, "SgPolicy status was not updated after smartnic was unhealthy", "100ms", it.pollTimeout())
 
 	// mark the smartnic as healthy
-	snic, err = it.apisrvClient.ClusterV1().SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
+	snic, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
 	AssertOk(c, err, "Error finding new snic")
 	snic.Status.Conditions[0].Status = "TRUE"
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), snic)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), snic)
 	AssertOk(c, err, "Error updating new snic")
 	agent, err = CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", agNum), it.resolverClient)
 	c.Assert(err, IsNil)
@@ -393,10 +393,10 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	}, "SgPolicy status was not in pending after adding new smartnic without agent", "100ms", it.pollTimeout())
 
 	// mark the smartnic as unhealthy
-	snic, err = it.apisrvClient.ClusterV1().SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
+	snic, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
 	AssertOk(c, err, "Error finding new snic")
 	snic.Status.Conditions[0].Status = "UNKNOWN"
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), snic)
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), snic)
 	AssertOk(c, err, "Error updating new snic")
 
 	// verify policy is not pending anymore

@@ -319,7 +319,7 @@ func getTenant(ctx *cliContext) string {
 	switch ctx.subcmd {
 	case "host":
 		return ""
-	case "smartnic":
+	case "distributedservicecard":
 		return ""
 	case "cluster":
 		return ""

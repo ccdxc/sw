@@ -22,7 +22,7 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 			nodeUUID := ""
 			nslist := delphiProto.NaplesStatusList(delphiClient)
 			for _, ns := range nslist {
-				nodeUUID = ns.GetSmartNicName()
+				nodeUUID = ns.GetDSCName()
 			}
 			intfList := dnetproto.InterfaceList(delphiClient)
 			for _, intf := range intfList {

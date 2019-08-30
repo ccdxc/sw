@@ -29,7 +29,7 @@ class DummyComponent {
 
   startQuery() {
     const queryList: TelemetryPollingMetricQueries = {
-      queries: [ MetricsUtility.timeSeriesQueryPolling('SmartNIC')],
+      queries: [ MetricsUtility.timeSeriesQueryPolling('DistributedServiceCard')],
       tenant: 'default'
     };
     this.metricSub = this.metricsqueryService.pollMetrics('test', queryList).subscribe(

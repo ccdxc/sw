@@ -9,14 +9,14 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
 export interface IClusterHostStatus {
-    'admitted-smart-nics'?: Array<string>;
+    'admitted-dscs'?: Array<string>;
 }
 
 
 export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
-    'admitted-smart-nics': Array<string> = null;
+    'admitted-dscs': Array<string> = null;
     public static propInfo: { [prop in keyof IClusterHostStatus]: PropInfoItem } = {
-        'admitted-smart-nics': {
+        'admitted-dscs': {
             required: false,
             type: 'Array<string>'
         },
@@ -44,7 +44,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['admitted-smart-nics'] = new Array<string>();
+        this['admitted-dscs'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -54,12 +54,12 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['admitted-smart-nics'] != null) {
-            this['admitted-smart-nics'] = values['admitted-smart-nics'];
-        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('admitted-smart-nics')) {
-            this['admitted-smart-nics'] = [ ClusterHostStatus.propInfo['admitted-smart-nics'].default];
+        if (values && values['admitted-dscs'] != null) {
+            this['admitted-dscs'] = values['admitted-dscs'];
+        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('admitted-dscs')) {
+            this['admitted-dscs'] = [ ClusterHostStatus.propInfo['admitted-dscs'].default];
         } else {
-            this['admitted-smart-nics'] = [];
+            this['admitted-dscs'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -68,7 +68,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admitted-smart-nics': CustomFormControl(new FormControl(this['admitted-smart-nics']), ClusterHostStatus.propInfo['admitted-smart-nics']),
+                'admitted-dscs': CustomFormControl(new FormControl(this['admitted-dscs']), ClusterHostStatus.propInfo['admitted-dscs']),
             });
         }
         return this._formGroup;
@@ -80,7 +80,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['admitted-smart-nics'].setValue(this['admitted-smart-nics']);
+            this._formGroup.controls['admitted-dscs'].setValue(this['admitted-dscs']);
         }
     }
 }

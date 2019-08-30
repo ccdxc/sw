@@ -82,7 +82,7 @@ message PropagationStatus {
     // Textual description of propagation status
     string Status = 5 [(gogoproto.jsontag) = "status"];
     // list of smartnics where propagation did not complete
-    repeated string PendingNaples = 6 [(gogoproto.jsontag) = "pending-smartnics"];
+    repeated string PendingNaples = 6 [(gogoproto.jsontag) = "pending-dscs"];
 }
 
 message SGRuleStatus {

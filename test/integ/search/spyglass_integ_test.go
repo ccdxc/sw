@@ -645,7 +645,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		},
 		{
 			search.SearchRequest{
-				QueryString: "kind:SmartNIC",
+				QueryString: "kind:DistributedServiceCard",
 				From:        from,
 				MaxResults:  maxResults,
 				Aggregate:   true,
@@ -657,7 +657,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -671,7 +671,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		},
 		{ // no aggregation should be performed on the results
 			search.SearchRequest{
-				QueryString: "kind:SmartNIC",
+				QueryString: "kind:DistributedServiceCard",
 				From:        from,
 				MaxResults:  maxResults,
 				Aggregate:   false,
@@ -687,7 +687,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Test Paginated query #1
 			// Use sort option for deterministic results
 			search.SearchRequest{
-				QueryString: "kind:SmartNIC",
+				QueryString: "kind:DistributedServiceCard",
 				From:        0, // from offset-0
 				MaxResults:  3, // get 3 results
 				Aggregate:   true,
@@ -699,7 +699,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -713,7 +713,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Test Paginated query #2
 			// Use sort option for deterministic results
 			search.SearchRequest{
-				QueryString: "kind:SmartNIC",
+				QueryString: "kind:DistributedServiceCard",
 				From:        3, // from offset-3
 				MaxResults:  2, // get 2 results
 				Aggregate:   true,
@@ -725,7 +725,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0003": nil,
 							"4444.4400.0004": nil,
 						},
@@ -884,7 +884,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		{
 			// Text search that matches on Kind
 			search.SearchRequest{
-				QueryString: "SmartNIC",
+				QueryString: "DistributedServiceCard",
 				From:        from,
 				MaxResults:  maxResults,
 				Aggregate:   true,
@@ -896,7 +896,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -923,7 +923,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -971,7 +971,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1016,7 +1016,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0001": nil,
 						},
 					},
@@ -1057,7 +1057,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		// Text search (case insensitive) on kind
 		{
 			search.SearchRequest{
-				QueryString: "smartnic",
+				QueryString: "distributedservicecard",
 				From:        from,
 				MaxResults:  maxResults,
 				Aggregate:   true,
@@ -1069,7 +1069,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1084,7 +1084,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		// Text search (case insensitive and prefix match) on kind
 		{
 			search.SearchRequest{
-				QueryString: "smart*",
+				QueryString: "distributed*",
 				From:        from,
 				MaxResults:  maxResults,
 				Aggregate:   true,
@@ -1096,7 +1096,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1323,7 +1323,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		{
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 				},
 				From:       from,
 				MaxResults: maxResults,
@@ -1336,7 +1336,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1353,7 +1353,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Use sort option for deterministic results
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 				},
 				From:       0, // from offset-0
 				MaxResults: 3, // get 3 results
@@ -1367,7 +1367,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1382,7 +1382,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Use sort option for deterministic results
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 				},
 				From:       3, // from offset-3
 				MaxResults: 2, // get 2 results
@@ -1396,7 +1396,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0003": nil,
 							"4444.4400.0004": nil,
 						},
@@ -1575,7 +1575,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
 						{
-							Text: []string{"SmartNIC"},
+							Text: []string{"DistributedServiceCard"},
 						},
 					},
 				},
@@ -1590,7 +1590,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1609,7 +1609,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
 						{
-							Text: []string{"smartnic"},
+							Text: []string{"distributedservicecard"},
 						},
 					},
 				},
@@ -1624,7 +1624,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1642,7 +1642,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
 						{
-							Text: []string{"smart*"},
+							Text: []string{"distributed*"},
 						},
 					},
 				},
@@ -1657,7 +1657,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1690,7 +1690,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1744,7 +1744,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -1808,7 +1808,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Precise match on a MAC address, part of smartNIC object
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
 							{
@@ -1830,7 +1830,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0001": nil,
 						},
 					},
@@ -1842,7 +1842,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// NotEquals test case
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
 							{
@@ -1864,7 +1864,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0002": nil,
 							"4444.4400.0003": nil,
@@ -1879,7 +1879,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// IN test case
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
 							{
@@ -1901,7 +1901,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 						},
@@ -1914,7 +1914,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Multiple IN test case
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
 							{
@@ -1941,7 +1941,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 						},
 					},
@@ -1953,7 +1953,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			// NOT-IN test case
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
 							{
@@ -1975,7 +1975,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0002": nil,
 							"4444.4400.0003": nil,
 							"4444.4400.0004": nil,
@@ -2021,7 +2021,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
 						{
-							Text: []string{"smartnic"},
+							Text: []string{"distributedservicecard"},
 						},
 					},
 				},
@@ -2038,7 +2038,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0004": nil,
 							"4444.4400.0003": nil,
 							"4444.4400.0002": nil,
@@ -2116,10 +2116,10 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		},
 		// Test case for time based query using range operators [gt, gte, lt, lte]
 		{
-			// Query all SmartNIC objects created in the last 10mins using using RFC3339Nano format
+			// Query all DistributedServiceCard objects created in the last 10mins using using RFC3339Nano format
 			search.SearchRequest{
 				Query: &search.SearchQuery{
-					Kinds: []string{"SmartNIC"},
+					Kinds: []string{"DistributedServiceCard"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
 							{
@@ -2146,7 +2146,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
-						"SmartNIC": {
+						"DistributedServiceCard": {
 							"4444.4400.0000": nil,
 							"4444.4400.0001": nil,
 							"4444.4400.0002": nil,
@@ -2403,8 +2403,8 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				"default": {
 					"Cluster": {
-						"SmartNIC": 5,
-						"Tenant":   2,
+						"DistributedServiceCard": 5,
+						"Tenant":                 2,
 					},
 				},
 				"audi": {

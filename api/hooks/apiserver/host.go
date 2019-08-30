@@ -72,12 +72,12 @@ func (cl *clusterHooks) getHostSmartNICConflicts(ctx context.Context, host *clus
 	// We don't need to check for conflicts across multiple SmartNIC IDs in the same
 	// Host objects because right now each Host object can have only 1 SmartNIC ID
 	var conflicts []string
-	for _, hostNIC := range host.Spec.SmartNICs {
+	for _, hostNIC := range host.Spec.DSCs {
 		for _, otherHost := range hosts.Items {
 			if host.Name == otherHost.Name {
 				continue
 			}
-			for _, otherHostNIC := range otherHost.Spec.SmartNICs {
+			for _, otherHostNIC := range otherHost.Spec.DSCs {
 				if (hostNIC.MACAddress != "" && hostNIC.MACAddress == otherHostNIC.MACAddress) ||
 					(hostNIC.ID != "" && hostNIC.ID == otherHostNIC.ID) {
 					conflicts = append(conflicts, otherHost.Name)
@@ -121,12 +121,12 @@ func (cl *clusterHooks) validateHostSmartNICs(host *cluster.Host) []error {
 	var err []error
 
 	// As of now, only one SmartNIC per host is supported
-	if len(host.Spec.SmartNICs) != numExpectedSmartNICsInHostSpec {
-		err = append(err, cl.errUnsupportedNumberOfSmartNICs(len(host.Spec.SmartNICs), numExpectedSmartNICsInHostSpec))
+	if len(host.Spec.DSCs) != numExpectedSmartNICsInHostSpec {
+		err = append(err, cl.errUnsupportedNumberOfSmartNICs(len(host.Spec.DSCs), numExpectedSmartNICsInHostSpec))
 	}
 
 	// validate each SmartNIC spec
-	for _, sn := range host.Spec.SmartNICs {
+	for _, sn := range host.Spec.DSCs {
 		if (sn.MACAddress == "") == (sn.ID == "") { // both empty or both non-empty
 			err = append(err, cl.errInvalidSmartNIC())
 		}

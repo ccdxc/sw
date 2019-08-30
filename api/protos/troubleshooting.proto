@@ -92,7 +92,7 @@ message TsResult {
 }
 
 message PingStats {
-    string                  SmartNIC    = 1 [(gogoproto.jsontag) = "smart-nic,inline"];
+    string                  DSC         = 1 [(gogoproto.jsontag) = "dsc,inline"];
     uint32                  PacketsTx   = 2 [(gogoproto.jsontag) = "packets-sent,inline"];
     uint32                  PacketsRx   = 3 [(gogoproto.jsontag) = "packets-received,inline"];
     uint32                  PacketLoss  = 4 [(gogoproto.jsontag) = "packet-loss,inline"];

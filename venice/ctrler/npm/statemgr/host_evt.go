@@ -88,11 +88,11 @@ func (sm *Statemgr) OnHostUpdate(host *ctkit.Host, nhst *cluster.Host) error {
 
 	rescanEps := false
 	// check if host mac address changed
-	if len(host.Spec.SmartNICs) != len(nhst.Spec.SmartNICs) {
+	if len(host.Spec.DSCs) != len(nhst.Spec.DSCs) {
 		rescanEps = true
 	} else {
-		for idx, sn := range nhst.Spec.SmartNICs {
-			if host.Spec.SmartNICs[idx].ID != sn.ID || host.Spec.SmartNICs[idx].MACAddress != sn.MACAddress {
+		for idx, sn := range nhst.Spec.DSCs {
+			if host.Spec.DSCs[idx].ID != sn.ID || host.Spec.DSCs[idx].MACAddress != sn.MACAddress {
 				rescanEps = true
 			}
 		}
@@ -101,17 +101,17 @@ func (sm *Statemgr) OnHostUpdate(host *ctkit.Host, nhst *cluster.Host) error {
 	hs.Host.Host = *nhst
 
 	if rescanEps {
-		var snic *SmartNICState
+		var snic *DistributedServiceCardState
 		// find the smart nic by name or mac addr
-		for jj := range host.Host.Spec.SmartNICs {
-			if host.Host.Spec.SmartNICs[jj].ID != "" {
-				snic, err = sm.FindSmartNICByHname(host.Host.Spec.SmartNICs[jj].ID)
+		for jj := range host.Host.Spec.DSCs {
+			if host.Host.Spec.DSCs[jj].ID != "" {
+				snic, err = sm.FindDistributedServiceCardByHname(host.Host.Spec.DSCs[jj].ID)
 				if err != nil {
-					log.Errorf("Error finding smart nic for name %v", host.Host.Spec.SmartNICs[jj].ID)
+					log.Errorf("Error finding smart nic for name %v", host.Host.Spec.DSCs[jj].ID)
 				}
-			} else if host.Host.Spec.SmartNICs[jj].MACAddress != "" {
-				snicMac := host.Host.Spec.SmartNICs[jj].MACAddress
-				snic, err = sm.FindSmartNICByMacAddr(snicMac)
+			} else if host.Host.Spec.DSCs[jj].MACAddress != "" {
+				snicMac := host.Host.Spec.DSCs[jj].MACAddress
+				snic, err = sm.FindDistributedServiceCardByMacAddr(snicMac)
 				if err != nil {
 					log.Errorf("Error finding smart nic for mac add %v", snicMac)
 				}

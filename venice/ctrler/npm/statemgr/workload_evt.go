@@ -157,7 +157,7 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 }
 
 // reconcileWorkload checks if the endpoints are create for the workload and tries to create them
-func (sm *Statemgr) reconcileWorkload(w *ctkit.Workload, hst *HostState, snic *SmartNICState) error {
+func (sm *Statemgr) reconcileWorkload(w *ctkit.Workload, hst *HostState, snic *DistributedServiceCardState) error {
 	// find workload
 	ws, err := sm.FindWorkload(w.Tenant, w.Name)
 	if err != nil {
@@ -252,39 +252,39 @@ func (ws *WorkloadState) createEndpoints() error {
 		epName := ws.Workload.Name + "-" + name
 		nodeUUID := ""
 		// find the smart nic by name or mac addr
-		for jj := range host.Host.Spec.SmartNICs {
-			if host.Host.Spec.SmartNICs[jj].ID != "" {
-				snic, err := ws.stateMgr.FindSmartNICByHname(host.Host.Spec.SmartNICs[jj].ID)
+		for jj := range host.Host.Spec.DSCs {
+			if host.Host.Spec.DSCs[jj].ID != "" {
+				snic, err := ws.stateMgr.FindDistributedServiceCardByHname(host.Host.Spec.DSCs[jj].ID)
 				if err != nil {
-					log.Warnf("Error finding smart nic for name %v", host.Host.Spec.SmartNICs[jj].ID)
+					log.Warnf("Error finding smart nic for name %v", host.Host.Spec.DSCs[jj].ID)
 					return nil
 				}
-				nodeUUID = snic.SmartNIC.Name
-			} else if host.Host.Spec.SmartNICs[jj].MACAddress != "" {
-				snicMac := host.Host.Spec.SmartNICs[jj].MACAddress
-				snic, err := ws.stateMgr.FindSmartNICByMacAddr(snicMac)
+				nodeUUID = snic.DistributedServiceCard.Name
+			} else if host.Host.Spec.DSCs[jj].MACAddress != "" {
+				snicMac := host.Host.Spec.DSCs[jj].MACAddress
+				snic, err := ws.stateMgr.FindDistributedServiceCardByMacAddr(snicMac)
 				if err != nil {
 					log.Warnf("Error finding smart nic for mac add %v", snicMac)
 					return nil
 				}
-				nodeUUID = snic.SmartNIC.Name
+				nodeUUID = snic.DistributedServiceCard.Name
 			}
 		}
 
 		/* FIXME: comment out this code till CMD publishes associated NICs in host
 		// check if the host has associated smart nic
-		if len(host.Host.Status.AdmittedSmartNICs) == 0 {
+		if len(host.Host.Status.AdmittedDSCs) == 0 {
 			log.Errorf("Host %v does not have a smart nic", w.Spec.HostName)
 			return fmt.Errorf("Host does not have associated smartnic")
 		}
 
-		for _, snicName := range host.Host.Status.AdmittedSmartNICs {
-			snic, err := sm.FindSmartNIC(host.Host.Tenant, snicName)
+		for _, snicName := range host.Host.Status.AdmittedDSCs {
+			snic, err := sm.FindDistributedServiceCard(host.Host.Tenant, snicName)
 			if err != nil {
 				log.Errorf("Error finding smart nic object for %v", snicName)
 				return err
 			}
-			nodeUUID = snic.SmartNIC.Name
+			nodeUUID = snic.DistributedServiceCard.Name
 		}
 		*/
 

@@ -786,8 +786,8 @@ func (ma *APIClient) Version() cmd.ClusterV1VersionInterface {
 	return nil
 }
 
-// SmartNIC returns mock SmartNICInterface - nill till we need this functionality
-func (ma *APIClient) SmartNIC() cmd.ClusterV1SmartNICInterface {
+// DistributedServiceCard returns mock DistributedServiceCardInterface - nill till we need this functionality
+func (ma *APIClient) DistributedServiceCard() cmd.ClusterV1DistributedServiceCardInterface {
 	return nil
 }
 

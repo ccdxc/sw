@@ -14,12 +14,12 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-func isNICHostPair(nic *cluster.SmartNIC, host *cluster.Host) bool {
+func isNICHostPair(nic *cluster.DistributedServiceCard, host *cluster.Host) bool {
 	// TODO -- do range check for MAC address
 	// Right now host can only have 1 SmartNICID. If in the future it can have more, we should
 	// report conflicts between SmartNICIDs belonging to the same host.
-	for _, nicID := range host.Spec.SmartNICs {
-		if nic != nil && nic.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() &&
+	for _, nicID := range host.Spec.DSCs {
+		if nic != nil && nic.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() &&
 			((nicID.ID != "" && nicID.ID == nic.Spec.ID) || (nicID.MACAddress != "" && nicID.MACAddress == nic.Status.PrimaryMAC)) {
 			return true
 		}
@@ -32,13 +32,13 @@ func isNICHostPair(nic *cluster.SmartNIC, host *cluster.Host) bool {
 // is non-nil only if event type == update
 // Caller is responsible for acquiring the lock on newNIC before invocation and releasing it afterwards.
 // Function updates local cache and sends notifications for Host and SmartNIC objects to ApiServer.
-func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, oldNIC *cluster.SmartNIC) error {
+func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, oldNIC *cluster.DistributedServiceCard) error {
 	hosts, err := sm.ListHosts()
 	if err != nil {
 		return fmt.Errorf("Error getting list of Host objects")
 	}
 
-	handleCreate := func(nic *cluster.SmartNIC) {
+	handleCreate := func(nic *cluster.DistributedServiceCard) {
 		// Go through all hosts, check SmartNIC IDs, add nic to status if there's a match
 		// If there's more than 1 match, report conflict
 		for _, hostState := range hosts {
@@ -46,7 +46,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 			host := hostState.Host
 			if isNICHostPair(nic, host) {
 				if nic.Status.Host == "" {
-					host.Status.AdmittedSmartNICs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedSmartNICs)
+					host.Status.AdmittedDSCs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedDSCs)
 					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
 					sm.UpdateSmartNIC(nic, true)
@@ -62,14 +62,14 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 		}
 	}
 
-	handleDelete := func(nic *cluster.SmartNIC) {
+	handleDelete := func(nic *cluster.DistributedServiceCard) {
 		// go through all hosts, check SmartNIC IDs, remove reference if present
 		for _, hostState := range hosts {
 			hostState.Lock()
 			host := hostState.Host
-			for ii, hostNIC := range host.Status.AdmittedSmartNICs {
+			for ii, hostNIC := range host.Status.AdmittedDSCs {
 				if hostNIC == nic.Name {
-					host.Status.AdmittedSmartNICs = append(host.Status.AdmittedSmartNICs[:ii], host.Status.AdmittedSmartNICs[ii+1:]...)
+					host.Status.AdmittedDSCs = append(host.Status.AdmittedDSCs[:ii], host.Status.AdmittedDSCs[ii+1:]...)
 					sm.UpdateHost(host, true)
 					log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.ID, host.Name)
 					break
@@ -89,7 +89,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 	case kvstore.Updated:
 		// We don't care about updates for non-admitted NICs.
 		// The de-admission case is handled explicitly in venice/cmd/services/master.go
-		if newNIC.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+		if newNIC.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
 			if oldNIC != nil && oldNIC.Spec.ID != newNIC.Spec.ID {
 				handleDelete(oldNIC)
 				newNIC.Status.Host = ""
@@ -120,12 +120,12 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 		// If we find a NIC that matches but is already paired with another Host, report conflict
 		for _, nic := range nics {
 			nic.Lock()
-			if isNICHostPair(nic.SmartNIC, host) {
+			if isNICHostPair(nic.DistributedServiceCard, host) {
 				if nic.Status.Host == "" {
-					host.Status.AdmittedSmartNICs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedSmartNICs)
+					host.Status.AdmittedDSCs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedDSCs)
 					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
-					sm.UpdateSmartNIC(nic.SmartNIC, true)
+					sm.UpdateSmartNIC(nic.DistributedServiceCard, true)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.ID, host.Name)
 				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("DSC %s(%s) matches Spec IDs of host %s but is already associated with host"+
@@ -140,7 +140,7 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 
 	handleDelete := func(host *cluster.Host) {
 		// go through all NICs paired with this host and mark them as free
-		for _, nicName := range host.Status.AdmittedSmartNICs {
+		for _, nicName := range host.Status.AdmittedDSCs {
 			nic, err := sm.FindSmartNIC(nicName)
 			if err != nil {
 				log.Errorf("Error getting SmartNIC %s. Err: %v", nicName, err)
@@ -157,9 +157,9 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 						continue
 					}
 					otherHost.Lock()
-					if isNICHostPair(nic.SmartNIC, otherHost.Host) {
+					if isNICHostPair(nic.DistributedServiceCard, otherHost.Host) {
 						nic.Status.Host = otherHost.Name
-						otherHost.Status.AdmittedSmartNICs = utils.AppendStringIfNotPresent(nic.Name, otherHost.Status.AdmittedSmartNICs)
+						otherHost.Status.AdmittedDSCs = utils.AppendStringIfNotPresent(nic.Name, otherHost.Status.AdmittedDSCs)
 						sm.UpdateHost(otherHost.Host, true)
 						otherHost.Unlock()
 						break
@@ -169,7 +169,7 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 			} else {
 				log.Errorf("Error getting list of Host objects: %v", err)
 			}
-			sm.UpdateSmartNIC(nic.SmartNIC, true)
+			sm.UpdateSmartNIC(nic.DistributedServiceCard, true)
 			nic.Unlock()
 		}
 	}
@@ -182,9 +182,9 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 		handleDelete(newHost)
 
 	case kvstore.Updated:
-		if oldHost != nil && !reflect.DeepEqual(newHost.Spec.SmartNICs, oldHost.Spec.SmartNICs) {
+		if oldHost != nil && !reflect.DeepEqual(newHost.Spec.DSCs, oldHost.Spec.DSCs) {
 			handleDelete(oldHost)
-			newHost.Status.AdmittedSmartNICs = []string{}
+			newHost.Status.AdmittedDSCs = []string{}
 			handleCreate(newHost)
 			sm.UpdateHost(newHost, true)
 		}

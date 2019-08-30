@@ -99,7 +99,7 @@ func getDBPath(index int) string {
 	return fmt.Sprintf("/tmp/nmd-%d.db", index)
 }
 
-// launchCMDServer creates a smartNIC CMD server for SmartNIC service.
+// launchCMDServer creates a smartNIC CMD server for DistributedServiceCard service.
 func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpckit.RPCServer, error) {
 	// create an RPC server.
 	rpcServer, err := rpckit.NewRPCServer("smartNIC", url)
@@ -265,27 +265,27 @@ func TestNICConfig(t *testing.T) {
 					}
 					AssertEventually(t, f1, "Failed to verify mode is in Host")
 
-					// Create SmartNIC object in Venice
-					nic := cmd.SmartNIC{
-						TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+					// Create DistributedServiceCard object in Venice
+					nic := cmd.DistributedServiceCard{
+						TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 						ObjectMeta: api.ObjectMeta{
 							Name: hostID,
 						},
-						Spec: cmd.SmartNICSpec{
+						Spec: cmd.DistributedServiceCardSpec{
 							Admit: true,
 							IPConfig: &cmd.IPConfig{
 								IPAddress: "0.0.0.0/0",
 							},
 							ID:          hostID,
-							MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
-							NetworkMode: cmd.SmartNICSpec_OOB.String(),
+							MgmtMode:    cmd.DistributedServiceCardSpec_NETWORK.String(),
+							NetworkMode: cmd.DistributedServiceCardSpec_OOB.String(),
 						},
-						Status: cmd.SmartNICStatus{
+						Status: cmd.DistributedServiceCardStatus{
 							AdmissionPhase: "UNKNOWN",
 						},
 					}
 
-					_, err = tInfo.apiClient.ClusterV1().SmartNIC().Create(context.Background(), &nic)
+					_, err = tInfo.apiClient.ClusterV1().DistributedServiceCard().Create(context.Background(), &nic)
 					if err != nil {
 						t.Errorf("Failed to created smartnic: %+v, err: %v", nic, err)
 					}
@@ -309,7 +309,7 @@ func TestNICConfig(t *testing.T) {
 						}
 
 						// Verify NIC is admitted
-						if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
+						if nic.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_ADMITTED.String() {
 							log.Errorf("NIC is not admitted")
 							return false, nil
 						}
@@ -329,22 +329,22 @@ func TestNICConfig(t *testing.T) {
 					}
 					AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("1s"), string("60s"))
 
-					// Validate SmartNIC object state is updated on Venice
+					// Validate DistributedServiceCard object state is updated on Venice
 					f5 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
 							Name: hostID,
 						}
-						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
-						if err != nil || nicObj == nil || nicObj.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
-							log.Errorf("Failed to validate phase of SmartNIC object, mac:%s, phase: %s err: %v",
+						nicObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &meta)
+						if err != nil || nicObj == nil || nicObj.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_ADMITTED.String() {
+							log.Errorf("Failed to validate phase of DistributedServiceCard object, mac:%s, phase: %s err: %v",
 								hostID, nicObj.Status.AdmissionPhase, err)
 							return false, nil
 						}
 
 						return true, nil
 					}
-					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
+					AssertEventually(t, f5, "Failed to verify creation of required DistributedServiceCard object", string("10ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
 						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
