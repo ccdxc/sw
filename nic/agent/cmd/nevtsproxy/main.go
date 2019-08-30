@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nevtsproxy/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/reader"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
+	"github.com/pensando/sw/nic/agent/nevtsproxy/upg"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -70,9 +71,10 @@ type evtServices struct {
 // NAPLES Clients for all the south bound connections
 type nClient struct {
 	name         string
-	sysmgrClient *sysmgr.Client   // NAPLES sys manager client
-	DelphiClient clientApi.Client // NAPLES delphi client
-	evtServices  *evtServices     // list of event services
+	sysmgrClient *sysmgr.Client       // NAPLES sys manager client
+	DelphiClient clientApi.Client     // NAPLES delphi client
+	upgClient    *upg.NaplesUpgClient // NAPLES upgrade client
+	evtServices  *evtServices         // list of event services
 	logger       log.Logger
 }
 
@@ -136,7 +138,8 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			n.evtServices.startNetworkModeServices()
 			return
 		}
-		n.evtServices.start(networkMode)
+		n.evtServices.start(networkMode, n.upgClient.IsUpgradeInProcess())
+		n.upgClient.RegisterEvtsProxy(n.evtServices.eps)
 	} else {
 		n.evtServices.nodeName = obj.GetSmartNicName() // use smart nic name for reporting events in host mode
 		if n.evtServices.running {
@@ -148,7 +151,8 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			}
 			return
 		}
-		n.evtServices.start(hostMode)
+		n.evtServices.start(hostMode, n.upgClient.IsUpgradeInProcess())
+		n.upgClient.RegisterEvtsProxy(n.evtServices.eps)
 	}
 }
 
@@ -218,6 +222,10 @@ func main() {
 
 	nClient.DelphiClient = delphiClient
 	nClient.sysmgrClient = sysmgr.NewClient(delphiClient, nClient.Name())
+	nClient.upgClient, err = upg.NewNaplesUpgClient(delphiClient, logger)
+	if err != nil {
+		log.Fatalf("failed to create naples upgrade client")
+	}
 
 	// Mount delphi naples status object
 	delphiProto.NaplesStatusMount(delphiClient, dproto.MountMode_ReadMode)
@@ -319,7 +327,7 @@ func (e *evtServices) stopNetworkModeServices() {
 }
 
 // helper function to start services based on the given mode
-func (e *evtServices) start(mode string) {
+func (e *evtServices) start(mode string, maintenanceMode bool) {
 	e.logger.Infof("initializing {%s} mode", mode)
 
 	var err error
@@ -338,7 +346,7 @@ func (e *evtServices) start(mode string) {
 	// create events proxy
 	if e.eps, err = evtsproxy.NewEventsProxy(e.nodeName, globals.EvtsProxy, e.config.grpcListenURL, e.resolverClient,
 		e.config.dedupInterval, e.config.batchInterval, &events.StoreConfig{Dir: e.config.evtsStoreDir}, e.logger,
-		evtsproxy.WithDefaultObjectRef(getDefaultObjectRef(e.nodeName))); err != nil {
+		evtsproxy.WithDefaultObjectRef(getDefaultObjectRef(e.nodeName)), evtsproxy.WithMaintenanceMode(maintenanceMode)); err != nil {
 		e.logger.Fatalf("error creating events proxy instance: %v", err)
 	}
 

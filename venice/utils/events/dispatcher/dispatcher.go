@@ -1,4 +1,4 @@
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2017-2019 Pensando Systems Inc. All rights reserved.
 
 package dispatcher
 
@@ -35,6 +35,16 @@ const (
 	defaultYearSetOnNaples = 2000
 )
 
+// Option fills the optional params for dispatcher
+type Option func(d *dispatcherImpl)
+
+// WithMaintenanceMode passes maintenance mode flag for dispatcher
+func WithMaintenanceMode(flag bool) Option {
+	return func(d *dispatcherImpl) {
+		d.maintenanceMode = flag
+	}
+}
+
 // dispatcherImpl implements the `Dispatcher` interface. It is responsible for
 // dispatching events to all the registered exporters.
 type dispatcherImpl struct {
@@ -54,6 +64,9 @@ type dispatcherImpl struct {
 
 	// default object ref to be included in the event that do not carry object-ref
 	defaultObjectRef *api.ObjectRef
+
+	// set to true when the system is going through upgrade
+	maintenanceMode bool
 
 	start sync.Once // used for starting the dispatcher
 
@@ -79,7 +92,7 @@ type evtsExporter struct {
 
 // NewDispatcher creates a new dispatcher instance with the given send interval.
 func NewDispatcher(nodeName string, dedupInterval, sendInterval time.Duration, storeConfig *events.StoreConfig,
-	defaultObjectRef *api.ObjectRef, logger log.Logger) (events.Dispatcher, error) {
+	defaultObjectRef *api.ObjectRef, logger log.Logger, opts ...Option) (events.Dispatcher, error) {
 	if utils.IsEmpty(nodeName) {
 		return nil, fmt.Errorf("empty node name")
 	}
@@ -116,6 +129,12 @@ func NewDispatcher(nodeName string, dedupInterval, sendInterval time.Duration, s
 		shutdown:         make(chan struct{}),
 	}
 
+	for _, opt := range opts {
+		if opt != nil {
+			opt(dispatcher)
+		}
+	}
+
 	return dispatcher, nil
 }
 
@@ -128,6 +147,13 @@ func (d *dispatcherImpl) Start() {
 
 		d.logger.Info("started events dispatcher")
 	})
+}
+
+// sets the maintenance mode to given `flag`
+func (d *dispatcherImpl) SetMaintenanceMode(flag bool) {
+	d.Lock()
+	d.maintenanceMode = flag
+	d.Unlock()
 }
 
 // Action implements the action to be taken when the event reaches the dispatcher.
@@ -146,6 +172,10 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 	if d.stopped {
 		d.logger.Errorf("dispatcher stopped, cannot process event: {%s}", event.GetSelfLink())
 		return fmt.Errorf("dispatcher stopped, cannot process events")
+	}
+
+	if d.maintenanceMode && events.SuppressDuringUpgrade(event.Type) {
+		return nil // suppress certain events during maintenance window
 	}
 
 	// skip events that were recorded before the clock is set

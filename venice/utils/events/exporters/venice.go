@@ -1,4 +1,4 @@
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2017-2019 Pensando Systems Inc. All rights reserved.
 
 package exporters
 
@@ -105,7 +105,7 @@ func (v *VeniceExporter) Start(eventsCh events.Chan, offsetTracker events.Offset
 	v.wg.Add(1)
 	go v.receiveEvents()
 
-	v.logger.Info("{exporter %s} started", v.name)
+	v.logger.Infof("{exporter %s} started", v.name)
 }
 
 // Stop stops the exporter

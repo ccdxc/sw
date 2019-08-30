@@ -16,10 +16,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
 	eapiclient "github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
@@ -76,16 +74,15 @@ var (
 // events to alerts based on the event based alert policies.
 type alertEngineImpl struct {
 	sync.RWMutex
-	logger          log.Logger                // logger
-	resolverClient  resolver.Interface        // to connect with apiserver to fetch alert policies; and send alerts
-	memDb           *memdb.MemDb              // in-memory db/cache
-	configWatcher   *eapiclient.ConfigWatcher // API server client
-	exporter        *exporter.AlertExporter   // exporter to export alerts to different destinations
-	ctx             context.Context           // context to cancel goroutines
-	cancelFunc      context.CancelFunc        // context to cancel goroutines
-	wg              sync.WaitGroup            // for version watcher routine
-	maintenanceMode *bool                     // indicates if the maintenance mode is on or not
-	apiClients      *apiClients
+	logger         log.Logger                // logger
+	resolverClient resolver.Interface        // to connect with apiserver to fetch alert policies; and send alerts
+	memDb          *memdb.MemDb              // in-memory db/cache
+	configWatcher  *eapiclient.ConfigWatcher // API server client
+	exporter       *exporter.AlertExporter   // exporter to export alerts to different destinations
+	ctx            context.Context           // context to cancel goroutines
+	cancelFunc     context.CancelFunc        // context to cancel goroutines
+	wg             sync.WaitGroup            // for version watcher routine
+	apiClients     *apiClients
 }
 
 type apiClients struct {
@@ -114,8 +111,7 @@ func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, configWatcher
 		apiClients:     &apiClients{clients: make([]apiclient.Services, 0, numAPIClients)},
 	}
 
-	ae.wg.Add(2)
-	go ae.watchVersionObject()
+	ae.wg.Add(1)
 	go ae.createAPIClients(numAPIClients)
 
 	return ae, nil
@@ -127,26 +123,16 @@ func (a *alertEngineImpl) ProcessEvents(reqID string, eventList *evtsapi.EventLi
 	start := time.Now()
 	a.logger.Infof("{req: %s} processing events at alert engine, len: %d", reqID, len(eventList.Items))
 
-	maintenanceMode := false
 	a.RLock()
-	if len(a.apiClients.clients) == 0 || a.maintenanceMode == nil {
-		a.logger.Errorf("{req: %s} alert engine not ready to process events, waiting for API client(s) and maintenance mode updates: %v, %v",
-			reqID, len(a.apiClients.clients), a.maintenanceMode)
+	if len(a.apiClients.clients) == 0 {
+		a.logger.Errorf("{req: %s} alert engine not ready to process events, waiting for API client(s): %v",
+			reqID, len(a.apiClients.clients))
 		a.RUnlock()
 		return
-	}
-	if *a.maintenanceMode {
-		maintenanceMode = true
 	}
 	a.RUnlock()
 
 	for _, evt := range eventList.GetItems() {
-		if maintenanceMode && evt.GetCategory() != eventattrs.Category_Rollout.String() {
-			// skip processing all events that don't belong to rollout category
-			// as a result, only rollout alerts will be triggered in the maintenance mode
-			continue
-		}
-
 		// get api client to process this event
 		apCl := a.getAPIClient()
 
@@ -228,52 +214,6 @@ func (a *alertEngineImpl) getAPIClient() apiclient.Services {
 
 	index := rand.Intn(len(a.apiClients.clients))
 	return a.apiClients.clients[index]
-}
-
-// watches version objects and sets the maintenance mode accordingly
-func (a *alertEngineImpl) watchVersionObject() {
-	defer a.wg.Done()
-
-	watchCh := a.memDb.WatchVersion()
-	defer a.memDb.StopWatchVersion(watchCh)
-
-	for {
-		select {
-		case <-a.ctx.Done():
-			return
-		case evt, ok := <-watchCh:
-			if !ok {
-				a.logger.Errorf("error reading version from the channel, closing")
-				return
-			}
-			versionObj := evt.Obj.(*cluster.Version)
-			switch evt.EventType {
-			case memdb.CreateEvent, memdb.UpdateEvent:
-				if !utils.IsEmpty(versionObj.Status.RolloutBuildVersion) {
-					a.setMaintenanceMode(true)
-				}
-				a.setMaintenanceMode(false)
-			case memdb.DeleteEvent:
-				a.setMaintenanceMode(false)
-			}
-		}
-	}
-}
-
-// setMaintenanceMode sets the maintenance mode flag
-func (a *alertEngineImpl) setMaintenanceMode(flag bool) {
-	a.Lock()
-	defer a.Unlock()
-	if flag {
-		if a.maintenanceMode == nil || (a.maintenanceMode != nil && !*a.maintenanceMode) {
-			a.logger.Infof("entering maintenance mode, only upgrade events will be processed")
-		}
-	} else {
-		if a.maintenanceMode != nil && *a.maintenanceMode {
-			a.logger.Infof("leaving maintenance mode")
-		}
-	}
-	a.maintenanceMode = &flag
 }
 
 // runPolicy helper function to run the given policy against event. Also, it updates

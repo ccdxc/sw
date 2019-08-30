@@ -509,7 +509,7 @@ e2e-ci:
 e2e-retest:
 	docker exec -it node0 sh -c 'PENS_SKIP_BOOTSTRAP=1 PENS_SKIP_AUTH=1 E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 45m ${E2E_SEED}'
 e2e-test:
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 45m ${E2E_SEED}'
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
 
 e2e-ui:
 	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=https://192.168.30.10:443" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} /bin/bash -c "yarn run webdriver-update-ci ; ng e2e --configuration=e2e-ci  --webdriverUpdate=false --suite=all| tee  /import/src/github.com/pensando/sw/e2e-ui.log" 

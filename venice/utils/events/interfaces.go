@@ -64,6 +64,9 @@ type Dispatcher interface {
 
 	// action to be performed by the proxy when an event is received from the recorder.
 	Action(event events.Event) error
+
+	// non-upgrade related events will be suppressed when maintenance mode flag is set
+	SetMaintenanceMode(bool)
 }
 
 // Chan represents the channel that will be used by the dispatcher to send

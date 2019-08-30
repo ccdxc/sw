@@ -309,6 +309,7 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 		ros.saveStatus()
 		ros.Mutex.Unlock()
+		ros.updateRolloutAction()
 
 		return
 	}
@@ -320,6 +321,7 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 		ros.saveStatus()
 		ros.Mutex.Unlock()
+		ros.updateRolloutAction()
 
 		return
 	}
@@ -342,6 +344,7 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 	ros.saveStatus()
 	ros.Mutex.Unlock()
+	ros.updateRolloutAction()
 
 	ros.eventChan <- fsmEvScheduleNow
 	ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)

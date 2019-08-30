@@ -55,6 +55,9 @@ type EventsProxy struct {
 type EventsProxyOptions struct {
 	// default object ref to be included in the event that do not carry object-ref
 	defaultObjectRef *api.ObjectRef
+
+	// used to suppress non-upgrade related events during upgrade process
+	maintenanceMode bool
 }
 
 // Option fills the optional params for events proxy
@@ -64,6 +67,13 @@ type Option func(epo *EventsProxyOptions)
 func WithDefaultObjectRef(objRef *api.ObjectRef) Option {
 	return func(epo *EventsProxyOptions) {
 		epo.defaultObjectRef = objRef
+	}
+}
+
+// WithMaintenanceMode passes a maintenance mode flag
+func WithMaintenanceMode(flag bool) Option {
+	return func(epo *EventsProxyOptions) {
+		epo.maintenanceMode = flag
 	}
 }
 
@@ -80,7 +90,8 @@ func NewEventsProxy(nodeName, serverName, serverURL string, resolverClient resol
 	}
 
 	// create the events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(nodeName, dedupInterval, batchInterval, storeConfig, epo.defaultObjectRef, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(nodeName, dedupInterval, batchInterval, storeConfig,
+		epo.defaultObjectRef, logger, dispatcher.WithMaintenanceMode(epo.maintenanceMode))
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating events proxy RPC server")
 	}
@@ -102,7 +113,6 @@ func NewEventsProxy(nodeName, serverName, serverURL string, resolverClient resol
 		ctx:            ctx,
 		cancelFunc:     cancel,
 	}, nil
-
 }
 
 // StartDispatch starts dispatching events to the registered exporters
@@ -110,6 +120,12 @@ func (ep *EventsProxy) StartDispatch() {
 	if ep.evtsDispatcher != nil {
 		ep.evtsDispatcher.Start()
 	}
+}
+
+// SetMaintenanceMode sets the maintenance flag.
+// certain events will be suppressed if the maintenance flag is set.
+func (ep *EventsProxy) SetMaintenanceMode(flag bool) {
+	ep.evtsDispatcher.SetMaintenanceMode(flag)
 }
 
 // Stop stops events proxy

@@ -111,7 +111,6 @@ func (w *Watcher) start() {
 				continue
 			}
 
-			w.logger.Infof("connected to {%s}", globals.EvtsMgr)
 			w.processEvents()
 			w.rpcClient.Close()
 			time.Sleep(retryDelay)
