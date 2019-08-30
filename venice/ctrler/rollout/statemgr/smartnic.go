@@ -176,7 +176,7 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 			continue
 		}
 		updateStatus = true
-		if s.OpStatus == "success" {
+		if s.OpStatus == "success" || s.OpStatus == "skipped" {
 			switch s.Op {
 			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgSuccess

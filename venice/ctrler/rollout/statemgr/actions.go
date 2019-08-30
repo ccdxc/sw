@@ -67,17 +67,7 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 		for _, s := range snics {
 			log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
 			if s.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
-				var found = true
-				for _, condition := range s.Status.Conditions {
-					log.Infof("Condition Status %+v Type %v", condition.Status, condition.Type)
-					if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_UNKNOWN.String() {
-						found = false
-						break
-					}
-				}
-				if found {
-					curbin = append(curbin, s)
-				}
+				curbin = append(curbin, s)
 			}
 		}
 		if len(curbin) > 0 {
@@ -395,6 +385,27 @@ Loop:
 				}
 				ros.setSmartNICPhase(snicState.Name, "", "", phase)
 
+				for _, condition := range snicState.Status.Conditions {
+					log.Infof("Condition Status %+v Type %v", condition.Status, condition.Type)
+					if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_UNKNOWN.String() {
+
+						snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
+						if err == nil {
+							snicROState.UpdateSmartNICRolloutStatus(&protos.SmartNICRolloutStatus{
+								OpStatus: []protos.SmartNICOpStatus{
+									{
+										Op:       op,
+										Version:  version,
+										OpStatus: "skipped",
+										Message:  "Skipped DSC from upgrade due to unreachable status",
+									},
+								},
+							})
+						}
+						continue
+					}
+				}
+
 				// Wait for response from  the NIC
 				timer := time.NewTimer(preUpgradeTimeout)
 				defer timer.Stop()
@@ -464,6 +475,12 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 	}
 
 	log.Infof("starting smartNIC Rollout Preupgrade")
+	snStatusList := make(map[string]string)
+
+	for _, snicStatus := range ros.Status.SmartNICsStatus {
+		log.Infof("Adding smartNIC Status to the List %s", snicStatus.Name)
+		snStatusList[snicStatus.Name] = snicStatus.Reason
+	}
 
 	snStates, err := sm.ListSmartNICs()
 	if err != nil {
@@ -475,9 +492,9 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
 		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {
-			ros.issueSmartNICOpExponential(s, op, nil)
+			ros.issueSmartNICOpExponential(s, op, snStatusList)
 		} else {
-			ros.issueSmartNICOpLinear(s, op, nil)
+			ros.issueSmartNICOpLinear(s, op, snStatusList)
 		}
 	}
 
@@ -500,8 +517,9 @@ func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, op pro
 	}
 	// give work to worker threads and wait for all of them to complete
 	for _, sn := range snStates {
-		if snStatusList != nil && snStatusList[sn.Name] == "" {
-			log.Infof("No status found for %v. skipping.", sn.Name)
+		if len(snStatusList) != 0 && (snStatusList[sn.Name] == "" || snStatusList[sn.Name] == "skipped") {
+			//A new node may have joined or become active. skip it
+			log.Infof("Status not found for %v. Or pre-check not done on this node earlier.", sn.Name)
 			continue
 		}
 		log.Infof("Adding %s to work %v", sn.Name, sn)
@@ -537,8 +555,8 @@ func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, o
 		for i := 0; i < numJobs; i++ {
 			sm.smartNICWG.Add(1)
 			go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, op)
-			if snStatusList != nil && snStatusList[snStates[curIndex].Name] == "" {
-				log.Infof("No status found for %v. skipping.", snStates[curIndex].Name)
+			if len(snStatusList) != 0 && (snStatusList[snStates[curIndex].Name] == "" || snStatusList[snStates[curIndex].Name] == "skipped") {
+				log.Infof("Status not found for %v. Or pre-check not done on this node earlier.", snStates[curIndex].Name)
 				curIndex++
 				continue
 			}
