@@ -65,10 +65,10 @@ type NMD struct {
 	httpServer       *http.Server // HTTP server
 	isRestSrvRunning bool         // status of the REST server
 
-	certsListenURL string                            // URL where local processes can request certificates
-	remoteCertsURL string                            // URL where local process cert request are forwarder
-	certsProxy     *certsproxy.CertsProxy            // the CertsProxy instance
-	tlsProvider    *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
+	certsListenURL  string                            // URL where local processes can request certificates
+	remoteCertsURLs []string                          // URLs where local process cert request are forwarder
+	certsProxy      *certsproxy.CertsProxy            // the CertsProxy instance
+	tlsProvider     *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
 	// Rollout related stuff
 	completedOps map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
 	ro           nmd.NaplesRollout

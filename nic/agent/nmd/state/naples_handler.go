@@ -511,7 +511,11 @@ func (n *NMD) AdmitNaples() {
 					log.Infof("Trying the next venice IP, if any, from the list. %v", n.config.Status.Controllers[currentVeniceIdx])
 					registrationURL := fmt.Sprintf("%s:%s", n.config.Status.Controllers[currentVeniceIdx], globals.CMDSmartNICRegistrationPort)
 
-					n.remoteCertsURL = fmt.Sprintf("%s:%s", n.config.Status.Controllers[currentVeniceIdx], globals.CMDAuthCertAPIPort)
+					// Re-populate remote certs URLs
+					n.remoteCertsURLs = []string{}
+					for _, c := range n.config.Status.Controllers {
+						n.remoteCertsURLs = append(n.remoteCertsURLs, fmt.Sprintf("%s:%s", c, globals.CMDAuthCertAPIPort))
+					}
 
 					cmdAPI, err := cmdif.NewCmdClient(n, registrationURL, n.resolverClient)
 					if err != nil {
@@ -653,14 +657,14 @@ func (n *NMD) AdmitNaples() {
 
 					// Start certificates proxy
 					if n.certsListenURL != "" {
-						certsProxy, err := certsproxy.NewCertsProxy(n.certsListenURL, n.remoteCertsURL,
+						certsProxy, err := certsproxy.NewCertsProxy(n.certsListenURL, n.remoteCertsURLs,
 							rpckit.WithTLSProvider(n.tlsProvider), rpckit.WithRemoteServerName(globals.Cmd))
 						if err != nil {
 							log.Errorf("Error starting certificates proxy at %s: %v", n.certsListenURL, err)
 							// cannot proceed without certs proxy, retry after nicRegInterval
 							continue
 						} else {
-							log.Infof("Started certificates proxy at %s, forwarding to: %s", n.certsListenURL, n.remoteCertsURL)
+							log.Infof("Started certificates proxy at %s, forwarding to: %v", n.certsListenURL, n.remoteCertsURLs)
 							n.certsProxy = certsProxy
 							n.certsProxy.Start()
 						}

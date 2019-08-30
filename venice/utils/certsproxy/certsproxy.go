@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/pkg/errors"
@@ -23,12 +24,14 @@ import (
 type CertsProxy struct {
 	// The URL where the proxy listens for requests
 	listenURL string
-	// the URL where where requests are forwarded to
-	remoteURL string
+	// the URLs where where requests are forwarded to in round-robin fashion
+	remoteURLs []string
 	// the gRPC endpoint that exposes CMD APIs to clients
 	rpcServer *rpckit.RPCServer
 	// rpc client options
 	rpcClientOptions []rpckit.Option
+	// remote URL index for next RPC
+	remoteURLIndex int
 }
 
 var (
@@ -52,11 +55,13 @@ func (c *CertsProxy) getRPCClient() (*rpckit.RPCClient, error) {
 	rpcOptions := []rpckit.Option{rpckit.WithFailFastDialOption(false), rpckit.WithDialTimeout(connDialTimeout)}
 	rpcOptions = append(rpcOptions, c.rpcClientOptions...)
 	for i := 0; i <= connMaxRetries; i++ {
-		rpcClient, err := rpckit.NewRPCClient("certsproxy", c.remoteURL, rpcOptions...)
+		remoteURL := c.remoteURLs[c.remoteURLIndex]
+		rpcClient, err := rpckit.NewRPCClient("certsproxy", remoteURL, rpcOptions...)
 		if err == nil {
 			return rpcClient, nil
 		}
-		log.Infof("Failed to open CMD Connection to: %v, result: %v, retrying in %v", c.remoteURL, err, connRetryInterval)
+		log.Infof("Failed to open CMD Connection to: %v, result: %v, retrying in %v", remoteURL, err, connRetryInterval)
+		c.remoteURLIndex = (c.remoteURLIndex + 1) % len(c.remoteURLs)
 		time.Sleep(connRetryInterval)
 	}
 	return nil, fmt.Errorf("Error opening CMD connection")
@@ -115,9 +120,9 @@ func (c *CertsProxy) GetListenURL() string {
 	return c.rpcServer.GetListenURL()
 }
 
-// GetRemoteURL returns the URL of the remote endpoint
-func (c *CertsProxy) GetRemoteURL() string {
-	return c.remoteURL
+// GetRemoteURLs returns the URLs of the remote endpoints
+func (c *CertsProxy) GetRemoteURLs() []string {
+	return c.remoteURLs
 }
 
 // Start starts listening for requests
@@ -131,19 +136,26 @@ func (c *CertsProxy) Stop() error {
 }
 
 // NewCertsProxy returns a new CertsProxy instance
-func NewCertsProxy(listenURL, remoteURL string, clientOptions ...rpckit.Option) (*CertsProxy, error) {
+func NewCertsProxy(listenURL string, remoteURLs []string, clientOptions ...rpckit.Option) (*CertsProxy, error) {
 	if listenURL == "" {
 		return nil, errors.New("listen URL required")
 	}
 
-	if remoteURL == "" {
+	if len(remoteURLs) == 0 {
 		return nil, errors.New("remote server URL required")
+	}
+
+	for _, u := range remoteURLs {
+		if u == "" {
+			return nil, errors.New("remote server URL cannot be empty")
+		}
 	}
 
 	certsProxy := &CertsProxy{
 		listenURL:        listenURL,
-		remoteURL:        remoteURL,
+		remoteURLs:       remoteURLs,
 		rpcClientOptions: clientOptions,
+		remoteURLIndex:   rand.Intn(len(remoteURLs)),
 	}
 
 	rpcServer, err := rpckit.NewRPCServer("certsproxy", listenURL, rpckit.WithTLSProvider(nil))

@@ -168,8 +168,11 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 						Servers: resolverURLs,
 					})
 
-					// Pick the first resolver URL for remote certs
-					n.remoteCertsURL = fmt.Sprintf("%s:%s", veniceIPs[0], globals.CMDAuthCertAPIPort)
+					// Re-populate remote certs URLs
+					n.remoteCertsURLs = []string{}
+					for _, i := range veniceIPs {
+						n.remoteCertsURLs = append(n.remoteCertsURLs, fmt.Sprintf("%s:%s", i, globals.CMDAuthCertAPIPort))
+					}
 
 					// Init TSDB
 					// initialize netagent's tsdb client

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	srv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
@@ -27,17 +28,21 @@ const (
 
 func TestInit(t *testing.T) {
 	// NEGATIVE TESTCASES
-	_, err := NewCertsProxy("", "localhost:0")
+	_, err := NewCertsProxy("", []string{"localhost:0"})
 	Assert(t, err != nil, "Expected an error when listenURL is empty")
-	_, err = NewCertsProxy("localhost:0", "")
-	Assert(t, err != nil, "Expected an error when listenURL is empty")
+	_, err = NewCertsProxy("localhost:0", nil)
+	Assert(t, err != nil, "Expected an error when no remoteURLs are provided")
+	_, err = NewCertsProxy("localhost:0", []string{})
+	Assert(t, err != nil, "Expected an error when no remoteURLs are provided")
+	_, err = NewCertsProxy("localhost:0", []string{""})
+	Assert(t, err != nil, "Expected an error when remoteURLs are empty")
 
 	// POSITIVE TESTCASES
 	// test options
 	balancer := balancer.New(nil)
 	tlsProvider := tlsproviders.KeyMgrBasedProvider{}
 
-	_, err = NewCertsProxy("localhost:0", "service", rpckit.WithBalancer(balancer), rpckit.WithTLSProvider(&tlsProvider))
+	_, err = NewCertsProxy("localhost:0", []string{"service"}, rpckit.WithBalancer(balancer), rpckit.WithTLSProvider(&tlsProvider))
 	AssertOk(t, err, "Error instantiating proxy with options")
 }
 
@@ -47,7 +52,8 @@ func TestProxy(t *testing.T) {
 	certsSrvURL := certsSrv.GetListenURL()
 	fmt.Printf("certsSrvURL: %s\n", certsSrvURL)
 
-	certsProxy, err := NewCertsProxy("localhost:0", certsSrvURL)
+	// provide one invalid remote URL and a valid one
+	certsProxy, err := NewCertsProxy("localhost:0", []string{"localhost:1", certsSrvURL}, rpckit.WithDialTimeout(time.Second))
 	AssertOk(t, err, "Error creating certsProxy instance")
 	certsProxy.Start()
 	certsProxyURL := certsProxy.GetListenURL()
@@ -110,6 +116,7 @@ func TestProxy(t *testing.T) {
 	// NEGATIVE TEST -- remote server is down, all calls should fail
 	// disable retries to speed up test
 	connMaxRetries = 0
+	connRetryInterval = time.Second
 	certsSrv.Stop()
 	trustRootsResp, err = client.GetTrustRoots(context.Background(), &certapi.Empty{})
 	Assert(t, err != nil, "RPC did not fail with remote server unavailable")
