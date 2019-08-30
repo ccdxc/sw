@@ -876,7 +876,7 @@ func getAPIRefMD(desc *descriptor.File, path string) (string, error) {
 	ret = ret + "|:-----------|:---------------|\n"
 	for _, k := range keys {
 		grp := index[k]
-		ret = fmt.Sprintf("%s| [%s](%s) | %s |\n", ret, strings.Title(k), fmt.Sprintf("generated/%s/index.html", k), grp.Description)
+		ret = fmt.Sprintf("%s| [%s](%s) | %s |\n", ret, strings.Title(k), fmt.Sprintf("generated/apiref/%s/index.html", k), grp.Description)
 	}
 	return ret, nil
 }
