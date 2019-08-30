@@ -1,6 +1,5 @@
 #include "e_pse.h"
 #include "pse_rsa.h"
-#include "pse_rand.h"
 #include <openssl/rsa.h>
 
 static RSA_METHOD *pse_rsa_method = NULL;
@@ -73,7 +72,7 @@ PSE_RSA_EX_DATA* pse_rsa_get_ex_data(RSA *rsa)
 static int 
 pse_rsa_set_ex_data(RSA *rsa, PSE_KEY* key, void *caller_ctx)
 {
-    PSE_RSA_EX_DATA *ex_data = PSE_MALLOC(sizeof(PSE_RSA_EX_DATA));
+    PSE_RSA_EX_DATA *ex_data = PSE_CALLOC(1, sizeof(PSE_RSA_EX_DATA));
     if(!ex_data) {
         WARN("Failed to allocate rsa ex data");
         return -1;
@@ -85,10 +84,12 @@ pse_rsa_set_ex_data(RSA *rsa, PSE_KEY* key, void *caller_ctx)
     ex_data->caller_ctx = caller_ctx;
     RSA_set_ex_data(rsa, pse_rsa_ex_data_index, ex_data);
 
-    pse_RAND_set_salt_val(NULL);
-    if (ex_data->offload.offload_method && ex_data->offload.salt_val) {
-        pse_RAND_set_mem_method(ex_data->offload.offload_method->mem_method);
-        pse_RAND_set_salt_val(ex_data->offload.salt_val);
+    pse_rand_set_ex_data(NULL);
+    if (ex_data->offload.offload_method->rand_method) {
+        ex_data->rand_ex_data.rand_method = ex_data->offload.offload_method->rand_method;
+        ex_data->rand_ex_data.salt_val = ex_data->offload.salt_val;
+        ex_data->rand_ex_data.rand_ctx = ex_data->offload.rand_ctx;
+        pse_rand_set_ex_data(&ex_data->rand_ex_data);
     }
     return 1;
 }

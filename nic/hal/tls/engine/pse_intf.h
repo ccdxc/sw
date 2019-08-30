@@ -21,8 +21,18 @@ typedef struct pse_offload_mem_method_s {
     void     (*write_thru)(PSE_OFFLOAD_MEM *mem);
 } PSE_OFFLOAD_MEM_METHOD;
 
+typedef struct pse_rand_bytes_param_s {
+    uint8_t             *buf;
+    uint32_t            size;
+} PSE_RAND_BYTES_PARAM;
+
+typedef struct pse_offload_rand_method_s {
+    int (*bytes)(void *ctx, const PSE_RAND_BYTES_PARAM *params);
+
+    const PSE_OFFLOAD_MEM_METHOD *mem_method;
+} PSE_OFFLOAD_RAND_METHOD;
+
 typedef struct pse_rsa_sign_param_s {
-    void                *caller_ctx;
     uint32_t            key_size;
     int32_t             key_idx ;
     uint8_t             *n;
@@ -35,7 +45,6 @@ typedef struct pse_rsa_sign_param_s {
 } PSE_RSA_SIGN_PARAM;
 
 typedef struct pse_rsa_encrypt_param_s {
-    void                *caller_ctx;
     uint32_t            key_size;
     int32_t             key_idx;
     uint8_t             *n;
@@ -48,7 +57,6 @@ typedef struct pse_rsa_encrypt_param_s {
 } PSE_RSA_ENCRYPT_PARAM;
 
 typedef struct pse_rsa_decrypt_param_s {
-    void                *caller_ctx;
     uint32_t            key_size;
     int32_t             key_idx;
     uint8_t             *p;
@@ -69,10 +77,10 @@ typedef struct pse_rsa_offload_method_s {
     int (*decrypt)(void *ctx, const PSE_RSA_DECRYPT_PARAM *param);
 
     const PSE_OFFLOAD_MEM_METHOD *mem_method;
+    const PSE_OFFLOAD_RAND_METHOD *rand_method;
 } PSE_RSA_OFFLOAD_METHOD;
 
 typedef struct pse_ec_sign_param_s {
-    void                *caller_ctx;
     int32_t             key_idx;
     uint8_t             *k_random;
     uint8_t             *hash_input;
@@ -85,7 +93,6 @@ typedef struct pse_ec_sign_param_s {
 } PSE_EC_SIGN_PARAM;
 
 typedef struct pse_ec_verify_param_s {
-    void                *caller_ctx;
     int32_t             key_idx;
     const uint8_t       *caller_unique_id;
     uint8_t             *hash_input;
@@ -119,6 +126,12 @@ static inline bool
 pse_key_idx_valid(int32_t key_idx)
 {
     return key_idx >= 0;
+}
+
+static inline void
+pse_rand_bytes_param_init(PSE_RAND_BYTES_PARAM *param)
+{
+    memset(param, 0, sizeof(*param));
 }
 
 static inline void
@@ -172,6 +185,7 @@ typedef struct PSE_rsa_key_offload_st {
     const PSE_RSA_OFFLOAD_METHOD *offload_method;
     PSE_OFFLOAD_MEM *digest_padded_mem;
     PSE_OFFLOAD_MEM *salt_val;
+    void        *rand_ctx;
     bool        wait_for_completion;
 } PSE_RSA_KEY_OFFLOAD;
 

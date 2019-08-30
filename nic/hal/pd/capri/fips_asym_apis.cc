@@ -27,6 +27,7 @@ const static PSE_RSA_OFFLOAD_METHOD     offload_method =
     .encrypt            = pd_tls_asym_rsa_encrypt_param,
     .decrypt            = pd_tls_asym_rsa_decrypt_param,
     .mem_method         = NULL,
+    .rand_method        = NULL,
 };
 
 static hal_ret_t init_ssl(void)

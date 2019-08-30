@@ -12,9 +12,11 @@ typedef PSE_BUFFER  pse_buffer_t;
     HEX_DUMP(buf.data, buf.len);
 
 #define PSE_MALLOC(sz)  \
-        malloc(sz);
+        malloc(sz)
+#define PSE_CALLOC(num, sz)  \
+        calloc(num, sz)
 #define PSE_FREE(ptr)   \
-        free(ptr);
+        free(ptr)
 
 int pse_BN_to_buffer(const BIGNUM* bn, pse_buffer_t *buf);
 int pse_BN_to_buffer_pad256(const BIGNUM* bn, pse_buffer_t *buf);

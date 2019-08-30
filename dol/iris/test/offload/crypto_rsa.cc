@@ -1,3 +1,4 @@
+#include "crypto_drbg.hpp"
 #include "crypto_rsa.hpp"
 #include "hal_if.hpp"
 #include "utils.hpp"
@@ -135,8 +136,10 @@ rsa_t::push(rsa_push_params_t& push_params)
                                       digest(digest).
                                       digest_padded(digest_padded).
                                       salt_val(push_params.salt_val()).
+                                      salt_len(push_params.salt_len()).
                                       sig_actual(push_params.sig_actual()).
                                       rsa(this).
+                                      rand_ctx(crypto_drbg::dflt_drbg_get(crypto_drbg::DRBG_INSTANCE0)).
                                       failure_expected(push_params.failure_expected()).
                                       wait_for_completion(false));
         break;
@@ -651,10 +654,11 @@ decrypt(void *ctx,
 
 const PSE_RSA_OFFLOAD_METHOD pse_rsa_offload_method =
 {
-    .sign       = sign,
-    .encrypt    = encrypt,
-    .decrypt    = decrypt,
-    .mem_method = &pse_mem_method,
+    .sign        = sign,
+    .encrypt     = encrypt,
+    .decrypt     = decrypt,
+    .mem_method  = &pse_mem_method,
+    .rand_method = &crypto_drbg::pse_rand_offload_method,
 };
 
 } // extern "C"

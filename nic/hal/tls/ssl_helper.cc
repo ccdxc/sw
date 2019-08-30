@@ -20,6 +20,7 @@ const static PSE_RSA_OFFLOAD_METHOD     rsa_offload_method =
     .encrypt            = pd_tls_asym_rsa_encrypt_param,
     .decrypt            = pd_tls_asym_rsa_decrypt_param,
     .mem_method         = NULL,
+    .rand_method        = NULL,
 };
 
 const static PSE_EC_OFFLOAD_METHOD     ec_offload_method =

@@ -125,7 +125,8 @@ testvec_parser_t::next_token_get(void)
  * Parse hex big number.
  */
 bool
-testvec_parser_t::parse_hex_bn(dp_mem_t *bn)
+testvec_parser_t::parse_hex_bn(dp_mem_t *bn,
+                               bool empty_ok)
 {
     string      token;
     size_t      bn_len;
@@ -134,6 +135,7 @@ testvec_parser_t::parse_hex_bn(dp_mem_t *bn)
     bn_len = bn->line_size_get();
     assert(bn_len);
 
+    bn->content_size_set(0);
     token = next_token_get();
     token_consume_set();
 
@@ -152,8 +154,9 @@ testvec_parser_t::parse_hex_bn(dp_mem_t *bn)
             bn->write_thru();
             return true;
         }
+        return false;
     }
-    return false;
+    return empty_ok;
 }
 
 

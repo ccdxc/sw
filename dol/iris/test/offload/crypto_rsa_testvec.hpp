@@ -290,6 +290,7 @@ public:
                    u_long modulus_bytes_len) :
         rsa_testvec(rsa_testvec),
         modulus_bytes_len(modulus_bytes_len),
+        salt_len(0),
         crypto_rsa(nullptr),
         failed_parse_token(PARSE_TOKEN_ID_VOID),
         failure_expected(false),
@@ -368,6 +369,7 @@ private:
     dp_mem_t                    *msg_actual;    // fragment of msg_vec
     dp_mem_t                    *e;     // RSA public exponent (only for sig verify)
     dp_mem_t                    *salt_val;      // random #, used by PSS
+    u_long                      salt_len;
     rsa_t                       *crypto_rsa;
     parser_token_id_t           failed_parse_token;
     uint32_t                    failure_expected: 1,

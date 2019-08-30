@@ -15,6 +15,7 @@
 #define PARSE_TOKEN_STR_MSG             "Msg"
 #define PARSE_TOKEN_STR_S               "S"
 #define PARSE_TOKEN_STR_SALT_VAL        "SaltVal"
+#define PARSE_TOKEN_STR_SALT_LEN        "SaltLen"
 
 /*
  * Unstripped versions
@@ -34,6 +35,7 @@
 #define PARSE_STR_S_SUFFIX              "\n"
 #define PARSE_STR_SALT_VAL_PREFIX       "SaltVal = "
 #define PARSE_STR_SALT_VAL_SUFFIX       "\n"
+#define PARSE_STR_SALT_LEN_PREFIX       "SaltLen = "
 
 namespace crypto_rsa {
 
@@ -62,6 +64,7 @@ enum {
     PARSE_TOKEN_ID_MSG,
     PARSE_TOKEN_ID_S,
     PARSE_TOKEN_ID_SALT_VAL,
+    PARSE_TOKEN_ID_SALT_LEN,
 };
 
 const static map<string,parser_token_id_t>      token2id_map =
@@ -75,6 +78,7 @@ const static map<string,parser_token_id_t>      token2id_map =
     {PARSE_TOKEN_STR_MSG,       PARSE_TOKEN_ID_MSG},
     {PARSE_TOKEN_STR_S,         PARSE_TOKEN_ID_S},
     {PARSE_TOKEN_STR_SALT_VAL,  PARSE_TOKEN_ID_SALT_VAL},
+    {PARSE_TOKEN_STR_SALT_LEN,  PARSE_TOKEN_ID_SALT_LEN},
 };
 
 /*
@@ -269,6 +273,16 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
             }
             break;
 
+        case PARSE_TOKEN_ID_SALT_LEN:
+            if (!msg_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place SaltLen");
+                goto error;
+            }
+            if (!testvec_parser->parse_ulong(&msg_repr->salt_len)) {
+                key_repr->failed_parse_token = token_id;
+            }
+            break;
+
         case PARSE_TOKEN_ID_RESULT:
             if (!msg_repr.use_count()) {
                 OFFL_FUNC_ERR("out of place Result");
@@ -368,6 +382,7 @@ rsa_testvec_t::push(rsa_testvec_push_params_t& push_params)
                                 sig_expected(msg_repr->sig_expected).
                                 sig_actual(msg_repr->sig_actual).
                                 salt_val(msg_repr->salt_val).
+                                salt_len(msg_repr->salt_len).
                                 failure_expected(msg_repr->failure_expected);
                 if (!msg_repr->crypto_rsa->push(rsa_push_params)) {
                     OFFL_FUNC_ERR_OR_DEBUG(msg_repr->failure_expected,

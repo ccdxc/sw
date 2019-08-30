@@ -16,6 +16,7 @@ local_rsa_pkey_load(void *caller_ctx,
                     dp_mem_t *d_e,
                     dp_mem_t *digest_padded,
                     dp_mem_t *salt_val,
+                    void *rand_ctx,
                     bool wait_for_completion)
 {
     PSE_KEY             key = {0};
@@ -37,6 +38,7 @@ local_rsa_pkey_load(void *caller_ctx,
     key.u.rsa_key.offload.offload_method = &crypto_rsa::pse_rsa_offload_method;
     key.u.rsa_key.offload.digest_padded_mem = (PSE_OFFLOAD_MEM *)digest_padded;
     key.u.rsa_key.offload.salt_val = (PSE_OFFLOAD_MEM *)salt_val;
+    key.u.rsa_key.offload.rand_ctx = rand_ctx;
     key.u.rsa_key.offload.wait_for_completion = wait_for_completion;
 
     pkey = ENGINE_load_private_key(eng_if_engine, (const char *)&key,
@@ -69,6 +71,7 @@ rsa_sign(rsa_sign_params_t& params)
                                    params.n(), params.d_e(),
                                    params.digest_padded(),
                                    params.salt_val(),
+                                   params.rand_ctx(),
                                    params.wait_for_completion());
     if (!evp_pkey) {
         OFFL_FUNC_ERR("Failed to setup RSA evp_pkey");
@@ -93,8 +96,8 @@ rsa_sign(rsa_sign_params_t& params)
         goto done;
     }
 
-    salt_len = params.salt_val() ? 
-               params.salt_val()->content_size_get() : 0;
+    salt_len = params.salt_val() && params.salt_val()->content_size_get() ? 
+               params.salt_val()->content_size_get() : params.salt_len();
     if (salt_len) {
         ossl_ret = EVP_PKEY_CTX_set_rsa_pss_saltlen(pkey_ctx, salt_len);
         if (ossl_ret <= 0) {
@@ -179,6 +182,7 @@ rsa_verify(rsa_verify_params_t& params)
                                    params.n(), params.d_e(),
                                    params.digest_padded(),
                                    params.salt_val(),
+                                   params.rand_ctx(),
                                    params.wait_for_completion());
     if (!evp_pkey) {
         OFFL_FUNC_ERR("Failed to setup RSA evp_pkey");

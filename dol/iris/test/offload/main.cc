@@ -13,7 +13,9 @@
 #include "nic/sdk/platform/capri/capri_state.hpp"
 #include "crypto_rsa_testvec.hpp"
 #include "crypto_ecdsa_testvec.hpp"
+#include "crypto_drbg_testvec.hpp"
 #include "crypto_asym.hpp"
+#include "crypto_drbg.hpp"
 
 DEFINE_uint64(hal_port, 50054, "TCP port of the HAL's gRPC server");
 DEFINE_string(hal_ip, "localhost", "IP of HAL's gRPC server");
@@ -59,6 +61,7 @@ bool run_nicmgr_tests;
 bool run_pdma_tests;
 bool run_rsa_testvectors;
 bool run_ecdsa_testvectors;
+bool run_drbg_testvectors;
 uint32_t run_acc_scale_tests_map;
 
 /*
@@ -137,6 +140,18 @@ const static vector<ecdsa_vector_entry_t> ecdsa_testvectors =
 
     {"ecdsa-testvectors/SigVer.req",
       crypto_ecdsa::ECDSA_KEY_CREATE_VERIFY},
+};
+
+/*
+ * DRBG testvectors
+ */
+typedef struct {
+    string                      testvec_fname;
+} drbg_vector_entry_t;
+
+const static vector<drbg_vector_entry_t> drbg_testvectors =
+{
+    {"drbg-testvectors/Hash_DRBG.req"},
 };
 
 /*
@@ -231,6 +246,7 @@ common_setup(void)
     OFFL_FUNC_INFO("Model client initialized");
 #endif
 
+    crypto_drbg::init();
     crypto_asym::init(FLAGS_engine_path.c_str());
     tests::test_generic_eos_ignore();
     return 0;
@@ -391,6 +407,66 @@ ecdsa_testvectors_run(void *test_param)
     return failure_count == 0;
 }
 
+/*
+ * Driver for DRBG testvectors
+ */
+static bool
+drbg_testvectors_run(void *test_param)
+{
+    vector<drbg_vector_entry_t>  *testvectors = 
+                       static_cast<vector<drbg_vector_entry_t> *>(test_param);
+    uint32_t        failure_count;
+
+    /*
+     * Run the vectors with the specified mem_type
+     */
+    auto testvectors_run = [](const drbg_vector_entry_t& entry,
+                              crypto_drbg::drbg_instance_t inst) -> bool
+    {
+        crypto_drbg::drbg_testvec_params_t        testvec_params;
+        crypto_drbg::drbg_testvec_pre_push_params_t pre_params;
+        crypto_drbg::drbg_testvec_push_params_t   push_params;
+        crypto_drbg::drbg_testvec_t               *drbg_testvec;
+        offload_base_params_t                     base_params;
+        bool                                      success;
+
+        OFFL_LOG_INFO("Running DRBG vector {}", entry.testvec_fname);
+        drbg_testvec = new crypto_drbg::drbg_testvec_t(
+                           testvec_params.base_params(base_params));
+        success = drbg_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
+                                                    testvec_fname(entry.testvec_fname));;
+        if (success) {
+            success = drbg_testvec->push(push_params.instance(inst));
+        }
+        if (success) {
+            success = drbg_testvec->post_push();
+        }
+        if (success) {
+            success = drbg_testvec->full_verify();
+        }
+        drbg_testvec->rsp_file_output(inst);
+
+        delete drbg_testvec;
+        return success;
+    };
+
+    failure_count = 0;
+    for (uint32_t i = 0; i < testvectors->size(); i++) {
+        const drbg_vector_entry_t& entry = testvectors->at(i);
+
+        for (int inst = crypto_drbg::DRBG_INSTANCE0; 
+             inst < crypto_drbg::DRBG_INSTANCE_MAX;
+             inst++) {
+
+            if (!testvectors_run(entry, (crypto_drbg::drbg_instance_t)inst)) {
+                failure_count++;
+            }
+        }
+    }
+
+    return failure_count == 0;
+}
+
 int
 main(int argc,
      char **argv)
@@ -414,10 +490,13 @@ main(int argc,
     if (FLAGS_test_group == "") {
         run_rsa_testvectors = true;
         run_ecdsa_testvectors = true;
+        run_drbg_testvectors = true;
     } else if (FLAGS_test_group == "rsa") {
         run_rsa_testvectors = true;
     } else if (FLAGS_test_group == "ecdsa") {
         run_ecdsa_testvectors = true;
+    } else if (FLAGS_test_group == "drbg") {
+        run_drbg_testvectors = true;
     }
 
     if (common_setup() < 0)  {
@@ -437,6 +516,10 @@ main(int argc,
     if (run_ecdsa_testvectors) {
         test_suite.push_back(test_entry_t("FIPS ECDSA", &ecdsa_testvectors_run,
                                           (void *)&ecdsa_testvectors));
+    }
+    if (run_drbg_testvectors) {
+        test_suite.push_back(test_entry_t("FIPS DRBG", &drbg_testvectors_run,
+                                          (void *)&drbg_testvectors));
     }
 
     OFFL_LOG_INFO("Formed test suite with {} cases", test_suite.size());

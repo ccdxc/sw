@@ -96,7 +96,7 @@ pse_ec_get_ex_data(EC_KEY *eckey)
 static int
 pse_ec_set_ex_data(EC_KEY *eckey, PSE_KEY* key, void *caller_ctx)
 {
-    PSE_EC_EX_DATA *ex_data = PSE_MALLOC(sizeof(PSE_EC_EX_DATA));
+    PSE_EC_EX_DATA *ex_data = PSE_CALLOC(1, sizeof(PSE_EC_EX_DATA));
     if(!ex_data) {
         WARN("Failed to allocate eckey ex data");
         return -1;

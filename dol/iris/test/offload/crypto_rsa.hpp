@@ -244,6 +244,7 @@ public:
         sig_expected_(nullptr),
         sig_actual_(nullptr),
         salt_val_(nullptr),
+        salt_len_(0),
         failure_expected_(false)
     {
     }
@@ -279,6 +280,12 @@ public:
         return *this;
     }
     rsa_push_params_t&
+    salt_len(uint32_t salt_len)
+    {
+        salt_len_ = salt_len;
+        return *this;
+    }
+    rsa_push_params_t&
     failure_expected(bool failure_expected)
     {
         failure_expected_ = failure_expected;
@@ -290,6 +297,7 @@ public:
     dp_mem_t *sig_expected(void) { return sig_expected_; }
     dp_mem_t *sig_actual(void) { return sig_actual_; }
     dp_mem_t *salt_val(void) { return salt_val_; }
+    uint32_t salt_len(void) { return salt_len_; }
     bool failure_expected(void) { return failure_expected_; }
 
 private:
@@ -298,6 +306,7 @@ private:
     dp_mem_t                    *sig_expected_;
     dp_mem_t                    *sig_actual_;
     dp_mem_t                    *salt_val_;
+    uint32_t                    salt_len_;
     bool                        failure_expected_;
 };
 

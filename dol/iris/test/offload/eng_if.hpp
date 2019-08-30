@@ -153,8 +153,10 @@ public:
         digest_(nullptr),
         digest_padded_(nullptr),
         salt_val_(nullptr),
+        salt_len_(0),
         sig_actual_(nullptr),
         rsa_(nullptr),
+        rand_ctx_(nullptr),
         failure_expected_(false),
         wait_for_completion_(false)
     {
@@ -209,6 +211,12 @@ public:
         return *this;
     }
     rsa_sign_params_t&
+    salt_len(uint32_t salt_len)
+    {
+        salt_len_ = salt_len;
+        return *this;
+    }
+    rsa_sign_params_t&
     sig_actual(dp_mem_t *sig_actual)
     {
         sig_actual_ = sig_actual;
@@ -218,6 +226,12 @@ public:
     rsa(void *rsa)
     {
         rsa_ = rsa;
+        return *this;
+    }
+    rsa_sign_params_t&
+    rand_ctx(void *rand_ctx)
+    {
+        rand_ctx_ = rand_ctx;
         return *this;
     }
     rsa_sign_params_t&
@@ -241,8 +255,10 @@ public:
     dp_mem_t *digest(void) { return digest_; }
     dp_mem_t *digest_padded(void) { return digest_padded_; }
     dp_mem_t *salt_val(void) { return salt_val_; }
+    uint32_t salt_len(void) { return salt_len_; }
     dp_mem_t *sig_actual(void) { return sig_actual_; }
     void *rsa(void) { return rsa_; }
+    void *rand_ctx(void) { return rand_ctx_; }
     bool failure_expected(void) { return failure_expected_; }
     bool wait_for_completion(void) { return wait_for_completion_; }
 
@@ -255,8 +271,10 @@ private:
     dp_mem_t                    *digest_;
     dp_mem_t                    *digest_padded_;
     dp_mem_t                    *salt_val_;
+    uint32_t                    salt_len_;
     dp_mem_t                    *sig_actual_;
     void                        *rsa_;
+    void                        *rand_ctx_;
     bool                        failure_expected_;
     bool                        wait_for_completion_;
 };
@@ -278,6 +296,7 @@ public:
         digest_padded_(nullptr),
         salt_val_(nullptr),
         rsa_(nullptr),
+        rand_ctx_(nullptr),
         failure_expected_(false),
         wait_for_completion_(false)
     {
@@ -344,6 +363,12 @@ public:
         return *this;
     }
     rsa_verify_params_t&
+    rand_ctx(void *rand_ctx)
+    {
+        rand_ctx_ = rand_ctx;
+        return *this;
+    }
+    rsa_verify_params_t&
     failure_expected(bool failure_expected)
     {
         failure_expected_ = failure_expected;
@@ -366,6 +391,7 @@ public:
     dp_mem_t *digest_padded(void) { return digest_padded_; }
     dp_mem_t *salt_val(void) { return salt_val_; }
     void *rsa(void) { return rsa_; }
+    void *rand_ctx(void) { return rand_ctx_; }
     bool failure_expected(void) { return failure_expected_; }
     bool wait_for_completion(void) { return wait_for_completion_; }
 
@@ -380,6 +406,7 @@ private:
     dp_mem_t                    *digest_padded_;
     dp_mem_t                    *salt_val_;
     void                        *rsa_;
+    void                        *rand_ctx_;
     bool                        failure_expected_;
     bool                        wait_for_completion_;
 };

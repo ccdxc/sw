@@ -39,7 +39,7 @@ testvec_output_t::testvec_output_t(const string& scripts_dir,
                   S_IRWXU | S_IRWXG | S_IRWXO)) {
             OFFL_FUNC_ERR("failed to create directory {}",
                           engine_rsp_fulldir);
-            assert(0);
+            goto done;
         }
     }
 
@@ -66,8 +66,11 @@ testvec_output_t::testvec_output_t(const string& scripts_dir,
     if (!fp) {
         OFFL_FUNC_ERR("failed to create testvec output file {}",
                       output_fname);
-        assert(fp);
+        goto done;
     }
+
+done:
+    ;
 }
 
 testvec_output_t::~testvec_output_t()

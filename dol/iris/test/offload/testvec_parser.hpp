@@ -119,7 +119,8 @@ public:
     parser_token_id_t parse(testvec_parse_params_t params);
 
     bool eof(void);
-    bool parse_hex_bn(dp_mem_t *bn);
+    bool parse_hex_bn(dp_mem_t *bn,
+                      bool empty_ok=false);
     bool parse_ulong(u_long *n);
     bool parse_string(string *str);
 

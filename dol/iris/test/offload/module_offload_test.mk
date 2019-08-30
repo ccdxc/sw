@@ -10,6 +10,8 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/testvec_parser.cc \
                   ${MODULE_SRC_DIR}/crypto_ecdsa_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_ecdsa.cc \
                   ${MODULE_SRC_DIR}/crypto_asym.cc \
+                  ${MODULE_SRC_DIR}/crypto_drbg_testvec.cc \
+                  ${MODULE_SRC_DIR}/crypto_drbg.cc \
                   ${MODULE_SRC_DIR}/eng_if.cc \
                   ${MODULE_SRC_DIR}/eng_if_digest.cc \
                   ${MODULE_SRC_DIR}/eng_if_rsa.cc \
