@@ -52,5 +52,16 @@ bool mpscq_t::dequeue(void **op, void **data)
     return true;
 }
 
+uint16_t
+mpscq_t::get_queue_len() {
+    if (ci_ == pi_) {
+        return 0;
+    } else if (ci_ < pi_) {
+        return pi_ - ci_+1;
+    } else {
+        return (pi_ + nslots_) - ci_ + 1;
+    }
+}
+
 }
 

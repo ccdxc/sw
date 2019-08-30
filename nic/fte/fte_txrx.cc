@@ -62,6 +62,7 @@ public:
     void set_bypass_fte(bool bypass_fte) { bypass_fte_ = bypass_fte; }
     void incr_freed_tx_stats(void);
     void compute_cps();
+    uint16_t softq_stats_get();
 
 private:
     uint8_t                 id_;
@@ -193,6 +194,18 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
     }
 
     return inst->softq_enqueue(fn, data);
+}
+typedef int softq_stats_t;
+hal_ret_t 
+fte_softq_stats_get(uint8_t fte_id, int &stat) {
+    if (fte_disabled_) {
+        return HAL_RET_OK;
+    }
+    if (g_inst_list[fte_id] != NULL) {
+        stat = g_inst_list[fte_id]->softq_stats_get();
+        return HAL_RET_OK;
+    }
+    return HAL_RET_ERR; 
 }
 
 //------------------------------------------------------------------------
@@ -420,6 +433,12 @@ inst_t::softq_enqueue(softq_fn_t fn, void *data)
     return HAL_RET_OK;
 }
 
+uint16_t
+inst_t::softq_stats_get()
+{
+    return softq_->get_queue_len();
+}      
+
 //------------------------------------------------------------------------------
 // Process an event from softq
 //------------------------------------------------------------------------------
@@ -433,10 +452,13 @@ void inst_t::process_softq()
     while (npkt < FTE_MAX_SOFTQ_BATCH_SZ && softq_->dequeue(&op, &data)) {
         //Increment stats
         stats_.fte_hbm_stats->qstats.softq_req++;
-        compute_pps();
+        //compute_pps();
 
         (*(softq_fn_t)op)(data);
         npkt++;
+    }
+    if (!npkt) {
+        HAL_TRACE_DEBUG("Done processing softq: {}", npkt);
     }
 }
 
@@ -966,6 +988,8 @@ void inst_t::process_arq_new ()
 
         fte::impl::cfg_db_close();
     }
+    HAL_TRACE_DEBUG("Done processing {} packets", cpupkt_batch.pktcount);
+
 }
 
 //------------------------------------------------------------------------------

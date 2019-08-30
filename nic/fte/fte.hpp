@@ -112,4 +112,6 @@ void incr_inst_freed_tx_stats(void);
 //Compute CPS
 void fte_inst_compute_cps(void);
 
+hal_ret_t fte_softq_stats_get(uint8_t fte_id, int &stat);
+
 } // namespace fte

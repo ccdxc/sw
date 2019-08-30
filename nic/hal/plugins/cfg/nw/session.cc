@@ -2932,6 +2932,9 @@ system_fte_stats_get(SystemResponse *rsp)
             fte_stats->set_packets_per_second(per_fte_stats.fte_hbm_stats->cpsstats.pps);
             fte_stats->set_max_packets_per_second(per_fte_stats.fte_hbm_stats->cpsstats.pps_hwm);
         }
+        int qlen = 0;
+        fte::fte_softq_stats_get(i, qlen);
+        fte_stats->set_softq_len(qlen);
 
         for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
             if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {

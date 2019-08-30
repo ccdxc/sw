@@ -296,20 +296,21 @@ message FTEFeatureStats {
 
 // per FTE Stats
 message FTEStatsInfo {
-  uint64                   conn_per_second   = 1;
-  uint64                   flow_miss_pkts    = 2;
-  uint64                   retransmit_pkts   = 3;
-  uint64                   redir_pkts        = 4;
-  uint64                   cflow_pkts        = 5;
-  uint64                   tcp_close_pkts    = 6;
-  uint64                   tls_proxy_pkts    = 7;
-  uint64                   softq_reqs        = 8;
-  uint64                   queued_tx_pkts    = 9;
-  uint64                   max_conn_per_second  = 10;
-  uint64                   packets_per_second     = 11;
-  uint64                   max_packets_per_second = 12;
-  repeated FTEError        fte_errors        = 13;
-  repeated FTEFeatureStats feature_stats     = 14;
+  uint64                   conn_per_second          = 1;
+  uint64                   flow_miss_pkts           = 2;
+  uint64                   retransmit_pkts          = 3;
+  uint64                   redir_pkts               = 4;
+  uint64                   cflow_pkts               = 5;
+  uint64                   tcp_close_pkts           = 6;
+  uint64                   tls_proxy_pkts           = 7;
+  uint64                   softq_reqs               = 8;
+  uint64                   queued_tx_pkts           = 9;
+  uint64                   max_conn_per_second      = 10;
+  uint64                   packets_per_second       = 11;
+  uint64                   max_packets_per_second   = 12;
+  uint64                   softq_len                = 13;
+  repeated FTEError        fte_errors               = 14;
+  repeated FTEFeatureStats feature_stats            = 15;
 }
 
 // FTE Global Stats

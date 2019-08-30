@@ -15,7 +15,7 @@ namespace pd {
 //#define HAL_TRACE_DEBUG2(fmt, ...)
 //#define HAL_TRACE_ERR2(fmt, ...)
 
-#define HAL_TRACE_DEBUG2 HAL_TRACE_DEBUG
+#define HAL_TRACE_DEBUG2 HAL_TRACE_VERBOSE
 #define HAL_TRACE_ERR2   HAL_TRACE_ERR
 
 thread_local uint32_t gc_pindex = 0;
@@ -1318,7 +1318,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	return(HAL_RET_RETRY);
     }
 
-    HAL_TRACE_DEBUG2("Process batch: total-pkts {} rxq-pkts {} compq-rx-descrs {} compq-tx-descrs {}",
+    HAL_TRACE_DEBUG("Process batch: total-pkts {} rxq-pkts {} compq-rx-descrs {} compq-tx-descrs {}",
 		    pktcount, rxq_pkt_count, compq_rx_pkt_count, compq_tx_pkt_count);
 
     /*

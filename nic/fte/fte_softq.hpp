@@ -16,6 +16,8 @@ public:
     bool dequeue(void **op, void **data);
 
     static mpscq_t *alloc(uint16_t nslots) { return new mpscq_t(nslots); }
+    // returns queue_len. Approximate only. Because read is not atomic guranteed. Used for debugging only
+    uint16_t get_queue_len();
 private:
     mpscq_t(uint16_t nslots): nslots_(nslots), pi_(0), ci_(0), slots_(new slot_t[nslots]) {}
     uint16_t nslots_;           // max no of slots

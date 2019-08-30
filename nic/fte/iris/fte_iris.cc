@@ -834,19 +834,21 @@ ctx_t::update_flow_table()
 end:
 
     // Dont log when we hit an error
-    if (!ipc_logging_disable() && (ret == HAL_RET_OK) &&
+    if ((ret == HAL_RET_OK) &&
         ((session_exists == false) || (update_type == "delete"))) {
       
         // Compute CPS
         if (session_exists == false) {
             fte_inst_compute_cps();
         }
+        if (!ipc_logging_disable()) {
  
-        /* Add flow logging only for initiator flows */
-        uint8_t istage = 0;
-        add_flow_logging(key_, session_handle, &iflow_log_[istage]);
-        if (++istage <= istage_)
+            /* Add flow logging only for initiator flows */
+            uint8_t istage = 0;
             add_flow_logging(key_, session_handle, &iflow_log_[istage]);
+            if (++istage <= istage_)
+                add_flow_logging(key_, session_handle, &iflow_log_[istage]);
+        }
     }
 
     return ret;

@@ -534,6 +534,7 @@ mem_hash_table_bucket::remove_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (!valid_) {
+        MEMHASH_TRACE_ERR("invalid bucket");
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

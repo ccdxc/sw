@@ -83,7 +83,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
     uint32_t cur_lif_id = 0;
     hal_handle_t ep_handle;
 
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    //hal::hal_cfg_db_open(hal::CFG_OP_READ);
 
 
     /* Lif update only for host originated packet */
