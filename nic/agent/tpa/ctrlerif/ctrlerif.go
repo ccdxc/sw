@@ -228,7 +228,7 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 					time.Sleep(time.Second * 5)
 				}
 				recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
-					strings.Split(strings.ToLower(event.EventType.String()), "-event")[0], event.Policy.Kind, event.Policy.Name), nil)
+					strings.Split(strings.ToLower(event.EventType.String()), "-event")[0], event.Policy.Kind, event.Policy.Name), event.Policy)
 			}()
 
 		case event, ok := <-wc.flowExpChan:
@@ -264,7 +264,7 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 					time.Sleep(time.Second * 5)
 				}
 				recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
-					strings.Split(strings.ToLower(event.EventType.String()), "-event")[0], event.Policy.Kind, event.Policy.Name), nil)
+					strings.Split(strings.ToLower(event.EventType.String()), "-event")[0], event.Policy.Kind, event.Policy.Name), event.Policy)
 			}()
 
 			// periodic sync

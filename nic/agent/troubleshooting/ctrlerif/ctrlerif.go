@@ -134,7 +134,7 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 					}
 
 					recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
-						strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.MirrorSession.Kind, evt.MirrorSession.Name), nil)
+						strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.MirrorSession.Kind, evt.MirrorSession.Name), &evt.MirrorSession)
 				}
 			}()
 		}

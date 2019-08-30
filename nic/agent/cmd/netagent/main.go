@@ -81,7 +81,7 @@ func main() {
 	defer logger.Close()
 
 	// create events recorder
-	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{Component: globals.Tmagent}, logger)
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{Component: globals.Netagent}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
