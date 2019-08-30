@@ -3,7 +3,6 @@ import enum
 import pdb
 import ipaddress
 
-import copy
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -108,30 +107,9 @@ class DeviceObjectClient:
         tunnel.client.CreateObjects()
         return
 
-    def ModifyObjects(self):
-        for obj in self.__objs:
-            obj.Show()
-            obj.Update()
-            obj.Show()
-        return
-
     def ReadObjects(self):
         msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
         api.client.Get(api.ObjectTypes.SWITCH, msgs)
-        return
-
-    def UpdateObjects(self):
-        #self.Show()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
-        api.client.Update(api.ObjectTypes.SWITCH, msgs)
-        #tunnel.client.CreateObjects()
-        return
-
-    def DeleteObjects(self):
-        #self.Show()
-        #msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
-        api.client.Delete(api.ObjectTypes.SWITCH, msgs)
-        #tunnel.client.CreateObjects()
         return
 
 client = DeviceObjectClient()

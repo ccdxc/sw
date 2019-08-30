@@ -3,6 +3,7 @@ import pdb
 import ipaddress
 import random
 from infra.common.logging import logger
+from infra.common.glopts import GlobalOptions as GlobalOptions
 import infra.api.api as infra_api
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
@@ -222,6 +223,10 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
     return __get_packet_srcmac_impl(testcase.config.root.FwdMode,
             testcase.config.devicecfg, testcase.config.remotemapping,
             testcase.config.localmapping, args)
+
+def GetExpectedPacket(testcase, args):
+    #add all the cases for checking packet and return expected packet on demand
+    return testcase.packets.Get(args.pkt)
 
 def __get_ip_localmapping_impl(localmapping, tunnel):
     if tunnel is not None:

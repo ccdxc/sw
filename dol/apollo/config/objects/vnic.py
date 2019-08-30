@@ -161,6 +161,11 @@ class VnicObjectClient:
     def GetVnicObject(self, vnicid):
         return self.__objs.get(vnicid, None)
 
+    def GetGrpcDeleteMessage(self):
+        grpcmsg = vnic_pb2.VnicDeleteRequest()
+        grpcmsg.VnicId.append(self.VnicId)
+        return grpcmsg
+
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'vnic', None) == None:
             return

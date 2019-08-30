@@ -66,5 +66,5 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
             port    : ref://testcase/config/switchport
