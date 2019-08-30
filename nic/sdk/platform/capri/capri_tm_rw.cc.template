@@ -1302,7 +1302,7 @@ capri_tm_sop_eop_check (tm_port_t port)
 }
 
 static sdk_ret_t
-capri_tm_drain_uplink_port (tm_port_t port)
+capri_tm_drain_hbm_contexts (tm_port_t port)
 {
     bool all_zeroes = false;
     uint32_t tries = 0;
@@ -1321,6 +1321,8 @@ capri_tm_drain_uplink_port (tm_port_t port)
             occupancy = capri_tm_get_hbm_occupancy(TM_HBM_FIFO_TYPE_UPLINK, context);
             if (occupancy) {
                 all_zeroes = false;
+            } else {
+                SDK_TRACE_DEBUG("port %u, hbm context %u 0", port, context);
             }
         }
         // TODO: Do we need a sleep here ?
@@ -1335,6 +1337,218 @@ capri_tm_drain_uplink_port (tm_port_t port)
     }
 
     return sdk::SDK_RET_OK;
+}
+
+static sdk_ret_t
+capri_tm_drain_occupancy (tm_port_t port)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t max_tries = 1000;
+    uint32_t tries = 0;
+    bool all_zeroes = false;
+    uint32_t cur_occupancy = 0;
+    uint32_t peak_occupancy = 0;
+    uint32_t num_iqs = capri_tm_get_num_iqs_for_port(port);
+
+    while ((all_zeroes == false) && (tries < max_tries)) {
+        all_zeroes = true;
+        for (uint32_t iq = 0; iq < num_iqs; iq++) {
+            capri_tm_get_buffer_occupancy(port, iq, &cur_occupancy, &peak_occupancy);
+            if (cur_occupancy != 0) {
+                all_zeroes = false;
+            } else {
+                SDK_TRACE_DEBUG("port %u, iq %u 0", port, iq);
+            }
+        }
+        tries++;
+        usleep(1000);
+    }
+    if (all_zeroes == false) {
+        return SDK_RET_RETRY;
+    }
+    return ret;
+}
+
+static sdk_ret_t
+capri_tm_drain_oq (tm_port_t port)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t max_tries = 1000;
+    uint32_t tries = 0;
+    bool all_zeroes = false;
+    uint32_t queue_depth = 0;
+    uint32_t num_oqs = capri_tm_get_num_oqs_for_port(port);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    while ((all_zeroes == false) && (tries < max_tries)) {
+        all_zeroes = true;
+        pbc_csr.sta_oq[port].read();
+        for (uint32_t oq = 0; oq < num_oqs; oq++) {
+            // 16 bits per oq
+            queue_depth = cpp_helper.get_slc(pbc_csr.sta_oq[port].depth_value(),
+                                             oq*16,
+                                             (((oq+1)*16)-1)).convert_to<uint32_t>();
+            if (queue_depth != 0) {
+                all_zeroes = false;
+            } else {
+                SDK_TRACE_DEBUG("port %u, oq %u 0", port, oq);
+            }
+        }
+        tries++;
+        usleep(1000);
+    }
+    if (all_zeroes == false) {
+        return SDK_RET_RETRY;
+    }
+    return ret;
+}
+
+sdk_ret_t
+capri_tm_drain_uplink_port (tm_port_t port)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    ret = capri_tm_drain_hbm_contexts(port);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Port %u drain. hbm contexts not drained", port);
+        return ret;
+    }
+
+    // wait for the sop and eop counters to match
+    ret = capri_tm_sop_eop_check(port);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Port %u drain. sop eop does not match", port);
+        return ret;
+    }
+
+    // wait for occupancy to be 0
+    ret = capri_tm_drain_occupancy(port);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Port %u drain, occ not drained", port);
+        return ret;
+    }
+
+    // wait for oq depth to be 0
+    ret = capri_tm_drain_oq(port);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Port %u drain, oq not drained", port);
+        return ret;
+    }
+
+    return ret;
+}
+
+sdk_ret_t
+capri_tm_flush_uplink_port (tm_port_t port, bool enable)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    // Mutex lock is to avoid sequencing b/w linkmgr-ctrl thread and periodic
+    // thread for now during link-down event.
+    // Ideally PB registers must be programmed by HAL cfg threads.
+    // For GS, since QOS changes are not supported, the only PB registers
+    // which are programmed after initial bootup are the ones below.
+    // This is invoked only during upgrade and link-down events.
+    pthread_mutex_lock(&tm_mutex);
+
+    stringstream data;
+    data << hex << endl;
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq.read();
+
+                // flush the oq for this port
+                pbc_csr.port_${p}.cfg_oq.flush(enable ? 1 : 0);
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_oq.write();
+                    pbc_csr.port_${p}.cfg_oq.read();
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq")}
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            pthread_mutex_unlock(&tm_mutex);
+            return sdk::SDK_RET_ERR;
+    }
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    pthread_mutex_unlock(&tm_mutex);
+
+    SDK_TRACE_DEBUG("%s uplink port %u flush, ret %u",
+                    enable ? "Enable" : "Disable", port, ret);
+    return ret;
+}
+
+sdk_ret_t
+capri_tm_write_control_uplink_port (tm_port_t port, bool enable)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    // Mutex lock is to avoid sequencing b/w linkmgr-ctrl thread and periodic
+    // thread for now during link-down event.
+    // Ideally PB registers must be programmed by HAL cfg threads.
+    // For GS, since QOS changes are not supported, the only PB registers
+    // which are programmed after initial bootup are the ones below.
+    // This is invoked only during upgrade and link-down events.
+    pthread_mutex_lock(&tm_mutex);
+
+    stringstream data;
+    data << hex << endl;
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_write_control.read();
+
+                // dont accept any packet into port
+                pbc_csr.port_${p}.cfg_write_control.enable(enable ? 1 : 0);
+
+                // flush the oq for this port
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_write_control.write();
+                    pbc_csr.port_${p}.cfg_write_control.read();
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            pthread_mutex_unlock(&tm_mutex);
+            return sdk::SDK_RET_ERR;
+    }
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    pthread_mutex_unlock(&tm_mutex);
+
+    SDK_TRACE_DEBUG("%s uplink port %u write control, ret %u",
+                    enable ? "Enable" : "Disable", port, ret);
+    return ret;
 }
 
 sdk_ret_t
@@ -1364,7 +1578,7 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
         if (ret != sdk::SDK_RET_OK) {
             SDK_TRACE_ERR("Port %u is not fully drained. Retry later", port);
             pthread_mutex_unlock(&tm_mutex);
-            return sdk::SDK_RET_RETRY;
+            return ret;
         }
     }
 
@@ -1385,11 +1599,13 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
                 // flush the oq for this port
                 pbc_csr.port_${p}.cfg_oq.flush(enable ? 0 : 1);
                 if (tm_sw_cfg_write_enabled()) {
-                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
                     pbc_csr.port_${p}.cfg_write_control.write();
+                    pbc_csr.port_${p}.cfg_write_control.read();
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
 
-                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq")}
                     pbc_csr.port_${p}.cfg_oq.write();
+                    pbc_csr.port_${p}.cfg_oq.read();
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq")}
                 }
                 break;
             }
@@ -1407,22 +1623,14 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
     if (!enable) {
         ret = capri_tm_drain_uplink_port(port);
         if (ret != sdk::SDK_RET_OK) {
-            SDK_TRACE_ERR("Port %u is not fully drained", port);
-            ret = sdk::SDK_RET_ERR;
-        }
-
-        // wait for the sop and eop counters to match
-        ret = capri_tm_sop_eop_check(port);
-        if (ret != sdk::SDK_RET_OK) {
-            SDK_TRACE_ERR("Port %u is not fully drained", port);
-            ret = sdk::SDK_RET_ERR;
+            SDK_TRACE_ERR("Port %u drain, not fully drained", port);
         }
     }
 
     pthread_mutex_unlock(&tm_mutex);
 
-    SDK_TRACE_DEBUG("%s uplink port %u",
-                    enable ? "Enable" : "Disable", port);
+    SDK_TRACE_DEBUG("%s uplink port %u, ret %u",
+                    enable ? "Enable" : "Disable", port, ret);
     return ret;
 }
 
@@ -3962,6 +4170,12 @@ capri_tm_init_enable_ports (void)
     }
     pbc_csr.port_${p}.cfg_write_control.read();
     pbc_csr.port_${p}.cfg_write_control.enable(enable);
+
+    // PB freeing cells from cache when toggling cfg_write_control.enable
+    // can mess up the accounting. Avoid freeing cells by setting
+    // release_cells=0x0
+    // pbc_csr.port_${p}.cfg_write_control.release_cells(0);
+
     if (set_rate_limiter) {
         pbc_csr.port_${p}.cfg_write_control.rate_limiter(rate_limiter);
     }

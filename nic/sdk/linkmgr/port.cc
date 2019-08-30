@@ -927,7 +927,9 @@ port::port_link_sm_process(bool start_en_timer)
                 port_mac_tx_drain(true);
 
                 // TODO Disable and drain PB
-                port_pb_enable(false);
+                port_pb_flush(true);
+                port_pb_drain();
+                port_pb_write_control(false);
 
                 // reset timers
 
@@ -1269,7 +1271,9 @@ port::port_link_sm_process(bool start_en_timer)
                 port_mac_stats_persist_collect_enable();
 
                 // TODO Enable PB
-                port_pb_enable(true);
+                port_pb_drain();
+                port_pb_flush(false);
+                port_pb_write_control(true);
 
                 // Disable MAC TX drain and set Tx/Rx=0x1
                 port_mac_tx_drain(false);
@@ -1551,6 +1555,32 @@ port::port_mac_stats_persist_clear(bool reset)
         memset(this->persist_stats_data_, 0, sizeof(this->persist_stats_data_));
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_pb_drain(void) {
+    uint32_t tm_port = logical_port_to_tm_port(port_num());
+
+    // TODO remove capri reference
+    return sdk::platform::capri::capri_tm_drain_uplink_port(tm_port);
+}
+
+sdk_ret_t
+port::port_pb_write_control(bool enable) {
+    uint32_t tm_port = logical_port_to_tm_port(port_num());
+
+    // TODO remove capri reference
+    return sdk::platform::capri::capri_tm_write_control_uplink_port(
+                                                        tm_port, enable);
+}
+
+sdk_ret_t
+port::port_pb_flush(bool enable) {
+    uint32_t tm_port = logical_port_to_tm_port(port_num());
+
+    // TODO remove capri reference
+    return sdk::platform::capri::capri_tm_flush_uplink_port(
+                                                        tm_port, enable);
 }
 
 sdk_ret_t

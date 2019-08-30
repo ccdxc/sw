@@ -275,6 +275,9 @@ sdk_ret_t capri_tm_get_clock_tick(uint64_t *tick);
  * events etc
  */
 sdk_ret_t capri_tm_enable_disable_uplink_port(tm_port_t port, bool enable);
+sdk_ret_t capri_tm_flush_uplink_port(tm_port_t port, bool enable);
+sdk_ret_t capri_tm_write_control_uplink_port(tm_port_t port, bool enable);
+sdk_ret_t capri_tm_drain_uplink_port(tm_port_t port);
 
 /**
  * return front panel port number give TM/PB port number

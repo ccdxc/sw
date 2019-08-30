@@ -242,6 +242,9 @@ public:
     sdk_ret_t port_flush_set(bool);
     sdk_ret_t port_deinit (void);
     sdk_ret_t port_pb_enable(bool enable);
+    sdk_ret_t port_pb_drain(void);
+    sdk_ret_t port_pb_write_control(bool enable);
+    sdk_ret_t port_pb_flush(bool enable);
 
     // ----------------------------------------------------
     // mac methods

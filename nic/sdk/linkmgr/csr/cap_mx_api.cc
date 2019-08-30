@@ -1465,16 +1465,23 @@ cap_mx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
     // MAC control bit 5
    addr = (mac_ch == 1) ? 0x500 : (mac_ch == 2) ? 0x600 : (mac_ch == 3) ? 0x700 : 0x400;
    cap_mx_set_bit(chip_id, inst_id, addr, 5, drain);
+   cap_mx_apb_read(chip_id, inst_id, addr);
+
    cap_mx_set_bit(chip_id, inst_id, addr, 0, drain == true? false : true);
+   cap_mx_apb_read(chip_id, inst_id, addr);
+
    cap_mx_set_bit(chip_id, inst_id, addr, 1, drain == true? false : true);
+   cap_mx_apb_read(chip_id, inst_id, addr);
 
     // MAC transmit config  bit 15
    addr = (mac_ch == 1) ? 0x501 : (mac_ch == 2) ? 0x601 : (mac_ch == 3) ? 0x701 : 0x401;
    cap_mx_set_bit(chip_id, inst_id, addr, 15, drain);
+   cap_mx_apb_read(chip_id, inst_id, addr);
 
     // MAC txdebug config  bit 6
    addr = (mac_ch == 1) ? 0x591 : (mac_ch == 2) ? 0x691 : (mac_ch == 3) ? 0x791 : 0x491;
    cap_mx_set_bit(chip_id, inst_id, addr, 6, drain);
+   cap_mx_apb_read(chip_id, inst_id, addr);
    return 0;
 }
 
