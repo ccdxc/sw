@@ -62,6 +62,9 @@ third-party/avago/x86_64/
 third-party/libz/
 third-party/liblmdb/
 sdk/third-party/avago/include/
+sdk/third-party/openssl/aarch64
+sdk/third-party/openssl/include
+sdk/third-party/openssl/x86_64
 model_sim/libs/
 tools/ncc/csr_json/
 tools/sorrento/

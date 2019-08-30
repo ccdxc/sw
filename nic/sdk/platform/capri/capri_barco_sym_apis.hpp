@@ -1,10 +1,11 @@
 #ifndef __CAPRI_BARCO_SYM_APIS_H__
 #define __CAPRI_BARCO_SYM_APIS_H__
 
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "platform/capri/capri_barco_crypto.hpp"
 
-namespace hal {
-namespace pd {
+namespace sdk {
+namespace platform {
+namespace capri {
 
 typedef enum {
     CAPRI_SYMM_ENCTYPE_NONE = 0,
@@ -109,12 +110,12 @@ barco_symm_err_status_str (uint64_t status)
   }
 }
 
-hal_ret_t capri_barco_sym_hash_process_request(hal::CryptoApiHashType hash_type, bool generate,
+sdk_ret_t capri_barco_sym_hash_process_request(CryptoApiHashType hash_type, bool generate,
 					       unsigned char *key, int key_len,
 					       unsigned char *data, int data_len,
 					       uint8_t *output_digest, int digest_len);
 
-hal_ret_t capri_barco_sym_aes_encrypt_process_request(capri_barco_symm_enctype_e enc_type, bool encrypt,
+sdk_ret_t capri_barco_sym_aes_encrypt_process_request(capri_barco_symm_enctype_e enc_type, bool encrypt,
 						      uint8_t *key, int key_len,
 						      uint8_t *header, int header_len,
 						      uint8_t *plaintext, int plaintext_len,
@@ -122,11 +123,14 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request(capri_barco_symm_enctype_e
 						      uint8_t *ciphertext, int ciphertext_len,
 						      uint8_t *auth_tag, int auth_tag_len, bool schedule_barco);
 
-hal_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx);
+sdk_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx);
 
 void capri_barco_init_drbg(void);
 
-}    // namespace pd
-}    // namespace hal
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
+
+using sdk::platform::capri::capri_barco_setup_dummy_gcm1_req;
 
 #endif /* __CAPRI_BARCO_SYM_APIS_H__ */

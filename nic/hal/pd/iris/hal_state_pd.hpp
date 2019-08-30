@@ -156,7 +156,6 @@ public:
     indexer *qos_uplink_iq_idxr(void) { return qos_uplink_iq_idxr_; }
     indexer *qos_common_oq_idxr(void) { return qos_common_oq_idxr_; }
     indexer *qos_rxdma_oq_idxr(void) { return qos_rxdma_oq_idxr_; }
-    indexer *crypto_pd_keys_idxr(void) { return session_keys_idxr_; }
     indexer *rw_tbl_idxr(void) { return rw_tbl_idxr_; }
     indexer *tnnl_rw_tbl_idxr(void) { return tnnl_rw_tbl_idxr_; }
 
@@ -306,11 +305,6 @@ private:
     // wring related state
     struct {
         ht         *wring_hwid_ht_;
-    } __PACK__;
-
-    // Crypto related state
-    struct {
-        indexer    *session_keys_idxr_;
     } __PACK__;
 
     // ipseccb related state

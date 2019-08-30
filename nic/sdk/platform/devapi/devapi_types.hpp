@@ -6,6 +6,7 @@
 
 #include "include/sdk/base.hpp"
 #include "nic/include/accel_ring.h"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 
 namespace sdk {
 namespace platform {
@@ -216,16 +217,6 @@ typedef void (*accel_rgroup_rmetrics_rsp_cb_t)(void *user_ctx,
 typedef void (*accel_rgroup_rmisc_rsp_cb_t)(void *user_ctx,
                                             const accel_rgroup_rmisc_rsp_t& indices);
 
-typedef enum crypto_key_type_e {
-    CRYPTO_KEY_TYPE_AES128,
-    CRYPTO_KEY_TYPE_AES192,
-    CRYPTO_KEY_TYPE_AES256,
-    CRYPTO_KEY_TYPE_DES,
-    CRYPTO_KEY_TYPE_CHACHA20,
-    CRYPTO_KEY_TYPE_POLY1305,
-    CRYPTO_KEY_TYPE_HMAC,
-} crypto_key_type_t;
-
 }    // namespace platform
 }    // namespace sdk
 
@@ -246,7 +237,6 @@ using sdk::platform::accel_rgroup_rinfo_rsp_cb_t;
 using sdk::platform::accel_rgroup_rindices_rsp_cb_t;
 using sdk::platform::accel_rgroup_rmetrics_rsp_cb_t;
 using sdk::platform::accel_rgroup_rmisc_rsp_cb_t;
-using sdk::platform::crypto_key_type_t;
 using sdk::platform::lif_qpurpose_t;
 using sdk::platform::qos_class_info_t;
 using sdk::platform::qos_sched_type_t;

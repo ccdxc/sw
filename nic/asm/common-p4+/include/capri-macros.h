@@ -2,7 +2,7 @@
 #define __CAPRI_MACROS_H__
 
 #include "platform/capri/capri_common.hpp"
-#include "nic/include/capri_barco.h"
+#include "nic/sdk/platform/capri/capri_barco.h"
 
 #define DMA_CMD_WR_FENCE 1
 #define DMA_CMD_EOP 1

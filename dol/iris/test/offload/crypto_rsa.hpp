@@ -8,7 +8,7 @@
 #include "crypto_asym.hpp"
 #include "capri_barco_crypto.hpp"
 #include "capri_barco_rings.hpp"
-#include "pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 #include "eng_if.hpp"
 
 using namespace dp_mem;

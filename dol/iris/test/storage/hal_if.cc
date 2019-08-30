@@ -384,7 +384,7 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr, bool is_gcm) {
 }
 
 int get_ring_meta_config(types::BarcoRings ring_type,
-                         hal::barco_ring_meta_config_t *meta)
+                         barco_ring_meta_config_t *meta)
 {
   grpc::ClientContext context;
   internal::BarcoGetRingMetaConfigRequestMsg req_msg;

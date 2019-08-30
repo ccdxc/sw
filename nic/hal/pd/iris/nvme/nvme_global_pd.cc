@@ -5,7 +5,7 @@
 #include "nvme_global_pd.hpp"
 #include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_barco_rings.hpp"
+#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -346,19 +346,19 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
     nvme_global_pd->resourcecb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RESOURCECB);
 
     //tx_hwxtscb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_XTS0);
+    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_XTS0);
     nvme_global_pd->tx_hwxtscb_addr = opaque_tag_addr;
 
     //rx_hwxtscb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_XTS1);
+    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_XTS1);
     nvme_global_pd->rx_hwxtscb_addr = opaque_tag_addr;
 
     //tx_hwdgstcb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_CP);
+    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_CP);
     nvme_global_pd->tx_hwdgstcb_addr = opaque_tag_addr;
 
     //rx_hwdgstcb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_DC);
+    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_DC);
     nvme_global_pd->rx_hwdgstcb_addr = opaque_tag_addr;
 
     //cmd context page

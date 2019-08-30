@@ -2,20 +2,12 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#ifndef __CRYPT_ASYM_APIS_HPP__
-#define __CRYPT_ASYM_APIS_HPP__
+#ifndef __CRYPTO_APIS_HPP__
+#define __CRYPTO_APIS_HPP__
 
-#include "nic/include/base.hpp"
-#include "nic/include/pd.hpp"
-#include "gen/proto/internal.pb.h"
+#include "include/sdk/base.hpp"
 
-using internal::CryptoApiRequest;
-using internal::CryptoApiRequestMsg;
-using internal::CryptoApiResponse;
-using internal::CryptoApiResponseMsg;
-
-
-namespace hal {
+namespace sdk {
 
 
 #define ECC_MAX_KEY_SIZE 66 /* P-521 */
@@ -34,7 +26,7 @@ namespace hal {
 #define CRYPTO_SHA3_384_DIGEST_LEN  48
 #define CRYPTO_SHA3_512_DIGEST_LEN  64
 
-enum CryptoApiHashType {
+typedef enum CryptoApiHashType_e {
   CRYPTOAPI_HASHTYPE_NONE = 0,
   CRYPTOAPI_HASHTYPE_MD5 = 1,
   CRYPTOAPI_HASHTYPE_SHA1 = 2,
@@ -54,7 +46,7 @@ enum CryptoApiHashType {
   CRYPTOAPI_HASHTYPE_SHA3_256 = 16,
   CRYPTOAPI_HASHTYPE_SHA3_384 = 17,
   CRYPTOAPI_HASHTYPE_SHA3_512 = 18,
-};
+} CryptoApiHashType;
 
 static inline const char *
 CryptoApiHashType_Name(CryptoApiHashType value)
@@ -104,7 +96,10 @@ CryptoApiHashType_Name(CryptoApiHashType value)
   return("Unknown");
 }
 
-}    // namespace hal
+}    // namespace sdk
 
-#endif  /* __CRYPT_ASYM_APIS_HPP__ */
+using sdk::CryptoApiHashType;
+using sdk::CryptoApiHashType_Name;
+
+#endif  /* __CRYPTO_APIS_HPP__ */
 

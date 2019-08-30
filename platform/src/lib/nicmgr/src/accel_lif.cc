@@ -2603,7 +2603,7 @@ AccelLif::accel_ring_desc_valid(const accel_ring_t *ring,
                                 accel_ring_desc_type_t *ret_desc_type)
 {
     const hal::pd::cpdc_descriptor_t            *cpdc_desc;
-    const hal::pd::barco_symm_req_descriptor_t  *symm_desc;
+    const barco_symm_req_descriptor_t  *symm_desc;
 
     if (desc_size) {
         *ret_desc_type = accel_ring_desc_type_get(ring);
@@ -2615,8 +2615,8 @@ AccelLif::accel_ring_desc_valid(const accel_ring_t *ring,
             return !!cpdc_desc->src;
 
         case ACCEL_RING_DESC_CRYPTO_SYMM:
-            assert(desc_size == sizeof(hal::pd::barco_symm_req_descriptor_t));
-            symm_desc = (const hal::pd::barco_symm_req_descriptor_t *)desc;
+            assert(desc_size == sizeof(barco_symm_req_descriptor_t));
+            symm_desc = (const barco_symm_req_descriptor_t *)desc;
             return symm_desc->input_list_addr && symm_desc->output_list_addr;
 
         default:
@@ -2637,7 +2637,7 @@ AccelLif::accel_ring_desc_log(const accel_ring_t *ring,
                               accel_ring_desc_type_t desc_type)
 {
     const hal::pd::cpdc_descriptor_t            *cpdc_desc;
-    const hal::pd::barco_symm_req_descriptor_t  *symm_desc;
+    const barco_symm_req_descriptor_t  *symm_desc;
 
     switch (desc_type) {
 
@@ -2651,7 +2651,7 @@ AccelLif::accel_ring_desc_log(const accel_ring_t *ring,
         break;
 
     case ACCEL_RING_DESC_CRYPTO_SYMM:
-        symm_desc = (const hal::pd::barco_symm_req_descriptor_t *)desc;
+        symm_desc = (const barco_symm_req_descriptor_t *)desc;
         NIC_LOG_DEBUG("{}: Crypto Symm desc {} cmd {:#x} src {:#x} dst {:#x} "
                       "status {:#x} db {:#x} iv {:#x}", LifNameGet(), desc_idx,
                       symm_desc->command, symm_desc->input_list_addr,
@@ -2704,7 +2704,7 @@ AccelLif::accel_ring_desc_addr_notify(const accel_ring_t *ring,
                                       accel_ring_desc_type_t desc_type)
 {
     const hal::pd::cpdc_descriptor_t            *cpdc_desc;
-    const hal::pd::barco_symm_req_descriptor_t  *symm_desc;
+    const barco_symm_req_descriptor_t  *symm_desc;
 
     if (notifyq && ring) {
         ring_desc_addr_event_t ev = {0};
@@ -2725,7 +2725,7 @@ AccelLif::accel_ring_desc_addr_notify(const accel_ring_t *ring,
             break;
 
         case ACCEL_RING_DESC_CRYPTO_SYMM:
-            symm_desc = (const hal::pd::barco_symm_req_descriptor_t *)desc;
+            symm_desc = (const barco_symm_req_descriptor_t *)desc;
             ev.src_addr = symm_desc->input_list_addr;
             ev.dst_addr = symm_desc->output_list_addr;
             ev.status_addr = symm_desc->status_addr;

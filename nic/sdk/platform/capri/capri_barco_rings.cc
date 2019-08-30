@@ -1,45 +1,44 @@
-#include "gen/proto/types.pb.h"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_barco_rings.hpp"
+#include "platform/capri/capri_barco_rings.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
-#include "nic/hal/pd/capri/capri_barco_res.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
+#include "platform/capri/capri_barco_res.hpp"
+#include "platform/capri/capri_barco_crypto.hpp"
 #include "platform/capri/capri_common.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
+#include "asic/rw/asicrw.hpp"
 
-namespace hal {
+namespace sdk {
+namespace platform {
+namespace capri {
 
-namespace pd {
-
-hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
-hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
+sdk_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
         void *req, uint32_t *req_tag, bool);
-hal_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring);
-hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
-hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring,
+sdk_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring,
                                        void *req, uint32_t *req_tag, bool);
-hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring,
+sdk_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring,
                                        void *req, uint32_t *req_tag, bool);
-hal_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_xts0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
-hal_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_xts1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
-hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring,
+sdk_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring,
 					void *req, uint32_t *req_tag, bool);
-hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring);
-hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring);
-hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring);
-hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring);
-hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_cp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
-hal_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
-hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_dc_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
-hal_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring);
+sdk_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 
@@ -327,50 +326,50 @@ capri_barco_ring_t  barco_rings[] = {
     },
 };
 
-hal_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
 {
     uint64_t                            ring_base = 0;
     uint32_t                            ring_size = 0;
 
     ring_base = get_mem_addr(barco_ring->hbm_region);
     if (ring_base == INVALID_MEM_ADDRESS) {
-        HAL_TRACE_ERR("Failed to retrieve Barco Ring memory region for {}", barco_ring->ring_name);
-        return HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region for %s", barco_ring->ring_name);
+        return SDK_RET_ERR;
     }
 
     if (ring_base & (barco_ring->ring_alignment - 1)) {
-        HAL_TRACE_ERR("Failed to retrieve aligned Barco Ring memory region for {}", barco_ring->ring_name);
-        return HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to retrieve aligned Barco Ring memory region for %s", barco_ring->ring_name);
+        return SDK_RET_ERR;
     }
 
     ring_size = get_mem_size_kb(barco_ring->hbm_region) * 1024;
     if (ring_size < (uint32_t)(barco_ring->ring_size * barco_ring->descriptor_size)) {
-        HAL_TRACE_ERR("Not enough memory for Barco Ring memory region {}", barco_ring->ring_name);
-        return HAL_RET_ERR;
+        SDK_TRACE_ERR("Not enough memory for Barco Ring memory region %s", barco_ring->ring_name);
+        return SDK_RET_ERR;
     }
 
     barco_ring->ring_base = ring_base;
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t capri_barco_asym_key_array_init(void)
+sdk_ret_t capri_barco_asym_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            asym_key_array_base;
     uint32_t                            asym_key_array_key_count;
 
     ret = capri_barco_res_region_get(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, &asym_key_array_base);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr region");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr region");
         return ret;
     }
 
     ret = capri_barco_res_obj_count_get(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, &asym_key_array_key_count);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr count");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr count");
         return ret;
     }
 
@@ -395,22 +394,22 @@ hal_ret_t capri_barco_asym_key_array_init(void)
     hese.dhs_crypto_ctl.pk_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.pk_axi_status.write();
 
-    HAL_TRACE_DEBUG("Barco Asym Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco Asym Key Descriptor Array of count %d setup @ 0x%llx",
             asym_key_array_key_count, asym_key_array_base);
 
     return ret;
 }
 
 
-hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     //cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -442,7 +441,7 @@ hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
     //hens.dhs_crypto_ctl.pk_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.pk_consumer_idx.write();
 
-    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_asym_key_array_init();
@@ -456,13 +455,13 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 
     /* The opaque tag address is used as the CI address for the Asym ring */
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag, sizeof(curr_opaque_tag))) {
-        HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
         if ((int32_t(curr_opaque_tag - req_tag)) > 0) {
-            HAL_TRACE_DEBUG("Poll:{}: Check for req: {:#x}: Retrieved opaque tag addr: {:#x}value: {:#x}", 
+            SDK_TRACE_DEBUG("Poll:%s: Check for req: %d: Retrieved opaque tag addr: 0x%llx value: %d", 
                     barco_ring->ring_name, req_tag, barco_ring->opaque_tag_addr, curr_opaque_tag);
 
             ret = TRUE;
@@ -472,24 +471,21 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return ret;
 }
 
-hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
+sdk_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
 					 void *req, uint32_t *req_tag, bool schedule_barco)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     uint64_t                            slot_addr = 0;
-    hal_ret_t                           ret = HAL_RET_OK;
-    barco_asym_descriptor_t             *asym_req_descr = NULL;
-
-    asym_req_descr = (barco_asym_descriptor_t*) req;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
-        HAL_TRACE_ERR("Failed to write descriptor entry for {}  @ {:x}",
+        SDK_TRACE_ERR("Failed to write descriptor entry for %s  @ 0x%llx",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
-        ret = HAL_RET_INVALID_ARG;
+        ret = SDK_RET_INVALID_ARG;
     }
     else {
         *req_tag = barco_ring->producer_idx;;
@@ -507,11 +503,11 @@ hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
 /*
  * Only encryption works on xts0 and decryption on xts1
  */
-hal_ret_t capri_barco_xts0_key_array_init(void)
+sdk_ret_t capri_barco_xts0_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -535,22 +531,22 @@ hal_ret_t capri_barco_xts0_key_array_init(void)
 
     hese.dhs_crypto_ctl.xts_enc_key_array_size.fld(key_array_key_count);
     hese.dhs_crypto_ctl.xts_enc_key_array_size.write();
-    HAL_TRACE_DEBUG("Barco xts Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco xts Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
 
-hal_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     //cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -582,7 +578,7 @@ hal_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
     //hens.dhs_crypto_ctl.xts_enc_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.xts_enc_consumer_idx.write();
 
-    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_xts0_key_array_init();
@@ -594,11 +590,11 @@ bool capri_barco_xts0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return FALSE;
 }
 
-hal_ret_t capri_barco_xts1_key_array_init(void)
+sdk_ret_t capri_barco_xts1_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -622,22 +618,22 @@ hal_ret_t capri_barco_xts1_key_array_init(void)
 
     hese.dhs_crypto_ctl.xts_key_array_size.fld(key_array_key_count);
     hese.dhs_crypto_ctl.xts_key_array_size.write();
-    HAL_TRACE_DEBUG("Barco xts Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco xts Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
 
-hal_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     //cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -669,7 +665,7 @@ hal_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
     //hens.dhs_crypto_ctl.xts_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.xts_consumer_idx.write();
 
-    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_xts1_key_array_init();
@@ -681,11 +677,11 @@ bool capri_barco_xts1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return FALSE;
 }
 
-hal_ret_t capri_barco_mpp0_key_array_init(void)
+sdk_ret_t capri_barco_mpp0_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -723,20 +719,20 @@ hal_ret_t capri_barco_mpp0_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp0_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp0_axi_status.write();
 
-    HAL_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
-hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -774,7 +770,7 @@ hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.write();
 
-    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_mpp0_key_array_init();
@@ -787,7 +783,7 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
-        HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
@@ -813,13 +809,13 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 #endif
 }
 
-hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
+sdk_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
 					uint32_t *req_tag, bool schedule_barco)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
     uint64_t                            slot_addr = 0;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     barco_symm_req_descriptor_t         *sym_req_descr = NULL;
 
     /*
@@ -843,10 +839,10 @@ hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, v
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
-        HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
+        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
-        ret = HAL_RET_INVALID_ARG;
+        ret = SDK_RET_INVALID_ARG;
     }
     else {
         barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
@@ -861,11 +857,11 @@ hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, v
     return ret;
 }
 
-hal_ret_t capri_barco_mpp1_key_array_init(void)
+sdk_ret_t capri_barco_mpp1_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -903,20 +899,20 @@ hal_ret_t capri_barco_mpp1_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp1_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp1_axi_status.write();
 
-    HAL_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
-hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -948,17 +944,17 @@ hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.write();
 
-    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_mpp1_key_array_init();
 }
 
-hal_ret_t capri_barco_mpp2_key_array_init(void)
+sdk_ret_t capri_barco_mpp2_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -996,20 +992,20 @@ hal_ret_t capri_barco_mpp2_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp2_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp2_axi_status.write();
 
-    HAL_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
-hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1041,17 +1037,17 @@ hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.write();
 
-    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_mpp2_key_array_init();
 }
 
-hal_ret_t capri_barco_mpp3_key_array_init(void)
+sdk_ret_t capri_barco_mpp3_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -1089,20 +1085,20 @@ hal_ret_t capri_barco_mpp3_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp3_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp3_axi_status.write();
 
-    HAL_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
-hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1134,17 +1130,17 @@ hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.write();
 
-    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_mpp3_key_array_init();
 }
 
-hal_ret_t capri_barco_gcm0_key_array_init(void)
+sdk_ret_t capri_barco_gcm0_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -1184,23 +1180,23 @@ hal_ret_t capri_barco_gcm0_key_array_init(void)
     hese.dhs_crypto_ctl.gcm0_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.gcm0_axi_status.write();
 
-    HAL_TRACE_DEBUG("Barco gcm0 Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco gcm0 Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
-hal_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
 {
 
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint32_t                            gcm0_pi, gcm0_ci;
 
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1240,12 +1236,12 @@ bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
-        HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        HAL_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}", barco_ring->ring_name,
+        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %d", barco_ring->ring_name,
 			curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
@@ -1268,13 +1264,13 @@ bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 #endif
 }
 
-hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
+sdk_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
 			  		uint32_t *req_tag, bool schedule_barco)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     uint64_t                            slot_addr = 0;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     barco_symm_req_descriptor_t         *sym_req_descr = NULL;
 
     /*
@@ -1298,10 +1294,10 @@ hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
-        HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
+        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
-        ret = HAL_RET_INVALID_ARG;
+        ret = SDK_RET_INVALID_ARG;
     }
 
     barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
@@ -1317,11 +1313,11 @@ hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, 
     return ret;
 }
 
-hal_ret_t capri_barco_gcm1_key_array_init(void)
+sdk_ret_t capri_barco_gcm1_key_array_init(void)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hese_csr_t &                    hese = cap0.md.hese;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint64_t                            key_array_base;
     uint32_t                            key_array_key_count;
     char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
@@ -1361,23 +1357,23 @@ hal_ret_t capri_barco_gcm1_key_array_init(void)
     hese.dhs_crypto_ctl.gcm1_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.gcm1_axi_status.write();
 
-    HAL_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count %d setup @ 0x%llx",
             key_array_key_count, key_array_base);
 
     return ret;
 }
 
-hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
 {
 
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint32_t                            gcm1_pi, gcm1_ci;
 
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1412,16 +1408,16 @@ hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
 }
 
 
-hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint32_t                            reg_lo;
     uint32_t                            reg_hi;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1486,10 +1482,10 @@ hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.write();
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.get_offset();
 
-    HAL_TRACE_DEBUG("Barco compression ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco compression ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 bool capri_barco_cp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
@@ -1498,15 +1494,15 @@ bool capri_barco_cp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return FALSE;
 }
 
-hal_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint32_t                            reg_lo;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1530,10 +1526,10 @@ hal_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.write();
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.get_offset();
 
-    HAL_TRACE_DEBUG("Barco compression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco compression hot ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
@@ -1542,16 +1538,16 @@ bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return FALSE;
 }
 
-hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint32_t                            reg_lo;
     uint32_t                            reg_hi;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1616,10 +1612,10 @@ hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.write();
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.get_offset();
 
-    HAL_TRACE_DEBUG("Barco decompression ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco decompression ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 bool capri_barco_dc_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
@@ -1628,15 +1624,15 @@ bool capri_barco_dc_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return FALSE;
 }
 
-hal_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     uint32_t                            reg_lo;
 
     ret = capri_barco_ring_common_init(barco_ring);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -1660,10 +1656,10 @@ hal_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.write();
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.get_offset();
 
-    HAL_TRACE_DEBUG("Barco decompression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco decompression hot ring \"%s\" base setup @ 0x%llx, descriptor count %d",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
@@ -1679,12 +1675,12 @@ bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
-        HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        HAL_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}", barco_ring->ring_name,
+        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %s", barco_ring->ring_name,
 			curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
@@ -1707,13 +1703,13 @@ bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 #endif
 }
 
-hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
+sdk_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
 			  		uint32_t *req_tag, bool schedule_barco)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     uint64_t                            slot_addr = 0;
-    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           ret = SDK_RET_OK;
     barco_symm_req_descriptor_t         *sym_req_descr = NULL;
 
     /*
@@ -1737,10 +1733,10 @@ hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
-        HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
+        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
-        ret = HAL_RET_INVALID_ARG;
+        ret = SDK_RET_INVALID_ARG;
     }
 
     barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
@@ -1756,7 +1752,7 @@ hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, 
     return ret;
 }
 
-bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
+bool capri_barco_ring_poll(barco_rings_t barco_ring_type, uint32_t req_tag)
 {
     capri_barco_ring_t          *barco_ring;
 
@@ -1768,7 +1764,7 @@ bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
     return FALSE;
 }
 
-hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag, bool schedule_barco)
+sdk_ret_t capri_barco_ring_queue_request(barco_rings_t barco_ring_type, void *req, uint32_t *req_tag, bool schedule_barco)
 {
     capri_barco_ring_t          *barco_ring;
 
@@ -1780,17 +1776,17 @@ hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void
     return barco_ring->queue_request(barco_ring, req, req_tag, schedule_barco);
 }
 
-hal_ret_t capri_barco_ring_consume(types::BarcoRings barco_ring_type)
+sdk_ret_t capri_barco_ring_consume(barco_rings_t barco_ring_type)
 {
     capri_barco_ring_t          *barco_ring;
 
     barco_ring = &barco_rings[barco_ring_type];
     barco_ring->consumer_idx = (barco_ring->consumer_idx + 1) & (barco_ring->ring_size - 1);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 
-hal_ret_t capri_barco_rings_init(platform_type_t platform)
+sdk_ret_t capri_barco_rings_init(platform_type_t platform)
 {
     uint16_t        idx;
     uint64_t        opa_tag_addr = 0;
@@ -1799,31 +1795,31 @@ hal_ret_t capri_barco_rings_init(platform_type_t platform)
     uint64_t        shadow_pndx_def_val = 0;
     uint64_t        shadow_pndx_total = 0;
     uint32_t        shadow_pndx_size = 0;
-    hal_ret_t       ret = HAL_RET_OK;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     shadow_pndx_total = CRYPTO_BARCO_RES_HBM_MEM_512B_SIZE;
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B, NULL, &shadow_pndx_addr);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to allocate shadow pndx storage for rings");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Failed to allocate shadow pndx storage for rings");
         return ret;
     }
-    for (idx = 0; idx < types::BarcoRings_ARRAYSIZE; idx++) {
+    for (idx = 0; idx < BARCO_RING_MAX; idx++) {
         barco_rings[idx].producer_idx = 0;
         barco_rings[idx].consumer_idx = 0;
 
         if (barco_rings[idx].ring_size != 0) {
             barco_rings[idx].opaqe_tag_value = 0x1;
             
-            opa_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset((types::BarcoRings)idx);
+            opa_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset((barco_rings_t)idx);
 
-            HAL_TRACE_DEBUG("Ring: {}: Allocated opaque tag @ {:x}",
+            SDK_TRACE_DEBUG("Ring: %s: Allocated opaque tag @ 0x%llx",
                 barco_rings[idx].ring_name, opa_tag_addr);
             if(sdk::asic::asic_mem_write(opa_tag_addr, (uint8_t *)&opa_tag_def_val, sizeof(opa_tag_def_val))) {
-                HAL_TRACE_ERR("Ring: {}: Failed to initialized opaque tag @ {:x}",
+                SDK_TRACE_ERR("Ring: %s: Failed to initialized opaque tag @ 0x%llx",
                     barco_rings[idx].ring_name, opa_tag_addr);
-                return HAL_RET_HW_FAIL;
+                return SDK_RET_HW_PROGRAM_ERR;
             } 
-            HAL_TRACE_DEBUG("Ring: {}: initialized opaque tag to 0 @ {:x}",
+            SDK_TRACE_DEBUG("Ring: %s: initialized opaque tag to 0 @ 0x%llx",
                 barco_rings[idx].ring_name, opa_tag_addr);
 
             barco_rings[idx].opaque_tag_addr = opa_tag_addr;
@@ -1832,18 +1828,18 @@ hal_ret_t capri_barco_rings_init(platform_type_t platform)
         if (shadow_pndx_size) {
             assert(shadow_pndx_size <= sizeof(shadow_pndx_def_val));
             if (shadow_pndx_total < shadow_pndx_size) {
-                HAL_TRACE_ERR("Out of shadow pndx storage for ring {}",
+                SDK_TRACE_ERR("Out of shadow pndx storage for ring %s",
                               barco_rings[idx].ring_name);
-                return HAL_RET_HW_FAIL;
+                return SDK_RET_HW_PROGRAM_ERR;
             }
             barco_rings[idx].shadow_pndx_addr = shadow_pndx_addr;
             if(sdk::asic::asic_mem_write(shadow_pndx_addr, (uint8_t *)&shadow_pndx_def_val,
                                    shadow_pndx_size)) {
-                HAL_TRACE_ERR("Ring: {}: Failed to initialize shadow pndx @ {:x}",
+                SDK_TRACE_ERR("Ring: %s: Failed to initialize shadow pndx @ 0x%llx",
                               barco_rings[idx].ring_name, shadow_pndx_addr);
-                return HAL_RET_HW_FAIL;
+                return SDK_RET_HW_PROGRAM_ERR;
             } 
-            HAL_TRACE_DEBUG("Ring: {}: initialized shadow pndx to 0 @ {:x}",
+            SDK_TRACE_DEBUG("Ring: %s: initialized shadow pndx to 0 @ 0x%llx",
                             barco_rings[idx].ring_name, shadow_pndx_addr);
             shadow_pndx_addr += shadow_pndx_size;
             shadow_pndx_total -= shadow_pndx_size;
@@ -1858,8 +1854,8 @@ hal_ret_t capri_barco_rings_init(platform_type_t platform)
         }
         if (barco_rings[idx].init) {
             ret = barco_rings[idx].init(&barco_rings[idx]);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to initialize Barco Ring {}", barco_rings[idx].ring_name);
+            if (ret != SDK_RET_OK) {
+                SDK_TRACE_ERR("Failed to initialize Barco Ring %s", barco_rings[idx].ring_name);
                 return ret;
             }
         }
@@ -1868,13 +1864,13 @@ hal_ret_t capri_barco_rings_init(platform_type_t platform)
     return ret;
 }
 
-hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr)
+sdk_ret_t get_opaque_tag_addr(barco_rings_t ring_type, uint64_t* addr)
 {
     *addr = barco_rings[ring_type].opaque_tag_addr;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type,
+sdk_ret_t capri_barco_get_meta_config_info(barco_rings_t ring_type,
                                            barco_ring_meta_config_t *meta)
 {
     meta->shadow_pndx_addr = barco_rings[ring_type].shadow_pndx_addr;
@@ -1885,46 +1881,46 @@ hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type,
     meta->producer_idx_addr = barco_rings[ring_type].producer_idx_addr;
     meta->opaque_tag_addr = barco_rings[ring_type].opaque_tag_addr;
     meta->ring_size = barco_rings[ring_type].ring_size;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
-hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
+sdk_ret_t capri_barco_get_capabilities(barco_rings_t ring_type,
                                        bool *sw_reset_capable, bool *sw_enable_capable)
 {
     *sw_reset_capable = barco_rings[ring_type].sw_reset_capable;
     *sw_enable_capable = barco_rings[ring_type].sw_enable_capable;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, hal::barco_asym_descr_t *asym_req_descr)
+sdk_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, barco_asym_descr_t *asym_req_descr)
 {
   /* To be implemented */
 
-  return HAL_RET_OK;
+  return SDK_RET_OK;
 }
 
-hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t slot_index,
-					 hal::barco_symm_descr_t *symm_req_descr)
+sdk_ret_t capri_barco_symm_req_descr_get(barco_rings_t ring_type, uint32_t slot_index,
+					 barco_symm_descr_t *symm_req_descr)
 {
     barco_symm_req_descriptor_t *req_descr;
     capri_barco_ring_t          *barco_ring;
     uint64_t                    slot_addr;
 
     barco_ring = &barco_rings[ring_type];
-    if (!barco_ring->ring_size || !barco_ring->ring_base) return(HAL_RET_OK);
+    if (!barco_ring->ring_size || !barco_ring->ring_base) return(SDK_RET_OK);
 
     uint8_t  value[barco_ring->descriptor_size];
     uint32_t index = (slot_index % barco_ring->ring_size);
     slot_addr = barco_ring->ring_base + (index * barco_ring->descriptor_size);
-    HAL_TRACE_DEBUG("{}@{:x}: Ring base {:x}, slot_addr {:x}, read size {:x}",
+    SDK_TRACE_DEBUG("%s@%d: Ring base 0x%llx, slot_addr 0x%llx, read size %d",
 		    barco_ring->ring_name, barco_ring->ring_size,
             barco_ring->ring_base, (uint64_t) slot_addr,
 		    barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_read(slot_addr, value, sizeof(value))) {
-        HAL_TRACE_ERR("{}@{:x}: Failed to read Symmetric request descriptor entry",
+        SDK_TRACE_ERR("%s@0x%llx: Failed to read Symmetric request descriptor entry",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
-        return HAL_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
 
     req_descr = (barco_symm_req_descriptor_t *) value;
@@ -1947,13 +1943,13 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
         if(sdk::asic::asic_mem_read(req_descr->iv_address,
 	    		   (uint8_t*)&symm_req_descr->salt,
 	    		   sizeof(symm_req_descr->salt))) {
-           HAL_TRACE_ERR("{}@{:x}: Failed to read the Salt information from HBM",
+           SDK_TRACE_ERR("%s@0x%llx: Failed to read the Salt information from HBM",
 	    	     barco_ring->ring_name, (uint64_t) req_descr->iv_address);
         }
         if(sdk::asic::asic_mem_read(req_descr->iv_address + 4,
 	    		   (uint8_t*)&symm_req_descr->explicit_iv,
 	    		   sizeof(symm_req_descr->explicit_iv))) {
-            HAL_TRACE_ERR("{}@{:x}: Failed to read the explicit IV information from HBM",
+            SDK_TRACE_ERR("%s@0x%llx: Failed to read the explicit IV information from HBM",
 	    	      barco_ring->ring_name, (uint64_t) (req_descr->iv_address + 4));
         }
     }
@@ -1961,14 +1957,14 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
         if(sdk::asic::asic_mem_read(req_descr->status_addr,
 	    		   (uint8_t*)&symm_req_descr->barco_status,
 	   		   sizeof(symm_req_descr->barco_status))) {
-           HAL_TRACE_ERR("{}@{:x}: Failed to read the Barco Status information from HBM",
+           SDK_TRACE_ERR("%s@0x%llx: Failed to read the Barco Status information from HBM",
 	    	     barco_ring->ring_name, (uint64_t) req_descr->status_addr);
         }
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t capri_barco_ring_meta_get(types::BarcoRings ring_type, uint32_t *pi, uint32_t *ci)
+sdk_ret_t capri_barco_ring_meta_get(barco_rings_t ring_type, uint32_t *pi, uint32_t *ci)
 {
     cap_top_csr_t &             cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &            mpns = cap0.mp.mpns;
@@ -1978,53 +1974,53 @@ hal_ret_t capri_barco_ring_meta_get(types::BarcoRings ring_type, uint32_t *pi, u
      * Read the PI/CI registers for the corresponding barco ring.
      */
     switch(ring_type) {
-    case types::BarcoRings::BARCO_RING_GCM0:
+    case BARCO_RING_GCM0:
         hens.dhs_crypto_ctl.gcm0_producer_idx.read();
         *pi = hens.dhs_crypto_ctl.gcm0_producer_idx.fld().convert_to<uint32_t>();
         hens.dhs_crypto_ctl.gcm0_consumer_idx.read();
         *ci = hens.dhs_crypto_ctl.gcm0_consumer_idx.fld().convert_to<uint32_t>();
         break;
-    case types::BarcoRings::BARCO_RING_GCM1:
+    case BARCO_RING_GCM1:
         hens.dhs_crypto_ctl.gcm1_producer_idx.read();
         *pi = hens.dhs_crypto_ctl.gcm1_producer_idx.fld().convert_to<uint32_t>();
         hens.dhs_crypto_ctl.gcm1_consumer_idx.read();
         *ci = hens.dhs_crypto_ctl.gcm1_consumer_idx.fld().convert_to<uint32_t>();
         break;
-    case types::BarcoRings::BARCO_RING_MPP0:
+    case BARCO_RING_MPP0:
       mpns.dhs_crypto_ctl.mpp0_producer_idx.read();
       *pi = mpns.dhs_crypto_ctl.mpp0_producer_idx.fld().convert_to<uint32_t>();
       mpns.dhs_crypto_ctl.mpp0_consumer_idx.read();
       *ci = mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld().convert_to<uint32_t>();
       break;
-    case types::BarcoRings::BARCO_RING_MPP1:
+    case BARCO_RING_MPP1:
       mpns.dhs_crypto_ctl.mpp1_producer_idx.read();
       *pi = mpns.dhs_crypto_ctl.mpp1_producer_idx.fld().convert_to<uint32_t>();
       mpns.dhs_crypto_ctl.mpp1_consumer_idx.read();
       *ci = mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld().convert_to<uint32_t>();
       break;
-    case types::BarcoRings::BARCO_RING_MPP2:
+    case BARCO_RING_MPP2:
       mpns.dhs_crypto_ctl.mpp2_producer_idx.read();
       *pi = mpns.dhs_crypto_ctl.mpp2_producer_idx.fld().convert_to<uint32_t>();
       mpns.dhs_crypto_ctl.mpp2_consumer_idx.read();
       *ci = mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld().convert_to<uint32_t>();
       break;
-    case types::BarcoRings::BARCO_RING_MPP3:
+    case BARCO_RING_MPP3:
       mpns.dhs_crypto_ctl.mpp3_producer_idx.read();
       *pi = mpns.dhs_crypto_ctl.mpp3_producer_idx.fld().convert_to<uint32_t>();
       mpns.dhs_crypto_ctl.mpp3_consumer_idx.read();
       *ci = mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld().convert_to<uint32_t>();
       break;
     default:
-      HAL_TRACE_ERR("{}: Ring type not supported yet",
+      SDK_TRACE_ERR("%s: Ring type not supported yet",
 		    barco_rings[ring_type].ring_name);
-      return HAL_RET_INVALID_ARG;
+      return SDK_RET_INVALID_ARG;
       break;
     }
-    HAL_TRACE_DEBUG("{}: PI {:x}, CI {:x}",
+    SDK_TRACE_DEBUG("%s: PI %d, CI %d",
 		    barco_rings[ring_type].ring_name, *pi, *ci);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-} // namespace pd
-
-} // namespace hal
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk

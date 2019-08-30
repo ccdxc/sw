@@ -2,40 +2,30 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "nic/hal/pd/capri/capri_barco_res.hpp"
-#include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
+#include "nic/sdk/platform/capri/capri_barco_res.hpp"
+#include "nic/sdk/platform/capri/capri_barco_sym_apis.hpp"
 
 #define MAX_IPSEC_PAD_SIZE 256
 
 namespace hal {
 namespace pd {
 
-uint64_t    key_mem_base = 0;
-uint64_t    key_mem_size = 0;
-char        key_mem[] = CAPRI_BARCO_KEY_MEM;
-
-// hal_ret_t pd_crypto_alloc_key(int32_t *key_idx)
 hal_ret_t
 pd_crypto_alloc_key(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     pd_crypto_alloc_key_args_t *args = pd_func_args->pd_crypto_alloc_key;
-    indexer::status     is = indexer::SUCCESS;
-    uint64_t            key_addr = 0;
-    int32_t *key_idx = args->key_idx;
+    int32_t             *key_idx = args->key_idx;
 
-    is = g_hal_state_pd->crypto_pd_keys_idxr()->alloc((uint32_t *)key_idx);
-    if (is != indexer::SUCCESS) {
-        HAL_TRACE_ERR("SessKey: Failed to allocate key memory");
-        *key_idx = -1;
-        return HAL_RET_NO_RESOURCE;
+    sdk_ret = capri_barco_sym_alloc_key(key_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SessKey: Failed to allocate key");
+        return ret;
     }
-    /* Setup the key descriptor with the corresponding key memory
-    *  Currently statically carved and associated
-    */
-    key_addr = key_mem_base + (*key_idx * CRYPTO_KEY_SIZE_MAX);
-    capri_barco_init_key(*key_idx, key_addr);
+
     HAL_TRACE_DEBUG("SessKey:{}: Allocated key memory @ index: {}",
                     __FUNCTION__, *key_idx);
     return ret;
@@ -44,52 +34,35 @@ pd_crypto_alloc_key(pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_crypto_alloc_key_withid(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     pd_crypto_alloc_key_withid_args_t *args = pd_func_args->pd_crypto_alloc_key_withid;
-    indexer::status     is = indexer::SUCCESS;
-    uint64_t            key_addr = 0;
-    int32_t key_idx = args->key_idx;
+    int32_t             key_idx = args->key_idx;
 
-    is = g_hal_state_pd->crypto_pd_keys_idxr()->alloc_withid(key_idx);
-    if (is != indexer::SUCCESS) {
-        if (is == indexer::DUPLICATE_ALLOC) {
-            if (!args->allow_dup_alloc) {
-                HAL_TRACE_ERR("SessKey: duplicate key_idx {}", key_idx);
-                return HAL_RET_ENTRY_EXISTS;
-            }
-        } else {
-            HAL_TRACE_ERR("SessKey: Failed to allocate key memory");
-            return HAL_RET_NO_RESOURCE;
-        }
+    sdk_ret = capri_barco_sym_alloc_key_withid(key_idx, args->allow_dup_alloc);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SessKey: Failed to allocate key by ID: {}", key_idx);
+        return ret;
     }
-    /* Setup the key descriptor with the corresponding key memory
-    *  Currently statically carved and associated
-    */
-    key_addr = key_mem_base + (key_idx * CRYPTO_KEY_SIZE_MAX);
-    capri_barco_init_key(key_idx, key_addr);
     HAL_TRACE_DEBUG("SessKey:{}: Allocated key memory @ index: {}",
                     __FUNCTION__, key_idx);
     return ret;
 }
 
 
-// hal_ret_t pd_crypto_free_key(int32_t key_idx)
 hal_ret_t pd_crypto_free_key(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     pd_crypto_free_key_args_t *args = pd_func_args->pd_crypto_free_key;
-    indexer::status     is = indexer::SUCCESS;
-    int32_t key_idx = args->key_idx;
+    int32_t             key_idx = args->key_idx;
 
-    if (!g_hal_state_pd->crypto_pd_keys_idxr()->is_index_allocated(key_idx)) {
-        HAL_TRACE_ERR("SessKey: Freeing non-allocated key: {}", key_idx);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    is = g_hal_state_pd->crypto_pd_keys_idxr()->free(key_idx);
-    if (is != indexer::SUCCESS) {
+    sdk_ret = capri_barco_sym_free_key(key_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SessKey: Failed to free key memory: {}", key_idx);
-        return HAL_RET_INVALID_ARG;
+        return ret;
     }
 
     HAL_TRACE_DEBUG("SessKey:{}: Freed key memory @ index: {}",
@@ -98,15 +71,16 @@ hal_ret_t pd_crypto_free_key(pd_func_args_t *pd_func_args)
 }
 
 
-// hal_ret_t pd_crypto_write_key(int32_t key_idx, crypto_key_t *key)
 hal_ret_t pd_crypto_write_key(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     pd_crypto_write_key_args_t *args = pd_func_args->pd_crypto_write_key;
     int32_t key_idx = args->key_idx;
     crypto_key_t *key = args->key;
 
-    ret = capri_barco_setup_key(key_idx, key->key_type, key->key, key->key_size);
+    sdk_ret = capri_barco_setup_key(key_idx, (crypto_key_type_t)key->key_type, key->key, key->key_size);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }
@@ -114,12 +88,14 @@ hal_ret_t pd_crypto_write_key(pd_func_args_t *pd_func_args)
 // hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key)
 hal_ret_t pd_crypto_read_key(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     pd_crypto_read_key_args_t *args = pd_func_args->pd_crypto_read_key;
     int32_t key_idx = args->key_idx;
     crypto_key_t *key = args->key;
 
-    ret = capri_barco_read_key(key_idx, &key->key_type, key->key, &key->key_size);
+    sdk_ret = capri_barco_read_key(key_idx, (crypto_key_type_t*)&key->key_type, key->key, &key->key_size);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }
@@ -129,16 +105,18 @@ hal_ret_t
 pd_crypto_asym_alloc_key(pd_func_args_t *pd_func_args)
 
 {
+    sdk_ret_t              sdk_ret;
     uint64_t        key_desc;
     pd_crypto_asym_alloc_key_args_t *args = pd_func_args->pd_crypto_asym_alloc_key;
     hal_ret_t       ret = HAL_RET_OK;
     int32_t *key_idx = args->key_idx;
 
-    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc);
+    sdk_ret = capri_barco_asym_alloc_key(key_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SessKey: Failed to allocate key memory");
         *key_idx = -1;
-        return HAL_RET_NO_RESOURCE;
+        return ret;
     }
     return ret;
 }
@@ -146,6 +124,7 @@ pd_crypto_asym_alloc_key(pd_func_args_t *pd_func_args)
 // hal_ret_t pd_crypto_asym_free_key(int32_t key_idx)
 hal_ret_t pd_crypto_asym_free_key(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     pd_crypto_asym_free_key_args_t *args = pd_func_args->pd_crypto_asym_free_key;
     int32_t key_idx = args->key_idx;
@@ -154,10 +133,11 @@ hal_ret_t pd_crypto_asym_free_key(pd_func_args_t *pd_func_args)
      * if any referenced by the key descriptor
      */
 
-    ret = capri_barco_res_free_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx);
+    sdk_ret = capri_barco_asym_free_key(key_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("AsymKey: Failed to free key memory: {}", key_idx);
-        return HAL_RET_INVALID_ARG;
+        return ret;
     }
 
     return ret;
@@ -166,6 +146,7 @@ hal_ret_t pd_crypto_asym_free_key(pd_func_args_t *pd_func_args)
 // hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key)
 hal_ret_t pd_crypto_asym_write_key(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t                       ret = HAL_RET_OK;
     pd_crypto_asym_write_key_args_t *args = pd_func_args->pd_crypto_asym_write_key;
     capri_barco_asym_key_desc_t     key_desc;
@@ -173,21 +154,16 @@ hal_ret_t pd_crypto_asym_write_key(pd_func_args_t *pd_func_args)
     int32_t key_idx = args->key_idx;
     crypto_asym_key_t *key = args->key;
 
-
-    ret = capri_barco_res_get_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc_addr);
-    if (ret  != HAL_RET_OK) {
-        HAL_TRACE_ERR("AsymKey Write: Failed to retrieve the address from key index: {}", key_idx);
-        return ret;
-    }
-
     key_desc.key_param_list = key->key_param_list;
     key_desc.command_reg = key->command_reg;
 
-    if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        HAL_TRACE_ERR("Failed to write Barco Asym key descriptor @ {:x}", (uint64_t) key_desc_addr);
-        return HAL_RET_INVALID_ARG;
+    sdk_ret = capri_barco_asym_write_key(key_idx, &key_desc);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to write Barco Asym key descriptor @ {}", key_idx);
+        return ret;
     }
-    HAL_TRACE_DEBUG("AsymKey Write: Setup key @ {:x}", key_desc_addr);
+    HAL_TRACE_DEBUG("AsymKey Write: Setup key @ {}", key_idx);
 
     return ret;
 }
@@ -195,22 +171,18 @@ hal_ret_t pd_crypto_asym_write_key(pd_func_args_t *pd_func_args)
 // hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key)
 hal_ret_t pd_crypto_asym_read_key(pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t                       ret = HAL_RET_OK;
     pd_crypto_asym_read_key_args_t *args = pd_func_args->pd_crypto_asym_read_key;
     capri_barco_asym_key_desc_t     key_desc;
-    uint64_t                        key_desc_addr = 0;
     int32_t key_idx = args->key_idx;
     crypto_asym_key_t *key = args->key;
 
-    ret = capri_barco_res_get_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc_addr);
-    if (ret  != HAL_RET_OK) {
-        HAL_TRACE_ERR("AsymKey Read: Failed to retrieve the address from key index: {}", key_idx);
+    sdk_ret = capri_barco_asym_read_key(key_idx, &key_desc);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to read Barco Asym key descriptor from {}", key_idx);
         return ret;
-    }
-
-    if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        HAL_TRACE_ERR("Failed to read Barco Asym key descriptor from {:x}", (uint64_t) key_desc_addr);
-        return HAL_RET_INVALID_ARG;
     }
 
     key->key_param_list = key_desc.key_param_list;
@@ -242,6 +214,7 @@ crypto_init_ipsec_pad_table(void)
 /* This is to support the Barco GCM decrypt bug workaround */
 hal_ret_t capri_barco_setup_dummy_ring_desc(void)
 {
+    sdk_ret_t              sdk_ret;
     hal_ret_t                           ret = HAL_RET_OK;
     pd_crypto_alloc_key_args_t          alloc_key_args;
     pd_func_args_t                      pd_func_args = {0};
@@ -279,7 +252,8 @@ hal_ret_t capri_barco_setup_dummy_ring_desc(void)
     }
     HAL_TRACE_DEBUG("Setup AES128 key at idx ({}) for dummy decrypt op", key_idx);
 
-    ret = capri_barco_setup_dummy_gcm1_req(key_idx);
+    sdk_ret = capri_barco_setup_dummy_gcm1_req(key_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to setup descriptor for dummy decrypt op: {}", ret);
         return ret;
@@ -290,12 +264,6 @@ hal_ret_t capri_barco_setup_dummy_ring_desc(void)
 hal_ret_t crypto_pd_init(void)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    uint32_t            region_sz = 0;
-
-    key_mem_base = get_mem_addr(key_mem);
-    region_sz = get_mem_size_kb(key_mem) * 1024;
-    key_mem_size = region_sz / CRYPTO_KEY_SIZE_MAX;
-    assert(key_mem_size >= CRYPTO_KEY_COUNT_MAX);
 
     ret = crypto_init_ipsec_pad_table();
     if (ret != HAL_RET_OK) {

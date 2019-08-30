@@ -9,7 +9,7 @@ acc_ring_t *asym_ring;
 bool
 init(const char *engine_path)
 {
-    hal::barco_ring_meta_config_t   meta;
+    sdk::platform::capri::barco_ring_meta_config_t   meta;
 
     if (!eng_if::init(engine_path)) {
         OFFL_FUNC_ERR("failed eng_if init");

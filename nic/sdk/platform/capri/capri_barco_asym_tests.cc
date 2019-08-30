@@ -1,9 +1,9 @@
-#include "nic/include/base.hpp"
-#include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
+#include "include/sdk/base.hpp"
+#include "platform/capri/capri_barco_asym_apis.hpp"
 
-namespace hal {
-namespace pd {
+namespace sdk {
+namespace platform {
+namespace capri {
 
 
 /* secp256r1 */
@@ -72,9 +72,9 @@ uint8_t yq[] = {
 };
 
 
-hal_ret_t capri_barco_asym_ecc_point_mul_p256_test(void)
+sdk_ret_t capri_barco_asym_ecc_point_mul_p256_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
     uint8_t             x3[32];
     uint8_t             y3[32];
 
@@ -84,20 +84,18 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256_test(void)
     return ret;
 }
 
-hal_ret_t capri_barco_asym_ecdsa_sig_gen_test(void)
+sdk_ret_t capri_barco_asym_ecdsa_sig_gen_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
     uint8_t             r[32];
     uint8_t             s[32];
-    pd_capri_barco_asym_async_args_t async_args = {0};
-    async_args.async_en = false;
 
     /* Using k for private key (dA)     */
     /* Using n for the message hash h   */
 
     ret = capri_barco_asym_ecdsa_p256_sig_gen(-1, p, n,
                                               xg, yg, a, b, k/*da*/, k, n/*h*/, r, s,
-                                              &async_args);
+                                              false, NULL);
 
     return ret;
 }
@@ -116,14 +114,12 @@ uint8_t s[] = {
     0x9e, 0x7b, 0x93, 0x58,     0x19, 0xf8, 0xbd, 0x52
 };
 
-hal_ret_t capri_barco_asym_ecdsa_sig_verify_test(void)
+sdk_ret_t capri_barco_asym_ecdsa_sig_verify_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    pd_capri_barco_asym_async_args_t async_args = {0};
-    async_args.async_en = false;
+    sdk_ret_t           ret = SDK_RET_OK;
 
     ret = capri_barco_asym_ecdsa_p256_sig_verify(p, n,
-                                                 xg, yg, a, b, xq, yq, r, s, n/*h*/, &async_args);
+                                                 xg, yg, a, b, xq, yq, r, s, n/*h*/, false, NULL);
 
     return ret;
 }
@@ -451,19 +447,18 @@ uint8_t rsa_qinv[] = {
 
 uint8_t             out_c[256];
 
-hal_ret_t capri_barco_asym_rsa2k_encrypt_test(void)
+sdk_ret_t capri_barco_asym_rsa2k_encrypt_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    pd_capri_barco_asym_async_args_t async_args = {0};
-    async_args.async_en = false;
-    ret = capri_barco_asym_rsa2k_encrypt(modulo_n, e, m, out_c, &async_args);
+    sdk_ret_t           ret = SDK_RET_OK;
+
+    ret = capri_barco_asym_rsa2k_encrypt(modulo_n, e, m, out_c, false, NULL);
 
     return ret;
 }
 
-hal_ret_t capri_barco_asym_rsa2k_decrypt_test(void)
+sdk_ret_t capri_barco_asym_rsa2k_decrypt_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
     uint8_t             out_m[256];
 
     ret = capri_barco_asym_rsa2k_decrypt(modulo_n, rsa_d, out_c, out_m);
@@ -471,35 +466,32 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt_test(void)
     return ret;
 }
 
-hal_ret_t capri_barco_asym_rsa2k_crt_decrypt_test(void)
+sdk_ret_t capri_barco_asym_rsa2k_crt_decrypt_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
     uint8_t             out_m[256];
-    pd_capri_barco_asym_async_args_t async_args = {0};
-    async_args.async_en = false;
 
     ret = capri_barco_asym_rsa2k_crt_decrypt(-1, rsa_p, rsa_q, rsa_dp,
-                                             rsa_dq, rsa_qinv, out_c, out_m, &async_args);
+                                             rsa_dq, rsa_qinv, out_c, out_m, 
+                                             false, NULL);
 
     return ret;
 }
 
 uint8_t             out_s[256];
-hal_ret_t capri_barco_asym_rsa2k_sig_gen_test(void)
+sdk_ret_t capri_barco_asym_rsa2k_sig_gen_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    pd_capri_barco_asym_async_args_t async_args = {0};
-    async_args.async_en = false;
+    sdk_ret_t           ret = SDK_RET_OK;
 
     ret = capri_barco_asym_rsa2k_sig_gen(-1, modulo_n, rsa_d,
-                                         m /* h */, out_s, &async_args);
+                                         m /* h */, out_s, false, NULL);
 
     return ret;
 }
 
-hal_ret_t capri_barco_asym_rsa2k_sig_verify_test(void)
+sdk_ret_t capri_barco_asym_rsa2k_sig_verify_test(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
 
     ret = capri_barco_asym_rsa2k_sig_verify(modulo_n, e,
             m /* h */, out_s);
@@ -507,44 +499,45 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify_test(void)
     return ret;
 }
 
-hal_ret_t capri_barco_asym_run_tests(void)
+sdk_ret_t capri_barco_asym_run_tests(void)
 {
-    hal_ret_t       ret = HAL_RET_OK;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     ret = capri_barco_asym_ecc_point_mul_p256_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_ecc_point_mul_p256_test failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_ecc_point_mul_p256_test failed");
     }
     ret = capri_barco_asym_ecdsa_sig_gen_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_ecdsa_sig_gen_test failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_ecdsa_sig_gen_test failed");
     }
     ret = capri_barco_asym_ecdsa_sig_verify_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_ecdsa_sig_verify_test failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_ecdsa_sig_verify_test failed");
     }
     ret = capri_barco_asym_rsa2k_encrypt_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_rsa2k_encrypt failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_rsa2k_encrypt failed");
     }
     ret = capri_barco_asym_rsa2k_decrypt_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_rsa2k_encrypt failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_rsa2k_encrypt failed");
     }
     ret = capri_barco_asym_rsa2k_crt_decrypt_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_rsa2k_encrypt failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_rsa2k_encrypt failed");
     }
     ret = capri_barco_asym_rsa2k_sig_gen_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_rsa2k_sig_gen_test failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_rsa2k_sig_gen_test failed");
     }
     ret = capri_barco_asym_rsa2k_sig_verify_test();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri_barco_asym_rsa2k_sig_verify_test failed");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("capri_barco_asym_rsa2k_sig_verify_test failed");
     }
 
     return ret;
 }
-}    // namespace pd
-}    // namespace hal
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk

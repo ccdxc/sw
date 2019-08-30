@@ -4,7 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include "nic/sdk/platform/capri/capri_common.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

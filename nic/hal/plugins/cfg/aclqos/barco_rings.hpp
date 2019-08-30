@@ -30,45 +30,6 @@ using internal::BarcoGetRingMetaConfigResponseMsg;
 
 namespace hal {
 
-typedef struct barco_symm_descr_s {
-    uint64_t                ilist_addr;
-    uint64_t                olist_addr;
-    uint32_t                command;
-    uint32_t                key_desc_index;
-    uint64_t                iv_addr;
-    uint64_t                status_addr;
-    uint64_t                doorbell_addr;
-    uint64_t                doorbell_data;
-    uint32_t                salt;
-    uint64_t                explicit_iv;
-    uint32_t                barco_status;
-    uint32_t                header_size;
-    uint32_t                second_key_desc_index;
-} barco_symm_descr_t;
-
-typedef struct barco_asym_descr_s {
-    uint64_t                ilist_addr;
-    uint64_t                olist_addr;
-    uint32_t                key_desc_index;
-    uint64_t                status_addr;
-    uint32_t                opaque_tag_value;
-    uint32_t                opaque_tag_wr_en;
-    uint32_t                flag_a;
-    uint32_t                flag_b;
-    uint32_t                barco_status;
-} barco_asym_descr_t;
-
-typedef struct barco_ring_meta_config_s {
-    uint64_t                ring_base;
-    uint64_t                producer_idx_addr;
-    uint64_t                shadow_pndx_addr;
-    uint64_t                opaque_tag_addr;
-    uint32_t                ring_size;
-    uint32_t                desc_size;
-    uint32_t                pndx_size;
-    uint32_t                opaque_tag_size;
-} barco_ring_meta_config_t;
-
 hal_ret_t barco_get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
 
 }    // namespace hal

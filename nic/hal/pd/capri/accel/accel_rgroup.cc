@@ -1,6 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-#include "nic/hal/pd/capri/capri_barco_rings.hpp"
+#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
+#include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/pd/capri/accel/accel_rgroup.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
@@ -174,7 +175,7 @@ accel_ring_sw_reset_capable(types::BarcoRings ring_type)
     bool    sw_reset_capable;
     bool    sw_enable_capable;
 
-    capri_barco_get_capabilities(ring_type, &sw_reset_capable, &sw_enable_capable);
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &sw_reset_capable, &sw_enable_capable);
     return sw_reset_capable;
 }
 
@@ -187,7 +188,7 @@ accel_ring_meta_config_get(types::BarcoRings ring_type,
 {
     barco_ring_meta_config_t    meta = {0};
 
-    capri_barco_get_meta_config_info(ring_type, &meta);
+    capri_barco_get_meta_config_info((barco_rings_t)ring_type, &meta);
     ret_info->base_pa = meta.ring_base;
     ret_info->opaque_tag_pa = meta.opaque_tag_addr;
     ret_info->shadow_pndx_pa = meta.shadow_pndx_addr;
@@ -207,7 +208,7 @@ accel_shadow_pndx_write(types::BarcoRings ring_type,
 {
     barco_ring_meta_config_t meta = {0};
 
-    capri_barco_get_meta_config_info(ring_type, &meta);
+    capri_barco_get_meta_config_info((barco_rings_t)ring_type, &meta);
     if (meta.pndx_size) {
         assert(meta.pndx_size <= sizeof(val));
         if (sdk::asic::asic_mem_write(meta.shadow_pndx_addr, (uint8_t *)&val,
@@ -794,7 +795,7 @@ accel_ring_cp_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
@@ -953,7 +954,7 @@ accel_ring_cp_hot_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
@@ -1081,7 +1082,7 @@ accel_ring_dc_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
@@ -1240,7 +1241,7 @@ accel_ring_dc_hot_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
@@ -1368,7 +1369,7 @@ accel_ring_xts0_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
@@ -1500,7 +1501,7 @@ accel_ring_xts1_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
@@ -1632,7 +1633,7 @@ accel_ring_gcm0_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
@@ -1764,7 +1765,7 @@ accel_ring_gcm1_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities(ring_type, &info.sw_reset_capable,
+    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);

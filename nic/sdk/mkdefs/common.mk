@@ -19,7 +19,8 @@ export SDK_THIRD_PARTY_INCLUDES := \
        ${SDKDIR}/third-party/zmq/include \
        ${SDKDIR}/third-party/edit/include \
        ${SDKDIR}/third-party/gmp/include \
-       ${SDKDIR}/third-party/ncurses/include
+       ${SDKDIR}/third-party/ncurses/include \
+       ${SDKDIR}/third-party/openssl/include
 
 export SDK_THIRD_PARTY_VPP_INCLUDES := \
        ${SDKDIR}/third-party/vpp-pkg/include

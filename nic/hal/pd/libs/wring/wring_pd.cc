@@ -6,7 +6,7 @@
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "platform/capri/capri_common.hpp"
-#include "nic/include/capri_barco.h"
+#include "nic/sdk/platform/capri/capri_barco.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/sdk/lib/pal/pal.hpp"
 

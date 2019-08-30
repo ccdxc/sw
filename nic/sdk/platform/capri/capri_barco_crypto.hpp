@@ -1,12 +1,28 @@
 #ifndef __CAPRI_BARCO_CRYPTO_HPP__
 #define __CAPRI_BARCO_CRYPTO_HPP__
 
-#include "gen/proto/types.pb.h"
-#include "nic/include/base.hpp"
+#include "include/sdk/base.hpp"
 #include "platform/capri/capri_cfg.hpp"
 
-namespace hal {
-namespace pd {
+namespace sdk {
+namespace platform {
+namespace capri {
+
+typedef enum crypto_key_type_e {
+    CRYPTO_KEY_TYPE_AES128,
+    CRYPTO_KEY_TYPE_AES192,
+    CRYPTO_KEY_TYPE_AES256,
+    CRYPTO_KEY_TYPE_DES,
+    CRYPTO_KEY_TYPE_CHACHA20,
+    CRYPTO_KEY_TYPE_POLY1305,
+    CRYPTO_KEY_TYPE_HMAC,
+    CRYPTO_KEY_TYPE_MAX
+} crypto_key_type_t;
+
+
+#define CAPRI_BARCO_KEY_MEM              "key-mem"
+#define CAPRI_BARCO_KEY_DESC             "key-desc-array"
+#define CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE "tls_proxy_pad_table"
 
 #define BARCO_CRYPTO_DESC_SZ                128 /* 1024 bits */
 #define BARCO_CRYPTO_DESC_ALIGN_BYTES       128
@@ -16,6 +32,8 @@ namespace pd {
 
 /* FIXME: this needs to be driven from HAL PD, but the includes do not make it to capri */
 #define CRYPTO_KEY_COUNT_MAX                (64 * 1024)
+
+#define CRYPTO_SYM_KEY_SIZE_MAX             64  /* 2 * 256 bit key */
 
 #define CAPRI_MAX_TLS_PAD_SIZE              512
 #define BARCO_RING_SHADOW_PI_SIZE           2
@@ -57,15 +75,18 @@ namespace pd {
 #define BARCO_MPP3_QSTATS_HBM_TABLE_OFFSET  (BARCO_MPP2_CI_HBM_TABLE_OFFSET + BARCO_RING_SHADOW_CI_SIZE)
 
 
-hal_ret_t capri_barco_rings_init(platform_type_t platform);
-hal_ret_t capri_barco_res_allocator_init(void);
-hal_ret_t capri_barco_crypto_init(platform_type_t platform);
-hal_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr);
-hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type, uint8_t *key,
+sdk_ret_t capri_barco_rings_init(platform_type_t platform);
+sdk_ret_t capri_barco_res_allocator_init(void);
+sdk_ret_t capri_barco_crypto_init(platform_type_t platform);
+sdk_ret_t capri_barco_sym_alloc_key(int32_t *key_idx);
+sdk_ret_t capri_barco_sym_alloc_key_withid(int32_t key_idx, bool allow_dup_alloc);
+sdk_ret_t capri_barco_sym_free_key(int32_t key_idx);
+sdk_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr);
+sdk_ret_t capri_barco_setup_key(uint32_t key_idx, crypto_key_type_t key_type, uint8_t *key,
         uint32_t key_size);
-hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
+sdk_ret_t capri_barco_read_key(uint32_t key_idx, crypto_key_type_t *key_type,
         uint8_t *key, uint32_t *key_size);
-hal_ret_t capri_barco_crypto_init_tls_pad_table(void);
+sdk_ret_t capri_barco_crypto_init_tls_pad_table(void);
 
 /* Barco Crypto specific definitions */
 typedef struct capri_barco_key_desc_s {
@@ -93,6 +114,12 @@ typedef struct capri_barco_asym_key_desc_s {
     uint32_t                command_reg;
     uint32_t                reserved;
 } __PACK__ capri_barco_asym_key_desc_t;
+
+sdk_ret_t capri_barco_asym_alloc_key(int32_t *key_idx);
+sdk_ret_t capri_barco_asym_free_key(int32_t key_idx);
+sdk_ret_t capri_barco_asym_read_key(int32_t key_idx, capri_barco_asym_key_desc_t *key);
+sdk_ret_t capri_barco_asym_write_key(int32_t key_idx, capri_barco_asym_key_desc_t *key);
+
 
 /* Asymmetric/PKE Command Definitions */
 #define CAPRI_BARCO_ASYM_CMD_CALCR2         0x80000000
@@ -447,7 +474,19 @@ typedef struct capri_barco_asym_key_desc_s {
     (CAPRI_BARCO_SYM_ERR_GEN_PUSH_ERR      |   \
      CAPRI_BARCO_SYM_ERR_GEN_FETCH_ERR)
 
-}    // namespace pd
-}    // namespace hal
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
+
+using sdk::platform::capri::crypto_key_type_t;
+using sdk::platform::capri::capri_barco_crypto_init;
+using sdk::platform::capri::capri_barco_sym_alloc_key;
+using sdk::platform::capri::capri_barco_sym_alloc_key_withid;
+using sdk::platform::capri::capri_barco_sym_free_key;
+using sdk::platform::capri::capri_barco_setup_key;
+using sdk::platform::capri::capri_barco_read_key;
+using sdk::platform::capri::capri_barco_asym_key_desc_t;
+using sdk::platform::capri::capri_barco_asym_alloc_key;
+using sdk::platform::capri::capri_barco_asym_free_key;
 
 #endif /*  __CAPRI_BARCO_CRYPTO_HPP__ */

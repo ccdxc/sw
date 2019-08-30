@@ -4,7 +4,7 @@
 #include "logger.hpp"
 #include "offload_base_params.hpp"
 #include "dp_mem.hpp"
-#include "pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 #include "eng_if.hpp"
 #include "utils.hpp"
 #ifdef ELBA

@@ -2,7 +2,7 @@
 #define __CAPRI_H
 
 #include "platform/capri/capri_common.hpp"
-#include "capri_barco.h"
+#include "nic/sdk/platform/capri/capri_barco.h"
 
 #define CAPRI_NUM_STAGES    8
 #define CAPRI_STAGE_FIRST   0

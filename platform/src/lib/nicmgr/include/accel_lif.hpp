@@ -448,9 +448,9 @@ private:
  * Some well known ring constants
  */
 #define ACCEL_RING_MAX_DESC_SIZE                                        \
-    ((sizeof(hal::pd::barco_symm_req_descriptor_t) >                    \
+    ((sizeof(barco_symm_req_descriptor_t) >                    \
                             sizeof(hal::pd::cpdc_descriptor_t)) ?       \
-    sizeof(hal::pd::barco_symm_req_descriptor_t) :                      \
+    sizeof(barco_symm_req_descriptor_t) :                      \
     sizeof(hal::pd::cpdc_descriptor_t))
 
 #define ACCEL_RING_MAX_PREFETCH_DESCS   16

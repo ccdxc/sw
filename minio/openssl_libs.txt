@@ -1,3 +1,5 @@
 nic/hal/third-party/openssl/x86_64/*
 nic/hal/third-party/openssl/aarch64/*
-
+nic/sdk/third-party/openssl/aarch64/*
+nic/sdk/third-party/openssl/include/*
+nic/sdk/third-party/openssl/x86_64/*

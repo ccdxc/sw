@@ -2,7 +2,7 @@
 #define __PSE_MEM_H__
 
 #include <openssl/bn.h>
-#include "pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 
 typedef PSE_BUFFER  pse_buffer_t;
 

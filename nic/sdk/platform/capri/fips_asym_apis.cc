@@ -3,15 +3,14 @@
 #include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/engine.h>
-#include "nic/include/base.hpp"
-#include "nic/hal/pd/pd_api.hpp"
-#include "nic/hal/pd/pd_api_c.h"
-#include "nic/hal/tls/engine/pse_intf.h"
-#include "nic/hal/iris/include/hal_state.hpp"
-#include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/pse_intf.h"
+#include "platform/capri/capri_barco_asym_apis.hpp"
 
-namespace hal {
-namespace pd {
+namespace sdk {
+namespace platform {
+namespace capri {
+
 /*
  * FIXME: Ideally we should have a unified initialization of the PSE engine done in one
  * central place and then used by everybody in HAL.
@@ -21,16 +20,56 @@ namespace pd {
 static ENGINE       *engine = NULL;
 BIO                 *bio = NULL;
 
+static int fips_asym_rsa_sig_gen_param(void *ctx,
+                              const PSE_RSA_SIGN_PARAM *param)
+{
+    return capri_barco_asym_rsa_sig_gen(param->key_size,
+                                          param->key_idx,
+                                          param->n,
+                                          param->d,
+                                          param->hash_input,
+                                          param->sig_output,
+                                          param->async,
+                                          param->caller_unique_id);
+}
+
+int fips_asym_rsa_encrypt_param(void *ctx,
+                              const PSE_RSA_ENCRYPT_PARAM *param)
+{
+    return capri_barco_asym_rsa_encrypt(param->key_size,
+                                          param->n,
+                                          param->e,
+                                          param->plain_input,
+                                          param->ciphered_output,
+                                          param->async,
+                                          param->caller_unique_id);
+}
+
+int fips_asym_rsa_decrypt_param(void *ctx,
+                              const PSE_RSA_DECRYPT_PARAM *param)
+{
+    return capri_barco_asym_rsa2k_crt_decrypt(param->key_idx,
+                                              param->p,
+                                              param->q,
+                                              param->dp,
+                                              param->dq,
+                                              param->qinv,
+                                              param->ciphered_input,
+                                              param->plain_output,
+                                              param->async,
+                                              param->caller_unique_id);
+}
+
 const static PSE_RSA_OFFLOAD_METHOD     offload_method =
 {
-    .sign               = pd_tls_asym_rsa_sig_gen_param,
-    .encrypt            = pd_tls_asym_rsa_encrypt_param,
-    .decrypt            = pd_tls_asym_rsa_decrypt_param,
+    .sign               = fips_asym_rsa_sig_gen_param,
+    .encrypt            = fips_asym_rsa_encrypt_param,
+    .decrypt            = fips_asym_rsa_decrypt_param,
     .mem_method         = NULL,
     .rand_method        = NULL,
 };
 
-static hal_ret_t init_ssl(void)
+static sdk_ret_t init_ssl(void)
 {
     SSL_library_init();
 
@@ -39,17 +78,17 @@ static hal_ret_t init_ssl(void)
      * Openssl ERR_print facilities.
      */
     bio = BIO_new_fp(stdout, BIO_NOCLOSE);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 
 
-static hal_ret_t init_pse_engine()
+static sdk_ret_t init_pse_engine()
 {
     const char        *eng_path;
 
     if(engine != NULL) {
-        return HAL_RET_OK;
+        return SDK_RET_OK;
     }
 
     init_ssl();
@@ -60,40 +99,44 @@ static hal_ret_t init_pse_engine()
 
     engine = ENGINE_by_id("dynamic");
     if(engine == NULL) {
-        HAL_TRACE_ERR("Failed to load dynamic engine");
-        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+        SDK_TRACE_ERR("Failed to load dynamic engine");
+        return SDK_RET_ERR;
     }
 
+#if 0
     if (is_platform_type_hw() || is_platform_type_haps()) {
         eng_path = "/nic/lib/libtls_pse.so";
     } else {
         eng_path = "/sw/nic/build/x86_64/iris/lib/libtls_pse.so";
     }
-    HAL_TRACE_DEBUG("Loading pensando engine from path: {}", eng_path);
+#else
+    eng_path = "/nic/lib/libtls_pse.so";
+#endif
+    SDK_TRACE_DEBUG("Loading pensando engine from path: %s", eng_path);
 
     if(!ENGINE_ctrl_cmd_string(engine, "SO_PATH", eng_path, 0)) {
-       HAL_TRACE_ERR("SSL: SO_PATH pensando engine load failed!!");
-       return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+       SDK_TRACE_ERR("SSL: SO_PATH pensando engine load failed!!");
+       return SDK_RET_ERR;
     }
 
     if(!ENGINE_ctrl_cmd_string(engine, "ID", "pse", 0)) {
-        HAL_TRACE_ERR("ID failed!!");
-        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+        SDK_TRACE_ERR("ID failed!!");
+        return SDK_RET_ERR;
     }
 
     if(!ENGINE_ctrl_cmd_string(engine, "LOAD", NULL, 0)) {
-        HAL_TRACE_ERR("ENGINE LOAD_ADD failed, err: {}",
+        SDK_TRACE_ERR("ENGINE LOAD_ADD failed, err: %s",
             ERR_error_string(ERR_get_error(), NULL));
-        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+        return SDK_RET_ERR;
     }
     int ret = ENGINE_init(engine);
-    HAL_TRACE_DEBUG("Successfully loaded OpenSSL Engine: {} init result: {}",
+    SDK_TRACE_DEBUG("Successfully loaded OpenSSL Engine: %s init result: %d",
                             ENGINE_get_name(engine), ret);
 
     ENGINE_set_default_EC(engine);
     ENGINE_set_default_RSA(engine);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 #if 0
 RSA * rsa_setup_key(unsigned short modulus_len, char *n, char *e, char *d)
@@ -154,22 +197,22 @@ int compute_message_digest(const EVP_MD *md, const unsigned char *message, size_
     EVP_MD_CTX *mdctx;
 
     if((mdctx = EVP_MD_CTX_create()) == NULL) {
-        HAL_TRACE_ERR("Failed to create EVP_MD_CTX");
+        SDK_TRACE_ERR("Failed to create EVP_MD_CTX");
         return -1;
     }
 
     if(1 != EVP_DigestInit_ex(mdctx, md, NULL)) {
-        HAL_TRACE_ERR("Failed to initialize EVP_MD_CTX");
+        SDK_TRACE_ERR("Failed to initialize EVP_MD_CTX");
         return -1;
     }
 
     if(1 != EVP_DigestUpdate(mdctx, message, message_len)) {
-        HAL_TRACE_ERR("Failed in EVP_DigestUpdate");
+        SDK_TRACE_ERR("Failed in EVP_DigestUpdate");
         return -1;
     }
 
     if(1 != EVP_DigestFinal_ex(mdctx, (unsigned char *)digest, digest_len)) {
-        HAL_TRACE_ERR("Failed in EVP_DigestFinal_ex");
+        SDK_TRACE_ERR("Failed in EVP_DigestFinal_ex");
         return -1;
     }
 
@@ -201,109 +244,109 @@ EVP_PKEY *rsa_setup_key(ENGINE *engine, uint16_t key_size, int32_t key_idx, uint
                                    (const char *)&pse_key,
                                    NULL, NULL);
     if (!pkey) {
-        HAL_TRACE_ERR("Failed to setup RSA key");
+        SDK_TRACE_ERR("Failed to setup RSA key");
     }
     return pkey;
 }
 
-hal_ret_t capri_barco_asym_fips_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
+sdk_ret_t capri_barco_asym_fips_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
         uint8_t *n, uint8_t *e, uint8_t *msg, uint16_t msg_len, uint8_t *s,
-        types::HashType hash_type, types::RSASignatureScheme sig_scheme, 
-        pd_capri_barco_asym_async_args_t *async_args)
+        hash_type_t hash_type, rsa_signature_scheme_t sig_scheme, 
+        bool async_en, const uint8_t *unique_key)
 {
     EVP_PKEY_CTX        *ctx = NULL;
     size_t              siglen = 0;
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
     int                 ossl_ret = 0;
     char                digest[128];
     unsigned int        digest_len = 0;
     EVP_PKEY            *evp_pkey = NULL;
     const EVP_MD        *md = NULL;
 
-    if ((ret = init_pse_engine()) != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize SSL engine");
-        ret = HAL_RET_ERR;
+    if ((ret = init_pse_engine()) != SDK_RET_OK) {
+        SDK_TRACE_ERR("Failed to initialize SSL engine");
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
 
     /* Setup key */
     evp_pkey = rsa_setup_key(engine, key_size, key_idx, n, e);
     if (!evp_pkey) {
-        HAL_TRACE_ERR("Failed to setup RSA key");
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to setup RSA key");
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
 
     ctx = EVP_PKEY_CTX_new(evp_pkey, NULL);
     if (!ctx) {
-        HAL_TRACE_ERR("Failed to allocate EVP_PKEY_CTX");
-        ret = HAL_RET_NO_RESOURCE;
+        SDK_TRACE_ERR("Failed to allocate EVP_PKEY_CTX");
+        ret = SDK_RET_NO_RESOURCE;
         ERR_print_errors(bio);
         goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_sign_init(ctx)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
     switch (hash_type) {
-        case types::SHA1:
+        case SHA1:
             md = EVP_sha1();
             break;
-        case types::SHA224:
+        case SHA224:
             md = EVP_sha224();
             break;
-        case types::SHA256:
+        case SHA256:
             md = EVP_sha256();
             break;
-        case types::SHA384:
+        case SHA384:
             md = EVP_sha384();
             break;
-        case types::SHA512:
+        case SHA512:
             md = EVP_sha512();
             break;
         default:
-            HAL_TRACE_ERR("Unsupported Hash Algo");
-            ret = HAL_RET_INVALID_ARG;
+            SDK_TRACE_ERR("Unsupported Hash Algo");
+            ret = SDK_RET_INVALID_ARG;
             goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
 
     /* Determine buffer length */
     if ((ossl_ret = EVP_PKEY_sign(ctx, NULL, &siglen, msg, msg_len)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to determine sig len, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to determine sig len, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
-    HAL_TRACE_INFO("Sig Len: {}", siglen);
+    SDK_TRACE_INFO("Sig Len: %d", siglen);
 
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg", (char*)msg, msg_len);
     /* Compute the digest of the message */
     if (compute_message_digest(md, msg, msg_len, digest, &digest_len)) {
-        HAL_TRACE_ERR("Failed to compute the message digest");
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to compute the message digest");
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
-    HAL_TRACE_INFO("Computed message digest of len: {}", digest_len);
+    SDK_TRACE_INFO("Computed message digest of len: %d", digest_len);
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg Digest", digest, digest_len);
 
     if ((ossl_ret = EVP_PKEY_sign(ctx, s, &siglen, (const unsigned char*) digest, digest_len)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to generate sig, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to generate sig, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
     CAPRI_BARCO_API_PARAM_HEXDUMP("Sig", (char*)s, key_size);
@@ -320,98 +363,98 @@ cleanup:
     return ret;
 }
 
-hal_ret_t capri_barco_asym_fips_rsa_sig_verify(uint16_t key_size,
+sdk_ret_t capri_barco_asym_fips_rsa_sig_verify(uint16_t key_size,
         uint8_t *n, uint8_t *e, uint8_t *msg, uint16_t msg_len, uint8_t *s,
-        types::HashType hash_type, types::RSASignatureScheme sig_scheme, 
-        pd_capri_barco_asym_async_args_t *async_args)
+        hash_type_t hash_type, rsa_signature_scheme_t sig_scheme, 
+        bool async_en, const uint8_t *unique_key)
 {
     EVP_PKEY_CTX        *ctx = NULL;
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
     int                 ossl_ret = 0;
     char                digest[128];
     unsigned int        digest_len = 0;
     EVP_PKEY            *evp_pkey = NULL;
     const EVP_MD        *md = NULL;
 
-    if ((ret = init_pse_engine()) != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize SSL engine");
-        ret = HAL_RET_ERR;
+    if ((ret = init_pse_engine()) != SDK_RET_OK) {
+        SDK_TRACE_ERR("Failed to initialize SSL engine");
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
 
     /* Setup key */
     evp_pkey = rsa_setup_key(engine, key_size, -1, n, e);
     if (!evp_pkey) {
-        HAL_TRACE_ERR("Failed to setup RSA key");
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to setup RSA key");
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
 
     ctx = EVP_PKEY_CTX_new(evp_pkey, NULL);
     if (!ctx) {
-        HAL_TRACE_ERR("Failed to allocate EVP_PKEY_CTX");
-        ret = HAL_RET_NO_RESOURCE;
+        SDK_TRACE_ERR("Failed to allocate EVP_PKEY_CTX");
+        ret = SDK_RET_NO_RESOURCE;
         ERR_print_errors(bio);
         goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_verify_init(ctx)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
     switch (hash_type) {
-        case types::SHA1:
+        case SHA1:
             md = EVP_sha1();
             break;
-        case types::SHA224:
+        case SHA224:
             md = EVP_sha224();
             break;
-        case types::SHA256:
+        case SHA256:
             md = EVP_sha256();
             break;
-        case types::SHA384:
+        case SHA384:
             md = EVP_sha384();
             break;
-        case types::SHA512:
+        case SHA512:
             md = EVP_sha512();
             break;
         default:
-            HAL_TRACE_ERR("Unsupported Hash Algo");
-            ret = HAL_RET_INVALID_ARG;
+            SDK_TRACE_ERR("Unsupported Hash Algo");
+            ret = SDK_RET_INVALID_ARG;
             goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
 
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg", (char*)msg, msg_len);
     /* Compute the digest of the message */
     if (compute_message_digest(md, msg, msg_len, digest, &digest_len)) {
-        HAL_TRACE_ERR("Failed to compute the message digest");
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to compute the message digest");
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
-    HAL_TRACE_INFO("Computed message digest of len: {}", digest_len);
+    SDK_TRACE_INFO("Computed message digest of len: %d", digest_len);
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg Digest", digest, digest_len);
 
     if ((ossl_ret = EVP_PKEY_verify(ctx, s, key_size, (const unsigned char*) digest, digest_len)) <= 0) {
         /* Error */
-        HAL_TRACE_ERR("Failed to verify sig, ret:{}", ossl_ret);
-        ret = HAL_RET_ERR;
+        SDK_TRACE_ERR("Failed to verify sig, ret:%d", ossl_ret);
+        ret = SDK_RET_ERR;
         goto cleanup;
     }
     else {
-        HAL_TRACE_INFO("EVP_PKEY_verify Succeeded");
+        SDK_TRACE_INFO("EVP_PKEY_verify Succeeded");
     }
 
 cleanup:
@@ -425,5 +468,6 @@ cleanup:
 
     return ret;
 }
-}
-}
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk

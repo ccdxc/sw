@@ -6,7 +6,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/internal/crypto_apis.hpp"
+#include "nic/sdk/include/sdk/crypto_apis.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
 // #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 // #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
@@ -121,7 +121,7 @@ hal_ret_t crypto_asym_api_ecdsa_sig_gen(internal::CryptoApiRequest &req,
             args.h = (uint8_t *)req.ecdsa_sig_gen_fp().h().data();
             args.r = r;
             args.s = s;
-            args.async_args.async_en = req.ecdsa_sig_gen_fp().async_en();
+            args.async_en = req.ecdsa_sig_gen_fp().async_en();
 
             pd_func_args.pd_capri_barco_asym_ecdsa_p256_sig_gen = &args;
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, &pd_func_args);
@@ -169,7 +169,7 @@ hal_ret_t crypto_asym_api_ecdsa_sig_verify(internal::CryptoApiRequest &req,
             args.r = (uint8_t *)req.ecdsa_sig_verify_fp().r().data();
             args.s = (uint8_t *)req.ecdsa_sig_verify_fp().s().data();
             args.h = (uint8_t *)req.ecdsa_sig_verify_fp().h().data();
-            args.async_args.async_en = (uint8_t *)req.ecdsa_sig_verify_fp().async_en();
+            args.async_en = (uint8_t *)req.ecdsa_sig_verify_fp().async_en();
             pd_func_args.pd_capri_barco_asym_ecdsa_p256_sig_verify = &args;
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, &pd_func_args);
             break;
@@ -205,7 +205,7 @@ hal_ret_t crypto_asym_api_rsa_encrypt(internal::CryptoApiRequest &req,
             args.e = (uint8_t *)req.rsa_encrypt().e().data();
             args.m = (uint8_t *)req.rsa_encrypt().plain_text().data();
             args.c = cipher_text;
-            args.async_args.async_en = req.rsa_encrypt().async_en();
+            args.async_en = req.rsa_encrypt().async_en();
             pd_func_args.pd_capri_barco_asym_rsa2k_encrypt = &args;
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, &pd_func_args);
             break;
@@ -284,7 +284,7 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(internal::CryptoApiRequest &req,
             args.qinv = (uint8_t *)req.rsa_crt_decrypt().qinv().data();
             args.c = (uint8_t *)req.rsa_crt_decrypt().cipher_text().data();
             args.m = plain_text;
-            args.async_args.async_en = req.rsa_crt_decrypt().async_en();
+            args.async_en = req.rsa_crt_decrypt().async_en();
             pd_func_args.pd_capri_barco_asym_rsa2k_crt_decrypt = &args;
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, &pd_func_args);
             break;
@@ -679,7 +679,7 @@ hal_ret_t crypto_asym_api_rsa_sig_gen(internal::CryptoApiRequest &req,
             args.d = (uint8_t *)req.rsa_sig_gen().d().data();
             args.h = (uint8_t *)req.rsa_sig_gen().h().data();
             args.s = s;
-            args.async_args.async_en = req.rsa_sig_gen().async_en();
+            args.async_en = req.rsa_sig_gen().async_en();
             pd_func_args.pd_capri_barco_asym_rsa_sig_gen = &args;
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA_SIG_GEN, &pd_func_args);
             break;
@@ -1005,7 +1005,7 @@ hal_ret_t crypto_asym_api_fips_rsa_sig_gen(internal::CryptoApiRequest &req,
             args.hash_type = req.fips_rsa_sig_gen().hash_type();
             args.sig_scheme = req.fips_rsa_sig_gen().sig_scheme();
 
-            args.async_args.async_en = false;
+            args.async_en = false;
             pd_func_args.pd_capri_barco_asym_fips_rsa_sig_gen = &args;
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_GEN, &pd_func_args);
             break;
@@ -1050,7 +1050,7 @@ hal_ret_t crypto_asym_api_fips_rsa_sig_verify(internal::CryptoApiRequest &req,
             args.hash_type = req.fips_rsa_sig_verify().hash_type();
             args.sig_scheme = req.fips_rsa_sig_verify().sig_scheme();
 
-            args.async_args.async_en = false;
+            args.async_en = false;
             pd_func_args.pd_capri_barco_asym_fips_rsa_sig_verify = &args;
             ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_VERIFY, &pd_func_args);
             break;

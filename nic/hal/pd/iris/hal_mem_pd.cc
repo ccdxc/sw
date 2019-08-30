@@ -45,7 +45,7 @@
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/iris/tcp_proxy/tcp_rings.hpp"
 #include "nic/hal/pd/iris/internal/rawrcb_pd.hpp"
-#include "nic/hal/pd/capri/capri_barco_res.hpp"
+#include "nic/sdk/platform/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/iris/internal/rawccb_pd.hpp"
 #include "nic/hal/pd/iris/internal/proxyrcb_pd.hpp"
 #include "nic/hal/pd/iris/internal/proxyccb_pd.hpp"
@@ -403,10 +403,6 @@ hal_state_pd::init(void)
                   hal::pd::wring_pd_compute_hw_hash_func,
                   hal::pd::wring_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((wring_hwid_ht_ != NULL), false);
-
-    // Indexer based allocator to manage the crypto session keys
-    session_keys_idxr_ = sdk::lib::indexer::factory(CRYPTO_KEY_COUNT_MAX);
-    SDK_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
 
     // initialize IPSECCB related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)] =

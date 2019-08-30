@@ -64,6 +64,7 @@ MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/utils/host_mem \
                   ${TOPDIR}/nic/sdk/include \
                   ${TOPDIR}/nic/sdk/model_sim/include \
+				  ${TOPDIR}/nic/sdk/platform/capri \
                   ${TOPDIR}/nic/include \
                   ${TOPDIR}
 include ${MKDEFS}/post.mk

@@ -1,7 +1,7 @@
 # format: <name> <version>
 third_party_libs 1.1.148
 lkl_libs 1.1.11
-openssl_libs 1.1.0
+openssl_libs 1.1.0.2
 platform_libs 0.0.36
 storage_libs 0.0.1
 asic_libs 70c44b16fea7919e290989d71e40717162aabf74

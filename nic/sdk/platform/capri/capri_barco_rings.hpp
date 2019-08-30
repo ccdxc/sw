@@ -3,10 +3,79 @@
 
 #ifndef BARCO_CRYPTO_RINGS_CFG_VAL_ONLY
 
-#include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
+#include "include/sdk/base.hpp"
 
-namespace hal {
-namespace pd {
+namespace sdk {
+namespace platform {
+namespace capri {
+
+    /* FIXME: These definitions used by the storage offload code are a dupliate of
+     * what's already defined in capri_barco_rings.hpp. The storage code needs to migrate to
+     * the common definitions and the following needs to be removed
+     */
+
+typedef struct barco_symm_descr_s {
+    uint64_t                ilist_addr;
+    uint64_t                olist_addr;
+    uint32_t                command;
+    uint32_t                key_desc_index;
+    uint64_t                iv_addr;
+    uint64_t                status_addr;
+    uint64_t                doorbell_addr;
+    uint64_t                doorbell_data;
+    uint32_t                salt;
+    uint64_t                explicit_iv;
+    uint32_t                barco_status;
+    uint32_t                header_size;
+    uint32_t                second_key_desc_index;
+} barco_symm_descr_t;
+
+typedef struct barco_asym_descr_s {
+    uint64_t                ilist_addr;
+    uint64_t                olist_addr;
+    uint32_t                key_desc_index;
+    uint64_t                status_addr;
+    uint32_t                opaque_tag_value;
+    uint32_t                opaque_tag_wr_en;
+    uint32_t                flag_a;
+    uint32_t                flag_b;
+    uint32_t                barco_status;
+} barco_asym_descr_t;
+
+typedef struct barco_ring_meta_config_s {
+    uint64_t                ring_base;
+    uint64_t                producer_idx_addr;
+    uint64_t                shadow_pndx_addr;
+    uint64_t                opaque_tag_addr;
+    uint32_t                ring_size;
+    uint32_t                desc_size;
+    uint32_t                pndx_size;
+    uint32_t                opaque_tag_size;
+} barco_ring_meta_config_t;
+
+
+typedef enum barco_rings_e {
+    BARCO_RING_ASYM,
+    BARCO_RING_GCM0,
+    BARCO_RING_GCM1,
+    BARCO_RING_XTS0,
+    BARCO_RING_XTS1,
+    BARCO_RING_MPP0,
+    BARCO_RING_MPP1,
+    BARCO_RING_MPP2,
+    BARCO_RING_MPP3,
+    BARCO_RING_MPP4,
+    BARCO_RING_MPP5,
+    BARCO_RING_MPP6,
+    BARCO_RING_MPP7,
+    BARCO_RING_CP,
+    BARCO_RING_CP_HOT,
+    BARCO_RING_DC,
+    BARCO_RING_DC_HOT,
+    BARCO_RING_MAX
+} barco_rings_t;
+
+
 /* Asymmetric engine related definitions */
 
 typedef struct barco_asym_descriptor_s {
@@ -97,13 +166,13 @@ typedef struct barco_sym_msg_descriptor_s {
 
 /* Barco Asym DMA Descriptor allocator */
 
-hal_ret_t pd_crypto_asym_dma_descr_alloc(uint64_t *asym_dma_descr);
-hal_ret_t pd_crypto_asym_dma_descr_free(uint64_t asym_dma_descr);
-hal_ret_t pd_crypto_asym_dma_descr_init(void);
+sdk_ret_t pd_crypto_asym_dma_descr_alloc(uint64_t *asym_dma_descr);
+sdk_ret_t pd_crypto_asym_dma_descr_free(uint64_t asym_dma_descr);
+sdk_ret_t pd_crypto_asym_dma_descr_init(void);
 
-typedef hal_ret_t (*barco_ring_init_t) (struct capri_barco_ring_s *);
+typedef sdk_ret_t (*barco_ring_init_t) (struct capri_barco_ring_s *);
 typedef bool (*barco_ring_poller_t) (struct capri_barco_ring_s *, uint32_t);
-typedef hal_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *, uint32_t *, bool);
+typedef sdk_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *, uint32_t *, bool);
 
 typedef struct capri_barco_ring_s {
     char                ring_name[32];      /*  Friendly name for logging       */
@@ -153,12 +222,27 @@ typedef struct capri_barco_ring_s {
 #define BARCO_RING_DC_STR       "Barco DC"
 #define BARCO_RING_DC_HOT_STR   "Barco DC Hot"
 
-hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag, bool);
-bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag);
-  hal_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, hal::barco_asym_descr_t *asym_req_descr);
-hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t slot_index,
-					 hal::barco_symm_descr_t *symm_req_descr);
-hal_ret_t capri_barco_ring_meta_get(types::BarcoRings ring_type, uint32_t *pi, uint32_t *ci);
+#define CAPRI_HBM_REG_BARCO_RING_ASYM    "brq-ring-asym"
+#define CAPRI_HBM_REG_BARCO_RING_GCM0    "brq-ring-gcm0"
+#define CAPRI_HBM_REG_BARCO_RING_GCM1    "brq-ring-gcm1"
+#define CAPRI_HBM_REG_BARCO_RING_XTS0    "brq-ring-xts0"
+#define CAPRI_HBM_REG_BARCO_RING_XTS1    "brq-ring-xts1"
+#define CAPRI_HBM_REG_BARCO_RING_MPP0    "brq-ring-mpp0"
+#define CAPRI_HBM_REG_BARCO_RING_MPP1    "brq-ring-mpp1"
+#define CAPRI_HBM_REG_BARCO_RING_MPP2    "brq-ring-mpp2"
+#define CAPRI_HBM_REG_BARCO_RING_MPP3    "brq-ring-mpp3"
+#define CAPRI_HBM_REG_BARCO_RING_CP      "brq-ring-cp"
+#define CAPRI_HBM_REG_BARCO_RING_CP_HOT  "brq-ring-cp-hot"
+#define CAPRI_HBM_REG_BARCO_RING_DC      "brq-ring-dc"
+#define CAPRI_HBM_REG_BARCO_RING_DC_HOT  "brq-ring-dc-hot"
+#define CAPRI_HBM_REG_OPAQUE_TAG         "opaque_tag"
+
+sdk_ret_t capri_barco_ring_queue_request(barco_rings_t barco_ring_type, void *req, uint32_t *req_tag, bool);
+bool capri_barco_ring_poll(barco_rings_t barco_ring_type, uint32_t req_tag);
+  sdk_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, barco_asym_descr_t *asym_req_descr);
+sdk_ret_t capri_barco_symm_req_descr_get(barco_rings_t ring_type, uint32_t slot_index,
+					 barco_symm_descr_t *symm_req_descr);
+sdk_ret_t capri_barco_ring_meta_get(barco_rings_t ring_type, uint32_t *pi, uint32_t *ci);
 
 typedef int (*barco_response_cb)(void *user_ctx, void *response);
 
@@ -200,24 +284,25 @@ capri_barco_resp_dispatch (capri_barco_ring_t *barco_ring)
 }
 #endif
 
-hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
+sdk_ret_t get_opaque_tag_addr(barco_rings_t ring_type, uint64_t* addr);
 
 #define CAPRI_BARCO_OPAQUE_TAG_ENTRY_SIZE 64 //Bytes
 #define CAPRI_BARCO_MAX_OPAQUE_TAG_ENTRIES 32
 
-static inline int get_opaque_tag_offset(types::BarcoRings ring_type)
+static inline int get_opaque_tag_offset(barco_rings_t ring_type)
 {
     assert(ring_type < CAPRI_BARCO_MAX_OPAQUE_TAG_ENTRIES);
     return (ring_type * CAPRI_BARCO_OPAQUE_TAG_ENTRY_SIZE);
 }
 
-hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type,
+sdk_ret_t capri_barco_get_meta_config_info(barco_rings_t ring_type,
                                            barco_ring_meta_config_t *meta);
-hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
+sdk_ret_t capri_barco_get_capabilities(barco_rings_t ring_type,
                                        bool *sw_reset_capable, bool *sw_enable_capable);
 
-}    // namespace pd
-}    // namespace hal
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
 
 #endif /* BARCO_CRYPTO_RINGS_CFG_VAL_ONLY */
 
@@ -266,5 +351,14 @@ hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
 #define BARCO_CRYPTO_CP_HOT_RING_SIZE               4096
 #define BARCO_CRYPTO_DC_RING_SIZE                   4096
 #define BARCO_CRYPTO_DC_HOT_RING_SIZE               4096
+
+using sdk::platform::capri::barco_symm_descr_t;
+using sdk::platform::capri::barco_asym_descr_t;
+using sdk::platform::capri::barco_ring_meta_config_t;
+using sdk::platform::capri::barco_rings_t;
+using sdk::platform::capri::barco_asym_descriptor_t;
+using sdk::platform::capri::barco_asym_dma_descriptor_t;
+using sdk::platform::capri::barco_symm_req_descriptor_t;
+using sdk::platform::capri::barco_sym_msg_descriptor_t;
 
 #endif /* __CAPRI_BARCO_RINGS_H__ */

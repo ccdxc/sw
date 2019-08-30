@@ -6,7 +6,7 @@
 #include "openssl/modes.h"
 #include "openssl/aes.h"
 #include "nic/include/base.hpp"
-#include "nic/hal/tls/engine/pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
 

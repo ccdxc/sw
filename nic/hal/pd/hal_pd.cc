@@ -755,8 +755,8 @@ pd_tls_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8_t *n,
     args.h = h;
     args.r = r;
     args.s = s;
-    args.async_args.async_en = async;
-    args.async_args.unique_key = unique_key;
+    args.async_en = async;
+    args.unique_key = unique_key;
 
     pd_func_args.pd_capri_barco_asym_ecdsa_p256_sig_gen = &args;
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, &pd_func_args);
@@ -798,8 +798,8 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     args.r = r;
     args.s = s;
     args.h = h;
-    args.async_args.async_en = async;
-    args.async_args.unique_key = unique_key;
+    args.async_en = async;
+    args.unique_key = unique_key;
 
     pd_func_args.pd_capri_barco_asym_ecdsa_p256_sig_verify = &args;
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, &pd_func_args);
@@ -830,8 +830,8 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
     args.e = e;
     args.m = m;
     args.c = c;
-    args.async_args.async_en = async;
-    args.async_args.unique_key = unique_key;
+    args.async_en = async;
+    args.unique_key = unique_key;
 
     pd_func_args.pd_capri_barco_asym_rsa2k_encrypt = &args;
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, &pd_func_args);
@@ -853,8 +853,8 @@ pd_tls_asym_rsa_encrypt(uint16_t key_size, uint8_t *n, uint8_t *e, uint8_t *m,  
     args.e = e;
     args.m = m;
     args.c = c;
-    args.async_args.async_en = async;
-    args.async_args.unique_key = unique_key;
+    args.async_en = async;
+    args.unique_key = unique_key;
 
     pd_func_args.pd_capri_barco_asym_rsa_encrypt = &args;
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA_ENCRYPT, &pd_func_args);
@@ -888,8 +888,8 @@ pd_tls_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx, uint8_t *n, uint8_t 
     args.d = d;
     args.h = h;
     args.s = s;
-    args.async_args.async_en = async;
-    args.async_args.unique_key = unique_key;
+    args.async_en = async;
+    args.unique_key = unique_key;
 
     pd_func_args.pd_capri_barco_asym_rsa_sig_gen = &args;
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA_SIG_GEN, &pd_func_args);
@@ -925,8 +925,8 @@ pd_tls_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_t *q, uint8_t *
     args.qinv = qinv;
     args.c = c;
     args.m = m;
-    args.async_args.async_en = async;
-    args.async_args.unique_key = unique_key;
+    args.async_en = async;
+    args.unique_key = unique_key;
 
     pd_func_args.pd_capri_barco_asym_rsa2k_crt_decrypt = &args;
     ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, &pd_func_args);

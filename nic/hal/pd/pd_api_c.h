@@ -1,7 +1,7 @@
 #ifndef __PD_API_C_H__
 #define __PD_API_C_H__
 
-#include "nic/hal/tls/engine/pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 
 #ifdef __cplusplus
 extern "C" {

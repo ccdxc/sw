@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "gen/proto/types.pb.h"
 #include "logger.hpp"
-#include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
+#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 
 #define LIF_MAX_TYPES    8
 #define LIF_BASE_QUEUE_SIZE  5
@@ -44,7 +44,7 @@ int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate);
 int alloc_hbm_address(const char *handle, uint64_t *addr, uint32_t *size);
 int get_xts_ring_base_address(bool is_decr, uint64_t *addr, bool is_gcm=false);
 int get_ring_meta_config(types::BarcoRings ring_type,
-                         hal::barco_ring_meta_config_t *meta);
+                         barco_ring_meta_config_t *meta);
 int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, uint32_t* key_index);
 int delete_key(uint32_t key_index);
 int get_asym_key_index(const uint8_t *key_desc, 

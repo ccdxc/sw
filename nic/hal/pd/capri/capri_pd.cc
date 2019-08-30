@@ -7,9 +7,9 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
-#include "nic/hal/pd/capri/capri_barco_rings.hpp"
-#include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
-#include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
+#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
+#include "nic/sdk/platform/capri/capri_barco_asym_apis.hpp"
+#include "nic/sdk/platform/capri/capri_barco_sym_apis.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "platform/capri/capri_quiesce.hpp"
@@ -122,63 +122,70 @@ hal_ret_t
 pd_get_opaque_tag_addr (pd_func_args_t *pd_func_args)
 {
     pd_get_opaque_tag_addr_args_t *args = pd_func_args->pd_get_opaque_tag_addr;
-    return get_opaque_tag_addr(args->ring_type, args->addr);
+    return (get_opaque_tag_addr((barco_rings_t)args->ring_type, args->addr) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_req_descr_get (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_req_descr_get_args_t *args = pd_func_args->pd_capri_barco_asym_req_descr_get;
-    return capri_barco_asym_req_descr_get(args->slot_index,
-                                          args->asym_req_descr);
+    return (capri_barco_asym_req_descr_get(args->slot_index,
+                                          args->asym_req_descr) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_symm_req_descr_get (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_symm_req_descr_get_args_t *args = pd_func_args->pd_capri_barco_symm_req_descr_get;
-    return capri_barco_symm_req_descr_get(args->ring_type,
+    return (capri_barco_symm_req_descr_get((barco_rings_t)args->ring_type,
                                           args->slot_index,
-                                          args->symm_req_descr);
+                                          args->symm_req_descr) ==
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_ring_meta_get (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_ring_meta_get_args_t *args = pd_func_args->pd_capri_barco_ring_meta_get;
-    return capri_barco_ring_meta_get(args->ring_type,
-                                     args->pi, args->ci);
+    return (capri_barco_ring_meta_get((barco_rings_t)args->ring_type,
+                                     args->pi, args->ci) ==
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_ring_meta_config_get (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_ring_meta_config_get_args_t *args = pd_func_args->pd_capri_barco_ring_meta_config_get;
-    return capri_barco_get_meta_config_info(args->ring_type, args->meta);
+    return (capri_barco_get_meta_config_info((barco_rings_t)args->ring_type, args->meta) ==
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_add_pend_req(pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_add_pend_req_args_t *args = pd_func_args->pd_capri_barco_asym_add_pend_req;
-    return capri_barco_asym_add_pend_req(args->hw_id,
-                                         args->sw_id);
+    return (capri_barco_asym_add_pend_req(args->hw_id,
+                                         args->sw_id) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_poll_pend_req(pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_poll_pend_req_args_t *args = pd_func_args->pd_capri_barco_asym_poll_pend_req;
-    return capri_barco_asym_poll_pend_req(args->batch_size,
+    return (capri_barco_asym_poll_pend_req(args->batch_size,
                                           args->id_count,
-                                          args->ids);
+                                          args->ids) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_ecc_point_mul(pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_ecc_point_mul_args_t *args = pd_func_args->pd_capri_barco_asym_ecc_point_mul;
-    return capri_barco_asym_ecc_point_mul(     args->key_size,
+    return (capri_barco_asym_ecc_point_mul(     args->key_size,
                                                args->p,
                                                args->n,
                                                args->xg,
@@ -189,28 +196,30 @@ pd_capri_barco_asym_ecc_point_mul(pd_func_args_t *pd_func_args)
                                                args->y1,
                                                args->k,
                                                args->x3,
-                                               args->y3);
+                                               args->y3) ==
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_ecdsa_p256_setup_priv_key(pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_ecdsa_p256_setup_priv_key;
-    return capri_barco_asym_ecdsa_p256_setup_priv_key(args->p,
+    return (capri_barco_asym_ecdsa_p256_setup_priv_key(args->p,
                                                       args->n,
                                                       args->xg,
                                                       args->yg,
                                                       args->a,
                                                       args->b,
                                                       args->da,
-                                                      args->key_idx);
+                                                      args->key_idx) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_ecdsa_p256_sig_gen (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_ecdsa_p256_sig_gen;
-    return capri_barco_asym_ecdsa_p256_sig_gen(args->key_idx,
+    return (capri_barco_asym_ecdsa_p256_sig_gen(args->key_idx,
                                                args->p,
                                                args->n,
                                                args->xg,
@@ -222,14 +231,16 @@ pd_capri_barco_asym_ecdsa_p256_sig_gen (pd_func_args_t *pd_func_args)
                                                args->h,
                                                args->r,
                                                args->s,
-                                               &args->async_args);
+                                               args->async_en,
+                                               args->unique_key) ==
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_ecdsa_p256_sig_verify (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t *args = pd_func_args->pd_capri_barco_asym_ecdsa_p256_sig_verify;
-    return capri_barco_asym_ecdsa_p256_sig_verify(args->p,
+    return (capri_barco_asym_ecdsa_p256_sig_verify(args->p,
                                                   args->n,
                                                   args->xg,
                                                   args->yg,
@@ -240,47 +251,54 @@ pd_capri_barco_asym_ecdsa_p256_sig_verify (pd_func_args_t *pd_func_args)
                                                   args->r,
                                                   args->s,
                                                   args->h,
-                                                  &args->async_args);
+                                                  args->async_en,
+                                                  args->unique_key) ==
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa2k_encrypt (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_encrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_encrypt;
-    return capri_barco_asym_rsa2k_encrypt(args->n,
+    return (capri_barco_asym_rsa2k_encrypt(args->n,
                                           args->e,
                                           args->m,
                                           args->c,
-                                          &args->async_args);
+                                          args->async_en,
+                                          args->unique_key) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa_encrypt (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa_encrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa_encrypt;
-    return capri_barco_asym_rsa_encrypt(args->key_size,
+    return (capri_barco_asym_rsa_encrypt(args->key_size,
                                           args->n,
                                           args->e,
                                           args->m,
                                           args->c,
-                                          &args->async_args);
+                                          args->async_en,
+                                          args->unique_key) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa2k_decrypt (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_decrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_decrypt;
-    return capri_barco_asym_rsa2k_decrypt(args->n,
+    return (capri_barco_asym_rsa2k_decrypt(args->n,
                                           args->d,
                                           args->c,
-                                          args->m);
+                                          args->m) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa2k_crt_decrypt (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_crt_decrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_crt_decrypt;
-    return capri_barco_asym_rsa2k_crt_decrypt(args->key_idx,
+    return (capri_barco_asym_rsa2k_crt_decrypt(args->key_idx,
                                               args->p,
                                               args->q,
                                               args->dp,
@@ -288,118 +306,133 @@ pd_capri_barco_asym_rsa2k_crt_decrypt (pd_func_args_t *pd_func_args)
                                               args->qinv,
                                               args->c,
                                               args->m,
-                                              &args->async_args);
+                                              args->async_en,
+                                              args->unique_key) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key;
-    return capri_barco_asym_rsa2k_setup_sig_gen_priv_key(args->n,
+    return (capri_barco_asym_rsa2k_setup_sig_gen_priv_key(args->n,
                                                          args->d,
-                                                         args->key_idx);
+                                                         args->key_idx) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key;
-    return capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(args->p,
+    return (capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(args->p,
                                                              args->q,
                                                              args->dp,
                                                              args->dq,
                                                              args->qinv,
-                                                             args->key_idx);
+                                                             args->key_idx) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa_setup_priv_key(pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa_setup_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa_setup_priv_key;
-    return capri_barco_asym_rsa_setup_priv_key(args->key_size,
+    return (capri_barco_asym_rsa_setup_priv_key(args->key_size,
                                                 args->n,
                                                 args->d,
-                                                args->key_idx);
+                                                args->key_idx) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa2k_sig_gen (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_sig_gen;
-    return capri_barco_asym_rsa2k_sig_gen(args->key_idx,
+    return (capri_barco_asym_rsa2k_sig_gen(args->key_idx,
                                           args->n,
                                           args->d,
                                           args->h,
                                           args->s,
-                                          &args->async_args);
+                                          args->async_en,
+                                          args->unique_key) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa_sig_gen (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_rsa_sig_gen;
-    return capri_barco_asym_rsa_sig_gen(args->key_size,
+    return (capri_barco_asym_rsa_sig_gen(args->key_size,
                                           args->key_idx,
                                           args->n,
                                           args->d,
                                           args->h,
                                           args->s,
-                                          &args->async_args);
+                                          args->async_en,
+                                          args->unique_key) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_fips_rsa_sig_gen (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_fips_rsa_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_fips_rsa_sig_gen;
-    return capri_barco_asym_fips_rsa_sig_gen(args->key_size,
+    return (capri_barco_asym_fips_rsa_sig_gen(args->key_size,
                                           args->key_idx,
                                           args->n,
                                           args->e,
                                           args->msg,
                                           args->msg_len,
                                           args->s,
-                                          args->hash_type,
-                                          args->sig_scheme,
-                                          &args->async_args);
+                                          (hash_type_t)args->hash_type,
+                                          (rsa_signature_scheme_t)args->sig_scheme,
+                                          args->async_en,
+                                          args->unique_key) ==
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_fips_rsa_sig_verify (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_fips_rsa_sig_verify_args_t *args = pd_func_args->pd_capri_barco_asym_fips_rsa_sig_verify;
-    return capri_barco_asym_fips_rsa_sig_verify(args->key_size,
+    return (capri_barco_asym_fips_rsa_sig_verify(args->key_size,
                                           args->n,
                                           args->e,
                                           args->msg,
                                           args->msg_len,
                                           args->s,
-                                          args->hash_type,
-                                          args->sig_scheme,
-                                          &args->async_args);
+                                          (hash_type_t)args->hash_type,
+                                          (rsa_signature_scheme_t)args->sig_scheme,
+                                          args->async_en,
+                                          args->unique_key) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_asym_rsa2k_sig_verify (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_sig_verify_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_sig_verify;
-    return capri_barco_asym_rsa2k_sig_verify(args->n,
+    return (capri_barco_asym_rsa2k_sig_verify(args->n,
                                              args->e,
                                              args->h,
-                                             args->s);
+                                             args->s) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 hal_ret_t
 pd_capri_barco_sym_hash_process_request (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_sym_hash_process_request_args_t *args = pd_func_args->pd_capri_barco_sym_hash_process_request;
-    return capri_barco_sym_hash_process_request(args->hash_type,
+    return (capri_barco_sym_hash_process_request(args->hash_type,
                                                 args->generate,
                                                 args->key,
                                                 args->key_len,
                                                 args->data,
                                                 args->data_len,
                                                 args->output_digest,
-                                                args->digest_len);
+                                                args->digest_len) == 
+            SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
 }
 
 // Enable MPU tracing on p4 ingress

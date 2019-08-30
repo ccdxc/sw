@@ -16,7 +16,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/hal.hpp"
 #include "platform/capri/capri_common.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include "nvme_sesscb_pd.hpp"
 #include "nvme_ns_pd.hpp"
 #include "nvme_global_pd.hpp"

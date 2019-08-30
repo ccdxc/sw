@@ -7,7 +7,7 @@
 #include <openssl/evp.h>
 #include "logger.hpp"
 #include "nic/include/base.hpp"
-#include "pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 #include "crypto_asym.hpp"
 
 using namespace std;

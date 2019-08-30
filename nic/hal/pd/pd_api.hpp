@@ -35,9 +35,9 @@
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
-#include "nic/hal/src/internal/crypto_apis.hpp"
+#include "nic/sdk/include/sdk/crypto_apis.hpp"
 #include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
-#include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
+#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
 #include "platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
@@ -2697,7 +2697,7 @@ typedef struct pd_capri_barco_asym_req_descr_get_args_s {
 typedef struct pd_capri_barco_symm_req_descr_get_args_s {
     types::BarcoRings ring_type;
     uint32_t slot_index;
-    hal::barco_symm_descr_t *symm_req_descr;
+    barco_symm_descr_t *symm_req_descr;
 } __PACK__ pd_capri_barco_symm_req_descr_get_args_t;
 
 typedef struct pd_capri_barco_ring_meta_get_args_s {
@@ -2766,7 +2766,8 @@ typedef struct pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s {
     uint8_t *h;
     uint8_t *r;
     uint8_t *s;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool    async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_ecdsa_p256_sig_verify_args_s {
@@ -2781,7 +2782,8 @@ typedef struct pd_capri_barco_asym_ecdsa_p256_sig_verify_args_s {
     uint8_t *r;
     uint8_t *s;
     uint8_t *h;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_encrypt_args_s {
@@ -2789,7 +2791,8 @@ typedef struct pd_capri_barco_asym_rsa2k_encrypt_args_s {
     uint8_t *e;
     uint8_t *m;
     uint8_t *c;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_rsa2k_encrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa_encrypt_args_s {
@@ -2798,7 +2801,8 @@ typedef struct pd_capri_barco_asym_rsa_encrypt_args_s {
     uint8_t *e;
     uint8_t *m;
     uint8_t *c;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_rsa_encrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_decrypt_args_s {
@@ -2817,7 +2821,8 @@ typedef struct pd_capri_barco_asym_rsa2k_crt_decrypt_args_s {
     uint8_t *qinv;
     uint8_t *c;
     uint8_t *m;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_rsa2k_crt_decrypt_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_s {
@@ -2848,7 +2853,8 @@ typedef struct pd_capri_barco_asym_rsa2k_sig_gen_args_s {
     uint8_t *d;
     uint8_t *h;
     uint8_t *s;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_rsa2k_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_rsa_sig_gen_args_s {
@@ -2858,7 +2864,8 @@ typedef struct pd_capri_barco_asym_rsa_sig_gen_args_s {
     uint8_t *d;
     uint8_t *h;
     uint8_t *s;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_rsa_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_fips_rsa_sig_gen_args_s {
@@ -2871,7 +2878,8 @@ typedef struct pd_capri_barco_asym_fips_rsa_sig_gen_args_s {
     uint8_t *s;
     types::HashType  hash_type;
     types::RSASignatureScheme    sig_scheme;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_fips_rsa_sig_gen_args_t;
 
 typedef struct pd_capri_barco_asym_fips_rsa_sig_verify_args_s {
@@ -2884,7 +2892,8 @@ typedef struct pd_capri_barco_asym_fips_rsa_sig_verify_args_s {
     uint8_t *s;
     types::HashType  hash_type;
     types::RSASignatureScheme    sig_scheme;
-    pd_capri_barco_asym_async_args_t async_args;
+    bool async_en;
+    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_capri_barco_asym_fips_rsa_sig_verify_args_t;
 
 typedef struct pd_capri_barco_asym_rsa2k_sig_verify_args_s {

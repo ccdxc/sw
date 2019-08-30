@@ -2,7 +2,7 @@
 #define __PSE_RAND_H__
 
 #include <openssl/ossl_typ.h>
-#include "pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 
 typedef struct pse_rand_ex_data_s {
     const PSE_OFFLOAD_RAND_METHOD *rand_method;

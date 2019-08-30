@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <unordered_map>
-#include "pse_intf.h"
+#include "nic/sdk/include/sdk/pse_intf.h"
 #include "pal_compat.hpp"
 
 #ifndef BITS_PER_BYTE

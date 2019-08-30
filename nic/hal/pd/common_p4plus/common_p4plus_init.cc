@@ -4,12 +4,12 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_pd.hpp"
-#include "nic/hal/pd/capri/capri_barco_rings.hpp"
+#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 
 namespace hal {
 namespace pd {
@@ -387,19 +387,19 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     symbols[i].name = NVME_TX_HWXTSCB;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_XTS0);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(sdk::platform::capri::BARCO_RING_XTS0);
     i++;
 
     symbols[i].name = NVME_RX_HWXTSCB;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_XTS1);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(sdk::platform::capri::BARCO_RING_XTS1);
     i++;
 
     symbols[i].name = NVME_TX_HWDGSTCB;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_CP);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(sdk::platform::capri::BARCO_RING_CP);
     i++;
 
     symbols[i].name = NVME_RX_HWDGSTCB;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_DC);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(sdk::platform::capri::BARCO_RING_DC);
     i++;
 
     symbols[i].name = NVME_TX_NMDPR_RING_BASE;

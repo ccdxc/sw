@@ -23,9 +23,9 @@ enum {
 
 extern acc_ring_t *asym_ring;
 
-typedef hal::pd::barco_asym_dma_descriptor_t    barco_dma_desc_t;
-typedef hal::pd::capri_barco_asym_key_desc_t    barco_key_desc_t;
-typedef hal::pd::barco_asym_descriptor_t        barco_req_desc_t;
+typedef sdk::platform::capri::barco_asym_dma_descriptor_t    barco_dma_desc_t;
+typedef sdk::platform::capri::capri_barco_asym_key_desc_t    barco_key_desc_t;
+typedef sdk::platform::capri::barco_asym_descriptor_t        barco_req_desc_t;
 
 typedef union {
     uint32_t            full_word;

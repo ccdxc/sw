@@ -19,7 +19,7 @@
 #include "nic/include/tls_common.h"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 
 namespace hal {
 namespace pd {
