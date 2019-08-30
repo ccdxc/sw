@@ -457,7 +457,7 @@ void inst_t::process_softq()
         (*(softq_fn_t)op)(data);
         npkt++;
     }
-    if (!npkt) {
+    if (npkt) {
         HAL_TRACE_DEBUG("Done processing softq: {}", npkt);
     }
 }
