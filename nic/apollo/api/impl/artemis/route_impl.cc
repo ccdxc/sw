@@ -238,7 +238,7 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 
 void
 route_table_impl::fill_status_(pds_route_table_status_t *status) {
-    status->route_table_base_addr = lpm_root_addr();
+    status->route_table_base_addr = lpm_root_addr_;
 }
 
 sdk_ret_t

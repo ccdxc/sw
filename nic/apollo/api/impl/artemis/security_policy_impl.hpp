@@ -89,6 +89,14 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief      read spec, statistics and status from hw tables
+    /// \param[in]  api_obj  API object
+    /// \param[in]  key  pointer to policy key
+    /// \param[out] info pointer to policy info
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) override;
+
     mem_addr_t security_policy_root_addr(void) {
         return security_policy_root_addr_;
     }
@@ -107,6 +115,10 @@ private:
 
     /// \brief  destructor
     ~security_policy_impl() {}
+
+    /// \brief      fill the policy status
+    /// \param[out] status status
+    void fill_status_(pds_policy_status_t *status);
 
 private:
     // P4 datapath specific state

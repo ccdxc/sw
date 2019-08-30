@@ -170,6 +170,11 @@ public:
         return false;
     }
 
+    ///\brief read config
+    ///\param[out] info Pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_policy_info_t *info);
+
     /**
      * @brief     return impl instance of this security policy object
      * @return    impl instance of the rout table object
@@ -194,6 +199,10 @@ private:
 
     /**< @brief    destructor */
     ~policy();
+
+    /// \brief      fill the policy sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_policy_spec_t *spec);
 
     /**
      * @brief     free h/w resources used by this object, if any

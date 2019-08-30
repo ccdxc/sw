@@ -152,6 +152,20 @@ security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 
+void
+security_policy_impl::fill_status_(pds_policy_status_t *status) {
+    status->policy_base_addr = security_policy_root_addr_;
+}
+
+sdk_ret_t
+security_policy_impl::read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) {
+    pds_policy_info_t *policy_info = (pds_policy_info_t *)info;
+
+    fill_status_(&policy_info->status);
+
+    return SDK_RET_OK;
+}
 /// \@}
 
 }    // namespace impl

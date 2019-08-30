@@ -42,17 +42,6 @@ pds_policy_api_handle (api::api_op_t op, pds_policy_key_t *key,
     return sdk::SDK_RET_OOM;
 }
 
-static inline sdk_ret_t
-pds_policy_spec_fill (policy *entry, pds_policy_spec_t *spec)
-{
-    memcpy(&spec->key,
-           (pds_policy_key_t *)policy::policy_key_func_get((void *)entry),
-           sizeof(pds_policy_key_t));
-    spec->af = entry->af();
-    spec->direction = entry->dir();
-    return SDK_RET_OK;
-}
-
 static inline policy *
 pds_policy_entry_find (pds_policy_key_t *key)
 {
@@ -102,7 +91,6 @@ pds_policy_delete (pds_policy_key_t *key)
 sdk_ret_t
 pds_policy_read(pds_policy_key_t *key, pds_policy_info_t *info)
 {
-    sdk::sdk_ret_t rv;
     policy *entry = NULL;
 
     if (key == NULL || info == NULL)
@@ -111,10 +99,7 @@ pds_policy_read(pds_policy_key_t *key, pds_policy_info_t *info)
     if ((entry = pds_policy_entry_find(key)) == NULL)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
 
-    if ((rv = pds_policy_spec_fill(entry, &info->spec)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return SDK_RET_OK;
+    return entry->read(info);
 }
 
 /** @} */ // end of PDS_POLICY_API

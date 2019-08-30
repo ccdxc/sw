@@ -209,6 +209,24 @@ sdk_ret_t
 policy::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICY, this);
 }
+
+void
+policy::fill_spec_(pds_policy_spec_t *spec) {
+    memcpy(&spec->key, &this->key_, sizeof(pds_policy_key_t));
+    spec->af = af_;
+    spec->direction = dir_;
+    spec->num_rules = 0;
+    // rules are not stored anywhere
+    spec->rules = NULL;
+    return;
+}
+
+sdk_ret_t
+policy::read(pds_policy_info_t *info) {
+    fill_spec_(&info->spec);
+    return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                          (impl::obj_info_t *)info);
+}
 /** @} */    // end of PDS_POLICY
 
 }    // namespace api
