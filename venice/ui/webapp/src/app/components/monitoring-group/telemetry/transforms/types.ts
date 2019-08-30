@@ -7,6 +7,7 @@ import { MetricsMetadata } from '@sdk/metrics/generated/metadata';
 import { DataTransformConfig  } from '@app/models/frontend/shared/userpreference.interface';
 import { TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
 
+// List of transforms
 export enum TransformNames {
   GroupByTime = 'GroupByTime',
   AxisTransform = 'AxisTransform',
@@ -20,6 +21,8 @@ export enum TransformNames {
   RoundCounters = 'RoundCounters',
   Derivative = 'Derivative',
 }
+
+/** Types used for hook signatures */
 
 export interface ChartDataSets extends ChartJSDataSets {
   sourceID: string;
@@ -64,17 +67,21 @@ export interface TransformQueries {
 
 export interface TransformDatasets extends Array<TransformDataset> {}
 
+/** Class that all metric transforms must extend from */
 export abstract class MetricTransform<T> {
   abstract transformName: TransformNames;
 
-  // Fields that will be populated by MetricSource
+  // Fields that will be populated by MetricSource/TelemetryChart.
+  // Transforms can rely on these always being filled out.
   private reqMetrics: Observer<any>;
   measurement: string;
   fields: string[];
   debugMode: boolean;
+  // Function for getting another transform that exists within the same datasource
   getTransform: (transformName: string) => MetricTransform<any>;
 
-
+  // Functions called for loading and saving the transform configuration
+  // into the user preference object
   abstract load(config: T);
   abstract save(): T;
 
@@ -92,22 +99,26 @@ export abstract class MetricTransform<T> {
   transformDatasets(opts: TransformDatasets) {}
 
   // Utility functions
+  // Requests telemetryChart to rebuild its query.
   requestMetrics() {
     this.reqMetrics.next(true);
   }
 
+  // Gets metadata pertaining to a measurement and field/
   getFieldData(measurement, field) {
     return MetricsMetadata[measurement].fields.find(x => x.name === field);
   }
 }
 
+/** Base transform class for graph wide option */
 export abstract class GraphTransform<T> {
   abstract transformName: string;
 
   // Fields that will be populated by MetricSource
   private reqRedraw: Observer<any>;
 
-
+  // Functions called for loading and saving the transform configuration
+  // into the user preference object
   abstract load(config: T);
   abstract save(): T;
 
@@ -126,6 +137,7 @@ export abstract class GraphTransform<T> {
   getFieldData(measurement, field) {
     return MetricsMetadata[measurement].fields.find(x => x.name === field);
   }
+  // Requests telemetryChart to redraw the graph.
   requestRedraw() {
     this.reqRedraw.next(true);
   }

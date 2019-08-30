@@ -9,6 +9,7 @@
     "start": "ng serve",
     "build": "ng build --prod",
     "dev": "yarn run ng-high-memory -- serve",
+    "dev-container": "yarn run ng-high-memory -- serve --host=0.0.0.0",
     "test": "yarn run ng-high-memory -- test",
     "test-prod": "npm run ng-high-memory -- test --prod --watch=false --source-map=false --browsers=ChromeHeadlessCI",
     "lint": "npm run lint-css && npm run lint-html && ng lint --fix",

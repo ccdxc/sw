@@ -605,7 +605,7 @@ ui-serve:
 	yarn -v;
 	$(MAKE) ui-link-framework
 	$(MAKE) ui-venice-sdk
-	cd venice/ui/webapp && yarn run dev
+	cd venice/ui/webapp && yarn run dev-container
 
 ui-mac:
 	@echo "you will need node v10.15.3, yarn installed";

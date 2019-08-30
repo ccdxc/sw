@@ -155,7 +155,7 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
       }
       if (tableWidth !== 0) {
         const children = this.headerRow.nativeElement.children;
-        const startIndex  = 1;  // check if checkbox is enabled.
+        const startIndex  = (this.enableCheckbox) ? 1 : 0;  // check if checkbox is enabled.
         for (let i = startIndex; i < children.length - 1; i++) {
           const newWidth = ($(children[i]).outerWidth() * 100) / tableWidth;
           this.cols[i - startIndex].width = newWidth;
