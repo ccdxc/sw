@@ -21,6 +21,7 @@ void UpgReqReact::SetStateMachine(delphi::objects::UpgReqPtr req) {
     ctx.upgType = req->upgreqtype();
     ctx.firmwarePkgName = req->upgpkgname();
     ctx.postRestart = false;
+    ctx.ctxUpdated = false;
     ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
     ctx.haltStateMachine = false;
@@ -286,6 +287,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     ctx.upgType = req->upgreqtype();
     ctx.firmwarePkgName = req->upgpkgname();
     ctx.postRestart = false;
+    ctx.ctxUpdated = false;
     ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
     ctx.haltStateMachine = false;
@@ -352,6 +354,7 @@ delphi::error UpgReqReact::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
         sdk_->DeleteObject(upgReqStatus);
     }
     DeleteUpgMgrResp();
+    ctx.ctxUpdated = false;
     return delphi::error::OK();
 }
 
@@ -463,6 +466,7 @@ delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     ctx.upgType = req->upgreqtype();
     ctx.firmwarePkgName = req->upgpkgname();
     ctx.postRestart = false;
+    ctx.ctxUpdated = false;
     ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
     ctx.haltStateMachine = false;

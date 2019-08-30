@@ -133,6 +133,9 @@ bool GetUpgCtxTablesFromMeta(string metafile,
 
 bool GetUpgCtxFromMeta(UpgCtx& ctx) {
     bool ret = true;
+    if (ctx.ctxUpdated) {
+        return ret;
+    }
     string premetafile = "/data/running_meta.json";
     string postmetafile = "/data/upg_meta.json";
 
@@ -155,6 +158,7 @@ bool GetUpgCtxFromMeta(UpgCtx& ctx) {
         string postmetafile = "/sw/nic/upgrade_manager/meta/MANIFEST.json";
         ret = GetUpgCtxTablesFromMeta(postmetafile, ctx.postUpgMeta, false);
     }
+    ctx.ctxUpdated = true;
     return ret;
 }
 

@@ -109,6 +109,7 @@ bool UpgStateReqReact::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
 delphi::error UpgStateReqReact::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
     UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
+    ctx.ctxUpdated = false;
     if (!GetUpgCtx(req)) {
         return delphi::error("GetUpgCtxFromMeta failed");
     }
@@ -131,6 +132,7 @@ delphi::error UpgStateReqReact::OnUpgStateReqDelete(delphi::objects::UpgStateReq
     UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got deleted with {}", req->upgreqstate());
     //delete the object
     upgAppRespPtr_->DeleteUpgAppResp();
+    ctx.ctxUpdated = false;
     return delphi::error::OK();
 }
 

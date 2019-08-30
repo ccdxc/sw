@@ -33,6 +33,7 @@ typedef struct UpgCtx_ {
     UpgReqStateType            prevExecState;
     bool                       haltStateMachine;
     string                     compatCheckFailureReason;
+    bool                       ctxUpdated;
 } UpgCtx;
 
 typedef enum {
