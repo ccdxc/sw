@@ -140,7 +140,6 @@ func (n *NMD) RestartRevProxyWithRetries() error {
 			err := n.StopReverseProxy()
 			if err != nil {
 				log.Errorf("Failed to stop reverse proxy. Err: %v", err)
-				break
 			}
 
 			err = n.StartReverseProxy()

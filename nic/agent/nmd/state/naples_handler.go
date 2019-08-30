@@ -687,13 +687,7 @@ func (n *NMD) AdmitNaples() {
 						n.SendNICUpdates()
 					}()
 
-					// restart rev proxy so that it can switch to HTTPS + client auth
-					err = n.StopReverseProxy()
-					if err != nil {
-						log.Errorf("Failed to stop reverse proxy. Err : %v", err)
-					}
-
-					err = n.StartReverseProxy()
+					err = n.RestartRevProxyWithRetries()
 					if err != nil {
 						log.Errorf("Failed to start reverse proxy. Err : %v", err)
 					}
