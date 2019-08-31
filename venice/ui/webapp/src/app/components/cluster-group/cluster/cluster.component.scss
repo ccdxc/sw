@@ -55,10 +55,17 @@ $table-headerheight: 55px;
 }
 
 .cluster-node-status {
-  background-color: #77a746;
   border-radius: 50%;
   height: 7px;
   width: 7px;
+}
+
+.cluster-node-status-healthy {
+  background-color: #77a746;
+}
+
+.cluster-node-status-unhealthy {
+  background-color: #dd3b09;
 }
 
 .cluster-node-container {

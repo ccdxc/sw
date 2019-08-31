@@ -49,7 +49,8 @@
              class="cluster-node-container">
           <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px"
                class="cluster-node-name">
-            <div fxFlex="none" class="cluster-node-status"></div>
+            <div fxFlex="none" class="cluster-node-status" [ngClass]="getNodeStatusClass(node)">
+            </div>
             <span class="cluster-node-name" fxFlex="none">{{ node.meta.name }}</span>
             <mat-icon fxFlex="none" *ngIf="cluster.status.leader === node.meta.name"
                       class="cluster-node-star" title="Leader">star_rate</mat-icon>

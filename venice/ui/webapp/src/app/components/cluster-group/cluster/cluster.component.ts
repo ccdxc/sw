@@ -18,6 +18,7 @@ import {Animations} from '@app/animations';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterupdateComponent } from './clusterupdate/clusterupdate.component';
+import { NodeConditionValues } from '@app/components/cluster-group/naples';
 
 @Component({
   selector: 'app-cluster',
@@ -302,5 +303,9 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
     });
+  }
+
+  getNodeStatusClass(node: ClusterNode): string {
+    return (this.displayCondition(node) === NodeConditionValues.HEALTHY) ? 'cluster-node-status-healthy' : 'cluster-node-status-unhealthy';
   }
 }

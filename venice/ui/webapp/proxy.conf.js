@@ -11,7 +11,7 @@
 // const URL = "192.168.78.237";    // systest  ambish's box
 // const URL = "192.168.78.195"; // systest Yonatan's box. root/N0isystem$
 // const URL = "192.168.129.19"; // systest Swami's appliance. root/centos
-
+// const URL = "192.168.129.176"; // systest Amar's appliance. root/centos
 
 
 const PROXY_CONFIG =

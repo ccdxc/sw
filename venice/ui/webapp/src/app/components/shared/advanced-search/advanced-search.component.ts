@@ -465,9 +465,9 @@ export class AdvancedSearchComponent implements OnInit {
           q.values.forEach( value => {
             const val = value.toLowerCase();
             const valRes = searchObj[q.key][val];
-            conditionRes = conditionRes.length > 0 ? _.union(conditionRes, valRes) : valRes;
+            conditionRes = (conditionRes && conditionRes.length ) > 0 ? _.union(conditionRes, valRes) : valRes;
           });
-          res.searchRes = res.searchRes.length > 0 ? _.intersection(res.searchRes, conditionRes) : conditionRes;
+          res.searchRes = (res && res.searchRes && res.searchRes.length) > 0 ? _.intersection(res.searchRes, conditionRes) : conditionRes;
         }
       }
     });
