@@ -1347,29 +1347,7 @@ validate_nwsec_policy_create (nwsec::SecurityPolicySpec&     spec,
 hal_ret_t
 nwsec_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    dllist_ctxt_t       *lnode = NULL;
-    dhl_entry_t         *dhl_entry =  NULL;
-    nwsec_policy_t      *policy = NULL;
-
-    if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("Invalid policy ctxt");
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
-
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-
-    policy = (nwsec_policy_t *) dhl_entry->obj;
-
-    policy = policy;
-
-    // Print the rule id???
-
-
-end:
-    return ret;
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -1394,12 +1372,12 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     policy = (nwsec_policy_t *) dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    ret = acl::acl_commit(app_ctx->acl_ctx);
+    /*ret = acl::acl_commit(app_ctx->acl_ctx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
         goto end;
     }
-    acl_deref(app_ctx->acl_ctx);
+    acl_deref(app_ctx->acl_ctx);*/
 
     HAL_TRACE_DEBUG("SFW policy handle {}", hal_handle);
     ret = add_nwsec_policy_to_db(policy);
@@ -1418,17 +1396,13 @@ end:
 hal_ret_t
 nwsec_policy_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 hal_ret_t
 nwsec_policy_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -1497,6 +1471,8 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
 
     //nwsec_spec_dump(&spec);
     trim_mem_usage("Before Create");
+    // Give up the read lock
+    hal_handle_cfg_db_lock(true, false);
 
     nwsec_policy = nwsec_policy_alloc_init();
     if (nwsec_policy == NULL) {
@@ -1561,13 +1537,20 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
         HAL_TRACE_ERR("Failed to add policy to lib, ret: {}", ret);
         goto end;
     }
-
     dhl_entry.handle = nwsec_policy->hal_handle;
     dhl_entry.obj   = nwsec_policy;
     cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    
+    ret = acl::acl_commit(app_ctxt.acl_ctx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
+        goto end;
+    }
+    acl_deref(app_ctxt.acl_ctx);
+    hal_handle_cfg_db_lock(true, true);
     ret = hal_handle_add_obj(nwsec_policy->hal_handle, &cfg_ctxt,
                              nwsec_policy_create_add_cb,
                              nwsec_policy_create_commit_cb,
