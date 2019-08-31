@@ -16,6 +16,8 @@ struct phv_ p;
 offloads:
     seq             c4, k.ipv4_1_valid, TRUE
     seq             c5, k.ipv6_1_valid, TRUE
+    bcf             [!c4 & !c5], offloads_end
+    nop
     bbne            k.p4plus_to_p4_update_ip_len, TRUE, offloads_get_l4_len
     add             r7, r0, r0
     seq             c1, k.ctag_1_valid, TRUE
@@ -101,6 +103,10 @@ offloads_update_checksum_flags_non_tcp:
     phvwr.c4        p.ipv4_1_udp_csum, 1
     phvwr.e         p.udp_1_csum, 1
     phvwr.c5        p.ipv6_1_tcp_csum, 1
+
+offloads_end:
+    nop.e
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */
