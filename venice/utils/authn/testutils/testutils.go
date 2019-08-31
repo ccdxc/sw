@@ -373,7 +373,7 @@ func DeleteTenant(apicl apiclient.Services, tenant string) error {
 	defer cancelFunc()
 	// delete all alerts belonging to default alert policy
 	alertPolicies, _ := apicl.MonitoringV1().Alert().List(ctx,
-		&api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}, FieldSelector: "status.reason.alert-policy-id=default-event-based-alerts"})
+		&api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}})
 	for _, ap := range alertPolicies {
 		apicl.MonitoringV1().Alert().Delete(ctx, &ap.ObjectMeta)
 	}

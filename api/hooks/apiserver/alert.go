@@ -41,6 +41,7 @@ type alertUpdateFlags struct {
 	incrementOpenAlerts int32
 	userSelfLink        string
 	alert               monitoring.Alert
+	alertPolicyUUID     string
 }
 
 func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc {
@@ -118,9 +119,11 @@ func (a *alertHooks) getAlertPolUpdFunc(flags *alertUpdateFlags) kvstore.UpdateF
 			return alertPolicyObj, errInternalError
 		}
 
-		a.logger.Infof("debug: updating the alert policy {%s} with {o: %v, a: %v}, original {o: %v, a: %v}",
-			alertPolicyObj.Name, flags.incrementOpenAlerts, flags.incrementAckAlerts,
-			alertPolicyObj.Status.OpenAlerts, alertPolicyObj.Status.AcknowledgedAlerts)
+		if alertPolicyObj.GetUUID() != flags.alertPolicyUUID { // nothing to be updated
+			a.logger.Infof("alert policy {%s} not the same as the one that created the alert, skipping update", alertPolicyObj.GetName())
+			return oldObj, nil
+		}
+
 		if flags.incrementAckAlerts != 0 || flags.incrementOpenAlerts != 0 {
 			alertPolicyObj.Status.AcknowledgedAlerts += flags.incrementAckAlerts
 			alertPolicyObj.Status.OpenAlerts += flags.incrementOpenAlerts
@@ -148,10 +151,17 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 	}
 	userSelfLink := (&auth.User{ObjectMeta: *userMeta}).MakeURI("configs", "v1", "auth")
 
+	temp := strings.Split(alert.Status.Reason.GetPolicyID(), "/")
+	if len(temp) != 2 {
+		return nil, false, errInvalidInputType
+	}
+	policyName, policyUUID := temp[0], temp[1]
+
 	// these two variables are used in the closures passed to consistent update requirement.
 	flags := alertUpdateFlags{
-		alert:        alert,
-		userSelfLink: userSelfLink,
+		alert:           alert,
+		userSelfLink:    userSelfLink,
+		alertPolicyUUID: policyUUID,
 	}
 
 	// update alert
@@ -162,7 +172,7 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 	}
 
 	apKey := (&monitoring.AlertPolicy{
-		ObjectMeta: api.ObjectMeta{Name: alert.Status.Reason.GetPolicyID(), Tenant: alert.GetTenant()},
+		ObjectMeta: api.ObjectMeta{Name: policyName, Tenant: alert.GetTenant()},
 	}).MakeKey("monitoring")
 	if err := kv.Get(ctx, apKey, &monitoring.AlertPolicy{}); err == nil {
 		curAlertPolicyObj := &monitoring.AlertPolicy{}

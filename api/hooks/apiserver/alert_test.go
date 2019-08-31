@@ -595,19 +595,17 @@ func setup(t *testing.T) (context.Context, kvstore.Interface, string, string) {
 	ap1Key := (&monitoring.AlertPolicy{
 		ObjectMeta: api.ObjectMeta{Name: "ap1", Tenant: globals.DefaultTenant},
 	}).MakeKey("monitoring")
-	err = kvs.Create(context.Background(),
-		ap1Key,
-		&monitoring.AlertPolicy{
-			TypeMeta: api.TypeMeta{Kind: "AlertPolicy"},
-			ObjectMeta: api.ObjectMeta{
-				Name:   "ap1",
-				Tenant: globals.DefaultTenant,
-			},
-			Status: monitoring.AlertPolicyStatus{
-				OpenAlerts: 1,
-			},
+	ap := &monitoring.AlertPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AlertPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "ap1",
+			Tenant: globals.DefaultTenant,
 		},
-	)
+		Status: monitoring.AlertPolicyStatus{
+			OpenAlerts: 1,
+		},
+	}
+	err = kvs.Create(context.Background(), ap1Key, ap)
 	AssertOk(t, err, "failed to create alert policy, err: %v", err)
 
 	// create alert
@@ -627,7 +625,7 @@ func setup(t *testing.T) (context.Context, kvstore.Interface, string, string) {
 			},
 			Status: monitoring.AlertStatus{
 				Reason: monitoring.AlertReason{
-					PolicyID: "ap1",
+					PolicyID: fmt.Sprintf("%s/%s", ap.GetName(), ap.GetUUID()),
 				},
 			},
 		},

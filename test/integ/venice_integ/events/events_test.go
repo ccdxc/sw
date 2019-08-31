@@ -999,44 +999,45 @@ func TestEventsAlertEngine(t *testing.T) {
 		expSuccess bool
 	}{
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
-				alertPolicy1.GetName(), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy1.GetName(), alertPolicy1.GetUUID(), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
 			expMessage: fmt.Sprintf("(tenant:%s) test %s unresponsive", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
-				alertPolicy1.GetName(), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy1.GetName(), alertPolicy1.GetUUID(), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
 			expMessage: fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s",
-				alertPolicy1.GetName(), alertPolicy1.Spec.GetSeverity()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s,status.severity=%s",
+				alertPolicy1.GetName(), alertPolicy1.GetUUID(), alertPolicy1.Spec.GetSeverity()),
 			expMessage: fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
-				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy2.GetName(), alertPolicy2.GetUUID(), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
 			expMessage: fmt.Sprintf("(tenant:%s) test %s stopped", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,meta.tenant=%s",
-				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), globals.DefaultTenant),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s,status.severity=%s,meta.tenant=%s",
+				alertPolicy2.GetName(), alertPolicy2.GetUUID(), alertPolicy2.Spec.GetSeverity(), globals.DefaultTenant),
 			expMessage: fmt.Sprintf("(tenant:%s) test %s stopped", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
-				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy2.GetName(), alertPolicy2.GetUUID(), alertPolicy2.Spec.GetSeverity(),
+				dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
 			expMessage: fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), "invalid"),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s,status.severity=%s,status.object-ref.kind=%s",
+				alertPolicy2.GetName(), alertPolicy2.GetUUID(), alertPolicy2.Spec.GetSeverity(), "invalid"),
 			expMessage: fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
 			expSuccess: false,
 		},
@@ -1119,7 +1120,9 @@ func TestEventsAlertEngine(t *testing.T) {
 		&api.ListWatchOptions{
 			ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant},
 			FieldSelector: fmt.Sprintf("status.reason.alert-policy-id in (%s,%s,%s)",
-				alertPolicy1.GetName(), alertPolicy2.GetName(), alertPolicy3.GetName()),
+				fmt.Sprintf("%s/%s", alertPolicy1.GetName(), alertPolicy1.GetUUID()),
+				fmt.Sprintf("%s/%s", alertPolicy2.GetName(), alertPolicy2.GetUUID()),
+				fmt.Sprintf("%s/%s", alertPolicy3.GetName(), alertPolicy3.GetUUID())),
 		})
 	AssertOk(t, err, "failed to list alerts, err: %v", err)
 	Assert(t, len(alerts) > 2, "expected more than 2 alerts, got: %v", len(alerts))
@@ -1135,7 +1138,8 @@ func TestEventsAlertEngine(t *testing.T) {
 
 	for _, at := range alertTests {
 		aURL := fmt.Sprintf("https://%s/configs/monitoring/v1/alerts/%s", apiGwAddr, at.alert.GetName())
-		apURL := fmt.Sprintf("https://%s/configs/monitoring/v1/alertPolicies/%s", apiGwAddr, at.alert.Status.Reason.GetPolicyID())
+		apURL := fmt.Sprintf("https://%s/configs/monitoring/v1/alertPolicies/%s", apiGwAddr,
+			strings.Split(at.alert.Status.Reason.GetPolicyID(), "/")[0])
 
 		httpClient := netutils.NewHTTPClient()
 		httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})

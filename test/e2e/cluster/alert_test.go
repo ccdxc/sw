@@ -52,7 +52,7 @@ var _ = Describe("alert test", func() {
 			}
 
 			for _, alert := range alerts {
-				if alert.Status.Reason.GetPolicyID() == alertPolicy1.GetName() &&
+				if alert.Status.Reason.GetPolicyID() == fmt.Sprintf("%s/%s", alertPolicy1.GetName(), alertPolicy1.GetUUID()) &&
 					strings.Contains(alert.Status.GetMessage(), fmt.Sprintf("pen-citadel stopped on %s", serviceStoppedOn)) {
 					return true
 				}
