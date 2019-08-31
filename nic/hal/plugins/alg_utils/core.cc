@@ -406,6 +406,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
     SET_EXP_FLOW_KEY(exp_flow->entry.key, key);
     insert_expected_flow(&exp_flow->entry);
     dllist_reset(&exp_flow->exp_flow_lentry);
+    dllist_reset(&exp_flow->fte_feature_state.session_feature_lentry);
     dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
@@ -439,6 +440,7 @@ hal_ret_t alg_state::alloc_and_insert_l4_sess(app_session_t *app_sess,
     SDK_SPINLOCK_LOCK(&app_sess->slock);
     alg_status->app_session = app_sess;
     dllist_reset(&alg_status->l4_sess_lentry);
+    dllist_reset(&alg_status->fte_feature_state.session_feature_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &alg_status->l4_sess_lentry);
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 

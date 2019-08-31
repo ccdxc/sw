@@ -39,6 +39,7 @@ void *process_packets (void *ptr)
 
 TEST_F(tftp_test, tftp_e2e)
 {
+#if 0
     pthread_t mThreadID1, mThreadID2, mThreadID3;
 
     SetUpE2ETestCase();
@@ -51,4 +52,5 @@ TEST_F(tftp_test, tftp_e2e)
     pthread_cancel(mThreadID3);
     pthread_join(mThreadID1, NULL);
     pthread_join(mThreadID3, NULL);
+#endif
 }

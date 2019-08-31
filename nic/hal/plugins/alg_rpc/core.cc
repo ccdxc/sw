@@ -350,7 +350,8 @@ void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
         g_rpc_state->alg_info_slab()->free((rpc_info_t *)l4_sess->info);
     }
 
-    if (l4_sess->sess_hdl != HAL_HANDLE_INVALID)
+    if (l4_sess->sess_hdl != HAL_HANDLE_INVALID &&
+        !dllist_empty(&l4_sess->fte_feature_state.session_feature_lentry))
         dllist_del(&l4_sess->fte_feature_state.session_feature_lentry);
 }
 

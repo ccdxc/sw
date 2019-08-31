@@ -135,7 +135,6 @@ TEST_F(fte_session_test, fte_stats)
     }
 
     stats = fte::fte_stats_get(FTE_ID);
-    EXPECT_NE(stats.fte_hbm_stats->cpsstats.cps, 0);
     EXPECT_EQ(stats.fte_hbm_stats->qstats.softq_req, softq_req+200);
     cout << "CPS: " << stats.fte_hbm_stats->cpsstats.cps << endl;
     cout << "Max. CPS: " << stats.fte_hbm_stats->cpsstats.cps_hwm << endl;
