@@ -85,7 +85,7 @@ func TestBrokerTstoreBasic(t *testing.T) {
 			return false, nil
 		}
 		for _, nd := range brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap {
-			if nd.NumShards != 4 {
+			if nd.NumShards != (meta.DefaultShardCount*meta.DefaultReplicaCount)/numNodes {
 				return false, []interface{}{brokers[0].GetCluster(meta.ClusterTypeTstore), nd}
 			}
 		}
@@ -365,7 +365,7 @@ func TestBrokerKstoreBasic(t *testing.T) {
 			return false, nil
 		}
 		for _, nd := range brokers[0].GetCluster(meta.ClusterTypeKstore).NodeMap {
-			if nd.NumShards != 4 {
+			if nd.NumShards != (meta.DefaultShardCount*meta.DefaultReplicaCount)/numNodes {
 				return false, []interface{}{brokers[0].GetCluster(meta.ClusterTypeKstore), nd}
 			}
 		}
@@ -502,7 +502,7 @@ func TestBrokerAggQuery(t *testing.T) {
 			return false, nil
 		}
 		for _, nd := range brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap {
-			if nd.NumShards != 4 {
+			if nd.NumShards != (meta.DefaultShardCount*meta.DefaultReplicaCount)/numNodes {
 				return false, []interface{}{brokers[0].GetCluster(meta.ClusterTypeTstore), nd}
 			}
 		}
@@ -605,7 +605,7 @@ func TestBrokerTstoreWriteRetry(t *testing.T) {
 				return false, nil
 			}
 			for _, nd := range brokers[idx].GetCluster(meta.ClusterTypeTstore).NodeMap {
-				if nd.NumShards != 4 {
+				if nd.NumShards != (meta.DefaultShardCount*meta.DefaultReplicaCount)/numNodes {
 					return false, []interface{}{brokers[idx].GetCluster(meta.ClusterTypeTstore), nd}
 				}
 			}
@@ -681,7 +681,7 @@ func TestBrokerBenchmark(t *testing.T) {
 			return false, nil
 		}
 		for _, nd := range broker.GetCluster(meta.ClusterTypeTstore).NodeMap {
-			if nd.NumShards != 4 {
+			if nd.NumShards != (meta.DefaultShardCount*meta.DefaultReplicaCount)/numNodes {
 				return false, []interface{}{broker.GetCluster(meta.ClusterTypeTstore), nd}
 			}
 		}

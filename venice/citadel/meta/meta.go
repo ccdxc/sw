@@ -135,6 +135,7 @@ type ClusterConfig struct {
 	NumShards           uint32             // number of shards in shardmap
 	DesiredReplicas     uint32             // desired number of replicas
 	NodeTTL             uint64             // TTL for the node keepalives
+	MaxSyncMsgSize      int                // Max sync message size
 	DeadInterval        time.Duration      // duration after which we declare a node as dead
 	RebalanceInterval   time.Duration      // rebalance interval
 	RebalanceDelay      time.Duration      // delay before starting rebalance loop
@@ -158,13 +159,14 @@ const (
 
 // default values for cluster config
 const (
-	DefaultShardCount          = 8
+	DefaultShardCount          = 16
 	DefaultReplicaCount        = 2
 	DefaultNodeDeadInterval    = time.Second * 30
 	DefaultNodeTTL             = 30
 	DefaultRetentionPeriod     = 7 * 24 * time.Hour
 	DefaultRetentionPolicyName = "default"
 	DefaultMetaStoreRetry      = 180
+	DefaultMaxSyncMsgSize      = 20 * 1024 * 1024 // 20MB
 )
 
 // DefaultClusterConfig returns default cluster config params
@@ -186,6 +188,7 @@ func DefaultClusterConfig() *ClusterConfig {
 		NumShards:           DefaultShardCount,
 		DesiredReplicas:     DefaultReplicaCount,
 		NodeTTL:             DefaultNodeTTL,
+		MaxSyncMsgSize:      DefaultMaxSyncMsgSize,
 		DeadInterval:        DefaultNodeDeadInterval,
 		RebalanceInterval:   time.Second,
 		RebalanceDelay:      time.Second * 5,
