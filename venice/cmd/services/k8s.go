@@ -626,19 +626,9 @@ func (k *k8sService) Stop() {
 	k.isLeader = false
 	if k.modCh != nil {
 		close(k.modCh)
-		k.modCh = nil
 	}
 	if k.cancel != nil {
 		k.cancel()
-		k.cancel = nil
-	}
-
-	if k.client != nil {
-		k.client = nil
-	}
-
-	if k.strClient != nil {
-		k.strClient = nil
 	}
 
 	// release lock so that goroutines can make progress and terminate cleanly
@@ -646,6 +636,11 @@ func (k *k8sService) Stop() {
 
 	// Wait for goroutines to terminate
 	k.Wait()
+
+	k.client = nil
+	k.strClient = nil
+	k.cancel = nil
+	k.modCh = nil
 }
 
 func (k *k8sService) Register(o types.K8sPodEventObserver) {
