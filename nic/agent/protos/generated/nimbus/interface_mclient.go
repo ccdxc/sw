@@ -195,7 +195,7 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 				// update the Interface
 				err = reactor.UpdateInterface(&evt.Interface)
 				if err != nil {
-					log.Errorf("Error updating the Interface {%+v}. Err: %v", evt.Interface, err)
+					log.Errorf("Error updating the Interface {%+v}. Err: %v", evt.Interface.GetKey(), err)
 					client.debugStats.AddInt("UpdateInterfaceError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateInterface", 1)

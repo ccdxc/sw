@@ -195,7 +195,7 @@ func (client *NimbusClient) processNamespaceEvent(evt netproto.NamespaceEvent, r
 				// update the Namespace
 				err = reactor.UpdateNamespace(&evt.Namespace)
 				if err != nil {
-					log.Errorf("Error updating the Namespace {%+v}. Err: %v", evt.Namespace, err)
+					log.Errorf("Error updating the Namespace {%+v}. Err: %v", evt.Namespace.GetKey(), err)
 					client.debugStats.AddInt("UpdateNamespaceError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateNamespace", 1)

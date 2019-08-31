@@ -8,6 +8,8 @@ import (
 	"hash/fnv"
 	"sync"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
@@ -28,15 +30,21 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	if err != nil {
 		return err
 	}
+
+	// Check  for max allowed SGPolicies
+	if len(na.ListSGPolicy()) != 0 {
+		log.Errorf("Exceeds maximum allowed Network Security Policy of %d", globals.MaxAllowedSGPolicies)
+		return fmt.Errorf("exceeds maximum allowed Network Security Policy of %d", globals.MaxAllowedSGPolicies)
+	}
+
 	oldSgp, err := na.FindSGPolicy(sgp.ObjectMeta)
 	if err == nil {
-		// check if the contents are same
-		if !proto.Equal(oldSgp, sgp) {
-			log.Infof("SGPolicy %+v already exists", oldSgp.ObjectMeta)
-			return na.UpdateSGPolicy(sgp)
+		if !proto.Equal(&oldSgp.Spec, &sgp.Spec) {
+			log.Errorf("Network Security Policy  %+v already exists", oldSgp.GetKey())
+			return errors.New("network security policy already exists")
 		}
 
-		log.Infof("Received duplicate security group policy create {%+v}", sgp.ObjectMeta)
+		log.Infof("Received duplicate network security policy create for ep {%+v}", sgp.GetKey())
 		return nil
 	}
 

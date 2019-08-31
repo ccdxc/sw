@@ -209,7 +209,7 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 				// update the {{$crudObject}}
 				err = reactor.Update{{$crudObject}}(&evt.{{$crudObject}})
 				if err != nil {
-					log.Errorf("Error updating the {{$crudObject}} {%+v}. Err: %v", evt.{{$crudObject}}, err)
+					log.Errorf("Error updating the {{$crudObject}} {%+v}. Err: %v", evt.{{$crudObject}}.GetKey(), err)
 					client.debugStats.AddInt("Update{{$crudObject}}Error", 1)
 				} else {
 					client.debugStats.AddInt("Update{{$crudObject}}", 1)

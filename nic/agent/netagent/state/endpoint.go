@@ -302,6 +302,19 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		return err
 	}
 
+	// find the corresponding vrf.
+	vrf, err := na.ValidateVrf(ep.Tenant, ep.Namespace, ep.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ep.Spec.VrfName)
+		return err
+	}
+
+	lifID, err := na.findIntfID(ep, Local)
+	if err != nil {
+		log.Errorf("could not find an interface to associate to the endpoint")
+		return err
+	}
+
 	// check if security groups its referring to exists
 	var sgs []*netproto.SecurityGroup
 	for _, sgname := range ep.Spec.SecurityGroups {
@@ -333,7 +346,7 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 
 	// call the datapath
 	if ep.Spec.NodeUUID == na.NodeUUID {
-		err = na.Datapath.UpdateLocalEndpoint(ep, nw, sgs)
+		err = na.Datapath.UpdateLocalEndpoint(ep, nw, sgs, lifID, ep.Status.EnicID, vrf)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err

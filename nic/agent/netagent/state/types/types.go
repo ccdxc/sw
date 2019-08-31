@@ -291,7 +291,7 @@ type PluginIntf interface {
 type NetDatapathAPI interface {
 	SetAgent(ag DatapathIntf) error
 	CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*IntfInfo, error)
-	UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error
+	UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) error
 	DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error
 	CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, vrf *netproto.Vrf) error
 	UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error

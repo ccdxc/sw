@@ -72,6 +72,9 @@ func TestSGPolicyCreateDelete(t *testing.T) {
 	AssertOk(t, err, "SG Policy was not found in DB")
 	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
 
+	err = ag.DeleteSGPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	AssertOk(t, err, "Error deleting sg policy")
+
 	// verify duplicate tenant creations succeed
 	err = ag.CreateSGPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating duplicate sg policy")

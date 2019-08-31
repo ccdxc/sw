@@ -195,7 +195,7 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 				// update the SecurityProfile
 				err = reactor.UpdateSecurityProfile(&evt.SecurityProfile)
 				if err != nil {
-					log.Errorf("Error updating the SecurityProfile {%+v}. Err: %v", evt.SecurityProfile, err)
+					log.Errorf("Error updating the SecurityProfile {%+v}. Err: %v", evt.SecurityProfile.GetKey(), err)
 					client.debugStats.AddInt("UpdateSecurityProfileError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateSecurityProfile", 1)

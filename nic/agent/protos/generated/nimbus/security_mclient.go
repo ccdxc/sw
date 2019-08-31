@@ -195,7 +195,7 @@ func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroup
 				// update the SecurityGroup
 				err = reactor.UpdateSecurityGroup(&evt.SecurityGroup)
 				if err != nil {
-					log.Errorf("Error updating the SecurityGroup {%+v}. Err: %v", evt.SecurityGroup, err)
+					log.Errorf("Error updating the SecurityGroup {%+v}. Err: %v", evt.SecurityGroup.GetKey(), err)
 					client.debugStats.AddInt("UpdateSecurityGroupError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateSecurityGroup", 1)

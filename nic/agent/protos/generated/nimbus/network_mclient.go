@@ -195,7 +195,7 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 				// update the Network
 				err = reactor.UpdateNetwork(&evt.Network)
 				if err != nil {
-					log.Errorf("Error updating the Network {%+v}. Err: %v", evt.Network, err)
+					log.Errorf("Error updating the Network {%+v}. Err: %v", evt.Network.GetKey(), err)
 					client.debugStats.AddInt("UpdateNetworkError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateNetwork", 1)

@@ -195,7 +195,7 @@ func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, rea
 				// update the SGPolicy
 				err = reactor.UpdateSGPolicy(&evt.SGPolicy)
 				if err != nil {
-					log.Errorf("Error updating the SGPolicy {%+v}. Err: %v", evt.SGPolicy, err)
+					log.Errorf("Error updating the SGPolicy {%+v}. Err: %v", evt.SGPolicy.GetKey(), err)
 					client.debugStats.AddInt("UpdateSGPolicyError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateSGPolicy", 1)

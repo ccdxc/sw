@@ -195,7 +195,7 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 				// update the Endpoint
 				err = reactor.UpdateEndpoint(&evt.Endpoint)
 				if err != nil {
-					log.Errorf("Error updating the Endpoint {%+v}. Err: %v", evt.Endpoint, err)
+					log.Errorf("Error updating the Endpoint {%+v}. Err: %v", evt.Endpoint.GetKey(), err)
 					client.debugStats.AddInt("UpdateEndpointError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateEndpoint", 1)

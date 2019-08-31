@@ -192,14 +192,19 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 }
 
 // UpdateLocalEndpoint updates the endpoint
-func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
 	hd.Lock()
 	defer hd.Unlock()
 	var halIPAddresses []*halproto.IPAddress
+	var lifHandle *halproto.LifKeyHandle
+
 	// convert mac address
+	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
+	macaddr, _ := strconv.ParseUint(hex, 16, 64)
+
 	if len(ep.Spec.IPv4Address) > 0 {
 		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
 		if err != nil {
@@ -217,6 +222,12 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 	}
 
+	vrfKey := halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: vrf.Status.VrfID,
+		},
+	}
+
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
@@ -228,20 +239,20 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		sgHandles = append(sgHandles, &sgKey)
 	}
 
-	l2Handle := halproto.L2SegmentKeyHandle{
-		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
-			L2SegmentHandle: nw.Status.NetworkHandle,
+	l2Key := halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
+			SegmentId: nw.Status.NetworkID,
 		},
 	}
 
-	ifKeyHandle := halproto.InterfaceKeyHandle{
-		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
-			IfHandle: 0, //FIXME
+	ifKey := halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+			InterfaceId: enicID,
 		},
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceKeyHandle: &ifKeyHandle, //FIXME
+		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
 		SgKeyHandle:        sgHandles,
@@ -252,36 +263,99 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			EndpointKey: &halproto.EndpointKey{
 				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
 					L2Key: &halproto.EndpointL2Key{
-						L2SegmentKeyHandle: &l2Handle,
+						L2SegmentKeyHandle: &l2Key,
+						MacAddress:         macaddr,
 					},
 				},
 			},
 		},
 	}
 
+	if lifID != 0 {
+		lifHandle = &halproto.LifKeyHandle{
+			KeyOrHandle: &halproto.LifKeyHandle_LifId{
+				LifId: lifID,
+			},
+		}
+	}
+
+	// build enic message
+	enicSpec := &halproto.InterfaceSpec{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: enicID,
+			},
+		},
+		Type: halproto.IfType_IF_TYPE_ENIC,
+		// associate the lif id
+		IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+			IfEnicInfo: &halproto.IfEnicInfo{
+				EnicType:       halproto.IfEnicType_IF_ENIC_TYPE_USEG,
+				LifKeyOrHandle: lifHandle,
+				EnicTypeInfo: &halproto.IfEnicInfo_EnicInfo{
+					EnicInfo: &halproto.EnicInfo{
+						L2SegmentKeyHandle: &l2Key,
+						MacAddress:         macaddr,
+						EncapVlanId:        ep.Spec.UsegVlan,
+					},
+				},
+			},
+		},
+	}
+
+	enicReqMsg := &halproto.InterfaceRequestMsg{
+		Request: []*halproto.InterfaceSpec{
+			enicSpec,
+		},
+	}
+
+	// create enic
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Ifclient.InterfaceUpdate(context.Background(), enicReqMsg)
+		if err != nil {
+			log.Errorf("Error updating interface. Err: %v", err)
+			return err
+		}
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+		}
+	} else {
+		_, err := hd.Hal.Ifclient.InterfaceUpdate(context.Background(), enicReqMsg)
+		if err != nil {
+			log.Errorf("Error updating interface. Err: %v", err)
+			return err
+		}
+	}
+
 	// build endpoint message
-	epUpdateReq := halproto.EndpointUpdateRequest{
+	epinfo := halproto.EndpointUpdateRequest{
 		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
+		VrfKeyHandle:  &vrfKey,
+	}
+	epReq := halproto.EndpointUpdateRequestMsg{
+		Request: []*halproto.EndpointUpdateRequest{&epinfo},
 	}
 
-	epUpdateReqMsg := halproto.EndpointUpdateRequestMsg{
-		Request: []*halproto.EndpointUpdateRequest{&epUpdateReq},
+	// create endpoint
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Epclient.EndpointUpdate(context.Background(), &epReq)
+		if err != nil {
+			log.Errorf("Error updating endpoint. Err: %v", err)
+			return err
+		}
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+		}
+	} else {
+		_, err := hd.Hal.Epclient.EndpointUpdate(context.Background(), &epReq)
+		if err != nil {
+			log.Errorf("Error updating endpoint. Err: %v", err)
+			return err
+		}
 	}
-
-	// call hal to update the endpoint
-	// FIXME: handle response
-
-	_, err := hd.Hal.Epclient.EndpointUpdate(context.Background(), &epUpdateReqMsg)
-	if err != nil {
-		log.Errorf("Error updating endpoint. Err: %v", err)
-		return err
-	}
-	// save the endpoint message
-	//hd.Lock()
-	hd.DB.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
-	//hd.Unlock()
-
 	return nil
 }
 

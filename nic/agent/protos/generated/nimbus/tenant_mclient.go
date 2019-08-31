@@ -195,7 +195,7 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 				// update the Tenant
 				err = reactor.UpdateTenant(&evt.Tenant)
 				if err != nil {
-					log.Errorf("Error updating the Tenant {%+v}. Err: %v", evt.Tenant, err)
+					log.Errorf("Error updating the Tenant {%+v}. Err: %v", evt.Tenant.GetKey(), err)
 					client.debugStats.AddInt("UpdateTenantError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateTenant", 1)

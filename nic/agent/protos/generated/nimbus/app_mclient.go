@@ -195,7 +195,7 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 				// update the App
 				err = reactor.UpdateApp(&evt.App)
 				if err != nil {
-					log.Errorf("Error updating the App {%+v}. Err: %v", evt.App, err)
+					log.Errorf("Error updating the App {%+v}. Err: %v", evt.App.GetKey(), err)
 					client.debugStats.AddInt("UpdateAppError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateApp", 1)

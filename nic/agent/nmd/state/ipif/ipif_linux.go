@@ -6,9 +6,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"net"
-	"os"
 	"strings"
 	"time"
 
@@ -73,63 +71,69 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 		}
 	}
 
-	if len(ipConfig.DNSServers) > 0 {
-		log.Infof("Got DNS Servers. Populating /etc/resolv.conf with nameservers. %v", ipConfig.DNSServers)
-		var resolvStr string
-		for _, ip := range ipConfig.DNSServers {
-			resolvStr = resolvStr + fmt.Sprintf("nameserver %v\n", ip)
-		}
-		os.Remove("/etc/resolv.conf")
-
-		err := ioutil.WriteFile("/etc/resolv.conf", []byte(resolvStr), 0666)
-		if err != nil {
-			log.Errorf("Failed to write DNS information into resolv.conf")
-		}
-	}
-
 	return addr.String(), nil
 }
 
 // DoDHCPConfig performs dhcp on the management interface and obtains venice co-ordinates
 func (c *IPClient) DoDHCPConfig() error {
+
+	dhcpCtx, cancel := context.WithCancel(context.Background())
+	if c.dhcpState.DhcpCancel != nil {
+		log.Info("Clearing existing dhcp go routines")
+		c.dhcpState.DhcpCancel()
+	}
+	c.dhcpState.DhcpCancel = cancel
+	c.dhcpState.DhcpCtx = dhcpCtx
+
+	// This is needed to enable 1st tick on a large ticker duration. TODO investigate leaks here
 	if err := c.doDHCP(); err == nil {
 		log.Info("DHCP successful")
 		return nil
 	}
 
 	ticker := time.NewTicker(AdmissionRetryDuration)
-	dhcpCtx, cancel := context.WithCancel(context.Background())
-	if c.dhcpCancel != nil {
-		log.Info("Clearing existing dhcp go routines")
-		c.dhcpCancel()
-	}
-	c.dhcpCancel = cancel
 	go func(ctx context.Context) {
+		c := c
 		for {
 			select {
 			case <-ticker.C:
 				log.Info("Retrying DHCP Config")
 				if err := c.doDHCP(); err != nil {
 					log.Errorf("DHCP Config failed due to %v | Retrying...", err)
+					if (c.dhcpState.Client) != nil {
+						if err := c.dhcpState.Client.Close(); err != nil {
+							log.Errorf("Failed to cancel DoDHCPConfig. Err: %v", err)
+						}
+					}
 				}
-
 			case <-ctx.Done():
+				if (c.dhcpState.Client) != nil {
+					if err := c.dhcpState.Client.Close(); err != nil {
+						log.Errorf("Failed to cancel DoDHCPConfig. Err: %v", err)
+					}
+				}
 				return
 			}
 		}
-	}(dhcpCtx)
+	}(c.dhcpState.DhcpCtx)
 	return nil
 }
 
 // StopDHCPConfig will stops the DHCP Control Loop
 func (c *IPClient) StopDHCPConfig() {
-	if c.dhcpCancel != nil {
+	if c.dhcpState.DhcpCancel != nil {
 		log.Info("Cancelling DHCP Control loop")
-		c.dhcpCancel()
+		c.dhcpState.DhcpCancel()
 	}
 }
 
 func (c *IPClient) doDHCP() error {
+	if (c.dhcpState.Client) != nil {
+		if err := c.dhcpState.Client.Close(); err != nil {
+			log.Errorf("Failed to close pktsock during doDHCP init. Err: %v", err)
+		}
+	}
+
 	pktSock, err := dhcp.NewPacketSock(c.intf.Attrs().Index, 68, 67)
 	if err != nil {
 		log.Errorf("Failed to create packet sock Err: %v", err)
@@ -182,13 +186,10 @@ func (c *IPClient) startDHCP(client *dhcp.Client) (err error) {
 		return
 	}
 
-	//c.dhcpState.SetState(dhcpSent)
-
 	ack, err := client.GetAcknowledgement(&req)
 	log.Infof("Get Ack Returned: %v", ack)
 	if err != nil {
 		log.Errorf("Failed to get ack. Err: %v", err)
-		//c.dhcpState.SetState(dhcpTimedout)
 		return
 	}
 
@@ -236,7 +237,12 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 		log.Info("Venice co-ordinates provided via spec. Ignoring vendor options")
 	}
 
-	d.LeaseDuration, err = time.ParseDuration(fmt.Sprintf("%ds", binary.BigEndian.Uint32(opts[dhcp4.OptionIPAddressLeaseTime])))
+	dur, err := time.ParseDuration(fmt.Sprintf("%ds", binary.BigEndian.Uint32(opts[dhcp4.OptionIPAddressLeaseTime])))
+	if err != nil {
+		log.Errorf("Failed to parse the lease duration. Err: %v", err)
+	}
+
+	d.LeaseDuration = dur
 	// Start renewal routine
 	// Kick off a renewal process.
 	go d.startRenewLoop(d.AckPacket, mgmtLink)
@@ -258,7 +264,13 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 		IPNet: &d.IPNet,
 	}
 	if err := netlink.AddrAdd(mgmtLink, addr); err != nil {
-		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", addr, mgmtLink.Attrs().Name, err)
+		// Make this a non error TODO
+		if !strings.Contains(err.Error(), "file exists") {
+			log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", addr, mgmtLink.Attrs().Name, err)
+			return err
+
+		}
+		log.Infof("IP Address %v already present on interface %v. Err: %v", addr, mgmtLink.Attrs().Name, err)
 	}
 	ipCfg := &cluster.IPConfig{
 		IPAddress: addr.String(),
@@ -269,22 +281,24 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 
 func (d *DHCPState) startRenewLoop(ackPacket dhcp4.Packet, mgmtLink netlink.Link) {
 	log.Infof("Starting DHCP renewal loop for interface: %v", mgmtLink.Attrs().Name)
-	defer func() {
-		if err := recover(); err != nil {
-			log.Errorf("Renewal control loop exited. Err: %v", err)
-			log.Infof("Restarting renew loop...")
-			d.startRenewLoop(d.AckPacket, mgmtLink)
-		}
-	}()
 	ticker := time.NewTicker(d.LeaseDuration)
 	for {
 		select {
 		case <-ticker.C:
 			d := d
-			_, newAck, _ := d.Client.Renew(ackPacket)
-			if err := d.updateDHCPState(newAck, mgmtLink); err != nil {
-				log.Errorf("Failed to update DHCP State. Err: %v", err)
+			_, newAck, err := d.Client.Renew(ackPacket)
+			if err != nil {
+				log.Infof("Failed to get the new Ack Packet.  Err: %v | Retrying...", err)
+			} else {
+				log.Infof("Renewed Ack Packet: %v. ", newAck)
+				if err := d.updateDHCPState(newAck, mgmtLink); err != nil {
+					log.Errorf("Failed to update DHCP State. Err: %v", err)
+				}
 			}
+
+		case <-d.DhcpCtx.Done():
+			log.Info("Killing renewal loop")
+			return
 		}
 	}
 }

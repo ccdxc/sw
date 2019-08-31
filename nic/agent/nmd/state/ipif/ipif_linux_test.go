@@ -295,7 +295,7 @@ func TestDHCPRenewal(t *testing.T) {
 	}
 	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
 	ackPktBeforeRenewal := ipClient.dhcpState.AckPacket
-	time.Sleep(leaseDuration)
+	time.Sleep(2 * leaseDuration)
 	ackPktAfterRenewal := ipClient.dhcpState.AckPacket
 	if bytes.Equal(ackPktBeforeRenewal, ackPktAfterRenewal) {
 
@@ -474,6 +474,7 @@ func TestInvalidStaticIPAssignment(t *testing.T) {
 }
 
 func TestRenewalLoopPanics(t *testing.T) {
+	t.Skip("This is no longer needed")
 	var d dhcpSrv
 	err := d.setup(configureNoVendorAtrrs)
 	AssertOk(t, err, "Setup Failed")
