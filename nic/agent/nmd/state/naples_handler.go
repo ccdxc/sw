@@ -657,6 +657,15 @@ func (n *NMD) AdmitNaples() {
 
 					// Start certificates proxy
 					if n.certsListenURL != "" {
+						if n.certsProxy != nil {
+							log.Info("Previous instance of certs proxy found. Stopping it.")
+							n.certsProxy.Stop()
+							n.certsProxy = nil
+
+							// We need to give some time for the port to be released and garbage collected by the OS.
+							time.Sleep(time.Second)
+						}
+
 						certsProxy, err := certsproxy.NewCertsProxy(n.certsListenURL, n.remoteCertsURLs,
 							rpckit.WithTLSProvider(n.tlsProvider), rpckit.WithRemoteServerName(globals.Cmd))
 						if err != nil {
