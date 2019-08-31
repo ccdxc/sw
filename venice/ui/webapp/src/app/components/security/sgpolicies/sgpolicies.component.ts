@@ -29,7 +29,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecuritySGPolicy
 
   // All columns are set as not sortable as it isn't currently supported
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'SG Policy Name', class: 'sgpolicies-column-name', sortable: true, width: 'auto' },
+    { field: 'meta.name', header: 'Policy Name', class: 'sgpolicies-column-name', sortable: true, width: 'auto' },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'sgpolicies-column-date', sortable: true, width: '180px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'sgpolicies-column-date', sortable: true, width: '25' },
   ];
@@ -67,14 +67,14 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecuritySGPolicy
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitysgpolicy_create) && this.uiconfigsService.isFeatureEnabled(Features.createSGPolicy)) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
-        text: 'ADD SG POLICY',
+        text: 'ADD POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
       }];
     }
     this._controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' }]
+      breadcrumb: [{ label: 'Network Security Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' }]
     });
   }
 

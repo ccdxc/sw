@@ -40,7 +40,7 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
   disableTableWhenRowExpanded = true;
   subscriptions: Subscription[] = [];
   isTabComponent = false;
-  exportFilename: string = 'Security-apps';
+  exportFilename: string = 'Apps';
 
   selectedSecurityApp: SecurityApp = null;
 
@@ -88,7 +88,7 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
       buttons = [
         {
           cssClass: 'global-button-primary security-new-app',
-          text: 'ADD SECURITY APP',
+          text: 'ADD APP',
           computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
           callback: () => { this.createNewObject(); }
         }
@@ -96,7 +96,7 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
     }
     this._controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Security Apps', url: Utility.getBaseUIUrl() + 'security/securityapps' }]
+      breadcrumb: [{ label: 'Apps', url: Utility.getBaseUIUrl() + 'security/securityapps' }]
     });
   }
 

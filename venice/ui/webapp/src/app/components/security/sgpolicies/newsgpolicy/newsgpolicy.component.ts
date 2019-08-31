@@ -196,7 +196,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecuritySGPolicy, Securi
     currToolbar.buttons = [
       {
         cssClass: 'global-button-primary global-button-padding',
-        text: 'CREATE SG POLICY',
+        text: 'CREATE POLICY',
         callback: () => { this.saveObject(); },
         computeClass: () => this.computeButtonClass()
       },

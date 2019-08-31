@@ -88,7 +88,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
       currToolbar.buttons = [
         {
           cssClass: 'global-button-primary newsecurityapp-button',
-          text: 'CREATE SECURITY APP ',
+          text: 'CREATE APP ',
           callback: () => { this.savePolicy(); },
           computeClass: () => this.computeButtonClass()
         },

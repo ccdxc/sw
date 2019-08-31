@@ -44,7 +44,7 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/cluster', 'cluster']
       },
       {
-        label: 'Distributed Services Cards',
+        label: 'DSC',
         icon: {
           cssClass: 'app-l-side-nav-cluster-naples'
         },
@@ -79,7 +79,7 @@ export const sideNavMenu: SideNavItem[] = [
     },
     children: [
       {
-        label: 'SG Policies',
+        label: 'Policies',
         icon: {
           cssClass: 'app-l-side-nav-security-securitypolicy'
         },
@@ -96,7 +96,7 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/security', 'securitygroups']
       },
       {
-        label: 'Security Apps',
+        label: 'Apps',
         icon: {
           cssClass: 'app-l-side-nav-security-apps'
         },

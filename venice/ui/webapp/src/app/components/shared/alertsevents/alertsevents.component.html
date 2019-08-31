@@ -142,12 +142,12 @@
               <mat-icon *ngIf="showBatchResolveIcon()" matTooltip="Resolve Selected Alerts"
                         class="global-table-action-icon"
                         (click)="resolveSelectedAlerts()">
-                done
+                done_all
               </mat-icon>
               <mat-icon *ngIf="showBatchAcknowLedgeIcon()" matTooltip="Acknowledge Selected Alerts"
                         class="global-table-action-icon alertsevents-acknowledge-icon"
                         (click)="acknowledgeSelectedAlerts()">
-                archive
+                done
               </mat-icon>
               <mat-icon *ngIf="showBatchOpenIcon()" matTooltip="Mark Selected Alerts as Open"
                         class="global-table-action-icon alertsevents-open-icon"
@@ -257,13 +257,13 @@
                 <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'RESOLVED'"
                           matTooltip="Resolve Alert"
                           class="global-table-action-icon" (click)="resolveAlert(rowData)">
-                  done
+                  done_all
                 </mat-icon>
                 <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'ACKNOWLEDGED'"
                           matTooltip="Acknowledge Alert"
                           class="global-table-action-icon alertsevents-acknowledge-icon"
                           (click)="acknowledgeAlert(rowData)">
-                  archive
+                  done
                 </mat-icon>
                 <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'open'"
                           matTooltip="Mark Alert as Open"

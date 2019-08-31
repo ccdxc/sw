@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyIcon" header="Security Group Policies">
+<app-pagebody [icon]="bodyIcon" header="Network Security Policies">
   <app-tableviewedit fxLayout="column" class="fwlogpolicies-widget"
                      [creatingMode]="creatingMode"
                      [showRowExpand]="showRowExpand"
@@ -14,7 +14,8 @@
 </app-pagebody>
 
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="SG Policies" [total]="count" [icon]="tableIcon" width="250px">
+  <app-tableheader title="Network Security Policies" [total]="count" [icon]="tableIcon"
+                   width="250px">
   </app-tableheader>
 </ng-template>
 

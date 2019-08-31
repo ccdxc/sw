@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyIcon" header="Security Apps Overview">
+<app-pagebody [icon]="bodyIcon" header="Apps Overview">
   <app-tableviewedit fxLayout="column" class="securityapps-widget"
                      [creatingMode]="creatingMode"
                      [showRowExpand]="showRowExpand"
@@ -15,7 +15,7 @@
 </app-pagebody>
 
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Security Apps" [total]="count" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Apps" [total]="count" [icon]="headerIcon" width="250px">
   </app-tableheader>
 </ng-template>
 
@@ -43,7 +43,7 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newsecurityapp [style.width]="'100%'" [@slideInOut] (formClose)="creationFormClose()"
-                      [objectData]="rowData" [existingApps]="dataObjects"
+  <app-newsecurityapp [style.width]="'100%'" [@slideInOut] (formClose)="closeRowExpand()"
+                      [objectData]="rowData" [existingApps]="dataObjects" [isInline]="true"
                       fxFlex="none"></app-newsecurityapp>
 </ng-template>

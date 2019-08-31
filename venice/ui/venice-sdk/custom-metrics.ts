@@ -123,8 +123,8 @@ export const customMetrics  = [
   {
     name: 'DistributedServiceCard',
     objectKind: 'DistributedServiceCard',
-    displayName: 'Naples',
-    description: 'Contains metrics reported from the Naples',
+    displayName: 'DSC',
+    description: 'Contains metrics reported from the DSC',
     tags: [
       "Level7"
     ],
@@ -233,8 +233,8 @@ export const customMetrics  = [
       },
       {
         name: 'reporterID',
-        displayName: 'Naples',
-        description: 'Name of reporting Naples',
+        displayName: 'DSC',
+        description: 'Name of reporting DSC',
         baseType: 'string',
         jsType: 'string',
         isTag: true,
@@ -253,8 +253,8 @@ export const customMetrics  = [
     fields: [
       {
         name: 'AdmittedNICs',
-        displayName: 'Admitted NICs',
-        description: 'Number of admitted NICs',
+        displayName: 'Admitted DSCs',
+        description: 'Number of admitted DSCs',
         units: 'count',
         baseType: 'gauge',
         jsType: 'number',
@@ -265,8 +265,8 @@ export const customMetrics  = [
       },
       {
         name: 'DecommissionedNICs',
-        displayName: 'Decomissioned NICs',
-        description: 'Number of decommissioned NICs',
+        displayName: 'Decomissioned DSCs',
+        description: 'Number of decommissioned DSCs',
         units: 'count',
         baseType: 'gauge',
         jsType: 'number',
@@ -277,8 +277,8 @@ export const customMetrics  = [
       },
       {
         name: 'DisconnectedNICs',
-        displayName: 'Disconnected NICs',
-        description: 'Number of disconnected NICs',
+        displayName: 'Disconnected DSCs',
+        description: 'Number of disconnected DSCs',
         units: 'count',
         baseType: 'gauge',
         jsType: 'number',
@@ -289,8 +289,8 @@ export const customMetrics  = [
       },
       {
         name: 'HealthyNICs',
-        displayName: 'Healthy NICs',
-        description: 'Number of healthy NICs',
+        displayName: 'Healthy DSCs',
+        description: 'Number of healthy DSCs',
         units: 'count',
         baseType: 'gauge',
         jsType: 'number',
@@ -301,8 +301,8 @@ export const customMetrics  = [
       },
       {
         name: 'PendingNICs',
-        displayName: 'Pending NICs',
-        description: 'Number of pending NICs',
+        displayName: 'Pending DSCs',
+        description: 'Number of pending DSCs',
         units: 'count',
         baseType: 'gauge',
         jsType: 'number',
@@ -313,8 +313,8 @@ export const customMetrics  = [
       },
       {
         name: 'RejectedNICs',
-        displayName: 'Rejected NICs',
-        description: 'Number of rejected NICs',
+        displayName: 'Rejected DSCs',
+        description: 'Number of rejected DSCs',
         units: 'count',
         baseType: 'gauge',
         jsType: 'number',
@@ -325,8 +325,8 @@ export const customMetrics  = [
       },
       {
         name: 'UnhealthyNICs',
-        displayName: 'Unhealthy NICs',
-        description: 'Number of unhealthy NICs',
+        displayName: 'Unhealthy DSCs',
+        description: 'Number of unhealthy DSCs',
         units: 'count',
         baseType: 'gauge',
         jsType: 'number',

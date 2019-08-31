@@ -78,7 +78,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       top: '9px',
       left: '8px',
     },
-    url: '/assets/images/icons/cluster/naples/ico-naples-black.svg',
+    url: '/assets/images/icons/cluster/naples/ico-dsc-black.svg',
   };
 
   cardColor = '#b592e3';
