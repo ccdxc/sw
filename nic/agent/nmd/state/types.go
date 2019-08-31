@@ -18,7 +18,6 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -70,7 +69,6 @@ type NMD struct {
 	certsProxy      *certsproxy.CertsProxy            // the CertsProxy instance
 	tlsProvider     *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
 	// Rollout related stuff
-	completedOps map[roprotos.DSCOpSpec]bool // the ops that were requested by spec and got completed
 	ro           nmd.NaplesRollout
 	objectMeta   api.ObjectMeta
 	profiles     []*nmd.NaplesProfile

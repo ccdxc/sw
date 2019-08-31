@@ -26,5 +26,7 @@ message NaplesRollout {
                                                    (gogoproto.jsontag) = "completed,omitempty"];
     protos.DSCOpSpec InProgressOp = 5 [(gogoproto.nullable) = false,
                                             (gogoproto.jsontag) = "inprogress,omitempty"];
+    repeated protos.DSCOpSpec CompletedOps = 6 [(gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = "completed,omitempty"];
 }
 

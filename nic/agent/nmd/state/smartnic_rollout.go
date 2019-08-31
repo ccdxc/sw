@@ -22,12 +22,6 @@ import (
 func (n *NMD) CreateUpdateDSCRollout(sro *protos.DSCRollout) error {
 	n.Lock()
 	defer n.Unlock()
-
-	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp || len(n.ro.OpStatus) != 0 {
-		log.Errorf("A previously issued Rollout %v state exists. Please DELETE it before proceeding.", n.ro)
-		return fmt.Errorf("delete previous rollout before proceeding")
-	}
-
 	n.objectMeta = sro.ObjectMeta
 	n.updateOps(sro.Spec.Ops)
 	n.issueNextPendingOp()
@@ -72,6 +66,30 @@ func (n *NMD) updateRolloutStatus(inProgressOp protos.DSCOpSpec) {
 	}
 }
 
+func (n *NMD) isOpCompleted(op protos.DSCOpSpec) bool {
+	for _, o := range n.ro.CompletedOps {
+		if o == op {
+			return true
+		}
+	}
+	return false
+}
+
+func (n *NMD) appendCompletedOps(op protos.DSCOpSpec) {
+	n.ro.CompletedOps = append(n.ro.CompletedOps, op)
+}
+
+func (n *NMD) removeFromCompletedOps(op protos.DSCOpSpec) {
+	completedOps := []protos.DSCOpSpec{}
+	for _, o := range n.ro.CompletedOps {
+		if o == op {
+			continue
+		}
+		completedOps = append(completedOps, o)
+	}
+	n.ro.CompletedOps = completedOps
+}
+
 // new/update request came from venice
 /*
 	Clear the pending list
@@ -86,16 +104,16 @@ func (n *NMD) updateOps(ops []protos.DSCOpSpec) error {
 	for _, o := range ops {
 		newOps[o] = true
 
-		if n.completedOps[o] || (n.ro.InProgressOp == o) {
+		if n.isOpCompleted(o) || (n.ro.InProgressOp == o) {
 			continue
 		} else {
 			newPendingOps = append(newPendingOps, o)
 		}
 	}
 	n.ro.PendingOps = newPendingOps
-	for o := range n.completedOps {
+	for _, o := range n.ro.CompletedOps {
 		if !newOps[o] {
-			delete(n.completedOps, o)
+			n.removeFromCompletedOps(o)
 			// remove o from Status also
 			newOpStatus := []protos.DSCOpStatus{}
 			for _, st := range n.ro.OpStatus {
@@ -106,13 +124,13 @@ func (n *NMD) updateOps(ops []protos.DSCOpSpec) error {
 			n.ro.OpStatus = newOpStatus
 		}
 	}
-	log.Infof("state after updateOps is completed:%s inProgress:%s pending:%s ro.OpStatus:%s", spew.Sdump(n.completedOps), n.ro.InProgressOp, spew.Sdump(n.ro.PendingOps), spew.Sdump(n.ro.OpStatus))
+	log.Infof("state after updateOps is completed:%s inProgress:%s pending:%s ro.OpStatus:%s", spew.Sdump(n.ro.CompletedOps), n.ro.InProgressOp, spew.Sdump(n.ro.PendingOps), spew.Sdump(n.ro.OpStatus))
 	return nil
 }
 
 // MUST be called with lock held
 func (n *NMD) issueNextPendingOp() {
-	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.completedOps), n.ro.InProgressOp, spew.Sdump(n.ro.PendingOps))
+	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.ro.CompletedOps), n.ro.InProgressOp, spew.Sdump(n.ro.PendingOps))
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		log.Infof("An op is currently in progress.  %v", n.ro.InProgressOp.Op)
 		return // an op is already in progress...
@@ -251,7 +269,7 @@ func (n *NMD) UpgSuccessful() {
 
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		n.updateOpStatus(n.ro.InProgressOp.Op, n.ro.InProgressOp.Version, "success", message)
-		n.completedOps[n.ro.InProgressOp] = true
+		n.appendCompletedOps(n.ro.InProgressOp)
 		n.updateRolloutStatus(protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp})
 	} else {
 		log.Infof("UpgSuccessful got called when there is no pending Op")
@@ -270,7 +288,7 @@ func (n *NMD) UpgFailed(errStrList *[]string) {
 
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		n.updateOpStatus(n.ro.InProgressOp.Op, n.ro.InProgressOp.Version, "failure", message)
-		n.completedOps[n.ro.InProgressOp] = true
+		n.appendCompletedOps(n.ro.InProgressOp)
 		n.updateRolloutStatus(protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp})
 	} else {
 		log.Infof("UpgFailed got called when there is no pending Op")
@@ -287,7 +305,7 @@ func (n *NMD) UpgPossible() {
 	message := ""
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		n.updateOpStatus(n.ro.InProgressOp.Op, n.ro.InProgressOp.Version, "success", message)
-		n.completedOps[n.ro.InProgressOp] = true
+		n.appendCompletedOps(n.ro.InProgressOp)
 		n.updateRolloutStatus(protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp})
 	} else {
 		log.Infof("UpgPossible got called when there is no pending Op")
@@ -307,7 +325,7 @@ func (n *NMD) UpgNotPossible(errStrList *[]string) {
 
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		n.updateOpStatus(n.ro.InProgressOp.Op, n.ro.InProgressOp.Version, "failure", message)
-		n.completedOps[n.ro.InProgressOp] = true
+		n.appendCompletedOps(n.ro.InProgressOp)
 		n.updateRolloutStatus(protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp})
 	} else {
 		log.Infof("UpgNotPossible got called when there is no pending Op")
