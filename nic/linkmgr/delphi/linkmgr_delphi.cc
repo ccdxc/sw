@@ -202,41 +202,50 @@ error port_svc::update_port_status(google::protobuf::uint32 port_num,
 }
 
 void
-port_event_notify (uint32_t port_num, port_event_t event,
-                   port_speed_t port_speed)
+port_event_notify (port_event_info_t *port_event_info)
 {
     kh::PortKeyHandle port_key_handle;
+    const char *port_str = NULL;
+    uint32_t logical_port = port_event_info->logical_port;
+    port_event_t port_event = port_event_info->event;
+    port_speed_t port_speed = port_event_info->speed;
+    port_type_t port_type = port_event_info->type;
 
     if (port_svc_get() == NULL) {
         return;
     }
 
-    port_key_handle.set_port_id(port_num);
-    switch (event) {
+    port_str =
+        sdk::lib::catalog::logical_port_to_str(logical_port, port_type).c_str();
+
+    port_key_handle.set_port_id(logical_port);
+    switch (port_event) {
     case port_event_t::PORT_EVENT_LINK_UP:
-        HAL_TRACE_DEBUG("port: {}, Link UP", port_num);
+        HAL_TRACE_DEBUG("port: {}, {}, Link UP",
+                        logical_port, port_str);
         port_svc_get()->update_port_status(
-                            port_num,
+                            logical_port,
                             port::PORT_OPER_STATUS_UP,
                             sdk_port_speed_to_port_speed_spec(port_speed));
         events_recorder_get()->event(
                             eventtypes::LINK_UP,
                             "PortKeyHandle",
                             port_key_handle,
-                            "Port: %d, Link UP", port_num);
+                            "Port: %s, Link UP", port_str);
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
-        HAL_TRACE_DEBUG("port: {}, Link DOWN", port_num);
+        HAL_TRACE_DEBUG("port: {}, {}, Link DOWN",
+                        logical_port, port_str);
         port_svc_get()->update_port_status(
-                            port_num,
+                            logical_port,
                             port::PORT_OPER_STATUS_DOWN,
                             sdk_port_speed_to_port_speed_spec(port_speed));
         events_recorder_get()->event(
                             eventtypes::LINK_DOWN,
                             "PortKeyHandle",
                             port_key_handle,
-                            "Port: %d, Link DOWN", port_num);
+                            "Port: %s, Link DOWN", port_str);
         break;
 
     default:

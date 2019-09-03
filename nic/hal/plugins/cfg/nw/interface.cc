@@ -4972,16 +4972,18 @@ end:
 }
 
 void
-port_event_cb (uint32_t port_num, port_event_t event,
-               port_speed_t port_speed)
+port_event_cb (port_event_info_t *port_event_info)
 {
     if_port_timer_ctxt_t *ctxt =
         (if_port_timer_ctxt_t *)g_hal_state->port_timer_ctxt_slab()->alloc();
-    ctxt->port_num   = port_num;
-    ctxt->event      = event;
-    ctxt->port_speed = port_speed;
+    ctxt->port_num   = port_event_info->logical_port;
+    ctxt->event      = port_event_info->event;
+    ctxt->port_speed = port_event_info->speed;
+    ctxt->port_type  = port_event_info->type;
     HAL_TRACE_DEBUG("Starting port timer. Port: {}, Event: {}, Speed: {}",
-                    port_num, (uint32_t)event, (uint32_t)port_speed);
+                    port_event_info->logical_port,
+                    (uint32_t)port_event_info->event,
+                    (uint32_t)port_event_info->speed);
     // Start a timer
     sdk::lib::timer_schedule(sdk::linkmgr::SDK_TIMER_ID_PORT_EVENT,
                              250, /* Milliseconds */
@@ -4997,13 +4999,19 @@ sdk_ret_t
 port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     if_port_timer_ctxt_t *port_ctxt = (if_port_timer_ctxt_t *)ctxt;
+    port_event_info_t port_event_info;
+
+    port_event_info.logical_port = port_ctxt->port_num;
+    port_event_info.event = port_ctxt->event;
+    port_event_info.speed = port_ctxt->port_speed;
+    port_event_info.type  = port_ctxt->port_type;
+
     HAL_TRACE_DEBUG("Timer fired. Port: {}, Event: {}, Speed: {}",
                     port_ctxt->port_num, (uint32_t)port_ctxt->event,
                     (uint32_t)port_ctxt->port_speed);
     sdk::linkmgr::port_set_leds(port_ctxt->port_num, port_ctxt->event);
     if_port_oper_state_process_event(port_ctxt->port_num, port_ctxt->event);
-    linkmgr::port_event_notify(port_ctxt->port_num, port_ctxt->event,
-                               port_ctxt->port_speed);
+    linkmgr::port_event_notify(&port_event_info);
 
     // Free ctxt
     hal::delay_delete_to_slab(HAL_SLAB_PORT_TIMER_CTXT, ctxt);

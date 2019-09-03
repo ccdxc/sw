@@ -48,13 +48,9 @@ void xcvr_event_cb(xcvr_event_info_t *xcvr_event_info);
 
 /**
  * @brief        Handle link UP/Down events
- * @param[in]    port_num    port number of the port
- * @param[in]    event       link UP/Down event
- * @param[in]    port_speed  speed of the port
+ * @param[in]    port_event_info port event information
  */
-void port_event_cb(uint32_t port_num,
-                   port_event_t event,
-                   port_speed_t port_speed);
+void port_event_cb(port_event_info_t *port_event_info);
 
 /**
   * @brief    start aacs server

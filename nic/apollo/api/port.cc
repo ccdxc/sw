@@ -21,23 +21,23 @@ namespace api {
 
 /**
  * @brief        Handle link UP/Down events
- * @param[in]    logical_port    logical port number of the port
- * @param[in]    event           link UP/Down event
- * @param[in]    port_speed      speed of the port
+ * @param[in]    port_event_info port event information
  */
 void
-port_event_cb (uint32_t logical_port, port_event_t event,
-               port_speed_t port_speed)
+port_event_cb (port_event_info_t *port_event_info)
 {
     ::core::event_t *evnt;
+    uint32_t logical_port = port_event_info->logical_port;
+    port_event_t port_event = port_event_info->event;
+    port_speed_t port_speed = port_event_info->speed;
 
-    sdk::linkmgr::port_set_leds(logical_port, event);
+    sdk::linkmgr::port_set_leds(logical_port, port_event);
     evnt = ::core::event_alloc();
     if (evnt) {
         evnt->event_id = EVENT_ID_PORT;
         evnt->port.port_id =
             sdk::lib::catalog::logical_port_to_ifindex(logical_port);
-        evnt->port.event = event;
+        evnt->port.event = port_event;
         evnt->port.speed = port_speed;
     }
     if (event_enqueue(evnt, core::THREAD_ID_NICMGR) == false) {
@@ -51,7 +51,7 @@ port_event_cb (uint32_t logical_port, port_event_t event,
 bool
 xvcr_event_walk_cb (void *entry, void *ctxt)
 {
-     int phy_port;
+    int phy_port;
     uint32_t logical_port;
     pds_ifindex_t ifindex;
     if_entry *intf = (if_entry *)entry;

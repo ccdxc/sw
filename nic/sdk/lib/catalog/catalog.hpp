@@ -23,6 +23,8 @@ using boost::property_tree::ptree;
 #define MAX_PORT_SPEEDS    8
 #define MAX_BO_MODES       4
 #define DEFAULT_CATALOG_PATH    "/nic/conf/"
+// TODO only applicable for Capri
+#define MGMT_BASE_PORT     9
 
 typedef enum card_id_e {
     CARD_ID_NAPLES100,
@@ -167,6 +169,8 @@ public:
     static uint32_t ifindex_to_logical_port(uint32_t ifindex);
     static uint32_t ifindex_to_phy_port(uint32_t ifindex);
     static uint32_t logical_port_to_ifindex(uint32_t logical_port);
+    static std::string logical_port_to_str(
+                        uint32_t logical_port, port_type_t port_type);
     static uint8_t slot(void) { return 1; }
 
     // catalog to sdk conversion

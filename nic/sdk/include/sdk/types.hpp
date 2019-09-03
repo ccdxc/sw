@@ -196,9 +196,14 @@ typedef struct xcvr_event_info_s {
     uint8_t           xcvr_sprom[XCVR_SPROM_SIZE];
 } xcvr_event_info_t;
 
-typedef void (*port_event_notify_t)(uint32_t port_num,
-                                    port_event_t port_event,
-                                    port_speed_t port_speed);
+typedef struct port_event_info_s {
+    uint32_t     logical_port;  // logical port number
+    port_event_t event;         // link UP/Down event
+    port_speed_t speed;         // speed of the port
+    port_type_t  type;          // type of the port
+} port_event_info_t;
+
+typedef void (*port_event_notify_t)(port_event_info_t *port_event_info);
 
 }    // namespace types
 }    // namespace sdk
@@ -217,6 +222,7 @@ using sdk::types::cable_type_t;
 using sdk::types::xcvr_event_info_t;
 using sdk::types::xcvr_sprom_data_t;
 using sdk::types::port_event_notify_t;
+using sdk::types::port_event_info_t;
 using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;

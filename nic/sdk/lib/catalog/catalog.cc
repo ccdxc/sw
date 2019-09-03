@@ -981,6 +981,19 @@ catalog::logical_port_to_ifindex(uint32_t logical_port)
     return ETH_IFINDEX(slot(), parent, child);
 }
 
+std::string
+catalog::logical_port_to_str(uint32_t logical_port, port_type_t port_type)
+{
+    uint32_t parent = 0;
+
+    if (port_type == port_type_t::PORT_TYPE_ETH) {
+        parent = ((logical_port - 1)/MAX_PORT_LANES) + 1;
+        return "eth" + std::to_string(slot()) + "/" + std::to_string(parent);
+    }
+    parent = logical_port - MGMT_BASE_PORT;
+    return "mgmt" + std::to_string(parent);
+}
+
 uint32_t
 catalog::ifindex_to_tm_port(uint32_t ifindex)
 {

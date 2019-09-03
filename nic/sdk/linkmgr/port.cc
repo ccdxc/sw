@@ -1360,9 +1360,11 @@ port::port_disable(void)
 }
 
 sdk_ret_t
-port::port_event_notify(port_event_t event)
+port::port_event_notify(port_event_t port_event)
 {
-    switch(event) {
+    port_event_info_t port_event_info;
+
+    switch(port_event) {
     case port_event_t::PORT_EVENT_LINK_UP:
         break;
 
@@ -1377,8 +1379,13 @@ port::port_event_notify(port_event_t event)
         break;
     }
 
+    port_event_info.logical_port = port_num();
+    port_event_info.event = port_event;
+    port_event_info.speed = port_speed();
+    port_event_info.type = port_type();
+
     if (g_linkmgr_cfg.port_event_cb) {
-        g_linkmgr_cfg.port_event_cb(port_num(), event, port_speed());
+        g_linkmgr_cfg.port_event_cb(&port_event_info);
     }
 
     return SDK_RET_OK;

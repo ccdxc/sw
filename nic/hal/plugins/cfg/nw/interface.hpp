@@ -278,6 +278,7 @@ typedef struct if_port_timer_ctxt_s {
     uint32_t port_num;
     port_event_t event;
     port_speed_t port_speed;
+    port_type_t  port_type;
 } __PACK__ if_port_timer_ctxt_t;
 
 static inline void
@@ -399,8 +400,7 @@ hal_ret_t hal_if_repin_ipfix_flows(if_t *uplink);
 hal_ret_t if_port_oper_state_process_event(uint32_t fp_port_num, port_event_t event);
 const char*if_status_to_str(IfStatus status);
 sdk_ret_t port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt);
-void port_event_cb (uint32_t port_num, port_event_t event,
-                    port_speed_t port_speed);
+void port_event_cb (port_event_info_t *port_event_info);
 
 }    // namespace hal
 

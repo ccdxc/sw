@@ -16,6 +16,7 @@ enum {
     IF_TYPE_ETH     = 1,
     IF_TYPE_ETH_PC  = 2,
     IF_TYPE_TUNNEL  = 3,
+    IF_TYPE_MGMT    = 4,
 };
 
 #define IF_TYPE_SHIFT                            28
