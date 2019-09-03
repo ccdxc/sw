@@ -26,7 +26,10 @@
 #define FTE_EXPORT_STATS_SIZE     7
 #define FTE_LIFQ_METRICS_OFFSET   16
 #define FTE_MAX_SOFTQ_BATCH_SZ    128
+namespace hal {
+extern hal::session_stats_t  *g_session_stats;
 
+}
 namespace fte {
 
 static const uint16_t MAX_SOFTQ_SLOTS(1024);
@@ -60,6 +63,7 @@ public:
     void update_rx_stats_batch(uint16_t pktcount);
     void update_tx_stats(uint16_t pktcount);
     void set_bypass_fte(bool bypass_fte) { bypass_fte_ = bypass_fte; }
+    void set_fte_max_sessions(uint64_t max_sessions) { max_sessions_ = max_sessions; }
     void incr_freed_tx_stats(void);
     void compute_cps();
     uint16_t softq_stats_get();
@@ -81,6 +85,7 @@ private:
     bool                    bypass_fte_;
     timespec_t              t_old_ts_, t_cur_ts_;
     uint64_t                time_diff;
+    uint64_t                max_sessions_; // sessions per inst;
 
     void process_arq();
     void process_arq_new();
@@ -369,6 +374,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
      * Get the bypass-fte flag from hal-config.
      */
     bypass_fte_ = hal_cfg->bypass_fte;
+    max_sessions_ = hal_cfg->max_sessions;
 
     ctx_mem_init();
 
@@ -959,6 +965,11 @@ void inst_t::process_arq_new ()
                 drop_pkt = true;
                 ctx_->set_drop();
             }
+            if ((drop_pkt == false) &&  hal::g_session_stats[id_].total_active_sessions >= max_sessions_) {
+                drop_pkt = true;
+                stats_.fte_hbm_stats->qstats.max_session_drop_pkts++;
+                ctx_->set_drop();
+            }
 
             if (!drop_pkt) {
 
@@ -1100,10 +1111,32 @@ set_bypass_fte (uint8_t fte_id, bool bypass_fte)
 
     if (fte_disabled_)
         goto done;
-
+    fn_ctx.bypass_fte = bypass_fte;
     fte_execute(fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
             t_inst->set_bypass_fte(fn_ctx->bypass_fte);
+        }, &fn_ctx);
+
+done:
+    return;
+}
+
+
+void
+set_fte_max_sessions (uint8_t fte_id, uint64_t max_sessions)
+{
+    struct fn_ctx_t {
+        uint64_t max_sessions;
+    } fn_ctx;
+
+    if (fte_disabled_)
+        goto done;
+    fn_ctx.max_sessions = max_sessions;
+    HAL_TRACE_DEBUG("max sessions {}", max_sessions);
+
+    fte_execute(fte_id, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
+            t_inst->set_fte_max_sessions(fn_ctx->max_sessions);
         }, &fn_ctx);
 
 done:

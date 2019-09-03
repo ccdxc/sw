@@ -15,6 +15,7 @@
 #include "nic/fte/acl/list.hpp"
 #include "nic/fte/acl/itree.hpp"
 #include "nic/fte/acl/acl_ctx.hpp"
+#include "nic/fte/fte.hpp"
 
 
 
@@ -335,6 +336,16 @@ trace_get (TraceResponseMsg *rsp)
         response->set_trace_level(debug::TRACE_LEVEL_NONE);
     }
 
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
+session_ctrl_update (SessionCtrlSpec& spec)
+{
+    for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_cores; i++) {
+        fte::set_fte_max_sessions(i, spec.max_session());
+    }
     return HAL_RET_OK;
 }
 

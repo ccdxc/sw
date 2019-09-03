@@ -2261,6 +2261,7 @@ func fteStatsShow(stats *halproto.Stats) {
 		fmt.Printf("%s%-15d\n", "Softq Reqs			:", ftestatsinfo.GetSoftqReqs())
 		fmt.Printf("%s%-15d\n", "Queued Tx Packets		:", ftestatsinfo.GetQueuedTxPkts())
 		fmt.Printf("%s%-15d\n", "Softq length           :", ftestatsinfo.GetSoftqLen())
+		fmt.Printf("%s%-20d\n", "Max. Session drop pkts :", ftestatsinfo.GetMaxSessionPktDrops())
 		fmt.Printf("\n%s\n", "FTE Error Count: ")
 		hdrLine := strings.Repeat("-", 56)
 		fmt.Println(hdrLine)

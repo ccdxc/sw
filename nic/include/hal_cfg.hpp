@@ -22,7 +22,7 @@ enum {
     HAL_THREAD_ID_MAX           = 8,
 };
 
-#define HAL_MAX_NAME_STR  16
+#define HAL_MAX_NAME_STR       16
 const uint16_t MAX_FTE_THREADS =
                HAL_THREAD_ID_FTE_MAX - HAL_THREAD_ID_FTE_MIN + 1;
 
@@ -83,6 +83,7 @@ typedef struct hal_cfg_s {
     bool                     shm_mode;
     bool                     qemu;                      // true if this is running on QEMU
     bool                     bypass_fte;                // test mode, for PMD testing
+    uint64_t                 max_sessions;              // max number of sessions
 } hal_cfg_t;
 
 #if 0

@@ -442,9 +442,9 @@ typedef struct session_get_stream_filter_ {
     uint32_t                                            count;
 } session_get_stream_filter_t;
 
+
 // max. number of session supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_SESSIONS                             524288
-#define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
+#define HAL_CFG_MAX_SESSIONS               131072
 
 #define SESSION_AGE_DEBUG                  1
 

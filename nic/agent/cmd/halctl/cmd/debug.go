@@ -38,6 +38,7 @@ var (
 	tcpProxyMss         uint32
 	tcpProxyCwndInitial uint32
 	tcpProxyCwndIdle    uint32
+	maxSession          uint64
 )
 
 var debugCmd = &cobra.Command{
@@ -175,6 +176,13 @@ var xcvrDebugCmd = &cobra.Command{
 	Run:   xcvrDebugCmdHandler,
 }
 
+var sessionCtrlDebugCmd = &cobra.Command{
+	Use:   "session-ctrl",
+	Short: "debug session --max-session ",
+	Long:  "debug session --max-session",
+	Run:   sessionCtrlDebugCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
@@ -187,6 +195,7 @@ func init() {
 	debugCmd.AddCommand(debugDeleteCmd)
 	debugCmd.AddCommand(testDebugCmd)
 	debugCmd.AddCommand(memoryDebugCmd)
+	debugCmd.AddCommand(sessionCtrlDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
@@ -203,6 +212,7 @@ func init() {
 	platDebugCmd.AddCommand(platDatapathCacheDebugCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
+	sessionCtrlDebugCmd.Flags().Uint64Var(&maxSession, "max-session", 0, "Max sessions to handle per fte 1 - 131072")
 	secProfDebugCmd.Flags().Uint32Var(&secProfID, "id", 0, "Specify firewall security profile ID")
 	secProfDebugCmd.Flags().StringVar(&connTrack, "conntrack", "off", "Turn connection tracking on/off")
 	secProfDebugCmd.Flags().Uint32Var(&tcpTimeout, "tcp-timeout", 3600, "TCP session aging timeout in range 0-172800 (0 means no aging)")
@@ -1066,4 +1076,30 @@ func testSendFinDebugCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		}
 	}
+}
+
+func sessionCtrlDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+	client := halproto.NewDebugClient(c)
+	if cmd.Flags().Changed("max-session") {
+		req := &halproto.SessionCtrlSpec{
+			MaxSession: maxSession,
+		}
+		sessionReqMsg := &halproto.SessionCtrlRequestMsg{
+			Spec: []*halproto.SessionCtrlSpec{req},
+		}
+
+		_, err := client.SessionCtrlUpdate(context.Background(), sessionReqMsg)
+		if err != nil {
+			fmt.Printf("SessionCtrl Update failed. %v\n", err)
+			return
+		}
+	}
+	fmt.Println("Success: SessionCtrl Update successfull.")
 }

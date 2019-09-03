@@ -861,6 +861,24 @@ func (mr *MockDebugClientMockRecorder) QueueCreditsGet(ctx, in interface{}, opts
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueueCreditsGet", reflect.TypeOf((*MockDebugClient)(nil).QueueCreditsGet), varargs...)
 }
 
+// SessionCtrlUpdate mocks base method
+func (m *MockDebugClient) SessionCtrlUpdate(ctx context.Context, in *SessionCtrlRequestMsg, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SessionCtrlUpdate", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SessionCtrlUpdate indicates an expected call of SessionCtrlUpdate
+func (mr *MockDebugClientMockRecorder) SessionCtrlUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SessionCtrlUpdate", reflect.TypeOf((*MockDebugClient)(nil).SessionCtrlUpdate), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -1311,4 +1329,17 @@ func (m *MockDebugServer) QueueCreditsGet(arg0 context.Context, arg1 *Empty) (*Q
 // QueueCreditsGet indicates an expected call of QueueCreditsGet
 func (mr *MockDebugServerMockRecorder) QueueCreditsGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueueCreditsGet", reflect.TypeOf((*MockDebugServer)(nil).QueueCreditsGet), arg0, arg1)
+}
+
+// SessionCtrlUpdate mocks base method
+func (m *MockDebugServer) SessionCtrlUpdate(arg0 context.Context, arg1 *SessionCtrlRequestMsg) (*Empty, error) {
+	ret := m.ctrl.Call(m, "SessionCtrlUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SessionCtrlUpdate indicates an expected call of SessionCtrlUpdate
+func (mr *MockDebugServerMockRecorder) SessionCtrlUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SessionCtrlUpdate", reflect.TypeOf((*MockDebugServer)(nil).SessionCtrlUpdate), arg0, arg1)
 }

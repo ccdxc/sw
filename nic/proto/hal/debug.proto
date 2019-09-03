@@ -63,6 +63,7 @@ service Debug {
 
   rpc MemoryTrim (types.Empty) returns (types.Empty) {}
   rpc QueueCreditsGet (types.Empty) returns (QueueCreditsGetResponse) {}
+  rpc SessionCtrlUpdate (SessionCtrlRequestMsg) returns (types.Empty) {}    
 }
 
 
@@ -738,4 +739,11 @@ message PortQueueCredit {
 message QueueCreditsGetResponse {
   types.ApiStatus          ApiStatus       = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   repeated PortQueueCredit PortQueueCredit = 2;
+}
+
+message SessionCtrlSpec {
+  uint64         max_session     = 1;
+}
+message SessionCtrlRequestMsg {
+  repeated SessionCtrlSpec spec = 1;
 }

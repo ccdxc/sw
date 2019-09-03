@@ -80,6 +80,8 @@ using debug::PacketBufferRequestMsg;
 using debug::PacketBufferResponse;
 using debug::PacketBufferResponseMsg;
 using debug::QueueCreditsGetResponse;
+using debug::SessionCtrlRequestMsg;
+using debug::SessionCtrlSpec;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -116,6 +118,10 @@ public:
     Status TraceGet(ServerContext *context,
                     const Empty *req,
                     TraceResponseMsg *rsp) override;
+    
+    Status SessionCtrlUpdate(ServerContext *context,
+                             const SessionCtrlRequestMsg *req,
+                             Empty      *rsp) override;
     Status GenericOpn(ServerContext *context,
                       const GenericOpnRequestMsg *req_msg,
                       GenericOpnResponseMsg *rsp_msg);

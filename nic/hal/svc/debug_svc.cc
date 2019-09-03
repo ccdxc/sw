@@ -333,6 +333,26 @@ DebugServiceImpl::TraceUpdate(ServerContext *context,
     return Status::OK;
 }
 
+
+Status
+DebugServiceImpl::SessionCtrlUpdate(ServerContext *context,
+                              const SessionCtrlRequestMsg *req,
+                              Empty  *rsp)
+{
+    uint32_t         i, nreqs = req->spec_size();
+    
+
+    HAL_TRACE_DEBUG("Received session ctrl update");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; i++) {
+        auto spec = req->spec(i);
+        hal::session_ctrl_update(spec);
+    }
+    return Status::OK;
+}
+
 Status
 DebugServiceImpl::TraceGet(ServerContext *context,
                            const Empty *req,

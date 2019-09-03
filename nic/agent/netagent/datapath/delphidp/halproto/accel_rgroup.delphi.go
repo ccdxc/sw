@@ -239,6 +239,8 @@ It has these top-level messages:
 	QueueCredit
 	PortQueueCredit
 	QueueCreditsGetResponse
+	SessionCtrlSpec
+	SessionCtrlRequestMsg
 	ICMPMsg
 	DoSService
 	DoSSessionLimits

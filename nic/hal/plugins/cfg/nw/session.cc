@@ -2931,6 +2931,7 @@ system_fte_stats_get(SystemResponse *rsp)
             fte_stats->set_queued_tx_pkts(per_fte_stats.fte_hbm_stats->qstats.queued_tx_pkts);
             fte_stats->set_packets_per_second(per_fte_stats.fte_hbm_stats->cpsstats.pps);
             fte_stats->set_max_packets_per_second(per_fte_stats.fte_hbm_stats->cpsstats.pps_hwm);
+            fte_stats->set_max_session_pkt_drops(per_fte_stats.fte_hbm_stats->qstats.max_session_drop_pkts);
         }
         int qlen = 0;
         fte::fte_softq_stats_get(i, qlen);

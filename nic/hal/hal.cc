@@ -29,6 +29,7 @@
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/delphi/utils/log.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -295,7 +296,9 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // This should come from hal-config file or policy
     hal_cfg->bypass_fte = false;
-
+    
+    hal_cfg->max_sessions = HAL_CFG_MAX_SESSIONS; // This is total sessions supported in the system
+                                                 // should come from config-file, should be modifiable in future
     // linkmgr init
     hal_linkmgr_init(hal_cfg, hal::port_event_cb);
 

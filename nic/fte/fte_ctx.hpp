@@ -501,6 +501,7 @@ typedef struct fte_hbm_stats_ {
         uint64_t          softq_req;                   // Number of softq requests processed by this FTE
         uint64_t          queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
         uint64_t          freed_tx_pkts;               // Number of dropped/non-flowmiss packets for which the CPU buffers are freed 
+        uint64_t          max_session_drop_pkts;       // Number of pkts dropped because of max sessions
     } __PACK__ qstats;
 } __PACK__ fte_hbm_stats_t;
 

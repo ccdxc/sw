@@ -971,7 +971,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 
     // initialize flow/session related data structures
     HAL_HT_CREATE("session-telemetry", session_hal_telemetry_ht_,
-                  HAL_MAX_SESSIONS >> 1,
+                  HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_handle_key_func,
                   hal::session_compute_handle_hash_func,
                   hal::session_compare_handle_key_func,
@@ -980,7 +980,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 
     // initialize flow/session related data structures
     HAL_HT_CREATE("session-handle", session_hal_handle_ht_,
-                  HAL_MAX_SESSIONS >> 1,
+                  HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_handle_key_func,
                   hal::session_compute_handle_hash_func,
                   hal::session_compare_handle_key_func,
@@ -988,7 +988,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     SDK_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
 
     HAL_HT_CREATE("iflow", session_hal_iflow_ht_,
-                  HAL_MAX_SESSIONS >> 1,
+                  HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_iflow_key_func,
                   hal::session_compute_iflow_hash_func,
                   hal::session_compare_iflow_key_func,
@@ -996,7 +996,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     SDK_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
 
     HAL_HT_CREATE("rflow", session_hal_rflow_ht_,
-                  HAL_MAX_SESSIONS >> 1,
+                  HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_rflow_key_func,
                   hal::session_compute_rflow_hash_func,
                   hal::session_compare_rflow_key_func,

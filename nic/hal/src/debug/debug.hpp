@@ -39,6 +39,8 @@ using debug::HbmCacheRequestMsg;
 using debug::HbmCacheResponse;
 using debug::HbmCacheResponseMsg;
 using debug::SchedulerStatsResponse;
+using debug::SessionCtrlRequestMsg;
+using debug::SessionCtrlSpec;
 
 namespace hal {
 
@@ -88,6 +90,7 @@ hal_ret_t trace_update(debug::TraceSpec& spec, debug::TraceResponse *rsp);
 hal_ret_t trace_get(debug::TraceResponseMsg *rsp);
 hal_ret_t flush_logs (FlushLogsResponse *rsp);
 hal_ret_t thread_get (ThreadResponseMsg *rsp);
+hal_ret_t session_ctrl_update(debug::SessionCtrlSpec& spec);
 
 // HBM BW
 hal_ret_t hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp);
