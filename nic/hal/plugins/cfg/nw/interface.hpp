@@ -115,6 +115,7 @@ typedef struct if_s {
             hal_handle_t        pinned_uplink;      // pinned uplink
             // Smart host nic mode
             bool                egress_en;          // valid only for smart nic host-pin/switch
+            bool                lif_learned;        // lif mapping learnt thru ep learn
         } __PACK__;
 
         // uplink interface info

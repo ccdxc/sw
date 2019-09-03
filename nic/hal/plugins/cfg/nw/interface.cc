@@ -1321,6 +1321,10 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
             *has_changed = true;
         }
     } else {
+        if (hal_if->lif_learned) {
+            HAL_TRACE_DEBUG("Lif already learnt. Skipping lif change check");
+            goto end;
+        }
         ret = get_lif_handle_from_spec(spec, &lif_handle);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to find lif. ret: {}", ret);
@@ -2282,6 +2286,9 @@ enic_update_lif (if_t *hal_if,
 
     if (new_lif) {
         (*new_hal_if)->lif_handle = new_lif->hal_handle;
+        (*new_hal_if)->lif_learned = true;
+    } else {
+        (*new_hal_if)->lif_learned = false;
     }
 
     // form ctxt and call infra update object
@@ -3213,6 +3220,9 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
     }
 
     lif = find_lif_by_handle(hal_if->lif_handle);
+    if (lif) {
+        hal_if->lif_learned = false;
+    }
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
             hal_if->enic_type == intf::IF_ENIC_TYPE_PVLAN ||
