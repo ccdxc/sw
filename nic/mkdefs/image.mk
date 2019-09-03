@@ -92,8 +92,8 @@ build-gold-image: gold_env build-rootfs.cpio
 
 .PHONY: build-diag-image
 build-diag-image: diag_env build-rootfs.cpio
-	$(eval KERNEL_DIR=linux-$(shell sh -c "grep BR2_LINUX_KERNEL_VERSION ${NICDIR}/buildroot/${OUT_DIR}/.config | cut -d'\"' -f2"))
-	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-buildroot-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image 
+	$(eval KERNEL_DIR=linux-custom)
+	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-buildroot-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
 	/usr/bin/install -m 0644 -D ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR}/arch/arm64/boot/Image ${NICDIR}/buildroot/${OUT_DIR}/images/Image
 	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-image.sh
 
@@ -111,7 +111,8 @@ diag_env:
 	$(eval OUT_DIR := output_diag)
 	$(eval NAPLES_FW_NAME := naples_diagfw.tar)
 	$(eval FW_PACKAGE_DIR := capri-diagimg)
-	@echo OUT_DIR=${OUT_DIR} NAPLES_FW_NAME=${NAPLES_FW_NAME} FW_PACKAGE_DIR=${FW_PACKAGE_DIR}
+	$(eval AARCH64_LINUX_HEADERS := ${NICDIR}/buildroot/output_diag/build/linux-custom)
+	@echo OUT_DIR=${OUT_DIR} NAPLES_FW_NAME=${NAPLES_FW_NAME} FW_PACKAGE_DIR=${FW_PACKAGE_DIR} AARCH64_LINUX_HEADERS=${AARCH64_LINUX_HEADERS}
 
 .PHONY: firmware-normal
 firmware-normal: build-image
