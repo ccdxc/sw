@@ -9,6 +9,7 @@ testcases:
         testcase: testcases.penctl.mode_verify_show_naples
 
     -   name    : MODE_UPDATE_OOB_STATIC_REBOOT
+        disable : true
         testcase: testcases.penctl.mode_oob_static_reboot
 
     -   name    : MODE_UPDATE_INBAND_STATIC_LOOP
