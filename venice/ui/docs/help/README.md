@@ -9,7 +9,7 @@ Markdown files can live anywhere under `ui/docs/help`. Each markdown file should
 id: authpolicy
 ---
 ```
-To link to another markdown file, set the link as '%<markdown-id>'.
+To link to another markdown file, set the link as '%markdown-id'.
 
 After adding or modifying any files run `make ui-autogen` from sw/.
 
@@ -35,3 +35,9 @@ Option | Description |
 ## Linking help docs with UI pages.
 
 `urlMap.ts` contains a mapping of UI paths to help doc IDs. Update this map to see the doc show up in the UI.
+
+
+## Implementation details
+`venice-sdk/generators/helpdocs.ts` searches for all markdwon files under `docs/help`. It then calls the Pensando-swagger-ts-generator to parse the swagger files, and expand the load-table syntax into markdown. This results in an intermediate markdown file. `Helpdocs.ts` then runs this through showdown.js to conver the md into html, and writes it directly to `webapp/src/app/assets`. It also copies all of the images under help/docs, and resolves all links into their actual paths.
+
+For loading the proper html help pages, `helpoverly.component.ts` uses `urlMap.ts` and `linkMap.ts` to map the current url route to a help page.
