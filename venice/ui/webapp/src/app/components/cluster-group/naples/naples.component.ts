@@ -174,18 +174,27 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
   /**
+   * We use DSC maps for local search. In the backend, DSC status may changed. So we must clean up map every time we get updated data from watch.api
+   * This a helper function to clear up maps.
+   */
+  _clearDSCMaps() {
+    this.naplesMap = {};
+    this.conditionNaplesMap = {};
+  }
+
+  /**
    * Watches NapDistributed Services Cards data on KV Store and fetch new nic data
    * Generates column based search object, currently facilitates condition search
    */
   getNaples() {
-    this.naplesMap = {};
-    this.conditionNaplesMap = {};
+    this._clearDSCMaps();
     this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     this.filteredNaples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
+        this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
         for (const naple of this.naples) {
           this.naplesMap[naple.meta.name] = naple;
           // Create search object for condition
