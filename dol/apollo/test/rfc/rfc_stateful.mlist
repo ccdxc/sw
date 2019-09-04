@@ -1,0 +1,15 @@
+# Feature RFC Stateful IPV4 Modules List
+feature:
+    id          : rfc
+    sub         : stateful_ipv4
+    package     : test.rfc
+    module      : rfc
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_DISJOINT
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful

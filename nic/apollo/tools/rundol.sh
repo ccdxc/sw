@@ -4,6 +4,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NICDIR=`readlink -f $ABS_TOOLS_DIR/../../`
 DOLDIR=`readlink -f $NICDIR/../dol/`
+START_VPP=0
 
 argc=$#
 argv=($@)
@@ -13,8 +14,28 @@ for (( j=0; j<argc; j++ )); do
     fi
 done
 
+if [ ${NICMGR_SIM_MODE} == 1 ];then
+    START_VPP=1
+fi
+
 set -x
 echo $NICDIR
+
+cleanup() {
+    if [ $START_VPP == 1 ]; then
+        sudo $NICDIR/apollo/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
+    fi
+    pkill agent
+    pkill cap_model
+}
+
+trap cleanup EXIT
+
+NICMGR_FILE="$NICDIR/nicmgr.log"
+if [ -f "$NICMGR_FILE" ]; then
+    echo "Removing $NICMGR_FILE"
+    command rm -f $NICMGR_FILE
+fi
 
 if [ $PIPELINE == 'apollo' ];then
     $NICDIR/apollo/tools/start-agent-sim.sh > agent.log 2>&1 &
@@ -26,9 +47,16 @@ $NICDIR/apollo/test/tools/start-$PIPELINE-model.sh &
 
 export CONFIG_PATH=$NICDIR/conf
 
+if [ $START_VPP == 1 ]; then
+    echo "Starting VPP"
+    sudo $NICDIR/apollo/tools/start-vpp-sim.sh $*
+    if [[ $? != 0 ]]; then
+        echo "Failed to bring up VPP"
+        exit -1
+    fi
+fi
+
 $DOLDIR/main.py $* 2>&1 | tee dol.log
 status=${PIPESTATUS[0]}
 
-pkill agent
-pkill cap_model
 exit $status

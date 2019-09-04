@@ -76,24 +76,27 @@ initialize_pds(void)
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
 
+    platform_type_t platform_type;
+#ifdef __x86_64__
+    platform_type = platform_type_t::PLATFORM_TYPE_SIM;
+#else
+    platform_type = platform_type_t::PLATFORM_TYPE_HW;
+#endif
+
     /* initialize PAL */
-    pal_ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
+    pal_ret = sdk::lib::pal_init(platform_type);
+
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
 
     memset(&capri_cfg, 0, sizeof(capri_cfg_t));
     capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     catalog *platform_catalog =  catalog::factory(capri_cfg.cfg_path,
                                                   "",
-                                                  platform_type_t::PLATFORM_TYPE_HW);
-    uint32_t mem_sz = platform_catalog->memory_capacity();
-    std::string mem_path = "";
-    if (mem_sz == 8) {
-        mem_path = "/8g";
-    } else if (mem_sz == 4) {
-        mem_path = "/4g";
-    }
+                                                  platform_type);
     std::string mpart_json = capri_cfg.cfg_path + "/" +
-                             PDS_PLATFORM + mem_path + "/hbm_mem.json";
+                             PDS_PLATFORM + "/" +
+                             platform_catalog->memory_capacity_str() +
+                             "/hbm_mem.json";
 
     capri_cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
@@ -128,11 +131,17 @@ session_insert(uint32_t ses_id, void *ses_info)
 {
     uint64_t entry_addr = (ses_id * g_session_tbl_ctx.hbm_layout.entry_width);
     uint64_t *src_addr = (uint64_t *)ses_info;
-    uint64_t *dst_addr = (uint64_t *)
-                         (g_session_tbl_ctx.base_mem_va + entry_addr);
-    for (int i = 0;
-         i < (g_session_tbl_ctx.hbm_layout.entry_width / sizeof(uint64_t)); i++) {
-        dst_addr[i] = src_addr[i];
+
+    if (likely(g_session_tbl_ctx.base_mem_va)) {
+        uint64_t *dst_addr = (uint64_t *)
+                              (g_session_tbl_ctx.base_mem_va + entry_addr);
+        for (int i = 0;
+             i < (g_session_tbl_ctx.hbm_layout.entry_width / sizeof(uint64_t)); i++) {
+            dst_addr[i] = src_addr[i];
+        }
+    } else {
+        pal_mem_write(g_session_tbl_ctx.base_mem_pa, (uint8_t *)src_addr, 
+                      g_session_tbl_ctx.hbm_layout.entry_width);
     }
     capri::capri_hbm_table_entry_cache_invalidate(g_session_tbl_ctx.cache,
                                                   entry_addr,
@@ -143,9 +152,17 @@ session_insert(uint32_t ses_id, void *ses_info)
 void
 session_get_addr(uint32_t ses_id, uint8_t **ses_addr, uint32_t *entry_size)
 {
+    static thread_local uint8_t *ret_addr =
+        (uint8_t *) calloc(g_session_tbl_ctx.hbm_layout.entry_width, 1);
     *entry_size = g_session_tbl_ctx.hbm_layout.entry_width;
-    *ses_addr = (uint8_t *) (g_session_tbl_ctx.base_mem_va +
-                (ses_id * (*entry_size)));
+    if (likely(g_session_tbl_ctx.base_mem_va)) {
+        *ses_addr = (uint8_t *) (g_session_tbl_ctx.base_mem_va +
+                    (ses_id * (*entry_size)));
+    } else {
+       pal_mem_read((g_session_tbl_ctx.base_mem_pa + (ses_id * (*entry_size))),
+                    ret_addr, *entry_size);
+       *ses_addr = ret_addr;
+    }
     return;
 }
 

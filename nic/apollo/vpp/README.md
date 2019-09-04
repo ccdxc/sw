@@ -4,6 +4,16 @@ VPP is used as software dataplane for handling exception packets which can't be 
 ## Basic Commands
 
 ###  Interface commands:
+To login to vpp shell:
+```
+vppctl
+```
+Alternatively to run any VPP command without login to shell:
+```
+vppctl <vpp command>
+```
+
+###  Interface commands:
 To check interface admin state/counters:
 ```
 show interface

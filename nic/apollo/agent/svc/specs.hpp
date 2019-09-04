@@ -591,7 +591,6 @@ policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
     } else if (api_spec->direction == RULE_DIR_EGRESS) {
         proto_spec->set_direction(types::RULE_DIR_EGRESS);
     }
-#if 0 // We don't store rules in db for now
     for (uint32_t i = 0; i < api_spec->num_rules; i++) {
         pds::SecurityRule *proto_rule = proto_spec->add_rules();
         rule_t *api_rule = &api_spec->rules[i];
@@ -646,7 +645,6 @@ policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(api_rule->match.l4_match.dport_range.port_lo);
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_porthigh(api_rule->match.l4_match.dport_range.port_hi);
     }
-#endif
 
     return;
 }

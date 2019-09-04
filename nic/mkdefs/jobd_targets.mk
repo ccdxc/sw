@@ -173,7 +173,7 @@ jobd/dol/apollo/lpm: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apollo/rfc
 jobd/dol/apollo/rfc: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo rfc --feature rfc
+	NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo rfc --feature rfc
 
 .PHONY: jobd/dol/apollo/mirror
 jobd/dol/apollo/mirror: ${JOBD_PREREQS}

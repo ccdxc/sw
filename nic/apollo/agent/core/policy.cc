@@ -118,6 +118,8 @@ policy_get (pds_policy_key_t *key, pds_policy_info_t *info)
     }
 
     memcpy(&info->spec, spec, sizeof(pds_policy_spec_t));
+    // rules aren't stored in db
+    info->spec.num_rules = 0;
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_policy_read(key, info);
     }
@@ -133,6 +135,8 @@ policy_get_all_cb (pds_policy_spec_t *spec, void *ctxt)
 
     memset(&info, 0, sizeof(pds_policy_info_t));
     memcpy(&info.spec, spec, sizeof(pds_policy_spec_t));
+    // rules aren't stored in db
+    info.spec.num_rules = 0;
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_policy_read(&spec->key, &info);
     }

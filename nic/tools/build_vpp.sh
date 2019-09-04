@@ -33,6 +33,7 @@ start_shell() {
 cleanup() {
     # stop shell
     [ ! -z "$DOCKER_ID" ] && echo "Stopping docker container" && docker stop $DOCKER_ID
+    return
 }
 
 get_repo() {
@@ -99,8 +100,15 @@ do
 done
 
 TOPDIR=$(dirname `pwd`)
-DOCKER_TOPDIR=/sw
-NUMAROOT=$DOCKER_TOPDIR/nic/sdk/third-party/libnuma
+SDK_DIR=${TOPDIR}/nic/sdk
+DPDK_DIR=${SDK_DIR}/dpdk
+VPP_DIR=${SDK_DIR}/third-party/vpp
+DOCKER_TOPDIR=/usr/src/github.com/pensando/sw
+DOCKER_SDK_DIR=${DOCKER_TOPDIR}/nic/sdk
+DOCKER_DPDK_DIR=${DOCKER_SDK_DIR}/dpdk
+DOCKER_VPP_DIR=${DOCKER_SDK_DIR}/third-party/vpp
+DOCKER_VPP_PKG_DIR=${DOCKER_SDK_DIR}/third-party/vpp-pkg
+DOCKER_NUMAROOT=${DOCKER_SDK_DIR}/third-party/libnuma
 TOOLCHAIN_DIR=/tool/toolchain/aarch64-1.1
 TOOLCHAIN_PREFIX=$TOOLCHAIN_DIR/bin/aarch64-linux-gnu
 USERNAME=$(id -nu)
@@ -140,7 +148,7 @@ alias docker_root="docker exec $DOCKER_ID /bin/bash -c"
 
 clean_vpp_build() {
     echo "Clean VPP build"
-    [ ! -z "$DOCKER_ID" ] && docker_exec "cd $DOCKER_TOPDIR/nic/sdk/third-party/vpp && mv module.mk module.mk_bak && mv module_export.mk module_export.mk_bak"
+    [ ! -z "$DOCKER_ID" ] && docker_exec "cd $DOCKER_VPP_DIR && mv module.mk module.mk_bak && mv module_export.mk module_export.mk_bak"
     #echo "Delete VPP repo"
     #docker_exec "rm -rf $DOCKER_TOPDIR/nic/sdk/third-party/vpp"
     cleanup
@@ -148,49 +156,128 @@ clean_vpp_build() {
 
 copy_assets() {
     echo "Copying Assets"
-    docker_exec "command cp -f -L $DOCKER_TOPDIR/nic/sdk/third-party/vpp/build-root/pensando/lib/dpdk_plugin.so $DOCKER_TOPDIR/nic/sdk/third-party/vpp-pkg/aarch64/lib"
-    if [[ $? -ne 0 ]]; then
-        echo "DPDK plugin copy failed"
-        exit 1;
-    fi
-    docker_exec "command cp -f -L $DOCKER_TOPDIR/nic/sdk/third-party/vpp/build-root/pensando/lib/lib*.so.* $DOCKER_TOPDIR/nic/sdk/third-party/vpp-pkg/aarch64/lib"
-    if [[ $? -ne 0 ]]; then
-        echo "VPP libs copy failed"
-        exit 1;
-    fi
-    docker_exec "command cp -f -L $DOCKER_TOPDIR/nic/sdk/third-party/vpp/build-root/pensando/bin/vpp $DOCKER_TOPDIR/nic/sdk/third-party/vpp-pkg/aarch64/bin"
-    if [[ $? -ne 0 ]]; then
-        echo "VPP bins copy failed"
-        exit 1;
-    fi
-    docker_exec "command cp -f -L -r $DOCKER_TOPDIR/nic/sdk/third-party/vpp/build-root/pensando/include/* $DOCKER_TOPDIR/nic/sdk/third-party/vpp-pkg/include/"
+    DOCKER_VPP_BUILD_ROOT=${DOCKER_VPP_DIR}/build-root
+    DOCKER_VPP_BUILD_AARCH64=${DOCKER_VPP_BUILD_ROOT}/install-naples-aarch64/vpp
+    DOCKER_VPP_BUILD_X86_64=${DOCKER_VPP_BUILD_ROOT}/install-vpp_debug-x86_64/vpp
+
+    docker_exec "rm -rf ${DOCKER_VPP_PKG_DIR}/aarch64 ${DOCKER_VPP_PKG_DIR}/x86_64 ${DOCKER_VPP_PKG_DIR}/include ${DOCKER_VPP_PKG_DIR}/share"
+    docker_exec "mkdir -p ${DOCKER_VPP_PKG_DIR}/aarch64/lib ${DOCKER_VPP_PKG_DIR}/aarch64/bin"
+    docker_exec "mkdir -p ${DOCKER_VPP_PKG_DIR}/x86_64/lib ${DOCKER_VPP_PKG_DIR}/x86_64/bin"
+    docker_exec "mkdir -p ${DOCKER_VPP_PKG_DIR}/include ${DOCKER_VPP_PKG_DIR}/share"
+
+    docker_exec "command cp -f -L -r ${DOCKER_VPP_BUILD_AARCH64}/include/* $DOCKER_VPP_PKG_DIR/include/"
     if [[ $? -ne 0 ]]; then
         echo "VPP headers copy failed"
         exit 1;
     fi
+
+    docker_exec "command cp -f -L -r ${DOCKER_VPP_BUILD_AARCH64}/share/* $DOCKER_VPP_PKG_DIR/share/"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP share copy failed"
+        exit 1;
+    fi
+
+    docker_exec "command cp -f -L ${DOCKER_VPP_BUILD_AARCH64}/lib/lib*.so.* ${DOCKER_VPP_PKG_DIR}/aarch64/lib/"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP aarch64 libs copy failed"
+        exit 1;
+    fi
+
+    docker_exec "command cp -f -L -r ${DOCKER_VPP_BUILD_AARCH64}/lib/vpp_plugins ${DOCKER_VPP_PKG_DIR}/aarch64/lib/"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP aarch64 plugins copy failed"
+        exit 1;
+    fi
+
+    docker_exec "command cp -f -L ${DOCKER_VPP_BUILD_AARCH64}/bin/* ${DOCKER_VPP_PKG_DIR}/aarch64/bin/"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP aarch64 bin copy failed"
+        exit 1;
+    fi
+
+    docker_exec "command cp -f -L ${DOCKER_VPP_BUILD_X86_64}/lib/lib*.so.* ${DOCKER_VPP_PKG_DIR}/x86_64/lib/"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP x86_64 libs copy failed"
+        exit 1;
+    fi
+
+    docker_exec "command cp -f -L -r ${DOCKER_VPP_BUILD_X86_64}/lib/vpp_plugins ${DOCKER_VPP_PKG_DIR}/x86_64/lib/"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP x86_64 plugins copy failed"
+        exit 1;
+    fi
+
+    docker_exec "command cp -f -L ${DOCKER_VPP_BUILD_X86_64}/bin/* ${DOCKER_VPP_PKG_DIR}/x86_64/bin/"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP x86_64 bin copy failed"
+        exit 1;
+    fi
+
     echo "Successfully updated assets"
 }
 
-build_dpdk() {
-    echo "Building DPDK, check $TOPDIR/nic/sdk/dpdk/dpdk_build.log"
-    docker_exec "rm -rf $DOCKER_TOPDIR/nic/sdk/dpdk/build"
-    docker_exec "cd $DOCKER_TOPDIR/nic/sdk/dpdk && make -j8 -f REPOmakefile config T=arm64-armv8a-linuxapp-gcc && make -f REPOmakefile CROSS=${TOOLCHAIN_PREFIX}- CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-isystem  ${NUMAROOT}/include -fPIC\" EXTRA_LDFLAGS=\"-L${NUMAROOT}/aarch64/lib -lnuma\" &> dpdk_build.log"
+build_dpdk_aarch64() {
+    echo "Building DPDK - aarch64, check $DPDK_DIR/dpdk_build_aarch64.log"
+    docker_exec "rm -rf $DOCKER_DPDK_DIR/build"
+    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 -f REPOmakefile config T=arm64-armv8a-linuxapp-gcc && make V=1 -f REPOmakefile CROSS=${TOOLCHAIN_PREFIX}- CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-isystem ${DOCKER_NUMAROOT}/include -fPIC\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/aarch64/lib -lnuma\" &> dpdk_build_aarch64.log"
     if [[ $? -ne 0 ]]; then
-        echo "DPDK build Failed"
+        echo "DPDK - aarch64 build Failed"
         exit 1;
     fi
-    echo "DPDK build success"
+    echo "DPDK - aarch64 build success"
+}
+
+build_vpp_aarch64() {
+    build_dpdk_aarch64
+    echo "Building VPP - aarch64, check $VPP_DIR/vpp_build_aarch64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR wipe_vpp &> vpp_clean_aarch64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR all &> vpp_build_aarch64.log"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP - aarch64 build Failed"
+        exit 1;
+    fi
+    echo "VPP - aarch64 build success"
+}
+
+build_sdk_x86_64() {
+    echo "Building SDK - x86_64, check $SDK_DIR/sdk_build_x86_64.log"
+    docker_root "mkdir -p /sdk && mount --bind ${DOCKER_SDK_DIR} /sdk && PLATFORM=sim make -C /sdk &> ${DOCKER_SDK_DIR}/sdk_build_x86_64.log"
+    if [[ $? -ne 0 ]]; then
+        echo "SDK - x86_64 build Failed, continue.."
+        exit 1;
+    else
+        echo "SDK - x86_64 build success."
+    fi
+}
+
+build_dpdk_x86_64() {
+    build_sdk_x86_64
+    echo "Building DPDK - x86_64, check $DPDK_DIR/dpdk_build_x86_64.log"
+    docker_exec "rm -rf $DOCKER_DPDK_DIR/build"
+    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 -f REPOmakefile config T=x86_64-default-linuxapp-gcc && make V=1 -j8 -f REPOmakefile CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-I ${DOCKER_NUMAROOT}/include -I ${DOCKER_SDK_DIR} -DDPDK_SIM -g -fPIC -O0 -Wno-error -L ${DOCKER_NUMAROOT}/x86_64/lib\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/x86_64/lib -L/sdk/build/x86_64/lib/ -lnuma -ldpdksim -lsdkpal -llogger\" &> dpdk_build_x86_64.log"
+    if [[ $? -ne 0 ]]; then
+        echo "DPDK - x86_64 build Failed"
+        exit 1;
+    fi
+    echo "DPDK - x86_64 build success"
+}
+
+build_vpp_x86_64() {
+    build_dpdk_x86_64
+    echo "Building VPP - x86_64, check $VPP_DIR/vpp_build_x86_64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR wipe_vpp &> vpp_clean_x86_64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make V=1 -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR all &> vpp_build_x86_64.log"
+    if [[ $? -ne 0 ]]; then
+        echo "VPP - x86_64 build Failed"
+        exit 1;
+    fi
+    echo "VPP - x86_64 build success"
 }
 
 build_vpp() {
-    build_dpdk
-    echo "Building VPP, check $TOPDIR/nic/sdk/third-party/vpp/vpp_build.log"
-    docker_root "cd $DOCKER_TOPDIR/nic/sdk/third-party/vpp && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_TOPDIR/nic/sdk all &> vpp_build.log"
-    if [[ $? -ne 0 ]]; then
-        echo "VPP build Failed"
-        exit 1;
-    fi
-    echo "VPP build success"
+    [ ! -z "$DOCKER_ID" ] && docker_exec "cd $DOCKER_VPP_DIR && mv module.mk module.mk_bak && mv module_export.mk module_export.mk_bak"
+    build_vpp_aarch64
+    build_vpp_x86_64
 }
 
 upload_assets() {
@@ -201,14 +288,16 @@ upload_assets() {
         exit 1;
     fi
     echo "Uploading assets with version ${VPP_ASSET_VERSION}"
-    docker_exec "cd $DOCKER_TOPDIR && UPLOAD=1 make create-assets"
+    docker_exec "cd $DOCKER_TOPDIR && UPLOAD=1 make create-assets &> $DOCKER_TOPDIR/asset_upload.txt"
     if [[ $? -ne 0 ]]; then
-        echo "Upload-assets failed for version ${VPP_ASSET_VERSION}"
+        echo "Upload-assets failed for version ${VPP_ASSET_VERSION}, check $TOPDIR/asset_upload.txt"
         exit 1;
     fi
-    echo "Uploaded assets with version ${VPP_ASSET_VERSION}"
+    echo "Uploaded assets with version ${VPP_ASSET_VERSION}, verify $TOPDIR/asset_upload.txt"
 }
 
+docker_root "echo \"ip_resolve=IPv4\" >> /etc/yum.conf"
+docker_root "rm ${DOCKER_VPP_DIR}/build-root/.deps_installed"
 build_vpp
 
 if [ -z "$VPP_ASSET_VERSION" ]; then

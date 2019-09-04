@@ -1440,22 +1440,22 @@ vpc:
                     v4pfx: '10.10.10.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
 
+              - type : specific
+                policytype : stateful       # disjoint prefix but proto & l4 overlap
+                overlaptype : disjoint_pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '11.11.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+
               # # policies with stateful rules
-              # - type : specific
-              #   policytype : stateful       # disjoint prefix but proto & l4 overlap
-              #   overlaptype : disjoint_pfx
-              #   direction  : bidir
-              #   rule:
-              #     - protocol: tcp
-              #       stateful: true
-              #       v4pfx: '10.10.0.0\16'
-              #       v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
-
-              #     - protocol: tcp
-              #       stateful: true
-              #       v4pfx: '11.11.0.0\16'
-              #       v6pfx: '1e7:a11:bad:b075:d1e::0\80'
-
               # - type : specific
               #   policytype : stateful
               #   overlaptype : none          # no overlapping fields
