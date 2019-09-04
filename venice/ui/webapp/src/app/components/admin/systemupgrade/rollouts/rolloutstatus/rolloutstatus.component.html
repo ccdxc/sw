@@ -76,7 +76,7 @@
           <div class="rolloutstatus-summary-panel-content-label"> Upgrade DSCs by Label?:
           </div>
           <div class="rolloutstatus-summary-panel-content-value">
-            {{selectedRollout?.spec["smartnic-must-match-constraint"]? 'true': 'false' }}</div>
+            {{selectedRollout?.spec["dscs-must-match-constraint"]? 'true': 'false' }}</div>
         </div>
         <div fxFlex="50" fxLayout="row"
              *ngIf="labelSelectorsStrings && labelSelectorsStrings.length>0">
@@ -96,8 +96,9 @@
       <mat-panel-title class="rolloutstatus-summary-panel-header">
         Status ({{selectedRollout?.status.state}}) <span
               class="rolloutstatus-summary-panel-header-failurereason"
-              *ngIf="selectedRollout?.status.state==='failure'"
-              (click)=onFailureReasonClick($event)>reasons</span>
+              *ngIf="false && selectedRollout?.status.state==='failure'"
+              (click)=onFailureReasonClick($event)>View Reasons</span>
+        <!-- the reasons link per QA request 2019-09-03 -->
       </mat-panel-title>
     </mat-expansion-panel-header>
     <div class="rolloutstatus-summary-panel-content">
@@ -151,9 +152,9 @@
                     *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-services-status'], tablename:'Controller Services'}">
       </ng-container>
     </mat-tab>
-    <mat-tab label="NAPLES" *ngIf="!isVeniceOnly()">
+    <mat-tab label="DISTRIBUTED SERVICES CARDS" *ngIf="!isVeniceOnly()">
       <ng-container
-                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['smartnics-status'], tablename:'NAPLES'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['dscs-status'], tablename:'Distributed Services Cards'}">
       </ng-container>
     </mat-tab>
   </mat-tab-group>
@@ -198,10 +199,16 @@
             <div fxFlex></div>
           </app-tableheader>
         </ng-template>
+        <!-- colgroup config is need to enable column resize.  The "th" config needs pResizableColumn -->
+        <ng-template pTemplate="colgroup" let-columns>
+          <colgroup>
+            <col *ngFor="let col of columns">
+          </colgroup>
+        </ng-template>
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
           <tr>
-            <th *ngFor="let col of statusCols; let last = last"
+            <th *ngFor="let col of statusCols; let last = last" pResizableColumn
                 [pSortableColumn]="col.sortable? col.field : ''"
                 [class]="col.class" [style.width]="col.width + '%'">
               <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}

@@ -154,6 +154,9 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
   }
 
   isFormValid(): boolean {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return false;
+    }
     if (!this.newObject.$formGroup.valid) {
       return false;
     }

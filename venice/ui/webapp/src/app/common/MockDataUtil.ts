@@ -271,7 +271,7 @@ export class MockDataUtil {
             },
             'creation-time': '2018-06-06T19:32:33.610293273Z',
             'mod-time': '2018-06-07T06:28:15.435273503Z',
-            'self-link': '/venice/cluster/smartnics/02:42:c0:a8:1c:02'
+            'self-link': '/venice/cluster/distributedservicecards/02:42:c0:a8:1c:02'
           }
         },
         {
@@ -372,7 +372,7 @@ export class MockDataUtil {
                           },
                           'creation-time': '2018-06-06T19:32:33.610293273Z',
                           'mod-time': '2018-06-07T06:28:15.435273503Z',
-                          'self-link': '/venice/cluster/smartnics/02:42:c0:a8:1c:02'
+                          'self-link': '/venice/cluster/distributedservicecards/02:42:c0:a8:1c:02'
                         }
                       }
                     ]

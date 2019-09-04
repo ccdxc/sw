@@ -303,7 +303,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     const exportObj = {
       urls: {
         nodes: Utility.getBaseUIUrl + 'telemetry/v1/metrics',
-        naples: Utility.getBaseUIUrl + '/configs/cluster/v1/watch/smartnics',
+        dscs: Utility.getBaseUIUrl + '/configs/cluster/v1/watch/distributedservicecards',
         metrics: Utility.getBaseUIUrl + 'telemetry/v1/metrics'
       },
       data: {

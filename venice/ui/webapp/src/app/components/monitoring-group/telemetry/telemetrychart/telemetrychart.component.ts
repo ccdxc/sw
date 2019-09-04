@@ -325,10 +325,10 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         // mac-address to name map
         this.macAddrToName = {};
         this.nameToMacAddr = {};
-        for (const smartnic of this.naples) {
-          this.macAddrToName[smartnic.meta.name] = smartnic.spec.id;
-          if (smartnic.spec.id != null || smartnic.spec.id.length > 0) {
-            this.nameToMacAddr[smartnic.spec.id] = smartnic.meta.name;
+        for (const nic of this.naples) {
+          this.macAddrToName[nic.meta.name] = nic.spec.id;
+          if (nic.spec.id != null || nic.spec.id.length > 0) {
+            this.nameToMacAddr[nic.spec.id] = nic.meta.name;
           }
         }
         this.getMetrics();

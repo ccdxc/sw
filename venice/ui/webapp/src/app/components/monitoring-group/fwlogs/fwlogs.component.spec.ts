@@ -74,7 +74,7 @@ describe('fwlogsComponent', () => {
       'uuid': '96fa49f5-ccb8-40ac-a314-41dd798fae78',
       'creation-time': '2019-04-02T18:09:39.17373748Z',
       'mod-time': '2019-04-09T07:15:59.574423516Z',
-      'self-link': '/configs/cluster/v1/smartnics/00ae.cd00.1142'
+      'self-link': '/configs/cluster/v1/distributedservicecards/00ae.cd00.1142'
     },
     'spec': {
       'admit': true,

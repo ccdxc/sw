@@ -13,44 +13,44 @@ export class RolloutUtil {
 
   /**
    * In English (from Suresh):
-   * if smartnics-only == true then venice is skipped.
-   * if smartnic-must-match-constraint is false  then
-   *   ALL naples are upgraded
+   * if dscs-only == true then venice is skipped.
+   * if dsc-must-match-constraint is false  then
+   *   ALL DSCS are upgraded
    * else
-   *    Only naples matching constraints are upgraded
+   *    Only DSCS matching constraints are upgraded
    *
    *  =====
-   * Naples only :
-   *    "smartnics-only": true,
-   *    if (smartnic-must-match-constraint== true) {
+   * DSC only :
+   *    "dscs-only": true,
+   *    if (dsc-must-match-constraint== true) {
    *         Naples listed in [order-constraints] will be updated
    *    } else {
    *        update all naples
    *    }
    *
-   * Both Venice and Napple :
-   *   "smartnics-only": false,
-   *    if (smartnic-must-match-constraint== true) {
+   * Both Venice and DSC :
+   *   "dscs-only": false,
+   *    if (dsc-must-match-constraint== true) {
    *         Naples listed in [order-constraints] will be updated
    *    } else {
    *        update all naples
    *    }
    *
    * Venice-only :
-   *   "smartnics-only": false,
+   *   "dscs-only": false,
    *   "order-constraints": [],
-   *   "smartnic-must-match-constraint": true,
+   *   "dsc-must-match-constraint": true,
    *
    *
    *
    *
    */
   public static getRolloutNaplesVeniceType(rollout: RolloutRollout): string {
-    if (rollout.spec['smartnics-only']) {
+    if (rollout.spec['dscs-only']) {
       return RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY;
     } else {
       // Figure out if it is   RolloutUtil.ROLLOUTTYPE_VENICE_ONLY or RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE
-      return (rollout.spec['smartnic-must-match-constraint'] === true && rollout.spec['order-constraints'] && rollout.spec['order-constraints'].length === 0) ? RolloutUtil.ROLLOUTTYPE_VENICE_ONLY : RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE;
+      return (rollout.spec['dsc-must-match-constraint'] === true && rollout.spec['order-constraints'] && rollout.spec['order-constraints'].length === 0) ? RolloutUtil.ROLLOUTTYPE_VENICE_ONLY : RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE;
     }
   }
 

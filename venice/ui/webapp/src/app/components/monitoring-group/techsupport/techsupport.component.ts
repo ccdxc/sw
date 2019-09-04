@@ -144,7 +144,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   displayTimeOutMessage(rowData: MonitoringTechSupportRequest): string {
     const nodes = rowData.status['ctrlr-node-results'];
-    const nics = rowData.status['smartnic-node-results'];
+    const nics = rowData.status['dsc-results'];
     const reasonArray: string[] = [];
     if (nodes != null) {
       Object.keys(nodes).forEach((key) => {
@@ -169,7 +169,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   displayFailureMessage(rowData: MonitoringTechSupportRequest): string {
     const nodes = rowData.status['ctrlr-node-results'];
-    const nics = rowData.status['smartnic-node-results'];
+    const nics = rowData.status['dsc-results'];
     const reasonArray: string[] = [];
     if (nodes != null) {
       Object.keys(nodes).forEach((key) => {
@@ -198,7 +198,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   whichNaplesFail(rowData: MonitoringTechSupportRequest): string {
     const nodes = rowData.status['ctrlr-node-results'];
-    const nics = rowData.status['smartnic-node-results'];
+    const nics = rowData.status['dsc-results'];
     const reasonArray: string[] = [];
     if (nodes != null) {
     Object.keys(nodes).forEach((key) => {
@@ -236,7 +236,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   status: {
           "instance-id": "b91bd56b-060a-48dc-ad9b-fa2c62d7b621",
           "status": "Completed",
-          "smartnic-node-results": {
+          "dsc-results": {
             "00ae.cd00.1142": {
               "end-time": "2019-04-15T19:14:24.435689118Z",
               "status": "Completed"
@@ -252,7 +252,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     const tsName = rowData.meta.name;
     const status: IMonitoringTechSupportRequestStatus = rowData.status;
     const instanceId = status['instance-id'];
-    const smartNICNodeResults = status['smartnic-node-results'];
+    const smartNICNodeResults = status['dsc-results'];
     const ctrlrNnodeResults = status['ctrlr-node-results'];
     const downloadObj = {
       nicNodes: [],

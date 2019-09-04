@@ -175,7 +175,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   /**
    * We use DSC maps for local search. In the backend, DSC status may changed. So we must clean up map every time we get updated data from watch.api
-   * This a helper function to clear up maps.
+   * This is a helper function to clear up maps.
    */
   _clearDSCMaps() {
     this.naplesMap = {};
