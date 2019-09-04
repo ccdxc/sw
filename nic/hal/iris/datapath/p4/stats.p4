@@ -242,23 +242,24 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
                   drop_count1, drop_count2, drop_count3, drop_count4,
                   drop_count5, drop_count6, drop_count7, drop_count8,
                   flow_agg_index1, flow_agg_index2) {
-    modify_field(scratch_metadata.flow_last_seen_timestamp,
-                 last_seen_timestamp);
     if (capri_intrinsic.drop == TRUE) {
+        // update timestamp only if drop reason is flow_hit drop
+        if (control_metadata.drop_reason == (1 << DROP_FLOW_HIT)) {
+            modify_field(scratch_metadata.flow_last_seen_timestamp,
+                         last_seen_timestamp);
+        }
         bit_or(scratch_metadata.drop_reason, drop_reason,
                control_metadata.drop_reason);
         add(scratch_metadata.flow_packets, drop_packets, 1);
         add(scratch_metadata.flow_bytes, drop_bytes,
             capri_p4_intrinsic.packet_len);
-        // 1. on overflow, update to atomic add region indexed by flow_index
-        // 2. based on drop_count_map, update drop_count[1-8]
     } else {
+        // update timestamp
+        modify_field(scratch_metadata.flow_last_seen_timestamp,
+                     last_seen_timestamp);
         add(scratch_metadata.flow_packets, permit_packets, 1);
         add(scratch_metadata.flow_bytes, permit_bytes,
             capri_p4_intrinsic.packet_len);
-        // 1. on overflow, update to atomic add region indexed by flow index
-        // 2. if flow_agg_index1/flow_agg_index2 are non-zero, then update
-        // to those indicies as well
     }
 
     // dummy ops to keep compiler happy
@@ -273,25 +274,6 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
     modify_field(scratch_metadata.drop_count, drop_count8);
     modify_field(scratch_metadata.flow_agg_index, flow_agg_index1);
     modify_field(scratch_metadata.flow_agg_index, flow_agg_index2);
-
-#if 0
-    // take care of wrap around case.
-    if ((burst_start_timestamp <= capri_intrinsic.timestamp) &&
-        (capri_intrinsic.timestamp <= burst_max_timestamp)) {
-        if (allowed_bytes + capri_p4_intrinsic.packet_len <= max_allowed_bytes) {
-            allowed_bytes += capri_p4_intrinsic.packet_len;
-        } else {
-            burst_exceed_bytes += capri_p4_intrinsic.packet_len;
-            burst_exceed_count++;
-        }
-    } else if (capri_intrinsic.timestamp > burst_max_timestamp) {
-        allowed_bytes = capri_p4_intrinsic.packet_len;
-        burst_max_timestamp = capri_intrinsic.timestamp+micro_burst_cycles;
-        burst_start_timestamp = capri_intrinsic.timestamp;
-        burst_exceed_count = 0;
-        burst_exceed_bytes = 0;
-    }
-#endif
 }
 
 @pragma stage 5
