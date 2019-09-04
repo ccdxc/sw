@@ -304,8 +304,10 @@ if [ -z "$VPP_ASSET_VERSION" ]; then
     copy_assets
     echo 'Updated assets but skipping upload'
 else
-    upload_assets
-    echo 'Done. Please check your diffs, push and create a PR'
+#    upload_assets
+#    echo 'Done. Please check your diffs, push and create a PR'
+    copy_assets
+    echo 'Uploading assets disabled with this script, please upload manually!'
 fi
 
 #clean_vpp_build
