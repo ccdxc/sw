@@ -18,7 +18,7 @@ sacl_sport_lpm_s0:
     seq             c1, k.p4_to_rxdma_header_direction, TX_FROM_HOST
     phvwr.c1        p.sacl_metadata_ip[127:112], \
                         k.p4_to_rxdma_header_flow_dst_s0_e15
-    phvwr.c1        p.sacl_metadata_ip[110:0], \
+    phvwr.c1        p.sacl_metadata_ip[111:0], \
                         k.p4_to_rxdma_header_flow_dst_s16_e127
     phvwr.!c1       p.sacl_metadata_ip, k.p4_to_rxdma_header_flow_src
     add             r1, k.p4_to_rxdma_header_flow_dport, \

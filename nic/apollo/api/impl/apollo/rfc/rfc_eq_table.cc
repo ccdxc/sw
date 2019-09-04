@@ -58,7 +58,8 @@ rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
 {
     sacl_ip_sport_p1_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("running id %u, class id %u", running_id, cid);
+    PDS_TRACE_DEBUG("running id %u, entry %u, class 0x%x",
+                    running_id, entry_num, cid);
     action_data = (sacl_ip_sport_p1_actiondata_t *)actiondata;
     switch (entry_num) {
         case 0:
@@ -234,6 +235,7 @@ rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t                        ret;
     sacl_ip_sport_p1_actiondata_t    *action_data;
 
+    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (sacl_ip_sport_p1_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                                                            P4_APOLLO_RXDMA_TBL_ID_SACL_IP_SPORT_P1,
@@ -1091,6 +1093,7 @@ rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t               ret;
     sacl_p2_actiondata_t    *action_data;
 
+    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (sacl_p2_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                                                            P4_APOLLO_RXDMA_TBL_ID_SACL_P2,
@@ -1283,6 +1286,7 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
     {
         sacl_ip_sport_p1_actiondata_t action_data = { 0 };
 
+        PDS_TRACE_DEBUG("Starting RFC P1");
         rfc_compute_eq_class_tables(rfc_ctxt,
                                     &rfc_ctxt->port_tree.rfc_table,
                                     &rfc_ctxt->pfx_tree.rfc_table,
@@ -1307,6 +1311,7 @@ rfc_compute_p2_tables (rfc_ctxt_t *rfc_ctxt)
 {
     sacl_p2_actiondata_t     action_data = { 0 };
 
+    PDS_TRACE_DEBUG("Starting RFC P2");
     rfc_compute_eq_class_tables(rfc_ctxt, &rfc_ctxt->p1_table,
                                 &rfc_ctxt->proto_port_tree.rfc_table, NULL,
                                 rfc_ctxt->base_addr + SACL_P2_TABLE_OFFSET,
