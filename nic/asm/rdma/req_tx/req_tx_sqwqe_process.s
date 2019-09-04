@@ -110,12 +110,13 @@ skip_fence_check:
     .brcase OP_TYPE_FRPMR
         b.!c7           frpmr
         b.c7            skip_npg_wqe // Branch Delay Slot
-        nop             //Branch Delay slot 
+        phvwrpair.c7      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg), 1, \
+                          CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg_frpmr), 1 // BD-slot
 
     .brcase OP_TYPE_LOCAL_INV
         b.!c7           local_inv
         b.c7            skip_npg_wqe // Branch Delay Slot
-        nop             //Branch Delay slot
+        nop
 
     .brcase OP_TYPE_BIND_MW
         b.!c7           bind_mw

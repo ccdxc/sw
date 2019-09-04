@@ -26,9 +26,6 @@ struct sqcb2_t d;
 .align
 req_tx_sqcb2_write_back_process:
 
-    //invoke stats_process for NPG case here
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
-
     // if speculative cindex matches cindex, then this wqe is being
     // processed in the right order and state update is allowed. Otherwise
     // discard and continue with speculation until speculative cindex
@@ -36,10 +33,12 @@ req_tx_sqcb2_write_back_process:
     // doesn't allow this packet
     seq            c1, K_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
-    nop
+    SQCB0_ADDR_GET(r1) //BD-slot
+
+    //invoke stats_process for NPG case here
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
 
     phvwr          p.common.to_stage_6_to_stage_data, K_TO_S5_DATA
-    SQCB0_ADDR_GET(r1)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r1)
 
     bbeq           CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
@@ -118,11 +117,15 @@ end:
     nop
 
 error_exit:
+
+#if !(defined(HAPS) || defined(HW))
+
     /*
      *  TODO: Incrementing sq_cindex copy to satisfy model. Ideally, on error disabling we should just exit and be
      *  in the same state which caused the error.
      */
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
+#endif
 
     phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
     phvwrpair      p.rdma_feedback.completion.ssn, d.ssn, p.rdma_feedback.completion.tx_psn, d.tx_psn

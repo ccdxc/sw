@@ -588,7 +588,6 @@ spec_fail:
     CAPRI_SET_TABLE_2_VALID(0)
 
 credit_check_fail:
-    phvwr     CAPRI_PHV_FIELD(IN_P, credit_check_failed), 1
 rrq_full:
 #if !(defined(HAPS) || defined(HW))
     // For Model, to avoid infinite loop, disable scheduler for this QP and upon
@@ -599,6 +598,8 @@ rrq_full:
     DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r1, r2)
 #endif
 rate_enforce_fail:
+    tblwr          d.fence, 0
+    tblwr          d.fence_done, 1
     phvwr    CAPRI_PHV_FIELD(SQCB_WRITE_BACK_T, rate_enforce_failed), 1 
 poll_fail:
 exit:

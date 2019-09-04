@@ -107,13 +107,6 @@ process_req_tx:
         tblwr          d.dcqcn_rl_failure, 0
 
 process_send:
-        sub            r2, SQ_P_INDEX, d.sqd_cindex
-        mincr          r2, d.log_num_wqes, r0
-        sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
-        mincr          r3, d.log_num_wqes, r0
-        sle            c1, r2, r3
-        CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
-
         bbeq           d.frpmr_in_progress, 1, frpmr
                               
         // if (sqcb0_p->fence) goto fence
@@ -129,6 +122,12 @@ process_send:
         bcf            [c3], exit
         
 poll_for_work:
+        sub            r2, SQ_P_INDEX, d.sqd_cindex
+        mincr          r2, d.log_num_wqes, r0
+        sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
+        mincr          r3, d.log_num_wqes, r0
+        sle            c1, r2, r3
+        CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
         // header_template_addr is needed to load hdr_template_process in fast-path.
         // For UD QPs, header_template_addr is shared with the q_key
@@ -262,6 +261,14 @@ pt_process:
 in_progress:
         // do not speculate for in_progress processing
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+
+        // Set rexmit bit if spec-cindex is behind sqd-cindex
+        sub            r2, SQ_P_INDEX, d.sqd_cindex
+        mincr          r2, d.log_num_wqes, r0
+        sub            r3, SQ_P_INDEX, r1
+        mincr          r3, d.log_num_wqes, r0
+        sle            c1, r2, r3
+        CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
         phvwrpair CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr, \
                   CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr 
@@ -551,6 +558,14 @@ fence:
     // Reset spec-cindex to cindex to re-process wqe.
     tblwr       SPEC_SQ_C_INDEX, SQ_C_INDEX
 
+    // Set rexmit bit if spec-cindex is behind sqd-cindex
+    sub            r2, SQ_P_INDEX, d.sqd_cindex
+    mincr          r2, d.log_num_wqes, r0
+    sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
+    mincr          r3, d.log_num_wqes, r0
+    sle            c1, r2, r3
+    CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
+
     // Setup to-stage info.
     phvwrpair   CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
                 CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
@@ -593,6 +608,14 @@ end:
 frpmr:
     // Reset spec_cindex and trigger dcqcn/sqcb_write_back/sqcb2_write_back to update cindex-copy everywhere.
     tblwr      SPEC_SQ_C_INDEX, SQ_C_INDEX
+
+    // Set rexmit bit if spec-cindex is behind sqd-cindex
+    sub            r2, SQ_P_INDEX, d.sqd_cindex
+    mincr          r2, d.log_num_wqes, r0
+    sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
+    mincr          r3, d.log_num_wqes, r0
+    sle            c1, r2, r3
+    CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
     // Its ok to reset the flag here. cindex-copy update is not expected to fail!
     tblwr      d.frpmr_in_progress, 0
