@@ -100,7 +100,7 @@ func (client *CmdClient) initUpdatesRPC() error {
 	var err error
 	log.Infof("Initializing NIC updates RPC client ")
 	client.updatesRPCClient, err = rpckit.NewRPCClient("nmd-nic-upd", globals.CmdNICUpdatesSvc,
-		rpckit.WithBalancer(balancer.New(client.resolverClient)))
+		rpckit.WithBalancer(balancer.NewWithName(client.resolverClient, "nmd-nic-upd")))
 	if err != nil {
 		log.Errorf("Error connecting to grpc service for NIC updates: %v", err)
 	}

@@ -1,12 +1,16 @@
 package resolver
 
 import (
+	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
-	context "golang.org/x/net/context"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/api"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
@@ -92,6 +96,22 @@ func New(c *Config) Interface {
 	return r
 }
 
+func (r resolverClient) String()string {
+	var b strings.Builder
+	fmt.Fprintf(&b,"name:%s servers:%s ",r.config.Name, strings.Join(r.config.Servers,","))
+	fmt.Fprintf(&b, "Services:")
+	for srv,s := range r.svcsMap {
+
+		instStr := []string{}
+		for instName,inst := range s {
+			instStr = append(instStr, fmt.Sprintf("inst:%s,image:%s,node:%s,url:%s", instName,inst.Image,inst.Node,inst.URL))
+		}
+		fmt.Fprintf(&b,"%s:{ %s } ",srv,strings.Join(instStr," "))
+	}
+
+	return b.String()
+}
+
 // runUntilCancel implements the business logic of the resolver client.
 func (r *resolverClient) runUntilCancel() {
 	s := rand.NewSource(time.Now().UnixNano())
@@ -143,6 +163,7 @@ func (r *resolverClient) runUntilCancel() {
 			time.Sleep(rpcRetryInterval)
 			continue
 		}
+		log.Infof("Resolver connected to server %s", r.config.Servers[i])
 		first := true
 		for {
 			el, err := watcher.Recv()
@@ -164,6 +185,7 @@ func (r *resolverClient) runUntilCancel() {
 				}
 				r.Lock()
 				r.svcsMap = svcsMap
+				log.Infof("Resolver :%s", r)
 				r.Unlock()
 				first = false
 				for ii := range el.Items {
@@ -190,6 +212,7 @@ func (r *resolverClient) runUntilCancel() {
 					delete(svcMap, e.Instance.Name)
 				}
 			}
+			log.Infof("Resolver :%s", r)
 			r.Unlock()
 			for ii := range el.Items {
 				r.notify(*el.Items[ii])
@@ -290,8 +313,10 @@ func (r *resolverClient) notify(e types.ServiceInstanceEvent) error {
 }
 
 func (r *resolverClient) UpdateServers(servers []string) {
-	s := []string{}
+	log.Infof("Resolver servers updated to %v", servers)
+
+	s := append([]string{}, servers...)
 	r.Lock()
-	r.config.Servers = append(s, servers...)
+	r.config.Servers = s
 	r.Unlock()
 }

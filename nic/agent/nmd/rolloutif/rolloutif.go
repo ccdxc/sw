@@ -129,7 +129,7 @@ func (client *RoClient) initRPC() error {
 	var err error
 	log.Infof("Initializing smartNICRollout updates RPC client ")
 	client.rpcClient, err = rpckit.NewRPCClient("nmd-ro", rolloutURL,
-		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Rollout))
+		rpckit.WithBalancer(balancer.NewWithName(client.resolverClient, "nmd-ro")), rpckit.WithRemoteServerName(globals.Rollout))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server for NIC updates, URL: %v Err: %v", rolloutURL, err)
 	} else {

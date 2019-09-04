@@ -44,17 +44,31 @@ type balancer struct {
 	rand          *rand.Rand
 	monitorOfset  time.Duration
 	monitorJitter time.Duration
+	name          string
 }
 
 // New creates a new balancer.
-func New(resolver resolver.Interface) Balancer {
+func New(rslvr resolver.Interface) Balancer {
 	return &balancer{
-		resolver:      resolver,
+		name:          "balancer",
+		resolver:      rslvr,
 		upConns:       make([]grpc.Address, 0),
 		rand:          rand.New(rand.NewSource(int64(time.Now().Nanosecond()))),
 		monitorCh:     make(chan error, 1),
 		monitorOfset:  defaultMonitorOfset,
 		monitorJitter: defaultMonitorJitter,
+	}
+}
+
+func NewWithName(rslvr resolver.Interface, name string) Balancer {
+	return &balancer{
+		resolver:      rslvr,
+		upConns:       make([]grpc.Address, 0),
+		rand:          rand.New(rand.NewSource(int64(time.Now().Nanosecond()))),
+		monitorCh:     make(chan error, 1),
+		monitorOfset:  defaultMonitorOfset,
+		monitorJitter: defaultMonitorJitter,
+		name:          name,
 	}
 }
 
@@ -75,6 +89,8 @@ func (b *balancer) Start(target string, config grpc.BalancerConfig) error {
 	b.monitorExit = nil
 	// Send the current state
 	b.Add(1)
+	log.InfoLog("name", b.name, "msg", "balancer started", "target", b.service)
+
 	go b.notifyServiceInstances()
 	b.Add(1)
 	go b.monitor()
@@ -89,7 +105,7 @@ func (b *balancer) Up(addr grpc.Address) func(error) {
 	if !b.running {
 		return func(err error) {}
 	}
-	log.InfoLog("msg", "address UP notified", "addr", addr.Addr, "target", b.service)
+	log.InfoLog("name", b.name, "msg", "address UP notified", "addr", addr.Addr, "target", b.service)
 	b.upConns = append(b.upConns, addr)
 	// broadcast to waiting Gets.
 	close(b.upCh)
@@ -98,7 +114,7 @@ func (b *balancer) Up(addr grpc.Address) func(error) {
 	// This is the Down function that grpc will invoke when this connection breaks.
 	return func(err error) {
 		b.Lock()
-		log.ErrorLog("msg", "address DOWN notified", "addr", addr.Addr, "target", b.service, "err", err)
+		log.ErrorLog("name", b.name, "msg", "address DOWN notified", "addr", addr.Addr, "target", b.service, "err", err)
 		for ii := range b.upConns {
 			if b.upConns[ii] == addr {
 				b.upConns = append(b.upConns[:ii], b.upConns[ii+1:]...)
@@ -200,6 +216,7 @@ func (b *balancer) Get(ctx context.Context, opts grpc.BalancerGetOptions) (grpc.
 	for {
 		addr, fn, err := b.get()
 		if err == grpc.ErrClientConnClosing || addr.Addr != "" {
+			log.InfoLog("name", b.name, "msg", "balancer returning Address", "addr", addr.Addr, "target", b.service)
 			return addr, fn, err
 		}
 		b.RLock()
@@ -227,7 +244,7 @@ func (b *balancer) Close() error {
 	}
 	b.running = false
 	b.resolver.Deregister(b)
-	b.monitorExit = fmt.Errorf("close requested")
+	b.monitorExit = fmt.Errorf("%s close requested", b.name)
 	b.wakeUpMonitor(b.monitorExit)
 	close(b.notifyCh)
 	close(b.upCh)
