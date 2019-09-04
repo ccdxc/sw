@@ -60,6 +60,7 @@ func New(rslvr resolver.Interface) Balancer {
 	}
 }
 
+// NewWithName creates a new balancer with a name.
 func NewWithName(rslvr resolver.Interface, name string) Balancer {
 	return &balancer{
 		resolver:      rslvr,

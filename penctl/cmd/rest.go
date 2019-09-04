@@ -20,6 +20,7 @@ import (
 	"github.com/ghodss/yaml"
 
 	"github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/penctl/http2curl"
 )
 
 var penHTTPClient = &http.Client{}
@@ -46,6 +47,8 @@ const (
 func printHTTPReq(r *http.Request) {
 	if verbose {
 		fmt.Println("==== HTTP Request Start ====")
+		command, _ := http2curl.GetCurlCommand(r)
+		fmt.Println(command)
 		if r.ContentLength > twoKB {
 			fmt.Printf("RevProxy: ContentLength: %d\n", r.ContentLength)
 			dump, err := httputil.DumpRequest(r, false)

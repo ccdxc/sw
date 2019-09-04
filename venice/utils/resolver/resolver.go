@@ -96,17 +96,17 @@ func New(c *Config) Interface {
 	return r
 }
 
-func (r resolverClient) String()string {
+func (r *resolverClient) String() string {
 	var b strings.Builder
-	fmt.Fprintf(&b,"name:%s servers:%s ",r.config.Name, strings.Join(r.config.Servers,","))
+	fmt.Fprintf(&b, "name:%s servers:%s ", r.config.Name, strings.Join(r.config.Servers, ","))
 	fmt.Fprintf(&b, "Services:")
-	for srv,s := range r.svcsMap {
+	for srv, s := range r.svcsMap {
 
 		instStr := []string{}
-		for instName,inst := range s {
-			instStr = append(instStr, fmt.Sprintf("inst:%s,image:%s,node:%s,url:%s", instName,inst.Image,inst.Node,inst.URL))
+		for instName, inst := range s {
+			instStr = append(instStr, fmt.Sprintf("inst:%s,image:%s,node:%s,url:%s", instName, inst.Image, inst.Node, inst.URL))
 		}
-		fmt.Fprintf(&b,"%s:{ %s } ",srv,strings.Join(instStr," "))
+		fmt.Fprintf(&b, "%s:{ %s } ", srv, strings.Join(instStr, " "))
 	}
 
 	return b.String()
