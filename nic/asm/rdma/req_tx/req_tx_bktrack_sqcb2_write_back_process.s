@@ -73,6 +73,9 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr          d.{rrq_pindex, rrq_cindex}, 0
  
      tblwr          d.need_credits, 0
+     seq            c1, d.disable_credits, 1
+     tblwr.!c1      d.lsn_tx, d.lsn_rx
+     tblwr.!c1      d.lsn, d.lsn_rx
 
      // Update exp_rsp_psn to be one less than rexmit_psn
      sub            r3, d.rexmit_psn, 1

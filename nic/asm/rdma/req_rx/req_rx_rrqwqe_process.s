@@ -100,6 +100,9 @@ ack_or_nak_or_rnr:
 ack:
     cmov           r6, c6, K_BTH_PSN, K_TX_PSN // Branch Delay Slot
     mincr.c6       r6, 24, 1
+    seq            c2, CAPRI_KEY_FIELD(IN_P, rrq_empty), 1
+    scwlt24.!c2    c3, r6, d.e_psn
+    cmov.!c2       r6, c3, r6, d.e_psn
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
     phvwr.e        p.rexmit_psn, r6
     phvwrpair      CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \

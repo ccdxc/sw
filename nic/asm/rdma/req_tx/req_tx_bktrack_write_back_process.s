@@ -123,5 +123,10 @@ end:
 
 drop_bktrack:
      tblwr    SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
+     tblwr    d.bktrack_in_progress, 0
+     // Finally, clear bktrack_in_progress
+     SQCB1_ADDR_GET(r1)
+     add            r2, FIELD_OFFSET(sqcb1_t, bktrack_in_progress), r1
+     memwr.b        r2, 0
      phvwr.e  p.common.p4_intr_global_drop, 1
      CAPRI_SET_TABLE_0_VALID(0)
