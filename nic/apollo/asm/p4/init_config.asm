@@ -9,6 +9,8 @@ struct phv_ p;
 %%
 
 init_config:
+    .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
+    phvwr           p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
     bbne            k.service_header_valid, TRUE, service_header_done
     xor             r1, k.service_header_local_mapping_done, 0x1
     phvwr           p.control_metadata_local_mapping_ohash_lkp, r1

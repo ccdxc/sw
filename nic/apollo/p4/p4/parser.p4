@@ -55,19 +55,19 @@ header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 @pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.flags        tcp.flags
 @pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.window       tcp.window
 @pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.urgentPtr    tcp.urgentPtr
-//@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.ts           tcp_option_timestamp.ts
-//@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.prev_echo_ts tcp_option_timestamp.prev_echo_ts
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.ts           tcp_option_timestamp.ts
+@pragma pa_field_union ingress p4_to_p4plus_tcp_proxy.prev_echo_ts tcp_option_timestamp.prev_echo_ts
 header p4_to_p4plus_tcp_proxy_base_header_t p4_to_p4plus_tcp_proxy;
 
 @pragma synthetic_header
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq0 tcp_option_four_sack.first_le
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq0   tcp_option_four_sack.first_re
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq1 tcp_option_four_sack.second_le
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq1   tcp_option_four_sack.second_re
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq2 tcp_option_four_sack.third_le
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq2   tcp_option_four_sack.third_re
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq3 tcp_option_four_sack.fourth_le
-//@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq3   tcp_option_four_sack.fourth_re
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq0 tcp_option_four_sack.first_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq0   tcp_option_four_sack.first_re
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq1 tcp_option_four_sack.second_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq1   tcp_option_four_sack.second_re
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq2 tcp_option_four_sack.third_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq2   tcp_option_four_sack.third_re
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq3 tcp_option_four_sack.fourth_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq3   tcp_option_four_sack.fourth_re
 header p4_to_p4plus_tcp_proxy_sack_header_t p4_to_p4plus_tcp_proxy_sack;
 
 @pragma synthetic_header
@@ -125,6 +125,28 @@ header udp_t udp_2;
 header tcp_t tcp;
 header icmp_t icmp;
 
+// TCP options
+@pragma hdr_len parser_metadata.parse_tcp_counter
+header tcp_options_blob_t tcp_options_blob;
+header tcp_option_unknown_t tcp_option_unknown;
+header tcp_option_eol_t tcp_option_eol;
+header tcp_option_nop_t tcp_option_nop;
+header tcp_option_nop_t tcp_option_nop_1;
+header tcp_option_mss_t tcp_option_mss;
+header tcp_option_ws_t tcp_option_ws;
+header tcp_option_sack_perm_t tcp_option_sack_perm;
+@pragma pa_header_union ingress tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack
+@pragma no_ohi ingress
+header tcp_option_one_sack_t tcp_option_one_sack;
+@pragma no_ohi ingress
+header tcp_option_two_sack_t tcp_option_two_sack;
+@pragma no_ohi ingress
+header tcp_option_three_sack_t tcp_option_three_sack;
+@pragma no_ohi ingress
+header tcp_option_four_sack_t tcp_option_four_sack;
+@pragma no_ohi ingress
+header tcp_option_timestamp_t tcp_option_timestamp;
+
 /******************************************************************************
  * Parser OHI
  *****************************************************************************/
@@ -153,7 +175,8 @@ metadata parser_ohi_t ohi;
  *****************************************************************************/
 header_type parser_metadata_t {
     fields {
-        mirror_blob_len : 8;
+        parse_tcp_counter   : 8;
+        mirror_blob_len     : 8;
     }
 }
 @pragma pa_parser_local
@@ -324,8 +347,182 @@ parser parse_tcp {
     set_metadata(offset_metadata.l4_2, current + 0);
     set_metadata(key_metadata.sport, latest.srcPort);
     set_metadata(key_metadata.dport, latest.dstPort);
+    set_metadata(parser_metadata.parse_tcp_counter, (tcp.dataOffset << 2) - 20);
+    return select(parser_metadata.parse_tcp_counter) {
+        0 : ingress;
+        0x80 mask 0x80: parse_tcp_option_error;
+        default : parse_tcp_options_blob;
+    }
+}
+
+@pragma dont_advance_packet
+@pragma capture_payload_offset
+parser parse_tcp_options_blob {
+    set_metadata(parser_metadata.parse_tcp_counter, parser_metadata.parse_tcp_counter + 0);
+    extract(tcp_options_blob);
+    return parse_tcp_options;
+}
+
+parser parse_tcp_option_one_sack {
+    extract(tcp_option_one_sack);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 10);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_option_two_sack {
+    extract(tcp_option_two_sack);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 18);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_option_three_sack {
+    extract(tcp_option_three_sack);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 26);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_option_four_sack {
+    extract(tcp_option_four_sack);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 34);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_option_EOL {
+    extract(tcp_option_eol);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 1);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_option_NOP {
+    extract(tcp_option_nop);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 1);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+@pragma deparse_only
+parser parse_tcp_deparse_options {
+    extract(tcp_option_nop_1);
+    return parse_tcp_options;
+}
+
+parser parse_tcp_option_mss {
+    extract(tcp_option_mss);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 4);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_option_ws {
+    extract(tcp_option_ws);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 3);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_option_sack_perm {
+    extract(tcp_option_sack_perm);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 2);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_timestamp {
+    extract(tcp_option_timestamp);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - 10);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+parser parse_tcp_unknown_option {
+    extract(tcp_option_unknown);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - tcp_option_unknown.optLength);
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
+}
+
+@pragma dont_capture_payload_offset
+parser parse_tcp_option_error {
+    set_metadata(control_metadata.parse_tcp_option_error, 1);
     return ingress;
 }
+
+@pragma dont_capture_payload_offset
+parser parse_tcp_option_error2 {
+    set_metadata(control_metadata.parse_tcp_option_error, 1);
+    return ingress;
+}
+
+@pragma header_ordering tcp_option_mss tcp_option_ws tcp_option_sack_perm tcp_option_one_sack tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack tcp_option_timestamp tcp_option_unknown tcp_option_nop tcp_option_nop_1 tcp_option_eol
+parser parse_tcp_options {
+    return select(parser_metadata.parse_tcp_counter, current(0, 8)) {
+        0x0000 mask 0xff00 : ingress;
+        0x8000 mask 0x8000 : parse_tcp_option_error;
+        0x0000 mask 0x00ff : parse_tcp_option_EOL;
+        0x0001 mask 0x00ff : parse_tcp_option_NOP;
+        default : parse_tcp_multibyte_options;
+        0x0001 mask 0x0000 : parse_tcp_deparse_options;
+    }
+}
+
+parser parse_tcp_multibyte_options {
+    return select(current(0, 16)) {
+        0x0204 mask 0xffff : parse_tcp_option_mss;
+        0x0200 mask 0xff00 : parse_tcp_option_error2;
+        0x0303 mask 0xffff : parse_tcp_option_ws;
+        0x0300 mask 0xff00 : parse_tcp_option_error2;
+        0x0402 mask 0xffff : parse_tcp_option_sack_perm;
+        0x0400 mask 0xff00 : parse_tcp_option_error2;
+        0x050a mask 0xffff : parse_tcp_option_one_sack;
+        0x0512 mask 0xffff : parse_tcp_option_two_sack;
+        0x051a mask 0xffff : parse_tcp_option_three_sack;
+        0x0522 mask 0xffff : parse_tcp_option_four_sack;
+        0x0500 mask 0xff00 : parse_tcp_option_error2;
+        0x080a mask 0xffff : parse_tcp_timestamp;
+        0x0800 mask 0xff00 : parse_tcp_option_error2;
+        0x0000 mask 0x00ff : parse_tcp_option_error2;
+        default: parse_tcp_unknown_option;
+    }
+}
+
 
 parser parse_udp_1 {
     extract(udp_1);

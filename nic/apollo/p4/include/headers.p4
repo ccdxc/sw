@@ -68,6 +68,117 @@ header_type tcp_t {
     }
 }
 
+header_type tcp_options_blob_t {
+    fields {
+        hdr_len : 8;
+        data : *;
+    }
+    length : hdr_len;
+    max_length : 40;
+}
+
+header_type tcp_option_eol_t {
+    fields {
+        optType : 8;
+    }
+}
+
+header_type tcp_option_nop_t {
+    fields {
+        optType : 8;
+    }
+}
+
+header_type tcp_option_mss_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        value : 16;
+    }
+}
+
+header_type tcp_option_ws_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        value : 8;
+    }
+}
+
+header_type tcp_option_sack_perm_t {
+    fields {
+        optType: 8;
+        optLength : 8;
+    }
+}
+
+header_type tcp_option_timestamp_t {
+    fields {
+        optType : 8;
+        optLength: 8;
+        ts : 32;
+        prev_echo_ts : 32;
+    }
+}
+
+header_type tcp_option_one_sack_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        first_le : 32;
+        first_re : 32;
+    }
+}
+
+header_type tcp_option_two_sack_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        first_le : 32;
+        first_re : 32;
+        second_le : 32;
+        second_re : 32;
+    }
+}
+
+header_type tcp_option_three_sack_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        first_le : 32;
+        first_re : 32;
+        second_le : 32;
+        second_re : 32;
+        third_le : 32;
+        third_re : 32;
+    }
+}
+
+header_type tcp_option_four_sack_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        first_le : 32;
+        first_re : 32;
+        second_le : 32;
+        second_re : 32;
+        third_le : 32;
+        third_re : 32;
+        fourth_le : 32;
+        fourth_re : 32;
+    }
+}
+
+header_type tcp_option_unknown_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        data : *;
+    }
+    length : optLength;
+    max_length : 40;
+}
+
 header_type udp_t {
     fields {
         srcPort : 16;

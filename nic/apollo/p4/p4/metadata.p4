@@ -59,6 +59,7 @@ header_type control_metadata_t {
         tunneled_packet                     : 1;
         fastpath                            : 1;
         mode                                : 2;
+        parse_tcp_option_error              : 1;
     }
 }
 

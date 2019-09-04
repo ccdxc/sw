@@ -253,7 +253,20 @@ p4plus_app_tcp_proxy:
                        service_header_valid, \
                        capri_p4_intrinsic_valid}, 0x18005
     phvwr           p.p4_to_p4plus_tcp_proxy_table0_valid, 1
-    phvwr.e         p.tcp_valid, 0
+
+    or              r1, k.tcp_option_one_sack_valid, k.tcp_option_two_sack_valid, 1
+    or              r1, r1, k.tcp_option_three_sack_valid, 2
+    or              r1, r1, k.tcp_option_four_sack_valid, 3
+    indexn          r2, r1, [0xF, 0x7, 0x3, 0x1, 0x0], 0
+    or              r2, r2, k.tcp_option_timestamp_valid, 3
+    seq             c1, k.ipv4_1_valid, 1
+    or.c1           r2, r2, k.ipv4_1_diffserv[1:0], 4
+    or.!c1          r2, r2, k.ipv6_1_trafficClass[1:0]
+    phvwr           p.{p4_to_p4plus_tcp_proxy_ecn, \
+                        p4_to_p4plus_tcp_proxy_timestamp_valid, \
+                        p4_to_p4plus_tcp_proxy_num_sack_blocks}, r2
+
+    phvwr.e         p.{tcp_option_eol_valid...tcp_valid}, r0
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
                     (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                      CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_TCP_PROXY_HDR_SZ)
