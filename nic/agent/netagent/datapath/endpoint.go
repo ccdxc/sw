@@ -403,17 +403,17 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)
 		if err != nil {
-			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			log.Errorf("Error deleting local endpoint. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_NOT_FOUND) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)
 		if err != nil {
-			log.Errorf("Error deleting remote endpoint. Err: %v", err)
+			log.Errorf("Error deleting local endpoint. Err: %v", err)
 			return err
 		}
 	}
@@ -440,7 +440,7 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			log.Errorf("Error deleting enic. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_NOT_FOUND) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
@@ -720,7 +720,7 @@ func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 			log.Errorf("Error deleting remote endpoint. Err: %v", err)
 			return err
 		}
-		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_NOT_FOUND) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}

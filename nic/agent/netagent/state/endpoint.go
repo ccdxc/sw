@@ -80,7 +80,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 
 	if ok {
 		// check if endpoint contents are same
-		if !proto.Equal(oldEp, ep) {
+		if !proto.Equal(&oldEp.Spec, &ep.Spec) {
 			log.Errorf("Endpoint %+v already exists. New ep {%+v}", oldEp, ep)
 			return errors.New("Endpoint already exists")
 		}
@@ -286,8 +286,10 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 
 	// check if endpoint contents are same
 	if proto.Equal(&oldEp.Spec, &ep.Spec) {
+		log.Info("Nothing to update")
 		return nil
 	}
+	log.Infof("Valid EP Update. Old: %v, New: %v", oldEp.Spec, ep.Spec)
 
 	// verify endpoint's network is not changing
 	if oldEp.Spec.NetworkName != ep.Spec.NetworkName {
