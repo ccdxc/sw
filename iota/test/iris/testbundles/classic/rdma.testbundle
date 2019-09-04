@@ -483,53 +483,53 @@ testcases:
     #=======================================
     # KRping
     #=======================================
-#    -   name    : KRping
-#        testcase: testcases.rdma.krping
-#        stress  : True
-#        args    :
-#            type: remote_only
-#        iterators :
-#            type    : nested
-#            compat: ['yes', 'no']
-#            server_inv: ['yes', 'no']
-#            local_dma_lkey: ['yes', 'no']
-#
-#    -   name    : KRping_Sweep
-#        testcase: testcases.rdma.krping
-#        stress  : True
-#        args    :
-#            type: remote_only
-#        iterators :
-#            type    : nested
-#            compat: ['yes', 'no']
-#            server_inv: ['yes', 'no']
-#            local_dma_lkey: ['yes']
-#            size: [4096, 65536]
-#
-#    -   name    : KRping_TxDepth
-#        testcase: testcases.rdma.krping
-#        stress  : True
-#        args    :
-#            type: remote_only
-#        iterators :
-#            type    : nested
-#            compat: ['yes', 'no']
-#            server_inv: ['yes', 'no']
-#            local_dma_lkey: ['yes']
-#            txdepth: [256, 1021]
-#            count: [5, 100, 2000]
-#
-#    -   name    : KRping_Fr
-#        testcase: testcases.rdma.krping
-#        stress  : True
-#        args    :
-#            type: remote_only
-#        iterators :
-#            type    : nested
-#            compat: ['no']
-#            fr: ['yes']
-#            txdepth: [512]
-#            count: [1000]
+    -   name    : KRping
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            compat: ['yes', 'no']
+            server_inv: ['yes', 'no']
+            local_dma_lkey: ['yes', 'no']
+
+    -   name    : KRping_Sweep
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            compat: ['yes', 'no']
+            server_inv: ['yes', 'no']
+            local_dma_lkey: ['yes']
+            size: [4096, 65536]
+
+    -   name    : KRping_TxDepth
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            compat: ['yes', 'no']
+            server_inv: ['yes', 'no']
+            local_dma_lkey: ['yes']
+            txdepth: [256, 1021]
+            count: [5, 100, 2000]
+
+    -   name    : KRping_Fr
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            compat: ['no']
+            fr: ['yes']
+            txdepth: [512]
+            count: [1000]
 
     #=======================================
     # Teardown
