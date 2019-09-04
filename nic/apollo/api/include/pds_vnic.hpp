@@ -38,6 +38,10 @@ typedef struct pds_vnic_spec_s {
     pds_meter_key_t v6_meter;          ///< IPv6 Metering policy to apply on
                                        ///< Tx and Rx traffic
     bool switch_vnic;                  ///< TRUE if vnic is a switch/bridge vnic
+    pds_policy_key_t ing_v4_policy;    ///< ingress IPv4 policy table
+    pds_policy_key_t ing_v6_policy;    ///< ingress IPv6 policy table
+    pds_policy_key_t egr_v4_policy;    ///< egress IPv4 policy table
+    pds_policy_key_t egr_v6_policy;    ///< egress IPv6 policy table
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status

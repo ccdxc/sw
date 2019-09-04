@@ -253,6 +253,10 @@ vnic_api_spec_to_proto_spec (pds::VnicSpec *proto_spec,
         }
     }
     proto_spec->set_switchvnic(api_spec->switch_vnic);
+    proto_spec->set_ingv4securitypolicyid(api_spec->ing_v4_policy.id);
+    proto_spec->set_ingv6securitypolicyid(api_spec->ing_v6_policy.id);
+    proto_spec->set_egv4securitypolicyid(api_spec->egr_v4_policy.id);
+    proto_spec->set_egv6securitypolicyid(api_spec->egr_v6_policy.id);
 }
 
 // populate VPCPeer protobuf spec from VPCPeer API spec
@@ -1828,6 +1832,11 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->v4_meter.id = proto_spec.v4meterid();
     api_spec->v6_meter.id = proto_spec.v6meterid();
     api_spec->switch_vnic = proto_spec.switchvnic();
+    api_spec->ing_v4_policy.id = proto_spec.ingv4securitypolicyid();
+    api_spec->ing_v6_policy.id = proto_spec.ingv6securitypolicyid();
+    api_spec->egr_v4_policy.id = proto_spec.egv4securitypolicyid();
+    api_spec->egr_v6_policy.id = proto_spec.egv6securitypolicyid();
+
     return SDK_RET_OK;
 }
 

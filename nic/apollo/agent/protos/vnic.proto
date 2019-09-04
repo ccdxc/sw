@@ -50,6 +50,14 @@ message VnicSpec {
   uint32      V4MeterId             = 12;
   // metering policy to apply for IPv6 traffic coming in and going out of vnic
   uint32      V6MeterId             = 13;
+  // identifier of ingress IPv4 security policy to be enforced
+  uint32      IngV4SecurityPolicyId = 14;
+  // identifier of ingress IPv6 security policy to be enforced
+  uint32      IngV6SecurityPolicyId = 15;
+  // identifier of egress IPv4 security policy to be enforced
+  uint32      EgV4SecurityPolicyId  = 16;
+  // identifier of egress IPv6 security policy to be enforced
+  uint32      EgV6SecurityPolicyId  = 17;
 }
 
 // operational status of Vnic, if any
