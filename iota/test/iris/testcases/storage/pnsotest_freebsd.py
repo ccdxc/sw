@@ -43,7 +43,7 @@ def GetCounts():
 
 def GetTestCount():
     with open(GlobalOptions.test) as f:
-        testobj = yaml.load(f, Loader=yaml.FullLoader)
+        testobj = yaml.load(f)
     f.close()
     return len(testobj['tests'])
 
