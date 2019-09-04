@@ -381,9 +381,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
           const thirdStatName = thirdStatNaples.spec.id;
           let thirdStat: string = thirdStatName;
           if (thirdStat.length > 0) {
-            if (thirdStat.length > 8) {
-              thirdStat = thirdStat.substring(0, 9) + '...';
-            }
+            thirdStat = Utility.getHeroCardDisplayValue(thirdStat); // VS-736
             thirdStat += ' (' + Math.round(maxNaples.max) + '%)';
             heroCard.thirdStat.value = thirdStat;
             heroCard.thirdStat.url = '/cluster/naples/' + thirdStatNaples.meta.name;

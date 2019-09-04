@@ -49,6 +49,8 @@ export class Utility {
   // In RBAC, when kind is ['AuditEvent', 'FwlogsQuery', 'Event'] , there is no group
   public static KINDS_WITHOUT_GROUP = ['AuditEvent', 'FwlogsQuery', 'Event'];
 
+  public static HERO_CARD_THIRDVALUE_LENGTH: number = 15;
+
   myControllerService: ControllerService;
   myLogService: LogService;
 
@@ -205,6 +207,13 @@ export class Utility {
 
   public static getAuditEventCacheSize(): number {
     return 10; // For future code refactoring, we are planning to use user-preferences and env.variable
+  }
+
+  public static getHeroCardDisplayValue(value: string , maxLen: number = this.HERO_CARD_THIRDVALUE_LENGTH): string {
+    if ( value && value.length > maxLen) {
+      return  value.substring(0, 15) + '...';
+     }
+     return value;
   }
 
   /**
