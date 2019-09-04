@@ -59,6 +59,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'SERVICE_STOPPED',
     'SERVICE_UNRESPONSIVE',
     'SYSTEM_COLDBOOT',
+    'SYSTEM_RESOURCE_USAGE',
   ],
 }
 
@@ -277,5 +278,10 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "SYSTEM_COLDBOOT",
       "Severity": EventsEvent_severity.warn,
       "Desc": "System cold booted",
+  },
+  'SYSTEM_RESOURCE_USAGE' : {
+      "Name": "SYSTEM_RESOURCE_USAGE",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "System resource usage is high",
   },
 };

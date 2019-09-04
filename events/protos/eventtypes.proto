@@ -181,6 +181,10 @@ enum EventTypes {
                                            (severity) = WARN,
                                            (desc)     = "System cold booted"];
 
+    SYSTEM_RESOURCE_USAGE           = 507 [(category) = System,
+                                          (severity) = WARN,
+                                          (desc)     = "System resource usage is high"];
+
     // ------------------------------ Rollout events -------------------------- //
     ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,

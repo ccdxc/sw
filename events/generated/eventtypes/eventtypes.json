@@ -222,6 +222,11 @@
    "Name": "SYSTEM_COLDBOOT",
    "Severity": "warn",
    "Desc": "System cold booted"
+  },
+  {
+   "Name": "SYSTEM_RESOURCE_USAGE",
+   "Severity": "warn",
+   "Desc": "System resource usage is high"
   }
  ]
 }

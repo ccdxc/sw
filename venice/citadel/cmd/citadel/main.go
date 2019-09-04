@@ -3,12 +3,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"path/filepath"
 	rdebug "runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/influxdata/influxdb/models"
+
+	"github.com/shirou/gopsutil/disk"
 
 	"github.com/pensando/sw/venice/utils/k8s"
 
@@ -36,6 +41,7 @@ import (
 )
 
 const maxRetry = 120
+const thresholdUsage = 80
 
 // periodicFreeMemory forces garbage collection every minute and frees OS memory
 func periodicFreeMemory() {
@@ -44,6 +50,44 @@ func periodicFreeMemory() {
 		case <-time.After(time.Minute):
 			// force GC and free OS memory
 			rdebug.FreeOSMemory()
+		}
+	}
+}
+
+func reportStats(node string, dbpath string, br *broker.Broker) {
+	for {
+		select {
+		case <-time.After(time.Minute * 5):
+			f, err := disk.Usage(dbpath)
+			if err != nil {
+				log.Errorf("failed to get disk stats, %v", err)
+				continue
+			}
+
+			points, err := models.NewPoint("ctstats", models.NewTags(map[string]string{
+				"node": node,
+				"path": dbpath,
+			}), map[string]interface{}{
+				"disk_usedpercent": f.UsedPercent,
+				"disk_used":        f.Used >> 20,
+				"disk_free":        f.Free >> 20,
+			}, time.Now())
+			if err != nil {
+				log.Errorf("failed to parse disk stats, %v", err)
+				continue
+			}
+
+			err = br.WritePoints(context.Background(), globals.DefaultTenant, models.Points{points})
+			if err != nil {
+				log.Errorf("error writing points. Err: %v", err)
+				continue
+			}
+
+			// generate event
+			if f.UsedPercent > thresholdUsage {
+				recorder.Event(eventtypes.SYSTEM_RESOURCE_USAGE, fmt.Sprintf("%v disk usage is high (%.2f%%)", globals.Citadel, f.UsedPercent), nil)
+			}
+
 		}
 	}
 }
@@ -174,6 +218,7 @@ func main() {
 	log.Infof("query server is listening on %+v", qsrv)
 
 	go periodicFreeMemory()
+	go reportStats(*nodeUUID, *dbPath, br)
 
 	// Wait forever
 	select {}

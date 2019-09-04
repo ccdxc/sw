@@ -261,6 +261,12 @@ func init() {
 		Category: "system",
 		Desc:     "System cold booted"}
 
+	eventTypes[SYSTEM_RESOURCE_USAGE] = &EventTypeAttributes{
+		EType:    SYSTEM_RESOURCE_USAGE.String(),
+		Severity: "warn",
+		Category: "system",
+		Desc:     "System resource usage is high"}
+
 	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
 		EType:    ROLLOUT_STARTED.String(),
 		Severity: "info",

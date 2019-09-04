@@ -69,6 +69,7 @@ export enum EventsEvent_type {
     'SERVICE_STOPPED' = "SERVICE_STOPPED",
     'SERVICE_UNRESPONSIVE' = "SERVICE_UNRESPONSIVE",
     'SYSTEM_COLDBOOT' = "SYSTEM_COLDBOOT",
+    'SYSTEM_RESOURCE_USAGE' = "SYSTEM_RESOURCE_USAGE",
 }
 
 export enum EventsEvent_category {
