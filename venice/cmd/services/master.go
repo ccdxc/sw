@@ -357,6 +357,11 @@ func (m *masterService) startLeaderServices() error {
 				m.diagModuleSvc.Enqueue(diagmod, module.Update)
 				log.Infof("updating diagnostic module: %+v", *diagmod)
 			}
+		case types.K8sPodDeleted:
+			for _, diagmod := range diagModules {
+				m.diagModuleSvc.Enqueue(diagmod, module.Delete)
+				log.Infof("deleting diagnostic module: %+v", *diagmod)
+			}
 		}
 		return nil
 	}
