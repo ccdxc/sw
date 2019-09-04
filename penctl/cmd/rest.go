@@ -69,7 +69,7 @@ func printHTTPReq(r *http.Request) {
 func printHTTPResp(resp *http.Response) {
 	if verbose {
 		fmt.Println("==== HTTP Response Start ====")
-		dump, _ := httputil.DumpResponse(resp, true)
+		dump, _ := httputil.DumpResponse(resp, false)
 		fmt.Printf("%s\n", string(dump))
 		fmt.Println("==== HTTP Response End ====")
 	}
