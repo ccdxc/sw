@@ -2415,6 +2415,7 @@ endpoint_delete (EndpointDeleteRequest& req,
     ret = find_ep(req.key_or_handle(), &ep, &api_status);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to find EP");
+        ret = HAL_RET_EP_NOT_FOUND;
         goto end;
     }
     HAL_TRACE_DEBUG("Deleting EP {}", ep_l2_key_to_str(ep));
