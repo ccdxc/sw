@@ -73,6 +73,17 @@ var _ = BeforeSuite(func() {
 		agIP := net.ParseIP(ts.tu.FirstNaplesIP).To4()
 		Expect(len(agIP)).ShouldNot(Equal(0))
 		for idx := 0; idx < ts.tu.NumNaplesHosts; idx++ {
+			// nmd shuts down all interfaces in host mode.
+			// bring up oob_mnic0 to send mode switch
+			gw := net.ParseIP(ts.tu.NaplesNodeIPs[idx])
+			gw[len(gw)-1] = 1 // 1st ip is used as gateway
+			By(fmt.Sprintf("setting gateway:%v", gw))
+			st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ip link set oob_mnic0 up", ts.tu.NaplesNodes[idx]))
+			Expect(st).Should(Equal(""))
+			time.Sleep(time.Second)
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s route add default gw %v oob_mnic0", ts.tu.NaplesNodes[idx], gw.String()))
+			Expect(st).Should(Equal(""))
+
 			agURL := agIP.String() + ":" + globals.AgentProxyPort
 			By(fmt.Sprintf("ts:%s connecting to netagent [%s]", time.Now().String(), agURL))
 
@@ -117,6 +128,7 @@ var _ = BeforeSuite(func() {
 			// Ensure that a random static IP is given
 			naples.Spec.IPConfig = &cluster.IPConfig{
 				IPAddress: agIP.String() + "/24",
+				DefaultGW: gw.String(),
 			}
 			By(fmt.Sprintf("Switching Naples %+v to managed mode", naples))
 			out, err := json.Marshal(&naples)

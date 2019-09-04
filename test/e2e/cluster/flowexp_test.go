@@ -65,7 +65,6 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should create/update/delete flow export policy", func() {
-			Skip("Temporarily skipped pending successful ARP resolution changes in the dind env")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
@@ -246,7 +245,6 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should create/delete multiple flow export policy with the same collector", func() {
-			Skip("Temporarily skipped pending successful ARP resolution changes in the dind env")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
@@ -461,7 +459,6 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should create/delete multiple flow export policy with the same match-rule", func() {
-			Skip("Temporarily skipped pending successful ARP resolution changes in the dind env")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)

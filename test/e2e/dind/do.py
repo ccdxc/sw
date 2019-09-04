@@ -173,10 +173,7 @@ class NaplesNode(Node):
         else:
             runCommand("""docker run --cap-add=NET_ADMIN --dns-search my.dummy -td {} -P -l pens -l pens-naples --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
             runCommand("""docker exec {}  bash -c "echo exit 0 > /sbin/start-stop-daemon; chmod 700 /sbin/start-stop-daemon" """.format(self.name))
-            runCommand("""docker exec {}  bash -c "ip link add oob_mnic0 type veth peer name dhcp-srv" """.format(self.name))
-            runCommand("""docker exec {}  bash -c "ip link set oob_mnic0 up" """.format(self.name))
-            runCommand("""docker exec {}  bash -c "ip link set arp on dev oob_mnic0" """.format(self.name))
-            runCommand("""docker exec {}  bash -c "arp -i oob_mnic0 -s 192.168.30.1 aa:bb:cc:dd:ee:ff" """.format(self.name))
+            runCommand("""docker exec {}  bash -c "ip link set eth0 down && sleep 1 && ip link set eth0 name oob_mnic0 && ip link set oob_mnic0 up" """.format(self.name))
             runCommand("""docker exec {}  bash -c "mkdir -p /sysconfig/config0 /sysconfig/config1" """.format(self.name))
             runCommand("""docker exec {}  bash -c "echo '{}' > /tmp/fru.json" """.format(self.name, makeNaplesFRU(self.containerIndex).replace('"', '\\"')))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando """.format(self.name))

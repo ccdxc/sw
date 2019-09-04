@@ -19,6 +19,6 @@ if [ $? -ne 0 ]; then
     docker exec $node mkdir -p /var/lib/pensando/events
     docker exec $node tar Ccf /var/lib/pensando/events - . | tar Cxf /tmp/ClusterLogs/$node/events -
   done
-  tar cvfz /tmp/clusterlogs.tgz /tmp/ClusterLogs
+  tar cfz /tmp/clusterlogs.tgz /tmp/ClusterLogs
   exit -1
 fi
