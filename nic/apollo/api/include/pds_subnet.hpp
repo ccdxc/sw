@@ -38,6 +38,7 @@ typedef struct pds_subnet_spec_s {
     pds_policy_key_t ing_v6_policy;          ///< ingress IPv6 policy table
     pds_policy_key_t egr_v4_policy;          ///< egress IPv4 policy table
     pds_policy_key_t egr_v6_policy;          ///< egress IPv6 policy table
+    pds_encap_t fabric_encap;                ///< fabric encap for this subnet
 } __PACK__ pds_subnet_spec_t;
 
 /// \brief Subnet status

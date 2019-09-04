@@ -56,9 +56,8 @@ using sdk::asic::pd::port_queue_credit_t;
 using sdk::asic::pd::queue_credit_t;
 
 static inline void
-queue_credits_proto_fill(uint32_t port_num,
-                         port_queue_credit_t *credit,
-                         void *ctxt)
+queue_credits_proto_fill (uint32_t port_num, port_queue_credit_t *credit,
+                          void *ctxt)
 {
     QueueCreditsGetResponse *proto = (QueueCreditsGetResponse *)ctxt;
     auto port_credit = proto->add_portqueuecredit();
@@ -75,7 +74,8 @@ queue_credits_proto_fill(uint32_t port_num,
 static inline void
 lif_api_spec_to_proto (void *entry, void *ctxt)
 {
-    auto proto_spec = ((pds::LifGetResponse *)ctxt)->add_response()->mutable_spec();
+    auto proto_spec =
+        ((pds::LifGetResponse *)ctxt)->add_response()->mutable_spec();
     pds_lif_spec_t *api_spec = (pds_lif_spec_t *)entry;
 
     proto_spec->set_lifid(api_spec->key);
@@ -203,10 +203,10 @@ pds_tag_proto_spec_to_api_spec (pds_tag_spec_t *api_spec,
         api_spec->rules[i].tag = proto_rule.tag();
         api_spec->rules[i].priority = proto_rule.priority();
         api_spec->rules[i].num_prefixes = proto_rule.prefix_size();
-        api_spec->rules[i].prefixes = (ip_prefix_t *)SDK_MALLOC(
-                                                 PDS_MEM_ALLOC_ID_TAG,
-                                                 api_spec->rules[i].num_prefixes *
-                                                 sizeof(ip_prefix_t));
+        api_spec->rules[i].prefixes =
+            (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
+                                      api_spec->rules[i].num_prefixes *
+                                          sizeof(ip_prefix_t));
         for (int j = 0; j < proto_rule.prefix_size(); j ++) {
             ippfx_proto_spec_to_api_spec(
                         &api_spec->rules[i].prefixes[j], proto_rule.prefix(j));
@@ -334,7 +334,8 @@ service_api_spec_to_proto_spec (pds::SvcMappingSpec *proto_spec,
     ipaddr_api_spec_to_proto_spec(
                 proto_spec->mutable_privateip(), &api_spec->backend_ip);
     ipaddr_api_spec_to_proto_spec(
-                proto_spec->mutable_providerip(), &api_spec->backend_provider_ip);
+                proto_spec->mutable_providerip(),
+                &api_spec->backend_provider_ip);
     proto_spec->set_vpcid(api_spec->vpc.id);
     proto_spec->set_port(api_spec->svc_port);
 }
@@ -1015,7 +1016,8 @@ pds_meter_debug_stats_fill (pds_meter_debug_stats_t *stats, void *ctxt)
 }
 
 static inline void
-pds_session_debug_stats_fill (uint32_t idx, pds_session_debug_stats_t *stats, void *ctxt)
+pds_session_debug_stats_fill (uint32_t idx, pds_session_debug_stats_t *stats,
+                              void *ctxt)
 {
     pds::SessionStatsGetResponse *rsp = (pds::SessionStatsGetResponse *)ctxt;
     auto proto_stats = rsp->add_stats();
@@ -1122,7 +1124,8 @@ static inline void
 pds_pb_stats_entry_fill (pds_pb_debug_stats_t *pds_stats, void *ctxt)
 {
     sdk::platform::capri::tm_pb_debug_stats_t *stats = &pds_stats->stats;
-    sdk::platform::capri::capri_queue_stats_t *qos_queue_stats = &pds_stats->qos_queue_stats;
+    sdk::platform::capri::capri_queue_stats_t *qos_queue_stats =
+        &pds_stats->qos_queue_stats;
     pds::PbStatsGetResponse *rsp = (pds::PbStatsGetResponse *)ctxt;
     auto pb_stats = rsp->mutable_pbstats()->add_portstats();
     auto port = pb_stats->mutable_packetbufferport();
@@ -1390,6 +1393,8 @@ subnet_api_spec_to_proto_spec (pds::SubnetSpec *proto_spec,
     proto_spec->set_ingv6securitypolicyid(api_spec->ing_v6_policy.id);
     proto_spec->set_egv4securitypolicyid(api_spec->egr_v4_policy.id);
     proto_spec->set_egv6securitypolicyid(api_spec->egr_v6_policy.id);
+    pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
+                             &api_spec->fabric_encap);
 }
 
 // populate proto buf status from subnet API status
@@ -1441,6 +1446,7 @@ subnet_proto_spec_to_api_spec (pds_subnet_spec_t *api_spec,
     api_spec->ing_v6_policy.id = proto_spec.ingv6securitypolicyid();
     api_spec->egr_v4_policy.id = proto_spec.egv4securitypolicyid();
     api_spec->egr_v6_policy.id = proto_spec.egv6securitypolicyid();
+    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
 }
 
 // Build VPC API spec from protobuf spec
