@@ -143,7 +143,7 @@ DebugSvcImpl::TableStatsGet(ServerContext *context, const Empty *proto_req,
                             pds::TableStatsGetResponse *proto_rsp) {
     sdk_ret_t ret;
 
-    if ((ret = debug::pds_table_stats_get(pds_table_stats_entry_fill, proto_rsp)) != SDK_RET_OK) {
+    if ((ret = debug::pds_table_stats_get(pds_table_stats_entry_to_proto, proto_rsp)) != SDK_RET_OK) {
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 
@@ -203,7 +203,7 @@ DebugSvcImpl::PbStatsGet(ServerContext *context, const Empty *proto_req,
                          pds::PbStatsGetResponse *proto_rsp) {
     sdk_ret_t ret;
 
-    if ((ret = debug::pds_pb_stats_get(pds_pb_stats_entry_fill, proto_rsp)) != SDK_RET_OK) {
+    if ((ret = debug::pds_pb_stats_get(pds_pb_stats_entry_to_proto, proto_rsp)) != SDK_RET_OK) {
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 
@@ -287,7 +287,7 @@ DebugSvcImpl::MeterStatsGet(ServerContext *context, const pds::MeterStatsGetRequ
                             pds::MeterStatsGetResponse *rsp) {
     sdk_ret_t ret;
 
-    if ((ret = debug::pds_meter_stats_get(pds_meter_debug_stats_fill,
+    if ((ret = debug::pds_meter_stats_get(pds_meter_debug_stats_to_proto,
                                           req->statsindexlow(),
                                           req->statsindexhigh(),
                                           rsp)) != SDK_RET_OK) {
@@ -302,7 +302,7 @@ DebugSvcImpl::SessionStatsGet(ServerContext *context, const pds::SessionStatsGet
                               pds::SessionStatsGetResponse *rsp) {
     sdk_ret_t ret;
 
-    if ((ret = debug::pds_session_stats_get(pds_session_debug_stats_fill,
+    if ((ret = debug::pds_session_stats_get(pds_session_debug_stats_to_proto,
                                             req->statsindexlow(),
                                             req->statsindexhigh(),
                                             rsp)) != SDK_RET_OK) {
@@ -316,7 +316,7 @@ Status
 DebugSvcImpl::QueueCreditsGet(ServerContext *context, const Empty *req,
                               pds::QueueCreditsGetResponse *rsp) {
     sdk_ret_t ret;
-    ret = sdk::asic::pd::queue_credits_get(queue_credits_proto_fill, rsp);
+    ret = sdk::asic::pd::queue_credits_get(pds_queue_credits_to_proto, rsp);
     rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }

@@ -8,7 +8,7 @@
 Status
 SessionSvcImpl::SessionGet(ServerContext *context, const Empty *req,
                            grpc::ServerWriter<pds::SessionGetResponse> *writer) {
-    debug::pds_session_get(pds_session_fill, writer);
+    debug::pds_session_get(pds_session_to_proto, writer);
     return Status::OK;
 }
 
@@ -21,7 +21,7 @@ SessionSvcImpl::FlowGet(ServerContext *context, const Empty *req,
     flow.msg.clear_flow();
     flow.count = 0;
 
-    debug::pds_flow_get(pds_flow_fill, &flow);
+    debug::pds_flow_get(pds_flow_to_proto, &flow);
 
     return Status::OK;
 }

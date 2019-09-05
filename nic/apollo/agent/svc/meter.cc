@@ -30,7 +30,7 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        ret = pds_meter_proto_spec_to_api_spec(api_spec, request);
+        ret = pds_meter_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->meter_slab()->free(api_spec);
             break;
@@ -71,7 +71,7 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        ret = pds_meter_proto_spec_to_api_spec(api_spec, request);
+        ret = pds_meter_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->meter_slab()->free(api_spec);
             break;
@@ -131,11 +131,11 @@ MeterSvcImpl::MeterGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        meter_api_info_to_proto(&info, proto_rsp);
+        pds_meter_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::meter_get_all(meter_api_info_to_proto, proto_rsp);
+        ret = core::meter_get_all(pds_meter_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;

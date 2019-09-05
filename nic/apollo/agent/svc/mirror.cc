@@ -31,7 +31,7 @@ MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        ret = mirror_session_proto_to_api_spec(api_spec, request);
+        ret = pds_mirror_session_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             core::agent_state::state()->mirror_session_slab()->free(api_spec);
             break;
@@ -67,7 +67,7 @@ MirrorSvcImpl::MirrorSessionUpdate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        ret = mirror_session_proto_to_api_spec(api_spec, request);
+        ret = pds_mirror_session_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             core::agent_state::state()->mirror_session_slab()->free(api_spec);
             break;
@@ -113,7 +113,7 @@ MirrorSvcImpl::MirrorSessionGet(ServerContext *context,
         return Status::OK;
     }
     if (proto_req->id_size() == 0) {
-        ret = core::mirror_session_get_all(mirror_session_api_info_to_proto,
+        ret = core::mirror_session_get_all(pds_mirror_session_api_info_to_proto,
                                            proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
@@ -125,11 +125,11 @@ MirrorSvcImpl::MirrorSessionGet(ServerContext *context,
             break;
         }
         auto response = proto_rsp->add_response();
-        mirror_session_api_to_proto_spec(response->mutable_spec(), &info.spec);
-        mirror_session_api_status_to_proto_status(response->mutable_status(),
-                                                  &info.status);
-        mirror_session_api_stats_to_proto_stats(response->mutable_stats(),
-                                                &info.stats);
+        pds_mirror_session_api_spec_to_proto(response->mutable_spec(), &info.spec);
+        pds_mirror_session_api_status_to_proto(response->mutable_status(),
+                                               &info.status);
+        pds_mirror_session_api_stats_to_proto(response->mutable_stats(),
+                                              &info.stats);
     }
     return Status::OK;
 }

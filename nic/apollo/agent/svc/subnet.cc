@@ -31,7 +31,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        subnet_proto_spec_to_api_spec(api_spec, request);
+        pds_subnet_proto_to_api_spec(api_spec, request);
         hooks::subnet_create(api_spec);
         ret = core::subnet_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -63,7 +63,7 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        subnet_proto_spec_to_api_spec(api_spec, request);
+        pds_subnet_proto_to_api_spec(api_spec, request);
         ret = core::subnet_update(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -106,7 +106,7 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
     }
     if (proto_req->id_size() == 0) {
         // get all
-        ret = core::subnet_get_all(subnet_api_info_to_proto, proto_rsp);
+        ret = core::subnet_get_all(pds_subnet_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
@@ -117,11 +117,11 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
             break;
         }
         auto response = proto_rsp->add_response();
-        subnet_api_spec_to_proto_spec(
+        pds_subnet_api_spec_to_proto(
                 response->mutable_spec(), &info.spec);
-        subnet_api_status_to_proto_status(
+        pds_subnet_api_status_to_proto(
                 response->mutable_status(), &info.status);
-        subnet_api_stats_to_proto_stats(
+        pds_subnet_api_stats_to_proto(
                 response->mutable_stats(), &info.stats);
     }
     return Status::OK;

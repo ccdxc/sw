@@ -22,10 +22,10 @@ IfSvcImpl::LifGet(ServerContext *context,
             pds_lif_key_t key = proto_req->lifid(i);
             ret = pds_lif_read(&key, &spec);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            lif_api_spec_to_proto(&spec, proto_rsp);
+            pds_lif_api_spec_to_proto(&spec, proto_rsp);
         }
         if (proto_req->lifid_size() == 0) {
-            ret = pds_lif_read_all(lif_api_spec_to_proto, proto_rsp);
+            ret = pds_lif_read_all(pds_lif_api_spec_to_proto, proto_rsp);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
     }

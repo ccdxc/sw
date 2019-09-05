@@ -30,7 +30,7 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.vnicid();
-        ret = pds_vnic_proto_spec_to_api_spec(api_spec, request);
+        ret = pds_vnic_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->vnic_slab()->free(api_spec);
             break;
@@ -65,7 +65,7 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.vnicid();
-        ret = pds_vnic_proto_spec_to_api_spec(api_spec, request);
+        ret = pds_vnic_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->vnic_slab()->free(api_spec);
             break;
@@ -119,11 +119,11 @@ VnicSvcImpl::VnicGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        vnic_api_info_to_proto(&info, proto_rsp);
+        pds_vnic_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->vnicid_size() == 0) {
-        ret = core::vnic_get_all(vnic_api_info_to_proto, proto_rsp);
+        ret = core::vnic_get_all(pds_vnic_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;

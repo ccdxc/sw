@@ -20,12 +20,12 @@ PortSvcImpl::PortGet(ServerContext *context,
 
     if (proto_req) {
         for (int i = 0; i < proto_req->id_size(); i ++) {
-            ret = api::port_get(proto_req->id(i), pds_port_fill,
+            ret = api::port_get(proto_req->id(i), pds_port_to_proto,
                                 proto_rsp);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
         if (proto_req->id_size() == 0) {
-            ret = api::port_get(0, pds_port_fill, proto_rsp);
+            ret = api::port_get(0, pds_port_to_proto, proto_rsp);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
     }
@@ -40,7 +40,7 @@ PortSvcImpl::PortUpdate(ServerContext *context,
     port_args_t port_args;
 
     PDS_TRACE_VERBOSE("Received Port Update");
-    port_proto_spec_to_port_args(&port_args, proto_req->spec());
+    pds_port_proto_to_port_args(&port_args, proto_req->spec());
     ret = api::update_port(proto_req->spec().id(), &port_args);
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 

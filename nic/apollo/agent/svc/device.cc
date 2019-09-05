@@ -29,7 +29,7 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
         return Status::OK;
     }
-    pds_agent_device_api_spec_fill(api_spec, proto_req->request());
+    pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
         ret = pds_device_create(api_spec);
     }
@@ -84,7 +84,7 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
         return Status::OK;
     }
-    pds_agent_device_api_spec_fill(api_spec, proto_req->request());
+    pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
         ret = pds_device_update(api_spec);
     }
@@ -138,11 +138,11 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
     if (ret != sdk::SDK_RET_OK) {
         return Status::OK;
     }
-    device_api_spec_to_proto_spec(
+    pds_device_api_spec_to_proto(
             proto_rsp->mutable_response()->mutable_spec(), &info.spec);
-    device_api_status_to_proto_status(
+    pds_device_api_status_to_proto(
             proto_rsp->mutable_response()->mutable_status(), &info.status);
-    device_api_stats_to_proto_stats(
+    pds_device_api_stats_to_proto(
             proto_rsp->mutable_response()->mutable_stats(), &info.stats);
     return Status::OK;
 }

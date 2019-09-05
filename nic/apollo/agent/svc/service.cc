@@ -33,7 +33,7 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
         key.vpc.id = request.key().vpcid();
         key.svc_port = request.key().svcport();
         ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
-        service_proto_spec_to_api_spec(api_spec, request);
+        pds_service_proto_to_api_spec(api_spec, request);
         hooks::svc_mapping_create(api_spec);
         ret = core::service_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -67,7 +67,7 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
         key.vpc.id = request.key().vpcid();
         key.svc_port = request.key().svcport();
         ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
-        service_proto_spec_to_api_spec(api_spec, request);
+        pds_service_proto_to_api_spec(api_spec, request);
         ret = core::service_update(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -112,7 +112,7 @@ SvcImpl::SvcMappingGet(ServerContext *context,
     }
     if (proto_req->key_size() == 0) {
         // get all
-        ret = core::service_get_all(service_api_info_to_proto, proto_rsp);
+        ret = core::service_get_all(pds_service_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->key_size(); i++) {
@@ -125,11 +125,11 @@ SvcImpl::SvcMappingGet(ServerContext *context,
             break;
         }
         auto response = proto_rsp->add_response();
-        service_api_spec_to_proto_spec(
+        pds_service_api_spec_to_proto(
                 response->mutable_spec(), &info.spec);
-        service_api_status_to_proto_status(
+        pds_service_api_status_to_proto(
                 response->mutable_status(), &info.status);
-        service_api_stats_to_proto_stats(
+        pds_service_api_stats_to_proto(
                 response->mutable_stats(), &info.stats);
     }
     return Status::OK;

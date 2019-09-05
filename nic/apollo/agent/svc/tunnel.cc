@@ -30,7 +30,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
             break;
         }
         auto request = proto_req->request(i);
-        tep_proto_spec_to_api_spec(api_spec, request);
+        pds_tep_proto_to_api_spec(api_spec, request);
         hooks::tunnel_create(api_spec);
         ret = core::tep_create(request.id(), api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -61,7 +61,7 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
             break;
         }
         auto request = proto_req->request(i);
-        tep_proto_spec_to_api_spec(api_spec, request);
+        pds_tep_proto_to_api_spec(api_spec, request);
         ret = core::tep_update(request.id(), api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -101,7 +101,7 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
     }
     if (proto_req->id_size() == 0) {
         // get all
-        ret = core::tep_get_all(tep_api_info_to_proto, proto_rsp);
+        ret = core::tep_get_all(pds_tep_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
@@ -111,10 +111,10 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
             break;
         }
         auto response = proto_rsp->add_response();
-        tep_api_spec_to_proto_spec(response->mutable_spec(), &info.spec);
-        tep_api_status_to_proto_status(response->mutable_status(),
-                                       &info.status);
-        tep_api_stats_to_proto_stats(response->mutable_stats(), &info.stats);
+        pds_tep_api_spec_to_proto(response->mutable_spec(), &info.spec);
+        pds_tep_api_status_to_proto(response->mutable_status(),
+                                    &info.status);
+        pds_tep_api_stats_to_proto(response->mutable_stats(), &info.stats);
     }
     return Status::OK;
 }

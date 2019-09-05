@@ -70,11 +70,11 @@ SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        policy_api_info_to_proto(&info, proto_rsp);
+        pds_policy_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::policy_get_all(policy_api_info_to_proto, proto_rsp);
+        ret = core::policy_get_all(pds_policy_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;

@@ -31,7 +31,7 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
-        pds_agent_vpc_api_spec_fill(api_spec, proto_spec);
+        pds_vpc_proto_to_api_spec(api_spec, proto_spec);
         ret = core::vpc_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -62,7 +62,7 @@ VPCSvcImpl::VPCUpdate(ServerContext *context,
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
-        pds_agent_vpc_api_spec_fill(api_spec, proto_spec);
+        pds_vpc_proto_to_api_spec(api_spec, proto_spec);
         ret = core::vpc_update(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -115,11 +115,11 @@ VPCSvcImpl::VPCGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        vpc_api_info_to_proto(&info, proto_rsp);
+        pds_vpc_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::vpc_get_all(vpc_api_info_to_proto, proto_rsp);
+        ret = core::vpc_get_all(pds_vpc_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 
@@ -147,7 +147,7 @@ VPCSvcImpl::VPCPeerCreate(ServerContext *context,
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
-        pds_agent_vpc_peer_api_spec_fill(api_spec, proto_spec);
+        pds_vpc_peer_proto_to_api_spec(api_spec, proto_spec);
         ret = core::vpc_peer_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -200,11 +200,11 @@ VPCSvcImpl::VPCPeerGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        vpc_peer_api_info_to_proto(&info, proto_rsp);
+        pds_vpc_peer_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::vpc_peer_get_all(vpc_peer_api_info_to_proto, proto_rsp);
+        ret = core::vpc_peer_get_all(pds_vpc_peer_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 

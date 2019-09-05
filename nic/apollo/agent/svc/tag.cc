@@ -30,7 +30,7 @@ TagSvcImpl::TagCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        ret = pds_tag_proto_spec_to_api_spec(api_spec, request);
+        ret = pds_tag_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->tag_slab()->free(api_spec);
             break;
@@ -71,7 +71,7 @@ TagSvcImpl::TagUpdate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        ret = pds_tag_proto_spec_to_api_spec(api_spec, request);
+        ret = pds_tag_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->tag_slab()->free(api_spec);
             break;
@@ -131,11 +131,11 @@ TagSvcImpl::TagGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        tag_api_info_to_proto(&info, proto_rsp);
+        pds_tag_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::tag_get_all(tag_api_info_to_proto, proto_rsp);
+        ret = core::tag_get_all(pds_tag_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;

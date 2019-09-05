@@ -72,7 +72,7 @@ create_policy_grpc (pds_policy_spec_t *spec)
 
     if (spec != NULL) {
         pds::SecurityPolicySpec *proto_spec = g_policy_req.add_request();
-        policy_api_spec_to_proto_spec(proto_spec, spec);
+        pds_policy_api_spec_to_proto(proto_spec, spec);
     }
     if ((g_policy_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_policy_stub_->SecurityPolicyCreate(&context,
@@ -137,7 +137,7 @@ create_vnic_grpc (pds_vnic_spec_t *spec)
 
     if (spec != NULL) {
         pds::VnicSpec *proto_spec = g_vnic_req.add_request();
-        vnic_api_spec_to_proto_spec(proto_spec, spec);
+        pds_vnic_api_spec_to_proto(proto_spec, spec);
     }
     if ((g_vnic_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vnic_stub_->VnicCreate(&context, g_vnic_req, &response);
@@ -271,7 +271,7 @@ read_vpc_grpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
         } else if (response.apistatus() == types::API_STATUS_OK) {
             auto getresponse = response.response(0);  // get first info
             vpcspec = getresponse.spec();
-            pds_agent_vpc_api_spec_fill(&info->spec, vpcspec);
+            pds_vpc_proto_to_api_spec(&info->spec, vpcspec);
         }
     }
 
@@ -287,7 +287,7 @@ create_vpc_peer_grpc (pds_vpc_peer_spec_t *spec)
 
     if (spec != NULL) {
         pds::VPCPeerSpec *proto_spec = g_vpc_peer_req.add_request();
-        vpc_peer_api_spec_to_proto_spec(proto_spec, spec);
+        pds_vpc_peer_api_spec_to_proto(proto_spec, spec);
     }
     if ((g_vpc_peer_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vpc_stub_->VPCPeerCreate(&context, g_vpc_peer_req, &response);
@@ -310,7 +310,7 @@ create_tag_grpc (pds_tag_spec_t *spec)
 
     if (spec != NULL) {
         pds::TagSpec *proto_spec = g_tag_req.add_request();
-        tag_api_spec_to_proto_spec(proto_spec, spec);
+        pds_tag_api_spec_to_proto(proto_spec, spec);
     }
     if ((g_tag_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_tag_stub_->TagCreate(&context, g_tag_req, &response);
@@ -332,7 +332,7 @@ create_meter_grpc (pds_meter_spec_t *spec)
 
     if (spec != NULL) {
         MeterSpec *proto_spec = g_meter_req.add_request();
-        meter_api_spec_to_proto_spec(proto_spec, spec);
+        pds_meter_api_spec_to_proto(proto_spec, spec);
     }
     if ((g_meter_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_meter_stub_->MeterCreate(&context, g_meter_req, &response);
@@ -354,7 +354,7 @@ create_nexthop_grpc (pds_nexthop_spec_t *spec)
 
     if (spec != NULL) {
         NexthopSpec *proto_spec = g_nexthop_req.add_request();
-        nh_api_spec_to_proto_spec(proto_spec, spec);
+        pds_nh_api_spec_to_proto(proto_spec, spec);
     }
     if ((g_nexthop_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
        ret_status = g_nexthop_stub_->NexthopCreate(

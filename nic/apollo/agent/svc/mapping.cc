@@ -20,12 +20,12 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
             pds_remote_mapping_spec_t remote_spec = { 0 };
 
             if (proto_req->request(i).has_tunnelip() == false) {
-                pds_agent_local_mapping_api_spec_fill(&local_spec,
-                                                      proto_req->request(i));
+                pds_local_mapping_proto_to_api_spec(&local_spec,
+                                                    proto_req->request(i));
                 hooks::local_mapping_create(&local_spec);
             } else {
-                pds_agent_remote_mapping_api_spec_fill(&remote_spec,
-                                                       proto_req->request(i));
+                pds_remote_mapping_proto_to_api_spec(&remote_spec,
+                                                     proto_req->request(i));
                 hooks::remote_mapping_create(&remote_spec);
             }
 
@@ -54,11 +54,11 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
             pds_remote_mapping_spec_t remote_spec = { 0 };
 
             if (proto_req->request(i).has_tunnelip() == false) {
-                pds_agent_local_mapping_api_spec_fill(&local_spec,
-                                                      proto_req->request(i));
+                pds_local_mapping_proto_to_api_spec(&local_spec,
+                                                    proto_req->request(i));
             } else {
-                pds_agent_remote_mapping_api_spec_fill(&remote_spec,
-                                                       proto_req->request(i));
+                pds_remote_mapping_proto_to_api_spec(&remote_spec,
+                                                     proto_req->request(i));
             }
 
             if (!core::agent_state::state()->pds_mock_mode()) {

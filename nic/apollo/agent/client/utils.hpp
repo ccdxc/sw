@@ -216,7 +216,7 @@ populate_vpc_request (VPCRequest *req, pds_vpc_spec_t *vpc)
     }
 
     VPCSpec *spec = req->add_request();
-    vpc_api_spec_to_proto_spec(spec, vpc);
+    pds_vpc_api_spec_to_proto(spec, vpc);
     return;
 }
 
@@ -255,7 +255,7 @@ populate_tunnel_request (TunnelRequest *req,
     }
     spec = req->add_request();
     spec->set_id(tep_id);
-    tep_api_spec_to_proto_spec(spec, tep);
+    pds_tep_api_spec_to_proto(spec, tep);
     return;
 }
 
@@ -268,7 +268,7 @@ populate_device_request (DeviceRequest *req, pds_device_spec_t *device)
         return;
     }
     spec = req->mutable_request();
-    device_api_spec_to_proto_spec(spec, device);
+    pds_device_api_spec_to_proto(spec, device);
     return;
 }
 
