@@ -554,7 +554,9 @@ func (c *ClusterHealthMonitor) processNodeEvent(et kvstore.WatchEventType, node 
 			if cond.Type == cmd.NodeCondition_HEALTHY.String() {
 				c.nodesHealth.nodes[node.GetName()] = cond.Status == cmd.ConditionStatus_TRUE.String()
 				if cond.Status != cmd.ConditionStatus_TRUE.String() {
+					c.nodesHealth.Unlock()
 					c.updateCh <- struct{}{}
+					return
 				}
 				c.nodesHealth.Unlock()
 				return
@@ -666,7 +668,9 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 				if !c.isPodRunning(pod) { // delete the instance from list
 					c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list[:i],
 						c.servicesHealth.services[refName].list[i+1:]...)
+					c.servicesHealth.Unlock()
 					c.updateCh <- struct{}{}
+					return
 				}
 				c.servicesHealth.Unlock()
 				return
@@ -682,8 +686,8 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 			if instanceName == pod.GetName() {
 				c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list[:i],
 					c.servicesHealth.services[refName].list[i+1:]...)
-				c.updateCh <- struct{}{}
 				c.servicesHealth.Unlock()
+				c.updateCh <- struct{}{}
 				return
 			}
 		}
