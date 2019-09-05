@@ -80,7 +80,8 @@ header_type eth_tx_qstate_d {
         // sta
         color : 1;
         spec_miss : 1;
-        rsvd1 : 6;
+        spurious_db_cnt : 4;
+        rsvd1 : 2;
 
         // cfg
         enable : 1;
@@ -91,16 +92,22 @@ header_type eth_tx_qstate_d {
         rsvd2 : 3;
 
         ring_base : 64;
-        ring_size : 16;
+        ring_size : 8;
         cq_ring_base : 64;
         intr_assert_index : 16;
         sg_ring_base : 64;
 
-        tso_hdr_addr : 64;
+        tso_hdr_addr : 52;
         tso_hdr_len : 10;
+        rsvd3 : 2;
         tso_ipid_delta : 16;
         tso_seq_delta : 32;
-        spurious_db_cnt : 6;
+
+        lg2_desc_sz : 4;
+        lg2_cq_desc_sz : 4;
+        lg2_sg_desc_sz : 4;
+        rsvd4 : 4;
+        rsvd5 : 8;
     }
 }
 
@@ -150,7 +157,7 @@ header_type eth_tx_global_k {
         dma_cur_index : 6;
         sg_desc_addr : 64;
         sg_in_progress : 1;
-        num_sg_elems : 5;
+        num_sg_elems : 4;
         tso_eot : 1;    // end of tso
         tso_sot : 1;    // start of tso
         host_queue : 1;
@@ -178,8 +185,9 @@ header_type eth_tx_t0_s2s_k {
 
 header_type eth_tx_t2_s2s_k {
     fields {
-        tso_hdr_addr : 64;
+        tso_hdr_addr : 52;
         tso_hdr_len : 10;
+        rsvd : 2;
         tso_ipid_delta : 16;
         tso_seq_delta : 32;
     }
@@ -196,8 +204,9 @@ header_type eth_tx_to_s2_k {
         qtype : 3;
         qid : 24;
         my_ci : 16;
-        tso_hdr_addr : 64;
+        tso_hdr_addr : 52;
         tso_hdr_len : 10;
+        rsvd : 2;
     }
 }
 

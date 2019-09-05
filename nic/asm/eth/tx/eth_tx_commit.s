@@ -39,7 +39,7 @@ eth_tx_commit:
   nop
 
   // Claim the descriptor(s)
-  tblmincr        d.{c_index0}.hx, d.{ring_size}.hx, _r_num_desc
+  tblmincr        d.{c_index0}.hx, d.ring_size, _r_num_desc
 
   // Indicate ci_miss to (stage 0) if this PHV misspeculated
   sne             c2, k.eth_tx_t0_s2s_num_todo, k.eth_tx_t0_s2s_num_desc
@@ -55,11 +55,12 @@ eth_tx_commit:
 eth_tx_commit_cq_entry:
 
   // Compute the completion descriptor address
-  add             _r_cq_desc_addr, d.{cq_ring_base}.dx, d.{comp_index}.hx, LG2_TX_CMPL_DESC_SIZE
+  sll             r7, d.{comp_index}.hx, d.lg2_cq_desc_sz
+  add             _r_cq_desc_addr, d.{cq_ring_base}.dx, r7
   phvwr           p.eth_tx_t0_s2s_cq_desc_addr, _r_cq_desc_addr
 
   // Claim a completion entry
-  tblmincri       d.{comp_index}.hx, d.{ring_size}.hx, 1
+  tblmincri       d.{comp_index}.hx, d.ring_size, 1
 
   // Change color if end-of-ring
   phvwr           p.eth_tx_cq_desc_color, d.color
@@ -68,7 +69,7 @@ eth_tx_commit_cq_entry:
 
   // comp_index = (ci - 1). Note - set this after incrementing ci
   add             r7, r0, d.{c_index0}.hx
-  mincr           r7, d.{ring_size}.hx, -1
+  mincr           r7, d.ring_size, -1
   phvwr           p.eth_tx_cq_desc_comp_index, r7.hx
 
   // Save cq & intr information for eth_tx_completion action
@@ -91,8 +92,10 @@ eth_tx_commit_tx:
 
 eth_tx_commit_sg:
   // Compute the sg descriptor address
-  add             _r_sg_desc_addr, d.{sg_ring_base}.dx, k.{eth_tx_to_s2_my_ci}.hx, LG2_TX_SG_DESC_SIZE
+  sll             r7, k.{eth_tx_to_s2_my_ci}.hx, d.lg2_sg_desc_sz
+  add             _r_sg_desc_addr, d.{sg_ring_base}.dx, r7
   phvwr           p.eth_tx_global_sg_desc_addr, _r_sg_desc_addr
+
   // Launch eth_tx_sg stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
   phvwrpair       p.common_te1_phv_table_raw_table_size, LG2_TX_SG_MAX_READ_SIZE, p.common_te1_phv_table_addr, _r_sg_desc_addr
@@ -117,7 +120,7 @@ eth_tx_commit_tso_sot:
   tblwr           d.tso_hdr_len, k.eth_tx_to_s2_tso_hdr_len
   tblwr.f         d.{tso_ipid_delta...tso_seq_delta}, 0
   b               eth_tx_commit_tso_done
-  phvwr           p.{eth_tx_t2_s2s_tso_hdr_addr...eth_tx_t2_s2s_tso_hdr_len}, k.{eth_tx_to_s2_tso_hdr_addr...eth_tx_to_s2_tso_hdr_len}
+  phvwr           p.{eth_tx_t2_s2s_tso_hdr_addr...eth_tx_t2_s2s_tso_seq_delta}, d.{tso_hdr_addr...tso_seq_delta}
 
 eth_tx_commit_tso_done:
   bbeq            k.eth_tx_t0_s2s_do_sg, 1, eth_tx_commit_tso_sg
@@ -132,8 +135,10 @@ eth_tx_commit_tso_nonsg:
 
 eth_tx_commit_tso_sg:
   // Compute the sg descriptor address
-  add             _r_sg_desc_addr, d.{sg_ring_base}.dx, k.{eth_tx_to_s2_my_ci}.hx, LG2_TX_SG_DESC_SIZE
+  sll             r7, k.{eth_tx_to_s2_my_ci}.hx, d.lg2_sg_desc_sz
+  add             _r_sg_desc_addr, d.{sg_ring_base}.dx, r7
   phvwr           p.eth_tx_global_sg_desc_addr, _r_sg_desc_addr
+
   // Launch eth_tx_tso stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 1)
   phvwrpair       p.common_te2_phv_table_raw_table_size, LG2_TX_SG_MAX_READ_SIZE, p.common_te2_phv_table_addr, _r_sg_desc_addr

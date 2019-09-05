@@ -55,18 +55,18 @@ eth_tx_fetch_desc:
   seq             c1, d.p_index0, d.ci_fetch
   bcf             [c1], eth_tx_fetch_drop
 
-  sll             _r_ringsz, 1, d.{ring_size}.hx
+  sll             _r_ringsz, 1, d.ring_size
 
   // Drop the PHV if we are speculating too far ahead
   sub             r7, d.{ci_fetch}.hx, d.{c_index0}.hx
-  mincr           r7, d.{ring_size}.hx, 0
+  mincr           r7, d.ring_size, 0
   slt             c1, r7, MAX_DESC_SPEC
   bcf             [!c1], eth_tx_fetch_drop
 
   // How many descriptors are posted?
   // num_posted = (pi < ci) ? (ring_size - (ci - pi)) : (pi - ci)
   sub             _r_numtodo, d.{p_index0}.hx, d.{ci_fetch}.hx
-  mincr           _r_numtodo, d.{ring_size}.hx, 0
+  mincr           _r_numtodo, d.ring_size, 0
 
   // We should only process upto MAX_DESC_PER_PHV
   // num_todo = max(num_posted, max_per_phv)
@@ -81,7 +81,8 @@ eth_tx_fetch_desc:
   cmov            _r_numtodo, c3, 1, _r_numtodo
 
   // Compute the descriptor fetch address
-  add             _r_tbladdr, d.{ring_base}.dx, d.{ci_fetch}.hx, LG2_TX_DESC_SIZE
+  sll             r7, d.{ci_fetch}.hx, d.lg2_desc_sz
+  add             _r_tbladdr, d.{ring_base}.dx, r7
 
   // Save data for next stages
   phvwr           p.eth_tx_global_cpu_queue, d.cpu_queue
@@ -93,12 +94,12 @@ eth_tx_fetch_desc:
   phvwr           p.eth_tx_to_s2_my_ci, d.ci_fetch
 
   // Speculatively claim the descriptors
-  tblmincr.f      d.{ci_fetch}.hx, d.{ring_size}.hx, _r_numtodo
+  tblmincr.f      d.{ci_fetch}.hx, d.ring_size, _r_numtodo
 
   // Compute the size of descriptor read
   // read_size = (num_todo == 1) ? 16 : 64
   seq             c4, _r_numtodo, 1
-  cmov            _r_tblsz, c4, LG2_TX_DESC_SIZE, LG2_TX_DESC_SIZE + 2
+  cmov            _r_tblsz, c4, d.lg2_desc_sz, 6
 
   // SAVE_STATS(_r_stats)
 

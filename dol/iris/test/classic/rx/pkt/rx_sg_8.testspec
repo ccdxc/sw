@@ -4,12 +4,12 @@ selectors:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
         segment     : filter://any
-        endpoint    : filter://remote=False
+        endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False,access=False
         interface   : filter://any
     flow            : filter://fwtype=L2
     maxflows        : 1
@@ -17,7 +17,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : 2048
+        payloadsize : 8192
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
             eth:
@@ -37,7 +37,6 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                flags   : ack
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
@@ -47,59 +46,81 @@ packets:
                 type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
             payload:
-                data    : callback://eth/callbacks/GetPayload/size=2048
+                data    : callback://eth/callbacks/GetPayload/size=8192
 
     - packet:
-        id          : PKT1 # Base packet
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+            qtag:
+                vlan    : callback://networking/packets/GetVlanId
             tcp:
                 flags: ack
 
-    # Expect Packets
-    - callback: callback://eth/callbacks/InitEthTxTsoPackets/pkt=PKT1,mss=1448
+    - packet:
+        id          : PKT2 # Expected Packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag:
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: callback://networking/packets/GetExpectedPacketCos
+            ipv4:
+                tos : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc  : ref://testcase/config/flow/txqos/dscp
+            tcp:
+                flags: ack
 
 buffers:
     - buffer:
-        id      : BUF1 # Input Buffer
+        id      : BUF1  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
-        fields  :
+        fields:
             bind: True
-            size : ref://testcase/packets/id=PKT1/size
-            data : ref://testcase/packets/id=PKT1/rawbytes
+            size: 9126
+            data: None
+
+    - buffer:
+        id      : BUF2  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=PKT2/size
+            data  : ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
-    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
     - descriptor:
-        id      : EXP_DESC1 # Expected Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        id      : DESC1 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            status : 0x0
+            _buf  : ref://testcase/buffers/id=BUF1
+
+    - callback: callback://eth/callbacks/InitEthRxSgDescriptor/desc=DESC1,buf=BUF1,nfrags=8
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF2
+            len   : ref://testcase/buffers/id=BUF2/size
+            status : 0
+            num_sg_elems : 8
 
 trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
-
-expect:
-    delay   : callback://networking/packets/GetExpectDelay
-
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_DESC1
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
 
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXP_PKT1
-            port    : callback://networking/fwmode/GetTxExpectedPorts
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT2
-            port    : callback://networking/fwmode/GetTxExpectedPorts
+            object  : ref://testcase/packets/id=PKT1
+            port    : callback://classic/callbacks/GetRxTriggerPorts
+
+expect:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX

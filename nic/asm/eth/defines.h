@@ -94,6 +94,8 @@ struct skip {
     cmd_type: 3;
 };
 
+#define BIT(n)                             (1 << n)
+
 #define CAPRI_RAW_TABLE_SIZE_MPU_ONLY      (7)
 
 #define NUM_DMA_CMDS_PER_FLIT               4

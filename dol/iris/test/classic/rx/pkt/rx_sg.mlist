@@ -1,0 +1,73 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : rx_sg
+    package     : test.classic.rx.pkt
+    module      : rx_sg
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : SG_0
+        spec    : rx_sg_0.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_1
+        spec    : rx_sg_1.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_2
+        spec    : rx_sg_2.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_3
+        spec    : rx_sg_3.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_4
+        spec    : rx_sg_4.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_5
+        spec    : rx_sg_5.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_6
+        spec    : rx_sg_6.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_7
+        spec    : rx_sg_7.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : SG_8
+        spec    : rx_sg_8.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False

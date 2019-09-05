@@ -4,13 +4,27 @@ feature:
     sub         : tx_tso
     package     : test.classic
     module      : classic
-    enable      : False
+    enable      : True
     ignore      : False
 
 modules:
     - module:
+        name    : TSO_1K
+        spec    : tso_1k.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
         name    : TSO_2K
         spec    : tso_2k.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : TSO_4K
+        spec    : tso_4k.testspec
         iterate:
             - flow    : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment : filter://native=False

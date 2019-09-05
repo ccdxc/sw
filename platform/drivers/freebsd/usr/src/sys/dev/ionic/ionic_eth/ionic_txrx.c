@@ -931,13 +931,13 @@ ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type,
 static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 {
 	struct txq_desc *desc;
-	struct txq_sg_desc *sg;
+	struct txq_sg_elem *sg;
 	struct tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *txbuf;
 	struct mbuf *m;
 	bool offload = false;
 	int i, error, index, nsegs;
-	bus_dma_segment_t  seg[IONIC_MAX_TSO_STACK_SG_ENTRIES + 1]; /* Extra for the first segment. */
+	bus_dma_segment_t  seg[IONIC_MAX_SEGMENTS];
 	u8 opcode, flags = 0;
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n", txq->head_index, txq->tail_index);
@@ -945,13 +945,12 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	index = txq->head_index;
 	desc = &txq->cmd_ring[index];
 	txbuf = &txq->txbuf[index];
-	sg = &txq->sg_ring[index];
-	bzero(sg, sizeof(*sg));
+	sg = &txq->sg_ring[index * txq->sg_desc_stride];
+	bzero(sg, sizeof(*sg) * txq->sg_desc_stride);
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
-	if ((error == EFBIG) ||
-		(nsegs >= IONIC_TX_MAX_SG_ELEMS)) {
+	if (error == EFBIG) {
 		struct mbuf *newm;
 
 		stats->mbuf_defrag++;
@@ -968,12 +967,12 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
 
-	if (error || (nsegs >= IONIC_TX_MAX_SG_ELEMS)) {
+	if (error || (nsegs > txq->max_sg_elems + 1)) {
 		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, segs %d/%d, error: %d\n",
-				nsegs, IONIC_TX_MAX_SG_ELEMS, error);
+				nsegs, txq->max_sg_elems, error);
 		/* Too many segments. */
 		error = (error == 0) ? EFBIG : error;
 		return (error);
@@ -1021,9 +1020,9 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	desc->cmd = encode_txq_desc_cmd(opcode, flags, nsegs - 1, txbuf->pa_addr);
 	desc->len = seg[0].ds_len;
 	/* Populate sg list with rest of segments. */
-	for (i = 0 ; i < nsegs - 1 ; i++) {
-		sg->elems[i].addr = seg[i + 1].ds_addr;
-		sg->elems[i].len = seg[i + 1].ds_len;
+	for (i = 0 ; i < nsegs - 1 ; i++, sg++) {
+		sg->addr = seg[i + 1].ds_addr;
+		sg->len = seg[i + 1].ds_len;
 	}
 
 	stats->pkts++;
@@ -1043,7 +1042,7 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 	bus_dma_segment_t  *seg, int nsegs, int stop_index)
 {
 	struct txq_desc *desc;
-	struct txq_sg_desc *sg;
+	struct txq_sg_elem *sg;
 	struct ionic_tx_buf *txbuf;
 	int i, j, len;
 
@@ -1061,7 +1060,7 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 	for (i = txq->head_index; i != stop_index; i = (i+1) % txq->num_descs) {
 		txbuf = &txq->txbuf[i];
 		desc = &txq->cmd_ring[i];
-		sg = &txq->sg_ring[i];
+		sg = &txq->sg_ring[i * txq->sg_desc_stride];
 		len += desc->len;
 		/* Expected SOF */
 		if ((i == txq->head_index) &&
@@ -1089,12 +1088,11 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 			i, desc->len, desc->cmd,
 			desc->mss, desc->hdr_len, txbuf->m);
 
-		for (j = 0; j < IONIC_TX_MAX_SG_ELEMS && sg->elems[j].len; j++) {
-			len += sg->elems[j].len;
+		for (j = 0; j < txq->max_sg_elems && sg->len; j++, sg++) {
+			len += sg->len;
 			IONIC_TX_TRACE(txq, "  TSO sg[%d] pa: 0x%lx length: %d\n",
-				j, sg->elems[j].addr, sg->elems[j].len);
+				j, sg->addr, sg->len);
 		}
-
 	}
 	if (len != m->m_pkthdr.len)
 		IONIC_QUE_ERROR(txq, "descriptor length mismatch %d(actual: %d)\n",
@@ -1109,11 +1107,11 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	struct tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *first_txbuf, *txbuf;
 	struct txq_desc *desc;
-	struct txq_sg_desc *sg;
+	struct txq_sg_elem *sg;
 	uint16_t eth_type;
 	int i, j, index, hdr_len, proto, error, nsegs, num_descs;
 	uint32_t frag_offset, desc_len, remain_len, frag_remain_len, desc_max_size;
-	bus_dma_segment_t  seg[IONIC_MAX_TSO_STACK_SG_ENTRIES + 1]; /* Extra for the first segment. */
+	bus_dma_segment_t  seg[IONIC_MAX_SEGMENTS]; /* Extra for the first segment. */
 	dma_addr_t addr;
 	uint8_t flags;
 	uint16_t len;
@@ -1162,12 +1160,12 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
 
-	if (error || (nsegs > IONIC_MAX_TSO_STACK_SG_ENTRIES)) {
+	if (error || (nsegs > txq->max_sg_elems + 1)) {
 		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, seg %d/%d , error: %d\n",
-				nsegs, IONIC_MAX_TSO_STACK_SG_ENTRIES, error);
+				nsegs, txq->max_sg_elems, error);
 		/* Too many fragments. */
 		error = (error == 0) ? EFBIG : error;
 
@@ -1203,8 +1201,8 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	for (i = 0; i < nsegs && remain_len > 0;) {
 		desc = &txq->cmd_ring[index];
 		txbuf = &txq->txbuf[index];
-		sg = &txq->sg_ring[index];
-		bzero(sg, sizeof(*sg));
+		sg = &txq->sg_ring[index * txq->sg_desc_stride];
+		bzero(sg, sizeof(*sg) * txq->sg_desc_stride);
 
 		desc_max_size = start ? (mss + hdr_len) : mss;
 		desc_len = min(frag_remain_len, desc_max_size);
@@ -1226,13 +1224,12 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		/*
 		 * Now populate SG list, with the remaining fragments upto MSS size.
 		 */
-		for (j = 0; j < IONIC_TX_MAX_SG_ELEMS && (i < nsegs) && desc_len < desc_max_size; j++) {
-			sg->elems[j].addr = seg[i].ds_addr + frag_offset;
-			sg->elems[j].len = min(frag_remain_len, (desc_max_size - desc_len));
-
-			frag_remain_len -= sg->elems[j].len;
-			frag_offset += sg->elems[j].len;
-			desc_len += sg->elems[j].len;
+		for (j = 0; j < txq->max_sg_elems && (i < nsegs) && desc_len < desc_max_size; j++, sg++) {
+			sg->addr = seg[i].ds_addr + frag_offset;
+			sg->len = min(frag_remain_len, (desc_max_size - desc_len));
+			frag_remain_len -= sg->len;
+			frag_offset += sg->len;
+			desc_len += sg->len;
 
 			/* Check if anything left to transmit from this fragment. */
 			if (frag_remain_len <= 0) {

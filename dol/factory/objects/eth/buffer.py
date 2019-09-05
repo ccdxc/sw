@@ -16,12 +16,12 @@ class EthBufferObject(base.FactoryObjectBase):
         super().Init(spec)
         self.size = getattr(spec.fields, 'size', 0)
         self.data = getattr(spec.fields, 'data', None)
-        bind = getattr(spec.fields, 'bind', False)
+        self.bind = getattr(spec.fields, 'bind', False)
 
         # Bind the buffer if required by spec
         self._mem = None
         self.addr = None    # Required to fill the 'buf_addr' field of descriptor
-        if bind:
+        if self.bind:
             # Allocate Memory for the buffer
             self._mem = resmgr.HostMemoryAllocator.get(self.size, page_aligned=False)
             self.addr = self._mem.pa

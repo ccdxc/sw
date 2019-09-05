@@ -1,4 +1,10 @@
 # Test Spec
+#
+# Unrealistic edge case: not really segmentation
+#   - proves tso code can handle single segment
+#   - the TXD is both SOT and EOT of TSO
+#
+
 selectors:
     root: ref://store/templates/id=SESSION
     src:
@@ -17,7 +23,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : 2048
+        payloadsize : 1024
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
             eth:
@@ -47,7 +53,7 @@ packets:
                 type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
             payload:
-                data    : callback://eth/callbacks/GetPayload/size=2048
+                data    : callback://eth/callbacks/GetPayload/size=1024
 
     - packet:
         id          : PKT1 # Base packet
@@ -84,9 +90,6 @@ trigger:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay
@@ -99,7 +102,4 @@ expect:
     packets:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT1
-            port    : callback://networking/fwmode/GetTxExpectedPorts
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT2
             port    : callback://networking/fwmode/GetTxExpectedPorts

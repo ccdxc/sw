@@ -129,7 +129,7 @@ eth_rx_sg_next:   // Continue SG in next stage
 eth_rx_sg_done:   // We are done with SG
 
   // Update completion descriptor
-  sub             r7, RX_MAX_SG_ELEMS, _r_rem_sg
+  sub             r7, k.eth_rx_t1_s2s_sg_max_elems, _r_rem_sg
   phvwr           p.eth_rx_cq_desc_num_sg_elems, r7
 
   // Save DMA command pointer

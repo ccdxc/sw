@@ -233,6 +233,7 @@ struct txque {
 
 	unsigned int index;
 	unsigned int type;
+	unsigned int ver;
 	unsigned int hw_index;
 	unsigned int hw_type;
 	u64 dbval;
@@ -244,6 +245,8 @@ struct txque {
 	dma_addr_t comp_ring_pa;
 	dma_addr_t sg_ring_pa;
 	uint32_t total_ring_size;
+	uint8_t max_sg_elems;
+	uint8_t sg_desc_stride;
 
 	struct mtx tx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -263,7 +266,7 @@ struct txque {
 	 */
 	struct txq_desc *cmd_ring;
 	struct txq_comp *comp_ring;
-	struct txq_sg_desc *sg_ring;	/* SG descriptors. */
+	struct txq_sg_elem *sg_ring;	/* SG descriptors. */
 };
 
 struct ionic_mc_addr {
@@ -415,6 +418,8 @@ int ionic_lifs_init(struct ionic *ionic);
 int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lifs_size(struct ionic *ionic);
+
+int ionic_txq_identify(struct ionic *ionic, uint8_t ver);
 
 int ionic_adminq_clean(struct adminq* adminq, int limit);
 int ionic_notifyq_clean(struct notifyq* notifyq);

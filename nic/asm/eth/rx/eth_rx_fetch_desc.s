@@ -36,22 +36,27 @@ eth_rx_fetch_desc:
   nop
 
   // Compute descriptor fetch address
-  add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_RX_DESC_SIZE
+  sll             r7, d.{c_index0}.hx, d.lg2_desc_sz
+  add             _r_desc_addr, d.{ring_base}.dx, r7
 
   // Compute completion entry address
-  add             _r_cq_desc_addr, d.{cq_ring_base}.dx, d.{c_index0}.hx, LG2_RX_CMPL_DESC_SIZE
+  sll             r7, d.{comp_index}.hx, d.lg2_cq_desc_sz
+  add             _r_cq_desc_addr, d.{cq_ring_base}.dx, r7
+  phvwr           p.eth_rx_t0_s2s_cq_desc_addr, _r_cq_desc_addr
 
   // Compute the sg descriptor address
   sne             c7, d.sg_ring_base, 0
-  add.c7          _r_sg_desc_addr, d.{sg_ring_base}.dx, d.{c_index0}.hx, LG2_RX_SG_DESC_SIZE
+  sll.c7          r7, d.{c_index0}.hx, d.lg2_sg_desc_sz
+  add.c7          _r_sg_desc_addr, d.{sg_ring_base}.dx, r7
   phvwr.c7        p.eth_rx_to_s3_sg_desc_addr, _r_sg_desc_addr
+  phvwr.c7        p.eth_rx_to_s3_sg_max_elems, d.sg_max_elems
 
   // Claim the descriptor
   phvwr           p.eth_rx_cq_desc_comp_index, d.c_index0
-  tblmincri       d.{c_index0}.hx, d.{ring_size}.hx, 1
+  tblmincri       d.{c_index0}.hx, d.ring_size, 1
 
   // Claim the completion entry
-  tblmincri       d.{comp_index}.hx, d.{ring_size}.hx, 1
+  tblmincri       d.{comp_index}.hx, d.ring_size, 1
 
   // Update color
   phvwr           p.eth_rx_cq_desc_color, d.color
@@ -62,7 +67,8 @@ eth_rx_fetch_desc:
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
   phvwri          p.common_te0_phv_table_lock_en, 0
   phvwri          p.common_te0_phv_table_pc, eth_rx[38:6]
-  phvwrpair       p.common_te0_phv_table_raw_table_size, LG2_RX_DESC_SIZE, p.common_te0_phv_table_addr, _r_desc_addr
+  phvwr           p.common_te0_phv_table_addr, _r_desc_addr
+  phvwr           p.common_te0_phv_table_raw_table_size, d.lg2_desc_sz
 
   SAVE_STATS(_r_stats)
 
@@ -70,7 +76,6 @@ eth_rx_fetch_desc:
   phvwr           p.eth_rx_global_cpu_queue, d.cpu_queue
   phvwr           p.eth_rx_global_host_queue, d.host_queue
   phvwr           p.eth_rx_global_intr_enable, d.intr_enable
-  phvwr           p.eth_rx_t0_s2s_cq_desc_addr, _r_cq_desc_addr
   phvwr.e         p.eth_rx_t0_s2s_intr_assert_index, d.{intr_assert_index}.hx
   phvwri.f        p.eth_rx_t0_s2s_intr_assert_data, 0x01000000
 

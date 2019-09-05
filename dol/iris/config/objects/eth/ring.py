@@ -68,17 +68,16 @@ class EthRingObject(ring.RingObject):
         descriptor.Bind(self._mem + (self.desc_size * self.pi))
         descriptor.Write()
 
-        # For TX queues, write out the SG descriptor
+        # Write the SG descriptor
         self.queue.buffers[self.pi] = descriptor.GetBuffer()
-        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-            if 'num_sg_elems' in descriptor.fields:
-                offset = self.pi * self.sg_desc_size
-                for i in range(descriptor.fields['num_sg_elems']):
-                    sg_elem = descriptor._sgelems[i]
-                    logger.info("Writing EthTxSGElem @ %s mem %s" % (i, self._sgmem + offset))
-                    resmgr.HostMemoryAllocator.write(self._sgmem + offset, bytes(sg_elem))
-                    logger.info(ctypes_pformat(sg_elem))
-                    offset += self.sg_elem_size
+        if hasattr(descriptor, '_sgelems'):
+            offset = self.pi * self.sg_desc_size
+            for i in range(0, len(descriptor._sgelems)):
+                sg_elem = descriptor._sgelems[i]
+                logger.info("Writing EthSGElem @ %s mem %s" % (i, self._sgmem + offset))
+                resmgr.HostMemoryAllocator.write(self._sgmem + offset, bytes(sg_elem))
+                logger.info(ctypes_pformat(sg_elem))
+                offset += self.sg_elem_size
 
         # Increment posted index
         self.pi = (self.pi + 1) % self.size

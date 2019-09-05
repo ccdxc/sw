@@ -937,21 +937,23 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union dev_identity *dev_ident = (union dev_identity *)resp_data;
+    union dev_identity *ident = (union dev_identity *)resp_data;
     struct dev_identify_cmd *cmd = (struct dev_identify_cmd *)req;
     struct dev_identify_comp *comp = (struct dev_identify_comp *)resp;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    dev_ident->nports = 1;
-    dev_ident->nlifs = spec->lif_count;
-    dev_ident->nintrs = spec->intr_count;
-    dev_ident->ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
+    memset(ident, 0, sizeof(union dev_identity));
+
+    ident->nports = 1;
+    ident->nlifs = spec->lif_count;
+    ident->nintrs = spec->intr_count;
+    ident->ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
 
     int mul, div;
     intr_coal_get_params(&mul, &div);
-    dev_ident->intr_coal_mult = mul;
-    dev_ident->intr_coal_div = div;
+    ident->intr_coal_mult = mul;
+    ident->intr_coal_div = div;
 
     comp->ver = IONIC_IDENTITY_VERSION_1;
 
@@ -1047,6 +1049,8 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
         port_config->state = PORT_ADMIN_STATE_UP;
         return (IONIC_RC_SUCCESS);
     }
+
+    memset(info, 0, sizeof(union port_identity));
 
     ret = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)cfg);
     if (ret != SDK_RET_OK) {
@@ -1280,7 +1284,7 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     DEVAPI_CHECK
 
-    memset(ident, 0, sizeof(devcmd->data));
+    memset(ident, 0, sizeof(union qos_identity));
 
     ident->version = 1;
     ident->type = 0;
@@ -1424,6 +1428,8 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
     struct lif_identify_comp *comp = (struct lif_identify_comp *)resp;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
+    memset(ident, 0, sizeof(union lif_identity));
 
     ident->capabilities = IONIC_LIF_CAP_ETH;
 

@@ -8,7 +8,8 @@
 #pragma pack(push, 1)
 
 struct eth_tx_sta_qstate {
-    uint8_t     rsvd1:6;
+    uint8_t     rsvd1:2;
+    uint8_t     spurious_db_cnt:4;
     uint8_t     spec_miss:1;
     uint8_t     color:1;
 };
@@ -44,16 +45,22 @@ typedef struct eth_tx_qstate {
     struct eth_tx_cfg_qstate cfg;
 
     uint64_t    ring_base;
-    uint16_t    ring_size;
+    uint8_t     ring_size;
     uint64_t    cq_ring_base;
     uint16_t    intr_assert_index;
     uint64_t    sg_ring_base;
 
-    uint64_t    tso_hdr_addr;
+    uint64_t    tso_hdr_addr:52;
     uint64_t    tso_hdr_len:10;
+    uint64_t    rsvd3:2;
     uint64_t    tso_ipid_delta:16;
     uint64_t    tso_seq_delta:32;
-    uint64_t    spurious_db_cnt:6;
+
+    uint8_t     lg2_desc_sz : 4;
+    uint8_t     lg2_cq_desc_sz : 4;
+    uint8_t     rsvd4 : 4;
+    uint8_t     lg2_sg_desc_sz : 4;
+    uint8_t     rsvd5 : 8;
 
 } eth_tx_qstate_t;
 
@@ -93,12 +100,17 @@ typedef struct eth_rx_qstate {
     struct eth_rx_cfg_qstate cfg;
 
     uint64_t    ring_base;
-    uint16_t    ring_size;
+    uint8_t     ring_size;
     uint64_t    cq_ring_base;
     uint16_t    intr_assert_index;
     uint64_t    sg_ring_base;
 
-    uint8_t     __pad[20];
+    uint8_t     lg2_desc_sz : 4;
+    uint8_t     lg2_cq_desc_sz : 4;
+    uint8_t     sg_max_elems : 4;
+    uint8_t     lg2_sg_desc_sz : 4;
+
+    uint8_t     __pad[19];
 
 } eth_rx_qstate_t;
 

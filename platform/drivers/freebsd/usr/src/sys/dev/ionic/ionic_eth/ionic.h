@@ -43,8 +43,11 @@
 
 #define IONIC_ADDR_BITS		52
 #define IONIC_MAX_ADDR		(BIT_ULL(IONIC_ADDR_BITS) - 1)
+
+/* This should be the largest SGL size supported for any descriptor */
+#define IONIC_MAX_SEGMENTS	(IONIC_TX_MAX_SG_ELEMS_V1 + 1)
+
 /* TSO DMA related definitions. */
-#define IONIC_MAX_TSO_STACK_SG_ENTRIES (IONIC_TX_MAX_SG_ELEMS)
 #define IONIC_MAX_TSO_SG_SIZE 		(64 * SIZE_1K)
 #define IONIC_MAX_TSO_SIZE 		(64 * SIZE_1K)
 

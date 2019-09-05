@@ -577,7 +577,9 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
-               "sg_ring_base=0x%0lx\n",
+               "sg_ring_base=0x%0lx\n"
+               "lg2_desc_sz=0x%x\nlg2_cq_desc_sz=0x%x\nlg2_sg_desc_sz=0x%x\n"
+               "sg_max_elems=0x%x\n",
                qstate_ethrx.pc_offset, qstate_ethrx.rsvd0, qstate_ethrx.cosA, qstate_ethrx.cosB,
                qstate_ethrx.cos_sel, qstate_ethrx.eval_last, qstate_ethrx.host, qstate_ethrx.total,
                qstate_ethrx.pid, qstate_ethrx.p_index0, qstate_ethrx.c_index0,
@@ -586,7 +588,9 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethrx.cfg.intr_enable, qstate_ethrx.cfg.debug,
                qstate_ethrx.ring_base,
                qstate_ethrx.ring_size, qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_index,
-               qstate_ethrx.sg_ring_base);
+               qstate_ethrx.sg_ring_base,
+               qstate_ethrx.lg2_desc_sz, qstate_ethrx.lg2_cq_desc_sz, qstate_ethrx.lg2_sg_desc_sz,
+               qstate_ethrx.sg_max_elems);
         break;
     case 1:
         sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
@@ -603,7 +607,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "sg_ring_base=0x%0lx\n"
-               "spurious_db_cnt=0x%lx\n",
+               "spurious_db_cnt=%d\n"
+               "lg2_desc_sz=0x%x\nlg2_cq_desc_sz=0x%x\nlg2_sg_desc_sz=0x%x\n",
                qstate_ethtx.pc_offset, qstate_ethtx.rsvd0, qstate_ethtx.cosA, qstate_ethtx.cosB,
                qstate_ethtx.cos_sel, qstate_ethtx.eval_last, qstate_ethtx.host, qstate_ethtx.total,
                qstate_ethtx.pid, qstate_ethtx.p_index0, qstate_ethtx.c_index0,
@@ -613,7 +618,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethtx.cfg.intr_enable, qstate_ethtx.cfg.debug,
                qstate_ethtx.ring_base,
                qstate_ethtx.ring_size, qstate_ethtx.cq_ring_base, qstate_ethtx.intr_assert_index,
-               qstate_ethtx.sg_ring_base, qstate_ethtx.spurious_db_cnt);
+               qstate_ethtx.sg_ring_base, qstate_ethtx.sta.spurious_db_cnt,
+               qstate_ethtx.lg2_desc_sz, qstate_ethtx.lg2_cq_desc_sz, qstate_ethtx.lg2_sg_desc_sz);
         break;
     case 2:
         sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethaq, sizeof(qstate_ethaq));

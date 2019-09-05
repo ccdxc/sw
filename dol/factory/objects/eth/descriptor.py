@@ -10,7 +10,7 @@ import infra.factory.base as base
 
 
 IONIC_RX_MAX_SG_ELEMS = 8
-IONIC_TX_MAX_SG_ELEMS = 8
+IONIC_TX_MAX_SG_ELEMS = 16
 
 
 def to_dict(obj):

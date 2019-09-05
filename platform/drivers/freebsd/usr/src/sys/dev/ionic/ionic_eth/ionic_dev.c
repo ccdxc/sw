@@ -431,6 +431,20 @@ ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+/* Queue commands */
+void ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
+	uint8_t type, uint8_t ver)
+{
+	union dev_cmd cmd = {
+		.q_identify.opcode = CMD_OPCODE_Q_IDENTIFY,
+		.q_identify.lif_type = lif_type,
+		.q_identify.type = type,
+		.q_identify.ver = ver,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 char *ionic_dev_asic_name(u8 asic_type)
 {
 	switch (asic_type) {

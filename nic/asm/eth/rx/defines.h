@@ -1,19 +1,9 @@
 
 #include "nic/asm/eth/defines.h"
 
-#define BIT(n)                  (1 << n)
+#define LG2_RX_QSTATE_SIZE          (6)
 
-#define LG2_RX_QSTATE_SIZE      (6)
-
-#define LG2_RX_DESC_SIZE        (4)
-#define LG2_RX_CMPL_DESC_SIZE   (4)
-
-#define RX_MAX_SG_ELEMS             (8)
-#define LG2_RX_SG_ELEM_SIZE         (4)
 #define LG2_RX_SG_MAX_READ_SIZE     (6)
-#define RX_SG_MAX_READ_SIZE         (64)    // 4 sg elements
-#define RX_SG_MAX_READ_ELEM         (4)
-#define LG2_RX_SG_DESC_SIZE         (7)
 
 #define L2_PKT_TYPE_UNICAST     0
 #define L2_PKT_TYPE_MULTICAST   1

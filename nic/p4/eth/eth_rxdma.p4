@@ -65,10 +65,15 @@ header_type eth_rx_qstate_d {
         rsvd2 : 3;
 
         ring_base : 64;
-        ring_size : 16;
+        ring_size : 8;
         cq_ring_base : 64;
         intr_assert_index : 16;
         sg_ring_base : 64;
+
+        lg2_desc_sz : 4;
+        lg2_cq_desc_sz : 4;
+        lg2_sg_desc_sz : 4;
+        sg_max_elems : 4;
     }
 }
 
@@ -126,14 +131,16 @@ header_type eth_rx_t0_s2s_k {
 header_type eth_rx_t1_s2s_k {
     fields {
         sg_desc_addr : 64;
-        rem_sg_elems : 5;
         rem_pkt_bytes : 14;
+        rem_sg_elems : 4;
+        sg_max_elems : 4;
     }
 }
 
 header_type eth_rx_to_s3_k {
     fields {
         sg_desc_addr : 64;
+        sg_max_elems : 4;
     }
 }
 

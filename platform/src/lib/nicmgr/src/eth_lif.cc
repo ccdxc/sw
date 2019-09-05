@@ -685,6 +685,10 @@ EthLif::CmdHandler(void *req, void *req_data,
         status = _CmdRxFilterDel(req, req_data, resp, resp_data);
         break;
 
+    case CMD_OPCODE_Q_IDENTIFY:
+        status = _CmdQIdentify(req, req_data, resp, resp_data);
+        break;
+
     case CMD_OPCODE_Q_INIT:
         status = _CmdQInit(req, req_data, resp, resp_data);
         break;
@@ -982,6 +986,131 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
 #endif
 
 status_code_t
+EthLif::_CmdQIdentify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    status_code_t ret = IONIC_RC_ERROR;
+    struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
+
+    NIC_LOG_DEBUG("{}: {} lif_type {} qtype {} ver {}", spec->name,
+        opcode_to_str(cmd->opcode), cmd->lif_type, cmd->type, cmd->ver);
+
+    switch (cmd->type) {
+        case IONIC_QTYPE_ADMINQ:
+            ret = AdminQIdentify(req, req_data, resp, resp_data);
+            break;
+        case IONIC_QTYPE_NOTIFYQ:
+            ret = NotifyQIdentify(req, req_data, resp, resp_data);
+            break;
+        case IONIC_QTYPE_RXQ:
+            ret = RxQIdentify(req, req_data, resp, resp_data);
+            break;
+        case IONIC_QTYPE_TXQ:
+            ret = TxQIdentify(req, req_data, resp, resp_data);
+            break;
+        default:
+            ret = IONIC_RC_EINVAL;
+            NIC_LOG_ERR("{}: Invalid qtype {}", hal_lif_info_.name,
+                cmd->type);
+            break;
+    }
+
+    return ret;
+}
+
+status_code_t
+EthLif::AdminQIdentify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    union q_identity *ident = (union q_identity *)resp_data;
+    // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
+    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+
+    memset(ident, 0, sizeof(union q_identity));
+
+    ident->version = 0;
+    ident->supported = 1;
+    ident->features = IONIC_QIDENT_F_CQ;
+    ident->desc_sz = sizeof(struct admin_cmd);
+    ident->comp_sz = sizeof(struct admin_comp);
+
+    comp->ver = ident->version;
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::NotifyQIdentify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    union q_identity *ident = (union q_identity *)resp_data;
+    // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
+    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+
+    memset(ident, 0, sizeof(union q_identity));
+
+    ident->version = 0;
+    ident->supported = 1;
+    ident->features = 0;
+    ident->desc_sz = sizeof(struct notifyq_event);
+
+    comp->ver = ident->version;
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::RxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    union q_identity *ident = (union q_identity *)resp_data;
+    // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
+    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+
+    memset(ident, 0, sizeof(union q_identity));
+
+    ident->version = 0;
+    ident->supported = 1;
+    ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG;
+    ident->desc_sz = sizeof(struct rxq_desc);
+    ident->comp_sz = sizeof(struct rxq_comp);
+    ident->sg_desc_sz = sizeof(struct rxq_sg_desc);
+    ident->max_sg_elems = IONIC_RX_MAX_SG_ELEMS;
+    ident->sg_desc_stride = IONIC_RX_MAX_SG_ELEMS;
+
+    comp->ver = ident->version;
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::TxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    union q_identity *ident = (union q_identity *)resp_data;
+    struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
+    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+
+    memset(ident, 0, sizeof(union q_identity));
+
+    ident->supported = 0x3;
+    ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG;
+    ident->desc_sz = sizeof(struct txq_desc);
+    ident->comp_sz = sizeof(struct txq_comp);
+
+    if (cmd->ver == 0) {
+        ident->version = 0;
+        ident->sg_desc_sz = sizeof(struct txq_sg_desc);
+        ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS;
+        ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE;
+    } else {
+        ident->version = 1;
+        ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
+        ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
+        ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
+    }
+
+    comp->ver = ident->version;
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
 EthLif::_CmdQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     status_code_t ret = IONIC_RC_ERROR;
@@ -1019,12 +1148,13 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     eth_tx_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: {}: "
-        "type {} index {} cos {} "
+        "type {} ver {} index {} cos {} "
         "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {} "
         "intr_index {} flags {}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
+        cmd->ver,
         cmd->index,
         cmd->cos,
         cmd->ring_base,
@@ -1040,6 +1170,11 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ver > 1) {
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->index >= spec->txq_count) {
@@ -1100,6 +1235,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.ci_miss = 0;
     qstate.sta.color = 1;
     qstate.sta.spec_miss = 0;
+    qstate.sta.spurious_db_cnt = 0;
     qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
     qstate.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
     qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
@@ -1127,7 +1263,14 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     if (cmd->flags & IONIC_QINIT_F_IRQ) {
         qstate.intr_assert_index = res->intr_base + cmd->intr_index;
     }
-    qstate.spurious_db_cnt = 0;
+
+    qstate.lg2_desc_sz = log2(sizeof(struct txq_desc));
+    qstate.lg2_cq_desc_sz = log2(sizeof(struct txq_comp));
+    if (cmd->ver == 1) {
+        qstate.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc_v1));
+    } else {
+        qstate.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc));
+    }
 
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
@@ -1151,12 +1294,13 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     eth_rx_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: {}: "
-        "type {} index {} cos {} "
+        "type {} ver {} index {} cos {} "
         "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {}"
         " intr_index {} flags {}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
+        cmd->ver,
         cmd->index,
         cmd->cos,
         cmd->ring_base,
@@ -1172,6 +1316,11 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ver != 0) {
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->index >= spec->rxq_count) {
@@ -1253,6 +1402,11 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     if (cmd->flags & IONIC_QINIT_F_IRQ)
         qstate.intr_assert_index = res->intr_base + cmd->intr_index;
 
+    qstate.lg2_desc_sz = log2(sizeof(struct rxq_desc));
+    qstate.lg2_cq_desc_sz = log2(sizeof(struct rxq_comp));
+    qstate.lg2_sg_desc_sz = log2(sizeof(struct rxq_sg_desc));
+    qstate.sg_max_elems = IONIC_RX_MAX_SG_ELEMS;
+
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
@@ -1274,11 +1428,12 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     struct q_init_comp *comp = (struct q_init_comp *)resp;
 
     NIC_LOG_INFO("{}: {}: "
-        "type {} index {} ring_base {:#x} ring_size {} intr_index {} "
+        "type {} ver {} index {} ring_base {:#x} ring_size {} intr_index {} "
         "flags {}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
+        cmd->ver,
         cmd->index,
         cmd->ring_base,
         cmd->ring_size,
@@ -1290,6 +1445,11 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ver != 0) {
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->index >= spec->eq_count) {
@@ -1378,11 +1538,12 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     struct q_init_comp *comp = (struct q_init_comp *)resp;
 
     NIC_LOG_DEBUG("{}: {}: "
-        "type {} index {} ring_base {:#x} ring_size {} intr_index {} "
+        "type {} ver {} index {} ring_base {:#x} ring_size {} intr_index {} "
         "flags {}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
+        cmd->ver,
         cmd->index,
         cmd->ring_base,
         cmd->ring_size,
@@ -1394,6 +1555,11 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ver != 0) {
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->index >= spec->adminq_count) {

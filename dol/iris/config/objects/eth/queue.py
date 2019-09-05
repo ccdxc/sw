@@ -1,11 +1,13 @@
 #! /usr/bin/python3
 
 import math
+import ctypes
 from infra.common.defs          import status
 from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 from iris.config.objects.queue       import QueueObject
 import model_sim.src.model_wrap as model_wrap
+from factory.objects.eth.descriptor import *
 
 from scapy.all import *
 
@@ -33,9 +35,15 @@ class EthRxQstate(Packet):
         BitField("rsvd2", 0, 6),
 
         LELongField("ring_base", 0),
-        LEShortField("ring_size", 0),
+        ByteField("ring_size", 0),
         LELongField("cq_ring_base", 0),
         LEShortField("intr_assert_index", 0),
+        LELongField("sg_ring_base", 0),
+
+        BitField("lg2_desc_sz", 0, 4),
+        BitField("lg2_cq_desc_sz", 0, 4),
+        BitField("lg2_sg_desc_sz", 0, 4),
+        BitField("sg_max_elems", 0, 4),
     ]
 
 
@@ -59,23 +67,30 @@ class EthTxQstate(Packet):
 
         BitField("color", 0, 1),
         BitField("spec_miss", 0, 1),
-        BitField("rsvd1", 0, 6),
+        BitField("spurious_db_cnt", 0, 4),
+        BitField("rsvd1", 0, 2),
 
         BitField("enable", 0, 1),
         BitField("host_queue", 0, 1),
         BitField("rsvd2", 0, 6),
 
         LELongField("ring_base", 0),
-        LEShortField("ring_size", 0),
+        ByteField("ring_size", 0),
         LELongField("cq_ring_base", 0),
         LEShortField("intr_assert_index", 0),
         LELongField("sg_ring_base", 0),
 
-        LELongField("tso_hdr_addr", 0),
+        BitField("tso_hdr_addr", 0, 52),
         BitField("tso_hdr_len", 0, 10),
+        BitField("rsvd3", 0, 2),
         BitField("tso_ipid_delta", 0, 16),
         BitField("tso_seq_delta", 0, 32),
-        BitField("spurious_db_cnt", 0, 6),
+
+        BitField("lg2_desc_sz", 0, 4),
+        BitField("lg2_cq_desc_sz", 0, 4),
+        BitField("lg2_sg_desc_sz", 0, 4),
+        BitField("rsvd4", 0, 4),
+        ByteField("rsvd5", 0),
     ]
 
 
@@ -166,7 +181,12 @@ class EthRxQstateObject(QstateObject):
     def set_cq_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 26, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 25, bytes(ctypes.c_uint64(value)), 8)
+
+    def set_sg_base(self, value):
+        assert(isinstance(value, int))
+        self.data[self.__data_class__].cq_base = value
+        model_wrap.write_mem_pcie(self.addr + 35, bytes(ctypes.c_uint64(value)), 8)
 
 
 class EthTxQstateObject(QstateObject):
@@ -188,12 +208,12 @@ class EthTxQstateObject(QstateObject):
     def set_cq_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 30, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 29, bytes(ctypes.c_uint64(value)), 8)
 
     def set_sg_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 40, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 39, bytes(ctypes.c_uint64(value)), 8)
 
 
 class AdminQstateObject(QstateObject):
@@ -268,13 +288,20 @@ class EthQueueObject(QueueObject):
         if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
             req_spec.queue_state = bytes(EthTxQstate(host=1, total=1,
                                                      enable=1, color=1,
-                                                     host_queue=1))
+                                                     host_queue=1,
+                                                     lg2_desc_sz=int(math.log(ctypes.sizeof(EthTxDescriptor), 2)),
+                                                     lg2_cq_desc_sz=int(math.log(ctypes.sizeof(EthTxCqDescriptor), 2)),
+                                                     lg2_sg_desc_sz=int(math.log(ctypes.sizeof(EthTxSgDescriptor), 2))))
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "eth_tx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
             req_spec.queue_state = bytes(EthRxQstate(host=1, total=1,
                                                      enable=1, color=1,
-                                                     host_queue=1))
+                                                     host_queue=1,
+                                                     lg2_desc_sz=int(math.log(ctypes.sizeof(EthRxDescriptor), 2)),
+                                                     lg2_cq_desc_sz=int(math.log(ctypes.sizeof(EthRxCqDescriptor), 2)),
+                                                     lg2_sg_desc_sz=int(math.log(ctypes.sizeof(EthRxSgDescriptor), 2)),
+                                                     sg_max_elems=8))
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
@@ -329,7 +356,7 @@ class EthQueueObject(QueueObject):
             if ring.id == 'R0':
                 self.qstate.set_ring_base(ring._mem.pa)
                 self.qstate.set_ring_size(ring.size)
-                if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+                if self.queue_type.purpose != "LIF_QUEUE_PURPOSE_ADMIN":
                     self.qstate.set_sg_base(ring._sgmem.pa)
             elif ring.id == 'R1':
                 self.qstate.set_cq_base(ring._mem.pa)

@@ -184,13 +184,13 @@ print_tx_qstate (const char *qstate)
               << "ci_fetch: " << tx->ci_fetch << "\n"
               << "color: " << tx->sta.color << "\n"
               << "spec_miss: " << tx->sta.spec_miss << "\n"
+              << "spurious_db_cnt: " << tx->sta.spurious_db_cnt << "\n"
               << "enable: " << tx->cfg.enable << "\n"
               << "host_queue: " << tx->cfg.host_queue << "\n"
               << "ring_base: " << tx->ring_base << "\n"
               << "ring_size: " << tx->ring_size << "\n"
               << "cq_ring_base: " << tx->cq_ring_base << "\n"
               << "intr_assert_index: " << tx->intr_assert_index << "\n"
-              << "spurious_db_cnt: " << tx->spurious_db_cnt << "\n"
               << "sg_ring_base: " << tx->sg_ring_base << "\n"
               << std::endl;
 }

@@ -3,15 +3,7 @@
 
 #define LG2_TX_QSTATE_SIZE          (6)
 
-#define LG2_TX_DESC_SIZE            (4)
-#define LG2_TX_CMPL_DESC_SIZE       (4)
-
-#define TX_MAX_SG_ELEMS             (8)
-#define LG2_TX_SG_ELEM_SIZE         (4)
 #define LG2_TX_SG_MAX_READ_SIZE     (6)
-#define TX_SG_MAX_READ_SIZE         (64)    // 4 sg elements
-#define TX_SG_MAX_READ_ELEM         (4)
-#define LG2_TX_SG_DESC_SIZE         (7)
 
 // TX limits
 #define MAX_DESC_SPEC               (64)

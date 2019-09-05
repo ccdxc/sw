@@ -105,6 +105,8 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct lif_setattr_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct lif_setattr_comp) != 16);
 
+	BUILD_BUG_ON(sizeof(struct q_identify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct q_identify_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct q_init_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct q_init_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct q_control_cmd) != 64);
@@ -133,6 +135,7 @@ static inline void ionic_struct_size_checks(void)
 	/* I/O */
 	BUILD_BUG_ON(sizeof(struct txq_desc) != 16);
 	BUILD_BUG_ON(sizeof(struct txq_sg_desc) != 128);
+	BUILD_BUG_ON(sizeof(struct txq_sg_desc_v1) != 256);
 	BUILD_BUG_ON(sizeof(struct txq_comp) != 16);
 
 	BUILD_BUG_ON(sizeof(struct rxq_desc) != 16);
@@ -242,6 +245,9 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index);
 void ionic_dev_cmd_qos_class_identify(struct ionic_dev *idev);
 void ionic_dev_cmd_qos_class_init(struct ionic_dev *idev, uint8_t group);
 void ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group);
+
+void ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
+	uint8_t type, uint8_t ver);
 
 char *ionic_dev_asic_name(u8 asic_type);
 int ionic_db_page_num(struct ionic *ionic, int lif_id, int pid);

@@ -269,6 +269,11 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_unmap_bars;
 	}
 
+	err = ionic_txq_identify(ionic, 1);
+	if (err) {
+		dev_err(dev, "Cannot identify txq v1, falling back to v0: err %d\n", err);
+	}
+
 	err = ionic_lifs_size(ionic);
 	if (err) {
 		IONIC_DEV_ERROR(dev, "Cannot size LIFs, aborting\n");

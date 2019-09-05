@@ -193,11 +193,18 @@ private:
     status_code_t _CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data);
 
+    status_code_t _CmdQIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t AdminQIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t NotifyQIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t TxQIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t RxQIdentify(void *req, void *req_data, void *resp, void *resp_data);
+
     status_code_t _CmdQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t NotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t TxQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t RxQInit(void *req, void *req_data, void *resp, void *resp_data);
+
     status_code_t _CmdQControl(void *req, void *req_data, void *resp, void *resp_data);
 
     status_code_t _CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data);

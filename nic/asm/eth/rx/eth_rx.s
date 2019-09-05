@@ -72,7 +72,8 @@ eth_rx_sg:
 
     // Launch eth_rx_sg in next stage
     phvwr           p.eth_rx_t1_s2s_sg_desc_addr, k.eth_rx_to_s3_sg_desc_addr
-    phvwr           p.eth_rx_t1_s2s_rem_sg_elems, RX_MAX_SG_ELEMS
+    phvwr           p.eth_rx_t1_s2s_rem_sg_elems, k.eth_rx_to_s3_sg_max_elems
+    phvwr           p.eth_rx_t1_s2s_sg_max_elems, k.eth_rx_to_s3_sg_max_elems
     phvwr           p.eth_rx_t1_s2s_rem_pkt_bytes, _r_len
 
     // Save DMA command pointer

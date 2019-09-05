@@ -1721,6 +1721,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	txq->index = qnum;
 	txq->num_descs = num_descs;
 	txq->pid = pid;
+	txq->ver = lif->ionic->ident.txq.version;
 
 	IONIC_TX_LOCK_INIT(txq);
 
@@ -1734,7 +1735,15 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	/* Allocate DMA for command and completion rings. They must be consecutive. */
 	cmd_ring_size = sizeof(*txq->cmd_ring) * num_descs;
 	comp_ring_size = sizeof(*txq->comp_ring) * num_descs;
-	sg_ring_size = sizeof(*txq->sg_ring) * num_descs;
+	if (txq->ver == 1) {
+		sg_ring_size = sizeof(*txq->sg_ring) * IONIC_TX_SG_DESC_STRIDE_V1 * num_descs;
+	} else if (txq->ver == 0) {
+		sg_ring_size = sizeof(*txq->sg_ring) * IONIC_TX_SG_DESC_STRIDE * num_descs;
+	} else {
+		IONIC_QUE_ERROR(txq, "invalid queue version %d\n", txq->ver);
+		goto failed_alloc;
+	}
+
 	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(sg_ring_size, PAGE_SIZE);
 	txq->total_ring_size = total_size;
 
@@ -1754,8 +1763,19 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	txq->comp_ring = (struct txq_comp *)(txq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
 
 	txq->sg_ring_pa = txq->comp_ring_pa + ALIGN(comp_ring_size, PAGE_SIZE);
-	txq->sg_ring = (struct txq_sg_desc *)(txq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE) +
-			ALIGN(comp_ring_size, PAGE_SIZE));
+	if (txq->ver == 1) {
+		txq->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
+		txq->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
+	} else if (txq->ver == 0) {
+		txq->max_sg_elems = IONIC_TX_MAX_SG_ELEMS;
+		txq->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE;
+	} else {
+		IONIC_QUE_ERROR(txq, "invalid queue version %d\n", txq->ver);
+		goto failed_alloc;
+	}
+
+	txq->sg_ring = (struct txq_sg_elem *)(txq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE) +
+				ALIGN(comp_ring_size, PAGE_SIZE));;
 
 	/* Allocate buffer ring. */
 	txq->br = buf_ring_alloc(4096, M_IONIC, M_WAITOK, &txq->tx_mtx);
@@ -1765,7 +1785,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	/*
-	 * Create just one tag for Rx bufferrs.
+	 * Create just one tag for Tx bufferrs.
 	 */
 	error = bus_dma_tag_create(
 	         /*      parent */ bus_get_dma_tag(txq->lif->ionic->dev->bsddev),
@@ -1776,7 +1796,8 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	         /*      filter */ NULL,
 	         /*   filterarg */ NULL,
 	         /*     maxsize */ IONIC_MAX_TSO_SIZE,
-	         /*   nsegments */ IONIC_MAX_TSO_STACK_SG_ENTRIES,
+	         /* HW supports one segment on desc ring and max_sg_elems on sg ring */
+	         /*   nsegments */ txq->max_sg_elems + 1,
 	         /*  maxsegsize */ IONIC_MAX_TSO_SG_SIZE,
 	         /*       flags */ 0,
 	         /*    lockfunc */ NULL,
@@ -2067,7 +2088,8 @@ ionic_lif_ifnet_init(struct lif *lif)
 	lif->max_frame_size = ifp->if_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
 	/* Adverise h/w TSO limits. */
 	ifp->if_hw_tsomax = IONIC_MAX_TSO_SIZE - (ETHER_HDR_LEN + ETHER_CRC_LEN);
-	ifp->if_hw_tsomaxsegcount = IONIC_MAX_TSO_STACK_SG_ENTRIES;
+	/* HW supports one segment on desc ring and max_sg_elems on sg ring */
+	ifp->if_hw_tsomaxsegcount = lif->txqs[0]->max_sg_elems + 1;
 	ifp->if_hw_tsomaxsegsize = IONIC_MAX_TSO_SG_SIZE;
 
 	ifmedia_init(&lif->media, IFM_IMASK, ionic_media_change,
@@ -2822,6 +2844,7 @@ ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 			.lif_index = lif->index,
 			.type = txq->type,
 			.index = txq->index,
+			.ver = txq->ver,
 			.flags = (IONIC_QINIT_F_IRQ | IONIC_QINIT_F_SG),
 			.intr_index = lif->rxqs[txq->index]->intr.index,
 			.pid = txq->pid,
@@ -2998,7 +3021,7 @@ ionic_rx_clean(struct rxque *rxq , int rx_limit)
 
 		IONIC_RX_TRACE(rxq, "comp index: %d color: %d done_color: %d nsegs: %d"
 				" len: %d desc_posted: %d\n",
-				comp_index, comp->pkt_type_color & IONIC_COMP_COLOR_MASK,
+				comp_index, comp->pkt_type_color & IONIC_COMP_COLOR_MASK ? 1 : 0,
 				rxq->done_color, comp->num_sg_elems,
 				comp->len, IONIC_Q_LENGTH(rxq));
 
@@ -4063,4 +4086,28 @@ try_fewer:
 	}
 
 	return ENOSPC;
+}
+
+int
+ionic_txq_identify(struct ionic *ionic, u8 ver)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	struct identity *ident = &ionic->ident;
+	int i, err;
+	unsigned int nwords;
+
+	IONIC_DEV_LOCK(ionic);
+	ionic_dev_cmd_q_identify(idev, IONIC_LIF_TYPE_CLASSIC, IONIC_QTYPE_TXQ, ver);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	if (err) {
+		IONIC_DEV_UNLOCK(ionic);
+		return (err);
+	}
+
+	nwords = min(ARRAY_SIZE(ident->txq.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
+	for (i = 0; i < nwords; i++)
+		ident->txq.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
+	IONIC_DEV_UNLOCK(ionic);
+
+	return 0;
 }

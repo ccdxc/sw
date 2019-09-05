@@ -42,6 +42,7 @@ enum cmd_opcode {
 	CMD_OPCODE_RX_FILTER_DEL		= 32,
 
 	/* Queue commands */
+	CMD_OPCODE_Q_IDENTIFY			= 39,
 	CMD_OPCODE_Q_INIT			= 40,
 	CMD_OPCODE_Q_CONTROL			= 41,
 
@@ -241,7 +242,7 @@ union drv_identity {
 		char   kernel_ver_str[32];
 		char   driver_ver_str[32];
 	};
-	__le32 words[512];
+	__le32 words[478];
 };
 
 /**
@@ -275,7 +276,7 @@ union dev_identity {
 		__le32 intr_coal_mult;
 		__le32 intr_coal_div;
 	};
-	__le32 words[512];
+	__le32 words[478];
 };
 
 enum lif_type {
@@ -438,7 +439,7 @@ union lif_identity {
 			struct lif_logical_qtype eq_qtype;
 		} rdma;
 	};
-	__le32 words[512];
+	__le32 words[478];
 };
 
 /**
@@ -469,10 +470,68 @@ struct lif_init_comp {
 };
 
 /**
+ * struct q_identify_cmd - queue identify command
+ * @opcode:     opcode
+ * @lif_type:   lif type (enum lif_type)
+ * @type:       logical queue type (enum logical_qtype)
+ * @ver:        version of identify returned by device
+ */
+struct q_identify_cmd {
+	u8     opcode;
+	u8     rsvd;
+	__le16 lif_type;
+	u8     type;
+	u8     ver;
+	u8     rsvd2[58];
+};
+
+/**
+ * struct q_identify_comp - queue identify command completion
+ * @status:  status of the command (enum status_code)
+ * @ver:     version of identify returned by device
+ */
+struct q_identify_comp {
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	u8     ver;
+	u8     rsvd2[11];
+};
+
+/**
+ * union q_identity - queue identity information
+ *     @version:        queue identify structure version
+ *     @supported:      supported queue versions
+ *     @features:       queue features
+ *     @desc_sz:        descriptor size
+ *     @comp_sz:        completion descriptor size
+ *     @sg_desc_sz:     sg descriptor size
+ *     @max_sg_elems:   maximum number of sg elements
+ *     @sg_desc_stride: number of sg elements per descriptor
+ */
+union q_identity {
+	struct {
+		u8      version;
+		u8      supported;
+		u8      rsvd[6];
+#define IONIC_QIDENT_F_CQ	0x01	/* queue has completion ring */
+#define IONIC_QIDENT_F_SG	0x02	/* queue has scatter/gather ring */
+#define IONIC_QIDENT_F_EQ	0x04	/* queue can use event queue */
+		__le64  features;
+		__le16  desc_sz;
+		__le16  comp_sz;
+		__le16  sg_desc_sz;
+		__le16  max_sg_elems;
+		__le16  sg_desc_stride;
+	};
+	__le32 words[478];
+};
+
+/**
  * struct q_init_cmd - Queue init command
  * @opcode:       opcode
  * @type:         Logical queue type
- * @ver:          Queue version (defines opcode/descriptor scope)
+ * @ver:          queue revision
  * @lif_index:    LIF index
  * @index:        (lif, qtype) relative admin queue index
  * @intr_index:   Interrupt control register index
@@ -498,7 +557,7 @@ struct lif_init_comp {
  * @ring_base:    Queue ring base address
  * @cq_ring_base: Completion queue ring base address
  * @sg_ring_base: Scatter/Gather ring base address
- * @eq_index:	  Event queue index
+ * @eq_index:     Event queue index
  */
 struct q_init_cmd {
 	u8     opcode;
@@ -528,7 +587,6 @@ struct q_init_cmd {
 /**
  * struct q_init_comp - Queue init command completion
  * @status:     The status of the command (enum status_code)
- * @ver:        Queue version (defines opcode/descriptor scope)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
  * @hw_index:   Hardware Queue ID
@@ -537,7 +595,7 @@ struct q_init_cmd {
  */
 struct q_init_comp {
 	u8     status;
-	u8     ver;
+	u8     rsvd;
 	__le16 comp_index;
 	__le32 hw_index;
 	u8     hw_type;
@@ -732,20 +790,31 @@ static inline void decode_txq_desc_cmd(u64 cmd, u8 *opcode, u8 *flags,
 	*addr = (cmd >> IONIC_TXQ_DESC_ADDR_SHIFT) & IONIC_TXQ_DESC_ADDR_MASK;
 };
 
-#define IONIC_TX_MAX_SG_ELEMS	8
-#define IONIC_RX_MAX_SG_ELEMS	8
-
 /**
- * struct txq_sg_desc - Transmit scatter-gather (SG) list
+ * struct txq_sg_elem - Transmit scatter-gather (SG) descriptor element
  * @addr:      DMA address of SG element data buffer
  * @len:       Length of SG element data buffer, in bytes
  */
+struct txq_sg_elem {
+	__le64 addr;
+	__le16 len;
+	__le16 rsvd[3];
+};
+
+/**
+ * struct txq_sg_desc - Transmit scatter-gather (SG) list
+ * @elems:     Scattter-gather elements
+ */
 struct txq_sg_desc {
-	struct txq_sg_elem {
-		__le64 addr;
-		__le16 len;
-		__le16 rsvd[3];
-	} elems[IONIC_TX_MAX_SG_ELEMS];
+#define IONIC_TX_MAX_SG_ELEMS		8
+#define IONIC_TX_SG_DESC_STRIDE		8
+	struct txq_sg_elem elems[IONIC_TX_MAX_SG_ELEMS];
+};
+
+struct txq_sg_desc_v1 {
+#define IONIC_TX_MAX_SG_ELEMS_V1		15
+#define IONIC_TX_SG_DESC_STRIDE_V1		16
+	struct txq_sg_elem elems[IONIC_TX_SG_DESC_STRIDE_V1];
 };
 
 /**
@@ -787,19 +856,27 @@ struct rxq_desc {
 	u8     rsvd[5];
 	__le16 len;
 	__le64 addr;
+};	
+
+/**
+ * struct rxq_sg_elem - Receive scatter-gather (SG) descriptor element
+ * @addr:      DMA address of SG element data buffer
+ * @len:       Length of SG element data buffer, in bytes
+ */
+struct rxq_sg_elem {
+	__le64 addr;
+	__le16 len;
+	__le16 rsvd[3];
 };
 
 /**
  * struct rxq_sg_desc - Receive scatter-gather (SG) list
- * @addr:      DMA address of SG element data buffer
- * @len:       Length of SG element data buffer, in bytes
+ * @elems:     Scattter-gather elements
  */
 struct rxq_sg_desc {
-	struct rxq_sg_elem {
-		__le64 addr;
-		__le16 len;
-		__le16 rsvd[3];
-	} elems[IONIC_RX_MAX_SG_ELEMS];
+#define IONIC_RX_MAX_SG_ELEMS		8
+#define IONIC_RX_SG_DESC_STRIDE		8
+	struct rxq_sg_elem elems[IONIC_RX_SG_DESC_STRIDE];
 };
 
 /**
@@ -1713,7 +1790,7 @@ union qos_identity {
 		u8     rsvd[62];
 		union  qos_config config[IONIC_QOS_CLASS_MAX];
 	};
-	__le32 words[512];
+	__le32 words[478];
 };
 
 /**
@@ -2111,7 +2188,7 @@ union port_identity {
 		u8     rsvd2[44];
 		union port_config config;
 	};
-	__le32 words[512];
+	__le32 words[478];
 };
 
 /**
@@ -2313,6 +2390,7 @@ union dev_cmd {
 	struct qos_init_cmd qos_init;
 	struct qos_reset_cmd qos_reset;
 
+	struct q_identify_cmd q_identify;
 	struct q_init_cmd q_init;
 };
 
@@ -2342,6 +2420,7 @@ union dev_cmd_comp {
 	qos_init_comp qos_init;
 	qos_reset_comp qos_reset;
 
+	struct q_identify_comp q_identify;
 	struct q_init_comp q_init;
 };
 
@@ -2410,6 +2489,7 @@ union dev_regs {
 union adminq_cmd {
 	struct admin_cmd cmd;
 	struct nop_cmd nop;
+	struct q_identify_cmd q_identify;
 	struct q_init_cmd q_init;
 	struct q_control_cmd q_control;
 	struct lif_setattr_cmd lif_setattr;
@@ -2426,6 +2506,7 @@ union adminq_cmd {
 union adminq_comp {
 	struct admin_comp comp;
 	struct nop_comp nop;
+	struct q_identify_comp q_identify;
 	struct q_init_comp q_init;
 	struct lif_setattr_comp lif_setattr;
 	struct lif_getattr_comp lif_getattr;
@@ -2577,6 +2658,7 @@ struct identity {
 	union lif_identity lif;
 	union port_identity port;
 	union qos_identity qos;
+	union q_identity txq;
 };
 
 #pragma pack(pop)

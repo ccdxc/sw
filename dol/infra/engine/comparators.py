@@ -352,7 +352,6 @@ class PacketComparator:
         self.rid += 1
         rpgid = 'RXPKT%d' % self.rid
         logger.info("ACTUAL RX Packet: %s, Ports: " % rpgid, ports)
-        scapyfactory.ScapyPacketObject.ShowRawPacket(spkt)
         rpobj = CrPacket(rpgid, spkt, ports)
         rpobj.Show()
         self.rxpkts[rpobj.pktid] = rpobj
