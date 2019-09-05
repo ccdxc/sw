@@ -13,6 +13,7 @@
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_barco_crypto.hpp"
 #include "third-party/asic/capri/verif/apis/cap_npv_api.h"
 #include "third-party/asic/capri/verif/apis/cap_dpa_api.h"
 #include "third-party/asic/capri/verif/apis/cap_pics_api.h"
@@ -497,6 +498,11 @@ capri_init (capri_cfg_t *cfg)
                             "Capri replication init failure, err : %d", ret);
 
     sdk::p4::p4_dump_program_info(cfg->cfg_path.c_str());
+
+    ret = capri_barco_crypto_init(cfg->platform);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri barco crypto init failure, err : {}", ret);
+
 
     ret = capri_quiesce_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,

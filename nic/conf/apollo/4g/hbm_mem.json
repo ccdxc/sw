@@ -311,6 +311,103 @@
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
             "size": "1088K"
+        },
+        {
+            "name": "key-desc-array",
+            "size": "1024K"
+        },
+        {
+            "name": "key-mem",
+            "size": "4096K"
+        },
+        {
+            "name": "brq-ring-asym",
+            "size": "32K"
+        },
+        {
+            "name": "brq-ring-gcm0",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-gcm1",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-xts0",
+            "size": "512K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-xts1",
+            "size": "512K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-mpp0",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp1",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp2",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp3",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-cp",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-cp-hot",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-dc",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-dc-hot",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "crypto-asym-dma-descr",
+            "size": "24K"
+        },
+        {
+            "name": "crypto-hbm-mem",
+            "size": "512K"
+        },
+        {
+            "_comment": "512K x 10",
+            "name": "crypto-hbm-mem-big",
+            "size": "5120K"
+        },
+        {
+            "name": "crypto-asym-key-desc-array",
+            "size": "1024K"
+        },
+        {
+            "name": "crypto-sym-msg-descr",
+            "size": "64K"
+        },
+        {
+            "name": "tls_proxy_pad_table",
+            "size": "1K"
+        },
+        {
+            "_comment" : "32 entries of 64 Bytes each",
+            "name": "opaque_tag",
+            "size": "2K",
+            "reset": true
         }
     ]
 }

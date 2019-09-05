@@ -48,11 +48,6 @@ pd_asic_init (pd_func_args_t *pd_func_args)
     SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri s/w phv init failure, err : {}", ret);
 
-    sdk_ret = capri_barco_crypto_init(args->cfg->platform);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri barco crypto init failure, err : {}", ret);
-
     ret = (hal_ret_t)sdk::platform::utils::lif_mgr::lifs_reset(
                                                     HAL_LIF_ID_UPLINK_MIN - 1,
                                                     HAL_LIF_ID_SVC_LIF_MAX);
