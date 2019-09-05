@@ -70,7 +70,7 @@ BUILD_CONTAINER ?= pens-bld:v0.14
 UI_BUILD_CONTAINER ?= pens-ui-bld:v0.28
 DIND_CONTAINER ?= pens-dind:v0.4
 E2E_CONTAINER ?= pens-e2e:v0.6
-TARGETS ?= ws-tools pull-assets gen build
+TARGETS ?= ws-tools pull-assets-venice gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
@@ -85,7 +85,7 @@ export GIT_COMMIT GIT_VERSION BUILD_DATE
 default:
 	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
-	$(MAKE) pull-assets
+	$(MAKE) pull-assets-venice
 	$(MAKE) gen-clean
 	$(MAKE) gen
 	$(MAKE) checks
@@ -95,7 +95,7 @@ default:
 ut-odd:
 	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
-	$(MAKE) pull-assets
+	$(MAKE) pull-assets-venice
 	$(MAKE) gen-clean
 	$(MAKE) gen
 	$(MAKE) checks
@@ -105,7 +105,7 @@ ut-odd:
 ut-even:
 	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
-	$(MAKE) pull-assets
+	$(MAKE) pull-assets-venice
 	$(MAKE) gen-clean
 	$(MAKE) gen
 	$(MAKE) build
@@ -216,7 +216,7 @@ integ-test-even: gopkglist
 ci-integ-test:
 	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
-	$(MAKE) pull-assets
+	$(MAKE) pull-assets-venice
 	$(MAKE) gen-clean
 	$(MAKE) gen
 	$(MAKE) integ-test-odd
@@ -225,7 +225,7 @@ ci-integ-test:
 ci-integ-test-odd:
 	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
-	$(MAKE) pull-assets
+	$(MAKE) pull-assets-venice
 	$(MAKE) gen-clean
 	$(MAKE) gen
 	$(MAKE) integ-test-odd
@@ -233,7 +233,7 @@ ci-integ-test-odd:
 ci-integ-test-even:
 	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
-	$(MAKE) pull-assets
+	$(MAKE) pull-assets-venice
 	$(MAKE) gen-clean
 	$(MAKE) gen
 	$(MAKE) integ-test-even
@@ -478,6 +478,9 @@ toolchain-clean:
 
 toolchain:
 	if [ ! -d "/tool/toolchain" ]; then sudo rm -rf /tool; sudo mkdir -p /tool; sudo mount asic20.pensando.io:/export/tool /tool; fi
+
+pull-assets-venice:
+	bash scripts/pull-assets-venice.sh
 
 pull-assets:
 	bash scripts/pull-assets.sh
