@@ -865,7 +865,8 @@ func (naples *naplesHwNode) addNodeEntities(in *iota.Node) error {
 		if err := wload.BringUp(naplesCfg.GetNaplesIpAddress(),
 			strconv.Itoa(sshPort), naplesCfg.GetNaplesUsername(), naplesCfg.GetNaplesPassword()); err != nil {
 			naples.logger.Errorf("Naples Hw entity type add failed %v", err.Error())
-			return err
+			//Ignore error as runner might copy the pub key to remote entity later.
+			//return err
 		}
 		if wload != nil {
 			naples.entityMap.Store(entityEntry.GetName(), iotaWorkload{workload: wload})
@@ -886,6 +887,10 @@ func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
 	naples.logger.Printf("naples hw uuid out %s", cmdResp.Stdout)
 	naples.logger.Printf("naples hw uuid err %s", cmdResp.Stderr)
 	naples.logger.Printf("naples hw uuid exit code %d", cmdResp.ExitCode)
+
+	if cmdResp.ExitCode != 0 {
+		return "", errors.Errorf("Error executing command")
+	}
 
 	var deviceJSON map[string]interface{}
 	if err := json.Unmarshal([]byte(cmdResp.Stdout), &deviceJSON); err != nil {
@@ -958,7 +963,8 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 	if err != nil {
 		msg := fmt.Sprintf("Error in reading naples hw uuid : %s", err.Error())
 		naples.logger.Error(msg)
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		//Don't return error, let Harness figure out.
+		//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 	}
 
 	return &iota.Node{NodeStatus: apiSuccess, NodeUuid: nodeUUID,

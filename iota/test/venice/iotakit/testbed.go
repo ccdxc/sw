@@ -1221,15 +1221,6 @@ func (tb *TestBed) setupTestBed() error {
 
 	tb.Nodes = addedNodes
 
-	if !tb.skipSetup {
-		// move naples to managed mode
-		err := tb.setupNaplesMode(tb.Nodes)
-		if err != nil {
-			log.Errorf("Setting up naples failed. Err: %v", err)
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -1239,6 +1230,23 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 	if os.Getenv("REBOOT_ONLY") != "" {
 		log.Infof("Skipping naples setup as it is just reboot")
 		return nil
+	}
+
+	// get token ao authenticate to agent
+	veniceCtx, err := tb.VeniceLoggedInCtx(context.Background())
+	if err != nil {
+		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+
+	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+	defer cancel()
+	token, err := utils.GetNodeAuthToken(ctx, tb.GetVeniceURL()[0], []string{"*"})
+	if err != nil {
+		nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
 	}
 
 	log.Infof("Setting up Naples in network managed mode")
@@ -1257,12 +1265,6 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 	for _, node := range nodes {
 		veniceIPs := strings.Join(node.NaplesConfig.VeniceIps, ",")
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			// set date on naples
-			//trig.AddCommand(fmt.Sprintf("rm /etc/localtime"), node.NodeName+"_naples", node.NodeName)
-			//trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), node.NodeName+"_naples", node.NodeName)
-			//cmd := fmt.Sprintf("date -s \"%s\"", time.Now().Format("2006-01-02 15:04:05"))
-			//trig.AddCommand(cmd, node.NodeName+"_naples", node.NodeName)
-
 			// untar the package
 			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
@@ -1272,6 +1274,9 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 
 			// disable watchdog for naples
 			trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), node.NodeName+"_naples", node.NodeName)
+
+			// make sure console is enabled
+			trig.AddCommand(fmt.Sprintf("touch /sysconfig/config0/.console"), node.NodeName+"_naples", node.NodeName)
 			// trigger mode switch
 			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, node.NodeName, node.iotaNode.NodeUuid)
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
@@ -1321,6 +1326,57 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
+	}
+
+	//After reloading make sure we setup the host
+	trig = tb.NewTrigger()
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
+			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s update ssh-pub-key -f ~/.ssh/id_rsa.pub",
+				penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
+			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			//enable sshd
+			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s system enable-sshd",
+				penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
+			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+		}
+	}
+
+	resp, err = trig.Run()
+	if err != nil {
+		return fmt.Errorf("Error update public key on naples. Err: %v", err)
+	}
+
+	// check the response
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("Changing naples mode failed. %+v", cmdResp)
+			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
+				cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+
+		}
+	}
+
+	trig = tb.NewTrigger()
+	//Make sure we can run command on naples
+
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			// cleaning up db is good for now.
+			trig.AddCommand(fmt.Sprintf("date"), node.NodeName+"_naples", node.NodeName)
+		}
+	}
+
+	// check the response
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
+			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
+				cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+
+		}
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
@@ -1419,6 +1475,13 @@ func (tb *TestBed) SetupConfig(ctx context.Context) error {
 	err = tb.SetupVeniceNodes()
 	if err != nil {
 		log.Errorf("Error setting up venice nodes. Err: %v", err)
+		return err
+	}
+
+	// move naples to managed mode
+	err = tb.setupNaplesMode(tb.Nodes)
+	if err != nil {
+		log.Errorf("Setting up naples failed. Err: %v", err)
 		return err
 	}
 

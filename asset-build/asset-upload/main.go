@@ -23,10 +23,6 @@ func main() {
 	app.ArgsUsage = "[name] [version] [filename to upload]"
 
 	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "force, f",
-			Usage: "push over an existing version",
-		},
 		cli.StringFlag{
 			Name:   "assets-server-colo, ac",
 			Value:  asset.EndpointColo,
@@ -86,14 +82,14 @@ func action(ctx *cli.Context) error {
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		if err := upload(name, version, ep, f, ctx.Bool("force")); err != nil {
+		if err := upload(name, version, ep, f); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func upload(name, version, endpoint string, reader io.Reader, force bool) error {
+func upload(name, version, endpoint string, reader io.Reader) error {
 	mc, err := minio.New(endpoint, asset.AccessKeyID, asset.SecretAccessKey, false)
 	if err != nil {
 		return err
@@ -109,15 +105,13 @@ func upload(name, version, endpoint string, reader io.Reader, force bool) error 
 
 	assetPath := path.Join(name, version, "asset.tgz")
 
-	if !force {
-		doneCh := make(chan struct{})
-		list := mc.ListObjects(asset.RootBucket, assetPath, false, doneCh)
-		_, ok := <-list
-		if ok {
-			return errors.New("cowardly refusing to overwrite an existing asset. pass -f if you really want to")
-		}
-		close(doneCh)
+	doneCh := make(chan struct{})
+	list := mc.ListObjects(asset.RootBucket, assetPath, false, doneCh)
+	_, ok := <-list
+	if ok {
+		return errors.New("cowardly refusing to overwrite an existing asset. pass -f if you really want to")
 	}
+	close(doneCh)
 
 	n, err := mc.PutObject(asset.RootBucket, assetPath, reader, -1, minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
 	if err != nil {

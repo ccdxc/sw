@@ -910,7 +910,7 @@ func initAllowedCommands() {
 	allowedCommands["killall"] = 16
 	allowedCommands["penrmsshdfiles"] = 17
 	allowedCommands["ssh-keygen"] = 18
-	allowedCommands["/usr/sbin/sshd"] = 19
+	allowedCommands["/etc/init.d/S50sshd"] = 19
 	allowedCommands["penrmpubkey"] = 20
 	allowedCommands["/nic/bin/halctl"] = 21
 	allowedCommands["ifconfig"] = 22

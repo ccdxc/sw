@@ -2,6 +2,7 @@ package workload
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strconv"
@@ -755,20 +756,13 @@ func (app *remoteWorkload) RunCommand(cmds []string, dir string, timeout uint32,
 	runCmd := strings.Join(cmds, " ")
 	if app.sshHandle == nil {
 		if err := app.Reinit(); err != nil {
-			cmdInfo.Ctx.Stderr = "SSH connection failed"
-			cmdInfo.Ctx.ExitCode = 1
+			cmdInfo = &cmd.CmdInfo{Ctx: &cmd.CmdCtx{
+				ExitCode: 1,
+				Stderr:   "SSH connection failed",
+			}}
 			return cmdInfo.Ctx, "", nil
 		}
 	}
-
-	//Ignore diretory for remote workload for now
-	//Even though mount is suppoted, commenting out as on naples remote
-	//we don't to mount yet.
-	/*if dir != "" {
-		runCmd = "cd " + app.baseDir + "/" + dir + " && " + strings.Join(cmd, " ")
-	} else {
-		runCmd = "cd " + app.baseDir + " && " + strings.Join(cmd, " ")
-	}*/
 
 	if !background {
 		for i := 0; i < 2; i++ {
@@ -777,6 +771,8 @@ func (app *remoteWorkload) RunCommand(cmds []string, dir string, timeout uint32,
 				cmdInfo.Ctx.Stderr = "SSH connection failed"
 				//Try it again.
 				if err := app.Reinit(); err != nil {
+					//Make sure we don't crash next time
+					app.sshHandle = nil
 					return cmdInfo.Ctx, "", nil
 				}
 				continue
@@ -793,6 +789,8 @@ func (app *remoteWorkload) RunCommand(cmds []string, dir string, timeout uint32,
 			cmdInfo.Ctx.Stderr = "SSH connection failed"
 			//Try it again.
 			if err := app.Reinit(); err != nil {
+				//Make sure we don't crash next time
+				app.sshHandle = nil
 				return cmdInfo.Ctx, "", nil
 			}
 			continue
@@ -840,30 +838,75 @@ func (app *remoteWorkload) mountDirectory(userName string, password string, srcD
 	return nil
 }
 
+func getKeyFile() (key ssh.Signer, err error) {
+	sshDir := os.Getenv("HOME") + "/.ssh"
+	file := sshDir + "/id_rsa"
+	buf, err := ioutil.ReadFile(file)
+	if err != nil {
+		return
+	}
+	key, err = ssh.ParsePrivateKey(buf)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (app *remoteWorkload) Reinit() error {
 	var err error
 
-	config := &ssh.ClientConfig{
-		User: app.username,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(app.password),
-			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
-				answers = make([]string, len(questions))
-				for n := range questions {
-					answers[n] = app.password
-				}
+	connectWithPassword := func() error {
+		config := &ssh.ClientConfig{
+			User: app.username,
+			Auth: []ssh.AuthMethod{
+				ssh.Password(app.password),
+				ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+					answers = make([]string, len(questions))
+					for n := range questions {
+						answers[n] = app.password
+					}
 
-				return answers, nil
-			}),
-		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-	fmt.Println("App : ", app.ip, app.port, app.username, app.password)
-	if app.sshHandle, err = ssh.Dial("tcp", app.ip+":"+app.port, config); err != nil {
-		err = errors.Wrapf(err, "SSH connect failed %v:%v@%v", app.username, app.password, app.ip)
-		return err
+					return answers, nil
+				}),
+			}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
+		fmt.Println("App : ", app.ip, app.port, app.username, app.password)
+		if app.sshHandle, err = ssh.Dial("tcp", app.ip+":"+app.port, config); err != nil {
+			err = errors.Wrapf(err, "SSH connect failed %v:%v@%v", app.username, app.password, app.ip)
+			return err
+		}
+		return nil
 	}
 
-	return nil
+	connectWithPrivateKey := func() error {
+		// Now in the main function DO:
+		var key ssh.Signer
+		var err error
+		if key, err = getKeyFile(); err != nil {
+			return err
+		}
+
+		config := &ssh.ClientConfig{
+			User: app.username,
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeys(key),
+			},
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
+		fmt.Println("(Private key : App : ", app.ip, app.port, app.username)
+		if app.sshHandle, err = ssh.Dial("tcp", app.ip+":"+app.port, config); err != nil {
+			err = errors.Wrapf(err, "SSH connect failed %v:%v@%v", app.username, app.password, app.ip)
+			return err
+		}
+		return nil
+	}
+
+	if err := connectWithPassword(); err == nil {
+		return nil
+	}
+
+	app.logger.Errorf("Failed conneting with password, trying with private key")
+	return connectWithPrivateKey()
 }
 
 func (app *remoteWorkload) BringUp(args ...string) error {

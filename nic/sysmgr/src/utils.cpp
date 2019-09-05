@@ -352,54 +352,38 @@ std::string get_main_config_file()
 
     pt::read_json(DEVICE_JSON, ptree);
 
-    fwd_mode = ptree.get<std::string>("forwarding-mode",
-        "FORWARDING_MODE_CLASSIC");
-    if (fwd_mode == "FORWARDING_MODE_CLASSIC")
+    int fwd = ptree.get<int>("forwarding-mode",
+        device::FORWARDING_MODE_NONE);
+    if (fwd == device::FORWARDING_MODE_CLASSIC)
     {
         fwd_mode = "classic";
     }
-    else if (fwd_mode == "FORWARDING_MODE_HOSTPIN")
+    else if (fwd == device::FORWARDING_MODE_HOSTPIN)
     {
         fwd_mode = "hostpin";
     }
-    else if (fwd_mode == "FORWARDING_MODE_SWITCH")
+    else if (fwd == device::FORWARDING_MODE_SWITCH)
     {
         fwd_mode = "switch";
     }
     else
     {
-        logger->error("Unknown forwarding mode '{}'", fwd_mode);
-        return DEFAULT_SYSMGR_JSON;
+        throw std::runtime_error("Unknown forwarding-mode");
     }
 
-    int feature_profile = ptree.get<int>("feature-profile", 
-                                         device::FEATURE_PROFILE_CLASSIC_DEFAULT);
+    int feature_profile = ptree.get<int>(
+        "feature-profile", 
+        device::FEATURE_PROFILE_CLASSIC_DEFAULT);
     if (feature_profile == device::FEATURE_PROFILE_NONE ||
         feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
         feature = "default";
-    } else if (feature_profile == device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
+    } else if (feature_profile ==
+        device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
+
         feature = "eth-dev-scale";
     } else {
-        logger->error("Unknown feature profile '{}'", feature);
-        return DEFAULT_SYSMGR_JSON;
+        throw std::runtime_error("Unknown forwarding-mode");
     }
-
-#if 0
-    feature = ptree.get<std::string>("feature-profile", "classic-default");
-    if (feature == "classic-default")
-    {
-        feature = "default";
-    }
-    else if (feature == "classic-eth-dev-scale")
-    {
-        feature = "eth-dev-scale";
-    }
-    else
-    {
-        logger->error("Unknown feature profile '{}'", feature);
-        return DEFAULT_SYSMGR_JSON;
-    }
-#endif
 
     return "/nic/conf/sysmgr-" + fwd_mode + "-" + feature + ".json";
 }

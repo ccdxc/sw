@@ -534,6 +534,16 @@ def RebootHost(n):
     api.Logger.info("Rebooting Host {}".format(n))
     ret = api.RestartNodes(nodes)
 
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    enable_sshd = "system enable-sshd"
+    copy_key = "update ssh-pub-key -f ~/.ssh/id_rsa.pub"
+    for n in nodes:
+        #hack for now, need to set date
+        AddPenctlCommand(req, n, enable_sshd)
+        AddPenctlCommand(req, n, copy_key)
+
+    resp = api.Trigger(req)
+
     return api.types.status.FAILURE
 
 def DelphictlGetNetworkMode(n):

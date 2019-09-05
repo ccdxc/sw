@@ -11,53 +11,53 @@ NIC_CONTAINER_VERSION:=1.35
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 ifeq ($(USER),)
 docker/shell:
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic bash
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic bash
 else
 docker/shell: docker/build-shell-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER)
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER)
 endif
 
 docker/background-shell: docker/build-shell-image
-	docker run -dit --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw  -w /sw/nic pensando/nic su -l $(CUR_USER)
+	docker run -dit --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw  -w /sw/nic pensando/nic su -l $(CUR_USER)
 
 docker/build-shell-image: docker/install_box
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
 	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
 
 docker/coverage: docker/build-runtime-image
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su  -l $(CUR_USER)  -c 'tools/coverage_script.sh'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su  -l $(CUR_USER)  -c 'tools/coverage_script.sh'
 
 docker/jenkins-coverage: docker/build-runtime-image
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'HARDWARE_TESTBED=${HARDWARE_TESTBED_COPIED}  EXTRA_ARGS="${EXTRA_ARGS}" ${COV_SCRIPT}'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'HARDWARE_TESTBED=${HARDWARE_TESTBED_COPIED}  EXTRA_ARGS="${EXTRA_ARGS}" ${COV_SCRIPT}'
 
 docker/firmware: docker/build-runtime-image
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'cd /usr/src/github.com/pensando/sw/nic && make JOB_ID=1 PIPELINE=${PIPELINE} BUILD_SW_VERSION=${UPSTREAM_BUILD_TAG} BUILD_BR_VERSION=${UPSTREAM_BUILD_TAG} jobd/firmware'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'cd /usr/src/github.com/pensando/sw/nic && make JOB_ID=1 PIPELINE=${PIPELINE} BUILD_SW_VERSION=${UPSTREAM_BUILD_TAG} BUILD_BR_VERSION=${UPSTREAM_BUILD_TAG} jobd/firmware'
 
 docker/naples-sim: docker/build-runtime-image
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'cd /usr/src/github.com/pensando/sw/nic && make JOB_ID=1 PIPELINE=${PIPELINE} BUILD_SW_VERSION=${UPSTREAM_BUILD_TAG} BUILD_BR_VERSION=${UPSTREAM_BUILD_TAG} jobd/e2e/naples-sim-image'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'cd /usr/src/github.com/pensando/sw/nic && make JOB_ID=1 PIPELINE=${PIPELINE} BUILD_SW_VERSION=${UPSTREAM_BUILD_TAG} BUILD_BR_VERSION=${UPSTREAM_BUILD_TAG} jobd/e2e/naples-sim-image'
 
 docker/coverage-shell: docker/build-runtime-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su -l $(CUR_USER)
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su -l $(CUR_USER)
 
 docker/e2e-sanity-build: docker/build-runtime-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make'
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make'
 
 docker/e2e-sanity-hal-bringup:
 	@bash -c '(./tools/start-model.sh &) && ./tools/start-hal.sh'
 
 docker/e2e-sanity-tls-build: docker/build-runtime-image-skip-box
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make pull-assets && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol ; ret=$? ; make sanity_logs ; exit $(ret)'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make pull-assets && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol ; ret=$? ; make sanity_logs ; exit $(ret)'
 
 # run `make gtest` with the dependencies image.
 docker/test: docker/build-runtime-image
-	docker run -it --rm  --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make gtest'
+	docker run -it --rm  --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make gtest'
 
 # run a build with the dependencies image.
 docker/build: docker/build-runtime-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make gtest'
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make gtest'
 
 docker/clean-docker: docker/build-runtime-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make clean'
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make clean'
 
 REGISTRY = registry.test.pensando.io:5000
 

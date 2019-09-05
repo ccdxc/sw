@@ -121,12 +121,20 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 
 func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "killall",
-		Opts:       strings.Join([]string{"sshd"}, ""),
+		Executable: "/etc/init.d/S50sshd",
+		Opts:       strings.Join([]string{"disable"}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		fmt.Println(err)
-		return errors.New("Unable to killall sshd")
+		return errors.New("Unable to disable sshd")
+	}
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/etc/init.d/S50sshd",
+		Opts:       strings.Join([]string{"stop"}, ""),
+	}
+	if err := naplesExecCmd(v); err != nil {
+		fmt.Println(err)
+		return errors.New("Unable to stop sshd")
 	}
 	v = &nmd.NaplesCmdExecute{
 		Executable: "penrmsshdfiles",
@@ -145,8 +153,16 @@ func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Unable to create missing keys")
 	}
 	v = &nmd.NaplesCmdExecute{
-		Executable: "/usr/sbin/sshd",
-		Opts:       strings.Join([]string{""}, ""),
+		Executable: "/etc/init.d/S50sshd",
+		Opts:       strings.Join([]string{"enable"}, ""),
+	}
+	if err := naplesExecCmd(v); err != nil {
+		fmt.Println(err)
+		return errors.New("Unable to enable sshd")
+	}
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/etc/init.d/S50sshd",
+		Opts:       strings.Join([]string{"start"}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		fmt.Println(err)

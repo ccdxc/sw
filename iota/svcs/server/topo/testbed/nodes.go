@@ -89,6 +89,9 @@ func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		log.Infof("Waiting for little longer for ESX node to come up..")
 		time.Sleep(60 * time.Second)
+	} else {
+		log.Infof("Waiting for a littel longer for node to come up...")
+		time.Sleep(10 * time.Second)
 	}
 
 	return nil

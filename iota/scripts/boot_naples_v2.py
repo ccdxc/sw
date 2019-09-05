@@ -394,12 +394,20 @@ class NaplesManagement(EntityManagement):
             self.SendlineExpect("", ["capri login:", "capri-gold login:"], timeout = 120)
         self.__login()
 
+    def InstallPrep(self):
+        self.SendlineExpect("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0", "#")
+        self.CleanUpOldFiles()
+        self.SetUpInitFiles()
+        self.SendlineExpect("umount /sysconfig/config0", "#")
+
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
     def InstallMainFirmware(self, copy_fw = True):
         if copy_fw:
             self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
+        self.InstallPrep()
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
+
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
@@ -492,7 +500,13 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
         self.SendlineExpect("rm -rf /obfl/asicerrord_err*", "#")
+        # Make sure console is enabled
+        self.SendlineExpect("touch /sysconfig/config0/.console", "#")
 
+
+    def SetUpInitFiles(self):
+        self.SendlineExpect("touch /sysconfig/config0/.console", "#")
+        
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
@@ -500,7 +514,6 @@ class NaplesManagement(EntityManagement):
         if goldfw:
             self.SendlineExpect("fwupdate -s goldfw", "#")
 
-        self.CleanUpOldFiles()
 
     def Close(self):
         if self.hdl:
@@ -570,22 +583,25 @@ class HostManagement(EntityManagement):
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
 
+    def InstallPrep(self):
+        self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
+        self.RunNaplesCmd("mkdir -p /data && sync")
+        self.RunNaplesCmd("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0")
+        #Clean up old files as we are starting fresh.
+        self.CleanUpOldFiles()
+        self.SetUpInitFiles()
+        #unmount
+        self.RunNaplesCmd("umount /sysconfig/config0")
+
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
         assert(self.RunSshCmd("lspci | grep 1dd8") == 0)
-        if mount_data:
-            self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
-            self.RunNaplesCmd("mkdir -p /data && sync")
-            self.RunNaplesCmd("mount /dev/mmcblk0p10 /data/")
+        self.InstallPrep()
 
         if copy_fw:
             self.CopyIN(GlobalOptions.image, entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
 
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/%s"%os.path.basename(GlobalOptions.image))
-        if mount_data:
-            self.RunNaplesCmd("sync && sync && sync")
-            self.RunNaplesCmd("umount /data/")
-
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
@@ -604,6 +620,24 @@ class HostManagement(EntityManagement):
 
     def UnloadDriver(self):
         pass
+
+    def CleanUpOldFiles(self):
+        #clean up db that was setup by previous
+        self.RunNaplesCmd("rm -rf /sysconfig/config0/*.db")
+        self.RunNaplesCmd("rm -rf /sysconfig/config0/*.conf")
+        self.RunNaplesCmd("rm -rf /sysconfig/config1/*.db")
+        self.RunNaplesCmd("rm -rf /sysconfig/config1/*.conf")
+        self.RunNaplesCmd("rm -f /sysconfig/config0/clusterTrustRoots.pem")
+        self.RunNaplesCmd("rm -f /sysconfig/config0/frequency.json")
+
+        self.RunNaplesCmd("rm -rf /data/log && sync")
+        self.RunNaplesCmd("rm -rf /data/core/* && sync")
+        self.RunNaplesCmd("rm -rf /data/*.dat && sync")
+        self.RunNaplesCmd("rm -rf /obfl/asicerrord_err*")
+
+
+    def SetUpInitFiles(self):
+        self.RunNaplesCmd("touch /sysconfig/config0/.console")
 
 
 class EsxHostManagement(HostManagement):
@@ -726,10 +760,7 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        if mount_data:
-            self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
-            self.RunNaplesCmd("mkdir -p /data && sync")
-            self.RunNaplesCmd("mount /dev/mmcblk0p10 /data/")
+        self.InstallPrep()
 
         #Ctrl VM reboot might have removed the image
         self.ctrl_vm_copyin(GlobalOptions.image,
@@ -737,9 +768,6 @@ class EsxHostManagement(HostManagement):
                     naples_dir = "/tmp")
 
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /tmp/%s"%os.path.basename(GlobalOptions.image))
-        if mount_data:
-            self.RunNaplesCmd("sync && sync && sync")
-            self.RunNaplesCmd("umount /data/")
 
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
@@ -945,8 +973,6 @@ def Main():
             if not IsNaplesGoldFWLatest():
                 naples.InstallGoldFirmware()
             naples.Reboot()
-            #Clean up old files as we are starting fresh.
-            naples.CleanUpOldFiles()
         else:
             host.InitForUpgrade()
             host.Reboot()

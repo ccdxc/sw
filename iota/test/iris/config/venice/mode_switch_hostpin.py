@@ -14,6 +14,9 @@ def Main(step):
         # Touch a file to indicate to NMD that the current mode is emulation
         cmd = "touch /data/iota-emulation"
         api.Trigger_AddNaplesCommand(req, n, cmd)
+        # Make sure console is enabled
+        cmd = "touch /sysconfig/config0/.console"
+        api.Trigger_AddNaplesCommand(req, n, cmd)
 
         if common.PenctlGetModeStatus(n) != "NETWORK" or common.PenctlGetTransitionPhaseStatus(n) != "VENICE_REGISTRATION_DONE":
             api.Logger.info("Host [{}] is in HOST mode. Initiating mode change.".format(n))
@@ -74,10 +77,14 @@ def Main(step):
         return api.types.status.FAILURE
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    for n in nodes:
+    enable_sshd = "system enable-sshd"
+    copy_key = "update ssh-pub-key -f ~/.ssh/id_rsa.pub"
+    for n in api.GetNaplesHostnames():
         #hack for now, need to set date
         cmd = "date -s '{}'".format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         api.Trigger_AddNaplesCommand(req, n, cmd)
+        common.AddPenctlCommand(req, n, enable_sshd)
+        common.AddPenctlCommand(req, n, copy_key)
 
     resp = api.Trigger(req)
 

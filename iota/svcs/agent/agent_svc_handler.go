@@ -13,6 +13,7 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 
+	"github.com/pensando/sw/iota/svcs/agent/utils"
 	"github.com/pensando/sw/iota/svcs/common"
 )
 
@@ -59,6 +60,7 @@ func (agent *Service) init() {
 		os.Mkdir(dbDir, 0755)
 	}
 
+	utils.SSHKeygen()
 	agent.logger.Println("Agent initialized...")
 }
 

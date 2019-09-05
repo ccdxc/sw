@@ -40,6 +40,9 @@ const (
 	// DstIotaAgentDir captures the top level dir where all the agent copies happen
 	DstIotaAgentDir = "/pensando/iota"
 
+	// NaplesAuthTokenFile naples auth token file
+	NaplesAuthTokenFile = "/pensando/iota/naples_auth_token"
+
 	// DstIotaEntitiesDir has all workload related data for each workload
 	DstIotaEntitiesDir = DstIotaAgentDir + "/entities"
 

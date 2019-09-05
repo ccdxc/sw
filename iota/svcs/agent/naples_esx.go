@@ -364,8 +364,8 @@ func (node *esxHwNode) addHostEntity(in *iota.Node) error {
 			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, entityEntry.GetName(), node.name, node.logger)
 			node.hostEntityKey = entityEntry.GetName()
 			if err := wload.BringUp(); err != nil {
-				node.logger.Errorf("Naples Hw entity type add failed %v", err.Error())
-				return err
+				node.logger.Errorf("Naples bring up failed, ignoring %v", err.Error())
+				//return err
 			}
 			node.entityMap.Store(node.hostEntityKey, iotaWorkload{workload: wload})
 			wDir := Common.DstIotaEntitiesDir + "/" + entityEntry.GetName()
@@ -392,8 +392,8 @@ func (node *esxHwNode) addNaplesEntity(in *iota.Node) error {
 			naplesCfg := in.GetNaplesConfig()
 			if err := wload.BringUp(naplesCfg.GetNaplesIpAddress(),
 				strconv.Itoa(sshPort), naplesCfg.GetNaplesUsername(), naplesCfg.GetNaplesPassword()); err != nil {
-				node.logger.Errorf("Naples Hw entity type add failed %v", err.Error())
-				return err
+				node.logger.Errorf("Naples bring up failed, ignoring %v", err.Error())
+				//return err
 			}
 			wDir := Common.DstIotaEntitiesDir + "/" + entityEntry.GetName()
 			wload.SetBaseDir(wDir)
