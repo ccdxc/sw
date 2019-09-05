@@ -4,7 +4,7 @@ import { MetricsUtility } from '@app/common/MetricsUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
-import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
+import { MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { ChartOptions } from 'chart.js';
 import { Observer, Subject, Subscription } from 'rxjs';
@@ -19,7 +19,7 @@ import { FieldValueTransform, ValueMap, QueryMap } from '../transforms/fieldvalu
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { ClusterDistributedServiceCard, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
 import { LabelSelectorTransform } from '../transforms/labelselector.transform';
 import { AuthService } from '@app/services/generated/auth.service';
 import { TelemetryPref, GraphConfig, DataTransformConfig } from '@app/models/frontend/shared/userpreference.interface';
@@ -461,6 +461,17 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     }, 0);
   }
 
+  /**
+   * This API build MetricsPollingQuery and let user customize MetricsPollingQuery
+   * @param source
+   */
+  buildMetricsPollingQuery(source: DataSource): MetricsPollingQuery {
+    const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
+    if (source.measurement === 'Cluster') {
+      query.query.function = Telemetry_queryMetricsQuerySpec_function.median; // VS-741 use median function to show DSC count
+    }
+    return query;
+  }
 
   generateMetricsQuery(): TelemetryPollingMetricQueries {
     const queryList: TelemetryPollingMetricQueries = {
@@ -473,8 +484,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     this.dataSources.forEach( (source) => {
       if (source.fields != null && source.fields.length !== 0) {
         // Fields with counter types go into a second query
-        const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
-        // Remvoing default group by time
+        const query =  this.buildMetricsPollingQuery(source);
+         // Remvoing default group by time
         query.query['group-by-time'] = null;
         // Set timerange
         const setQueryTime = (currQuery: ITelemetry_queryMetricsQuerySpec) => {
