@@ -1358,7 +1358,6 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                      *dhl_entry  = NULL;
     nwsec_policy_t                   *policy;
     hal_handle_t                     hal_handle = 0;
-    nwsec_policy_create_app_ctxt_t   *app_ctx = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1367,17 +1366,9 @@ nwsec_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctx = (nwsec_policy_create_app_ctxt_t *) cfg_ctxt->app_ctxt;
 
     policy = (nwsec_policy_t *) dhl_entry->obj;
     hal_handle = dhl_entry->handle;
-
-    /*ret = acl::acl_commit(app_ctx->acl_ctx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
-        goto end;
-    }
-    acl_deref(app_ctx->acl_ctx);*/
 
     HAL_TRACE_DEBUG("SFW policy handle {}", hal_handle);
     ret = add_nwsec_policy_to_db(policy);
@@ -1472,7 +1463,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
     //nwsec_spec_dump(&spec);
     trim_mem_usage("Before Create");
     // Give up the read lock
-    hal_handle_cfg_db_lock(true, false);
+    hal_cfg_db_close();
 
     nwsec_policy = nwsec_policy_alloc_init();
     if (nwsec_policy == NULL) {
@@ -1550,7 +1541,8 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
         goto end;
     }
     acl_deref(app_ctxt.acl_ctx);
-    hal_handle_cfg_db_lock(true, true);
+    //Retake the read lock to make "hal_handle_add_obj" happy
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal_handle_add_obj(nwsec_policy->hal_handle, &cfg_ctxt,
                              nwsec_policy_create_add_cb,
                              nwsec_policy_create_commit_cb,
@@ -1652,7 +1644,8 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     }
 
     nwsec_policy_make_clone(policy, (nwsec_policy_t **)&dhl_entry.cloned_obj);
-    hal_handle_cfg_db_lock(true, false);
+    // free up cfg db read lock
+    hal_cfg_db_close();
     policy_clone = (nwsec_policy_t *)dhl_entry.cloned_obj;
     ret = extract_policy_from_spec(spec, (nwsec_policy_t *)dhl_entry.cloned_obj);
     if (ret != HAL_RET_OK) {
@@ -1691,7 +1684,8 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
         HAL_TRACE_DEBUG("deleted acl");
         acl_deref(app_ctx.acl_ctx);
     }
-    hal_handle_cfg_db_lock(true, true);
+    //Take up read lock again to make hal_handle_upd_obj happy
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal_handle_upd_obj(policy->hal_handle, &cfg_ctxt,
                              nwsec_policy_update_upd_cb,
                              nwsec_policy_update_commit_cb,
