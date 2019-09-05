@@ -188,7 +188,8 @@ func (em *EventsManager) createEventsElasticTemplate(esClient elastic.ESClient) 
 		mapper.WithShardCount(3),
 		mapper.WithReplicaCount(2),
 		mapper.WithMaxInnerResults(globals.SpyglassMaxResults),
-		mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", docType)))
+		mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", docType)),
+		mapper.WithCharFilter())
 	if err != nil {
 		em.logger.Errorf("failed get elastic mapping for event object {%v}, err: %v", eventSkeleton, err)
 		return err

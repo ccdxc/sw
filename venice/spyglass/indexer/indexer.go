@@ -476,7 +476,7 @@ func (idr *Indexer) initSearchDB() error {
 
 // Function to keep the elastic indices warm in memory
 // by periodically querying in the background. This helps
-// reduce the intital search latency by 2-5x order of
+// reduce the initial search latency by 2-5x order of
 // magnitude.
 func (idr *Indexer) refreshIndices() {
 	idr.Lock()

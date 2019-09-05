@@ -14,20 +14,21 @@ import (
 
 // Elastic mapper options
 type options struct {
-	shards          uint   // Shard count
-	replicas        uint   // Replica count
-	codec           string // Codec compression scheme
-	maxInnerResults uint   // Max inner results
-	indexPatterns   string // index pattern for the template
+	shards          uint                   // Shard count
+	replicas        uint                   // Replica count
+	codec           string                 // Codec compression scheme
+	maxInnerResults uint                   // Max inner results
+	indexPatterns   string                 // index pattern for the template
+	textAnalysis    map[string]interface{} // character filter to be used in the index
 }
 
 // Option fills the optional params for Mapper
 type Option func(opt *options)
 
 // fieldOrTypeOverride is map of special types per docType
-// based on our usecase to support aggregations and mapping
+// based on our use case to support aggregations and mapping
 // for non-primitive data types
-// This is organized per docType/category to accomadate potential
+// This is organized per docType/category to accommodate potential
 // conflicts in field-name to type mapping.
 var fieldOrTypeOverride = map[string]map[string]string{
 
@@ -115,6 +116,28 @@ func WithIndexPatterns(pattern string) Option {
 	}
 }
 
+// WithCharFilter character filter to replace "-" to "_"
+func WithCharFilter() Option {
+	return func(o *options) {
+		charFilter := make(elastic.Mapping)
+		charFilter["type"] = "mapping"
+		charFilter["mappings"] = []string{
+			"- => _",
+		}
+
+		analyzer := make(elastic.Mapping)
+		analyzer["tokenizer"] = "standard"
+		analyzer["char_filter"] = []string{"t_char_filter"}
+		analyzer["filter"] = []string{"lowercase"}
+
+		analysis := make(elastic.Mapping)
+		analysis["char_filter"] = elastic.Mapping{"t_char_filter": charFilter}
+		analysis["analyzer"] = elastic.Mapping{"t_analyzer": analyzer}
+
+		o.textAnalysis = analysis
+	}
+}
+
 // GetElasticType returns the mapping to go data type
 // to elastic data types listed below.
 //
@@ -196,9 +219,14 @@ func ElasticMapper(obj interface{}, docType string, opts ...Option) (elastic.Con
 		MaxInnerResults: options.maxInnerResults,
 	}
 
+	// add character filter if required
+	if options.textAnalysis != nil {
+		settings.Analysis = options.textAnalysis
+	}
+
 	// Generate mappings for Object
 	configs := elastic.Mapping{}
-	mapper(docType, val.Type().String(), val, configs, "--", true, true)
+	mapper(docType, val.Type().String(), val, configs, "--", true, true, &options)
 
 	// Fill in mappings for docType
 	mappings := elastic.Mapping{}
@@ -217,7 +245,8 @@ func ElasticMapper(obj interface{}, docType string, opts ...Option) (elastic.Con
 
 // mapper is a helper function to generate mapping from golang types to elastic type.
 // TODO: Remove debug logs
-func mapper(docType, key string, val reflect.Value, config map[string]interface{}, indent string, outer, inline bool) {
+func mapper(docType, key string, val reflect.Value, config map[string]interface{}, indent string, outer, inline bool,
+	opts *options) {
 
 	log.Debugf("%s mapper configmap: %v N:%v T:%v K:%v concrete-value: %v",
 		indent, config, key, val.Type().Name(), val.Kind(), val.Interface())
@@ -237,6 +266,15 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 			cMap := make(map[string]interface{})
 			cMap[string("type")] = "text"
 			cMap[string("fields")] = kw
+
+			if opts.textAnalysis != nil {
+				if analyzer, ok := opts.textAnalysis["analyzer"]; ok {
+					textAnalyzer := analyzer.(elastic.Mapping)
+					if _, ok := textAnalyzer["t_analyzer"]; ok {
+						cMap[string("analyzer")] = "t_analyzer"
+					}
+				}
+			}
 			config[key] = cMap
 
 		} else {
@@ -289,7 +327,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 				fieldName = val.Type().Field(i).Name
 			}
 
-			mapper(docType, fieldName, f, sMap, indent+"--", false, fieldInline)
+			mapper(docType, fieldName, f, sMap, indent+"--", false, fieldInline, opts)
 		}
 
 		if inline == true {
@@ -347,7 +385,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 			return
 		}
 		log.Debugf("%s Ptr %s: %s", indent, pval.Type(), pval.String())
-		mapper(docType, key, pval, config, indent, false, false)
+		mapper(docType, key, pval, config, indent, false, false, opts)
 
 	case reflect.String:
 		fallthrough
@@ -383,7 +421,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 		log.Debugf("%s %s: %s len: %d", indent, key,
 			GetElasticType(val.Kind()), val.Len())
 		if val.Len() > 0 {
-			mapper(docType, key, val.Index(0), config, indent, false, false)
+			mapper(docType, key, val.Index(0), config, indent, false, false, opts)
 		} else {
 			log.Warn("Unable to generate mapping for empty slice")
 		}

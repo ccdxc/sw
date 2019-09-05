@@ -3,6 +3,7 @@
 package elastic
 
 import (
+	"bytes"
 	"encoding/json"
 	"time"
 
@@ -66,6 +67,9 @@ type SettingsConfig struct {
 
 	// Max number of inner results with Aggregation, default is 100.
 	MaxInnerResults uint `json:"max_inner_result_window"`
+
+	// text analyzer settings
+	Analysis map[string]interface{} `json:"analysis,omitempty"`
 }
 
 // Properties contains the mapping of all fields in
@@ -79,23 +83,30 @@ type Properties struct {
 // JSONString generates the JSON string for the object
 func (e Config) JSONString() (string, error) {
 
-	jd, err := json.Marshal(e)
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(e)
 	if err != nil {
 		log.Errorf("Failed to marshal: %v into json, err: %v", e, err)
 		return "", err
 	}
-	return string(jd), nil
+	return string(buffer.Bytes()), nil
 }
 
 // JSONPrettyString generates the JSON string in pretty string for the object
 func (e Config) JSONPrettyString() (string, error) {
 
-	jd, err := json.MarshalIndent(e, "", indentation)
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", indentation)
+	err := encoder.Encode(e)
 	if err != nil {
 		log.Errorf("Failed to marshal: %v into json, err: %v", e, err)
 		return "", err
 	}
-	return string(jd), nil
+	return string(buffer.Bytes()), nil
 }
 
 // SettingsResponse contains the index settings response

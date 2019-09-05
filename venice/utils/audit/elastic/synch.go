@@ -120,7 +120,8 @@ func (a *synchAuditor) createAuditLogsElasticTemplate() error {
 		mapper.WithShardCount(3),
 		mapper.WithReplicaCount(2),
 		mapper.WithMaxInnerResults(globals.SpyglassMaxResults),
-		mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", docType)))
+		mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", docType)),
+		mapper.WithCharFilter())
 	if err != nil {
 		a.logger.Errorf("failed to get elastic mapping for audit log object (%v), err: %v", auditapi.Event{}, err)
 		return err

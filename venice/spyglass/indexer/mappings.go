@@ -11,7 +11,7 @@ import (
 	*************************************************************************************
 	** Venice object in JSON form and index mapping need to match JSON names precisely **
 	** TODO: The json field names in Type and Object meta are still in camelCase and   **
-	**       needs to be converted lower case hypenated form as in spec and status     **
+	**       needs to be converted lower case hyphenated form as in spec and status     **
 	*************************************************************************************
 
 	{
@@ -44,7 +44,7 @@ import (
 		// sorting/aggregations on these attributes as well.
 		//
 		// If there are overlapping names with different data-types
-		// we need to seggregate the objects into different doc-type
+		// we need to segregate the objects into different doc-type
 		// and use copy_to mapping to create unique attribute names
 		// prefixed by Kind to disambiguate the overlapping names.
 
@@ -139,11 +139,12 @@ func (idr *Indexer) getIndexMapping(dType globals.DataType) (string, error) {
 	case globals.Configs:
 
 		// get the elastic mapping config
-		config, err := mapper.ElasticMapper(search.Entry{},
+		config, err := mapper.ElasticMapper(search.ConfigEntry{},
 			elastic.GetDocType(dType),
 			mapper.WithShardCount(3),
 			mapper.WithReplicaCount(2),
-			mapper.WithMaxInnerResults(globals.SpyglassMaxResults))
+			mapper.WithMaxInnerResults(globals.SpyglassMaxResults),
+			mapper.WithCharFilter())
 		if err != nil {
 			idr.logger.Errorf("Failed to generate elastic mapping for docType: %d, err: %v",
 				dType, err)
