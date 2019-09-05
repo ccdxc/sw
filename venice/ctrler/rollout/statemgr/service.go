@@ -122,6 +122,7 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 	version := sros.ros.Rollout.Spec.Version
 
 	log.Infof("Updating status of ServiceRollout %v", sros.ServiceRollout.Name)
+	sros.ros.stopRolloutTimer()
 
 	var message, reason string
 	var phase roproto.RolloutPhase_Phases

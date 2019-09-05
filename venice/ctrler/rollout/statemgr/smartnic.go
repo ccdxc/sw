@@ -176,7 +176,7 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 			continue
 		}
 		updateStatus = true
-		if s.OpStatus == "success" || s.OpStatus == "skipped" {
+		if s.OpStatus == opStatusSuccess || s.OpStatus == opStatusSkipped {
 			switch s.Op {
 			case protos.DSCOp_DSCPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgSuccess

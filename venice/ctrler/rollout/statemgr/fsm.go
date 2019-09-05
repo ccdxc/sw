@@ -389,6 +389,7 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 func fsmAcIssueServiceRollout(ros *RolloutState) {
 	log.Infof("fsmAcIssueServiceRollout..")
 	ros.stopRolloutTimer()
+	ros.startRolloutTimer()
 	serviceRolloutPending, err := ros.issueServiceRollout()
 	if err != nil {
 		log.Errorf("Error %s issuing service rollout", err)
@@ -398,6 +399,7 @@ func fsmAcIssueServiceRollout(ros *RolloutState) {
 	log.Infof("fsmAcIssueServiceRollout.. checking pending service Rollout")
 	if !serviceRolloutPending {
 		log.Infof("issue fsmEvServiceUpgOK")
+		ros.stopRolloutTimer()
 		ros.eventChan <- fsmEvServiceUpgOK
 	}
 	log.Infof("fsmAcIssueServiceRollout.. returning from fsmAcIssueServiceRollout")

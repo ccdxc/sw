@@ -18,6 +18,11 @@ import (
 	"github.com/pensando/sw/venice/utils/memdb"
 )
 
+const (
+	opStatusSkipped = "skipped"
+	opStatusSuccess = "success"
+)
+
 // ==== helper routines
 
 func getVenicePendingRolloutIssue(version string, veniceRollouts []*VeniceRolloutState) []string {
@@ -396,7 +401,7 @@ Loop:
 									{
 										Op:       op,
 										Version:  version,
-										OpStatus: "skipped",
+										OpStatus: opStatusSkipped,
 										Message:  "Skipped DSC from upgrade due to unreachable status",
 									},
 								},
@@ -517,7 +522,7 @@ func (ros *RolloutState) issueDSCOpLinear(snStates []*SmartNICState, op protos.D
 	}
 	// give work to worker threads and wait for all of them to complete
 	for _, sn := range snStates {
-		if len(snStatusList) != 0 && (snStatusList[sn.Name] == "" || snStatusList[sn.Name] == "skipped") {
+		if len(snStatusList) != 0 && (snStatusList[sn.Name] == "" || snStatusList[sn.Name] == opStatusSkipped) {
 			//A new node may have joined or become active. skip it
 			log.Infof("Status not found for %v. Or pre-check not done on this node earlier.", sn.Name)
 			continue
@@ -555,7 +560,7 @@ func (ros *RolloutState) issueDSCOpExponential(snStates []*SmartNICState, op pro
 		for i := 0; i < numJobs; i++ {
 			sm.smartNICWG.Add(1)
 			go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, op)
-			if len(snStatusList) != 0 && (snStatusList[snStates[curIndex].Name] == "" || snStatusList[snStates[curIndex].Name] == "skipped") {
+			if len(snStatusList) != 0 && (snStatusList[snStates[curIndex].Name] == "" || snStatusList[snStates[curIndex].Name] == opStatusSkipped) {
 				log.Infof("Status not found for %v. Or pre-check not done on this node earlier.", snStates[curIndex].Name)
 				curIndex++
 				continue
@@ -646,7 +651,7 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 
 	for _, snicStatus := range ros.Status.DSCsStatus {
 		log.Infof("Adding smartNIC Status to the List %s", snicStatus.Name)
-		snStatusList[snicStatus.Name] = snicStatus.Name
+		snStatusList[snicStatus.Name] = snicStatus.Reason
 	}
 
 	var op protos.DSCOp
