@@ -127,7 +127,15 @@ func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs
 			return nil, false, fmt.Errorf("failed to list SGPolicies. Err: %v", err)
 		}
 
-		if len(sgPolicies.Items) == globals.MaxAllowedSGPolicies {
+		// filter out policy with same name
+		for idx, p := range sgPolicies.Items {
+			if p.Name == policy.Name {
+				sgPolicies.Items = append(sgPolicies.Items[:idx], sgPolicies.Items[idx+1:]...)
+			}
+		}
+
+		// check if we are exceeding max limit
+		if len(sgPolicies.Items) >= globals.MaxAllowedSGPolicies {
 			log.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
 			return nil, false, fmt.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
 		}
