@@ -220,7 +220,7 @@ ep_t* find_ep_by_v4_key_in_l2segment(uint32_t v4_addr,
 // find EP from v6 key in segment
 ep_t* find_ep_by_v6_key_in_l2segment(const ip_addr_t *ip_addr,
         const hal::l2seg_t *l2seg);
-hal_ret_t find_ep(EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status);
+hal_ret_t find_ep(EndpointKeyHandle kh, ep_t **ep);
 if_t *ep_get_pinned_uplink(ep_t *ep);
 
 bool ep_handle_ipsg_change_cb(void *ht_entry, void *ctxt);

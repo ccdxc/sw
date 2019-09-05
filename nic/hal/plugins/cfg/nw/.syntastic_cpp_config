@@ -3,4 +3,5 @@
 -I ../../../../sdk/include
 -I ../../../../build/aarch64/iris
 -I ../../../../hal/third-party/spdlog/include
+-D__FNAME__
 -std=c++11

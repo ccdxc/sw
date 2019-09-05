@@ -347,7 +347,7 @@ nexthop_create (NexthopSpec& spec, NexthopResponse *rsp)
     // check if ep is present
     if (spec.if_or_ep_case() == NexthopSpec::kEpKeyOrHandle) {
         auto ep_kh = spec.ep_key_or_handle();
-        ret = find_ep(ep_kh, &ep, NULL);
+        ret = find_ep(ep_kh, &ep);
         if (ep == NULL) {
             HAL_TRACE_ERR("Unable to find ep err: {}", ret);
             ret = HAL_RET_EP_NOT_FOUND;

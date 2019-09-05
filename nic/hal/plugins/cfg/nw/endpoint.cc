@@ -1456,8 +1456,9 @@ endpoint_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // helper to get endpoint from! key or handle
 //------------------------------------------------------------------------------
 hal_ret_t
-find_ep (EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status)
+find_ep (EndpointKeyHandle kh, ep_t **ep)
 {
+    hal_ret_t              ret = HAL_RET_OK;
     ep_l3_key_t            l3_key    = { 0 };
     l2seg_t                *l2seg    = NULL;
     mac_addr_t             mac_addr;
@@ -1477,46 +1478,46 @@ find_ep (EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status)
                 HAL_TRACE_ERR("Failed to find l2seg id {}, handle {}",
                               ep_l2_key.l2segment_key_handle().segment_id(),
                               ep_l2_key.l2segment_key_handle().l2segment_handle());
-                return HAL_RET_L2SEG_NOT_FOUND;
+                ret = HAL_RET_L2SEG_NOT_FOUND;
+                goto end;
             }
             *ep = find_ep_by_l2_key(l2seg->seg_id, mac_addr);
+            if (!(*ep)) {
+                ret = HAL_RET_EP_NOT_FOUND;
+            }
         } else if (ep_key.has_l3_key()) {
             auto ep_l3_key = ep_key.l3_key();
             vrf = vrf_lookup_key_or_handle(ep_l3_key.vrf_key_handle());
             if (vrf == NULL) {
                 HAL_TRACE_ERR("Failed to find vrf {}",
                               vrf_spec_keyhandle_to_str(ep_l3_key.vrf_key_handle()));
-                return HAL_RET_VRF_NOT_FOUND;
+                ret = HAL_RET_VRF_NOT_FOUND;
+                goto end;
 
             }
             l3_key.vrf_id = vrf->vrf_id;
             ip_addr_spec_to_ip_addr(&l3_key.ip_addr,
                     ep_l3_key.ip_address());
             *ep = find_ep_by_l3_key(&l3_key);
-        } else {
-            if (api_status) {
-                *api_status = types::API_STATUS_INVALID_ARG;
+            if (!(*ep)) {
+                ret = HAL_RET_EP_NOT_FOUND;
             }
-            return HAL_RET_INVALID_ARG;
+        } else {
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
         }
     } else if (kh.key_or_handle_case() ==
             EndpointKeyHandle::kEndpointHandle) {
         *ep = find_ep_by_handle(kh.endpoint_handle());
+        if (!(*ep)) {
+            ret = HAL_RET_EP_NOT_FOUND;
+        }
     } else {
-        if (api_status) {
-            *api_status = types::API_STATUS_INVALID_ARG;
-        }
-        return HAL_RET_INVALID_ARG;
+        ret = HAL_RET_INVALID_ARG;
     }
 
-    if (!(*ep)) {
-        if (api_status) {
-            *api_status = types::API_STATUS_INVALID_ARG;
-        }
-        return HAL_RET_INVALID_ARG;
-    }
-
-    return HAL_RET_OK;
+end:
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -2101,10 +2102,12 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     }
 
     // fetch the ep
-    ret = find_ep(req.key_or_handle(), &ep, &api_status);
+    ret = find_ep(req.key_or_handle(), &ep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to fetch endpoint");
-        rsp->set_api_status(api_status);
+        HAL_TRACE_ERR("Failed to find EP. ret: {}", ret);
+        if (ret == HAL_RET_L2SEG_NOT_FOUND || ret == HAL_RET_VRF_NOT_FOUND) {
+            ret = HAL_RET_INVALID_ARG;
+        }
         goto end;
     }
 
@@ -2412,10 +2415,12 @@ endpoint_delete (EndpointDeleteRequest& req,
     }
 
     // fetch the ep
-    ret = find_ep(req.key_or_handle(), &ep, &api_status);
+    ret = find_ep(req.key_or_handle(), &ep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to find EP");
-        ret = HAL_RET_EP_NOT_FOUND;
+        HAL_TRACE_ERR("Failed to find EP. ret: {}", ret);
+        if (ret == HAL_RET_L2SEG_NOT_FOUND || ret == HAL_RET_VRF_NOT_FOUND) {
+            ret = HAL_RET_INVALID_ARG;
+        }
         goto end;
     }
     HAL_TRACE_DEBUG("Deleting EP {}", ep_l2_key_to_str(ep));
