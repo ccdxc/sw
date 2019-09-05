@@ -33,6 +33,7 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 })
 export class RolloutstatusComponent extends BaseComponent implements OnInit, OnDestroy {
   public static STOP_BUTTON_TEXT  = 'STOP ROLLOUT';
+  public static DSC_TABLE_NAME = 'Distributed Services Cards';
 
   subscriptions = [];
   selectedRolloutId: string;
@@ -318,7 +319,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
    * We check "tablename" to build name column display.
    */
   displayNameColumn(data: any, col: TableCol, tablename: string): string {
-      if (tablename === 'NAPLES') {
+      if (tablename === RolloutstatusComponent.DSC_TABLE_NAME) {
         const fields = col.field.split('.');
         const value = Utility.getObjectValueByPropertyPath(data, fields);
         const column = col.field;

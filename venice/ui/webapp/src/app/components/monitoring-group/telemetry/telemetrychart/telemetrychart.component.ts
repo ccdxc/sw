@@ -153,6 +153,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   // Used to prevent fetching metrics before all configs are loaded
   configLoaded: boolean = false;
 
+
+  _groupByTransform: GroupByTransform  = new GroupByTransform();  // VS-742  TODO: make a better design
+
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
@@ -331,6 +334,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
             this.nameToMacAddr[nic.spec.id] = nic.meta.name;
           }
         }
+        // VS-742 assign values to _groupByTransform.
+        this._groupByTransform.macAddrToName = this.macAddrToName;
+        this._groupByTransform.nameToMacAddr = this.nameToMacAddr;
         this.getMetrics();
       },
       this.controllerService.webSocketErrorHandler('Failed to get labels')
@@ -425,7 +431,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       new RoundCountersTransform(),
       new DisplayLabelTransform(), // This needs to be before groupByTransform
       new ColorTransform(),
-      new GroupByTransform(),
+      this._groupByTransform,  // VS-742
       new GroupByTimeTransform(),
       new FieldSelectorTransform(),
       new LabelSelectorTransform(this.labelMap),

@@ -300,7 +300,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   displayColumn_nodeselector(fields, value): string {
-    const nodenames = 'Nodes: ' + value.names.join(',');
+    const nodenames = 'Nodes: ' + value.names.join(', ');  // VS-719 make sure it is not a one big comma-seperated long word.
     const labelselectors = [];
     value.labels.requirements.forEach((req) => {
       let ret = '';
