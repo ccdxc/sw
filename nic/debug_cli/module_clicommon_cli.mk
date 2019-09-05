@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = _cli.so
-MODULE_PIPELINE	    = iris apollo artemis
+MODULE_PIPELINE	    = iris apollo artemis apulu
 MODULE_PREREQS      = clicommon.swigcli
 MODULE_SRC_DIR      = ${BLD_P4CLICMN_DIR}
 MODULE_SRCS         = $(wildcard ${MODULE_SRC_DIR}/*.cc) \

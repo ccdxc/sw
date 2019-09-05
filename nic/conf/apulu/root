@@ -1,0 +1,2 @@
+# run every 5 mins
+5 * * * * /nic/tools/run_cron.sh > /dev/null 2>&1

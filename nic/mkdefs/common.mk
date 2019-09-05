@@ -48,7 +48,7 @@ export NIC_HAL_DLOPEN_SOLIBS := plugin_network \
                                 plugin_lb \
                                 plugin_nat \
                                 plugin_telemetry \
-                                plugin_app_redir 
+                                plugin_app_redir
 
 export NIC_HAL_PROTO_SOLIBS := halproto hal_svc_gen hal_svc
 export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
@@ -108,6 +108,7 @@ export NIC_iris_P4PD_SOLIBS := p4pd_iris p4pd_common_p4plus_txdma \
 export NIC_gft_P4PD_SOLIBS := p4pd_gft p4pd_common_p4plus_txdma \
     p4pd_common_p4plus_rxdma
 export NIC_apollo_P4PD_SOLIBS := p4pd_apollo p4pd_apollo_rxdma p4pd_apollo_txdma
+export NIC_apulu_P4PD_SOLIBS := p4pd_apulu p4pd_apulu_rxdma p4pd_apulu_txdma
 export NIC_artemis_P4PD_SOLIBS := p4pd_artemis p4pd_artemis_rxdma p4pd_artemis_txdma
 export NIC_l2switch_P4PD_SOLIBS := p4pd_l2switch
 export NIC_elektra_P4PD_SOLIBS := p4pd_elektra
@@ -115,6 +116,7 @@ export NIC_phoebus_P4PD_SOLIBS := p4pd_phoebus
 export NIC_hello_P4PD_SOLIBS := p4pd_hello
 export NIC_apollo_PDSAPI_IMPL_SOLIBS := lpmitree_apollo rfc_apollo sensor trace memhash pdsapi_capri_impl
 export NIC_artemis_PDSAPI_IMPL_SOLIBS := lpmitree_artemis rfc_artemis sensor trace memhash pdsapi_capri_impl
+export NIC_apulu_PDSAPI_IMPL_SOLIBS := lpmitree_apulu rfc_apulu sensor trace memhash pdsapi_capri_impl
 
 # ==========================================================================
 #                           Third-party Libs
@@ -137,6 +139,11 @@ export apollo_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 export artemis_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 
 # ==========================================================================
+#                           APULU GTEST common LDLIBS
+# ==========================================================================
+export apulu_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
+
+# ==========================================================================
 #                           P4PD CLI Libs
 # ==========================================================================
 export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
@@ -145,10 +152,12 @@ export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
                         /usr/include/python3.4m
 export CLI_P4PD_FLAGS := -Wl,--allow-multiple-definition -Wno-sign-compare
 export CLI_iris_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
-							   ${SDK_THIRDPARTY_CAPRI_LDLIBS}	
+							   ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 export CLI_apollo_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
                                  ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 export CLI_artemis_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
+                                  ${SDK_THIRDPARTY_CAPRI_LDLIBS}
+export CLI_apulu_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
                                   ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 export CLI_iris_P4PD_SOLIBS :=   p4pd_iris p4pd_common_p4plus_txdma  p4pd_common_p4plus_rxdma \
                                  ${NIC_SDK_SOLIBS} \
@@ -172,6 +181,13 @@ export CLI_artemis_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                   sdkplatformutils sdkasicpd memhash \
                                   bm_allocator pal
 
+export CLI_apulu_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
+                                  ${NIC_SDK_SOLIBS} \
+                                  ${NIC_HAL_PD_SOLIBS_${ARCH}} \
+                                  sdkp4 sdkp4utils \
+                                  sdkcapri_asicrw_if sdkcapri \
+                                  sdkplatformutils sdkasicpd memhash \
+                                  bm_allocator pal
 # ==========================================================================
 #                        HAL Binary/Gtest Libs
 # ==========================================================================
@@ -227,17 +243,25 @@ export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils \
                                   pciehdevices pcietlp cfgspace intrutils misc
 
 # ==========================================================================
+#                        APULU specific defs
+# ==========================================================================
+export NIC_apulu_NICMGR_LIBS := nicmgr_artemis mnet evutils \
+                                pciemgr_if pciemgr pciemgrutils \
+                                pciehdevices pcietlp cfgspace intrutils misc
+
+# ==========================================================================
 #                        Pipeline Specific Defs
 # ==========================================================================
 iris_DEFS       := -DIRIS
 gft_DEFS        := -DGFT
 apollo_DEFS     := -DAPOLLO
 artemis_DEFS    := -DARTEMIS
+apulu_DEFS      := -DAPULU
 l2switch_DEFS   := -DL2SWITCH
 elektra_DEFS    := -DELEKTRA
 phoebus_DEFS    := -DPHOEBUS
 hello_DEFS      := -DHELLO
 
-export PIPLINES_8G := apollo artemis
-export PIPELINES_ALL := iris gft apollo artemis l2switch elektra phoebus hello
+export PIPLINES_8G := apollo artemis apulu
+export PIPELINES_ALL := iris gft apollo artemis apulu l2switch elektra phoebus hello
 
