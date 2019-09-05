@@ -1,4 +1,6 @@
-#include "sysmond.h"
+#include "platform/src/app/sysmond/logger.h"
+#include "sysmond_delphi.hpp"
+#include "platform/sysmon/sysmon.h"
 
 using namespace std;
 

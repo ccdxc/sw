@@ -1,133 +1,85 @@
 /*
  * Copyright (c) 2019, Pensando Systems Inc.
  */
-#include "sysmond.h"
-#include "nic/sdk/platform/capri/csrint/csr_init.hpp"
+#include "logger.h"
+#include "platform/sysmon/sysmon.h"
+#include "lib/thread/thread.hpp"
+#include "lib/periodic/periodic.hpp"
 
-::utils::log *g_trace_logger;
-::utils::log *obfl_trace_logger;
-extern sdk::lib::catalog *catalog;
-extern int configurefrequency();
+#define SYSMOND_TIMER_ID_POLL 1
+#define SYSMOND_POLL_TIME     10000 // 10 secs = 10 * 1000 msecs
 
-extern monfunc_t __start_monfunclist[];
-extern monfunc_t __stop_monfunclist[];
+//------------------------------------------------------------------------------
+// starting point for the periodic thread loop
+//------------------------------------------------------------------------------
+static void *
+periodic_thread_start (void *ctxt)
+{
+    // initialize timer wheel
+    sdk::lib::periodic_thread_init(ctxt);
 
-shared_ptr<SysmondService> svc;
-systemled_t currentstatus = {UKNOWN_STATE, LED_COLOR_NONE};
-
-static void monitorsystem() {
-    for (monfunc_t *c = __start_monfunclist; c < __stop_monfunclist; c++) {
-        c->func();
-    }
-    return;
+    // run main loop
+    sdk::lib::periodic_thread_run(ctxt);
+    return NULL;
 }
 
-void
-sysmgrsystemled (systemled_t led) {
-
-    //Check if already at max warning level.
-    if (led.event >= currentstatus.event) {
-        return;
-    }
-    switch (led.event) {
-        case CRITICAL_EVENT:
-            currentstatus.event = CRITICAL_EVENT;
-            currentstatus.color = LED_COLOR_YELLOW;
-            pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
-            break;
-        case NON_CRITICAL_EVENT:
-            currentstatus.event = NON_CRITICAL_EVENT;
-            currentstatus.color = LED_COLOR_YELLOW;
-            pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
-            break;
-        case PROCESS_CRASHED_EVENT:
-            currentstatus.event = PROCESS_CRASHED_EVENT;
-            currentstatus.color = LED_COLOR_YELLOW;
-            pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
-            break;
-        case EVERYTHING_WORKING:
-            currentstatus.event = EVERYTHING_WORKING;
-            currentstatus.color = LED_COLOR_GREEN;
-            pal_system_set_led(LED_COLOR_GREEN, LED_FREQUENCY_0HZ);
-            break;
-        default:
-            return;
-    }
-    return;
-}
-
-void initializeLogger() {
-    static bool initDone = false;
-    LogMsg::Instance().get()->setMaxErrCount(0);
-    if (!initDone) {
-        g_trace_logger = ::utils::log::factory("sysmond", 0x0,
-                                        ::utils::log_mode_sync, false,
-                                        LOG_FILENAME, LOG_MAX_FILESIZE,
-                                        LOG_MAX_FILES, ::utils::trace_debug,
-                                        ::utils::log_none);
-        obfl_trace_logger = ::utils::log::factory("sysmond_obfl", 0x0,
-                                        ::utils::log_mode_sync, false,
-                                        OBFL_LOG_FILENAME, OBFL_LOG_MAX_FILESIZE,
-                                        LOG_MAX_FILES, ::utils::trace_debug,
-                                        ::utils::log_none);
-        initDone = true;
-    }
+static sdk_ret_t
+sysmond_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    sysmond_monitor();
+    sysmond_flush_logger();
+    return SDK_RET_OK;
 }
 
 int
 main(int argc, char *argv[])
 {
-    systemled_t led;
+    void *res = NULL;
+    int rv = 0;
+    int thread_id = 0;
+
     //initialize the logger
     initializeLogger();
-    sdk::lib::logger::init(local_sdk_logger, obfl_sdk_logger);
 
-    TRACE_INFO(GetLogger(), "Monitoring system events");
-    TRACE_INFO(GetObflLogger(), "Monitoring system memory");
+    // register for SDK logger
+    sdk::lib::logger::init(sysmond_logger, sysmond_obfl_logger);
 
-    // initialize the pal
-#ifdef __x86_64__
-    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
-#elif __aarch64__
-    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
-#endif
+    // init the lib
+    sysmond_init();
 
-    //check for panic dump
-    checkpanicdump();
+    // set the CPU cores for control threads
+    sdk::lib::thread::control_cores_mask_set(0xf);
 
-    // Register for sysmond metrics
-    delphi::objects::AsicTemperatureMetrics::CreateTable();
-    delphi::objects::AsicPowerMetrics::CreateTable();
-    delphi::objects::AsicFrequencyMetrics::CreateTable();
-    delphi::objects::AsicMemoryMetrics::CreateTable();
+    // create the periodic timer
+    sdk::lib::thread *thread = sdk::lib::thread::factory(
+                              "sysmon-timer",
+                              thread_id,
+                              sdk::lib::THREAD_ROLE_CONTROL,
+                              0x0 /* use all control cores */,
+                              periodic_thread_start,
+                              sdk::lib::thread::priority_by_role(
+                                                sdk::lib::THREAD_ROLE_CONTROL),
+                              sdk::lib::thread::sched_policy_by_role(
+                                                sdk::lib::THREAD_ROLE_CONTROL),
+                              true);
+    SDK_ASSERT_TRACE_RETURN((thread != NULL), SDK_RET_ERR,
+                             "periodic thread create failure");
 
-    sdk::platform::capri::csr_init();
-    catalog = sdk::lib::catalog::factory();
-    TRACE_INFO(GetLogger(), "HBM Threshold temperature is {}", catalog->hbmtemperature_threshold());
+    // start the periodic thread
+    thread->start(thread);
 
-    if (configurefrequency() == 0) {
-        TRACE_INFO(GetLogger(), "Frequency set from file");
-    } else {
-        TRACE_INFO(GetLogger(), "Failed to set frequency from file");
+    // wait until the periodic thread is ready
+    while (!sdk::lib::periodic_thread_is_running()) {
+        pthread_yield();
     }
-    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-    svc = make_shared<SysmondService>(sdk, "Sysmond");
-    svc->init();
-    sdk->RegisterService(svc);
 
-    pthread_t delphi_thread;
-    pthread_create(&delphi_thread, NULL, delphi_thread_run, reinterpret_cast<void *>(&sdk));
+    // schedule the periodic timer cb
+    sdk::lib::timer_schedule(
+                    SYSMOND_TIMER_ID_POLL, SYSMOND_POLL_TIME, NULL,
+                    (sdk::lib::twheel_cb_t)sysmond_timer_cb,
+                    true);
 
-    led.event = EVERYTHING_WORKING;
-    sysmgrsystemled(led);
-
-    while (1) {
-        // Dont block context switches, let the process sleep for some time
-        sleep(10);
-        // Poll the system variables
-        monitorsystem();
-        TRACE_FLUSH(GetLogger());
-        TRACE_FLUSH(GetObflLogger());
-    }
+    // wait for the periodic thread
+    thread->wait_until_complete();
     return 0;
 }

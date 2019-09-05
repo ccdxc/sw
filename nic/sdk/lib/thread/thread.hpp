@@ -50,6 +50,7 @@ public:
     sdk_ret_t start(void *ctxt);
     sdk_ret_t stop(void);
     sdk_ret_t wait(void);
+    sdk_ret_t wait_until_complete(void);
     const char *name(void) const { return name_; }
     uint32_t thread_id(void) const { return thread_id_; }
     uint32_t priority(void) const { return prio_; }

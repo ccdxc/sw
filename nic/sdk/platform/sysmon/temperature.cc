@@ -2,18 +2,15 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmond.h"
-#include "nic/sdk/platform/sensor/sensor.hpp"
+#include "sysmon.h"
+#include "platform/sensor/sensor.hpp"
 #include "asic/pd/pd.hpp"
-
 using namespace sdk::asic::pd;
 using namespace sdk::platform::sensor;
-extern shared_ptr<SysmondService> svc;
 
-static delphi::objects::asictemperaturemetrics_t    asictemp;
+sdk::lib::catalog  *catalog = NULL;
 static pd_adjust_perf_index_t perf_id = PD_PERF_ID0;
 int startingfrequency_1100 = 0;
-sdk::lib::catalog  *catalog = NULL;
 
 #define FREQUENCY_FILE "/sysconfig/config0/frequency.json"
 #define FREQUENCY_KEY "frequency"
@@ -31,19 +28,19 @@ changefrequency(uint64_t hbmtemperature) {
     if (hbmtemperature <= HBM_TEMP_LOWER_LIMIT) {
         status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_UP);
         if (status == PD_PERF_SUCCESS) {
-            TRACE_INFO(GetLogger(), "Increased the frequency.");
+            SDK_TRACE_INFO("Increased the frequency.");
         } else {
             if (perf_id != PD_PERF_ID4) {
-                TRACE_ERR(GetLogger(), "Unable to change the frequency failed, perf_id is {}", perf_id);
+                SDK_TRACE_ERR("Unable to change the frequency failed, perf_id is %u", perf_id);
             }
         }
     } else if (hbmtemperature >= HBM_TEMP_UPPER_LIMIT) {
         status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_DOWN);
         if (status == PD_PERF_SUCCESS) {
-            TRACE_INFO(GetLogger(), "Decreased the frequency.");
+            SDK_TRACE_INFO("Decreased the frequency.");
         } else {
             if (perf_id != PD_PERF_ID0) {
-                TRACE_ERR(GetLogger(), "Unable to change the frequency failed, perf_id is {}", perf_id);
+                SDK_TRACE_ERR("Unable to change the frequency failed, perf_id is %u", perf_id);
             }
         }
     } else {
@@ -51,10 +48,9 @@ changefrequency(uint64_t hbmtemperature) {
     }
 }
 
-static void
+void
 checktemperature(void)
 {
-    uint64_t key = 0;
     int ret;
     int chip_id = 0;
     int inst_id = 0;
@@ -67,51 +63,44 @@ checktemperature(void)
     if (!ret) {
         temperature.dietemp /= 1000;
         if (max_die_temp < temperature.dietemp) {
-            TRACE_INFO(GetLogger(), "{:s} is : {:d}C",
+            SDK_TRACE_INFO("%s is : %uC",
                        "Die temperature", temperature.dietemp);
             max_die_temp = temperature.dietemp;
         }
-        asictemp.die_temperature = temperature.dietemp;
         pal_write_core_temp(temperature.dietemp);
 
         temperature.localtemp /= 1000;
         if (max_local_temp < temperature.localtemp) {
-            TRACE_INFO(GetLogger(), "{:s} is : {:d}C",
+            SDK_TRACE_INFO("%s is : %uC",
                        "Local temperature", temperature.localtemp);
             max_local_temp = temperature.localtemp;
         }
-        asictemp.local_temperature = temperature.localtemp;
         pal_write_board_temp(temperature.localtemp);
 
         if (max_hbm_temp < temperature.hbmtemp) {
-            TRACE_INFO(GetLogger(), "HBM temperature is : {:d}C", temperature.hbmtemp);
+            SDK_TRACE_INFO("HBM temperature is : %uC", temperature.hbmtemp);
             max_hbm_temp = temperature.hbmtemp;
         }
-        asictemp.hbm_temperature = temperature.hbmtemp;
         pal_write_hbm_temp(temperature.hbmtemp);
 
         if (startingfrequency_1100 == 1) {
-            changefrequency(asictemp.hbm_temperature);
+            changefrequency(temperature.hbmtemp);
         }
-        if (asictemp.hbm_temperature >= catalog->hbmtemperature_threshold()) {
-            TRACE_INFO(GetObflLogger(), "HBM temperature is : {:d}C *** and threshold is {:d}",
-                       asictemp.hbm_temperature, catalog->hbmtemperature_threshold());
-            TRACE_INFO(GetLogger(), "HBM temperature is : {:d}C *** and threshold is {:d}",
-                       asictemp.hbm_temperature, catalog->hbmtemperature_threshold());
-            TRACE_FLUSH(GetObflLogger());
-//            asic_pd_set_half_clock(chip_id, inst_id);
-//            svc->ChangeAsicFrequency();
+        if (temperature.hbmtemp >= catalog->hbmtemperature_threshold()) {
+            SDK_OBFL_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
+                       temperature.hbmtemp, catalog->hbmtemperature_threshold());
+            SDK_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
+                       temperature.hbmtemp, catalog->hbmtemperature_threshold());
         }
-        //Publish Delphi object
-        delphi::objects::AsicTemperatureMetrics::Publish(key, &asictemp);
+        temp_event_cb(&temperature);
     } else {
-        TRACE_ERR(GetLogger(), "Reading temperature failed");
+        SDK_TRACE_ERR("Reading temperature failed");
     }
 
     return;
 }
 
-MONFUNC(checktemperature);
+// MONFUNC(checktemperature);
 
 int configurefrequency() {
     boost::property_tree::ptree input;
@@ -124,7 +113,7 @@ int configurefrequency() {
         boost::property_tree::read_json(FREQUENCY_FILE, input);
     }
     catch (std::exception const &ex) {
-        TRACE_ERR(GetLogger(), "{}", ex.what());
+        SDK_TRACE_ERR("%s", ex.what());
         return -1;
     }
 
@@ -151,7 +140,7 @@ int configurefrequency() {
             }
             status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_SET);
         } catch (std::exception const &ex) {
-            TRACE_ERR(GetLogger(), "{}", ex.what());
+            SDK_TRACE_ERR("%s", ex.what());
             return -1;
         }
     }

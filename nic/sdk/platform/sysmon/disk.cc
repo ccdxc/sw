@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmond.h"
+#include "sysmon.h"
 #include "string.h"
 #include <map>
 
@@ -57,7 +57,7 @@ checkdiskinfo(mondisk_t *disk) {
 
     it = mondisk_map.find(disk->mounted);
     if (it == mondisk_map.end()) {
-        TRACE_INFO(GetObflLogger(), "{} {:.1f} MB, {:.1f} MB, {:.1f} MB {}",
+        SDK_OBFL_TRACE_INFO("%u %f MB, %f MB, %f MB %u",
                 disk->filesystem, (double)disk->size / 1024.0,
                 (double)disk->used / 1024.0,
                 (double)disk->available / 1024.0,
@@ -69,7 +69,7 @@ checkdiskinfo(mondisk_t *disk) {
         if (old_disk.size != disk->size ||
             old_disk.used != disk->used ||
             old_disk.available != disk->available) {
-            TRACE_INFO(GetObflLogger(), "{} {:.1f} MB, {:.1f} MB, {:.1f} MB {}",
+            SDK_OBFL_TRACE_INFO("%u %f MB, %f MB, %f MB %u",
                 disk->filesystem, (double)disk->size / 1024.0,
                 (double)disk->used / 1024.0,
                 (double)disk->available / 1024.0,
@@ -135,7 +135,7 @@ monitordisk(void) {
     }
 }
 
-static void
+void
 checkdisk(void)
 {
     static int runtimecounter;
@@ -146,4 +146,4 @@ checkdisk(void)
 
 }
 
-MONFUNC(checkdisk);
+// MONFUNC(checkdisk);

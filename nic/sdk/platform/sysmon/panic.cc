@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmond.h"
+#include "sysmon.h"
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -52,20 +52,20 @@ checkpanicdump(void)
 
     getpanicmtd(mtdname);
     if (mtdname.empty()) {
-        TRACE_INFO(GetLogger(), "Could not find MTD name");
+        SDK_TRACE_INFO("Could not find MTD name");
         return;
     }
 
     snprintf(filename, sizeof(filename), "/dev/%s", mtdname.c_str());
     fd = open(filename, O_RDWR);
     if (fd < 0) {
-        TRACE_INFO(GetLogger(), "Error opening {}", filename);
+        SDK_TRACE_INFO("Error opening %s", filename);
         return;
     }
 
     // read the header
     if (read(fd, &hdr, sizeof(panicbuf_header))  < 0) {
-        TRACE_INFO(GetLogger(), "Error reading {}", filename);
+        SDK_TRACE_INFO("Error reading %s", filename);
         goto exit;
     }
     if (hdr.magic == PANIC_SIGNATURE) {
@@ -74,18 +74,18 @@ checkpanicdump(void)
         ioctl(fd, MEMGETINFO, &mtd_info);
         // validate size
         if (hdr.len + sizeof(hdr) > mtd_info.size) {
-            TRACE_INFO(GetLogger(), "Invalid length {}", hdr.len);
+            SDK_TRACE_INFO("Invalid length %u", hdr.len);
             goto exit;
         }
 
         // allocate memory for the data and read the data
         kdump = (uint8_t *)malloc(hdr.len);
         if (kdump == NULL) {
-            TRACE_INFO(GetLogger(), "Error allocating {} bytes", hdr.len);
+            SDK_TRACE_INFO("Error allocating %u bytes", hdr.len);
             goto exit;
         }
         if (read(fd, kdump, hdr.len) < 0) {
-            TRACE_INFO(GetLogger(), "Error reading data from {}", filename);
+            SDK_TRACE_INFO("Error reading data from %s", filename);
             goto exit;
         }
 
@@ -95,11 +95,11 @@ checkpanicdump(void)
         // write data to the file
         kfptr = fopen(PANIC_KDUMP_FILE, "w");
         if (kfptr == NULL) {
-            TRACE_INFO(GetLogger(), "Error opening {}", PANIC_KDUMP_FILE);
+            SDK_TRACE_INFO("Error opening %s", PANIC_KDUMP_FILE);
             goto exit;
         }
         if (fwrite(kdump, sizeof(uint8_t), hdr.len, kfptr) != hdr.len) {
-            TRACE_INFO(GetLogger(), "Error writing to {}", PANIC_KDUMP_FILE);
+            SDK_TRACE_INFO("Error writing to %s", PANIC_KDUMP_FILE);
             fclose(kfptr);
             goto exit;
         }
@@ -113,7 +113,7 @@ checkpanicdump(void)
                 ioctl(fd, MEMUNLOCK, &mtd_erase);
                 ioctl(fd, MEMERASE, &mtd_erase);
         }
-        TRACE_INFO(GetLogger(), "{} flash erased and {} created",
+        SDK_TRACE_INFO("%s flash erased and %s created",
                    PANIC_BUF, PANIC_KDUMP_FILE);
     }
 exit:

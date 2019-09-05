@@ -2,9 +2,9 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmond.h"
+#include "sysmon.h"
 
-static void
+void
 checkruntime(void)
 {
     static int runtimecounter;
@@ -20,7 +20,7 @@ checkruntime(void)
             if (fptr == NULL) {
                 if (filerror == false) {
                     filerror = true;
-                    TRACE_INFO(GetLogger(), "Error creating file {}", UPTIME_FILENAME);
+                    SDK_TRACE_INFO("Error creating file %s", UPTIME_FILENAME);
                 }
                 return;
             }
@@ -38,4 +38,4 @@ checkruntime(void)
     return;
 }
 
-MONFUNC(checkruntime);
+// MONFUNC(checkruntime);

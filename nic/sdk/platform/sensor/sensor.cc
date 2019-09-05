@@ -125,9 +125,9 @@ int read_powers(system_power_t *power)
     if (power == NULL) {
         return -EINVAL;
     }
-    if (read_pin(&power->pin) == 0 &&
-        read_pout1(&power->pout1) == 0 &&
-        read_pout2(&power->pout2) == 0)
+    if ((read_pin(&power->pin) == 0) &&
+        (read_pout1(&power->pout1) == 0) &&
+        (read_pout2(&power->pout2) == 0))
     {
         return 0;
     }

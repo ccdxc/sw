@@ -307,15 +307,10 @@ thread::stop(void)
 // wait for the thread to complete
 //------------------------------------------------------------------------------
 sdk_ret_t
-thread::wait(void)
+thread::wait_until_complete(void)
 {
     int    rv;
     void   *res;
-
-    if (running_) {
-        SDK_TRACE_ERR("pthread cancel not done on thread %s", name_);
-        return SDK_RET_ERR;
-    }
 
     rv = pthread_join(pthread_id_, &res);
     if (rv != 0) {
@@ -326,6 +321,20 @@ thread::wait(void)
     }
 
     return SDK_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// wait for the thread to complete. Thread needs to be stopped first.
+//------------------------------------------------------------------------------
+sdk_ret_t
+thread::wait(void)
+{
+    if (running_) {
+        SDK_TRACE_ERR("pthread cancel not done on thread %s", name_);
+        return SDK_RET_ERR;
+    }
+
+    return wait_until_complete();
 }
 
 //------------------------------------------------------------------------------

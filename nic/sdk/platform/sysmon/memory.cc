@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmond.h"
+#include "sysmon.h"
 #include "string.h"
 #include <map>
 
@@ -28,7 +28,6 @@ typedef struct monprocess_s {
     int64_t vsz_change;
 } monprocess_t;
 
-static delphi::objects::asicmemorymetrics_t asicmemory;
 static std::map<int, monprocess_t> monprocess_map;
 static bool color = true;
 
@@ -45,8 +44,8 @@ checkprocess(monprocess_t *process) {
 
     it = monprocess_map.find(process->pid);
     if (it == monprocess_map.end()) {
-        TRACE_INFO(GetObflLogger(), "{}({}): RSS: {:.1f} MB, VSZ: {:.1f} MB",
-                process->command, process->pid, (double)process->rss / 1024.0,
+        SDK_OBFL_TRACE_INFO("%s(%u): RSS: %f MB, VSZ: %f MB",
+                process->command.c_str(), process->pid, (double)process->rss / 1024.0,
                 (double)process->vsz / 1024.0);
         monprocess_map[process->pid] = *process;
     } else {
@@ -60,9 +59,9 @@ checkprocess(monprocess_t *process) {
             if (process->rss_change >= PROCESS_CHANGE_THRESHOLD &&
                 process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                TRACE_INFO(GetObflLogger(), "{}({}):RSS: {:.1f} MB (+{:.1f} MB), " \
-                           "VSZ: {:.1f} MB (+{:.1f} MB)",
-                            process->command, process->pid,
+                SDK_OBFL_TRACE_INFO("%s(%u):RSS: %f MB (+%f MB), " \
+                           "VSZ: %f MB (+%f MB)",
+                            process->command.c_str(), process->pid,
                             (double)process->rss / 1024.0,
                             (double)process->rss_change / 1024.0,
                             (double)process->vsz / 1024.0,
@@ -72,16 +71,16 @@ checkprocess(monprocess_t *process) {
                 process->vsz_change = 0;
             } else if (process->rss_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                TRACE_INFO(GetObflLogger(), "{}({}):RSS: {:.1f}MB (+{:.1f}MB)",
-                            process->command, process->pid,
+                SDK_OBFL_TRACE_INFO("%s(%u):RSS: %fMB (+%fMB)",
+                            process->command.c_str(), process->pid,
                             (double)process->rss / 1024.0,
                             (double)process->rss_change / 1024.0);
                 //Reinitialize rss_change  to 0
                 process->rss_change = 0;
             } else if (process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in vsz
-                TRACE_INFO(GetObflLogger(), "{}({}):VSZ: {:.1f}MB (+{:.1f}MB)",
-                            process->command, process->pid,
+                SDK_OBFL_TRACE_INFO("%s(%u):VSZ: %fMB (+%fMB)",
+                            process->command.c_str(), process->pid,
                             (double)process->vsz / 1024.0,
                             (double)process->vsz_change / 1024.0);
                 //Reinitialize vsz_change  to 0
@@ -164,8 +163,8 @@ removeprocess() {
     for (it = monprocess_map.begin(); it != monprocess_map.end(); it++) {
         const monprocess_t &cur_process = it->second;
         if (cur_process.visited != color) {
-            TRACE_INFO(GetObflLogger(), "{}({}) - exited",
-                       cur_process.command, cur_process.pid);
+            SDK_OBFL_TRACE_INFO("%s(%u) - exited",
+                       cur_process.command.c_str(), cur_process.pid);
             removeitem.push_back(it->first);
         }
     }
@@ -198,7 +197,8 @@ getmeminfo(char *psline) {
  * Monitor free curr_memory on the system
 */
 static void
-monitorfreememory(void) {
+monitorfreememory (uint64_t *total_mem, uint64_t *available_mem, 
+                   uint64_t *free_mem) {
     FILE *fptr = NULL;
     char line[100];
     string meminfoline;
@@ -212,31 +212,31 @@ monitorfreememory(void) {
         while (fgets(line, sizeof(line), fptr) != NULL) {
             meminfoline = line;
             if ((found = meminfoline.find(TOTAL_MEMORY)) != string::npos) {
-                asicmemory.totalmemory = getmeminfo(line);
+                *total_mem = getmeminfo(line);
             }
             if ((found = meminfoline.find(AVAILABLE_MEMORY)) != string::npos) {
                 curr_memory = getmeminfo(line);
-                if (asicmemory.availablememory == 0) {
+                if (*available_mem == 0) {
                     avail_memory_lowest = curr_memory;
-                    TRACE_INFO(GetObflLogger(), "Available memory {:.1f} MB",
+                    SDK_OBFL_TRACE_INFO("Available memory %f MB",
                     (double)avail_memory_lowest / 1024.0);
                 } else if (curr_memory < avail_memory_lowest) {
                     mem_diff = mem_diff + avail_memory_lowest - curr_memory;
                     avail_memory_lowest = curr_memory;
                     if (mem_diff >= AVAILABLE_MEMORY_THRESHOLD) {
-                        TRACE_INFO(GetObflLogger(), "Available memory lowerwatermark {:.1f} MB",
+                        SDK_OBFL_TRACE_INFO("Available memory lowerwatermark %f MB",
                         (double)avail_memory_lowest / 1024.0);
                         mem_diff = 0;
                     }
                 }
                 if (curr_memory < LOW_MEMORY_THRESHOLD) {
-                    TRACE_INFO(GetObflLogger(), "Available memory is {:.1f} MB",
+                    SDK_OBFL_TRACE_INFO("Available memory is %f MB",
                     (double)curr_memory / 1024.0);
                 }
-                asicmemory.availablememory = curr_memory;
+                *available_mem = curr_memory;
             }
             if ((found = meminfoline.find(FREE_MEMORY)) != string::npos) {
-                asicmemory.freememory = getmeminfo(line);
+                *free_mem = getmeminfo(line);
             }
         }
         fclose(fptr);
@@ -266,11 +266,13 @@ monitorprocess(void) {
     }
 }
 
-static void
+void
 checkmemory(void)
 {
-    uint64_t key = 0;
     static int runtimecounter;
+    static uint64_t total_mem = 0;
+    static uint64_t available_mem = 0;
+    static uint64_t free_mem = 0;
 
     if (++runtimecounter < 6) {
         return;
@@ -280,10 +282,9 @@ checkmemory(void)
     //remove the pids which are no longer used.
     removeprocess();
     //monitor the available curr_memory
-    monitorfreememory();
-    //Publish Delphi object
-    delphi::objects::AsicMemoryMetrics::Publish(key, &asicmemory);
+    monitorfreememory(&total_mem, &available_mem, &free_mem);
+    memory_event_cb(total_mem, available_mem, free_mem);
     color = !color;
 }
 
-MONFUNC(checkmemory);
+// MONFUNC(checkmemory);
