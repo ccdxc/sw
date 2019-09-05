@@ -282,7 +282,9 @@ inst_t::inst_t(uint8_t fte_id) :
     feature_state_size_(0),
     num_features_(0),
     iflow_(NULL),
-    rflow_(NULL)
+    rflow_(NULL),
+    max_sessions_(0),
+    bypass_fte_(false)
 {
     if (hal::is_platform_type_sim()) {
         // SIM
@@ -375,6 +377,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
      */
     bypass_fte_ = hal_cfg->bypass_fte;
     max_sessions_ = hal_cfg->max_sessions;
+    HAL_TRACE_DEBUG("Set max sessions:{}", max_sessions_);
 
     ctx_mem_init();
 

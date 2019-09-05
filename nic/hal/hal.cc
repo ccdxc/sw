@@ -213,6 +213,11 @@ hal_init (hal_cfg_t *hal_cfg)
     hal_cfg->mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
+    // This should come from hal-config file or policy
+    hal_cfg->bypass_fte = false;
+    hal_cfg->max_sessions = HAL_CFG_MAX_SESSIONS; // This is total sessions supported in the system
+                                                 // should come from config-file, should be modifiable in future
+
     // validate control/data cores against catalog
     ret = hal_cores_validate(catalog->cores_mask(),
                              hal_cfg->control_cores_mask,
@@ -267,7 +272,6 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // notify sysmgr that we are up
     //svc::hal_init_done();
-
     if (!getenv("DISABLE_FTE")) {
         if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
             // starting fte thread for fte-span
@@ -294,11 +298,6 @@ hal_init (hal_cfg_t *hal_cfg)
         fte::disable_fte();
     }
 
-    // This should come from hal-config file or policy
-    hal_cfg->bypass_fte = false;
-    
-    hal_cfg->max_sessions = HAL_CFG_MAX_SESSIONS; // This is total sessions supported in the system
-                                                 // should come from config-file, should be modifiable in future
     // linkmgr init
     hal_linkmgr_init(hal_cfg, hal::port_event_cb);
 
