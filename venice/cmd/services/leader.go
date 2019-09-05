@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"regexp"
 	"sync"
 	"time"
@@ -44,9 +45,9 @@ func NewLeaderService(store kvstore.Interface, leaderKey, id string) types.Leade
 
 // Start starts leader election on quorum nodes.
 func (l *leaderService) Start() error {
-	l.Lock()
-	defer l.Unlock()
-	return l.start()
+	l.stopped = false
+	l.start()
+	return nil
 }
 
 func (l *leaderService) Register(o types.LeadershipObserver) {
@@ -82,28 +83,34 @@ func (l *leaderService) notify(e types.LeaderEvent) error {
 }
 
 // start is a helper function to start election.
-func (l *leaderService) start() error {
-	if l.election != nil {
-		return nil
-	}
-	log.Infof("Starting leader election with id: %v", l.id)
-	ctx, cancel := context.WithCancel(context.Background())
-	l.cancel = cancel
-
+func (l *leaderService) start() {
 	evtObjRef := &cluster.Node{}
 	evtObjRef.Defaults("all")
 	evtObjRef.Name = l.id
 	recorder.Event(eventtypes.ELECTION_STARTED, "Leader election started", evtObjRef)
+	for {
+		l.Lock()
 
-	election, err := l.store.Contest(ctx, l.leaderKey, l.id, ttl)
-	if err != nil {
-		log.Errorf("Failed to start leader election with error: %v", err)
-		return err
+		if l.election != nil {
+			l.Unlock()
+			return
+		}
+		log.Infof("Starting leader election with id: %v", l.id)
+		ctx, cancel := context.WithCancel(context.Background())
+		l.cancel = cancel
+		election, err := l.store.Contest(ctx, l.leaderKey, l.id, ttl)
+		if err != nil {
+			log.Errorf("Failed to start leader election with error: %v", err)
+			l.Unlock()
+			time.Sleep(time.Second * time.Duration(int(1+rand.Intn(4))))
+			continue
+		}
+		l.election = election
+		go l.waitForEventsOrCancel(ctx)
+		l.Unlock()
+		return
 	}
-	l.election = election
-	l.stopped = false
-	go l.waitForEventsOrCancel(ctx)
-	return nil
+
 }
 
 // waitForEventsOrCancel waits for events until ctx is canceled.
@@ -114,6 +121,8 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 		case e, ok := <-evCh:
 			if l.stopped {
 				return
+			} else if ctx.Err() != nil {
+				return
 			} else if ok {
 				log.Infof("Election event: %+v", e)
 				l.Lock()
@@ -122,8 +131,11 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 			} else {
 				log.Infof("Election event channel closed. restarting election")
 				// Cant trust being a leader anymore.
-				l.Stop()
-				go l.Start()
+				l.Lock()
+				l.stop()
+				l.processEvent("")
+				l.Unlock()
+				go l.start()
 			}
 		case <-ctx.Done():
 			log.Infof("Leader election canceled")
@@ -140,13 +152,13 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 func (l *leaderService) Stop() {
 	l.Lock()
 	defer l.Unlock()
+	l.stopped = true
 	l.stop()
 	l.processEvent("")
 }
 
 // stop is a helper function to stop the leader election.
 func (l *leaderService) stop() {
-	l.stopped = true
 	if l.cancel != nil {
 		l.cancel()
 		l.election.WaitForStop()
