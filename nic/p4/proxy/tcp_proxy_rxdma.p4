@@ -16,6 +16,7 @@
 #define rx_table_s2_t0 s2_t0_tcp_rx
 #define rx_table_s2_t1 s2_t1_tcp_rx
 #define rx_table_s2_t2 s2_t2_tcp_rx
+#define rx_table_s2_t3 s2_t3_tcp_rx
 
 #define rx_table_s3_t0 s3_t0_tcp_rx
 #define rx_table_s3_t1 s3_t1_tcp_rx
@@ -45,6 +46,7 @@
 #define rx_table_s2_t0_action tcp_ack
 #define rx_table_s2_t1_action read_rnmdr
 #define rx_table_s2_t2_action ooo_book_keeping
+#define rx_table_s2_t3_action read_rnmdr_fc
 
 #define rx_table_s3_t0_action tcp_rtt
 #define rx_table_s3_t1_action rdesc_alloc
@@ -202,6 +204,14 @@ header_type read_rnmdr_d_t {
     fields {
         rnmdr_pidx              : 32;
         rnmdr_pidx_full         : 8;
+    }
+}
+
+// d for stage 2 table 3
+header_type read_rnmdr_fc_d_t {
+    fields {
+        rnmdr_pidx              : 32;
+        rnmdr_cidx              : 32;
     }
 }
 
@@ -476,6 +486,7 @@ header_type to_stage_5_phv_t {
         serq_cidx               : 12;
         serq_pidx               : 12;
         rcv_nxt                 : 32;
+        rnmdr_size              : 32;
     }
 }
 
@@ -594,6 +605,8 @@ metadata tcp_rx_d_t tcp_rx_d;
 metadata tcp_rtt_d_t tcp_rtt_d;
 @pragma scratch_metadata
 metadata read_rnmdr_d_t read_rnmdr_d;
+@pragma scratch_metadata
+metadata read_rnmdr_fc_d_t read_rnmdr_fc_d;
 @pragma scratch_metadata
 metadata tcp_cc_d_t tcp_cc_d;
 @pragma scratch_metadata
@@ -997,6 +1010,12 @@ action ooo_book_keeping (TCP_RX_BOOKKEEPING_PARAMS)
     GENERATE_T2_S2S_K
 
     TCP_RX_GENERATE_BOOKKEEPING_D
+}
+
+action read_rnmdr_fc(rnmdr_pidx, rnmdr_cidx) {
+    // d for stage 2 table 1 read-rnmdr-idx
+    modify_field(read_rnmdr_fc_d.rnmdr_pidx, rnmdr_pidx);
+    modify_field(read_rnmdr_fc_d.rnmdr_cidx, rnmdr_cidx);
 }
 
 

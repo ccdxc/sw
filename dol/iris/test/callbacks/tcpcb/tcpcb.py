@@ -227,3 +227,21 @@ def GetPktAckOutSackTcpOptions(tc, pkt):
     sack_opt.append(TcpOptions('NOP', None))
     sack_opt.append(TcpOptions('SAck', sack_str))
     return sack_opt
+
+def GetWindowInAckOut(tc, pkt):
+    if tc.pvtdata.rnmdr_big_pi and tc.pvtdata.rnmdr_big_ci:
+        rnmdr_size = 0x2000
+        rnmdr_free = ((tc.pvtdata.rnmdr_big_ci + (rnmdr_size - 1)) \
+                          - tc.pvtdata.rnmdr_big_pi) & (rnmdr_size - 1)
+        if rnmdr_free > 0x1800:
+            return 8176
+        if rnmdr_free > 0x1000:
+            return 4088
+        if rnmdr_free > 0x800:
+            return 2044
+        if rnmdr_free > 0x400:
+            return 1022
+        else:
+            return 0
+    else:
+        return 8176

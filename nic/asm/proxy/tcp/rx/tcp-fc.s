@@ -79,17 +79,24 @@ start_window_calc:
     and         r2, r2, d.consumer_ring_slots_mask;
 
     slt         c1, d.high_thresh1, r2
+    slt.c1      c1, 0x1800, k.to_s5_rnmdr_size
     sll.c1      r4, r2, d.avg_pkt_size_shift
     b.c1        window_calc_done
+
     slt         c1, d.high_thresh2, r2
+    slt.c1      c1, 0x1000, k.to_s5_rnmdr_size
     sub         r7, d.avg_pkt_size_shift, 1
     sll.c1      r4, r2, r7
     b.c1        window_calc_done
+
     slt         c1, d.high_thresh3, r2
+    slt.c1      c1, 0x800, k.to_s5_rnmdr_size
     sub         r7, d.avg_pkt_size_shift, 2
     sll.c1      r4, r2, r7
     b.c1        window_calc_done
+
     slt         c1, d.high_thresh4, r2
+    slt.c1      c1, 0x400, k.to_s5_rnmdr_size
     sub         r7, d.avg_pkt_size_shift, 3
     sll.c1      r4, r2, r7
     b.c1        window_calc_done

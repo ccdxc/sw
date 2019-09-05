@@ -5,6 +5,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "nic/sdk/platform/capri/capri_barco.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -23,6 +24,7 @@ hal_ret_t armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
 hal_ret_t barco_gcm0_get_hw_meta(pd_wring_t* wring_pd);
 hal_ret_t tcp_actl_q_get_hw_meta(pd_wring_t* wring_pd);
+hal_ret_t p4pd_wring_set_rnmdpr_meta(pd_wring_t* wring_pd);
 
 hal_ret_t
 wring_pd_meta_init() {
@@ -186,6 +188,7 @@ wring_pd_meta_init() {
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_NMDPR_OBJS_BIG_RX, CAPRI_NMDPR_BIG_OBJ_TOTAL_SIZE,
                            CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR,
                            NULL, NULL, false};
+    g_meta[types::WRING_TYPE_NMDPR_BIG_RX].set_hw_meta_fn = p4pd_wring_set_rnmdpr_meta;
     
     g_meta[types::WRING_TYPE_TCP_OOO_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_TCP_OOO_QBASE_RING, CAPRI_TCP_ALLOC_OOQ_RING_SIZE,
@@ -733,8 +736,8 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     pd_wring_meta_t     *meta = &g_meta[wring->wring_type];
     uint64_t            sem_addr = meta->alloc_semaphore_addr;
 
-    if(meta->get_hw_meta_fn) {
-    	return meta->get_hw_meta_fn(wring_pd);
+    if(meta->set_hw_meta_fn) {
+    	return meta->set_hw_meta_fn(wring_pd);
     }
 
     HAL_TRACE_DEBUG("Writing pi {} to addr: {:#x}",
@@ -751,6 +754,39 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     if (sdk::asic::asic_reg_write(sem_addr, &wring->ci) != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to write data to hw)");
     }
+
+    return ret;
+}
+
+hal_ret_t
+p4pd_wring_set_rnmdpr_meta(pd_wring_t* wring_pd)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    wring_t*            wring = wring_pd->wring;
+    pd_wring_meta_t     *meta = &g_meta[wring->wring_type];
+    uint64_t            sem_addr = meta->alloc_semaphore_addr;
+    uint64_t            addr;
+    uint32_t            ci;
+
+    HAL_TRACE_DEBUG("Writing pi {} to addr: {:#x}",
+            wring->pi, sem_addr);
+
+    if (sdk::asic::asic_reg_write(sem_addr, &wring->pi) != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to write data to hw)");
+    }
+
+    sem_addr += 4;
+    HAL_TRACE_DEBUG("Writing ci {} to addr: {:#x}",
+            wring->ci, sem_addr);
+
+    if (sdk::asic::asic_reg_write(sem_addr, &wring->ci) != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to write data to hw)");
+    }
+
+    addr = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_RNMDPR_FP_PI;
+    ci = wring->ci - CAPRI_RNMDPR_BIG_RING_SIZE;
+    HAL_TRACE_DEBUG("Writing ci {} to addr: {:#x}", wring->ci, addr);
+    sdk::asic::asic_mem_write(addr, (uint8_t *)&ci, sizeof(uint32_t));
 
     return ret;
 }

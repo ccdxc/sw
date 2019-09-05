@@ -18,6 +18,7 @@ struct s1_t0_tcp_rx_d d;
 %%
     .param          tcp_ack_start
     .param          tcp_rx_read_rnmdr_start
+    .param          tcp_rx_read_rnmdr_fc
     .param          tcp_ooo_book_keeping
     .param          tcp_ooo_book_keeping_in_order
     .param          TCP_PROXY_STATS
@@ -185,6 +186,8 @@ table_launch_RNMDR_ALLOC_IDX:
     bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_start,
                         RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_fc,
+                 CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR, TABLE_SIZE_64_BITS)
 tcp_rx_end:
     nop.e
     nop

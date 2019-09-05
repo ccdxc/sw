@@ -30,6 +30,16 @@ def TestCaseSetup(tc):
 
     tc.pvtdata = ObjectDatabase()
 
+    if hasattr(tc.module.args, 'rnmdr_big_pi'):
+        tc.pvtdata.rnmdr_big_pi = tc.module.args.rnmdr_big_pi
+    else:
+        tc.pvtdata.rnmdr_big_pi = None
+
+    if hasattr(tc.module.args, 'rnmdr_big_ci'):
+        tc.pvtdata.rnmdr_big_ci = tc.module.args.rnmdr_big_ci
+    else:
+        tc.pvtdata.rnmdr_big_ci = None
+
     tcp_proxy.SetupProxyArgs(tc)
 
     id1, id2 = ProxyCbServiceHelper.GetSessionQids(tc.config.flow._FlowObject__session)
@@ -135,6 +145,16 @@ def TestCaseSetup(tc):
         rnmdpr_big.pi = 0
         rnmdpr_big.ci = 2    # ring size of 2, so can hold 1 entry
         rnmdpr_big.SetMeta()
+    else:
+       setMeta = False
+       if tc.pvtdata.rnmdr_big_pi is not None:
+          rnmdpr_big.pi = tc.pvtdata.rnmdr_big_pi
+          setMeta = True
+       if tc.pvtdata.rnmdr_big_ci is not None:
+          rnmdpr_big.ci = tc.pvtdata.rnmdr_big_ci
+          setMeta = True
+       if setMeta:
+          rnmdpr_big.SetMeta()
     tc.pvtdata.Add(rnmdpr_big)
 
     if tc.pvtdata.test_ooo_queue:
@@ -573,10 +593,18 @@ def TestCaseTeardown(tc):
 
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(0)
+
+    reset_rnmdpr = False
     if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
+        reset_rnmdpr =True
+    if tc.pvtdata.rnmdr_big_pi is not None:
+        reset_rnmdpr =True
+    if tc.pvtdata.rnmdr_big_ci is not None:
+        reset_rnmdpr =True
+    if reset_rnmdpr:
         rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
         rnmdpr_big.pi = 0
-        rnmdpr_big.ci = 1024
+        rnmdpr_big.ci = 8192
         rnmdpr_big.SetMeta()
     if tc.pvtdata.test_retx_timer_full:
         tcpcb.debug_dol_tx = 0

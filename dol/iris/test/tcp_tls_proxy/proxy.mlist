@@ -1248,3 +1248,81 @@ modules:
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
 
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_RNMDR_LESSTHAN_25PERCENT_USED
+        spec    : tcp_fc_rnmdr.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            rcv_wnd        : 10 
+            rnmdr_big_ci   : 1
+            rnmdr_big_pi   : 2046
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_RNMDR_25TO50PERCENT_USED
+        spec    : tcp_fc_rnmdr.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            rcv_wnd        : 10 
+            rnmdr_big_ci   : 1
+            rnmdr_big_pi   : 4094
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_RNMDR_50TO75PERCENT_USED
+        spec    : tcp_fc_rnmdr.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            rnmdr_big_ci   : 1
+            rcv_wnd        : 10 
+            rnmdr_big_pi   : 6142
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_RNMDR_75TO87PERCENT_USED
+        spec    : tcp_fc_rnmdr.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            rcv_wnd        : 10 
+            rnmdr_big_ci   : 1
+            rnmdr_big_pi   : 7127
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_RNMDR_MORETHAN_87PERCENT_USED
+        spec    : tcp_fc_rnmdr.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            rcv_wnd        : 10 
+            rnmdr_big_ci   : 1
+            rnmdr_big_pi   : 7168
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
