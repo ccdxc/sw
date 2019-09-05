@@ -281,7 +281,11 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       } else {
         const thirdStatName = maxNode.name;
         let thirdStat = thirdStatName;
-        thirdStat = Utility.getHeroCardDisplayValue(thirdStat); // VS-736
+
+        // VS-736
+        thirdStat = Utility.getHeroCardDisplayValue(thirdStat);
+        Utility.customizeHeroCardThirdStat(thirdStat, heroCard, thirdStatName);
+
         thirdStat += ' (' + Math.round(maxNode.max) + '%)';
         heroCard.thirdStat.numericValue = Math.round(maxNode.max);
         heroCard.thirdStat.value = thirdStat;
@@ -293,6 +297,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       heroCard.cardState = CardStates.READY;
     }
   }
+
 
   onCertificateCancel(event) {
     this.certMode = false;

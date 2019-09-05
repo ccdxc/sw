@@ -74,7 +74,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     graphId: 'dsbdnaples-totalNaples',
     defaultValue: 0,
     defaultDescription: 'Avg',
-    hoverDescription: 'Distributed Service Card',
+    hoverDescription: 'DSCs',  // VS-744 , make the label short.
     isPercentage: false,
     scaleMin: 0,
   };
@@ -87,7 +87,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     graphId: 'dsbdnaples-rejectedNaples',
     defaultValue: 0,
     defaultDescription: 'Avg',
-    hoverDescription: 'Distributed Services Cards',
+    hoverDescription: 'DSCs',
     isPercentage: false,
     scaleMin: 0,
   };
@@ -100,7 +100,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     graphId: 'dsbdnaples-pendingNaples',
     defaultValue: 0,
     defaultDescription: 'Avg',
-    hoverDescription: 'Distributed Services Cards',
+    hoverDescription: 'DSCs',
     isPercentage: false,
     scaleMin: 0,
   };

@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { StatArrowDirection, CardStates } from '../basecard/basecard.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { LineGraphStat, GraphPadding } from '../linegraph/linegraph.component';
+import { Utility } from '@app/common/Utility';
 
 export interface Stat {
   value: any;
@@ -176,5 +177,12 @@ export class HerocardComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   *  compute whether add extra css class
+   *  for VS-736
+   */
+  isValueLong(thirdStat: any): string {
+    return  (thirdStat.value.length > Utility.HERO_CARD_THIRDVALUE_LENGTH) ? 'herocard-third-stat-value-long' : '';
+  }
 
 }

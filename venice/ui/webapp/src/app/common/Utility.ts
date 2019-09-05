@@ -21,6 +21,7 @@ import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollou
 import { NaplesCondition, NaplesConditionValues, NodeConditionValues } from '@app/components/cluster-group/naples/index.ts';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
 import { ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
+import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 
 
 
@@ -214,6 +215,14 @@ export class Utility {
       return  value.substring(0, 15) + '...';
      }
      return value;
+  }
+
+  public static  customizeHeroCardThirdStat(thirdStat: string, heroCard: HeroCardOptions, thirdStatName: string) {
+    if (thirdStat.length > Utility.HERO_CARD_THIRDVALUE_LENGTH) {
+      if (heroCard.thirdStat.tooltip.indexOf(thirdStatName) < 0) {
+        heroCard.thirdStat.tooltip += ' (' + thirdStatName + ')';
+      }
+    }
   }
 
   /**

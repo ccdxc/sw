@@ -59,9 +59,10 @@
                  [style.cursor]="thirdStat.url != null ? 'pointer' : 'auto'"
                  (click)="thirdStatClick()">
               <div fxFlex="auto" [style.color]="updateStatColor(thirdStat)"
-                   class="herocard-third-stat-value">
+                   class="herocard-third-stat-value" [ngClass]="isValueLong(thirdStat)">
                 {{ thirdStat.value }}</div>
-              <div fxFlex="auto" class="herocard-third-stat-description">{{ thirdStat.description }}
+              <div fxFlex="auto" class="herocard-third-stat-description"
+                   [ngClass]="isValueLong(thirdStat)">{{ thirdStat.description }}
               </div>
             </div>
           </div>
