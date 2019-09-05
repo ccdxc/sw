@@ -532,7 +532,10 @@ func (d *dhcpSrv) setup(configureVendorAttrs int) error {
 
 	// Create the veth pair
 	if err := netlink.LinkAdd(dhcpClientMock); err != nil {
-		return err
+		if !strings.Contains(err.Error(), "file exists") {
+			return err
+		}
+		log.Info("Interface already present. Continuing...")
 	}
 	if err := netlink.LinkSetARPOn(dhcpClientMock); err != nil {
 		return err
@@ -542,14 +545,20 @@ func (d *dhcpSrv) setup(configureVendorAttrs int) error {
 	// Assign IP Address statically for the server
 	srvIntf, err := netlink.LinkByName(dhcpServerIntf)
 	if err != nil {
-		log.Errorf("Failed to find the server interface")
-		return err
+		if !strings.Contains(err.Error(), "file exists") {
+			log.Errorf("Failed to find the server interface")
+			return err
+		}
+		log.Info("Interface  already up. Continuing...")
 	}
 	addr, _ := netlink.ParseAddr("172.16.10.1/28")
 
 	if err := netlink.AddrAdd(srvIntf, addr); err != nil {
-		log.Errorf("Failed to assign ip address %v to interface dhcpmock. Err: %v", addr.IP.String(), err)
-		return err
+		if !strings.Contains(err.Error(), "file exists") {
+			log.Errorf("Failed to assign ip address %v to interface dhcpmock. Err: %v", addr.IP.String(), err)
+			return err
+		}
+		log.Info("Address already present. Continuing...")
 	}
 
 	if err := netlink.LinkSetUp(srvIntf); err != nil {
