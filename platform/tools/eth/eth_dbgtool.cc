@@ -965,27 +965,26 @@ hal_cfg_path()
     return hal_cfg_path_;
 }
 
-std::string
+int
 fwd_mode()
 {
     boost::property_tree::ptree spec;
     boost::property_tree::read_json("/sysconfig/config0/device.conf", spec);
 
-    return spec.get<std::string>("forwarding-mode");
+    return spec.get<int>("forwarding-mode");
 }
 
 std::string
 mpart_cfg_path()
 {
     std::string hal_cfg_path_ = hal_cfg_path();
-    std::string mpart_json;
 
 #if defined(APOLLO)
-    mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
+    std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
 #elif defined(ARTEMIS)
-    mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
+    std::string mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
 #else
-    mpart_json = (fwd_mode() == "FORWARDING_MODE_CLASSIC") ?
+    std::string mpart_json = fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ?
             hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
             hal_cfg_path_ + "/iris/hbm_mem.json";
 #endif
@@ -1148,9 +1147,10 @@ port_status(uint64_t addr)
 
     printf("\n");
     printf("port_status:\n");
-    printf("  speed: %u\n", status->speed);
     printf("  id: %u\n", status->id);
+    printf("  speed: %u\n", status->speed);
     printf("  status: %u\n", status->status);
+    printf("  link_down_count: %u\n", status->link_down_count);
     printf("  xcvr:\n");
     printf("    state: %u\n", status->xcvr.state);
     printf("    phy: %u\n", status->xcvr.phy);

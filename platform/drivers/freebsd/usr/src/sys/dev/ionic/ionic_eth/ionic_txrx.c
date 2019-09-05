@@ -1864,17 +1864,19 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 
 	sbuf_printf(sb, "\n");
 
-	sbuf_printf(sb, " lif_status eid=%ld link_status=%s"
-		" link_speed=%dMbps link_down_count=%d\n",
+	sbuf_printf(sb, " lif_status eid=%ld status=%s"
+		" speed=%dMbps lif_down_count=%d\n",
 			lif_status->eid,
 			ionic_port_oper_status_str(lif_status->link_status),
 			lif_status->link_speed,
 			lif_status->link_down_count);
 
-	sbuf_printf(sb, "  port_status id=%d status=%s speed=%dMbps\n",
+	sbuf_printf(sb, "  port_status id=%d status=%s"
+		" speed=%dMbps link_down_count=%d\n",
 			port_status->id,
 			ionic_port_oper_status_str(port_status->status),
-			port_status->speed);
+			port_status->speed,
+			port_status->link_down_count);
 
 	sbuf_printf(sb, "  port_config state=%s speed=%dMbps mtu=%d AN %s"
 		" fec_type=%s pause_type=%s loopback_mode=%s\n",

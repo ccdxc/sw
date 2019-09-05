@@ -431,6 +431,10 @@ static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 		print_hex_dump(KERN_INFO, "notifyq ", DUMP_PREFIX_OFFSET, 16, 1,
 			       comp->log.data, sizeof(comp->log.data), true);
 		break;
+	case EVENT_OPCODE_XCVR:
+		netdev_info(netdev, "Notifyq EVENT_OPCODE_XCVR eid=%lld\n",
+			    eid);
+		break;
 	default:
 		netdev_warn(netdev, "Notifyq unknown event ecode=%d eid=%lld\n",
 			    comp->event.ecode, eid);

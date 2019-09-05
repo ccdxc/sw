@@ -95,6 +95,7 @@ enum notifyq_opcode {
 	EVENT_OPCODE_RESET		= 2,
 	EVENT_OPCODE_HEARTBEAT		= 3,
 	EVENT_OPCODE_LOG		= 4,
+	EVENT_OPCODE_XCVR		= 5,
 };
 
 /**
@@ -1083,13 +1084,15 @@ union port_config {
  * @status:             link status (enum port_oper_status)
  * @id:                 port id
  * @speed:              link speed (in Mbps)
+ * @link_down_count:    number of times link when from up to down
  * @xcvr:               tranceiver status
  */
 struct port_status {
 	__le32 id;
 	__le32 speed;
 	u8     status;
-	u8     rsvd[51];
+	__le16 link_down_count;
+	u8     rsvd[49];
 	struct xcvr_status  xcvr;
 };
 
@@ -1256,7 +1259,7 @@ struct port_getattr_comp {
  * @port_num:        port the lif is connected to
  * @link_status:     port status (enum port_oper_status)
  * @link_speed:      speed of link in Mbps
- * @link_down_count: number of times link status changes
+ * @link_down_count: number of times link when from up to down
  */
 struct lif_status {
 	__le64 eid;
@@ -1934,6 +1937,19 @@ struct log_event {
 	__le64 eid;
 	__le16 ecode;
 	u8     data[54];
+};
+
+/**
+ * struct xcvr_event
+ * @eid:	event number
+ * @ecode:	event code = EVENT_OPCODE_XCVR
+ *
+ * Transceiver change event
+ */
+struct xcvr_event {
+	__le64 eid;
+	__le16 ecode;
+	u8     rsvd[54];
 };
 
 /**

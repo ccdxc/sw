@@ -2605,6 +2605,8 @@ ionic_process_event(struct notifyq* notifyq, union notifyq_comp *comp)
 
 	switch (comp->event.ecode) {
 	case EVENT_OPCODE_LINK_CHANGE:
+		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
+			lif->last_eid, (lif->link_up ? "up" : "down"), lif->link_speed);
 		ionic_read_notify_block(lif);
 
 		if (lif->last_eid < comp->event.eid) {
@@ -2620,12 +2622,10 @@ ionic_process_event(struct notifyq* notifyq, union notifyq_comp *comp)
 		ionic_open_or_stop(lif);
 
 		IONIC_LIF_UNLOCK(lif);
-		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
-			lif->last_eid, (lif->link_up ? "up" : "down"), lif->link_speed);
 		break;
 
 	case EVENT_OPCODE_RESET:
-		if_printf(ifp, "[eid:%ld]reset_code: %d state: %d\n",
+		if_printf(ifp, "[eid:%ld]reset code: %d state: %d\n",
 				comp->event.eid, comp->reset.reset_code,
 			    comp->reset.state);
 		break;
@@ -2639,6 +2639,11 @@ ionic_process_event(struct notifyq* notifyq, union notifyq_comp *comp)
 			    comp->event.eid);
 		print_hex_dump(KERN_INFO, "nq log", DUMP_PREFIX_OFFSET, 16, 1,
 			       comp->log.data, sizeof(comp->log.data), true);
+		break;
+
+	case EVENT_OPCODE_XCVR:
+		if_printf(ifp, "[eid:%ld]xcvr event\n", comp->event.eid);
+		ionic_ifmedia_xcvr(lif);
 		break;
 
 	default:

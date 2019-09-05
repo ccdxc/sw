@@ -2307,8 +2307,6 @@ void
 EthLif::LinkEventHandler(port_status_t *evd)
 {
     if (spec->uplink_port_num != evd->id) {
-        // NIC_LOG_WARN("{}: Uplink port number not matching status_port: {}. up_port: {}",
-        //              hal_lif_info_.name, evd->id, spec->uplink_port_num);
         return;
     }
 
@@ -2319,16 +2317,18 @@ EthLif::LinkEventHandler(port_status_t *evd)
         NIC_LOG_INFO("{}: {} + {} => {}",
             hal_lif_info_.name,
             lif_state_to_str(state),
-            (evd->status == 1) ? "LINK_UP" : "LINK_DN",
+            (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
             lif_state_to_str(state));
         return;
     }
+
+    enum eth_lif_state next_state = (evd->status == PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
 
     // Update local lif status
     lif_status->link_status = evd->status;
     lif_status->link_speed =  evd->speed;
     ++lif_status->eid;
-    if (state == LIF_STATE_DOWN && evd->status == PORT_OPER_STATUS_UP)
+    if (state == LIF_STATE_UP && next_state == LIF_STATE_DOWN)
         ++lif_status->link_down_count;
     WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
 
@@ -2342,6 +2342,14 @@ EthLif::LinkEventHandler(port_status_t *evd)
             NULL
         );
     }
+
+    NIC_LOG_INFO("{}: {} + {} => {}",
+        hal_lif_info_.name,
+        lif_state_to_str(state),
+        (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
+        lif_state_to_str(state));
+
+    state = next_state;
 
     if (notify_enabled == 0) {
         return;
@@ -2375,13 +2383,56 @@ EthLif::LinkEventHandler(port_status_t *evd)
     WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
 
     // FIXME: Wait for completion
+}
 
-    state = (evd->status == PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
-    NIC_LOG_INFO("{}: {} + {} => {}",
-        hal_lif_info_.name,
-        lif_state_to_str(state),
-        (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
-        lif_state_to_str(state));
+void
+EthLif::XcvrEventHandler(port_status_t *evd)
+{
+    if (spec->uplink_port_num != evd->id) {
+        return;
+    }
+
+    // drop the event if the lif is not initialized
+    if (state != LIF_STATE_INIT &&
+        state != LIF_STATE_UP &&
+        state != LIF_STATE_DOWN) {
+        NIC_LOG_INFO("{}: {} + XCVR_EVENT => {}",
+            hal_lif_info_.name,
+            lif_state_to_str(state),
+            lif_state_to_str(state));
+        return;
+    }
+
+    if (notify_enabled == 0) {
+        return;
+    }
+
+    uint64_t addr, req_db_addr;
+
+    // Send the xcvr notification
+    struct xcvr_event msg = {
+        .eid = lif_status->eid,
+        .ecode = EVENT_OPCODE_XCVR,
+    };
+
+    addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
+    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
+    req_db_addr =
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
+                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
+                (hal_lif_info_.lif_id << 6) +
+                (ETH_NOTIFYQ_QTYPE << 3);
+
+    // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
+    //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
+    notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
+    PAL_barrier();
+    WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
+
+    // FIXME: Wait for completion
 }
 
 void

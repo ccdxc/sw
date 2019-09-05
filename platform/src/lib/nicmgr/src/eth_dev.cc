@@ -1779,6 +1779,17 @@ Eth::HalEventHandler(bool status)
 void
 Eth::LinkEventHandler(port_status_t *evd)
 {
+    if (spec->uplink_port_num != evd->id) {
+        return;
+    }
+
+    port_status->id = evd->id;
+    port_status->speed = evd->speed;
+    if (port_status->status == PORT_OPER_STATUS_UP && evd->status == PORT_OPER_STATUS_DOWN)
+        ++port_status->link_down_count;
+    port_status->status = evd->status;
+
+    PortStatusUpdate(this);
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
         eth_lif->LinkEventHandler(evd);
@@ -1798,6 +1809,10 @@ Eth::XcvrEventHandler(port_status_t *evd)
     memcpy(&port_status->xcvr, &evd->xcvr, sizeof(struct xcvr_status));
 
     PortStatusUpdate(this);
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        EthLif *eth_lif = it->second;
+        eth_lif->XcvrEventHandler(evd);
+    }
 }
 
 bool

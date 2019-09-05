@@ -825,6 +825,11 @@ static bool ionic_notifyq_cb(struct cq *cq,
                                sizeof(comp->log.data),
                                ionic_driver.log_component);
                 break;
+        case EVENT_OPCODE_XCVR:
+                ionic_en_info("%s: Notifyq EVENT_OPCODE_XCVR eid=%ld\n",
+                           vmk_NameToString(&uplink_handle->uplink_name),
+                           comp->event.eid);
+                break;
         default:
                 ionic_en_warn("%s: Notifyq bad event ecode=%d eid=%ld\n",
                            vmk_NameToString(&uplink_handle->uplink_name),

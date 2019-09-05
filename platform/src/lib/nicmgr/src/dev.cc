@@ -154,45 +154,6 @@ DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
         return string("/platform/etc/nicmgrd/device.json");
     }
 
-
-#if 0
-    boost::property_tree::ptree spec;
-    std::string forwarding_mode;
-
-    *fw_mode = sdk::platform::FWD_MODE_CLASSIC;
-
-    cout << "Parsing Device conf, input: " << filename << endl;
-    if (filename.compare("none") == 0) {
-        /* No device.conf file. Classic default mode */
-        return string("/platform/etc/nicmgrd/device.json");
-    }
-
-    /* Parse the input device.conf json file */
-    boost::property_tree::read_json(filename, spec);
-    forwarding_mode = spec.get<std::string>("forwarding-mode", "FORWARDING_MODE_CLASSIC");
-
-    // int fw_mode = spec.get<int>("forwarding-mode");
-    int feature_profile = spec.get<int>("feature-profile");
-    cout << "feature_profile: " <<
-        device::FeatureProfile_Name(device::FeatureProfile(feature_profile)) << endl;
-    if (forwarding_mode == "FORWARDING_MODE_HOSTPIN" ||
-         forwarding_mode == "FORWARDING_MODE_SWITCH") {
-        *fw_mode = sdk::platform::FWD_MODE_SMART;
-        return string("/platform/etc/nicmgrd/eth_smart.json");
-    } else if (forwarding_mode == "FORWARDING_MODE_CLASSIC") {
-        if (feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
-            return string("/platform/etc/nicmgrd/device.json");
-        } else if (feature_profile == device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
-            return string("/platform/etc/nicmgrd/eth_scale.json");
-        } else {
-            cout << "Profile is none! Return classic default" << endl;
-            return string("/platform/etc/nicmgrd/device.json");
-        }
-    } else {
-        cout << "Unknown mode, returning classic default" << endl;
-        return string("/platform/etc/nicmgrd/device.json");
-    }
-#endif
 #endif
     return string("");
 }
