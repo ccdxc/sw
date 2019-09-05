@@ -1320,7 +1320,7 @@ func waitForTracer() {
 func TestMain(m *testing.M) {
 
 	// tune timeouts to speed-up tests
-	cache.SetAPIServerRPCTimeout(1 * time.Second)
+	cache.SetAPIServerRPCTimeout(3 * time.Second)
 
 	flag.Parse()
 	log.Infof("#### TestMain num-Agents:%d #CPU: %d", *numNaples, gorun.NumCPU())

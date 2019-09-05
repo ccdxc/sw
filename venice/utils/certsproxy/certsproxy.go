@@ -128,10 +128,12 @@ func (c *CertsProxy) GetRemoteURLs() []string {
 // Start starts listening for requests
 func (c *CertsProxy) Start() {
 	c.rpcServer.Start()
+	log.Infof("CertsProxy %p started, listenURL: %v, config:  %+v", c, c.GetListenURL(), c)
 }
 
 // Stop stops the rpc server
 func (c *CertsProxy) Stop() error {
+	log.Infof("CertsProxy %p stopped, listenURL: %v, config:  %+v", c, c.GetListenURL(), c)
 	return c.rpcServer.Stop()
 }
 
