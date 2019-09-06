@@ -70,16 +70,15 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	ctx, cancel := context.WithCancel(pctx)
 
 	// create server instance
-	srv := RestServer{
+	srv := &RestServer{
 		listenURL: listenURL,
 		ctx:       ctx,
 		cancel:    cancel,
 		TpAgent:   tpAgent,
 	}
-
 	// if no URL was specified, just return (used during unit/integ tests)
 	if listenURL == "" {
-		return &srv, nil
+		return srv, nil
 	}
 
 	tstr := ntranslate.MustGetTranslator()
@@ -126,7 +125,7 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
-	router.Methods("GET").Subrouter().HandleFunc("/debug/state", httputils.MakeHTTPHandler(tpAgent.Debug))
+	router.Methods("GET").Subrouter().HandleFunc("/debug/state", httputils.MakeHTTPHandler(srv.Debug))
 
 	// listener
 	listener, err := net.Listen("tcp", listenURL)
@@ -141,7 +140,7 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	// create a http server
 	srv.httpServer = &http.Server{Addr: listenURL, Handler: router}
 	go srv.httpServer.Serve(listener)
-	return &srv, nil
+	return srv, nil
 }
 
 // getTagsFromMeta returns tags to store in Venice TSDB
@@ -236,6 +235,12 @@ func (s *RestServer) SetNodeUUID(uuid string) {
 	s.gensrv.SetNodeUUID(uuid)
 }
 
+// SetPolicyHandler sets policy handler in the REST server
+func (s *RestServer) SetPolicyHandler(handler types.CtrlerIntf) {
+	s.TpAgent = handler
+	s.gensrv.SetPolicyHandler(handler)
+}
+
 // Stop stops the http server, metrics reporter
 func (s *RestServer) Stop() error {
 	if s.httpServer != nil {
@@ -245,4 +250,12 @@ func (s *RestServer) Stop() error {
 	s.cancel()
 	s.wg.Wait()
 	return nil
+}
+
+// Debug handler
+func (s *RestServer) Debug(r *http.Request) (interface{}, error) {
+	if s.TpAgent != nil {
+		return s.TpAgent.Debug(r)
+	}
+	return nil, nil
 }

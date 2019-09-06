@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ntranslate"
 	"github.com/pensando/sw/venice/utils/tsdb"
+	"github.com/pensando/sw/nic/agent/tpa/state/types"
 )
 
 // this package contains the REST API provided by the agent
@@ -32,7 +33,7 @@ const (
 
 // RestServer is the REST api server
 type RestServer struct {
-        sync.Mutex
+    sync.Mutex
 	listenURL         string                   // URL where http server is listening
 	TpAgent           tpa.CtrlerIntf           // telemetry policy agent
 	nodeUUID          string                   // smart nic name for default meta
@@ -98,12 +99,18 @@ func (s *RestServer) GetObjectMeta(kind string, key interface{})*api.ObjectMeta 
 	return meta
 }
 
+// SetPolicyHandler sets policy handler in the REST server
+func (s *RestServer) SetPolicyHandler(handler types.CtrlerIntf) {
+	s.Lock()
+	defer s.Unlock()
+	s.TpAgent = handler
+}
+
 // SetNodeUUID sets node UUID from naple status
 func (s *RestServer) SetNodeUUID(name string) {
 	s.Lock()
 	defer s.Unlock()
 	s.nodeUUID = name
-
 }
 
 // GetUUID gets node UUID

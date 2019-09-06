@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -426,7 +427,7 @@ func (s *PolicyState) Reset() error {
 
 // CreateFwlogPolicy is the POST() entry point
 func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) (err error) {
-	log.Infof("process fwlog policy %+v", p)
+	log.Infof("POST: fwlog policy %+v", p)
 
 	if err = s.validateFwLogPolicy(p); err != nil {
 		log.Errorf("fwlog policy validation failed, %v", err)
@@ -434,7 +435,6 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	}
 
 	if _, err := s.emstore.Read(p); err == nil {
-		log.Warnf("policy %s/%s already exists", p.Kind, p.Name)
 		return fmt.Errorf("policy %s already exists", p.Name)
 	}
 
@@ -496,14 +496,25 @@ func (s *PolicyState) UpdateHostName(hostname string) {
 
 // UpdateFwlogPolicy is the PUT entry point
 func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
-	log.Infof("update fwlog policy %+v", p)
+	log.Infof("PUT: fwlog policy %+v", p)
 
 	if err := s.validateFwLogPolicy(p); err != nil {
 		return err
 	}
 
-	if _, err := s.emstore.Read(p); err != nil {
+	obj, err := s.emstore.Read(p)
+	if err != nil {
 		return fmt.Errorf("policy %s doesn't exist", p.Name)
+	}
+
+	sp, ok := obj.(*tpmprotos.FwlogPolicy)
+	if !ok {
+		return fmt.Errorf("found invalid policy type %T", obj)
+	}
+
+	if reflect.DeepEqual(sp.Spec, p.Spec) {
+		log.Infof("no change in policy %v", p.Name)
+		return nil
 	}
 
 	vrf, err := s.getvrf(p.Tenant, p.Namespace, p.Spec.VrfName)
@@ -511,10 +522,33 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		return fmt.Errorf("failed to get tenant for %s/%s", p.Tenant, p.Namespace)
 	}
 
+	oldCollector := make(map[string]*fwlogCollector)
+	for _, target := range sp.Spec.Targets {
+		key := s.getCollectorKey(vrf, sp, target)
+		transport := strings.Split(target.Transport, "/")
+		oldCollector[key] = &fwlogCollector{
+			vrf:         vrf,
+			filter:      s.getFilter(sp.Spec.Filter),
+			format:      sp.Spec.Format,
+			destination: target.Destination,
+			proto:       transport[0],
+			port:        transport[1],
+		}
+
+		if sp.Spec.Config != nil {
+			oldCollector[key].facility = syslog.Priority(monitoring.SyslogFacility_vvalue[p.Spec.Config.FacilityOverride])
+		}
+	}
+
 	newCollector := make(map[string]*fwlogCollector)
 	filter := s.getFilter(p.Spec.Filter)
 	for _, target := range p.Spec.Targets {
 		key := s.getCollectorKey(vrf, p, target)
+
+		if _, ok := oldCollector[key]; ok {
+			delete(oldCollector, key)
+			continue
+		}
 		transport := strings.Split(target.Transport, "/")
 		newCollector[key] = &fwlogCollector{
 			vrf:         vrf,
@@ -530,31 +564,21 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		}
 	}
 
-	delList := map[string]bool{}
-	// walk thru existing collectors
-	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
-		key := k.(string)
-		col := v.(*fwlogCollector)
-		col.Lock()
-		if ncol, ok := newCollector[key]; ok {
-			col.filter = ncol.filter
-			delete(newCollector, key)
-		} else {
-			// remove it
-			s.closeSyslog(col)
-			delList[key] = true
-		}
-		col.Unlock()
-		return true
-	})
-
 	// delete
-	for k := range delList {
+	for k := range oldCollector {
+		log.Infof("delete collector %v", k)
+		if v, ok := s.fwLogCollectors.Load(k); ok {
+			col := v.(*fwlogCollector)
+			col.Lock()
+			s.closeSyslog(col)
+			col.Unlock()
+		}
 		s.fwLogCollectors.Delete(k)
 	}
 
 	// add new collectors
 	for key := range newCollector {
+		log.Infof("add collector %v", key)
 		// connect() is done by connectSyslog() to avoid blocking
 		s.fwLogCollectors.Store(key, newCollector[key])
 	}
@@ -569,7 +593,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 // DeleteFwlogPolicy is the DELETE entry point
 func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
-	log.Infof("delete fwlog policy %+v", p)
+	log.Infof("DEL: fwlog policy %+v", p)
 	// set default
 	if p.Tenant == "" {
 		p.Tenant = globals.DefaultTenant
@@ -586,7 +610,7 @@ func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 	sp, ok := obj.(*tpmprotos.FwlogPolicy)
 	if !ok {
-		return fmt.Errorf("invalid fwlog policy %+v in db", obj)
+		return fmt.Errorf("invalid fwlog policy type %T", obj)
 	}
 
 	vrf, err := s.getvrf(sp.Tenant, sp.Namespace, sp.Spec.VrfName)

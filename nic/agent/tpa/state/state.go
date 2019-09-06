@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"golang.org/x/sys/unix"
 
 	"github.com/pensando/sw/venice/utils/ipfix"
@@ -30,7 +32,6 @@ import (
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -95,9 +96,10 @@ func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string, halTm hal
 		ipfixCtx:      &sync.Map{},
 	}
 
-	// restart? check if there are collectors configured in hal
+	// restart? check if there are flow monitor/collectors configured in hal
 	pctx := &policyDb{state: state}
 	pctx.readCollectorTable()
+
 	for _, cdata := range pctx.collectorTable.Collector {
 		ckey := &cdata.Key
 		state.SendTemplates(context.Background(), ckey)
@@ -973,12 +975,12 @@ func (p *policyDb) readFlowExportPolicyTable(tpmPolicy *tpmprotos.FlowExportPoli
 			ObjectMeta: tpmPolicy.ObjectMeta,
 		}})
 	if err != nil {
-		return nil, fmt.Errorf("failed to read collectors, %s", err)
+		return nil, fmt.Errorf("failed to read policy, error: %s", err)
 	}
 
 	flowObj, ok := obj.(*types.FlowExportPolicyTable)
 	if !ok {
-		return nil, fmt.Errorf("invalid collector object in db")
+		return nil, fmt.Errorf("invalid flow export object type %T", obj)
 	}
 
 	return flowObj, nil
@@ -1083,6 +1085,16 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	s.Lock()
 	defer s.Unlock()
 
+	policyCtx, err := s.createPolicyContext(p)
+	if err != nil {
+		log.Errorf("failed to create policy context, %s", err)
+		return err
+	}
+
+	if policyCtx.tpmPolicy != nil {
+		return fmt.Errorf("policy %s already exists", p.Name)
+	}
+
 	if objList, err := s.store.List(&types.FlowExportPolicyTable{
 		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{
@@ -1095,16 +1107,6 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 		}
 	}
 
-	policyCtx, err := s.createPolicyContext(p)
-	if err != nil {
-		log.Errorf("failed to create policy context, %s", err)
-		return err
-	}
-
-	if policyCtx.tpmPolicy != nil {
-		return fmt.Errorf("policy %s already exists", p.Name)
-	}
-
 	policyCtx.collectorKeys = collKeys
 
 	// Create lateral objects here
@@ -1112,7 +1114,7 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 		mgmtIP := s.getMgmtIPAddr()
 		if err := s.netAgent.CreateLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
 			log.Errorf("Failed to create lateral objects in netagent. Err: %v", err)
-			return fmt.Errorf("failed to create lateral objects in netagent. Err: %v", err)
+			return err
 		}
 	}
 
@@ -1127,8 +1129,22 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 // UpdateFlowExportPolicy is the PUT entry point
 func (s *PolicyState) UpdateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
 	log.Infof("PUT: %+v", p)
+	pctx, err := s.createPolicyContext(p)
+	if err != nil {
+		return fmt.Errorf("failed to create policy context, %s", err)
+	}
+
+	if pctx.tpmPolicy == nil {
+		return fmt.Errorf("policy %v doesn't exist", p.Name)
+	}
+
+	if reflect.DeepEqual(pctx.tpmPolicy.Spec, p.Spec) {
+		log.Infof("no change in policy %v", p.Name)
+		return nil
+	}
+
 	if err := s.DeleteFlowExportPolicy(ctx, p); err != nil {
-		return fmt.Errorf("failed to delete policy %s, error %s", p.Name, err)
+		return fmt.Errorf("policy %s doesn't exist", p.Name)
 	}
 
 	return s.CreateFlowExportPolicy(ctx, p)

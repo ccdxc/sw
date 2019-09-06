@@ -1189,6 +1189,27 @@ func TestPolicyUpdate(t *testing.T) {
 				Assert(t, ok != true, "key was present in map when it should have been deleted")
 			}
 		}
+
+		// check total collectors
+		polCollector := map[string]bool{}
+		pl, err := ps.ListFwlogPolicy(ctx)
+		AssertOk(t, err, "failed to list policy ")
+		for _, p := range pl {
+			for _, c := range p.Spec.Targets {
+				polCollector[ps.getCollectorKey(vrf, p, c)] = true
+			}
+		}
+
+		activeCollector := map[string]bool{}
+		ps.fwLogCollectors.Range(func(k, v interface{}) bool {
+			activeCollector[k.(string)] = true
+			return true
+		})
+
+		AssertEquals(t, len(polCollector), len(activeCollector), "expected %d collectors got %d, policy:%+v active:+%v",
+			len(polCollector), len(activeCollector), polCollector, activeCollector)
+
+		Assert(t, reflect.DeepEqual(polCollector, activeCollector), "collectors didn't match", polCollector, activeCollector)
 	}
 }
 

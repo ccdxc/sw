@@ -159,7 +159,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			log.Fatalf("failed to init tmagent state, err: %v", err)
 		}
 		s.tmagent.tpState = tpState
-
+		s.tmagent.restServer.SetPolicyHandler(tpState)
 	}
 }
 

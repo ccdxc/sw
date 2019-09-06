@@ -68,7 +68,7 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 		routes, err := netlink.RouteGet(net.ParseIP(destIP))
 		if err != nil || len(routes) == 0 {
 			log.Errorf("No routes found for the dest IP %s. Err: %v", destIP, err)
-			return fmt.Errorf("no routes found for the dest IP %s. Err: %v", destIP, err)
+			return fmt.Errorf("no routes found for %s", destIP)
 		}
 
 		// Pick the first route. Dest IP in not in the local subnet. Use GW IP as the destIP for ARP'ing
@@ -112,8 +112,13 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 			dMAC = d.(string)
 			time.Sleep(time.Second * 1)
 		}
-		log.Errorf("failed to find resolve MAC despite retries for %s", destIP)
-		return fmt.Errorf("failed to find resolve MAC despite retries for %s", destIP)
+
+		if done != nil {
+			done() // cancel arp
+		}
+
+		log.Errorf("failed to resolve MAC despite retries for %s", destIP)
+		return fmt.Errorf("failed to resolve mac address for %s", destIP)
 	}
 
 	nw := &netproto.Network{

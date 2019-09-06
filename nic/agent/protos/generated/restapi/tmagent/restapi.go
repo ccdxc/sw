@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	tpa "github.com/pensando/sw/nic/agent/tpa/state/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ntranslate"
@@ -91,12 +92,18 @@ func (s *RestServer) GetObjectMeta(kind string, key interface{}) *api.ObjectMeta
 	return meta
 }
 
+// SetPolicyHandler sets policy handler in the REST server
+func (s *RestServer) SetPolicyHandler(handler types.CtrlerIntf) {
+	s.Lock()
+	defer s.Unlock()
+	s.TpAgent = handler
+}
+
 // SetNodeUUID sets node UUID from naple status
 func (s *RestServer) SetNodeUUID(name string) {
 	s.Lock()
 	defer s.Unlock()
 	s.nodeUUID = name
-
 }
 
 // GetUUID gets node UUID

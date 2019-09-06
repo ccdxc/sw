@@ -119,7 +119,6 @@ var _ = Describe("fwlog policy tests", func() {
 		})
 
 		It("Should create/update/delete fwlog policy", func() {
-			Skip("skip to debug CI failures")
 			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 
 			By("create fwlog Policy")
