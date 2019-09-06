@@ -17,9 +17,12 @@ static int ionic_dl_info_get(struct devlink *dl, struct devlink_info_req *req,
 	struct ionic *ionic = devlink_priv(dl);
 	struct ionic_dev *idev = &ionic->idev;
 	char buf[16];
+	int err = 0;
 	u32 val;
 
-	devlink_info_driver_name_put(req, DRV_NAME);
+	err = devlink_info_driver_name_put(req, DRV_NAME);
+	if (err)
+		return err;
 
 	devlink_info_version_running_put(req, "fw_version",
 					 idev->dev_info.fw_version);
@@ -29,14 +32,22 @@ static int ionic_dl_info_get(struct devlink *dl, struct devlink_info_req *req,
 	devlink_info_version_running_put(req, "fw_heartbeat", buf);
 
 	snprintf(buf, sizeof(buf), "0x%x", idev->dev_info.asic_type);
-	devlink_info_version_fixed_put(req, "asic_type", buf);
+	err = devlink_info_version_fixed_put(req,
+					     DEVLINK_INFO_VERSION_GENERIC_ASIC_ID,
+					     buf);
+	if (err)
+		return err;
 
 	snprintf(buf, sizeof(buf), "0x%x", idev->dev_info.asic_rev);
-	devlink_info_version_fixed_put(req, "asic_rev", buf);
+	err = devlink_info_version_fixed_put(req,
+					     DEVLINK_INFO_VERSION_GENERIC_ASIC_REV,
+					     buf);
+	if (err)
+		return err;
 
-	devlink_info_serial_number_put(req, idev->dev_info.serial_num);
+	err = devlink_info_serial_number_put(req, idev->dev_info.serial_num);
 
-	return 0;
+	return err;
 }
 
 static const struct devlink_ops ionic_dl_ops = {
@@ -46,32 +57,29 @@ static const struct devlink_ops ionic_dl_ops = {
 struct ionic *ionic_devlink_alloc(struct device *dev)
 {
 	struct devlink *dl;
-	struct ionic *ionic;
 
 	dl = devlink_alloc(&ionic_dl_ops, sizeof(struct ionic));
-	if (!dl) {
-		dev_warn(dev, "devlink_alloc failed");
-		return NULL;
-	}
 
-	ionic = devlink_priv(dl);
-	ionic->dl = dl;
-
-	return ionic;
+	return devlink_priv(dl);
 }
 
 void ionic_devlink_free(struct ionic *ionic)
 {
-	devlink_free(ionic->dl);
+	struct devlink *dl = priv_to_devlink(ionic);
+
+	devlink_free(dl);
 }
 
 int ionic_devlink_register(struct ionic *ionic)
 {
+	struct devlink *dl = priv_to_devlink(ionic);
 	int err;
 
-	err = devlink_register(ionic->dl, ionic->dev);
-	if (err)
+	err = devlink_register(dl, ionic->dev);
+	if (err) {
 		dev_warn(ionic->dev, "devlink_register failed: %d\n", err);
+		return err;
+	}
 
 #if ( LINUX_VERSION_CODE < KERNEL_VERSION(5,2,0) )
 	devlink_port_attrs_set(&ionic->dl_port, DEVLINK_PORT_FLAVOUR_PHYSICAL,
@@ -80,7 +88,7 @@ int ionic_devlink_register(struct ionic *ionic)
 	devlink_port_attrs_set(&ionic->dl_port, DEVLINK_PORT_FLAVOUR_PHYSICAL,
 			       0, false, 0, NULL, 0);
 #endif
-	err = devlink_port_register(ionic->dl, &ionic->dl_port, 0);
+	err = devlink_port_register(dl, &ionic->dl_port, 0);
 	if (err)
 		dev_err(ionic->dev, "devlink_port_register failed: %d\n", err);
 	else
@@ -92,10 +100,9 @@ int ionic_devlink_register(struct ionic *ionic)
 
 void ionic_devlink_unregister(struct ionic *ionic)
 {
-	if (!ionic || !ionic->dl)
-		return;
+	struct devlink *dl = priv_to_devlink(ionic);
 
 	devlink_port_unregister(&ionic->dl_port);
-	devlink_unregister(ionic->dl);
+	devlink_unregister(dl);
 }
 #endif /* IONIC_DEVLINK */

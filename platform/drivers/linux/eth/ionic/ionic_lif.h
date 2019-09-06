@@ -125,7 +125,7 @@ enum lif_state_flags {
 	LIF_INITED,
 	LIF_SW_DEBUG_STATS,
 	LIF_UP,
-	LIF_LINK_CHECK_NEEDED,
+	LIF_LINK_CHECK_REQUESTED,
 	LIF_QUEUE_RESET,
 	LIF_F_FW_READY,
 
@@ -133,7 +133,7 @@ enum lif_state_flags {
 	LIF_STATE_SIZE
 };
 
-#define LIF_NAME_MAX_SZ		(32)
+#define LIF_NAME_MAX_SZ		32
 struct lif {
 	struct list_head list;
 	struct net_device *netdev;
@@ -193,6 +193,12 @@ struct lif {
 #define lif_to_txq(lif, i)	(&lif_to_txqcq((lif), i)->q)
 #define lif_to_rxq(lif, i)	(&lif_to_txqcq((lif), i)->q)
 #define is_master_lif(lif)	((lif)->index == 0)
+
+/* returns 0 if successfully set the bit, else non-zero */
+static inline int ionic_wait_for_bit(struct lif *lif, int bitname)
+{
+	return wait_on_bit_lock(lif->state, bitname, TASK_INTERRUPTIBLE);
+}
 
 static inline bool ionic_is_platform_dev(struct ionic *ionic)
 {

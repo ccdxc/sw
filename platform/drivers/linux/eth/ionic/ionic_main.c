@@ -597,6 +597,8 @@ static void __exit ionic_cleanup_module(void)
 {
 	ionic_bus_unregister_driver();
 	ionic_debugfs_destroy();
+
+	pr_info("%s removed\n", DRV_NAME);
 }
 
 module_init(ionic_init_module);

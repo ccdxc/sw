@@ -56,7 +56,6 @@ struct ionic {
 	struct work_struct nb_work;
 	struct notifier_block nb;
 #ifdef IONIC_DEVLINK
-	struct devlink *dl;
 	struct devlink_port dl_port;
 #endif
 

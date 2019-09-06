@@ -33,6 +33,7 @@
 #include <asm/io.h>
 #include <linux/ethtool.h>
 #include <linux/if_vlan.h>
+#include <net/devlink.h>
 
 #ifndef NSEC_PER_MSEC
 #define NSEC_PER_MSEC 1000000L
@@ -6127,6 +6128,13 @@ static inline int _kc_macvlan_release_l2fw_offload(struct net_device *dev)
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5,2,0))
 #else
 #define HAVE_NETDEV_XMIT_MORE
+#endif
+
+#ifndef DEVLINK_INFO_VERSION_GENERIC_ASIC_ID
+#define DEVLINK_INFO_VERSION_GENERIC_ASIC_ID   "asic.id"
+#endif
+#ifndef DEVLINK_INFO_VERSION_GENERIC_ASIC_REV
+#define DEVLINK_INFO_VERSION_GENERIC_ASIC_REV  "asic.rev"
 #endif
 
 #endif /* _KCOMPAT_H_ */

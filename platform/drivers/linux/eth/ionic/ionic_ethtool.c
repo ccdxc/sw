@@ -126,6 +126,11 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 
 	ethtool_link_ksettings_zero_link_mode(ks, supported);
 
+	/* The port_info data is found in a DMA space that the NIC keeps
+	 * up-to-date, so there's no need to request the data from the
+	 * NIC, we already have it in our memory space.
+	 */
+
 	switch (le16_to_cpu(idev->port_info->status.xcvr.pid)) {
 		/* Copper */
 	case XCVR_PID_QSFP_100G_CR4:
@@ -226,12 +231,11 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 			 idev->port_info->status.xcvr.pid);
 		break;
 	case XCVR_PID_UNKNOWN:
-		if (ionic_is_mnic(lif->ionic)) {
+		/* This means there's no module plugged in */
+		if (ionic_is_mnic(lif->ionic))
 			ethtool_link_ksettings_add_link_mode(ks, supported,
 							     1000baseT_Full);
-			break;
-		}
-		/* fall through */
+		break;
 	default:
 		dev_dbg(lif->ionic->dev, "unknown xcvr type pid=%d / 0x%x\n",
 			idev->port_info->status.xcvr.pid,
@@ -239,17 +243,15 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		break;
 	}
 
-#ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
+	bitmap_copy(ks->link_modes.advertising, ks->link_modes.supported,
+		    __ETHTOOL_LINK_MODE_MASK_NBITS);
+
+#ifdef ETHTOOL_FEC_NONE
 	if (idev->port_info->config.fec_type == PORT_FEC_TYPE_FC)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_BASER);
 	else if (idev->port_info->config.fec_type == PORT_FEC_TYPE_RS)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_RS);
-	else
-		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_NONE);
 #endif
-
-	bitmap_copy(ks->link_modes.advertising, ks->link_modes.supported,
-		    __ETHTOOL_LINK_MODE_MASK_NBITS);
 
 	if (ionic_is_mnic(lif->ionic))
 		ethtool_link_ksettings_add_link_mode(ks, supported, Backplane);
@@ -257,8 +259,6 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		ethtool_link_ksettings_add_link_mode(ks, supported, FIBRE);
 
 	ethtool_link_ksettings_add_link_mode(ks, supported, Pause);
-	if (idev->port_info->config.pause_type)
-		ethtool_link_ksettings_add_link_mode(ks, advertising, Pause);
 
 	if (idev->port_info->status.xcvr.phy == PHY_TYPE_COPPER || copper_seen)
 		ks->base.port = PORT_DA;
@@ -299,7 +299,7 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &lif->ionic->idev;
-#ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
+#ifdef ETHTOOL_FEC_NONE
 	u8 fec_type = PORT_FEC_TYPE_NONE;
 	u32 req_rs, req_fc;
 #endif
@@ -313,8 +313,6 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 		mutex_unlock(&ionic->dev_cmd_lock);
 		if (err)
 			return err;
-
-		idev->port_info->config.an_enable = ks->base.autoneg;
 	}
 
 	/* set speed */
@@ -325,18 +323,15 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 		mutex_unlock(&ionic->dev_cmd_lock);
 		if (err)
 			return err;
-
-		idev->port_info->config.speed = cpu_to_le32(ks->base.speed);
 	}
 
-#ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
+#ifdef ETHTOOL_FEC_NONE
 	/* set FEC */
 	req_rs = ethtool_link_ksettings_test_link_mode(ks, advertising, FEC_RS);
 	req_fc = ethtool_link_ksettings_test_link_mode(ks, advertising, FEC_BASER);
 	if (req_rs && req_fc) {
 		netdev_info(netdev, "Only select one FEC mode at a time\n");
 		return -EINVAL;
-
 	} else if (req_fc &&
 		   idev->port_info->config.fec_type != PORT_FEC_TYPE_FC) {
 		fec_type = PORT_FEC_TYPE_FC;
@@ -355,8 +350,6 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 		mutex_unlock(&ionic->dev_cmd_lock);
 		if (err)
 			return err;
-
-		idev->port_info->config.fec_type = fec_type;
 	}
 #endif
 
@@ -367,11 +360,11 @@ static void ionic_get_pauseparam(struct net_device *netdev,
 				 struct ethtool_pauseparam *pause)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct ionic_dev *idev = &lif->ionic->idev;
-	uint8_t pause_type = idev->port_info->config.pause_type;
+	uint8_t pause_type;
 
-	pause->autoneg = idev->port_info->config.an_enable;
+	pause->autoneg = 0;
 
+	pause_type = lif->ionic->idev.port_info->config.pause_type;
 	if (pause_type) {
 		pause->rx_pause = pause_type & IONIC_PAUSE_F_RX ? 1 : 0;
 		pause->tx_pause = pause_type & IONIC_PAUSE_F_TX ? 1 : 0;
@@ -383,18 +376,11 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic *ionic = lif->ionic;
-	struct ionic_dev *idev = &lif->ionic->idev;
-
 	u32 requested_pause;
-	u32 cur_autoneg;
 	int err;
 
-	cur_autoneg = idev->port_info->config.an_enable ? AUTONEG_ENABLE :
-								AUTONEG_DISABLE;
-	if (pause->autoneg != cur_autoneg) {
-		netdev_info(netdev, "Please use 'ethtool -s ...' to change autoneg\n");
+	if (pause->autoneg)
 		return -EOPNOTSUPP;
-	}
 
 	/* change both at the same time */
 	requested_pause = PORT_PAUSE_TYPE_LINK;
@@ -403,13 +389,11 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 	if (pause->tx_pause)
 		requested_pause |= IONIC_PAUSE_F_TX;
 
-	if (requested_pause == idev->port_info->config.pause_type)
+	if (requested_pause == lif->ionic->idev.port_info->config.pause_type)
 		return 0;
 
-	idev->port_info->config.pause_type = requested_pause;
-
 	mutex_lock(&ionic->dev_cmd_lock);
-	ionic_dev_cmd_port_pause(idev, requested_pause);
+	ionic_dev_cmd_port_pause(&lif->ionic->idev, requested_pause);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err)
@@ -518,6 +502,7 @@ static int ionic_set_ringparam(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	bool running;
+	int err;
 
 	if (ring->rx_mini_pending || ring->rx_jumbo_pending) {
 		netdev_info(netdev, "Changing jumbo or mini descriptors not supported\n");
@@ -544,8 +529,9 @@ static int ionic_set_ringparam(struct net_device *netdev,
 	    ring->rx_pending == lif->nrxq_descs)
 		return 0;
 
-	while (test_and_set_bit(LIF_QUEUE_RESET, lif->state))
-		usleep_range(200, 400);
+	err = ionic_wait_for_bit(lif, LIF_QUEUE_RESET);
+	if (err)
+		return err;
 
 	running = test_bit(LIF_UP, lif->state);
 	if (running)
@@ -578,6 +564,7 @@ static int ionic_set_channels(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	bool running;
+	int err;
 
 	if (!ch->combined_count || ch->other_count ||
 	    ch->rx_count || ch->tx_count)
@@ -589,8 +576,9 @@ static int ionic_set_channels(struct net_device *netdev,
 	if (ch->combined_count == lif->nxqs)
 		return 0;
 
-	while (test_and_set_bit(LIF_QUEUE_RESET, lif->state))
-		usleep_range(200, 400);
+	err = ionic_wait_for_bit(lif, LIF_QUEUE_RESET);
+	if (err)
+		return err;
 
 	running = test_bit(LIF_UP, lif->state);
 	if (running)
@@ -785,32 +773,28 @@ static int ionic_get_module_eeprom(struct net_device *netdev,
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct xcvr_status *xcvr;
+	char tbuf[sizeof(xcvr->sprom)];
+	int count = 10;
 	u32 len;
 
-	/* copy the module bytes into data */
+	/* The NIC keeps the module prom up-to-date in the DMA space
+	 * so we can simply copy the module bytes into the data buffer.
+	 */
 	xcvr = &idev->port_info->status.xcvr;
 	len = min_t(u32, sizeof(xcvr->sprom), ee->len);
-	memcpy(data, xcvr->sprom, len);
 
-	dev_dbg(&lif->netdev->dev, "notifyblock eid=0x%llx link_status=0x%x link_speed=0x%x link_down_cnt=0x%x\n",
-		lif->info->status.eid,
-		lif->info->status.link_status,
-		lif->info->status.link_speed,
-		lif->info->status.link_down_count);
-	dev_dbg(&lif->netdev->dev, "  port_status id=0x%x status=0x%x speed=0x%x\n",
-		idev->port_info->status.id,
-		idev->port_info->status.status,
-		idev->port_info->status.speed);
-	dev_dbg(&lif->netdev->dev, "    xcvr status state=0x%x phy=0x%x pid=0x%x\n",
-		xcvr->state, xcvr->phy, xcvr->pid);
-	dev_dbg(&lif->netdev->dev, "  port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
-		idev->port_info->config.state,
-		idev->port_info->config.speed,
-		idev->port_info->config.mtu,
-		idev->port_info->config.an_enable,
-		idev->port_info->config.fec_type,
-		idev->port_info->config.pause_type,
-		idev->port_info->config.loopback_mode);
+	do {
+		memcpy(data, xcvr->sprom, len);
+		memcpy(tbuf, xcvr->sprom, len);
+
+		/* Let's make sure we got a consistent copy */
+		if (!memcmp(data, tbuf, len))
+			break;
+
+	} while (--count);
+
+	if (!count)
+		return -ETIMEDOUT;
 
 	return 0;
 }
