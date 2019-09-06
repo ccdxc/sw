@@ -48,64 +48,84 @@ func init() {
 var cmdToExecute = `
 Cmds:
  -
-   cmd: pcieutil port
+   cmd: pcieutilport
+   lcmd: pcieutil port
    outputfile: pcieutil.port
  -
-   cmd: pcieutil portstats
+   cmd: pcieutilportstats
+   lcmd: pcieutil portstats
    outputfile: pcieutil.portstats
  -
-   cmd: pcieutil stats
+   cmd: pcieutilstats
+   lcmd: pcieutil stats
    outputfile: pcieutil.stats
  -
-   cmd: pcieutil counters
+   cmd: pcieutilcounters
+   lcmd: pcieutil counters
    outputfile: pcieutil.counters
  -
-   cmd: pcieutil dev
+   cmd: pcieutildev
+   lcmd: pcieutil dev
    outputfile: pcieutil.dev
  -
-   cmd: pcieutil devintr
+   cmd: pcieutildevintr
+   lcmd: pcieutil devintr
    outputfile: pcieutil.devintr
  -
-   cmd: pcieutil bar
+   cmd: pcieutilbar
+   lcmd: pcieutil bar
    outputfile: pcieutil.bar
  -
-   cmd: pcieutil pmt
+   cmd: pcieutilpmt
+   lcmd: pcieutil pmt
    outputfile: pcieutil.pmt
  -
-   cmd: pcieutil prt
+   cmd: pcieutilprt
+   lcmd: pcieutil prt
    outputfile: pcieutil.prt
  -
-   cmd: pcieutil aximst
+   cmd: pcieutilaximst
+   lcmd: pcieutil aximst
    outputfile: pcieutil.aximst
  -
-   cmd: ifconfig -a
+   cmd: listintf
+   lcmd: ifconfig -a
    outputfile: ifconfig.out
  -
-   cmd: fwupdate -l
+   cmd: listfirmware
+   lcmd: fwupdate -l
    outputfile: fw_version.out
  -
-   cmd: ps
+   cmd: listprocesses
+   lcmd: ps
    outputfile: ps.out
  -
-   cmd: df
+   cmd: filesystemdiskspace
+   lcmd: df
    outputfile: df.out
  -
-   cmd: delphictl db get UpgReq
+   cmd: delphictldbgetUpgReq
+   lcmd: delphictl db get UpgReq
    outputfile: upgreq.out
  -
-   cmd: delphictl db get UpgResp
+   cmd: delphictldbgetUpgResp
+   lcmd: delphictl db get UpgResp
    outputfile: upgresp.out
  -
-   cmd: delphictl db get UpgStateReq
+   cmd: delphictldbgetUpgStateReq
+   lcmd: delphictl db get UpgStateReq
    outputfile: upgstatereq.out
  -
-   cmd: delphictl db get UpgAppResp
+   cmd: delphictldbgetUpgAppResp
+   lcmd: delphictl db get UpgAppResp
    outputfile: upgappresp.out
  -
-   cmd: delphictl db get UpgApp
+   cmd: delphictldbgetUpgApp
+   lcmd: delphictl db get UpgApp
    outputfile: upgapp.out
  -
-   cmd: uptime
+   cmd: sysuptime
+   lcmd: uptime
    outputfile: uptime.out
 `
 
@@ -113,6 +133,7 @@ Cmds:
 type NaplesCmds struct {
 	Cmds []struct {
 		Cmd        string `yaml:"cmd"`
+		LCmd       string `yaml:"lcmd"`
 		Outputfile string `yaml:"outputfile"`
 	} `yaml:"Cmds"`
 }
@@ -227,6 +248,9 @@ func execTechSupportCmds(cmdToExecute string, cmdDestDir string) error {
 		if isNaplesReachableOverLocalHost() == nil {
 			fmt.Println("Executing cmd locally")
 			var ret string
+			lcmd := strings.Fields(naplesCmd.LCmd)
+			v.Executable = lcmd[0]
+			v.Opts = strings.Join(lcmd[1:], " ")
 			ret, err = execCmd(v)
 			resp = []byte(ret)
 		} else {
@@ -236,7 +260,7 @@ func execTechSupportCmds(cmdToExecute string, cmdDestDir string) error {
 			fmt.Println(err)
 		}
 		if len(resp) > 3 {
-			fmt.Println(naplesCmd.Cmd)
+			fmt.Println(v.Executable + " " + v.Opts)
 			s := strings.Replace(string(resp), `\n`, "\n", -1)
 			s = strings.Replace(s, "\\", "", -1)
 			file = cmdDestDir + "/" + naplesCmd.Outputfile

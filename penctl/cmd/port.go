@@ -77,8 +77,8 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: "halctlshowport",
+		Opts:       strings.Join(execCmd[3:], " "),
 	}
 
 	naplesExecCmd(v)
@@ -90,12 +90,18 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	halctlStr := "halctl show port "
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
+		execCmd := strings.Fields(halctlStr)
+		v := &nmd.NaplesCmdExecute{
+			Executable: "halctlshowport",
+			Opts:       strings.Join(execCmd[3:], " "),
+		}
+		naplesExecCmd(v)
+		return
 	}
 
-	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: "halctlshowport",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 
 	naplesExecCmd(v)
@@ -111,8 +117,8 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: "halctlshowport",
+		Opts:       strings.Join(execCmd[3:], " "),
 	}
 
 	naplesExecCmd(v)
@@ -182,8 +188,8 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: "halctldebug",
+		Opts:       strings.Join(execCmd[2:], " "),
 	}
 
 	naplesExecCmd(v)

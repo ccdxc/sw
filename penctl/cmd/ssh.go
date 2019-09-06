@@ -66,14 +66,14 @@ func delSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 
 func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "mkdir",
-		Opts:       strings.Join([]string{"/root/.ssh/"}, ""),
+		Executable: "mksshdir",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	naplesExecCmd(v)
 
 	v = &nmd.NaplesCmdExecute{
-		Executable: "touch",
-		Opts:       strings.Join([]string{"/root/.ssh/authorized_keys"}, ""),
+		Executable: "touchsshauthkeys",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		return err
@@ -121,16 +121,16 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 
 func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/etc/init.d/S50sshd",
-		Opts:       strings.Join([]string{"disable"}, ""),
+		Executable: "disablesshd",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		fmt.Println(err)
 		return errors.New("Unable to disable sshd")
 	}
 	v = &nmd.NaplesCmdExecute{
-		Executable: "/etc/init.d/S50sshd",
-		Opts:       strings.Join([]string{"stop"}, ""),
+		Executable: "stopsshd",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		fmt.Println(err)
@@ -145,23 +145,23 @@ func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 
 func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "ssh-keygen",
-		Opts:       strings.Join([]string{"-A"}, ""),
+		Executable: "pensshkeygen",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		fmt.Println(err)
 		return errors.New("Unable to create missing keys")
 	}
 	v = &nmd.NaplesCmdExecute{
-		Executable: "/etc/init.d/S50sshd",
-		Opts:       strings.Join([]string{"enable"}, ""),
+		Executable: "enablesshd",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		fmt.Println(err)
 		return errors.New("Unable to enable sshd")
 	}
 	v = &nmd.NaplesCmdExecute{
-		Executable: "/etc/init.d/S50sshd",
+		Executable: "startsshd",
 		Opts:       strings.Join([]string{"start"}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
@@ -169,8 +169,8 @@ func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Unable to start sshd")
 	}
 	v = &nmd.NaplesCmdExecute{
-		Executable: "touch",
-		Opts:       strings.Join([]string{"/var/lock/sshd"}, ""),
+		Executable: "touchsshdlock",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }

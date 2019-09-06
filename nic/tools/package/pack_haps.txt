@@ -229,6 +229,7 @@ nic/tools/bringup_mgmt_ifs.sh                                       /nic/tools/
 nic/tools/firewall.sh                                               /nic/tools/
 nic/tools/clear_nic_config.sh                                       /nic/tools/
 nic/tools/sysmgr_debug.sh                                           /nic/tools/
+nic/tools/serial_console.sh                                         /nic/tools/
 nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /nic/tools/
 nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /etc/bash_completion.d/
 nic/tools/.bashrc                                                   /root/

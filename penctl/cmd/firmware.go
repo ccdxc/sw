@@ -106,8 +106,8 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 
 func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-r"}, ""),
+		Executable: "showRunningFirmware",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 
 	resp, err := restGetWithBody(v, "cmd/v1/naples/")
@@ -128,24 +128,24 @@ func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 
 func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-S"}, ""),
+		Executable: "showStartupFirmware",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-s ", "mainfwa"}, ""),
+		Executable: "setStartupToMainfwa",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-s ", "mainfwb"}, ""),
+		Executable: "setStartupToMainfwb",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
@@ -190,8 +190,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		fw = "goldfw"
 	}
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-p ", "/update/" + firmware, " -i " + fw}, ""),
+		Executable: "installFirmware",
+		Opts:       strings.Join([]string{firmware, " " + fw}, ""),
 	}
 
 	if err = naplesExecCmd(v); err != nil {
@@ -216,8 +216,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 
 	if goldfw == false {
 		v = &nmd.NaplesCmdExecute{
-			Executable: "fwupdate",
-			Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
+			Executable: "setStartupToAltfw",
+			Opts:       strings.Join([]string{""}, ""),
 		}
 		if err := naplesExecCmd(v); err != nil {
 			return err

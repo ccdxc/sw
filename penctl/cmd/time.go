@@ -51,33 +51,32 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 	symlink, err := filepath.EvalSymlinks("/etc/localtime")
 	if err == nil {
 		v := &nmd.NaplesCmdExecute{
-			Executable: "ln",
-			Opts:       strings.Join([]string{"-sf", symlink, "/etc/localtime"}, " "),
+			Executable: "lnlocaltime",
+			Opts:       strings.Join([]string{symlink}, " "),
 		}
 		if err := naplesExecCmd(v); err != nil {
 			return err
 		}
 	}
 	dateString := time.Now().Format("Jan 2 15:04:05 2006")
-	opts := strings.Join([]string{"--set ", dateString}, "")
 	v := &nmd.NaplesCmdExecute{
-		Executable: "date",
-		Opts:       opts,
+		Executable: "setdate",
+		Opts:       strings.Join([]string{dateString}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		return err
 	}
 
 	v = &nmd.NaplesCmdExecute{
-		Executable: "hwclock",
-		Opts:       strings.Join([]string{"-wu"}, ""),
+		Executable: "sethwclock",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func showSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "date",
+		Executable: "getdate",
 		Opts:       "",
 	}
 	return naplesExecCmd(v)

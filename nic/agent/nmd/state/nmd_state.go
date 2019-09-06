@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -866,6 +867,37 @@ func NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
 	return resp, nil
 }
 
+func copyFile(src, dst string, mode os.FileMode) error {
+	// First try to make the directory if it doesn't exist
+	err := os.MkdirAll(filepath.Dir(dst), 0755)
+	if err != nil {
+		log.Errorf("failed creating directory: %s", err)
+		return err
+	}
+
+	srcf, err := os.Open(src)
+	if err != nil {
+		log.Errorf("failed opening file: %s", err)
+		return err
+	}
+	defer srcf.Close()
+
+	dstf, err := os.OpenFile(dst, os.O_CREATE|os.O_RDWR, mode)
+	if err != nil {
+		log.Errorf("failed creating file: %s", err)
+		return err
+	}
+	defer dstf.Close()
+
+	_, err = io.Copy(dstf, srcf)
+	if err != nil {
+		log.Errorf("failed copying file: %s", err)
+		return err
+	}
+
+	return nil
+}
+
 func appendAuthorizedKeyFile(sshPubKeyFile string) error {
 	file, err := os.OpenFile("/root/.ssh/authorized_keys", os.O_WRONLY|os.O_APPEND, os.ModeAppend)
 	if err != nil {
@@ -892,31 +924,67 @@ var allowedCommands map[string]int
 
 func initAllowedCommands() {
 	allowedCommands = make(map[string]int)
-	allowedCommands["fwupdate"] = 1
-	allowedCommands["halctl"] = 2
-	allowedCommands["ls"] = 3
-	allowedCommands["penrmfirmware"] = 4
-	allowedCommands["free"] = 5
-	allowedCommands["cat"] = 6
-	allowedCommands["pensettimezone"] = 7
-	allowedCommands["ln"] = 8
-	allowedCommands["hwclock"] = 9
-	allowedCommands["date"] = 10
-	allowedCommands["setsshauthkey"] = 11
-	allowedCommands["clear_nic_config.sh"] = 12
-	allowedCommands["mkdir"] = 13
-	allowedCommands["touch"] = 14
-	allowedCommands["penrmauthkeys"] = 15
-	allowedCommands["killall"] = 16
-	allowedCommands["penrmsshdfiles"] = 17
-	allowedCommands["ssh-keygen"] = 18
-	allowedCommands["/etc/init.d/S50sshd"] = 19
-	allowedCommands["penrmpubkey"] = 20
-	allowedCommands["/nic/bin/halctl"] = 21
-	allowedCommands["ifconfig"] = 22
-	allowedCommands["pcieutil"] = 23
-	allowedCommands["ps"] = 24
-	allowedCommands["delphictl"] = 25
+	allowedCommands["showRunningFirmware"] = 1
+	allowedCommands["showStartupFirmware"] = 2
+	allowedCommands["setStartupToMainfwa"] = 3
+	allowedCommands["setStartupToMainfwb"] = 4
+	allowedCommands["setStartupToAltfw"] = 5
+	allowedCommands["installFirmware"] = 6
+	allowedCommands["penrmfirmware"] = 7
+	allowedCommands["pensettimezone"] = 8
+	allowedCommands["sethwclock"] = 9
+	allowedCommands["setsshauthkey"] = 10
+	allowedCommands["eraseConfig"] = 11
+	allowedCommands["factoryDefault"] = 12
+	allowedCommands["penrmauthkeys"] = 13
+	allowedCommands["penrmsshdfiles"] = 14
+	allowedCommands["penrmpubkey"] = 15
+	allowedCommands["pcieutilport"] = 16
+	allowedCommands["pcieutilportstats"] = 17
+	allowedCommands["pcieutilstats"] = 18
+	allowedCommands["pcieutilcounters"] = 19
+	allowedCommands["pcieutildev"] = 20
+	allowedCommands["pcieutildevintr"] = 21
+	allowedCommands["pcieutilbar"] = 22
+	allowedCommands["pcieutilpmt"] = 23
+	allowedCommands["pcieutilprt"] = 24
+	allowedCommands["pcieutilaximst"] = 25
+	allowedCommands["delphictldbgetUpgReq"] = 26
+	allowedCommands["delphictldbgetUpgResp"] = 27
+	allowedCommands["delphictldbgetUpgStateReq"] = 28
+	allowedCommands["delphictldbgetUpgAppResp"] = 29
+	allowedCommands["delphictldbgetUpgApp"] = 30
+	allowedCommands["listintf"] = 31
+	allowedCommands["listfirmware"] = 32
+	allowedCommands["halctlshowinterface"] = 33
+	allowedCommands["halctlshowinterfacetunnel"] = 34
+	allowedCommands["halctlshowinterfacetunnelmplsoudp"] = 35
+	allowedCommands["halctldebugdeleteinterface"] = 36
+	allowedCommands["halctldebugupdateinterface"] = 37
+	allowedCommands["halctlshowport"] = 38
+	allowedCommands["halctldebug"] = 39
+	allowedCommands["mksshdir"] = 40
+	allowedCommands["touchsshauthkeys"] = 41
+	allowedCommands["pensshkeygen"] = 42
+	allowedCommands["touchsshdlock"] = 43
+	allowedCommands["disablesshd"] = 44
+	allowedCommands["stopsshd"] = 45
+	allowedCommands["enablesshd"] = 46
+	allowedCommands["startsshd"] = 47
+	allowedCommands["lnlocaltime"] = 48
+	allowedCommands["setdate"] = 49
+	allowedCommands["getdate"] = 50
+	allowedCommands["getsysmem"] = 51
+	allowedCommands["getprocmeminfo"] = 52
+	allowedCommands["halctlshowqosclass"] = 53
+	allowedCommands["halctlshowqosclassgroup"] = 54
+	allowedCommands["halctldebugdeleteqosclassqosgroup"] = 55
+	allowedCommands["halctlshowsystemqueuestats"] = 56
+	allowedCommands["listprocesses"] = 57
+	allowedCommands["filesystemdiskspace"] = 58
+	allowedCommands["sysuptime"] = 59
+	allowedCommands["consoledisable"] = 60
+	allowedCommands["consoleenable"] = 61
 }
 
 func isCmdAllowed(cmd string) bool {
@@ -941,10 +1009,8 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	if !isCmdAllowed(req.Executable) {
 		return "Unknown executable " + req.Executable, errors.New("Unknown executable " + req.Executable)
 	}
-	parts := strings.Fields(req.Opts)
-	if req.Executable == "date" && req.Opts != "" {
-		parts = strings.SplitN(req.Opts, " ", 2)
-	} else if req.Executable == "pensettimezone" {
+
+	if req.Executable == "pensettimezone" {
 		err := ioutil.WriteFile("/etc/timezone", []byte(req.Opts), 0644)
 		if err != nil {
 			return err.Error(), err
@@ -955,25 +1021,202 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 		if err != nil {
 			return err.Error(), err
 		}
+		err = copyFile("/root/.ssh/authorized_keys",
+			"/sysconfig/config0/.authorized_keys", 0600)
+		if err != nil {
+			return err.Error(), err
+		}
 		return "", nil
 	} else if req.Executable == "penrmpubkey" {
 		req.Executable = "rm"
 		req.Opts = "-rf /update/*"
-		parts = strings.Fields(req.Opts)
 	} else if req.Executable == "penrmsshdfiles" {
 		req.Executable = "rm"
-		req.Opts = "-f /var/lock/sshd /root/.ssh/authorized_keys"
-		parts = strings.Fields(req.Opts)
+		req.Opts = "-f /var/lock/sshd /root/.ssh/authorized_keys " +
+			"/sysconfig/config0/.authorized_keys"
 	} else if req.Executable == "penrmfirmware" {
 		req.Executable = "rm"
 		req.Opts = "-rf /update/*"
-		parts = strings.Fields(req.Opts)
 	} else if req.Executable == "penrmauthkeys" {
 		req.Executable = "rm"
+		req.Opts = "/root/.ssh/authorized_keys " +
+			"/sysconfig/config0/.authorized_keys"
+	} else if req.Executable == "showRunningFirmware" {
+		req.Executable = "fwupdate"
+		req.Opts = "-r"
+	} else if req.Executable == "showStartupFirmware" {
+		req.Executable = "fwupdate"
+		req.Opts = "-S"
+	} else if req.Executable == "setStartupToMainfwa" {
+		req.Executable = "fwupdate"
+		req.Opts = "-s mainfwa"
+	} else if req.Executable == "setStartupToMainfwb" {
+		req.Executable = "fwupdate"
+		req.Opts = "-s mainfwb"
+	} else if req.Executable == "installFirmware" {
+		parts := strings.SplitN(req.Opts, " ", 2)
+		req.Executable = "fwupdate"
+		req.Opts = "-p /update/" + parts[0] + " -i " + parts[1]
+	} else if req.Executable == "setStartupToAltfw" {
+		req.Executable = "fwupdate"
+		req.Opts = "-s altfw"
+	} else if req.Executable == "eraseConfig" {
+		req.Executable = "clear_nic_config.sh"
+		req.Opts = "remove-config"
+	} else if req.Executable == "factoryDefault" {
+		req.Executable = "clear_nic_config.sh"
+		req.Opts = "factory-default"
+	} else if req.Executable == "sethwclock" {
+		req.Executable = "hwclock"
+		req.Opts = "-wu"
+	} else if req.Executable == "pcieutilport" {
+		req.Executable = "pcieutil"
+		req.Opts = "port"
+	} else if req.Executable == "pcieutilportstats" {
+		req.Executable = "pcieutil"
+		req.Opts = "portstats"
+	} else if req.Executable == "pcieutilstats" {
+		req.Executable = "pcieutil"
+		req.Opts = "stats"
+	} else if req.Executable == "pcieutilcounters" {
+		req.Executable = "pcieutil"
+		req.Opts = "counters"
+	} else if req.Executable == "pcieutildev" {
+		req.Executable = "pcieutil"
+		req.Opts = "dev"
+	} else if req.Executable == "pcieutildevintr" {
+		req.Executable = "pcieutil"
+		req.Opts = "devintr"
+	} else if req.Executable == "pcieutilbar" {
+		req.Executable = "pcieutil"
+		req.Opts = "bar"
+	} else if req.Executable == "pcieutilpmt" {
+		req.Executable = "pcieutil"
+		req.Opts = "pmt"
+	} else if req.Executable == "pcieutilprt" {
+		req.Executable = "pcieutil"
+		req.Opts = "prt"
+	} else if req.Executable == "pcieutilaximst" {
+		req.Executable = "pcieutil"
+		req.Opts = "aximst"
+	} else if req.Executable == "delphictldbgetUpgReq" {
+		req.Executable = "delphictl"
+		req.Opts = "db get UpgReq"
+	} else if req.Executable == "delphictldbgetUpgResp" {
+		req.Executable = "delphictl"
+		req.Opts = "db get UpgResp"
+	} else if req.Executable == "delphictldbgetUpgStateReq" {
+		req.Executable = "delphictl"
+		req.Opts = "db get UpgStateReq"
+	} else if req.Executable == "delphictldbgetUpgAppResp" {
+		req.Executable = "delphictl"
+		req.Opts = "db get UpgAppResp"
+	} else if req.Executable == "delphictldbgetUpgApp" {
+		req.Executable = "delphictl"
+		req.Opts = "db get UpgApp"
+	} else if req.Executable == "listintf" {
+		req.Executable = "ifconfig"
+		req.Opts = "-a"
+	} else if req.Executable == "listfirmware" {
+		req.Executable = "fwupdate"
+		req.Opts = "-l"
+	} else if req.Executable == "halctlshowinterface" {
+		req.Executable = "halctl"
+		req.Opts = "show interface"
+	} else if req.Executable == "halctlshowinterfacetunnel" {
+		req.Executable = "halctl"
+		req.Opts = "show interface tunnel"
+	} else if req.Executable == "halctlshowinterfacetunnelmplsoudp" {
+		req.Executable = "halctl"
+		req.Opts = "show interface tunnel mplsoudp"
+	} else if req.Executable == "halctldebugdeleteinterface" {
+		req.Executable = "halctl"
+		req.Opts = "debug delete interface " + req.Opts
+	} else if req.Executable == "halctldebugupdateinterface" {
+		req.Executable = "halctl"
+		req.Opts = "debug update interface " + req.Opts
+	} else if req.Executable == "halctlshowport" {
+		req.Executable = "halctl"
+		req.Opts = "show port " + req.Opts
+	} else if req.Executable == "halctldebug" {
+		req.Executable = "halctl"
+		req.Opts = "debug " + req.Opts
+	} else if req.Executable == "mksshdir" {
+		req.Executable = "mkdir"
+		req.Opts = "/root/.ssh/"
+	} else if req.Executable == "touchsshauthkeys" {
+		req.Executable = "touch"
 		req.Opts = "/root/.ssh/authorized_keys"
-		parts = strings.Fields(req.Opts)
+	} else if req.Executable == "killsshd" {
+		req.Executable = "killall"
+		req.Opts = "sshd"
+	} else if req.Executable == "pensshkeygen" {
+		req.Executable = "ssh-keygen"
+		req.Opts = "-A"
+	} else if req.Executable == "startsshd" {
+		req.Executable = "/usr/sbin/sshd"
+		req.Opts = ""
+	} else if req.Executable == "touchsshdlock" {
+		req.Executable = "touch"
+		req.Opts = "/var/lock/sshd"
+	} else if req.Executable == "lnlocaltime" {
+		req.Executable = "ln"
+		req.Opts = "-sf " + req.Opts + " /etc/localtime"
+	} else if req.Executable == "setdate" {
+		req.Executable = "date"
+		req.Opts = "--set " + req.Opts
+		parts := strings.SplitN(req.Opts, " ", 2)
+		return executeCmd(req, parts)
+	} else if req.Executable == "getdate" {
+		req.Executable = "date"
+		req.Opts = ""
+	} else if req.Executable == "getsysmem" {
+		req.Executable = "free"
+		req.Opts = "-m"
+	} else if req.Executable == "getprocmeminfo" {
+		req.Executable = "cat"
+		req.Opts = "/proc/meminfo"
+	} else if req.Executable == "halctlshowsystemqueuestats" {
+		req.Executable = "halctl"
+		req.Opts = "show system queue-statistics"
+	} else if req.Executable == "halctlshowqosclass" {
+		req.Executable = "halctl"
+		req.Opts = "show qos-class"
+	} else if req.Executable == "halctlshowqosclassgroup" {
+		req.Executable = "halctl"
+		req.Opts = "show qos-class --qosgroup " + req.Opts
+	} else if req.Executable == "halctldebugdeleteqosclassqosgroup" {
+		req.Executable = "halctl"
+		req.Opts = "debug delete qos-class --qosgroup " + req.Opts
+	} else if req.Executable == "listprocesses" {
+		req.Executable = "ps"
+		req.Opts = ""
+	} else if req.Executable == "sysuptime" {
+		req.Executable = "uptime"
+		req.Opts = ""
+	} else if req.Executable == "filesystemdiskspace" {
+		req.Executable = "df"
+		req.Opts = ""
+	} else if req.Executable == "disablesshd" {
+		req.Executable = "/etc/init.d/S50sshd"
+		req.Opts = "disable"
+	} else if req.Executable == "stopsshd" {
+		req.Executable = "/etc/init.d/S50sshd"
+		req.Opts = "stop"
+	} else if req.Executable == "enablesshd" {
+		req.Executable = "/etc/init.d/S50sshd"
+		req.Opts = "enable"
+	} else if req.Executable == "startsshd" {
+		req.Executable = "/etc/init.d/S50sshd"
+		req.Opts = "start"
+	} else if req.Executable == "consoleenable" {
+		req.Executable = "/nic/tools/serial_console.sh"
+		req.Opts = "enable"
+	} else if req.Executable == "consoledisable" {
+		req.Executable = "/nic/tools/serial_console.sh"
+		req.Opts = "disable"
 	}
-	return executeCmd(req, parts)
+	return executeCmd(req, strings.Fields(req.Opts))
 }
 
 func naplesPkgVerify(pkgName string) (string, error) {

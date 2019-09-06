@@ -39,13 +39,6 @@ testcases:
     #-   name    : CHECK_METRICS
     #    testcase: testcases.penctl.lif_metrics
 
-    -   name    : CHECK_EXECUTE
-        testcase: testcases.penctl.execute
-        iterators :
-            type : simple
-            command : [ "/nic/bin/halctl show endpoint --yaml",
-                         "ls -al /nic/bin/ /nic/tools/" ]
-
     -   name    : CHECK_DIAG
         testcase: testcases.penctl.diag
 

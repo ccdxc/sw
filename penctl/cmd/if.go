@@ -115,10 +115,9 @@ func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
 		halctlStr = "halctl show interface tunnel mplsoudp"
 	}
 
-	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: strings.Replace(halctlStr, " ", "", -1),
+		Opts:       strings.Join([]string{""}, ""),
 	}
 
 	naplesExecCmd(v)
@@ -141,8 +140,8 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: "halctldebugdeleteinterface",
+		Opts:       strings.Join(execCmd[4:], " "),
 	}
 
 	if err := naplesExecCmd(v); err != nil {
@@ -178,8 +177,8 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: "halctldebugupdateinterface",
+		Opts:       strings.Join(execCmd[4:], " "),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		str := err.Error()

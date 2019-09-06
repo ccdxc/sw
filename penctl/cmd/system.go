@@ -68,22 +68,22 @@ func init() {
 
 func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "free",
-		Opts:       strings.Join([]string{"-m"}, ""),
+		Executable: "getsysmem",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func getProcMemInfoCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "cat",
-		Opts:       strings.Join([]string{"/proc/meminfo"}, ""),
+		Executable: "getprocmeminfo",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {
-	resp, err := restGet("monitoring/v1/naples/logs/pensando/pciemgrd.log")
+	resp, err := restGet("monitoring/v1/naples/obfl/pciemgrd.log")
 	if err != nil {
 		return err
 	}
@@ -117,12 +117,10 @@ func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
-	halctlStr := "halctl show system queue-statistics "
-
-	execCmd := strings.Fields(halctlStr)
+	//halctlStr := "halctl show system queue-statistics "
 	v := &nmd.NaplesCmdExecute{
-		Executable: execCmd[0],
-		Opts:       strings.Join(execCmd[1:], " "),
+		Executable: "halctlshowsystemqueuestats",
+		Opts:       "",
 	}
 
 	resp, err := restGetWithBody(v, "cmd/v1/naples/")

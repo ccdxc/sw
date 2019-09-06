@@ -4,7 +4,6 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.testcases.penctl.penctldefs as penctldefs
 import iota.test.iris.testcases.penctl.common as common
 
-
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
     return api.types.status.SUCCESS
@@ -15,7 +14,6 @@ def Trigger(tc):
     for n in tc.Nodes:
         common.AddPenctlCommand(req, n, "show proc-meminfo")
         common.AddPenctlCommand(req, n, "show system-memory-usage")
-        common.AddPenctlCommand(req, n, "execute ls -al /nic/bin/ /nic/tools/")
 
     tc.resp = api.Trigger(req)
 

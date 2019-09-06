@@ -33,16 +33,16 @@ func init() {
 
 func eraseConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "clear_nic_config.sh",
-		Opts:       strings.Join([]string{"remove-config"}, ""),
+		Executable: "eraseConfig",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmdNoPrint(v)
 }
 
 func factoryDefaultCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "clear_nic_config.sh",
-		Opts:       strings.Join([]string{"factory-default"}, ""),
+		Executable: "factoryDefault",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmdNoPrint(v)
 }

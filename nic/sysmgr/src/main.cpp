@@ -4,6 +4,7 @@
 #include <string>
 
 #include <ev++.h>
+#include <stdlib.h>
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/utils/penlog/lib/penlog.hpp"
@@ -42,14 +43,22 @@ main(int argc, char *argv[])
     delphi_sdk->RegisterService(svc);
     logger = penlog::logger_init(delphi_sdk, "sysmgr");
     watchdog = Watchdog::create();
-
+    
     if (argc > 1)
     {
         service_factory->load_config(argv[1]);
     }
     else
     {
-        service_factory->load_config(get_main_config_file());
+        std::string config_file;
+        try {
+            config_file = get_main_config_file();
+        } catch (const std::exception & e) {
+            logger->error("get_main_config_file() exception: {}",
+                std::string(e.what()));
+            exit(-1);
+        }
+        service_factory->load_config(config_file);
     }
     
     logger->debug("Trying /data/sysmgr.json");

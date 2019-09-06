@@ -382,7 +382,7 @@ std::string get_main_config_file()
 
         feature = "eth-dev-scale";
     } else {
-        throw std::runtime_error("Unknown forwarding-mode");
+        throw std::runtime_error("Unknown feature-mode");
     }
 
     return "/nic/conf/sysmgr-" + fwd_mode + "-" + feature + ".json";
