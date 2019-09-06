@@ -637,6 +637,10 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			}
 			return nil, errPreOpChecksFailed.makeError(i, []string{err.Error()}, "")
 		}
+		if i == nil {
+			i = orig
+		}
+
 		// Even on a staging buffer do not allow non-temp errors
 		if sok && !s.IsTemporary {
 			return nil, apierrors.AddDetails(s)

@@ -683,7 +683,6 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 		objm.GenerationID = "1"
 	} else {
 		// In cache and in overlay
-		ovObj.oper = operUpdate
 		ovObj.val = obj
 	}
 	ovObj.oper = oper
@@ -692,6 +691,9 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 		// If this is coming from an apply then retain the updateFn, else overwrite.
 		ovObj.updateFn = updateFn
 		ovObj.resVer = resVer
+	}
+	if oper == operUpdate && primary && updateFn != nil {
+		c.reqs.NewConsUpdateRequirement([]apiintf.ConstUpdateItem{{Key: key, Func: updateFn, ResourceVersion: resVer, Into: obj}})
 	}
 	ovObj.val = cacheObj
 	ovObj.URI = uri
@@ -1067,9 +1069,7 @@ func (c *overlay) UpdatePrimary(ctx context.Context, service, method, uri, key, 
 	if !c.ephemeral && (service == "" || method == "") {
 		panic("primary with no service or method")
 	}
-	if updateFn != nil {
-		c.reqs.NewConsUpdateRequirement([]apiintf.ConstUpdateItem{{Key: key, Func: updateFn, ResourceVersion: resVer, Into: obj}})
-	}
+
 	return c.update(ctx, service, method, uri, key, orig, obj, updateFn, resVer, verVer, true)
 }
 

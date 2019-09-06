@@ -57,6 +57,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./nic/delphi/compiler/... \
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 							./vendor/github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc \
+							./venice/utils/doctool
 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa
@@ -401,7 +402,7 @@ fixtures:
 	fi
 	@if [ -z ${BYPASS_DOCS} ]; then \
 		echo "++ generating documentation"; \
-		tools/scripts/gendocs.sh "${REGISTRY_URL}/${UI_BUILD_CONTAINER}" ;\
+		tools/scripts/gendocs.sh "${REGISTRY_URL}/${BUILD_CONTAINER}" "${REGISTRY_URL}/${UI_BUILD_CONTAINER}" ;\
 		cp -r api/docs tools/docker-files/apigw; \
 		cp -r docs/examples tools/docker-files/apigw/docs; \
 	fi

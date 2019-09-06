@@ -1,16 +1,17 @@
 #!/bin/bash
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 2 ]; then
     echo "Invalid number of arguments"
     echo " $0 <protobuf file directory>"
     exit 1
 fi
-container=$1
+bld_container=$1
+container=$2
 
 rm -rf ${PWD}/api/docs/generated/
 mkdir -p ${PWD}/api/docs/generated/
-go install ./venice/utils/doctool
 
-doctool -c ./api/docs/config.yaml || exit 1
+echo "+++ running doctool"
+docker run --user `id -u`:`id -g` --rm -e "GOPATH=/import" -v${PWD}:/import/src/github.com/pensando/sw -v${PWD}/bin/cbin:/import/bin -w /import/src/github.com/pensando/sw ${bld_container} bash -c "doctool -c /import/src/github.com/pensando/sw/api/docs/config.yaml"
 
 while read -r line || [[ -n "$line" ]];
 do

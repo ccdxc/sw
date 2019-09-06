@@ -124,7 +124,7 @@ func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs
 		sgpKey := strings.TrimSuffix(pol.MakeKey(string(apiclient.GroupSecurity)), "/")
 
 		if err := kvs.List(ctx, sgpKey, &sgPolicies); err != nil {
-			return nil, false, fmt.Errorf("failed to list SGPolicies. Err: %v", err)
+			return nil, true, fmt.Errorf("failed to list SGPolicies. Err: %v", err)
 		}
 
 		// filter out policy with same name
@@ -137,7 +137,7 @@ func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs
 		// check if we are exceeding max limit
 		if len(sgPolicies.Items) >= globals.MaxAllowedSGPolicies {
 			log.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
-			return nil, false, fmt.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
+			return nil, true, fmt.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
 		}
 		return i, true, nil
 	default:
