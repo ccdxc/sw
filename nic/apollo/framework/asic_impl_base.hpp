@@ -104,13 +104,11 @@ public:
     ///              highidx High Index for stats to be read
     ///              ctxt    Opaque context to be passed to callback
     /// \return      SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt) {
+    virtual sdk_ret_t meter_stats(debug::meter_stats_get_cb_t cb,
+                                  uint32_t lowidx, uint32_t highidx,
+                                  void *ctxt) {
         return SDK_RET_ERR;
     }
-
-    /// \brief Dump all the debug information to given file
-    /// \param[in] fp File handle
-    virtual void debug_dump(FILE *fp) {}
 
 private:
     sdk::platform::asic_type_t asic_type_;

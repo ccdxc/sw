@@ -152,10 +152,6 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t flow_clear(uint32_t idx) override;
 
-    /// \brief     dump all the debug information to given file
-    /// \param[in] fp file handle
-    void debug_dump(FILE *fp);
-
 private:
     /// \brief constructor
     apollo_impl() {}
@@ -195,14 +191,6 @@ private:
     /// \brief  program all p4/p4+ tables that require one time initialization
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_init_(void);
-
-    /// \brief     dump ingress drop statistics
-    /// \param[in] fp file handle
-    void dump_ingress_drop_stats_(FILE *fp);
-
-    /// \brief     dump egress drop statistics
-    /// \param[in] fp file handle
-    void dump_egress_drop_stats_(FILE *fp);
 
     /// \brief     apollo specific mpu program sort function
     /// \param[in] program information

@@ -83,7 +83,6 @@ static void
 sig_handler (int sig, siginfo_t *info, void *ptr)
 {
     PDS_TRACE_DEBUG("Caught signal %d", sig);
-    debug::system_dump("/tmp/debug.info");
 }
 
 static void

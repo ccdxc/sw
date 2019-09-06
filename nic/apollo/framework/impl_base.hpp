@@ -45,11 +45,6 @@ public:
     /// \brief destroy function which should be called at teardown
     static void destroy(void);
 
-    /// \brief Dump all the debug information to given file
-    ///
-    /// \param[in] fp File handle
-    static void debug_dump(FILE *fp);
-
     /// \brief Factory method to instantiate an impl object
     ///
     /// \param[in] impl Object id

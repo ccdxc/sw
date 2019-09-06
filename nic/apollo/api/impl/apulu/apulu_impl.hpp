@@ -105,8 +105,9 @@ public:
     /// \param[in]  highidx High Index for stats to be read
     /// \param[in]  ctxt    Opaque context to be passed to callback
     /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
-                                    uint32_t highidx, void *ctxt) override;
+    virtual sdk_ret_t session_stats(debug::session_stats_get_cb_t cb,
+                                    uint32_t lowidx, uint32_t highidx,
+                                    void *ctxt) override;
 
     /// \brief      API to get session
     /// \param[in]  cb      callback to be called on session
@@ -129,10 +130,6 @@ public:
     /// \param[in]  idx     Index for flow to be cleared
     /// \return     SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t flow_clear(uint32_t idx) override;
-
-    /// \brief     dump all the debug information to given file
-    /// \param[in] fp file handle
-    void debug_dump(FILE *fp);
 
 private:
     /// \brief constructor
@@ -173,14 +170,6 @@ private:
     /// \brief  program all p4/p4+ tables that require one time initialization
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_init_(void);
-
-    /// \brief     dump ingress drop statistics
-    /// \param[in] fp file handle
-    void dump_ingress_drop_stats_(FILE *fp);
-
-    /// \brief     dump egress drop statistics
-    /// \param[in] fp file handle
-    void dump_egress_drop_stats_(FILE *fp);
 
     /// \brief     apulu specific mpu program sort function
     /// \param[in] program information

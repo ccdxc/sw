@@ -95,7 +95,8 @@ public:
      *              ctxt    Opaque context to be passed to callback
      * @return      SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) override;
+    virtual sdk_ret_t pb_stats(debug::pb_stats_get_cb_t cb,
+                               void *ctxt) override;
 
     /**
      * @brief      Meter Stats Get
@@ -105,13 +106,9 @@ public:
      *              ctxt    Opaque context to be passed to callback
      * @return      SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt) override;
-
-    /**
-     * @brief    dump all the debug information to given file
-     * @param[in] fp    file handle
-     */
-    virtual void debug_dump(FILE *fp);
+    virtual sdk_ret_t meter_stats(debug::meter_stats_get_cb_t cb,
+                                  uint32_t lowidx, uint32_t highidx,
+                                  void *ctxt) override;
 
 private:
     capri_impl() {}
@@ -123,13 +120,6 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t init_(void);
-
-    /**
-     * @brief    dump per TM port stats
-     * @param[in] fp       file handle
-     * @param[in] stats    pointer to the stats
-     */
-    void dump_tm_debug_stats_(FILE *fp, tm_pb_debug_stats_t *debug_stats);
 
 private:
     asic_cfg_t           asic_cfg_;

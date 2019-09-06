@@ -14,8 +14,6 @@
 
 namespace debug {
 
-sdk_ret_t system_dump(const char *filename);
-
 }    // namespace debug
 
 #endif    /** __DEBUG_HPP__ */

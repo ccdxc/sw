@@ -572,39 +572,6 @@ apollo_impl::pipeline_init(void) {
     return SDK_RET_OK;
 }
 
-void
-apollo_impl::dump_egress_drop_stats_(FILE *fp) {
-}
-
-void
-apollo_impl::dump_ingress_drop_stats_(FILE *fp) {
-    sdk_ret_t                         ret;
-    uint64_t                          pkts;
-    sltcam                            *table;
-    sdk::table::sdk_table_api_stats_t api_stats = { 0 };
-    sdk::table::sdk_table_stats_t     table_stats = { 0 };
-
-    table = apollo_impl_db()->ingress_drop_stats_tbl();
-    ret = table->stats_get(&api_stats, &table_stats);
-    fprintf(fp, "insert_fail %u, get_fail %u, remove_fail %u, \
-            release_fail %u, reserve_fail %u \n", api_stats.insert_fail,
-            api_stats.get_fail, api_stats.remove_fail, api_stats.release_fail,
-            api_stats.reserve_fail);
-    fprintf(fp, "entries %u, collisions %u, insert %u, remove %u \
-            read %u, write %u\n", table_stats.entries, table_stats.collisions,
-            table_stats.insert, table_stats.remove, table_stats.read,
-            table_stats.write);
-    fprintf(fp, "\n");
-}
-
-void
-apollo_impl::debug_dump(FILE *fp) {
-    fprintf(fp, "Ingress drop statistics\n");
-    dump_ingress_drop_stats_(fp);
-    fprintf(fp, "Egress drop statistics\n");
-    dump_egress_drop_stats_(fp);
-}
-
 sdk_ret_t
 apollo_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
                                   uint8_t action_id, void *actiondata) {

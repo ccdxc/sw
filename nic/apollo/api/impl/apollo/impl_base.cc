@@ -59,12 +59,6 @@ impl_base::destroy(void) {
     asic_impl_->destroy(asic_impl_);
 }
 
-void
-impl_base::debug_dump(FILE *fp) {
-    asic_impl_->debug_dump(fp);
-    pipeline_impl_->debug_dump(fp);
-}
-
 impl_base *
 impl_base::factory(impl_obj_id_t obj_id, void *args) {
     switch (obj_id) {
