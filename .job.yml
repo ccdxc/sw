@@ -60,46 +60,53 @@ image:
   bind_dir: "/sw"
   work_dir: "/sw"
 queue_name: builder
-references:
-  - nic
-  - penctl
-  - nic/apollo
-  - nic/sdk
-  - dol
-  - venice
-  - api
-  - platform
-  - nic/agent
-  - test
-  - docs
-  - venice/ui
+jobs:
+  api:
+  docs:
+  dol:
+  iota:
+  iota/test/venice:
+  iota/test/no-venice:
+  iota/test/venice/hwtest:
+  iota/test/venice/hwtest/hwregression:
+  nic:
+  nic/agent:
+  nic/apollo:
+  nic/apollo/doc:
+  nic/sdk:
+  nic/utils/ftlite:
+  penctl:
+  platform:
+  platform/drivers/linux:
+  storage/offload:
+  storage/offload/linux-build-test:
+  test:
+  test/ci_targets/e2e:
+  venice:
+  venice/ui:
 #Disabling as failing on top
-#  - test/suites/e2esanities
-  - test/ci_targets/e2e
-# - test/ci_targets/e2erollout
-#  - test/ci_targets/e2etelemetry
-  - storage/offload
-  - storage/offload/linux-build-test
-  - iota
-  - iota/test/venice
-  - iota/test/no-venice
-  - platform/drivers/linux
-  - iota/test/venice/hwtest
-  - iota/test/venice/hwtest/hwregression
-  - nic/utils/ftlite
-  - nic/apollo/doc
+# test/suites/e2esanities:
+# test/ci_targets/e2erollout:
+# test/ci_targets/e2etelemetry:
 
 dependencies:
-  platform:
-    - reference: nic/apollo
-    - reference: iota/test/venice/hwtest
-      exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
-    - reference: iota/test/no-venice
-      exclude_dirs: ["doc"]
-  vendor:
-    - reference: api
-    - reference: venice
+  api:
     - reference: test/ci_targets/e2e
+    - reference: venice/ui
+  dol/apollo:
+    - reference: nic/apollo
+  dol/artemis:
+    - reference: nic/apollo
+  dol/test/networking:
+    - reference: nic
+  events:
+    - reference: venice/ui
+  iota:
+    - reference: iota/test/venice/hwtest
+    - reference: iota/test/no-venice
+      exclude_dirs: ["test/venice", "test/apollo"]
+  metrics:
+    - reference: venice/ui
   nic:
     - reference: iota/test/venice/hwtest
       exclude_dirs: ["apollo", "doc"]
@@ -110,38 +117,31 @@ dependencies:
     - reference: test/ci_targets/e2e
   nic/apollo:
     - reference: nic/apollo/doc
-  nic/sdk:
-    - reference: nic/apollo
   nic/conf/apollo:
     - reference: nic/apollo
   nic/conf/artemis:
     - reference: nic/apollo
-  dol/apollo:
-    - reference: nic/apollo
-  dol/artemis:
-    - reference: nic/apollo
-  dol/test/networking: 
-    - reference: nic
   nic/debug_cli/apollo:
     - reference: nic/apollo
-  venice:
-    - reference: api
-    - reference: test/ci_targets/e2e
+  nic/sdk:
+    - reference: nic/apollo
+  platform:
+    - reference: nic/apollo
     - reference: iota/test/venice/hwtest
+      exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
+    - reference: iota/test/no-venice
+      exclude_dirs: ["doc"]
+  storage/offload:
+    - reference: storage/offload/linux-build-test
   test:
     - reference: api
     - reference: test/ci_targets/e2e
     - reference: platform
-  api:
+  vendor:
+    - reference: api
+    - reference: venice
     - reference: test/ci_targets/e2e
-    - reference: venice/ui
-  metrics:
-    - reference: venice/ui
-  events:
-    - reference: venice/ui
-  iota:
+  venice:
+    - reference: api
+    - reference: test/ci_targets/e2e
     - reference: iota/test/venice/hwtest
-    - reference: iota/test/no-venice
-      exclude_dirs: ["test/venice", "test/apollo"]
-  storage/offload: 
-    - reference: storage/offload/linux-build-test
