@@ -85,12 +85,6 @@ TUNABLE_INT("hw.ionic.enable_msix", &ionic_enable_msix);
 SYSCTL_INT(_hw_ionic, OID_AUTO, enable_msix, CTLFLAG_RWTUN,
     &ionic_enable_msix, 0, "Enable MSI/X");
 
-/* XXX: legacy interrupt is not functional with adminq. */
-int ionic_use_adminq = 1;
-TUNABLE_INT("hw.ionic.use_adminq", &ionic_use_adminq);
-SYSCTL_INT(_hw_ionic, OID_AUTO, use_adminq, CTLFLAG_RDTUN,
-    &ionic_use_adminq, 0, "Enable adminQ");
-
 int adminq_descs = 16;
 TUNABLE_INT("hw.ionic.adminq_descs", &adminq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, adminq_descs, CTLFLAG_RDTUN,
@@ -1175,13 +1169,24 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	m = *m_headp;
 	remain_len = m->m_pkthdr.len;
 	mss = m->m_pkthdr.tso_segsz;
-	/* Calculate the number of descriptors we need for whole TSO segment. */
-	num_descs = (remain_len + mss - 1) / mss;
-	if (!ionic_tx_avail(txq, num_descs)) {
-		stats->no_descs++;
+
+	/* Calculate the number of descriptors needed for the whole TSO */
+	num_descs = (remain_len - hdr_len + mss - 1) / mss;
+	if (num_descs > stats->tso_max_descs)
+		stats->tso_max_descs = num_descs;
+	if (num_descs > txq->num_descs) {
+		stats->tso_too_big++;
 		bus_dmamap_unload(txq->buf_tag, first_txbuf->dma_map);
-		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs :%d\n",
-			txq->head_index, txq->tail_index, nsegs);
+		IONIC_TX_TRACE(txq, "TSO too big, num_descs: %d request: %d\n",
+			       txq->num_descs, num_descs);
+		return (ENOSPC);
+	}
+	if (!ionic_tx_avail(txq, num_descs)) {
+		stats->tso_no_descs++;
+		bus_dmamap_unload(txq->buf_tag, first_txbuf->dma_map);
+		IONIC_TX_TRACE(txq,
+			"No space avail, head: %u tail: %u num_descs: %d\n",
+			txq->head_index, txq->tail_index, num_descs);
 		return (ENOSPC);
 	}
 
@@ -1272,12 +1277,14 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		stats->pkts++;
 		stats->bytes += desc_len;
 
+		num_descs--;
 		index = (index + 1) % txq->num_descs;
 		if (index % ionic_tx_stride == 0)
 			ionic_tx_ring_doorbell(txq, index);
 	}
 
 	KASSERT(end, ("No end of frame"));
+	KASSERT(num_descs == 0, ("unexpected num_descs %d", num_descs));
 	if (__IONIC_TSO_DEBUG)
 		ionic_tx_tso_dump(txq, m, seg, nsegs, index);
 	txq->head_index = index;
@@ -1509,8 +1516,6 @@ ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 
 	/* Connect lif to ifnet. */
 	lif->netdev = ifp;
-
-	IONIC_LIF_LOCK_INIT(lif);
 
 	return (0);
 }
@@ -2093,6 +2098,8 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 			&rxq->comp_index, 0, "Completion index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
 			&rxq->num_descs, 0, "Number of descriptors");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "irq", CTLFLAG_RD,
+			&rxq->intr.vector, 0, "Interrupt vector");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "dma_setup_error", CTLFLAG_RD,
 			 &rxstat->dma_map_err, "DMA map setup error");
@@ -2201,6 +2208,12 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
 			 &txstat->tso_max_size, "TSO maximum packet size");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_max_sg", CTLFLAG_RD,
 			 &txstat->tso_max_sg, "TSO maximum number of sg");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_max_descs", CTLFLAG_RD,
+			 &txstat->tso_max_descs, "TSO max number of descs");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_too_big", CTLFLAG_RD,
+			 &txstat->tso_too_big, "TSO too big for ring");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_no_descs", CTLFLAG_RD,
+			 &txstat->tso_no_descs, "TSO descriptors not avail");
 }
 
 /*
@@ -2554,6 +2567,8 @@ ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 			&notifyq->num_descs, 0, "Number of descriptors");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
 			&notifyq->comp_index, 0, "Completion index");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "irq", CTLFLAG_RD,
+			&notifyq->intr.vector, 0, "Interrupt vector");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
 			&lif->last_eid, "Last event Id");
 }
@@ -2769,6 +2784,8 @@ ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
 			&adminq->num_descs, 0, "Number of descriptors");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "irq", CTLFLAG_RD,
+			&adminq->intr.vector, 0, "Interrupt vector");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
 			&adminq->head_index, 0, "Head index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,

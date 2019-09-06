@@ -236,56 +236,6 @@ void ionic_api_put_dbid(struct lif *lif, int dbid)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 
-#define XXX_DEVCMD_HALF_PAGE 0x800
-
-// XXX temp func to get side-band data from 2nd half page of dev_cmd reg space.
-static int SBD_get(struct ionic_dev *idev, void *dst, size_t len)
-{
-	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd_regs;
-	u32 *dst32 = dst;
-	unsigned int i, count;
-
-	// check pointer and size alignment
-	if ((unsigned long)dst & 0x3 || len & 0x3)
-		return -EINVAL;
-
-	// check length fits in 2nd half of page
-	if (len > XXX_DEVCMD_HALF_PAGE)
-		return -EINVAL;
-
-	page32 += XXX_DEVCMD_HALF_PAGE / sizeof(*page32);
-	count = len / sizeof(*page32);
-
-	for (i = 0; i < count; ++i)
-		dst32[i] = ioread32(&page32[i]);
-
-	return 0;
-}
-
-// XXX temp func to put side-band data into 2nd half page of dev_cmd reg space.
-static int SBD_put(struct ionic_dev *idev, void *src, size_t len)
-{
-	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd_regs;
-	u32 *src32 = src;
-	unsigned int i, count;
-
-	// check pointer and size alignment
-	if ((unsigned long)src & 0x3 || len & 0x3)
-		return -EINVAL;
-
-	// check length fits in 2nd half of page
-	if (len > XXX_DEVCMD_HALF_PAGE)
-		return -EINVAL;
-
-	page32 += XXX_DEVCMD_HALF_PAGE / sizeof(*page32);
-	count = len / sizeof(*page32);
-
-	for (i = 0; i < count; ++i)
-		iowrite32(src32[i], &page32[i]);
-
-	return 0;
-}
-
 static void ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
 {
 	IONIC_NETDEV_INFO(adminq->lif->netdev, "ring doorbell for index: %d\n", index);
@@ -319,36 +269,13 @@ static int ionic_api_do_devcmd(struct lif* lif, struct ionic_admin_ctx *ctx)
 				     &ctx->cmd, sizeof(ctx->cmd), true);
 	}
 
-	if (ctx->side_data) {
-		if (__IONIC_DEBUG)
-			print_hex_dump_debug("data ", DUMP_PREFIX_OFFSET, 16, 1,
-					     ctx->side_data, ctx->side_data_len, true);
-		err = SBD_put(idev, ctx->side_data, ctx->side_data_len);
-		if (err) {
-			IONIC_NETDEV_ERROR(lif->netdev, "SBD_put failed, error: %d\n", err);
-			goto err_out;
-		}
-    }
-
 	ionic_dev_cmd_go(idev, (void *)&ctx->cmd);
 
-	/* XXX: sleep while holding spinlock... this is just temporary */
 	err = ionic_dev_cmd_wait_check(idev, HZ * 10);
 	if (err)
 		goto err_out;
 
 	ionic_dev_cmd_comp(idev, &ctx->comp);
-
-	if (ctx->side_data) {
-		err = SBD_get(idev, ctx->side_data, ctx->side_data_len);
-		if (err) {
-			IONIC_NETDEV_ERROR(lif->netdev, "SBD_get failed, error: %d\n", err);
-			goto err_out;
-		}
-		if (__IONIC_DEBUG)
-			print_hex_dump_debug("data readback ", DUMP_PREFIX_OFFSET, 16, 1,
-					     ctx->side_data, ctx->side_data_len, true);
-	}
 
 	if (__IONIC_DEBUG) {
 		IONIC_NETDEV_INFO(lif->netdev, "comp admin dev command:\n");
@@ -404,7 +331,8 @@ static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
 int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 
-	if (ionic_use_adminq)
+	/* TODO: Will be removed in future commit */
+	if (1)
 		return (ionic_api_do_adminq(lif, ctx));
 	else
 		return ionic_api_do_devcmd(lif, ctx);

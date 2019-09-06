@@ -535,9 +535,11 @@ ionic_cmd_hb_resched(struct ionic_dev *idev)
 	ionic_cmd_hb_stop(idev);
 
 	/* Start again with the new hb_interval */
+	IONIC_WDOG_LOCK(idev);
 	idev->cmd_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
 			   idev->cmd_hb_interval);
+	IONIC_WDOG_UNLOCK(idev);
 }
 
 static void
@@ -637,9 +639,11 @@ ionic_fw_hb_resched(struct ionic_dev *idev)
 	ionic_fw_hb_stop(idev);
 
 	/* Start again with the new hb_interval */
+	IONIC_WDOG_LOCK(idev);
 	idev->fw_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
 			   idev->fw_hb_interval);
+	IONIC_WDOG_UNLOCK(idev);
 }
 
 int
@@ -651,6 +655,8 @@ ionic_wdog_init(struct ionic *ionic)
 	snprintf(name, sizeof(name), "devwdwq%d",
 		 le32_to_cpu(idev->port_info->status.id));
 	idev->wdog_wq = create_singlethread_workqueue(name);
+	INIT_DELAYED_WORK(&idev->cmd_hb_work, ionic_cmd_hb_work);
+	INIT_DELAYED_WORK(&idev->fw_hb_work, ionic_fw_hb_work);
 	IONIC_WDOG_LOCK_INIT(idev);
 
 	/* Device command heartbeat watchdog */
@@ -664,10 +670,11 @@ ionic_wdog_init(struct ionic *ionic)
 	idev->cmd_hb_interval =
 		(unsigned long)ionic_cmd_hb_interval * HZ / 1000;
 
-	INIT_DELAYED_WORK(&idev->cmd_hb_work, ionic_cmd_hb_work);
+	IONIC_WDOG_LOCK(idev);
 	idev->cmd_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
 			   idev->cmd_hb_interval);
+	IONIC_WDOG_UNLOCK(idev);
 
 	/* Firmware heartbeat */
 	if (ionic_fw_hb_interval > 0 &&
@@ -689,10 +696,11 @@ ionic_wdog_init(struct ionic *ionic)
 	idev->fw_hb_state = ionic_fw_hb_interval ?
 		IONIC_FW_HB_INIT : IONIC_FW_HB_DISABLED;
 
-	INIT_DELAYED_WORK(&idev->fw_hb_work, ionic_fw_hb_work);
+	IONIC_WDOG_LOCK(idev);
 	idev->fw_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
 	                   idev->fw_hb_interval);
+	IONIC_WDOG_UNLOCK(idev);
 
 	return 0;
 }

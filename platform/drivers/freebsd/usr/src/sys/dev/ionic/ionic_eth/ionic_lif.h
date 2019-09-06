@@ -56,6 +56,9 @@ struct tx_stats {
 	u64 tso_ipv6;
 	u64 tso_max_sg;
 	u64 tso_max_size;
+	u64 tso_max_descs;
+	u64 tso_too_big;
+	u64 tso_no_descs;
 	u64 bad_ethtype;	/* Unknown Ethernet frame. */
 	u64 wdog_expired;
 };

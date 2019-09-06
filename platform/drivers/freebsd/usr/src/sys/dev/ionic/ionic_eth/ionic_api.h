@@ -230,24 +230,11 @@ void ionic_api_put_dbid(struct lif *lif, int dbid);
  * @work:		Work completion wait queue element.
  * @cmd:		Admin command (64B) to be copied to the queue.
  * @comp:		Admin completion (16B) copied from the queue.
- *
- * @side_data:		Additional data to be copied to the doorbell page,
- *			  if the command is issued as a dev cmd.
- * @side_data_len:	Length of additional data to be copied.
- *
- * TODO:
- * The side_data and side_data_len are temporary and will be removed.  For now,
- * they are used when admin commands referring to side-band data are posted as
- * dev commands instead.  Only single-indirect side-band data is supported.
- * Only 2K of data is supported, because first half of page is for registers.
  */
 struct ionic_admin_ctx {
 	struct completion work;
 	union adminq_cmd cmd;
 	union adminq_comp comp;
-
-	void *side_data;
-	size_t side_data_len;
 };
 
 /** ionic_api_adminq_post - Post an admin command.

@@ -42,19 +42,6 @@ void ionic_rx_filter_free(struct lif *lif, struct rx_filter *f)
 	free(f, M_IONIC);
 }
 
-int ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
-{
-	struct ionic_admin_ctx ctx = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.rx_filter_del = {
-			.opcode = CMD_OPCODE_RX_FILTER_DEL,
-			.filter_id = f->filter_id,
-		},
-	};
-
-	return ionic_api_adminq_post(lif, &ctx);
-}
-
 int ionic_rx_filters_init(struct lif *lif)
 {
 	unsigned int i;

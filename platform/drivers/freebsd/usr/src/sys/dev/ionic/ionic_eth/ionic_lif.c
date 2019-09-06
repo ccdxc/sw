@@ -221,9 +221,11 @@ ionic_adminq_hb_resched(struct lif *lif)
 	ionic_adminq_hb_stop(lif);
 
 	/* Start again with the new hb_interval */
+	IONIC_WDOG_LOCK(lif);
 	lif->adq_hb_resched = true;
 	queue_delayed_work(lif->wdog_wq, &lif->adq_hb_work,
 			   lif->adq_hb_interval);
+	IONIC_WDOG_UNLOCK(lif);
 }
 
 static void
@@ -264,10 +266,19 @@ ionic_txq_wdog_work(struct work_struct *work)
 		ionic_wdog_error_trigger = 0;
 	}
 	if (err) {
+		struct ionic_dev *idev = &lif->ionic->idev;
+		struct rxque *rxq = lif->rxqs[first_txq];
+		u32 mask =
+			ioread32(&idev->intr_ctrl[rxq->intr.index].mask);
+		u32 rxq_intr =
+			ioread32(&idev->intr_ctrl[rxq->intr.index].credits);
+
 		IONIC_QUE_ERROR(lif->adminq,
-				"txq%d watchdog timeout (%lums)\n",
+			"txq%d watchdog timeout (%lums), intr %#x mask %#x\n",
 				first_txq,
-				(ticks - first_wdog_start) * 1000 / HZ);
+				(ticks - first_wdog_start) * 1000 / HZ,
+				rxq_intr, mask);
+
 		err = ionic_lif_reinit(lif, true);
 		if (err) {
 			/* Disable the watchdog */
@@ -299,9 +310,11 @@ ionic_txq_wdog_resched(struct lif *lif)
 	ionic_txq_wdog_stop(lif);
 
 	/* Start again with the new hb_interval */
+	IONIC_WDOG_LOCK(lif);
 	lif->txq_wdog_resched = true;
 	queue_delayed_work(lif->wdog_wq, &lif->txq_wdog_work,
 			   lif->txq_wdog_timeout);
+	IONIC_WDOG_UNLOCK(lif);
 }
 
 /*
@@ -389,8 +402,9 @@ ionic_open(struct lif *lif)
 	ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	if_link_state_change(ifp, LINK_STATE_UP);
 }
+
 /*
- * Disable all queues, mask interrupts.
+ * Disable device, disable all queues, mask interrupts.
  */
 int
 ionic_stop(struct ifnet *ifp)
@@ -1254,6 +1268,8 @@ ionic_register_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	if ((vtag == 0) || (vtag > MAX_VLAN_TAG))  /* Invalid */
 		return;
 
+	IONIC_LIF_LOCK(lif);
+
 	if (lif->vlan_bitmap[index] & BIT(bit)) {
 		IONIC_NETDEV_WARN(lif->netdev, "VLAN: %d is already registered\n", vtag);
 		IONIC_LIF_UNLOCK(lif);
@@ -1269,6 +1285,7 @@ ionic_register_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	lif->vlan_bitmap[index] |= BIT(bit);
 	++lif->num_vlans;
 
+	IONIC_LIF_UNLOCK(lif);
 	IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d registered\n", vtag);
 }
 
@@ -1285,6 +1302,8 @@ ionic_unregister_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	if ((vtag == 0) || (vtag > MAX_VLAN_TAG))  /* Invalid */
 		return;
 
+	IONIC_LIF_LOCK(lif);
+
 	if ((lif->vlan_bitmap[index] & BIT(bit)) == 0) {
 		IONIC_NETDEV_WARN(lif->netdev, "VLAN: %d is not registered\n", vtag);
 		IONIC_LIF_UNLOCK(lif);
@@ -1300,6 +1319,7 @@ ionic_unregister_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	lif->vlan_bitmap[index] &= ~BIT(bit);
 	--lif->num_vlans;
 
+	IONIC_LIF_UNLOCK(lif);
 	IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d unregistered\n", vtag);
 }
 
@@ -2031,7 +2051,7 @@ ionic_qcqs_free(struct lif *lif)
 		ionic_adminq_free(lif, lif->adminq);
 
 	IONIC_LIF_UNLOCK(lif);
-	IONIC_LIF_LOCK_DESTROY(lif);
+
 	free(lif->rxqs, M_IONIC);
 	free(lif->txqs, M_IONIC);
 }
@@ -2135,6 +2155,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		return ENOMEM;
 	}
 
+	IONIC_LIF_LOCK_INIT(lif);
 	snprintf(lif->name, sizeof(lif->name), "%s%u", DRV_NAME, index);
 	snprintf(lif->sx_name, sizeof(lif->sx_name), "%s-core", lif->name);
 	lif->ionic = ionic;
@@ -2158,6 +2179,8 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 	snprintf(name, sizeof(name), "wdwq%d", index);
 	lif->wdog_wq = create_singlethread_workqueue(name);
+	INIT_DELAYED_WORK(&lif->adq_hb_work, ionic_adminq_hb_work);
+	INIT_DELAYED_WORK(&lif->txq_wdog_work, ionic_txq_wdog_work);
 	IONIC_WDOG_LOCK_INIT(lif);
 
 	lif->adq_hb_interval =
@@ -2318,9 +2341,12 @@ ionic_lif_free(struct lif *lif)
 	ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
 
 	/* free netdev & lif */
-	list_del(&lif->list);
 	ionic_lif_netdev_free(lif);
 	free(lif->dbid_inuse, M_IONIC);
+
+	/* free lif */
+	list_del(&lif->list);
+	IONIC_LIF_LOCK_DESTROY(lif);
 	free(lif, M_IONIC);
 }
 
@@ -2459,9 +2485,8 @@ ionic_lif_adminq_deinit(struct lif *lif)
 }
 
 static void
-ionic_lif_notifyq_deinit(struct lif *lif)
+ionic_lif_notifyq_disable(struct lif *lif)
 {
-
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct notifyq *notifyq = lif->notifyq;
 
@@ -2470,26 +2495,45 @@ ionic_lif_notifyq_deinit(struct lif *lif)
 
 	ionic_intr_mask(idev->intr_ctrl, notifyq->intr.index,
 			IONIC_INTR_MASK_SET);
+}
 
-	if (notifyq->taskq) {
+static void
+ionic_lif_notifyq_drain(struct lif *lif)
+{
+	struct notifyq *notifyq = lif->notifyq;
+
+	if (notifyq == NULL || notifyq->taskq == NULL)
+		return;
+
+	while (taskqueue_cancel(notifyq->taskq, &notifyq->task, NULL) != 0)
 		taskqueue_drain(notifyq->taskq, &notifyq->task);
+}
+
+static void
+ionic_lif_txqs_disable(struct lif *lif)
+{
+	struct txque *txq;
+	unsigned int i;
+
+	for (i = 0; i < lif->ntxqs; i++) {
+		txq = lif->txqs[i];
+		ionic_txq_disable(txq);
 	}
 }
 
 static void
-ionic_lif_txqs_deinit(struct lif *lif)
+ionic_lif_txqs_clean(struct lif *lif)
 {
-	unsigned int i;
 	struct txque *txq;
+	unsigned int i;
 
-	for (i = 0; i < lif->nrxqs; i++) {
+	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
-		ionic_txq_disable(txq);
 
 		/*
-		 * RxQ deinit may schedule the task for tx clean but its not guaranteed,
-		 * do explicit clean here.
-		 */	
+		 * RxQ deinit may schedule the task for tx clean but it's
+		 * not guaranteed, so do explicit clean here.
+		 */
 		IONIC_TX_LOCK(txq);
 		ionic_tx_clean(txq, txq->num_descs);
 		IONIC_TX_UNLOCK(txq);
@@ -2497,11 +2541,11 @@ ionic_lif_txqs_deinit(struct lif *lif)
 }
 
 static void
-ionic_lif_rxqs_deinit(struct lif *lif)
+ionic_lif_rxqs_disable(struct lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
-	unsigned int i;
 	struct rxque *rxq;
+	unsigned int i;
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
@@ -2513,6 +2557,17 @@ ionic_lif_rxqs_deinit(struct lif *lif)
 			taskqueue_drain(rxq->taskq, &rxq->tx_task);
 			taskqueue_drain(rxq->taskq, &rxq->task);
 		}
+	}
+}
+
+static void
+ionic_lif_rxqs_clean_empty(struct lif *lif)
+{
+	struct rxque *rxq;
+	unsigned int i;
+
+	for (i = 0; i < lif->nrxqs; i++) {
+		rxq = lif->rxqs[i];
 
 		IONIC_RX_LOCK(rxq);
 		ionic_rx_clean(rxq, rxq->num_descs);
@@ -2539,14 +2594,16 @@ ionic_lif_reset(struct lif *lif)
 static void
 ionic_lif_deinit(struct lif *lif)
 {
-	/* Stop the NQ before stopping data queues. */
-	ionic_lif_notifyq_deinit(lif);
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
+	/* NB: Caller must have already stopped notifyq! */
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_deinit(lif);
 
-	ionic_lif_txqs_deinit(lif);
-	ionic_lif_rxqs_deinit(lif);
+	ionic_lif_rxqs_disable(lif);
+	ionic_lif_txqs_disable(lif);
+	ionic_lif_txqs_clean(lif);
+	ionic_lif_rxqs_clean_empty(lif);
 	ionic_lif_adminq_deinit(lif);
 
 	ionic_lif_reset(lif);
@@ -2561,11 +2618,19 @@ ionic_lifs_deinit(struct ionic *ionic)
 	list_for_each(cur, &ionic->lifs) {
 		lif = list_entry(cur, struct lif, list);
 
-		/* Shut down the watchdogs.
+		/*
+		 * Shut down the watchdogs.
 		 * NB: Must be done before taking the LIF lock!
 		 */
 		ionic_adminq_hb_stop(lif);
 		ionic_txq_wdog_stop(lif);
+
+		/*
+		 * Stop the NotifyQ before stopping data queues.
+		 * NB: Must be done before taking the LIF lock!
+		 */
+		ionic_lif_notifyq_disable(lif);
+		ionic_lif_notifyq_drain(lif);
 
 		IONIC_LIF_LOCK(lif);
 		ionic_lif_deinit(lif);
@@ -2603,11 +2668,10 @@ ionic_lif_adminq_init(struct lif *lif)
 	ionic_dev_cmd_go(idev, &cmd);
 
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	ionic_dev_cmd_comp(idev, &comp);
 	IONIC_DEV_UNLOCK(lif->ionic);
 	if (err)
 		return err;
-
-	ionic_dev_cmd_comp(idev, &comp);
 
 	adminq->hw_type = comp.hw_type;
 	adminq->hw_index = comp.hw_index;
@@ -3250,9 +3314,6 @@ ionic_media_change(struct ifnet *ifp)
 		return (ENODEV);
 
 	switch (IFM_SUBTYPE(ifm->ifm_media)) {
-	case IFM_AUTO:
-		an_enable = 1;
-		break;
 	case IFM_100G_CR4:
 	case IFM_100G_SR4:
 	case IFM_100G_LR4:
@@ -3284,6 +3345,7 @@ ionic_media_change(struct ifnet *ifp)
 		speed = IONIC_SPEED_10G;
 		an_enable = 0;
 		break;
+	case IFM_AUTO:
 	default:
 		speed = 0;
 		an_enable = 1;
@@ -3575,6 +3637,8 @@ ionic_lif_init(struct lif *lif, bool wdog_reset_path)
 	struct q_init_comp comp;
 	int err;
 
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
+
 	IONIC_DEV_LOCK(ionic);
 	ionic_dev_cmd_lif_init(idev, lif->index, lif->info_pa);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
@@ -3604,7 +3668,7 @@ ionic_lif_init(struct lif *lif, bool wdog_reset_path)
 
 	err = ionic_lif_txqs_init(lif);
 	if (err)
-		goto err_out_notifyq_deinit;
+		goto err_out_notifyq_disable;
 
 	err = ionic_lif_rxqs_init(lif);
 	if (err)
@@ -3626,15 +3690,15 @@ ionic_lif_init(struct lif *lif, bool wdog_reset_path)
 
 	/* Start the watchdogs */
 	if (!wdog_reset_path) {
-		INIT_DELAYED_WORK(&lif->adq_hb_work, ionic_adminq_hb_work);
+		IONIC_WDOG_LOCK(lif);
 		lif->adq_hb_resched = true;
 		queue_delayed_work(lif->wdog_wq, &lif->adq_hb_work,
 				   lif->adq_hb_interval);
 
-		INIT_DELAYED_WORK(&lif->txq_wdog_work, ionic_txq_wdog_work);
 		lif->txq_wdog_resched = true;
 		queue_delayed_work(lif->wdog_wq, &lif->txq_wdog_work,
 				   lif->txq_wdog_timeout);
+		IONIC_WDOG_UNLOCK(lif);
 	}
 
 	return err;
@@ -3642,11 +3706,14 @@ ionic_lif_init(struct lif *lif, bool wdog_reset_path)
 err_out_rss_deinit:
 	ionic_lif_rss_deinit(lif);
 err_out_rxqs_deinit:
-	ionic_lif_rxqs_deinit(lif);
+	ionic_lif_rxqs_disable(lif);
+	ionic_lif_rxqs_clean_empty(lif);
 err_out_txqs_deinit:
-	ionic_lif_txqs_deinit(lif);
-err_out_notifyq_deinit:
-	ionic_lif_notifyq_deinit(lif);
+	ionic_lif_txqs_disable(lif);
+	ionic_lif_txqs_clean(lif);
+err_out_notifyq_disable:
+	/* NB: Drain later, after dropping LIF lock */
+	ionic_lif_notifyq_disable(lif);
 err_out_adminq_deinit:
 	ionic_lif_adminq_deinit(lif);
 
@@ -3665,8 +3732,11 @@ ionic_lifs_init(struct ionic *ionic)
 		IONIC_LIF_LOCK(lif);
 		err = ionic_lif_init(lif, false);
 		IONIC_LIF_UNLOCK(lif);
-		if (err)
+		if (err) {
+			/* Wait until after unlock to drain NotifyQ */
+			ionic_lif_notifyq_drain(lif);
 			return err;
+		}
 	}
 
 	return 0;
@@ -3700,6 +3770,13 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 		ionic_txq_wdog_stop(lif);
 	}
 
+	/*
+	 * Stop the NotifyQ before stopping data queues.
+	 * NB: Must be done before taking the LIF lock!
+	 */
+	ionic_lif_notifyq_disable(lif);
+	ionic_lif_notifyq_drain(lif);
+
 	IONIC_LIF_LOCK(lif);
 	lif->num_resets++;
 	was_open = false;
@@ -3717,6 +3794,9 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 	if (error) {
 		IONIC_NETDEV_ERROR(ifp, "init failed, error = %d\n", error);
 		IONIC_LIF_UNLOCK(lif);
+
+		/* Wait until after unlock to drain NotifyQ */
+		ionic_lif_notifyq_drain(lif);
 		return (error);
 	}
 
@@ -3852,6 +3932,7 @@ ionic_lif_register(struct lif *lif)
 	err = ionic_station_add(lif);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "ionic_station_add failed, error = %d\n", err);
+		IONIC_LIF_UNLOCK(lif);
 		return (EIO);
 	}
 
@@ -3867,6 +3948,7 @@ ionic_lif_register(struct lif *lif)
 				| ETH_HW_TSO_IPV6);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "ionic_set_features failed, error = %d\n", err);
+		IONIC_LIF_UNLOCK(lif);
 		return (EIO);
 	}
 

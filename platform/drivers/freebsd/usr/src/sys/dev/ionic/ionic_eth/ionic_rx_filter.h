@@ -67,7 +67,6 @@ struct rx_filters {
 struct ionic_admin_ctx;
 
 void ionic_rx_filter_free(struct lif *lif, struct rx_filter *f);
-int ionic_rx_filter_del(struct lif *lif, struct rx_filter *f);
 int ionic_rx_filters_init(struct lif *lif);
 void ionic_rx_filters_deinit(struct lif *lif);
 int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,

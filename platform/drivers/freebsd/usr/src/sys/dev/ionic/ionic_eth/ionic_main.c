@@ -389,7 +389,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev,
 		return 0;
 	}
 
-	IONIC_ERROR("DEVCMD timeout after %lums\n", msecs);
+	IONIC_ERROR("DEVCMD timeout after %lums (%d waits)\n", msecs, waits);
 
 	return ETIMEDOUT;
 }
