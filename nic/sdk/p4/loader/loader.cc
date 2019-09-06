@@ -151,7 +151,8 @@ sdk_ret_t
 p4_load_mpu_programs (const char *handle,
                          char *pathname, uint64_t hbm_base_addr,
                          p4_param_info_t *prog_param_info,
-                         int num_prog_params, mpu_pgm_sort_t sort_func)
+                         int num_prog_params, mpu_pgm_sort_t sort_func,
+                         bool is_slave)
 {
     int i, j;
     p4_loader_ctx_t *ctx;
@@ -351,14 +352,16 @@ p4_load_mpu_programs (const char *handle,
                            //program_info[i].copy.complete);
        }
 
-       /* Write program to HBM */
-       rv = sdk::asic::asic_mem_write(program_info[i].base_addr,
-                                      (uint8_t *) program_info[i].copy.text.data(),
-                                      program_info[i].size,
-                                      ASIC_WRITE_MODE_WRITE_THRU);
-       if (rv != SDK_RET_OK) {
-           SDK_TRACE_ERR("HBM program write failed");
-           SDK_ASSERT_RETURN(0, SDK_RET_ERR);
+       if (!is_slave) {
+           /* Write program to HBM */
+           rv = sdk::asic::asic_mem_write(program_info[i].base_addr,
+                                          (uint8_t *) program_info[i].copy.text.data(),
+                                          program_info[i].size,
+                                          ASIC_WRITE_MODE_WRITE_THRU);
+           if (rv != SDK_RET_OK) {
+               SDK_TRACE_ERR("HBM program write failed");
+               SDK_ASSERT_RETURN(0, SDK_RET_ERR);
+           }
        }
     }
 

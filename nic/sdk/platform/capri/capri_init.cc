@@ -151,7 +151,8 @@ capri_asm_init (capri_cfg_t *cfg)
            base_addr,
            symbols,
            num_symbols,
-           cfg->asm_cfg[i].sort_func);
+           cfg->asm_cfg[i].sort_func,
+           sdk::asic::is_slave_init());
 
        if (symbols) {
            for (uint32_t j = 0; j < num_symbols; j++) {
@@ -450,13 +451,16 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "capri_state_pd_init failure, err : %d", ret);
 
-    if (capri_table_rw_init(cfg) != CAPRI_OK) {
-        return SDK_RET_ERR;
-    }
-
     // Skip the remaining for the slave initialization
     if (sdk::asic::is_slave_init()) {
+        ret = capri_asm_init(cfg);
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                                "Capri ASM init failure, err : %d", ret);
         goto end;
+    }
+
+    if (capri_table_rw_init(cfg) != CAPRI_OK) {
+        return SDK_RET_ERR;
     }
 
     ret = capri_hbm_regions_init(cfg);

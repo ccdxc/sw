@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __P4PD_HPP__
-#define __P4PD_HPP__
+#ifndef __P4PD_DEFAULTS_HPP__
+#define __P4PD_DEFAULTS_HPP__
 
 // NWSEC profile table
 #define L4_PROF_DEFAULT_ENTRY       0
@@ -40,5 +40,5 @@
 #define MIRROR_FTE_SPAN_IDX 7
 
 
-#endif    // __P4PD_HPP__
+#endif    // __P4PD_DEFAULTS_HPP__
 

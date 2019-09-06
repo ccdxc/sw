@@ -49,6 +49,7 @@ typedef struct asic_cfg_s {
                          *ring_meta;
     platform_type_t      platform;
     completion_cb_t      completion_func;
+    bool                 is_slave;
 } asic_cfg_t;
 
 // initialize the asic

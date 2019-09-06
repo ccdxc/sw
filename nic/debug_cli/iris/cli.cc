@@ -11,6 +11,50 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
+#include "gen/p4gen/p4/include/p4pd.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/iris/p4pd_cfg.hpp"
+
+
+/*
+ * SDK Logger for CLI:
+ * - Only Warnings and Errors are shown on console.
+ */
+sdk_trace_level_e g_cli_trace_level = sdk::lib::SDK_TRACE_LEVEL_WARN;
+static int
+cli_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    if ((int)g_cli_trace_level >= (int)tracel_level)  {
+        va_start(args, format);
+        vsnprintf(logbuf, sizeof(logbuf), format, args);
+        switch (tracel_level) {
+        case sdk::lib::SDK_TRACE_LEVEL_ERR:
+            printf("%s\n", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_WARN:
+            printf("%s\n", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_INFO:
+            printf("%s\n", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+            printf("%s\n", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+            printf("%s\n", logbuf);
+            break;
+        default:
+            break;
+        }
+        va_end(args);
+    }
+
+    return 0;
+}
 
 static bool pd_inited = 0;
 int
@@ -19,42 +63,56 @@ cli_init (char *ptr)
     pal_ret_t    pal_ret;
     p4pd_error_t p4pd_ret;
     capri_cfg_t  capri_cfg;
+    p4pd_cfg_t   p4pd_cfg, p4pd_rxdma_cfg, p4pd_txdma_cfg;
 
-    p4pd_cfg_t p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_table_map.json",
-        .p4pd_pgm_name       = "iris_p4",
-        .p4pd_rxdma_pgm_name = "iris_rxdma",
-        .p4pd_txdma_pgm_name = "iris_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_rxdma_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
-        .p4pd_pgm_name       = "iris_p4",
-        .p4pd_rxdma_pgm_name = "iris_rxdma",
-        .p4pd_txdma_pgm_name = "iris_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_txdma_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
-        .p4pd_pgm_name       = "iris_p4",
-        .p4pd_rxdma_pgm_name = "iris_rxdma",
-        .p4pd_txdma_pgm_name = "iris_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
+    printf("Initing: Please wait for the prompt ...\n");
+
+    // initialize logger
+    sdk::lib::logger::init(cli_sdk_logger);
+
+    // populate cfg
+    pipeline_cfg_init(&p4pd_cfg, &p4pd_rxdma_cfg, &p4pd_txdma_cfg);
 
     // initialize PAL
     pal_ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
 
-    memset(&capri_cfg, 0, sizeof(capri_cfg_t));
-    capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    std::string mpart_json = capri_cfg.cfg_path + "/iris/hbm_mem.json";
-    capri_cfg.mempartition =
+    asic_cfg_t asic_cfg;
+    memset(&asic_cfg, 0, sizeof(asic_cfg_t));
+    asic_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    // asic_cfg.default_config_dir = std::string(std::getenv("HAL_PBC_INIT_CONFIG"));
+    asic_cfg.admin_cos = 1;
+    asic_cfg.num_rings = 0;
+    asic_cfg.ring_meta = NULL;
+    std::string mpart_json = asic_cfg.cfg_path + "/iris/hbm_mem.json";
+    asic_cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
-    // do capri_state_pd_init needed by sdk capri
-    // csr init is done inside capri_state_pd_init
-    sdk::platform::capri::capri_state_pd_init(&capri_cfg);
+    asic_cfg.repl_entry_width = P4_REPL_ENTRY_WIDTH;
+    asic_cfg.pgm_name = std::string("iris");
+
+    asic_cfg.num_pgm_cfgs = 1;
+    asic_cfg.pgm_cfg[0].path = std::string("pgm_bin");
+
+    asic_cfg.num_asm_cfgs = 1;
+    asic_cfg.asm_cfg[0].name = std::string("iris");
+    asic_cfg.asm_cfg[0].path = std::string("asm_bin");
+    asic_cfg.asm_cfg[0].symbols_func = NULL;
+    asic_cfg.asm_cfg[0].sort_func = NULL;
+    asic_cfg.asm_cfg[0].base_addr = std::string(JP4_PRGM);
+
+#if 0
+    asic_cfg.asm_cfg[1].name = std::string("p4plus");
+    asic_cfg.asm_cfg[1].path = std::string("p4plus_bin");
+    asic_cfg.asm_cfg[1].symbols_func = NULL;
+    // asic_cfg.asm_cfg[1].symbols_func = hal::pd::common_p4plus_symbols_init;
+    asic_cfg.asm_cfg[1].sort_func = NULL;
+    asic_cfg.asm_cfg[1].base_addr = std::string(JP4PLUS_PRGM);
+#endif
+
+    // asic_cfg.completion_func = asiccfg_init_completion_event;
+    asic_cfg.completion_func = NULL;
+    SDK_ASSERT(sdk::asic::asic_init(&asic_cfg) == SDK_RET_OK);
 
     // do iris specific initialization
     p4pd_ret = p4pd_init(&p4pd_cfg);
@@ -65,6 +123,8 @@ cli_init (char *ptr)
 
     p4pd_ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
     SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
+
+    SDK_ASSERT(sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);
 
     pd_inited = 1;
     return 0;

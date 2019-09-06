@@ -65,7 +65,8 @@ typedef uint32_t (*mpu_pgm_symbols_t)(void **, platform_type_t);
 sdk_ret_t p4_load_mpu_programs(const char *handle,
                             char *pathname, uint64_t hbm_base_addr,
                             p4_param_info_t *prog_param_info,
-                            int num_prog_params, mpu_pgm_sort_t sort_func);
+                            int num_prog_params, mpu_pgm_sort_t sort_func,
+                            bool is_slave);
 
 /**
  * p4_program_label_to_offset: Resolve a programs, label to its relative

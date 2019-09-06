@@ -59,6 +59,7 @@
 #include "nic/hal/pd/iris/event/hal_event_pd.hpp"
 #include "nic/hal/pd/iris/debug/debug_pd.hpp"
 #include "nic/hal/pd/iris/debug/snake_pd.hpp"
+#include "nic/hal/pd/iris/p4pd_cfg.hpp"
 
 namespace hal {
 namespace pd {
@@ -1049,13 +1050,10 @@ hal_state_pd::p4plus_rxdma_init_tables(pd_mem_init_args_t *args)
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_error_t               rc;
-    p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
-        .p4pd_pgm_name       = "iris",
-        .p4pd_rxdma_pgm_name = "p4plus",
-        .p4pd_txdma_pgm_name = "p4plus",
-        .cfg_path            = args->cfg_path,
-    };
+    p4pd_cfg_t                 p4pd_cfg;
+
+    pipeline_cfg_init(NULL, &p4pd_cfg, NULL);
+    p4pd_cfg.cfg_path = args->cfg_path;
 
     memset(&tinfo, 0, sizeof(tinfo));
     memset(&ctinfo, 0, sizeof(ctinfo));
@@ -1108,13 +1106,10 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_error_t               rc;
-    p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
-        .p4pd_pgm_name       = "iris",
-        .p4pd_rxdma_pgm_name = "p4plus",
-        .p4pd_txdma_pgm_name = "p4plus",
-        .cfg_path            = args->cfg_path,
-    };
+    p4pd_cfg_t                 p4pd_cfg;
+
+    pipeline_cfg_init(NULL, NULL, &p4pd_cfg);
+    p4pd_cfg.cfg_path = args->cfg_path;
 
     memset(&tinfo, 0, sizeof(tinfo));
     memset(&ctinfo, 0, sizeof(ctinfo));
@@ -1253,15 +1248,12 @@ pd_mem_init (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
 {
-    p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_table_map.json",
-        .p4pd_pgm_name       = "iris",
-        .p4pd_rxdma_pgm_name = "p4plus",
-        .p4pd_txdma_pgm_name = "p4plus",
-    };
+    p4pd_cfg_t    p4pd_cfg;
 
     pd_mem_init_phase2_args_t           *ph2_args;
     hal::hal_cfg_t                      *hal_cfg;
+
+    pipeline_cfg_init(&p4pd_cfg, NULL, NULL);
 
     ph2_args = pd_func_args->pd_mem_init_phase2;
     hal_cfg = ph2_args->hal_cfg;

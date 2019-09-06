@@ -47,6 +47,7 @@ export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 export LD_LIBRARY_PATH=/nic/lib:/platform/lib:/nic/cli
 export HAL_CONFIG_PATH=/nic/conf
+export ASIC_SLAVE_INIT=1
 if [[ "$repl" -eq 0 ]]; then
         echo "python3 /nic/cli/debug_cli_$platform.py cmd"
         python3 /nic/cli/debug_cli_$platform.py $cmd
