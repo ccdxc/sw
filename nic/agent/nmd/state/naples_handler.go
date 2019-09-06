@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -199,6 +200,14 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
 		// Update Spec
 		n.SetNaplesConfig(cfg.Spec)
+
+		if !isDataplaneClassic() {
+			log.Info("Setting reboot needed flag")
+			n.rebootNeeded = true
+		} else {
+			n.rebootNeeded = false
+		}
+
 		if err := n.handleHostModeTransition(); err != nil {
 			return errInternalServer(err)
 		}
@@ -218,10 +227,23 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		}
 
 		// Check if reboot is needed after the completion of the mode switch
-		if cfg.Spec.NetworkMode != n.config.Spec.NetworkMode {
+		// Reboot is required for -
+		// 1. When the dataplane is in Classic mode and the intention received from the user is to move to Network Mode
+		// 2. When a user initiates a transition to NetworkMode - a user initiated action will have different timestamp than what is currently saved
+		//    This is required, as many clients/libraries of other processes have the keys in-memory. A process restart, achieved through Naples Reboot,
+		//    is necessary to ensure that these in-memory keys are flushed out.
+		if isDataplaneClassic() || types.TimestampString(&n.config.CreationTime.Timestamp) != types.TimestampString(&cfg.CreationTime.Timestamp) {
 			log.Info("Setting reboot needed flag")
 			n.rebootNeeded = true
+
+			// When moving from HOST->NETWORK, there are no Trust bundles saved
+			// When moving from NETWORK->NETWORK, the action can only be issued by a trusted entity
+			err := utils.ClearNaplesTrustRoots()
+			if err != nil {
+				log.Errorf("Failed to clear trust certs. Err : %v", err)
+			}
 		} else {
+			// A reboot is not required only in case when at init time, the saved configs are replayed
 			n.rebootNeeded = false
 		}
 
@@ -328,6 +350,10 @@ func (n *NMD) handleHostModeTransition() error {
 		n.config.Status.Controllers = []string{}
 		n.config.Status.TransitionPhase = ""
 		n.config.Status.AdmissionPhase = ""
+
+		if n.rebootNeeded {
+			n.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
+		}
 
 		if err := n.persistState(true); err != nil {
 			log.Errorf("Failed to persist Naples Config. Err : %v", err)
@@ -911,4 +937,18 @@ func (n *NMD) UpdateNaplesProfile(profile nmd.NaplesProfile) error {
 	}
 
 	return nil
+}
+
+// TODO : Use halproto instead of doing the string compare
+func isDataplaneClassic() bool {
+	cmd := exec.Command("bash", "-c", "halctl show system forwarding-mode")
+	out, err := cmd.Output()
+
+	if err != nil || strings.Contains(string(out), "CLASSIC") {
+		log.Info("Dataplane is in CLASSIC mode.")
+		return true
+	}
+
+	log.Info("Dataplane is in HOSTPIN mode")
+	return false
 }
