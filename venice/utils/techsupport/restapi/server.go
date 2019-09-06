@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
+	tsconfig "github.com/pensando/sw/venice/ctrler/tsm/config"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -19,10 +20,11 @@ type RestServer struct {
 	diagnosticsURL        string
 	diagnosticsListener   net.Listener
 	diagnosticsHTTPServer *http.Server
+	cfg                   *tsconfig.TechSupportConfig
 }
 
 // NewRestServer creates a new techsupport server
-func NewRestServer(techsupportURL string, diagnosticsURL string, tsCh chan<- tsproto.TechSupportRequest) *RestServer {
+func NewRestServer(techsupportURL string, diagnosticsURL string, tsCh chan<- tsproto.TechSupportRequest, cfg *tsconfig.TechSupportConfig) *RestServer {
 	if techsupportURL == "" {
 		log.Errorf("Cannot create Server. techsupportURL is empty.")
 		return nil
@@ -32,6 +34,7 @@ func NewRestServer(techsupportURL string, diagnosticsURL string, tsCh chan<- tsp
 		techsupportURL: techsupportURL,
 		tsCh:           tsCh,
 		diagnosticsURL: diagnosticsURL,
+		cfg:            cfg,
 	}
 }
 

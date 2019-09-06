@@ -31,11 +31,31 @@
                                         "Method" : 0,
 					"Command" : "mkdir core && cp /data/core/* core"
                                 },
+                                {
+                                        "Name" : "Collect Events",
+                                        "Method" : 0,
+                                        "Command" : "mkdir events && cp /var/lib/pensando/events/* events"
+                                },
+                                {
+                                        "Name" : "Collect Update Directory",
+                                        "Method" : 0,
+                                        "Command" : "mkdir update && cp /update/upgrade_halt_state_machine /update/pcieport_upgdata /update/pciemgr_upgdata /update/pciemgr_upgrollback /update/nicmgr_upgstate /update/upgrade_to_same_firmware_allowed  update"
+                                },
+                                {
+                                        "Name" : "Collect Events",
+                                        "Method" : 0,
+                                        "Command" : "mkdir events && cp /var/lib/pensando/events/* events"
+                                },
 				{
                                         "Name" : "Collect Logs",
                                         "Method" : 0,
-                                        "Command" : "mkdir logs && cp /var/log/pensando/* logs/"
+                                        "Command" : "mkdir pen-logs && cp /var/log/pensando/* pen-logs/"
                                 },
+                                {
+                                        "Name" : "Collect Miscellaneous files from Data",
+                                        "Method" : 0,
+					"Command" : "mkdir data-misc && cp /data/delphi.dat /data/pre-upgrade-logs.tar.gz /data/post-upgrade-logs.tar.gz data-misc"
+				},
                                 {
                                         "Name" : "Collect Sysmgr Logs",
                                         "Method" : 0,
@@ -49,27 +69,112 @@
                                 {
                                         "Name" : "HBM Bandwidth",
                                         "Method" : 0,
-                                        "Command" : "halctl show platform hbm bandwidth"
+                                        "Command" : "/nic/bin/halctl show platform hbm bandwidth"
                                 },
                                 {
                                         "Name" : "LLC Stats",
                                         "Method" : 0,
-                                        "Command" : "halctl show hbm llc-stats"
+                                        "Command" : "/nic/bin/halctl show hbm llc-stats"
                                 },
                                 {
                                         "Name" : "Show Lif",
                                         "Method" : 0,
-                                        "Command" : "halctl show lif"
+                                        "Command" : "/nic/bin/halctl show lif"
                                 },                                
 				{
                                         "Name" : "Table Info",
                                         "Method" : 0,
-                                        "Command" : "halctl show table info"
+                                        "Command" : "/nic/bin/halctl show table info"
 				},
 				{
                                         "Name" : "NaplesStatus Delphi Object",
                                         "Method" : 0,
-                                        "Command" : "delphictl db get NaplesStatus"
+                                        "Command" : "/nic/bin/delphictl db get NaplesStatus"
+                                },
+                                {
+                                        "Name" : "Pcie Port",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil port"
+                                },
+                                {
+                                        "Name" : "Pcie Portstats",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil portstats"
+                                },
+                                {
+                                        "Name" : "Pcie Stats",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil stats"
+                                },
+                                {
+                                        "Name" : "Pcie Counters",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil counters"
+                                },
+                                {
+                                        "Name" : "Pcie Dev",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil dev"
+                                },
+                                {
+                                        "Name" : "Pcie Devintr",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil devintr"
+                                },
+                                {
+                                        "Name" : "Pcie Bar",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil bar"
+                                },
+                                {
+                                        "Name" : "Pcie PMT",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil pmt"
+                                },
+                                {
+                                        "Name" : "Pcie PRT",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil prt"
+                                },
+                                {
+                                        "Name" : "Pcie aximst",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil aximst"
+                                },
+                                {
+                                        "Name" : "Fwupdate",
+                                        "Method" : 0,
+                                        "Command" : "/nic/tools/fwupdate -l"
+                                },
+                                {
+                                        "Name" : "IfConfig",
+                                        "Method" : 0,
+                                        "Command" : "ifconfig -a"
+                                },
+                                {
+                                        "Name" : "DelphiObj UpgReq",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/delphictl db get UpgReq"
+                                },
+                                {
+                                        "Name" : "DelphiObj UpgResp",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/delphictl db get UpgResp"
+                                },
+                                {
+                                        "Name" : "DelphiObj UpgStateReq",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/delphictl db get UpgStateReq"
+                                },
+                                {
+                                        "Name" : "DelphiObj UpgAppResp",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/delphictl db get UpgAppResp"
+                                },
+                                {
+                                        "Name" : "DelphiObj UpgApp",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/delphictl db get UpgApp"
                                 }
 			],
 

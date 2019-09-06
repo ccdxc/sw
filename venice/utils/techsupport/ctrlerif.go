@@ -95,7 +95,7 @@ func NewTSMClient(name string, mac string, kind string, configPath string, contr
 	// RESTUri is expected to be non-null for techsupport agent on Naples
 	if res.RESTUri != "" {
 		log.Info("REST URI is non null")
-		agent.restServer = rest.NewRestServer(res.RESTUri, diagnosticsURL, agent.tsCh)
+		agent.restServer = rest.NewRestServer(res.RESTUri, diagnosticsURL, agent.tsCh, agent.cfg)
 	}
 
 	return agent
