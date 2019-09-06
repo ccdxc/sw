@@ -181,7 +181,7 @@ targets:
     - build-iris-x86
   dol/ipsec:
     commands: ["make", "jobd/dol/ipsec"]
-    owners: ["email:rameshp@pensando.io"]
+    owners: ["email:raghava@pensando.io"]
     area:
     sub-area:
     feature:
