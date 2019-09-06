@@ -1151,7 +1151,9 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	os.Setenv("PATH", originalPath)
 
 	// stop delphi hub
-	it.hub.Stop()
+	if it.hub != nil {
+		it.hub.Stop()
+	}
 	// stop the agents
 	for _, sn := range it.snics {
 		sn.agent.Stop()
