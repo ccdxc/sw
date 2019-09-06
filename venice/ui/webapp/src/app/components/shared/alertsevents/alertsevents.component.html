@@ -254,12 +254,12 @@
             </td>
             <td class="global-column-action">
               <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'RESOLVED'"
+                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'resolved'"
                           matTooltip="Resolve Alert"
                           class="global-table-action-icon" (click)="resolveAlert(rowData)">
                   done_all
                 </mat-icon>
-                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'ACKNOWLEDGED'"
+                <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'acknowledged'"
                           matTooltip="Acknowledge Alert"
                           class="global-table-action-icon alertsevents-acknowledge-icon"
                           (click)="acknowledgeAlert(rowData)">

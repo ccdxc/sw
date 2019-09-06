@@ -123,8 +123,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
 
   graphTransforms: GraphTransform<any>[] = [
     new GraphTitleTransform(),
-    new AxisTransform(),
-    new DerivativeTransform(),
+    new AxisTransform()
+    // comment out DerivativeTransform to avoid TCP Session to negative numbers
+    // new DerivativeTransform(),
   ];
 
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
@@ -313,7 +314,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         this.labelMap['Node'] = Utility.getLabels(this.nodes as any[]);
         this.getMetrics();
       },
-      this.controllerService.webSocketErrorHandler('Failed to get labels')
+      this.controllerService.webSocketErrorHandler('Failed to get Venice nodes')
     );
     this.subscriptions.push(subscription);
   }
@@ -467,9 +468,12 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
    */
   buildMetricsPollingQuery(source: DataSource): MetricsPollingQuery {
     const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
-    if (source.measurement === 'Cluster') {
+    if (source.measurement === 'Cluster') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
       query.query.function = Telemetry_queryMetricsQuerySpec_function.median; // VS-741 use median function to show DSC count
     }
+    /* if (source.measurement === 'FteCPSMetrics') { // CPS
+      query.query.function = Telemetry_queryMetricsQuerySpec_function.none; // VS-741 use median function to show DSC count
+    } */
     return query;
   }
 
@@ -640,7 +644,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // Create a map of which datasets are currently hidden, so that we can keep it.
     const hiddenDatasets = {};
     this.lineData.datasets.forEach( (dataset, index) => {
-      if (!this.chartContainer.chart.isDatasetVisible(index)) {
+      if (this.chartContainer.chart && !this.chartContainer.chart.isDatasetVisible(index)) {  // VS-745 (saw some console errror. add a check)
         const key = sourceFieldKey(dataset.sourceID, dataset.sourceMeasurement, dataset.sourceField) + dataset.label;
         hiddenDatasets[key] = true;
       }

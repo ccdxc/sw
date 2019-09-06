@@ -88,11 +88,12 @@
 <ng-template #ViewSource let-source let-index="index">
   <div fxFlex="auto" fxLayout="row">
     <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
-      <div fxFlex="none" [matTooltip]="getMeasurementMetadata(source.measurement).description">
+      <div fxFlex="none"
+           [matTooltip]="getMeasurementMetadata(source.measurement)? getMeasurementMetadata(source.measurement).description : ''">
         {{ getMeasurementMetadata(source.measurement).displayName }} </div>
       <div fxFlex="none"> - </div>
       <div fxFlex="none" *ngFor="let field of source.fields; let last = last;"
-           [matTooltip]="getFieldMetadata(source.measurement, field).description">
+           [matTooltip]="getFieldMetadata(source.measurement, field) ? getFieldMetadata(source.measurement, field).description : ''">
         {{ !last && source.fields.length > 0 ? getFieldMetadata(source.measurement, field).displayName + ',' : getFieldMetadata(source.measurement, field).displayName }}
       </div>
     </div>

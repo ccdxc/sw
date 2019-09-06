@@ -13,8 +13,9 @@
 // const URL = "192.168.129.19"; // systest Swami's appliance. root/centos
 // const URL = "192.168.129.176"; // systest Amar's appliance. root/centos
 // const URL = "192.168.68.224"  // Vinod's box. There are real DSC NIC. admin/Pensando0$
- const URL = "192.168.129.38";
- // const URL = "192.168.129.42";  // many NICS
+// const URL = "192.168.129.38";
+ const URL =  "192.168.78.243"
+ // const URL = // "192.168.129.42";  // many NICS
 
 const PROXY_CONFIG =
   {
