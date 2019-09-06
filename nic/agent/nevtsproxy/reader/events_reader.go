@@ -115,12 +115,6 @@ func (r *EvtReader) handler(nEvt *halproto.Event) error {
 	// convert received halproto.Event to venice event
 	vEvt := convertToVeniceEvent(nEvt)
 
-	// default all events to smart nic object; update it with the respective object if given (key)
-	vEvt.EventAttributes.ObjectRef = &api.ObjectRef{
-		Name: r.nodeName,
-		Kind: "SmartNIC",
-	}
-
 	// convert nEvt.ObjectKey to api.ObjectMeta
 	if nEvt.ObjectKey != nil {
 		dAny := &types.DynamicAny{}

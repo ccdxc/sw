@@ -432,13 +432,13 @@ func (e *evtServices) stop() {
 
 // returns the default object ref for events
 func getDefaultObjectRef(nodeName string) *api.ObjectRef {
-	nic := &cluster.DistributedServiceCard{}
-	nic.Defaults("all")
+	dsc := &cluster.DistributedServiceCard{}
+	dsc.Defaults("all")
 	return &api.ObjectRef{
-		Kind:      nic.GetKind(),
+		Kind:      dsc.GetKind(),
 		Name:      nodeName,
-		Tenant:    nic.GetTenant(),
-		Namespace: nic.GetNamespace(),
-		URI:       nic.GetSelfLink(),
+		Tenant:    dsc.GetTenant(),
+		Namespace: dsc.GetNamespace(),
+		URI:       dsc.GetSelfLink(),
 	}
 }

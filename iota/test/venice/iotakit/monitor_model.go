@@ -37,7 +37,7 @@ func (sm *SysModel) LinkUpEventsSince(since time.Time, npc *NaplesCollection) *E
 		naplesNames = append(naplesNames, naples.iotaNode.Name)
 	}
 
-	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=SmartNIC,object-ref.name in (%v)",
+	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=DistributedServiceCard,object-ref.name in (%v)",
 		eventtypes.LINK_UP, since.Format(time.RFC3339Nano), fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
 
 	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
@@ -56,7 +56,7 @@ func (sm *SysModel) LinkDownEventsSince(since time.Time, npc *NaplesCollection) 
 		naplesNames = append(naplesNames, naples.iotaNode.Name)
 	}
 
-	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=SmartNIC,object-ref.name in (%v)",
+	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=DistributedServiceCard,object-ref.name in (%v)",
 		eventtypes.LINK_DOWN, since.Format(time.RFC3339Nano), fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
 
 	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
