@@ -25,6 +25,50 @@ void cap_bx_apb_write(int chip_id, int inst_id, int addr, int data) {
     // bx_csr.dhs_apb.entry[addr].show();
 }
 
+// reads addr, set/reset bit and writes back
+static int
+cap_bx_set_bit (int chip_id, int inst_id, int addr, int bit, bool set)
+{
+   int data = cap_bx_apb_read(chip_id, inst_id, addr);
+
+   if (set) {
+       data = data | (1 << bit);
+   } else {
+       data = data & ~(1 << bit);
+   }
+   cap_bx_apb_write(chip_id, inst_id, addr, data);
+   return 0;
+}
+
+static inline uint32_t
+set_bits(uint32_t data, int pos, int num_bits, uint32_t value)
+{
+    uint32_t mask = 0;
+
+    for (int i = pos; i < pos + num_bits; ++i) {
+        mask |= (1 << i);
+    }
+
+    // clear the bits
+    data = data & ~mask;
+
+    // set the bits
+    data = data | (value << pos);
+
+    return data;
+}
+
+static int
+cap_bx_set_bits(int chip_id, int inst_id, uint32_t addr,
+                int pos, int num_bits, uint32_t value)
+{
+    uint32_t data = cap_bx_apb_read(chip_id, inst_id, addr);
+
+    data = set_bits(data, pos, num_bits, value);
+    cap_bx_apb_write(chip_id, inst_id, addr, data);
+    return 0;
+}
+
 void cap_bx_set_ch_enable(int chip_id, int inst_id, int value) { 
     int rdata = cap_bx_apb_read(chip_id, inst_id, 0x1f10);
     int wdata = (rdata & 0xfe) | (value & 0x1);
@@ -44,10 +88,12 @@ void cap_bx_set_glbl_mode(int chip_id, int inst_id, int value) {
     bx_csr.cfg_fixer.write();
 }
 
-void cap_bx_set_tx_rx_enable(int chip_id, int inst_id, int value) { 
-    int rdata = cap_bx_apb_read(chip_id, inst_id, 0x2100);
-    int wdata = (rdata & 0xfc) | (value & 0x3);
-    cap_bx_apb_write(chip_id, inst_id, 0x2100, wdata);
+void cap_bx_set_tx_rx_enable(int chip_id, int inst_id, int value) {
+    uint32_t addr = 0x2100;
+    int pos = 0;
+    int num_bits = 2;
+
+    cap_bx_set_bits(chip_id, inst_id, addr, pos, num_bits, value);
 }
 
 void cap_bx_set_soft_reset(int chip_id, int inst_id, int value) { 
@@ -427,6 +473,27 @@ void cap_bx_bist_chk(int chip_id, int inst_id) {
 int
 cap_bx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
 {
+    int addr = 0;
+
+    // MAC control bit 5
+    addr = 0x2100;
+    cap_bx_set_bit(chip_id, inst_id, addr, 5, drain);
+    cap_bx_apb_read(chip_id, inst_id, addr);
+
+    cap_bx_set_bit(chip_id, inst_id, addr, 0, drain == true? false : true);
+    cap_bx_apb_read(chip_id, inst_id, addr);
+
+    cap_bx_set_bit(chip_id, inst_id, addr, 1, drain == true? false : true);
+    cap_bx_apb_read(chip_id, inst_id, addr);
+
+    // MAC transmit config  bit 15
+    addr = 0x2101;
+    cap_bx_set_bit(chip_id, inst_id, addr, 15, drain);
+    cap_bx_apb_read(chip_id, inst_id, addr);
+
+    // MAC txdebug config  bit 6
+    addr = 0x2191;
+    cap_bx_set_bit(chip_id, inst_id, addr, 6, drain);
+    cap_bx_apb_read(chip_id, inst_id, addr);
     return 0;
 }
-
