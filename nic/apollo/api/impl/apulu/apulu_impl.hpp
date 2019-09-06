@@ -151,9 +151,9 @@ private:
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t key_tunneled_init_(void);
 
-    /// \brief  init routine to initialize ingress to rxdma table
+    /// \brief  init routine to initialize inter pipe table
     /// \return SDK_RET_OK on success, failure status code on error
-    sdk_ret_t ingress_to_rxdma_init_(void);
+    sdk_ret_t inter_pipe_init_(void);
 
     /// \brief  initialize ingress drop stats table
     /// \return SDK_RET_OK on success, failure status code on error

@@ -31,15 +31,47 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_PIPELINE_IMPL Pipeline wrapper implementation
+/// \defgroup PDS_PIPELINE_IMPL pipeline wrapper implementation
 /// @{
 
-/// \brief Pipeline configuration
+/// \brief pipeline configuration
 typedef struct pipeline_cfg_s {
-    std::string    name;    ///< Name of the pipeline
+    std::string    name;    ///< name of the pipeline
 } pipeline_cfg_t;
 
-/// \brief Pipeline implementation
+/// \brief helper class to sort p4/p4+ programs to maximize performance
+class sort_mpu_programs_compare {
+public:
+    bool operator() (std::string p1, std::string p2) {
+        std::map <std::string, p4pd_table_properties_t>::iterator it1, it2;
+
+        it1 = tbl_map_.find(p1);
+        it2 = tbl_map_.find(p2);
+        if ((it1 == tbl_map_.end()) || (it2 == tbl_map_.end())) {
+            return (p1 < p2);
+        }
+        p4pd_table_properties_t tbl_ctx1 = it1->second;
+        p4pd_table_properties_t tbl_ctx2 = it2->second;
+        if (tbl_ctx1.gress != tbl_ctx2.gress) {
+            return (tbl_ctx1.gress < tbl_ctx2.gress);
+        }
+        if (tbl_ctx1.stage != tbl_ctx2.stage) {
+            return (tbl_ctx1.stage < tbl_ctx2.stage);
+        }
+        return (tbl_ctx1.stage_tableid < tbl_ctx2.stage_tableid);
+    }
+
+    void add_table(std::string tbl_name, p4pd_table_properties_t tbl_ctx) {
+        std::pair <std::string, p4pd_table_properties_t> key_value;
+        key_value = std::make_pair(tbl_name.append(".bin"), tbl_ctx);
+        tbl_map_.insert(key_value);
+    }
+
+private:
+    std::map <std::string, p4pd_table_properties_t> tbl_map_;
+};
+
+/// \brief pipeline implementation
 class pipeline_impl_base : public obj_base {
 public:
     /// \brief Factory method to instantiate pipeline impl instance
@@ -104,14 +136,14 @@ public:
         return SDK_RET_ERR;
     }
 
-    /// \brief API to begin transaction over all the table mgmt library instances
+    /// \brief API to begin transaction over all table mgmt library instances
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t table_transaction_begin(void) {
         return SDK_RET_ERR;
     }
 
-    /// \brief API to end transaction over all the table mgmt library instances
+    /// \brief API to end transaction over all table mgmt library instances
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t table_transaction_end(void) {

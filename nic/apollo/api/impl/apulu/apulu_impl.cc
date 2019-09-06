@@ -1,10 +1,10 @@
 //
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// apollo pipeline implementation
+/// apulu pipeline implementation
 ///
 //----------------------------------------------------------------------------
 
@@ -15,29 +15,31 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+
 // TODO: clean this up
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/capri/capri_common.hpp"
+
 #include "nic/sdk/platform/ring/ring.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
-#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
-#include "nic/apollo/api/impl/apollo/impl_utils.hpp"
+#include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/impl_utils.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
-#include "nic/apollo/p4/include/defines.h"
-#include "gen/p4gen/apollo/include/p4pd.h"
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "nic/apollo/p4/include/apulu_defines.h"
+#include "gen/p4gen/apulu/include/apulu_p4pd.h"
+#include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
+#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
 
-extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
 extern sdk_ret_t init_service_lif(const char *cfg_path);
 
 #define MEM_REGION_RXDMA_PROGRAM_NAME "rxdma_program"
 #define MEM_REGION_TXDMA_PROGRAM_NAME "txdma_program"
 #define MEM_REGION_LIF_STATS_BASE     "lif_stats_base"
+#define MEM_REGION_SESSION_STATS_NAME "session_stats"
+
 #define RXDMA_SYMBOLS_MAX             1
 #define TXDMA_SYMBOLS_MAX             1
-#define MEM_REGION_SESSION_STATS_NAME "session_stats"
 
 using ftlite::internal::ipv6_entry_t;
 using ftlite::internal::ipv4_entry_t;
@@ -50,7 +52,7 @@ namespace impl {
 /// @{
 
 void
-apollo_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
+apulu_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
     sort_mpu_programs_compare sort_compare;
 
     for (uint32_t tableid = p4pd_tableid_min_get();
@@ -64,7 +66,7 @@ apollo_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
 }
 
 uint32_t
-apollo_impl::rxdma_symbols_init_(void **p4plus_symbols,
+apulu_impl::rxdma_symbols_init_(void **p4plus_symbols,
                                  platform_type_t platform_type)
 {
     uint32_t    i = 0;
@@ -85,7 +87,7 @@ apollo_impl::rxdma_symbols_init_(void **p4plus_symbols,
 }
 
 uint32_t
-apollo_impl::txdma_symbols_init_(void **p4plus_symbols,
+apulu_impl::txdma_symbols_init_(void **p4plus_symbols,
                                  platform_type_t platform_type)
 {
     uint32_t    i = 0;
@@ -106,56 +108,57 @@ apollo_impl::txdma_symbols_init_(void **p4plus_symbols,
 }
 
 sdk_ret_t
-apollo_impl::init_(pipeline_cfg_t *pipeline_cfg) {
+apulu_impl::init_(pipeline_cfg_t *pipeline_cfg) {
     pipeline_cfg_ = *pipeline_cfg;
     return SDK_RET_OK;
 }
 
-apollo_impl *
-apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
-    apollo_impl    *impl;
+apulu_impl *
+apulu_impl::factory(pipeline_cfg_t *pipeline_cfg) {
+    apulu_impl    *impl;
 
-    impl = (apollo_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_PIPELINE_IMPL,
-                                    sizeof(apollo_impl));
-    new (impl) apollo_impl();
+    impl = (apulu_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_PIPELINE_IMPL,
+                                    sizeof(apulu_impl));
+    new (impl) apulu_impl();
     if (impl->init_(pipeline_cfg) != SDK_RET_OK) {
-        impl->~apollo_impl();
+        impl->~apulu_impl();
         SDK_FREE(SDK_MEM_ALLOC_PDS_PIPELINE_IMPL, impl);
         return NULL;
     }
     return impl;
 }
 
+// TODO: usage of handles here is incorrect (may be delete by index ?)
 void
-apollo_impl::destroy(apollo_impl *impl) {
+apulu_impl::destroy(apulu_impl *impl) {
     int i;
     sdk_table_api_params_t       tparams = { 0 };
 
-    // Remove key native table entries
+    // remove key native table entries
     for (i = 0; i < MAX_KEY_NATIVE_TBL_ENTRIES; i++) {
-        tparams.handle = apollo_impl_db()->key_native_tbl_hdls_[i];
-        apollo_impl_db()->key_native_tbl()->remove(&tparams);
+        tparams.handle = apulu_impl_db()->key_native_tbl_hdls_[i];
+        apulu_impl_db()->key_native_tbl()->remove(&tparams);
     }
-    // Remove key tunneled table entries
+    // remove key tunneled table entries
     for (i = 0; i < MAX_KEY_TUNNELED_TBL_ENTRIES; i++) {
-        tparams.handle = apollo_impl_db()->key_tunneled_tbl_hdls_[i];
-        apollo_impl_db()->key_tunneled_tbl()->remove(&tparams);
+        tparams.handle = apulu_impl_db()->key_tunneled_tbl_hdls_[i];
+        apulu_impl_db()->key_tunneled_tbl()->remove(&tparams);
     }
-    // Remove drop stats table entries
+    // remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
-        tparams.handle = apollo_impl_db()->egress_drop_stats_tbl_hdls_[i];
-        apollo_impl_db()->egress_drop_stats_tbl()->remove(&tparams);
+        tparams.handle = apulu_impl_db()->egress_drop_stats_tbl_hdls_[i];
+        apulu_impl_db()->egress_drop_stats_tbl()->remove(&tparams);
     }
     for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
-        tparams.handle = apollo_impl_db()->ingress_drop_stats_tbl_hdls_[i];
-        apollo_impl_db()->ingress_drop_stats_tbl()->remove(&tparams);
+        tparams.handle = apulu_impl_db()->ingress_drop_stats_tbl_hdls_[i];
+        apulu_impl_db()->ingress_drop_stats_tbl()->remove(&tparams);
     }
     api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
     p4pd_cleanup();
 }
 
 void
-apollo_impl::program_config_init(pds_init_params_t *init_params,
+apulu_impl::program_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) {
     asic_cfg->num_pgm_cfgs = 3;
     memset(asic_cfg->pgm_cfg, 0, sizeof(asic_cfg->pgm_cfg));
@@ -165,7 +168,7 @@ apollo_impl::program_config_init(pds_init_params_t *init_params,
 }
 
 void
-apollo_impl::asm_config_init(pds_init_params_t *init_params,
+apulu_impl::asm_config_init(pds_init_params_t *init_params,
                              asic_cfg_t *asic_cfg) {
     asic_cfg->num_asm_cfgs = 3;
     memset(asic_cfg->asm_cfg, 0, sizeof(asic_cfg->asm_cfg));
@@ -184,12 +187,12 @@ apollo_impl::asm_config_init(pds_init_params_t *init_params,
 }
 
 void
-apollo_impl::ring_config_init(asic_cfg_t *asic_cfg) {
+apulu_impl::ring_config_init(asic_cfg_t *asic_cfg) {
     asic_cfg->num_rings = 0;
 }
 
 sdk_ret_t
-apollo_impl::key_native_init_(void) {
+apulu_impl::key_native_init_(void) {
     sdk_ret_t                  ret;
     uint32_t                   idx = 0;
     key_native_swkey_t         key;
@@ -216,9 +219,9 @@ apollo_impl::key_native_init_(void) {
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_NATIVE_NATIVE_IPV4_PACKET_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->key_native_tbl()->insert(&tparams);
     SDK_ASSERT(ret == SDK_RET_OK);
-    apollo_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
+    apulu_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
 
     // entry for native IPv6 packets
     memset(&key, 0, sizeof(key));
@@ -239,9 +242,9 @@ apollo_impl::key_native_init_(void) {
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_NATIVE_NATIVE_IPV6_PACKET_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->key_native_tbl()->insert(&tparams);
     SDK_ASSERT(ret == SDK_RET_OK);
-    apollo_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
+    apulu_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
 
     // entry for native non-IP packets
     memset(&key, 0, sizeof(key));
@@ -262,9 +265,9 @@ apollo_impl::key_native_init_(void) {
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_NATIVE_NATIVE_NONIP_PACKET_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->key_native_tbl()->insert(&tparams);
     SDK_ASSERT(ret == SDK_RET_OK);
-    apollo_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
+    apulu_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
 
     // check overflow
     SDK_ASSERT(idx <= MAX_KEY_NATIVE_TBL_ENTRIES);
@@ -272,7 +275,7 @@ apollo_impl::key_native_init_(void) {
 }
 
 sdk_ret_t
-apollo_impl::key_tunneled_init_(void) {
+apulu_impl::key_tunneled_init_(void) {
     sdk_ret_t                    ret;
     uint32_t                     idx = 0;
     sdk_table_api_params_t       tparams = { 0 };
@@ -300,9 +303,9 @@ apollo_impl::key_tunneled_init_(void) {
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->key_tunneled_tbl()->insert(&tparams);
     SDK_ASSERT(ret == SDK_RET_OK);
-    apollo_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
+    apulu_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
 
     // entry for tunneled (inner) IPv6 packets
     key.ipv4_1_valid = 1;
@@ -320,9 +323,9 @@ apollo_impl::key_tunneled_init_(void) {
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_TUNNELED_TUNNELED_IPV6_PACKET_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->key_tunneled_tbl()->insert(&tparams);
     SDK_ASSERT(ret == SDK_RET_OK);
-    apollo_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
+    apulu_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
 
     // entry for tunneled (inner) non-IP packets
     key.ipv4_1_valid = 1;
@@ -340,48 +343,21 @@ apollo_impl::key_tunneled_init_(void) {
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_TUNNELED_TUNNELED_NONIP_PACKET_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->key_tunneled_tbl()->insert(&tparams);
     SDK_ASSERT(ret == SDK_RET_OK);
-    apollo_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
+    apulu_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
 
     SDK_ASSERT(idx <= MAX_KEY_TUNNELED_TBL_ENTRIES);
     return ret;
 }
 
 sdk_ret_t
-apollo_impl::ingress_to_rxdma_init_(void) {
-    p4pd_error_t p4pd_ret;
-    ingress_to_rxdma_actiondata_t data = { 0 };
-
-    data.action_id = INGRESS_TO_RXDMA_CLASSIC_NIC_APP_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_CLASSIC_NIC,
-                                       NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-
-    data.action_id = INGRESS_TO_RXDMA_REDIRECT_TO_ARM_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_CPU,
-                                       NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-
-    data.action_id = INGRESS_TO_RXDMA_P4PLUS_APP_TCP_PROXY_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_TCPTLS,
-                                       NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-
+apulu_impl::inter_pipe_init_(void) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::egress_drop_stats_init_(void) {
+apulu_impl::egress_drop_stats_init_(void) {
     sdk_ret_t                    ret;
     p4e_drop_stats_swkey_t       key = { 0 };
     p4e_drop_stats_swkey_mask_t  key_mask = { 0 };
@@ -397,15 +373,15 @@ apollo_impl::egress_drop_stats_init_(void) {
         PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
                                        P4E_DROP_STATS_P4E_DROP_STATS_ID,
                                        sdk::table::handle_t::null());
-        ret = apollo_impl_db()->egress_drop_stats_tbl()->insert(&tparams);
-        apollo_impl_db()->egress_drop_stats_tbl_hdls_[i] = tparams.handle;
+        ret = apulu_impl_db()->egress_drop_stats_tbl()->insert(&tparams);
+        apulu_impl_db()->egress_drop_stats_tbl_hdls_[i] = tparams.handle;
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return ret;
 }
 
 sdk_ret_t
-apollo_impl::ingress_drop_stats_init_(void) {
+apulu_impl::ingress_drop_stats_init_(void) {
     sdk_ret_t                    ret;
     p4i_drop_stats_swkey_t       key = { 0 };
     p4i_drop_stats_swkey_mask_t  key_mask = { 0 };
@@ -418,25 +394,42 @@ apollo_impl::ingress_drop_stats_init_(void) {
         key_mask.control_metadata_p4i_drop_reason_mask =
             key.control_metadata_p4i_drop_reason;
         data.action_id = P4I_DROP_STATS_P4I_DROP_STATS_ID;
-        PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
                                        P4I_DROP_STATS_P4I_DROP_STATS_ID,
                                        sdk::table::handle_t::null());
-        ret = apollo_impl_db()->ingress_drop_stats_tbl()->insert(&tparams);
-        apollo_impl_db()->ingress_drop_stats_tbl_hdls_[i] = tparams.handle;
+        ret = apulu_impl_db()->ingress_drop_stats_tbl()->insert(&tparams);
+        // TODO: storing handles is not going to work !!
+        apulu_impl_db()->ingress_drop_stats_tbl_hdls_[i] = tparams.handle;
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return ret;
 }
 
 sdk_ret_t
-apollo_impl::stats_init_(void) {
+apulu_impl::stats_init_(void) {
     ingress_drop_stats_init_();
     egress_drop_stats_init_();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::table_init_(void) {
+apulu_impl::nacl_init_(void) {
+    uint32_t idx;
+    sdk_ret_t ret;
+    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask = { 0 };
+    nacl_actiondata_t data =  { 0 };
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+apulu_impl::checksum_init_(void) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+apulu_impl::table_init_(void) {
     sdk_ret_t     ret;
     mem_addr_t    addr;
 
@@ -448,75 +441,89 @@ apollo_impl::table_init_(void) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    ret = ingress_to_rxdma_init_();
+    ret = inter_pipe_init_();
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+    // initialize checksum table
+    ret = checksum_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // initialize stats tables
+    ret = stats_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // install all default NACL entries
+    ret = nacl_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
 
     // program session stats table base address as table constant
     // of session table
     addr = api::g_pds_state.mempartition()->start_addr(
                                         MEM_REGION_SESSION_STATS_NAME);
     SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
-    // reset bit 31 (saves one asm instruction)
-    addr &= ~((uint64_t)1 << 31);
+    // subtract 2G (saves ASM instructions)
+    addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::p4plus_table_init_(void) {
+apulu_impl::p4plus_table_init_(void) {
+    p4plus_prog_t prog;
     p4pd_table_properties_t tbl_ctx_apphdr;
     p4pd_table_properties_t tbl_ctx_apphdr_off;
     p4pd_table_properties_t tbl_ctx_txdma_act;
     p4pd_table_properties_t tbl_ctx_txdma_act_ext;
-    p4plus_prog_t prog;
 
 
-    p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+    p4pd_global_table_properties_get(P4_APULU_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx_apphdr);
-    p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
+    p4pd_global_table_properties_get(P4_APULU_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
                                      &tbl_ctx_apphdr_off);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_apphdr.stage;
     prog.stage_tableid = tbl_ctx_apphdr.stage_tableid;
     prog.stage_tableid_off = tbl_ctx_apphdr_off.stage_tableid;
-    prog.control = "apollo_rxdma";
+    prog.control = "apulu_rxdma";
     prog.prog_name = "rxdma_stage0.bin";
     prog.pipe = P4_PIPELINE_RXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+    sdk::platform::capri::capri_p4plus_table_init(&prog,
+                                                  api::g_pds_state.platform_type());
 
-    p4pd_global_table_properties_get(P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S0_T0,
+    p4pd_global_table_properties_get(P4_APULU_TXDMA_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_txdma_act.stage;
     prog.stage_tableid = tbl_ctx_txdma_act.stage_tableid;
-    prog.control = "apollo_txdma";
+    prog.control = "apulu_txdma";
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+    sdk::platform::capri::capri_p4plus_table_init(&prog,
+                                                  api::g_pds_state.platform_type());
 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::pipeline_init(void) {
+apulu_impl::pipeline_init(void) {
     sdk_ret_t  ret;
     p4pd_cfg_t p4pd_cfg;
 
     ret = pipeline_p4_hbm_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    // Skip the remaining if it is a slave initialization
+    // skip the remaining if it is a slave initialization
     if (sdk::asic::is_slave_init()) {
         return SDK_RET_OK;
     }
 
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = sdk::asic::pd::asicpd_toeplitz_init("apollo_rxdma",
-                             P4_APOLLO_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
+    ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
+                             P4_APULU_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
@@ -534,14 +541,12 @@ apollo_impl::pipeline_init(void) {
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = stats_init_();
-    SDK_ASSERT(ret == SDK_RET_OK);
 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
+apulu_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
                                   uint8_t action_id, void *actiondata) {
     uint32_t     len;
     uint8_t      packed_bytes[CACHE_LINE_SIZE];
@@ -550,22 +555,21 @@ apollo_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
     if (p4pd_rxdma_get_max_action_id(tableid) > 1) {
         struct line_s {
             uint8_t action_pc;
-            uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
+            uint8_t packed_entry[CACHE_LINE_SIZE - sizeof(action_pc)];
         };
-
-        auto line = (struct line_s *) packed_bytes;
-        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, action_id);
+        auto line = (struct line_s *)packed_bytes;
+        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid,
+                                                              action_id);
         packed_entry = line->packed_entry;
     }
-
-    p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apollo_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    p4pd_apulu_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_apulu_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
 
 sdk_ret_t
-apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
+apulu_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
                                   uint8_t action_id, void *actiondata) {
     uint32_t     len;
     uint8_t      packed_bytes[CACHE_LINE_SIZE];
@@ -574,22 +578,22 @@ apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
     if (p4pd_txdma_get_max_action_id(tableid) > 1) {
         struct line_s {
             uint8_t action_pc;
-            uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
+            uint8_t packed_entry[CACHE_LINE_SIZE - sizeof(action_pc)];
         };
-
         auto line = (struct line_s *) packed_bytes;
-        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, action_id);
+        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid,
+                                                              action_id);
         packed_entry = line->packed_entry;
     }
-
-    p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apollo_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    p4pd_apulu_txdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_apulu_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
 
 sdk_ret_t
-apollo_impl::table_transaction_begin(void) {
+apulu_impl::table_transaction_begin(void) {
+    vpc_impl_db()->table_transaction_begin();
     tep_impl_db()->table_transaction_begin();
     vnic_impl_db()->table_transaction_begin();
     mapping_impl_db()->table_transaction_begin();
@@ -601,7 +605,8 @@ apollo_impl::table_transaction_begin(void) {
 }
 
 sdk_ret_t
-apollo_impl::table_transaction_end(void) {
+apulu_impl::table_transaction_end(void) {
+    vpc_impl_db()->table_transaction_end();
     tep_impl_db()->table_transaction_end();
     vnic_impl_db()->table_transaction_end();
     mapping_impl_db()->table_transaction_end();
@@ -613,13 +618,13 @@ apollo_impl::table_transaction_end(void) {
 }
 
 sdk_ret_t
-apollo_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
+apulu_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     mapping_impl_db()->table_stats(cb, ctxt);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
+apulu_impl::session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
                            uint32_t highidx, void *ctxt) {
     sdk_ret_t ret;
     uint64_t offset = 0;
@@ -627,41 +632,42 @@ apollo_impl::session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
     pds_session_debug_stats_t session_stats_entry;
 
     memset(&session_stats_entry, 0, sizeof(pds_session_debug_stats_t));
-
-    start_addr = api::g_pds_state.mempartition()->start_addr(
-                                                  MEM_REGION_SESSION_STATS_NAME);
+    start_addr =
+        api::g_pds_state.mempartition()->start_addr(MEM_REGION_SESSION_STATS_NAME);
 
     for (uint32_t idx = lowidx; idx <= highidx; idx ++) {
+        // TODO: usage of sizeof(pds_session_debug_stats_t) is incorrect here,
+        //       we need to use a pipeline specific data structure here ...
+        //       ideally, the o/p of p4pd_global_table_properties_get() will
+        //       have entry size
         offset = idx * sizeof(pds_session_debug_stats_t);
-
         ret = sdk::asic::asic_mem_read(start_addr + offset,
                                        (uint8_t *)&session_stats_entry,
                                        sizeof(pds_session_debug_stats_t));
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to read session stats for index %u err %u", idx, ret);
+            PDS_TRACE_ERR("Failed to read session stats for index %u err %u",
+                          idx, ret);
             return ret;
         }
-
         cb(idx, &session_stats_entry, ctxt);
     }
-
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::session(debug::session_get_cb_t cb, void *ctxt) {
+apulu_impl::session(debug::session_get_cb_t cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::flow(debug::flow_get_cb_t cb, void *ctxt) {
+apulu_impl::flow(debug::flow_get_cb_t cb, void *ctxt) {
     uint32_t idx = 0;
     p4pd_error_t p4pd_ret;
     p4pd_table_properties_t prop;
     ipv4_entry_t ipv4_entry;
     ipv6_entry_t ipv6_entry;
 
-    // Read IPv4 sessions
+    // read IPv4 sessions
     p4pd_global_table_properties_get(P4TBL_ID_IPV4_FLOW, &prop);
     for (idx = 0; idx < prop.tabledepth; idx ++) {
         memcpy(&ipv4_entry, ((ipv4_entry_t *)(prop.base_mem_va)) + idx,
@@ -682,7 +688,7 @@ apollo_impl::flow(debug::flow_get_cb_t cb, void *ctxt) {
     }
     cb(NULL, NULL, ctxt);
 
-    // Read IPv6 sessions
+    // read IPv6 sessions
     p4pd_global_table_properties_get(P4TBL_ID_FLOW, &prop);
     for (idx = 0; idx < prop.tabledepth; idx ++) {
         memcpy(&ipv6_entry, ((ipv6_entry_t *)(prop.base_mem_va)) + idx,
@@ -707,12 +713,12 @@ apollo_impl::flow(debug::flow_get_cb_t cb, void *ctxt) {
 }
 
 sdk_ret_t
-apollo_impl::session_clear(uint32_t idx) {
+apulu_impl::session_clear(uint32_t idx) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::flow_clear(uint32_t idx) {
+apulu_impl::flow_clear(uint32_t idx) {
     return SDK_RET_OK;
 }
 
