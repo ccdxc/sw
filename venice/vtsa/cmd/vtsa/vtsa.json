@@ -41,6 +41,11 @@
                                         "Method" : 0,
                                         "Command" : "mkdir logs && cp /var/log/pensando/* logs/"
                                 },
+				{
+					"Name" : "syslog",
+					"Method": 0,
+					"Command" : "mkdir syslogs && cp /var/syslog/messages syslogs/"
+				},
                                 {
                                         "Name" : "Events",
                                         "Method" : 0,

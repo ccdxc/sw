@@ -89,6 +89,13 @@ var kubernetesPKIVolume = protos.ModuleSpec_Volume{
 	MountPath: globals.KubeletPKIDir,
 }
 
+// varLogVolume is a reusable volume definition for kuberenete API Client PKI directory.
+var varLogVolume = protos.ModuleSpec_Volume{
+	Name:      "varlog",
+	HostPath:  "/var/log",
+	MountPath: "/var/syslog",
+}
+
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]protos.Module{
@@ -436,6 +443,7 @@ var k8sModules = map[string]protos.Module{
 				configVolume,
 				runVolume,
 				kubernetesPKIVolume,
+				varLogVolume,
 			},
 		},
 	},
