@@ -3198,12 +3198,22 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			break;
 		}
 		IONIC_LIF_LOCK(lif);
+		/*
+		Freebsd network stack can change the admin link state of a netdev
+		while handling the SIOCSIFADDR ioctl. Also, it will not call the
+		SIOCSIFFLAGS ioctl. So we need to apply if_flags in the SIOCSIFADDR
+		ioctl handler.
+		*/
 		if (ifp->if_flags & IFF_UP) {
-			if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0) {
-				/* if_init = ionic_open is done from ether_ioctl */
-			}
+#ifdef NETAPP_PATCH
+			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
+#endif
 			ionic_set_rx_mode(lif->netdev);
 			ionic_set_mac(lif->netdev);
+		} else {
+#ifdef NETAPP_PATCH
+			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
+#endif
 		}
 		IONIC_LIF_UNLOCK(lif);
 		break;
