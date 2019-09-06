@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   	= libagentclient.so
-MODULE_PIPELINE 	= apollo artemis
+MODULE_PIPELINE 	= apollo artemis apulu
 MODULE_INCS          	= ${BLD_PROTOGEN_DIR}
 MODULE_LDLIBS        	= ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 MODULE_SRCS          	= $(wildcard ${MODULE_SRC_DIR}/*.cc) \

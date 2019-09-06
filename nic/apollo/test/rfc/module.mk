@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_rte_bitmap_test.gtest
-MODULE_PIPELINE = apollo
+MODULE_PIPELINE = apollo apulu
 
 ifeq ($(ARCH),aarch64)
 MODULE_INCS     = ${TOPDIR}/nic/sdk/third-party/dpdk/v18.11/lib/librte_eal/common/include \

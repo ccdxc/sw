@@ -43,9 +43,8 @@ enum {
 sdk_ret_t thread_periodic_spawn(pds_state *state);
 sdk_ret_t thread_nicmgr_spawn(pds_state *state);
 sdk_ret_t thread_pciemgr_spawn(pds_state *state);
-sdk_ret_t thread_netagent_spawn(pds_state *state);
 sdk_ret_t thread_fte_spawn(pds_state *state);
-void threads_stop();
+void threads_stop(void);
 sdk::lib::thread *thread_get(uint32_t thread_id);
 sdk_ret_t parse_global_config(string pipeline, string cfg_file,
                               pds_state *state);

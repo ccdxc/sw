@@ -2,5 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsapi.so
-MODULE_PIPELINE = apollo artemis
+MODULE_PIPELINE = apollo artemis apulu
 include ${MKDEFS}/post.mk

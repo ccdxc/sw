@@ -189,9 +189,6 @@ pds_init (pds_init_params_t *params)
     // spin nicmgr thread. have to be after linkmgr init
     core::thread_nicmgr_spawn(&api::g_pds_state);
 
-    // spin netagent thread.
-    core::thread_netagent_spawn(&api::g_pds_state);
-
     // spin fte threads
     //core::thread_fte_spawn(&api::g_pds_state);
 

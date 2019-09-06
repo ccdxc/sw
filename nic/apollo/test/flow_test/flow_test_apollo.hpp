@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
+
 #ifndef __FLOW_TEST_APOLLO_HPP__
 #define __FLOW_TEST_APOLLO_HPP__
 #include <iostream>
@@ -25,8 +26,10 @@
 
 #if defined(APOLLO)
 #include "gen/p4gen/apollo/include/p4pd.h"
-#else
+#elif defined(ARTEMIS)
 #include "gen/p4gen/artemis/include/p4pd.h"
+#elif defined(APULU)
+#include "gen/p4gen/apollo/include/p4pd.h"
 #endif
 
 using sdk::table::ftlv6;
@@ -691,4 +694,4 @@ public:
     }
 };
 
-#endif // __APOLLO_SCALE_FLOW_TEST_HPP__
+#endif    // __FLOW_TEST_APOLLO_HPP__

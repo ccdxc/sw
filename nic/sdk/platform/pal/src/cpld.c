@@ -79,19 +79,16 @@ pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency)
 void
 pal_write_core_temp(int data)
 {
-    return -1;
 }
 
 void
 pal_write_hbm_temp(int data)
 {
-    return -1;
 }
 
 void
 pal_write_board_temp(int data)
 {
-    return -1;
 }
 #else
 #include <string.h>

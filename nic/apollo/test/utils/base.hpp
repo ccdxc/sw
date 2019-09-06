@@ -12,16 +12,19 @@
 #define __TEST_UTILS_BASE_HPP__
 
 #include <gtest/gtest.h>
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 // Returns pipeline string
 static inline std::string
-pipeline_get ()
+pipeline_get (void)
 {
 #ifdef APOLLO
     return "apollo";
 #elif ARTEMIS
     return "artemis";
+#elif APULU
+    return "apulu";
 #else
     SDK_ASSERT(0);
     return NULL;

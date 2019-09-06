@@ -30,6 +30,11 @@
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd_table.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd_table.h"
+#elif defined(APULU)
+#include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
+#include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd_table.h"
+#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
+#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd_table.h"
 #else
 #include "gen/platform/mem_regions.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"

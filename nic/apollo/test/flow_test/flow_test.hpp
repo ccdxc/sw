@@ -11,6 +11,9 @@
 #include "flow_test_apollo.hpp"
 #elif ARTEMIS
 #include "flow_test_artemis.hpp"
+#elif APULU
+// this is temporary
+#include "flow_test_apollo.hpp"
 #else
 #include "flow_test_iris.hpp"
 #endif

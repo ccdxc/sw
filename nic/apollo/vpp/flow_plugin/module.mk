@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = flow_plugin.so
-MODULE_PIPELINE = apollo artemis
+MODULE_PIPELINE = apollo artemis apulu
 MODULE_ARCH     = aarch64 x86_64
 MODULE_PREREQS  = vpp_pkg.export
 MODULE_SOLIBS   = ftlv6 ftlv4 logger sdkpal sdkcapri                        \
