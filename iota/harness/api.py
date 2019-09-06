@@ -725,7 +725,7 @@ def CopyFromHost(node_name, files, dest_dir):
 def CopyFromNaples(node_name, files, dest_dir):
     req = Trigger_CreateExecuteCommandsRequest()
     for f in files:
-        copy_cmd = "sshpass -p %s scp -o StrictHostKeyChecking=no  %s@%s:%s ." % ("pen123", 'root', GetNicIntMgmtIP(node_name), f)
+        copy_cmd = "sshpass -p %s scp -p -o StrictHostKeyChecking=no  %s@%s:%s ." % ("pen123", 'root', GetNicIntMgmtIP(node_name), f)
         Trigger_AddHostCommand(req, node_name, copy_cmd)
     tresp = Trigger(req)
     for cmd in tresp.commands:

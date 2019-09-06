@@ -52,3 +52,6 @@ testcases:
         args      :
             sleep : 30
 
+    -   name: COPY_TECH_SUPPORT
+        testcase    : testcases.naples_upgrade.copy_test_support
+

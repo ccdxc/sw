@@ -112,7 +112,6 @@ def Setup(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/nicmgr_upgstate")
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/*tar*")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/NaplesTechSupport-*")
         api.Trigger_AddNaplesCommand(req, node, "touch /update/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
@@ -167,6 +166,7 @@ def Verify(tc):
 
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
+            api.Logger.info("cmd returned failure")
             return api.types.status.FAILURE
         ret = netagent_cfg_api.PushBaseConfig(ignore_error = False)
         if ret != api.types.status.SUCCESS:

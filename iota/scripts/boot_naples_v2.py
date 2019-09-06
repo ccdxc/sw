@@ -508,6 +508,10 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("touch /sysconfig/config0/.console", "#")
         
 
+    def SetUpInitFiles(self):
+        self.SendlineExpect("touch /sysconfig/config0/.console", "#")
+        
+
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
 

@@ -100,7 +100,6 @@ def Teardown(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK))
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG))
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/upgrade_to_same_firmware_allowed")
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/*tar*")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/NaplesTechSupport-*")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
