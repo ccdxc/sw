@@ -2,7 +2,7 @@
 // Copyright (c) 2019 Pensando Systems, Inc.
 //------------------------------------------------------------------------------
 
-#include "sysmon.h"
+#include "sysmon_internal.hpp"
 #include "asic/pd/pd.hpp"
 #include "third-party/asic/capri/verif/apis/cap_freq_api.h"
 
@@ -31,7 +31,9 @@ checkfrequency(void)
     uint32_t frequency = cap_top_sbus_get_core_freq(chip_id, inst_id);
     if (frequency != db.frequency) {
         db.frequency = frequency;
-        frequency_change_event_cb(frequency);
+        if (g_sysmon_cfg.frequency_change_event_cb) {
+            g_sysmon_cfg.frequency_change_event_cb(frequency);
+        }
     }
     return;
 }
@@ -47,7 +49,9 @@ checkcattrip(void)
     asic_pd_unravel_hbm_intrs(&iscattrip);
     if (iscattrip == true && logcattrip == false) {
         // asic_pd_set_half_clock(chip_id, inst_id);
-        cattrip_event_cb();
+        if (g_sysmon_cfg.cattrip_event_cb) {
+            g_sysmon_cfg.cattrip_event_cb();
+        }
         logcattrip = true;
     }
 }

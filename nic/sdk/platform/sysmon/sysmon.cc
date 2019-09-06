@@ -1,8 +1,9 @@
 /*
  * Copyright (c) 2019, Pensando Systems Inc.
  */
-#include "sysmon.h"
-#include "platform/capri/csrint/csr_init.hpp"
+#include "sysmon_internal.hpp"
+
+sysmon_cfg_t g_sysmon_cfg;
 
 systemled_t currentstatus = {UKNOWN_STATE, LED_COLOR_NONE};
 
@@ -58,27 +59,24 @@ sysmgrsystemled (systemled_t led) {
 }
 
 int
-sysmond_init (void)
+sysmon_init (sysmon_cfg_t *sysmon_cfg)
 {
     systemled_t led;
 
-    SDK_TRACE_INFO("Monitoring system events");
+    if (sysmon_cfg == NULL) {
+        SDK_TRACE_ERR("Invalid params, cfg is NULL");
+        return -1;
+    }
 
-    // initialize the pal
-#ifdef __x86_64__
-    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
-#elif __aarch64__
-    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW) == sdk::lib::PAL_RET_OK);
-#endif
+    g_sysmon_cfg = *sysmon_cfg;
+
+    SDK_TRACE_INFO("Monitoring system events");
 
     //check for panic dump
     checkpanicdump();
 
-    event_cb_init();
-
-    sdk::platform::capri::csr_init();
-    catalog = sdk::lib::catalog::factory();
-    SDK_TRACE_INFO("HBM Threshold temperature is %u", catalog->hbmtemperature_threshold());
+    SDK_TRACE_INFO("HBM Threshold temperature is %u",
+                   g_sysmon_cfg.catalog->hbmtemperature_threshold());
 
     if (configurefrequency() == 0) {
         SDK_TRACE_INFO("Frequency set from file");
@@ -92,7 +90,7 @@ sysmond_init (void)
 }
 
 int
-sysmond_monitor (void)
+sysmon_monitor (void)
 {
     // Poll the system variables
     monitorsystem();

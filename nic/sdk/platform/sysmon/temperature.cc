@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmon.h"
+#include "sysmon_internal.hpp"
 #include "platform/sensor/sensor.hpp"
 #include "asic/pd/pd.hpp"
 using namespace sdk::asic::pd;
@@ -92,7 +92,9 @@ checktemperature(void)
             SDK_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
                        temperature.hbmtemp, catalog->hbmtemperature_threshold());
         }
-        temp_event_cb(&temperature);
+        if (g_sysmon_cfg.temp_event_cb) {
+            g_sysmon_cfg.temp_event_cb(&temperature);
+        }
     } else {
         SDK_TRACE_ERR("Reading temperature failed");
     }

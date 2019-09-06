@@ -2,9 +2,12 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 #include "logger.h"
-#include "platform/sysmon/sysmon.h"
+#include "platform/sysmon/sysmon.hpp"
 #include "lib/thread/thread.hpp"
 #include "lib/periodic/periodic.hpp"
+#include "platform/capri/csrint/csr_init.hpp"
+#include "delphi/sysmond_delphi.hpp"
+#include "delphi/sysmond_cb.hpp"
 
 #define SYSMOND_TIMER_ID_POLL 1
 #define SYSMOND_POLL_TIME     10000 // 10 secs = 10 * 1000 msecs
@@ -26,7 +29,7 @@ periodic_thread_start (void *ctxt)
 static sdk_ret_t
 sysmond_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    sysmond_monitor();
+    sysmon_monitor();
     sysmond_flush_logger();
     return SDK_RET_OK;
 }
@@ -37,6 +40,7 @@ main(int argc, char *argv[])
     void *res = NULL;
     int rv = 0;
     int thread_id = 0;
+    sysmon_cfg_t sysmon_cfg;
 
     //initialize the logger
     initializeLogger();
@@ -44,8 +48,29 @@ main(int argc, char *argv[])
     // register for SDK logger
     sdk::lib::logger::init(sysmond_logger, sysmond_obfl_logger);
 
+    // initialize the pal
+#ifdef __x86_64__
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
+#elif __aarch64__
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW) == sdk::lib::PAL_RET_OK);
+#endif
+
+    // event cb init
+    event_cb_init();
+
+    sdk::platform::capri::csr_init();
+
+    sdk::lib::catalog *catalog = sdk::lib::catalog::factory();
+
+    sysmon_cfg.frequency_change_event_cb = frequency_change_event_cb;
+    sysmon_cfg.cattrip_event_cb = cattrip_event_cb;
+    sysmon_cfg.power_event_cb = power_event_cb;
+    sysmon_cfg.temp_event_cb = temp_event_cb;
+    sysmon_cfg.memory_event_cb = memory_event_cb;
+    sysmon_cfg.catalog = catalog;
+
     // init the lib
-    sysmond_init();
+    sysmon_init(&sysmon_cfg);
 
     // set the CPU cores for control threads
     sdk::lib::thread::control_cores_mask_set(0xf);

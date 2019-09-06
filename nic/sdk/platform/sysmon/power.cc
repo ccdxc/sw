@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmon.h"
+#include "sysmon_internal.hpp"
 #include "platform/sensor/sensor.hpp"
 
 using namespace sdk::platform::sensor;
@@ -48,7 +48,9 @@ checkpower(void)
             }
             max_pout2 = power.pout2;
         }
-        power_event_cb(&power);
+        if (g_sysmon_cfg.power_event_cb) {
+            g_sysmon_cfg.power_event_cb(&power);
+        }
     } else {
         SDK_TRACE_ERR("Reading power failed");
     }

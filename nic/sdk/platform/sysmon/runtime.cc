@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmon.h"
+#include "sysmon_internal.hpp"
 
 void
 checkruntime(void)

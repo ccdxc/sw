@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmon.h"
+#include "sysmon_internal.hpp"
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>

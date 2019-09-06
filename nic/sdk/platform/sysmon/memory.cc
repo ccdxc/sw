@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 
-#include "sysmon.h"
+#include "sysmon_internal.hpp"
 #include "string.h"
 #include <map>
 
@@ -283,7 +283,9 @@ checkmemory(void)
     removeprocess();
     //monitor the available curr_memory
     monitorfreememory(&total_mem, &available_mem, &free_mem);
-    memory_event_cb(total_mem, available_mem, free_mem);
+    if (g_sysmon_cfg.memory_event_cb) {
+        g_sysmon_cfg.memory_event_cb(total_mem, available_mem, free_mem);
+    }
     color = !color;
 }
 
