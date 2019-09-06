@@ -344,7 +344,7 @@ func testAPICRUDOps() func() {
 }
 
 // Basic CRUD Tests with reload
-var _ = Describe("API Crud tests", func() {
+var _ = Describe("api crud tests", func() {
 	getAPIServerNodeNRestartCount := func() (int64, string, string, error) {
 		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods -o wide --no-headers | grep pen-apiserver "), "\n")
 		By(fmt.Sprintf("kubectl get pods -o wide --no-headers | grep pen-apiserver: %s", out))

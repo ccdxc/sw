@@ -18,7 +18,7 @@ import (
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 )
 
-var _ = Describe("Elastic cluster test", func() {
+var _ = Describe("elastic cluster test", func() {
 	var (
 		esClient                 elastic.ESClient
 		mr                       = mockresolver.New()

@@ -51,7 +51,7 @@ func defaultResultCheck(resp interface{}, tc queryTestCase) error {
 	return nil
 }
 
-var _ = Describe("Search test", func() {
+var _ = Describe("search test", func() {
 
 	BeforeEach(func() {
 		validateCluster()

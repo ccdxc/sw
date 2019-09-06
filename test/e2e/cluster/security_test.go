@@ -201,7 +201,7 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 }
 
 // Security test suite
-var _ = Describe("Security", func() {
+var _ = Describe("security", func() {
 	Context("Security policy tests", func() {
 		// setup
 		BeforeEach(securityTg.setupTest)

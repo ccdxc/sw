@@ -100,6 +100,30 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Using LAST function",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Function: telemetry_query.TsdbFunctionType_LAST.String(),
+			},
+			resp: "SELECT last(*) FROM test-db ORDER BY time ASC",
+			pass: true,
+		},
+		{
+			desc: "Using LAST function with groupby",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Function:    telemetry_query.TsdbFunctionType_LAST.String(),
+				GroupbyTime: "3m",
+			},
+			resp: "SELECT last(*) FROM test-db GROUP BY time(3m) ORDER BY time ASC",
+			pass: true,
+		},
+
+		{
 			desc: "Using MEDIAN function",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{

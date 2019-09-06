@@ -348,7 +348,7 @@ func testObjCUDOps(testSearch bool) func() {
 	}
 }
 
-var _ = Describe("Objstore Write and read test", func() {
+var _ = Describe("objstore write and read test", func() {
 	getVosNodes := func() []string {
 		var ret []string
 		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods -o wide --no-headers | grep pen-vos "), "\n")

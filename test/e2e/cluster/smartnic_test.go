@@ -175,7 +175,7 @@ func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1DistributedServic
 	}, 90, 10).Should(BeTrue(), fmt.Sprintf("DistributedServiceCard metrics do not match cluster state. Have: %+v, want: %+v", actualMetrics, refMetrics))
 }
 
-var _ = Describe("DistributedServiceCard tests", func() {
+var _ = Describe("distributedservicecard tests", func() {
 
 	Context("DistributedServiceCard object creation & nic-admission validation test", func() {
 		var (

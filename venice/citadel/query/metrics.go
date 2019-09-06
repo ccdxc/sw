@@ -83,6 +83,8 @@ func (q *Server) validateMetricsQuerySpec(qs *telemetry_query.MetricsQuerySpec) 
 		//none
 	case telemetry_query.TsdbFunctionType_NONE.String():
 		//none
+	case telemetry_query.TsdbFunctionType_LAST.String():
+		//none
 	}
 
 	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
@@ -216,6 +218,7 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 
 		case telemetry_query.TsdbFunctionType_MEAN.String(),
 			telemetry_query.TsdbFunctionType_MAX.String(),
+			telemetry_query.TsdbFunctionType_LAST.String(),
 			telemetry_query.TsdbFunctionType_MEDIAN.String(),
 			telemetry_query.TsdbFunctionType_DIFFERENCE.String():
 			newFields := []string{}

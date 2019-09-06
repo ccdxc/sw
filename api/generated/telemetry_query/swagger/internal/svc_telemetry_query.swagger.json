@@ -910,7 +910,8 @@
             "max",
             "median",
             "derivative",
-            "difference"
+            "difference",
+            "last"
           ],
           "default": "none",
           "title": "Functions specify an operation function to be applied, example mean()/max()"

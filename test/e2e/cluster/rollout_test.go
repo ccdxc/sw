@@ -118,7 +118,7 @@ func UploadImage(ctx context.Context, client objstore.Client, version string, im
 }
 
 // run the tests
-var _ = Describe("Rollout object tests", func() {
+var _ = Describe("rollout object tests", func() {
 
 	Context("Rollout tests", func() {
 

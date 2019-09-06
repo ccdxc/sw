@@ -19,6 +19,7 @@ enum TsdbFunctionType {
     MEDIAN = 3; // returns median of the fields
     DERIVATIVE = 4; // returns derivative of the fields, defaults to 1s
     DIFFERENCE = 5; // returns difference between subsequent points
+    LAST       = 6; // pick the entry with the most recent timestamp
 }
 
 enum SortOrder {

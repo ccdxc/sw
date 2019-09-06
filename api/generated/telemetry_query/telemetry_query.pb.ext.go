@@ -30,6 +30,7 @@ var _ listerwatcher.WatcherClient
 var TsdbFunctionType_normal = map[string]string{
 	"derivative": "derivative",
 	"difference": "difference",
+	"last":       "last",
 	"max":        "max",
 	"mean":       "mean",
 	"median":     "median",
@@ -43,6 +44,7 @@ var TsdbFunctionType_vname = map[int32]string{
 	3: "median",
 	4: "derivative",
 	5: "difference",
+	6: "last",
 }
 
 var TsdbFunctionType_vvalue = map[string]int32{
@@ -52,6 +54,7 @@ var TsdbFunctionType_vvalue = map[string]int32{
 	"median":     3,
 	"derivative": 4,
 	"difference": 5,
+	"last":       6,
 }
 
 func (x TsdbFunctionType) String() string {

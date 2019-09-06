@@ -290,8 +290,81 @@ var _ = Describe("telemetry tests", func() {
 		}
 		testQueryingMetrics("DistributedServiceCard")
 	})
-	It("telemetry Fwlogs query ", func() {
+	It("telemetry Fwlogs query", func() {
 		testQueryingFwlogs()
+	})
+
+	It("verify query functions", func() {
+		kind := "Node"
+		// Create telemetry client
+		apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+		tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
+		Expect(err).Should(BeNil())
+		ctx := ts.tu.MustGetLoggedInContext(context.Background())
+
+		for qf := range telemetry_query.TsdbFunctionType_value {
+			qf = strings.ToLower(qf)
+			Eventually(func() bool {
+				fields := []string{}
+				if qf == telemetry_query.TsdbFunctionType_MAX.String() {
+					fields = append(fields, "CPUUsedPercent")
+				}
+				nodeQuery := &telemetry_query.MetricsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.MetricsQuerySpec{
+						{
+							TypeMeta: api.TypeMeta{
+								Kind: kind,
+							},
+							Function: qf,
+							Fields:   fields,
+						},
+					},
+				}
+
+				By(fmt.Sprintf("query function:%v kind:%v", qf, kind))
+				res, err := tc.Metrics(ctx, nodeQuery)
+				if err != nil {
+					By(fmt.Sprintf("query for %s returned err: %s", kind, err))
+					return false
+				}
+				if len(res.Results) == 0 || len(res.Results[0].Series) == 0 {
+					By(fmt.Sprintf("query for %v returned empty data", nodeQuery.Queries[0]))
+					return false
+				}
+				if len(res.Results[0].Series[0].Values) == 0 {
+					By(fmt.Sprintf("query returned empty data %v", res.Results[0].Series[0].Values))
+					return false
+				}
+
+				// skip unsupported
+				if qf == telemetry_query.TsdbFunctionType_NONE.String() ||
+					qf == telemetry_query.TsdbFunctionType_DERIVATIVE.String() ||
+					qf == telemetry_query.TsdbFunctionType_DIFFERENCE.String() {
+					return true
+				}
+
+				// group by time
+				By(fmt.Sprintf("query function:%v kind:%v group by time(3m)", qf, kind))
+				nodeQuery.Queries[0].GroupbyTime = "3m"
+				res, err = tc.Metrics(ctx, nodeQuery)
+				if err != nil {
+					By(fmt.Sprintf("query for %s returned err: %s", kind, err))
+					return false
+				}
+				if len(res.Results) == 0 || len(res.Results[0].Series) == 0 {
+					By(fmt.Sprintf("query for %v returned empty data", nodeQuery.Queries[0]))
+					return false
+				}
+				if len(res.Results[0].Series[0].Values) == 0 {
+					By(fmt.Sprintf("query returned empty data %v", res.Results[0].Series[0].Values))
+					return false
+				}
+
+				return true
+			}, 90, 10).Should(BeTrue(), "%s should have reported stats and been queryable", kind)
+		}
 	})
 
 	Context("on restarting citadel service", func() {

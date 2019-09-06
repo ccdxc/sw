@@ -16,7 +16,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
-var _ = Describe("MirrorSession Tests", func() {
+var _ = Describe("mirror session tests", func() {
 	Context("MirrorSession CRUD Tests", func() {
 		var testMirrorSessions = []monitoring.MirrorSession{
 			{

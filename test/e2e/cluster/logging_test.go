@@ -24,7 +24,7 @@ var (
 	sortAsc     = true
 )
 
-var _ = Describe("Logging tests", func() {
+var _ = Describe("logging tests", func() {
 	Context("Logs from all venice services should make it to elastic", func() {
 		var (
 			err      error
