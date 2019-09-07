@@ -16,7 +16,8 @@ import (
 // NodeState security policy state
 type NodeState struct {
 	*sync.Mutex
-	*cluster.Node // node object
+	*cluster.Node      // node object
+	dirty         bool // dirty is true when there are uncommitted updates to apiserver
 }
 
 // NodeStateFromObj converts from memdb object to Node state
@@ -122,7 +123,7 @@ func (sm *Statemgr) UpdateNode(node *cluster.Node, writeback bool) error {
 		return err
 	}
 
-	if writeback {
+	if writeback || nodeState.dirty {
 		nodeObj := node
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
@@ -130,6 +131,7 @@ func (sm *Statemgr) UpdateNode(node *cluster.Node, writeback bool) error {
 			_, err = sm.APIClient().Node().Update(ctx, nodeObj)
 			if err == nil {
 				ok = true
+				nodeState.dirty = false
 				log.Infof("Updated Node object in ApiServer: %+v", nodeObj)
 				cancel()
 				break
@@ -145,6 +147,7 @@ func (sm *Statemgr) UpdateNode(node *cluster.Node, writeback bool) error {
 			cancel()
 		}
 		if !ok {
+			nodeState.dirty = true
 			log.Errorf("Error updating Node object %+v in ApiServer, retries exhausted", nodeObj.ObjectMeta)
 		}
 	}

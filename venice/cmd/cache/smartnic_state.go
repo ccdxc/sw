@@ -18,7 +18,8 @@ import (
 // SmartNICState security policy state
 type SmartNICState struct {
 	*sync.RWMutex
-	*cluster.DistributedServiceCard // smartnic policy object
+	*cluster.DistributedServiceCard      // smartnic policy object
+	dirty                           bool // dirty is true when there are uncommitted updates to apiserver
 }
 
 // SmartNICStateFromObj converts from memdb object to SmartNIC state
@@ -187,7 +188,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, write
 		return err
 	}
 
-	if writeback {
+	if writeback || cachedState.dirty {
 		nicObj := updObj
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
@@ -195,6 +196,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, write
 			_, err = sm.APIClient().DistributedServiceCard().Update(ctx, nicObj)
 			if err == nil {
 				ok = true
+				cachedState.dirty = false
 				cancel()
 				log.Infof("Updated SmartNIC object in ApiServer: %+v", nicObj)
 				break
@@ -210,6 +212,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, write
 			cancel()
 		}
 		if !ok {
+			cachedState.dirty = true
 			log.Errorf("Error updating SmartNIC object %+v in ApiServer, retries exhausted", nicObj.ObjectMeta)
 		}
 	}

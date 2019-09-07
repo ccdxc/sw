@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
@@ -16,7 +17,8 @@ import (
 // HostState security policy state
 type HostState struct {
 	*sync.Mutex
-	*cluster.Host // host object
+	*cluster.Host      // host object
+	dirty         bool // dirty is true when there are uncommitted updates to apiserver
 }
 
 // HostStateFromObj converts from memdb object to Host state
@@ -122,7 +124,7 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 		return err
 	}
 
-	if writeback {
+	if writeback || hostState.dirty {
 		hostObj := host
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
@@ -130,6 +132,7 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 			_, err = sm.APIClient().Host().Update(ctx, hostObj)
 			if err == nil {
 				ok = true
+				hostState.dirty = false
 				log.Infof("Updated Host object in ApiServer: %+v", hostObj)
 				cancel()
 				break
@@ -145,6 +148,7 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 			cancel()
 		}
 		if !ok {
+			hostState.dirty = true
 			log.Errorf("Error updating Host object %+v in ApiServer, retries exhausted", hostObj.ObjectMeta)
 		}
 	}
@@ -165,4 +169,29 @@ func (sm *Statemgr) DeleteHost(host *cluster.Host) error {
 	// Host deletes are never written back to ApiServer
 	log.Infof("Deleted Host state {%+v}", host.ObjectMeta)
 	return nil
+}
+
+func (sm *Statemgr) retryDirtyHosts(done chan bool) {
+	log.Infof("RetryDirtyHosts Start")
+	ticker := time.NewTicker(time.Duration(2*maxAPIServerWriteRetries) * apiClientRetryInterval * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			hosts, err := sm.ListHosts()
+			if err != nil {
+				log.Infof("Error listing hosts")
+			}
+			for _, h := range hosts {
+				h.Lock()
+				if h.dirty {
+					sm.UpdateHost(h.Host, true)
+				}
+				h.Unlock()
+			}
+		case <-done:
+			log.Infof("RetryDirtyHosts Stop")
+			return
+		}
+	}
 }

@@ -33,6 +33,9 @@ type Statemgr struct {
 	// hostnameToSmartNICMap is a cache of known DistributedServiceCard objects indexed by hostname
 	hostnameToSmartNICMap     map[string]*cluster.DistributedServiceCard
 	hostnameToSmartNICMapLock sync.RWMutex
+
+	// channel to stop spawned goroutines
+	done chan bool
 }
 
 // FindObject looks up an object in local db
@@ -78,7 +81,13 @@ func NewStatemgr(clientGetter APIClientGetter) *Statemgr {
 		memDB:                 memdb.NewMemdb(),
 		clientGetter:          clientGetter,
 		hostnameToSmartNICMap: make(map[string]*cluster.DistributedServiceCard),
+		done:                  make(chan bool),
 	}
+
+	// Host objects are not updated periodically, so to make sure that updates
+	// are eventually pushed to ApiServer, we need to track dirty objects and
+	// re-trigger updates from a dedicated goroutine
+	go statemgr.retryDirtyHosts(statemgr.done)
 
 	return statemgr
 }
