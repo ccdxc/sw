@@ -468,6 +468,32 @@ testcases:
             type: remote_only
 
     #=======================================
+    # UD
+    #=======================================
+
+    -   name    : UD_TCPCM
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            transport: ['UD']
+            command  : ['ib_send_bw']
+
+    -   name    : UD_RDMACM
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            rdma_cm  : [ 'yes']
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            transport: ['UD']
+            command  : ['ib_send_bw']
+
+    #=======================================
     # RPing
     #=======================================
     -   name    : Rping

@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import re
 
 def Setup(tc):
  
@@ -21,6 +22,15 @@ def Setup(tc):
     tc.w = []
     tc.w.append(pairs[0][0])
     tc.w.append(pairs[0][1])
+
+    if getattr(tc.iterators, 'transport', None) == 'UD':
+        unames = api.GetTestsuiteAttr("unames")
+        for name in unames:
+            # skip, UD in user space is broken with ib_uverbs of older uek kernel
+            m = re.match(r'^4\.14\.35-(\d+)\..*\.el7uek', name)
+            if m and int(m.group(1)) < 1844:
+                api.Logger.info("Skip UD perftest with uname %s" % (name,))
+                return api.types.status.IGNORED
 
     tc.devices = []
     tc.gid = []

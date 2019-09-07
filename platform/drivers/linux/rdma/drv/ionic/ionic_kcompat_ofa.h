@@ -62,6 +62,7 @@
 #define MLNX_OFED_4_2__4_10b		1
 #define MLNX_OFED_4_2__4_14a		1
 #define MLNX_OFED_4_2__4_14c		1
+#define MLNX_OFED_4_2__4_15		1
 #define MLNX_OFED_4_2__4_17		1
 #define MLNX_OFED_4_2__4_19a		1
 #define MLNX_OFED_4_2__4_19b		1

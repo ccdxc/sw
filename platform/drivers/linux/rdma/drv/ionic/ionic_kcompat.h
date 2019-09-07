@@ -147,6 +147,21 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #define HAVE_QP_INIT_SRC_QPN
 #endif
 
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,15, /* RHEL */ 7,6, /* OFA */ 4_15)
+/* XXX UEK
+ *
+ * Oracle Linux removed the symbol export for ib_resolve_eth_dmac, so we can't
+ * call it from the driver.  Defining the macro below disables the driver code.
+ *
+ * User space verbs with UD type QPs is broken on Oracle Linux.
+ */
+#ifdef _LINUX_UEK_KABI_H
+#define HAVE_CREATE_AH_UDATA_DMAC
+#endif
+#else /* 4.15.0 and later */
+#define HAVE_CREATE_AH_UDATA_DMAC
+#endif
+
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99, /* OFA */ 4_17)
 #define HAVE_IB_GID_DEV_PORT_INDEX
 #else /* 4.17.0 and later */

@@ -2127,6 +2127,14 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 #endif
 
 #ifdef HAVE_CREATE_AH_UDATA
+#ifndef HAVE_CREATE_AH_UDATA_DMAC
+	if (udata) {
+		rc = ib_resolve_eth_dmac(&dev->ibdev, attr);
+		if (rc)
+			goto err_ah;
+	}
+#endif
+
 	if (ctx)
 		rc = ionic_validate_udata(udata, 0, sizeof(resp));
 	else
