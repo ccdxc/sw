@@ -383,11 +383,11 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 	}
 
-	// Create SGPolicy object-3 with 70k rules
+	// Create SGPolicy object-3 with 30000 rules
 	proto := []string{"tcp", "udp"}
 	actions := []string{security.SGRule_PERMIT.String(), security.SGRule_DENY.String()}
-	rules3 := make([]security.SGRule, 70000)
-	for i := 0; i < 70000; i++ {
+	rules3 := make([]security.SGRule, 30000)
+	for i := 0; i < 30000; i++ {
 		rules3[i] = security.SGRule{
 			ProtoPorts:      []security.ProtoPort{{Protocol: fmt.Sprintf("%s", proto[i%2]), Ports: fmt.Sprintf("%d", (i+1)%65536)}},
 			Action:          actions[i%2],

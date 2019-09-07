@@ -146,6 +146,35 @@ func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs
 
 }
 
+// enforceMaxSGRulePreCommitHook ensures that SG Policies will not exceed globals.MaxAllowedSGRules
+func (s *securityHooks) enforceMaxSGRulePreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	policy, ok := i.(security.SGPolicy)
+	if !ok {
+		return i, false, fmt.Errorf("invalid object type %T. Expecting SGPolicy", i)
+	}
+
+	if ctx == nil || kvs == nil {
+		return i, false, fmt.Errorf("enforceMaxSGPolicyPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
+	}
+
+	switch oper {
+	case apiintf.UpdateOper:
+		fallthrough
+	case apiintf.CreateOper:
+		// check if we are exceeding max limit
+		numRules := len(policy.Spec.Rules)
+		log.Infof("Found %d rules", numRules)
+		if numRules > globals.MaxAllowedSGRules {
+			log.Errorf("Failed to create SGPolicy: %s with %d rules, exceeds max allowed rules of %d", policy.Name, numRules, globals.MaxAllowedSGRules)
+			return nil, false, fmt.Errorf("failed to create SGPolicy: %s with %d rules, exceeds max allowed rules of %d", policy.Name, numRules, globals.MaxAllowedSGRules)
+		}
+		return i, true, nil
+	default:
+		return i, true, nil
+	}
+
+}
+
 // validateProtoPort will enforce a valid proto/port declaration.
 // references to the named apps will be handled by the controller.
 func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
@@ -454,6 +483,8 @@ func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("SGPolicy", apiintf.CreateOper).GetRequestType().WithValidate(r.validateSGPolicy)
 	svc.GetCrudService("SGPolicy", apiintf.CreateOper).WithPreCommitHook(r.enforceMaxSGPolicyPreCommitHook)
+	svc.GetCrudService("SGPolicy", apiintf.CreateOper).WithPreCommitHook(r.enforceMaxSGRulePreCommitHook)
+	svc.GetCrudService("SGPolicy", apiintf.UpdateOper).WithPreCommitHook(r.enforceMaxSGRulePreCommitHook)
 	svc.GetCrudService("App", apiintf.CreateOper).GetRequestType().WithValidate(r.validateApp)
 }
 

@@ -3045,13 +3045,13 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 		},
 		{
-			// Scale profile, match on 35000th rule
-			"Scale test with match on 35001th Rule",
+			// Scale profile, match on 29000th rule
+			"Scale test with match on 29000th Rule",
 			search.PolicySearchRequest{
 				Tenant:        "default",
 				Protocol:      "tcp",
-				Port:          "35001",
-				FromIPAddress: "10.0.136.184",
+				Port:          "29001",
+				FromIPAddress: "10.0.113.72",
 				ToIPAddress:   "any",
 				SGPolicy:      "sgp-aggregate",
 			},
@@ -3062,16 +3062,16 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 						Entries: []*search.PolicyMatchEntry{
 							{
 								Rule: &security.SGRule{
-									ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "35001"}},
+									ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "29001"}},
 									FromIPAddresses: []string{
-										"10.0.136.184/32",
+										"10.0.113.72/32",
 									},
 									ToIPAddresses: []string{
-										"20.0.136.184/32",
+										"20.0.113.72/32",
 									},
 									Action: security.SGRule_PERMIT.String(),
 								},
-								Index: 35008, // zero base + 1st 8 rules
+								Index: 29008, // zero base + 1st 8 rules
 							},
 						},
 					},
@@ -3079,14 +3079,14 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 		},
 		{
-			// Scale profile, match on 70000th rule
-			"Scale test with match on 70000th Rule",
+			// Scale profile, match on 29999th rule
+			"Scale test with match on 29999th Rule",
 			search.PolicySearchRequest{
 				Tenant:        "default",
 				Protocol:      "udp",
-				Port:          "4464",
-				FromIPAddress: "10.1.17.111",
-				ToIPAddress:   "20.1.17.111",
+				Port:          "30000",
+				FromIPAddress: "10.0.117.47",
+				ToIPAddress:   "20.0.117.47",
 				SGPolicy:      "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
@@ -3096,16 +3096,16 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 						Entries: []*search.PolicyMatchEntry{
 							{
 								Rule: &security.SGRule{
-									ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "4464"}},
+									ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "30000"}},
 									FromIPAddresses: []string{
-										"10.1.17.111/32",
+										"10.1.117.47/32",
 									},
 									ToIPAddresses: []string{
-										"20.1.17.111/32",
+										"20.1.117.47/32",
 									},
 									Action: security.SGRule_DENY.String(),
 								},
-								Index: 70007, // zero base + 1st 8 rules
+								Index: 30007, // zero base + 1st 8 rules
 							},
 						},
 					},

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/api/generated/apiclient"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -242,6 +244,146 @@ func TestMaxSGPolicyEnforcementForSameName(t *testing.T) {
 
 	_, _, err = s.enforceMaxSGPolicyPreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
 	AssertOk(t, err, "SGPolicy creates with same name must not fail")
+	err = kv.Delete(ctx, key, nil)
+	AssertOk(t, err, "Error deleting object in KVStore")
+}
+
+func TestMaxSGRuleEnforcementOnCreate(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	var rules []security.SGRule
+	for i := 0; i < globals.MaxAllowedSGRules+1; i++ {
+		rule := security.SGRule{
+
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"any"},
+		}
+		rules = append(rules, rule)
+	}
+
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	sgp1 := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy1",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{"max-test"}, Codec: runtime.NewJSONCodec(runtime.GetDefaultScheme())}
+	kv, err := store.New(config)
+	AssertOk(t, err, "Failed to create kv store. Err: %v", err)
+
+	ctx := context.TODO()
+	key := strings.TrimSuffix(sgp.MakeKey(string(apiclient.GroupSecurity)), "/")
+	err = kv.Create(ctx, key, &sgp)
+	AssertOk(t, err, "Error creating object in KVStore")
+
+	_, _, err = s.enforceMaxSGRulePreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
+	Assert(t, err != nil, "SGPolicy creates exceeding max allowed rules must fail", err)
+	err = kv.Delete(ctx, key, nil)
+	AssertOk(t, err, "Error deleting object in KVStore")
+}
+
+func TestMaxSGRuleEnforcementOnUpdate(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	var rules []security.SGRule
+	for i := 0; i < globals.MaxAllowedSGRules+1; i++ {
+		rule := security.SGRule{
+
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"any"},
+		}
+		rules = append(rules, rule)
+	}
+
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicyUpdate",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	sgp1 := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicyUpdate1",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{"max-test"}, Codec: runtime.NewJSONCodec(runtime.GetDefaultScheme())}
+	kv, err := store.New(config)
+	AssertOk(t, err, "Failed to create kv store. Err: %v", err)
+
+	ctx := context.TODO()
+	key := strings.TrimSuffix(sgp.MakeKey(string(apiclient.GroupSecurity)), "/")
+	err = kv.Create(ctx, key, &sgp)
+	AssertOk(t, err, "Error creating object in KVStore")
+
+	_, _, err = s.enforceMaxSGRulePreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.UpdateOper, false, sgp1)
+	Assert(t, err != nil, "SGPolicy creates exceeding max allowed rules must fail", err)
 	err = kv.Delete(ctx, key, nil)
 	AssertOk(t, err, "Error deleting object in KVStore")
 }
