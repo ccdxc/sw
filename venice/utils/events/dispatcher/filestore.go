@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	maxFileSize = 10 * 1000 * 1000 // 10mb
-	maxNumFiles = 5                // up to 5 events files
+	maxFileSize = 2 * 1000 * 1000 // 2mb
+	maxNumFiles = 5               // up to 5 events files
 	fileMode    = 0755
 )
 
