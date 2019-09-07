@@ -48,6 +48,7 @@ public:
     apulu_impl_state *apulu_impl_db(void) const { return apulu_impl_db_; }
     lif_impl_state *lif_impl_db(void) const { return lif_impl_db_; }
     tep_impl_state *tep_impl_db(void) const { return tep_impl_db_; }
+    vpc_impl_state *vpc_impl_db(void) const { return vpc_impl_db_; }
     vnic_impl_state *vnic_impl_db(void) const { return vnic_impl_db_; }
     mapping_impl_state *mapping_impl_db(void) const { return mapping_impl_db_; }
     route_table_impl_state *route_table_impl_db(void) const {
@@ -70,6 +71,7 @@ private:
     apulu_impl_state           *apulu_impl_db_;
     lif_impl_state             *lif_impl_db_;
     tep_impl_state             *tep_impl_db_;
+    vpc_impl_state             *vpc_impl_db_;
     vnic_impl_state            *vnic_impl_db_;
     mapping_impl_state         *mapping_impl_db_;
     route_table_impl_state     *route_table_impl_db_;
