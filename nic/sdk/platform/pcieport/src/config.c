@@ -143,6 +143,25 @@ pcieport_mac_k_rx_cred(pcieport_t *p)
     }
 }
 
+/*
+ * Set these values to perform better on pcie compliance tests.
+ * k_lmr is documented in
+ *     PLDA XpressRICH4 Reference Manual
+ *     Version 1.9.3 January 2018 - Pre-release draft
+ */
+static void
+pcieport_mac_k_lmr(pcieport_t *p)
+{
+    const int pn = p->port;
+    u_int32_t val[3];
+
+    pal_reg_rd32w(PXC_(CFG_C_MAC_K_LMR, pn), val, 3);
+    val[0] = 0x140620df;
+    val[1] = 0x800000;
+    val[2] = 0xf;
+    pal_reg_wr32w(PXC_(CFG_C_MAC_K_LMR, pn), val, 3);
+}
+
 static void
 pcieport_mac_set_ids(pcieport_t *p)
 {
@@ -308,6 +327,7 @@ pcieport_config_host(pcieport_t *p)
     pcieport_mac_k_rx_cred(p);
     pcieport_mac_k_pexconf(p);
     pcieport_mac_k_pciconf(p);
+    pcieport_mac_k_lmr(p);
 
     pcieport_poweron_script(p);
 
@@ -315,6 +335,12 @@ pcieport_config_host(pcieport_t *p)
     if (pcieport_mac_unreset(p) < 0) {
         return -1;
     }
+
+    /*
+     * Set "margining ready" for better pcie compliance test results.
+     * Margining is Gen4 or later.
+     */
+    pcieport_set_margining_ready(p, 1);
 
     /*
      * "AER common" controls whether we capture errors

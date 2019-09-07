@@ -264,6 +264,23 @@ pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq)
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
 
+void
+pcieport_set_margining_ready(pcieport_t *p, const int on)
+{
+    const int pn = p->port;
+    u_int32_t reg[2];
+#define MARGINING_READY \
+    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_1_2_MARGINING_READY_FIELD_MASK
+
+    pal_reg_rd32w(PXC_(CFG_C_PORT_MAC, pn), reg, 2);
+    if (on) {
+        reg[1] |= MARGINING_READY;
+    } else {
+        reg[1] &= ~MARGINING_READY;
+    }
+    pal_reg_wr32w(PXC_(CFG_C_PORT_MAC, pn), reg, 2);
+}
+
 /*
  * The interface to this register group has special considerations.
  * When the "update" field is set the hw sets its internal buffer pointers
