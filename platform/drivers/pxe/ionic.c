@@ -142,6 +142,8 @@ static void ionic_close(struct net_device *netdev)
 
 	ionic_qcq_disable(ionic->lif->txqcqs);
 
+	ionic_lif_quiesce(ionic->lif);
+
 	ionic_tx_flush(netdev, ionic->lif);
 
 	ionic_rx_flush(ionic->lif);

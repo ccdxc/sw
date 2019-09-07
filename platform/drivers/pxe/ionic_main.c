@@ -1221,6 +1221,29 @@ int ionic_qcq_disable(struct qcq *qcq)
 }
 
 /**
+ * Quiesce the lif, using adminq_post
+ * */
+int ionic_lif_quiesce(struct lif *lif)
+{
+	int err;
+	struct ionic_admin_ctx ctx = {
+		.cmd.lif_setattr = {
+			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.attr = IONIC_LIF_ATTR_STATE,
+			.index = lif->index,
+			.state = IONIC_LIF_DISABLE
+		},
+	};
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err) {
+		DBG2("%s :: failed to quiesce lif error = %d\n", __FUNCTION__, err);
+		return err;
+	}
+	return 0;
+}
+
+/**
  * Cleans up the rxq of the remaining IOB
  * */
 void ionic_rx_flush(struct lif *lif)

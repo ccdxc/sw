@@ -278,6 +278,7 @@ int ionic_qcq_enable(struct qcq *qcq);
 int ionic_qcq_disable(struct qcq *qcq);
 int ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode);
 
+int ionic_lif_quiesce(struct lif *lif);
 void ionic_rx_flush(struct lif *lif);
 void ionic_tx_flush(struct net_device *netdev, struct lif *lif);
 void ionic_rx_fill(struct net_device *netdev, int length);
