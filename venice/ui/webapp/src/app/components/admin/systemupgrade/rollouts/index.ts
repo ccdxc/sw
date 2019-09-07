@@ -9,9 +9,9 @@ export interface RolloutImageLabel {
 }
 
 export enum EnumRolloutOptions {
-    'naplesonly' = 'DS-Card Only',
+    'naplesonly' = 'DSC Only',
     'veniceonly' = 'Venice Only',
-    'both' = 'Both DS-Card and Venice'
+    'both' = 'Both DSC and Venice'
 }
 
 export interface RolloutImageOption extends SelectItem {

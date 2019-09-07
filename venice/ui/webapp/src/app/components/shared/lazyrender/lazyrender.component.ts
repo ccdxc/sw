@@ -240,6 +240,7 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
       $('.lazyrender-container .ui-table-scrollable-body').css('max-height', newHeight + 'px');
       // Setting height as well since sometimes the auto calculation is off by 1 px
       $('.lazyrender-container .ui-table-scrollable-body').css('height', newHeight + 'px');
+      $('.lazyrender-container .ui-table-scrollable-body').css('visibility', ''); // VS-757.  Parent html dom has "visibility: hidden". We want this node now to have "visibility: visible"
     }, delay);
   }
 

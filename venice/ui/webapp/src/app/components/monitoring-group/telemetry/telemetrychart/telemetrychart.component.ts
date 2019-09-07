@@ -469,7 +469,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   buildMetricsPollingQuery(source: DataSource): MetricsPollingQuery {
     const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
     if (source.measurement === 'Cluster') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
-      query.query.function = Telemetry_queryMetricsQuerySpec_function.median; // VS-741 use median function to show DSC count
+      query.query.function = Telemetry_queryMetricsQuerySpec_function.last; // VS-741 use last (2019-09-06) function to show DSC count
     }
     /* if (source.measurement === 'FteCPSMetrics') { // CPS
       query.query.function = Telemetry_queryMetricsQuerySpec_function.none; // VS-741 use median function to show DSC count
@@ -726,6 +726,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     resDataSets.forEach( (dataset, index) => {
       const key = sourceFieldKey(dataset.sourceID, dataset.sourceMeasurement, dataset.sourceField) + dataset.label;
       dataset.hidden = hiddenDatasets[key] != null ? hiddenDatasets[key] : false;
+      dataset.steppedLine = (dataset.sourceMeasurement === 'Cluster') ? 'middle' : false; // VS-741 make cluster chart using stepped-line style
     });
 
     this.graphOptions = newGraphOptions;
