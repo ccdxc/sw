@@ -64,11 +64,12 @@ public:
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
-    mem_hash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
+    mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
     directmap *nat_tbl(void) { return nat_tbl_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
     friend class mapping_impl;    ///< friend of mapping_impl_state
+    friend class vnic_impl;
 
 private:
     mem_hash  *local_mapping_tbl_;

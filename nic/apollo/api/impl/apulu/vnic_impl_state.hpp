@@ -61,7 +61,6 @@ public:
 private:
     indexer *vnic_idxr(void) { return vnic_idxr_; }
     slab *vnic_impl_slab(void) { return vnic_impl_slab_; }
-    mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
     ///< vnic_impl class is friend of vnic_impl_state
     friend class vnic_impl;
     ///< mapping_impl class is friend of vnic_impl_state
@@ -73,7 +72,6 @@ private:
     slab     *vnic_impl_slab_;
     ///< indexer to allocate hw vnic id
     indexer  *vnic_idxr_;
-    mem_hash *local_mapping_tbl_;
 };
 
 /// \@}

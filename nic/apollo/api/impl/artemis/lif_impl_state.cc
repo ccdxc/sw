@@ -50,36 +50,6 @@ lif_impl_state::~lif_impl_state() {
     //directmap::destroy(tx_rate_limiter_tbl_);
 }
 
-lif_impl *
-lif_impl_state::alloc(void) {
-    return (lif_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_LIF_IMPL, sizeof(lif_impl));
-}
-
-sdk_ret_t
-lif_impl_state::insert(lif_impl *impl) {
-    return lif_ht_->insert_with_key(&impl->key_, impl, &impl->ht_ctxt_);
-}
-
-lif_impl *
-lif_impl_state::remove(lif_impl *impl) {
-    return (lif_impl *)(lif_ht_->remove(&impl->key_));
-}
-
-void
-lif_impl_state::free(lif_impl *impl) {
-    SDK_FREE(SDK_MEM_ALLOC_PDS_LIF_IMPL, impl);
-}
-
-lif_impl *
-lif_impl_state::find(pds_lif_key_t *key) const {
-    return (lif_impl *)(lif_ht_->lookup(key));
-}
-
-sdk_ret_t
-lif_impl_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
-    return lif_ht_->walk(walk_cb, ctxt);
-}
-
 /// \@}
 
 }    // namespace impl
