@@ -573,6 +573,17 @@ func TestNewTpAgent(t *testing.T) {
 	})
 	tu.AssertOk(t, err, fmt.Sprintf("failed to list export policy"))
 	tu.Assert(t, len(l) == 2, fmt.Sprintf("invalid number of export policy, expectec 2 got %d, %+v", len(l), l))
+
+	fd, err := os.Create(tpafile)
+	tu.AssertOk(t, err, "failed to create %v", tpafile)
+	fd.Close()
+	defer os.Remove(tpafile)
+
+	// check reboot cleanup
+	ng, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
+	defer cleanup(t, ng)
+
 }
 
 func TestCreateFlowExportPolicy(t *testing.T) {

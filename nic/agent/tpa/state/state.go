@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -39,7 +40,8 @@ import (
 
 const (
 	flowExportPolicyID = "flowExportPolicyId"
-	ipfixSrcPort       = 32007 // src port used by datapath
+	ipfixSrcPort       = 32007                // src port used by datapath
+	tpafile            = "/tmp/.netagent-tpa" // temp file in tmpfs
 )
 
 // PolicyState keeps the agent state
@@ -96,10 +98,57 @@ func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string, halTm hal
 		ipfixCtx:      &sync.Map{},
 	}
 
+	reboot := false // naples rebooted
+	if _, err := os.Stat(tpafile); err != nil {
+		if os.IsNotExist(err) {
+			if fd, err := os.Create(tpafile); err != nil {
+				log.Errorf("failed to create %v, %v", tpafile, err)
+			} else {
+				fd.Close()
+			}
+			reboot = true
+		}
+	}
+
 	// restart? check if there are flow monitor/collectors configured in hal
 	pctx := &policyDb{state: state}
-	pctx.readCollectorTable()
 
+	if reboot {
+		log.Infof("cleanup flowexport db on restart")
+
+		if err := state.store.Delete(&types.CollectorTable{
+			TypeMeta: api.TypeMeta{Kind: "tpacollectorTable"},
+		}); err != nil {
+			if !strings.Contains(err.Error(), emstore.ErrTableNotFound.Error()) {
+				log.Errorf("failed to cleanup collector table")
+			}
+		}
+
+		if err := state.store.Delete(&types.FlowMonitorTable{
+			TypeMeta: api.TypeMeta{Kind: "tpaFlowMonitorTable"},
+		}); err != nil {
+			if !strings.Contains(err.Error(), emstore.ErrTableNotFound.Error()) {
+				log.Errorf("failed to cleanup flow monitor table")
+			}
+		}
+
+		if objList, err := state.store.List(&types.FlowExportPolicyTable{
+			FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "FlowExportPolicy",
+				},
+			},
+		}); err == nil {
+			for _, obj := range objList {
+				log.Infof("deleting policy %v", obj.GetObjectMeta())
+				if err := state.store.Delete(obj); err != nil {
+					log.Errorf("failed to delete policy, %v", err)
+				}
+			}
+		}
+	}
+
+	pctx.readCollectorTable()
 	for _, cdata := range pctx.collectorTable.Collector {
 		ckey := &cdata.Key
 		state.SendTemplates(context.Background(), ckey)
@@ -915,7 +964,9 @@ func (p *policyDb) readFlowMonitorTable() *types.FlowMonitorTable {
 
 	obj, err := p.state.store.Read(fmObj)
 	if err != nil {
-		log.Warnf("failed to read FlowMonitor table, %s", err)
+		if !strings.Contains(err.Error(), emstore.ErrTableNotFound.Error()) {
+			log.Warnf("failed to read FlowMonitor table, %s", err)
+		}
 		return fmObj
 	}
 
@@ -947,7 +998,9 @@ func (p *policyDb) readCollectorTable() error {
 
 	obj, err := p.state.store.Read(collObj)
 	if err != nil {
-		log.Warnf("failed to read collector table, %s", err)
+		if !strings.Contains(err.Error(), emstore.ErrTableNotFound.Error()) {
+			log.Warnf("failed to read collector table, %s", err)
+		}
 		return nil
 	}
 
@@ -1300,7 +1353,15 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 		},
 	}); err == nil {
 		for _, obj := range objList {
-			readObj, err := s.store.Read(obj)
+			readObj, err := s.store.Read(&types.FlowExportPolicyTable{
+				FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+					TypeMeta: api.TypeMeta{
+						Kind: "FlowExportPolicy",
+					},
+					ObjectMeta: *obj.GetObjectMeta(),
+				},
+			})
+
 			if err != nil || readObj == nil {
 				continue
 			}
