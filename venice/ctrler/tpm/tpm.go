@@ -205,7 +205,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 	defer cancelWatch()
 
 	watchList := map[int]string{}
-	opts := api.ListWatchOptions{}
+	opts := api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}
 	selCases := []reflect.SelectCase{}
 
 	// stats
@@ -245,7 +245,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// watch tenants
-	watcher, err = pm.apiClient.ClusterV1().Tenant().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}})
+	watcher, err = pm.apiClient.ClusterV1().Tenant().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch tenant, error: {%s}", err)
 		return err

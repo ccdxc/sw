@@ -238,7 +238,7 @@ func TestProcessEvents(t *testing.T) {
 	defer cancel()
 
 	pa := &PolicyManager{}
-	opts := &api.ListWatchOptions{}
+	opts := &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}
 
 	sV1 := &mockMonitoringV1{}
 	mSp := mockapi.NewMockMonitoringV1StatsPolicyInterface(ctrl)
@@ -292,14 +292,13 @@ func TestProcessEvents(t *testing.T) {
 	mSp.EXPECT().Watch(ctx, opts).Return(statsEvent, nil).Times(1)
 	mFp.EXPECT().Watch(ctx, opts).Return(fwlogEvent, nil).Times(1)
 	mEvp.EXPECT().Watch(ctx, opts).Return(flowExpEvent, nil).Times(1)
-	mTnt.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(nil, fmt.Errorf("mock tenant failure")).Times(1)
+	mTnt.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("mock tenant failure")).Times(1)
 
 	mapi.EXPECT().MonitoringV1().Return(sV1).Times(3)
 	mapi.EXPECT().ClusterV1().Return(tV1).Times(1)
 
 	err = pa.processEvents(parentCtx)
 	tu.Assert(t, err != nil, "missed tenant failure")
-
 }
 
 func TestEventLoop(t *testing.T) {
@@ -313,7 +312,7 @@ func TestEventLoop(t *testing.T) {
 	pa, err := NewPolicyManager(listenURL, r, "127.0.0.1:")
 	tu.AssertOk(t, err, "failed to create policy manager")
 
-	opts := &api.ListWatchOptions{}
+	opts := &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}
 
 	sV1 := &mockMonitoringV1{}
 	mSp := mockapi.NewMockMonitoringV1StatsPolicyInterface(ctrl)
