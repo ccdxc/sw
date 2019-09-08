@@ -52,10 +52,28 @@ public:
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
+    /// \brief     API to get table stats
+    /// \param[in]  cb      callback to be called on stats
+    ///             ctxt    opaque ctxt passed to the callback
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
+
 private:
     indexer *vnic_idxr(void) { return vnic_idxr_; }
-    friend class vnic_impl;       ///< vnic_impl class is friend of vnic_impl_state
-    friend class mapping_impl;    ///< mapping_impl class is friend of vnic_impl_state
+    slab *vnic_impl_slab(void) { return vnic_impl_slab_; }
+    mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
+    ///< vnic_impl class is friend of vnic_impl_state
+    friend class vnic_impl;
+    ///< mapping_impl class is friend of vnic_impl_state
+    friend class mapping_impl;
+
+private:
+    // NOTE: there is no explicit table mgmt for rx and tx stats, we directly
+    //       index using hw_id_ of vnic and and bzero out when we create vnic
+    slab     *vnic_impl_slab_;
+    ///< indexer to allocate hw vnic id
+    indexer  *vnic_idxr_;
+    mem_hash *local_mapping_tbl_;
 };
 
 /// \@}
