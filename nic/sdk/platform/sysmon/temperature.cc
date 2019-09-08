@@ -8,7 +8,6 @@
 using namespace sdk::asic::pd;
 using namespace sdk::platform::sensor;
 
-sdk::lib::catalog  *catalog = NULL;
 static pd_adjust_perf_index_t perf_id = PD_PERF_ID0;
 int startingfrequency_1100 = 0;
 
@@ -86,11 +85,11 @@ checktemperature(void)
         if (startingfrequency_1100 == 1) {
             changefrequency(temperature.hbmtemp);
         }
-        if (temperature.hbmtemp >= catalog->hbmtemperature_threshold()) {
+        if (temperature.hbmtemp >= g_sysmon_cfg.catalog->hbmtemperature_threshold()) {
             SDK_OBFL_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
-                       temperature.hbmtemp, catalog->hbmtemperature_threshold());
+                       temperature.hbmtemp, g_sysmon_cfg.catalog->hbmtemperature_threshold());
             SDK_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
-                       temperature.hbmtemp, catalog->hbmtemperature_threshold());
+                       temperature.hbmtemp, g_sysmon_cfg.catalog->hbmtemperature_threshold());
         }
         if (g_sysmon_cfg.temp_event_cb) {
             g_sysmon_cfg.temp_event_cb(&temperature);

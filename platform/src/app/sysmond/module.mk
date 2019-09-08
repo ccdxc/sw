@@ -14,5 +14,5 @@ MODULE_LDLIBS   = :libprotobuf.so.14 grpc++ \
                   ${NIC_COMMON_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                   ${NIC_CAPSIM_LDLIBS}
-MODULE_FLAGS    = -DCAPRI_SW ${NIC_CSR_FLAGS}
+MODULE_FLAGS    = -DCAPRI_SW ${NIC_CSR_FLAGS} -O2
 include ${MKDEFS}/post.mk

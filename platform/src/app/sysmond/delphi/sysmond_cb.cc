@@ -11,6 +11,7 @@ static shared_ptr<SysmondService> svc;
 static delphi::objects::asicpowermetrics_t asicpower;
 static delphi::objects::asictemperaturemetrics_t asictemp;
 static delphi::objects::asicmemorymetrics_t asicmemory;
+static delphi::SdkPtr g_sdk;
 
 void
 event_cb_init (void)
@@ -27,9 +28,8 @@ event_cb_init (void)
     svc = make_shared<SysmondService>(sdk, "Sysmond");
     svc->init();
     sdk->RegisterService(svc);
-
-    pthread_create(&delphi_thread, NULL, delphi_thread_run, reinterpret_cast<void *>(&sdk));
-
+    g_sdk = sdk;
+    pthread_create(&delphi_thread, NULL, delphi_thread_run, reinterpret_cast<void *>(&g_sdk));
 }
 
 void
