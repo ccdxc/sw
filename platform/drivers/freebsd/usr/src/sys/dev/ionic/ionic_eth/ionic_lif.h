@@ -59,6 +59,10 @@ struct tx_stats {
 	u64 tso_max_descs;
 	u64 tso_too_big;
 	u64 tso_no_descs;
+	u64 tso_sparse;
+	u64 tso_defrag_sparse;
+	u64 pkt_sparse;
+	u64 pkt_defrag_sparse;
 	u64 bad_ethtype;	/* Unknown Ethernet frame. */
 	u64 wdog_expired;
 };
@@ -97,7 +101,9 @@ struct ionic_rx_buf {
 
 struct ionic_tx_buf {
 	struct mbuf *m;
+	u8 is_tso;
 	bus_dmamap_t dma_map;
+	bus_dmamap_t tso_dma_map;
 	uint64_t timestamp;
 	uint64_t pa_addr; 		/* Cache address to avoid access to command ring. */
 };
@@ -243,6 +249,7 @@ struct txque {
 
 	struct ionic_tx_buf *txbuf;	/* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
+	bus_dma_tag_t tso_buf_tag;
 	struct ionic_dma_info cmd_dma; 	/* DMA ring for command and completion. */
 	dma_addr_t cmd_ring_pa;
 	dma_addr_t comp_ring_pa;

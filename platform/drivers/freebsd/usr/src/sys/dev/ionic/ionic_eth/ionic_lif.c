@@ -1805,7 +1805,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	/*
-	 * Create just one tag for Tx bufferrs.
+	 * Create one tag for non-TSO buffers and another one for TSO buffers.
 	 */
 	error = bus_dma_tag_create(
 	         /*      parent */ bus_get_dma_tag(txq->lif->ionic->dev->bsddev),
@@ -1818,7 +1818,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	         /*     maxsize */ IONIC_MAX_TSO_SIZE,
 	         /* HW supports one segment on desc ring and max_sg_elems on sg ring */
 	         /*   nsegments */ txq->max_sg_elems + 1,
-	         /*  maxsegsize */ IONIC_MAX_TSO_SG_SIZE,
+	         /*  maxsegsize */ IONIC_MAX_TSO_SEG_SIZE,
 	         /*       flags */ 0,
 	         /*    lockfunc */ NULL,
 	         /* lockfuncarg */ NULL,
@@ -1834,6 +1834,39 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 		if (error) {
 			IONIC_QUE_ERROR(txq, "failed to create map for entry%d, err: %d\n", i, error);
 			bus_dma_tag_destroy(txq->buf_tag);
+			goto failed_alloc;
+		}
+	}
+
+	error = bus_dma_tag_create(
+	         /*      parent */ bus_get_dma_tag(txq->lif->ionic->dev->bsddev),
+	         /*   alignment */ 1,
+	         /*      bounds */ 0,
+	         /*     lowaddr */ IONIC_MAX_ADDR,
+	         /*    highaddr */ BUS_SPACE_MAXADDR,
+	         /*      filter */ NULL,
+	         /*   filterarg */ NULL,
+	         /*     maxsize */ IONIC_MAX_TSO_SIZE,
+	         /* HW supports one segment on desc ring and max_sg_elems on sg ring */
+	         /*   nsegments */ IONIC_MAX_TSO_SEGMENTS,
+	         /*  maxsegsize */ IONIC_MAX_TSO_SEG_SIZE,
+	         /*       flags */ 0,
+	         /*    lockfunc */ NULL,
+	         /* lockfuncarg */ NULL,
+	                           &txq->tso_buf_tag);
+
+	if (error) {
+		IONIC_QUE_ERROR(txq, "failed to create TSO DMA tag, err: %d\n", error);
+		bus_dma_tag_destroy(txq->buf_tag);
+		goto failed_alloc;
+	}
+
+	for ( txbuf = txq->txbuf, i = 0 ; txbuf != NULL && i < num_descs; i++, txbuf++ ) {
+		error = bus_dmamap_create(txq->tso_buf_tag, 0, &txbuf->tso_dma_map);
+		if (error) {
+			IONIC_QUE_ERROR(txq, "failed to create map for entry%d, err: %d\n", i, error);
+			bus_dma_tag_destroy(txq->buf_tag);
+			bus_dma_tag_destroy(txq->tso_buf_tag);
 			goto failed_alloc;
 		}
 	}
@@ -2109,8 +2142,8 @@ ionic_lif_ifnet_init(struct lif *lif)
 	/* Adverise h/w TSO limits. */
 	ifp->if_hw_tsomax = IONIC_MAX_TSO_SIZE - (ETHER_HDR_LEN + ETHER_CRC_LEN);
 	/* HW supports one segment on desc ring and max_sg_elems on sg ring */
-	ifp->if_hw_tsomaxsegcount = lif->txqs[0]->max_sg_elems + 1;
-	ifp->if_hw_tsomaxsegsize = IONIC_MAX_TSO_SG_SIZE;
+	ifp->if_hw_tsomaxsegcount = IONIC_MAX_TSO_SEGMENTS;
+	ifp->if_hw_tsomaxsegsize = IONIC_MAX_TSO_SEG_SIZE;
 
 	ifmedia_init(&lif->media, IFM_IMASK, ionic_media_change,
 		ionic_media_status);
@@ -2879,10 +2912,16 @@ ionic_tx_clean(struct txque *txq, int tx_limit)
 		if (txbuf->m != NULL) {
 			IONIC_TX_TRACE(txq, "took %lu tsc to free %d descs txbuf index @:%d\n",
 				rdtsc() - txbuf->timestamp, batch, cmd_stop_index);
-			bus_dmamap_sync(txq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
-			bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
+			if (txbuf->is_tso) {
+				bus_dmamap_sync(txq->tso_buf_tag, txbuf->tso_dma_map, BUS_DMASYNC_POSTWRITE);
+				bus_dmamap_unload(txq->tso_buf_tag, txbuf->tso_dma_map);
+			} else {
+				bus_dmamap_sync(txq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
+				bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
+			}
 			m_freem(txbuf->m);
 			txbuf->m = NULL;
+			txbuf->is_tso = 0;
 			batch = 0;
 		}
 

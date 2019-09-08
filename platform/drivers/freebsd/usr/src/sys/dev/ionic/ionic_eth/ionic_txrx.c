@@ -928,7 +928,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	struct txq_sg_elem *sg;
 	struct tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *txbuf;
-	struct mbuf *m;
+	struct mbuf *m, *newm;
 	bool offload = false;
 	int i, error, index, nsegs;
 	bus_dma_segment_t  seg[IONIC_MAX_SEGMENTS];
@@ -944,9 +944,13 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
-	if (error == EFBIG) {
-		struct mbuf *newm;
+	if (!error && nsegs > txq->max_sg_elems + 1) {
+		bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
+		stats->pkt_sparse++;
+		error = EFBIG;
+	}
 
+	if (error == EFBIG) {
 		stats->mbuf_defrag++;
 		newm = m_defrag(*m_headp, M_NOWAIT);
 		if (newm == NULL) {
@@ -957,18 +961,22 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 			return (ENOBUFS);
 		}
 		*m_headp = newm;
+
 		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, newm,
 			seg, &nsegs, BUS_DMA_NOWAIT);
+		if (!error && nsegs > txq->max_sg_elems + 1) {
+			bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
+			stats->pkt_defrag_sparse++;
+			error = EFBIG;
+		}
 	}
 
-	if (error || (nsegs > txq->max_sg_elems + 1)) {
+	if (error) {
 		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, segs %d/%d, error: %d\n",
 				nsegs, txq->max_sg_elems, error);
-		/* Too many segments. */
-		error = (error == 0) ? EFBIG : error;
 		return (error);
 	}
 
@@ -1093,10 +1101,58 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 				len, m->m_pkthdr.len);
 }
 
+/* Is any MSS size chunk spanning more than the supported number of SGLs? */
+static inline int
+ionic_tso_is_sparse(struct txque *txq, struct mbuf *m,
+	bus_dma_segment_t *segs, int nsegs, int hdr_len)
+{
+	int frag_cnt = 0, frag_len = 0;
+	int seg_rem = 0, seg_idx = 0;
+	int tso_rem = 0, tcp_seg_rem = 0;
+
+	if (nsegs <= txq->max_sg_elems + 1)
+		return (0);
+
+	tso_rem = m->m_pkthdr.len;
+	/* first tcp segment descriptor has header + mss_payload */
+	tcp_seg_rem = m->m_pkthdr.tso_segsz + hdr_len;
+	seg_rem = segs[seg_idx].ds_len;
+	/* until all data in tso is exhausted */
+	while (tso_rem > 0) {
+		/* until a full tcp segment can be created */
+		while (tcp_seg_rem > 0 && tso_rem > 0) {
+			frag_cnt++;
+			/* is this tcp segment too fragmented? */
+			if (frag_cnt > txq->max_sg_elems + 1)
+				return (EFBIG);
+			/* is the mbuf segment is exhausted? */
+			if (seg_rem == 0) {
+				seg_idx++;
+				/* we ran out of mbufs before all tso data is exhausted?
+				   may be length is wrong in mbuf */
+				if (seg_idx == nsegs)
+					return (EIO);
+				/* use the next mbuf segment */
+				seg_rem = segs[seg_idx].ds_len;
+			}
+			frag_len = min(seg_rem, tcp_seg_rem);
+			seg_rem -= frag_len;
+			tcp_seg_rem -= frag_len;
+			tso_rem -= frag_len;
+		}
+		/* move to the next tcp segment */
+		frag_cnt = 0;
+		/* subsequent tcp segment descriptor only has mss_payload */
+		tcp_seg_rem = m->m_pkthdr.tso_segsz;
+	}
+
+	return (0);
+}
+
 static int
 ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 {
-	struct mbuf *m;
+	struct mbuf *m, *newm;
 	uint32_t mss;
 	struct tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *first_txbuf, *txbuf;
@@ -1105,7 +1161,7 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	uint16_t eth_type;
 	int i, j, index, hdr_len, proto, error, nsegs, num_descs;
 	uint32_t frag_offset, desc_len, remain_len, frag_remain_len, desc_max_size;
-	bus_dma_segment_t  seg[IONIC_MAX_SEGMENTS]; /* Extra for the first segment. */
+	bus_dma_segment_t seg[IONIC_MAX_TSO_SEGMENTS];
 	dma_addr_t addr;
 	uint8_t flags;
 	uint16_t len;
@@ -1131,15 +1187,15 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	index = txq->head_index;
 	first_txbuf = &txq->txbuf[index];
 
-	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, *m_headp,
+	error = bus_dmamap_load_mbuf_sg(txq->tso_buf_tag, first_txbuf->tso_dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
-	/*
-	* Don't check for nsegs since anyway we are responsible for creating
-	* fragments.
-	*/
-	if (error == EFBIG) {
-		struct mbuf *newm;
+	if (!error && ionic_tso_is_sparse(txq, *m_headp, seg, nsegs, hdr_len)) {
+		bus_dmamap_unload(txq->tso_buf_tag, first_txbuf->tso_dma_map);
+		stats->tso_sparse++;
+		error = EFBIG;
+	}
 
+	if (error == EFBIG) {
 		stats->mbuf_defrag++;
 		newm = m_defrag(*m_headp, M_NOWAIT);
 		if (newm == NULL) {
@@ -1150,19 +1206,22 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 			return (ENOBUFS);
 		}
 		*m_headp = newm;
-		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, newm,
+
+		error = bus_dmamap_load_mbuf_sg(txq->tso_buf_tag, first_txbuf->tso_dma_map, newm,
 			seg, &nsegs, BUS_DMA_NOWAIT);
+		if (!error && ionic_tso_is_sparse(txq, *m_headp, seg, nsegs, hdr_len)) {
+			bus_dmamap_unload(txq->tso_buf_tag, first_txbuf->tso_dma_map);
+			stats->tso_defrag_sparse++;
+			error = EFBIG;
+		}
 	}
 
-	if (error || (nsegs > txq->max_sg_elems + 1)) {
+	if (error) {
 		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, seg %d/%d , error: %d\n",
 				nsegs, txq->max_sg_elems, error);
-		/* Too many fragments. */
-		error = (error == 0) ? EFBIG : error;
-
 		return (error);
 	}
 
@@ -1176,21 +1235,21 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		stats->tso_max_descs = num_descs;
 	if (num_descs > txq->num_descs) {
 		stats->tso_too_big++;
-		bus_dmamap_unload(txq->buf_tag, first_txbuf->dma_map);
+		bus_dmamap_unload(txq->tso_buf_tag, first_txbuf->tso_dma_map);
 		IONIC_TX_TRACE(txq, "TSO too big, num_descs: %d request: %d\n",
 			       txq->num_descs, num_descs);
 		return (ENOSPC);
 	}
 	if (!ionic_tx_avail(txq, num_descs)) {
 		stats->tso_no_descs++;
-		bus_dmamap_unload(txq->buf_tag, first_txbuf->dma_map);
+		bus_dmamap_unload(txq->tso_buf_tag, first_txbuf->tso_dma_map);
 		IONIC_TX_TRACE(txq,
 			"No space avail, head: %u tail: %u num_descs: %d\n",
 			txq->head_index, txq->tail_index, num_descs);
 		return (ENOSPC);
 	}
 
-	bus_dmamap_sync(txq->buf_tag, first_txbuf->dma_map, BUS_DMASYNC_PREWRITE);
+	bus_dmamap_sync(txq->tso_buf_tag, first_txbuf->tso_dma_map, BUS_DMASYNC_PREWRITE);
 	stats->tso_max_size = max(stats->tso_max_size, m->m_pkthdr.len);
 
 	index = txq->head_index;
@@ -1251,8 +1310,9 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		if (end) {
 			txbuf->pa_addr = addr;
 			txbuf->m = m;
-			txbuf->dma_map = first_txbuf->dma_map;
+			txbuf->tso_dma_map = first_txbuf->tso_dma_map;
 			txbuf->timestamp = rdtsc();
+			txbuf->is_tso = 1;
 		} else {
 			txbuf->m = NULL;
 			txbuf->pa_addr = 0;
@@ -2214,6 +2274,15 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
 			 &txstat->tso_too_big, "TSO too big for ring");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_no_descs", CTLFLAG_RD,
 			 &txstat->tso_no_descs, "TSO descriptors not avail");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_sparse", CTLFLAG_RD,
+			 &txstat->tso_sparse, "TSO is sparse");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_defrag_sparse", CTLFLAG_RD,
+			 &txstat->tso_defrag_sparse, "TSO is sparse after defragging");
+
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkt_sparse", CTLFLAG_RD,
+			 &txstat->pkt_sparse, "Packet is sparse");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkt_defrag_sparse", CTLFLAG_RD,
+			 &txstat->pkt_defrag_sparse, "Packet is sparse after defragging");
 }
 
 /*
