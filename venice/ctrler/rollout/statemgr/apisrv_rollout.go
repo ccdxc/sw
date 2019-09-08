@@ -302,6 +302,15 @@ func (ros *RolloutState) startRolloutTimer() {
 			}
 			ros.eventChan <- fsmEvOneVenicePreUpgFail
 		}
+		if ros.currentState == fsmstRollingOutService {
+			phase := roproto.RolloutPhase_FAIL
+			for _, curStatus := range ros.Status.ControllerServicesStatus {
+				if curStatus.Phase == roproto.RolloutPhase_PROGRESSING.String() {
+					ros.setServicePhase(curStatus.Name, "", "Timeout waiting for Service rollout status", phase)
+				}
+			}
+			ros.eventChan <- fsmEvFail
+		}
 	})
 }
 

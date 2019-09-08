@@ -186,6 +186,7 @@ var roFSM = [][]fsmNode{
 		fsmEvServiceUpgOK:             {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
 		fsmEvSuspend:                  {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstRollingOutService},
+		fsmEvFail:                     {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstRollingOutService},
 	},
 	fsmstRollingoutOutSmartNIC: {
