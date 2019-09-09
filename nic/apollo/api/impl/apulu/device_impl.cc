@@ -15,7 +15,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 namespace api {

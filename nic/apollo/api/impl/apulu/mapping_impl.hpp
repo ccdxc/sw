@@ -130,8 +130,10 @@ public:
 private:
     /// \brief constructor
     mapping_impl() {
-        handle_.local_.overlay_ip_to_public_ip_nat_hdl_ = 0;
-        handle_.local_.public_ip_to_overlay_ip_nat_hdl_ = 0;
+        local_mapping_overlay_ip_hdl_ = handle_t::null();
+        local_mapping_public_ip_hdl_ = handle_t::null();
+        mapping_overlay_ip_hdl_ = handle_t::null();
+        mapping_public_ip_hdl_ = handle_t::null();
     }
 
     /// \brief destructor
@@ -207,9 +209,11 @@ private:
     uint32_t    to_public_ip_nat_hdl_;
     uint32_t    to_overlay_ip_nat_hdl_;
 
-    // handles or indices for mapping tables
-    handle_t    local_mapping_hdl_;
-    handle_t    mapping_hdl_;
+    // handles or indices for LOCAL_MAPPING and MAPPING tables
+    handle_t    local_mapping_overlay_ip_hdl_;
+    handle_t    local_mapping_public_ip_hdl_;
+    handle_t    mapping_overlay_ip_hdl_;
+    handle_t    mapping_public_ip_hdl_;
 };
 
 /// \@}

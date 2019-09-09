@@ -17,7 +17,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 namespace api {
