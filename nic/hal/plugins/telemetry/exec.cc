@@ -6,6 +6,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
+#include "nic/include/pd_api.hpp"
 
 namespace hal {
 namespace plugins {
@@ -242,6 +243,35 @@ telemetry_exec (fte::ctx_t &ctx)
     if ((session && session->is_ipfix_flow) ||
             (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
             (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
+        // If its a flow-miss for IPFIX we need to make sure the VLAN tag
+        // on the packet is the same as the from cpu vlan id of the collector
+        // With PS-1888 we noticed that the incoming vlan tag was not the same
+        // as the collectors from-cpu vlan id. It is not conclusive but there is
+        // a possibility that we did a delete-create on the l2seg/collector after
+        // P4 queued the flow-miss. We could end up with memhash mismatch leading to
+        // asserts hence the check.
+        if (!session && ctx.cpu_rxhdr() &&
+            (ctx.cpu_rxhdr()->flags&CPU_FLAGS_VLAN_VALID) && ctx.dl2seg()) {
+            hal::pd::pd_func_args_t  pd_func_args = {0};
+            hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
+            uint16_t                 fromcpu_tag = 0;
+
+            vlan_header_t *vlan = (vlan_header_t*)(ctx.pkt() + ctx.cpu_rxhdr()->l2_offset);
+
+            args.l2seg = ctx.dl2seg();
+            args.vid = &fromcpu_tag;
+
+            pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
+            if ((hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                 &pd_func_args) == HAL_RET_OK) && (fromcpu_tag != ntohs(vlan->vlan_tag))) {
+                 fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
+                 flowupd.action = session::FLOW_ACTION_DROP;
+                 HAL_TRACE_ERR("IPFIX from-cpu vlan mismatch fromcpu_tag: {} vlanhdr tag: {}", 
+                               fromcpu_tag, vlan->vlan_tag);
+                 ctx.update_flow(flowupd);
+                 return fte::PIPELINE_CONTINUE;
+            }
+        }
         HAL_TRACE_DEBUG("Processing IPFIX flow");
         sfw_info = sfw::sfw_feature_state(ctx);
         // IPFIX flows are always allowed

@@ -171,7 +171,7 @@ session_update_in_fte (hal_handle_t session_handle, uint64_t featureid_bitmap)
                     session->hal_handle,
                     (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
 
-    HAL_TRACE_VERBOSE("num features: {} feature state size: {}", num_features, fstate_size);
+    HAL_TRACE_VERBOSE("feature_bitmap: {} num features: {} feature state size: {}", featureid_bitmap, num_features, fstate_size);
 
     feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
     if (!feature_state) {
@@ -208,8 +208,10 @@ session_update_async (hal::session_t *session, uint64_t featureid_bitmap)
     fn_ctx_t *fn_ctx = (fn_ctx_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_SESS_UPD_DATA, (sizeof(fn_ctx_t)));
 
     fn_ctx->session_handle  = session->hal_handle;
+    fn_ctx->featureid_bitmap = featureid_bitmap;
     fn_ctx->ret = HAL_RET_OK;
-
+    
+    HAL_TRACE_VERBOSE("Feature id bitmap: {}", fn_ctx->featureid_bitmap);
     fte_softq_enqueue(session->fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
             fn_ctx->ret = session_update_in_fte(fn_ctx->session_handle, fn_ctx->featureid_bitmap);

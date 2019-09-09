@@ -298,20 +298,7 @@ typedef struct flow_state_s {
     uint8_t         tcp_ts_option_sent : 1;
     uint8_t         tcp_sack_perm_option_sent : 1;
 } __PACK__ flow_state_t;
-inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
-{
-    os << "{state=" << val.state;
-    if (val.syn_ack_delta) {
-        os << ", syn_ack_delta=" << val.syn_ack_delta;
-    }
-    if (val.tcp_seq_num) {
-        os << ", tcp_seq_num=" << val.tcp_seq_num;
-    }
-    if (val.tcp_ack_num) {
-        os << ", tcp_ack_num=" << val.tcp_ack_num;
-    }
-    return os << "}";
-}
+std::ostream& operator<<(std::ostream& os, const hal::flow_state_t& val);
 
 enum {
     SESSION_MATCH_SVRF   = 1 << 0,
@@ -446,7 +433,7 @@ typedef struct session_get_stream_filter_ {
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_CFG_MAX_SESSIONS               131072
 
-#define SESSION_AGE_DEBUG                  1
+#define SESSION_AGE_DEBUG                  0
 
 session_t *find_session_by_handle(hal_handle_t handle);
 //session_t *find_session_by_id(session_id_t session_id);

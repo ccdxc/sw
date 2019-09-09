@@ -55,6 +55,7 @@ update_src_if(fte::ctx_t&ctx)
     bool dst_local = 0; 
     bool broadcast_pkt = is_broadcast(ctx);
     bool mcast_dmac = is_multicast_dmac(ctx);
+    fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
     src_local = ((ctx.sep() && ctx.sep()->ep_flags & EP_FLAGS_LOCAL) || (hal::is_mytep(*(ctx.svrf()), (&ctx.key().sip)))); 
     dst_local =  (ctx.dep() && ctx.dep()->ep_flags & EP_FLAGS_LOCAL);
@@ -77,7 +78,6 @@ update_src_if(fte::ctx_t&ctx)
     // Drop Multicast packets 
     // for smart switch mode
     if (mcast_dmac) {
-        fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
         flowupd.action = session::FLOW_ACTION_DROP;
         HAL_TRACE_ERR("Dropping packet for multicast dmac");
         return ctx.update_flow(flowupd);
@@ -85,7 +85,6 @@ update_src_if(fte::ctx_t&ctx)
 
     // drop remote to remote sessions
     if (!src_local &&  !dst_local) {
-        fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
         flowupd.action = session::FLOW_ACTION_DROP;
         HAL_TRACE_ERR("Dropping packet for remote to remote");
         return ctx.update_flow(flowupd);
@@ -95,6 +94,14 @@ update_src_if(fte::ctx_t&ctx)
         (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_IPSEC)) {
         HAL_TRACE_DEBUG("Pkt from IPSec app, do not enforce ingress-checks");
         return HAL_RET_OK;
+    }
+
+    if (dst_local && ctx.dif() == NULL) {
+        // If we allow flow create here we would be sending the packets destined
+        // to local workload to pinned uplink and we dont want to do that.
+        HAL_TRACE_ERR("Dest is local but no pinning yet. Dropping the packet");
+        flowupd.action = session::FLOW_ACTION_DROP;
+        return ctx.update_flow(flowupd);
     }
 
     // no check needed if src is local or no pinned intf for dep
@@ -127,7 +134,7 @@ update_src_if(fte::ctx_t&ctx)
     }
 
     // set the expected sif for both iflow & rflow
-    fte::flow_update_t flowupd = {type: fte::FLOWUPD_INGRESS_INFO};
+    flowupd = {type: fte::FLOWUPD_INGRESS_INFO};
     flowupd.ingress_info.expected_sif = sif;
     return ctx.update_flow(flowupd);
 }

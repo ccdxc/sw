@@ -522,6 +522,8 @@ ctx_t::update_flow(const flow_update_t& flowupd,
 hal_ret_t
 ctx_t::advance_to_next_stage() {
 
+    if (is_ipfix_flow()) return HAL_RET_OK; 
+    
     if (existing_session()) {
         if (role_ == hal::FLOW_ROLE_INITIATOR &&
             session()->iflow && session()->iflow->assoc_flow) {
@@ -631,6 +633,8 @@ ctx_t::swap_flow_objs()
 bool
 ctx_t::is_proxy_enabled()
 {
+    if (is_ipfix_flow()) return false;
+
     flow_t **flow = (role_ == hal::FLOW_ROLE_INITIATOR) ? iflow_ : rflow_;
 
     // For existing sessions, fwding will be set to TRUE even if it is

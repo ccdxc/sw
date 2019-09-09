@@ -59,6 +59,20 @@ using namespace sdk::lib;
 
 namespace hal {
 
+std::ostream& operator<<(std::ostream& os, const hal::flow_state_t& val) {
+    os << "{state=" << val.state;
+    if (val.syn_ack_delta) {
+        os << ", syn_ack_delta=" << val.syn_ack_delta;
+    }
+    if (val.tcp_seq_num) {
+        os << ", tcp_seq_num=" << val.tcp_seq_num;
+    }
+    if (val.tcp_ack_num) {
+        os << ", tcp_ack_num=" << val.tcp_ack_num;
+    }
+    return os << "}";
+}
+
 thread_local void *t_session_timer;
 session_stats_t  *g_session_stats;
 
@@ -1893,7 +1907,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // connections if half-closed timeout is disabled.
 #if SESSION_AGE_DEBUG
     HAL_TRACE_VERBOSE("retval {} session handle: {}, session iflow state: {}, session rflow state: {}",
-                    retval, session->hal_handle, session_state.iflow_state.state, session_state.rflow_state.state);
+                    retval, session->hal_handle, session_state.iflow_state, session_state.rflow_state);
     HAL_TRACE_VERBOSE("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
                     session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
 #endif

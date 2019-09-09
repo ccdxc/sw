@@ -609,18 +609,9 @@ void fte_inst_compute_cps(void)
 //-----------------------------------------------------------------------------
 void inst_t::compute_cps(void)
 {
-    if (time_diff > TIME_NSECS_PER_SEC) {
-        stats_.fte_hbm_stats->cpsstats.cps = t_rx_cxn;
-        t_rx_cxn = 1;
-    } else if (time_diff == TIME_NSECS_PER_SEC) {
-        stats_.fte_hbm_stats->cpsstats.cps = ++t_rx_cxn;
-    } else {
+    if (time_diff < TIME_NSECS_PER_SEC) {
         t_rx_cxn++;
     }
-
-    // Record the Max. CPS we've done
-    if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
-        stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
 }
 
 //-----------------------------------------------------------------------------
@@ -639,10 +630,13 @@ void inst_t::compute_pps(void)
 
      if (time_diff > TIME_NSECS_PER_SEC) {
          stats_.fte_hbm_stats->cpsstats.pps = t_rx_pkts;
+         stats_.fte_hbm_stats->cpsstats.cps = t_rx_cxn;
          t_old_ts_ = t_cur_ts_;
          t_rx_pkts = 1;
+         t_rx_cxn = 1;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
          stats_.fte_hbm_stats->cpsstats.pps = ++t_rx_pkts;
+         stats_.fte_hbm_stats->cpsstats.cps = ++t_rx_cxn;
          t_old_ts_ = t_cur_ts_;
      } else {
          t_rx_pkts++;
@@ -651,7 +645,10 @@ void inst_t::compute_pps(void)
      // Record the Max. PPS we've done
      if (stats_.fte_hbm_stats->cpsstats.pps > stats_.fte_hbm_stats->cpsstats.pps_hwm)
          stats_.fte_hbm_stats->cpsstats.pps_hwm = stats_.fte_hbm_stats->cpsstats.pps;
-
+ 
+     // Record the Max. CPS we've done
+     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
+        stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
 }
 
 //-----------------------------------------------------------------------------

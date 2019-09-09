@@ -249,9 +249,7 @@ ctx_t::lookup_flow_objs()
              hal::lif_t *dlif = if_get_lif(dif_);
              if (dlif == NULL) {
                  /* Ignore the lookup as we don't know the lif yet */
-                 HAL_TRACE_DEBUG("fte: ignoring dep lookup as lif not found or discovered yet.");
-                 dif_ = NULL;
-                 dep_ = NULL;
+                 HAL_TRACE_DEBUG("fte: dest lif not found or discovered yet.");
              }
         }
     }
@@ -461,9 +459,6 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     int64_t         ctime_ns;
 
     t_fwlg.Clear();
-
-    // Dont log for non-ipv4 flows or netflow
-    if (key.flow_type != hal::FLOW_TYPE_V4 || is_ipfix_flow()) return;
 
     t_fwlg.set_source_vrf(key.svrf_id);
     t_fwlg.set_dest_vrf(key.dvrf_id);
@@ -834,13 +829,14 @@ ctx_t::update_flow_table()
 end:
 
     // Dont log when we hit an error
-    if ((ret == HAL_RET_OK) &&
-        ((session_exists == false) || (update_type == "delete"))) {
+    if ((key_.flow_type == hal::FLOW_TYPE_V4) && !is_ipfix_flow() && 
+        (ret == HAL_RET_OK) && ((session_exists == false) || (update_type == "delete"))) {
       
         // Compute CPS
         if (session_exists == false) {
             fte_inst_compute_cps();
         }
+
         if (!ipc_logging_disable()) {
  
             /* Add flow logging only for initiator flows */
