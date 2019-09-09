@@ -101,9 +101,11 @@ def check_max_usage(sz):
         elif pipeline == "artemis":
             if sz > (6 << 30): # 6 Gigabyte
                 return -1
+        elif pipeline == "apulu":
+            if sz > (2 << 30): # 2 Gigabyte
+                return -1
         else:
-            print "Unknown pipeline. Not enforcing size check"
-
+            print "Unknown pipeline, not enforcing size check"
     return 0
 
 def convert_size(sz):

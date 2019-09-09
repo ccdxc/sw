@@ -16,29 +16,29 @@ while getopts ":c:p:h" opt; do
       ;;
     p )
       platform=$OPTARG
-      if [ $platform != "iris" ] && [ $platform != "apollo" ] && [ $platform != "artemis" ]; then
-        echo -e "-p <platform can be iris or apollo or artemis> \n Usage: p4ctl -p <iris|apollo|artemis> -c \"debug ...\""
+      if [ $platform != "iris" ] && [ $platform != "apollo" ] && [ $platform != "apulu" ] && [ $platform != "artemis" ]; then
+        echo -e "-p <platform can be iris or apollo or artemis> \n Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
         exit
       fi
       #echo $platform
       ;;
     h )
-      echo "Usage: p4ctl -p <iris|apollo|artemis> -c \"debug ...\""
+      echo "Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
       exit
       ;;
     \? )
-      echo "Usage: p4ctl -p <iris|apollo|artemis> -c \"debug ...\""
+      echo "Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
       exit
       ;;
     : )
-      echo "Usage: p4ctl -p <iris|apollo|artemis> -c \"debug ...\""
+      echo "Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
       exit
       ;;
   esac
 done
 shift $((OPTIND -1))
 if [ -z "$platform" ]; then
-   echo -e " -p <platform is mandatory> \n Usage:  p4ctl -p <iris|apollo|artemis> -c \"debug ...\""
+   echo -e " -p <platform is mandatory> \n Usage:  p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
    exit
 fi
 
