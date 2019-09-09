@@ -1790,11 +1790,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a4c4224926f7752fb433e3b89178e670c764595a9658a69ded77f3db201dad68"
+  digest = "1:824253174b92de12946ff3b55ecab03ca1b93c514d75cd09ea08db57fb535049"
   name = "github.com/pensando/dhcp-client"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "1e4d3169e3fae8f261365f2b89a423e449364fb1"
+  revision = "debb2d7296245ce29ef06c565036bef4429e601a"
 
 [[projects]]
   digest = "1:7c04005149aad047f93fe43b38627d068dee005fa1bcb595fcf1d8b4f92c04a3"

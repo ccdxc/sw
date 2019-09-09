@@ -131,7 +131,11 @@ func GenerateXID(g func([]byte)) func(*Client) error {
 //Close Connections
 func (c *Client) Close() error {
 	if c.connection != nil {
-		return c.connection.Close()
+		err := c.connection.Close()
+		if err != nil {
+			return err
+		}
+		c.connection = nil
 	}
 	return nil
 }

@@ -3,9 +3,9 @@ package dhcp
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"golang.org/x/sys/unix"
 	"net"
 	"time"
-	"golang.org/x/sys/unix"
 )
 
 const (
@@ -54,7 +54,14 @@ func NewPacketSock(ifindex int, srcPort, dstPort uint16) (*packetSock, error) {
 }
 
 func (pc *packetSock) Close() error {
-	return unix.Close(pc.fd)
+	if pc.fd >= 0 {
+		err := unix.Close(pc.fd)
+		if err != nil {
+			return err
+		}
+		pc.fd = -1
+	}
+	return nil
 }
 
 func (pc *packetSock) Write(packet []byte) error {
