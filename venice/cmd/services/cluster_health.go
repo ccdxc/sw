@@ -369,6 +369,11 @@ podWatch:
 			c.processPodEvent(event.Type, obj)
 		default:
 			c.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
+			// could be that resourceVersion is old and hence this code path. Cleanup lastSyncResourceVersion
+			//	so that we do full sync. If we dont clear, we keep getting to this old code path again and again
+			c.daemonSetWatcher.lastSyncResourceVersion = ""
+			c.deploymentWatcher.lastSyncResourceVersion = ""
+			c.podWatcher.lastSyncResourceVersion = ""
 			c.restartServiceWatchers()
 			return
 		}
@@ -470,7 +475,7 @@ func (c *ClusterHealthMonitor) updateClusterHealth(healthy bool, reason []string
 			}
 		}
 
-		cluster, err = apiClient.Cluster().UpdateStatus(ctx, cluster)
+		_, err = apiClient.Cluster().UpdateStatus(ctx, cluster)
 		if err != nil {
 			c.logger.Errorf("failed to update cluster health, err: %v", err)
 			return nil, err
@@ -713,12 +718,30 @@ func (c *ClusterHealthMonitor) isPodRunning(pod *v1.Pod) bool {
 // stops k8s service related watchers
 func (c *ClusterHealthMonitor) stopServiceWatchers() {
 	c.daemonSetWatcher.Interface.Stop()
+
+	// have to explicitly drain the ResultChan. Else there is a goroutine leak in
+	// pensando/sw/vendor/k8s.io/apimachinery/pkg/watch/streamwatcher.go:114
+	if c.daemonSetWatcher.Interface != nil {
+		evchan := c.daemonSetWatcher.Interface.ResultChan()
+		for range evchan {
+		}
+	}
 	c.daemonSetWatcher.Interface = nil
 
 	c.deploymentWatcher.Interface.Stop()
+	if c.deploymentWatcher.Interface != nil {
+		evchan := c.deploymentWatcher.Interface.ResultChan()
+		for range evchan {
+		}
+	}
 	c.deploymentWatcher.Interface = nil
 
 	c.podWatcher.Interface.Stop()
+	if c.podWatcher.Interface != nil {
+		evchan := c.podWatcher.Interface.ResultChan()
+		for range evchan {
+		}
+	}
 	c.podWatcher.Interface = nil
 }
 

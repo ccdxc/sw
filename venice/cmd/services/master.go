@@ -516,6 +516,13 @@ func (m *masterService) updateClusterStatus() {
 
 func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	var err error
+
+	// Cluster Health Monitor gets started as part of startLeaderServices()
+	//	and starts using k8s immedietaly. Hence clean the references to old k8s
+	//	here before calling startLeaderServices()
+	//	so that cluster health monitor uses latest k8s client
+	m.k8sSvc.Stop()
+
 	switch e.Evt {
 	case types.LeaderEventChange:
 		fallthrough
@@ -536,7 +543,6 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 			m.startLeaderServices()
 		}
 	}
-	m.k8sSvc.Stop()
 	config := &k8srest.Config{
 		Host:    fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
 		Timeout: k8sClientTimeout,
