@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2019, Pensando Systems Inc.
  */
-#include "logger.h"
-#include "platform/sysmon/sysmon.hpp"
 #include "lib/thread/thread.hpp"
 #include "lib/periodic/periodic.hpp"
+#include "platform/sysmon/sysmon.hpp"
 #include "platform/capri/csrint/csr_init.hpp"
+#include "platform/evutils/include/evutils.h"
+#include "logger.h"
 #include "delphi/sysmond_delphi.hpp"
 #include "delphi/sysmond_cb.hpp"
 
@@ -104,7 +105,7 @@ main(int argc, char *argv[])
                     (sdk::lib::twheel_cb_t)sysmond_timer_cb,
                     true);
 
-    // wait for the periodic thread
-    thread->wait_until_complete();
+    // event loop needed for callbacks
+    evutil_run(EV_DEFAULT);
     return 0;
 }

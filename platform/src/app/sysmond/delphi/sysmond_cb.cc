@@ -28,8 +28,8 @@ event_cb_init (void)
     svc = make_shared<SysmondService>(sdk, "Sysmond");
     svc->init();
     sdk->RegisterService(svc);
+    sdk->Connect();
     g_sdk = sdk;
-    pthread_create(&delphi_thread, NULL, delphi_thread_run, reinterpret_cast<void *>(&g_sdk));
 }
 
 void
