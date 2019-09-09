@@ -16,12 +16,20 @@ ulimit -c unlimited
 #Also clean up /data/delphi.dat to bring up delphi clean
 
 #if we see overlay's lowerdir is /new that means we are starting in upgrade mode
-grep "overlay" /proc/mounts | grep -q "lowerdir=/new"
-
 #if lowerdir=/new is not found then we are in fresh boot mode
+grep "overlay" /proc/mounts | grep -q "lowerdir=/new"
 if [ $? -ne 0 ]; then
     cd /update && find . \( -path ./lost+found -o -path ./naples_fw.tar -o \) -prune -o -exec rm -rf '{}' ';' &> /dev/null
     rm -rf /data/delphi.dat
+fi
+
+# Restore "authorized_keys"
+SAVED_AUTHORIZED_KEYS=/sysconfig/config0/.authorized_keys
+AUTHORIZED_KEYS=/root/.ssh/authorized_keys
+if [ -f ${SAVED_AUTHORIZED_KEYS} ]; then
+    mkdir -p $(dirname ${AUTHORIZED_KEYS})
+    cp ${SAVED_AUTHORIZED_KEYS} ${AUTHORIZED_KEYS}
+    chmod 0600 ${AUTHORIZED_KEYS}
 fi
 
 # Reserving port for HAL GRPC server
