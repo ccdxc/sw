@@ -87,8 +87,9 @@ sdk_ret_t pds_nexthop_delete(pds_nexthop_key_t *key);
 
 /// \brief nexthop group type
 typedef enum pds_nexthop_group_type_e {
-    PDS_NHGROUP_TYPE_NONE = 0,
-    PDS_NHGROUP_TYPE_ECMP = 1,    ///< ECMP nexthop group
+    PDS_NHGROUP_TYPE_NONE          = 0,
+    PDS_NHGROUP_TYPE_OVERLAY_ECMP  = 1,    ///< overlay ECMP nexthop group
+    PDS_NHGROUP_TYPE_UNDERLAY_ECMP = 2,    ///< underlay ECMP nexthop group
 } pds_nexthop_group_type_t;
 
 /// \brief nexthop group specification

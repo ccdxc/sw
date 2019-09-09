@@ -142,6 +142,8 @@ private:
     /// \brief constructor
     vnic_impl() {
         hw_id_ = 0xFFFF;
+        local_mapping_handle_ = handle_t::null();
+        mapping_handle_ = handle_t::null();
     }
 
     /// \brief destructor
@@ -179,7 +181,11 @@ private:
 
 private:
     // P4 datapath specific state
-    uint16_t hw_id_;                           ///< hardware id
+    uint16_t hw_id_;                   ///< hardware id
+    ///< handle for LOCAL_MAPPING and MAPPING table entries (note that handles
+    ///< are valid only in a transaction)
+    handle_t local_mapping_handle_;
+    handle_t mapping_handle_;
 };
 
 /// \@}

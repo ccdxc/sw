@@ -147,6 +147,10 @@ public:
         return false;
     }
 
+    /// \brief     return the type of the nexthop group
+    /// \return    type of the nexthop group
+    pds_nexthop_group_type_t type(void) const { return type_; }
+
     /// \brief     return impl instance of this nexthop group object
     /// \return    impl instance of the nexthop group object
     impl_base *impl(void) { return impl_; }
@@ -165,6 +169,7 @@ private:
 
 private:
     pds_nexthop_group_key_t key_;             ///< nexthop group key
+    pds_nexthop_group_type_t type_;           ///< nexthop group type
     ht_ctxt_t ht_ctxt_;                       ///< hash table context
     impl_base *impl_;                         ///< impl object instance
 
