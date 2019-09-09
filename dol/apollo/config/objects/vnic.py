@@ -21,6 +21,7 @@ class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
+        self.deleted = False
         self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
         self.SUBNET = parent
@@ -91,6 +92,11 @@ class VnicObject(base.ConfigObjectBase):
         grpcmsg.VnicId.append(self.VnicId)
         return grpcmsg
 
+    def GetGrpcDeleteMessage(self):
+        grpcmsg = vnic_pb2.VnicDeleteRequest()
+        grpcmsg.VnicId.append(self.VnicId)
+        return grpcmsg
+
     def ValidateSpec(self, spec):
         if spec.VnicId != self.VnicId:
             return False
@@ -142,6 +148,20 @@ class VnicObject(base.ConfigObjectBase):
     def SetupTestcaseConfig(self, obj):
         return
 
+    def Delete(self, spec=None):
+        logger.info("Delete vnic: Vnic%d" %(self.VnicId))
+        msg = self.GetGrpcDeleteMessage()
+        resps = api.client.Delete(api.ObjectTypes.VNIC, [msg])
+        return utils.ValidateDelete(self, resps)
+
+    def Restore(self, spec=None):
+        logger.info("Restore vnic: Vnic%d" %(self.VnicId))
+        msg = self.GetGrpcCreateMessage()
+        resps = api.client.Create(api.ObjectTypes.VNIC, [msg])
+        return utils.ValidateRestore(self, resps)
+
+    def Equals(self, obj, spec):
+        return True
 
 class VnicObjectClient:
     def __init__(self):

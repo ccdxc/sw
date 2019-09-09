@@ -36,6 +36,8 @@ BaseTopoExcludeFeatureList = [
 ]
 
 class FeatureObject:
+    counts = {}
+
     def __init__(self, spec):
         self.spec       = spec
         self.id         = spec.feature.id
@@ -55,27 +57,63 @@ class FeatureObject:
         self.modscale    = getattr(spec.feature, 'modscale', None)
         return
 
-    def LoadModules(self):
+    def AddModulesFromMlists(self, test_path):
         for m in self.spec.modules:
             mspec = m.module
-            if self.sub is None:
-                mspec.feature = self.id
+            if hasattr(mspec, 'mlist'):
+                mlist_name = getattr(mspec, 'mlist')
+                spec = parser.ParseFile(test_path, mlist_name)
+                for mod in spec.modules:
+                    self.spec.modules.append(mod)
+
+    def RenameModule(self, mspec):
+        if mspec.name in self.counts:
+            count = self.counts[mspec.name]
+            count += 1
+            self.counts[mspec.name] = count
+        else:
+            self.counts[mspec.name] = 0
+        mspec.name = str(self.counts[mspec.name]) + "." + mspec.name
+
+    def LoadOneModule(self, mspec, recurse=False):
+        if self.sub is None:
+            mspec.feature = self.id
+        else:
+            mspec.feature = "%s::%s" %(self.id, self.sub)
+        mspec.enable    = getattr(mspec, 'enable', self.enable)
+        mspec.ignore    = getattr(mspec, 'ignore', self.ignore)
+        mspec.module    = getattr(mspec, 'module', self.module)
+        mspec.package   = getattr(mspec, 'package', self.package)
+        mspec.spec      = getattr(mspec, 'spec', self.testspec)
+        mspec.args      = getattr(mspec, 'args', self.args)
+        mspec.selectors = getattr(mspec, 'selectors', self.selectors)
+        mspec.rtl       = getattr(mspec, 'rtl', self.rtl)
+        mspec.perf      = getattr(mspec, 'perf', self.perf)
+        mspec.pendol    = getattr(mspec, 'pendol', self.pendol)
+        mspec.tcscale   = getattr(mspec, 'tcscale', self.tcscale)
+        mspec.modscale  = getattr(mspec, 'modscale', self.modscale)
+        mspec.runorder  = self.runorder
+        if recurse is True:
+            # Rename the module to avoid duplicate cases
+            self.RenameModule(mspec)
+        ModuleStore.Add(mspec)
+
+    def LoadModulesFromMlist(self, mspec, path):
+        mlist_name = getattr(mspec, 'mlist')
+        if mlist_name is None:
+            return
+        spec = parser.ParseFile(path, mlist_name)
+        for mod in spec.modules:
+            mspec = mod.module
+            self.LoadOneModule(mspec, True)
+
+    def LoadModules(self, path):
+        for m in self.spec.modules:
+            mspec = m.module
+            if hasattr(mspec, 'mlist'):
+                self.LoadModulesFromMlist(mspec, path)
             else:
-                mspec.feature = "%s::%s" %(self.id, self.sub)
-            mspec.enable    = getattr(mspec, 'enable', self.enable)
-            mspec.ignore    = getattr(mspec, 'ignore', self.ignore)
-            mspec.module    = getattr(mspec, 'module', self.module)
-            mspec.package   = getattr(mspec, 'package', self.package)
-            mspec.spec      = getattr(mspec, 'spec', self.testspec)
-            mspec.args      = getattr(mspec, 'args', self.args)
-            mspec.selectors = getattr(mspec, 'selectors', self.selectors)
-            mspec.rtl       = getattr(mspec, 'rtl', self.rtl)
-            mspec.perf      = getattr(mspec, 'perf', self.perf)
-            mspec.pendol    = getattr(mspec, 'pendol', self.pendol)
-            mspec.tcscale   = getattr(mspec, 'tcscale', self.tcscale)
-            mspec.modscale   = getattr(mspec, 'modscale', self.modscale)
-            mspec.runorder  = self.runorder
-            ModuleStore.Add(mspec)
+                self.LoadOneModule(mspec)
         return
 
 class FeatureObjectHelper(parser.ParserBase):
@@ -105,12 +143,12 @@ class FeatureObjectHelper(parser.ParserBase):
     def Parse(self, test_path):
         ftlist = super().Parse(test_path, '*.mlist')
         for fspec in ftlist:
-            logger.info("Loading Feature Test Module List: %s" % fspec.feature.id)
+            logger.info("Loading Feature Test Module List: %s" % (fspec.feature.id))
             feature = FeatureObject(fspec)
             if self.__is_enabled(feature) is False:
                 logger.info("  - Disabled....Skipping")
                 continue
-            feature.LoadModules()
+            feature.LoadModules(test_path)
             self.features.append(feature)
         return
 

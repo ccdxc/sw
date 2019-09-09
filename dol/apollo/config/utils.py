@@ -88,11 +88,39 @@ def ValidateGrpcResponse(resp, expApiStatus=types_pb2.API_STATUS_OK):
     return expApiStatus == resp.ApiStatus
 
 def ValidateRead(obj, getResp, expApiStatus=types_pb2.API_STATUS_OK):
-    if ValidateGrpcResponse(getResp, expApiStatus):
-        if types_pb2.API_STATUS_OK == getResp.ApiStatus:
-            return obj.Validate(getResp.Response)
-        return True
-    return False
+    if GlobalOptions.dryrun: return
+    for resp in getResp:
+        if ValidateGrpcResponse(resp, expApiStatus):
+            if ValidateGrpcResponse(resp):
+                for response in resp.Response:
+                    if not obj.Validate(response):
+                        return False
+        else:
+            return False
+    return True
+
+def ValidateDelete(obj, resps):
+    if GlobalOptions.dryrun: return
+    for resp in resps:
+        statuses = resp.ApiStatus
+        for status in statuses:
+            if status == types_pb2.API_STATUS_OK:
+                obj.deleted = True
+            else:
+                logger.error("Delete failed")
+                obj.Show()
+    return
+
+def ValidateRestore(obj, resps):
+    if GlobalOptions.dryrun: return
+    for resp in resps:
+        if types_pb2.API_STATUS_OK == resp.ApiStatus:
+            obj.deleted = False
+            logger.info("Restore success")
+        else:
+            logger.error("Restore failed")
+            obj.Show()
+    return
 
 def GetIPProtoByName(protoname):
     """

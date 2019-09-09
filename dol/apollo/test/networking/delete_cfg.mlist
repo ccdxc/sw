@@ -1,0 +1,36 @@
+feature:
+    id          : networking
+    sub         : delete_cfg
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+
+# specify all the filters that are used in the packet testcases that will follow
+    - module:
+        name    : DEL_CFG
+        spec    : delete_cfg.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+
+    - module:
+        name    : IGW2LOCAL
+        mlist   : igw2local.mlist
+
+    - module:
+        name    : RESTORE_CFG
+        spec    : restore_cfg.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+
+    - module:
+        name    : IGW2LOCAL
+        mlist   : igw2local.mlist

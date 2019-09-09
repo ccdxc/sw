@@ -23,7 +23,7 @@ def TestCaseTeardown(tc):
     return True
 
 def TestCasePreTrigger(tc):
-    if tc.pvtdata.verify_drop_stats:
+    if hasattr(tc.pvtdata, 'verify_drop_stats') and tc.pvtdata.verify_drop_stats:
         tc.pvtdata.dropstats = dropstats.DropStatsVerifHelper()
         tc.pvtdata.dropstats.Init(tc)
     return True
@@ -41,6 +41,7 @@ def TestCaseStepTeardown(tc, step):
     return True
 
 def TestCaseVerify(tc):
-    if tc.pvtdata.verify_drop_stats and tc.pvtdata.dropstats.Verify(tc) == False:
+    if hasattr(tc.pvtdata, 'verify_drop_stats') and tc.pvtdata.verify_drop_stats\
+       and hasattr(tc.pvtdata, 'dropstats') and tc.pvtdata.dropstats.Verify(tc) == False:
         return False
     return True

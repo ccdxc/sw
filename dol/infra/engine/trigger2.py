@@ -18,7 +18,7 @@ class TriggerEngineObject:
 
     def _trigger_step(self, tc, step):
         return
-        
+
     def Trigger(self, tc):
         assert(tc != None)
         tc.status = self._trigger(tc)
@@ -64,8 +64,8 @@ class TriggerEngineObject:
         else:
             logger.info("TESTCASE FINAL STATUS = PASS")
         tc.TeardownCallback()
-        return status    
-        
+        return status
+
 class DolTriggerEngineObject(TriggerEngineObject):
     def __init__(self):
         super().__init__()
@@ -116,11 +116,10 @@ class DolTriggerEngineObject(TriggerEngineObject):
     def __ring_doorbell(self, step):
         if GlobalOptions.dryrun:
             return
-        
         dbsp = step.trigger.doorbell
-        if dbsp is None or dbsp.object is None: 
+        if dbsp is None or dbsp.object is None:
             return
-        
+
         db = dbsp.object
         logger.info("Posting doorbell %s" % db)
         db.Ring(dbsp.spec)
@@ -131,10 +130,11 @@ class DolTriggerEngineObject(TriggerEngineObject):
             return
 
         for config in step.trigger.configs:
-            method = getattr(config.actual_object, config.method)
-            if not method:
-                 assert 0
-            method(config_spec.spec)
+            if config.method is not None:
+                method = getattr(config.actual_object, config.method)
+                if not method:
+                    assert 0
+                method(config.spec)
         return
 
     def __trigger_delay(self, step):
@@ -147,6 +147,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
 
     def _trigger_step(self, tc, step):
         super()._trigger_step(tc, step)
+        self.__trigger_config(step)
         self.__trigger_delay(step)
         self.__trigger_descriptors(tc, step)
         self.__ring_doorbell(step)
@@ -163,7 +164,7 @@ class E2ETriggerEngineObject(TriggerEngineObject):
         for cmd in step.trigger.commands:
             logger.info("Running command %s : %s" % (cmd.object.GID(), cmd.command))
             if GlobalOptions.dryrun:
-                return        
+                return
             cmd.status = E2E.RunCommand(cmd.object.GID(), cmd.command, timeout=cmd.timeout,
                                          background=cmd.background)
         return
@@ -174,13 +175,12 @@ class E2ETriggerEngineObject(TriggerEngineObject):
                 logger.info("Running setup %s : %s" % (setup.endpoint.GID(), file))
                 E2E.CopyFile(setup.endpoint.GID(), file)
         return
-    
+
     def _trigger_step(self, tc, step):
         self.__trigger_setups(step)
         self.__trigger_commands(step)
         tc.TriggerCallback()
         return
-    
 
 DolTriggerEngine = DolTriggerEngineObject()
 E2ETriggerEngine = E2ETriggerEngineObject()

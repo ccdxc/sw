@@ -215,7 +215,7 @@ class DOLTestCase(TestCase):
             tc_config = TestCaseTrigExpConfigObject()
             tc_config.actual_object = spec_config_entry.object.Get(self)
             tc_config.original_object = copy.copy(tc_config.actual_object)
-            tc_config.method = spec_config_entry.method
+            tc_config.method = getattr(spec_config_entry, "method", None)
             tc_config.spec = getattr(spec_config_entry, "fields", None)
             tcsn.configs.append(tc_config)
    

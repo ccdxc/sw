@@ -9,6 +9,8 @@ import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
 import types_pb2 as types_pb2
 
+from infra.common.glopts import GlobalOptions
+
 IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
 IPV6_HOST = ipaddress.IPv6Address('e1ba:aced:a11:face:b00c:bade:da75:900d')
 
@@ -226,6 +228,8 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
 
 def GetExpectedPacket(testcase, args):
     #add all the cases for checking packet and return expected packet on demand
+    if testcase.config.localmapping.VNIC.deleted == True:
+        return None
     return testcase.packets.Get(args.pkt)
 
 def __get_ip_localmapping_impl(localmapping, tunnel):

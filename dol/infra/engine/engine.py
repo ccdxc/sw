@@ -37,7 +37,7 @@ def ExecuteAllModules():
     for module in ModuleStore.GetAll():
         infra_data = CreateInfraData()
         module.main(infra_data)
- 
+
 def GetSummaryAndResult():
     print("\nResult Summary:")
     print("=" * SUMMARY_NCOLS)

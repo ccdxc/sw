@@ -30,7 +30,7 @@ class VerifEngineObject:
         if GlobalOptions.skipverify:
             logger.info("Run with skipverify=True: SKIPPING VERIFICATION")
             return defs.status.SUCCESS
-    
+
 class DolVerifEngineObject(VerifEngineObject):
     def __init__(self):
         super().__init__()
@@ -112,7 +112,7 @@ class DolVerifEngineObject(VerifEngineObject):
         if ebuf.IsPacket() is False:
             logger.info("Buffer is not a packet. Skipping PktCompare.")
             return defs.status.SUCCESS
-       
+
         epktbuf = self.__get_pktbuffer(ebuf, tc)
         apktbuf = self.__get_pktbuffer(abuf, tc)
         return self.__verify_pktbuffers(epktbuf, apktbuf, tc)
@@ -174,7 +174,7 @@ class DolVerifEngineObject(VerifEngineObject):
     def __consume_descriptor(self, edescr, ring, tc):
         if GlobalOptions.dryrun:
             return None
-        
+
         adescr = copy.copy(edescr)
         max_retries = self.__get_num_retries(tc, None)
         for r in range(max_retries):
@@ -197,11 +197,11 @@ class DolVerifEngineObject(VerifEngineObject):
 
     def __verify_configs(self, step, tc):
         for config in step.expect.configs:
-            method = getattr(config.actual_object, config.method)
-            if not method:
-                assert 0
-                
-            method()
+            if config.method is not None:
+                method = getattr(config.actual_object, config.method)
+                if not method:
+                    assert 0
+                method(config.spec)
             if not config.original_object.Equals(config.actual_object, tc):
                 logger.error("Config object compare result = MisMatch")
                 return defs.status.ERROR
@@ -250,7 +250,7 @@ class DolVerifEngineObject(VerifEngineObject):
             self.__add_dummy_rx(pcr, step, tc)
         else:
             self.__receive_packets(pcr, step, tc)
-        
+
         pcr.Compare()
         pcr.ShowResults()
         if pcr.IsMatch() == False:
@@ -263,7 +263,7 @@ class DolVerifEngineObject(VerifEngineObject):
 
     def _verify(self, step, tc):
         verify_pass = True
-        
+
         pstatus = self.__verify_packets(step, tc)
         if pstatus == defs.status.ERROR:
             verify_pass = False
@@ -278,7 +278,7 @@ class DolVerifEngineObject(VerifEngineObject):
         cstatus = self.__verify_configs(step, tc)
         if cstatus == defs.status.ERROR:
             verify_pass = False
-                
+
         return defs.status.SUCCESS
 
     def __verify_delay(self, step, tc):
@@ -300,7 +300,7 @@ class DolVerifEngineObject(VerifEngineObject):
         return self._verify(step, tc)
 
 class E2EVerifEngineObject(VerifEngineObject):
-    
+
     def __init__(self):
         super().__init__()
 
@@ -318,26 +318,25 @@ class E2EVerifEngineObject(VerifEngineObject):
         if any(status == defs.status.ERROR for status in all_status):
             return defs.status.ERROR
         else:
-             return defs.status.SUCCESS       
-    
+             return defs.status.SUCCESS
+
     def _verify(self, step, tc):
         verify_pass = True
-        
+
         cstatus = self.__verify_commands(step, tc)
         if cstatus == defs.status.ERROR:
-           verify_pass = False      
+           verify_pass = False
 
         if verify_pass == False:
-            return defs.status.ERROR         
-        
+            return defs.status.ERROR
+
         return defs.status.SUCCESS
 
     def Verify(self, step, tc):
         if GlobalOptions.skipverify:
             logger.info("Run with skipverify=True: SKIPPING VERIFICATION")
             return defs.status.SUCCESS
-        return self._verify(step, tc) 
-       
+        return self._verify(step, tc)
+
 DolVerifEngine = DolVerifEngineObject()
 E2EVerifEngine = E2EVerifEngineObject()
-

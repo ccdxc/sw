@@ -234,7 +234,7 @@ class FlowMapObjectHelper:
                             continue
                     obj = FlowMapObject(lobj, robj, fwdmode, None, robj.TUNNEL)
                     objs.append(obj)
-        return utils.GetFilteredObjects(objs, selectors.maxlimits)
+        return utils.GetFilteredObjects(objs, selectors.maxlimits, random=False)
 
 FlowMapHelper = FlowMapObjectHelper()
 

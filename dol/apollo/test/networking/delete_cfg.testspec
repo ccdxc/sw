@@ -1,0 +1,15 @@
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 3
+    flow: filter://any
+    route: filter://any
+
+trigger:
+    configs:
+        - object: ref://testcase/config/localmapping/VNIC
+          method: Delete
+
+expect:
+    configs:
+        - object: ref://testcase/config/localmapping/VNIC
+          method: ReadAfterDelete
