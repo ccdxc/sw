@@ -2950,6 +2950,8 @@ ionic_setup_device_stats(struct lif *lif)
 			&lif->num_dev_cmds, "Number of dev commands used");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "lif_resets", CTLFLAG_RD,
 			&lif->num_resets, "Number of resets attempted on this LIF");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "wdog_error_trigger", CTLFLAG_RW,
+			&lif->wdog_error_trigger, 0, "Inject watchdog error");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "mac_filter_count", CTLFLAG_RD,
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mbuf_sz", CTLFLAG_RD,

@@ -298,16 +298,20 @@ static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
 	struct adminq *adminq = lif->adminq;
 
 	struct admin_cmd *cmd;
-	int err = 0;
 
 	IONIC_ADMIN_LOCK(adminq);
 
+	if (adminq->stop) {
+		IONIC_QUE_INFO(adminq, "can't post admin queue command\n");
+		IONIC_ADMIN_UNLOCK(adminq);
+		return (-ESHUTDOWN);
+	}
+
 	if (!ionic_adminq_avail(adminq, 1)) {
-		err = ENOSPC;
 		IONIC_QUE_ERROR(adminq, "adminq is hung!, head: %d tail: %d\n",
 			adminq->head_index, adminq->tail_index);
 		IONIC_ADMIN_UNLOCK(adminq);
-		return (err);
+		return (-ENOSPC);
 	}
 
 	adminq->ctx_ring[adminq->head_index] = ctx;
@@ -325,7 +329,7 @@ static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
 
 	IONIC_ADMIN_UNLOCK(adminq);
 
-	return err;
+	return 0;
 }
 
 int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)

@@ -128,6 +128,9 @@ struct adminq {
 	dma_addr_t comp_ring_pa;
 	uint32_t total_ring_size;
 
+	bool stop;
+	bool wq_stop;
+
 	struct mtx mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
 	unsigned int head_index;		/* Index for buffer and command descriptors. */
@@ -381,6 +384,7 @@ struct lif {
 
 	u64 	num_dev_cmds;
 	u64     num_resets;
+	u32     wdog_error_trigger;
 };
 
 

@@ -320,9 +320,18 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	int err, remaining;
+	const char *name;
+
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif is not locked", lif->name));
 
 	err = ionic_api_adminq_post(lif, ctx);
+	if (err == -ESHUTDOWN) {
+		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
+		IONIC_NETDEV_ERROR(lif->netdev,
+				   "%s (%d) failed: adminq stopped\n",
+				   name, ctx->cmd.cmd.opcode);
+		return err;
+	}
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev,
 				   "api_adminq_post failed, error: %d\n",

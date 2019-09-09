@@ -68,6 +68,10 @@ def set_wdog_error(req, n, err):
     return api.Trigger_AddHostCommand(req, n, \
             "sysctl hw.ionic.wdog_error_trigger=%d" % err)
 
+def set_lif_wdog_error(req, n, lif, err):
+    return api.Trigger_AddHostCommand(req, n, \
+            "sysctl dev.ionic.%d.wdog_error_trigger=%d" % (lif, err))
+
 def get_intf_names(tc, hostname):
     return tc.host_intf[hostname]
 
@@ -93,7 +97,7 @@ def Trigger(tc):
     # Force a LIF reset with TxQ watchdog
     for n in tc.nodes:
         api.Logger.info("Stage 1: Force TxQ watchdog on %s" % n)
-        set_wdog_error(req, n, WDOG_ERR_TXQ)
+        set_lif_wdog_error(req, n, 0, WDOG_ERR_TXQ)
     api.Trigger_AddHostCommand(req, n, "sleep 15")
 
     # Read the updated reset counters
@@ -104,7 +108,7 @@ def Trigger(tc):
     # Force a LIF reset with AdminQ NOP heartbeat
     for n in tc.nodes:
         api.Logger.info("Stage 2: Force AdminQ heartbeat failure on %s" % n)
-        set_wdog_error(req, n, WDOG_ERR_ADQ_HB)
+        set_lif_wdog_error(req, n, 1, WDOG_ERR_ADQ_HB)
     api.Trigger_AddHostCommand(req, n, "sleep 15")
 
     # Read the updated reset counters
