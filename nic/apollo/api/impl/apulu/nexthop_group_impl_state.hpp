@@ -58,10 +58,10 @@ private:
     friend class nexthop_group_impl;
 
 private:
-    // directmap table for underlay ECMP
-    directmap *underlay_nh_group_tbl_;
     // directmap table for overlay ECMP
     directmap *overlay_nh_group_tbl_;
+    // directmap table for underlay ECMP
+    directmap *underlay_nh_group_tbl_;
 };
 
 /// @}
