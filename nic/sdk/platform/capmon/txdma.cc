@@ -94,18 +94,18 @@ ptd_read_counters(int verbose)
     pal_reg_rd32w(CAP_ADDR_BASE_PT_PT_OFFSET +
                       CAP_PT_CSR_PTD_CNT_MA_BYTE_ADDRESS,
                   cnt, 3);
-    int ma_cnt = CAP_PTD_CSR_CNT_MA_CNT_MA_0_3_SOP_31_0_GET(cnt[0]);
+    uint32_t ma_cnt = CAP_PTD_CSR_CNT_MA_CNT_MA_0_3_SOP_31_0_GET(cnt[0]);
 
     pal_reg_rd32w(CAP_ADDR_BASE_PT_PT_OFFSET +
                       CAP_PT_CSR_PTD_CNT_NPV_RESUB_BYTE_ADDRESS,
                   cnt, 3);
-    int resub_cnt =
+    uint32_t resub_cnt =
         CAP_PTD_CSR_CNT_NPV_RESUB_CNT_NPV_RESUB_0_3_SOP_31_0_GET(cnt[0]);
 
     pal_reg_rd32w(CAP_ADDR_BASE_PT_PT_OFFSET +
                       CAP_PT_CSR_PTD_CNT_PB_BYTE_ADDRESS,
                   cnt, 3);
-    int pb_cnt = CAP_PTD_CSR_CNT_PB_CNT_PB_0_3_SOP_31_0_GET(cnt[0]);
+    uint32_t pb_cnt = CAP_PTD_CSR_CNT_PB_CNT_PB_0_3_SOP_31_0_GET(cnt[0]);
 
     // Pending Reads/Writes, # PHVs
     for (i = 0; i < polls; i++) {

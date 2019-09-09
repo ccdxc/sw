@@ -59,6 +59,9 @@ enum eth_hw_qtype {
 #define LG2_ETH_ADMINQ_RESP_RING_SIZE   4
 #define ETH_ADMINQ_RESP_RING_SIZE       (1 << LG2_ETH_ADMINQ_RESP_RING_SIZE)
 
+#define RXDMA_Q_QUIESCE_WAIT_S         0.001  //1 ms
+#define RXDMA_LIF_QUIESCE_WAIT_S       0.01   //10 ms
+
 #define RSS_HASH_KEY_SIZE	40
 #define RSS_IND_TBL_SIZE	128
 

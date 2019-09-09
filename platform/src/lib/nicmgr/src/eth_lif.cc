@@ -14,6 +14,12 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
+namespace pr {
+#include "cap_pr_c_hdr.h"
+}
+namespace psp {
+#include "cap_psp_c_hdr.h"
+}
 
 #include "nic/include/edmaq.h"
 #include "nic/sdk/lib/thread/thread.hpp"
@@ -1753,6 +1759,9 @@ status_code_t
 EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_setattr_cmd *cmd = (struct lif_setattr_cmd *)req;
+    struct eth_rx_cfg_qstate rx_cfg = {0};
+    struct eth_tx_cfg_qstate tx_cfg = {0};
+    uint64_t addr;
 
     NIC_LOG_DEBUG("{}: {}: attr {}",
         hal_lif_info_.name, opcode_to_str(cmd->opcode), cmd->attr);
@@ -1766,6 +1775,47 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 
     switch (cmd->attr) {
         case IONIC_LIF_ATTR_STATE:
+            for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
+                addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_RX, qid);
+                if (addr < 0) {
+                    NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
+                        hal_lif_info_.name, qid);
+                    return (IONIC_RC_ERROR);
+                }
+                READ_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+                if (cmd->state == IONIC_Q_ENABLE) {
+                    rx_cfg.enable = 0x1;
+                    active_q_ref_cnt++;
+                } else if (cmd->state == IONIC_Q_DISABLE) {
+                    rx_cfg.enable = 0x0;
+                    active_q_ref_cnt--;
+                }
+                WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+                PAL_barrier();
+                p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+            }
+            for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
+                addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_TX, qid);
+                if (addr < 0) {
+                    NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
+                        hal_lif_info_.name, qid);
+                    return (IONIC_RC_ERROR);
+                }
+                READ_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+                if (cmd->state == IONIC_Q_ENABLE) {
+                    tx_cfg.enable = 0x1;
+                    active_q_ref_cnt++;
+                } else if (cmd->state == IONIC_Q_DISABLE) {
+                    tx_cfg.enable = 0x0;
+                    active_q_ref_cnt--;
+                }
+                WRITE_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+                PAL_barrier();
+                p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+            }
+            /* TODO: Need to implement queue flushing */
+            if (cmd->state == IONIC_LIF_DISABLE)
+                ev_sleep(RXDMA_LIF_QUIESCE_WAIT_S);
             break;
         case IONIC_LIF_ATTR_NAME:
             strncpy0(name, cmd->name, sizeof(name));
@@ -1838,14 +1888,19 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
             return (IONIC_RC_ERROR);
         }
         READ_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
-        if (cmd->oper == IONIC_Q_ENABLE)
+        if (cmd->oper == IONIC_Q_ENABLE) {
             rx_cfg.enable = 0x1;
-        else if (cmd->oper == IONIC_Q_DISABLE)
+            active_q_ref_cnt++;
+        } else if (cmd->oper == IONIC_Q_DISABLE) {
             rx_cfg.enable = 0x0;
+            active_q_ref_cnt--;
+        }
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
-        active_q_ref_cnt--;
+        /* TODO: Need to implement queue flushing */
+        if (cmd->oper == IONIC_Q_DISABLE)
+            ev_sleep(RXDMA_Q_QUIESCE_WAIT_S);
         break;
     case IONIC_QTYPE_TXQ:
         if (cmd->index >= spec->txq_count) {
@@ -1859,14 +1914,16 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
             return (IONIC_RC_ERROR);
         }
         READ_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
-        if (cmd->oper == IONIC_Q_ENABLE)
+        if (cmd->oper == IONIC_Q_ENABLE) {
             tx_cfg.enable = 0x1;
-        else if (cmd->oper == IONIC_Q_DISABLE)
+            active_q_ref_cnt++;
+        } else if (cmd->oper == IONIC_Q_DISABLE) {
             tx_cfg.enable = 0x0;
+            active_q_ref_cnt--;
+        }
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
-        active_q_ref_cnt--;
         break;
     case IONIC_QTYPE_ADMINQ:
         if (cmd->index >= spec->adminq_count) {

@@ -26,7 +26,7 @@
 static inline uint32_t READ_REG32(uint64_t addr)
 {
     uint32_t val;
-    sdk::lib::pal_reg_write(addr, &val);
+    sdk::lib::pal_reg_read(addr, &val);
     return val;
 }
 #define WRITE_REG32(addr, val) { \

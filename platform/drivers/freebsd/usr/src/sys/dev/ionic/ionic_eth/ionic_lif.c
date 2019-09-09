@@ -440,18 +440,20 @@ ionic_stop(struct ifnet *ifp)
 		ionic_txq_disable(txq);
 	}
 
-	for (i = 0; i < lif->nrxqs; i++) {
-		rxq = lif->rxqs[i];
-		IONIC_RX_LOCK(rxq);
-		ionic_rx_clean(rxq, rxq->num_descs);
-		IONIC_RX_UNLOCK(rxq);
-	}
+	ionic_lif_quiesce(lif);
 
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
 		IONIC_TX_LOCK(txq);
 		ionic_tx_clean(txq, txq->num_descs);
 		IONIC_TX_UNLOCK(txq);
+	}
+
+	for (i = 0; i < lif->nrxqs; i++) {
+		rxq = lif->rxqs[i];
+		IONIC_RX_LOCK(rxq);
+		ionic_rx_clean(rxq, rxq->num_descs);
+		IONIC_RX_UNLOCK(rxq);
 	}
 
 	return (0);
@@ -2624,6 +2626,29 @@ ionic_lif_reset(struct lif *lif)
 	IONIC_DEV_UNLOCK(lif->ionic);
 }
 
+int
+ionic_lif_quiesce(struct lif *lif)
+{
+	int err;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.lif_setattr = {
+			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.attr = IONIC_LIF_ATTR_STATE,
+			.index = lif->index,
+			.state = IONIC_LIF_DISABLE
+		},
+	};
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to quiesce lif, error = %d\n", err);
+		return err;
+	}
+
+	return (0);
+}
+
 static void
 ionic_lif_deinit(struct lif *lif)
 {
@@ -2635,6 +2660,7 @@ ionic_lif_deinit(struct lif *lif)
 
 	ionic_lif_rxqs_disable(lif);
 	ionic_lif_txqs_disable(lif);
+	ionic_lif_quiesce(lif);
 	ionic_lif_txqs_clean(lif);
 	ionic_lif_rxqs_clean_empty(lif);
 	ionic_lif_adminq_deinit(lif);

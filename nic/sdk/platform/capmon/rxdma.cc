@@ -73,20 +73,20 @@ prd_read_counters(int verbose)
     pal_reg_rd32w(CAP_ADDR_BASE_PR_PR_OFFSET +
                       CAP_PR_CSR_PRD_CNT_MA_BYTE_ADDRESS,
                   cnt, 3);
-    int ma_cnt = CAP_PRD_CSR_CNT_MA_CNT_MA_0_3_SOP_31_0_GET(cnt[0]);
+    uint32_t ma_cnt = CAP_PRD_CSR_CNT_MA_CNT_MA_0_3_SOP_31_0_GET(cnt[0]);
 
     // Number of PHVs recirculated
     pal_reg_rd32w(CAP_ADDR_BASE_PR_PR_OFFSET +
                       CAP_PR_CSR_PRD_CNT_PS_RESUB_PKT_BYTE_ADDRESS,
                   cnt, 3);
-    int resub_cnt =
+    uint32_t resub_cnt =
         CAP_PRD_CSR_CNT_PS_RESUB_PKT_CNT_PS_RESUB_PKT_0_3_SOP_31_0_GET(cnt[0]);
 
     // TODO
     pal_reg_rd32w(CAP_ADDR_BASE_PR_PR_OFFSET +
                       CAP_PR_CSR_PRD_CNT_PS_PKT_BYTE_ADDRESS,
                   cnt, 3);
-    int ps_cnt = CAP_PRD_CSR_CNT_PS_PKT_CNT_PS_PKT_0_3_SOP_31_0_GET(cnt[0]);
+    uint32_t ps_cnt = CAP_PRD_CSR_CNT_PS_PKT_CNT_PS_PKT_0_3_SOP_31_0_GET(cnt[0]);
 
     for (i = 0; i < polls; i++) {
         /*
@@ -161,7 +161,7 @@ prd_read_counters(int verbose)
         phv_xoff += CAP_PRD_CSR_STA_XOFF_STA_XOFF_0_3_NUMPHV_XOFF_GET(cnt[0]);
 
         pb_xoff += CAP_PRD_CSR_STA_XOFF_STA_XOFF_1_3_PKT_PBUS_XOFF_GET(cnt[1]);
-        host_xoff =
+        host_xoff +=
             CAP_PRD_CSR_STA_XOFF_STA_XOFF_1_3_HOST_PBUS_XOFF_GET(cnt[1]);
 
         pkt_ff_depth +=
@@ -174,8 +174,11 @@ prd_read_counters(int verbose)
                                 rd_ff_empty, rd_ff_full, wr_ff_empty,
                                 wr_ff_full, pkt_ff_empty, pkt_ff_full,
                                 pkt_ff_depth, polls);
-    capmon_pipeline_rx_data_store1(RXDMA, hostq_xoff_cnt, pkt_xoff_cnt,
-                                   phv_xoff_cnt, (phv_xoff * 100) / polls,
+    capmon_pipeline_rx_data_store1(RXDMA,
+                                   hostq_xoff_cnt / polls,
+                                   pkt_xoff_cnt / polls,
+                                   phv_xoff_cnt / polls,
+                                   (phv_xoff * 100) / polls,
                                    (pb_xoff * 100) / polls,
                                    (host_xoff * 100) / polls);
 }
