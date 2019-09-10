@@ -3709,12 +3709,11 @@ ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz)
 	buf_pa = fw_dma.dma_paddr;
 	IONIC_NETDEV_INFO(lif->netdev, "firmware dma buffer address %lx\n", buf_pa);
 
+	IONIC_LIF_LOCK(lif);
 	offset = 0;
 	while (offset < fw_sz) {
 		copy_sz = min(buf_sz, fw_sz - offset);
 		bcopy(fw_data + offset, buf, copy_sz);
-		// IONIC_NETDEV_DEBUG(lif->netdev, "Sending offset %x size %u\n",
-		// 	offset, copy_sz);
 		if (ionic_firmware_download(lif, buf_pa, offset, copy_sz)) {
 			IONIC_NETDEV_ERROR(lif->netdev,
 				"firmware upload failed at offset %x addr %lx len %u\n",
@@ -3739,6 +3738,7 @@ ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz)
 
 err_out_free_buf:
 	ionic_dma_free(lif->ionic, &fw_dma);
+	IONIC_LIF_UNLOCK(lif);
 
 	return (err);
 }
