@@ -343,10 +343,11 @@ Loop:
 
 				log.Infof("Got work %#v", snicState)
 
-				watchChan := make(chan memdb.Event, memdb.WatchLen)
-				defer close(watchChan)
-				sm.WatchObjects("DSCRollout", watchChan)
-				defer sm.StopWatchObjects("DSCRollout", watchChan)
+				watcher := memdb.Watcher{Name: "rollout"}
+				watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+				defer close(watcher.Channel)
+				sm.WatchObjects("DSCRollout", &watcher)
+				defer sm.StopWatchObjects("DSCRollout", &watcher)
 
 				snicROState, err := sm.GetDSCRolloutState(snicState.Tenant, snicState.Name)
 				if err == nil {
@@ -422,7 +423,7 @@ Loop:
 						// Can return immediately now not waiting for a response from NAPLES.
 						// If needed, in the future we wait for a response from NAPLES before coming out of this loop
 						return
-					case evt, ok := <-watchChan:
+					case evt, ok := <-watcher.Channel:
 						if !ok {
 							log.Errorf("Error reading from local watch channel. Closing watch")
 							break Loop

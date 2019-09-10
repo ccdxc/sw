@@ -24,7 +24,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/debug/stats"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -417,7 +417,7 @@ func (pm *PolicyManager) Debug(r *http.Request) (interface{}, error) {
 	for _, key := range kind {
 		dbgInfo.Policy[key] = map[string]memdb.Object{}
 
-		pl := pm.policyDb.ListObjects(key)
+		pl := pm.policyDb.ListObjects(key, nil)
 		for _, p := range pl {
 			dbgInfo.Policy[key][p.GetObjectMeta().GetName()] = p
 		}

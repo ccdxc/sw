@@ -277,7 +277,7 @@ func (ug *defaultAuthGetter) processEventCb(evt *kvstore.WatchEvent) error {
 }
 
 func (ug *defaultAuthGetter) resetCacheCb() {
-	users := ug.cache.ListObjects("User")
+	users := ug.cache.ListObjects("User", nil)
 	for _, user := range users {
 		ug.cache.DeleteObject(user)
 	}

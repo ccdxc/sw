@@ -49,7 +49,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
-	"github.com/pensando/sw/venice/utils/debug/stats"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	diagproto "github.com/pensando/sw/venice/utils/diagnostics/protos"
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/log"

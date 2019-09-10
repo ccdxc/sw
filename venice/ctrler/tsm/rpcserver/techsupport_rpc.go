@@ -234,10 +234,11 @@ func (r *TechSupportRPCServer) WatchTechSupportRequests(params *tsproto.WatchTec
 		return fmt.Errorf("Invalid NodeKind %s in WatchTechSupportRequests call", nodeKind)
 	}
 
-	tsrEventChannel := make(chan memdb.Event, memdb.WatchLen)
-	defer close(tsrEventChannel)
-	r.stateMgr.WatchObjects(statemgr.KindTechSupportRequest, tsrEventChannel)
-	defer r.stateMgr.StopWatchObjects(statemgr.KindTechSupportRequest, tsrEventChannel)
+	watcher := memdb.Watcher{Name: "tech-support"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	r.stateMgr.WatchObjects(statemgr.KindTechSupportRequest, &watcher)
+	defer r.stateMgr.StopWatchObjects(statemgr.KindTechSupportRequest, &watcher)
 
 	tsrStateList, err := r.listTechSupportRequestsActive(context.Background(), nodeName, nodeKind)
 	if err != nil {
@@ -277,7 +278,7 @@ func (r *TechSupportRPCServer) WatchTechSupportRequests(params *tsproto.WatchTec
 	for {
 		select {
 
-		case evt, ok := <-tsrEventChannel:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from TechSupportRequest update channel: %v", err)
 				return errors.New("Error reading from TechSupportRequest update channel")

@@ -48,12 +48,28 @@ type objState struct {
 	nodeState map[string]Object // per node state
 }
 
+//FilterFn filter function
+type FilterFn func(Object) bool
+
+//Watcher watcher attributes
+type Watcher struct {
+	Name    string
+	Filter  FilterFn
+	Channel chan Event
+}
+
+//GetName gets name of the watcher
+func (watcher *Watcher) GetName() interface{} {
+	return watcher.Name
+}
+
 // Objdb contains objects of a specific kind
 type Objdb struct {
 	sync.Mutex
 	WatchLock sync.RWMutex
 	objects   map[string]*objState
-	watchers  []chan Event
+	watchers  []*Watcher
+	watchMap  map[string]*Watcher
 }
 
 // Memdb is database of all objects
@@ -71,14 +87,19 @@ func (od *Objdb) watchEvent(obj Object, et EventType) error {
 	}
 	od.WatchLock.RLock()
 	// send it to each watcher
-	for _, watchChan := range od.watchers {
+	for _, watcher := range od.watchers {
+		if watcher.Filter != nil && !watcher.Filter(ev.Obj) {
+			continue
+		}
 		select {
-		case watchChan <- ev:
+		case watcher.Channel <- ev:
 		default:
 			log.Errorf("too slow agent and watcher events are greater than channel capacity")
 			// TODO: too slow agent and watcher events are greater than channel capacity..
 			// come up with a policy.. either close the connection or drop the events or something else
 		}
+		log.Infof("Sending  Event %v kind %v, object %+v to watcher %v",
+			ev.EventType, ev.Obj.GetObjectKind(), ev.Obj.GetObjectMeta(), watcher.Name)
 	}
 	od.WatchLock.RUnlock()
 
@@ -117,7 +138,8 @@ func (md *Memdb) getObjdb(kind string) *Objdb {
 
 	// create new objectdb
 	od = &Objdb{
-		objects: make(map[string]*objState),
+		objects:  make(map[string]*objState),
+		watchMap: make(map[string]*Watcher),
 	}
 
 	// save it and return
@@ -127,27 +149,29 @@ func (md *Memdb) getObjdb(kind string) *Objdb {
 
 // WatchObjects watches for changes on an object kind
 // TODO: Add support for watch support with resource version
-func (md *Memdb) WatchObjects(kind string, watchChan chan Event) error {
+func (md *Memdb) WatchObjects(kind string, watcher *Watcher) error {
 	// get objdb
 	od := md.getObjdb(kind)
 
 	od.WatchLock.Lock()
 	// add the channel to watch list and return
-	od.watchers = append(od.watchers, watchChan)
+	od.watchers = append(od.watchers, watcher)
+	od.watchMap[watcher.Name] = watcher
 	od.WatchLock.Unlock()
 	return nil
 }
 
 // StopWatchObjects removes watches given the kind and watchChan
-func (md *Memdb) StopWatchObjects(kind string, watchChan chan Event) error {
+func (md *Memdb) StopWatchObjects(kind string, watcher *Watcher) error {
 	// get objdb
 	od := md.getObjdb(kind)
 
 	// lock object db
 	od.WatchLock.Lock()
 	for i, other := range od.watchers {
-		if other == watchChan {
+		if other == watcher {
 			od.watchers = append(od.watchers[:i], od.watchers[i+1:]...)
+			delete(od.watchMap, watcher.Name)
 			break
 		}
 	}
@@ -252,7 +276,7 @@ func (md *Memdb) FindObject(kind string, ometa *api.ObjectMeta) (Object, error) 
 }
 
 // ListObjects returns a list of all objects of a kind
-func (md *Memdb) ListObjects(kind string) []Object {
+func (md *Memdb) ListObjects(kind string, filter FilterFn) []Object {
 	// get objdb
 	od := md.getObjdb(kind)
 
@@ -263,7 +287,9 @@ func (md *Memdb) ListObjects(kind string) []Object {
 	// walk all objects and add it to return list
 	var objs []Object
 	for _, obj := range od.objects {
-		objs = append(objs, obj.obj)
+		if filter == nil || filter(obj.obj) {
+			objs = append(objs, obj.obj)
+		}
 	}
 
 	return objs
@@ -357,8 +383,8 @@ func (md *Memdb) MarshalJSON() ([]byte, error) {
 		}
 
 		watchers := []int{}
-		for _, ch := range objs.watchers {
-			watchers = append(watchers, len(ch))
+		for _, watcher := range objs.watchers {
+			watchers = append(watchers, len(watcher.Channel))
 		}
 
 		contents[kind] = struct {

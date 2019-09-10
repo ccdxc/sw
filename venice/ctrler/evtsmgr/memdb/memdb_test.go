@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -35,11 +35,11 @@ func TestMemDb(t *testing.T) {
 	mDb.AddObject(policygen.CreateSmartNIC("0014.2201.2334", cluster.DistributedServiceCardStatus_ADMITTED.String(), "esx-2",
 		&cluster.DSCCondition{Type: cluster.DSCCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
 
-	objs := mDb.ListObjects("AlertPolicy")
+	objs := mDb.ListObjects("AlertPolicy", nil)
 	Assert(t, len(objs) == 4, "invalid number of alert policies, expected: %v, got: %v", 4, len(objs))
-	objs = mDb.ListObjects("Alert")
+	objs = mDb.ListObjects("Alert", nil)
 	Assert(t, len(objs) == 2, "invalid number of alerts objects, expected: %v, got: %v", 2, len(objs))
-	objs = mDb.ListObjects("DistributedServiceCard")
+	objs = mDb.ListObjects("DistributedServiceCard", nil)
 	Assert(t, len(objs) == 2, "invalid number of Smart NIC objects, expected: %v, got: %v", 2, len(objs))
 
 	// test update
@@ -47,12 +47,12 @@ func TestMemDb(t *testing.T) {
 	AssertOk(t, mDb.AddObject(ap), "failed to add object to mem DB")
 	ap.Spec.Enable = false
 	AssertOk(t, mDb.UpdateObject(ap), "failed to update object to mem DB")
-	objs = mDb.ListObjects("AlertPolicy")
+	objs = mDb.ListObjects("AlertPolicy", nil)
 	Assert(t, len(objs) == 5, "invalid number of alert policies, expected: %v, got: %v", 5, len(objs))
 
 	// test delete
 	AssertOk(t, mDb.DeleteObject(ap), "failed to delete object from mem DB")
-	objs = mDb.ListObjects("AlertPolicy")
+	objs = mDb.ListObjects("AlertPolicy", nil)
 	Assert(t, len(objs) == 4, "invalid number of alert policies, expected: %v, got: %v", 5, len(objs))
 
 	// test alert destination
@@ -61,7 +61,7 @@ func TestMemDb(t *testing.T) {
 		&monitoring.SyslogExport{
 			Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 		}))
-	objs = mDb.ListObjects("AlertDestination")
+	objs = mDb.ListObjects("AlertDestination", nil)
 	Assert(t, len(objs) == 1, "invalid number of alert destinations, expected: %v, got: %v", 1, len(objs))
 	Assert(t, mDb.GetAlertDestination("dest-1") != nil, "failed to get alert destination")
 

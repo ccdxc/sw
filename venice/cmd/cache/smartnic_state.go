@@ -57,7 +57,7 @@ func (sm *Statemgr) FindSmartNIC(name string) (*SmartNICState, error) {
 
 // ListSmartNICs lists all smartNIC objects
 func (sm *Statemgr) ListSmartNICs() ([]*SmartNICState, error) {
-	objs := sm.memDB.ListObjects("DistributedServiceCard")
+	objs := sm.memDB.ListObjects("DistributedServiceCard", nil)
 
 	var sgs []*SmartNICState
 	for _, obj := range objs {

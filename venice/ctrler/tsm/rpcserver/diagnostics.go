@@ -20,10 +20,11 @@ type diagnosticsServer struct {
 }
 
 func (d *diagnosticsServer) WatchModule(options *api.ListWatchOptions, stream tsproto.DiagnosticsApi_WatchModuleServer) error {
-	moduleEventChannel := make(chan memdb.Event, memdb.WatchLen)
-	defer close(moduleEventChannel)
-	d.stateMgr.WatchObjects(statemgr.KindModule, moduleEventChannel)
-	defer d.stateMgr.StopWatchObjects(statemgr.KindModule, moduleEventChannel)
+	watcher := memdb.Watcher{Name: "module-event"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	d.stateMgr.WatchObjects(statemgr.KindModule, &watcher)
+	defer d.stateMgr.StopWatchObjects(statemgr.KindModule, &watcher)
 
 	modules := d.stateMgr.ListModuleState()
 	for _, moduleState := range modules {
@@ -42,7 +43,7 @@ func (d *diagnosticsServer) WatchModule(options *api.ListWatchOptions, stream ts
 	for {
 		select {
 
-		case evt, ok := <-moduleEventChannel:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from Module update channel")
 				return errors.New("error reading from Module update channel")

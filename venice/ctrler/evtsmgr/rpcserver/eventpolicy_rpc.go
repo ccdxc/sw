@@ -36,13 +36,14 @@ func (e *EventPolicyRPCHandler) WatchEventPolicy(in *api.ObjectMeta, stream emgr
 	e.logger.Infof("watch event policy from [%v]", in.Name)
 
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	e.policyDb.WatchObjects("EventPolicy", watchChan)
-	defer e.policyDb.StopWatchObjects("EventPolicy", watchChan)
+	watcher := memdb.Watcher{Name: "event-policy"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	e.policyDb.WatchObjects("EventPolicy", &watcher)
+	defer e.policyDb.StopWatchObjects("EventPolicy", &watcher)
 
 	// send existing event policies to the watcher
-	for _, obj := range e.policyDb.ListObjects("EventPolicy") {
+	for _, obj := range e.policyDb.ListObjects("EventPolicy", nil) {
 		if policy, ok := obj.(*monitoring.EventPolicy); ok {
 			// convert monitoring.EventPolicy to evtsmgrprotos.EventPolicy
 			eventPolicy := &emgrpc.EventPolicy{
@@ -67,7 +68,7 @@ func (e *EventPolicyRPCHandler) WatchEventPolicy(in *api.ObjectMeta, stream emgr
 	// loop forever on watch channel
 	for {
 		select {
-		case event, ok := <-watchChan:
+		case event, ok := <-watcher.Channel:
 			if !ok {
 				e.logger.Errorf("[%s] error received from", in.GetName())
 				return fmt.Errorf("invalid event from watch channel")

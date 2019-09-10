@@ -620,10 +620,11 @@ func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]*
 // WatchNICs watches smartNICs objects for changes and sends them as streaming rpc
 func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_WatchNICsServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	s.stateMgr.WatchObjects("DistributedServiceCard", watchChan)
-	defer s.stateMgr.StopWatchObjects("DistributedServiceCard", watchChan)
+	watcher := memdb.Watcher{Name: "dsc-cmd"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	s.stateMgr.WatchObjects("DistributedServiceCard", &watcher)
+	defer s.stateMgr.StopWatchObjects("DistributedServiceCard", &watcher)
 
 	// first get a list of all smartnics
 	nics, err := s.ListSmartNICs(context.Background(), sel)
@@ -653,7 +654,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")

@@ -159,14 +159,14 @@ func (e *AlertExporter) export(destName string, alert *monitoring.Alert) int {
 // watchAlertDestinations watches for the alert destination update/delete event and updates the
 // writers in the exporter accordingly.
 func (e *AlertExporter) watchAlertDestinations() {
-	watchCh := e.memDb.WatchAlertDestinations()
-	defer e.memDb.StopWatchAlertDestinations(watchCh)
+	watcher := e.memDb.WatchAlertDestinations()
+	defer e.memDb.StopWatchAlertDestinations(watcher)
 
 	for {
 		select {
 		case <-e.stop:
 			return
-		case evt, ok := <-watchCh:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				e.logger.Errorf("error reading alert destination from the channel, closing")
 				return

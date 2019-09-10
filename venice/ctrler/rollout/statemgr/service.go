@@ -102,7 +102,7 @@ func ServiceRolloutStateFromObj(obj memdb.Object) (*ServiceRolloutState, error) 
 
 // ListServiceRollouts lists all ServiceRollout objects
 func (sm *Statemgr) ListServiceRollouts() ([]*ServiceRolloutState, error) {
-	objs := sm.memDB.ListObjects(kindServiceRollout)
+	objs := sm.memDB.ListObjects(kindServiceRollout, nil)
 
 	var nodeUpdateStates []*ServiceRolloutState
 	for _, obj := range objs {

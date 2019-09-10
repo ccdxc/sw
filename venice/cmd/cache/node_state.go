@@ -55,7 +55,7 @@ func (sm *Statemgr) FindNode(name string) (*NodeState, error) {
 // ListNodes lists all Node objects
 func (sm *Statemgr) ListNodes() ([]*NodeState, error) {
 	var sgs []*NodeState
-	objs := sm.memDB.ListObjects("Node")
+	objs := sm.memDB.ListObjects("Node", nil)
 	for _, obj := range objs {
 		sg, err := NodeStateFromObj(obj)
 		if err != nil {

@@ -102,7 +102,7 @@ func SmartNICStateFromObj(obj memdb.Object) (*SmartNICState, error) {
 
 // ListSmartNICs lists all SmartNIC objects
 func (sm *Statemgr) ListSmartNICs() ([]*SmartNICState, error) {
-	objs := sm.memDB.ListObjects(kindSmartNIC)
+	objs := sm.memDB.ListObjects(kindSmartNIC, nil)
 
 	var smartNICStates []*SmartNICState
 	for _, obj := range objs {

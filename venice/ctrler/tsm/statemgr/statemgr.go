@@ -63,19 +63,19 @@ func (sm *Statemgr) FindObject(kind string, ometa *api.ObjectMeta) (memdb.Object
 
 // ListObjects list all objects of a kind
 func (sm *Statemgr) ListObjects(kind string) []memdb.Object {
-	return sm.memDB.ListObjects(kind)
+	return sm.memDB.ListObjects(kind, nil)
 }
 
 // WatchObjects watches monitoring objects for changes
-func (sm *Statemgr) WatchObjects(kind string, watchChan chan memdb.Event) error {
+func (sm *Statemgr) WatchObjects(kind string, watcher *memdb.Watcher) error {
 	// just add the channel to the list of watchers
-	return sm.memDB.WatchObjects(kind, watchChan)
+	return sm.memDB.WatchObjects(kind, watcher)
 }
 
 // StopWatchObjects Stops watches of network state
-func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) error {
+func (sm *Statemgr) StopWatchObjects(kind string, watcher *memdb.Watcher) error {
 	// just remove the channel from the list of watchers
-	return sm.memDB.StopWatchObjects(kind, watchChan)
+	return sm.memDB.StopWatchObjects(kind, watcher)
 }
 
 // runMirrorSessionWatcher watches on a channel for changes from api server and internal events

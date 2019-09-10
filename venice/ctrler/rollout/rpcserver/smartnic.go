@@ -27,10 +27,11 @@ func NewDSCRolloutRPCServer(stateMgr *statemgr.Statemgr) (*DSCRolloutRPCServer, 
 func (n *DSCRolloutRPCServer) WatchDSCRollout(sel *api.ObjectMeta, stream protos.DSCRolloutApi_WatchDSCRolloutServer) error {
 	var sentSpec protos.DSCRolloutSpec
 
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	n.stateMgr.WatchObjects("DSCRollout", watchChan)
-	defer n.stateMgr.StopWatchObjects("DSCRollout", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	n.stateMgr.WatchObjects("DSCRollout", &watcher)
+	defer n.stateMgr.StopWatchObjects("DSCRollout", &watcher)
 
 	log.Debugf("Got WatchDSCRollout from %v", sel.Name)
 	rs, err := n.stateMgr.ListDSCRollouts()
@@ -66,7 +67,7 @@ func (n *DSCRolloutRPCServer) WatchDSCRollout(sel *api.ObjectMeta, stream protos
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("error reading from channel")

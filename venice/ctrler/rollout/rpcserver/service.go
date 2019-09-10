@@ -27,10 +27,11 @@ func NewServiceRolloutRPCServer(stateMgr *statemgr.Statemgr) (*ServiceRolloutRPC
 func (n *ServiceRolloutRPCServer) WatchServiceRollout(sel *api.ObjectMeta, stream protos.ServiceRolloutApi_WatchServiceRolloutServer) error {
 	var sentSpec protos.ServiceRolloutSpec
 
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	n.stateMgr.WatchObjects("ServiceRollout", watchChan)
-	defer n.stateMgr.StopWatchObjects("ServiceRollout", watchChan)
+	watcher := memdb.Watcher{Name: "rollout"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	n.stateMgr.WatchObjects("ServiceRollout", &watcher)
+	defer n.stateMgr.StopWatchObjects("ServiceRollout", &watcher)
 
 	rs, err := n.stateMgr.ListServiceRollouts()
 	if err != nil {
@@ -60,7 +61,7 @@ func (n *ServiceRolloutRPCServer) WatchServiceRollout(sel *api.ObjectMeta, strea
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("error reading from channel")

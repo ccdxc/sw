@@ -203,7 +203,7 @@ func WithEnabledFilter(enabled bool) FilterFn {
 // GetAlertPolicies returns the list of alert policies that matches all the given filters
 func (m *MemDb) GetAlertPolicies(filters ...FilterFn) []*monitoring.AlertPolicy {
 	var alertPolicies []*monitoring.AlertPolicy
-	for _, policy := range m.ListObjects("AlertPolicy") {
+	for _, policy := range m.ListObjects("AlertPolicy", nil) {
 		ap := *(policy.(*monitoring.AlertPolicy))
 
 		matched := 0
@@ -230,7 +230,7 @@ func (m *MemDb) GetAlertPolicies(filters ...FilterFn) []*monitoring.AlertPolicy 
 
 // GetAlertDestination returns the alert destination matching the given name
 func (m *MemDb) GetAlertDestination(name string) *monitoring.AlertDestination {
-	for _, alertD := range m.ListObjects("AlertDestination") {
+	for _, alertD := range m.ListObjects("AlertDestination", nil) {
 		ad := alertD.(*monitoring.AlertDestination)
 		if ad.GetName() == name {
 			return ad
@@ -241,27 +241,29 @@ func (m *MemDb) GetAlertDestination(name string) *monitoring.AlertDestination {
 }
 
 // WatchAlertDestinations returns the watcher to watch for alert destination events
-func (m *MemDb) WatchAlertDestinations() chan memdb.Event {
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	m.WatchObjects("AlertDestination", watchChan)
-	return watchChan
+func (m *MemDb) WatchAlertDestinations() *memdb.Watcher {
+	watcher := memdb.Watcher{Name: "alert-dest"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	m.WatchObjects("AlertDestination", &watcher)
+	return &watcher
 }
 
 // StopWatchAlertDestinations stops the alert destination watcher
-func (m *MemDb) StopWatchAlertDestinations(watchChan chan memdb.Event) {
-	m.StopWatchObjects("AlertDestination", watchChan)
+func (m *MemDb) StopWatchAlertDestinations(watcher *memdb.Watcher) {
+	m.StopWatchObjects("AlertDestination", watcher)
 }
 
 // WatchVersion returns the watcher to watch for version events
-func (m *MemDb) WatchVersion() chan memdb.Event {
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	m.WatchObjects("Version", watchChan)
-	return watchChan
+func (m *MemDb) WatchVersion() *memdb.Watcher {
+	watcher := memdb.Watcher{Name: "alert-dest"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	m.WatchObjects("Version", &watcher)
+	return &watcher
 }
 
 // StopWatchVersion stops the version watcher
-func (m *MemDb) StopWatchVersion(watchChan chan memdb.Event) {
-	m.StopWatchObjects("Version", watchChan)
+func (m *MemDb) StopWatchVersion(watcher *memdb.Watcher) {
+	m.StopWatchObjects("Version", watcher)
 }
 
 // NewMemDb creates a new mem DB

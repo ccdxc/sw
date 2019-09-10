@@ -178,8 +178,9 @@ func TestSmartNICWatch(t *testing.T) {
 	defer stateMgr.Stop()
 
 	// start a watch
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	err = stateMgr.WatchObjects("DistributedServiceCard", watchChan)
+	watcher := memdb.Watcher{Name: "rollout"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	err = stateMgr.WatchObjects("DistributedServiceCard", &watcher)
 	AssertOk(t, err, "Error creating the Watch for VeniceRollout")
 
 	// Create SmartNICObject and see that its properly created and that watchers see the updates to the object
@@ -200,7 +201,7 @@ func TestSmartNICWatch(t *testing.T) {
 
 	// verify we get a watch event
 	select {
-	case wnt, ok := <-watchChan:
+	case wnt, ok := <-watcher.Channel:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
 		Assert(t, wnt.Obj.GetObjectKind() == "DistributedServiceCard", "Received invalid Kind SmartNIC", wnt)
@@ -214,7 +215,7 @@ func TestSmartNICWatch(t *testing.T) {
 
 	// verify we get a watch event
 	select {
-	case wnt, ok := <-watchChan:
+	case wnt, ok := <-watcher.Channel:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
 		Assert(t, wnt.Obj.GetObjectKind() == "DistributedServiceCard", "Received invalid Kind DistributedServiceCard", wnt)
@@ -227,7 +228,7 @@ func TestSmartNICWatch(t *testing.T) {
 
 	// verify we get a watch event
 	select {
-	case wnt, ok := <-watchChan:
+	case wnt, ok := <-watcher.Channel:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
 		Assert(t, wnt.Obj.GetObjectKind() == "DistributedServiceCard", "Received invalid Kind DistributedServiceCard", wnt)
@@ -250,8 +251,9 @@ func TestVeniceRolloutWatch(t *testing.T) {
 	defer stateMgr.Stop()
 
 	// start a watch
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	err = stateMgr.WatchObjects("VeniceRollout", watchChan)
+	watcher := memdb.Watcher{Name: "rollout"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	err = stateMgr.WatchObjects("VeniceRollout", &watcher)
 	AssertOk(t, err, "Error creating the Watch for VeniceRollout")
 
 	ro := protos.VeniceRollout{
@@ -268,7 +270,7 @@ func TestVeniceRolloutWatch(t *testing.T) {
 
 	// verify we get a watch event
 	select {
-	case wnt, ok := <-watchChan:
+	case wnt, ok := <-watcher.Channel:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, wnt.Obj.GetObjectMeta().Name == t.Name(), "Received invalid venice Rollout", wnt)
 		Assert(t, wnt.Obj.GetObjectKind() == "VeniceRollout", "Received invalid Kind venice Rollout", wnt)

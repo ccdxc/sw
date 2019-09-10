@@ -127,7 +127,7 @@ func DSCRolloutStateFromObj(obj memdb.Object) (*DSCRolloutState, error) {
 
 // ListDSCRollouts lists all DSCRollout objects
 func (sm *Statemgr) ListDSCRollouts() ([]*DSCRolloutState, error) {
-	objs := sm.memDB.ListObjects(kindDSCRollout)
+	objs := sm.memDB.ListObjects(kindDSCRollout, nil)
 
 	var smartNICUpdateStates []*DSCRolloutState
 	for _, obj := range objs {

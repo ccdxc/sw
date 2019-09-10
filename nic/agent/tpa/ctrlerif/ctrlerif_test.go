@@ -162,7 +162,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	err = policyDb.AddObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {
-		p := policyDb.ListObjects("FwlogPolicy")
+		p := policyDb.ListObjects("FwlogPolicy", nil)
 		return len(p) == 3, p
 	}, "fwlog update failed", "1s", "60s")
 
@@ -171,7 +171,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	err = policyDb.UpdateObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to update fwlog object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {
-		p := policyDb.ListObjects("FwlogPolicy")
+		p := policyDb.ListObjects("FwlogPolicy", nil)
 		return len(p) == 3, p
 	}, "fwlog update failed", "1s", "60s")
 
@@ -180,7 +180,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	err = policyDb.DeleteObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to delete fwlog object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {
-		p := policyDb.ListObjects("FwlogPolicy")
+		p := policyDb.ListObjects("FwlogPolicy", nil)
 		return len(p) == 2, p
 	}, "fwlog update failed", "1s", "60s")
 
@@ -321,7 +321,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	err = policyDb.AddObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to add FlowExportPolicy object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {
-		p := policyDb.ListObjects("FlowExportPolicy")
+		p := policyDb.ListObjects("FlowExportPolicy", nil)
 		return len(p) == 3, p
 	}, "fFlowExportPolicy add failed")
 
@@ -336,7 +336,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	err = policyDb.UpdateObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to update FlowExportPolicy object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {
-		p := policyDb.ListObjects("FlowExportPolicy")
+		p := policyDb.ListObjects("FlowExportPolicy", nil)
 		return len(p) == 3, p
 	}, "FlowExportPolicy update failed", "1s", "60s")
 
@@ -345,7 +345,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	err = policyDb.DeleteObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to delete FlowExportPolicy object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {
-		p := policyDb.ListObjects("FlowExportPolicy")
+		p := policyDb.ListObjects("FlowExportPolicy", nil)
 		return len(p) == 2, p
 	}, "FlowExportPolicy update failed", "1s", "60s")
 

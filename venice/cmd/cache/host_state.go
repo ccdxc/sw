@@ -56,7 +56,7 @@ func (sm *Statemgr) FindHost(name string) (*HostState, error) {
 // ListHosts lists all Host objects
 func (sm *Statemgr) ListHosts() ([]*HostState, error) {
 	var sgs []*HostState
-	objs := sm.memDB.ListObjects("Host")
+	objs := sm.memDB.ListObjects("Host", nil)
 	for _, obj := range objs {
 		sg, err := HostStateFromObj(obj)
 		if err != nil {

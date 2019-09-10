@@ -53,19 +53,19 @@ func (sm *Statemgr) FindObject(kind, tenant, name string) (memdb.Object, error) 
 
 // ListObjects list all objects of a kind
 func (sm *Statemgr) ListObjects(kind string) []memdb.Object {
-	return sm.memDB.ListObjects(kind)
+	return sm.memDB.ListObjects(kind, nil)
 }
 
 // WatchObjects watches network state for changes
-func (sm *Statemgr) WatchObjects(kind string, watchChan chan memdb.Event) error {
+func (sm *Statemgr) WatchObjects(kind string, watcher *memdb.Watcher) error {
 	// just add the channel to the list of watchers
-	return sm.memDB.WatchObjects(kind, watchChan)
+	return sm.memDB.WatchObjects(kind, watcher)
 }
 
 // StopWatchObjects Stops watches of network state
-func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) error {
+func (sm *Statemgr) StopWatchObjects(kind string, watcher *memdb.Watcher) error {
 	// just remove the channel from the list of watchers
-	return sm.memDB.StopWatchObjects(kind, watchChan)
+	return sm.memDB.StopWatchObjects(kind, watcher)
 }
 
 // APIClient returns an APIServer client for the Cluster group

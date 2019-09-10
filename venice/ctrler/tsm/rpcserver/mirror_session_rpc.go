@@ -103,10 +103,11 @@ func (r *MirrorSessionRPCServer) ListMirrorSessionsActive(ctx context.Context, s
 // This function is invoked when agent (grpc client) performs stream.Recv() on this watch stream service
 func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream tsproto.MirrorSessionApi_WatchMirrorSessionsServer) error {
 	// watch for changes
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	r.stateMgr.WatchObjects("MirrorSession", watchChan)
-	defer r.stateMgr.StopWatchObjects("MirrorSession", watchChan)
+	watcher := memdb.Watcher{Name: "mirror-session"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	r.stateMgr.WatchObjects("MirrorSession", &watcher)
+	defer r.stateMgr.StopWatchObjects("MirrorSession", &watcher)
 
 	log.Debugf("Find existing sessions to be sent to an agent")
 	// get a list of all existing mirror sessions
@@ -142,7 +143,7 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("tms:Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")

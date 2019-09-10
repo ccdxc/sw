@@ -116,7 +116,7 @@ func NodeStateFromObj(obj memdb.Object) (*NodeState, error) {
 
 // ListNodes lists all Node objects
 func (sm *Statemgr) ListNodes() ([]*NodeState, error) {
-	objs := sm.memDB.ListObjects(kindNode)
+	objs := sm.memDB.ListObjects(kindNode, nil)
 
 	var ns []*NodeState
 	for _, obj := range objs {

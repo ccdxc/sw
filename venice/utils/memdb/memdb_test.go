@@ -52,7 +52,7 @@ func TestMemdbAddDelete(t *testing.T) {
 	}
 
 	// verify list works
-	objs := md.ListObjects("testObj")
+	objs := md.ListObjects("testObj", nil)
 	Assert(t, (len(objs) == 1), "List returned incorrect number of objs", objs)
 	Assert(t, (objs[0].GetObjectMeta().Name == obj.Name), "Got invalid object", objs)
 
@@ -69,7 +69,7 @@ func TestMemdbAddDelete(t *testing.T) {
 	// verify object is not found after delete
 	_, err = md.FindObject("testObj", &obj.ObjectMeta)
 	Assert(t, (err != nil), "Object found when expecting error", md)
-	objs = md.ListObjects("testObj")
+	objs = md.ListObjects("testObj", nil)
 	Assert(t, (len(objs) == 0), "List returned incorrect number of objs", objs)
 }
 
@@ -115,22 +115,23 @@ func TestMemdbWatch(t *testing.T) {
 	}
 
 	// start watch on objects
-	watchChan := make(chan Event, WatchLen)
-	md.WatchObjects("testObj", watchChan)
+	watcher := Watcher{}
+	watcher.Channel = make(chan Event, WatchLen)
+	md.WatchObjects("testObj", &watcher)
 
 	// add an object
 	err := md.AddObject(&obj)
 	AssertOk(t, err, "Error creating object")
 
 	// verify we get a watch event
-	wobj := waitForWatch(t, watchChan, CreateEvent)
+	wobj := waitForWatch(t, watcher.Channel, CreateEvent)
 	Assert(t, (wobj.GetObjectMeta().Name == obj.Name), "Received invalid object", wobj)
 	verifyObjField(t, wobj, "testField")
 
 	// verify duplicate add results in update
 	err = md.AddObject(&obj)
 	AssertOk(t, err, "Error adding duplicate object")
-	wobj = waitForWatch(t, watchChan, UpdateEvent)
+	wobj = waitForWatch(t, watcher.Channel, UpdateEvent)
 
 	// update the object
 	newObj := obj
@@ -139,13 +140,13 @@ func TestMemdbWatch(t *testing.T) {
 	AssertOk(t, err, "Error updating object")
 
 	// verify we received the update
-	wobj = waitForWatch(t, watchChan, UpdateEvent)
+	wobj = waitForWatch(t, watcher.Channel, UpdateEvent)
 	verifyObjField(t, wobj, "updatedField")
 
 	// delete the object
 	err = md.DeleteObject(&obj)
 	AssertOk(t, err, "Error deleting object")
-	wobj = waitForWatch(t, watchChan, DeleteEvent)
+	wobj = waitForWatch(t, watcher.Channel, DeleteEvent)
 	Assert(t, (wobj.GetObjectMeta().Name == obj.Name), "Received invalid object", wobj)
 
 	// verify we cant delete non-existing object
@@ -175,12 +176,13 @@ func TestMemdbConcurrency(t *testing.T) {
 	}
 
 	// setup concurrent watches
-	watchers := make([]chan Event, watchConcur)
+	watchers := make([]*Watcher, watchConcur)
 	for i := 0; i < watchConcur; i++ {
-		watchChan := make(chan Event, (objConcur + 100))
-		err := md.WatchObjects("testObj", watchChan)
+		watcher := Watcher{}
+		watcher.Channel = make(chan Event, (objConcur + 100))
+		err := md.WatchObjects("testObj", &watcher)
 		AssertOk(t, err, "Error creating watcher")
-		watchers[i] = watchChan
+		watchers[i] = &watcher
 	}
 
 	// add objects concurrently
@@ -197,7 +199,7 @@ func TestMemdbConcurrency(t *testing.T) {
 	for i := 0; i < watchConcur; i++ {
 		go func(wid int) {
 			for objID := 0; objID < objConcur; objID++ {
-				evt, ok := <-watchers[wid]
+				evt, ok := <-watchers[wid].Channel
 				if !ok {
 					logrus.Errorf("Error receiving from channel %d", wid)
 					close(watchDoneChan)
@@ -226,7 +228,7 @@ func TestMemdbConcurrency(t *testing.T) {
 	logrus.Infof("Received %d create events successfully", watchConcur*objConcur)
 
 	// verify all objects were created
-	objs := md.ListObjects("testObj")
+	objs := md.ListObjects("testObj", nil)
 	Assert(t, (len(objs) == objConcur), "Incorrect number of objects got created", objs)
 
 	// add objects concurrently
@@ -246,7 +248,7 @@ func TestMemdbConcurrency(t *testing.T) {
 	}
 
 	// verify all of them were deleted
-	objs = md.ListObjects("testObj")
+	objs = md.ListObjects("testObj", nil)
 	Assert(t, (len(objs) == 0), "Some objects were not deleted", objs)
 }
 
@@ -267,9 +269,11 @@ func TestStopWatchObjects(t *testing.T) {
 	}
 
 	// setup watchers
-	watchers := map[int]chan Event{}
+	watchers := map[int]*Watcher{}
 	for i := 0; i < numWatchers; i++ {
-		watchers[i] = make(chan Event, 2)
+		watcher := Watcher{}
+		watcher.Channel = make(chan Event, 2)
+		watchers[i] = &watcher
 		err := md.WatchObjects("testObj", watchers[i])
 		AssertOk(t, err, "Error creating watcher")
 	}
@@ -277,7 +281,7 @@ func TestStopWatchObjects(t *testing.T) {
 	AssertOk(t, err, "error creating object")
 
 	for _, w := range watchers {
-		_ = waitForWatch(t, w, CreateEvent)
+		_ = waitForWatch(t, w.Channel, CreateEvent)
 	}
 
 	for i := 0; i < numWatchers; i++ {
@@ -293,7 +297,7 @@ func TestStopWatchObjects(t *testing.T) {
 		AssertOk(t, err, "error updating object")
 
 		for _, w := range watchers {
-			_ = waitForWatch(t, w, UpdateEvent)
+			_ = waitForWatch(t, w.Channel, UpdateEvent)
 		}
 	}
 }
@@ -317,8 +321,9 @@ func TestMarshal(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	// start watch on objects
-	watchChan := make(chan Event, WatchLen)
-	md.WatchObjects("testObj", watchChan)
+	watcher := Watcher{}
+	watcher.Channel = make(chan Event, WatchLen)
+	md.WatchObjects("testObj", &watcher)
 
 	mo, err := md.MarshalJSON()
 	AssertOk(t, err, "Error marshaling object")

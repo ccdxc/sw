@@ -27,10 +27,12 @@ func NewVeniceRolloutRPCServer(stateMgr *statemgr.Statemgr) (*VeniceRolloutRPCSe
 func (n *VeniceRolloutRPCServer) WatchVeniceRollout(sel *api.ObjectMeta, stream protos.VeniceRolloutApi_WatchVeniceRolloutServer) error {
 	var sentSpec protos.VeniceRolloutSpec
 
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-	n.stateMgr.WatchObjects("VeniceRollout", watchChan)
-	defer n.stateMgr.StopWatchObjects("VeniceRollout", watchChan)
+	watcher := memdb.Watcher{Name: "rpc-server"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+
+	defer close(watcher.Channel)
+	n.stateMgr.WatchObjects("VeniceRollout", &watcher)
+	defer n.stateMgr.StopWatchObjects("VeniceRollout", &watcher)
 
 	log.Debugf("Watcher for VeniceRollout for %v", sel.Name)
 	rs, err := n.stateMgr.ListVeniceRollouts()
@@ -65,7 +67,7 @@ func (n *VeniceRolloutRPCServer) WatchVeniceRollout(sel *api.ObjectMeta, stream 
 	for {
 		select {
 		// read from channel
-		case evt, ok := <-watchChan:
+		case evt, ok := <-watcher.Channel:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
 				return errors.New("error reading from watch channel")

@@ -108,7 +108,7 @@ func VeniceRolloutStateFromObj(obj memdb.Object) (*VeniceRolloutState, error) {
 
 // ListVeniceRollouts lists all VeniceRollout objects
 func (sm *Statemgr) ListVeniceRollouts() ([]*VeniceRolloutState, error) {
-	objs := sm.memDB.ListObjects(kindVeniceRollout)
+	objs := sm.memDB.ListObjects(kindVeniceRollout, nil)
 
 	var nodeUpdateStates []*VeniceRolloutState
 	for _, obj := range objs {

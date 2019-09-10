@@ -56,11 +56,11 @@ var apiEventTypeMap = map[memdb.EventType]api.EventType{
 func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProtos.StatsPolicyApi_WatchStatsPolicyServer) error {
 	ctx := out.Context()
 
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
-
-	p.policyDb.WatchObjects("StatsPolicy", watchChan)
-	defer p.policyDb.StopWatchObjects("StatsPolicy", watchChan)
+	watcher := memdb.Watcher{Name: "tpm"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	p.policyDb.WatchObjects("StatsPolicy", &watcher)
+	defer p.policyDb.StopWatchObjects("StatsPolicy", &watcher)
 
 	// track clients
 	peer := ctxutils.GetPeerAddress(ctx)
@@ -71,7 +71,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 	}
 
 	// send existing policy
-	for _, obj := range p.policyDb.ListObjects("StatsPolicy") {
+	for _, obj := range p.policyDb.ListObjects("StatsPolicy", nil) {
 		if policy, ok := obj.(*apiProtos.StatsPolicy); ok {
 			statsPolicy := &tpmProtos.StatsPolicy{
 				TypeMeta:   policy.TypeMeta,
@@ -95,7 +95,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 	// loop forever on watch channel
 	for {
 		select {
-		case event, ok := <-watchChan:
+		case event, ok := <-watcher.Channel:
 			if !ok {
 				rpcLog.Errorf("error from %v in stats channel", peer)
 				return fmt.Errorf("invalid event from watch channel")
@@ -139,7 +139,7 @@ func (p *fwlogPolicyRPCServer) ListFwlogPolicy(ctx context.Context, meta *api.Ob
 	}
 
 	ev := &tpmProtos.FwlogPolicyEventList{}
-	for _, obj := range p.policyDb.ListObjects("FwlogPolicy") {
+	for _, obj := range p.policyDb.ListObjects("FwlogPolicy", nil) {
 		if policy, ok := obj.(*apiProtos.FwlogPolicy); ok {
 			ev.EventList = append(ev.EventList, &tpmProtos.FwlogPolicyEvent{
 				EventType: api.EventType_CreateEvent,
@@ -155,11 +155,12 @@ func (p *fwlogPolicyRPCServer) ListFwlogPolicy(ctx context.Context, meta *api.Ob
 }
 
 func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProtos.FwlogPolicyApi_WatchFwlogPolicyServer) error {
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
 
-	p.policyDb.WatchObjects("FwlogPolicy", watchChan)
-	defer p.policyDb.StopWatchObjects("FwlogPolicy", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+	p.policyDb.WatchObjects("FwlogPolicy", &watcher)
+	defer p.policyDb.StopWatchObjects("FwlogPolicy", &watcher)
 
 	ctx := out.Context()
 
@@ -172,7 +173,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 	}
 
 	// send existing policy
-	for _, obj := range p.policyDb.ListObjects("FwlogPolicy") {
+	for _, obj := range p.policyDb.ListObjects("FwlogPolicy", nil) {
 		if policy, ok := obj.(*apiProtos.FwlogPolicy); ok {
 			fwlogPolicy := &tpmProtos.FwlogPolicy{
 				TypeMeta:   policy.TypeMeta,
@@ -194,7 +195,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 	// loop forever on watch channel
 	for {
 		select {
-		case event, ok := <-watchChan:
+		case event, ok := <-watcher.Channel:
 
 			if !ok {
 				rpcLog.Errorf("error from %v in fwlog channel ", peer)
@@ -239,7 +240,7 @@ func (p *flowExportPolicyRPCServer) ListFlowExportPolicy(ctx context.Context, me
 	}
 
 	ev := &tpmProtos.FlowExportPolicyEventList{}
-	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy") {
+	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy", nil) {
 		if apiPol, ok := obj.(*apiProtos.FlowExportPolicy); ok {
 			p, err := json.Marshal(apiPol)
 			if err != nil {
@@ -266,11 +267,11 @@ func (p *flowExportPolicyRPCServer) ListFlowExportPolicy(ctx context.Context, me
 	return ev, nil
 }
 func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, out tpmProtos.FlowExportPolicyApi_WatchFlowExportPolicyServer) error {
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	defer close(watchChan)
 
-	p.policyDb.WatchObjects("FlowExportPolicy", watchChan)
-	defer p.policyDb.StopWatchObjects("FlowExportPolicy", watchChan)
+	watcher := memdb.Watcher{}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	p.policyDb.WatchObjects("FlowExportPolicy", &watcher)
+	defer p.policyDb.StopWatchObjects("FlowExportPolicy", &watcher)
 
 	ctx := out.Context()
 
@@ -284,7 +285,7 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 	rpcLog.Infof("watch flowexport policy from [%v]", peer)
 
 	// send existing policy
-	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy") {
+	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy", nil) {
 
 		if _, ok := obj.(*apiProtos.FlowExportPolicy); !ok {
 			rpcLog.Errorf("invalid flow export policy from list, %T", obj)
@@ -313,7 +314,7 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 	// loop forever on watch channel
 	for {
 		select {
-		case event, ok := <-watchChan:
+		case event, ok := <-watcher.Channel:
 			if !ok {
 				rpcLog.Errorf("error from %v in flowexport channel", peer)
 				return fmt.Errorf("invalid event from watch channel")
