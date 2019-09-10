@@ -219,7 +219,7 @@ copy_assets() {
 build_dpdk_aarch64() {
     echo "Building DPDK - aarch64, check $DPDK_DIR/dpdk_build_aarch64.log"
     docker_exec "rm -rf $DOCKER_DPDK_DIR/build"
-    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 -f REPOmakefile config T=arm64-armv8a-linuxapp-gcc && make V=1 -f REPOmakefile CROSS=${TOOLCHAIN_PREFIX}- CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-isystem ${DOCKER_NUMAROOT}/include -fPIC\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/aarch64/lib -lnuma\" &> dpdk_build_aarch64.log"
+    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 -f REPOmakefile config T=arm64-armv8a-linuxapp-gcc && make -j8 V=1 -f REPOmakefile CROSS=${TOOLCHAIN_PREFIX}- CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-isystem ${DOCKER_NUMAROOT}/include -fPIC\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/aarch64/lib -lnuma\" &> dpdk_build_aarch64.log"
     if [[ $? -ne 0 ]]; then
         echo "DPDK - aarch64 build Failed"
         exit 1;

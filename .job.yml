@@ -111,7 +111,7 @@ dependencies:
     - reference: iota/test/venice/hwtest
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
     - reference: iota/test/no-venice
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus". "l2switch"]
+      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
   nic/agent:
     - reference: api
     - reference: test/ci_targets/e2e
