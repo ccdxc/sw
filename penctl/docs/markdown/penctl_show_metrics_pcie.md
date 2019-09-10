@@ -1,13 +1,13 @@
 ## penctl show metrics pcie
 
-
+Metrics for Pcie Subsystem
 
 ### Synopsis
 
 
 
 ---------------------------------
- Metrics for pciemgr
+ Metrics for Pcie Subsystem
 ---------------------------------
 
 

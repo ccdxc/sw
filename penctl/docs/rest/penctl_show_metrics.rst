@@ -49,7 +49,7 @@ SEE ALSO
 * `penctl show metrics ftelifq <penctl_show_metrics_ftelifq.rst>`_ 	 - Show FteLifQMetrics from Naples
 * `penctl show metrics lif <penctl_show_metrics_lif.rst>`_ 	 - Show LifMetrics from Naples
 * `penctl show metrics mac <penctl_show_metrics_mac.rst>`_ 	 - Show MacMetrics from Naples
-* `penctl show metrics pcie <penctl_show_metrics_pcie.rst>`_ 	 - 
+* `penctl show metrics pcie <penctl_show_metrics_pcie.rst>`_ 	 - Metrics for Pcie Subsystem
 * `penctl show metrics rule <penctl_show_metrics_rule.rst>`_ 	 - Show RuleMetrics from Naples
 * `penctl show metrics sessionsummary <penctl_show_metrics_sessionsummary.rst>`_ 	 - Show SessionSummaryMetrics from Naples
 * `penctl show metrics sonic <penctl_show_metrics_sonic.rst>`_ 	 - Metrics for Storage Offload DSC

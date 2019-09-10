@@ -135,16 +135,16 @@ func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-func restPost(v interface{}, url string) error {
+func restPost(v interface{}, url string) (string, error) {
 	payloadBytes, err := json.Marshal(v)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if verbose {
 		var prettyJSON bytes.Buffer
 		error := json.Indent(&prettyJSON, payloadBytes, "", "\t")
 		if error != nil {
-			return err
+			return "", err
 		}
 
 		fmt.Println("Json output:", string(prettyJSON.Bytes()))
@@ -154,39 +154,39 @@ func restPost(v interface{}, url string) error {
 	if ur, err := getNaplesURL(); err == nil {
 		url = ur + url
 	} else {
-		return err
+		return "", err
 	}
 	if verbose {
 		fmt.Println("URL: ", url)
 	}
 	postReq, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		return err
+		return "", err
 	}
 	postReq.Header.Set("Content-Type", "application/json")
 	printHTTPReq(postReq)
 	postResp, err := penHTTPClient.Do(postReq)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer postResp.Body.Close()
 	printHTTPResp(postResp)
+	bodyBytes, _ := ioutil.ReadAll(postResp.Body)
 	if postResp.StatusCode != 200 {
 		if verbose {
 			fmt.Println(postResp.Status + " " + url)
 			fmt.Println(postResp.Body)
 		}
-		bodyBytes, _ := ioutil.ReadAll(postResp.Body)
 		jsonResp := state.NaplesConfigResp{}
 		json.Unmarshal(bodyBytes[:len(bodyBytes)-1], &jsonResp)
-		return errors.New(jsonResp.ErrorMsg)
+		return string(bodyBytes), errors.New(jsonResp.ErrorMsg)
 	}
 	if verbose {
 		fmt.Println("Successfully posted the request")
 		fmt.Println("Status:", postResp.Status)
 		fmt.Println("StatusCode: ", postResp.StatusCode)
 	}
-	return nil
+	return string(bodyBytes), nil
 }
 
 func restGet(url string) ([]byte, error) {

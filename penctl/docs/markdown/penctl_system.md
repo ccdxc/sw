@@ -29,7 +29,9 @@ System Operations
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
+* [penctl system disable-console](penctl_system_disable-console.md)	 - Disable serial console on Naples
 * [penctl system disable-sshd](penctl_system_disable-sshd.md)	 - Disable sshd on Naples
+* [penctl system enable-console](penctl_system_enable-console.md)	 - Enable serial console on Naples
 * [penctl system enable-sshd](penctl_system_enable-sshd.md)	 - Enable sshd on Naples
 * [penctl system erase-config](penctl_system_erase-config.md)	 - Erase all local Naples configuration and revert to "host-managed" mode. (reboot required)
 * [penctl system factory-default](penctl_system_factory-default.md)	 - Perform "erase-config" plus remove all Naples internal databases and diagnostic failure logs (reboot required)

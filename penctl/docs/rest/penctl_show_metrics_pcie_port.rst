@@ -64,5 +64,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl show metrics pcie <penctl_show_metrics_pcie.rst>`_ 	 - 
+* `penctl show metrics pcie <penctl_show_metrics_pcie.rst>`_ 	 - Metrics for Pcie Subsystem
 

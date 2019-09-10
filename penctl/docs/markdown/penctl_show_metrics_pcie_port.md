@@ -56,5 +56,5 @@ penctl show metrics pcie port [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics pcie](penctl_show_metrics_pcie.md)	 - 
+* [penctl show metrics pcie](penctl_show_metrics_pcie.md)	 - Metrics for Pcie Subsystem
 

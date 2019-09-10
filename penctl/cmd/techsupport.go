@@ -5,20 +5,19 @@
 package cmd
 
 import (
-	"bufio"
-	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
-	"time"
-
-	"gopkg.in/yaml.v2"
 
 	"github.com/spf13/cobra"
 
+	"github.com/pensando/sw/api"
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 )
 
 var showTechCmd = &cobra.Command{
@@ -28,125 +27,29 @@ var showTechCmd = &cobra.Command{
 	RunE:  showTechCmdHandler,
 }
 
-var destDir string
-var cmdFile string
 var tarFile string
 var tarFileDir string
-var tmpDir string
 
 func init() {
 	sysCmd.AddCommand(showTechCmd)
 
 	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
 	showTechCmd.Flags().StringVarP(&tarFileDir, "odir", "", "", "Directory to create the tech-support in")
-	showTechCmd.Flags().StringVarP(&tmpDir, "tmpdir", "", "", "Transient directory to collect files into")
 
 	showTechCmd.Flags().MarkHidden("odir")
-	showTechCmd.Flags().MarkHidden("tmpdir")
 }
 
-var cmdToExecute = `
-Cmds:
- -
-   cmd: pcieutilport
-   lcmd: pcieutil port
-   outputfile: pcieutil.port
- -
-   cmd: pcieutilportstats
-   lcmd: pcieutil portstats
-   outputfile: pcieutil.portstats
- -
-   cmd: pcieutilstats
-   lcmd: pcieutil stats
-   outputfile: pcieutil.stats
- -
-   cmd: pcieutilcounters
-   lcmd: pcieutil counters
-   outputfile: pcieutil.counters
- -
-   cmd: pcieutildev
-   lcmd: pcieutil dev
-   outputfile: pcieutil.dev
- -
-   cmd: pcieutildevintr
-   lcmd: pcieutil devintr
-   outputfile: pcieutil.devintr
- -
-   cmd: pcieutilbar
-   lcmd: pcieutil bar
-   outputfile: pcieutil.bar
- -
-   cmd: pcieutilpmt
-   lcmd: pcieutil pmt
-   outputfile: pcieutil.pmt
- -
-   cmd: pcieutilprt
-   lcmd: pcieutil prt
-   outputfile: pcieutil.prt
- -
-   cmd: pcieutilaximst
-   lcmd: pcieutil aximst
-   outputfile: pcieutil.aximst
- -
-   cmd: listintf
-   lcmd: ifconfig -a
-   outputfile: ifconfig.out
- -
-   cmd: listfirmware
-   lcmd: fwupdate -l
-   outputfile: fw_version.out
- -
-   cmd: listprocesses
-   lcmd: ps
-   outputfile: ps.out
- -
-   cmd: filesystemdiskspace
-   lcmd: df
-   outputfile: df.out
- -
-   cmd: delphictldbgetUpgReq
-   lcmd: delphictl db get UpgReq
-   outputfile: upgreq.out
- -
-   cmd: delphictldbgetUpgResp
-   lcmd: delphictl db get UpgResp
-   outputfile: upgresp.out
- -
-   cmd: delphictldbgetUpgStateReq
-   lcmd: delphictl db get UpgStateReq
-   outputfile: upgstatereq.out
- -
-   cmd: delphictldbgetUpgAppResp
-   lcmd: delphictl db get UpgAppResp
-   outputfile: upgappresp.out
- -
-   cmd: delphictldbgetUpgApp
-   lcmd: delphictl db get UpgApp
-   outputfile: upgapp.out
- -
-   cmd: sysuptime
-   lcmd: uptime
-   outputfile: uptime.out
-`
-
-// NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support
-type NaplesCmds struct {
-	Cmds []struct {
-		Cmd        string `yaml:"cmd"`
-		LCmd       string `yaml:"lcmd"`
-		Outputfile string `yaml:"outputfile"`
-	} `yaml:"Cmds"`
-}
-
-func copyFileToDest(destDir string, url string, file string) error {
-	//fmt.Println("Copying file: " + file + " to: " + destDir)
-	resp, err := restGetResp(url + file)
+func copyFileToDest(destDir string, url string, gfile string, ofile string) error {
+	if verbose {
+		fmt.Println("Copying file: " + gfile + " to: " + destDir)
+	}
+	resp, err := restGetResp(url + gfile)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 	defer resp.Body.Close()
-	file = destDir + "/" + file
+	file = destDir + "/" + filepath.Base(ofile)
 	out, err := os.Create(file)
 	if err != nil {
 		fmt.Println(err)
@@ -168,286 +71,61 @@ func createDestDir(destDir string) {
 	}
 }
 
-func getLogs(subDir string, url string) error {
-	//Copy out log files from /var/log recursively
-	resp, err := restGetResp(url)
-	if err != nil && !strings.Contains(err.Error(), "not found") {
-		return err
+func requestTechSupport() (string, error) {
+	tsReq := tsproto.TechSupportRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: "TechSupportRequest",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "PenctlTechSupportRequest",
+		},
+		Spec: tsproto.TechSupportRequestSpec{
+			InstanceID: "penctl-techsupport",
+		},
 	}
-	retS, err := parseFiles(resp)
+	ntsaResp, err := restPost(tsReq, "api/techsupport/")
+	ntsaRespBytes := []byte(ntsaResp)
+	ntsaRespJSON := tsproto.TechSupportRequest{}
+	json.Unmarshal(ntsaRespBytes[:len(ntsaRespBytes)-1], &ntsaRespJSON)
 	if err != nil {
-		return err
-	}
-	logDestDir := destDir + "/" + subDir + "/"
-	createDestDir(logDestDir)
-	for _, file = range retS {
-		if strings.HasSuffix(file, "/") {
-			napDir := file
-			logSubDestDir := logDestDir + napDir
-			createDestDir(logSubDestDir)
-			resp, err = restGetResp(url + napDir)
-			if err != nil {
-				return err
-			}
-			retSlice = nil
-			retS, err = parseFiles(resp)
-			if err != nil {
-				return err
-			}
-			for _, subfile := range retS {
-				fmt.Printf(".")
-				copyFileToDest(logSubDestDir, "monitoring/v1/naples/logs/"+napDir, subfile)
-			}
-			retSlice = nil
-		} else {
-			fmt.Printf(".")
-			copyFileToDest(logDestDir, url, file)
+		if ntsaRespJSON.Status.Status != tsproto.TechSupportRequestStatus_Completed {
+			return "", errors.New(ntsaRespJSON.Status.Reason)
 		}
+		return "", err
 	}
-	return nil
-}
 
-func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
-	cmd := exec.Command(req.Executable, parts...)
-	os.Setenv("PATH", os.Getenv("PATH")+":/bin:/sbin:/usr/bin:/usr/sbin:/platform/bin:/nic/bin:/platform/tools:/nic/tools")
-	cmd.Env = os.Environ()
-	if verbose {
-		fmt.Printf("Upgrade Cmd Execute Request: %+v env: [%s]", req, os.Environ())
-	}
-	stdoutStderr, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
-	}
-	return string(stdoutStderr), nil
-}
-
-func execCmd(req *nmd.NaplesCmdExecute) (string, error) {
-	parts := strings.Fields(req.Opts)
-	return executeCmd(req, parts)
-}
-
-func execTechSupportCmds(cmdToExecute string, cmdDestDir string) error {
-	var naplesCmds NaplesCmds
-	err := yaml.UnmarshalStrict([]byte(cmdToExecute), &naplesCmds)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	for _, naplesCmd := range naplesCmds.Cmds {
-		if naplesCmd.Outputfile == "" || naplesCmd.Cmd == "" {
-			fmt.Printf("\nMissing command attributes %+v\n", naplesCmd)
-			continue
-		}
-		cmd := strings.Fields(naplesCmd.Cmd)
-		opts := strings.Join(cmd[1:], " ")
-		v := &nmd.NaplesCmdExecute{
-			Executable: cmd[0],
-			Opts:       opts,
-		}
-		var resp []byte
-		if isNaplesReachableOverLocalHost() == nil {
-			fmt.Println("Executing cmd locally")
-			var ret string
-			lcmd := strings.Fields(naplesCmd.LCmd)
-			v.Executable = lcmd[0]
-			v.Opts = strings.Join(lcmd[1:], " ")
-			ret, err = execCmd(v)
-			resp = []byte(ret)
-		} else {
-			resp, err = restGetWithBody(v, "cmd/v1/naples/")
-		}
-		if err != nil {
-			fmt.Println(err)
-		}
-		if len(resp) > 3 {
-			fmt.Println(v.Executable + " " + v.Opts)
-			s := strings.Replace(string(resp), `\n`, "\n", -1)
-			s = strings.Replace(s, "\\", "", -1)
-			file = cmdDestDir + "/" + naplesCmd.Outputfile
-			out, err := os.Create(file)
-			if err != nil {
-				fmt.Println(err)
-			}
-			defer out.Close()
-			w := bufio.NewWriter(out)
-			w.WriteString("===" + cmd[0] + " " + opts + "===\n" + s)
-			w.Flush()
-		}
-	}
-	return nil
-}
-
-func createTechSupportTarBall(destDir string, tarFile string, tarcmd *exec.Cmd) error {
-	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
-	tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
-	var tarout bytes.Buffer
-	tarcmd.Stdout = &tarout
-	err := tarcmd.Run()
-	if err != nil {
-		return err
-	}
-	fmt.Println(tarFile + ".tar.gz generated")
-
-	fmt.Println("removing " + destDir)
-	rmdestdircmd := exec.Command("rm", "-rf", destDir)
-	rmdestdircmd.Stdin = strings.NewReader("rm -rf " + destDir)
-	var rmout bytes.Buffer
-	rmdestdircmd.Stdout = &rmout
-	return rmdestdircmd.Run()
+	return ntsaRespJSON.Status.URI, nil
 }
 
 func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = false
-	timeStr := time.Now().Format(time.UnixDate)
-	timeStr = strings.Replace(timeStr, " ", "-", -1)
-
-	destDir = "/tmp"
-	if cmd.Flags().Changed("tmpdir") {
-		destDir = tmpDir
-	} else if val, ok := os.LookupEnv("TMPDIR"); ok {
-		destDir = val
-		if verbose {
-			fmt.Printf("$TMPDIR set to %s\n", val)
-		}
-	}
-
-	destDir = destDir + "/NaplesTechSupport-" + timeStr + "/"
-	fmt.Println("Collecting tech-support from Naples")
-
-	if _, err := os.Stat(destDir); os.IsNotExist(err) {
-		os.MkdirAll(destDir, os.ModePerm)
-	}
-
-	fmt.Printf("Executing commands:\n")
-	//Execute cmds pointed to by YML file
-	cmdDestDir := destDir + "/cmd_out/"
-	createDestDir(cmdDestDir)
-
-	execTechSupportCmds(cmdToExecute, cmdDestDir)
-	fmt.Printf("Commands executed\n")
-
-	file = destDir + "/penctl.ver"
-	out, err := os.Create(file)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer out.Close()
-	w := bufio.NewWriter(out)
-	w.WriteString(getPenctlVer())
-	w.Flush()
-
 	if !cmd.Flags().Changed("tarball") {
 		tarFile = "naples-tech-support"
 	}
 	if !cmd.Flags().Changed("odir") {
 		tarFileDir = "./"
 	}
-	tarFile = tarFileDir + "/" + tarFile
+	createDestDir(tarFileDir)
+	tarFile = tarFileDir + tarFile + ".tar.gz"
 
-	if isNaplesReachableOverLocalHost() == nil {
-		fmt.Println("penctl running tar locally on naples")
-		tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir, "/data/post-upgrade-logs.tar.gz", "/data/pre-upgrade-logs.tar.gz", "/data/delphi.dat", "/data/delphi.dat-lock", "/var/log/", "/update/", "/var/lib/pensando/events/", "/obfl/", "/data/core/")
-		return createTechSupportTarBall(destDir, tarFile, tarcmd)
-	}
-
-	fmt.Printf("Fetching data directory")
-	//Copy out upgrade logs
-	dataDestDir := destDir + "/data/"
-	createDestDir(dataDestDir)
-	resp, err := restGetResp("data/")
+	uri, err := requestTechSupport()
 	if err != nil {
 		return err
 	}
-	retS, err := parseFiles(resp)
-	if err != nil {
-		return err
-	}
-	for _, file := range retS {
-		fmt.Println(file)
-		if strings.Contains(file, "naples-disruptive-upgrade-tech-support") || strings.Contains(file, "-upgrade-logs") || strings.Contains(file, "delphi.dat") {
-			fmt.Printf(".")
-			copyFileToDest(dataDestDir, "data/", file)
-		}
-	}
-	fmt.Printf("\ndata directory fetched\n")
-	retSlice = nil
 
-	fmt.Printf("Fetching update directory")
-	//Copy out files from /update/
-	updateDestDir := destDir + "/update/"
-	createDestDir(updateDestDir)
-	resp, err = restGetResp("update/")
-	if err != nil && !strings.Contains(err.Error(), "not found") {
-		return err
+	if verbose {
+		fmt.Println("Downloading tarball: " + uri + " as: " + tarFile)
 	}
-	retS, err = parseFiles(resp)
+	err = copyFileToDest(tarFileDir, "data/", strings.TrimPrefix(uri, "/data/"), tarFile)
 	if err != nil {
-		return err
+		fmt.Println("Downloading tech-support failed")
+		return errors.New("Downloading tech-support failed")
 	}
-	for _, file = range retS {
-		if strings.HasSuffix(file, "/") || strings.Contains(file, "tar") {
-			continue
-		}
-		fmt.Printf(".")
-		copyFileToDest(updateDestDir, "update/", file)
-	}
-	fmt.Printf("\nupdate directory fetched\n")
-	retSlice = nil
+	fmt.Println("Downloaded tech-support file: " + tarFile)
 
-	fmt.Printf("Fetching cores")
-	//Copy out core files from /data/core
-	coreDestDir := destDir + "/cores/"
-	createDestDir(coreDestDir)
-	resp, err = restGetResp("cores/v1/naples/")
-	if err != nil && !strings.Contains(err.Error(), "not found") {
-		return err
+	v := &nmd.NaplesCmdExecute{
+		Executable: "rmpentechsupportdir",
+		Opts:       strings.Join([]string{""}, ""),
 	}
-	retS, err = parseFiles(resp)
-	if err != nil {
-		return err
-	}
-	for _, file := range retS {
-		fmt.Printf(".")
-		copyFileToDest(coreDestDir, "cores/v1/naples/", file)
-	}
-	fmt.Printf("\nCores fetched\n")
-	retSlice = nil
-
-	fmt.Printf("Fetching events ")
-	//Copy out all event files from /var/lib/pensando/events/ dir
-	eventsDestDir := destDir + "/events/"
-	createDestDir(eventsDestDir)
-	evresp, err := restGetResp("monitoring/v1/naples/events/")
-	if err != nil && !strings.Contains(err.Error(), "not found") {
-		return err
-	}
-	retS, err = parseFiles(evresp)
-	if err != nil {
-		return err
-	}
-	fmt.Println(retS)
-	for _, file = range retS {
-		if file == "events" || strings.HasSuffix(file, "/") {
-			continue
-		}
-		fmt.Printf(".")
-		copyFileToDest(eventsDestDir, "monitoring/v1/naples/events/", file)
-	}
-	fmt.Printf("Events fetched\n")
-	retSlice = nil
-
-	fmt.Printf("Fetching logs")
-	err = getLogs("logs", "monitoring/v1/naples/logs/")
-	if err != nil {
-		return err
-	}
-	err = getLogs("obfl", "monitoring/v1/naples/obfl/")
-	if err != nil {
-		return err
-	}
-	fmt.Printf("\nLogs fetched\n")
-
-	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
-	tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir)
-	return createTechSupportTarBall(destDir, tarFile, tarcmd)
+	return naplesExecCmd(v)
 }

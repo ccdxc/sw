@@ -5,8 +5,8 @@ import iota.test.iris.testcases.penctl.penctldefs as penctldefs
 import iota.test.iris.testcases.penctl.common as common
 
 def_tech_support_file_name = "naples-tech-support.tar.gz"
-def_tech_support_dir_name = "NaplesTechSupport"
-def_tech_support_dirs = ["cores", "events", "logs", "penctl.ver", "cmd_out", "data", "obfl", "update"]
+def_tech_support_dir_name = "PenctlTechSupportRequest"
+def_tech_support_dirs = ["CollectActions", "core", "data-misc", "events", "obfl-logs", "out.sh", "pen-logs", "PrepActions", "sysmgr-logs", "update"]
 def_tech_support_log_files = ["hal.log", "nicmgr.log", "pciemgrd.log", "linkmgr.log"]
 
 
@@ -105,7 +105,7 @@ def Verify(tc):
     def check_cores():
         req = api.Trigger_CreateExecuteCommandsRequest()
         for n in tc.Nodes:
-            api.Trigger_AddHostCommand(req, n, "ls %s/%s" % (supportDir[n], "cores"))
+            api.Trigger_AddHostCommand(req, n, "ls %s/%s" % (supportDir[n], "core"))
         resp = api.Trigger(req)
         for cmd in resp.commands:
             api.PrintCommandResults(cmd)
@@ -138,13 +138,12 @@ def Verify(tc):
 #        if len(log_files_not_found) > 0:
 #            api.Logger.error("Log files missing: %s" %(set(log_files_not_found)))
 #            return api.types.status.FAILURE
-#
 #        return api.types.status.SUCCESS
 
     def check_log_files():
         req = api.Trigger_CreateExecuteCommandsRequest()
         for n in tc.Nodes:
-            api.Trigger_AddHostCommand(req, n, "ls %s/%s %s/%s %s/%s" % (supportDir[n], "logs/pensando", supportDir[n], "logs", supportDir[n], "obfl"))
+            api.Trigger_AddHostCommand(req, n, "ls %s/%s %s/%s %s/%s" % (supportDir[n], "obfl-logs", supportDir[n], "pen-logs", supportDir[n], "sysmgr-logs"))
         resp = api.Trigger(req)
         for cmd in resp.commands:
             api.PrintCommandResults(cmd)

@@ -175,6 +175,11 @@
                                         "Name" : "DelphiObj UpgApp",
                                         "Method" : 0,
                                         "Command" : "/nic/bin/delphictl db get UpgApp"
+                                },
+                                {
+                                        "Name" : "PenCtl Version",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/penctl --version"
                                 }
 			],
 

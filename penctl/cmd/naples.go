@@ -144,7 +144,7 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	err := restPost(naplesCfg, "api/v1/naples/")
+	_, err := restPost(naplesCfg, "api/v1/naples/")
 	if err != nil {
 		if strings.Contains(err.Error(), "EOF") {
 			if verbose {
@@ -222,7 +222,7 @@ func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	err := restPost(profile, "api/v1/naples/profiles/")
+	_, err := restPost(profile, "api/v1/naples/profiles/")
 	if err != nil {
 		if strings.Contains(err.Error(), "EOF") {
 			if verbose {
