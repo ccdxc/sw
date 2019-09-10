@@ -234,12 +234,10 @@ find_tcpcb_by_id (tcpcb_id_t tcpcb_id)
 }
 
 extern void *tcpcb_get_key_func(void *entry);
-extern uint32_t tcpcb_compute_hash_func(void *key, uint32_t ht_size);
-extern bool tcpcb_compare_key_func(void *key1, void *key2);
+extern uint32_t tcpcb_key_size(void);
 
 extern void *tcpcb_get_handle_key_func(void *entry);
-extern uint32_t tcpcb_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool tcpcb_compare_handle_key_func(void *key1, void *key2);
+extern uint32_t tcpcb_handle_key_size(void);
 
 }    // namespace hal
 

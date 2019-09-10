@@ -199,12 +199,10 @@ private:
 } __PACK__;
 
 void *dpkt_learn_trans_get_key_func(void *entry);
-uint32_t dpkt_learn_trans_compute_hash_func(void *key, uint32_t ht_size);
-bool dpkt_learn_tras_compare_key_func(void *key1, void *key2);
+uint32_t dpkt_learn_trans_key_size(void);
 
 void *dpkt_learn_trans_get_handle_key_func(void *entry);
-uint32_t dpkt_learn_trans_compute_handle_hash_func(void *key, uint32_t ht_size);
-bool fmis_learn_trans_compare_handle_key_func(void *key1, void *key2);
+uint32_t dpkt_learn_trans_handle_key_size(void);
 
 hal_ret_t dpkt_learn_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr);
 void dpkt_learn_entry_delete_timeout_set(uint32_t timeout);

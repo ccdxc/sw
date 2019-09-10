@@ -24,20 +24,8 @@ crypto_cert_store_get_key_func(void *entry)
     return (void *)&(((crypto_cert_t *)entry)->cert_id);
 }
 
-uint32_t
-crypto_cert_store_compute_hash_func(void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(crypto_cert_id_t)) % ht_size;
-}
-
-bool
-crypto_cert_store_compare_key_func(void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if(*(crypto_cert_id_t *) key1 == *(crypto_cert_id_t *)key2) {
-        return true;
-    }
-    return false;
+uint32_t crypto_cert_store_key_size(void) {
+    return sizeof(crypto_cert_id_t);
 }
 
 /* Asym APIs */

@@ -20,19 +20,9 @@ proxyccb_get_key_func (void *entry)
 }
 
 uint32_t
-proxyccb_compute_hash_func (void *key, uint32_t ht_size)
+proxyccb_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(proxyccb_id_t)) % ht_size;
-}
-
-bool
-proxyccb_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(proxyccb_id_t *)key1 == *(proxyccb_id_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(proxyccb_id_t);
 }
 
 void *
@@ -43,19 +33,9 @@ proxyccb_get_handle_key_func (void *entry)
 }
 
 uint32_t
-proxyccb_compute_handle_hash_func (void *key, uint32_t ht_size)
+proxyccb_handle_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-proxyccb_compare_handle_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(hal_handle_t);
 }
 
 // allocate a PROXYCCB instance

@@ -134,12 +134,10 @@ find_wring_by_id (wring_id_t wring_id)
 }
 
 extern void *wring_get_key_func(void *entry);
-extern uint32_t wring_compute_hash_func(void *key, uint32_t ht_size);
-extern bool wring_compare_key_func(void *key1, void *key2);
+extern uint32_t wring_key_size(void);
 
 extern void *wring_get_handle_key_func(void *entry);
-extern uint32_t wring_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool wring_compare_handle_key_func(void *key1, void *key2);
+extern uint32_t wring_handle_key_size(void);
 extern hal_ret_t wring_get_phys_addr(types::WRingType wring_type,
         wring_id_t wring_id, uint64_t *phys_addr);
 extern hal_ret_t wring_get_meta(types::WRingType wring_type,

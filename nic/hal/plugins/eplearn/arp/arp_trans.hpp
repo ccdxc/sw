@@ -225,12 +225,10 @@ private:
 } __PACK__;
 
 void *arptrans_get_key_func(void *entry);
-uint32_t arptrans_compute_hash_func(void *key, uint32_t ht_size);
-bool arptrans_compare_key_func(void *key1, void *key2);
+uint32_t arptrans_key_size(void);
 
 void *arptrans_get_handle_key_func(void *entry);
-uint32_t arptrans_compute_handle_hash_func(void *key, uint32_t ht_size);
-bool arptrans_compare_handle_key_func(void *key1, void *key2);
+uint32_t arptrans_handle_key_size(void);
 
 hal_ret_t arp_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr);
 

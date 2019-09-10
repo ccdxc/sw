@@ -120,8 +120,7 @@ vrf_lookup_by_handle (hal_handle_t handle)
 }
 
 void *vrf_id_get_key_func(void *entry);
-uint32_t vrf_id_compute_hash_func(void *key, uint32_t ht_size);
-bool vrf_id_compare_key_func(void *key1, void *key2);
+uint32_t vrf_id_key_size(void);
 vrf_t *vrf_lookup_by_id(vrf_id_t tid);
 vrf_t *vrf_lookup_key_or_handle(const VrfKeyHandle& kh);
 const char *vrf_spec_keyhandle_to_str(const VrfKeyHandle& key_handle);

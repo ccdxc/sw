@@ -21,19 +21,9 @@ ipsec_sa_get_key_func (void *entry)
 }
 
 uint32_t
-ipsec_sa_compute_hash_func (void *key, uint32_t ht_size)
+ipsec_sa_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipsec_sa_id_t)) % ht_size;
-}
-
-bool
-ipsec_sa_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*((ipsec_sa_id_t *)key1) == *((ipsec_sa_id_t *)key2)) {
-        return true;
-    }
-    return false;
+    return sizeof(ipsec_sa_id_t);
 }
 
 void *
@@ -44,19 +34,9 @@ ipsec_sa_get_handle_key_func (void *entry)
 }
 
 uint32_t
-ipsec_sa_compute_handle_hash_func (void *key, uint32_t ht_size)
+ipsec_sa_handle_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-ipsec_sa_compare_handle_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(hal_handle_t);
 }
 
 //------------------------------------------------------------------------------

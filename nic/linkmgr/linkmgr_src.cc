@@ -259,19 +259,9 @@ port_id_get_key_func (void *entry)
 }
 
 uint32_t
-port_id_compute_hash_func (void *key, uint32_t ht_size)
+port_id_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(port_num_t)) % ht_size;
-}
-
-bool
-port_id_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(port_num_t *)key1 == *(port_num_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(port_num_t);
 }
 
 //------------------------------------------------------------------------------
@@ -298,7 +288,7 @@ port_add_to_db (port_t *pi_p, hal_handle_t handle)
     // add mapping from port num to its handle
     entry->handle_id = handle;
     sdk_ret = g_linkmgr_state->port_id_ht()->insert_with_key(
-                                    &pi_p->port_num, entry, &entry->ht_ctxt);
+                                    &handle, entry, &entry->ht_ctxt);
     if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add port num to handle mapping for port: {},"
                       " err: {}",  pi_p->port_num, sdk_ret);
@@ -803,7 +793,7 @@ port_del_from_db (port_t *pi_p)
 
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)
-            g_linkmgr_state->port_id_ht()->remove(&pi_p->port_num);
+            g_linkmgr_state->port_id_ht()->remove(&pi_p->hal_handle_id);
 
     // free up
     g_linkmgr_state->hal_handle_id_ht_entry_slab()->free(entry);

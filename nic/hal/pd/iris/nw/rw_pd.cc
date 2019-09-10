@@ -20,25 +20,12 @@ rw_entry_pd_get_key_func (void *entry)
 }
 
 //-----------------------------------------------------------------------------
-// compute hash func
+// compute hash key size
 //-----------------------------------------------------------------------------
 uint32_t
-rw_entry_pd_compute_hash_func (void *key, uint32_t ht_size)
+rw_entry_pd_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(pd_rw_entry_key_t)) % ht_size;
-}
-
-//-----------------------------------------------------------------------------
-// compare func.
-//-----------------------------------------------------------------------------
-bool
-rw_entry_pd_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-	if (!memcmp(key1, key2, sizeof(pd_rw_entry_key_t))) {
-		return true;
-	}
-    return false;
+    return sizeof(pd_rw_entry_key_t);
 }
 
 //-----------------------------------------------------------------------------

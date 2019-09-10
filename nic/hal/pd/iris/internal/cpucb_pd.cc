@@ -23,19 +23,9 @@ cpucb_pd_get_hw_key_func (void *entry)
 }
 
 uint32_t
-cpucb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
+cpucb_pd_hw_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(cpucb_hw_id_t)) % ht_size;
-}
-
-bool
-cpucb_pd_compare_hw_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(cpucb_hw_id_t *)key1 == *(cpucb_hw_id_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(cpucb_hw_id_t);
 }
 
 /********************************************

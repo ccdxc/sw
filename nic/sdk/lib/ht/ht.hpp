@@ -79,15 +79,11 @@ class ht {
 public:
     // callback functions to be provided by the user of this library
     typedef void *(*ht_get_key_func_t)(void *entry);
-    typedef uint32_t (*ht_compute_hash_func_t)(void *key, uint32_t ht_size);
-    typedef bool (*ht_compare_key_func_t)(void *key1, void *key2);
     typedef bool (ht_walk_cb_t)(void *entry, void *ctxt);
 
     static ht *factory(uint32_t ht_size, ht_get_key_func_t key_func,
-                       ht_compute_hash_func_t hash_func,
-                       ht_compare_key_func_t compare_func,
-                       bool thread_safe=true,
-                       shmmgr *mmgr=NULL);
+                       uint32_t key_size, bool thread_safe=true,
+                       bool key_string=false, shmmgr *mmgr=NULL);
     static void destroy(ht *htable, shmmgr *mmgr=NULL);
 
     // lookup() will return entry given its key or NULL if entry is not found
@@ -140,10 +136,10 @@ private:
     uint32_t                  num_buckets_;          // number of buckets
     ht_bucket_t               *ht_buckets_;          // actual hash table buckets
     bool                      thread_safe_;          // TRUE for thread safety
+    bool                      key_string_;           // TRUE if key is a string
     sdk_spinlock_t            slock_;                // lock for thread safety
-    ht_compute_hash_func_t    hash_func_;            // hash function
     ht_get_key_func_t         get_key_func_;         // get key function
-    ht_compare_key_func_t     compare_key_func_;     // key comparison function
+    uint32_t                  key_size_;             // key size
     uint32_t                  num_entries_;          // total no. of entries in the table
     uint32_t                  num_inserts_;          // no. of insert operations so far
     uint32_t                  num_insert_err_;       // no. of insert errors
@@ -155,9 +151,8 @@ private:
     ht() { }
     ~ht();
     bool init(uint32_t ht_size, ht_get_key_func_t key_func,
-              ht_compute_hash_func_t hash_func,
-              ht_compare_key_func_t compare_func,
-              bool thread_safe, shmmgr *mmgr);
+              uint32_t key_size, bool thread_safe,
+              bool key_string, shmmgr *mmgr);
     static void cleanup(ht *htable, shmmgr *mmgr);
     void *lookup_(ht_bucket_t *ht_bucket, void *key);
 };

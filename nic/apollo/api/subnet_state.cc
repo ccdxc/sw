@@ -19,8 +19,7 @@ subnet_state::subnet_state() {
     // TODO: need to tune multi-threading related params later
     subnet_ht_ =
         ht::factory(PDS_MAX_SUBNET >> 1, subnet_entry::subnet_key_func_get,
-                    subnet_entry::subnet_hash_func_compute,
-                    subnet_entry::subnet_key_func_compare);
+                    subnet_entry::key_size());
     SDK_ASSERT(subnet_ht() != NULL);
     // we should accomodate one extra subnet of type provider/substrate/internet
     subnet_idxr_ = indexer::factory(PDS_MAX_SUBNET + 1);

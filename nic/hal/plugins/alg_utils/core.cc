@@ -215,32 +215,22 @@ out:
     return ret;
 }
 
-
-static void * app_sess_get_key_func(void *entry)
+static void *app_sess_get_key_func(void *entry)
 {
     SDK_ASSERT(entry != NULL);
     return (void *)&(((app_session_t *)entry)->key);
 }
 
-static uint32_t app_sess_compute_hash_func(void *key, uint32_t ht_size)
-{
-    return (sdk::lib::hash_algo::fnv_hash(key,
-                                          sizeof(hal::flow_key_t)) % ht_size);
-}
-
-static bool app_sess_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    return (memcmp(key1, key2, sizeof(hal::flow_key_t)) == 0);
+static uint32_t app_sess_key_size(void) {
+    return sizeof(hal::flow_key_t);
 }
 
 void alg_state::init(const char* feature_name, slab *app_sess_slab,
-                   slab *l4_sess_slab, slab *alg_info_slab,
-                   app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
+                     slab *l4_sess_slab, slab *alg_info_slab,
+                     app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
                      l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr,
                      ht::ht_get_key_func_t ht_get_key_func,
-                     ht::ht_compute_hash_func_t ht_compute_hash_func,
-                     ht::ht_compare_key_func_t ht_compare_key_func)
+                     uint32_t ht_key_size)
 {
     feature_ = feature_name;
     app_sess_slab_ = app_sess_slab;
@@ -249,16 +239,14 @@ void alg_state::init(const char* feature_name, slab *app_sess_slab,
     app_sess_cleanup_hdlr_ = app_sess_clnup_hdlr;
     l4_sess_cleanup_hdlr_ = l4_sess_clnup_hdlr;
 
-    if (ht_get_key_func == NULL) {
+    if (ht_key_size == 0) {
+        ht_key_size = app_sess_key_size();
         ht_get_key_func = app_sess_get_key_func;
-        ht_compute_hash_func = app_sess_compute_hash_func;
-        ht_compare_key_func = app_sess_compare_key_func;
     }
 
     app_sess_ht_ = sdk::lib::ht::factory(ALG_UTILS_MAX_APP_SESS,
                                          ht_get_key_func,
-                                         ht_compute_hash_func,
-                                         ht_compare_key_func);
+                                         ht_key_size);
 
 }
 
@@ -267,8 +255,7 @@ alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
                                 app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
                                 l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr,
                                 ht::ht_get_key_func_t ht_get_key_func,
-                                ht::ht_compute_hash_func_t ht_compute_hash_func,
-                                ht::ht_compare_key_func_t ht_compare_key_func)
+                                uint32_t ht_key_size)
 {
     void         *mem = NULL;
     alg_state    *state = NULL;
@@ -280,7 +267,7 @@ alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
 
     state->init(feature_name, app_sess_slab, l4_sess_slab,
                 alg_info_slab, app_sess_clnup_hdlr, l4_sess_clnup_hdlr,
-                ht_get_key_func, ht_compute_hash_func, ht_compare_key_func);
+                ht_get_key_func, ht_key_size);
 
     return state;
 }

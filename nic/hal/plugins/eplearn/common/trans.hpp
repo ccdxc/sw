@@ -201,8 +201,7 @@ public:
 };
 
 void *trans_get_ip_entry_key_func(void *entry);
-uint32_t trans_compute_ip_entry_hash_func(void *key, uint32_t ht_size);
-bool trans_compare_ip_entry_key_func(void *key1, void *key2);
+uint32_t trans_ip_entry_key_size(void);
 
 }
 }

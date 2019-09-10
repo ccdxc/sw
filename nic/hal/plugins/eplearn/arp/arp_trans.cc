@@ -28,16 +28,8 @@ void *arptrans_get_key_func(void *entry) {
     return (void *)(((arp_trans_t *)entry)->trans_key_ptr());
 }
 
-uint32_t arptrans_compute_hash_func(void *key, uint32_t ht_size) {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(arp_trans_key_t)) % ht_size;
-}
-
-bool arptrans_compare_key_func(void *key1, void *key2) {
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (memcmp(key1, key2, sizeof(arp_trans_key_t)) == 0) {
-        return true;
-    }
-    return false;
+uint32_t arptrans_key_size(void) {
+    return sizeof(arp_trans_key_t);
 }
 
 /* Make sure only one instance of State machine is present and all transactions
@@ -51,14 +43,13 @@ slab *arp_trans_t::arplearn_slab_ =
                   sizeof(arp_trans_t), 16, false,
                   true, true);
 ht *arp_trans_t::arplearn_key_ht_ =
-    ht::factory(HAL_MAX_ARP_TRANS, arptrans_get_key_func,
-                arptrans_compute_hash_func,
-                arptrans_compare_key_func);
+    ht::factory(HAL_MAX_ARP_TRANS,
+                arptrans_get_key_func,
+                arptrans_key_size());
 ht *arp_trans_t::arplearn_ip_entry_ht_ =
     ht::factory(HAL_MAX_ARP_TRANS,
                 trans_get_ip_entry_key_func,
-                trans_compute_ip_entry_hash_func,
-                trans_compare_ip_entry_key_func);
+                trans_ip_entry_key_size());
 
 // This is default, entry func can override this.
 #define BOUND_TIMEOUT      60 *  (TIME_MSECS_PER_MIN)

@@ -23,25 +23,17 @@ namespace eplearn {
 
 uint32_t dpkt_learn_entry_delete_timeout = DPKT_LEARN_ENTRY_DELETE_TIMEOUT;
 
+void dpkt_learn_entry_delete_timeout_set(uint32_t timeout) {
+    dpkt_learn_entry_delete_timeout = timeout;
+}
+
 void *dpkt_learn_trans_get_key_func(void *entry) {
     SDK_ASSERT(entry != NULL);
     return (void *)(((dpkt_learn_trans_t *)entry)->trans_key_ptr());
 }
 
-uint32_t dpkt_learn_trans_compute_hash_func(void *key, uint32_t ht_size) {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(dpkt_learn_trans_key_t)) % ht_size;
-}
-
-void dpkt_learn_entry_delete_timeout_set(uint32_t timeout) {
-    dpkt_learn_entry_delete_timeout = timeout;
-}
-
-bool dpkt_learn_trans_compare_key_func(void *key1, void *key2) {
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (memcmp(key1, key2, sizeof(dpkt_learn_trans_key_t)) == 0) {
-        return true;
-    }
-    return false;
+uint32_t dpkt_learn_trans_key_size(void) {
+    return sizeof(dpkt_learn_trans_key_t);
 }
 
 /* Make sure only one instance of State machine is present and all transactions
@@ -54,14 +46,13 @@ slab *dpkt_learn_trans_t::dpkt_learn_slab_ =
                   sizeof(dpkt_learn_trans_t), 16, false,
                   true, true);
 ht *dpkt_learn_trans_t::dpkt_learn_key_ht_ =
-    ht::factory(HAL_MAX_DPKT_LEARN_TRANS, dpkt_learn_trans_get_key_func,
-                dpkt_learn_trans_compute_hash_func,
-                dpkt_learn_trans_compare_key_func);
+    ht::factory(HAL_MAX_DPKT_LEARN_TRANS,
+                dpkt_learn_trans_get_key_func,
+                dpkt_learn_trans_key_size());
 ht *dpkt_learn_trans_t::dpkt_learn_ip_entry_ht_ =
     ht::factory(HAL_MAX_DPKT_LEARN_TRANS,
                 trans_get_ip_entry_key_func,
-                trans_compute_ip_entry_hash_func,
-                trans_compare_ip_entry_key_func);
+                trans_ip_entry_key_size());
 
 // This is default, entry func can override this.
 #define BOUND_TIMEOUT      60 *  (TIME_MSECS_PER_MIN)

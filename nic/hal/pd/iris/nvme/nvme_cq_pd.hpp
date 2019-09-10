@@ -95,8 +95,7 @@ find_nvme_cq_by_hwid (nvme_cq_hw_id_t hwid)
 }
 
 extern void *nvme_cq_pd_get_hw_key_func(void *entry);
-extern uint32_t nvme_cq_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool nvme_cq_pd_compare_hw_key_func(void *key1, void *key2);
+extern uint32_t nvme_cq_pd_hw_key_size(void);
 
 }   // namespace pd
 }   // namespace hal

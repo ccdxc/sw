@@ -37,26 +37,12 @@ acl_get_key_func (void *entry)
 }
 
 // ----------------------------------------------------------------------------
-// hash table acl_type => entry - compute hash
+// hash table acl_type key size
 // ----------------------------------------------------------------------------
 uint32_t
-acl_compute_hash_func (void *key, uint32_t ht_size)
+acl_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(acl_key_t)) % ht_size;
-}
-
-// ----------------------------------------------------------------------------
-// hash table acl_type => entry - compare function
-// ----------------------------------------------------------------------------
-bool
-acl_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-
-    if (!memcmp(key1, key2, sizeof(acl_key_t))) {
-        return true;
-    }
-    return false;
+    return sizeof(acl_key_t);
 }
 
 //------------------------------------------------------------------------------

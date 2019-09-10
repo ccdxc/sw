@@ -160,8 +160,7 @@ find_tlscb_by_hwid (tlscb_hw_id_t hwid)
 }
 
 extern void *tlscb_pd_get_hw_key_func(void *entry);
-extern uint32_t tlscb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool tlscb_pd_compare_hw_key_func(void *key1, void *key2);
+extern uint32_t tlscb_pd_hw_key_size(void);
 extern hal_ret_t p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd);
 
 uint32_t pd_tlscb_sesq_ci_offset_get(void);

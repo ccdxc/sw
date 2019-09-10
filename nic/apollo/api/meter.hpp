@@ -130,24 +130,10 @@ public:
         return (void *)&(meter->key_);
     }
 
-    /// \brief          helper function to compute hash for given meter key
-    /// \param[in]      key        meter's key
-    /// \param[in]      ht_size    hash table size
-    /// \return         hash value
-    static uint32_t meter_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(pds_meter_key_t)) % ht_size;
-    }
-
-    /// \brief          helper function to compare two meter keys
-    /// \param[in]      key1        pointer to meter's key
-    /// \param[in]      key2        pointer to meter's key
-    /// \return         0 if keys are same or else non-zero value
-    static bool meter_key_func_compare(void *key1, void *key2) {
-        SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(pds_meter_key_t))) {
-            return true;
-        }
-        return false;
+    /// \brief   helper function to get size of key
+    /// \return  size of key
+    static uint32_t key_size(void) {
+        return sizeof(pds_meter_key_t);
     }
 
     /// \brief          return the meter entry's key/id

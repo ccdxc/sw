@@ -103,8 +103,7 @@ l2seg_pd_mem_free (pd_l2seg_t *l2seg_pd)
 }
 
 extern void *flow_lkupid_get_hw_key_func(void *entry);
-extern uint32_t flow_lkupid_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool flow_lkupid_compare_hw_key_func(void *key1, void *key2);
+extern uint32_t flow_lkupid_hw_key_size(void);
 hal_ret_t pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                                     if_t *prom_enic_if,
                                     bool inc, bool skip_hw_pgm);

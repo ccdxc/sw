@@ -57,8 +57,7 @@ namespace hal {
 #define HAL_MAX_NAT_ADDR_MAP        8192
 
 void *nat_mapping_get_key_func(void *entry);
-uint32_t nat_mapping_compute_hash_func(void *key, uint32_t ht_size);
-bool nat_mapping_compare_key_func(void *key1, void *key2);
+uint32_t nat_mapping_key_size(void);
 
 hal_ret_t nat_pool_create(NatPoolSpec& spec, NatPoolResponse *rsp);
 hal_ret_t nat_pool_update(NatPoolSpec& spec, NatPoolResponse *rsp);
