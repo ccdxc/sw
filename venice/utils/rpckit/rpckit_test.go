@@ -627,7 +627,7 @@ func createRPCClients(t *testing.T, wg *sync.WaitGroup, srcAddr, srvURL string, 
 	begin := time.Now()
 	for i := 0; i < numConns; i++ {
 		dialer := &net.Dialer{LocalAddr: &net.TCPAddr{IP: net.ParseIP(srcAddr)}}
-		client, err := NewRPCClient(srcAddr, srvURL, WithTracerEnabled(false), WithDialer(dialer))
+		client, err := NewRPCClient(srcAddr, srvURL, WithTracerEnabled(false), WithDialer(dialer), WithDialTimeout(200*time.Millisecond))
 		if err != nil {
 			t.Logf("Failed to create client with error %v", err)
 			errors++
@@ -640,8 +640,8 @@ func createRPCClients(t *testing.T, wg *sync.WaitGroup, srcAddr, srvURL string, 
 			} else {
 				success++
 			}
+			client.Close()
 		}
-		client.Close()
 		time.Sleep(sleepMs * time.Millisecond)
 	}
 	end := time.Now()
@@ -714,7 +714,7 @@ func TestRPCConnectionRateLimit(t *testing.T) {
 	}
 	wg.Wait()
 
-	margin := 0.2
+	margin := 0.25
 	for i, r := range rates {
 		rpcLowerBound := float64(expSuccessfulRPCs[i]) * (1 - margin)
 		rpcUpperBound := float64(expSuccessfulRPCs[i]) * (1 + margin)
@@ -723,7 +723,9 @@ func TestRPCConnectionRateLimit(t *testing.T) {
 			"Rate: %f Unexpected number of successful RPCs. Have: %f, want: %f-%f", r, rpcActualValue, rpcLowerBound, rpcUpperBound)
 
 		compTimeLowerBound := float64(expCompletionTimes[i]) * (1 - margin)
-		compTimeUpperBound := float64(expCompletionTimes[i]) * (1 + margin)
+		// In the upper bound, allow up to 50 ms of average (dial + RPC time) for each successful RPC
+		compTimeUpperBound := float64(expCompletionTimes[i])*(1+margin) +
+			float64(time.Duration(expSuccessfulRPCs[i]*50)*time.Millisecond)
 		compTimeActualValue := float64(actualCompletionTimes[i])
 		Assert(t, compTimeActualValue > compTimeLowerBound && compTimeActualValue < compTimeUpperBound,
 			"Rate: %f Unexpected completion time. Have: %f, want: %f-%f", r, compTimeActualValue, compTimeLowerBound, compTimeUpperBound)
