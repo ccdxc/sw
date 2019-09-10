@@ -152,7 +152,6 @@ func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, quer
 		return nil, err
 	}
 	dn.metaNode = metaNode
-
 	return &dn, nil
 }
 
@@ -294,6 +293,31 @@ func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			if ok && val.(*TshardState).store != nil {
 				dn.logger.Warnf("Replica %d already exists", req.ReplicaID)
 				return &resp, nil
+			}
+
+			// delete old replicas of the shard if it exists
+			delReplicas := []uint64{}
+			dn.tshards.Range(func(key, val interface{}) bool {
+				replID := key.(uint64)
+				tState := val.(*TshardState)
+
+				// find old replica of the shard
+				if tState.shardID == req.ShardID {
+					delReplicas = append(delReplicas, replID)
+				}
+				return true
+			})
+
+			for _, r := range delReplicas {
+				log.Infof("delete prev. replica %d of shard %v, new replica %d", r, req.ShardID, req.ReplicaID)
+				if _, err := dn.DeleteShard(ctx, &tproto.ShardReq{
+					ClusterType: req.ClusterType,
+					ShardID:     req.ShardID,
+					ReplicaID:   r,
+				}); err != nil {
+					log.Errorf("failed to delete replica %d of shard %v, err: %v", r, req.ShardID, err)
+					continue
+				}
 			}
 
 			// create the data store

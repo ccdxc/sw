@@ -385,6 +385,7 @@ func (dn *DNode) processPendingQueue(sb *syncBufferState) {
 		select {
 		case <-time.After(wait):
 			if err := dn.replicateFailedRequest(sb); err != nil {
+				log.Infof("failed to replicate points from sync buffer, %v", err)
 				sb.backoff.NextBackOff()
 
 			} else { // reset

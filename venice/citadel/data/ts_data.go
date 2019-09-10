@@ -248,6 +248,12 @@ func (dn *DNode) replicateFailedPoints(sb *syncBufferState) error {
 	dn.logger.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
 
 	cl := dn.watcher.GetCluster(meta.ClusterTypeTstore)
+	if _, err := cl.GetNode(sb.nodeUUID); err != nil {
+		// drain the buffer
+		sb.queue.RemoveAll(func(k interface{}) {})
+		return fmt.Errorf("unable to find node %v", sb.nodeUUID)
+	}
+
 	if !cl.IsNodeAlive(sb.nodeUUID) {
 		return fmt.Errorf("unable to reach node %v", sb.nodeUUID)
 	}
