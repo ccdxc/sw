@@ -82,8 +82,8 @@ int record_events(events_recorder* recorder, int rps, int total_events, char* me
     int num_events_recorded = 0;
     int num_events_per_iteration = (rps < 5) ? rps : (rps / 5);
 
-    // 1s or 100ms accounts for the time to send events
-    int time_to_sleep = (rps < 5) ? 1000000 : 100000;
+    // 1s or 200ms accounts for the time to send events
+    int time_to_sleep = (rps < 5) ? 1000000 : 200000;
 
     while (num_events_recorded < total_events) {
         for (int i = 0; i < num_events_per_iteration; i++) {
@@ -97,18 +97,18 @@ int record_events(events_recorder* recorder, int rps, int total_events, char* me
             }
         }
         num_non_critical_events_recorded += num_events_per_iteration;
+        usleep(time_to_sleep); // 1s or 200ms
 
         // record 1 critical event every second
-        if (num_non_critical_events_recorded % (rps - num_events_per_iteration) == 0) {
+        if ((rps - num_events_per_iteration) != 0 && num_non_critical_events_recorded % (rps - num_events_per_iteration) == 0) {
             std::string evt_message = message_substr + std::string(" - alert - ") + get_random_alert_str();
             int ret_val = record_event(recorder, eventtypes::NAPLES_SERVICE_STOPPED, evt_message.c_str());
             if (ret_val != 0) {
                 return ret_val;
             }
             num_critical_events_recorded++;
-            usleep(100000); // 100ms
+            usleep(time_to_sleep/num_events_per_iteration);
         }
-        usleep(time_to_sleep); // 1s or 100ms
         num_events_recorded = num_non_critical_events_recorded + num_critical_events_recorded;
         logger->info("num events recorded so far: non-critical - {}, critical - {}, total - {}",
             num_non_critical_events_recorded, num_critical_events_recorded, num_events_recorded);

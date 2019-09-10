@@ -39,16 +39,23 @@ retryloop:
 			retryCount++
 			ctx, cancel = context.WithTimeout(context.Background(), retryInterval)
 			result, err = eval(ctx)
-			cancel()
-			if err != nil {
-				if retryCount > maxRetries {
-					log.Errorf("Retry exhausted, evaluator failed err: %v", err)
-					return nil, err
-				}
-				log.Debugf("Retrying, evaluator failed err: %v", err)
-			} else {
+			if err == nil {
+				cancel()
 				break retryloop
 			}
+
+			if retryCount > maxRetries {
+				log.Errorf("Retry exhausted, evaluator failed err: %v", err)
+				cancel()
+				return nil, err
+			}
+
+			if ctx.Err() != nil { // context deadline exceeded; add a breather
+				time.Sleep(retryInterval)
+			}
+			cancel()
+
+			log.Debugf("Retrying, evaluator failed err: %v", err)
 		}
 	}
 	return result, nil

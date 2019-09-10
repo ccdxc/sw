@@ -313,7 +313,7 @@ func (a *alertEngineImpl) createAlert(apCl apiclient.Services, reqID string, ale
 			return true, nil
 		}
 		return false, err
-	}, time.Second, maxRetry)
+	}, 2*time.Second, maxRetry)
 	if err != nil {
 		return false, err
 	}
