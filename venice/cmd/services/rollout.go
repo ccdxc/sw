@@ -288,7 +288,7 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 				BuildVersion:        env.GitVersion,
 				VCSCommit:           env.GitCommit,
 				BuildDate:           env.BuildDate,
-				RolloutBuildVersion: clusterVersion.Status.RolloutBuildVersion,
+				RolloutBuildVersion: "",
 			},
 		}
 
