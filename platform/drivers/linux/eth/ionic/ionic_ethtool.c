@@ -742,7 +742,7 @@ static int ionic_get_module_info(struct net_device *netdev,
 	struct xcvr_status *xcvr;
 
 	if (ionic_is_mnic(lif->ionic))
-		return 0;
+		return -EOPNOTSUPP;
 
 	xcvr = &idev->port_info->status.xcvr;
 
@@ -760,7 +760,7 @@ static int ionic_get_module_info(struct net_device *netdev,
 	default:
 		netdev_info(netdev, "unknown xcvr type 0x%02x\n",
 			    xcvr->sprom[0]);
-		break;
+		return -EOPNOTSUPP;
 	}
 
 	return 0;
