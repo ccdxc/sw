@@ -16,7 +16,7 @@
             <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
                  *ngFor="let smartNICID of smartNICIDs; let index = index; let first = first"
                  [formGroupName]="index">
-              <div fxFlex="nogrow" class="newhost-text">ADD NAPLES BY:</div>
+              <div fxFlex="nogrow" class="newhost-text">ADD DSC BY:</div>
               <ng-container *ngTemplateOutlet="newHostCreation; context:{index:index}">
               </ng-container>
             </div>
@@ -65,7 +65,7 @@
 
       <ng-container *ngSwitchCase="'id'">
         <div fxFlex="nogrow" fxLayout="row" class="newhost-input-row">
-          <div fxFlex="nogrow" class="newhost-NAPLESName-text">NAPLES NAME:</div>
+          <div fxFlex="nogrow" class="newhost-NAPLESName-text">DSC NAME:</div>
 
           <input fxFlex="300px" class="newhost-NAPLES-name" formControlName="id" appErrorTooltip
                  spellcheck="false" type="text" pInputText placeholder="Enter ID...">

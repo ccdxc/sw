@@ -436,10 +436,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       rollout.spec['order-constraints'] = [];
       rollout.spec['dsc-must-match-constraint'] = true;
       rollout.spec['dscs-only'] = false;
+      rollout.spec['max-parallel'] = null; // 	VS-769. When rollout is Venice-only, there max-parallel does not apply
     } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY) {
       rollout.spec['dscs-only'] = true;
       this.setSpecOrderConstrains(rollout);
-      rollout.spec['max-parallel'] = null;
     } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE) {
       rollout.spec['dscs-only'] = false;
       this.setSpecOrderConstrains(rollout);

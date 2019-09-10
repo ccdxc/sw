@@ -331,7 +331,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       'resource-kind': 'Rollout',
       'resource-namespace': '',
       'actions': [
-        AuthPermission_actions.Read
+        AuthPermission_actions.read
       ]
     };
     const rolloutPermission = new AuthPermission(jsonPermission);
@@ -380,9 +380,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     // Clearing out previous actions
     // otherwise, if user goes from an object with all actions, checks one, and then
     // moves to a kind with no group, we will accidentally send the old value as well.
-    // VS 576: Kinds without group have default action Read
+    // VS 576: Kinds without group have default action read
     if (Utility.KINDS_WITHOUT_GROUP.includes($event.value)) {
-      permission.get('actions').setValue([{ label: 'read', value: AuthPermission_actions.read }]);
+      permission.get('actions').setValue([{ label: 'Read', value: AuthPermission_actions.read }]);
     } else {
       permission.get('actions').setValue([]);
     }
@@ -436,11 +436,11 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   getActionOptions(permission: AbstractControl): SelectItem[] {
     const selectedKind = permission.get('resource-kind').value;
-    // If it's a kind without a group, only read permission can be given
+    // If it's a kind without a group, only read permission can be given. Make sure 'read' is in lower
     if (Utility.KINDS_WITHOUT_GROUP.includes(selectedKind)) {
-      return [{
+       return [{
         label: AuthPermission_actions_uihint.read,
-        value: AuthPermission_actions_uihint.read
+        value: 'read'
       }];
     }
     if (permission.value['resource-group'] === 'staging') {
@@ -471,8 +471,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
         values.remove(values.indexOf(NewroleComponent.ACTIONOPTIONS_ALL));
       }
       // VS 576: Kinds without group have default action Read
-      if (!values.includes({ label: 'Read', value: AuthPermission_actions.read })) {
-        values.push({ label: 'Read', value: AuthPermission_actions.read });
+      // if (!values.includes({ label: 'read', value: AuthPermission_actions.read })) {
+      if (values && values.length === 0 ) {
+        values.push({ label: 'read', value: AuthPermission_actions.read });
       }
     }
     if (values.length > 1) {
