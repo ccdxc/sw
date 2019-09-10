@@ -40,6 +40,8 @@
 		Command
 		ClusterHealthMsg
 		NodeHealth
+		NetworkQosClass
+		NetworkPolicyQos
 		DataSwitch
 		TestBedMsg
 		TestNodesMsg

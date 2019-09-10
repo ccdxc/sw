@@ -28,7 +28,7 @@ e2e-targets:
        count: 1
        resources:
          # server-type could be server-a or server-d
-         server-type: server-a
+         server-type: any
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:

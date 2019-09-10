@@ -80,7 +80,10 @@ def Setup(tc):
 
     tc.files = []
     tc.tcdir = "%s/%s" % (api.GetTopDir(), pnsodefs.PNSO_TCDIR)
-    tc.tmpdir = "/tmp/%s_%d" % (os.environ["USER"], os.getpid())
+    try:
+        tc.tmpdir = "/tmp/%s_%d" % (os.environ["USER"], os.getpid())
+    except:
+        tc.tmpdir = "/tmp/%s_%d" % (os.environ["HOSTNAME"], os.getpid())
     tc.ymldir = "%s/%s" % (api.GetTopDir(), pnsodefs.YMLDIR)
     tc.os = __get_param(tc, 'os', [ 'linux', 'freebsd', 'esx' ] )
 

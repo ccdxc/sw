@@ -175,6 +175,8 @@ def UpdateTestBedVlans(objects):
 __config_pushed = False
 def PushBaseConfig(ignore_error = True):
     api.Testbed_ResetVlanAlloc()
+    vlan = api.Testbed_AllocateVlan()
+    api.Logger.info("Ignoring first vlan as it is native ", vlan)
     objects = QueryConfigs(kind='Namespace')
     ret = PushConfigObjects(objects, ignore_error=ignore_error)
     if not ignore_error and ret != api.types.status.SUCCESS:

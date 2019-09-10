@@ -6,3 +6,9 @@ extract-artifacts:
 
 esx: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite hostpin_vm --testbed /warmd.json
+
+linux: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json
+
+freebsd: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json

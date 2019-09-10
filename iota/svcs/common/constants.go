@@ -29,7 +29,7 @@ const (
 	NicFinderConfFileName = "nic.conf"
 
 	// VlansPerTestBed vlans that a testbed can manage
-	VlansPerTestBed = 10
+	VlansPerTestBed = 64
 
 	// MaxVlanRange max vlan range to be used for allocation
 	MaxVlanRange = 4000

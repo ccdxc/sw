@@ -109,7 +109,7 @@ if GlobalOptions.drivers_pkg is None:
 
 ROOT_EXP_PROMPT="~#"
 if GlobalOptions.os == 'freebsd':
-    ROOT_EXP_PROMPT="~]#"
+    ROOT_EXP_PROMPT="~]"
 
 if GlobalOptions.os == 'esx':
     ROOT_EXP_PROMPT="~]"
@@ -553,14 +553,15 @@ class HostManagement(EntityManagement):
         nodeinit_args = ""
         if cleanup:
             nodeinit_args = "--cleanup"
-            self.RunSshCmd("%s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
+            self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 
         if driver_pkg:
             nodeinit_args = ""
-            self.RunSshCmd("rm -rf /naples && mkdir /naples")
+            self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
+            self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
             self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
             self.CopyIN(driver_pkg, HOST_NAPLES_DIR)
-            self.RunSshCmd("%s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
+            self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
 
     @_exceptionWrapper(_errCodes.HOST_COPY_FAILED, "Host Init Failed")
@@ -569,8 +570,8 @@ class HostManagement(EntityManagement):
         super(HostManagement, self).CopyIN(src_filename, entity_dir)
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.RunSshCmd("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
-                           (GlobalOptions.password, dest_filename, GlobalOptions.mnic_ip, naples_dest_filename))
+            ret = self.RunSshCmd("sshpass -p %s scp -o StrictHostKeyChecking=no %s %s@%s:%s" %\
+                           (GlobalOptions.password, dest_filename, GlobalOptions.username, GlobalOptions.mnic_ip, naples_dest_filename))
             if ret:
                 raise Exception("Copy to Naples failed")
         return 0
@@ -579,10 +580,10 @@ class HostManagement(EntityManagement):
     def Reboot(self, dryrun = False):
         os.system("date")
         self.RunSshCmd("sync")
-        self.RunSshCmd("ls -l /root/")
+        self.RunSshCmd("ls -l /tmp/")
         self.RunSshCmd("uptime")
         if dryrun == False:
-            self.RunSshCmd("shutdown -r now", ignore_failure = True)
+            self.RunSshCmd("sudo shutdown -r now", ignore_failure = True)
         time.sleep(60)
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
@@ -663,8 +664,8 @@ class EsxHostManagement(HostManagement):
 
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.ctrl_vm_run("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
-                           (GlobalOptions.password, dest_filename, GlobalOptions.mnic_ip, naples_dest_filename))
+            ret = self.ctrl_vm_run("sshpass -p %s scp -o StrictHostKeyChecking=no %s vm@%s:%s" %\
+                           (GlobalOptions.password, dest_filename, GlobalOptions.username, GlobalOptions.mnic_ip, naples_dest_filename))
             if ret:
                 raise Exception("Cmd failed : " + cmd)
 
@@ -673,8 +674,8 @@ class EsxHostManagement(HostManagement):
     @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
-        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
-                       (GlobalOptions.password, GlobalOptions.mnic_ip, command)
+        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no %s@%s %s" %\
+                       (GlobalOptions.password, GlobalOptions.username, GlobalOptions.mnic_ip, command)
         return self.ctrl_vm_run(full_command, ignore_failure)
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_RUN_CMD_FAILED, "ESX ctrl vm run failed")
@@ -810,7 +811,7 @@ class EsxHostManagement(HostManagement):
     def __host_connect(self):
         ip=GlobalOptions.host_ip
         port='22'
-        username='root'
+        username=GlobalOptions.host_username
         password=GlobalOptions.host_password
         ssh=paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

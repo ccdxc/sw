@@ -19,7 +19,23 @@ var (
 	configRegex     = regexp.MustCompile(`\(config\)\# `)
 	configIfRegex   = regexp.MustCompile(`\(config-if\)\# `)
 	configVlanRegex = regexp.MustCompile(`\(config-vlan\)\# `)
+	configPmapQos   = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
+	configClassQos  = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
+	configSystemQos = regexp.MustCompile(`\(config-sys-qos\)\# `)
 )
+
+//QosClass qos classes
+type QosClass struct {
+	Name   string
+	Mtu    uint32
+	PfsCos uint32
+}
+
+//QosConfig qos config
+type QosConfig struct {
+	Name    string
+	Classes []QosClass
+}
 
 type writerProxy struct {
 	w io.Writer
@@ -111,8 +127,103 @@ func ConfigInterface(n3k *ConnectCtx, port string, commands []string, timeout ti
 	return buf.String(), nil
 }
 
+//ConfigureQos configure qos on switch
+func ConfigureQos(n3k *ConnectCtx, qosCfg *QosConfig, timeout time.Duration) (string, error) {
+
+	buf := &bytes.Buffer{}
+	exp, err := spawnExp(n3k, buf)
+	if err != nil {
+		return "", errors.Wrapf(err, "while spawn goexpect")
+	}
+	defer exp.Close()
+
+	_, _, err = exp.Expect(promptRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if err = exp.Send("conf\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	nwQos := fmt.Sprintf("policy-map type network-qos %v\n", qosCfg.Name)
+	//Set spanning tree mode to mst to support more vlans
+	if err = exp.Send(nwQos); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configPmapQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if len(qosCfg.Classes) != 0 {
+		for _, qosClass := range qosCfg.Classes {
+			qosCmd := fmt.Sprintf("class type network-qos %v\n", qosClass.Name)
+
+			if err = exp.Send(qosCmd); err != nil {
+				return buf.String(), err
+			}
+			_, _, err = exp.Expect(configClassQos, timeout)
+			if err != nil {
+				return buf.String(), err
+			}
+
+			if qosClass.Mtu != 0 {
+				mtuCmd := fmt.Sprintf("mtu %v\n", qosClass.Mtu)
+				if err = exp.Send(mtuCmd); err != nil {
+					return buf.String(), err
+				}
+			}
+
+			pfcCmd := fmt.Sprintf("pause pfc-cos %v\n", qosClass.PfsCos)
+			if err = exp.Send(pfcCmd); err != nil {
+				return buf.String(), err
+			}
+
+			exp.Send("exit\n") //exit configClassQos
+			time.Sleep(exitTimeout)
+		}
+	}
+
+	if err = exp.Send("system qos\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configSystemQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	systemQosCmd := fmt.Sprintf("service-policy type network-qos %v\n", qosCfg.Name)
+
+	if err = exp.Send(systemQosCmd); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configSystemQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	exp.Send("exit\n") // exit system qos
+	time.Sleep(exitTimeout)
+
+	return "", nil
+}
+
 // ConfigVlan configures vlan on the interface
-func ConfigVlan(n3k *ConnectCtx, vlanRange string, timeout time.Duration) (string, error) {
+func ConfigVlan(n3k *ConnectCtx, vlanRange string, igmpEnabled bool, timeout time.Duration) (string, error) {
 	buf := &bytes.Buffer{}
 	exp, err := spawnExp(n3k, buf)
 	if err != nil {
@@ -142,9 +253,30 @@ func ConfigVlan(n3k *ConnectCtx, vlanRange string, timeout time.Duration) (strin
 		time.Sleep(exitTimeout)
 	}()
 
+	//Set spanning tree mode to mst to support more vlans
+	if err = exp.Send("spanning-tree mode mst\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
 	if err := confVlanCmd(exp, fmt.Sprintf("vlan %s\n", vlanRange), timeout); err != nil {
 		return buf.String(), err
 	}
+
+	var cmd string
+	if igmpEnabled {
+		cmd = "ip igmp snooping\n"
+	} else {
+		cmd = "no ip igmp snooping\n"
+	}
+
+	if err = exp.Send(cmd); err != nil {
+		return buf.String(), err
+	}
+
 	defer func() {
 		exp.Send("exit\n")
 		time.Sleep(exitTimeout)

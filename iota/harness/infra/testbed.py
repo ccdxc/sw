@@ -24,6 +24,27 @@ ESX_CTRL_VM_BRINGUP_SCRIPT = "%s/iota/bin/iota_esx_setup" % (GlobalOptions.topdi
 def _get_driver_version(file):
     return os.path.basename(os.path.dirname(os.path.realpath(file)))
 
+def setUpSwitchQos(switch_ctx):
+    #Needed for RDMA, neeed to be set from testsuite.
+    switch_ctx.flow_control_receive = True
+    switch_ctx.flow_control_send = True
+    switch_ctx.mtu = 9216
+    switch_ctx.qos.name = "pausenq"
+    qosClass = switch_ctx.qos.qos_classes.add()
+    qosClass.name = "c-nq3"
+    qosClass.mtu = 1500
+    qosClass = switch_ctx.qos.qos_classes.add()
+    qosClass.name = "c-nq2"
+    qosClass.mtu = 1500
+    qosClass = switch_ctx.qos.qos_classes.add()
+    qosClass.name = "c-nq1"
+    qosClass.mtu = 1500
+    qosClass = switch_ctx.qos.qos_classes.add()
+    qosClass.name = "c-nq-default"
+    qosClass.mtu = 9216
+    qosClass.pause_pfc_cos = 0
+
+
 class _Testbed:
     def __init__(self):
         self.curr_ts = None     # Current Testsuite
@@ -142,6 +163,10 @@ class _Testbed:
                         switch_ctx.ports.append(nw.Name)
                         #This should from testsuite eventually or each testcase should be able to set
                         switch_ctx.speed = topo_pb2.DataSwitch.Speed_auto
+                        #igmp disabled for now
+                        switch_ctx.igmp_disabled = True
+                        setUpSwitchQos(switch_ctx)
+
                     #Testbed ID is the last one.
                     msg.testbed_id = getattr(instance, "ID", 0)
                     Logger.info("Testbed ID used %s" % str(msg.testbed_id))
@@ -215,8 +240,6 @@ class _Testbed:
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
                 if instance.NodeOs == "esx":
                     cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
-                    cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
-                    cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
                 cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
                 cmd.extend(["--gold-firmware-image", "%s/platform/goldfw/naples/naples_fw.tar" % (GlobalOptions.topdir)])
                 latest_gold_driver =  "%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)
@@ -246,9 +269,13 @@ class _Testbed:
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
-                if instance.NodeOs == "esx":
-                    cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
-                    cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
+            if instance.NodeOs == "esx":
+                cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
+                cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
+            else:
+                cmd.extend(["--host-username", self.__tbspec.Provision.Username])
+                cmd.extend(["--host-password", self.__tbspec.Provision.Password])
+
                 logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                 Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
 

@@ -1083,6 +1083,8 @@ func (tb *TestBed) setupTestBed() error {
 	for _, vlan := range tb.initTestbedResp.AllocatedVlans {
 		tb.allocatedVlans = append(tb.allocatedVlans, vlan)
 	}
+	//Ignore the first one as it is native vlan
+	tb.allocatedVlans = tb.allocatedVlans[1:]
 
 	// Build Topology Object after parsing warmd.json
 	nodes := &iota.NodeMsg{
@@ -1591,29 +1593,37 @@ func (tb *TestBed) CollectLogs() error {
 
 	// get token ao authenticate to agent
 	veniceCtx, err := tb.VeniceLoggedInCtx(context.Background())
-	if err != nil {
+	addedTechSupport := false
+	trig := tb.NewTrigger()
+	if err == nil {
+		ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+		defer cancel()
+		token, err := utils.GetNodeAuthToken(ctx, tb.GetVeniceURL()[0], []string{"*"})
+		if err == nil {
+			addedTechSupport = true
+			// collect tech-support on
+			for _, node := range tb.Nodes {
+				switch node.Personality {
+				case iota.PersonalityType_PERSONALITY_NAPLES:
+					cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
+					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
+					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+				}
+			}
+		} else {
+			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
+			log.Errorf("%v", nerr)
+		}
+	} else {
 		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
 		log.Errorf("%v", nerr)
-		return nerr
-	}
-	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
-	defer cancel()
-	token, err := utils.GetNodeAuthToken(ctx, tb.GetVeniceURL()[0], []string{"*"})
-	if err != nil {
-		nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
-		log.Errorf("%v", nerr)
-		return nerr
 	}
 
-	// collect tech-support on naples
-	trig := tb.NewTrigger()
+	// collect reset of venice logs
 	for _, node := range tb.Nodes {
 		switch node.Personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES:
-			cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
 			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_naples/%s_naples.tar /pensando/iota/logs /pensando/iota/varlog", node.NodeName, node.NodeName), node.NodeName+"_naples", node.NodeName)
@@ -1641,7 +1651,9 @@ func (tb *TestBed) CollectLogs() error {
 		switch node.Personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES:
 			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName)}, "logs")
-			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s-tech-support.tar.gz", node.NodeName)}, "logs")
+			if addedTechSupport {
+				tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s-tech-support.tar.gz", node.NodeName)}, "logs")
+			}
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
 			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName), fmt.Sprintf("%s_naples.tar", node.NodeName)}, "logs")
 		case iota.PersonalityType_PERSONALITY_VENICE:
@@ -1707,6 +1719,12 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *S
 
 	// create sysmodel
 	model, err := NewSysModel(tb)
+	if err != nil {
+		tb.CollectLogs()
+		return nil, nil, err
+	}
+
+	err = model.Action().VerifyClusterStatus()
 	if err != nil {
 		tb.CollectLogs()
 		return nil, nil, err

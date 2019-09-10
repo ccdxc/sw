@@ -66,9 +66,9 @@ jobs:
   dol:
   iota:
   iota/test/venice:
-  iota/test/no-venice:
-  iota/test/venice/hwtest:
-  iota/test/venice/hwtest/hwregression:
+  iota/test/standalone:
+#  iota/test/venice/regression:
+  iota/test/venice/sim:
   nic:
   nic/agent:
   nic/apollo:
@@ -84,10 +84,6 @@ jobs:
   test/ci_targets/e2e:
   venice:
   venice/ui:
-#Disabling as failing on top
-# test/suites/e2esanities:
-# test/ci_targets/e2erollout:
-# test/ci_targets/e2etelemetry:
 
 dependencies:
   api:
@@ -102,15 +98,15 @@ dependencies:
   events:
     - reference: venice/ui
   iota:
-    - reference: iota/test/venice/hwtest
-    - reference: iota/test/no-venice
+    - reference: iota/test/venice
+    - reference: iota/test/standalone
       exclude_dirs: ["test/venice", "test/apollo"]
   metrics:
     - reference: venice/ui
   nic:
-    - reference: iota/test/venice/hwtest
+    - reference: iota/test/venice
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
-    - reference: iota/test/no-venice
+    - reference: iota/test/standalone
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
   nic/agent:
     - reference: api
@@ -127,12 +123,16 @@ dependencies:
     - reference: nic/apollo
   platform:
     - reference: nic/apollo
-    - reference: iota/test/venice/hwtest
+    - reference: iota/test/venice
       exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
-    - reference: iota/test/no-venice
+    - reference: iota/test/standalone
       exclude_dirs: ["doc"]
   storage/offload:
     - reference: storage/offload/linux-build-test
+  venice:
+    - reference: api
+    - reference: test/ci_targets/e2e
+    - reference: iota/test/venice
   test:
     - reference: api
     - reference: test/ci_targets/e2e
@@ -141,7 +141,3 @@ dependencies:
     - reference: api
     - reference: venice
     - reference: test/ci_targets/e2e
-  venice:
-    - reference: api
-    - reference: test/ci_targets/e2e
-    - reference: iota/test/venice/hwtest

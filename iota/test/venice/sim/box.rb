@@ -7,6 +7,4 @@ run "chmod +x /dind"
 copy "venice/entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
 
-entrypoint "/dind"
-
-cmd %w[make]
+entrypoint "/entrypoint.sh"

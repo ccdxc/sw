@@ -303,8 +303,10 @@ func clearSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string) error {
 	return nil
 }
 
-func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVlan int, vlanRange string,
-	speed dataswitch.PortSpeed) error {
+func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string,
+	nativeVlan int, vlanRange string, igmpDisabled bool, speed dataswitch.PortSpeed,
+	mtu uint32, receiveFlowControl, sendFlowControl bool) error {
+
 	for _, port := range ports {
 		if err := dataSwitch.SetTrunkMode(port); err != nil {
 			return errors.Wrap(err, "Setting switch trunk mode failed")
@@ -313,16 +315,55 @@ func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVla
 			return errors.Wrap(err, "Setting Vlan trunk range failed")
 		}
 
+		if igmpDisabled {
+			if err := dataSwitch.DisableIGMP(vlanRange); err != nil {
+				return errors.Wrap(err, "Disable IGMP failed")
+			}
+		}
+
 		if err := dataSwitch.SetSpeed(port, speed); err != nil {
 			return errors.Wrap(err, "Setting Port speed failed")
 		}
 
-		//Native vlan not supported in naples for now.
-		//if err := dataSwitch.SetNativeVlan(port, nativeVlan); err != nil {
-		//	return errors.Wrap(err, "Setting switch trunk mode failed")
-		//}
+		if err := dataSwitch.SetNativeVlan(port, nativeVlan); err != nil {
+			return errors.Wrap(err, "Setting switch trunk mode failed")
+		}
+
+		if mtu != 0 {
+			if err := dataSwitch.SetMtu(port, mtu); err != nil {
+				return errors.Wrap(err, "Setting mtu failed")
+			}
+		}
+		if err := dataSwitch.SetFlowControlReceive(port, receiveFlowControl); err != nil {
+			return errors.Wrap(err, "Setting mtu failed")
+		}
+		if err := dataSwitch.SetFlowControlSend(port, sendFlowControl); err != nil {
+			return errors.Wrap(err, "Setting mtu failed")
+		}
+
 	}
 
+	return nil
+}
+
+func setSwitchQosConfig(dataSwitch dataswitch.Switch, qos *iota.NetworkPolicyQos) error {
+
+	if qos == nil {
+		return nil
+	}
+	log.Print("Doing Switch QOS configuration successful..")
+	qosCfg := dataswitch.QosConfig{Name: qos.Name}
+
+	for _, qClass := range qos.GetQosClasses() {
+		qosCfg.Classes = append(qosCfg.Classes, dataswitch.QosClass{Mtu: qClass.Mtu,
+			Name: qClass.Name, PfsCos: qClass.PausePfcCos})
+	}
+	err := dataSwitch.DoQosConfig(&qosCfg)
+	if err != nil {
+		return errors.Wrap(err, "Setting QOS config for switch failed")
+	}
+
+	log.Print("Switch QOS configuration successful..")
 	return nil
 }
 
@@ -411,8 +452,15 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vla
 
 		speed := getSpeed(ds.GetSpeed())
 		vlanRange := strconv.Itoa(int(vlans[0])) + "-" + strconv.Itoa(int(vlans[len(vlans)-1]))
-		if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(switchPortID), vlanRange, speed); err != nil {
+		log.Infof("Reserving vlans %v", vlanRange)
+		if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(vlans[0]), vlanRange,
+			ds.GetIgmpDisabled(), speed, ds.Mtu, ds.FlowControlReceive, ds.FlowControlSend); err != nil {
 			return nil, errors.Wrap(err, "Configuring switch failed")
+
+		}
+
+		if err := setSwitchQosConfig(n3k, ds.GetQos()); err != nil {
+			return nil, errors.Wrap(err, "Configuring  QOS  on switch failed")
 
 		}
 

@@ -1,6 +1,7 @@
 package DataSwitch
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -64,16 +65,34 @@ func (s portSpeedValue) String() string {
 	return [...]string{"100000", "10000", "auto"}[s]
 }
 
+//QosClass qos classes
+type QosClass struct {
+	Name   string
+	Mtu    uint32
+	PfsCos uint32
+}
+
+//QosConfig qos config
+type QosConfig struct {
+	Name    string
+	Classes []QosClass
+}
+
 //Switch interface
 type Switch interface {
 	SetNativeVlan(port string, vlan int) error
 	UnsetNativeVlan(port string) error
 	LinkOp(port string, shutdown bool) error
 	SetSpeed(port string, speed PortSpeed) error
+	SetFlowControlReceive(port string, enable bool) error
+	SetFlowControlSend(port string, enable bool) error
+	SetMtu(port string, mtu uint32) error
+	DisableIGMP(vlanRange string) error
 	SetTrunkVlanRange(port string, vlanRange string) error
 	UnsetTrunkVlanRange(port string, vlanRange string) error
 	SetTrunkMode(port string) error
 	UnsetTrunkMode(port string) error
+	DoQosConfig(qosConfig *QosConfig) error
 	CheckSwitchConfiguration(port string, mode PortMode, status PortStatus, speed PortSpeed) (string, error)
 }
 
@@ -132,9 +151,9 @@ func (sw *nexus3k) SetNativeVlan(port string, vlan int) error {
 	return err
 }
 
-func (sw *nexus3k) ConfigureVlans(vlans string) error {
+func (sw *nexus3k) ConfigureVlans(vlans string, igmpEnabled bool) error {
 
-	out, err := n3k.ConfigVlan(sw.ctx, vlans, 10*time.Second)
+	out, err := n3k.ConfigVlan(sw.ctx, vlans, igmpEnabled, 10*time.Second)
 	log.Println("-------------------output-------------------")
 	log.Println(out)
 	if err != nil {
@@ -192,6 +211,40 @@ func (sw *nexus3k) LinkOp(port string, shutdown bool) error {
 	return sw.runConfigIFCommands(port, cmds)
 }
 
+func (sw *nexus3k) SetFlowControlReceive(port string, enable bool) error {
+	var cmds []string
+
+	if enable {
+		cmds = []string{"flowcontrol receive on"}
+
+	} else {
+		cmds = []string{"flowcontrol receive off"}
+	}
+
+	return sw.runConfigIFCommands(port, cmds)
+}
+
+func (sw *nexus3k) SetFlowControlSend(port string, enable bool) error {
+	var cmds []string
+
+	if enable {
+		cmds = []string{"flowcontrol send on"}
+
+	} else {
+		cmds = []string{"flowcontrol send off"}
+	}
+
+	return sw.runConfigIFCommands(port, cmds)
+}
+
+func (sw *nexus3k) SetMtu(port string, mtu uint32) error {
+	var cmds []string
+
+	cmds = []string{fmt.Sprintf("mtu %v", mtu)}
+
+	return sw.runConfigIFCommands(port, cmds)
+}
+
 func (sw *nexus3k) UnsetNativeVlan(port string) error {
 	cmds := []string{
 		"no switchport trunk native vlan",
@@ -200,10 +253,20 @@ func (sw *nexus3k) UnsetNativeVlan(port string) error {
 	return sw.runConfigIFCommands(port, cmds)
 }
 
+func (sw *nexus3k) DisableIGMP(vlanRange string) error {
+	//first create vlans
+	err := sw.ConfigureVlans(vlanRange, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (sw *nexus3k) SetTrunkVlanRange(port string, vlanRange string) error {
 
 	//first create vlans
-	err := sw.ConfigureVlans(vlanRange)
+	err := sw.ConfigureVlans(vlanRange, true)
 	if err != nil {
 		return err
 	}
@@ -258,6 +321,18 @@ func (sw *nexus3k) CheckSwitchConfiguration(port string, mode PortMode, status P
 		speedStr, 5*time.Second)
 
 	return buf, err
+}
+
+func (sw *nexus3k) DoQosConfig(qosConfig *QosConfig) error {
+
+	n3kQos := n3k.QosConfig{Name: qosConfig.Name}
+
+	for _, qClass := range qosConfig.Classes {
+		n3kQos.Classes = append(n3kQos.Classes, n3k.QosClass{Mtu: qClass.Mtu,
+			Name: qClass.Name, PfsCos: qClass.PfsCos})
+	}
+	_, err := n3k.ConfigureQos(sw.ctx, &n3kQos, 5*time.Second)
+	return err
 }
 
 //NewSwitch Create a new switch handler

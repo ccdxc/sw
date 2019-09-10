@@ -492,6 +492,26 @@ message NodeHealth {
     HealthCode health_code   = 3;
 }
 
+message NetworkQosClass {
+    //name of qos
+    string name = 1;
+
+    //MTU size to be set
+    uint32 mtu = 2;
+
+    //pause pfc qos
+    uint32 pause_pfc_cos = 3;
+}
+
+message NetworkPolicyQos {
+
+    //Name of network policy qos
+    string name = 1;
+
+    repeated NetworkQosClass qos_classes = 2;
+
+}
+
 message DataSwitch {
 
     enum Speed {
@@ -513,6 +533,21 @@ message DataSwitch {
 
     // Speed of each port
     Speed speed = 5;
+
+    //MTU size to be set
+    uint32 mtu = 6;
+
+    //Flow Control Receive  enabled/disabled
+    bool flow_control_receive = 7;
+
+    //Flow Control Send enabled/disabled
+    bool flow_control_send = 8;
+
+    //Network Qos to be used.
+    NetworkPolicyQos qos = 9;
+
+    //disable igmp
+    bool igmp_disabled = 10;
 }
 
 message TestBedMsg {
@@ -532,6 +567,7 @@ message TestBedMsg {
     string driver_sources               = 5;
 
     // Allocated vlans based off of the port id
+    // First one will always be native vlan
     repeated uint32 allocated_vlans     = 6;
 
     // List of node IP addresses
