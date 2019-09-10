@@ -125,7 +125,9 @@ func (ep *EventsProxy) StartDispatch() {
 // SetMaintenanceMode sets the maintenance flag.
 // certain events will be suppressed if the maintenance flag is set.
 func (ep *EventsProxy) SetMaintenanceMode(flag bool) {
-	ep.evtsDispatcher.SetMaintenanceMode(flag)
+	if ep.evtsDispatcher != nil {
+		ep.evtsDispatcher.SetMaintenanceMode(flag)
+	}
 }
 
 // Stop stops events proxy

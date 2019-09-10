@@ -89,8 +89,10 @@ func (n *NaplesUpgClient) ProcessQuiesceHandler(upgCtx *upggosdk.UpgCtx) upggosd
 func (n *NaplesUpgClient) LinkDownHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 
-	n.logger.Info("upgrade in process, entering maintenance mode")
-	n.evtsProxy.SetMaintenanceMode(true)
+	if n.evtsProxy != nil {
+		n.logger.Info("upgrade in process, entering maintenance mode")
+		n.evtsProxy.SetMaintenanceMode(true)
+	}
 
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -179,17 +181,21 @@ func (n *NaplesUpgClient) DataplaneDowntimePhase4Handler(upgCtx *upggosdk.UpgCtx
 
 // SuccessHandler ...
 func (n *NaplesUpgClient) SuccessHandler(upgCtx *upggosdk.UpgCtx) {
-	n.logger.Info("upgrade finished, leaving maintenance mode")
-	n.evtsProxy.SetMaintenanceMode(false)
-	return
+	if n.evtsProxy != nil {
+		n.logger.Info("upgrade finished, leaving maintenance mode")
+		n.evtsProxy.SetMaintenanceMode(false)
+		return
+	}
 }
 
 // FailedHandler ...
 func (n *NaplesUpgClient) FailedHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 
-	n.logger.Info("upgrade finished, leaving maintenance mode")
-	n.evtsProxy.SetMaintenanceMode(false)
+	if n.evtsProxy != nil {
+		n.logger.Info("upgrade finished, leaving maintenance mode")
+		n.evtsProxy.SetMaintenanceMode(false)
+	}
 
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
