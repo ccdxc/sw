@@ -257,7 +257,7 @@ func (a *apiGw) checkCORS(h http.Handler) http.Handler {
 // securityHeadersHandler sets security headers for prevention of clickjacking, cross-site scripting, MIM attacks
 func (a *apiGw) securityHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		setSecurityHeaders(w)
+		setSecurityHeaders(w, r)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -947,7 +947,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.apiGw.logger.Infof("Handling HTTP proxy request")
 
 	// set security headers
-	setSecurityHeaders(w)
+	setSecurityHeaders(w, r)
 
 	// make sure end user is not able to set user and permission info in request headers
 	authzhttp.RemoveUserPermsFromRequest(r)
@@ -1190,10 +1190,17 @@ func getRequestURI(ctx context.Context) string {
 	return uri
 }
 
-func setSecurityHeaders(w http.ResponseWriter) {
+func setSecurityHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Frame-Options", "deny")
 	w.Header().Set("X-XSS-Protection", "1; mode=block")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains") // browser will remember for a year to use https
-	w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data:")
+	// create websocket URL. It is needed to be set for Safari. Having 'self' as default-src doesn't allow wss. Refer https://bugs.webkit.org/show_bug.cgi?id=201591
+	// if there is a proxy in front of API Gw
+	host := r.Header.Get(apigw.XForwardedHostHeader)
+	if host == "" {
+		host = r.Host
+	}
+	websocketURL := fmt.Sprintf("wss://%s", host)
+	w.Header().Set("Content-Security-Policy", fmt.Sprintf("default-src 'self'; connect-src 'self' %s; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data:", websocketURL))
 }
