@@ -1,5 +1,4 @@
 #include "nic/utils/events/recorder/recorder.hpp"
-#include "nic/utils/events/recorder/constants.h"
 #include "nic/utils/events/queue/queue.hpp"
 #include "gen/proto/events.pb.h"
 #include "gen/proto/eventtypes.pb.h"
@@ -20,17 +19,13 @@
 
 // initialize the events recorder; size is defaulted to SHM_SIZE
 // if undefined (shm_size = 0)
-events_recorder* events_recorder::init(const char* shm_name, int shm_size,
-    const char *component, Logger logger)
+events_recorder* events_recorder::init(const char* component, Logger logger, int shm_size)
 {
     if (logger == nullptr) {
         return nullptr;
     }
 
-    std::string abs_shm_name = shm_name;
-    if (shm_name[0] != '/') {
-        abs_shm_name =  std::string("/") + shm_name; // /dev/shm/{shm_name}
-    }
+    std::string abs_shm_name = std::string("/") + component + std::string(".events");
 
     if(shm_size == 0) {
         shm_size = SHM_SIZE;
@@ -63,6 +58,31 @@ void events_recorder::deinit()
 
 // construct and record event in the shared memory queue
 int events_recorder::event(eventtypes::EventTypes type,
+    const char* msg...)
+{
+    events::Event evt;
+    va_list args;
+    char buffer[256];                   // message buffer
+    timespec_t time_ts;                 // time
+    uint64_t time_ns;                   // time in ns
+
+    clock_gettime(CLOCK_REALTIME, &time_ts);
+    sdk::timestamp_to_nsecs(&time_ts, &time_ns);
+
+    evt.set_type(type);                  // type
+    evt.set_component(this->component_); // component
+    evt.set_time(time_ns);               // time
+
+    va_start(args, msg);
+    vsprintf(buffer, msg, args);
+    va_end(args);
+    evt.set_message(buffer);             // message
+
+    return this->write_event(evt);
+}
+
+// construct and record event in the shared memory queue
+int events_recorder::event_with_ref(eventtypes::EventTypes type,
     const char* kind, const ::google::protobuf::Message& key,
     const char* msg...)
 {

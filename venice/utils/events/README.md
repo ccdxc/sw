@@ -150,11 +150,10 @@ Proxy will read the events from shared memory, massages the event (key conversio
 	// in the main code
 	#include "nic/utils/events/recorder/recorder.hpp"
 	...
-	events_recorder* recorder = events_recorder::init(
-                           "linkmgr.events",     // name; this should end with ".events"
-                           2048,                 // size of the shared memory
-                           "linkmgr",            // component that records the event
-                           std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
+    // initialize events recorder
+    g_linkmgr_svc.recorder = events_recorder::init(
+        "linkmgr", // component generating the event
+        std::shared_ptr<logger>(hal::utils::hal_logger()));
 	...
 	```
 
@@ -165,6 +164,12 @@ Proxy will read the events from shared memory, massages the event (key conversio
 	#include "nic/utils/events/recorder/recorder.hpp"
 	...
 	recorder->event(
+		eventypes::LINK_UP,                           // event type
+		"link %s is up, "linkXXXXXX");                // message...
+	...
+	or
+	...
+	recorder->event_with_ref(
 			eventypes::LINK_UP,                           // event type
 			"Network",                                    // object_kind
 			network_key,                                  // kh:: NetworkKeyHandle

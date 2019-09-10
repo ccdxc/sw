@@ -4,6 +4,7 @@
 #include "nic/utils/events/queue/queue.hpp"
 #include "gen/proto/events.pb.h"
 #include "gen/proto/eventtypes.pb.h"
+#include "nic/utils/events/recorder/constants.h"
 #include <google/protobuf/any.h>
 #include <google/protobuf/message.h>
 #include <google/protobuf/generated_enum_reflection.h>
@@ -15,13 +16,16 @@ typedef std::shared_ptr<spdlog::logger> Logger;
 class events_recorder {
 public:
     // initialize events recorder; shm_name, shm_size, component, logger
-    static events_recorder* init(const char *, int, const char *, Logger);
+    static events_recorder* init(const char *, Logger, int shm_size = SHM_SIZE);
 
     // tear down events recorder
     void deinit();
 
+    // record event with default object reference (naples) using the given args; // type, message...;
+    int event(eventtypes::EventTypes, const char*...);
+
     // record event using the given args; // type, kind, object key, message...
-    int event(eventtypes::EventTypes, const char*, const ::google::protobuf::Message&, const char*...);
+    int event_with_ref(eventtypes::EventTypes, const char*, const ::google::protobuf::Message&, const char*...);
 private:
     const char *component_;
     events_queue *queue_;

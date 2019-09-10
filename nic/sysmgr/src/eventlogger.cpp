@@ -18,7 +18,7 @@ EventLoggerPtr EventLogger::getInstance()
         instance = std::make_shared<EventLogger>();
 
         instance->recorder = events_recorder::init(
-            "sysmgr.events", 32768, "sysmgr", logger->get_spd());
+            "sysmgr", logger->get_spd());
     }
 
     return instance;
@@ -27,22 +27,12 @@ EventLoggerPtr EventLogger::getInstance()
 void EventLogger::LogServiceEvent(eventtypes::EventTypes event,
     std::string description, std::string name)
 {
-    eventattrs::Key key;
-
-    key.set_name(name);
-
-    this->recorder->event(event, "SysmgrProcessStatus", key,
-        description.c_str(), name.c_str());
+    this->recorder->event(event, description.c_str(), name.c_str());
 }
 
 
 void EventLogger::LogSystemEvent(eventtypes::EventTypes event,
     std::string description)
 {
-    eventattrs::Key key;
-
-    key.set_name("default");
-
-    this->recorder->event(event, "SysmgrSystemStatus", key,
-        description.c_str());
+    this->recorder->event(event, description.c_str());
 }

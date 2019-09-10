@@ -1,5 +1,4 @@
 #include "nic/utils/events/recorder/recorder.hpp"
-#include "nic/utils/events/recorder/constants.h"
 #include "nic/utils/ipc/constants.h"
 #include "gen/proto/eventtypes.pb.h"
 #include "gen/proto/attributes.pb.h"
@@ -13,9 +12,8 @@ Logger logger = spdlog::stdout_color_mt("gen_events");
 events_recorder* init_events_recorder()
 {
     const char* component = "genevents";
-    const char* shm_name = "/genevents.events";
     int shm_size = (SHM_BUF_SIZE * 11) + IPC_OVH_SIZE; // shm can hold up to 10 events
-    return events_recorder::init(shm_name, shm_size, component, logger);
+    return events_recorder::init(component, logger, shm_size);
 }
 
 // generates a random string of given length.

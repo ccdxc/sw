@@ -1,6 +1,5 @@
 #include "nic/utils/events/recorder/recorder.hpp"
 #include "nic/utils/ipc/constants.h"
-#include "nic/utils/events/recorder/constants.h"
 #include "gen/proto/kh.pb.h"
 #include "gen/proto/events.pb.h"
 #include "gen/proto/eventtypes.pb.h"
@@ -39,27 +38,31 @@ protected:
 // - test recording events using the recorder library.
 TEST_F(events_recorder_test, test_basic) {
     const char* component  = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const char* shm_name   = "/events_recorder_test_basic.events";
-    int shm_size           = 512; // 512 bytes
+    int shm_size           = 800; // 800 bytes (holds 2 events)
     int max_events_allowed = ((shm_size - IPC_OVH_SIZE)/SHM_BUF_SIZE) - 1;
 
     // initialize events recorder
-    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, logger);
+    events_recorder* recorder = events_recorder::init(component, logger, shm_size);
     ASSERT_NE(recorder, nullptr);
 
     // record some events
-    for (int index = 1; index <= max_events_allowed; index++) {
+    int index = 1;
+    for (; index <= max_events_allowed-1; index++) {
         kh::VrfKeyHandle key;
         key.set_vrf_id(index);
-        ASSERT_EQ(recorder->event(eventtypes::SERVICE_STARTED, "Vrf",  key, "test event message - %d ", index), 0);
+        ASSERT_EQ(recorder->event_with_ref(eventtypes::SERVICE_STARTED, "Vrf",  key, "test event message - %d ", index), 0);
         usleep(1000 * 10); // 10ms
+    }
+    // last event
+    if (max_events_allowed != 0) {
+        ASSERT_EQ(recorder->event(eventtypes::SERVICE_STARTED, "test event message - %d ", index), 0);
     }
 
     // any further writes should fail
     for (int index = 1; index <= 5; index++) {
 	    kh::VrfKeyHandle key;
 	    key.set_vrf_id(index);
-        ASSERT_EQ(recorder->event(eventtypes::SERVICE_STARTED, "Vrf", key, "test event message"), -1);
+        ASSERT_EQ(recorder->event_with_ref(eventtypes::SERVICE_STARTED, "Vrf", key, "test event message"), -1);
     }
 
     recorder->deinit();
@@ -71,18 +74,18 @@ TEST_F(events_recorder_test, test_basic) {
 // - read event and verify it matches `evt`.
 TEST_F(events_recorder_test, test_verify_rw) {
     const char* component  = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const char* shm_name   = "/events_recorder_test_verify_rw.events";
     int shm_size           = 576; // 576 bytes
 
     // initialize events recorder
-    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, logger);
+    events_recorder* recorder = events_recorder::init(component, logger, shm_size);
     ASSERT_NE(recorder, nullptr);
 
     // WRITE to shared mem.
-    ASSERT_EQ(recorder->event(eventtypes::SERVICE_STARTED, "Vrf",  kh::VrfKeyHandle(), "test event message"), 0);
+    ASSERT_EQ(recorder->event_with_ref(eventtypes::SERVICE_STARTED, "Vrf",  kh::VrfKeyHandle(), "test event message"), 0);
 
     // OPEN & READ from shared mem.
-    int fd = shm_open(shm_name, O_RDWR, 0666);
+    std::string shm_name  = std::string("/") + component + std::string(".events");
+    int fd = shm_open(shm_name.c_str(), O_RDWR, 0666);
     ASSERT_EQ(fd > 0, true);
     void *mmap_addr = mmap(0, shm_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     ASSERT_NE(mmap_addr, MAP_FAILED);
@@ -192,15 +195,15 @@ void* read_from_shm(void *args) {
 // - ensure all the events sent were read by the reader.
 TEST_F(events_recorder_test, test_multiple_rws) {
     const char* component  = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const char* shm_name  = "/events_recorder_test_multiple_rws.events";
     int shm_size          = 1024; // 1024 bytes
     int total_events      = 100;
 
     // initialize events recorder
-    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, logger);
+    events_recorder* recorder = events_recorder::init(component, logger, shm_size);
     ASSERT_NE(recorder, nullptr);
 
-    args.shm_name = shm_name;
+    std::string shm_name  = std::string("/") + component + std::string(".events");
+    args.shm_name = shm_name.c_str();
     args.shm_size = shm_size;
     args.total_messages_to_be_read = total_events;
 
@@ -212,11 +215,11 @@ TEST_F(events_recorder_test, test_multiple_rws) {
     for (int index=1; index <= total_events; index++) {
         if (index%2 == 0) { // VrfKeyHandle as object key
             kh::VrfKeyHandle key;
-            ASSERT_EQ(recorder->event(eventtypes::SERVICE_STARTED, "Vrf",  key, "test msg - %d", index), 0);
+            ASSERT_EQ(recorder->event_with_ref(eventtypes::SERVICE_STARTED, "Vrf",  key, "test msg - %d", index), 0);
         } else {            // SecurityPolicyKey as object key
             kh::SecurityPolicyKey key;
             key.set_security_policy_id(index);
-            ASSERT_EQ(recorder->event(eventtypes::SERVICE_STARTED, "SecurityGroup", key, "test msg - %d", index), 0);
+            ASSERT_EQ(recorder->event_with_ref(eventtypes::SERVICE_STARTED, "SecurityGroup", key, "test msg - %d", index), 0);
         }
         usleep(1000 * 10); // 10ms
     }

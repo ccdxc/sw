@@ -54,12 +54,10 @@ Status port_svc_init(delphi::SdkPtr sdk) {
 
     HAL_TRACE_DEBUG("Linkmgr: Mounted port objects from delphi...");
 
-    // initialize events recorder; size of the shm. mem = 2048 bytes
-    g_linkmgr_svc.recorder =
-        events_recorder::init("linkmgr.events",     // name; this should end with ".events"
-                              2048, // size of the shared memory
-                              "linkmgr", // component that records the event
-                              std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
+    // initialize events recorder
+    g_linkmgr_svc.recorder = events_recorder::init("linkmgr",
+        std::shared_ptr<logger>(hal::utils::hal_logger()));
+
     if (g_linkmgr_svc.recorder == nullptr) {
         HAL_TRACE_ERR("events recorder init failed");
         return Status::CANCELLED;
@@ -229,8 +227,6 @@ port_event_notify (port_event_info_t *port_event_info)
                             sdk_port_speed_to_port_speed_spec(port_speed));
         events_recorder_get()->event(
                             eventtypes::LINK_UP,
-                            "PortKeyHandle",
-                            port_key_handle,
                             "Port: %s, Link UP", port_str);
         break;
 
@@ -243,8 +239,6 @@ port_event_notify (port_event_info_t *port_event_info)
                             sdk_port_speed_to_port_speed_spec(port_speed));
         events_recorder_get()->event(
                             eventtypes::LINK_DOWN,
-                            "PortKeyHandle",
-                            port_key_handle,
                             "Port: %s, Link DOWN", port_str);
         break;
 
