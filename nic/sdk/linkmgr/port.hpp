@@ -16,6 +16,7 @@
 #define MAX_PORT_SERDES_DFE_RETRIES 5
 #define MAX_PORT_MAC_FAULTS_CHECK   3
 #define MAX_PORT_MAC_NOFAULTS_CHECK 3
+#define PORT_MAC_STAT_REPORT_SIZE   1024
 #define MIN_PORT_TIMER_INTERVAL     TWHEEL_DEFAULT_SLICE_DURATION   // msecs
 
 namespace sdk {
@@ -259,9 +260,6 @@ public:
     // mac software reset
     sdk_ret_t port_mac_soft_reset(bool);
 
-    // mac stats reset
-    sdk_ret_t port_mac_stats_reset(bool);
-
     // mac interrupt enable or disable
     sdk_ret_t port_mac_intr_en(bool enable);
 
@@ -300,7 +298,10 @@ public:
     bool port_mac_sync_get(void);
 
     // mac stats
+    sdk_ret_t port_mac_stats_init(void);
+    sdk_ret_t port_mac_stats_reset(bool);
     sdk_ret_t port_mac_stats_get(uint64_t *stats_data);
+    sdk_ret_t port_mac_stats_publish(uint64_t *stats_data);
 
     // mac pause src addr
     sdk_ret_t port_mac_set_pause_src_addr(uint8_t *mac_addr);
@@ -358,6 +359,8 @@ public:
         return 0;
     }
 
+    static sdk_ret_t port_mac_stats_init(port *port_p);
+
     // If current_thread is hal-control thread, invoke method directly
     // Else trigger hal-control thread to invoke method
     static sdk_ret_t port_enable(port *port_p);
@@ -367,48 +370,49 @@ public:
     static sdk_ret_t port_disable(port *port_p);
 
 private:
-    uint32_t              port_num_;                  // uplink port number
-    port_oper_status_t    oper_status_;               // port operational status
-    port_speed_t          port_speed_;                // port speed
-    port_type_t           port_type_;                 // port type
-    port_admin_state_t    admin_state_;               // port admin state
-    port_admin_state_t    user_admin_state_;          // port user configured admin state
-    port_link_sm_t        link_sm_;                   // port link state machine
-    port_link_sm_t        link_dfe_sm_;               // port link DFE state machine
-    port_link_sm_t        link_an_sm_;                // port link AN state machine
-    port_fec_type_t       fec_type_;                  // FEC type
-    port_pause_type_t     pause_;                     // Enable MAC pause
-    bool                  tx_pause_enable_;           // Enable MAC Tx Pause
-    bool                  rx_pause_enable_;           // Enable MAC Rx Pause
-    bool                  auto_neg_enable_;           // Enable AutoNeg
-    bool                  auto_neg_cfg_;              // user configured AutoNeg
-    void                  *link_bring_up_timer_;      // port link bring up timer
-    void                  *link_debounce_timer_;      // port link debounce timer
-    uint32_t              mac_id_;                    // mac instance for this port
-    uint32_t              mac_ch_;                    // mac channel within mac instance
-    uint32_t              num_lanes_;                 // number of lanes for this port
-    uint32_t              num_lanes_cfg_;             // user configured number of lanes for this port
-    uint32_t              mtu_;                       // number of lanes for this port
-    uint32_t              debounce_time_;             // Debounce time in ms
-    uint32_t              bringup_timer_val_;         // current bringup timer value
-    uint32_t              user_cap_;                  //  AN user_cap
-    bool                  fec_ability_;               //  AN fec_ability
-    uint32_t              fec_request_;               //  AN fec_request
-    uint32_t              sbus_addr_[MAX_PORT_LANES]; // sbus addr for each serdes
-    mac_fn_t              *mac_fns_;                  // mac functions
-    serdes_fn_t           *serdes_fns_;               // serdes functions
-    uint32_t              num_retries_;               // max linkup retries
-    uint32_t              num_link_down_;             // number of link down
-    cable_type_t          cable_type_;                // cable type
-    port_loopback_mode_t  loopback_mode_;             // port loopback mode - MAC/PHY
-    uint32_t              mac_faults_;                // number of times MAC faults detected
-    uint32_t              num_mac_nofaults_;          // number of times no MAC faults were detected (applicable for 10G/25G-no-fec)
-    uint32_t              num_dfe_retries_;           // number of times ical is retried in one pass of SM
-    uint32_t              num_an_hcd_retries_;        // number of times AN HCD was retried in one pass of SM
-    uint32_t              num_mac_sync_retries_;      // number of times MAC sync is retried in one pass of SM
-    uint32_t              num_link_train_retries_;    // number of times link training failed in one pass of SM
-    bool                  persist_stats_collect_;     // set after initial link-up state; never reset (? TBD)
-    uint64_t              persist_stats_data_[MAX_MAC_STATS]; // saved stats before link flap or mac resets;
+    uint32_t                  port_num_;                  // uplink port number
+    port_oper_status_t        oper_status_;               // port operational status
+    port_speed_t              port_speed_;                // port speed
+    port_type_t               port_type_;                 // port type
+    port_admin_state_t        admin_state_;               // port admin state
+    port_admin_state_t        user_admin_state_;          // port user configured admin state
+    port_link_sm_t            link_sm_;                   // port link state machine
+    port_link_sm_t            link_dfe_sm_;               // port link DFE state machine
+    port_link_sm_t            link_an_sm_;                // port link AN state machine
+    port_fec_type_t           fec_type_;                  // FEC type
+    port_pause_type_t         pause_;                     // Enable MAC pause
+    bool                      tx_pause_enable_;           // Enable MAC Tx Pause
+    bool                      rx_pause_enable_;           // Enable MAC Rx Pause
+    bool                      auto_neg_enable_;           // Enable AutoNeg
+    bool                      auto_neg_cfg_;              // user configured AutoNeg
+    void                      *link_bring_up_timer_;      // port link bring up timer
+    void                      *link_debounce_timer_;      // port link debounce timer
+    uint32_t                  mac_id_;                    // mac instance for this port
+    uint32_t                  mac_ch_;                    // mac channel within mac instance
+    uint32_t                  num_lanes_;                 // number of lanes for this port
+    uint32_t                  num_lanes_cfg_;             // user configured number of lanes for this port
+    uint32_t                  mtu_;                       // number of lanes for this port
+    uint32_t                  debounce_time_;             // Debounce time in ms
+    uint32_t                  bringup_timer_val_;         // current bringup timer value
+    uint32_t                  user_cap_;                  //  AN user_cap
+    bool                      fec_ability_;               //  AN fec_ability
+    uint32_t                  fec_request_;               //  AN fec_request
+    uint32_t                  sbus_addr_[MAX_PORT_LANES]; // sbus addr for each serdes
+    mac_fn_t                  *mac_fns_;                  // mac functions
+    serdes_fn_t               *serdes_fns_;               // serdes functions
+    uint32_t                  num_retries_;               // max linkup retries
+    uint32_t                  num_link_down_;             // number of link down
+    cable_type_t              cable_type_;                // cable type
+    port_loopback_mode_t      loopback_mode_;             // port loopback mode - MAC/PHY
+    uint32_t                  mac_faults_;                // number of times MAC faults detected
+    uint32_t                  num_mac_nofaults_;          // number of times no MAC faults were detected (applicable for 10G/25G-no-fec)
+    uint32_t                  num_dfe_retries_;           // number of times ical is retried in one pass of SM
+    uint32_t                  num_an_hcd_retries_;        // number of times AN HCD was retried in one pass of SM
+    uint32_t                  num_mac_sync_retries_;      // number of times MAC sync is retried in one pass of SM
+    uint32_t                  num_link_train_retries_;    // number of times link training failed in one pass of SM
+    bool                      persist_stats_collect_;     // set after initial link-up state; never reset (? TBD)
+    uint64_t                  persist_stats_data_[MAX_MAC_STATS]; // saved stats before link flap or mac resets;
+    sdk::types::mem_addr_t    port_stats_base_addr_;      // Base address for this port's stats
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);

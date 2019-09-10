@@ -13,6 +13,7 @@
 #include "lib/pal/pal.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "linkmgr_periodic.hpp"
+#include "asic/rw/asicrw.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -1421,6 +1422,8 @@ port::port_mac_stats_get (uint64_t *stats_data)
     mac_fns()->mac_stats_get(this->mac_id_, this->mac_ch_, stats_data);
     // add persist stats to this current stats_data and return
     this->port_mac_stats_persist_collate(stats_data);
+    // Publish collated stats to HBM
+    this->port_mac_stats_publish(stats_data);
     return SDK_RET_OK;
 }
 
@@ -1535,6 +1538,73 @@ port::port_mac_stats_persist_collate(uint64_t *stats_data)
         stats_data[iter] += this->persist_stats_data_[iter];
     }
     return SDK_RET_OK;
+}
+
+// Init mac stats reporting to HBM (json needs entry)
+sdk_ret_t
+port::port_mac_stats_init(void)
+{
+    sdk::types::mem_addr_t port_stats_base = INVALID_MEM_ADDRESS;
+
+    this->port_stats_base_addr_ = INVALID_MEM_ADDRESS;
+    if (g_linkmgr_cfg.mempartition == NULL) {
+        SDK_TRACE_ERR("port %u stats_init NULL mempartition port stats not supported",
+            this->port_num_);
+        return SDK_RET_OK; // legacy
+    }
+    port_stats_base = g_linkmgr_cfg.mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS);
+    SDK_TRACE_DEBUG("port %u stats_init mpartition 0x%x, port_stats_base 0x%llx",
+            this->port_num_, g_linkmgr_cfg.mempartition, port_stats_base);
+
+    if ((port_stats_base == 0) || (port_stats_base== INVALID_MEM_ADDRESS)) {
+        // legacy json; old stats model; log and return ok
+        SDK_TRACE_ERR("port %u stats_init port_stats_base 0x%llx port stats not supported",
+            this->port_num_, port_stats_base);
+        return SDK_RET_OK;
+    }
+
+    if ((this->port_num_ >= 1) && (this->port_num_ <= 4)) {
+        this->port_stats_base_addr_ = port_stats_base;
+    } else if((this->port_num_ >= 5) && (this->port_num_ <= 8)) {
+        this->port_stats_base_addr_ = port_stats_base + PORT_MAC_STAT_REPORT_SIZE;
+    } else if(this->port_num_ == 9) {
+        this->port_stats_base_addr_ = port_stats_base + (PORT_MAC_STAT_REPORT_SIZE * 2);
+    } else {
+        SDK_TRACE_ERR("port %u port stats not supported", this->port_num_);
+        this->port_stats_base_addr_ = INVALID_MEM_ADDRESS;
+    }
+
+    SDK_TRACE_DEBUG("port %u stats_init port_stats_base = 0x%llx, port_stats_base_addr_ = 0x%llx",
+                     this->port_num_, port_stats_base, this->port_stats_base_addr_);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_stats_init(port *port_p)
+{
+    return port_p->port_mac_stats_init();
+}
+
+sdk_ret_t
+port::port_mac_stats_publish(uint64_t *stats_data)
+{
+    uint32_t len;
+    sdk_ret_t ret = SDK_RET_OK;
+
+    if (this->port_stats_base_addr_ == INVALID_MEM_ADDRESS) {
+        // We don't publish to HBM when we don't have the port_stats region available
+        return SDK_RET_OK; // return ok. legacy stats collection
+    }
+
+    len = MAX_MAC_STATS * sizeof(uint64_t); // byte granularity
+
+    ret = sdk::asic::asic_mem_write(this->port_stats_base_addr_, (uint8_t *) stats_data, len);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_DEBUG("port %u stats_publish port_stats_base_addr_ = 0x%llx asic_mem_write failed ret = 0x%x",
+                         this->port_num_, this->port_stats_base_addr_, ret);
+    }
+    return ret;
 }
 
 sdk_ret_t

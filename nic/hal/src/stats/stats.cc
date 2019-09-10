@@ -17,7 +17,7 @@ namespace hal {
 
 static thread_local void *t_stats_timer;
 
-#define HAL_STATS_COLLECTION_INTVL            (1 * TIME_MSECS_PER_SEC)
+#define HAL_STATS_COLLECTION_INTVL            ((1 * TIME_MSECS_PER_SEC) / 2)  // 500 msec
 #define HAL_STATS_START_INTVL                 (120 * TIME_MSECS_PER_SEC)    // 2 minutes
 
 #if 0

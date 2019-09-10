@@ -6,6 +6,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
 #include "lib/catalog/catalog.hpp"
+#include "platform/utils/mpartition.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -37,6 +38,7 @@ typedef struct linkmgr_cfg_s {
     port_log_fn_t       port_log_fn;
     bool                process_mode;
     port_admin_state_t  admin_state; // default port admin state
+    mpartition          *mempartition; // memory partition context from HAL
 } __PACK__ linkmgr_cfg_t;
 extern linkmgr_cfg_t g_linkmgr_cfg;
 

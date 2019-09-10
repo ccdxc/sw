@@ -89,6 +89,7 @@ Eth::Eth(devapi *dev_api,
     Eth::spec = dev_info->eth_spec;
     Eth::pd = pd_client;
     dev_resources = *(dev_info->eth_res);
+    sdk::types::mem_addr_t  stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
     NIC_LOG_DEBUG("{}: Restoring eth device in Upgrade mode", spec->name);
@@ -215,15 +216,55 @@ Eth::Eth(devapi *dev_api,
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
         port_status_addr);
 
-    // TODO: Add cap_mx_c_hdr.h & cap_bx_c_hdr.h to sw tree then remove these
-    // hardcoded values
-    if (spec->uplink_port_num >= 1 and spec->uplink_port_num <= 4) {
-        port_stats_addr = 0x01d81000;
-    } else if (spec->uplink_port_num >= 5 and spec->uplink_port_num <= 8) {
-        port_stats_addr = 0x01e81000;
-    } else if (spec->uplink_port_num == 9) {
-        port_stats_addr = 0x01000100;
+    // use_hbm when port_stats region is carved in HBM.
+    // else old approach
+    auto use_hbm = true;
+    // Null checks; just to be sure
+    if (pd == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No PD allocation!", spec->name);
+    } else if (pd->mp_ == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No HBM region!", spec->name);
     }
+
+    if (use_hbm == true) {
+        stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
+        if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
+            use_hbm = false;
+            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!",
+                spec->name);
+        }
+
+        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}",
+            spec->name, spec->uplink_port_num, stats_hbm_base_addr);
+    }
+
+    /*
+     * We read port values from HBM - populated by linkMgr
+     * Base: CAPRI_HBM_REG_PORT_STATS ("port_stats")
+     * 1K MAC stats size per port
+     * First 1K: Port 1
+     * Next 1K: Port 5
+     * Next 1K: Port 9
+     * TODO: remove hardcoding, enhance this logic to pack HBM region
+     */
+    if (spec->uplink_port_num >= 1 and spec->uplink_port_num <= 4) {
+        // mx0_dhs_mac_stats_entry
+        port_stats_addr = (use_hbm == false) ? 0x01d81000 : stats_hbm_base_addr;
+        port_stats_size = sizeof(struct port_stats);
+    } else if (spec->uplink_port_num >= 5 and spec->uplink_port_num <= 8) {
+        // mx1_dhs_mac_stats_entry
+        port_stats_addr = (use_hbm == false) ? 0x01e81000 : (stats_hbm_base_addr + 1024);
+        port_stats_size = sizeof(struct port_stats);
+    } else if (spec->uplink_port_num == 9) {
+        // bx_dhs_mac_stats_entry
+        port_stats_addr = (use_hbm == false) ? 0x01000100 : (stats_hbm_base_addr + 2048);
+        port_stats_size = sizeof(struct mgmt_port_stats);
+    }
+
+    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}",
+        spec->name, spec->uplink_port_num, port_stats_addr, port_stats_size);
 
     // Enable Devcmd Handling
     evutil_add_prepare(EV_A_ &devcmd_prepare, Eth::DevcmdPoll, this);
@@ -244,6 +285,7 @@ Eth::Eth(devapi *dev_api,
     Eth::dev_api = dev_api;
     Eth::spec = (struct eth_devspec *)dev_spec;
     Eth::pd = pd_client;
+    sdk::types::mem_addr_t  stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
 
@@ -369,18 +411,55 @@ Eth::Eth(devapi *dev_api,
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
         port_status_addr);
 
-    // TODO: Add cap_mx_c_hdr.h & cap_bx_c_hdr.h to sw tree then remove these
-    // hardcoded values
+    // use_hbm when port_stats region is carved in HBM.
+    // else old approach
+    auto use_hbm = true;
+    // Null checks; just to be sure
+    if (pd == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No PD allocation!", spec->name);
+    } else if (pd->mp_ == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No HBM region!", spec->name);
+    }
+
+    if (use_hbm == true) {
+        stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
+        if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
+            use_hbm = false;
+            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!",
+                spec->name);
+        }
+
+        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}",
+            spec->name, spec->uplink_port_num, stats_hbm_base_addr);
+    }
+
+    /*
+     * We read port values from HBM - populated by linkMgr
+     * Base: CAPRI_HBM_REG_PORT_STATS ("port_stats")
+     * 1K MAC stats size per port
+     * First 1K: Port 1
+     * Next 1K: Port 5
+     * Next 1K: Port 9
+     * TODO: remove hardcoding, enhance this logic to pack HBM region
+     */
     if (spec->uplink_port_num >= 1 and spec->uplink_port_num <= 4) {
-        port_stats_addr = 0x01d81000;   /* mx0_dhs_mac_stats_entry */
+        // mx0_dhs_mac_stats_entry
+        port_stats_addr = (use_hbm == false) ? 0x01d81000 : stats_hbm_base_addr;
         port_stats_size = sizeof(struct port_stats);
     } else if (spec->uplink_port_num >= 5 and spec->uplink_port_num <= 8) {
-        port_stats_addr = 0x01e81000;   /* mx1_dhs_mac_stats_entry */
+        // mx1_dhs_mac_stats_entry
+        port_stats_addr = (use_hbm == false) ? 0x01e81000 : (stats_hbm_base_addr + 1024);
         port_stats_size = sizeof(struct port_stats);
     } else if (spec->uplink_port_num == 9) {
-        port_stats_addr = 0x01000100;   /* bx_dhs_mac_stats_entry */
+        // bx_dhs_mac_stats_entry
+        port_stats_addr = (use_hbm == false) ? 0x01000100 : (stats_hbm_base_addr + 2048);
         port_stats_size = sizeof(struct mgmt_port_stats);
     }
+
+    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}",
+        spec->name, spec->uplink_port_num, port_stats_addr, port_stats_size);
 
     // Enable Devcmd Handling
     evutil_add_prepare(EV_A_ &devcmd_prepare, Eth::DevcmdPoll, this);
@@ -1561,7 +1640,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_INFO("{}: port{}: Starting stats update to "
                      "host_port_stats_addr {:#x}",
                      spec->name, spec->uplink_port_num, host_port_stats_addr);
-        evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.0, 0.2);
+        evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.0, 0.5);
     }
 
     // TODO: Workaround for linkmgr not setting port id

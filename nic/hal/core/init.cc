@@ -594,6 +594,7 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
         sdk_cfg.server_builder = hal_cfg->server_builder;
         sdk_cfg.admin_state    = hal_cfg->device_cfg.admin_state;
         sdk_cfg.port_event_cb  = port_event_cb;
+        sdk_cfg.mempartition   = hal_cfg->mempartition;
 
         ret = linkmgr::linkmgr_init(&sdk_cfg);
         if (ret != HAL_RET_OK) {

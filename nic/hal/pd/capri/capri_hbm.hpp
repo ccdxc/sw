@@ -15,6 +15,7 @@
 
 #define CAPRI_HBM_REG_P4_ATOMIC_STATS    "p4_atomic_stats"
 #define CAPRI_HBM_REG_LIF_STATS          "lif_stats"
+#define CAPRI_HBM_REG_PORT_STATS         "port_stats"
 #define CAPRI_HBM_REG_FLOW_HASH          "flow_hash"
 #define CAPRI_HBM_REG_FLOW_HASH_OVFLOW   "flow_hash_overflow"
 #define CAPRI_HBM_REG_IPSEC_NMDR_RX      "ipsec-nmdr-rx"

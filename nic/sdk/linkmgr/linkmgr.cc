@@ -1031,17 +1031,22 @@ port_create (port_args_t *args)
         port_p->set_fec_request(args->port_an_args->fec_request);
     }
 
+    ret = port::port_mac_stats_init(port_p);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("port %u mac stats init failed", args->port_num);
+    }
+
     // disable a port to invoke soft reset
     ret = port::port_disable(port_p);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("port disable failed");
+        SDK_TRACE_ERR("port %u disable failed", args->port_num);
     }
 
     // if admin up is set, enable the port
     if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_UP) {
         ret = port::port_enable(port_p);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("port enable failed");
+            SDK_TRACE_ERR("port %u enable failed", args->port_num);
         }
     }
 

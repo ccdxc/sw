@@ -18,6 +18,10 @@ namespace linkmgr {
 // max link training fail count before starting timer
 #define MAX_LINK_TRAIN_FAIL_COUNT 5
 
+// HBM region for port_stats - need to create same thing here,
+// as we cannot reference any declare outside "nic/sdk" domain
+#define CAPRI_HBM_REG_PORT_STATS         "port_stats"
+
 extern linkmgr_cfg_t g_linkmgr_cfg;
 extern char log_buf[];
 extern bool hal_cfg;
