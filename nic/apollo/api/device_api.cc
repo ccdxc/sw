@@ -52,7 +52,7 @@ pds_device_delete (void)
 }
 
 static inline void
-pds_device_spec_fill (device_entry *entry, pds_device_spec_t *spec)
+pds_device_spec_fill (pds_device_spec_t *spec, device_entry *entry)
 {
     spec->gateway_ip_addr = entry->gw_ip_addr();
 }
@@ -72,6 +72,6 @@ pds_device_read (pds_device_info_t *info)
     }
 
     // fill from software state
-    pds_device_spec_fill(entry, &info->spec);
+    pds_device_spec_fill(&info->spec, entry);
     return entry->read(info);
 }

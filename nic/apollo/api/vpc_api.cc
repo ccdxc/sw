@@ -40,20 +40,20 @@ pds_vpc_api_handle (api::api_op_t op, pds_vpc_key_t *key, pds_vpc_spec_t *spec)
 }
 
 static inline sdk_ret_t
-pds_vpc_stats_fill (vpc_entry *entry, pds_vpc_stats_t *stats)
+pds_vpc_stats_fill (pds_vpc_stats_t *stats, vpc_entry *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_vpc_status_fill (vpc_entry *entry, pds_vpc_status_t *status)
+pds_vpc_status_fill (pds_vpc_status_t *status, vpc_entry *entry)
 {
     status->hw_id = entry->hw_id();
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_vpc_spec_fill (vpc_entry *entry, pds_vpc_spec_t *spec)
+pds_vpc_spec_fill (pds_vpc_spec_t *spec, vpc_entry *entry)
 {
     spec->type = entry->type();
     spec->fabric_encap = entry->fabric_encap();
@@ -92,16 +92,16 @@ pds_vpc_read (pds_vpc_key_t *key, pds_vpc_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_vpc_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
+    if ((rv = pds_vpc_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
         return rv;
     }
     info->spec.key = *key;
 
-    if ((rv = pds_vpc_status_fill(entry, &info->status)) != SDK_RET_OK) {
+    if ((rv = pds_vpc_status_fill(&info->status, entry)) != SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = pds_vpc_stats_fill(entry, &info->stats)) != SDK_RET_OK) {
+    if ((rv = pds_vpc_stats_fill(&info->stats, entry)) != SDK_RET_OK) {
         return rv;
     }
 
@@ -146,19 +146,19 @@ pds_vpc_peer_api_handle (api::api_op_t op, pds_vpc_peer_key_t *key,
 }
 
 static inline sdk_ret_t
-pds_vpc_peer_stats_fill (vpc_peer_entry *entry, pds_vpc_peer_stats_t *stats)
+pds_vpc_peer_stats_fill (pds_vpc_peer_stats_t *stats, vpc_peer_entry *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_vpc_peer_status_fill (vpc_peer_entry *entry, pds_vpc_peer_status_t *status)
+pds_vpc_peer_status_fill (pds_vpc_peer_status_t *status, vpc_peer_entry *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_vpc_peer_spec_fill (vpc_peer_entry *entry, pds_vpc_peer_spec_t *spec)
+pds_vpc_peer_spec_fill (pds_vpc_peer_spec_t *spec, vpc_peer_entry *entry)
 {
     return SDK_RET_OK;
 }
@@ -202,16 +202,16 @@ pds_vpc_peer_read (pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_vpc_peer_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
+    if ((rv = pds_vpc_peer_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
         return rv;
     }
     info->spec.key = *key;
 
-    if ((rv = pds_vpc_peer_status_fill(entry, &info->status)) != SDK_RET_OK) {
+    if ((rv = pds_vpc_peer_status_fill(&info->status, entry)) != SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = pds_vpc_peer_stats_fill(entry, &info->stats)) != SDK_RET_OK) {
+    if ((rv = pds_vpc_peer_stats_fill(&info->stats, entry)) != SDK_RET_OK) {
         return rv;
     }
     return SDK_RET_OK;

@@ -39,20 +39,20 @@ pds_subnet_api_handle (api::api_op_t op, pds_subnet_key_t *key,
 }
 
 static inline sdk::sdk_ret_t
-pds_subnet_stats_fill (subnet_entry *entry, pds_subnet_stats_t *stats)
+pds_subnet_stats_fill (pds_subnet_stats_t *stats, subnet_entry *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk::sdk_ret_t
-pds_subnet_status_fill (subnet_entry *entry, pds_subnet_status_t *status)
+pds_subnet_status_fill (pds_subnet_status_t *status, subnet_entry *entry)
 {
     status->hw_id = entry->hw_id();
     return SDK_RET_OK;
 }
 
 static inline sdk::sdk_ret_t
-pds_subnet_spec_fill (subnet_entry *entry, pds_subnet_spec_t *spec)
+pds_subnet_spec_fill (pds_subnet_spec_t *spec, subnet_entry *entry)
 {
     pds_vpc_key_t vpc = {};
 
@@ -97,14 +97,14 @@ pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
     if ((entry = pds_subnet_entry_find(key)) == NULL)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
 
-    if ((rv = pds_subnet_spec_fill(entry, &info->spec)) != sdk::SDK_RET_OK)
+    if ((rv = pds_subnet_spec_fill(&info->spec, entry)) != sdk::SDK_RET_OK)
         return rv;
     info->spec.key = *key;
 
-    if ((rv = pds_subnet_status_fill(entry, &info->status)) != sdk::SDK_RET_OK)
+    if ((rv = pds_subnet_status_fill(&info->status, entry)) != sdk::SDK_RET_OK)
         return rv;
 
-    if ((rv = pds_subnet_stats_fill(entry, &info->stats)) != sdk::SDK_RET_OK)
+    if ((rv = pds_subnet_stats_fill(&info->stats, entry)) != sdk::SDK_RET_OK)
         return rv;
 
     return sdk::SDK_RET_OK;

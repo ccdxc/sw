@@ -40,19 +40,19 @@ pds_tag_api_handle (api::api_op_t op, pds_tag_key_t *key, pds_tag_spec_t *spec)
 }
 
 static inline sdk_ret_t
-pds_tag_stats_fill (tag_entry *entry, pds_tag_stats_t *stats)
+pds_tag_stats_fill (pds_tag_stats_t *stats, tag_entry *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_tag_status_fill (tag_entry *entry, pds_tag_status_t *status)
+pds_tag_status_fill (pds_tag_status_t *status, tag_entry *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_tag_spec_fill (tag_entry *entry, pds_tag_spec_t *spec)
+pds_tag_spec_fill (pds_tag_spec_t *spec, tag_entry *entry)
 {
     // nothing to fill for tag
     return SDK_RET_OK;
@@ -88,15 +88,15 @@ pds_tag_read (pds_tag_key_t *key, pds_tag_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_tag_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
+    if ((rv = pds_tag_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = pds_tag_status_fill(entry, &info->status)) != SDK_RET_OK) {
+    if ((rv = pds_tag_status_fill(&info->status, entry)) != SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = pds_tag_stats_fill(entry, &info->stats)) != SDK_RET_OK) {
+    if ((rv = pds_tag_stats_fill(&info->stats, entry)) != SDK_RET_OK) {
         return rv;
     }
 

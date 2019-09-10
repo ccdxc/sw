@@ -41,22 +41,22 @@ pds_nexthop_group_api_handle (api::api_op_t op, pds_nexthop_group_key_t *key,
 }
 
 static inline sdk_ret_t
-pds_nexthop_group_stats_fill (nexthop_group *entry,
-                              pds_nexthop_group_stats_t *stats)
+pds_nexthop_group_stats_fill (pds_nexthop_group_stats_t *stats,
+                              nexthop_group *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_nexthop_group_status_fill (nexthop_group *entry,
-                               pds_nexthop_group_status_t *status)
+pds_nexthop_group_status_fill (pds_nexthop_group_status_t *status,
+                               nexthop_group *entry)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_nexthop_group_spec_fill (nexthop_group *entry,
-                             pds_nexthop_group_spec_t *spec)
+pds_nexthop_group_spec_fill (pds_nexthop_group_spec_t *spec,
+                             nexthop_group *entry)
 {
     return SDK_RET_OK;
 }
@@ -92,16 +92,16 @@ pds_nexthop_group_read (pds_nexthop_group_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_nexthop_group_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
+    if ((rv = pds_nexthop_group_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = pds_nexthop_group_status_fill(entry, &info->status)) !=
+    if ((rv = pds_nexthop_group_status_fill(&info->status, entry)) !=
              SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = pds_nexthop_group_stats_fill(entry, &info->stats)) !=
+    if ((rv = pds_nexthop_group_stats_fill(&info->stats, entry)) !=
              SDK_RET_OK) {
         return rv;
     }
