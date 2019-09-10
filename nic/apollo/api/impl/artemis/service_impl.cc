@@ -107,7 +107,7 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                                     &spec->backend_provider_ip,
                                     &spec->key.vip,
                                     spec->key.svc_port);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
@@ -133,7 +133,7 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     vpc->hw_id(), &spec->backend_ip,
                                     (ip_addr_t *)NULL, spec->svc_port);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
@@ -211,7 +211,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_dip_nat_hdl_,
                                    spec->svc_port);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
                                    SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
                                    vip_to_dip_handle_);
@@ -248,7 +248,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_vip_nat_hdl_,
                                    spec->key.svc_port);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
                                    SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
                                    dip_to_vip_handle_);

@@ -130,6 +130,9 @@ public:
 private:
     /// \brief constructor
     mapping_impl() {
+        nh_idx_ = 0xFFFF;
+        to_public_ip_nat_hdl_ = 0xFFFF;
+        to_overlay_ip_nat_hdl_ = 0xFFFF;
         local_mapping_overlay_ip_hdl_ = handle_t::null();
         local_mapping_public_ip_hdl_ = handle_t::null();
         mapping_overlay_ip_hdl_ = handle_t::null();
@@ -202,7 +205,7 @@ private:
     pds_encap_t       fabric_encap_;
     ip_addr_t         public_ip_;
 
-    // nexthop index
+    // nexthop index (TODO: we need this here ?)
     uint32_t          nh_idx_;
 
     // handles or indices for NAT table

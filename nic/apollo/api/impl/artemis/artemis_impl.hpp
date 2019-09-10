@@ -45,15 +45,6 @@
         p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
     }
 
-#define PDS_IMPL_FILL_TABLE_API_PARAMS(api_params, key_, data, action, hdl)  \
-{                                                                            \
-    memset((api_params), 0, sizeof(*(api_params)));                          \
-    (api_params)->key = (key_);                                              \
-    (api_params)->appdata = (data);                                          \
-    (api_params)->action_id = (action);                                      \
-    (api_params)->handle = (hdl);                                            \
-}
-
 #define nat_action action_u.nat_nat_rewrite
 #define PDS_IMPL_FILL_NAT_DATA(data, ip)                                     \
 {                                                                            \

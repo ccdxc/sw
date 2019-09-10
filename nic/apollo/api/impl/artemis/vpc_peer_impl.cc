@@ -99,7 +99,7 @@ vpc_peer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 #if 0
     // reserve an entry in VPC_PEER table with (vpc1, vpc2) as key
     PDS_IMPL_FILL_VPC_PEER_SWKEY(&vpc_peer_key, vpc1->hw_id(), vpc2->hw_id());
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = vpc_peer_impl_db()->vpc_peer_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
@@ -111,7 +111,7 @@ vpc_peer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     // reserve an entry in VPC_PEER table with (vpc2, vpc1) as key
     PDS_IMPL_FILL_VPC_PEER_SWKEY(&vpc_peer_key, vpc2->hw_id(), vpc1->hw_id());
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = vpc_peer_impl_db()->vpc_peer_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
@@ -195,8 +195,9 @@ vpc_peer_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     // program (vpc1, vpc2) entry
     PDS_IMPL_FILL_VPC_PEER_SWKEY(&vpc_peer_key, vpc1->hw_id(), vpc2->hw_id());
     PDS_IMPL_FILL_VPC_PEER_APPDATA(&vpc_peer_data);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key, &vpc_peer_data,
-                                   VPC_PEER_INFO_ID, vpc_peer_handle1_);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key, NULL,
+                                   &vpc_peer_data, VPC_PEER_INFO_ID,
+                                   vpc_peer_handle1_);
     ret = vpc_peer_impl_db()->vpc_peer_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program entry in VPC_PEER table "
@@ -207,8 +208,9 @@ vpc_peer_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     // program (vpc2, vpc1) entry
     PDS_IMPL_FILL_VPC_PEER_SWKEY(&vpc_peer_key, vpc2->hw_id(), vpc1->hw_id());
     PDS_IMPL_FILL_VPC_PEER_APPDATA(&vpc_peer_data);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key, &vpc_peer_data,
-                                   VPC_PEER_INFO_ID, vpc_peer_handle2_);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &vpc_peer_key, NULL,
+                                   &vpc_peer_data, VPC_PEER_INFO_ID,
+                                   vpc_peer_handle2_);
     ret = vpc_peer_impl_db()->vpc_peer_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program reverse entry in VPC_PEER table "
