@@ -76,7 +76,7 @@
           <div class="rolloutstatus-summary-panel-content-label"> Upgrade DSCs by Label?:
           </div>
           <div class="rolloutstatus-summary-panel-content-value">
-            {{selectedRollout?.spec["dscs-must-match-constraint"]? 'true': 'false' }}</div>
+            {{selectedRollout?.spec["dsc-must-match-constraint"]? 'true': 'false' }}</div>
         </div>
         <div fxFlex="50" fxLayout="row"
              *ngIf="labelSelectorsStrings && labelSelectorsStrings.length>0">

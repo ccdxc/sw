@@ -83,9 +83,8 @@
       <!-- Table Body -->
       <ng-template pTemplate="body" let-rowData>
         <tr>
-          <td>
-            <p-tableCheckbox [value]="rowData">
-            </p-tableCheckbox>
+          <td style="text-overflow: clip">
+            <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           </td>
           <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
             <div *ngSwitchCase="'spec.id'">
