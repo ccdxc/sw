@@ -198,6 +198,10 @@ hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
             // insert in sw DS
             // hash_entry_map_[dleft_index] = he;
             rs = entry_ht_->insert_with_key(&dleft_index, he, &he->ht_ctxt);
+            if (rs != SDK_RET_OK) {
+                SDK_TRACE_ERR("Unable to insert key. err: %d", rs);
+                goto end;
+            }
             stats_incr(STATS_NUM_HASH);
         } else {
             // delete he;

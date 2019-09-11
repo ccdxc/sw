@@ -9,4 +9,5 @@
 -I ../../../../gen/nic/p4pd
 -I ../../../../hal/pd
 -I ../../../../hal
+-D__FNAME__
 -std=c++11

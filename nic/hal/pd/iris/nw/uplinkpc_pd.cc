@@ -67,10 +67,6 @@ pd_uplinkpc_update (pd_if_update_args_t *args)
     if_t        *hal_if = args->intf, *hal_if_clone = args->intf_clone;
     l2seg_t     *curr_nat_l2seg = NULL, *new_nat_l2seg = NULL;
 
-    if (!args) {
-        goto end;
-    }
-
     // update mbr ifs
     if (args->mbrlist_change) {
         // Reprogram output mapping table

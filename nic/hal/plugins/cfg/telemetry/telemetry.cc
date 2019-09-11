@@ -691,7 +691,7 @@ collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
             ret = collector_process_get(req, rsp, &args);
         }
     } else {
-        memset(&args.cfg, 0, sizeof(collector_config_t));
+        memset(args.cfg, 0, sizeof(collector_config_t));
         args.cfg->collector_id = req.key_or_handle().collector_id();
         ret = collector_process_get(req, rsp, &args);
     }
@@ -916,7 +916,7 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     bool                mirror_action = false;
     hal_ret_t           ret = HAL_RET_OK;
     uint64_t            vrf_id;
-    rule_key_t          rule_id;
+    int                 rule_id;
     flow_monitor_rule_t *rule = NULL;
     const acl_ctx_t     *flowmon_acl_ctx;
 

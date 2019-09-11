@@ -226,6 +226,10 @@ tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
         // insert in sw DS
         // tcam_entry_map_[index] = te;
         rs = entry_ht_->insert_with_key(&index, te, &te->ht_ctxt);
+        if (rs != SDK_RET_OK) {
+            SDK_TRACE_ERR("Unable to insert key. err: %d", rs);
+            goto end;
+        }
     } else {
         // tcam_entry::destroy(te);
         tcam_entry_delete(te);

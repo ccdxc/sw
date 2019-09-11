@@ -430,7 +430,7 @@ pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
                                  p4pd_table_id tbl_id)
 {
     tcam        *tcam;
-    hal_ret_t   ret;
+    hal_ret_t   ret = HAL_RET_OK;
     sdk_ret_t   sdk_ret;
     uint32_t    *arr;
 

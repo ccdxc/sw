@@ -1133,7 +1133,7 @@ fte_session_update_list (void *data)
 {
     hal_handle_t *session_list = (hal_handle_t *)data;
     // Set the feature id to run update on
-    uint64_t      bitmap = (1 << fte::feature_id("pensando.io/network:fwding"));
+    uint64_t      bitmap = (uint64_t)(1 << fte::feature_id("pensando.io/network:fwding"));
 
     for (uint8_t i=0; i<HAL_MAX_SESSIONS_PER_UPDATE; i++) {
         if (session_list[i])

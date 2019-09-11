@@ -519,7 +519,7 @@ end:
 hal_ret_t
 pd_fte_span_get (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t                   ret;
+    hal_ret_t                   ret = HAL_RET_OK;
     pd_fte_span_get_args_t     *args = pd_func_args->pd_fte_span_get;
     pd_fte_span_t               *fte_span_pd;
 

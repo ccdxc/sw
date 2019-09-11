@@ -678,7 +678,9 @@ hal_del_block_lists (block_list *dst, block_list *src)
 
     for (const void *ptr : *src) {
         p_hdl_id = (hal_handle_t *)ptr;
-        dst->remove(p_hdl_id);
+        if (p_hdl_id) {
+            dst->remove(p_hdl_id);
+        }
     }
     return HAL_RET_OK;
 }
