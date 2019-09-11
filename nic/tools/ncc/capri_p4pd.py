@@ -1574,7 +1574,7 @@ class capri_p4pd:
         changing the prog name from apollo to p4. generate code under
         build/$ARCH/$PIPIPELINE/gen/p4gen/$PROG_NAME
         '''
-        if self.be.prog_name == "apollo" or self.be.prog_name == "artemis":
+        if self.be.prog_name in ['apollo', 'artemis', 'apulu']:
             h_outputdir = gen_dir + '/p4/include'
             c_outputdir = gen_dir + '/p4/src/'
             py_outputdir = gen_dir + '/p4/cli/'

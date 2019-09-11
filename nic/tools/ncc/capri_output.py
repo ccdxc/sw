@@ -4309,7 +4309,7 @@ def capri_p4pd_create_swig_makefile(be):
 def capri_p4pd_create_swig_custom_hdr(be):
 
     name = be.prog_name
-    if name == 'apollo' or name == 'artemis':
+    if name in ['apollo', 'artemis', 'apulu']:
         name = 'p4'
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
@@ -4394,7 +4394,7 @@ void
 def capri_p4pd_create_swig_interface(be):
 
     name = be.prog_name
-    if name == 'apollo' or name == 'artemis':
+    if name in ['apollo', 'artemis', 'apulu']:
         name = 'p4'
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
