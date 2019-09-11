@@ -394,6 +394,7 @@ func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, 
 		if err == nil {
 			break
 		}
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	return buf.String(), err
