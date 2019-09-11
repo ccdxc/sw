@@ -28,6 +28,7 @@ import {
 } from '@sdk/v1/models/generated/auth';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import { required, patternValidator } from '@sdk/v1/utils/validators';
+import { FormControl, AbstractControl, ValidatorFn } from '@angular/forms';
 
 export enum ACTIONTYPE {
   CREATE = 'Create',
@@ -118,6 +119,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
 
   userEditAction: string = UsersComponent.USER_ACTION_UPDATE;
+
+
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
@@ -832,10 +835,13 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     let hasFormGroupError = null;
     if (this.userEditAction === UsersComponent.USER_ACTION_UPDATE) {
       hasFormGroupError = Utility.getAllFormgroupErrors(this.selectedAuthUser.$formGroup);
+      return (hasFormGroupError === null);
     } else if (this.userEditAction === UsersComponent.USER_ACTION_CHANGEPWD) {
       hasFormGroupError = Utility.getAllFormgroupErrors(this.authPasswordChangeRequest.$formGroup);
+      const inputValid = (hasFormGroupError === null);
+      const matchPwd = (this.authPasswordChangeRequest.$formGroup.get('new-password').value === this.authPasswordChangeRequest.$formGroup.get('confirm-new-password').value);
+      return (inputValid && matchPwd);
     }
-    return (hasFormGroupError === null);
   }
 
   /**
@@ -1048,11 +1054,20 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this.authPasswordChangeRequest.$formGroup.get(['old-password']).setValidators([required]);
     this.authPasswordChangeRequest.$formGroup.get(['new-password']).setValidators([required, patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE)]);
 
+    // Dynamically add a 'confirm-new-password' to form group.
+    const newControl = new FormControl(this['confirm-new-password'], [required,
+      patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE),
+      this.isConfirmPasswordMathcNewPassword(this.authPasswordChangeRequest.$formGroup.get(['new-password']))
+     ]);
+    this.authPasswordChangeRequest.$formGroup.addControl('confirm-new-password', newControl);
+
     const selectedUserData = this.selectedAuthUser.getFormGroupValues();
     selectedUserData.meta.name = this.selectedAuthUser.meta.name; // make sure to have name.
     this.authPasswordChangeRequest.setValues(selectedUserData); // this will populate data.
+  }
 
-
+  isConfirmPasswordMathcNewPassword(passwordControl: AbstractControl): ValidatorFn {
+    return Utility.isControlValueMatchOtherControlValueValidator(passwordControl, 'confirm-new-password', 'Comfirm-new-password input must match new-password input');
   }
 
 }

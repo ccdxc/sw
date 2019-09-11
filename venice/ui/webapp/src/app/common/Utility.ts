@@ -1600,6 +1600,20 @@ export class Utility {
     };
   }
 
+  public static isControlValueMatchOtherControlValueValidator(otherControl: AbstractControl, objectname: string, msg: string = 'Value not match'): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (control.value !== otherControl.value) {
+        return {
+          objectname: {
+            required: true,
+            message: msg
+          }
+        };
+      }
+      return null;
+    };
+  }
+
   public static isNameAlreadyExist(name: string, modelobjects: any[]): boolean {
     if (!modelobjects) {
       return false;
