@@ -49,12 +49,26 @@ nat_pool_get_key_func (void *entry)
 }
 
 //------------------------------------------------------------------------------
-// key size for nat pool
+// hash computation for nat pool key to handle hash table
 //------------------------------------------------------------------------------
 uint32_t
-nat_pool_key_size ()
+nat_pool_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(nat_pool_key_t);
+    SDK_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(nat_pool_key_t)) % ht_size;
+}
+
+//------------------------------------------------------------------------------
+// key comparision for nat pool key to handle hash table
+//------------------------------------------------------------------------------
+bool
+nat_pool_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(nat_pool_key_t))) {
+        return true;
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------
@@ -868,12 +882,27 @@ nat_mapping_get_key_func (void *entry)
 }
 
 //------------------------------------------------------------------------------
-// key size for nat mapping
+// hash computation for nat mapping key to handle hash table
 //------------------------------------------------------------------------------
 uint32_t
-nat_mapping_key_size ()
+nat_mapping_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(addr_entry_key_t);
+    SDK_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key,
+                                         sizeof(addr_entry_key_t)) % ht_size;
+}
+
+//------------------------------------------------------------------------------
+// key comparision for nat mapping key to handle hash table
+//------------------------------------------------------------------------------
+bool
+nat_mapping_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(addr_entry_key_t))) {
+        return true;
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------

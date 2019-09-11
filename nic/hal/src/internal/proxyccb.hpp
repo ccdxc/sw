@@ -93,10 +93,12 @@ typedef struct proxyccb_s {
 #define HAL_NUM_PROXYCCB_RINGS_MAX        APP_REDIR_PROXYC_RINGS_MAX
 
 extern void *proxyccb_get_key_func(void *entry);
-extern uint32_t proxyccb_key_size(void);
+extern uint32_t proxyccb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool proxyccb_compare_key_func(void *key1, void *key2);
 
 extern void *proxyccb_get_handle_key_func(void *entry);
-extern uint32_t proxyccb_handle_key_size(void);
+extern uint32_t proxyccb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool proxyccb_compare_handle_key_func(void *key1, void *key2);
 extern types::AppRedirType proxyccb_tcpcb_l7_proxy_type_eval(uint32_t flow_id);
 extern types::AppRedirType proxyccb_tlscb_l7_proxy_type_eval(uint32_t flow_id);
 

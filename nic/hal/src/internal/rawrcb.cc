@@ -20,9 +20,19 @@ rawrcb_get_key_func (void *entry)
 }
 
 uint32_t
-rawrcb_key_size ()
+rawrcb_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(rawrcb_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(rawrcb_id_t)) % ht_size;
+}
+
+bool
+rawrcb_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(rawrcb_id_t *)key1 == *(rawrcb_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 void *
@@ -33,9 +43,19 @@ rawrcb_get_handle_key_func (void *entry)
 }
 
 uint32_t
-rawrcb_handle_key_size (void *key, uint32_t ht_size)
+rawrcb_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(hal_handle_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+}
+
+bool
+rawrcb_compare_handle_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 // allocate a RAWRCB instance

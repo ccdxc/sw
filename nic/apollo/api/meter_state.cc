@@ -22,7 +22,8 @@ meter_state::meter_state() {
     // TODO: need to tune multi-threading related params later
     meter_ht_ = ht::factory(PDS_MAX_METER >> 1,
                             meter_entry::meter_key_func_get,
-                            meter_entry::key_size());
+                            meter_entry::meter_hash_func_compute,
+                            meter_entry::meter_key_func_compare);
     SDK_ASSERT(meter_ht() != NULL);
 
     meter_slab_ = slab::factory("meter", PDS_SLAB_ID_METER, sizeof(meter_entry),

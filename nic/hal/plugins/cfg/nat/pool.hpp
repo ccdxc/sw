@@ -41,7 +41,8 @@ typedef struct nat_pool_s {
 } __PACK__ nat_pool_t;
 
 void *nat_pool_get_key_func(void *entry);
-uint32_t nat_pool_key_size(void);
+uint32_t nat_pool_compute_hash_func(void *key, uint32_t ht_size);
+bool nat_pool_compare_key_func(void *key1, void *key2);
 
 hal_ret_t nat_pool_address_alloc(nat_pool_t *pool, ip_addr_t *nat_addr);
 hal_ret_t nat_pool_address_free(nat_pool_t *pool, ip_addr_t *nat_addr);

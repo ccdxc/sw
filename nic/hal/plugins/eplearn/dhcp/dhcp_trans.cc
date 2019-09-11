@@ -17,8 +17,16 @@ void *dhcptrans_get_key_func(void *entry) {
     return (void *)(((dhcp_trans_t *)entry)->trans_key_ptr());
 }
 
-uint32_t dhcptrans_key_size(void) {
-    return sizeof(dhcp_trans_key_t);
+uint32_t dhcptrans_compute_hash_func(void *key, uint32_t ht_size) {
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(dhcp_trans_key_t)) % ht_size;
+}
+
+bool dhcptrans_compare_key_func(void *key1, void *key2) {
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (memcmp(key1, key2, sizeof(dhcp_trans_key_t)) == 0) {
+        return true;
+    }
+    return false;
 }
 
 void dhcp_ctx::init(struct packet* dhcp_packet) {
@@ -42,14 +50,15 @@ slab *dhcp_trans_t::dhcplearn_slab_ = slab::factory("dhcpLearn", HAL_SLAB_DHCP_L
                                 sizeof(dhcp_trans_t), 16,
                                 false, true, true);
 ht *dhcp_trans_t::dhcplearn_key_ht_ =
-    ht::factory(HAL_MAX_DHCP_TRANS,
-                dhcptrans_get_key_func,
-                dhcptrans_key_size());
+    ht::factory(HAL_MAX_DHCP_TRANS, dhcptrans_get_key_func,
+                dhcptrans_compute_hash_func,
+                dhcptrans_compare_key_func);
 
 ht *dhcp_trans_t::dhcplearn_ip_entry_ht_ =
     ht::factory(HAL_MAX_DHCP_TRANS,
                 trans_get_ip_entry_key_func,
-                trans_ip_entry_key_size());
+                trans_compute_ip_entry_hash_func,
+                trans_compare_ip_entry_key_func);
 
 /* For now setting a high time for DOL testing
  * But, all these should be configurable.

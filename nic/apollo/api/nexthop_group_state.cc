@@ -22,7 +22,8 @@ nexthop_group_state::nexthop_group_state() {
     nexthop_group_ht_ =
         ht::factory(PDS_MAX_NEXTHOP_GROUP >> 1,
                     nexthop_group::nexthop_group_key_func_get,
-                    nexthop_group::key_size());
+                    nexthop_group::nexthop_group_hash_func_compute,
+                    nexthop_group::nexthop_group_key_func_compare);
     SDK_ASSERT(nh_group_ht() != NULL);
     nexthop_group_slab_ =
         slab::factory("nexthop-group", PDS_SLAB_ID_NEXTHOP_GROUP,

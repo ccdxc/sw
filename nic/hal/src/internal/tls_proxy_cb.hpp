@@ -131,10 +131,12 @@ find_tlscb_by_id (tlscb_id_t tlscb_id)
 }
 
 extern void *tlscb_get_key_func(void *entry);
-extern uint32_t tlscb_key_size(void);
+extern uint32_t tlscb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tlscb_compare_key_func(void *key1, void *key2);
 
 extern void *tlscb_get_handle_key_func(void *entry);
-extern uint32_t tlscb_handle_key_size(void);
+extern uint32_t tlscb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool tlscb_compare_handle_key_func(void *key1, void *key2);
 
 }    // namespace hal
 

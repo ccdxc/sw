@@ -18,7 +18,8 @@ using hal::HAL_SLAB_HANDLE_HT_ENTRY;
 using hal::HAL_SLAB_HANDLE_ID_HT_ENTRY;
 using hal::HAL_SLAB_PORT;
 using hal::hal_handle_id_get_key_func;
-using hal::hal_handle_id_key_size;
+using hal::hal_handle_id_compute_hash_func;
+using hal::hal_handle_id_compare_key_func;
 
 namespace linkmgr {
 
@@ -40,7 +41,8 @@ cfg_db::init(void)
     // initialize port related data structures
     port_id_ht_ = ht::factory(HAL_MAX_PORTS,
                               linkmgr::port_id_get_key_func,
-                              linkmgr::port_id_key_size());
+                              linkmgr::port_id_compute_hash_func,
+                              linkmgr::port_id_compare_key_func);
     if (NULL == port_id_ht_) {
         HAL_TRACE_ERR("port ht allocation failed");
         return false;
@@ -323,7 +325,8 @@ linkmgr_state::init()
 
     hal_handle_id_ht_ = ht::factory(HAL_MAX_HANDLES,
                                     hal_handle_id_get_key_func,
-                                    hal_handle_id_key_size());
+                                    hal_handle_id_compute_hash_func,
+                                    hal_handle_id_compare_key_func);
     if (NULL == hal_handle_id_ht_) {
         HAL_TRACE_ERR("hal handle id ht allocation failed");
         return HAL_RET_ERR;

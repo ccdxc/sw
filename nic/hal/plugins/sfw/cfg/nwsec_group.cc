@@ -178,9 +178,20 @@ nwsec_group_get_key_func (void *entry)
 }
 
 uint32_t
-nwsec_group_key_size ()
+nwsec_group_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(nwsec_group_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key,
+                                      sizeof(nwsec_group_id_t)) % ht_size;
+}
+
+bool
+nwsec_group_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(nwsec_group_id_t *) key1 == *(nwsec_group_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 static hal_ret_t
@@ -778,9 +789,13 @@ nwsec_rulelist_get_key_func (void *entry)
     return &((nwsec_rulelist_t *)entry)->rule_id;
 }
 
-uint32_t nwsec_rulelist_key_size (void) {
-    return sizeof(rule_key_t);
+uint32_t
+nwsec_rulelist_compute_hash_func (void *key, uint32_t ht_size)
+{
+    // Key itself a hash function given by agent as rule_id
+    return ((*(rule_key_t *)key) % ht_size);
 }
+
 
 /** Rules within a security policy **/
 static inline nwsec_rulelist_t *
@@ -882,7 +897,8 @@ nwsec_policy_init (nwsec_policy_t *policy)
     for (int i = 0; i < MAX_VERSION; i++) {
         policy->rules_ht[policy->version] = ht::factory(HAL_MAX_NW_SEC_GROUP_CFG,
                                                         hal::nwsec_rulelist_get_key_func,
-                                                        hal::nwsec_rulelist_key_size());
+                                                        hal::nwsec_rulelist_compute_hash_func,
+                                                        hal::nwsec_rulelist_compare_key_func);
         SDK_ASSERT_RETURN((policy->rules_ht[policy->version] != NULL), NULL);
     }
     policy->ht_ctxt.reset();
@@ -1021,6 +1037,19 @@ find_nwsec_policy_by_handle (hal_handle_t handle)
     return (nwsec_policy_t *)hal_handle->obj();
 }
 
+
+bool
+nwsec_policy_compare_key_func (void *key1, void *key2)
+{
+    dllist_ctxt_t    lentry;
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    // Compare the hash value
+    if (!memcmp(key1, key2, sizeof(policy_key_t))) {
+        return true;
+    }
+    return false;
+}
+
 void *
 nwsec_policy_get_key_func (void *entry)
 {
@@ -1037,9 +1066,10 @@ nwsec_policy_get_key_func (void *entry)
 }
 
 uint32_t
-nwsec_policy_key_size ()
+nwsec_policy_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(policy_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key,
+                                     sizeof(policy_key_t)) % ht_size;
 }
 
 //

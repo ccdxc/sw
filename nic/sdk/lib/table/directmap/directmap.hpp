@@ -120,7 +120,8 @@ private:
     sdk_ret_t entry_trace_(void *data, uint32_t index);
 
     static void *dm_entry_get_key_func(void *entry);
-    static uint32_t dm_entry_key_size(void);
+    static uint32_t dm_entry_compute_hash_func(void *key, uint32_t ht_size);
+    static bool dm_entry_compare_key_func(void *key1, void *key2);
 
     sdk_ret_t add_directmap_entry_to_db(directmap_entry_t *dme);
     void *del_directmap_entry_from_db(directmap_entry_t *dme);

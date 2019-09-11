@@ -4,7 +4,6 @@
 
 #include "include/sdk/mem.hpp"
 #include "lib/ht/ht.hpp"
-#include <cstring>
 
 namespace sdk {
 namespace lib {
@@ -12,16 +11,16 @@ namespace lib {
 // common initialization
 bool
 ht::init(uint32_t ht_size, ht_get_key_func_t get_key_func,
-         uint32_t key_size, bool thread_safe, bool key_string,
-         shmmgr *mmgr)
+        ht_compute_hash_func_t hash_func, ht_compare_key_func_t compare_func,
+        bool thread_safe, shmmgr *mmgr)
 {
     uint32_t    i;
 
     num_buckets_ = ht_size;
     thread_safe_ = thread_safe;
+    hash_func_ = hash_func;
     get_key_func_ = get_key_func;
-    key_size_ = key_size;
-    key_string_ = key_string;
+    compare_key_func_ = compare_func;
     if (thread_safe) {
         if (mmgr) {
             SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
@@ -69,15 +68,16 @@ ht::cleanup(ht *htable, shmmgr *mmgr)
 // factory method for the hash table
 ht *
 ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
-            uint32_t key_size, bool thread_safe, bool key_string,
+            ht_compute_hash_func_t hash_func,
+            ht_compare_key_func_t compare_func, bool thread_safe,
             shmmgr *mmgr)
 {
     void    *mem;
     ht      *hash_table = NULL;
 
-    SDK_ASSERT_RETURN((get_key_func != NULL) && 
-                      (ht_size > 0) && (key_size > 0),
-                      NULL);
+    SDK_ASSERT_RETURN((ht_size > 0), NULL);
+    SDK_ASSERT_RETURN(((get_key_func != NULL) && (hash_func != NULL) &&
+                       (compare_func != NULL)), NULL);
 
     if (mmgr) {
         mem = mmgr->alloc(sizeof(ht), 4, true);
@@ -104,9 +104,9 @@ ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
     }
     // SDK_TRACE_DEBUG("Allocated %u bytes for ht", ht_size * sizeof(ht_bucket_t));
 
-    if (hash_table->init(ht_size, get_key_func,
-                         key_size, thread_safe,
-                         key_string, mmgr) == false) {
+    if (hash_table->init(ht_size, get_key_func, hash_func,
+                         compare_func, thread_safe,
+                         mmgr) == false) {
         goto cleanup;
     }
     return hash_table;
@@ -142,16 +142,10 @@ ht::lookup_(ht_bucket_t *ht_bucket, void *key)
 {
     ht_ctxt_t    *ht_ctxt;
     bool         match;
-    void         *entry_key;
 
     ht_ctxt = ht_bucket->ht_ctxt;
     while (ht_ctxt) {
-        entry_key = get_key_func_(ht_ctxt->entry);
-        if (key_string_) {
-            match = (strcmp((char *)key, (char *)entry_key) == 0);
-        } else {
-            match = (std::memcmp(key, entry_key, key_size_) == 0);
-        }
+        match = compare_key_func_(key, get_key_func_(ht_ctxt->entry));
         if (match == true) {
             // found what we are looking for
             return ht_ctxt->entry;
@@ -169,11 +163,7 @@ ht::lookup(void *key)
     void           *entry = NULL;
 
     SDK_ASSERT_RETURN(key != NULL, NULL);
-    if (key_string_) {
-        hash_val = hash_algo::fnv_hash(key, strlen((char *)key)) % num_buckets_;
-    } else {
-        hash_val = hash_algo::fnv_hash(key, key_size_) % num_buckets_;
-    }
+    hash_val = hash_func_(key, num_buckets_);
     SDK_ASSERT_RETURN((hash_val < num_buckets_), NULL);
 
     SDK_ATOMIC_INC_UINT32(&this->num_lookups_, 1);
@@ -199,11 +189,7 @@ ht::insert_with_key(void *key, void *entry, ht_ctxt_t *ht_ctxt)
     ht_bucket_t    *ht_bucket;
 
     SDK_ASSERT_RETURN(key != NULL, SDK_RET_ERR);
-    if (key_string_) {
-        hash_val = hash_algo::fnv_hash(key, strlen((char *)key)) % num_buckets_;
-    } else {
-        hash_val = hash_algo::fnv_hash(key, key_size_) % num_buckets_;
-    }
+    hash_val = hash_func_(key, num_buckets_);
     SDK_ASSERT_RETURN((hash_val < num_buckets_), SDK_RET_ERR);
 
     SDK_ATOMIC_INC_UINT32(&this->num_inserts_, 1);
@@ -257,11 +243,7 @@ ht::remove(void *key)
     bool           match = false;
 
     SDK_ASSERT_RETURN(key != NULL, NULL);
-    if (key_string_) {
-        hash_val = hash_algo::fnv_hash(key, strlen((char *)key)) % num_buckets_;
-    } else {
-        hash_val = hash_algo::fnv_hash(key, key_size_) % num_buckets_;
-    }
+    hash_val = hash_func_(key, num_buckets_);
     SDK_ASSERT_RETURN((hash_val < num_buckets_), NULL);
 
     SDK_ATOMIC_INC_UINT32(&this->num_removals_, 1);
@@ -281,11 +263,7 @@ ht::remove(void *key)
     }
 
     do {
-        if (key_string_) {
-            match = (strcmp((char *)key, (char *)get_key_func_(curr_ctxt->entry)) == 0);
-        } else {
-            match = (std::memcmp(key, get_key_func_(curr_ctxt->entry), key_size_) == 0);
-        }
+        match = compare_key_func_(key, get_key_func_(curr_ctxt->entry));
         if (match == true) {
             // entry found, remove it
             if (curr_ctxt == ht_bucket->ht_ctxt) {
@@ -336,11 +314,7 @@ ht::remove_entry(void *entry, ht_ctxt_t *ht_ctxt)
 
     key = get_key_func_(entry);
     SDK_ASSERT_RETURN(key != NULL, SDK_RET_ERR);
-    if (key_string_) {
-        hash_val = hash_algo::fnv_hash(key, strlen((char *)key)) % num_buckets_;
-    } else {
-        hash_val = hash_algo::fnv_hash(key, key_size_) % num_buckets_;
-    }
+    hash_val = hash_func_(key, num_buckets_);
     SDK_ASSERT_RETURN((hash_val < num_buckets_), SDK_RET_ERR);
 
     SDK_ATOMIC_INC_UINT32(&this->num_removals_, 1);

@@ -22,7 +22,8 @@ tag_state::tag_state() {
     // TODO: need to tune multi-threading related params later
     tag_ht_ = ht::factory(PDS_MAX_TAG >> 1,
                           tag_entry::tag_key_func_get,
-                          tag_entry::key_size());
+                          tag_entry::tag_hash_func_compute,
+                          tag_entry::tag_key_func_compare);
     SDK_ASSERT(tag_ht() != NULL);
 
     tag_slab_ = slab::factory("tag", PDS_SLAB_ID_TAG, sizeof(tag_entry), 16,

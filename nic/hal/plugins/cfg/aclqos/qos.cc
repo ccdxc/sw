@@ -283,12 +283,26 @@ qos_class_get_key_func (void *entry)
 }
 
 // ----------------------------------------------------------------------------
-// hash table qos_group key size
+// hash table qos_group => entry - compute hash
 // ----------------------------------------------------------------------------
 uint32_t
-qos_class_key_size ()
+qos_class_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(qos_class_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(qos_class_key_t)) % ht_size;
+}
+
+// ----------------------------------------------------------------------------
+// hash table qos_group => entry - compare function
+// ----------------------------------------------------------------------------
+bool
+qos_class_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+
+    if (!memcmp(key1, key2, sizeof(qos_class_key_t))) {
+        return true;
+    }
+    return false;
 }
 
 // allocate a QosClass instance
@@ -2024,12 +2038,26 @@ copp_get_key_func (void *entry)
 }
 
 // ----------------------------------------------------------------------------
-// hash table copp_type key size
+// hash table copp_type => entry - compute hash
 // ----------------------------------------------------------------------------
 uint32_t
-copp_key_size ()
+copp_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(copp_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(copp_key_t)) % ht_size;
+}
+
+// ----------------------------------------------------------------------------
+// hash table copp_type => entry - compare function
+// ----------------------------------------------------------------------------
+bool
+copp_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+
+    if (!memcmp(key1, key2, sizeof(copp_key_t))) {
+        return true;
+    }
+    return false;
 }
 
 // allocate a Copp instance

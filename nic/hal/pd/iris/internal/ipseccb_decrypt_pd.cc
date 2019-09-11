@@ -23,9 +23,19 @@ ipseccb_pd_decrypt_get_hw_key_func (void *entry)
 }
 
 uint32_t
-ipseccb_pd_decrypt_hw_key_size ()
+ipseccb_pd_decrypt_compute_hw_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(ipseccb_hw_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipseccb_hw_id_t)) % ht_size;
+}
+
+bool
+ipseccb_pd_decrypt_compare_hw_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(ipseccb_hw_id_t *)key1 == *(ipseccb_hw_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 /********************************************

@@ -91,10 +91,12 @@ typedef struct rawccb_s {
 #define HAL_NUM_RAWCCB_RINGS_MAX        APP_REDIR_RAWC_RINGS_MAX
 
 extern void *rawccb_get_key_func(void *entry);
-extern uint32_t rawccb_key_size(void);
+extern uint32_t rawccb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool rawccb_compare_key_func(void *key1, void *key2);
 
 extern void *rawccb_get_handle_key_func(void *entry);
-extern uint32_t rawccb_handle_key_size(void);
+extern uint32_t rawccb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool rawccb_compare_handle_key_func(void *key1, void *key2);
 
 }    // namespace hal
 

@@ -185,10 +185,12 @@ ep_unlock (ep_t *ep, const char *fname,
 
 typedef void (*sessions_empty_cb_t)(const ep_t *ep);
 extern void *ep_get_l2_key_func(void *entry);
-extern uint32_t ep_l2_key_size(void);
+extern uint32_t ep_compute_l2_hash_func(void *key, uint32_t ht_size);
+extern bool ep_compare_l2_key_func(void *key1, void *key2);
 
 extern void *ep_get_l3_key_func(void *entry);
-extern uint32_t ep_l3_key_size(void);
+extern uint32_t ep_compute_l3_hash_func(void *key, uint32_t ht_size);
+extern bool ep_compare_l3_key_func(void *key1, void *key2);
 
 mac_addr_t *ep_get_mac_addr(ep_t *pi_ep);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);

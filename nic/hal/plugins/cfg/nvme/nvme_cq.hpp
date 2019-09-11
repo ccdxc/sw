@@ -91,10 +91,12 @@ nvme_cq_free (nvme_cq_t *nvme_cq)
 }
 
 extern void *nvme_cq_get_key_func(void *entry);
-extern uint32_t nvme_cq_key_size(void);
+extern uint32_t nvme_cq_compute_hash_func(void *key, uint32_t ht_size);
+extern bool nvme_cq_compare_key_func(void *key1, void *key2);
 
 extern void *nvme_cq_get_handle_key_func(void *entry);
-extern uint32_t nvme_cq_handle_key_size(void);
+extern uint32_t nvme_cq_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool nvme_cq_compare_handle_key_func(void *key1, void *key2);
 
 hal_ret_t
 nvme_cq_create(uint32_t lif,

@@ -48,12 +48,25 @@ ep_get_l2_key_func (void *entry)
 }
 
 //-----------------------------------------------------------------------------
-// hash table l2_key size
+// hash table l2_key => entry - compute hash
 //-----------------------------------------------------------------------------
 uint32_t
-ep_l2_key_size ()
+ep_compute_l2_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(ep_l2_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ep_l2_key_t)) % ht_size;
+}
+
+//-----------------------------------------------------------------------------
+// hash table l2_key => entry - compare function
+//-----------------------------------------------------------------------------
+bool
+ep_compare_l2_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(ep_l2_key_t))) {
+        return true;
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------
@@ -67,12 +80,25 @@ ep_get_l3_key_func (void *entry)
 }
 
 //------------------------------------------------------------------------------
-// Compute l3 hash key size
+// Compute l3 hash
 //------------------------------------------------------------------------------
 uint32_t
-ep_l3_key_size ()
+ep_compute_l3_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(ep_l3_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size;
+}
+
+//------------------------------------------------------------------------------
+// Compare l3 key
+//------------------------------------------------------------------------------
+bool
+ep_compare_l3_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(ep_l3_key_t))) {
+        return true;
+    }
+    return false;
 }
 
 // allocate a ep instance

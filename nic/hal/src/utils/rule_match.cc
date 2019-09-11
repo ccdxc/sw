@@ -514,29 +514,40 @@ free_rule_data(rule_data_t *data)
 // Rule Manipulation routines (rule add/del)
 //-----------------------------------------------------------------------------
 
+
 void *rule_ctr_get_key_func(void *entry)
 {
     return (void *)&((rule_ctr_t *)entry)->rule_key;
 }
 
-uint32_t rule_ctr_key_size(void) {
-    return sizeof(rule_key_t);
+uint32_t rule_ctr_compute_hash_func(void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(rule_key_t)) % ht_size;
 }
 
+bool  rule_ctr_compare_key_func(void *key1, void *key2) 
+{
+    return memcmp(key1, key2, sizeof(rule_key_t)) == 0;
+}
 void *rule_cfg_get_key_func(void *entry)
 {
     return (void *)((rule_cfg_t *)entry)->name;
 }
 
-uint32_t rule_cfg_key_size(void) {
-    return 64;
+uint32_t rule_cfg_compute_hash_func(void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, strlen((char *)key)) % ht_size;
 }
 
-static ht *g_rule_cfg_ht = ht::factory(256,
-                                       rule_cfg_get_key_func,
-                                       rule_cfg_key_size(),
-                                       false /* not thread_safe */,
-                                       true /* key is a string */);
+bool  rule_cfg_compare_key_func(void *key1, void *key2) 
+{
+    return strcmp((char *)key1, (char *)key2) == 0;
+}
+
+static ht *g_rule_cfg_ht = ht::factory(256, rule_cfg_get_key_func,
+                                       rule_cfg_compute_hash_func,
+                                       rule_cfg_compare_key_func,
+                                       false /* not thread_safe */ );    
 void 
 rule_lib_delete(const char *name)
 {
@@ -581,7 +592,8 @@ rule_lib_init(const char *name, acl_config_t *cfg, rule_lib_cb_t *rule_cb)
 
     rcfg->rule_ctr_ht = ht::factory(8192,
                                rule_ctr_get_key_func,
-                               rule_ctr_key_size());
+                               rule_ctr_compute_hash_func,
+                               rule_ctr_compare_key_func);
     SDK_ASSERT_RETURN((rcfg->rule_ctr_ht != NULL), NULL);
 
     if (rule_cb != NULL) {

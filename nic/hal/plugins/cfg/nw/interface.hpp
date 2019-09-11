@@ -311,7 +311,8 @@ hal_handle_id_ht_entry_t *find_handle_obj_by_if_id(if_id_t if_id);
 hal_handle_t find_hal_handle_from_if_id (if_id_t if_id);
 lif_t *find_lif_by_if_handle(hal_handle_t if_handle);
 extern void *if_id_get_key_func(void *entry);
-extern uint32_t if_id_key_size(void);
+extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);
+extern bool if_id_compare_key_func(void *key1, void *key2);
 hal_ret_t uplinkif_add_uplinkpc(if_t *upif, if_t *uppc);
 hal_ret_t uplinkif_del_uplinkpc(if_t *upif, if_t *uppc);
 hal_ret_t uplinkpc_update_mbrs_relation(block_list *mbr_list,

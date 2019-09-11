@@ -286,14 +286,13 @@ hal_handle_alloc (hal_obj_id_t obj_id, hal_handle_t handle_id,
 hal_ret_t
 hal_handle_insert (hal_obj_id_t obj_id, hal_handle_t handle_id, void *obj)
 {
+    hal_ret_t   ret = HAL_RET_OK;
     hal_handle  *handle = NULL;
 
-    if (hal_handle_alloc(obj_id, handle_id, &handle) == HAL_HANDLE_INVALID) {
-        return HAL_RET_ERR;
-    }
-
+    hal_handle_alloc(obj_id, handle_id, &handle);
     handle->set_obj(obj);
-    return HAL_RET_OK;
+
+    return ret;
 }
 
 //------------------------------------------------------------------------------

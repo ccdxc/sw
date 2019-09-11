@@ -154,7 +154,8 @@ find_port_by_handle (hal_handle_t handle)
 }
 
 void     *port_id_get_key_func(void *entry);
-uint32_t port_id_key_size(void);
+uint32_t port_id_compute_hash_func(void *key, uint32_t ht_size);
+bool     port_id_compare_key_func(void *key1, void *key2);
 
 hal_ret_t linkmgr_global_init(linkmgr_cfg_t*);
 sdk::lib::thread *current_thread(void);

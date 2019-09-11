@@ -209,7 +209,8 @@ const acl_ctx_t *rule_lib_init(const char *name, acl_config_t *cfg, rule_lib_cb_
 hal_ret_t rule_match_spec_build(rule_match_t *match,
                                 types::RuleMatch *spec);
 void *rule_cfg_get_key_func(void *entry);
-uint32_t rule_cfg_key_size(void);
+uint32_t rule_cfg_compute_hash_func(void *key, uint32_t ht_size);
+bool rule_cfg_compare_key_func(void *key1, void *key2);
 void rule_lib_delete(const char *name);
 rule_cfg_t *
 rule_cfg_get(const char *name);

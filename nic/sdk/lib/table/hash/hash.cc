@@ -42,7 +42,8 @@ hash::factory(char *name, uint32_t dleft_table_id,
 
     h->entry_ht_ = ht::factory(dleft_capacity,
                                hash_entry_get_key_func,
-                               hash_entry_key_size());
+                               hash_entry_compute_hash_func,
+                               hash_entry_compare_key_func);
 
     h->name_ = (char *)SDK_CALLOC(SDK_MEM_ALLOC_ID_HASH_NAME,
                                   strlen(name) + 1);

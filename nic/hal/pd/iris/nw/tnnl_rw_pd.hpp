@@ -107,7 +107,8 @@ find_tnnl_rw_entry_by_key (pd_tnnl_rw_entry_key_t *key)
 }
 
 extern void *tnnl_rw_entry_pd_get_key_func(void *entry);
-extern uint32_t tnnl_rw_entry_pd_key_size(void);
+extern uint32_t tnnl_rw_entry_pd_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tnnl_rw_entry_pd_compare_key_func(void *key1, void *key2);
 
 // Private APIs
 hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan(pd_tnnl_rw_entry_t *tnnl_rwe);

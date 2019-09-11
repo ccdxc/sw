@@ -45,10 +45,20 @@ nvme_sesscb_pd_get_hw_key_func (void *entry)
     return (void *)&(((pd_nvme_sesscb_t *)entry)->hw_id);
 }
 
-uint32_t
-nvme_sesscb_pd_hw_key_size ()
+bool
+nvme_sesscb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    return sizeof(nvme_sesscb_hw_id_t);
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(nvme_sesscb_hw_id_t *)key1 == *(nvme_sesscb_hw_id_t *)key2) {
+        return true;
+    }
+    return false;
+}
+
+uint32_t
+nvme_sesscb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(nvme_sesscb_hw_id_t)) % ht_size;
 }
 
 uint32_t nvme_sesscb_pd_sesq_prod_ci_offset_get()

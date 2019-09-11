@@ -179,7 +179,8 @@ extern lif_mgr *lif_manager();
 extern program_info *prog_info();
 
 extern void *lif_id_get_key_func(void *entry);
-extern uint32_t lif_id_key_size(void);
+extern uint32_t lif_id_compute_hash_func(void *key, uint32_t ht_size);
+extern bool lif_id_compare_key_func(void *key1, void *key2);
 extern lif_t *find_lif_by_id(lif_id_t lif_id);
 extern lif_t *find_lif_by_handle(hal_handle_t handle);
 void lif_print_ifs(lif_t *lif);

@@ -488,9 +488,20 @@ tcp_proxy_cfg_pol_key_func_get (void *entry)
 }
 
 static inline uint32_t
-tcp_proxy_cfg_pol_key_size (void)
+tcp_proxy_cfg_pol_hash_func_compute (void *key, uint32_t ht_size)
 {
-    return sizeof(tcp_proxy_cfg_pol_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(tcp_proxy_cfg_pol_key_t)) % ht_size;
+}
+
+static inline bool
+tcp_proxy_cfg_pol_key_func_compare (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(tcp_proxy_cfg_pol_key_t)))
+        return true;
+
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -848,17 +859,21 @@ find_tcp_proxy_cb_by_id (tcp_proxy_cb_id_t tcp_proxy_cb_id)
 }
 
 extern void *tcp_proxy_cb_get_key_func(void *entry);
-extern uint32_t tcp_proxy_cb_key_size(void);
+extern uint32_t tcp_proxy_cb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_cb_compare_key_func(void *key1, void *key2);
 
 extern void *tcp_proxy_cb_get_handle_key_func(void *entry);
-extern uint32_t tcp_proxy_cb_handle_key_size(void);
+extern uint32_t tcp_proxy_cb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_cb_compare_handle_key_func(void *key1, void *key2);
+
 
 extern void *tcp_proxy_rule_get_key_func(void *entry);
-extern uint32_t tcp_proxy_rule_key_size(void);
+extern uint32_t tcp_proxy_rule_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_rule_compare_key_func(void *key1, void *key2);
 
 extern void *tcp_proxy_rule_get_handle_key_func(void *entry);
-extern uint32_t tcp_proxy_rule_handle_key_size(void);
-
+extern uint32_t tcp_proxy_rule_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_rule_compare_handle_key_func(void *key1, void *key2);
 extern const acl::acl_ctx_t *
 tcp_proxy_cfg_pol_create_app_ctxt_init(tcp_proxy_cfg_pol_t *pol);
 extern hal_ret_t

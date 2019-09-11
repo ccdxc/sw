@@ -13,19 +13,24 @@ using sdk::lib::ht_ctxt_t;
 static sdk_spinlock_t g_ctx_lock;
 static int g_ctx_lock_init = SDK_SPINLOCK_INIT(&g_ctx_lock, PTHREAD_PROCESS_PRIVATE);
 
-static void *acl_ctx_get_key_func_(void *entry)
+static void *ctx_get_key_func_(void *entry)
 {
     return (void *)((acl_ctx_t *)entry)->name();
 }
 
-static uint32_t acl_ctx_key_size_(void) {
-    return ACL_NAMESIZE;
+static uint32_t ctx_compute_hash_func_(void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, strlen((char *)key)) % ht_size;
 }
 
-static ht *g_ctx_ht = ht::factory(16, acl_ctx_get_key_func_,
-                                  acl_ctx_key_size_(),
-                                  false /* not thread_safe */,
-                                  true /* key is a string */);
+static bool  ctx_compare_key_func_(void *key1, void *key2) {
+    return strcmp((char *)key1, (char *)key2) == 0;
+}
+
+static ht *g_ctx_ht = ht::factory(16, ctx_get_key_func_,
+                                  ctx_compute_hash_func_,
+                                  ctx_compare_key_func_,
+                                  false /* not thread_safe */);
 
 //------------------------------------------------------------------------
 // Creates a new ACL context.

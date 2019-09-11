@@ -95,7 +95,8 @@ find_nvme_ns_by_hwid (nvme_ns_hw_id_t hwid)
 }
 
 extern void *nvme_ns_pd_get_hw_key_func(void *entry);
-extern uint32_t nvme_ns_pd_hw_key_size(void);
+extern uint32_t nvme_ns_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool nvme_ns_pd_compare_hw_key_func(void *key1, void *key2);
 
 hal_ret_t
 nvme_ns_update_session_id(uint32_t g_nsid, uint16_t sess_id);

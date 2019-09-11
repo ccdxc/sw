@@ -35,12 +35,25 @@ nexthop_id_get_key_func (void *entry)
 }
 
 // ----------------------------------------------------------------------------
-// Key size for nexthop hash table
+// Compute hash function for nexthop hash table
 // ----------------------------------------------------------------------------
 uint32_t
-nexthop_id_key_size ()
+nexthop_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(nh_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(nh_id_t)) % ht_size;
+}
+
+// ----------------------------------------------------------------------------
+// Compare key function for nexthop hash table
+// ----------------------------------------------------------------------------
+bool
+nexthop_id_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(nh_id_t *)key1 == *(nh_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------

@@ -227,14 +227,16 @@ public:
                               app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
                               l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr,
                               ht::ht_get_key_func_t ht_get_key_func = NULL,
-                              uint32_t ht_key_size = 0);
+                              ht::ht_compute_hash_func_t ht_compute_hash_func = NULL,
+                              ht::ht_compare_key_func_t ht_compare_key_func = NULL);
 
     void init(const char* feature_name, slab *app_sess_slab,
               slab *l4_sess_slab, slab *alg_state_slab,
               app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
               l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr,
               ht::ht_get_key_func_t ht_get_key_func = NULL,
-              uint32_t ht_key_size = 0);
+              ht::ht_compute_hash_func_t ht_compute_hash_func = NULL,
+              ht::ht_compare_key_func_t ht_compare_key_func = NULL);
 
     ~alg_state();
 

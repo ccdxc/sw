@@ -99,7 +99,8 @@ find_proxyccb_by_hwid (proxyccb_hw_id_t hwid)
 }
 
 extern void *proxyccb_pd_get_hw_key_func(void *entry);
-extern uint32_t proxyccb_pd_hw_key_size(void);
+extern uint32_t proxyccb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool proxyccb_pd_compare_hw_key_func(void *key1, void *key2);
 
 }   // namespace pd
 }   // namespace hal

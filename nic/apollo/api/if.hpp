@@ -58,10 +58,25 @@ public:
         return (void *)&(intf->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_ifindex_t);
+    /// \brief          helper function to compute hash value for given
+    ///                 interface id
+    /// \param[in]      key        interface's key
+    /// \param[in]      ht_size    hash table size
+    /// \return         hash value
+    static uint32_t if_hash_func_compute(void *key, uint32_t ht_size) {
+        return hash_algo::fnv_hash(key, sizeof(pds_ifindex_t)) % ht_size;
+    }
+
+    /// \brief          helper function to compare two interface keys
+    /// \param[in]      key1        pointer to interface's key
+    /// \param[in]      key2        pointer to interface's key
+    /// \return         0 if keys are same or else non-zero value
+    static bool if_key_func_compare(void *key1, void *key2) {
+        SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+        if (!memcmp(key1, key2, sizeof(pds_ifindex_t))) {
+            return true;
+        }
+        return false;
     }
 
     /// \brief    return the interface index

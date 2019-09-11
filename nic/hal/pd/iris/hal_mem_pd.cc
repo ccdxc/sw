@@ -113,7 +113,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("flow-lookup-id", flow_lkupid_ht_,
                   (HAL_MAX_HW_L2SEGMENTS + HAL_MAX_HW_VRFS) >> 1,
                   hal::pd::flow_lkupid_get_hw_key_func,
-                  hal::pd::flow_lkupid_hw_key_size());
+                  hal::pd::flow_lkupid_compute_hw_hash_func,
+                  hal::pd::flow_lkupid_compare_hw_key_func);
     SDK_ASSERT_RETURN((flow_lkupid_ht_ != NULL), false);
 
     l2seg_cpu_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_L2SEGMENTS,
@@ -291,7 +292,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("tlscb_hw_id", tlscb_hwid_ht_,
                   HAL_MAX_HW_TLSCBS >> 1,
                   hal::pd::tlscb_pd_get_hw_key_func,
-                  hal::pd::tlscb_pd_hw_key_size());
+                  hal::pd::tlscb_pd_compute_hw_hash_func,
+                  hal::pd::tlscb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((tlscb_hwid_ht_ != NULL), false);
 
     // initialize TCPCB related data structures
@@ -305,7 +307,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("tcpcb_hw_id", tcpcb_hwid_ht_,
                   HAL_MAX_HW_TCPCBS >> 1,
                   hal::pd::tcpcb_pd_get_hw_key_func,
-                  hal::pd::tcpcb_pd_hw_key_size());
+                  hal::pd::tcpcb_pd_compute_hw_hash_func,
+                  hal::pd::tcpcb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((tcpcb_hwid_ht_ != NULL), false);
 
     // initialize NVME_SESSCB related data structures
@@ -319,7 +322,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("nvme_sesscb_hw_id", nvme_sesscb_hwid_ht_,
                   HAL_MAX_HW_NVME_SESSCBS >> 1,
                   hal::pd::nvme_sesscb_pd_get_hw_key_func,
-                  hal::pd::nvme_sesscb_pd_hw_key_size());
+                  hal::pd::nvme_sesscb_pd_compute_hw_hash_func,
+                  hal::pd::nvme_sesscb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((nvme_sesscb_hwid_ht_ != NULL), false);
 
     // initialize NVME_GLOBAL related data structures
@@ -341,7 +345,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("nvme_ns_hw_id", nvme_ns_hwid_ht_,
                   HAL_MAX_HW_NVME_NS >> 1,
                   hal::pd::nvme_ns_pd_get_hw_key_func,
-                  hal::pd::nvme_ns_pd_hw_key_size());
+                  hal::pd::nvme_ns_pd_compute_hw_hash_func,
+                  hal::pd::nvme_ns_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((nvme_ns_hwid_ht_ != NULL), false);
 
 
@@ -356,7 +361,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("nvme_sq_hw_id", nvme_sq_hwid_ht_,
                   HAL_MAX_HW_NVME_SQ >> 1,
                   hal::pd::nvme_sq_pd_get_hw_key_func,
-                  hal::pd::nvme_sq_pd_hw_key_size());
+                  hal::pd::nvme_sq_pd_compute_hw_hash_func,
+                  hal::pd::nvme_sq_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((nvme_sq_hwid_ht_ != NULL), false);
 
 
@@ -371,7 +377,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("nvme_cq_hw_id", nvme_cq_hwid_ht_,
                   HAL_MAX_HW_NVME_CQ >> 1,
                   hal::pd::nvme_cq_pd_get_hw_key_func,
-                  hal::pd::nvme_cq_pd_hw_key_size());
+                  hal::pd::nvme_cq_pd_compute_hw_hash_func,
+                  hal::pd::nvme_cq_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((nvme_cq_hwid_ht_ != NULL), false);
 
 
@@ -394,7 +401,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("wring_hw_id", wring_hwid_ht_,
                   HAL_MAX_HW_WRING >> 1,
                   hal::pd::wring_pd_get_hw_key_func,
-                  hal::pd::wring_pd_hw_key_size());
+                  hal::pd::wring_pd_compute_hw_hash_func,
+                  hal::pd::wring_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((wring_hwid_ht_ != NULL), false);
 
     // initialize IPSECCB related data structures
@@ -415,7 +423,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("ipseccb_hw_id", ipseccb_hwid_ht_,
                   HAL_MAX_HW_IPSECCBS >> 1,
                   hal::pd::ipseccb_pd_get_hw_key_func,
-                  hal::pd::ipseccb_pd_hw_key_size());
+                  hal::pd::ipseccb_pd_compute_hw_hash_func,
+                  hal::pd::ipseccb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((ipseccb_hwid_ht_ != NULL), false);
 
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_DECRYPT_PD)] =
@@ -429,13 +438,15 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("ipsecde_hw_id", ipseccb_decrypt_hwid_ht_,
                   HAL_MAX_HW_IPSECCBS >> 1,
                   hal::pd::ipseccb_pd_decrypt_get_hw_key_func,
-                  hal::pd::ipseccb_pd_decrypt_hw_key_size());
+                  hal::pd::ipseccb_pd_decrypt_compute_hw_hash_func,
+                  hal::pd::ipseccb_pd_decrypt_compare_hw_key_func);
     SDK_ASSERT_RETURN((ipseccb_decrypt_hwid_ht_ != NULL), false);
 
     HAL_HT_CREATE("ipsecsa_hw_id", ipsec_sa_hwid_ht_,
                   HAL_MAX_HW_IPSEC_SA >> 1,
                   hal::pd::ipsec_pd_get_hw_key_func,
-                  hal::pd::ipsec_pd_hw_key_size());
+                  hal::pd::ipsec_pd_compute_hw_hash_func,
+                  hal::pd::ipsec_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((ipsec_sa_hwid_ht_ != NULL), false);
 
     // initialize L4LB PD related data structures
@@ -457,7 +468,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("rw-table", rw_table_ht_,
                   HAL_MAX_RW_TBL_ENTRIES >> 1,
                   hal::pd::rw_entry_pd_get_key_func,
-                  hal::pd::rw_entry_pd_key_size());
+                  hal::pd::rw_entry_pd_compute_hash_func,
+                  hal::pd::rw_entry_pd_compare_key_func);
     SDK_ASSERT_RETURN((rw_table_ht_ != NULL), false);
 
     rw_tbl_idxr_ = sdk::lib::indexer::factory(HAL_MAX_RW_TBL_ENTRIES);
@@ -474,7 +486,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("tunnel-rw-table", tnnl_rw_table_ht_,
                   HAL_TUNNEL_RW_TABLE_SIZE >> 1,
                   hal::pd::tnnl_rw_entry_pd_get_key_func,
-                  hal::pd::tnnl_rw_entry_pd_key_size());
+                  hal::pd::tnnl_rw_entry_pd_compute_hash_func,
+                  hal::pd::tnnl_rw_entry_pd_compare_key_func);
     SDK_ASSERT_RETURN((tnnl_rw_table_ht_ != NULL), false);
 
     tnnl_rw_tbl_idxr_ = sdk::lib::indexer::factory(HAL_TUNNEL_RW_TABLE_SIZE);
@@ -491,7 +504,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("cpucb_hw_id", cpucb_hwid_ht_,
                   HAL_MAX_HW_CPUCBS >> 1,
                   hal::pd::cpucb_pd_get_hw_key_func,
-                  hal::pd::cpucb_pd_hw_key_size());
+                  hal::pd::cpucb_pd_compute_hw_hash_func,
+                  hal::pd::cpucb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((cpucb_hwid_ht_ != NULL), false);
 
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCP_RINGS_PD)] =
@@ -529,7 +543,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("rawrcb_hw_id", rawrcb_hwid_ht_,
                   HAL_MAX_HW_RAWRCB_HT_SIZE >> 1,
                   hal::pd::rawrcb_pd_get_hw_key_func,
-                  hal::pd::rawrcb_pd_hw_key_size());
+                  hal::pd::rawrcb_pd_compute_hw_hash_func,
+                  hal::pd::rawrcb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((rawrcb_hwid_ht_ != NULL), false);
 
     // initialize PROXYRCB related data structures
@@ -542,7 +557,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("proxyrcb_hw_id", proxyrcb_hwid_ht_,
                   HAL_MAX_HW_PROXYRCB_HT_SIZE >> 1,
                   hal::pd::proxyrcb_pd_get_hw_key_func,
-                  hal::pd::proxyrcb_pd_hw_key_size());
+                  hal::pd::proxyrcb_pd_compute_hw_hash_func,
+                  hal::pd::proxyrcb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((proxyrcb_hwid_ht_ != NULL), false);
 
     // initialize RAWCCB related data structures
@@ -556,7 +572,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("rawccb_hw_id", rawccb_hwid_ht_,
                   HAL_MAX_HW_RAWCCB_HT_SIZE >> 1,
                   hal::pd::rawccb_pd_get_hw_key_func,
-                  hal::pd::rawccb_pd_hw_key_size());
+                  hal::pd::rawccb_pd_compute_hw_hash_func,
+                  hal::pd::rawccb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((rawccb_hwid_ht_ != NULL), false);
 
     // initialize PROXYCCB related data structures
@@ -570,7 +587,8 @@ hal_state_pd::init(void)
     HAL_HT_CREATE("proxyccb-hw-id", proxyccb_hwid_ht_,
                   HAL_MAX_HW_PROXYCCB_HT_SIZE >> 1,
                   hal::pd::proxyccb_pd_get_hw_key_func,
-                  hal::pd::proxyccb_pd_hw_key_size());
+                  hal::pd::proxyccb_pd_compute_hw_hash_func,
+                  hal::pd::proxyccb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((proxyccb_hwid_ht_ != NULL), false);
 
     // initialize fte span pd related data structures

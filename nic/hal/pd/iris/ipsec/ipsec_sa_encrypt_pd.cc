@@ -26,9 +26,19 @@ ipsec_pd_get_hw_key_func (void *entry)
 }
 
 uint32_t
-ipsec_pd_hw_key_size ()
+ipsec_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(ipsec_sa_hw_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ipsec_sa_hw_id_t)) % ht_size;
+}
+
+bool
+ipsec_pd_compare_hw_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(ipsec_sa_hw_id_t *)key1 == *(ipsec_sa_hw_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 /********************************************

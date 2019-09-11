@@ -37,12 +37,29 @@ vrf_id_get_key_func (void *entry)
 }
 
 //------------------------------------------------------------------------------
-// hash table vrf_id key size
+// hash table vrf_id => entry - compute hash
 //------------------------------------------------------------------------------
 uint32_t
-vrf_id_key_size ()
+vrf_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(vrf_id_t);
+    SDK_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(vrf_id_t)) % ht_size;
+}
+
+//------------------------------------------------------------------------------
+// hash table vrf_id => entry - compare function
+//------------------------------------------------------------------------------
+bool
+vrf_id_compare_key_func (void *key1, void *key2)
+{
+    if (key1 == NULL || key2 == NULL) {
+        goto end;
+    }
+    if (*(vrf_id_t *)key1 == *(vrf_id_t *)key2) {
+        return true;
+    }
+end:
+    return false;
 }
 
 //------------------------------------------------------------------------------

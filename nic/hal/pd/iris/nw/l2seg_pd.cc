@@ -73,12 +73,25 @@ flow_lkupid_get_hw_key_func (void *entry)
 }
 
 //-----------------------------------------------------------------------------
-// key size for flow lkupid hash table
+// hash function for flow lkupid hash table
 //-----------------------------------------------------------------------------
 uint32_t
-flow_lkupid_hw_key_size ()
+flow_lkupid_compute_hw_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(l2seg_hw_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(l2seg_hw_id_t)) % ht_size;
+}
+
+//-----------------------------------------------------------------------------
+// compare key function for flow lkupid hash table
+//-----------------------------------------------------------------------------
+bool
+flow_lkupid_compare_hw_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(uint32_t *)key1 == *(uint32_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 //-----------------------------------------------------------------------------

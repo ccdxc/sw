@@ -163,7 +163,8 @@ is_l2seg_wire_encap_vxlan (l2seg_t *l2seg)
 }
 
 extern void *l2seg_id_get_key_func(void *entry);
-extern uint32_t l2seg_id_key_size(void);
+extern uint32_t l2seg_id_compute_hash_func(void *key, uint32_t ht_size);
+extern bool l2seg_id_compare_key_func(void *key1, void *key2);
 l2seg_t *find_l2seg_by_id(l2seg_id_t l2seg_id);
 l2seg_t *l2seg_lookup_by_handle(hal_handle_t handle);
 l2seg_t *l2seg_lookup_key_or_handle(const L2SegmentKeyHandle& kh);
@@ -197,7 +198,9 @@ typedef struct l2_seg_uplink_oif_list_s {
 
 void *
 l2seg_uplink_oif_get_key_func (void *entry);
-uint32_t l2seg_uplink_oif_key_size (void);
+uint32_t
+l2seg_uplink_oif_compute_hash_func (void *key, uint32_t ht_size);
+bool l2seg_uplink_oif_compare_key_func (void *key1, void *key2);
 bool l2seg_is_mbr_if (l2seg_t *l2seg, if_id_t if_id);
 bool l2seg_is_oob_mgmt(l2seg_t *l2seg);
 bool l2seg_is_mgmt(l2seg_t *l2seg);

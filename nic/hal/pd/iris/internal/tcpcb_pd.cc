@@ -46,9 +46,19 @@ tcpcb_pd_get_hw_key_func (void *entry)
 }
 
 uint32_t
-tcpcb_pd_hw_key_size ()
+tcpcb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(tcpcb_hw_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(tcpcb_hw_id_t)) % ht_size;
+}
+
+bool
+tcpcb_pd_compare_hw_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(tcpcb_hw_id_t *)key1 == *(tcpcb_hw_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 /********************************************

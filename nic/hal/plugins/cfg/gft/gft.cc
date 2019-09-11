@@ -55,12 +55,27 @@ gft_exact_match_profile_id_get_key_func (void *entry)
 }
 
 //----------------------------------------------------------------------------
-// compute the profile's key size
+// compute the hash given GFT exact match profile's key (i.e., profile id)
 //----------------------------------------------------------------------------
 uint32_t
-gft_exact_match_profile_id_key_size ()
+gft_exact_match_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(gft_profile_id_t);
+    SDK_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(gft_profile_id_t)) % ht_size;
+}
+
+//----------------------------------------------------------------------------
+// compare the keys of GFT exact match profiles
+//----------------------------------------------------------------------------
+bool
+gft_exact_match_profile_id_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(gft_profile_id_t *)key1 == *(gft_profile_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 //----------------------------------------------------------------------------
@@ -80,12 +95,27 @@ gft_hdr_transposition_profile_id_get_key_func (void *entry)
 }
 
 //-----------------------------------------------------------------------------
-// compute GFT header transposition profile's key size
+// compute hash given GFT header transposition profile's key (i.e., profile id)
 //-----------------------------------------------------------------------------
 uint32_t
-gft_hdr_transposition_profile_id_key_size ()
+gft_hdr_transposition_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(gft_profile_id_t);
+    SDK_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(gft_profile_id_t)) % ht_size;
+}
+
+//----------------------------------------------------------------------------
+// compare the keys of GFT header transposition profiles
+//----------------------------------------------------------------------------
+bool
+gft_hdr_transposition_profile_id_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(gft_profile_id_t *)key1 == *(gft_profile_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 //----------------------------------------------------------------------------
@@ -105,12 +135,27 @@ gft_exact_match_flow_entry_id_get_key_func (void *entry)
 }
 
 //------------------------------------------------------------------------------
-// compute the GFT exact match flow entry's key size
+// compute the hash given GFT exact match flow entry's key (i.e., flow entry id)
 //------------------------------------------------------------------------------
 uint32_t
-gft_exact_match_flow_entry_id_key_size (void)
+gft_exact_match_flow_entry_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(gft_flow_entry_id_t);
+    SDK_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(gft_flow_entry_id_t)) % ht_size;
+}
+
+//----------------------------------------------------------------------------
+// compare the keys of GFT exact match flow entries
+//----------------------------------------------------------------------------
+bool
+gft_exact_match_flow_entry_id_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(gft_flow_entry_id_t *)key1 == *(gft_flow_entry_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------

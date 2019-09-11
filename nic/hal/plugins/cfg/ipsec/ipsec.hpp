@@ -537,9 +537,20 @@ ipsec_cfg_pol_key_func_get (void *entry)
 }
 
 static inline uint32_t
-ipsec_cfg_pol_key_size ()
+ipsec_cfg_pol_hash_func_compute (void *key, uint32_t ht_size)
 {
-    return sizeof(ipsec_cfg_pol_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(ipsec_cfg_pol_key_t)) % ht_size;
+}
+
+static inline bool
+ipsec_cfg_pol_key_func_compare (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(ipsec_cfg_pol_key_t)))
+        return true;
+
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -833,10 +844,12 @@ ipsec_cfg_pol_acl_cleanup (ipsec_cfg_pol_t *pol)
 }
 
 extern void *ipsec_sa_get_key_func(void *entry);
-extern uint32_t ipsec_sa_key_size(void);
+extern uint32_t ipsec_sa_compute_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_sa_compare_key_func(void *key1, void *key2);
 
 extern void *ipsec_sa_get_handle_key_func(void *entry);
-extern uint32_t ipsec_sa_handle_key_size(void);
+extern uint32_t ipsec_sa_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_sa_compare_handle_key_func(void *key1, void *key2);
 
 hal_ret_t ipsec_saencrypt_create(ipsec::IpsecSAEncrypt& spec,
                        ipsec::IpsecSAEncryptResponse *rsp);

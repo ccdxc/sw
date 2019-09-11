@@ -17,9 +17,19 @@ event_map_get_key_func (void *entry)
 }
 
 static uint32_t
-event_map_key_size ()
+event_map_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(event_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(event_id_t)) % ht_size;
+}
+
+static bool
+event_map_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(event_id_t *)key1 == *(event_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 static void *
@@ -29,9 +39,19 @@ listener_map_get_key_func (void *entry)
 }
 
 static uint32_t
-listener_map_key_size ()
+listener_map_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(void *);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(void *)) % ht_size;
+}
+
+static bool
+listener_map_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(void **)key1 == *(void **)key2) {
+        return true;
+    }
+    return false;
 }
 
 // initialize event manager instance
@@ -39,7 +59,8 @@ int
 eventmgr::init(uint32_t max_events)
 {
     event_map_ = ht::factory(max_events, event_map_get_key_func,
-                             event_map_key_size(), true);
+                             event_map_compute_hash_func,
+                             event_map_compare_key_func, true);
     if (event_map_ == NULL) {
         return -1;
     }
@@ -65,7 +86,8 @@ eventmgr::init(uint32_t max_events)
     }
 
     listener_map_ = ht::factory(16, listener_map_get_key_func,
-                                listener_map_key_size(), true);
+                                listener_map_compute_hash_func,
+                                listener_map_compare_key_func, true);
     if (listener_map_ == NULL) {
         return -1;
     }

@@ -62,7 +62,8 @@ const char *filter_key_to_str (filter_key_t *key);
 const char *filter_keyhandle_to_str (filter_t *filter);
 hal_ret_t filter_check_enic (lif_t *lif, if_t *hal_if, bool *egress_en);
 void *filter_get_key_func (void *entry);
-uint32_t filter_key_size (void);
+uint32_t filter_compute_key_hash_func (void *key, uint32_t ht_size);
+bool filter_compare_key_func (void *key1, void *key2);
 
 }    // namespace hal
 

@@ -96,7 +96,8 @@ find_nvme_sesscb_by_hwid (nvme_sesscb_hw_id_t hwid)
 }
 
 extern void *nvme_sesscb_pd_get_hw_key_func(void *entry);
-extern uint32_t nvme_sesscb_pd_hw_key_size(void);
+extern uint32_t nvme_sesscb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool nvme_sesscb_pd_compare_hw_key_func(void *key1, void *key2);
 extern uint64_t nvme_sesscb_pd_serq_prod_ci_addr_get(uint32_t g_sess_id);
 
 

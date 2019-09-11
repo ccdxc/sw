@@ -92,7 +92,8 @@ find_cert_by_id(crypto_cert_id_t cert_id)
 }
 
 extern void *crypto_cert_store_get_key_func(void *entry);
-extern uint32_t crypto_cert_store_key_size(void);
+extern uint32_t crypto_cert_store_compute_hash_func(void *key, uint32_t ht_size);
+extern bool crypto_cert_store_compare_key_func(void *key1, void *key2);
 
 } // namespace hal
 

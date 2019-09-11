@@ -258,10 +258,12 @@ private:
 } __PACK__;
 
 void* dhcptrans_get_key_func(void* entry);
-uint32_t dhcptrans_key_size(void);
+uint32_t dhcptrans_compute_hash_func(void* key, uint32_t ht_size);
+bool dhcptrans_compare_key_func(void* key1, void* key2);
 
 void* dhcptrans_get_handle_key_func(void* entry);
-uint32_t dhcptrans_handle_key_size(void);
+uint32_t dhcptrans_compute_handle_hash_func(void* key, uint32_t ht_size);
+bool dhcptrans_compare_handle_key_func(void* key1, void* key2);
 
 hal_ret_t dhcp_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr);
 

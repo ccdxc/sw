@@ -128,7 +128,10 @@ extern void *
 nwsec_group_get_key_func (void *entry);
 
 extern uint32_t
-nwsec_group_key_size (void);
+nwsec_group_compute_hash_func (void *key, uint32_t ht_size);
+
+extern bool
+nwsec_group_compare_key_func (void *key1, void *key2);
 
 // max. number of SGs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NW_SEC_GROUP_CFG  8192
@@ -402,7 +405,8 @@ typedef struct nwsec_policy_s {
 hal_ret_t nwsec_policy_init();
 
 void *nwsec_policy_get_key_func(void *entry);
-uint32_t nwsec_policy_key_size(void);
+uint32_t nwsec_policy_compute_hash_func(void *key, uint32_t ht_size);
+bool nwsec_policy_compare_key_func(void *key1, void *key2);
 const char *nwsec_acl_ctx_name(vrf_id_t vrf_id);
 nwsec_policy_t *
 find_nwsec_policy_by_key(uint32_t policy_id, uint32_t vrf_id);
@@ -411,7 +415,10 @@ void *
 nwsec_rule_get_key_func (void *entry);
 
 uint32_t
-nwsec_rule_key_size (void);
+nwsec_rule_compute_hash_func (void *key, uint32_t ht_size);
+
+bool
+nwsec_rule_compare_key_func (void *key1, void *key2);
 
 typedef struct nwsec_policy_create_app_ctxt_s {
     const acl_ctx_t    *acl_ctx;

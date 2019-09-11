@@ -89,8 +89,20 @@ proxy_flow_ht_get_key_func (void *entry)
     return (void *)&(((proxy_flow_info_t *)entry)->flow_key);
 }
 
-uint32_t proxy_flow_key_size(void) {
-    return sizeof(flow_key_t);
+uint32_t
+proxy_flow_ht_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size;
+}
+
+bool
+proxy_flow_ht_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if(memcmp(key1, key2, sizeof(flow_key_t)) == 0) {
+        return true;
+    }
+    return false;
 }
 
 void *
@@ -100,8 +112,20 @@ proxy_get_key_func (void *entry)
     return (void *)&(((proxy_t *)entry)->type);
 }
 
-uint32_t proxy_key_size(void) {
-    return sizeof(types::ProxyType);
+uint32_t
+proxy_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(types::ProxyType)) % ht_size;
+}
+
+bool
+proxy_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(types::ProxyType *)key1 == *(types::ProxyType *)key2) {
+        return true;
+    }
+    return false;
 }
 
 void *
@@ -111,8 +135,20 @@ proxy_get_handle_key_func (void *entry)
     return (void *)&(((proxy_t *)entry)->hal_handle);
 }
 
-uint32_t proxy_handle_key_size(void) {
-    return sizeof(hal_handle_t);
+uint32_t
+proxy_compute_handle_hash_func (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+}
+
+bool
+proxy_compare_handle_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 // allocate a proxy instance
@@ -461,7 +497,8 @@ proxy_factory(types::ProxyType type)
     // Initialize flow info structures
     proxy->flow_ht_ = ht::factory(HAL_MAX_PROXY_FLOWS,
                                   hal::proxy_flow_ht_get_key_func,
-                                  hal::proxy_flow_key_size());
+                                  hal::proxy_flow_ht_compute_hash_func,
+                                 hal::proxy_flow_ht_compare_key_func);
     SDK_ASSERT(proxy->flow_ht_ != NULL);
 
     // Instantiate QID indexer

@@ -183,7 +183,8 @@ extern nwsec_profile_t *find_nwsec_profile_by_id(nwsec_profile_id_t profile_id);
 extern nwsec_profile_t *find_nwsec_profile_by_handle(hal_handle_t handle);
 nwsec_profile_t *nwsec_prof_lookup_key_or_handle (const SecurityProfileKeyHandle& kh);
 extern void *nwsec_profile_id_get_key_func(void *entry);
-extern uint32_t nwsec_profile_id_key_size(void);
+extern uint32_t nwsec_profile_id_compute_hash_func(void *key, uint32_t ht_size);
+extern bool nwsec_profile_id_compare_key_func(void *key1, void *key2);
 hal_ret_t find_nwsec_by_key_or_handle(const SecurityProfileKeyHandle& kh,
                                       nwsec_profile_t **nwsec_profile);
 

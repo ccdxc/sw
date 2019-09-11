@@ -117,9 +117,20 @@ nat_cfg_pol_key_func_get (void *entry)
 }
 
 inline uint32_t
-nat_cfg_pol_key_size ()
+nat_cfg_pol_hash_func_compute (void *key, uint32_t ht_size)
 {
-    return sizeof(nat_cfg_pol_key_t);
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(nat_cfg_pol_key_t)) % ht_size;
+}
+
+inline bool
+nat_cfg_pol_key_func_compare (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(nat_cfg_pol_key_t)))
+        return true;
+
+    return false;
 }
 
 inline void

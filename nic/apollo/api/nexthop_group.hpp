@@ -124,10 +124,27 @@ public:
         return (void *)&(nh_group->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_nexthop_group_key_t);
+    /// \brief     helper function to compute hash value for given
+    ///            nexthop group's key
+    /// \param[in] key     nexthop group 's key
+    /// \param[in] ht_size hash table size
+    /// \return    hash value
+    static uint32_t nexthop_group_hash_func_compute(void *key,
+                                                    uint32_t ht_size) {
+        return hash_algo::fnv_hash(key,
+                                   sizeof(pds_nexthop_group_key_t)) % ht_size;
+    }
+
+    /// \brief     helper function to compare two nexthop group's keys
+    /// \param[in] key1 pointer to nexthop group's key
+    /// \param[in] key2 pointer to nexthop group's key
+    /// \return    0 if keys are same or else non-zero value
+    static bool nexthop_group_key_func_compare(void *key1, void *key2) {
+        SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+        if (!memcmp(key1, key2, sizeof(pds_nexthop_group_key_t))) {
+            return true;
+        }
+        return false;
     }
 
     /// \brief     return the type of the nexthop group

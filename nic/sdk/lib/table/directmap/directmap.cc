@@ -36,7 +36,8 @@ directmap::init(char *name, uint32_t id, uint32_t capacity,
     if (sharing_en_) {
         entry_ht_ = ht::factory(capacity,
                                 dm_entry_get_key_func,
-                                swdata_len_);
+                                dm_entry_compute_hash_func,
+                                dm_entry_compare_key_func);
     }
 
     hwdata_len_ = 0;
@@ -130,6 +131,46 @@ void *
 directmap::dm_entry_get_key_func(void *entry)
 {
     return entry;
+}
+
+//-----------------------------------------------------------------------------
+// compute hash function
+//-----------------------------------------------------------------------------
+uint32_t
+directmap::dm_entry_compute_hash_func(void *key, uint32_t ht_size)
+{
+    directmap_entry_t           *ht_entry;
+    void                        *ht_key;
+
+    SDK_ASSERT(key != NULL);
+    ht_entry = (directmap_entry_t *)key;
+
+    ht_key = ht_entry->data;
+    SDK_ASSERT(ht_key != NULL);
+
+    return sdk::lib::hash_algo::fnv_hash(ht_key, ht_entry->len) % ht_size;
+}
+
+//-----------------------------------------------------------------------------
+// compare function
+//-----------------------------------------------------------------------------
+bool
+directmap::dm_entry_compare_key_func(void *key1, void *key2)
+{
+    directmap_entry_t           *ht_entry1, *ht_entry2;
+    void                        *ht_key1, *ht_key2;
+
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    ht_entry1 = (directmap_entry_t *)key1;
+    ht_entry2 = (directmap_entry_t *)key2;
+
+    ht_key1 = ht_entry1->data;
+    ht_key2 = ht_entry2->data;
+
+    if (!memcmp(ht_key1, ht_key2, ht_entry1->len)) {
+        return true;
+    }
+    return false;
 }
 
 //-----------------------------------------------------------------------------

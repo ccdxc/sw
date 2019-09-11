@@ -21,12 +21,24 @@ tcam_entry_get_key_func (void *entry)
 }
 
 //---------------------------------------------------------------------------
-// compute hash key size
+// compute hash 
 //---------------------------------------------------------------------------
 uint32_t 
-tcam_entry_key_size ()
+tcam_entry_compute_hash_func(void *key, uint32_t ht_size)
 {
-    return sizeof(uint32_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(uint32_t)) % ht_size;
+}
+
+//---------------------------------------------------------------------------
+// compare keys
+//---------------------------------------------------------------------------
+bool 
+tcam_entry_compare_key_func (void *key1, void *key2)
+{
+    if (*(uint32_t *)key1 == *(uint32_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 tcam_entry_t *

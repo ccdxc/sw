@@ -439,15 +439,20 @@ session_t *find_session_by_handle(hal_handle_t handle);
 //session_t *find_session_by_id(session_id_t session_id);
 
 extern void *session_get_key_func (void *entry);
-extern uint32_t session_key_size (void);
+extern uint32_t session_compute_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_key_func (void *key1, void *key2);
 extern void *session_get_handle_key_func (void *entry);
-extern uint32_t session_handle_key_size (void);
+extern uint32_t session_compute_handle_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_handle_key_func (void *key1, void *key2);
 extern void *session_get_iflow_key_func (void *entry);
-extern uint32_t session_iflow_key_size (void);
+extern uint32_t session_compute_iflow_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_iflow_key_func (void *key1, void *key2);
 extern void *session_get_rflow_key_func (void *entry);
-extern uint32_t session_rflow_key_size (void);
+extern uint32_t session_compute_rflow_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_rflow_key_func (void *key1, void *key2);
 extern void *flow_get_key_func (void *entry);
-extern uint32_t flow_key_size (void);
+extern uint32_t flow_compute_hash_func (void *key, uint32_t ht_size);
+extern bool flow_compare_key_func (void *key1, void *key2);
 extern hal_ret_t ep_get_from_flow_key (const flow_key_t* key,
                                       ep_t **sep, ep_t **dep);
 bool flow_needs_associate_flow (const flow_key_t *flow_key);

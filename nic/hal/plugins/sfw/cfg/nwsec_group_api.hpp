@@ -29,7 +29,10 @@ void *
 nwsec_policy_cfg_get_key_func (void *entry);
 
 uint32_t
-nwsec_policy_cfg_key_size (void);
+nwsec_policy_cfg_compute_hash_func (void *key, uint32_t ht_size);
+
+bool
+nwsec_policy_cfg_compare_key_func (void *key1, void *key2);
 
 nwsec_group_t *
 nwsec_group_lookup_key_or_handle(const kh::SecurityGroupKeyHandle& key_or_handle);

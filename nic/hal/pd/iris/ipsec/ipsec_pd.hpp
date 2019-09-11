@@ -234,10 +234,12 @@ find_ipsec_decrypt_by_hwid (ipsec_sa_hw_id_t hwid)
 }
 
 extern void *ipsec_pd_get_hw_key_func(void *entry);
-extern uint32_t ipsec_pd_hw_key_size(void);
+extern uint32_t ipsec_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_pd_compare_hw_key_func(void *key1, void *key2);
 #if 0
 extern void *ipsec_pd_decrypt_get_hw_key_func(void *entry);
-extern uint32_t ipsec_pd_decrypt_hw_key_size(void);
+extern uint32_t ipsec_pd_decrypt_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool ipsec_pd_decrypt_compare_hw_key_func(void *key1, void *key2);
 #endif
 
 }   // namespace pd

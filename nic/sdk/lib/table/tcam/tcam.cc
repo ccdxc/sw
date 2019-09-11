@@ -46,7 +46,8 @@ tcam::factory(char *name, uint32_t id,
 
     t->entry_ht_ = ht::factory(capacity,
                                tcam_entry_get_key_func,
-                               tcam_entry_key_size());
+                               tcam_entry_compute_hash_func,
+                               tcam_entry_compare_key_func);
 
     t->name_ = (char *)SDK_CALLOC(SDK_MEM_ALLOC_ID_TCAM_NAME,
                                   strlen(name) + 1);

@@ -105,12 +105,14 @@ typedef struct proxyrcb_s {
 #define HAL_NUM_PROXYRCB_RINGS_MAX        APP_REDIR_PROXYR_RINGS_MAX
 
 extern void *proxyrcb_get_key_func(void *entry);
-extern uint32_t proxyrcb_key_size(void);
+extern uint32_t proxyrcb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool proxyrcb_compare_key_func(void *key1, void *key2);
 extern proxyrcb_t *find_proxyrcb_by_id(proxyrcb_id_t proxyrcb_id);
 extern proxyrcb_t *find_proxyrcb_by_handle(hal_handle_t handle);
 
 extern void *proxyrcb_get_handle_key_func(void *entry);
-extern uint32_t proxyrcb_handle_key_size(void);
+extern uint32_t proxyrcb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool proxyrcb_compare_handle_key_func(void *key1, void *key2);
 
 }    // namespace hal
 

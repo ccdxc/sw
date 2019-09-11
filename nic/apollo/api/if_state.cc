@@ -22,7 +22,8 @@ namespace api {
 if_state::if_state() {
     // TODO: need to tune multi-threading related params later
     if_ht_ = ht::factory(PDS_MAX_IF >> 1, if_entry::if_key_func_get,
-                         if_entry::key_size());
+                         if_entry::if_hash_func_compute,
+                         if_entry::if_key_func_compare);
     SDK_ASSERT(if_ht() != NULL);
     if_slab_ = slab::factory("interface", PDS_SLAB_ID_IF, sizeof(if_entry), 16,
                              true, true, NULL);

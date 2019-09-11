@@ -21,9 +21,19 @@ cpucb_get_key_func (void *entry)
 }
 
 uint32_t
-cpucb_key_size ()
+cpucb_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(cpucb_id_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(cpucb_id_t)) % ht_size;
+}
+
+bool
+cpucb_compare_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(cpucb_id_t *)key1 == *(cpucb_id_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 void *
@@ -34,9 +44,19 @@ cpucb_get_handle_key_func (void *entry)
 }
 
 uint32_t
-cpucb_handle_key_size ()
+cpucb_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return sizeof(hal_handle_t);
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+}
+
+bool
+cpucb_compare_handle_key_func (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
+        return true;
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------
