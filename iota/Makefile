@@ -46,7 +46,9 @@ bin/iota-cmd:
 iota-test:
 	go test -c ./svcs/agent/ -o bin/agent.test
 
-iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd heimdall iota-test
+iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd iota-test
+
+iota-scale: iota heimdall
 
 iota-tarball: iota
 	tar -zcf iota.tgz bin images protos && cp iota.tgz ../ 
