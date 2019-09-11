@@ -276,6 +276,7 @@ struct sqcb4_t {
     num_npg_bindmw_t1_req:16;
     num_npg_bindmw_t2_req:16;
     num_npg_frpmr_req:16;
+    num_npg_local_inv_req:16;
     num_inline_req:16;
     num_timeout_local_ack:16;
     num_timeout_rnr:16;
@@ -319,7 +320,7 @@ struct sqcb4_t {
     qp_err_dis_err_retry_exceed              : 1;
     qp_err_dis_rnr_retry_exceed              : 1;
     qp_err_dis_rsvd                          : 26;
-    pad: 48;
+    pad: 32;
 };
 
 struct sqcb5_t {

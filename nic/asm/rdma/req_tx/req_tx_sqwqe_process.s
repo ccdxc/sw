@@ -116,12 +116,15 @@ skip_fence_check:
     .brcase OP_TYPE_LOCAL_INV
         b.!c7           local_inv
         b.c7            skip_npg_wqe // Branch Delay Slot
-        nop
+        phvwrpair.c7    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg), 1, \
+                        CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg_local_inv), 1 // Branch Delay SLot
+
 
     .brcase OP_TYPE_BIND_MW
         b.!c7           bind_mw
         b.c7            skip_npg_wqe // Branch Delay Slot
-        nop             //Branch Delay slot
+        phvwrpair.c7    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg), 1, \
+                        CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg_bindmw_t1), 1 // Branch Delay Slot
       
     .brcase OP_TYPE_SEND_INV_IMM
         b               invalid_optype

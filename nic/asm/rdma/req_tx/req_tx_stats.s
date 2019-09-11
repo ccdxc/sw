@@ -20,7 +20,7 @@ struct sqcb4_t d;
 
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
 #define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
-#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd_sbit20_ebit25)
+#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd_sbit19_ebit25)
 #define K_QP_ERR_DISABLED      CAPRI_KEY_FIELD(IN_P, qp_err_disabled)
 
 %%
@@ -105,10 +105,11 @@ done:
     nop
 
 handle_npg_stats:
-    crestore      [c4, c3, c2, c1], CAPRI_KEY_RANGE(IN_P, npg, npg_frpmr), 0xF
-    tblmincri.c3  d.num_npg_bindmw_t1_req, MASK_16, 1
-    tblmincri.c2  d.num_npg_bindmw_t2_req, MASK_16, 1
-    tblmincri.c1  d.num_npg_frpmr_req, MASK_16, 1
+    crestore      [c5, c4, c3, c2, c1], CAPRI_KEY_RANGE(IN_P, npg, npg_local_inv), 0x1F
+    tblmincri.c4  d.num_npg_bindmw_t1_req, MASK_16, 1
+    tblmincri.c3  d.num_npg_bindmw_t2_req, MASK_16, 1
+    tblmincri.c2  d.num_npg_frpmr_req, MASK_16, 1
+    tblmincri.c1  d.num_npg_local_inv_req, MASK_16, 1
     tblmincri.e   d.num_npg_req, MASK_32, 1
     nop
  

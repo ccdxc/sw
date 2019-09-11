@@ -239,6 +239,7 @@ header_type req_tx_to_stage_stats_info_t {
         npg_bindmw_t1                    :    1;
         npg_bindmw_t2                    :    1;
         npg_frpmr                        :    1;
+        npg_local_inv                    :    1;
         timeout                          :    1;
         timeout_local_ack                :    1;
         timeout_rnr                      :    1;
@@ -285,7 +286,7 @@ header_type req_tx_to_stage_stats_info_t {
         qp_err_dis_err_retry_exceed              : 1;
         qp_err_dis_rnr_retry_exceed              : 1;
         qp_err_dis_rsvd                          : 26;
-        pad                                      : 34;
+        pad                                      : 33;
     }
 }
 
@@ -2182,6 +2183,7 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.npg_bindmw_t1, to_s7_stats_info.npg_bindmw_t1);
     modify_field(to_s7_stats_info_scr.npg_bindmw_t2, to_s7_stats_info.npg_bindmw_t2);
     modify_field(to_s7_stats_info_scr.npg_frpmr, to_s7_stats_info.npg_frpmr);
+    modify_field(to_s7_stats_info_scr.npg_local_inv, to_s7_stats_info.npg_local_inv);
     modify_field(to_s7_stats_info_scr.timeout, to_s7_stats_info.timeout);
     modify_field(to_s7_stats_info_scr.timeout_local_ack, to_s7_stats_info.timeout_local_ack);
     modify_field(to_s7_stats_info_scr.timeout_rnr, to_s7_stats_info.timeout_rnr);

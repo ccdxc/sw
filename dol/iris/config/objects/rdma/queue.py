@@ -532,6 +532,7 @@ class RdmaSQstate(Packet):
         ShortField("tx_num_npg_bindmw_t1_req", 0),
         ShortField("tx_num_npg_bindmw_t2_req", 0),
         ShortField("tx_num_npg_frpmr_req", 0),
+        ShortField("tx_num_npg_li_req", 0),
         ShortField("tx_num_inline_req", 0),
         ShortField("tx_num_timeout_local_ack", 0),
         ShortField("tx_num_timeout_rnr", 0),
@@ -575,7 +576,7 @@ class RdmaSQstate(Packet):
         BitField("qp_err_dis_err_retry_exceed", 0, 1),
         BitField("qp_err_dis_rnr_retry_exceed", 0, 1),
         BitField("qp_err_dis_rsvd", 0, 26),
-        BitField("sqcb4", 0, 48),
+        BitField("sqcb4", 0, 32),
 
         #SQCB5
         LongField("rx_num_bytes", 0),

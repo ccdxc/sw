@@ -72,10 +72,9 @@ inv_valid_mw:
 
 invalidate:
     // Update state to FREE
-    tblwr        d.state, KEY_STATE_FREE
-
-    nop.e
-    nop
+    tblwr.e      d.state, KEY_STATE_FREE
+    phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg), 1, \
+                 CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg_local_inv), 1 //Exit Slot
 
 err_inv_not_allowed:
     b              error_completion
