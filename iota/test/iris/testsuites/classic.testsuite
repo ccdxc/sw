@@ -65,6 +65,7 @@ testbundles:
         - penctl/mode_change.testbundle
         - post_diag/post_diag.testbundle
         - asic_tools/asic_tools.testbundle
+        - system/obfl_check.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/

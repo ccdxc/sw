@@ -54,6 +54,7 @@ testbundles:
         - mnic/mnic_hostpin_naples_only.testbundle
         - penctl/penctl_hostpin.testbundle
         - naples_upgrade/naples_upgrade_hostpin.testbundle
+        - system/obfl_check.testbundle
 
     regression:
         - firewall/policy_scale.testbundle
