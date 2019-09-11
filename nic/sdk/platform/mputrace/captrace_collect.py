@@ -258,7 +258,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--host', help='hostname of server where NIC is present. e.g. --host cap-rdma')
     parser.add_argument('--mgmt', help='management ip for NAPLES device')
-    parser.add_argument('--pipeline', help='specify iris/apollo/artemis pipeline for captrace.syms. pipeline is iris by default if nothing is provided')
+    parser.add_argument('--pipeline', help='specify iris|apollo|artemis|apulu pipeline for captrace.syms. pipeline is iris by default if nothing is provided')
     parser.add_argument('--rxdma', action='store_true', help='enable captrace for RxDMA')
     parser.add_argument('--txdma', action='store_true',  help='enable captrace for TxDMA')
     parser.add_argument('--p4ig', action='store_true',  help='enable captrace for P4 ingress')
@@ -299,8 +299,8 @@ if __name__ == "__main__":
     if args.pipeline is None:
         g_pipeline = 'iris'
     else:
-        if args.pipeline != 'iris' and args.pipeline != 'apollo' and args.pipeline != 'artemis':
-            print("Error: Invalid argument for --pipeline. Please provide one of - iris/apollo/artemis")
+        if args.pipeline != 'iris' and args.pipeline != 'apollo' and args.pipeline != 'artemis' and args.pipeline != 'apulu':
+            print("Error: Invalid argument for --pipeline. Please provide one of - iris|apollo|artemis|apulu")
             parser.print_help()
             print("\neg: captrace_collect.py --mgmt 192.168.70.157 --pipeline apollo --rxdma")
             exit()

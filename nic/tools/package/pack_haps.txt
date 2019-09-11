@@ -172,6 +172,7 @@ nic/build/aarch64/iris/lib/libe2e*.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libtins.so.4.0                            /nic/lib/
 nic/build/aarch64/iris/lib/libpcap.so.0.8                            /nic/lib/
 nic/build/aarch64/iris/lib/libhaltestutils.so                        /nic/lib/
+#nic/build/aarch64/iris/bin/dsc_ssl_client                            /nic/bin/
 
 # linkmgr
 nic/build/aarch64/iris/bin/port_client                              /nic/bin

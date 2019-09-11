@@ -4,6 +4,7 @@
 #define __HAL_TRACE_HPP__
 
 #include "nic/include/trace.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 
 namespace hal {
 namespace utils {

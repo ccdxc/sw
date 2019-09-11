@@ -2,10 +2,11 @@
 
 #ifndef __SDK_MTRACK_HPP__
 #define __SDK_MTRACK_HPP__
-    
+
 #include <map>
 #include "lib/logger/logger.hpp"
 #include "include/sdk/lock.hpp"
+
 using namespace std;
 namespace sdk {
 namespace utils {
@@ -145,7 +146,6 @@ private:
     sdk_spinlock_t    mtrack_map_slock_;
     bool              enabled_;
 };
-
 
 }    // namespace utils
 }    // namespace sdk
