@@ -32,6 +32,8 @@ parser.add_argument('--testbed', dest='testbed_json', default="/warmd.json",
                     help='Testbed JSON file')
 parser.add_argument('--no-keep-going', dest='no_keep_going',
                     action='store_true', help='Stop on first error.')
+parser.add_argument('--stop-on-critical', dest='stop_on_critical',
+                    action='store_true', default=True, help='Stop on critical errors')
 #parser.add_argument('--mode', dest='mode', default='hardware',
 #                    choices=["hardware", "simulation", "mixed"],
 #                    help='Testbed Mode: Hardware / Simulation / Mixed.')

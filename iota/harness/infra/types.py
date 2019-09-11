@@ -11,6 +11,7 @@ __status = [
     'ABORTED',
     'ERROR',
     'DISABLED',
+    'CRITICAL',
 ]
 status = utils.List2Enum(__status)
 

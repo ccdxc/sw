@@ -143,6 +143,8 @@ class TestBundle:
                 ret = tc.Main()
                 if ret != types.status.SUCCESS:
                     result = ret
+                    if result == types.status.CRITICAL and GlobalOptions.stop_on_critical:
+                        return ret
                     if GlobalOptions.no_keep_going:
                         return ret
                 if self.__aborted:

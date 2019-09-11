@@ -490,6 +490,12 @@ class Testcase:
                     iter_data.SetStatus(result)
                     return types.status.FAILURE
 
+                if result == types.status.CRITICAL and GlobalOptions.stop_on_critical:
+                    Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
+                    Logger.error("Error: STOPPING ON CRITICAL FAILURE.")
+                    iter_data.SetStatus(result)
+                    return types.status.FAILURE
+
                 iter_data.SetStatus(result)
                 Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
 

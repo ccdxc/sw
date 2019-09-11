@@ -4,9 +4,14 @@ import iota.harness.api as api
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.common as common
 
+__MAX_TECHSUPPORT_PER_RUN = 5
+__CURREN_TECHSUPPORT_CNT = 0
+
 def Main(tc):
     if tc.GetStatus() == api.types.status.SUCCESS:
         return api.types.status.SUCCESS
+
+    __CURREN_TECHSUPPORT_CNT = __CURREN_TECHSUPPORT_CNT + 1
     api.Logger.info("TC: %s failed. Collecting techsupport." % (tc.Name()))
     nodes = api.GetNaplesHostnames()
     req = api.Trigger_CreateExecuteCommandsRequest()
@@ -31,4 +36,6 @@ def Main(tc):
             api.Logger.error("Failed to copy techsupport file from node: %s" % n)
             result = api.types.status.FAILURE
             continue
+    if __CURREN_TECHSUPPORT_CNT > __MAX_TECHSUPPORT_PER_RUN:
+        return api.types.status.CRITICAL
     return result

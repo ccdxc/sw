@@ -100,6 +100,7 @@ dependencies:
     - reference: venice/ui
   iota:
     - reference: iota/test/venice
+      exclude_dirs: ["harness", "test/iris", "test/apollo"]
     - reference: iota/test/standalone/freebsd
       exclude_dirs: ["test/venice", "test/apollo"]
     - reference: iota/test/standalone/esx
