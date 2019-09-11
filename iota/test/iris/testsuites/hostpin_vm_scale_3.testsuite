@@ -18,6 +18,7 @@ images:
 setup:
     topology: test/iris/topologies/2Naples_VM/vm_scale_3.topology
     config  :
+        - step : utils.cleanup
         - step : testcases.penctl.install
         - step : config.venice.mode_switch_hostpin
         - step : config.netagent.hw_push_config_host

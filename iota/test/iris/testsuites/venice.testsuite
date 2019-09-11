@@ -16,6 +16,7 @@ setup:
     topology: test/iris/topologies/3Naples_3Venice/3Naples_3Venice.topology
 
     config  :
+        - step : utils.cleanup
         - step : config.venice.make_cluster
         - step : config.venice.generate_base_config
           spec : test/iris/venice/baseconfig/sample_baseconfig.spec

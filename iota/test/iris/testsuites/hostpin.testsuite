@@ -16,6 +16,7 @@ images:
 setup:
     topology: test/iris/topologies/container/container.topology
     config  :
+        - step : utils.cleanup
         - step : testcases.penctl.install
         - step : config.venice.mode_switch_hostpin
         - step : utils.naples_workloads

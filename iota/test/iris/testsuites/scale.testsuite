@@ -17,6 +17,7 @@ images:
 setup:
     topology: test/iris/topologies/container/container.topology
     config  :
+        - step : utils.cleanup
         - step : utils.naples_workloads
         - step : config.config_link_flap
         - step : config.netagent.hw_push_config

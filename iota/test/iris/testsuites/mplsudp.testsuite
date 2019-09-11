@@ -16,6 +16,7 @@ images:
 setup:
     topology: test/iris/topologies/mplsudp/mplsudp.topology
     config  :
+        - step : utils.cleanup
         - step : testcases.penctl.install
         - step : testcases.penctl.eth_dev_scale_mode
         - step : utils.reboot_all

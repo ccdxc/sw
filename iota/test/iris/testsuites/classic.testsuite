@@ -16,6 +16,7 @@ setup:
     topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
     config  :
 
+        - step : utils.cleanup
         #- step : testcases.frequency.clock_settings
         #- step : utils.reboot_all
         - step : utils.naples_workloads

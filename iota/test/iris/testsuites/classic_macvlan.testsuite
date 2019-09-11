@@ -15,6 +15,7 @@ images:
 setup:
     topology: test/iris/topologies/classic_macvlan_baremetal/classic_macvlan_baremetal.topology
     config  :
+        - step : utils.cleanup
         - step : testcases.penctl.install
         - step : testcases.penctl.eth_dev_scale_mode
         - step : utils.reboot_all

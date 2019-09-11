@@ -638,8 +638,6 @@ class HostManagement(EntityManagement):
         self.RunNaplesCmd("rm -rf /data/log && sync")
         self.RunNaplesCmd("rm -rf /data/core/* && sync")
         self.RunNaplesCmd("rm -rf /data/*.dat && sync")
-        self.RunNaplesCmd("rm -rf /obfl/asicerrord_err*")
-
 
     def SetUpInitFiles(self):
         self.RunNaplesCmd("touch /sysconfig/config0/.console")

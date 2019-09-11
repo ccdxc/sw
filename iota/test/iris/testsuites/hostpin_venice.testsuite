@@ -18,6 +18,7 @@ setup:
     topology: test/iris/topologies/2Naples_Venice/vm.topology
     config  :
     config  :
+        - step : utils.cleanup
         - step : testcases.penctl.install
         - step : config.venice.make_cluster
         - step : config.venice.generate_base_config
