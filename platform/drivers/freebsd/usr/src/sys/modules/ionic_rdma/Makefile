@@ -11,14 +11,22 @@ res.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
 	opt_inet.h opt_inet6.h
 
+# Import host system's kernel configuration (INVARIANTS etc.)
+# Remember to do `make cleandepend` if changing KERNCONF!
+KERNCONF?=    GENERIC
+KERNCONFDIR=  /usr/src/sys/${MACHINE_ARCH}/conf
+SRCS+=        .kconf/opt_global.h
+CFLAGS+=      -include .kconf/opt_global.h
+
+.kconf/opt_global.h: ${KERNCONFDIR}/${KERNCONF}
+	cd ${KERNCONFDIR} && config -d ${.CURDIR}/.kconf ${KERNCONF}
+
 CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/ofed/include/uapi
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
 CFLAGS+= -I${.CURDIR}/../../ofed/include/uapi
 CFLAGS+= -I${.CURDIR}/../../dev/ionic/ionic_eth
-CFLAGS+= -DCONFIG_INFINIBAND_USER_MEM
-CFLAGS+= -DINET -DINET6
-#CFLAGS+= -DVIMAGE
+CFLAGS+= -DINET -DINET6 -DCONFIG_INFINIBAND_USER_MEM
 
 .include <bsd.kmod.mk>
 

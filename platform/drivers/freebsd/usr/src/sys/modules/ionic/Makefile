@@ -15,12 +15,21 @@ ionic_rx_filter.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
         opt_inet.h opt_inet6.h opt_rss.h
 
+# Import host system's kernel configuration (INVARIANTS etc.)
+# Remember to do `make cleandepend` if changing KERNCONF!
+KERNCONF?=    GENERIC
+KERNCONFDIR=  /usr/src/sys/${MACHINE_ARCH}/conf
+SRCS+=        .kconf/opt_global.h
+CFLAGS+=      -include .kconf/opt_global.h
+
+.kconf/opt_global.h: ${KERNCONFDIR}/${KERNCONF}
+	cd ${KERNCONFDIR} && config -d ${.CURDIR}/.kconf ${KERNCONF}
+
 # NetApp physical port
 #CFLAGS+= -DNETAPP_PATCH
 # To disable debugging, with no option to enable at runtime
 #CFLAGS+= -DIONIC_NDEBUG
 
-CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
 
 .include <bsd.kmod.mk>

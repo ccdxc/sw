@@ -30,13 +30,17 @@ fi
 # if OS_DIR was relative, make it absolute here
 OS_DIR=$(readlink -f "$OS_DIR")
 
+# Hacky: "root@freebsd:/usr/obj/usr/src/sys/GENERIC"
+# Can't rely on uname -i, unfortunately.
+KERNCONF=`uname -v | awk -F/ '{print $NF}'`
+
 make_ext() {
-	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
+	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" "KERNCONF=$KERNCONF" \
 		"DEBUG_FLAGS=-g" "-C$1" clean cleandepend || exit
-	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
+	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" "KERNCONF=$KERNCONF" \
 		"DEBUG_FLAGS=-g" "-C$1" || exit
 	# uncomment for static analysys with clang
-	# make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
+	# make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" "KERNCONF=$KERNCONF" \
 	# 	"DEBUG_FLAGS=-g" "-C$1" analyze
 }
 
