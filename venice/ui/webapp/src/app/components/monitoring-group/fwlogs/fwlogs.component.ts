@@ -23,6 +23,7 @@ import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { TimeRange } from '@app/components/shared/timerange/utility';
 import { Subscription, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { AbstractControl, ValidatorFn } from '@angular/forms';
 
 @Component({
   selector: 'app-fwlogs',
@@ -164,14 +165,21 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   postNgInit() {
     this.fwlogQueryListener();
     this.getNaples();
-    this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
-    this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
+    this.setSearchFormValidators();
     this.getSGPolicies();
     this.setDefaultToolbar();
     this.actionOptions = this.addAllOption(this.actionOptions);
     this.query.$formGroup.value.actions.push(FwlogsComponent.ALLOPTION);
   }
 
+
+  private setSearchFormValidators() {
+    this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
+    this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
+    const msg = 'port should be number in range [0, 65536]'; // VS-783 set validators for Ports
+    this.query.$formGroup.get('source-ports').setValidators(this.isPortInputsValid('source-ports', msg));
+    this.query.$formGroup.get('dest-ports').setValidators(this.isPortInputsValid('dest-ports', msg));
+  }
 
   setTimeRange(timeRange: TimeRange) {
     // Pushing into next event loop
@@ -442,5 +450,10 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       this.getFwlogs();
     }
   }
+
+  isPortInputsValid(objectname: string, msg: string): ValidatorFn {
+    return Utility.isValueInRangeValdator(0, 65536, objectname, msg);
+  }
+
 
 }

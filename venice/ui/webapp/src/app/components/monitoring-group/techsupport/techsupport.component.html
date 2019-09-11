@@ -46,6 +46,10 @@
            [matTooltip]="'Download all files'">Download all files</a>
       </div>
     </ng-container>
+    <ng-container *ngSwitchCase="'spec.node-selector'">
+      <div class="techsupportrequests-selected-nodes">{{displayColumn(rowData, col)}}
+      </div>
+    </ng-container>
     <ng-container *ngSwitchDefault>
       <div [innerHTML]="displayColumn(rowData, col)">
       </div>

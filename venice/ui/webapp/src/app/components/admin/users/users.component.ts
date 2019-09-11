@@ -1067,7 +1067,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   isConfirmPasswordMathcNewPassword(passwordControl: AbstractControl): ValidatorFn {
-    return Utility.isControlValueMatchOtherControlValueValidator(passwordControl, 'confirm-new-password', 'Comfirm-new-password input must match new-password input');
+    return Utility.isControlValueMatchOtherControlValueValidator(passwordControl, 'confirm-new-password', 'Confirm-new-password input must match new-password input');
   }
 
 }

@@ -1614,6 +1614,29 @@ export class Utility {
     };
   }
 
+  public static isValueInRangeValdator( minValue: number, maxValue: number,  objectname: string,  msg: string = 'Value is out of range', delimitor: string = ','): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control || ! control.value || control.value.length === 0 ) {
+        return null;
+      }
+      const values = control.value;
+      const valueList = values.split(delimitor);
+      for (let i = 0; i < valueList.length; i ++ ) {
+          const value = valueList[i];
+          if (value < minValue || value > maxValue) {
+            return {
+              objectname: {
+                required: true,
+                message: msg
+              }
+            };
+          }
+      }
+      return null;
+    };
+  }
+
+
   public static isNameAlreadyExist(name: string, modelobjects: any[]): boolean {
     if (!modelobjects) {
       return false;
