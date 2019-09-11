@@ -30,25 +30,33 @@ message MappingKey {
 // NOTE: Mapping is either on the local host/TEP or remote TEP
 message MappingSpec {
   // key to identify the mapping
-  MappingKey      Id          = 1;
+  MappingKey          Id             = 1;
   // subnet this mapping is in
-  uint32          SubnetId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // Tunnel IP of the TEP, if the mapping is remote, none for local mappings
-  types.IPAddress TunnelIP    = 3;
+  uint32              SubnetId       = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  oneof dstinfo {
+      // Tunnel IP of the TEP, if the mapping is remote, none for local mappings
+      types.IPAddress TunnelIP       = 3;
+      // nexthop identifier for reachability information
+      uint32          NexthopId      = 4 [(gogoproto.moretags) = "meta:mandatory"];
+      // mappings can point to underlay nexthop group, but not overlay as one
+      // mapping can't be behind two TEPs (i.e., multi-homing is not supported
+      // for mappings that are configured or learnt from eVPN routes)
+      uint32          NexthopGroupId = 5;  // only underlay-type NH-G
+  }
   // overlay MAC address of this mapping
-  uint64          MACAddr     = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64              MACAddr        = 6 [(gogoproto.moretags) = "meta:mandatory"];
   // fabric encap information specific to this mapping, if any
-  types.Encap     Encap       = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  types.Encap         Encap          = 7 [(gogoproto.moretags) = "meta:mandatory"];
   // if IP is that of local vnic, corresponding vnic id
-  uint32          VnicId      = 6;
+  uint32              VnicId         = 8;
   // public IP, if overlay IP has corresponding public IP
-  types.IPAddress PublicIP    = 7;
+  types.IPAddress     PublicIP       = 9;
   // provider/substrate IP corresponding to the overlay IP, if any
-  types.IPAddress ProviderIp  = 8;
+  types.IPAddress     ProviderIp     = 10;
   // service tag for this IP mapping, if exists. service tag can be used
   // in defining security policies
   // NOTE: service tag 0 is invalid
-  uint32          ServiceTag  = 9;
+  uint32              ServiceTag     = 11;
 }
 
 // operational status of a mapping

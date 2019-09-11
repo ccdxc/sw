@@ -116,14 +116,23 @@ enum NhGroupType {
   NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP = 2;
 }
 
+message Nh {
+  oneof nh {
+      // zero or more member nexthop identifiers
+      uint32 Nexthop = 1;
+      // zero or more member nexthop group identifiers
+      uint32 NhGroup = 2 [(gogoproto.moretags) = "meta:constraints={NhGroupSpec.Type==NEXTHOP_GROUP_TYPE_OVERLAY_ECMP}"];
+  }
+}
+
 // nexthop group specification - a nextgroup consists of bunch of nexthops
 message NhGroupSpec {
   // unique nexthop group id
-  uint32 Id                = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32      Id     = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the nexthop
-  NhGroupType Type         = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // 0 or more member nexthop identifiers
-  repeated uint32 Nexthops = 3;
+  NhGroupType Type   = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // zero or more member nexthops or nexthop groups
+  repeated Nh NhInfo = 3;
 }
 
 // operational status of nexthop group, if any

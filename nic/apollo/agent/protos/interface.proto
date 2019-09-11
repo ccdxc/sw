@@ -25,6 +25,8 @@ enum IfType {
   IF_TYPE_UPLINK    = 1;
   // uplink port-channel interface
   IF_TYPE_UPLINK_PC = 2;
+  // L3 interface
+  IF_TYPE_L3        = 3;
 }
 
 // IfStatus status reflects the operational status of Interface
@@ -53,6 +55,18 @@ message UplinkPCSpec {
   // Untagged ingress packets are considered as coming with this VLAN id
   // Egress packet tagged with this VLAN id are sent untagge
   uint32 NativeVlanId   = 2;
+}
+
+// L3 interface configuration
+message L3IfSpec {
+  // vpc/vrf this L3 interface belongs to
+  uint32         VpcId  = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP address, prefix of this L3 interface
+  types.IPPrefix Prefix = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // physical port id corresponding to this interface
+  uint32         PortId = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // optional encap, if this is a L3 sub interface
+  types.Encap    Encap  = 4;
 }
 
 // InterfaceSpec is used to add or update of an interface

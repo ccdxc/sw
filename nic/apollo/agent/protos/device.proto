@@ -26,10 +26,18 @@ enum DeviceProfile {
 
 // device configuration
 message DeviceSpec {
-  types.IPAddress IPAddr    = 1; // local IP address in the substrate
-  uint64          MACAddr   = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  types.IPAddress GatewayIP = 3; // IP address of the gateway in the substrate
-  DeviceProfile   Profile   = 4; // Device Profile
+  // local IP address in the substrate (i.e. MyTEP IP)
+  types.IPAddress IPAddr     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // system MAC
+  uint64          MACAddr    = 2;
+  // IP address of the gateway in the substrate
+  types.IPAddress GatewayIP  = 3;
+  // Device Profile (only DEVICE_PROFILE_DEFAULT is supported)
+  DeviceProfile   Profile    = 4;
+  // if BridgingEn is true, L2 functionality based on MAC addresses kicks in
+  bool            BridgingEn = 5;
+  // if LearningEn is true, MAC and IP learning is enabled
+  bool            LearningEn = 6;
 }
 
 // device operational status
