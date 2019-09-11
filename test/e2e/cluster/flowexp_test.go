@@ -11,6 +11,8 @@ import (
 
 	"github.com/calmh/ipfix"
 
+	vflow "github.com/pensando/sw/venice/utils/ipfix"
+
 	"github.com/pensando/sw/venice/utils/ipfix/server"
 
 	. "github.com/onsi/ginkgo"
@@ -673,7 +675,6 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should receive ipfix templates in collector", func() {
-			Skip("+++to debug CI failure")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
@@ -764,17 +765,22 @@ var _ = Describe("flow export policy tests", func() {
 			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
 
 			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
-				select {
-				case m, ok := <-collectors[i].ch:
-					hdr := m.Header
-					Expect(ok).Should(BeTrue())
-					Expect(m.TemplateRecords).Should(HaveLen(3), "expected 3 templates, got %v", len(m.TemplateRecords))
-					Expect(int(hdr.Version)).Should(Equal(0x0a), "invalid version %v", hdr.Version)
-					Expect(int(hdr.SequenceNumber)).Should(Equal(0), "invalid sequence number %v", hdr.SequenceNumber)
-					Expect(int(hdr.DomainID)).Should(Equal(0), "invalid domain id %v", hdr.DomainID)
-					Expect(int(hdr.Length)).Should(Equal(500), "invalid length %v", hdr.Length)
-				case <-time.After(time.Second * 5):
-					Expect(false).Should(BeTrue(), "timed-out to receive template")
+				for _ = range ts.tu.NaplesNodes {
+					select {
+					case m, ok := <-collectors[i].ch:
+						hdr := m.Header
+						Expect(ok).Should(BeTrue())
+						Expect(m.TemplateRecords).Should(HaveLen(3), "expected 3 templates, got %v", len(m.TemplateRecords))
+						Expect(int(hdr.Version)).Should(Equal(0x0a), "invalid version %v", hdr.Version)
+						Expect(int(hdr.SequenceNumber)).Should(Equal(0), "invalid sequence number %v", hdr.SequenceNumber)
+						Expect(int(hdr.DomainID)).Should(Equal(0), "invalid domain id %v", hdr.DomainID)
+						t, err := vflow.CreateTemplateMsg()
+						Expect(err).Should(BeNil())
+						Expect(int(hdr.Length)).Should(Equal(len(t)), "invalid length %v", hdr.Length)
+
+					case <-time.After(time.Second * 5):
+						Expect(false).Should(BeTrue(), "timed-out to receive template")
+					}
 				}
 			}
 
