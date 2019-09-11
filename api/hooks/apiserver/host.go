@@ -32,17 +32,17 @@ func (cl *clusterHooks) errInvalidMacConfig(mac string) error {
 // errUnsupportedNumberOfSmartNICs returns error associated with an
 // unsupported number of SmartNICs specified in a host object
 func (cl *clusterHooks) errUnsupportedNumberOfSmartNICs(numFoundNICs, numExpNICs int) error {
-	return fmt.Errorf("Found %d SmartNIC specifications in Host object, exactly %d expected", numFoundNICs, numExpNICs)
+	return fmt.Errorf("Found %d DSC specifications in Host object, exactly %d expected", numFoundNICs, numExpNICs)
 }
 
 // errInvalidSmartNICSpec returns error associated with invalid SmartNIC ID
 func (cl *clusterHooks) errInvalidSmartNIC() error {
-	return fmt.Errorf("Invalid SmartNIC specification in Host object: exactly one of {Name, MAC Address} must be provided")
+	return fmt.Errorf("Invalid DSC specification in Host object: exactly one of {Id, MAC Address} must be provided")
 }
 
 // errHostSmartNICConflicts returns error associated with invalid mac-address
 func (cl *clusterHooks) errHostSmartNICConflicts(hostName string, conflicts []string) error {
-	return fmt.Errorf("SmartNIC specification for Host object %s conflicts with specifications for Host objects %s."+
+	return fmt.Errorf("DSC specification for Host object %s conflicts with specifications for Host objects %s."+
 		" The same MAC Address or Name cannot appear in multiple host objects", hostName, strings.Join(conflicts, ","))
 }
 
