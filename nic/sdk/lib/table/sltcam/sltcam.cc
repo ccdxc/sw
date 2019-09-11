@@ -146,7 +146,8 @@ sltcam::read_(sltctx *ctx) {
 sdk_ret_t
 sltcam::alloc_(sltctx *ctx) {
     SDK_ASSERT(ctx->tcam_index_valid == false);
-    indexer::status irs = indexer_->alloc(&ctx->tcam_index);
+    indexer::status irs = indexer_->alloc(&ctx->tcam_index,
+                                          !ctx->params->highest);
     if (irs != indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }

@@ -180,6 +180,9 @@ typedef struct sdk_table_api_params_ {
     // Set this to true to force reading h/w state without checking s/w state,
     // valid for HASH tables only.
     bool force_hwread;
+    // [Input]
+    // Set this to true to allocate from top of range for indices
+    bool highest;
 } sdk_table_api_params_t;
 
 typedef struct sdk_table_api_stats_ {
