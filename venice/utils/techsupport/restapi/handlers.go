@@ -130,7 +130,9 @@ func (rs *RestServer) HandleDiagnostics(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.Write(out)
+	output := fmt.Sprintf("{\"result\":\"%s\"} }", string(out))
+
+	writeJSON(w, http.StatusOK, output)
 }
 
 func writeJSON(w http.ResponseWriter, code int, v interface{}) error {

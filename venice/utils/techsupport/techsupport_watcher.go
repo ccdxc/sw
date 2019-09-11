@@ -185,23 +185,26 @@ func (ag *TSMClient) DoWork(work tsproto.TechSupportRequest) error {
 	return nil
 }
 
+func (ag *TSMClient) deleteTechsupportFiles(work *tsproto.TechSupportRequest) error {
+	log.Info("Deleting techsupport files")
+	targetID := ag.generateTargetID(work.Spec.InstanceID, work.ObjectMeta.Name)
+	cmd := fmt.Sprintf("rm -rf %s/%s", ag.cfg.FileSystemRoot, targetID)
+	_, err := action.RunShellCmd(cmd)
+	return err
+}
+
 func (ag *TSMClient) handleTechSupportRetention(work *tsproto.TechSupportRequest) error {
 	if ag.cfg.Retention == tsconfig.TechSupportConfig_Manual {
 		return nil
 	}
 
-	targetID := ag.generateTargetID(work.Spec.InstanceID, work.ObjectMeta.Name)
-
 	if ag.cfg.Retention == tsconfig.TechSupportConfig_DelOnExport {
-		cmd := fmt.Sprintf("rm -rf %s/%s", ag.cfg.FileSystemRoot, targetID)
-		_, err := action.RunShellCmd(cmd)
-		return err
+		return ag.deleteTechsupportFiles(work)
 	}
 
 	return nil
 }
 
-// Move these into their own directory
 func (ag *TSMClient) pre(work *tsproto.TechSupportRequest) error {
 	log.Info("PreWork")
 	return nil
@@ -223,11 +226,21 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	err := action.CollectTechSupport(ag.cfg, targetID)
 	if err != nil {
 		log.Errorf("Err : %v", err)
+		delErr := ag.deleteTechsupportFiles(work)
+		if delErr != nil {
+			log.Errorf("Delete techsupport files failed. Err : %v", delErr)
+		}
+
 		return err
 	}
 
 	err = export.GenerateTechsupportZip(vosTarget, ag.cfg.FileSystemRoot+"/"+targetID)
 	if err != nil {
+		delErr := ag.deleteTechsupportFiles(work)
+		if delErr != nil {
+			log.Errorf("Delete techsupport files failed. Err : %v", delErr)
+		}
+
 		return err
 	}
 	tarballFile := ag.cfg.FileSystemRoot + "/" + targetID + "/" + vosTarget
@@ -241,20 +254,35 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 			log.Info("SCP file")
 			err = export.ScpFile(tarballFile, destination.Destination, "root", "docker", destination.Path)
 			if err != nil {
+
+				delErr := ag.deleteTechsupportFiles(work)
+				if delErr != nil {
+					log.Errorf("Delete techsupport files failed. Err : %v", delErr)
+				}
+
 				return err
 			}
 		case "Venice":
+			// TODO : Update the tenant default field once that is used and available as part of the the techsupport request
 			uri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", vosTarget)
 			work.Status.URI = uri
 			log.Infof("Send to VENICE. WORK : %v. URL : %v", work, uri)
 			err = export.SendToVenice(ag.resolverClient, tarballFile, vosTarget)
 			if err != nil {
+				delErr := ag.deleteTechsupportFiles(work)
+				if delErr != nil {
+					log.Errorf("Delete techsupport files failed. Err : %v", delErr)
+				}
 				return err
 			}
 		case "HTTPS":
 			log.Info("Transfer file using HTTPs")
 			err = export.SendToHTTP(tarballFile, destination.Path, "", "")
 			if err != nil {
+				delErr := ag.deleteTechsupportFiles(work)
+				if delErr != nil {
+					log.Errorf("Delete techsupport files failed. Err : %v", delErr)
+				}
 				return err
 			}
 		}
