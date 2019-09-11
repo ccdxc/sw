@@ -10,6 +10,7 @@ import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
 from apollo.config.store import Store
+import apollo.config.agent.api as api
 from infra.common.glopts import GlobalOptions
 
 UINT32_MIN = 0
@@ -84,43 +85,70 @@ def GetFilteredObjects(objs, maxlimits, random=True):
         return sample(objs, k=num)
     return objs[0:num]
 
+def IsDryRun():
+    return GlobalOptions.dryrun
+
 def ValidateGrpcResponse(resp, expApiStatus=types_pb2.API_STATUS_OK):
     return expApiStatus == resp.ApiStatus
 
-def ValidateRead(obj, getResp, expApiStatus=types_pb2.API_STATUS_OK):
-    if GlobalOptions.dryrun: return
-    for resp in getResp:
+def ValidateObject(obj, resp):
+    return obj.ValidateSpec(resp.Spec) and\
+           obj.ValidateStats(resp.Stats) and\
+           obj.ValidateStatus(resp.Status)
+
+def ValidateCreate(obj, resps):
+    if IsDryRun(): return
+    for resp in resps:
+        if ValidateGrpcResponse(resp):
+            obj.MarkDeleted(False)
+        else:
+            logger.error("Creation/Restoration failed for %s" %(obj.__repr__()))
+            obj.Show()
+    return
+
+def ValidateRead(obj, resps, expApiStatus=types_pb2.API_STATUS_OK):
+    if IsDryRun(): return
+    for resp in resps:
         if ValidateGrpcResponse(resp, expApiStatus):
             if ValidateGrpcResponse(resp):
                 for response in resp.Response:
-                    if not obj.Validate(response):
+                    if not ValidateObject(obj, response):
                         return False
         else:
             return False
     return True
 
 def ValidateDelete(obj, resps):
-    if GlobalOptions.dryrun: return
+    if IsDryRun(): return
     for resp in resps:
-        statuses = resp.ApiStatus
-        for status in statuses:
+        for status in resp.ApiStatus:
             if status == types_pb2.API_STATUS_OK:
-                obj.deleted = True
+                obj.MarkDeleted()
             else:
-                logger.error("Delete failed")
+                logger.error("Deletion failed for %s" %(obj.__repr__()))
                 obj.Show()
     return
 
-def ValidateRestore(obj, resps):
-    if GlobalOptions.dryrun: return
-    for resp in resps:
-        if types_pb2.API_STATUS_OK == resp.ApiStatus:
-            obj.deleted = False
-            logger.info("Restore success")
-        else:
-            logger.error("Restore failed")
-            obj.Show()
-    return
+def CreateObject(obj, objType):
+    if not obj.IsDeleted():
+        logger.info("Already restored %s" %(obj.__repr__()))
+        return
+    msg = obj.GetGrpcCreateMessage()
+    resps = api.client.Create(objType, [msg])
+    ValidateCreate(obj, resps)
+
+def ReadObject(obj, objType, expRetCode):
+    msg = obj.GetGrpcReadMessage()
+    resps = api.client.Get(objType, [msg])
+    return ValidateRead(obj, resps, expRetCode)
+
+def DeleteObject(obj, objType):
+    if obj.IsDeleted():
+        logger.info("Already deleted %s" %(obj.__repr__()))
+        return
+    msg = obj.GetGrpcDeleteMessage()
+    resps = api.client.Delete(objType, [msg])
+    ValidateDelete(obj, resps)
 
 def GetIPProtoByName(protoname):
     """

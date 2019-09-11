@@ -62,16 +62,66 @@ packets:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
                 dst     : 00:02:00:00:00:00
 
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
 
-trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=IN_PKT
-            port    : ref://testcase/config/hostport
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
 
-expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=EXP_SWITCH_PKT
-            port    : ref://testcase/config/switchport
-            #port    : 100
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : Delete
+
+            delay           : 1
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : ReadAfterDelete
+
+            packets:
+                - packet:
+                    #object  : None
+                    # Currently, deleting a policy object does NOT cleanup HW
+                    # and corresponding vnic also do not get updated.
+                    # Even if vnic's sacl root addr gets updated to 0, it is still bypass
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
+
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : Create
+
+            delay           : 1
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : Read
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport

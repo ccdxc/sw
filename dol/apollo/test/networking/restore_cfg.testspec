@@ -7,7 +7,7 @@ selectors:
 trigger:
     configs:
         - object: ref://testcase/config/localmapping/VNIC
-          method: Restore
+          method: Create
 
 expect:
     configs:

@@ -68,14 +68,66 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
                 prio    : 0
 
-trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=FROM_SWITCH_PKT
-            port    : ref://testcase/config/switchport
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
+        
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=TO_HOST_PKT
+                    port    : ref://testcase/config/hostport
 
-expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=TO_HOST_PKT
-            port    : ref://testcase/config/hostport
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : Delete
+
+            delay           : 1
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : ReadAfterDelete
+
+            packets:
+                - packet:
+                    #object  : None
+                    # Currently, deleting a policy object does NOT cleanup HW
+                    # and corresponding vnic also do not get updated.
+                    # Even if vnic's sacl root addr gets updated to 0, it is still bypass
+                    object  : ref://testcase/packets/id=TO_HOST_PKT
+                    port    : ref://testcase/config/hostport
+
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : Create
+
+            delay           : 1
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/policy
+                  method    : Read
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=TO_HOST_PKT
+                    port    : ref://testcase/config/hostport

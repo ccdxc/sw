@@ -13,7 +13,6 @@ import vnic_pb2 as vnic_pb2
 import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
 
-from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger
 from apollo.config.store import Store
 
@@ -122,15 +121,20 @@ class VnicObject(base.ConfigObjectBase):
     def ValidateStatus(self, status):
         return True
 
-    def Validate(self, resp):
-        return self.ValidateSpec(resp.Spec) and\
-               self.ValidateStats(resp.Stats) and\
-               self.ValidateStatus(resp.Status)
+    def Create(self, spec=None):
+        utils.CreateObject(self, api.ObjectTypes.VNIC)
 
     def Read(self, expRetCode=types_pb2.API_STATUS_OK):
-        msg = self.GetGrpcReadMessage()
-        resp = api.client.Get(api.ObjectTypes.VNIC, [msg])
-        return utils.ValidateRead(self, resp, expRetCode)
+        return utils.ReadObject(self, api.ObjectTypes.VNIC, expRetCode)
+
+    def ReadAfterDelete(self, spec=None):
+        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
+
+    def Delete(self, spec=None):
+        utils.DeleteObject(self, api.ObjectTypes.VNIC)
+
+    def Equals(self, obj, spec):
+        return True
 
     def Show(self):
         logger.info("VNIC object:", self)
@@ -142,26 +146,17 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         return
 
+    def MarkDeleted(self, flag=True):
+        self.deleted = flag
+
+    def IsDeleted(self):
+        return self.deleted
+
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
 
     def SetupTestcaseConfig(self, obj):
         return
-
-    def Delete(self, spec=None):
-        logger.info("Delete vnic: Vnic%d" %(self.VnicId))
-        msg = self.GetGrpcDeleteMessage()
-        resps = api.client.Delete(api.ObjectTypes.VNIC, [msg])
-        return utils.ValidateDelete(self, resps)
-
-    def Restore(self, spec=None):
-        logger.info("Restore vnic: Vnic%d" %(self.VnicId))
-        msg = self.GetGrpcCreateMessage()
-        resps = api.client.Create(api.ObjectTypes.VNIC, [msg])
-        return utils.ValidateRestore(self, resps)
-
-    def Equals(self, obj, spec):
-        return True
 
 class VnicObjectClient:
     def __init__(self):
@@ -241,8 +236,7 @@ class VnicObjectClient:
         return
 
     def ValidateObjects(self, getResp):
-        if GlobalOptions.dryrun:
-            return True
+        if utils.IsDryRun(): return True
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("VNIC get request failed for ", obj)
@@ -250,7 +244,7 @@ class VnicObjectClient:
             for resp in obj.Response:
                 spec = resp.Spec
                 vnic = self.GetVnicObject(spec.VnicId)
-                if not vnic.Validate(resp):
+                if not utils.ValidateObject(vnic, resp):
                     logger.error("VNIC validation failed for ", obj)
                     vnic.Show()
                     return False

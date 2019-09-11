@@ -6,7 +6,6 @@ import random
 import sys
 
 from infra.common.logging import logger
-from infra.common.glopts import GlobalOptions
 import infra.config.base as base
 
 from apollo.config.store import Store
@@ -115,6 +114,7 @@ class PolicyObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
         self.GID('Policy%d'%self.PolicyId)
         ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
+        self.deleted = False
         self.PolicyType = policytype
         self.OverlapType = overlaptype
         self.rules = copy.deepcopy(rules)
@@ -172,6 +172,11 @@ class PolicyObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.PolicyId)
         return grpcmsg
 
+    def GetGrpcDeleteMessage(self):
+        grpcmsg = policy_pb2.SecurityPolicyDeleteRequest()
+        grpcmsg.Id.append(self.PolicyId)
+        return grpcmsg
+
     def ValidateSpec(self, spec):
         if spec.Id != self.PolicyId:
             return False
@@ -187,10 +192,20 @@ class PolicyObject(base.ConfigObjectBase):
     def ValidateStatus(self, status):
         return True
 
-    def Validate(self, resp):
-        return self.ValidateSpec(resp.Spec) and\
-               self.ValidateStats(resp.Stats) and\
-               self.ValidateStatus(resp.Status)
+    def Create(self, spec=None):
+        utils.CreateObject(self, api.ObjectTypes.POLICY)
+
+    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
+        return utils.ReadObject(self, api.ObjectTypes.POLICY, expRetCode)
+
+    def ReadAfterDelete(self, spec=None):
+        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
+
+    def Delete(self, spec=None):
+        utils.DeleteObject(self, api.ObjectTypes.POLICY)
+
+    def Equals(self, obj, spec):
+        return True
 
     def Show(self):
         logger.info("Policy Object:", self)
@@ -203,6 +218,12 @@ class PolicyObject(base.ConfigObjectBase):
         for rule in self.rules:
             rule.Show()
         return
+
+    def MarkDeleted(self, flag=True):
+        self.deleted = flag
+
+    def IsDeleted(self):
+        return self.deleted
 
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.policy.filters)
@@ -694,8 +715,7 @@ class PolicyObjectClient:
         return
 
     def ValidateObjects(self, getResp):
-        if GlobalOptions.dryrun:
-            return True
+        if utils.IsDryRun(): return True
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("Policy get request failed for ", obj)
@@ -703,7 +723,7 @@ class PolicyObjectClient:
             for resp in obj.Response:
                 spec = resp.Spec
                 policy = self.GetPolicyObject(spec.Id)
-                if not policy.Validate(resp):
+                if not utils.ValidateObject(policy, resp):
                     logger.error("Policy validation failed for ", obj)
                     policy.Show()
                     return False
