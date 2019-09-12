@@ -50,7 +50,7 @@ public:
     mem_addr_t v4_region_addr(void) const { return v4_region_addr_; }
 
     /// \brief return per v4 lpm table's size
-    uint32_t v4_table_size(void) const { return v4_table_size_; }
+    uint64_t v4_table_size(void) const { return v4_table_size_; }
 
     /// \brief return number of v4 routes per table
     uint32_t v4_max_routes(void) const { return v4_max_routes_; }
@@ -59,7 +59,7 @@ public:
     mem_addr_t v6_region_addr(void) const { return v6_region_addr_; }
 
     /// \brief return per v6 lpm table's size
-    uint32_t v6_table_size(void) const { return v6_table_size_; }
+    uint64_t v6_table_size(void) const { return v6_table_size_; }
 
     /// \brief return number of v6 routes per table
     uint32_t v6_max_routes(void) const { return v6_max_routes_; }
@@ -74,10 +74,10 @@ private:
     indexer    *v4_idxr_;          ///< indexer to allocate v4 lpm mem block
     indexer    *v6_idxr_;          ///< indexer to allocate v6 lpm mem block
     mem_addr_t v4_region_addr_;    ///< base address for the v4 lpm region
-    uint32_t   v4_table_size_;     ///< size of each v4 lpm table
+    uint64_t   v4_table_size_;     ///< size of each v4 lpm table
     uint32_t   v4_max_routes_;     ///< max IPv4 routes per route table
     mem_addr_t v6_region_addr_;    ///< base address for the v6 lpm region
-    uint32_t   v6_table_size_;     ///< size of each v6 lpm table
+    uint64_t   v6_table_size_;     ///< size of each v6 lpm table
     uint32_t   v6_max_routes_;     ///< max IPv6 routes per route table
 };
 

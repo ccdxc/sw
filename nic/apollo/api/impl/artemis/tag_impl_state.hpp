@@ -72,7 +72,7 @@ public:
     /// \brief      return lpm table's size based on IP address family
     /// \param[in]  af IP address family
     /// \return     size of single IPv4/IPv6 tag lpm table's size
-    uint32_t table_size(uint8_t af) const {
+    uint64_t table_size(uint8_t af) const {
         if (af == IP_AF_IPV4) {
             return v4_lpm_table_size_;
         }
@@ -95,10 +95,10 @@ private:
 
 private:
     mem_addr_t    v4_lpm_region_addr_;     ///< base address for the v4 lpm reg
-    uint32_t      v4_lpm_table_size_;      ///< size of each v4 lpm table
+    uint64_t      v4_lpm_table_size_;      ///< size of each v4 lpm table
     uint32_t      v4_lpm_max_prefixes_;    ///< max IPv4 routes per tag tree
     mem_addr_t    v6_lpm_region_addr_;     ///< base address for the v6 lpm reg
-    uint32_t      v6_lpm_table_size_;      ///< size of each v6 lpm table
+    uint64_t      v6_lpm_table_size_;      ///< size of each v6 lpm table
     uint32_t      v6_lpm_max_prefixes_;    ///< max IPv6 routes per tag tree
     uint8_t       v4_lpm_bmap_;            ///< bitmap to keep track of free IPv4 region
     uint8_t       v6_lpm_bmap_;            ///< bitmap to keep track of free IPv6 region

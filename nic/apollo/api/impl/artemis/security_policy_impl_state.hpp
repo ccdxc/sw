@@ -64,7 +64,7 @@ public:
     }
 
     /// \brief return security policy table's size
-    uint32_t security_policy_table_size(uint8_t af, rule_dir_t dir) const {
+    uint64_t security_policy_table_size(uint8_t af, rule_dir_t dir) const {
         if (af == IP_AF_IPV4) {
             if (dir == RULE_DIR_INGRESS) {
                 return ing_v4_table_size_;
@@ -102,16 +102,16 @@ private:
     // datapath tables for security policy
     indexer    *ing_v4_idxr_;          ///< indexer to allocate mem block for ingress policy tables
     mem_addr_t ing_v4_region_addr_;    ///< base address for the ingress policy region
-    uint32_t   ing_v4_table_size_;     ///< size of each ingress policy table
+    uint64_t   ing_v4_table_size_;     ///< size of each ingress policy table
     indexer    *egr_v4_idxr_;          ///< indexer to allocate mem block for egress policy tables
     mem_addr_t egr_v4_region_addr_;    ///< base address for the egress policy region
-    uint32_t   egr_v4_table_size_;     ///< size of each egress policy table
+    uint64_t   egr_v4_table_size_;     ///< size of each egress policy table
     indexer    *ing_v6_idxr_;          ///< indexer to allocate mem block for ingress policy tables
     mem_addr_t ing_v6_region_addr_;    ///< base address for the ingress policy region
-    uint32_t   ing_v6_table_size_;     ///< size of each ingress policy table
+    uint64_t   ing_v6_table_size_;     ///< size of each ingress policy table
     indexer    *egr_v6_idxr_;          ///< indexer to allocate mem block for egress policy tables
     mem_addr_t egr_v6_region_addr_;    ///< base address for the egress policy region
-    uint32_t   egr_v6_table_size_;     ///< size of each egress policy table
+    uint64_t   egr_v6_table_size_;     ///< size of each egress policy table
 };
 
 /// \@}

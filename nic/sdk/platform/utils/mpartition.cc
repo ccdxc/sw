@@ -271,14 +271,14 @@ mpartition::start_addr(const char *name)
     return addr(start_offset);
 }
 
-uint32_t
+uint64_t
 mpartition::size(const char *name)
 {
     mpartition_region_t *reg = region(name);
     return reg ? reg->size : 0;
 }
 
-uint32_t
+uint64_t
 mpartition::block_size(const char *name)
 {
     mpartition_region_t *reg = region(name);
