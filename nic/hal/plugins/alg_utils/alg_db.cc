@@ -15,16 +15,8 @@ static void * expected_flow_get_key_func(void *entry)
     return (void *)&(((expected_flow_t *)entry)->key);
 }
 
-static uint32_t expected_flow_compute_hash_func(void *key, uint32_t ht_size)
-{
-    return (sdk::lib::hash_algo::fnv_hash(key,
-                                            sizeof(exp_flow_key_t)) % ht_size);
-}
-
-static bool expected_flow_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    return (memcmp(key1, key2, sizeof(exp_flow_key_t)) == 0);
+static uint32_t expected_flow_key_size(void) {
+    return sizeof(exp_flow_key_t);
 }
 
 //------------------------------------------------------------------------------
@@ -35,8 +27,7 @@ static sdk::lib::ht *expected_flow_ht()
     static sdk::lib::ht* ht_ =
         sdk::lib::ht::factory(FTE_MAX_EXPECTED_FLOWS,
                                 expected_flow_get_key_func,
-                                expected_flow_compute_hash_func,
-                                expected_flow_compare_key_func);
+                                expected_flow_key_size());
 
     return ht_;
 }

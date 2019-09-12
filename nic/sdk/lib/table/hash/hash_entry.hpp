@@ -33,8 +33,7 @@ typedef struct hash_entry_cb_s {
 } hash_entry_cb_t;
 
 void *hash_entry_get_key_func (void *entry);
-uint32_t hash_entry_compute_hash_func(void *key, uint32_t ht_size);
-bool hash_entry_compare_key_func (void *key1, void *key2);
+uint32_t hash_entry_key_size(void);
 
 hash_entry_t *
 hash_entry_create(void *key, uint32_t key_len,

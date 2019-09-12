@@ -36,8 +36,7 @@ typedef struct tcam_entry_cb_s {
 } tcam_entry_cb_t;
 
 void *tcam_entry_get_key_func (void *entry);
-uint32_t tcam_entry_compute_hash_func(void *key, uint32_t ht_size);
-bool tcam_entry_compare_key_func (void *key1, void *key2);
+uint32_t tcam_entry_key_size (void);
 
 tcam_entry_t *
 tcam_entry_create(void *key, void *key_mask, uint32_t key_len,

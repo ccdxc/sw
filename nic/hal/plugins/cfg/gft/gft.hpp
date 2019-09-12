@@ -653,19 +653,13 @@ find_gft_exact_match_flow_entry_by_handle (hal_handle_t handle)
 }
 
 void *gft_exact_match_profile_id_get_key_func(void *entry);
-uint32_t gft_exact_match_profile_id_compute_hash_func(void *key,
-                                                      uint32_t ht_size);
-bool gft_exact_match_profile_id_compare_key_func(void *key1, void *key2);
+uint32_t gft_exact_match_profile_id_key_size(void);
 
 void *gft_hdr_transposition_profile_id_get_key_func(void *entry);
-uint32_t gft_hdr_transposition_profile_id_compute_hash_func(void *key,
-                                                            uint32_t ht_size);
-bool gft_hdr_transposition_profile_id_compare_key_func(void *key1, void *key2);
+uint32_t gft_hdr_transposition_profile_id_key_size(void);
 
 void *gft_exact_match_flow_entry_id_get_key_func(void *entry);
-uint32_t gft_exact_match_flow_entry_id_compute_hash_func(void *key,
-                                                         uint32_t ht_size);
-bool gft_exact_match_flow_entry_id_compare_key_func(void *key1, void *key2);
+uint32_t gft_exact_match_flow_entry_id_key_size(void);
 
 // SVC CRUD APIs
 hal_ret_t gft_exact_match_profile_create(GftExactMatchProfileSpec& spec,

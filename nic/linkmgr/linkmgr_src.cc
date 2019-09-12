@@ -259,19 +259,9 @@ port_id_get_key_func (void *entry)
 }
 
 uint32_t
-port_id_compute_hash_func (void *key, uint32_t ht_size)
+port_id_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(port_num_t)) % ht_size;
-}
-
-bool
-port_id_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(port_num_t *)key1 == *(port_num_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(port_num_t);
 }
 
 //------------------------------------------------------------------------------

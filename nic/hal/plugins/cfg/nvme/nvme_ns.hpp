@@ -97,12 +97,10 @@ nvme_ns_free (nvme_ns_t *nvme_ns)
 }
 
 extern void *nvme_ns_get_key_func(void *entry);
-extern uint32_t nvme_ns_compute_hash_func(void *key, uint32_t ht_size);
-extern bool nvme_ns_compare_key_func(void *key1, void *key2);
+extern uint32_t nvme_ns_key_size(void);
 
 extern void *nvme_ns_get_handle_key_func(void *entry);
-extern uint32_t nvme_ns_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool nvme_ns_compare_handle_key_func(void *key1, void *key2);
+extern uint32_t nvme_ns_handle_key_size(void);
 
 hal_ret_t
 nvme_ns_create(uint32_t lif,

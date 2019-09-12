@@ -33,14 +33,10 @@ nvme_cq_pd_get_hw_key_func (void *entry)
     return (void *)&(((pd_nvme_cq_t *)entry)->hw_id);
 }
 
-bool
-nvme_cq_pd_compare_hw_key_func (void *key1, void *key2)
+uint32_t
+nvme_cq_pd_hw_key_size ()
 {
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(nvme_cq_hw_id_t *)key1 == *(nvme_cq_hw_id_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(nvme_cq_hw_id_t);
 }
 
 uint32_t

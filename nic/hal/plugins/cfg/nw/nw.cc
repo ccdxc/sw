@@ -41,25 +41,12 @@ network_get_key_func (void *entry)
 }
 
 // ----------------------------------------------------------------------------
-// Compute hash function for network hash table
+// Key size for network hash table
 // ----------------------------------------------------------------------------
 uint32_t
-network_compute_hash_func (void *key, uint32_t ht_size)
+network_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(network_key_t)) % ht_size;
-}
-
-// ----------------------------------------------------------------------------
-// Compare key function for network hash table
-// ----------------------------------------------------------------------------
-bool
-network_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(network_key_t))) {
-        return true;
-    }
-    return false;
+    return sizeof(network_key_t);
 }
 
 //------------------------------------------------------------------------------

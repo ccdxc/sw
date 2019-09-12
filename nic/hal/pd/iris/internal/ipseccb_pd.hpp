@@ -234,12 +234,10 @@ find_ipseccb_decrypt_by_hwid (ipseccb_hw_id_t hwid)
 }
 
 extern void *ipseccb_pd_get_hw_key_func(void *entry);
-extern uint32_t ipseccb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool ipseccb_pd_compare_hw_key_func(void *key1, void *key2);
+extern uint32_t ipseccb_pd_hw_key_size(void);
 
 extern void *ipseccb_pd_decrypt_get_hw_key_func(void *entry);
-extern uint32_t ipseccb_pd_decrypt_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool ipseccb_pd_decrypt_compare_hw_key_func(void *key1, void *key2);
+extern uint32_t ipseccb_pd_decrypt_hw_key_size(void);
 
 }   // namespace pd
 }   // namespace hal

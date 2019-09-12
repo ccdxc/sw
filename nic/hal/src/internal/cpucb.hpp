@@ -115,12 +115,10 @@ find_cpucb_by_id (cpucb_id_t cpucb_id)
 }
 
 extern void *cpucb_get_key_func(void *entry);
-extern uint32_t cpucb_compute_hash_func(void *key, uint32_t ht_size);
-extern bool cpucb_compare_key_func(void *key1, void *key2);
+extern uint32_t cpucb_key_size(void);
 
 extern void *cpucb_get_handle_key_func(void *entry);
-extern uint32_t cpucb_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool cpucb_compare_handle_key_func(void *key1, void *key2);
+extern uint32_t cpucb_handle_key_size(void);
 
 hal_ret_t cpucb_get_by_id (cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id = HAL_LIF_CPU);
 hal_ret_t

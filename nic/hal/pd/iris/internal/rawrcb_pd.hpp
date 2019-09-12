@@ -98,8 +98,7 @@ find_rawrcb_by_hwid (rawrcb_hw_id_t hwid)
 }
 
 extern void *rawrcb_pd_get_hw_key_func(void *entry);
-extern uint32_t rawrcb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool rawrcb_pd_compare_hw_key_func(void *key1, void *key2);
+extern uint32_t rawrcb_pd_hw_key_size(void);
 
 }   // namespace pd
 }   // namespace hal

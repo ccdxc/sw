@@ -142,16 +142,13 @@ find_proxy_flow_info(proxy_t* proxy, const flow_key_t* flow_key)
 }
 
 extern void *proxy_flow_ht_get_key_func(void *entry);
-extern uint32_t proxy_flow_ht_compute_hash_func(void *key, uint32_t ht_size);
-extern bool proxy_flow_ht_compare_key_func(void *key1, void *key2);
+extern uint32_t proxy_flow_ht_key_size(void);
 
 extern void *proxy_get_key_func(void *entry);
-extern uint32_t proxy_compute_hash_func(void *key, uint32_t ht_size);
-extern bool proxy_compare_key_func(void *key1, void *key2);
+extern uint32_t proxy_key_size(void);
 
 extern void *proxy_get_handle_key_func(void *entry);
-extern uint32_t proxy_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool proxy_compare_handle_key_func(void *key1, void *key2);
+extern uint32_t proxy_handle_key_size(void);
 
 /****************************
  * INIT APIs

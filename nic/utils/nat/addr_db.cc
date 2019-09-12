@@ -22,19 +22,9 @@ addr_entry_key_func_get (void *entry)
 }
 
 static uint32_t
-addr_entry_key_hash_func_compute (void *key, uint32_t ht_size)
+addr_entry_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(
-        key, sizeof(addr_entry_key_t)) % ht_size;
-}
-
-static bool
-addr_entry_key_func_compare (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(addr_entry_key_t)))
-        return true;
-    return false;
+    return sizeof(addr_entry_key_t);
 }
 
 ht *addr_db_;
@@ -44,8 +34,7 @@ addr_db_init (uint32_t db_size)
     addr_db_ =
         sdk::lib::ht::factory(db_size << 1,
                               addr_entry_key_func_get,
-                              addr_entry_key_hash_func_compute,
-                              addr_entry_key_func_compare);
+                              addr_entry_key_size());
     SDK_ASSERT_RETURN((addr_db_ != NULL), HAL_RET_ERR);
 
     return HAL_RET_OK;

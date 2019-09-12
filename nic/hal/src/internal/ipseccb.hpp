@@ -145,12 +145,10 @@ find_ipseccb_by_id (ipseccb_id_t ipseccb_id)
 }
 
 extern void *ipseccb_get_key_func(void *entry);
-extern uint32_t ipseccb_compute_hash_func(void *key, uint32_t ht_size);
-extern bool ipseccb_compare_key_func(void *key1, void *key2);
+extern uint32_t ipseccb_key_size(void);
 
 extern void *ipseccb_get_handle_key_func(void *entry);
-extern uint32_t ipseccb_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool ipseccb_compare_handle_key_func(void *key1, void *key2);
+extern uint32_t ipseccb_handle_key_size(void);
 
 }    // namespace hal
 

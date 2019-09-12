@@ -20,19 +20,9 @@ nvme_sesscb_get_key_func (void *entry)
 }
 
 uint32_t
-nvme_sesscb_compute_hash_func (void *key, uint32_t ht_size)
+nvme_sesscb_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(nvme_sesscb_id_t)) % ht_size;
-}
-
-bool
-nvme_sesscb_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(nvme_sesscb_id_t *)key1 == *(nvme_sesscb_id_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(nvme_sesscb_id_t);
 }
 
 void *
@@ -43,19 +33,9 @@ nvme_sesscb_get_handle_key_func (void *entry)
 }
 
 uint32_t
-nvme_sesscb_compute_handle_hash_func (void *key, uint32_t ht_size)
+nvme_sesscb_handle_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-nvme_sesscb_compare_handle_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(hal_handle_t);
 }
 
 static inline hal_ret_t

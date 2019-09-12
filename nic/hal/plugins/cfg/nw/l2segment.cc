@@ -35,24 +35,12 @@ l2seg_uplink_oif_get_key_func (void *entry)
 }
 
 // ----------------------------------------------------------------------------
-// hash table key => entry - compute hash
+// hash table key size
 // ----------------------------------------------------------------------------
 uint32_t
-l2seg_uplink_oif_compute_hash_func (void *key, uint32_t ht_size)
+l2seg_uplink_oif_key_size ()
 {
-    SDK_ASSERT(key != NULL);
-    return sdk::lib::hash_algo::
-           fnv_hash(key, sizeof(l2_seg_uplink_oif_list_key_t)) % ht_size;
-}
-
-// ----------------------------------------------------------------------------
-// hash table key => entry - compare function
-// ----------------------------------------------------------------------------
-bool
-l2seg_uplink_oif_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    return (memcmp(key1, key2, sizeof(l2_seg_uplink_oif_list_key_t)) == 0);
+    return sizeof(l2_seg_uplink_oif_list_key_t);
 }
 
 // allocate a l2segment uplink OIF list instance
@@ -99,26 +87,12 @@ l2seg_id_get_key_func (void *entry)
 }
 
 //----------------------------------------------------------------------------
-// hash table seg_id => entry - compute hash
+// hash table seg_id key size
 //----------------------------------------------------------------------------
 uint32_t
-l2seg_id_compute_hash_func (void *key, uint32_t ht_size)
+l2seg_id_key_size ()
 {
-    SDK_ASSERT(key != NULL);
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(l2seg_id_t)) % ht_size;
-}
-
-//----------------------------------------------------------------------------
-// hash table seg_id => entry - compare function
-//----------------------------------------------------------------------------
-bool
-l2seg_id_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(l2seg_id_t *)key1 == *(l2seg_id_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(l2seg_id_t);
 }
 
 // allocate a l2segment instance

@@ -165,8 +165,7 @@ nexthop_t *nexthop_lookup_key_or_handle (const NexthopKeyHandle& kh);
 const char *nexthop_lookup_key_or_handle_to_str (const NexthopKeyHandle& kh);
 
 void *nexthop_id_get_key_func(void *entry);
-uint32_t nexthop_id_compute_hash_func(void *key, uint32_t ht_size);
-bool nexthop_id_compare_key_func(void *key1, void *key2);
+uint32_t nexthop_id_key_size(void);
 
 }    // namespace hal
 

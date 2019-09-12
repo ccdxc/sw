@@ -167,8 +167,7 @@ route_lookup_by_handle (hal_handle_t handle)
 const char *route_keyhandle_to_str (RouteKeyHandle& kh);
 inline void route_dump (RouteSpec& spec);
 void *route_get_key_func(void *entry);
-uint32_t route_compute_hash_func(void *key, uint32_t ht_size);
-bool route_compare_key_func(void *key1, void *key2);
+uint32_t route_key_size(void);
 
 
 hal_ret_t route_clean_handle_mapping (hal_handle_t route_handle);

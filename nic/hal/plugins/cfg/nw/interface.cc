@@ -54,29 +54,12 @@ if_id_get_key_func (void *entry)
 
 
 //------------------------------------------------------------------------------
-// Compute hash function for if id hash table
+// Compute hash table key size
 //------------------------------------------------------------------------------
 uint32_t
-if_id_compute_hash_func (void *key, uint32_t ht_size)
+if_id_key_size ()
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(if_id_t)) % ht_size;
-}
-
-//------------------------------------------------------------------------------
-// Compare key function for if id hash table
-//------------------------------------------------------------------------------
-bool
-if_id_compare_key_func (void *key1, void *key2)
-{
-    if (key1 == NULL || key2 == NULL) {
-        goto end;
-    }
-    if (*(if_id_t *)key1 == *(if_id_t *)key2) {
-        return true;
-    }
-
-end:
-    return false;
+    return sizeof(if_id_t);
 }
 
 // allocate a interface instance
@@ -5436,8 +5419,11 @@ if_restore_cb (void *obj, uint32_t len)
     }
 
     // repopulate handle db
-    hal_handle_insert(HAL_OBJ_ID_INTERFACE, hal_if->hal_handle,
+    ret = hal_handle_insert(HAL_OBJ_ID_INTERFACE, hal_if->hal_handle,
                       (void *)hal_if);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
 
     ret = if_restore_add(hal_if, if_info);
     if (ret != HAL_RET_OK) {

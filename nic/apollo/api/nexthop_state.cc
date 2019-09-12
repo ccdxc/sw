@@ -21,8 +21,7 @@ namespace api {
 nexthop_state::nexthop_state() {
     nexthop_ht_ = ht::factory(PDS_MAX_NEXTHOP >> 1,
                               nexthop::nexthop_key_func_get,
-                              nexthop::nexthop_hash_func_compute,
-                              nexthop::nexthop_key_func_compare);
+                              nexthop::key_size());
     SDK_ASSERT(nh_ht() != NULL);
     nexthop_slab_ = slab::factory("nexthop", PDS_SLAB_ID_NEXTHOP,
                                   sizeof(nexthop), 256, true, true, NULL);

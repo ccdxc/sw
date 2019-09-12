@@ -870,8 +870,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("hal-handle", hal_handle_id_ht_,
                   HAL_MAX_HANDLES >> 1,
                   hal::hal_handle_id_get_key_func,
-                  hal::hal_handle_id_compute_hash_func,
-                  hal::hal_handle_id_compare_key_func,
+                  hal::hal_handle_id_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
 
@@ -879,8 +878,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("vrf", vrf_id_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::vrf_id_get_key_func,
-                  hal::vrf_id_compute_hash_func,
-                  hal::vrf_id_compare_key_func,
+                  hal::vrf_id_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
 
@@ -888,8 +886,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("nw", network_key_ht_,
                   HAL_MAX_NETWORKS >> 1,
                   hal::network_get_key_func,
-                  hal::network_compute_hash_func,
-                  hal::network_compare_key_func,
+                  hal::network_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((network_key_ht_ != NULL), false);
 
@@ -897,8 +894,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("nwsec-profile", nwsec_profile_id_ht_,
                   HAL_MAX_NWSEC_PROFILES >> 1,
                   hal::nwsec_profile_id_get_key_func,
-                  hal::nwsec_profile_id_compute_hash_func,
-                  hal::nwsec_profile_id_compare_key_func,
+                  hal::nwsec_profile_id_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((nwsec_profile_id_ht_ != NULL), false);
 
@@ -906,32 +902,28 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("l2seg", l2seg_id_ht_,
                   HAL_MAX_L2SEGMENTS >> 1,
                   hal::l2seg_id_get_key_func,
-                  hal::l2seg_id_compute_hash_func,
-                  hal::l2seg_id_compare_key_func,
+                  hal::l2seg_id_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
 
     HAL_HT_CREATE("l2seg_uplink_oifs", l2seg_uplink_oif_ht_,
                   HAL_MAX_MC_ENTRIES >> 1,
                   hal::l2seg_uplink_oif_get_key_func,
-                  hal::l2seg_uplink_oif_compute_hash_func,
-                  hal::l2seg_uplink_oif_compare_key_func,
+                  hal::l2seg_uplink_oif_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((l2seg_uplink_oif_ht_ != NULL), false);
 
     HAL_HT_CREATE("EP L2", ep_l2_ht_,
                   HAL_MAX_ENDPOINTS >> 1,
                   hal::ep_get_l2_key_func,
-                  hal::ep_compute_l2_hash_func,
-                  hal::ep_compare_l2_key_func,
+                  hal::ep_l2_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((ep_l2_ht_ != NULL), false);
 
     HAL_HT_CREATE("EP L3", ep_l3_entry_ht_,
                   HAL_MAX_ENDPOINTS,     // twice that of EPs, 1 IPv4,  IPv6 per EP
                   hal::ep_get_l3_key_func,
-                  hal::ep_compute_l3_hash_func,
-                  hal::ep_compare_l3_key_func,
+                  hal::ep_l3_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((ep_l3_entry_ht_ != NULL), false);
 
@@ -939,15 +931,13 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("mcast", mc_key_ht_,
                   HAL_MAX_MC_ENTRIES >> 1,
                   hal::mc_entry_get_key_func,
-                  hal::mc_entry_compute_hash_func,
-                  hal::mc_entry_compare_key_func,
+                  hal::mc_entry_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((mc_key_ht_ != NULL), false);
     HAL_HT_CREATE("OIF List", oif_list_id_ht_,
                   HAL_MAX_OIF_LISTS >> 1,
                   hal::oif_list_get_key_func,
-                  hal::oif_list_compute_hash_func,
-                  hal::oif_list_compare_key_func,
+                  hal::oif_list_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((oif_list_id_ht_ != NULL), false);
 
@@ -955,8 +945,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("lif", lif_id_ht_,
                   HAL_MAX_LIFS >> 1,
                   hal::lif_id_get_key_func,
-                  hal::lif_id_compute_hash_func,
-                  hal::lif_id_compare_key_func,
+                  hal::lif_id_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((lif_id_ht_ != NULL), false);
 
@@ -964,8 +953,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("interface", if_id_ht_,
                   HAL_MAX_INTERFACES >> 1,
                   hal::if_id_get_key_func,
-                  hal::if_id_compute_hash_func,
-                  hal::if_id_compare_key_func,
+                  hal::if_id_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((if_id_ht_ != NULL), false);
 
@@ -973,8 +961,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("session-telemetry", session_hal_telemetry_ht_,
                   HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_handle_key_func,
-                  hal::session_compute_handle_hash_func,
-                  hal::session_compare_handle_key_func,
+                  hal::session_handle_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((session_hal_telemetry_ht_ != NULL), false);
 
@@ -982,24 +969,21 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("session-handle", session_hal_handle_ht_,
                   HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_handle_key_func,
-                  hal::session_compute_handle_hash_func,
-                  hal::session_compare_handle_key_func,
+                  hal::session_handle_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
 
     HAL_HT_CREATE("iflow", session_hal_iflow_ht_,
                   HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_iflow_key_func,
-                  hal::session_compute_iflow_hash_func,
-                  hal::session_compare_iflow_key_func,
+                  hal::session_iflow_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
 
     HAL_HT_CREATE("rflow", session_hal_rflow_ht_,
                   HAL_CFG_MAX_SESSIONS >> 1,
                   hal::session_get_rflow_key_func,
-                  hal::session_compute_rflow_hash_func,
-                  hal::session_compare_rflow_key_func,
+                  hal::session_rflow_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
 
@@ -1007,8 +991,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("L4 LB", l4lb_ht_,
                   HAL_MAX_L4LB_SERVICES >> 1,
                   hal::l4lb_get_key_func,
-                  hal::l4lb_compute_key_hash_func,
-                  hal::l4lb_compare_key_func,
+                  hal::l4lb_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((l4lb_ht_ != NULL), false);
 
@@ -1016,8 +999,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("QoS-Class", qos_class_ht_,
                   HAL_MAX_QOS_CLASSES >> 1,
                   hal::qos_class_get_key_func,
-                  hal::qos_class_compute_hash_func,
-                  hal::qos_class_compare_key_func,
+                  hal::qos_class_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((qos_class_ht_ != NULL), false);
 
@@ -1025,8 +1007,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("COPP", copp_ht_,
                   HAL_MAX_COPPS >> 1,
                   hal::copp_get_key_func,
-                  hal::copp_compute_hash_func,
-                  hal::copp_compare_key_func,
+                  hal::copp_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((copp_ht_ != NULL), false);
 
@@ -1034,24 +1015,21 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("ACL", acl_ht_,
                   HAL_MAX_ACLS >> 1,
                   hal::acl_get_key_func,
-                  hal::acl_compute_hash_func,
-                  hal::acl_compare_key_func,
+                  hal::acl_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((acl_ht_ != NULL), false);
 
     HAL_HT_CREATE("security-group", nwsec_group_ht_,
                   HAL_MAX_NW_SEC_GROUP_CFG >> 1,
                   hal::nwsec_group_get_key_func,
-                  hal::nwsec_group_compute_hash_func,
-                  hal::nwsec_group_compare_key_func,
+                  hal::nwsec_group_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
     HAL_HT_CREATE("rule_cfg", rule_cfg_ht_,
                   HAL_MAX_NW_SEC_GROUP_CFG >> 1,
                   hal::rule_cfg_get_key_func,
-                  hal::rule_cfg_compute_hash_func,
-                  hal::rule_cfg_compare_key_func,
+                  hal::rule_cfg_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
@@ -1059,16 +1037,14 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("natpool", nat_pool_ht_,
                   HAL_MAX_NAT_POOLS >> 1,
                   hal::nat_pool_get_key_func,
-                  hal::nat_pool_compute_hash_func,
-                  hal::nat_pool_compare_key_func,
+                  hal::nat_pool_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((nat_pool_ht_ != NULL), false);
 
     HAL_HT_CREATE("nat-addr-map", nat_mapping_ht_,
                   HAL_MAX_NAT_ADDR_MAP >> 1,
                   hal::nat_mapping_get_key_func,
-                  hal::nat_mapping_compute_hash_func,
-                  hal::nat_mapping_compare_key_func,
+                  hal::nat_mapping_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((nat_mapping_ht_ != NULL), false);
 
@@ -1076,8 +1052,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("nexthop", nexthop_id_ht_,
                   HAL_MAX_NEXTHOPS >> 1,
                   hal::nexthop_id_get_key_func,
-                  hal::nexthop_id_compute_hash_func,
-                  hal::nexthop_id_compare_key_func,
+                  hal::nexthop_id_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((nexthop_id_ht_ != NULL), false);
 
@@ -1085,16 +1060,14 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     HAL_HT_CREATE("route", route_ht_,
                   HAL_MAX_ROUTES >> 1,
                   hal::route_get_key_func,
-                  hal::route_compute_hash_func,
-                  hal::route_compare_key_func,
+                  hal::route_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((route_ht_ != NULL), false);
 
     HAL_HT_CREATE("FILTER", filter_ht_,
                   HAL_MAX_FILTERS >> 1,
                   hal::filter_get_key_func,
-                  hal::filter_compute_key_hash_func,
-                  hal::filter_compare_key_func,
+                  hal::filter_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((filter_ht_ != NULL), false);
 
@@ -1105,8 +1078,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       gft_exact_match_profile_id_ht_,
                       HAL_MAX_GFT_EXACT_MATCH_PROFILES >> 1,
                       hal::gft_exact_match_profile_id_get_key_func,
-                      hal::gft_exact_match_profile_id_compute_hash_func,
-                      hal::gft_exact_match_profile_id_compare_key_func,
+                      hal::gft_exact_match_profile_id_key_size(),
                       true, mmgr);
         SDK_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
 
@@ -1114,8 +1086,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       gft_hdr_transposition_profile_id_ht_,
                       HAL_MAX_GFT_HDR_TRANSPOSITION_PROFILES >> 1,
                       hal::gft_hdr_transposition_profile_id_get_key_func,
-                      hal::gft_hdr_transposition_profile_id_compute_hash_func,
-                      hal::gft_hdr_transposition_profile_id_compare_key_func,
+                      hal::gft_hdr_transposition_profile_id_key_size(),
                       true, mmgr);
         SDK_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
 
@@ -1123,8 +1094,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       gft_exact_match_flow_entry_id_ht_,
                       HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES >> 1,
                       hal::gft_exact_match_flow_entry_id_get_key_func,
-                      hal::gft_exact_match_flow_entry_id_compute_hash_func,
-                      hal::gft_exact_match_flow_entry_id_compare_key_func,
+                      hal::gft_exact_match_flow_entry_id_key_size(),
                       true, mmgr);
         SDK_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
     }
@@ -1145,56 +1115,49 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
     // initialize Crypto Cert store related data structures
     crypto_cert_store_id_ht_ = ht::factory(HAL_MAX_CRYPTO_CERT_STORE_ELEMS,
                                            hal::crypto_cert_store_get_key_func,
-                                           hal::crypto_cert_store_compute_hash_func,
-                                           hal::crypto_cert_store_compare_key_func);
+                                           hal::crypto_cert_store_key_size());
     SDK_ASSERT_RETURN((crypto_cert_store_id_ht_ != NULL), false);
 
     // initialize TLS CB related data structures
     HAL_HT_CREATE("tlscb", tlscb_id_ht_,
                   HAL_MAX_TLSCB >> 1,
                   hal::tlscb_get_key_func,
-                  hal::tlscb_compute_hash_func,
-                  hal::tlscb_compare_key_func);
+                  hal::tlscb_key_size());
     SDK_ASSERT_RETURN((tlscb_id_ht_ != NULL), false);
 
     // initialize TCB CB related data structures
     HAL_HT_CREATE("tcpcb", tcpcb_id_ht_,
                   HAL_MAX_TCPCB >> 1,
                   hal::tcpcb_get_key_func,
-                  hal::tcpcb_compute_hash_func,
-                  hal::tcpcb_compare_key_func);
+                  hal::tcpcb_key_size());
     SDK_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
 
     // initialize NVME SESS CB related data structures
     HAL_HT_CREATE("nvme_sesscb", nvme_sesscb_id_ht_,
                   HAL_MAX_NVME_SESSCB >> 1,
                   hal::nvme_sesscb_get_key_func,
-                  hal::nvme_sesscb_compute_hash_func,
-                  hal::nvme_sesscb_compare_key_func);
+                  hal::nvme_sesscb_key_size());
     SDK_ASSERT_RETURN((nvme_sesscb_id_ht_ != NULL), false);
 
     // initialize NVME NS related data structures
     HAL_HT_CREATE("nvme_ns", nvme_ns_id_ht_,
                   HAL_MAX_NVME_NS >> 1,
                   hal::nvme_ns_get_key_func,
-                  hal::nvme_ns_compute_hash_func,
-                  hal::nvme_ns_compare_key_func);
+                  hal::nvme_ns_key_size());
     SDK_ASSERT_RETURN((nvme_ns_id_ht_ != NULL), false);
 
     // initialize NVME SQ related data structures
     HAL_HT_CREATE("nvme_sq", nvme_sq_id_ht_,
                   HAL_MAX_NVME_SQ >> 1,
                   hal::nvme_sq_get_key_func,
-                  hal::nvme_sq_compute_hash_func,
-                  hal::nvme_sq_compare_key_func);
+                  hal::nvme_sq_key_size());
     SDK_ASSERT_RETURN((nvme_sq_id_ht_ != NULL), false);
 
     // initialize NVME CQ related data structures
     HAL_HT_CREATE("nvme_cq", nvme_cq_id_ht_,
                   HAL_MAX_NVME_CQ >> 1,
                   hal::nvme_cq_get_key_func,
-                  hal::nvme_cq_compute_hash_func,
-                  hal::nvme_cq_compare_key_func);
+                  hal::nvme_cq_key_size());
     SDK_ASSERT_RETURN((nvme_cq_id_ht_ != NULL), false);
 
 
@@ -1214,107 +1177,93 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
     HAL_HT_CREATE("wringid", wring_id_ht_,
                   HAL_MAX_WRING >> 1,
                   hal::wring_get_key_func,
-                  hal::wring_compute_hash_func,
-                  hal::wring_compare_key_func);
+                  hal::wring_key_size());
     SDK_ASSERT_RETURN((wring_id_ht_ != NULL), false);
 
     // initialize proxy service related data structures
     HAL_HT_CREATE("proxy-type", proxy_type_ht_,
                   HAL_MAX_PROXY >> 1,
                   hal::proxy_get_key_func,
-                  hal::proxy_compute_hash_func,
-                  hal::proxy_compare_key_func);
+                  hal::proxy_key_size());
     SDK_ASSERT_RETURN((proxy_type_ht_ != NULL), false);
 
     // initialize IPSEC CB related data structures
     HAL_HT_CREATE("ipseccb", ipseccb_id_ht_,
                   HAL_MAX_IPSECCB/2,
                   hal::ipseccb_get_key_func,
-                  hal::ipseccb_compute_hash_func,
-                  hal::ipseccb_compare_key_func);
+                  hal::ipseccb_key_size());
     SDK_ASSERT_RETURN((ipseccb_id_ht_ != NULL), false);
 
     // initialize IPSEC SA related data structures
     HAL_HT_CREATE("ipsec_sa", ipsec_sa_id_ht_,
                   HAL_MAX_IPSEC_SA/2,
                   hal::ipsec_sa_get_key_func,
-                  hal::ipsec_sa_compute_hash_func,
-                  hal::ipsec_sa_compare_key_func);
+                  hal::ipsec_sa_key_size());
     SDK_ASSERT_RETURN((ipsec_sa_id_ht_ != NULL), false);
 
     HAL_HT_CREATE("ipsec_sa_hal_hdl", ipsec_sa_hal_hdl_ht_,
                   HAL_MAX_IPSEC_SA/2,
                   hal::ipsec_sa_get_handle_key_func,
-                  hal::ipsec_sa_compute_handle_hash_func,
-                  hal::ipsec_sa_compare_handle_key_func);
+                  hal::ipsec_sa_handle_key_size());
     SDK_ASSERT_RETURN((ipsec_sa_hal_hdl_ht_ != NULL), false);
 
     // initialize CPU CB related data structures
     HAL_HT_CREATE("cpucb", cpucb_id_ht_,
                   HAL_MAX_CPUCB >> 1,
                   hal::cpucb_get_key_func,
-                  hal::cpucb_compute_hash_func,
-                  hal::cpucb_compare_key_func);
+                  hal::cpucb_key_size());
     SDK_ASSERT_RETURN((cpucb_id_ht_ != NULL), false);
 
     // initialize Raw Redirect CB related data structures
     HAL_HT_CREATE("rawrcb", rawrcb_id_ht_,
                   HAL_MAX_RAWRCB_HT_SIZE >> 1,
                   hal::rawrcb_get_key_func,
-                  hal::rawrcb_compute_hash_func,
-                  hal::rawrcb_compare_key_func);
+                  hal::rawrcb_key_size());
     SDK_ASSERT_RETURN((rawrcb_id_ht_ != NULL), false);
 
     // initialize Raw Chain CB related data structures
     HAL_HT_CREATE("rawccb", rawccb_id_ht_,
                   HAL_MAX_RAWCCB_HT_SIZE >> 1,
                   hal::rawccb_get_key_func,
-                  hal::rawccb_compute_hash_func,
-                  hal::rawccb_compare_key_func);
+                  hal::rawccb_key_size());
     SDK_ASSERT_RETURN((rawccb_id_ht_ != NULL), false);
 
     // initialize Raw Redirect CB related data structures
     HAL_HT_CREATE("proxyrcb", proxyrcb_id_ht_,
                   HAL_MAX_PROXYRCB_HT_SIZE >> 1,
                   hal::proxyrcb_get_key_func,
-                  hal::proxyrcb_compute_hash_func,
-                  hal::proxyrcb_compare_key_func);
+                  hal::proxyrcb_key_size());
     SDK_ASSERT_RETURN((proxyrcb_id_ht_ != NULL), false);
 
     // initialize Raw Chain CB related data structures
     HAL_HT_CREATE("proxyccb", proxyccb_id_ht_,
                   HAL_MAX_PROXYCCB_HT_SIZE >> 1,
                   hal::proxyccb_get_key_func,
-                  hal::proxyccb_compute_hash_func,
-                  hal::proxyccb_compare_key_func);
+                  hal::proxyccb_key_size());
     SDK_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
 
     HAL_HT_CREATE("sfw policy", nwsec_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::nwsec_policy_get_key_func,
-                  hal::nwsec_policy_compute_hash_func,
-                  hal::nwsec_policy_compare_key_func);
+                  hal::nwsec_policy_key_size());
     SDK_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
 
     HAL_HT_CREATE("nat policy", nat_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::nat_cfg_pol_key_func_get,
-                  hal::nat_cfg_pol_hash_func_compute,
-                  hal::nat_cfg_pol_key_func_compare);
+                  hal::nat_cfg_pol_key_size());
     SDK_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
 
     HAL_HT_CREATE("ipsec policy", ipsec_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::ipsec_cfg_pol_key_func_get,
-                  hal::ipsec_cfg_pol_hash_func_compute,
-                  hal::ipsec_cfg_pol_key_func_compare);
+                  hal::ipsec_cfg_pol_key_size());
     SDK_ASSERT_RETURN((ipsec_policy_ht_ != NULL), false);
 
     HAL_HT_CREATE("tcp_proxy policy", tcp_proxy_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::tcp_proxy_cfg_pol_key_func_get,
-                  hal::tcp_proxy_cfg_pol_hash_func_compute,
-                  hal::tcp_proxy_cfg_pol_key_func_compare);
+                  hal::tcp_proxy_cfg_pol_key_size());
     SDK_ASSERT_RETURN((tcp_proxy_policy_ht_ != NULL), false);
 
     return true;

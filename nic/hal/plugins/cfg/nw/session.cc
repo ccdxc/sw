@@ -102,19 +102,9 @@ session_get_handle_key_func (void *entry)
 }
 
 uint32_t
-session_compute_handle_hash_func (void *key, uint32_t ht_size)
+session_handle_key_size ()
 {
-    return hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-session_compare_handle_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(hal_handle_t);
 }
 
 void *
@@ -125,19 +115,9 @@ session_get_iflow_key_func (void *entry)
 }
 
 uint32_t
-session_compute_iflow_hash_func (void *key, uint32_t ht_size)
+session_iflow_key_size ()
 {
-    return (hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
-}
-
-bool
-session_compare_iflow_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(flow_key_t))) {
-        return true;
-    }
-    return false;
+    return sizeof(flow_key_t);
 }
 
 void *
@@ -148,19 +128,9 @@ session_get_rflow_key_func (void *entry)
 }
 
 uint32_t
-session_compute_rflow_hash_func (void *key, uint32_t ht_size)
+session_rflow_key_size ()
 {
-    return (hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
-}
-
-bool
-session_compare_rflow_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(flow_key_t))) {
-        return true;
-    }
-    return false;
+    return sizeof(flow_key_t);
 }
 
 void *
@@ -171,19 +141,9 @@ flow_get_key_func (void *entry)
 }
 
 uint32_t
-flow_compute_hash_func (void *key, uint32_t ht_size)
+flow_key_size ()
 {
-    return hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size;
-}
-
-bool
-flow_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(flow_key_t))) {
-        return true;
-    }
-    return false;
+    return sizeof(flow_key_t);
 }
 
 session_t *

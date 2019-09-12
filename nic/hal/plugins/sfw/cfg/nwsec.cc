@@ -34,27 +34,12 @@ nwsec_profile_id_get_key_func (void *entry)
 }
 
 //----------------------------------------------------------------------------
-// hash table profile_id => entry compute hash func.
+// hash table profile_id key size
 //----------------------------------------------------------------------------
 uint32_t
-nwsec_profile_id_compute_hash_func (void *key, uint32_t ht_size)
+nwsec_profile_id_key_size ()
 {
-    SDK_ASSERT(key != NULL);
-    return sdk::lib::hash_algo::fnv_hash(key,
-                                         sizeof(nwsec_profile_id_t)) % ht_size;
-}
-
-//----------------------------------------------------------------------------
-// hash table profile_id => entry compare func.
-//----------------------------------------------------------------------------
-bool
-nwsec_profile_id_compare_key_func (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(nwsec_profile_id_t *)key1 == *(nwsec_profile_id_t *)key2) {
-        return true;
-    }
-    return false;
+    return sizeof(nwsec_profile_id_t);
 }
 
 //----------------------------------------------------------------------------

@@ -268,8 +268,7 @@ qos_spec_qos_group_to_qos_group (kh::QosGroup qos_group)
 }
 
 extern void *qos_class_get_key_func(void *entry);
-extern uint32_t qos_class_compute_hash_func(void *key, uint32_t ht_size);
-extern bool qos_class_compare_key_func(void *key1, void *key2);
+extern uint32_t qos_class_key_size(void);
 qos_class_t *find_qos_class_by_group(qos_group_t qos_group);
 qos_class_t *find_qos_class_by_handle(hal_handle_t handle);
 qos_class_t *find_qos_class_by_key_handle(const QosClassKeyHandle& kh);
@@ -465,8 +464,7 @@ cmap_type_dscp(qos_cmap_type_e type) {
 }
 
 extern void *copp_get_key_func(void *entry);
-extern uint32_t copp_compute_hash_func(void *key, uint32_t ht_size);
-extern bool copp_compare_key_func(void *key1, void *key2);
+extern uint32_t copp_key_size(void);
 extern copp_t *find_copp_by_copp_type(copp_type_t copp_type);
 extern copp_t *find_copp_by_handle(hal_handle_t handle);
 extern copp_t *find_copp_by_key_handle(const CoppKeyHandle& kh);

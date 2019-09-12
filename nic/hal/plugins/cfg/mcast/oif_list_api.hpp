@@ -73,8 +73,7 @@ hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list);
 hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list);
 
 void *oif_list_get_key_func(void *entry);
-uint32_t oif_list_compute_hash_func(void *key, uint32_t ht_size);
-bool oif_list_compare_key_func(void *key1, void *key2);
+uint32_t oif_list_key_size(void);
 }    // namespace hal
 
 #endif /* __OIF_LIST_API_HPP__ */

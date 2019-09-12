@@ -89,8 +89,7 @@ pd_wring_meta_t* wring_pd_get_meta(types::WRingType type);
 hal_ret_t wring_pd_table_init(types::WRingType type, uint32_t wring_id); 
 
 extern void *wring_pd_get_hw_key_func(void *entry);
-extern uint32_t wring_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool wring_pd_compare_hw_key_func(void *key1, void *key2);
+extern uint32_t wring_pd_hw_key_size(void);
 
 }   // namespace pd
 }   // namespace hal

@@ -27,8 +27,7 @@ lif_impl_state::lif_impl_state(pds_state *state) {
     // maintain all lifs in the system in a hash table
     lif_ht_ = ht::factory(PDS_MAX_LIFS >> 2,
                           lif_impl::lif_key_func_get,
-                          lif_impl::lif_hash_func_compute,
-                          lif_impl::lif_key_func_compare);
+                          lif_impl::key_size());
     SDK_ASSERT(lif_ht_ != NULL);
 
 #if 0

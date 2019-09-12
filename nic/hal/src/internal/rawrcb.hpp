@@ -96,14 +96,12 @@ typedef struct rawrcb_s {
 #define HAL_NUM_RAWRCB_RINGS_MAX        APP_REDIR_RAWR_RINGS_MAX
 
 extern void *rawrcb_get_key_func(void *entry);
-extern uint32_t rawrcb_compute_hash_func(void *key, uint32_t ht_size);
-extern bool rawrcb_compare_key_func(void *key1, void *key2);
+extern uint32_t rawrcb_key_size(void);
 extern rawrcb_t *find_rawrcb_by_id(rawrcb_id_t rawrcb_id);
 extern rawrcb_t *find_rawrcb_by_handle(hal_handle_t handle);
 
 extern void *rawrcb_get_handle_key_func(void *entry);
-extern uint32_t rawrcb_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool rawrcb_compare_handle_key_func(void *key1, void *key2);
+extern uint32_t rawrcb_handle_key_size(void *key, uint32_t ht_size);
 
 hal_ret_t rawrcb_create(internal::RawrCbSpec& spec,
                         internal::RawrCbResponse *rsp);
