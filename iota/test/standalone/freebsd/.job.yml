@@ -20,7 +20,7 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-8
+     - image: build-12
        count: 2
        resources:
          # Freebsd works with only server-d

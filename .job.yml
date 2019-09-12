@@ -134,7 +134,7 @@ dependencies:
     - reference: iota/test/standalone/esx
       exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
     - reference: iota/test/standalone/freebsd
-      exclude_dirs: ["doc", "drivers/linux", "drivers/esx"]
+      exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
   storage/offload:
     - reference: storage/offload/linux-build-test
   venice:
