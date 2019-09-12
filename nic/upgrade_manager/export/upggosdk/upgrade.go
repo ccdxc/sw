@@ -141,7 +141,8 @@ type UpgSdk interface {
 func (u *upgSdk) IsUpgradeInProgress() bool {
 	upgreq := upgrade.GetUpgReq(u.sdkClient)
 	if upgreq != nil &&
-		upgreq.GetUpgReqCmd() == upgrade.UpgReqType_UpgStart {
+		(upgreq.GetUpgReqCmd() == upgrade.UpgReqType_UpgStart ||
+			upgreq.GetUpgReqCmd() == upgrade.UpgReqType_IsUpgPossible) {
 		log.Infof("Upgrade in progress")
 		return true
 	}

@@ -174,7 +174,7 @@ bool UpgSdk::IsUpgradeInProgress(void) {
     UPG_LOG_DEBUG("UpgSdk::IsUpgradeInProgress");
 
     delphi::objects::UpgReqPtr upgReq = FindUpgReqSpec();
-    if (upgReq && upgReq->upgreqcmd() == UpgStart) {
+    if (upgReq && (upgReq->upgreqcmd() == UpgStart || upgReq->upgreqcmd() == IsUpgPossible)) {
         UPG_LOG_DEBUG("Upgrade in progress");
         return true;
     }
