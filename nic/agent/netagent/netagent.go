@@ -112,14 +112,13 @@ func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver
 
 	// create a new network agent
 	nagent, err := state.NewNetAgent(dp, dbPath, cl)
-	ag.NetworkAgent = nagent
-	ag.datapath = dp
-	ag.ResolverClient = resolverClient
-
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err
 	}
+	ag.NetworkAgent = nagent
+	ag.datapath = dp
+	ag.ResolverClient = resolverClient
 
 	// Mount delphi naples status object
 	delphiProto.NaplesStatusMount(ag.DelphiClient, delphi.MountMode_ReadMode)

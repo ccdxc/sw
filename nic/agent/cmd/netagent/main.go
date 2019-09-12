@@ -87,9 +87,6 @@ func main() {
 	}
 	defer evtsRecorder.Close()
 
-	// create a dummy channel to wait forver
-	waitCh := make(chan bool)
-
 	// set Garbage collection ratio and periodically free OS memory
 	debug.SetGCPercent(20)
 	go periodicFreeMemory()
@@ -170,6 +167,9 @@ func main() {
 	}
 
 	log.Infof("%s is running {%+v}.  With UUID: %v", globals.Netagent, ag, ag.NetworkAgent.NodeUUID)
+
+	// create a dummy channel to wait forver
+	waitCh := make(chan bool)
 
 	// wait forever
 	<-waitCh

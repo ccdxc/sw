@@ -41,7 +41,7 @@ func GetNaplesTrustRoots() ([]*x509.Certificate, error) {
 func ClearNaplesTrustRoots() error {
 	err := os.RemoveAll(globals.NaplesTrustRootsFile)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return os.RemoveAll(globals.NaplesTrustRootsBackupFile)

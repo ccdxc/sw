@@ -561,7 +561,7 @@ func (n *NMD) AdmitNaples() {
 			//    why it is rejected. In this case, there is no retry done.
 			// 3. If the phase is PENDING, it indicates that the certificate is valid, but it
 			//    is either not auto-admitted or not manually approved. In such cases
-			//    the retry is done at exponential interval and capped at  5min retry.
+			//    the retry is done at exponential interval and capped at 3min retry.
 			// 4. If is the phase is ADMITTED, move on to next stage of sending periodic
 			//    NIC updates.
 			//
