@@ -380,7 +380,7 @@ class Testcase:
     def __mk_testcase_directory(self, newdir):
         Logger.debug("Creating Testcase directory: %s" % newdir)
         command = "mkdir -p %s && chmod 777 %s" % (newdir, newdir)
-        req = api.Trigger_CreateExecuteCommandsRequest()
+        req = api.Trigger_CreateAllParallelCommandsRequest()
         for nodename in api.GetWorkloadNodeHostnames():
             api.Trigger_AddHostCommand(req, nodename, command)
         for wl in api.GetWorkloads():

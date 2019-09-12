@@ -4,13 +4,14 @@ import iota.harness.api as api
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.common as common
 
-__MAX_TECHSUPPORT_PER_RUN = 5
+__MAX_TECHSUPPORT_PER_RUN = 25
 __CURREN_TECHSUPPORT_CNT = 0
 
 def Main(tc):
     if tc.GetStatus() == api.types.status.SUCCESS:
         return api.types.status.SUCCESS
 
+    global __CURREN_TECHSUPPORT_CNT
     __CURREN_TECHSUPPORT_CNT = __CURREN_TECHSUPPORT_CNT + 1
     api.Logger.info("TC: %s failed. Collecting techsupport." % (tc.Name()))
     nodes = api.GetNaplesHostnames()
