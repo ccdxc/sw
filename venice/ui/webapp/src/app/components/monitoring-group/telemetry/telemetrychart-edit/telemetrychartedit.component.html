@@ -49,7 +49,8 @@
         ADD QUERY
       </div>
       <div fxFlex="auto"></div>
-      <div fxFlex="nogrow">
+      <div fxFlex="nogrow" *ngIf="false">
+        <!-- PS-1956 hide debug metrics 2019-09-11 -->
         <p-checkbox name="Debug Metrics"
                     styleClass="telemetrychartedit-checkbox"
                     labelStyleClass="telemetrychartedit-checkbox-label"

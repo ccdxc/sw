@@ -468,12 +468,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
    */
   buildMetricsPollingQuery(source: DataSource): MetricsPollingQuery {
     const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
-    if (source.measurement === 'Cluster') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
-      query.query.function = Telemetry_queryMetricsQuerySpec_function.last; // VS-741 use last (2019-09-06) function to show DSC count
+    if (source.measurement === 'Cluster' || source.measurement === 'SessionSummaryMetrics') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
+      query.query.function = Telemetry_queryMetricsQuerySpec_function.last; // VS-741 use median function to show DSC count
     }
-    /* if (source.measurement === 'FteCPSMetrics') { // CPS
-      query.query.function = Telemetry_queryMetricsQuerySpec_function.none; // VS-741 use median function to show DSC count
-    } */
     return query;
   }
 
