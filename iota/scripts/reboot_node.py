@@ -124,7 +124,7 @@ class EsxHostManagement(HostManagement):
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
 
         self.hdl.sendline("reboot && sleep 30")
-        match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
+        #match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
         self.hdl.close()
 
         # Wait for the host to start rebooting.
