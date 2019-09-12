@@ -17,7 +17,7 @@ import { AbstractControl, ValidatorFn } from '@angular/forms';
 import { required , patternValidator} from '@sdk/v1/utils/validators';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-
+import { hasStagingPermission, invokeConfigureStagingPermission } from '../';
 
 @Component({
   selector: 'app-newuser',
@@ -102,11 +102,10 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
         newUser.meta.name + ' already exist');
       return;
     }
-    if (this._uiconfigsService.isAuthorized(UIRolePermissions.stagingbuffer_create)) {
+    if (hasStagingPermission(this._uiconfigsService)) {
       this.addUser_with_staging();
     } else {
-      this._controllerService.invokeErrorToaster('Staging permission required',
-        'Please configure staging permission in role');
+      invokeConfigureStagingPermission(this._controllerService);
       return;
     }
   }
@@ -126,6 +125,10 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
    *             delete buffer
    */
   addUser_with_staging() {
+    if (!hasStagingPermission(this.uiconfigsService)) {
+      invokeConfigureStagingPermission(this._controllerService);
+      return;
+    }
     const newUser = this.newAuthUser.getFormGroupValues();
     let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
     let buffername = null; // createdBuffer.meta.name;

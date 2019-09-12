@@ -12,6 +12,7 @@ import { AuthPermission, AuthPermission_actions_uihint, AuthPermission_actions }
 import { AuthRoleBinding, AuthUser, AuthRole } from '@sdk/v1/models/generated/auth';
 import { Utility } from '@app/common/Utility';
 import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging';
+import { hasStagingPermission, invokeConfigureStagingPermission } from '..';
 
 /**
  * NewroleComponent is included in UsersComponent (parent).
@@ -228,6 +229,10 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    *            commit buffer
    */
   addRole_with_staging() {
+    if (!hasStagingPermission(this.uiconfigsService)) {
+      invokeConfigureStagingPermission(this._controllerService);
+      return;
+    }
     const newRole = Utility.TrimDefaultsAndEmptyFields(this.getRoleFromUI());
 
     const newRolebinding = new AuthRoleBinding();

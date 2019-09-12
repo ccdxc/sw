@@ -79,7 +79,6 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
   }
 
   ngOnInit() {
-    this._removeDropStatistics(); // comment this line out once backend supportd 'drop statistics'.
     const buttons = [
       {
         cssClass: 'global-button-primary telemetry-button',
@@ -104,10 +103,6 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     });
   }
 
-  _removeDropStatistics() {
-    // PS-1956 (take out DropMetrics)
-    delete MetricsMetadata['DropMetrics'];
-  }
 
   ngAfterViewInit() {
     // Pushing to next event loop so that updating the graphTitle doesn't cause an angular change detection error.
