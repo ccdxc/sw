@@ -75,9 +75,31 @@
 
   </style>
 
+  <script>
+    function detchSpinningStuck() {
+      setTimeout(() => {
+        try {
+          var list = document.getElementsByClassName("app-loading");
+          if (list && list.length > 0) {
+            alert("Can not load Venice UI , please hard reload browser.");
+          }
+        } catch (error) {
+          console.error('Venice-UI index.html detchSpinningStuck() ', error);
+        }
+      }, 60000);
+    }
+
+    function onBodyError() {
+      alert(
+        "Error occured while loading Venice UI , please hard reload browser or contact administor."
+      );
+    }
+
+  </script>
+
 </head>
 
-<body class="pensando-ui">
+<body class="pensando-ui" onload="detchSpinningStuck()" onerror="onBodyError()">
   <app-root>
     <div class="app-loading">
       <div class="logo"></div>
