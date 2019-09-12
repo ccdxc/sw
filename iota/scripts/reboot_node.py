@@ -28,12 +28,12 @@ parser.add_argument('--timeout', dest='timeout',
                     default=60, help='Naples Password.')
 GlobalOptions = parser.parse_args()
 
-ROOT_EXP_PROMPT="~#"
+USER_EXP_PROMPT="$"
 if GlobalOptions.os == 'freebsd':
-    ROOT_EXP_PROMPT="~]#"
+    USER_EXP_PROMPT="~]$"
 
 if GlobalOptions.os == 'esx':
-    ROOT_EXP_PROMPT="~]"
+    USER_EXP_PROMPT="~]"
 
 
 
@@ -57,9 +57,9 @@ class HostManagement:
         self.hdl.logfile = sys.stdout.buffer
         self.hdl.expect(["[Pp]assword:", "Password for root@"])
         self.hdl.sendline(GlobalOptions.host_password)
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
         self.hdl.sendline("uptime")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
         return
 
 
@@ -91,20 +91,20 @@ class HostManagement:
 
     def reboot(self):
         self.hdl.sendline("sync")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
         self.hdl.sendline("ls -l /root/")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
         self.hdl.sendline("uptime")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
         self.hdl.sendline("rm -rf /pensando")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
         self.hdl.sendline("mkdir /pensando")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
         self.hdl.sendline("chown vm:vm /pensando")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
 
-        self.hdl.sendline("reboot && sleep 30")
-        match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
+        self.hdl.sendline("sudo reboot && sleep 30")
+        match = self.hdl.expect_exact([USER_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
         self.hdl.close()
 
         # Wait for the host to start rebooting.
@@ -121,10 +121,10 @@ class EsxHostManagement(HostManagement):
 
     def reboot(self):
         self.hdl.sendline("sync")
-        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.expect_exact(USER_EXP_PROMPT)
 
-        self.hdl.sendline("reboot && sleep 30")
-        #match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
+        self.hdl.sendline("sudo reboot && sleep 30")
+        match = self.hdl.expect_exact([USER_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
         self.hdl.close()
 
         # Wait for the host to start rebooting.
