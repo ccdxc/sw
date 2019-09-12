@@ -98,7 +98,7 @@ pds_meter_debug_stats_to_proto (pds_meter_debug_stats_t *stats, void *ctxt)
 // build Meter api spec from proto buf spec
 static inline sdk_ret_t
 pds_meter_proto_to_api_spec (pds_meter_spec_t *api_spec,
-                                  const pds::MeterSpec &proto_spec)
+                             const pds::MeterSpec &proto_spec)
 {
     sdk_ret_t ret;
 
@@ -546,7 +546,7 @@ pds_tep_api_info_to_proto (const pds_tep_info_t *api_info, void *ctxt)
     pds_tep_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-// Build TEP API spec from protobuf spec
+// build TEP API spec from protobuf spec
 static inline void
 pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
                             const pds::TunnelSpec &proto_spec)
@@ -632,7 +632,7 @@ pds_service_api_info_to_proto (const pds_svc_mapping_info_t *api_info, void *ctx
     pds_service_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-// Build service API spec from proto buf spec
+// build service API spec from proto buf spec
 static inline void
 pds_service_proto_to_api_spec (pds_svc_mapping_spec_t *api_spec,
                                const pds::SvcMappingSpec &proto_spec)
@@ -1117,7 +1117,6 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
         default:
             break;
         }
-
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_portlow(api_rule->match.l4_match.sport_range.port_lo);
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_porthigh(api_rule->match.l4_match.sport_range.port_hi);
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(api_rule->match.l4_match.dport_range.port_lo);
@@ -1156,7 +1155,7 @@ pds_policy_api_info_to_proto (const pds_policy_info_t *api_info, void *ctxt)
     pds_policy_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-// Build nh API spec from protobuf spec
+// build nh API spec from protobuf spec
 static inline void
 pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
                                 const pds::NexthopSpec &proto_spec)
@@ -1225,18 +1224,65 @@ pds_nh_api_info_to_proto (const pds_nexthop_info_t *api_info, void *ctxt)
     pds_nh_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-// Build nh group API spec from protobuf spec
-static inline void
+// build nh group API spec from protobuf spec
+static inline sdk_ret_t
 pds_nh_group_proto_to_api_spec (pds_nexthop_group_spec_t *api_spec,
                                 const pds::NhGroupSpec &proto_spec)
 {
+    pds::NhGroupType type;
+
+    api_spec->key = proto_spec.id();
+    if (type == pds::NEXTHOP_GROUP_TYPE_NONE) {
+        return SDK_RET_INVALID_ARG;
+    } else if (type == pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP) {
+        api_spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+    } else if (type == pds::NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP) {
+        api_spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+    }
+    api_spec->num_entries = proto_spec.nhinfo_size();
+    if (api_spec->num_entries) {
+        if (proto_spec.nhinfo(0).nh_case() == pds::Nh::kNexthop) {
+            api_spec->entry_type = PDS_NHGROUP_ENTRY_TYPE_NEXTHOP;
+        } else if (proto_spec.nhinfo(0).nh_case() == pds::Nh::kNhGroup) {
+            api_spec->entry_type = PDS_NHGROUP_ENTRY_TYPE_NHGROUP;
+        } else {
+            return SDK_RET_INVALID_ARG;
+        }
+    } else {
+        api_spec->entry_type = PDS_NHGROUP_ENTRY_TYPE_NONE;
+    }
+    for (uint32_t i = 0; i < api_spec->num_entries; i++) {
+        if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NEXTHOP) {
+            api_spec->nexthops[i] = proto_spec.nhinfo(i).nexthop();
+        } else if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NHGROUP) {
+            api_spec->nexthop_groups[i] = proto_spec.nhinfo(i).nhgroup();
+        }
+    }
+    return SDK_RET_OK;
 }
 
 // populate proto buf spec from nh API spec
-static inline void
+static inline sdk_ret_t
 pds_nh_group_api_spec_to_proto (pds::NhGroupSpec *proto_spec,
                                 const pds_nexthop_group_spec_t *api_spec)
 {
+    proto_spec->set_id(api_spec->key);
+    if (api_spec->type == PDS_NHGROUP_TYPE_NONE) {
+        return SDK_RET_INVALID_ARG;
+    } else if (api_spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
+        proto_spec->set_type(pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP);
+    } else if (api_spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+        proto_spec->set_type(pds::NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP);
+    }
+    for (uint32_t i = 0; i < api_spec->num_entries; i++) {
+        if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NEXTHOP) {
+            auto nhinfo = proto_spec->add_nhinfo();
+            nhinfo->set_nexthop(api_spec->nexthops[i]);
+        } else if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NHGROUP) {
+            auto nhinfo = proto_spec->add_nhinfo();
+            nhinfo->set_nhgroup(api_spec->nexthop_groups[i]);
+        }
+    }
 }
 
 // populate proto buf status from nh group API status
@@ -1255,7 +1301,8 @@ pds_nh_group_api_stats_to_proto (pds::NhGroupStats *proto_stats,
 
 // populate proto buf from nh API info
 static inline void
-pds_nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info, void *ctxt)
+pds_nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info,
+                                void *ctxt)
 {
     pds::NhGroupGetResponse *proto_rsp = (pds::NhGroupGetResponse *)ctxt;
     auto nh = proto_rsp->add_response();
@@ -1299,10 +1346,12 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
     }
     for (uint32_t i = 0; i < num_routes; i++) {
         const pds::Route &proto_route = proto_spec.routes(i);
-        ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix, proto_route.prefix());
+        ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix,
+                                     proto_route.prefix());
         switch (proto_route.Nh_case()) {
         case pds::Route::kNextHop:
-            ipaddr_proto_spec_to_api_spec(&api_spec->routes[i].nh_ip, proto_route.nexthop());
+            ipaddr_proto_spec_to_api_spec(&api_spec->routes[i].nh_ip,
+                                          proto_route.nexthop());
             api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
             break;
         case pds::Route::kNexthopId:
@@ -1362,7 +1411,8 @@ pds_route_table_api_stats_to_proto (pds::RouteTableStats *proto_stats,
 
 // populate proto buf from route table API info
 static inline void
-pds_route_table_api_info_to_proto (const pds_route_table_info_t *api_info, void *ctxt)
+pds_route_table_api_info_to_proto (const pds_route_table_info_t *api_info,
+                                   void *ctxt)
 {
     pds::RouteTableGetResponse *proto_rsp = (pds::RouteTableGetResponse *)ctxt;
     auto route_table = proto_rsp->add_response();
@@ -1482,7 +1532,8 @@ pds_pb_stats_port_to_proto (pds::PacketBufferPort *buf_port, uint32_t port)
 }
 
 static inline void
-pds_session_debug_stats_to_proto (uint32_t idx, pds_session_debug_stats_t *stats, void *ctxt)
+pds_session_debug_stats_to_proto (uint32_t idx,
+                                  pds_session_debug_stats_t *stats, void *ctxt)
 {
     pds::SessionStatsGetResponse *rsp = (pds::SessionStatsGetResponse *)ctxt;
     auto proto_stats = rsp->add_stats();
@@ -1606,7 +1657,8 @@ pds_pb_stats_entry_to_proto (pds_pb_debug_stats_t *pds_stats, void *ctxt)
     buffer_stats->set_eopcountout(stats->buffer_stats.eop_count_out);
 
     auto drop_stats = buffer_stats->mutable_dropcounts();
-    for (int i = sdk::platform::capri::BUFFER_INTRINSIC_DROP; i < sdk::platform::capri::BUFFER_DROP_MAX; i ++) {
+    for (int i = sdk::platform::capri::BUFFER_INTRINSIC_DROP;
+         i < sdk::platform::capri::BUFFER_DROP_MAX; i ++) {
         auto drop_stats_entry = drop_stats->add_statsentries();
         drop_stats_entry->set_reasons(pds::BufferDropReasons(i));
         drop_stats_entry->set_dropcount(stats->buffer_stats.drop_counts[i]);
@@ -1827,13 +1879,15 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     } else {
         return SDK_RET_INVALID_ARG;
     }
+    MAC_UINT64_TO_ADDR(api_spec->device_mac_addr, macaddr);
     if ((gwipaddr.af() == types::IP_AF_INET) ||
         (gwipaddr.af() == types::IP_AF_INET6)) {
         ipaddr_proto_spec_to_api_spec(&api_spec->gateway_ip_addr, gwipaddr);
     } else {
         return SDK_RET_INVALID_ARG;
     }
-    MAC_UINT64_TO_ADDR(api_spec->device_mac_addr, macaddr);
+    api_spec->bridging_en = proto_spec.bridgingen();
+    api_spec->learning_en = proto_spec.learningen();
     return SDK_RET_OK;
 }
 
@@ -1891,7 +1945,7 @@ pds_subnet_api_info_to_proto (const pds_subnet_info_t *api_info, void *ctxt)
     pds_subnet_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-// Build subnet API spec from proto buf spec
+// build subnet API spec from proto buf spec
 static inline void
 pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
                               const pds::SubnetSpec &proto_spec)
@@ -1914,7 +1968,7 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
 }
 
-// Build VPC API spec from protobuf spec
+// build VPC API spec from protobuf spec
 static inline void
 pds_vpc_proto_to_api_spec (pds_vpc_spec_t *api_spec,
                            const pds::VPCSpec &proto_spec)
@@ -1986,7 +2040,7 @@ pds_vpc_api_info_to_proto (const pds_vpc_info_t *api_info, void *ctxt)
     pds_vpc_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-// Build VPC API spec from protobuf spec
+// build VPC API spec from protobuf spec
 static inline void
 pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                      const pds::MappingSpec &proto_spec)
@@ -2063,7 +2117,8 @@ pds_port_stats_to_proto (pds::PortStats *stats,
 }
 
 static inline void
-pds_port_spec_to_proto (pds::PortSpec *spec, sdk::linkmgr::port_args_t *port_info)
+pds_port_spec_to_proto (pds::PortSpec *spec,
+                        sdk::linkmgr::port_args_t *port_info)
 {
     spec->set_id(port_info->port_num);
     switch(port_info->admin_state) {
@@ -2093,7 +2148,7 @@ pds_port_spec_to_proto (pds::PortSpec *spec, sdk::linkmgr::port_args_t *port_inf
 
 static inline void
 pds_port_status_to_proto (pds::PortStatus *status,
-                              sdk::linkmgr::port_args_t *port_info)
+                          sdk::linkmgr::port_args_t *port_info)
 {
     auto link_status = status->mutable_linkstatus();
     auto xcvr_status = status->mutable_xcvrstatus();

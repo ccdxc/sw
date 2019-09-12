@@ -51,6 +51,9 @@ error:
     if (pkey) {
         EVP_PKEY_free(pkey);
     }
+    if (rsa) {
+        RSA_free(rsa);
+    }
     return NULL;
 }
 

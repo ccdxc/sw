@@ -26,6 +26,8 @@ typedef struct pds_device_s {
     ip_addr_t     device_ip_addr;     ///< device IP address
     mac_addr_t    device_mac_addr;    ///< device MAC address
     ip_addr_t     gateway_ip_addr;    ///< gateway IP address
+    bool          bridging_en;        ///< enable or disable L2 functionality
+    bool          learning_en;        ///< enable or disable L2/IP learning
 } __PACK__ pds_device_spec_t;
 
 /// \brief device status
@@ -41,10 +43,14 @@ typedef struct pds_device_drop_stats_s {
 
 /// \brief device statistics
 typedef struct pds_device_stats_s {
-    uint32_t ing_drop_stats_count;    ///<< Number of entries in the ingress drop statistics
-    uint32_t egr_drop_stats_count;    ///<< Number of entries in the egress drop statistics
-    pds_device_drop_stats_t ing_drop_stats[PDS_DROP_REASON_MAX];    ///<< Ingress drop statistics
-    pds_device_drop_stats_t egr_drop_stats[PDS_DROP_REASON_MAX];    ///<< Egress drop statistics
+    ///< number of entries in the ingress drop statistics
+    uint32_t ing_drop_stats_count;
+    ///< number of entries in the egress drop statistics
+    uint32_t egr_drop_stats_count;
+    ///<< ingress drop statistics
+    pds_device_drop_stats_t ing_drop_stats[PDS_DROP_REASON_MAX];
+    ///< egress drop statistics
+    pds_device_drop_stats_t egr_drop_stats[PDS_DROP_REASON_MAX];
 } __PACK__ pds_device_stats_t;
 
 /// \brief device information

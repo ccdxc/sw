@@ -92,12 +92,27 @@ typedef enum pds_nexthop_group_type_e {
     PDS_NHGROUP_TYPE_UNDERLAY_ECMP = 2,    ///< underlay ECMP nexthop group
 } pds_nexthop_group_type_t;
 
+/// \brief type of the entries in a nexthop group
+typedef enum pds_nh_group_entry_type_e {
+    PDS_NHGROUP_ENTRY_TYPE_NONE    = 0,
+    PDS_NHGROUP_ENTRY_TYPE_NEXTHOP = 1,    ///< nexthop type entries
+    PDS_NHGROUP_ENTRY_TYPE_NHGROUP = 2,    ///< nexthop group type entries
+} pds_nh_group_entry_type_t;
+
 /// \brief nexthop group specification
 typedef struct pds_nexthop_group_spec_s {
     pds_nexthop_group_key_t key;      ///< key
     pds_nexthop_group_type_t type;    ///< nexthop group type
-    uint16_t num_nexthops;            ///< number of nexthops in this group
-    pds_nexthop_key_t nexthops[0];    ///< nexthop list of this group
+    ///< type of the entries in this group
+    pds_nh_group_entry_type_t entry_type;
+    ///< number of nexthops or nexthop groups in this nexthop group
+    uint16_t num_entries;
+    union {
+        ///< nexthop list in this group
+        pds_nexthop_key_t nexthops[0];
+        ///< nexthop group list in this group
+        pds_nexthop_group_key_t nexthop_groups[0];
+    };
 } __PACK__ pds_nexthop_group_spec_t;
 
 /// \brief nexthop group status

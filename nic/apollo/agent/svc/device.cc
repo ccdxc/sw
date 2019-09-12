@@ -53,7 +53,7 @@ device_profile_update (pds::DeviceProfile profile)
     output.put("port-admin-state", "PORT_ADMIN_STATE_ENABLE");
 
     try {
-        // Copy existing data from device.conf
+        // copy existing data from device.conf
         std::ifstream json_cfg(DEVICE_CONF_FILE);
         read_json(json_cfg, pt);
 
@@ -62,7 +62,6 @@ device_profile_update (pds::DeviceProfile profile)
             ++pos;
         }
     } catch (...) {}
-
     boost::property_tree::write_json(DEVICE_CONF_FILE, output);
 
     return SDK_RET_OK;
@@ -89,7 +88,7 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
         ret = pds_device_update(api_spec);
     }
 
-    // Update device.conf with profile
+    // update device.conf with profile
     auto profile = proto_req->request().profile();
     ret = device_profile_update(profile);
 

@@ -109,9 +109,9 @@ message NexthopDeleteResponse {
 
 // type of the nexthop group
 enum NhGroupType {
-  NEXTHOP_GROUP_TYPE_NONE = 0;
+  NEXTHOP_GROUP_TYPE_NONE          = 0;
   // ECMP for overlay routes pointing to VTEPs
-  NEXTHOP_GROUP_TYPE_OVERLAY_ECMP = 1;
+  NEXTHOP_GROUP_TYPE_OVERLAY_ECMP  = 1;
   // ECMP for underlay VTEPs pointing to nexthops
   NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP = 2;
 }
