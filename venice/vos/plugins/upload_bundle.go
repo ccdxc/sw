@@ -196,11 +196,6 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 
 		//create version object to enable deletion
 		meta := make(map[string]string)
-		_, err = client.PutObject("default."+bucket, versionMap["Bundle"][metaVersion], bytes.NewBufferString(versionMap["Bundle"][metaVersion]), -1, minio.PutObjectOptions{UserMetadata: meta})
-		if err != nil {
-			log.Errorf("UploadImage: Could not put object [%s] to datastore (%s)", versionMap["Bundle"][metaName], err)
-			return err
-		}
 
 		for key := range versionMap {
 			if err := uploadFileToObjStore(client, bucket, installerTmpDir, key, versionMap); err != nil {
@@ -214,6 +209,12 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 				return err
 			}
 			log.Infof("uploaded %s in bucket[%s]", versionMap[key][metaName], "default."+bucket)
+		}
+
+		_, err = client.PutObject("default."+bucket, versionMap["Bundle"][metaVersion], bytes.NewBufferString(versionMap["Bundle"][metaVersion]), -1, minio.PutObjectOptions{UserMetadata: meta})
+		if err != nil {
+			log.Errorf("UploadImage: Could not put object [%s] to datastore (%s)", versionMap["Bundle"][metaName], err)
+			return err
 		}
 		if err := os.RemoveAll(installerTmpDir); err != nil {
 			return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
