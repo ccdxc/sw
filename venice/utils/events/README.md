@@ -54,7 +54,11 @@ Update `Category` enum in `/sw/events/protos/attributes.proto` and compile the p
 
 #### How to add/update/delete event types?
 
-All the event types are managed in a single file `/sw/events/protos/eventtypes.proto` under the enum named `EventTypes`. Update the enum and compile the protos using `make` from both `/sw/events` and `/sw/nic` directories.
+All the event types are managed in a single file `/sw/events/protos/eventtypes.proto` under the enum named `EventTypes`. Update the enum and compile the protos using:
+
+1. `make` from `/sw/events`
+2. `make` from `/sw/nic`
+3. `make ui-autogen` from `/sw`
 
 #### How to record events?
 1. All the event sources needs to provide source information (i.e. name of the component generating the event). This information will be used when the event is recorded.
