@@ -15,6 +15,8 @@ import { StagingBuffer } from '@sdk/v1/models/generated/staging';
 import { AbstractControl, ValidatorFn } from '@angular/forms';
 
 import { required , patternValidator} from '@sdk/v1/utils/validators';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 
 @Component({
@@ -38,9 +40,10 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
-    protected stagingService: StagingService
+    protected stagingService: StagingService,
+    protected _uiconfigsService: UIConfigsService
   ) {
-    super(_controllerService, _authService, stagingService, null);
+    super(_controllerService, _authService, stagingService, _uiconfigsService);
   }
 
   ngOnInit() {
@@ -99,7 +102,13 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
         newUser.meta.name + ' already exist');
       return;
     }
-    this.addUser_with_staging();
+    if (this._uiconfigsService.isAuthorized(UIRolePermissions.stagingbuffer_create)) {
+      this.addUser_with_staging();
+    } else {
+      this._controllerService.invokeErrorToaster('Staging permission required',
+        'Please configure staging permission in role');
+      return;
+    }
   }
 
   /**

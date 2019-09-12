@@ -101,6 +101,8 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     this.subscriptions.push(sub);
   }
 
+
+
   /**
    * This API serves html template
    */
@@ -135,7 +137,18 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   timeoutOrFailure(rowData: MonitoringTechSupportRequest): boolean {
-    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout || rowData.status.status === MonitoringTechSupportRequestStatus_status.failed) {
+    return (this.isTSFailure(rowData) || this.isTSFailure(rowData));
+  }
+
+  isTSFailure(rowData: MonitoringTechSupportRequest): boolean {
+    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.failed) {
+      return true;
+    }
+    return false;
+  }
+
+  isTSTimeout(rowData: MonitoringTechSupportRequest): boolean {
+    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout) {
       return true;
     }
     return false;
@@ -174,14 +187,14 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     if (nodes != null) {
       Object.keys(nodes).forEach((key) => {
         if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.failed) {
-          reasonArray.push(nodes[key].reason);
+          reasonArray.push(key + ' ' + nodes[key].reason);
         }
       });
     }
     if (nics != null) {
       Object.keys(nics).forEach((key) => {
         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.failed) {
-          reasonArray.push(nics[key].reason);
+          reasonArray.push(key + ' ' + nics[key].reason);
          }
      });
     }
@@ -266,6 +279,11 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       downloadObj['controlnodes'] = this.buildTSDownloadHelper(ctrlrNnodeResults, instanceId, tsName);
     }
     rowData[TechsupportComponent.TS_DOWNLOAD] = downloadObj;
+  }
+
+  triggerBuildDownloaZip(rowData: MonitoringTechSupportRequest): boolean {
+      this.buildTSDownload(rowData);
+      return true;
   }
 
   /**

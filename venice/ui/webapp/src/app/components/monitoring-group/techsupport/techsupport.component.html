@@ -31,13 +31,21 @@
       {{rowData.meta['mod-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'status.status'">
+
       <div *ngIf="!isTechsupportCompleted(rowData, col)">
         {{displayColumn(rowData, col)}}
         <mat-icon *ngIf="timeoutOrFailure(rowData)"
                   fxFlex="nogrow" [inline]="true"
                   class="global-alert-critical-icon techsupport-bad-icon">error</mat-icon>
+        <!-- vs-779 partial failure, let user download all available ts files -->
+        <a *ngIf="timeoutOrFailure(rowData) && triggerBuildDownloaZip(rowData) "
+           class="techsupportrequests-download-file-link" (click)="$event.stopPropagation()"
+           href="{{rowData['techsupportdownload']['bundleAll']}}"
+           [matTooltip]="'Download all available files'">Download</a>
       </div>
-      <div *ngIf="timeoutOrFailure(rowData)">{{displayMessage(rowData)}}</div>
+      <div *ngIf="timeoutOrFailure(rowData)" [matTooltip]="displayMessage(rowData)">
+        {{displayMessage(rowData)}}</div>
+
       <div *ngIf="isTechsupportCompleted(rowData, col)" fxLayout="column">
         <div fxLayout="row"> Success </div>
         <!--  download all ts output files in one bundle  -->
