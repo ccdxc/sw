@@ -37,10 +37,15 @@ struct resp_tx_s4_t0_k k;
 
 #define IN_TO_S4_P to_s4_dcqcn_rate_timer_info
 #define K_NEW_TIMER_CINDEX CAPRI_KEY_FIELD(IN_TO_S4_P, new_timer_cindex)
+
 #define K_MIN_QP_RATE CAPRI_KEY_FIELD(IN_TO_S4_P, min_qp_rate)
 #define K_MIN_QP_TARGET_RATE CAPRI_KEY_RANGE(IN_TO_S4_P, min_qp_target_rate_sbit0_ebit7, min_qp_target_rate_sbit24_ebit31)
 
+#define TO_S_STATS_INFO_P to_s7_stats_info
+
 %%
+    .param  resp_tx_stats_process
+
 resp_tx_dcqcn_rate_process:
 
     // Pin dcqcn_algo to stage 4
@@ -48,6 +53,10 @@ resp_tx_dcqcn_rate_process:
     seq     c1, r1[4:2], STAGE_4
     bcf     [!c1], bubble_to_next_stage
     nop
+
+    // invoke stats as mpu only
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_stats_process, r0)
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dcqcn_rate), 1
 
     // Check if doorbell is for processing CNP packet.
     seq     c2, d.num_cnp_rcvd, d.num_cnp_processed 
@@ -72,6 +81,9 @@ resp_tx_dcqcn_rate_process:
     nop
 
 additive_increase:
+    // Update DCQCN debug counters
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_additive_increase), 1
+
     // Check target-rate has reached MAX-QP-RATE. If yes, stop further target-rate-increase.
     slt     c1, TARGET_RATE, QP_MAX_RATE
     bcf     [!c1], skip_target_rate_inc
@@ -92,11 +104,15 @@ additive_increase:
     bcf     [c1], exit
     nop   // BD-slot
     tblwr   d.max_rate_reached, 1
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_max_rate_reached), 1
     DOORBELL_WRITE_CINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_NEW_TIMER_CINDEX, r1, r2)
     nop.e
     nop
 
 fast_recovery:
+    // Update DCQCN debug counters
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_fast_recovery), 1
+
     // Rc = ((Rt + Rc) / 2)
     add     r1, d.target_rate, d.rate_enforced
     srl     RATE_ENFORCED, r1, 1
@@ -106,6 +122,9 @@ fast_recovery:
     nop
 
 hyper_increase:
+    // Update DCQCN debug counters
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_hyper_increase), 1
+
     // Check target-rate has reached MAX-QP-RATE. If yes, stop further target-rate-increase.
     slt     c1, d.target_rate, QP_MAX_RATE
     bcf     [!c1], skip_target_rate_inc
@@ -126,6 +145,7 @@ skip_target_rate_inc:
     bcf     [c1], exit
     nop   // BD-slot
     tblwr   d.max_rate_reached, 1
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_max_rate_reached), 1
     DOORBELL_WRITE_CINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_NEW_TIMER_CINDEX, r1, r2)
     nop.e
     nop

@@ -20,6 +20,7 @@ struct resp_tx_s4_t1_k k;
 
 #define IN_TO_S4_P  to_s4_dcqcn_info
 #define K_PKT_LEN CAPRI_KEY_RANGE(IN_TO_S4_P, packet_len_sbit0_ebit4, packet_len_sbit13_ebit13)
+#define TO_S_STATS_INFO_P to_s7_stats_info
 %%
     .param rdma_num_clock_ticks_per_us
     .param resp_tx_rqcb0_write_back_process
@@ -97,6 +98,7 @@ ring_dcqcn_doorbell:
     // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
     tblwr         d.cur_byte_counter, 0
     tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_byte_threshold_db), 1
     DOORBELL_INC_PINDEX(K_GLOBAL_LIF,  K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     
 load_write_back:            

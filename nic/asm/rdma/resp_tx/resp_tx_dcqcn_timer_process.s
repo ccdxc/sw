@@ -19,7 +19,11 @@ struct resp_tx_s4_t0_k k;
 #define     G_MAX                   65536
 #define     LOG_G_MAX               16
 
+#define TO_S_STATS_INFO_P to_s7_stats_info
+
 %%
+    .param  resp_tx_stats_process
+
 resp_tx_dcqcn_timer_process:
 
     // Pin dcqcn timer processing to stage 4
@@ -27,6 +31,10 @@ resp_tx_dcqcn_timer_process:
     seq         c1, r1[4:2], STAGE_4
     bcf         [!c1], bubble_to_next_stage
     nop
+
+    // invoke stats as mpu only
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_stats_process, r0)
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dcqcn_timer), 1
 
     // Update alpha value.
     // int_alpha =  (((g_max - int_g) * int_alpha) >> log_g_max)
@@ -38,11 +46,13 @@ resp_tx_dcqcn_timer_process:
     // Check if timer T expired. 
     tblmincri   d.num_alpha_exp_cnt, 16, 1
     slt         c1, d.num_alpha_exp_cnt, K_TIMER_EXP_THR
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_alpha_timer_expiry), 1
     bcf         [c1], restart_timer
     nop 
     
     // Timer T expired. Ring doorbell to run dcqcn algo. 
     tblmincri   d.timer_exp_cnt, 16, 1
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_timer_T_expiry), 1
     DOORBELL_INC_PINDEX(K_GLOBAL_LIF,  K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     tblwr       d.num_alpha_exp_cnt, 0
 

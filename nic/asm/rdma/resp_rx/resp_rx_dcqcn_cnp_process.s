@@ -11,6 +11,7 @@ struct dcqcn_cb_t d;
 struct resp_rx_s1_t2_k k;
 
 #define TO_S_WB1_P to_s5_wb1_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
 
 %%
     .param    resp_rx_rqcb1_write_back_mpu_only_process
@@ -20,6 +21,7 @@ struct resp_rx_s1_t2_k k;
 resp_rx_dcqcn_cnp_process:
 
     tblmincri   d.num_cnp_rcvd, 8, 1 //num_cnp_recvd is 8-bit field.
+    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_cnp_processed), 1
     // Ring doorbell to cut-rate and reset dcqcn params. Also drop PHV since further 
     // processing will be done in TxDMA rate-compute-ring.
     DOORBELL_INC_PINDEX(K_GLOBAL_LIF,  K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)

@@ -42,6 +42,12 @@ req_tx_stats_process:
     seq              c1, CAPRI_KEY_FIELD(IN_P, sq_drain), 1 //BD Slot
     tblmincri.c1.e   d.num_sq_drains, MASK_16, 1
 
+    // if sqcb2_cnp_process, branch to dcqcn_cnp_sent_stats .
+    bbeq             CAPRI_KEY_FIELD(IN_P, dcqcn_cnp_sent), 1, dcqcn_cnp_sent_stats
+
+    seq              c7, CAPRI_KEY_FIELD(IN_P, rp_num_byte_threshold_db), 1
+    tblmincri.c7     d.rp_num_byte_threshold_db, MASK_16, 1
+
     bbeq             CAPRI_KEY_FIELD(IN_P, npg), 1, handle_npg_stats
     crestore         [c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_TX_FLAG_INV_RKEY | REQ_TX_FLAG_ATOMIC_FNA | REQ_TX_FLAG_ATOMIC_CSWAP | REQ_TX_FLAG_READ_REQ) //BD Slot
 
@@ -123,6 +129,13 @@ handle_timeout_stats:
 
 handle_error_stats:
     tblor.e          d.{qp_err_disabled...qp_err_dis_rsvd}, K_ERR_DIS_REASON_CODES
+    nop
+
+dcqcn_cnp_sent_stats:
+    seq              c2, CAPRI_KEY_FIELD(IN_P, np_cnp_sent), 1
+    tblmincri.c2     d.np_cnp_sent, MASK_16, 1
+
+    nop.e
     nop
 
 bubble_to_next_stage:

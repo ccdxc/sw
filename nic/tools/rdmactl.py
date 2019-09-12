@@ -476,6 +476,8 @@ class RdmaReqTxStats(Packet):
         ShortField("tx_num_timeout_local_ack", 0),
         ShortField("tx_num_timeout_rnr", 0),
         ShortField("tx_num_sq_drains", 0),
+        ShortField("np_cnp_sent", 0),
+        ShortField("rp_num_byte_threshold_db", 0),
         BitField("qp_err_disabled", 0, 1),
         BitField("qp_err_dis_flush_rq", 0, 1),
         BitField("qp_err_dis_ud_pmtu", 0, 1),
@@ -515,7 +517,6 @@ class RdmaReqTxStats(Packet):
         BitField("qp_err_dis_err_retry_exceed", 0, 1),
         BitField("qp_err_dis_rnr_retry_exceed", 0, 1),
         BitField("qp_err_dis_rsvd", 0, 26),
-        BitField("sqcb4", 0, 48),
     ]
 
 class RdmaReqRxStats(Packet):
@@ -771,6 +772,13 @@ class RdmaRespTxStats(Packet):
         X3BytesField("tx_last_psn", 0),
         ByteField("tx_last_syndrome", 0),
         X3BytesField("tx_last_msn", 0),
+        ShortField("rp_num_additive_increase", 0),
+        ShortField("rp_num_fast_recovery", 0),
+        ShortField("rp_num_hyper_increase", 0),
+        ShortField("rp_num_byte_threshold_db", 0),
+        ShortField("rp_num_alpha_timer_expiry", 0),
+        ShortField("rp_num_timer_T_expiry", 0),
+        ShortField("rp_num_max_rate_reached", 0),
         BitField("qp_err_disabled", 0, 1),
         BitField("qp_err_dis_rsvd_rkey_err", 0, 1),
         BitField("qp_err_dis_rkey_state_err", 0, 1),
@@ -780,7 +788,7 @@ class RdmaRespTxStats(Packet):
         BitField("qp_err_dis_type2a_mw_qp_mismatch", 0, 1),
         BitField("qp_err_dis_resp_rx", 0, 1),
 
-        BitField("rqcb4", 0, 144),
+        BitField("rqcb4", 0, 32),
     ]
 
 class RdmaRespRxStats(Packet):
@@ -805,6 +813,8 @@ class RdmaRespRxStats(Packet):
         ShortField("num_dup_wr_send_pkts", 0),
         ShortField("num_dup_rd_atomic_bt_pkts", 0),
         ShortField("num_dup_rd_atomic_drop_pkts", 0),
+        ShortField("np_ecn_marked_packets", 0),
+        ShortField("rp_cnp_processed", 0),
         BitField("qp_err_disabled", 0, 1),
         BitField("qp_err_dis_svc_type_err", 0, 1),
         BitField("qp_err_dis_pyld_len_err", 0, 1),
@@ -840,7 +850,7 @@ class RdmaRespRxStats(Packet):
         ByteField("last_bth_opcode", 0),
         BitField("recirc_reason", 0, 4),
         BitField("max_recirc_cnt_err", 0, 1),
-        BitField("pad", 0, 75),
+        BitField("pad", 0, 43),
     ]
 
 class RdmaDcqcnProfile(Packet):

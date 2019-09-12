@@ -19,6 +19,8 @@ struct req_tx_s4_t2_k k;
 
 #define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
+#define TO_S_STATS_INFO_P to_s7_stats_info
+
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define SQCB_WRITE_BACK_INFO_RD t2_s2s_sqcb_write_back_info_rd
 
@@ -115,6 +117,7 @@ rate_enforce:
     // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
     tblwr         d.cur_byte_counter, 0
     tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_byte_threshold_db), 1
     DOORBELL_INC_PINDEX(K_GLOBAL_LIF, Q_TYPE_RDMA_RQ, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
 
 skip_dcqcn_doorbell:            

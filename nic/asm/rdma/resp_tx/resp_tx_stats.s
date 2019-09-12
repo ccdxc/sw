@@ -11,6 +11,7 @@ struct resp_tx_s7_t3_k k;
 struct rqcb4_t d;
 
 #define IN_P    to_s7_stats_info
+#define K_DCQCN_FLAGS CAPRI_KEY_RANGE(IN_P, rp_num_additive_increase, rp_num_max_rate_reached)
 #define K_LAST_SYNDROME CAPRI_KEY_FIELD(IN_P, last_syndrome)
 #define K_LAST_MSN CAPRI_KEY_FIELD(IN_P, last_msn)
 #define K_LAST_PSN CAPRI_KEY_FIELD(IN_P, last_psn)
@@ -47,6 +48,16 @@ resp_tx_stats_process:
 
     // if flush rq, skip updating num_pkts and num_bytes
     bbeq             CAPRI_KEY_FIELD(IN_P, flush_rq), 1, err_dis_qp_stats
+
+    // if dcqcn rate, skip updating num_pkts and num_bytes etc.
+    bbeq             CAPRI_KEY_FIELD(IN_P, dcqcn_rate), 1, dcqcn_rate_stats
+
+    // if dcqcn timer, skip updating num_pkts and num_bytes etc.
+    bbeq             CAPRI_KEY_FIELD(IN_P, dcqcn_timer), 1, dcqcn_timer_stats
+
+    seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, rp_num_byte_threshold_db), 1
+    tblmincri.c7     d.rp_num_byte_threshold_db, MASK_16, 1
+
     crestore         [c7, c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_TX_FLAG_ATOMIC_RESP | RESP_TX_FLAG_READ_RESP | RESP_TX_FLAG_ACK | RESP_TX_FLAG_ONLY | RESP_TX_FLAG_LAST | RESP_TX_FLAG_FIRST | RESP_TX_FLAG_ERR_DIS_QP) // BD Slot
     // c7 - atomic_resp, c6 - read_resp, c5 - ack, c4 - only, c3 - last, c2 - first, c1 - err_dis_qp
 
@@ -124,6 +135,24 @@ exit:
     nop.e
     nop
 
+dcqcn_rate_stats:
+    crestore         [c7, c6, c5, c4], K_DCQCN_FLAGS, 0xFF
+    //c7-rp_num_additive_increase, c1-rp_num_max_rate_reached
+
+    tblmincri.c7     d.rp_num_additive_increase, MASK_16, 1
+    tblmincri.c6     d.rp_num_fast_recovery, MASK_16, 1
+    tblmincri.c5     d.rp_num_hyper_increase, MASK_16, 1
+    tblmincri.c4     d.rp_num_max_rate_reached, MASK_16, 1
+    nop.e
+    nop
+
+dcqcn_timer_stats:
+    seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, rp_num_alpha_timer_expiry), 1
+    tblmincri.c7     d.rp_num_alpha_timer_expiry, MASK_16, 1
+    seq              c6, CAPRI_KEY_FIELD(to_s7_stats_info, rp_num_timer_T_expiry), 1
+    tblmincri.c6     d.rp_num_timer_T_expiry, MASK_16, 1
+    nop.e
+    nop
 
 err_dis_qp_stats:
     tblwr           d.last_syndrome, K_LAST_SYNDROME

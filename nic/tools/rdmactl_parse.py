@@ -94,6 +94,13 @@ resp_tx_key_list = [
     "tx_last_psn",
     "tx_last_syndrome",
     "tx_last_msn",
+    "rp_num_additive_increase",
+    "rp_num_fast_recovery",
+    "rp_num_hyper_increase",
+    "rp_num_byte_threshold_db",
+    "rp_num_alpha_timer_expiry",
+    "rp_num_timer_T_expiry",
+    "rp_num_max_rate_reached",
     "qp_err_disabled",
     "qp_err_dis_rsvd_rkey_err",
     "qp_err_dis_rkey_state_err",
@@ -125,6 +132,8 @@ resp_rx_key_list = [
     "num_dup_wr_send_pkts",
     "num_dup_rd_atomic_bt_pkts",
     "num_dup_rd_atomic_drop_pkts",
+    "np_ecn_marked_packets"
+    "rp_cnp_processed"
     "qp_err_disabled",
     "qp_err_dis_svc_type_err",
     "qp_err_dis_pyld_len_err",

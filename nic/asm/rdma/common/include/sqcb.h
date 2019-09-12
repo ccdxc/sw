@@ -281,6 +281,8 @@ struct sqcb4_t {
     num_timeout_local_ack:16;
     num_timeout_rnr:16;
     num_sq_drains:16;
+    np_cnp_sent: 16;
+    rp_num_byte_threshold_db: 16;
     qp_err_disabled                  :    1;
     qp_err_dis_flush_rq              :    1;
     qp_err_dis_ud_pmtu               :    1;
@@ -320,7 +322,6 @@ struct sqcb4_t {
     qp_err_dis_err_retry_exceed              : 1;
     qp_err_dis_rnr_retry_exceed              : 1;
     qp_err_dis_rsvd                          : 26;
-    pad: 32;
 };
 
 struct sqcb5_t {

@@ -286,6 +286,15 @@ struct rqcb4_t {
     last_syndrome: 8;
     last_msn: 24;
 
+    //dcqcn
+    rp_num_additive_increase            :   16;
+    rp_num_fast_recovery                :   16;
+    rp_num_hyper_increase               :   16;
+    rp_num_byte_threshold_db            :   16;
+    rp_num_alpha_timer_expiry           :   16;
+    rp_num_timer_T_expiry               :   16;
+    rp_num_max_rate_reached             :   16;
+
     qp_err_disabled                     :    1;
     // rsqrkey errors
     qp_err_dis_rsvd_rkey_err            :    1;
@@ -297,7 +306,7 @@ struct rqcb4_t {
     // resp_rx err
     qp_err_dis_resp_rx                  :    1;
 
-    pad: 144;
+    pad: 32;
 };
 
 // resp_rx stats
@@ -321,6 +330,9 @@ struct rqcb5_t {
     num_dup_wr_send_pkts: 16;
     num_dup_rd_atomic_bt_pkts: 16;
     num_dup_rd_atomic_drop_pkts: 16;
+    //dcqcn
+    np_ecn_marked_packets: 16;
+    rp_cnp_processed: 16;
     // errors
     qp_err_disabled                     :    1;
     // stage 0 errors
@@ -368,7 +380,7 @@ struct rqcb5_t {
     last_bth_opcode: 8;
     recirc_reason: 4;
     max_recirc_cnt_err: 1;
-    pad: 75;
+    pad: 43;
 };
 
 struct rqcb_t {

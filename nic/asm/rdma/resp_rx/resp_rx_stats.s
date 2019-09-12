@@ -41,6 +41,12 @@ resp_rx_stats_process:
     seq              c1, r1[4:2], STAGE_7
     bcf              [!c1], bubble_to_next_stage
 
+    seq              c6, CAPRI_KEY_FIELD(to_s7_stats_info, np_ecn_marked_packets), 1
+    tblmincri.c6     d.np_ecn_marked_packets, MASK_16, 1
+
+    seq              c6, CAPRI_KEY_FIELD(to_s7_stats_info, rp_cnp_processed), 1
+    tblmincri.c6     d.rp_cnp_processed, MASK_16, 1
+
     crestore         [c7, c6, c5, c4], K_FLAGS, 0xf //BD Slot
     // c7-recirc_drop, c6-dup_wr_send, c5-dup_rd_atomic_bt, c4-dup_rd_atomic_drop
 

@@ -427,7 +427,16 @@ header_type resp_tx_to_stage_stats_info_t {
         qp_err_dis_rkey_va_err           :    1;
         qp_err_dis_type2a_mw_qp_mismatch :    1;
         qp_err_dis_resp_rx               :    1;
-        pad                              :   40;
+        dcqcn_rate                       :    1;
+        dcqcn_timer                      :    1;
+        rp_num_additive_increase         :    1;
+        rp_num_fast_recovery             :    1;
+        rp_num_hyper_increase            :    1;
+        rp_num_max_rate_reached          :    1;
+        rp_num_byte_threshold_db         :    1;
+        rp_num_alpha_timer_expiry        :    1;
+        rp_num_timer_T_expiry            :    1;
+        pad                              :   31;
     }
 }
 
@@ -1042,6 +1051,15 @@ action resp_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_rkey_va_err, to_s7_stats_info.qp_err_dis_rkey_va_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_type2a_mw_qp_mismatch, to_s7_stats_info.qp_err_dis_type2a_mw_qp_mismatch);
     modify_field(to_s7_stats_info_scr.qp_err_dis_resp_rx, to_s7_stats_info.qp_err_dis_resp_rx);
+    modify_field(to_s7_stats_info_scr.dcqcn_rate, to_s7_stats_info.dcqcn_rate);
+    modify_field(to_s7_stats_info_scr.dcqcn_timer, to_s7_stats_info.dcqcn_timer);
+    modify_field(to_s7_stats_info_scr.rp_num_additive_increase, to_s7_stats_info.rp_num_additive_increase);
+    modify_field(to_s7_stats_info_scr.rp_num_fast_recovery, to_s7_stats_info.rp_num_fast_recovery);
+    modify_field(to_s7_stats_info_scr.rp_num_hyper_increase, to_s7_stats_info.rp_num_hyper_increase);
+    modify_field(to_s7_stats_info_scr.rp_num_max_rate_reached, to_s7_stats_info.rp_num_max_rate_reached);
+    modify_field(to_s7_stats_info_scr.rp_num_byte_threshold_db, to_s7_stats_info.rp_num_byte_threshold_db);
+    modify_field(to_s7_stats_info_scr.rp_num_alpha_timer_expiry, to_s7_stats_info.rp_num_alpha_timer_expiry);
+    modify_field(to_s7_stats_info_scr.rp_num_timer_T_expiry, to_s7_stats_info.rp_num_timer_T_expiry);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

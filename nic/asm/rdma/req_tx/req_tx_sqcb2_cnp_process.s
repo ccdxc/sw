@@ -10,16 +10,23 @@ struct req_tx_phv_t p;
 struct sqcb2_t d;
 struct req_tx_s1_t0_k k;
 
+#define TO_S_STATS_INFO_P to_s7_stats_info
+
 #define DMA_CMD_BASE        r1
 
 %%
 
+    .param      req_tx_stats_process
     .param      req_tx_dcqcn_cnp_process
     .param      lif_stats_base
 
 // Prepare CNP packet
 req_tx_sqcb2_cnp_process:
-    
+
+    // invoke stats as mpu only, branch to dcqcn_cnp_sent in req_tx_stats
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dcqcn_cnp_sent), 1
+
     // Update dst_qp of the packet.
     phvwr       p.bth.dst_qp, d.dst_qp
     // Mellanox expects BECN to be set in CNP packet though RoceV2-Annex doesn't mandate. 
@@ -75,6 +82,8 @@ add_headers:
     
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
+    phvwr            CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, np_cnp_sent), 1
 
     CAPRI_SET_TABLE_0_VALID(0)
 

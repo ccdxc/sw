@@ -13,6 +13,7 @@ struct resp_rx_s1_t3_k k;
 #define DB_DATA r6
 
 #define IN_P t3_s2s_ecn_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Feeding timestamp from dcqcn_cb on model since model doesn't have timestamps.
@@ -27,7 +28,7 @@ struct resp_rx_s1_t3_k k;
 
 .align
 resp_rx_dcqcn_ecn_process:
-
+    phvwr CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, np_ecn_marked_packets), 1
     sub   r2, CUR_TIMESTAMP, d.last_cnp_timestamp
 
     blti  r2, DCQCN_MIN_TIME_BTWN_CNPS, exit

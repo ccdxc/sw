@@ -51,6 +51,10 @@ def TestCaseSetup(tc):
     rs.lqp.dcqcn_data.sq_cindex = tc.pvtdata.sq_cindex 
     rs.lqp.WriteDcqcnCb()
 
+    # Read RQ pre state
+    rs.lqp.rq.qstate.Read()
+    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
@@ -84,6 +88,9 @@ def TestCaseStepVerify(tc, step):
     rs.lqp.ReadDcqcnCb()
     tc.pvtdata.dcqcn_post_qstate = rs.lqp.dcqcn_data 
 
+    rs.lqp.rq.qstate.Read()
+    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
+
     if step.step_id == 0:
         # verify that p_index is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', ring0_mask,  1):
@@ -111,6 +118,14 @@ def TestCaseStepVerify(tc, step):
 
         # verify that p_index of rrq is not incremented
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
+            return False
+
+        # verify that rp_num_byte_threshold_db is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rp_num_byte_threshold_db', 1):
+            return False
+
+        ################# RQ verification ##############################
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_num_additive_increase', 1):
             return False
 
         ################# DCQCN verification ##############################
@@ -142,6 +157,13 @@ def TestCaseStepVerify(tc, step):
         rs.lqp.WriteDcqcnCb()
 
     elif step.step_id == 1:
+        # verify that rp_num_byte_threshold_db is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rp_num_byte_threshold_db', 2):
+            return False
+
+        ################# RQ verification ##############################
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_num_additive_increase', 2):
+            return False
 
         # verify that byte_counter_exp_cnt is incremented again by 1.
         if not VerifyFieldModify(tc, tc.pvtdata.dcqcn_pre_qstate, tc.pvtdata.dcqcn_post_qstate, 'byte_counter_exp_cnt', 2):
@@ -154,6 +176,13 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 2:                        
+        # verify that rp_num_byte_threshold_db is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rp_num_byte_threshold_db', 3):
+            return False
+
+        ################# RQ verification ##############################
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_num_additive_increase', 3):
+            return False
 
         # verify that byte_counter_exp_cnt is incremented again by 1.                                 
         if not VerifyFieldModify(tc, tc.pvtdata.dcqcn_pre_qstate, tc.pvtdata.dcqcn_post_qstate, 'byte_counter_exp_cnt', 3):                                                                                 
@@ -166,6 +195,13 @@ def TestCaseStepVerify(tc, step):
             return False                           
 
     elif step.step_id == 3:
+        # verify that rp_num_byte_threshold_db is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rp_num_byte_threshold_db', 4):
+            return False
+
+        ################# RQ verification ##############################
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_num_additive_increase', 4):
+            return False
 
         # verify that byte_counter_exp_cnt is incremented again by 1.                                 
         if not VerifyFieldModify(tc, tc.pvtdata.dcqcn_pre_qstate, tc.pvtdata.dcqcn_post_qstate, 'byte_counter_exp_cnt', 4):

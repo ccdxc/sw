@@ -125,6 +125,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
+        # verify that np_cnp_sent is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'np_cnp_sent', 1):
+            return False
+
         if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
             return False
 

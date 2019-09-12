@@ -286,7 +286,10 @@ header_type req_tx_to_stage_stats_info_t {
         qp_err_dis_err_retry_exceed              : 1;
         qp_err_dis_rnr_retry_exceed              : 1;
         qp_err_dis_rsvd                          : 26;
-        pad                                      : 33;
+        dcqcn_cnp_sent                           : 1;
+        np_cnp_sent                              : 1;
+        rp_num_byte_threshold_db                 : 1;
+        pad                                      : 30;
     }
 }
 
@@ -2230,6 +2233,10 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_err_retry_exceed, to_s7_stats_info.qp_err_dis_err_retry_exceed);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rnr_retry_exceed, to_s7_stats_info.qp_err_dis_rnr_retry_exceed);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rsvd, to_s7_stats_info.qp_err_dis_rsvd);
+    modify_field(to_s7_stats_info_scr.dcqcn_cnp_sent, to_s7_stats_info.dcqcn_cnp_sent);
+    modify_field(to_s7_stats_info_scr.np_cnp_sent, to_s7_stats_info.np_cnp_sent);
+    modify_field(to_s7_stats_info_scr.rp_num_byte_threshold_db, to_s7_stats_info.rp_num_byte_threshold_db);
+    modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage
     modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);

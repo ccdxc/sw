@@ -60,6 +60,10 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
+
+            # verify that rp_cnp_processed is incremented by 1.
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_cnp_processed', 1):
+            return False
     
             #########################   Verify DCQCN params  ############################
             # verify that timer_exp_cnt is set to 0.
@@ -102,7 +106,10 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 2):
             return False
-    
+
+        # verify that rp_cnp_processed is incremented by 1.
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_cnp_processed', 2):
+            return False
             #########################   Verify DCQCN params  ############################
             # verify that timer_exp_cnt is set to 0.
         if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'timer_exp_cnt', 0):
@@ -144,7 +151,10 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 3):
             return False
-    
+
+        # verify that rp_cnp_processed is incremented by 1.
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_cnp_processed', 3):
+            return False    
             #########################   Verify DCQCN params  ############################
             # verify that timer_exp_cnt is set to 0.
         if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'timer_exp_cnt', 0):
@@ -186,7 +196,10 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 4):
             return False
-    
+
+        # verify that rp_cnp_processed is incremented by 1.
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'rp_cnp_processed', 4):
+            return False
             #########################   Verify DCQCN params  ############################
             # verify that timer_exp_cnt is set to 0.
         if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'timer_exp_cnt', 0):

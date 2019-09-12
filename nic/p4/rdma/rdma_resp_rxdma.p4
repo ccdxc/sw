@@ -449,7 +449,9 @@ header_type resp_rx_to_stage_stats_info_t {
         recirc_reason                    :    4;
         last_bth_opcode                  :    8;
         recirc_bth_psn                   :   24;
-        pad                              :   32;
+        np_ecn_marked_packets            :    1;
+        rp_cnp_processed                 :    1;
+        pad                              :   30;
     }
 }
 
@@ -1708,6 +1710,8 @@ action resp_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.recirc_reason, to_s7_stats_info.recirc_reason);
     modify_field(to_s7_stats_info_scr.last_bth_opcode, to_s7_stats_info.last_bth_opcode);
     modify_field(to_s7_stats_info_scr.recirc_bth_psn, to_s7_stats_info.recirc_bth_psn);
+    modify_field(to_s7_stats_info_scr.np_ecn_marked_packets, to_s7_stats_info.np_ecn_marked_packets);
+    modify_field(to_s7_stats_info_scr.rp_cnp_processed, to_s7_stats_info.rp_cnp_processed);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

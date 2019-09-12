@@ -86,7 +86,10 @@ def TestCaseStepVerify(tc, step):
         # verify that max_pkts_in_any_msg is 1
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
             return False
-    
+
+        # verify that np_ecn_marked_packets is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'np_ecn_marked_packets', 1):
+            return False
         ############     CQ VALIDATIONS #################
         if not ValidateRespRxCQChecks(tc):
             return False
