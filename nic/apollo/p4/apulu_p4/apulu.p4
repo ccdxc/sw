@@ -11,22 +11,23 @@
 #include "i2e_metadata.p4"
 
 #if 0
-#include "key.p4"
 #include "vnic.p4"
 #include "tunnel.p4"
-#include "mappings.p4"
-#include "flow.p4"
 #include "session.p4"
-#include "nacl.p4"
 #include "inter_pipe.p4"
 #include "nat.p4"
 #include "nexthop.p4"
 #include "meter.p4"
-#include "stats.p4"
 #endif
 
+#include "key.p4"
+#include "input_properties.p4"
+#include "mappings.p4"
+#include "flow.p4"
+#include "nacl.p4"
 #include "mirror.p4"
 #include "checksum.p4"
+#include "stats.p4"
 
 action nop() {
 }
@@ -45,6 +46,12 @@ action egress_drop(drop_bit) {
 /* Ingress pipeline                                                          */
 /*****************************************************************************/
 control ingress {
+    key_init();
+    input_properties();
+    local_mapping();
+    flow_lookup();
+    nacl();
+    ingress_stats();
 }
 
 /*****************************************************************************/
@@ -55,5 +62,6 @@ control egress {
         mirror();
     } else {
         update_checksums();
+        egress_stats();
     }
 }

@@ -17,23 +17,36 @@ header_type key_metadata_t {
         dport           : 16;
         ipv4_src        : 32;
         ipv4_dst        : 32;
+
+        local_mapping_lkp_type  : 2;
+        local_mapping_lkp_id    : 16;
+        local_mapping_lkp_addr  : 128;
     }
 }
 
 header_type vnic_metadata_t {
     fields {
-        vnic_id         : 8;
-        vpc_id          : 8;
-        vlan_id         : 12;
+        vnic_id         : 16;
+        bd_id           : 16;
+        vpc_id          : 16;
     }
 }
 
 header_type control_metadata_t {
     fields {
-        p4i_drop_reason     : 32;
-        p4e_drop_reason     : 32;
-        span_copy           : 1;
-        update_checksum     : 1;
+        p4i_drop_reason         : 32;
+        p4e_drop_reason         : 32;
+        rx_packet               : 1;
+        tunneled_packet         : 1;
+        flow_miss               : 1;
+        pinned_lif              : 11;
+        pinned_qtype            : 3;
+        pinned_qid              : 24;
+        local_mapping_ohash_lkp : 1;
+        flow_ohash_lkp          : 1;
+        epoch                   : 8;
+        span_copy               : 1;
+        update_checksum         : 1;
     }
 }
 
@@ -41,12 +54,18 @@ header_type scratch_metadata_t {
     fields {
         flag                : 1;
         hint_valid          : 1;
-        flow_hash           : 0;
-        flow_hint           : 0;
+        epoch               : 8;
+        local_mapping_hash  : 15;
+        local_mapping_hint  : 14;
+        flow_hash           : 12;
+        flow_hint           : 18;
         in_packets          : 64;
         in_bytes            : 64;
         drop_stats_pad      : 88;
         drop_stats_pkts     : 40;
+        mac                 : 48;
+        pad8                : 8;
+        more_hints_pad      : 8;
     }
 }
 

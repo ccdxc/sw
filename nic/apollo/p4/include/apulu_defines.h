@@ -7,7 +7,7 @@
 #define IPTYPE_IPV6                     1
 
 /*****************************************************************************/
-/* Key types                                                                 */
+/* key types                                                                 */
 /*****************************************************************************/
 #define KEY_TYPE_NONE                   0
 #define KEY_TYPE_IPV4                   1
@@ -23,6 +23,7 @@
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
 #define P4I_DROP_REASON_MIN             0
+#define P4I_DROP_NACL                   0
 #define P4I_DROP_REASON_MAX             0
 
 #define P4E_DROP_REASON_MIN             0

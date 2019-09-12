@@ -1,8 +1,18 @@
-#define KEY_MAPPING_TABLE_SIZE                              64
-#define FLOW_TABLE_SIZE                                     8388608     // 8M
-#define FLOW_OHASH_TABLE_SIZE                               4718592     // 4M+512k
+#define LIF_TABLE_SIZE                                      2048
+#define VLAN_TABLE_SIZE                                     4096
+#define VNI_HASH_TABLE_SIZE                                 8192
+#define VNI_OTCAM_TABLE_SIZE                                1024
+#define LOCAL_MAPPING_TABLE_SIZE                            131072      // 128K
+#define LOCAL_MAPPING_OHASH_TABLE_SIZE                      16384       // 16K
+#define FLOW_TABLE_SIZE                                     1048576     // 1M
+#define FLOW_OHASH_TABLE_SIZE                               262144      // 256K
 #define NACL_TABLE_SIZE                                     512
+#define VNIC_STATS_TABLE_SIZE                               1024
+#define DROP_STATS_TABLE_SIZE                               64
 
 #define MIRROR_SESSION_TABLE_SIZE                           256
-#define SESSION_TABLE_SIZE                                  8388608     // 8M
 #define CHECKSUM_TABLE_SIZE                                 32
+
+#if 0
+#define SESSION_TABLE_SIZE                                  8388608     // 8M
+#endif
