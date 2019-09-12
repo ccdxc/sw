@@ -26,9 +26,11 @@ service NhSvc {
 enum NexthopType {
   NEXTHOP_TYPE_NONE = 0;
   NEXTHOP_TYPE_IP   = 1;
+  NEXTHOP_TYPE_L3   = 2;
 }
 
-message IPNexthopInfo {
+// IP nexthop information
+message IPNhInfo {
   // egress VRF id
   uint32           VPCId = 1;
   // nexthop's IP address
@@ -39,14 +41,32 @@ message IPNexthopInfo {
   uint64           Mac   = 4;
 }
 
+// Overlay nexthop information
+message OverlayNhInfo {
+  // L3 interface of this nexthop (outer SMAC is picked from this interface
+  // in case of VxLAN fabric)
+  uint32      L3InterfaceId = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // UnderlayNexthopMAC is the outer DMAC in case of VxLAN fabric
+  uint64      UnderlayNhMAC = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // OverlayNexthopMAC is the inner DMAC in case of VxLAN fabric
+  uint64      OverlayNhMAC  = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // Egress rewrite (NOTE: only VxLAN vnid is supported)
+  types.Encap Encap         = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  // TunnelId points to the remote VTEP (DMAC outer is picked from this)
+  uint32      TunnelId      = 5 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
 // nexthop specification
 message NexthopSpec {
   // unique nexthop id
-  uint32 Id                = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  NexthopType Type         = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          Id            = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  NexthopType     Type          = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // nexthop can be one of different types
   oneof NhInfo {
-    IPNexthopInfo IPNhInfo = 3 [(gogoproto.moretags) = "meta:constraints={NexthopSpec.Type==NEXTHOP_TYPE_IP}"];
+    // IP nexthop is used when VTEP IP is to be resolved by PDS
+    IPNhInfo      IPNhInfo      = 3 [(gogoproto.moretags) = "meta:constraints={NexthopSpec.Type==NEXTHOP_TYPE_IP}"];
+    // L3 nexthop is used when application (e.g., fib) resolved nexthop IP already
+    OverlayNhInfo OverlayNhInfo = 4 [(gogoproto.moretags) = "meta:constraints={NexthopSpec.Type==NEXTHOP_TYPE_L3}"];
   }
 }
 
