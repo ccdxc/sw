@@ -15,6 +15,7 @@ type EventTypeAttributes struct {
 	Category string
 	Severity string
 	Desc string
+	SuppressMM bool
 }
 
 // EventDetails contains all the attributes of an events
@@ -41,7 +42,8 @@ func init() {
                                 EType: {{.EType}}.String(),
                                 Severity: "{{.Severity}}",
                                 Category: "{{.Category}}",
-                                Desc: "{{.Desc}}"}
+                                Desc: "{{.Desc}}",
+                                SuppressMM: {{.SuppressMM}}}
 
     {{end}}
 }
@@ -54,6 +56,15 @@ func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {
 	}
 
 	return nil
+}
+
+func SuppressDuringMaintenance(eTypeStr string) bool {
+	if eType, found := EventType_value[eTypeStr]; found {
+		if attrs, ok := eventTypes[EventType(eType)]; ok {
+			return attrs.SuppressMM
+		}
+	}
+	return false
 }
 
 func GetEventsByCategory() map[string][]*EventDetails {

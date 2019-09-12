@@ -15,6 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/utils"
 	memcache "github.com/pensando/sw/venice/utils/cache"
 	"github.com/pensando/sw/venice/utils/events"
@@ -174,7 +175,7 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 		return fmt.Errorf("dispatcher stopped, cannot process events")
 	}
 
-	if d.maintenanceMode && events.SuppressDuringUpgrade(event.Type) {
+	if d.maintenanceMode && eventtypes.SuppressDuringMaintenance(event.Type) {
 		return nil // suppress certain events during maintenance window
 	}
 

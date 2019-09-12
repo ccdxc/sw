@@ -2864,10 +2864,11 @@ func getFileName(name string) string {
 
 // EventType represents the event type and it's attributes
 type EventType struct {
-	EType    string // event type
-	Severity string // severity
-	Category string // category
-	Desc     string // description or UI hint
+	EType      string // event type
+	Severity   string // severity
+	Category   string // category
+	Desc       string // description or UI hint
+	SuppressMM bool   // suppress during maintenance mode
 }
 
 // returns the list of event types found from given file
@@ -2904,6 +2905,12 @@ func getEventTypes(file *descriptor.File) ([]*EventType, error) {
 				et.Desc = *(v.(*string))
 			} else {
 				return nil, err
+			}
+
+			// get suppress_mm
+			v, err = proto.GetExtension(val.Options, eventtypes.E_SuppressMm)
+			if err == nil && v.(*bool) != nil {
+				et.SuppressMM = *(v.(*bool))
 			}
 
 			ets = append(ets, et)
