@@ -72,11 +72,19 @@ function dockerSettings() {
     mkdir -p /etc/docker
     if [ ! -f /etc/docker/daemon.json ] ; then
         systemctl stop docker || :
-        printf "{\n\t\"default-ipc-mode\": \"shareable\"\n}" > /etc/docker/daemon.json
+        printf "{\n\t\"default-ipc-mode\": \"shareable\",\n\t\"log-driver\": \"journald\"\n}" > /etc/docker/daemon.json
+        systemctl start docker || :
+    elif ! grep 'default-ipc-mode' /etc/docker/daemon.json && ! grep 'log-driver' /etc/docker/daemon.json; then
+        systemctl stop docker || :
+        sed -i -e "s{{\n\t\"default-ipc-mode\": \"shareable\",\n\t\"log-driver\": \"journald\",\n" /etc/docker/daemon.json
         systemctl start docker || :
     elif ! grep 'default-ipc-mode' /etc/docker/daemon.json ; then
         systemctl stop docker || :
         sed -i -e "s{{\n\t\"default-ipc-mode\": \"shareable\",\n" /etc/docker/daemon.json
+        systemctl start docker || :
+    elif ! grep 'log-driver' /etc/docker/daemon.json ; then
+        systemctl stop docker || :
+        sed -i -e "s{{\n\t\"log-driver\": \"journald\",\n" /etc/docker/daemon.json
         systemctl start docker || :
     fi
 }
