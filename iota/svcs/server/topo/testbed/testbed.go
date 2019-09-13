@@ -341,6 +341,14 @@ func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string,
 			return errors.Wrap(err, "Setting mtu failed")
 		}
 
+		//Shut and no shut ports for reliability.
+		if err := dataSwitch.LinkOp(port, true); err != nil {
+			return errors.Wrap(err, "Setting shut on port failed")
+		}
+
+		if err := dataSwitch.LinkOp(port, false); err != nil {
+			return errors.Wrap(err, "Setting no shut on port failed")
+		}
 	}
 
 	return nil

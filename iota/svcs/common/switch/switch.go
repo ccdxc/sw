@@ -282,6 +282,8 @@ func (sw *nexus3k) SetTrunkVlanRange(port string, vlanRange string) error {
 
 	cmds = []string{
 		"switchport trunk allowed vlan " + vlanRange,
+		//for faster convergence
+		"spanning-tree port type edge trunk",
 	}
 	return sw.runConfigIFCommands(port, cmds)
 }
