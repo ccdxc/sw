@@ -82,6 +82,7 @@ type alertEngineImpl struct {
 	ctx            context.Context           // context to cancel goroutines
 	cancelFunc     context.CancelFunc        // context to cancel goroutines
 	wg             sync.WaitGroup            // for version watcher routine
+	eventsQueue    chan *evtsapi.Event       // queue holding events that were not processed due to apiserver connection failure
 	apiClients     *apiClients
 }
 
@@ -108,11 +109,13 @@ func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, configWatcher
 		exporter:       exporter.NewAlertExporter(memDb, configWatcher, logger.WithContext("submodule", "alert_exporter")),
 		ctx:            ctx,
 		cancelFunc:     cancelFunc,
+		eventsQueue:    make(chan *evtsapi.Event, 500),
 		apiClients:     &apiClients{clients: make([]apiclient.Services, 0, numAPIClients)},
 	}
 
-	ae.wg.Add(1)
+	ae.wg.Add(2)
 	go ae.createAPIClients(numAPIClients)
+	go ae.processEventsFromQueue()
 
 	return ae, nil
 }
@@ -125,9 +128,9 @@ func (a *alertEngineImpl) ProcessEvents(reqID string, eventList *evtsapi.EventLi
 
 	a.RLock()
 	if len(a.apiClients.clients) == 0 {
-		a.logger.Errorf("{req: %s} alert engine not ready to process events, waiting for API client(s): %v",
-			reqID, len(a.apiClients.clients))
+		a.logger.Errorf("{req: %s} waiting for API client(s): %v, events will be queued for later processing", reqID, len(a.apiClients.clients))
 		a.RUnlock()
+		a.addToEventsQueueForLaterProcessing(reqID, eventList)
 		return
 	}
 	a.RUnlock()
@@ -135,26 +138,7 @@ func (a *alertEngineImpl) ProcessEvents(reqID string, eventList *evtsapi.EventLi
 	for _, evt := range eventList.GetItems() {
 		// get api client to process this event
 		apCl := a.getAPIClient()
-
-		// fetch alert policies belonging to evt.Tenant
-		alertPolicies := a.memDb.GetAlertPolicies(
-			memdb.WithTenantFilter(evt.GetTenant()),
-			memdb.WithResourceFilter("Event"),
-			memdb.WithEnabledFilter(true))
-
-		// run over each alert policy
-		for _, ap := range alertPolicies {
-			var reqs []*fields.Requirement
-			for _, t := range ap.Spec.GetRequirements() {
-				r := *t
-				reqs = append(reqs, &r)
-			}
-			ap.Spec.Requirements = reqs
-
-			if err := a.runPolicy(apCl, reqID, ap, evt); err != nil {
-				a.logger.Errorf("{req: %s} failed to run policy: %v on event: %v, err: %v", reqID, ap.GetName(), evt.GetMessage(), err)
-			}
-		}
+		a.processEvent(reqID, apCl, evt)
 	}
 	a.logger.Infof("{req: %s} finished processing events at alert engine, took: %v", reqID, time.Since(start))
 }
@@ -167,6 +151,8 @@ func (a *alertEngineImpl) Stop() {
 	a.cancelFunc()
 	a.wg.Wait()
 
+	close(a.eventsQueue)
+
 	a.exporter.Stop() // this will stop any exports that're in line
 
 	// close all the clients
@@ -175,6 +161,85 @@ func (a *alertEngineImpl) Stop() {
 		client.Close()
 	}
 	a.apiClients.Unlock()
+}
+
+// adds the given list of events to queue for later processing
+func (a *alertEngineImpl) addToEventsQueueForLaterProcessing(reqID string, eventList *evtsapi.EventList) {
+	for _, evt := range eventList.GetItems() {
+		select {
+		case <-a.ctx.Done():
+			a.logger.Infof("{req: %s} context cancelled, failed to add event(s) for later processing ", reqID)
+			return
+		case a.eventsQueue <- evt:
+			break
+		default:
+			a.logger.Infof("{req: %s} queue is full, failed to add event(s) for later processing", reqID)
+			return
+		}
+	}
+}
+
+// helper function to process the given event against the alert policies.
+func (a *alertEngineImpl) processEvent(reqID string, apCl apiclient.Services, evt *evtsapi.Event) {
+	// fetch alert policies belonging to evt.Tenant
+	alertPolicies := a.memDb.GetAlertPolicies(
+		memdb.WithTenantFilter(evt.GetTenant()),
+		memdb.WithResourceFilter("Event"),
+		memdb.WithEnabledFilter(true))
+
+	if len(alertPolicies) == 0 {
+		a.logger.Infof("found 0 policies to run against the evt: {%s}", evt.Message)
+		return
+	}
+
+	// run over each alert policy
+	for _, ap := range alertPolicies {
+		var reqs []*fields.Requirement
+		for _, t := range ap.Spec.GetRequirements() {
+			r := *t
+			reqs = append(reqs, &r)
+		}
+		ap.Spec.Requirements = reqs
+
+		if err := a.runPolicy(reqID, apCl, ap, evt); err != nil {
+			a.logger.Errorf("{req: %s} failed to run policy: %v on event: %v, err: %v", reqID, ap.GetName(), evt.GetMessage(), err)
+		}
+	}
+}
+
+// start processing events from the queue once apiclients are created
+func (a *alertEngineImpl) processEventsFromQueue() {
+	defer a.wg.Done()
+
+	a.logger.Info("starting to process events from queue")
+
+	reqID := "events-from-queue"
+	for {
+		select {
+		case <-a.ctx.Done():
+			a.logger.Info("context cancelled, returning from processing events queue")
+			return
+		case evt, ok := <-a.eventsQueue:
+			if !ok {
+				a.logger.Info("events queue closed, returning")
+			}
+
+			a.logger.Infof("processing event from the queue: {%s}", evt.Message)
+
+			// wait until API client is available
+			apiCl := a.getAPIClient()
+			for apiCl == nil {
+				if a.ctx.Err() != nil {
+					a.logger.Info("context cancelled, returning from processing events queue")
+					return
+				}
+				time.Sleep(time.Second)
+				apiCl = a.getAPIClient()
+			}
+
+			a.processEvent(reqID, apiCl, evt)
+		}
+	}
 }
 
 // helper function to create API clients
@@ -212,18 +277,22 @@ func (a *alertEngineImpl) getAPIClient() apiclient.Services {
 	a.apiClients.RLock()
 	defer a.apiClients.RUnlock()
 
+	if len(a.apiClients.clients) == 0 {
+		return nil
+	}
+
 	index := rand.Intn(len(a.apiClients.clients))
 	return a.apiClients.clients[index]
 }
 
 // runPolicy helper function to run the given policy against event. Also, it updates
 // totalHits and openAlerts on the alertPolicy.
-func (a *alertEngineImpl) runPolicy(apCl apiclient.Services, reqID string, ap *monitoring.AlertPolicy, evt *evtsapi.Event) error {
+func (a *alertEngineImpl) runPolicy(reqID string, apCl apiclient.Services, ap *monitoring.AlertPolicy, evt *evtsapi.Event) error {
 	match, reqWithObservedVal := aeutils.Match(ap.Spec.GetRequirements(), evt)
 	if match {
 		a.logger.Debugf("{req: %s} event {%s: %s} matched the alert policy {%s} with requirements:[%+v]",
 			reqID, evt.GetName(), evt.GetMessage(), ap.GetName(), ap.Spec.GetRequirements())
-		created, err := a.createAlert(apCl, reqID, ap, evt, reqWithObservedVal)
+		created, err := a.createAlert(reqID, apCl, ap, evt, reqWithObservedVal)
 		if err != nil {
 			errStatus, ok := status.FromError(err)
 			a.logger.Errorf("{req: %s} failed to create alert for event: %v, err: %v, %v", reqID, evt.GetUUID(), err, errStatus)
@@ -235,12 +304,13 @@ func (a *alertEngineImpl) runPolicy(apCl apiclient.Services, reqID string, ap *m
 		}
 
 		if created {
-			a.logger.Infof("{req: %s} alert created from event {%s:%s}", reqID, evt.GetName(), evt.GetMessage())
-			err = a.updateAlertPolicy(apCl, reqID, ap.GetObjectMeta(), 1, 1) // update total hits and open alerts count
+			a.logger.Infof("{req: %s} alert created from event {%s:%s} for the policy {%s/%s}", reqID, evt.GetName(),
+				evt.GetMessage(), ap.GetName(), ap.GetUUID())
+			err = a.updateAlertPolicy(reqID, apCl, ap.GetObjectMeta(), 1, 1) // update total hits and open alerts count
 		} else {
-			a.logger.Infof("{req: %s} existing open alert found for event {%s:%s}", reqID, evt.GetName(),
-				evt.GetMessage())
-			err = a.updateAlertPolicy(apCl, reqID, ap.GetObjectMeta(), 1, 0) //update only hits, alert exists already,
+			a.logger.Infof("{req: %s} existing open alert found for event {%s:%s}  for the policy {%s/%s}", reqID, evt.GetName(),
+				evt.GetMessage(), ap.GetName(), ap.GetUUID())
+			err = a.updateAlertPolicy(reqID, apCl, ap.GetObjectMeta(), 1, 0) //update only hits, // alert exists already,
 		}
 
 		return err
@@ -250,7 +320,7 @@ func (a *alertEngineImpl) runPolicy(apCl apiclient.Services, reqID string, ap *m
 }
 
 // createAlert helper function to construct and create the alert using API client.
-func (a *alertEngineImpl) createAlert(apCl apiclient.Services, reqID string, alertPolicy *monitoring.AlertPolicy,
+func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, alertPolicy *monitoring.AlertPolicy,
 	evt *evtsapi.Event, matchedRequirements []*monitoring.MatchedRequirement) (bool, error) {
 	alertUUID := uuid.NewV4().String()
 	alertName := alertUUID
@@ -329,7 +399,7 @@ func (a *alertEngineImpl) createAlert(apCl apiclient.Services, reqID string, ale
 }
 
 // updateAlertPolicy helper function to update total hits and open alerts count on the alert policy.
-func (a *alertEngineImpl) updateAlertPolicy(apCl apiclient.Services, reqID string, meta *api.ObjectMeta, incrementTotalHitsBy,
+func (a *alertEngineImpl) updateAlertPolicy(reqID string, apCl apiclient.Services, meta *api.ObjectMeta, incrementTotalHitsBy,
 	incrementOpenAlertsBy int) error {
 	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		ap, err := apCl.MonitoringV1().AlertPolicy().Get(ctx,

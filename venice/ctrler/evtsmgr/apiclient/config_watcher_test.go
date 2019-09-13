@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/types/protos"
@@ -169,22 +168,4 @@ func TestAlertCache(t *testing.T) {
 	// invalid
 	err = cfgWatcher.processAlert(kvstore.WatcherError, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "invalid alert watch event"), "expected failure, but succeeded")
-}
-
-// TestVersionCache tests the creation of the new events manager and maintenance mode
-func TestVersionCache(t *testing.T) {
-	cfgWatcher := &ConfigWatcher{logger: log.SetConfig(log.GetDefaultConfig(t.Name())), memDb: memdb.NewMemDb()}
-
-	ver := cluster.Version{
-		TypeMeta: api.TypeMeta{Kind: "Version"},
-		Status: cluster.VersionStatus{
-			BuildVersion:        "v1",
-			RolloutBuildVersion: "some-ver",
-		},
-	}
-	err := cfgWatcher.processVersion(kvstore.Created, &ver)
-	AssertOk(t, err, "failed to process version, err: %v", err)
-
-	err = cfgWatcher.processVersion(kvstore.Deleted, &ver)
-	AssertOk(t, err, "failed to delete version, err: %v", err)
 }

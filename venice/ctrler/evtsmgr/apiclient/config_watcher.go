@@ -9,7 +9,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
@@ -181,17 +180,6 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 		Dir:  reflect.SelectRecv,
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
-	// watch version object
-	watcher, err = c.apiClient.ClusterV1().Version().Watch(ctx, opts)
-	if err != nil {
-		c.logger.Errorf("failed to watch alerts, err: %v", err)
-		return err
-	}
-	watchList[len(selCases)] = "version"
-	selCases = append(selCases, reflect.SelectCase{
-		Dir:  reflect.SelectRecv,
-		Chan: reflect.ValueOf(watcher.EventChan())})
-
 	// ctx done
 	watchList[len(selCases)] = "ctx-canceled"
 	selCases = append(selCases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
@@ -225,8 +213,6 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 			c.processAlertDestination(event.Type, obj)
 		case *monitoring.EventPolicy:
 			c.processEventPolicy(event.Type, obj)
-		case *cluster.Version:
-			c.processVersion(event.Type, obj)
 		default:
 			c.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
 			return fmt.Errorf("invalid watch event type")
@@ -306,22 +292,5 @@ func (c *ConfigWatcher) processEventPolicy(eventType kvstore.WatchEventType, eve
 	default:
 		c.logger.Errorf("invalid event policy watch event, type %s policy %+v", eventType, eventPolicy)
 		return fmt.Errorf("invalid event policy watch event")
-	}
-}
-
-// helper to process version object
-func (c *ConfigWatcher) processVersion(eventType kvstore.WatchEventType, version *cluster.Version) error {
-	c.logger.Debugf("processing version watch event: {%s} {%#v} ", eventType, version)
-
-	switch eventType {
-	case kvstore.Created:
-		return c.memDb.AddObject(version)
-	case kvstore.Updated:
-		return c.memDb.UpdateObject(version)
-	case kvstore.Deleted:
-		return c.memDb.DeleteObject(version)
-	default:
-		c.logger.Errorf("invalid version watch event, type %s version %+v", eventType, version)
-		return fmt.Errorf("invalid version watch event")
 	}
 }

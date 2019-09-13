@@ -19,6 +19,8 @@ import (
 
 	es "github.com/olivere/elastic"
 	uuid "github.com/satori/go.uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -391,12 +393,12 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
 	AssertOk(t, err, "failed to get authZ header")
 	const testTenant = "testtenant"
-	MustCreateTenant(ti.apicl, testTenant)
-	defer MustDeleteTenant(ti.apicl, testTenant)
-	MustCreateTestUser(ti.apicl, testutils.TestLocalUser, testutils.TestLocalPassword, testTenant)
-	defer MustDeleteUser(ti.apicl, testutils.TestLocalUser, testTenant)
-	MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testutils.TestLocalUser}, nil)
-	defer MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
+	MustCreateTenant(ti.apiClient, testTenant)
+	defer MustDeleteTenant(ti.apiClient, testTenant)
+	MustCreateTestUser(ti.apiClient, testutils.TestLocalUser, testutils.TestLocalPassword, testTenant)
+	defer MustDeleteUser(ti.apiClient, testutils.TestLocalUser, testTenant)
+	MustUpdateRoleBinding(ti.apiClient, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testutils.TestLocalUser}, nil)
+	defer MustUpdateRoleBinding(ti.apiClient, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
 	testtenantAuthzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testTenant})
 	AssertOk(t, err, fmt.Sprintf("failed to get authZ header for user (%s|%s)", testTenant, testutils.TestLocalUser))
 
@@ -856,11 +858,6 @@ func TestEventsAlertEngine(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
-	// create API server client
-	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
-	AssertOk(t, err, "failed to create API server client, err: %v", err)
-	defer apiClient.Close()
-
 	// start spyglass (backend service for events)
 	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger, ti.esClient)
 	AssertOk(t, err, "failed to start spyglass finder, err: %v", err)
@@ -891,7 +888,7 @@ func TestEventsAlertEngine(t *testing.T) {
 			{Key: "source.node-name", Operator: "equals", Values: []string{t.Name()}},
 		}, []string{})
 
-	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
+	alertPolicy1, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy{ap1-*}, err: %v", err)
 
 	// policy - 2
@@ -906,13 +903,18 @@ func TestEventsAlertEngine(t *testing.T) {
 				eventattrs.Severity_INFO.String()}},
 		}, []string{})
 
-	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
+	alertPolicy2, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy{ap2-*}, err: %v", err)
 
 	alertPolicy3 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap3-%s", uuid.NewV4().String()),
 		"Event", eventattrs.Severity_WARN, "policy with no reqs", []*fields.Requirement{}, []string{})
-	alertPolicy3, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy3)
+	alertPolicy3, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy3)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+
+	defer func() {
+		err := ti.cleanupPolicies()
+		AssertOk(t, err, "failed to cleanup policies")
+	}()
 
 	// generate events
 	// define list of events to be recorded
@@ -1052,7 +1054,7 @@ func TestEventsAlertEngine(t *testing.T) {
 		defer wg.Done()
 		for _, test := range tests {
 			AssertEventually(t, func() (bool, interface{}) {
-				alerts, err := apiClient.MonitoringV1().Alert().List(context.Background(),
+				alerts, err := ti.apiClient.MonitoringV1().Alert().List(context.Background(),
 					&api.ListWatchOptions{
 						ObjectMeta:    api.ObjectMeta{Tenant: globals.DefaultTenant},
 						FieldSelector: test.selector})
@@ -1093,7 +1095,7 @@ func TestEventsAlertEngine(t *testing.T) {
 	}
 	for _, as := range expectedAlertStatus {
 		AssertEventually(t, func() (bool, interface{}) {
-			res, err := apiClient.MonitoringV1().AlertPolicy().Get(context.Background(),
+			res, err := ti.apiClient.MonitoringV1().AlertPolicy().Get(context.Background(),
 				&api.ObjectMeta{Name: as.policyMeta.GetName(), Tenant: as.policyMeta.GetTenant(), Namespace: as.policyMeta.GetNamespace(), UUID: as.policyMeta.GetUUID()})
 			if err != nil {
 				return false, fmt.Sprintf(":%v, err: %v", as.policyMeta.GetName(), err)
@@ -1116,7 +1118,7 @@ func TestEventsAlertEngine(t *testing.T) {
 	}
 
 	// resolve or acknowledge alerts
-	alerts, err := apiClient.MonitoringV1().Alert().List(context.Background(),
+	alerts, err := ti.apiClient.MonitoringV1().Alert().List(context.Background(),
 		&api.ListWatchOptions{
 			ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant},
 			FieldSelector: fmt.Sprintf("status.reason.alert-policy-id in (%s,%s,%s)",
@@ -1205,24 +1207,136 @@ func TestEventsAlertEngine(t *testing.T) {
 		Assert(t, !at.resolve || (at.resolve && updatedAp.Status.OpenAlerts < ap.Status.OpenAlerts),
 			"expected #acknowledged alerts: <%d, got: %d", ap.Status.OpenAlerts, updatedAp.Status.OpenAlerts)
 	}
+}
 
-	// delete all alerts
-	alerts, _ = apiClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
-	for _, a := range alerts {
-		apiClient.MonitoringV1().Alert().Delete(context.Background(), &a.ObjectMeta)
+// TestEventsAlertEngineWithAPIServerShutdown shuts down the API server and ensures alert engine behaves as expected.
+func TestEventsAlertEngineWithAPIServerShutdown(t *testing.T) {
+	// define list of events to be recorded
+	dummyObjRef := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      CreateAlphabetString(5),
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+	}
+	recordEvents := []*struct {
+		eventType eventtypes.EventType
+		message   string
+		objRef    interface{}
+	}{
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), dummyObjRef},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), dummyObjRef},
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), dummyObjRef},
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), dummyObjRef},
+		{eventtypes.NAPLES_SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s naples service stopped", dummyObjRef.Tenant, t.Name()), dummyObjRef},
 	}
 
-	// delete all alert destinations
-	alertDestinations, _ := apiClient.MonitoringV1().AlertDestination().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
-	for _, ad := range alertDestinations {
-		apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), &ad.ObjectMeta)
+	// setup events pipeline to record and distribute events
+	ti := tInfo{batchInterval: 100 * time.Millisecond, dedupInterval: 100 * time.Second}
+	AssertOk(t, ti.setup(t), "failed to setup test")
+	defer ti.teardown()
+
+	// start spyglass (apigw needs spyglass)
+	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger, ti.esClient)
+	AssertOk(t, err, "failed to start spyglass finder, err: %v", err)
+	fdr := fdrTemp.(finder.Interface)
+	defer fdr.Stop()
+	ti.updateResolver(globals.Spyglass, fdrAddr)
+
+	// API gateway
+	apiGw, _, err := testutils.StartAPIGateway(":0", false,
+		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth"}, []string{}, ti.mockResolver, ti.logger)
+	AssertOk(t, err, "failed to start API gateway, err: %v", err)
+	defer apiGw.Stop()
+
+	// setup authn and get authz token
+	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
+	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
+	AssertOk(t, err, "failed to setup authN service, err: %v", err)
+	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
+
+	// add event based alert policies
+	// policy - 1 (convert critical events to alerts)
+	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap1-%s", uuid.NewV4().String()),
+		"Event", eventattrs.Severity_CRITICAL, "critical alerts from events",
+		[]*fields.Requirement{
+			{Key: "severity", Operator: "equals", Values: []string{eventattrs.Severity_CRITICAL.String()}},
+		}, []string{})
+	alertPolicy1, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
+	errStatus, ok := status.FromError(err)
+	Assert(t, ok, "did not receive a proper http response from apiclient (add alert policy)")
+	Assert(t, errStatus.Code() == codes.OK, "failed to add alert policy{ap1-*}, err: %+v", errStatus)
+	defer ti.cleanupPolicies()
+
+	// total alerts should be 0
+	alerts, err := ti.apiClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{
+		FieldSelector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s", alertPolicy1.GetName(), alertPolicy1.GetUUID()),
+	})
+	AssertOk(t, err, "failed to list alerts")
+	Assert(t, len(alerts) == 0, "expected: 0, got: %v alerts", len(alerts))
+
+	// create events recorder
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+		Component:                   uuid.NewV4().String(),
+		EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+		BackupDir:                   recorderEventsDir,
+		SkipCategoryBasedEventTypes: true}, ti.logger)
+	AssertOk(t, err, "failed to create recorder")
+	ti.recorders.Lock()
+	ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+	ti.recorders.Unlock()
+
+	// stop apiserver
+	ti.stopAPIServer()
+
+	// restart evtsmgr
+	evtsMgrURL := ti.evtsMgr.RPCServer.GetListenURL()
+	ti.evtsMgr.Stop()
+
+	ti.evtsMgr, evtsMgrURL, err = testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient)
+	AssertOk(t, err, "failed to start events manager, err: %v", err)
+	time.Sleep(2 * time.Second) // wait for the API client creations to fail
+
+	// generate some more events
+	for i := range recordEvents {
+		evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].message, recordEvents[i].objRef)
 	}
 
-	// delete all alert policies
-	alertPolicies, _ := apiClient.MonitoringV1().AlertPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
-	for _, ap := range alertPolicies {
-		apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), &ap.ObjectMeta)
-	}
+	time.Sleep(1 * time.Second) // wait for the request to alert engine fail
+
+	// start API server back
+	err = ti.startAPIServer(t.Name())
+	AssertOk(t, err, "failed to start API server")
+	defer ti.stopAPIServer()
+
+	// total alerts should be 2
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+
+			alerts, err = ti.apiClient.MonitoringV1().Alert().List(ctx, &api.ListWatchOptions{
+				FieldSelector: fmt.Sprintf("status.reason.alert-policy-id=%s/%s", alertPolicy1.GetName(), alertPolicy1.GetUUID()),
+			})
+			if err != nil {
+				return false, nil
+			}
+			if len(alerts) == 2 {
+				return true, nil
+			}
+			return false, fmt.Sprintf("expected: 2, got: %v alerts", len(alerts))
+		}, fmt.Sprintf("expected number of alerts are not created"), "200ms", "6s")
+
+	err = ti.cleanupPolicies()
+	AssertOk(t, err, "failed to cleanup polices")
+
+	testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 }
 
 // TestEventsAlertEngineWithTCPSyslogExport tests the syslog export of alerts with dummy TCP server
@@ -1233,14 +1347,11 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
-	// create API server client
-	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
-	AssertOk(t, err, "failed to create API server client, err: %v", err)
-	defer apiClient.Close()
-	apiClient.ClusterV1().Tenant().Create(context.Background(), &cluster.Tenant{
+	ti.apiClient.ClusterV1().Tenant().Create(context.Background(), &cluster.Tenant{
 		TypeMeta:   api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{Name: "default"},
 	})
+
 	// start TCP server to receive syslog messages
 	ln, receivedMsgsAtTCPServer, err := serviceutils.StartTCPServer(":0", 100, 0)
 	AssertOk(t, err, "failed to start TCP server, err: %v", err)
@@ -1258,9 +1369,9 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 				},
 			},
 		})
-	alertDestBSDSyslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
+	alertDestBSDSyslog, err = ti.apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
-	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestBSDSyslog.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestBSDSyslog.GetObjectMeta())
 
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
@@ -1273,27 +1384,27 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 				},
 			},
 		})
-	alertDestRFC5424Syslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
+	alertDestRFC5424Syslog, err = ti.apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
-	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 
 	// policy - 1: convert CRITICAL events with occurrences > 10 to a CRITICAL alert and export it to the given alert dest
 	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", eventattrs.Severity_CRITICAL, "alerts from events", []*fields.Requirement{
 		{Key: "severity", Operator: "in", Values: []string{eventattrs.Severity_CRITICAL.String()}},
 		{Key: "count", Operator: "gt", Values: []string{"10"}},
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
-	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
+	alertPolicy1, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
-	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 	// policy - 2: convert WARNING events with occurrences = 10 to a WARNING alert and export it to the given alert dest
 	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", eventattrs.Severity_WARN, "alerts from events", []*fields.Requirement{
 		{Key: "severity", Operator: "equals", Values: []string{eventattrs.Severity_WARN.String()}},
 		{Key: "count", Operator: "gte", Values: []string{"10"}},
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
-	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
+	alertPolicy2, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
-	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy2.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy2.GetObjectMeta())
 
 	// object reference for events
 	dummyObjRef := &cluster.Node{
@@ -1358,7 +1469,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta())
+			ad, err := ti.apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta())
 			if err != nil {
 				return false, err
 			}
@@ -1372,7 +1483,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
+			ad, err := ti.apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 			if err != nil {
 				return false, err
 			}
@@ -1393,11 +1504,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
-	// create API server client
-	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
-	AssertOk(t, err, "failed to create API server client, err: %v", err)
-	defer apiClient.Close()
-	apiClient.ClusterV1().Tenant().Create(context.Background(), &cluster.Tenant{
+	ti.apiClient.ClusterV1().Tenant().Create(context.Background(), &cluster.Tenant{
 		TypeMeta:   api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{Name: "default"},
 	})
@@ -1431,9 +1538,9 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 				},
 			},
 		})
-	alertDestBSDSyslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
+	alertDestBSDSyslog, err = ti.apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
-	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestBSDSyslog.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestBSDSyslog.GetObjectMeta())
 
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
@@ -1446,9 +1553,9 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 				},
 			},
 		})
-	alertDestRFC5424Syslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
+	alertDestRFC5424Syslog, err = ti.apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
-	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 
 	// convert CRITICAL events with occurrences > 10 to a CRITICAL alert and export it to the given alert dest
 	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", eventattrs.Severity_CRITICAL, "alerts from events", []*fields.Requirement{
@@ -1457,9 +1564,9 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 			eventattrs.Severity_WARN.String()}},
 		{Key: "count", Operator: "gt", Values: []string{"10"}},
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
-	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
+	alertPolicy1, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
-	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 	// object reference for events
 	dummyObjRef := &cluster.Node{
@@ -1547,7 +1654,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta())
+			ad, err := ti.apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta())
 			if err != nil {
 				return false, err
 			}
@@ -1562,7 +1669,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
+			ad, err := ti.apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 			if err != nil {
 				return false, err
 			}
@@ -1583,11 +1690,6 @@ func TestEventsExport(t *testing.T) {
 	defer ti.teardown()
 
 	var wg sync.WaitGroup
-
-	// create API server client
-	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
-	AssertOk(t, err, "failed to create API server client, err: %v", err)
-	defer apiClient.Close()
 
 	// start UDP server to receive syslog messages
 	pConn1, receivedMsgsAtUDPServer1, err := serviceutils.StartUDPServer(":0")
@@ -1610,7 +1712,7 @@ func TestEventsExport(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{Name: "default"},
 	}
-	apiClient.ClusterV1().Tenant().Create(context.Background(), &defTenant)
+	ti.apiClient.ClusterV1().Tenant().Create(context.Background(), &defTenant)
 
 	// add event policy - 1
 	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-1",
@@ -1625,9 +1727,9 @@ func TestEventsExport(t *testing.T) {
 				Transport:   fmt.Sprintf("tcp/%s", tmp2[len(tmp2)-1]),
 			},
 		}, nil)
-	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
+	eventPolicy1, err = ti.apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
 	AssertOk(t, err, "failed to create event policy, err: %v", err)
-	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
 
 	// add event policy - 2
 	eventPolicy2 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-2",
@@ -1642,9 +1744,9 @@ func TestEventsExport(t *testing.T) {
 			FacilityOverride: monitoring.SyslogFacility_LOG_SYSLOG.String(),
 			Prefix:           CreateAlphabetString(5),
 		})
-	eventPolicy2, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy2)
+	eventPolicy2, err = ti.apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy2)
 	AssertOk(t, err, "failed to create event policy, err: %v", err)
-	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy2.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy2.GetObjectMeta())
 
 	// to let the event policies reach the policy manager (api server -> evtsmgr -> policy watcher -> policy manager -> exporter)
 	time.Sleep(2 * time.Second)
@@ -1864,9 +1966,9 @@ func TestEventsExport(t *testing.T) {
 				Transport:   fmt.Sprintf("udp/%s", tmp4[len(tmp4)-1]),
 			},
 		}, nil)
-	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Update(context.Background(), eventPolicy1)
+	eventPolicy1, err = ti.apiClient.MonitoringV1().EventPolicy().Update(context.Background(), eventPolicy1)
 	AssertOk(t, err, "failed to create event policy, err: %v", err)
-	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
 
 	// `receivedMsgsAtTCPServer1` should receive no more messages as it is removed from the policy '"ep-1"' (refer above);
 	// final should be the last message on this channel
@@ -2136,17 +2238,13 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	var wg sync.WaitGroup
 	stopGoRoutines := make(chan struct{})
 
-	// create API server client
-	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
-	AssertOk(t, err, "failed to create API server client, err: %v", err)
-	defer apiClient.Close()
 	defTenant := &cluster.Tenant{
 		TypeMeta:   api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{Name: "default"},
 	}
-	defTenant, err = apiClient.ClusterV1().Tenant().Create(context.Background(), defTenant)
+	defTenant, err := ti.apiClient.ClusterV1().Tenant().Create(context.Background(), defTenant)
 	AssertOk(t, err, "failed to create tenant")
-	defer apiClient.ClusterV1().Tenant().Delete(context.Background(), defTenant.GetObjectMeta())
+	defer ti.apiClient.ClusterV1().Tenant().Delete(context.Background(), defTenant.GetObjectMeta())
 
 	// add event policy - 1
 	port := getAvailablePort(45000, 45100)
@@ -2162,9 +2260,9 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 				Transport:   fmt.Sprintf("tcp/%d", port),
 			},
 		}, nil)
-	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
+	eventPolicy1, err = ti.apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
 	AssertOk(t, err, "failed to create event policy, err: %v", err)
-	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
+	defer ti.apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
 
 	// syslog will try reconnecting during this time
 	time.Sleep(1 * time.Second)

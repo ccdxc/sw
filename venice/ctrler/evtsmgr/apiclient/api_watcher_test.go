@@ -10,7 +10,6 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	mockapi "github.com/pensando/sw/api/mock"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
@@ -19,37 +18,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
-
-type mockClusterV1 struct {
-	mVersion cluster.ClusterV1VersionInterface
-}
-
-func (m *mockClusterV1) Cluster() cluster.ClusterV1ClusterInterface {
-	return nil
-}
-
-func (m *mockClusterV1) Node() cluster.ClusterV1NodeInterface {
-	return nil
-}
-
-func (m *mockClusterV1) Host() cluster.ClusterV1HostInterface {
-	return nil
-}
-
-func (m *mockClusterV1) DistributedServiceCard() cluster.ClusterV1DistributedServiceCardInterface {
-	return nil
-}
-func (m *mockClusterV1) Tenant() cluster.ClusterV1TenantInterface {
-	return nil
-}
-
-func (m *mockClusterV1) Version() cluster.ClusterV1VersionInterface {
-	return m.mVersion
-}
-
-func (m *mockClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, nil
-}
 
 type mockMonitoringV1 struct {
 	mAlert            monitoring.MonitoringV1AlertInterface
@@ -105,17 +73,14 @@ func TestAPIWatchEvents(t *testing.T) {
 	opts := &api.ListWatchOptions{}
 
 	mMonitoring := &mockMonitoringV1{}
-	mCluster := &mockClusterV1{}
 	mAlert := mockapi.NewMockMonitoringV1AlertInterface(ctrl)
 	mAlertPolicy := mockapi.NewMockMonitoringV1AlertPolicyInterface(ctrl)
 	mAlertDestination := mockapi.NewMockMonitoringV1AlertDestinationInterface(ctrl)
 	mEventPolicy := mockapi.NewMockMonitoringV1EventPolicyInterface(ctrl)
-	mVersion := mockapi.NewMockClusterV1VersionInterface(ctrl)
 	mMonitoring.mAlert = mAlert
 	mMonitoring.mAlertPolicy = mAlertPolicy
 	mMonitoring.mAlertDestination = mAlertDestination
 	mMonitoring.mEventPolicy = mEventPolicy
-	mCluster.mVersion = mVersion
 
 	mapi := mockapi.NewMockServices(ctrl)
 	evtsMgr.apiClient = mapi
@@ -161,15 +126,13 @@ func TestAPIWatchEvents(t *testing.T) {
 	apCh := make(chan *kvstore.WatchEvent)
 	defer close(apCh)
 	mAPWatcher.EXPECT().EventChan().Return(apCh).Times(1)
-	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert destination, alerts, event policy and version watchers
-	mWatcher.EXPECT().EventChan().Return(nil).Times(4)
+	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert destination, alerts and event policy
+	mWatcher.EXPECT().EventChan().Return(nil).Times(3)
 	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mAPWatcher, nil).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
-	mVersion.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(4)
-	mapi.EXPECT().ClusterV1().Return(mCluster).Times(1)
 	go func() { // send some watch events for alert policy
 		tick := time.NewTimer(1 * time.Second)
 		for {
@@ -192,8 +155,8 @@ func TestAPIWatchEvents(t *testing.T) {
 	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
 
 	// fail on invalid alert WATCH event
-	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert policy, alert destination, event policy and version watchers
-	mWatcher.EXPECT().EventChan().Return(nil).Times(4)
+	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert policy, alert destination and event policy
+	mWatcher.EXPECT().EventChan().Return(nil).Times(3)
 	mAWatcher := mockkvs.NewMockWatcher(ctrl) // alert watch chan
 	aCh := make(chan *kvstore.WatchEvent)
 	defer close(aCh)
@@ -202,9 +165,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
-	mVersion.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(4)
-	mapi.EXPECT().ClusterV1().Return(mCluster).Times(1)
 	go func() { // send some watch events for alert
 		tick := time.NewTimer(1 * time.Second)
 		for {
@@ -227,8 +188,8 @@ func TestAPIWatchEvents(t *testing.T) {
 	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
 
 	// fail on invalid alert destination WATCH event
-	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert, alert policy, event policy and version watchers
-	mWatcher.EXPECT().EventChan().Return(nil).Times(4)
+	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert, alert policy and event policy
+	mWatcher.EXPECT().EventChan().Return(nil).Times(3)
 	mADWatcher := mockkvs.NewMockWatcher(ctrl) // alert watch chan
 	adCh := make(chan *kvstore.WatchEvent)
 	defer close(adCh)
@@ -237,9 +198,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mADWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
-	mVersion.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(4)
-	mapi.EXPECT().ClusterV1().Return(mCluster).Times(1)
 	go func() { // send some watch events for alert
 		tick := time.NewTimer(1 * time.Second)
 		for {
@@ -262,8 +221,8 @@ func TestAPIWatchEvents(t *testing.T) {
 	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
 
 	// fail on invalid event policy WATCH event
-	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert, alert policy, alert destination and version watchers
-	mWatcher.EXPECT().EventChan().Return(nil).Times(4)
+	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert, alert policy and alert destination
+	mWatcher.EXPECT().EventChan().Return(nil).Times(3)
 	mEPWatcher := mockkvs.NewMockWatcher(ctrl) // alert watch chan
 	epCh := make(chan *kvstore.WatchEvent)
 	defer close(epCh)
@@ -272,9 +231,7 @@ func TestAPIWatchEvents(t *testing.T) {
 	mAlertPolicy.EXPECT().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}).Return(mWatcher, nil).Times(1)
 	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mEventPolicy.EXPECT().Watch(ctx, opts).Return(mEPWatcher, nil).Times(1)
-	mVersion.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
 	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(4)
-	mapi.EXPECT().ClusterV1().Return(mCluster).Times(1)
 	go func() { // send some watch events for alert
 		tick := time.NewTimer(1 * time.Second)
 		for {
@@ -295,5 +252,4 @@ func TestAPIWatchEvents(t *testing.T) {
 
 	err = evtsMgr.processEvents(parentCtx)
 	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
-
 }

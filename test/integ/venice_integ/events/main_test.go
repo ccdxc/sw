@@ -13,15 +13,14 @@ import (
 	"time"
 
 	es "github.com/olivere/elastic"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
@@ -66,7 +65,7 @@ type tInfo struct {
 	batchInterval     time.Duration                // events batch interval
 	signer            certs.CSRSigner              // function to sign CSRs for TLS
 	trustRoots        []*x509.Certificate          // trust roots to verify TLS certs
-	apicl             apiclient.Services
+	apiClient         apiclient.Services
 	recorders         *recorders
 	testName          string
 }
@@ -132,12 +131,10 @@ func (t *tInfo) setup(tst *testing.T) error {
 	}
 
 	// start API server
-	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, tst.Name(), t.logger)
-	if err != nil {
+	if err = t.startAPIServer(tst.Name()); err != nil {
 		t.logger.Errorf("failed to start API server, err: %v", err)
 		return err
 	}
-	t.updateResolver(globals.APIServer, t.apiServerAddr)
 
 	// start events manager
 	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger, t.esClient)
@@ -158,27 +155,6 @@ func (t *tInfo) setup(tst *testing.T) error {
 	t.storeConfig = storeConfig
 	t.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
-	// grpc client
-	apicl, err := apiclient.NewGrpcAPIClient("events_test", t.apiServerAddr, t.logger)
-	if err != nil {
-		t.logger.Errorf("cannot create grpc client, Err: %v", err)
-		return err
-	}
-	t.apicl = apicl
-
-	// create version object  - alert engine needs it
-	if _, err := apicl.ClusterV1().Version().Create(context.Background(), &cluster.Version{
-		TypeMeta: api.TypeMeta{
-			Kind: "Version",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: t.testName,
-		},
-	}); err != nil {
-		t.logger.Errorf("failed to create version object, err: %v", err)
-		return err
-	}
-
 	return nil
 }
 
@@ -186,8 +162,11 @@ func (t *tInfo) setup(tst *testing.T) error {
 func (t *tInfo) teardown() {
 	t.recorders.close()
 
-	t.apicl.ClusterV1().Version().Delete(context.Background(), &api.ObjectMeta{Name: t.testName})
-	t.apicl.Close()
+	if t.apiClient != nil {
+		t.apiClient.ClusterV1().Version().Delete(context.Background(), &api.ObjectMeta{Name: t.testName})
+		t.apiClient.Close()
+		t.apiClient = nil
+	}
 
 	if t.esClient != nil {
 		t.esClient.Close()
@@ -195,19 +174,95 @@ func (t *tInfo) teardown() {
 
 	testutils.StopElasticsearch(t.elasticsearchName, t.elasticsearchDir)
 
-	t.evtsMgr.Stop()
+	if t.evtsMgr != nil {
+		t.evtsMgr.Stop()
+		t.evtsMgr = nil
+	}
+
 	t.evtProxyServices.Stop()
-	t.apiServer.Stop()
+
+	if t.apiServer != nil {
+		t.apiServer.Stop()
+		t.apiServer = nil
+	}
+
 	// stop certificate server
 	testutils.CleanupIntegTLSProvider()
 
+	if t.mockResolver != nil {
+		t.mockResolver.Stop()
+		t.mockResolver = nil
+	}
+
 	// remove the local persistent events store
 	t.logger.Infof("removing events store %s", t.storeConfig.Dir)
-	t.mockResolver.Stop()
-	t.mockResolver = nil
-
 	os.RemoveAll(t.storeConfig.Dir)
+
 	t.logger.Infof("completed test")
+}
+
+// cleans up alerts, alert policies and destinations
+func (t *tInfo) cleanupPolicies() error {
+	if t.apiClient != nil {
+		// delete all alerts
+		alerts, err := t.apiClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+		if err != nil {
+			return err
+		}
+		for _, a := range alerts {
+			t.apiClient.MonitoringV1().Alert().Delete(context.Background(), &a.ObjectMeta)
+		}
+
+		// delete all alert destinations
+		alertDestinations, err := t.apiClient.MonitoringV1().AlertDestination().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+		if err != nil {
+			return err
+		}
+		for _, ad := range alertDestinations {
+			t.apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), &ad.ObjectMeta)
+		}
+
+		// delete all alert policies
+		alertPolicies, err := t.apiClient.MonitoringV1().AlertPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+		if err != nil {
+			return err
+		}
+		for _, ap := range alertPolicies {
+			t.apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), &ap.ObjectMeta)
+		}
+	}
+
+	return nil
+}
+
+func (t *tInfo) startAPIServer(clusterName string) error {
+	var err error
+	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, clusterName, t.logger)
+	if err != nil {
+		return err
+	}
+	t.updateResolver(globals.APIServer, t.apiServerAddr)
+
+	if t.apiClient != nil { // close existing client if any
+		t.apiClient.Close()
+	}
+
+	t.apiClient, err = apiclient.NewGrpcAPIClient("events_test", t.apiServerAddr, t.logger)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *tInfo) stopAPIServer() {
+	t.apiServer.Stop()
+	t.removeResolverEntry(globals.APIServer, t.apiServerAddr)
+
+	if t.apiClient != nil {
+		t.apiClient.Close()
+		t.apiClient = nil
+	}
 }
 
 // createElasticClient helper function to create elastic client
