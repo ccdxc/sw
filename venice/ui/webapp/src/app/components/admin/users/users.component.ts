@@ -128,7 +128,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     protected stagingService: StagingService,
     protected uiconfigsService: UIConfigsService
   ) {
-    super(_controllerService, null);  // we don't want to use messageService.
+    super(_controllerService, uiconfigsService);  // we don't want to use messageService.
   }
 
   ngOnInit() {

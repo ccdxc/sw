@@ -13,6 +13,7 @@ import { AuthRoleBinding, AuthUser, AuthRole } from '@sdk/v1/models/generated/au
 import { Utility } from '@app/common/Utility';
 import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging';
 import { hasStagingPermission, invokeConfigureStagingPermission } from '..';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 /**
  * NewroleComponent is included in UsersComponent (parent).
@@ -59,9 +60,10 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
-    protected stagingService: StagingService
+    protected stagingService: StagingService,
+    protected _uiconfigsService: UIConfigsService
   ) {
-    super(_controllerService, _authService, stagingService, null);
+    super(_controllerService, _authService, stagingService, _uiconfigsService);
   }
 
   /**
