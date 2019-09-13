@@ -320,7 +320,7 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 		return &resp, nil
 	}
 
-	dn.logger.Errorf("Error writing the points to db. Err: %v", err)
+	dn.logger.Errorf("Error writing %d points to db. Err: %v", len(points), err)
 	if strings.Contains(err.Error(), "database not found") {
 		dn.logger.Errorf("creating database %v in replica %v shard %v",
 			req.Database, req.ReplicaID, req.ShardID)
@@ -764,6 +764,7 @@ func (dn *DNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tp
 	wildcardStmnt.Fields = influxql.Fields{{Expr: &influxql.Wildcard{}}}
 	wildcardStmnt.Sources[0] = selStmt.Sources.Measurements()[0]
 	wildcardStmnt.Dimensions = nil
+	wildcardStmnt.Limit = (selStmt.Limit + 4) / 4
 
 	_, err = influxql.ParseQuery(wildcardStmnt.String())
 	if err != nil {

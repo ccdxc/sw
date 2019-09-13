@@ -11,10 +11,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -583,9 +581,6 @@ func GetMetastoreURLs(ctx context.Context, cfg *ClusterConfig) []string {
 			}
 			time.Sleep(time.Second)
 		}
-		// log event
-		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE,
-			globals.Citadel+" service failed to connect to "+globals.APIServer, nil)
 	}
 	return nil
 }

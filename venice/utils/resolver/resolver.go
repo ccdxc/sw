@@ -211,7 +211,6 @@ func (r *resolverClient) runUntilCancel() {
 					delete(svcMap, e.Instance.Name)
 				}
 			}
-			log.Infof("Resolver :%s", r)
 			r.Unlock()
 			for ii := range el.Items {
 				r.notify(*el.Items[ii])

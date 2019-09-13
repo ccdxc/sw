@@ -45,7 +45,7 @@ func (shard *Shard) AddReplicas(replicas []*Replica) error {
 		}
 
 		// set num replicas
-		shard.NumReplicas = uint32(len(replicas))
+		shard.NumReplicas = uint32(len(shard.Replicas))
 
 		// write the shard map
 		return shard.smap.Write()
@@ -80,14 +80,14 @@ func (shard *Shard) AddSecondaryReplica(repl *Replica) error {
 	repl.ShardID = shard.ShardID
 	repl.shard = shard
 	shard.Replicas[repl.ReplicaID] = repl
-	shard.NumReplicas++
+	shard.NumReplicas = uint32(len(shard.Replicas))
 
 	// get primary shard
 	prepl, err := shard.GetPrimaryreplica()
 	if err != nil {
 		// remove the replica from the shard
 		delete(shard.Replicas, repl.ReplicaID)
-		shard.NumReplicas--
+		shard.NumReplicas = uint32(len(shard.Replicas))
 		return err
 	}
 
@@ -98,7 +98,7 @@ func (shard *Shard) AddSecondaryReplica(repl *Replica) error {
 
 		// remove the replica from the shard
 		delete(shard.Replicas, repl.ReplicaID)
-		shard.NumReplicas--
+		shard.NumReplicas = uint32(len(shard.Replicas))
 		return err
 	}
 
@@ -191,7 +191,7 @@ func (shard *Shard) RemoveReplica(repl *Replica) error {
 
 	// remove the shard
 	delete(shard.Replicas, repl.ReplicaID)
-	shard.NumReplicas--
+	shard.NumReplicas = uint32(len(shard.Replicas))
 
 	// write the shardmap
 	return shard.smap.Write()
