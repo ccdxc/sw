@@ -7,6 +7,7 @@
 #  Please note that binaries must be Static binaries (hence we dont have to worry about presence of dynamic libraries on host)
 mv -f /target/usr/bin/systemd-docker /host/usr/pensando/bin/systemd-docker
 mv -f /target/usr/bin/kubelet /host/usr/pensando/bin/kubelet
+mv -f /target/usr/bin/kubectl /host/usr/pensando/bin/kubectl
 mv -f /target/usr/lib/systemd/system/* /host/usr/lib/systemd/system/
 # Each component gets an individual subdir under /etc/pensando if needed.
 # The subdir name for each component must match the definitions in venice/globals/modules.go.
