@@ -19,15 +19,13 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	telemetry "github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
+	"github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
-	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	vLog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -171,9 +169,6 @@ func (pm *PolicyManager) initAPIGrpcClient(serviceName string) apiclient.Service
 			pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, apiErr)
 			time.Sleep(2 * time.Second)
 		}
-
-		// log event
-		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE, globals.Tpm+" failed to connect to "+serviceName, nil)
 	}
 }
 
@@ -191,9 +186,6 @@ func (pm *PolicyManager) initMetricGrpcClient(serviceName string) metric.MetricA
 			pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, err)
 			time.Sleep(2 * time.Second)
 		}
-
-		// log event
-		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE, globals.Tpm+" failed to connect to "+serviceName, nil)
 	}
 }
 
