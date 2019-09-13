@@ -10,7 +10,7 @@ testcases:
         enable  : True
         iterators :
             type               : nested
-            tx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192]
+            tx_ring_size       : [ 64, 2048, 8192]
             mtu                : [ '1500']
             pktsize            : [ 1024]
             proto              : [ 'udp', 'tcp']
@@ -25,7 +25,7 @@ testcases:
         enable  : True
         iterators :
             type               : nested
-            rx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192]
+            rx_ring_size       : [ 64, 2048, 8192]
             mtu                : [ '1500']
             pktsize            : [ 1024 ]
             proto              : [ 'udp', 'tcp']
@@ -43,7 +43,7 @@ testcases:
             tx_queue_size      : [ 4 ]
             mtu                : [ '1500' ]
             pktsize            : [ 1024 ]
-            proto              : ['udp', 'tcp']
+            proto              : ['tcp']
             ipproto            : [ 'v4']
             vlantag            : ['on', 'off']
         args    :
@@ -59,7 +59,7 @@ testcases:
             rx_queue_size      : [ 4]
             mtu                : [ '1500' ]
             pktsize            : [ 1024 ]
-            proto              : ['udp', 'tcp']
+            proto              : ['tcp']
             ipproto            : [ 'v4']
             vlantag            : ['on', 'off']
         args    :
@@ -201,7 +201,7 @@ testcases:
         disable : False
         iterators :
         args      :
-            loops     : 100
+            loops     : 10
 
     -   name    : DriverWatchdog
         testcase: testcases.drivers.watchdog

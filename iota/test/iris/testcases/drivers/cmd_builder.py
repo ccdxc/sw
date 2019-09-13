@@ -114,12 +114,9 @@ def iperf_client_cmd(server_ip, port = None, time=10, pktsize=None, proto='tcp',
         cmd.extend(["-A", str(run_core)])
 
     if proto == 'udp':
-        cmd.append('-u')
+        cmd.append('-u -b 100G')
 
     if pktsize:
-        if proto == 'tcp':
-            cmd.extend(["-M", str(pktsize)])
-        else:
             cmd.extend(["-l", str(pktsize)])
 
     if ipproto == 'v6':
