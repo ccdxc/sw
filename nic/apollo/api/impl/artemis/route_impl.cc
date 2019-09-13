@@ -12,12 +12,12 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/route.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/tep_impl.hpp"
-#include "nic/apollo/lpm/lpm.hpp"
 
 namespace api {
 namespace impl {

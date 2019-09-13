@@ -15,7 +15,7 @@
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/p4/include/artemis_table_sizes.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 

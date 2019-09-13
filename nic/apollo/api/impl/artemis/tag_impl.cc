@@ -15,7 +15,7 @@
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/tag_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 
 namespace api {
 namespace impl {

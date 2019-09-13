@@ -9,7 +9,7 @@
 #if !defined (__LPM_IPV6_SIP_HPP__)
 #define __LPM_IPV6_SIP_HPP__
 
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 
 /**< key size is 16 bytes for IPv6 sip */
 #define LPM_IPV6_SIP_KEY_SIZE    (16)

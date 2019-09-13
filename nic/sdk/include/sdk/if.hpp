@@ -12,11 +12,15 @@
 #define __IF_HPP__
 
 enum {
-    IF_TYPE_NONE    = 0,
-    IF_TYPE_ETH     = 1,
-    IF_TYPE_ETH_PC  = 2,
-    IF_TYPE_TUNNEL  = 3,
-    IF_TYPE_MGMT    = 4,
+    IF_TYPE_NONE       = 0,
+    IF_TYPE_ETH        = 1,
+    IF_TYPE_ETH_PC     = 2,
+    IF_TYPE_TUNNEL     = 3,
+    IF_TYPE_MGMT       = 4,
+    IF_TYPE_UPLINK     = 5,
+    IF_TYPE_UPLINK_PC  = 6,
+    IF_TYPE_L3         = 7,
+    IF_TYPE_LIF        = 8,
 };
 
 #define IF_TYPE_SHIFT                            28
@@ -33,12 +37,21 @@ enum {
 ///<     s_ --> physical slot of the card  (4 bits)
 ///<     p_ --> parent port (1 based) (8 bits)
 ///<     c_ --> child port (1 based) (8 bits)
+///< based on the type of the interface, the slot bits will be
+///< used for a running identifier of that type of interface
+///< e.g. IF_TYPE_UPLINK or IF_TYPE_TUNNEL etc.
 #define IFINDEX(t_, s_, p_, c_)                      \
             ((t_ << IF_TYPE_SHIFT)        |          \
              ((s_) << IF_SLOT_SHIFT)      |          \
              (p_ << IF_PARENT_PORT_SHIFT) | (c_))
 
 #define ETH_IFINDEX(s_, p_, c_)    IFINDEX(IF_TYPE_ETH, (s_), (p_), (c_))
+#define UPLINK_IFINDEX(if_id_)     ((IF_TYPE_UPLINK << IF_TYPE_SHIFT) | \
+                                    (if_id_))
+#define UPLINK_PC_IFINDEX(pc_id_)  ((IF_TYPE_UPLINK_PC << IF_TYPE_SHIFT) | \
+                                    (pc_id_))
+#define L3_IFINDEX(if_id_)         ((IF_TYPE_L3 << IF_TYPE_SHIFT) | (if_id_))
+#define LIF_IFINDEX(if_id_)        ((IF_TYPE_LIF << IF_TYPE_SHIFT) | (if_id_))
 
 #define IFINDEX_TO_IFTYPE(ifindex_)         \
             ((ifindex_ >> IF_TYPE_SHIFT) & IF_TYPE_MASK)

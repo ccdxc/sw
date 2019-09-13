@@ -7,7 +7,6 @@
  */
 
 #include <math.h>
-#include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/apollo/lpm/lpm_ipv4_route.hpp"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "nic/apollo/framework/impl_base.hpp"

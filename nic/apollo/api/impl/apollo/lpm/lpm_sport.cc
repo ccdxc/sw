@@ -7,7 +7,6 @@
  */
 
 #include <math.h>
-#include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/apollo/lpm/lpm_sport.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"

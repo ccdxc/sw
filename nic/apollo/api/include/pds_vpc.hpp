@@ -18,7 +18,7 @@
 /// \defgroup PDS_VPC VPC API
 /// @{
 
-#define PDS_VPC_ID_INVALID 0     ///< invalid substrate ID
+#define PDS_VPC_ID_INVALID 0     ///< invalid VPC id
 #define PDS_MAX_VPC        64    ///< max VPC
 
 /// \brief VPC type

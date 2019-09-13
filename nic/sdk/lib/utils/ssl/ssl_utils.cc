@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 #include "include/sdk/base.hpp"
-#include "lib/utils/ssl_utils.hpp"
+#include "lib/utils/ssl/ssl_utils.hpp"
 
 namespace sdk {
 namespace utils {

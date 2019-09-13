@@ -9,7 +9,7 @@
 #if !defined (__LPM_PROTO_DPORT_HPP__)
 #define __LPM_PROTO_DPORT_HPP__
 
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 
 #define LPM_PROTO_DPORT_KEY_SIZE    (4)
 

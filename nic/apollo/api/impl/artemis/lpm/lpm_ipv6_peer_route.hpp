@@ -9,7 +9,7 @@
 #if !defined (__LPM_IPV6_PEER_ROUTE_HPP__)
 #define __LPM_IPV6_PEER_ROUTE_HPP__
 
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 
 /* key size is 8 bytes for IPv6 Peer Route */
 #define LPM_IPV6_PEER_ROUTE_KEY_SIZE    (8)

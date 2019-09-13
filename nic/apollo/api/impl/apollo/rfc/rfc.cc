@@ -9,7 +9,7 @@
 #include <string>
 #include "nic/apollo/core/trace.hpp"
 #include "rte_bitmap_utils.hpp"
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
 #include "rfc_tree.hpp"
 #include "rfc_utils.hpp"

@@ -6,7 +6,7 @@
  * @brief   RFC library interaction with LPM library
  */
 
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "rfc_utils.hpp"
 #include "rfc_tree.hpp"
 #include "nic/apollo/core/trace.hpp"

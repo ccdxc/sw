@@ -9,7 +9,7 @@
 #if !defined (__LPM_IPV6_METER_HPP__)
 #define __LPM_IPV6_METER_HPP__
 
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 
 /**< key size is 16 bytes for IPv6 meter */
 #define LPM_IPV6_METER_KEY_SIZE    (16)

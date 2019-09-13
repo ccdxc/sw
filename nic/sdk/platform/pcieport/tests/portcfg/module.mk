@@ -2,6 +2,6 @@
 include ${MKDEFS}/pre.mk
 MODULE_ARCH     := x86_64
 MODULE_TARGET   := test_pcieportcfg.bin
-MODULE_SOLIBS   := pcieport pal pciemgrutils cfgspace utils misc
+MODULE_SOLIBS   := pcieport pal pciemgrutils cfgspace misc
 MODULE_LDLIBS   := pthread
 include ${MKDEFS}/post.mk

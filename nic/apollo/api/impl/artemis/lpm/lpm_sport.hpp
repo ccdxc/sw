@@ -9,7 +9,7 @@
 #if !defined (__LPM_SPORT_HPP__)
 #define __LPM_SPORT_HPP__
 
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 
 #define LPM_SPORT_KEY_SIZE (2)
 

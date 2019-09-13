@@ -2,7 +2,7 @@
 
 #include <openssl/pem.h>
 #include <openssl/x509.h>
-#include "nic/sdk/lib/utils/ssl_utils.hpp"
+#include "nic/sdk/lib/utils/ssl/ssl_utils.hpp"
 #include "nic/hal/hal_trace.hpp"
 
 #define KEY_WIDTH    2048

@@ -7,7 +7,6 @@
  */
 
 #include <math.h>
-#include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/artemis/lpm/lpm_ipv6_acl.hpp"
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
 #include "nic/apollo/framework/impl_base.hpp"

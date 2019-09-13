@@ -9,7 +9,7 @@
 #if !defined (__LPM_IPV4_ACL_HPP__)
 #define __LPM_IPV4_ACL_HPP__
 
-#include "nic/apollo/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
 
 /**< key size is 4 bytes for IPv4 route */
 #define LPM_IPV4_ACL_KEY_SIZE    (4)
