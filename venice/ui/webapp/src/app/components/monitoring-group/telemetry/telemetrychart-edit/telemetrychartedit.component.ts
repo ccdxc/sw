@@ -7,6 +7,7 @@ import { GraphConfig } from '@app/models/frontend/shared/userpreference.interfac
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { MetricMeasurement, MetricsMetadata } from '@sdk/metrics/generated/metadata';
 import { Subject, Subscription } from 'rxjs';
@@ -71,11 +72,14 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
 
   showDebug: boolean = false;
 
+  isToShowDebugMetric: boolean = false;
+
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
+    protected uiConfigsService: UIConfigsService,
     protected telemetryqueryService: MetricsqueryService) {
-      super(controllerService);
+      super(controllerService, uiConfigsService);
   }
 
   ngOnInit() {
@@ -117,7 +121,13 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
         );
         this.subscriptions.push(sub);
       }
+      this._computeToShowDebugMetric() ; // PS-1956 we what to hide "debug metrics" checkbox.
     }, 0);
+  }
+
+  _computeToShowDebugMetric() {
+   const _isToShowDebugMetric =  this.uiconfigsService.configFile['showDebugMetrics']; // showDebugMetrics key in config.json
+   this.isToShowDebugMetric = (_isToShowDebugMetric) ? _isToShowDebugMetric : false;
   }
 
   addDataSource(): DataSource {

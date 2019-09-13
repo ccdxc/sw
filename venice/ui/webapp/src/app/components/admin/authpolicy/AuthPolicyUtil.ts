@@ -12,7 +12,7 @@ export class AuthPolicyUtil {
             if (checkResponse.authpolicy.status['ldap-servers']) {
                 checkResponse.authpolicy.status['ldap-servers'].forEach(server => {
                     if (server.result === AuthLdapServerStatus_result['bind-failure']
-                        || server.result === AuthLdapServerStatus_result['bind-success']) {
+                        || server.result === AuthLdapServerStatus_result['connect-failure']) {
                         _checkResponseError.errors.push(server);
                     }
                 });

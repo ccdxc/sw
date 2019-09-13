@@ -6,7 +6,7 @@
 // const URL = "10.7.100.44:10001"; // Rishabh's vm
 // const URL = "10.7.100.24:10001";  // Barun
 // const URL = "192.168.78.211";  // sys-test team (admin, Systest-1$
-// const URL = "192.168.78.198"   // india test team server with LDAP.  admin/Systest-1$ as admin access, sunil/N0isystem$ as LSDAP external user
+// const URL = "192.168.78.198"   // india test team server with LDAP.  admin/N0isystem (Systest-1$) as admin access, sunil/N0isystem$ as LSDAP external user
 // const URL = "192.168.78.186"  // systest Qixin's box
 // const URL = "192.168.78.237";    // systest  ambish's box
 // const URL = "192.168.78.195"; // systest Yonatan's box. root/N0isystem$

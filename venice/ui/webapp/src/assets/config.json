@@ -22,5 +22,6 @@
       "g": 116,
       "b": 83
     }
-  }
+  },
+  "showDebugMetrics" : false
 }
