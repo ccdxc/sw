@@ -50,4 +50,49 @@ typedef struct lpm_stage_meta_s {
     lpm_stage_info_t    stage_info[LPM_MAX_STAGES];
 } lpm_stage_meta_t;
 
+/**
+ * @brief    compare two given routes and return -1, 0 or 1 based on where they
+ *           fit on the number line, breaking the tie by comparing prefix
+ *           lengths
+ * @param[in]    r1    pointer to 1st route
+ * @param[in]    r2    pointer to 2nd route
+ * @param[in]    ctxt  opaque context
+ * @return  -1, 0, 1 based on the comparison result
+ */
+int route_compare_cb(const void *route1, const void *route2, void *ctxt);
+
+/**
+ * @brief    build an interval table corresponding to the give route table
+ * @param[in]    route_table    route table
+ * @param[in]   itable         interval node table that will be filled with
+ *                             intervals and nexthop ids
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t lpm_build_interval_table(route_table_t *route_table,
+                                   lpm_itable_t *itable);
+
+/**
+ * @brief    Finalizes the stages by programming the last table of each stage
+ *           to the hardware to make sure that the key with all 1's is taken
+ *           care of correctly.
+ * @param[in] smeta                  meta information for the stages
+ * @param[in] nstages                the number of stages
+ * @param[in] itable                 the interval table
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t lpm_finalize_stages(lpm_stage_meta_t *smeta, uint32_t nstages,
+                              lpm_itable_t *itable);
+
+/**
+ * @brief    Flushes the partially filled tabled to HW at the end of processing.
+ * @param[in] smeta                  meta information for the stages
+ * @param[in] nstages                the number of stages
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t lpm_flush_tables(lpm_stage_meta_t *smeta, uint32_t nstages,
+                           lpm_itable_t *itable);
+
+void lpm_promote_route(lpm_inode_t *inode, uint32_t stage,
+                       lpm_stage_meta_t *smeta);
+
 #endif    // __LPM_PRIV_HPP__
