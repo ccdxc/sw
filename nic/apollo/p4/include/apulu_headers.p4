@@ -18,6 +18,7 @@ header_type apulu_txdma_to_p4e_header_t {
     fields {
         p4plus_app_id : 4;
         pad0 : 4;
+        mapping_lkp_id : 16;
     }
 }
 
@@ -28,5 +29,13 @@ header_type apulu_ingress_recirc_header_t {
         pad1 : 6;
         flow_done : 1;
         local_mapping_done : 1;
+    }
+}
+
+header_type apulu_egress_recirc_header_t {
+    fields {
+        mapping_ohash : 32;
+        pad1 : 7;
+        mapping_done : 1;
     }
 }

@@ -10,9 +10,10 @@
 #define VNIC_STATS_TABLE_SIZE                               1024
 #define DROP_STATS_TABLE_SIZE                               64
 
+#define MAPPING_TABLE_SIZE                                  1048576     // 1M
+#define MAPPING_OHASH_TABLE_SIZE                            262144      // 256K
+#define SESSION_TABLE_SIZE                                  1048576     // 1M
 #define MIRROR_SESSION_TABLE_SIZE                           256
 #define CHECKSUM_TABLE_SIZE                                 32
-
-#if 0
-#define SESSION_TABLE_SIZE                                  8388608     // 8M
-#endif
+#define NEXTHOP_GROUP_TABLE_SIZE                            2048
+#define NEXTHOP_TABLE_SIZE                                  4096

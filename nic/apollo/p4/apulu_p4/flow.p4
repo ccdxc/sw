@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Policy (IPv6 and non-IP)                                                  */
 /*****************************************************************************/
-action flow_hash(epoch, session_index, flow_role, pad8,
+action flow_hash(epoch, session_id, flow_role, pad8,
                  hash1, hint1, hash2, hint2, hash3, hint3,
                  hash4, hint4,  more_hashes, more_hints, more_hints_pad,
                  entry_valid) {
@@ -14,7 +14,7 @@ action flow_hash(epoch, session_index, flow_role, pad8,
             modify_field(ingress_recirc.flow_done, TRUE);
         } else {
             modify_field(ingress_recirc.flow_done, TRUE);
-            modify_field(p4i_i2e.session_index, session_index);
+            modify_field(p4i_i2e.session_id, session_id);
             modify_field(p4i_i2e.flow_role, flow_role);
         }
 
@@ -106,7 +106,7 @@ table flow_ohash {
 /*****************************************************************************/
 /* Policy (IPv4)                                                             */
 /*****************************************************************************/
-action ipv4_flow_hash(epoch, session_index, flow_role, pad8,
+action ipv4_flow_hash(epoch, session_id, flow_role, pad8,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints,
                       more_hints_pad, entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
@@ -118,7 +118,7 @@ action ipv4_flow_hash(epoch, session_index, flow_role, pad8,
             modify_field(ingress_recirc.flow_done, TRUE);
         } else {
             modify_field(ingress_recirc.flow_done, TRUE);
-            modify_field(p4i_i2e.session_index, session_index);
+            modify_field(p4i_i2e.session_id, session_id);
             modify_field(p4i_i2e.flow_role, flow_role);
         }
 

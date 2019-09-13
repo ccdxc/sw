@@ -14,6 +14,8 @@ header apulu_i2e_metadata_t p4i_i2e;
 header apulu_i2e_metadata_t p4e_i2e;
 
 header apulu_ingress_recirc_header_t ingress_recirc;
+header apulu_egress_recirc_header_t egress_recirc;
+
 @pragma hdr_len parser_metadata.mirror_blob_len
 header mirror_blob_t mirror_blob;
 
@@ -354,8 +356,14 @@ parser egress_start {
 parser parse_egress_to_egress {
     return select(capri_intrinsic.tm_instance_type) {
         TM_INSTANCE_TYPE_SPAN : parse_egress_span_copy;
-        default : parse_egress;
+        default : parse_egress_recirc_header;
     }
+}
+
+@pragma xgress egress
+parser parse_egress_recirc_header {
+    extract(egress_recirc);
+    return parse_egress;
 }
 
 @pragma xgress egress
@@ -495,6 +503,8 @@ parser deparse_egress {
     extract(capri_rxdma_intrinsic);
 
     // Below are headers used in case of egress-to-egress recirc
+    extract(egress_recirc);
+    extract(txdma_to_p4e);
     extract(p4e_i2e);
 
     // layer 0

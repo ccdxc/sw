@@ -44,9 +44,23 @@ header_type control_metadata_t {
         pinned_qid              : 24;
         local_mapping_ohash_lkp : 1;
         flow_ohash_lkp          : 1;
+        mapping_ohash_lkp       : 1;
         epoch                   : 8;
         span_copy               : 1;
         update_checksum         : 1;
+        egress_bypass           : 1;
+    }
+}
+
+header_type rewrite_metadata_t {
+    fields {
+        ip                  : 128;
+        l4port              : 16;
+        nexthop_id          : 16;
+        nexthop_group_id    : 16;
+        flags               : 8;
+        policer_id          : 16;
+        dmaci               : 48;
     }
 }
 
@@ -57,6 +71,8 @@ header_type scratch_metadata_t {
         epoch               : 8;
         local_mapping_hash  : 15;
         local_mapping_hint  : 14;
+        mapping_hash        : 12;
+        mapping_hint        : 18;
         flow_hash           : 12;
         flow_hint           : 18;
         in_packets          : 64;
@@ -66,6 +82,18 @@ header_type scratch_metadata_t {
         mac                 : 48;
         pad8                : 8;
         more_hints_pad      : 8;
+        tcp_state           : 4;
+        tcp_seq_num         : 32;
+        tcp_ack_num         : 32;
+        tcp_win_sz          : 16;
+        tcp_win_scale       : 4;
+        timestamp           : 48;
+        tcp_flags           : 8;
+        session_stats_addr  : 34;
+        num_nexthop_groups  : 4;
+        num_nexthops        : 4;
+        nexthop_group_id    : 16;
+        nexthop_id          : 16;
     }
 }
 
@@ -84,6 +112,7 @@ header_type offset_metadata_t {
 metadata key_metadata_t         key_metadata;
 metadata vnic_metadata_t        vnic_metadata;
 metadata control_metadata_t     control_metadata;
+metadata rewrite_metadata_t     rewrite_metadata;
 
 @pragma parser_end_offset payload_offset
 metadata offset_metadata_t      offset_metadata;

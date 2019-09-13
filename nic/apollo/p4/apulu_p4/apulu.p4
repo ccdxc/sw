@@ -13,10 +13,8 @@
 #if 0
 #include "vnic.p4"
 #include "tunnel.p4"
-#include "session.p4"
 #include "inter_pipe.p4"
 #include "nat.p4"
-#include "nexthop.p4"
 #include "meter.p4"
 #endif
 
@@ -25,7 +23,9 @@
 #include "mappings.p4"
 #include "flow.p4"
 #include "nacl.p4"
+#include "session.p4"
 #include "mirror.p4"
+#include "nexthops.p4"
 #include "checksum.p4"
 #include "stats.p4"
 
@@ -61,7 +61,12 @@ control egress {
     if (control_metadata.span_copy == TRUE) {
         mirror();
     } else {
-        update_checksums();
-        egress_stats();
+        if (control_metadata.egress_bypass == FALSE) {
+            mapping();
+            session_lookup();
+            nexthops();
+            update_checksums();
+            egress_stats();
+        }
     }
 }

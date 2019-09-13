@@ -27,6 +27,9 @@
 #define P4I_DROP_REASON_MAX             0
 
 #define P4E_DROP_REASON_MIN             0
+#define P4E_DROP_SESSION_INVALID        0
+#define P4E_DROP_SESSION_HIT            0
+#define P4E_DROP_NEXTHOP_INVALID        0
 #define P4E_DROP_REASON_MAX             0
 
 /*****************************************************************************/
