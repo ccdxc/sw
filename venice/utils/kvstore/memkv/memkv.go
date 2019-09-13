@@ -123,6 +123,17 @@ func getCluster(cluster []string) *Cluster {
 	return cl
 }
 
+// DeleteClusters deletes all clusters, used in tests
+func DeleteClusters() {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+
+	for key, cl := range clusters {
+		cl.deleteAll()
+		delete(clusters, key)
+	}
+}
+
 // ttlDecrement would sleep for a second and decrement ttl for a key in kvstore
 // FIXME: this background task must be stopped, perhaps by having kvstore use the context
 func ttlDecrement(cluster *Cluster) {

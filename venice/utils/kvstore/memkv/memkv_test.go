@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	. "github.com/pensando/sw/venice/utils/testutils"
+
 	"math/rand"
 	"testing"
 
@@ -103,4 +105,11 @@ func TestWatchVersion(t *testing.T) {
 	}
 
 	t.Logf("Got expected version from watch")
+}
+
+func TestDeleteClusters(t *testing.T) {
+	_ = NewCluster()
+	Assert(t, len(clusters) == 1, "num. clusters expected 1 got %v", len(clusters))
+	DeleteClusters()
+	Assert(t, len(clusters) == 0, "num.clusters expected 0 got %v", len(clusters))
 }

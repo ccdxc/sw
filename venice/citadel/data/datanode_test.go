@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/kvstore/memkv"
+
 	"github.com/influxdata/influxdb/query"
 
 	_ "github.com/influxdata/influxdb/tsdb/engine"
@@ -83,6 +85,7 @@ func TestDataNodeBasic(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	defer memkv.DeleteClusters()
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
@@ -318,6 +321,7 @@ func TestDataNodeErrors(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	defer memkv.DeleteClusters()
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
@@ -637,6 +641,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	defer memkv.DeleteClusters()
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
@@ -1172,6 +1177,8 @@ func TestSyncBuffer(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	defer memkv.DeleteClusters()
+
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
@@ -1523,6 +1530,7 @@ func TestAggQuery(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	defer memkv.DeleteClusters()
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
@@ -1884,6 +1892,8 @@ func TestIsGrpcConnectErr(t *testing.T) {
 	qpath, err := ioutil.TempDir("", "qstore-")
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
+
+	defer memkv.DeleteClusters()
 
 	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 	dn, err := NewDataNode(cfg, "node-"+t.Name(), "localhost:7300", path+t.Name(), qpath+t.Name(), logger)
