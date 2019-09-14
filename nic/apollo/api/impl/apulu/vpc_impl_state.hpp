@@ -11,12 +11,12 @@
 #ifndef __VPC_IMPL_STATE_HPP__
 #define __VPC_IMPL_STATEHPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
-using sdk::table::sdk_table_factory_params_t;
+using sdk::table::slhash;
 
 namespace api {
 namespace impl {
@@ -47,8 +47,18 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
+    /// \brief     API to get table stats
+    /// \param[in]  cb    callback to be called on stats
+    ///             ctxt    opaque ctxt passed to the callback
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
+
 private:
+    slhash *tunnel_rx_tbl(void) { return vni_tbl_; }
     friend class vpc_impl;   // vpc_impl class is friend of vpc_impl_state
+
+private:
+    slhash *vni_tbl_;
 };
 
 /// @}

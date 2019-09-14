@@ -133,7 +133,7 @@ public:
 private:
     /// \brief  constructor
     vpc_impl() {
-        tep1_rx_handle_ = handle_t::null();
+        vni_handle_ = handle_t::null();
     }
 
     /// \brief  destructor
@@ -156,6 +156,7 @@ private:
     sdk_ret_t activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc);
 
 private:
+    handle_t    vni_handle_;
 };
 
 /// @}

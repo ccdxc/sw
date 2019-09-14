@@ -24,7 +24,7 @@ pds_impl_state::init(pds_state *state) {
     apulu_impl_db_ = new apulu_impl_state(state);
     lif_impl_db_ = new lif_impl_state(state);
     tep_impl_db_ = new tep_impl_state(state);
-    vpc_impl_db_ = new vpc_imp_state(state);
+    vpc_impl_db_ = new vpc_impl_state(state);
     vnic_impl_db_ = new vnic_impl_state(state);
     mapping_impl_db_ = new mapping_impl_state(state);
     route_table_impl_db_ = new route_table_impl_state(state);

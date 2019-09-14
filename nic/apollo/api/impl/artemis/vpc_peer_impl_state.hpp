@@ -12,13 +12,10 @@
 #define __VPC_PEER_IMPL_STATEHPP__
 
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
-#include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
-
-using sdk::table::slhash;
 
 namespace api {
 namespace impl {
