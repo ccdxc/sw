@@ -300,3 +300,28 @@ func CopyHTTPDefaultTransport() *http.Transport {
 	ht.MaxIdleConnsPerHost = dt.MaxIdleConnsPerHost
 	return ht
 }
+
+// StatusWriter is used to record http status code
+type StatusWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+// WriteHeader records http status code before delegating call to http.ResponseWriter
+func (s *StatusWriter) WriteHeader(statusCode int) {
+	s.statusCode = statusCode
+	s.ResponseWriter.WriteHeader(statusCode)
+}
+
+// GetStatusCode returns recorded http status code. If it is not set it returns an error.
+func (s *StatusWriter) GetStatusCode() (int, error) {
+	if s.statusCode == 0 {
+		return s.statusCode, errors.New("status code unknown")
+	}
+	return s.statusCode, nil
+}
+
+// NewStatusWriter returns an instance of StatusWriter to record returned http status code
+func NewStatusWriter(w http.ResponseWriter) *StatusWriter {
+	return &StatusWriter{ResponseWriter: w}
+}

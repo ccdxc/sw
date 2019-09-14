@@ -885,10 +885,15 @@ func TestHandleProxyRequest(t *testing.T) {
 		t.Errorf("expecting %v pre call hooks got %d", len(pc), mock.preCallCnt)
 	}
 	tc := prof.PostCallHooks()
-	if len(tc) != 1 || mock.postCallCnt != len(tc) {
+	if len(tc) != 1 {
 		t.Errorf("expecting %v post call hooks got %d", len(tc), mock.postCallCnt)
 	}
-
+	if mock.postCallCnt != 0 {
+		t.Errorf("expecting post call hook to be not called, got called %d times", mock.postCallCnt)
+	}
+	if !strings.Contains(buf.String(), "Operation failed to complete with status code: 502") {
+		t.Errorf("Expected log file to contain failure for failed reverse proxy operation")
+	}
 	// Test with the one preAuthn hook returning skip
 	skipfn := func() bool {
 		return mock.preCallCnt == 1

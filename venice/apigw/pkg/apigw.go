@@ -59,6 +59,7 @@ import (
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	penruntime "github.com/pensando/sw/venice/utils/runtime"
@@ -1051,7 +1052,16 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !skipCall {
 		nr := r.WithContext(nctx)
 		p.apiGw.logger.Infof("Calling Proxy handler with [%v][%v][%v][%v]", nr.RequestURI, nr.URL.Scheme, nr.URL.Host, nr.URL.Path)
-		p.proxy.ServeHTTP(w, nr)
+		sw := netutils.NewStatusWriter(w)
+		p.proxy.ServeHTTP(sw, nr)
+		statusCode, err := sw.GetStatusCode()
+		if err != nil || !strings.HasPrefix(string(statusCode), "2") {
+			apierr := apierrors.ToGrpcError("Operation failed to complete", []string{fmt.Sprintf("status code: %d", statusCode)}, int32(codes.Aborted), "", nil)
+			p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+			p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", fmt.Sprintf("Operation failed to complete with status code: %d", statusCode), "error", err)
+			p.apiGw.HTTPOtherErrorHandler(w, r, "Operation failed to complete", int(codes.Aborted))
+			return
+		}
 	}
 	postCall := p.svcProfile.PostCallHooks()
 	for _, h := range postCall {
