@@ -3,7 +3,6 @@ import pdb
 import ipaddress
 import sys
 
-from infra.common.glopts import GlobalOptions
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -12,6 +11,7 @@ import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.nexthop as nexthop
 import route_pb2 as route_pb2
 import tunnel_pb2 as tunnel_pb2
+import types_pb2 as types_pb2
 
 from infra.common.logging import logger
 from apollo.config.store import Store
@@ -44,6 +44,7 @@ class RouteObject(base.ConfigObjectBase):
         self.PeerVPCId = vpcpeerid
         self.AppPort = resmgr.TransportDstPort
         ##########################################################################
+        self.deleted = False
         self._derive_oper_info()
         self.Show()
         return
@@ -97,6 +98,11 @@ class RouteObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.RouteTblId)
         return grpcmsg
 
+    def GetGrpcDeleteMessage(self):
+        grpcmsg = route_pb2.RouteTableDeleteRequest()
+        grpcmsg.Id.append(self.RouteTblId)
+        return grpcmsg
+
     def ValidateSpec(self, spec):
         if spec.Id != self.RouteTblId:
             return False
@@ -110,10 +116,20 @@ class RouteObject(base.ConfigObjectBase):
     def ValidateStatus(self, status):
         return True
 
-    def Validate(self, resp):
-        return self.ValidateSpec(resp.Spec) and\
-               self.ValidateStats(resp.Stats) and\
-               self.ValidateStatus(resp.Status)
+    def Create(self, spec=None):
+        utils.CreateObject(self, api.ObjectTypes.ROUTE)
+
+    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
+        return utils.ReadObject(self, api.ObjectTypes.ROUTE, expRetCode)
+
+    def ReadAfterDelete(self, spec=None):
+        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
+
+    def Delete(self, spec=None):
+        utils.DeleteObject(self, api.ObjectTypes.ROUTE)
+
+    def Equals(self, obj, spec):
+        return True
 
     def Show(self):
         logger.info("RouteTable object:", self)
@@ -126,6 +142,12 @@ class RouteObject(base.ConfigObjectBase):
         for route in self.routes:
             logger.info(" -- %s" % str(route))
         return
+
+    def MarkDeleted(self, flag=True):
+        self.deleted = flag
+
+    def IsDeleted(self):
+        return self.deleted
 
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.route.filters)
@@ -336,8 +358,7 @@ class RouteObjectClient:
         return
 
     def ValidateObjects(self, getResp):
-        if GlobalOptions.dryrun:
-            return True
+        if utils.IsDryRun(): return True
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("Route table get request failed for ", obj)
@@ -345,7 +366,7 @@ class RouteObjectClient:
             for resp in obj.Response:
                 spec = resp.Spec
                 routeTable = self.GetRouteTableObject(spec.Id)
-                if not routeTable.Validate(resp):
+                if not utils.ValidateObject(routeTable, resp):
                     logger.error("Route table validation failed for ", obj)
                     routeTable.Show()
                     return False

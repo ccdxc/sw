@@ -58,14 +58,61 @@ packets:
                 dst     : 00:02:00:00:00:00
 
 
-trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=IN_PKT
-            port    : ref://testcase/config/hostport
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+        
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
 
-expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=EXP_SWITCH_PKT
-            port    : ref://testcase/config/switchport
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : Delete
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : ReadAfterDelete
+
+            packets:
+                - packet:
+                    #object  : None
+                    # Currently, deleting a route table does NOT cleanup HW
+                    # and corresponding vnic also does not get updated.
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
+
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : Create
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : Read
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
