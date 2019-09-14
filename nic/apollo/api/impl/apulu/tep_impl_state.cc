@@ -22,6 +22,7 @@ namespace impl {
 /// \@{
 
 tep_impl_state::tep_impl_state(pds_state *state) {
+#if 0
     p4pd_table_properties_t tinfo;
 
     // instantiate P4 tables for bookkeeping
@@ -31,6 +32,7 @@ tep_impl_state::tep_impl_state(pds_state *state) {
                                   tinfo.actiondata_struct_size,
                                   false, true, NULL);
     SDK_ASSERT(tep_tbl_ != NULL);
+#endif
 }
 
 tep_impl_state::~tep_impl_state() {

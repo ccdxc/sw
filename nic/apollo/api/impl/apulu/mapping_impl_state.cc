@@ -15,7 +15,7 @@
 #include "nic/apollo/api/impl/apollo/mapping_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
-#include "gen/p4gen/apollo/include/p4pd.h"
+#include "gen/p4gen/apulu/include/p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
 

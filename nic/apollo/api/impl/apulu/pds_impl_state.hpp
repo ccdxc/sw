@@ -15,6 +15,7 @@
 #include "nic/apollo/api/impl/apulu/apulu_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/route_impl_state.hpp"

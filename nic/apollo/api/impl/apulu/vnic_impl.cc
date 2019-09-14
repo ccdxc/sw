@@ -52,6 +52,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     sdk_table_api_params_t tparams = { 0 };
+    local_mapping_sw_key_t local_mapping_key;
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     // allocate hw id for this vnic
@@ -160,7 +161,6 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     pds_subnet_key_t subnet_key;
     vnic_entry *vnic = (vnic_entry *)api_obj;
     subnet_entry *subnet;
-    egress_local_vnic_info_actiondata_t egress_vnic_data = { 0 };
 
     subnet_key = vnic->subnet();
     subnet = (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, &subnet_key);

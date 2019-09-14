@@ -74,8 +74,6 @@ sdk_ret_t rfc_build_lpm_trees(rfc_ctxt_t *rfc_ctxt,
  */
 sdk_ret_t rfc_build_eqtables(rfc_ctxt_t *rfc_ctxt);
 
-
-
 }    // namespace rfc
 
 #endif    // __RFC_IMPL_HPP__
