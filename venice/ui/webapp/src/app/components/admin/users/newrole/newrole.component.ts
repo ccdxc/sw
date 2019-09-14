@@ -432,6 +432,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       // CategoryMapping has [AuditEvent, Event] under Monitoring group.
       // We add Fwlogs as well.
       kinds = Utility.getLodash().uniq(kinds.concat(Utility.KINDS_WITHOUT_GROUP));
+
+      // VS-754 in appcontent.sidenav,ts we set auditevent, fwlog
+      kinds = Utility.getLodash().dropRight(kinds, Utility.KINDS_WITHOUT_GROUP.length);
     }
     const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
     return this.addAllGroupOrKindItem(kindsItems);
