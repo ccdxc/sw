@@ -105,12 +105,12 @@ TUNABLE_INT("hw.ionic.rx_descs", &ionic_rx_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_descs, CTLFLAG_RDTUN,
     &ionic_rx_descs, 0, "Number of Rx descriptors");
 
-int ionic_rx_stride = 32;
+int ionic_rx_stride = 4;
 TUNABLE_INT("hw.ionic.rx_stride", &ionic_rx_stride);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_stride, CTLFLAG_RWTUN,
     &ionic_rx_stride, 0, "Rx side doorbell ring stride");
 
-int ionic_tx_stride = 16;
+int ionic_tx_stride = 4;
 TUNABLE_INT("hw.ionic.tx_stride", &ionic_tx_stride);
 SYSCTL_INT(_hw_ionic, OID_AUTO, tx_stride, CTLFLAG_RWTUN,
 	&ionic_tx_stride, 0, "Tx side doorbell ring stride");
@@ -120,10 +120,10 @@ TUNABLE_INT("hw.ionic.rx_fill_threshold", &ionic_rx_fill_threshold);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_fill_threshold, CTLFLAG_RWTUN,
     &ionic_rx_fill_threshold, 0, "Rx fill threshold");
 
-int ionic_tx_clean_threshold = 128;
-TUNABLE_INT("hw.ionic.tx_clean_threshold", &ionic_tx_clean_threshold);
+int ionic_tx_clean_limit = 128;
+TUNABLE_INT("hw.ionic.tx_clean_limit", &ionic_tx_clean_limit);
 SYSCTL_INT(_hw_ionic, OID_AUTO, tx_clean_threshold, CTLFLAG_RWTUN,
-    &ionic_tx_clean_threshold, 0, "Tx clean threshold");
+    &ionic_tx_clean_limit, 0, "Tx clean threshold");
 
 /* Number of packets processed by ISR, rest is handled by task handler. */
 int ionic_rx_clean_limit = 128;
@@ -210,6 +210,8 @@ TUNABLE_INT("hw.ionic.tso_debug", &ionic_tso_debug);
 SYSCTL_INT(_hw_ionic, OID_AUTO, tso_debug, CTLFLAG_RWTUN,
     &ionic_tso_debug, 0, "Enable IONIC_TSO_DEBUG messages");
 #endif
+
+static void ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq);
 
 static inline bool
 ionic_is_rx_tcp(uint8_t pkt_type)
@@ -604,18 +606,30 @@ ionic_queue_isr(int irq, void *data)
 	/* Fill the receive ring. */
 	if (IONIC_Q_REMAINING(rxq) >= ionic_rx_fill_threshold)
 		ionic_rx_fill(rxq);
+	/* Task handler will not be scheduled, flush LRO now. */
+	if (work_done < ionic_rx_clean_limit) {
+		tcp_lro_flush_all(&rxq->lro);
+	}
 	IONIC_RX_TRACE(rxq, "processed: %d packets\n", work_done);
 	IONIC_RX_UNLOCK(rxq);
 
 	IONIC_TX_LOCK(txq);
-	tx_work = ionic_tx_clean(txq, ionic_tx_clean_threshold);
+	tx_work = ionic_tx_clean(txq, ionic_tx_clean_limit);
 	IONIC_TX_TRACE(txq, "processed: %d packets\n", tx_work);
+	if (tx_work < ionic_tx_clean_limit) {
+		ionic_start_xmit_locked(txq->lif->netdev, txq);
+	}
 	IONIC_TX_UNLOCK(txq);
 
-	ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
-			   work_done + tx_work, 0);
-	/* XXX: schedule only if there is more work to do. */
-	taskqueue_enqueue(rxq->taskq, &rxq->task);
+	/* Not enough work items for task, unmask interrupt. */
+	if ((work_done < ionic_rx_clean_limit) && (tx_work < ionic_tx_clean_limit)) {
+		ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
+				   (work_done + tx_work), IONIC_INTR_CRED_REARM);
+	} else {
+		ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
+				   work_done + tx_work, 0);
+		taskqueue_enqueue(rxq->taskq, &rxq->task);
+	}
 
 	return (IRQ_HANDLED);
 }
@@ -642,7 +656,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
 		 * When the stopped state is cleared, after that in the same
 		 * thread the driver will do a final clean of the rxq, which
 		 * involves taking and dropping the rxq lock.  When rxq the
-		 * lock is aquired here after the final clean, we will also
+		 * lock is acquired here after the final clean, we will also
 		 * observe that the stopped state is cleared.
 		 *
 		 * Returning early from the task does not change the rxq or txq
@@ -664,12 +678,11 @@ ionic_queue_task_handler(void *arg, int pendindg)
 	if (IONIC_Q_REMAINING(rxq) >= ionic_rx_fill_threshold)
 		ionic_rx_fill(rxq);
 	IONIC_RX_TRACE(rxq, "processed %d packets\n", work_done);
-	/* Flush LRO only in the end of task handler. */
 	tcp_lro_flush_all(&rxq->lro);
 	IONIC_RX_UNLOCK(rxq);
 
 	IONIC_TX_LOCK(txq);
-	(void)ionic_start_xmit_locked(txq->lif->netdev, txq);
+	ionic_start_xmit_locked(txq->lif->netdev, txq);
 	tx_work = ionic_tx_clean(txq, txq->num_descs);
 	IONIC_TX_TRACE(txq, "processed %d packets\n", tx_work);
 	IONIC_TX_UNLOCK(txq);
@@ -1381,7 +1394,7 @@ ionic_xmit(struct ifnet *ifp, struct txque *txq, struct mbuf **m)
 	return (err);
 }
 
-int
+static void
 ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
 {
 	struct mbuf *m;
@@ -1406,8 +1419,6 @@ ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
 	/* On successful ionic_xmit, set the watchdog timer */
 	if (!err)
 		txq->wdog_start = ticks;
-
-	return (err);
 }
 
 int

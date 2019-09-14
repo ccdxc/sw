@@ -31,7 +31,6 @@ int ionic_setup_tx_intr(struct txque *txq);
 int ionic_setup_legacy_intr(struct lif *lif);
 
 int ionic_start_xmit(struct ifnet *ifp, struct mbuf *m);
-int ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq);
 
 int ionic_lif_netdev_alloc(struct lif *lif, int ndescs);
 void ionic_lif_netdev_free(struct lif *lifs);

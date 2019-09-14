@@ -15,6 +15,7 @@ ionic_rx_filter.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
         opt_inet.h opt_inet6.h opt_rss.h
 
+.if !defined(KERNBUILDDIR)
 # Import host system's kernel configuration (INVARIANTS etc.)
 # Remember to do `make cleandepend` if changing KERNCONF!
 KERNCONF?=    GENERIC
@@ -24,6 +25,7 @@ CFLAGS+=      -include .kconf/opt_global.h
 
 .kconf/opt_global.h: ${KERNCONFDIR}/${KERNCONF}
 	cd ${KERNCONFDIR} && config -d ${.CURDIR}/.kconf ${KERNCONF}
+.endif
 
 # NetApp physical port
 #CFLAGS+= -DNETAPP_PATCH
