@@ -10,7 +10,7 @@ MODULE_SOLIBS   = ftlv6 ftlv4 ftlp4pd_mock logger sdkpal sdkcapri \
                   ${NIC_HAL_PD_SOLIBS_${ARCH}}
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
-                  ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} dl
+                  ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} dl ssl crypto
 MODULE_FLAGS    = -O3 ${NIC_CSR_FLAGS}
 MODULE_ARCH     = x86_64
 MODULE_PIPELINE = apollo artemis

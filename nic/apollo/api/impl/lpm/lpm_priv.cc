@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// LPM library internal/private datastructures and APIs shared across pipelines
+/// LPM library internal/private datastructures & APIs shared across pipelines
 ///
 //----------------------------------------------------------------------------
 

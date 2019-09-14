@@ -8,14 +8,14 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/rfc/rfc.hpp"
-#include "rfc_utils.hpp"
-#include "rte_bitmap_utils.hpp"
-#include "nic/apollo/api/impl/apollo/rfc/rfc_tree.hpp"
-#include "nic/apollo/p4/include/sacl_defines.h"
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
+#include "nic/apollo/api/impl/rfc/rfc.hpp"
+#include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
+#include "nic/apollo/api/impl/rfc/rte_bitmap_utils.hpp"
+#include "nic/apollo/api/impl/apollo/rfc/rfc_utils.hpp"
+#include "nic/apollo/p4/include/sacl_defines.h"
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 
 #define RFC_RESULT_STATELESS_BIT_MASK           0x1
 #define RFC_RESULT_STATEFUL_BIT_MASK            0x2
@@ -1252,7 +1252,8 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
 
         for (uint32_t j = 0; j < rfc_table2->num_classes; j++) {
             rte_bitmap_reset(rfc_ctxt->cbm);
-            rte_bitmap_and(rfc_table1->cbm_table[i], rfc_table2->cbm_table[j],
+            rte_bitmap_and(rfc_table1->cbm_table[i].cbm,
+                           rfc_table2->cbm_table[j].cbm,
                            rfc_ctxt->cbm);
             entry_val = compute_entry_val_cb(rfc_ctxt, result_table,
                                              rfc_ctxt->cbm, rfc_ctxt->cbm_size);
@@ -1289,7 +1290,7 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
         PDS_TRACE_DEBUG("Starting RFC P1");
         rfc_compute_eq_class_tables(rfc_ctxt,
                                     &rfc_ctxt->port_tree.rfc_table,
-                                    &rfc_ctxt->pfx_tree.rfc_table,
+                                    &rfc_ctxt->sip_tree.rfc_table,
                                     &rfc_ctxt->p1_table,
                                     rfc_ctxt->base_addr + SACL_P1_TABLE_OFFSET,
                                     &action_data, SACL_P1_ENTRIES_PER_CACHE_LINE,

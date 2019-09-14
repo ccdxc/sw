@@ -6,10 +6,10 @@
  * @brief   RFC library interaction with LPM library
  */
 
-#include "nic/apollo/api/impl/lpm/lpm.hpp"
-#include "rfc_utils.hpp"
-#include "rfc_tree.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
+#include "nic/apollo/api/impl/apollo/rfc/rfc_utils.hpp"
 #include "nic/apollo/p4/include/sacl_defines.h"
 
 namespace rfc {
@@ -92,8 +92,9 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
         }
         lpm_itable->nodes[i].data = itable->nodes[i].rfc.class_id;
     }
-    ret = lpm_build_tree(lpm_itable, (lpm_itable->num_intervals > 0) ?
-                                      lpm_itable->nodes[lpm_itable->num_intervals-1].data:0,
+    ret = lpm_build_tree(lpm_itable,
+                         (lpm_itable->num_intervals > 0) ?
+                              lpm_itable->nodes[lpm_itable->num_intervals - 1].data : 0,
                          max_rules, tree_base_addr, mem_size);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC tree type %u, err : %u",
@@ -120,7 +121,7 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
     uint32_t        max_intervals, tree_size;
     mem_addr_t      tree_base_addr;
 
-    max_intervals = MAX(rfc_ctxt->pfx_tree.num_intervals,
+    max_intervals = MAX(rfc_ctxt->sip_tree.num_intervals,
                         rfc_ctxt->port_tree.num_intervals);
     max_intervals = MAX(rfc_ctxt->proto_port_tree.num_intervals,
                         max_intervals);
@@ -139,18 +140,18 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
 
     if (rfc_ctxt->policy->af == IP_AF_IPV4) {
         itable.tree_type = ITREE_TYPE_IPV4_ACL;
-        itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
+        itable.num_intervals = rfc_ctxt->sip_tree.num_intervals;
         tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                             &tree_base_addr, &tree_size);
-        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
+        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->sip_tree,
                                  tree_base_addr, tree_size,
                                  SACL_IPV4_TREE_MAX_NODES >> 1);
     } else {
         itable.tree_type = ITREE_TYPE_IPV6_ACL;
-        itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
+        itable.num_intervals = rfc_ctxt->sip_tree.num_intervals;
         tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                             &tree_base_addr, &tree_size);
-        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
+        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->sip_tree,
                                  tree_base_addr, tree_size,
                                  SACL_IPV6_TREE_MAX_NODES >> 1);
     }

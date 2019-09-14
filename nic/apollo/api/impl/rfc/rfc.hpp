@@ -11,8 +11,6 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/sdk/include/sdk/l4.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 
 namespace rfc {
@@ -39,6 +37,13 @@ typedef struct policy_s {
  */
 sdk_ret_t rfc_policy_create(policy_t *policy, mem_addr_t rfc_tree_root_addr,
                             uint32_t rfc_mem_size);
+
+/**
+* @brief    dump a given policy rule
+* @param[in]    policy    policy table
+* @param[in]    rule_num  rule number of the rule to dump
+*/
+void rfc_policy_rule_dump(policy_t *policy, uint32_t rule_num);
 
 }    // namespace rfc
 

@@ -6,10 +6,9 @@
  * @brief   RFC tree related helper APIs
  */
 
-#include "nic/sdk/lib/pal/pal.hpp"
-#include "nic/apollo/rfc/rfc.hpp"
-#include "nic/apollo/api/impl/artemis/rfc/rfc_tree.hpp"
-#include "nic/apollo/p4/include/artemis_sacl_defines.h"
+#include "nic/apollo/api/impl/rfc/rfc.hpp"
+#include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
+#include "nic/apollo/api/impl/rfc/rfc_impl.hpp"
 
 namespace rfc {
 
@@ -178,8 +177,8 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     }
     new (&rfc_ctxt->sip_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->sip_tree.rfc_table.max_classes =
-        (policy->af == IP_AF_IPV4) ? SACL_IPV4_SIP_TREE_MAX_CLASSES :
-                                     SACL_IPV6_SIP_TREE_MAX_CLASSES;
+        (policy->af == IP_AF_IPV4) ? sacl_sip_v4_tree_max_classes() :
+                                     sacl_sip_v6_tree_max_classes();
 
     // setup memory for DIP LPM tree
     rfc_ctxt->dip_tree.type = RFC_TREE_TYPE_DIP;
@@ -190,8 +189,8 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     }
     new (&rfc_ctxt->dip_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->dip_tree.rfc_table.max_classes =
-            (policy->af == IP_AF_IPV4) ? SACL_IPV4_DIP_TREE_MAX_CLASSES :
-                                         SACL_IPV6_DIP_TREE_MAX_CLASSES;
+            (policy->af == IP_AF_IPV4) ? sacl_dip_v4_tree_max_classes() :
+                                         sacl_dip_v6_tree_max_classes();
 
     // setup memory for stag "tree"
     rfc_ctxt->stag_tree.type = RFC_TREE_TYPE_STAG;
@@ -201,7 +200,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         return sdk::SDK_RET_OOM;
     }
     new (&rfc_ctxt->stag_tree.rfc_table.cbm_map) cbm_map_t();
-    rfc_ctxt->stag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
+    rfc_ctxt->stag_tree.rfc_table.max_classes = sacl_stag_tree_max_classes();
 
     // setup memory for dtag "tree"
     rfc_ctxt->dtag_tree.type = RFC_TREE_TYPE_DTAG;
@@ -211,7 +210,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         return sdk::SDK_RET_OOM;
     }
     new (&rfc_ctxt->dtag_tree.rfc_table.cbm_map) cbm_map_t();
-    rfc_ctxt->dtag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
+    rfc_ctxt->dtag_tree.rfc_table.max_classes = sacl_dtag_tree_max_classes();
 
     // setup memory for sport LPM tree
     rfc_ctxt->port_tree.type = RFC_TREE_TYPE_PORT;
@@ -222,7 +221,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     }
     new (&rfc_ctxt->port_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->port_tree.rfc_table.max_classes =
-        SACL_SPORT_TREE_MAX_CLASSES;
+        sacl_sport_tree_max_classes();
 
     // setup memory for protocol + dport LPM tree
     rfc_ctxt->proto_port_tree.type = RFC_TREE_TYPE_PROTO_PORT;
@@ -233,27 +232,15 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     }
     new (&rfc_ctxt->proto_port_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->proto_port_tree.rfc_table.max_classes =
-        SACL_PROTO_DPORT_TREE_MAX_CLASSES;
+        sacl_proto_dport_tree_max_classes();
 
     // setup P1 table
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
-    rfc_ctxt->p1_table.max_classes = SACL_P1_MAX_CLASSES;
+    rfc_ctxt->p1_table.max_classes = sacl_p1_max_classes();
 
     // setup P2 table
     new (&rfc_ctxt->p2_table.cbm_map) cbm_map_t();
-    rfc_ctxt->p2_table.max_classes = SACL_P2_MAX_CLASSES;
-
-#if 0
-    // initialize P3 tables's memory for all four combinations
-    sdk::lib::pal_mem_set(base_addr + SACL_P3_1_TABLE_OFFSET, 0xFF,
-                          SACL_P3_1_TABLE_SIZE);
-    sdk::lib::pal_mem_set(base_addr + SACL_P3_2_TABLE_OFFSET, 0xFF,
-                          SACL_P3_2_TABLE_SIZE);
-    sdk::lib::pal_mem_set(base_addr + SACL_P3_3_TABLE_OFFSET, 0xFF,
-                          SACL_P3_3_TABLE_SIZE);
-    sdk::lib::pal_mem_set(base_addr + SACL_P3_4_TABLE_OFFSET, 0xFF,
-                          SACL_P3_4_TABLE_SIZE);
-#endif
+    rfc_ctxt->p2_table.max_classes = sacl_p2_max_classes();
 
     // setup the scratch pad memory
     rfc_ctxt->cbm_size =

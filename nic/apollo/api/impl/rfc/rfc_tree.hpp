@@ -14,18 +14,18 @@
 #include <unordered_map>
 #include <rte_bitmap.h>
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/sdk/include/sdk/l4.hpp"
-#include "nic/apollo/api/impl/artemis/rfc/rte_bitmap_utils.hpp"
+#include "nic/apollo/api/impl/rfc/rfc.hpp"
+#include "nic/apollo/api/impl/rfc/rte_bitmap_utils.hpp"
 
 using std::unordered_map;
 
 namespace rfc {
 
 typedef struct rfc_itree_node_data_s {
-    uint16_t    class_id;      ///< RFC class id
-    uint16_t    rule_no:12;    ///< rule number
-    uint16_t    start:1;       ///< TRUE if this is start of the interval
-    uint16_t    pad:3;         ///< pad bits
+    uint16_t    class_id;        ///< RFC class id
+    uint16_t    rule_no : 12;    ///< rule number
+    uint16_t    start   : 1;     ///< TRUE if this is start of the interval
+    uint16_t    pad     : 3;     ///< pad bits
 } __PACK__ rfc_itree_node_data_t;
 
 ///< interval tree node
@@ -86,16 +86,17 @@ typedef struct rfc_tree_s {
 typedef struct rfc_ctxt_s {
     policy_t      *policy;        ///< user configured policy
     ///< phase 0 information
-    rfc_tree_t    sip_tree;       ///< RFC tree for SIP
-    rfc_tree_t    dip_tree;       ///< RFC tree for prefix
-    rfc_tree_t    stag_tree;      ///< RFC tree for source tags used in the policy
-    rfc_tree_t    dtag_tree;      ///< RFC tree for source tags used in the policy
+    rfc_tree_t    sip_tree;       ///< RFC tree for SIP prefix
+    rfc_tree_t    dip_tree;       ///< RFC tree for DIP prefix
+    rfc_tree_t    stag_tree;      ///< RFC tree for src tags used in the policy
+    rfc_tree_t    dtag_tree;      ///< RFC tree for dst tags used in the policy
     rfc_tree_t    port_tree;      ///< RFC tree for port
     rfc_tree_t    proto_port_tree;///< RFC tree for protocol-port
     ///< phase 1 information
     rfc_table_t   p1_table;       ///< phase 1 RFC table
     rfc_table_t   p2_table;       ///< phase 2 RFC table
-    rte_bitmap    *cbm;           ///< RFC class bitmap instance used as scratch pad
+    rte_bitmap    *cbm;           ///< RFC class bitmap instance
+                                  ///< (used as scratch pad)
     size_t        cbm_size;       ///< size of class-bit-map (CBM)
     mem_addr_t    base_addr;      ///< base address of the entire RFC block
     uint32_t      mem_size;       ///< RFC memory block size

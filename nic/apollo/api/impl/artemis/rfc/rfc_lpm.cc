@@ -6,10 +6,10 @@
  * @brief   RFC library interaction with LPM library
  */
 
-#include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/impl/lpm/lpm.hpp"
+#include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
 #include "nic/apollo/api/impl/artemis/rfc/rfc_utils.hpp"
-#include "nic/apollo/api/impl/artemis/rfc/rfc_tree.hpp"
 #include "nic/apollo/p4/include/artemis_sacl_defines.h"
 
 namespace rfc {

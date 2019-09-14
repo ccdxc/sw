@@ -7,8 +7,8 @@
  */
 
 #include "nic/apollo/api/impl/lpm/lpm.hpp"
-#include "nic/apollo/rfc/rfc.hpp"
-#include "nic/apollo/api/impl/apollo/rfc/rfc_tree.hpp"
+#include "nic/apollo/api/impl/rfc/rfc.hpp"
+#include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
 
 namespace rfc {
 
@@ -58,13 +58,13 @@ sdk_ret_t
 rfc_sort_itables (rfc_ctxt_t *rfc_ctxt)
 {
     if (rfc_ctxt->policy->af == IP_AF_IPV4) {
-        qsort_r(rfc_ctxt->pfx_tree.itable.nodes,
-                rfc_ctxt->pfx_tree.itable.num_nodes,
+        qsort_r(rfc_ctxt->sip_tree.itable.nodes,
+                rfc_ctxt->sip_tree.itable.num_nodes,
                 sizeof(inode_t), inode_compare_cb,
                 (void *)ITREE_TYPE_IPV4);
     } else if (rfc_ctxt->policy->af == IP_AF_IPV6) {
-        qsort_r(rfc_ctxt->pfx_tree.itable.nodes,
-                rfc_ctxt->pfx_tree.itable.num_nodes,
+        qsort_r(rfc_ctxt->sip_tree.itable.nodes,
+                rfc_ctxt->sip_tree.itable.num_nodes,
                 sizeof(inode_t), inode_compare_cb,
                 (void *)ITREE_TYPE_IPV6);
     }
@@ -108,7 +108,8 @@ rfc_compute_class_id (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
     cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, cbm_size);
     rte_bitmap_or(cbm, cbm_new, cbm_new);
-    rfc_table->cbm_table[class_id] = cbm_new;
+    rfc_table->cbm_table[class_id].class_id = class_id;
+    rfc_table->cbm_table[class_id].cbm = cbm_new;
     rfc_table->cbm_map[cbm_new] = class_id;
 
     return class_id;
