@@ -2,11 +2,14 @@
 set -e
 set -x
 
+# this is a no-op on the installer boot since pen.venice is not there
 if [[ -z "`grep pen.venice /proc/cmdline `" ]]
 then
     exit 0
 fi
 
+# this script is run early on in the venice bootup sequence
+# main idea is to mount various partitions and restore user specified config
 mkdir -p /config
 mkdir -p /data
 mount -L PENDATA /data

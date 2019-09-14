@@ -3,12 +3,17 @@
 # live: Late init script for live image
 #
 # chkconfig: 345 99 01
-# description: Late init script for live image.
+# description: Script to wipe and do full installation of venice by wiping existing installation
 
 . /etc/init.d/functions
 
+
 if ! strstr "`cat /proc/cmdline`" rd.live.image || [ "$1" != "start" ] || [ -e /.liveimg-late-configured ] ; then
     exit 0
+fi
+
+if [ -e /.liveimg-late-configured ] ; then
+    configdone=1
 fi
 
 exists() {
@@ -18,29 +23,31 @@ exists() {
 
 touch /.liveimg-late-configured
 
+if [ -n "$configdone" ]; then
+  exit 0
+fi
+
+
 # read some variables out of /proc/cmdline
 for o in `cat /proc/cmdline` ; do
     case $o in
-    pen.naples=*)
-        pen_naples="${o#pen.naples=}"
-        ;;
-    pen.venice=*)
-        pen_venice="${o#pen.venice=}"
-        ;;
     pen.install.script=*)
         pen_install_script="${o#pen.install.script=}"
         ;;
     esac
 done
 
-#/usr/local/bin/penservice.sh
+#installation is done ONLY when pen.live.install is set in the /proc/cmdline
 
+
+# pen.dvd.liveinstall option is set when booting from dvd
 if [ ! -z "`grep pen.live.install /proc/cmdline `" -a ! -z "`grep pen.live.dvdinstall /proc/cmdline `" ]
 then
     echo "Installing ..." | tee -a /dev/console
     /run/initramfs/live/LiveOS/venice-cleaninstall.sh 2>&1 | tee -a /dev/console
 fi
 
+# pen.install.script is used when doing network install - typically pxe
 if [ ! -z "`grep pen.live.install /proc/cmdline `" -a ! -z "`grep pen.install.script /proc/cmdline `" ]
 then
     echo "Installing ..." | tee -a /dev/console
@@ -50,5 +57,3 @@ then
     chmod +x ./venice-cleaninstall.sh
     ./venice-cleaninstall.sh 2>&1 | tee -a /dev/console
 fi
-
-

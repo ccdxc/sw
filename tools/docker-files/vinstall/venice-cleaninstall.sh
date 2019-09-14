@@ -176,9 +176,9 @@ mount -L ${label3} $TGTMNT3
 systemd-machine-id-setup --root=${TGTMNT3}/copy-fs/
 umount ${TGTMNT3}
 
-fsck -f ${device}2 || :
-fsck -f ${device}3 || :
-fsck -f ${device}4 || :
+fsck -pf ${device}2 || :
+fsck -pf ${device}3 || :
+fsck -pf ${device}4 || :
 
 echo Succesfully installed the image
 echo Eject the installation media or change the boot order and reboot the host
