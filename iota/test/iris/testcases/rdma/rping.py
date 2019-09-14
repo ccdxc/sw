@@ -40,10 +40,10 @@ def Trigger(tc):
     #==============================================================
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    if tc.iterators.server == 'yes':
+    if getattr(tc.iterators, 'server', None) == 'yes':
         i = 0
         k = 1
-    else :
+    else:
         i = 1
         k = 2
 

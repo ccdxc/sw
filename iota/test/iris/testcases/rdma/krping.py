@@ -33,23 +33,23 @@ def Setup(tc):
     tc.gid = []
     tc.ib_prefix = []
     for i in range(2):
-        tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_device'))
-        tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_gid'))
+        tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address + '_device'))
+        tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address + '_gid'))
 
         if not tc.w[i].IsNaples():
-            api.Logger.info("IGNORED: mlx side is hitting local prot err")
+            api.Logger.info("IGNORED: mlx side will hit local prot err")
             return api.types.status.IGNORED
 
     if getattr(tc.iterators, 'compat', None) == 'yes':
         for n in tc.nodes:
             if tc.os == host.OS_TYPE_LINUX:
-                api.Logger.info("IGNORED: krping_compat is not ported to Linux")
+                api.Logger.info("IGNORED: compat is FreeBSD only")
                 return api.types.status.IGNORED
         if getattr(tc.iterators, 'fr', None) == 'yes':
-            api.Logger.info("IGNORED: krping_compat fr: uses deprecated fast-reg-mr, not supported")
+            api.Logger.info("IGNORED: compat with fr is not supported")
             return api.types.status.IGNORED
         if getattr(tc.iterators, 'server_inv', None) == 'yes':
-            api.Logger.info("IGNORED: krping_compat server_inv: err if not used with fast-reg-mr, not supported")
+            api.Logger.info("IGNORED: compat with server_inv is not supported")
             return api.types.status.IGNORED
 
     return api.types.status.SUCCESS
@@ -66,8 +66,9 @@ def Trigger(tc):
     #==============================================================
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
-                   (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
+    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" % \
+                   (w1.workload_name, w1.ip_address,      \
+                    w2.workload_name, w2.ip_address)
 
     api.Logger.info("Starting krping_rdma test from %s" % (tc.cmd_descr))
 
@@ -98,36 +99,36 @@ def Trigger(tc):
 
     # cmd for server
     if api.GetNodeOs(w1.node_name) == host.OS_TYPE_LINUX:
-        krpfile = " /proc/krping "
+        krpfile = "/proc/krping"
     else:
-        krpfile = " /dev/krping "
+        krpfile = "/dev/krping"
 
-    #parse different options
-    options = ""
+    # parse different options
+    options = "verbose,validate,"
     if getattr(tc.iterators, 'server_inv', None) == 'yes':
         options = options + "server_inv,"
 
     if getattr(tc.iterators, 'local_dma_lkey', None) == 'yes':
         options = options + "local_dma_lkey,"
-        
+
     if hasattr(tc.iterators, 'txdepth'):
-        options = options + "txdepth={txdepth},".format(txdepth = tc.iterators.txdepth)  
+        options = options + "txdepth={txd},".format(txd = tc.iterators.txdepth)
 
     if hasattr(tc.iterators, 'count'):
-        options = options + "count={count},".format(count = tc.iterators.count)  
+        options = options + "count={count},".format(count = tc.iterators.count)
         count = tc.iterators.count
     else:
-        #When test does not give count, limit to 100 otherwise its equivalent to infinite count
+        # When test does not give count, default limit is 100
         count = 100
-        options = options + "count={count},".format(count = count)  
+        options = options + "count={count},".format(count = count)
 
     if hasattr(tc.iterators, 'size'):
-        options = options + "size={size},".format(size = tc.iterators.size)  
+        options = options + "size={size},".format(size = tc.iterators.size)
         size = tc.iterators.size
     else:
         size = 64 #default size
 
-    #'fr' is only issued on client
+    # 'fr' is only issued on client
     client_options = options
     if hasattr(tc.iterators, 'fr') and (tc.iterators.fr == 'yes'):
         client_options = client_options + "fr,"
@@ -135,37 +136,31 @@ def Trigger(tc):
     else:
         fr_test = False
 
-    cmd = "sudo echo -n 'server,port=9999,addr={addr},verbose,validate,{opstr} ' > {kfile}".format(
+    cmd = "sudo echo -n 'server,port=9999,addr={addr},{opstr}' > {kfile}".format(
               addr = w1.ip_address,
               opstr = options,
               kfile = krpfile)
-    api.Trigger_AddCommand(req, 
-                           w1.node_name, 
-                           w1.workload_name,
-                           cmd,
+    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd,
                            background = True)
 
-    # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
-    # starts listening. So sleep for a few seconds before trying to start the client
+    # On Naples-Mellanox setups, with Mellanox as server, it takes a few
+    # seconds before the server starts listening.
+    # Sleep for a few seconds before trying to start the client.
     cmd = 'sleep 2'
-    api.Trigger_AddCommand(req,
-                           w1.node_name,
-                           w1.workload_name,
-                           cmd)
+    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd)
 
-    #Right now on some setups its taking longer, so have 150secs timeout, that should address 2K count
-    #taking about 70secs for 1000 pkts on a very slow server, but one others its faster
+    # Right now on some setups it's taking longer, so use 150secs timeout.
+    # 150s should address 2K count taking about 70secs for 1000 pkts
+    # on a very slow server.
     wait_secs = 150
 
     # cmd for client
-    cmd = "sudo echo -n 'client,port=9999,addr={addr},verbose,validate,{opstr} ' > {kfile}".format(
+    cmd = "sudo echo -n 'client,port=9999,addr={addr},{opstr}' > {kfile}".format(
               addr = w1.ip_address,
               opstr = client_options,
               kfile = krpfile)
-    api.Trigger_AddCommand(req, 
-                           w2.node_name, 
-                           w2.workload_name,
-                           cmd, timeout = wait_secs)
+    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, cmd,
+                           timeout = wait_secs)
 
     # Save the dmesg
     for n in tc.nodes:

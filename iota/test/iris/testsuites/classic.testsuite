@@ -68,6 +68,10 @@ testbundles:
         - asic_tools/asic_tools.testbundle
         - system/obfl_check.testbundle
 
+    sanity_ext:
+        # Relative paths from iota/test/iris/testbundles/
+        - classic/rdma_ext.testbundle
+
     regression:
         # Relative paths from iota/test/iris/testbundles/
         - classic/rdma_reg.testbundle

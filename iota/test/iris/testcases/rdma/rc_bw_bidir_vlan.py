@@ -22,7 +22,7 @@ def Setup(tc):
     # get workloads from each node
     tc.w = []
 
-    if tc.iterators.flip == 'no':
+    if getattr(tc.iterators, 'flip', None) == 'no':
         tc.w.append(pairs[tc.vlan_idx][0])
         tc.w.append(pairs[tc.vlan_idx][1])
     else:
