@@ -83,7 +83,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     if (this.isEditMode()) {
       this.newAuthRole = this.getRoleFromSelectedRole();
     } else {
-      this.addEmptyPermission();
+      if (!this.newAuthRole) {
+        this.addEmptyPermission(); // VS-814, when adding a new role, user click refresh button, we should not add extra empty permission.
+      }
       this.newAuthRole.$formGroup.get(['meta', 'name']).setValidators([
         this.newAuthRole.$formGroup.get(['meta', 'name']).validator,
         this.isRolenameValid(this.veniceRoles)]);
@@ -130,7 +132,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       // actions is like ["create" "update"], we want to change to [{label:value, value=create}, {label:update, value=update}]
       if (actions) {
         const actionsValues = [];
-        actions.forEach( (element) => {
+        actions.forEach((element) => {
           const item = this.getPermissionActionItem(element);
           if (item) {
             actionsValues.push(item);
@@ -324,7 +326,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       this.newAuthRole = this.getRoleFromSelectedRole(role);
     } else {
       const permissionArray = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
-      permissionArray.insert(permissionArray.length , newPermission.$formGroup);
+      permissionArray.insert(permissionArray.length, newPermission.$formGroup);
     }
 
 
@@ -448,7 +450,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     const selectedKind = permission.get('resource-kind').value;
     // If it's a kind without a group, only read permission can be given. Make sure 'read' is in lower
     if (Utility.KINDS_WITHOUT_GROUP.includes(selectedKind)) {
-       return [{
+      return [{
         label: AuthPermission_actions_uihint.read,
         value: 'read'
       }];
@@ -482,16 +484,16 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       }
       // VS 576: Kinds without group have default action Read
       // if (!values.includes({ label: 'read', value: AuthPermission_actions.read })) {
-      if (values && values.length === 0 ) {
+      if (values && values.length === 0) {
         values.push({ label: 'read', value: AuthPermission_actions.read });
       }
     }
     if (values.length > 1) {
       if (index !== -1 && values.length - 1 === index) {
-          values[0] = values[index];
-          values.splice(1);
+        values[0] = values[index];
+        values.splice(1);
       } else if (index !== -1 && values.length - 1 !== index) {
-         values.splice(index, 1);
+        values.splice(index, 1);
       }
       actionListboxWidget.value = values;
     }
@@ -503,9 +505,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
   displayActions(permission): boolean {
-   if (permission.get('resource-kind').value !== '' && permission.get('resource-group').value !== '') {
-     return true;
-   }
-   return false;
+    if (permission.get('resource-kind').value !== '' && permission.get('resource-group').value !== '') {
+      return true;
+    }
+    return false;
   }
 }
