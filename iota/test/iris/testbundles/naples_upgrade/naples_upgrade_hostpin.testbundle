@@ -26,6 +26,12 @@ testcases:
         args      :
             sleep : 30
 
+    -   name: DISRUPTIVE_UPGRADE_HOSTREBOOT
+        disable : True
+        ignore      : True
+        testcase    : testcases.naples_upgrade.disruptive_upgrade_reboot_host
+        args      :
+            sleep : 600
+
     -   name: COPY_TECH_SUPPORT
         testcase    : testcases.naples_upgrade.copy_test_support
-

@@ -104,6 +104,8 @@ type UpgMgrAPI interface {
 	StartUpgOnNextHostReboot(firmwarePkgName string) error
 	StartPreCheckDisruptive(version string) error
 	StartPreCheckForUpgOnNextHostReboot(version string) error
+	IsUpgClientRegistered() error
+	IsUpgradeInProgress() bool
 }
 
 // NmdRolloutAPI is the API called by upgmgr agent to nmd

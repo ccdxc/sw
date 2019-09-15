@@ -55,12 +55,22 @@ func NewDelSrv() *DelSrv {
 
 // OnMountComplete is the function which is called by Delphi when the mounting of Service objects is completed.
 func (d *DelSrv) OnMountComplete() {
-	log.Infof("OnMountComplete() done for %s", d.Name())
+	log.Infof("OnMountComplete() called for %s", d.Name())
 	if err := d.Agent.Nmd.UpdateNaplesConfig(d.Agent.Nmd.GetNaplesConfig()); err != nil {
 		log.Errorf("Failed to update naples during onMountComplete. Err: %v", err)
 	}
 	d.Agent.Nmd.UpdateCurrentManagementMode()
 	d.Agent.Nmd.CreateIPClient()
+	if err := d.Agent.Nmd.Upgmgr.IsUpgClientRegistered(); err != nil {
+		log.Errorf("No upgrade manager")
+		return
+	}
+	log.Infof("OnMountComplete() checking if upgrade is in progress")
+	if !d.Agent.Nmd.Upgmgr.IsUpgradeInProgress() {
+		log.Infof("OnMountComplete() upgrade is not in progress")
+		d.Agent.Nmd.IssueInProgressOp()
+	}
+	log.Infof("OnMountComplete() done for %s", d.Name())
 }
 
 // Name returns the name of the delphi service.

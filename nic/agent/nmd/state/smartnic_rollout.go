@@ -22,7 +22,8 @@ import (
 func (n *NMD) CreateUpdateDSCRollout(sro *protos.DSCRollout) error {
 	n.Lock()
 	defer n.Unlock()
-	n.objectMeta = sro.ObjectMeta
+	n.ro.ObjectMeta.Name = n.config.Spec.PrimaryMAC
+	n.ro.TypeMeta.Kind = "NaplesRollout"
 	n.updateOps(sro.Spec.Ops)
 	n.issueNextPendingOp()
 	return nil
@@ -48,7 +49,7 @@ func (n *NMD) GetDSCRolloutStatus() protos.DSCRolloutStatusUpdate {
 	copy(OpStatus, n.ro.OpStatus)
 
 	return protos.DSCRolloutStatusUpdate{
-		ObjectMeta: n.objectMeta,
+		ObjectMeta: n.ro.ObjectMeta,
 		Status: protos.DSCRolloutStatus{
 			OpStatus: OpStatus,
 		},
@@ -59,7 +60,7 @@ func (n *NMD) GetDSCRolloutStatus() protos.DSCRolloutStatusUpdate {
 func (n *NMD) updateRolloutStatus(inProgressOp protos.DSCOpSpec) {
 	n.ro.InProgressOp = inProgressOp
 
-	log.Infof("Persisting rollout object to nmd.db. PendingOps : %v OpStatus : %v InProgressOps : %v", n.ro.PendingOps, n.ro.OpStatus, n.ro.InProgressOp)
+	log.Infof("Persisting rollout object to nmd.db. n.ro : %v PendingOps : %v OpStatus : %v InProgressOps : %v", n.ro, n.ro.PendingOps, n.ro.OpStatus, n.ro.InProgressOp)
 	err := n.store.Write(&n.ro)
 	if err != nil {
 		log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)
@@ -128,7 +129,19 @@ func (n *NMD) updateOps(ops []protos.DSCOpSpec) error {
 	return nil
 }
 
-// MUST be called with lock held
+// IssueInProgressOp MUST be called with lock held
+func (n *NMD) IssueInProgressOp() {
+	n.Lock()
+	defer n.Unlock()
+	log.Infof("IssueInProgressOp called with %v", n.ro)
+	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
+		n.ro.PendingOps = append([]protos.DSCOpSpec{n.ro.InProgressOp}, n.ro.PendingOps...)
+		n.ro.InProgressOp = protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp}
+		log.Infof("An op was in progress. Moving it to the head of PendingOps to process it. %v", n.ro)
+		n.issueNextPendingOp()
+	}
+}
+
 func (n *NMD) issueNextPendingOp() {
 	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.ro.CompletedOps), n.ro.InProgressOp, spew.Sdump(n.ro.PendingOps))
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
@@ -139,7 +152,7 @@ func (n *NMD) issueNextPendingOp() {
 	if len(n.ro.PendingOps) == 0 {
 		log.Info("No pending ops. Sending updates to Venice.")
 		st := protos.DSCRolloutStatusUpdate{
-			ObjectMeta: n.objectMeta,
+			ObjectMeta: n.ro.ObjectMeta,
 			Status: protos.DSCRolloutStatus{
 				OpStatus: n.ro.OpStatus,
 			},
@@ -164,6 +177,11 @@ func (n *NMD) issueNextPendingOp() {
 	log.Infof("Issuing %#v", n.ro.InProgressOp)
 	switch n.ro.InProgressOp.Op {
 	case protos.DSCOp_DSCDisruptiveUpgrade:
+		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
+			log.Errorf("/update/naples_fw.tar not found %s", err)
+			go n.UpgFailed(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
+			return
+		}
 		err = n.Upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
@@ -184,24 +202,11 @@ func (n *NMD) issueNextPendingOp() {
 		}
 		go n.UpgSuccessful()
 	case protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot:
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.InProgressOp.Version)
-		if err != nil {
-			log.Errorf("Failed to get naples version from objectstore %+v", err)
-			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to get naples version from objectstore %+v", err)})
-			cancel()
+		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
+			log.Errorf("/update/naples_fw.tar not found %s", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
 			return
 		}
-		cancel()
-		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Minute)
-		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
-		if err != nil {
-			log.Errorf("Failed to download naples image from objectstore %+v", err)
-			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to download naples image from objectstore %+v", err)})
-			cancel()
-			return
-		}
-		cancel()
 		_, err = naplesPkgVerify("naples_fw.tar")
 		if err != nil {
 			log.Errorf("Firmware image verification failed %s", err)
@@ -210,24 +215,11 @@ func (n *NMD) issueNextPendingOp() {
 		}
 		go n.UpgPossible()
 	case protos.DSCOp_DSCPreCheckForDisruptive:
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.InProgressOp.Version)
-		if err != nil {
-			log.Errorf("Failed to get naples version from objectstore %+v", err)
-			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to get naples version from objectstore %+v", err)})
-			cancel()
+		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
+			log.Errorf("/update/naples_fw.tar not found %s", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
 			return
 		}
-		cancel()
-		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Minute)
-		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
-		if err != nil {
-			log.Errorf("Failed to download naples image from objectstore %+v", err)
-			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to download naples image from objectstore %+v", err)})
-			cancel()
-			return
-		}
-		cancel()
 		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("StartPreCheckDisruptive returned %s", err)
@@ -362,7 +354,7 @@ func (n *NMD) updateOpStatus(op protos.DSCOp, version string, status string, mes
 	log.Infof("Updated NMD internal op status: %v", n.ro.OpStatus)
 
 	st := protos.DSCRolloutStatusUpdate{
-		ObjectMeta: n.objectMeta,
+		ObjectMeta: n.ro.ObjectMeta,
 		Status: protos.DSCRolloutStatus{
 			OpStatus: OpStatus,
 		},

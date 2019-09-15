@@ -240,7 +240,7 @@ func isUpgradeAllowed(pkgName string) error {
 		return err
 	}
 	if isPrePostImageMetaSame(&upgCtx) {
-		if _, err := os.Stat("/update/upgrade_to_same_firmware_allowed"); os.IsNotExist(err) {
+		if _, err := os.Stat("/data/upgrade_to_same_firmware_allowed"); os.IsNotExist(err) {
 			return errors.New("Upgrade image is same as running image")
 		}
 	}

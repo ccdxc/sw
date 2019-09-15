@@ -113,7 +113,7 @@ def Setup(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/nicmgr_upgstate")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/NaplesTechSupport-*")
-        api.Trigger_AddNaplesCommand(req, node, "touch /update/upgrade_to_same_firmware_allowed")
+        api.Trigger_AddNaplesCommand(req, node, "touch /data/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)
@@ -212,7 +212,7 @@ def Teardown(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/nicmgr_upgstate")
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/upgrade_to_same_firmware_allowed")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)

@@ -278,6 +278,12 @@ func (f *mockUpgAgent) StartUpgOnNextHostReboot(firmwarePkgName string) error {
 	}
 	return nil
 }
+func (f *mockUpgAgent) IsUpgClientRegistered() error {
+	return nil
+}
+func (f *mockUpgAgent) IsUpgradeInProgress() bool {
+	return false
+}
 func (f *mockUpgAgent) StartPreCheckDisruptive(version string) error {
 	if f.forceFail {
 		go f.n.UpgNotPossible(&[]string{"ForceFailpreCheckDisruptive"})

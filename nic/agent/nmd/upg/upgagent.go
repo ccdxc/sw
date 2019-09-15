@@ -3,6 +3,7 @@
 package upg
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/pensando/sw/nic/agent/nmd/api"
@@ -66,6 +67,22 @@ func (u *NaplesUpgClient) StartDisruptiveUpgrade(firmwarePkgName string) error {
 
 	go u.UpgSuccessful()
 	return nil
+}
+
+// IsUpgClientRegistered returns error if no upgrade sdk is present
+func (u *NaplesUpgClient) IsUpgClientRegistered() error {
+	if u.upgsdk == nil {
+		return errors.New("No upgrade client")
+	}
+	return nil
+}
+
+// IsUpgradeInProgress using upgrade manager
+func (u *NaplesUpgClient) IsUpgradeInProgress() bool {
+	if u.upgsdk != nil {
+		return u.upgsdk.IsUpgradeInProgress()
+	}
+	return false
 }
 
 // StartPreCheckDisruptive using upgrade manager

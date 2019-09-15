@@ -153,6 +153,7 @@ func NewNMD(pipeline Pipeline,
 		// Use the persisted config moving forward
 		ro = *roObj.(*nmd.NaplesRollout)
 		log.Infof("Using persisted Rollout values. %v", ro)
+		log.Infof("Persisting rollout object to nmd.db. ro : %v PendingOps : %v OpStatus : %v InProgressOps : %v", ro, ro.PendingOps, ro.OpStatus, ro.InProgressOp)
 	} else {
 		// persist the default rollout object
 		log.Info("Persisting Default Rollout Object.")
