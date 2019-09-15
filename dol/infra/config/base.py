@@ -141,16 +141,6 @@ class ConfigObjectBase(objects.FrameworkObject):
     def IsRetryEnabled(self):
         return False
 
-    def WorkflowStart(self, spec):
-        GlobalOptions.workflow_del = True
-        logger.verbose("delete workflow start")
-        return True
-
-    def WorkflowEnd(self, spec):
-        GlobalOptions.workflow_del = False
-        logger.verbose("delete workflow end")
-        return True
-
 class AgentObjectMeta:
     def __init__(self):
         self.Name = None

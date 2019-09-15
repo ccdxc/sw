@@ -7,11 +7,10 @@ feature:
     ignore      : False
 
 modules:
-
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : DEL_CFG
-        spec    : delete_cfg.testspec
+        name    : WORKFLOW_START
+        spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
@@ -19,18 +18,27 @@ modules:
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     - module:
-        name    : IGW2LOCAL
-        mlist   : igw2local.mlist
-
-    - module:
-        name    : RESTORE_CFG
-        spec    : restore_cfg.testspec
+        name    : DEL_VNIC
+        spec    : delete_vnic.testspec
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
 
     - module:
         name    : IGW2LOCAL
         mlist   : igw2local.mlist
+
+    - module:
+        name    : RESTORE_VNIC
+        spec    : restore_vnic.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
+
+    - module:
+        name    : IGW2LOCAL
+        mlist   : igw2local.mlist
+
+    - module:
+        name    : WORKFLOW_END
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING

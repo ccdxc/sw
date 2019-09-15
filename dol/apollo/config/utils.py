@@ -76,6 +76,27 @@ class rrobiniter:
     def size(self):
         return self.size
 
+class CachedObjs:
+
+    def __init__(self):
+        self.select_objs = False
+        self.use_selected_objs = False
+        self.objs = []
+
+    def add(self, obj):
+        self.objs.extend(obj)
+
+    def reset(self):
+        self.__init__()
+
+    def setMaxLimits(self, maxlimits):
+        self.maxlimits = maxlimits
+
+    def getMaxLimits(self):
+        return self.maxlimits
+
+CachedObjs = CachedObjs()
+
 def GetFilteredObjects(objs, maxlimits, random=True):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
         num = len(objs)
@@ -317,3 +338,9 @@ def GetVlanHeaderSize(packet):
     if Dot1Q in pkt:
         return DOT1Q_HDR_LEN
     return 0
+
+def MergeFilteredObjects(objs, selected_objs):
+    if CachedObjs.select_objs is True:
+        CachedObjs.add(objs)
+    elif CachedObjs.use_selected_objs is True:
+        objs.extend(selected_objs)

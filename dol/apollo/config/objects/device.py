@@ -80,6 +80,9 @@ class DeviceObject(base.ConfigObjectBase):
             return resp[0]
         return None
 
+    def Equals(self, obj, spec):
+        return True
+
 class DeviceObjectClient:
     def __init__(self):
         self.__objs = []

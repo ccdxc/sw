@@ -18,6 +18,11 @@ def IsNatEnabled(routetblobj):
         return tunnel.Nat
     return False
 
+def IsAlreadySelected(obj, objs):
+    if utils.CachedObjs.use_selected_objs is True and obj in objs:
+        return True
+    return False
+
 # Flow based on Local and Remote mapping
 class FlowMapObject(base.ConfigObjectBase):
     def __init__(self, lobj, robj, fwdmode, routetblobj = None, tunobj = None, policyobj = None):
@@ -135,7 +140,17 @@ class FlowMapObjectHelper:
 
         assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or \
                 fwdmode == 'IGW_NAT' or fwdmode == 'VPC_PEER' or \
-                fwdmode == 'POLICY' or fwdmode == 'L2L' ) == True
+                fwdmode == 'POLICY' or fwdmode == 'L2L') == True
+
+        selected_objs = []
+        if utils.CachedObjs.use_selected_objs == True and len(utils.CachedObjs.objs) != 0:
+            maxlimits = utils.CachedObjs.getMaxLimits()
+            selected_objs = utils.GetFilteredObjects(utils.CachedObjs.objs, maxlimits, random=False)
+            maxlimits = selectors.maxlimits - utils.CachedObjs.maxlimits
+            if maxlimits <= 0:
+                return utils.GetFilteredObjects(selected_objs, selectors.maxlimits)
+        else:
+            maxlimits = selectors.maxlimits
 
         if fwdmode == 'VPC_PEER':
             rmappings = rmapping.GetMatchingObjects(mapsel)
@@ -149,6 +164,7 @@ class FlowMapObjectHelper:
                 for robj in rmappingobjs:
                     for lobj in lmappingobjs:
                         obj = FlowMapObject(lobj, robj, fwdmode, routetblobj, robj.TUNNEL)
+                        if IsAlreadySelected(obj, selected_objs): continue
                         objs.append(obj)
         elif fwdmode == 'IGW':
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -159,6 +175,7 @@ class FlowMapObjectHelper:
                         # Skip IGWs with nat flag set to True
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
+                    if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         elif fwdmode == 'IGW_NAT':
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -171,6 +188,7 @@ class FlowMapObjectHelper:
                         # Skip IGWs without nat flag set to True
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
+                    if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         elif fwdmode == 'POLICY':
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -178,6 +196,7 @@ class FlowMapObjectHelper:
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
+                    if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         elif fwdmode == "L2L":
             lobjs = lmapping.GetMatchingObjects(mapsel)
@@ -188,8 +207,11 @@ class FlowMapObjectHelper:
                     for s in smappingobjs:
                         for d in dmappingobjs:
                             obj = FlowMapObject(s, d, fwdmode, None, None)
+                            if IsAlreadySelected(obj, selected_objs): continue
                             objs.append(obj)
-                return utils.GetFilteredObjects(objs, selectors.maxlimits)
+                objs = utils.GetFilteredObjects(objs, maxlimits)
+                utils.MergeFilteredObjects(objs, selected_objs)
+                return objs
 
             for s in lobjs:
                 if not self.__is_lmapping_valid(s):
@@ -217,6 +239,7 @@ class FlowMapObjectHelper:
                             continue
 
                     obj = FlowMapObject(s, d, fwdmode, None, None)
+                    if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         else:
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -233,8 +256,11 @@ class FlowMapObjectHelper:
                         if lobj.VNIC.SUBNET.SubnetId == robj.SUBNET.SubnetId:
                             continue
                     obj = FlowMapObject(lobj, robj, fwdmode, None, robj.TUNNEL)
+                    if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
-        return utils.GetFilteredObjects(objs, selectors.maxlimits, random=False)
+        objs = utils.GetFilteredObjects(objs, maxlimits)
+        utils.MergeFilteredObjects(objs, selected_objs)
+        return objs
 
 FlowMapHelper = FlowMapObjectHelper()
 
