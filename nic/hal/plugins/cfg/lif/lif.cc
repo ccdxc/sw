@@ -194,6 +194,34 @@ find_lif_by_handle (hal_handle_t handle)
     return (lif_t *)hal_handle->obj();
 }
 
+static bool
+lif_get_from_name_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    lif_get_from_name_ctxt_t    *lif_ctxt = (lif_get_from_name_ctxt_t*)ctxt;
+    lif_t                       *lif             = NULL;
+
+    lif = (lif_t *)hal_handle_get_obj(entry->handle_id);
+    if (!strncmp(lif_ctxt->name, lif->name, LIF_NAME_LEN)) {
+        lif_ctxt->lif = lif;
+        return true;    // returning true stops the walk
+    }
+
+    // returning false, walks through.
+    return false;
+}
+
+lif_t *
+find_lif_by_name (char *name)
+{
+    lif_get_from_name_ctxt_t lif_ctxt = {0};
+
+    lif_ctxt.name = name;
+    g_hal_state->lif_id_ht()->walk(lif_get_from_name_ht_cb, &lif_ctxt);
+
+    return lif_ctxt.lif;
+}
+
 //------------------------------------------------------------------------------
 // insert this lif in all meta data structures
 //------------------------------------------------------------------------------

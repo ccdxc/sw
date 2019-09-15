@@ -13,6 +13,7 @@
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/fte.hpp"
+#include "nic/hal/src/utils/if_utils.hpp"
 
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_update_args_t;
@@ -38,9 +39,7 @@ flow_monitor_rule_t *flow_mon_rules[MAX_FLOW_MONITOR_RULES];
 acl::acl_config_t   flowmon_rule_config_glbl = { };
 
 // Cache the current dest if mirror sessions are using
-hal::if_t *g_telemetry_mirror_dest_if;
 hal::if_t *g_telemetry_mirror_session_dest_if[MAX_MIRROR_SESSION_DEST];
-int g_telemetry_mirror_dest_if_rc = 0;
 
 hal_ret_t
 telemetry_eval_sessions (void)
@@ -90,17 +89,6 @@ telemetry_eval_sessions (void)
 }
 
 bool
-telemetry_is_mirror_session_configured (void)
-{
-    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
-        if (g_telemetry_mirror_session_dest_if[i] != NULL) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool
 telemetry_is_export_configured (void)
 {
     for (int i = 0; i < HAL_MAX_TELEMETRY_COLLECTORS; i++) {
@@ -140,7 +128,7 @@ mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 }
 
 hal_ret_t
-mirror_session_update_uplink (if_t *uplink)
+mirror_session_update_uplink (int session_id, if_t *uplink)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     mirror_session_t                session;
@@ -150,16 +138,15 @@ mirror_session_update_uplink (if_t *uplink)
     args.session = &session;
     pd_func_args.pd_mirror_session_update = &args;
 
-    // Update all mirror sessions
-    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
-        args.session->id = i;
-        args.session->dest_if = uplink;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_UPDATE, &pd_func_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Update failed for session id {}, ret {}", i, ret);
-        } else {
-            HAL_TRACE_DEBUG("Update Succeeded for session id {}", i);
-        }
+    // Update mirror session
+    args.session->id = session_id;
+    args.session->dest_if = uplink;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_UPDATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Update failed for session id {}, ret {}",
+                       session_id, ret);
+    } else {
+        HAL_TRACE_DEBUG("Update Succeeded for session id {}", session_id);
     }
     return ret;
 }
@@ -170,97 +157,61 @@ telemetry_mirror_session_handle_repin (if_t *uplink)
     hal_ret_t   ret = HAL_RET_OK;
     if_t        *dest_if = NULL;
 
-    if (!g_telemetry_mirror_dest_if) {
+
+    HAL_TRACE_DEBUG("Repin uplink id {} oper {}", uplink->if_id,
+                     uplink->if_op_status);
+    if (uplink->is_oob_management) {
+        // Nothing to be done for OOB intf event
+        goto end;
+    }
+    if (uplink->if_type != intf::IF_TYPE_UPLINK) {
         // Nothing to be done
         goto end;
     }
-
-    HAL_TRACE_DEBUG("Existing uplink id {} New uplink id {}",
-                            g_telemetry_mirror_dest_if->if_id, uplink->if_id);
-    HAL_TRACE_DEBUG("Existing uplink oper {} New uplink oper {}",
-                            g_telemetry_mirror_dest_if->if_op_status,
-                            uplink->if_op_status);
-    // Check if the uplink is same ?
-    if (g_telemetry_mirror_dest_if->if_id != uplink->if_id) {
-        // If existing uplink is down and new uplink becomes active
-        // then we need to repin the uplink
-        if (g_telemetry_mirror_dest_if->if_op_status == intf::IF_STATUS_DOWN) {
-            if (uplink->if_op_status == intf::IF_STATUS_UP) {
-                dest_if = uplink;
-                // Repin to new uplink
-                ret = mirror_session_update_uplink(dest_if);
-                if (ret == HAL_RET_OK) {
-                    g_telemetry_mirror_dest_if = dest_if;
-                }
-                goto end;
+    
+    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
+        if_t *sess_if = g_telemetry_mirror_session_dest_if[i];
+        if (sess_if && (sess_if->if_op_status == intf::IF_STATUS_DOWN)) {
+            // Session points to down interface, find the active uplink
+            if_t *new_dif = telemetry_get_active_uplink();
+            if (!new_dif) {
+                HAL_TRACE_DEBUG("Could not find active uplink");
+                continue;
             }
-        }
-    } else {
-        // Uplinks are same. Check if the link is up or down ?
-        if (uplink->if_op_status == intf::IF_STATUS_DOWN) {
-            // Link went down. Need to pick a new active link
-            if_t *new_dest_if = telemetry_get_active_uplink();
-            if (new_dest_if) {
-                dest_if = new_dest_if;
-                HAL_TRACE_DEBUG("New dest-if id {}", dest_if->if_id);
-                // Repin to new uplink
-                ret = mirror_session_update_uplink(dest_if);
-                if (ret == HAL_RET_OK) {
-                    g_telemetry_mirror_dest_if = dest_if;
-                }
-                goto end;
-            } else {
-                HAL_TRACE_DEBUG("Did not find an active uplink!");
-                ret = HAL_RET_ERR;
+            HAL_TRACE_DEBUG("New uplink id {} oper {}", new_dif->if_id,
+                             new_dif->if_op_status);
+            ret = mirror_session_update_uplink (i, new_dif);
+            if (ret == HAL_RET_OK) {
+                g_telemetry_mirror_session_dest_if[i] = new_dif;
             }
         }
     }
 
 end:
-    if (g_telemetry_mirror_dest_if) {
-        HAL_TRACE_DEBUG("Global uplink id {}, oper {}, ret {}",
-                                g_telemetry_mirror_dest_if->if_id,
-                                g_telemetry_mirror_dest_if->if_op_status, ret);
-    }
     return ret;
 }
 
 static if_t *
-telemetry_pick_dest_if (if_t *dest_if)
+telemetry_mirror_pick_dest_if (if_t *dest_if)
 {
     // No change to dest_if for sim mode
     if (hal::is_platform_type_sim()) {
         return dest_if;
     }
-
-    // Use the cached dest_if if we have one already for uplinks
-    if (g_telemetry_mirror_dest_if &&
-        (dest_if->if_type == intf::IF_TYPE_UPLINK)) {
-        dest_if = g_telemetry_mirror_dest_if;
-        g_telemetry_mirror_dest_if_rc++;
+    if (dest_if->is_oob_management) {
+        // Nothing to be done for oob intf
         return dest_if;
     }
-    if (!g_telemetry_mirror_dest_if &&
-            (dest_if->if_type == intf::IF_TYPE_UPLINK) &&
-            !dest_if->is_oob_management &&
-            (dest_if->if_op_status != intf::IF_STATUS_UP)) {
-        HAL_TRACE_DEBUG("Uplink is down, choosing new dest-if");
-        if_t *new_dest_if = telemetry_get_active_uplink();
+
+    if (dest_if->if_type == intf::IF_TYPE_UPLINK) {
+        HAL_TRACE_DEBUG("Choosing active dest-if");
+        if_t *new_dest_if = telemetry_get_active_bond_uplink();
         if (new_dest_if) {
             dest_if = new_dest_if;
-            HAL_TRACE_DEBUG("New dest-if id {}", dest_if->if_id);
+            HAL_TRACE_DEBUG("Active bond dest-if id {}", dest_if->if_id);
         } else {
             HAL_TRACE_DEBUG("Did not find an active uplink!");
         }
-        g_telemetry_mirror_dest_if = dest_if;
-        g_telemetry_mirror_dest_if_rc++;
-        return dest_if;
-    }
-    if (!g_telemetry_mirror_dest_if &&
-        (dest_if->if_type == intf::IF_TYPE_UPLINK)) {
-        g_telemetry_mirror_dest_if = dest_if;
-        g_telemetry_mirror_dest_if_rc++;
-        return dest_if;
     }
 
     return dest_if;
@@ -348,8 +299,9 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
                           ipaddr2str(&dst_addr));
             return HAL_RET_INVALID_ARG;
         }
-        HAL_TRACE_DEBUG("Dest IF type {}, op_status {}, id {}", dest_if->if_type,
-                                        dest_if->if_op_status, dest_if->if_id);
+        HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
+                         dest_if->if_type, dest_if->if_op_status,
+                         dest_if->if_id);
         auto ift = find_if_by_handle(ep->gre_if_handle);
         if (ift == NULL) {
             HAL_TRACE_ERR("Could not find ERSPAN tunnel dest if {}",
@@ -367,8 +319,19 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         }
         session.mirror_destination_u.er_span_dest.tunnel_if = ift;
         session.type = hal::MIRROR_DEST_ERSPAN;
-        auto ndest_if = telemetry_pick_dest_if(dest_if);
-        session.dest_if = ndest_if;
+        session.dest_if = dest_if;
+        auto ndest_if = telemetry_mirror_pick_dest_if(dest_if);
+        HAL_TRACE_DEBUG("New Dest IF type {}, op_status {}, id {}",
+                         ndest_if->if_type, ndest_if->if_op_status,
+                         ndest_if->if_id);
+        if (session.dest_if != ndest_if) {
+            // Update EP's hal handle
+            session.dest_if = ndest_if;
+            ep->if_handle = ndest_if->hal_handle;
+            // Update the if to ep backptr also
+            if_del_ep(session.dest_if, ep);
+            if_add_ep(ndest_if, ep);
+        }
         g_telemetry_mirror_session_dest_if[session.id] = session.dest_if;
         break;
     }
@@ -475,15 +438,6 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
             req.key_or_handle().mirrorsession_id());
     memset(&session, 0, sizeof(session));
     id = session.id = req.key_or_handle().mirrorsession_id();
-    // Adjust ref count if current mirror session was using the cached dest_if
-    // for uplinks
-    if (g_telemetry_mirror_session_dest_if[id] ==
-                                        g_telemetry_mirror_dest_if) {
-        g_telemetry_mirror_dest_if_rc--;
-        if (!g_telemetry_mirror_dest_if_rc) {
-            g_telemetry_mirror_dest_if = NULL;
-        }
-    }
     // PD call to delete mirror session
     args.session = &session;
     pd_func_args.pd_mirror_session_delete = &args;
@@ -536,6 +490,31 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
             spec.vrf_key_handle().vrf_id(), ipaddr2str(&cfg.dst_ip));
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
+    }
+    auto dest_if = find_if_by_handle(ep->if_handle);
+    if (dest_if == NULL) {
+        HAL_TRACE_ERR("Could not find if IPFIX dest if");
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
+                     dest_if->if_type, dest_if->if_op_status,
+                     dest_if->if_id);
+    if (!dest_if->is_oob_management) {
+        auto ndest_if = telemetry_get_active_bond_uplink();
+        if (ndest_if) {
+            HAL_TRACE_DEBUG("New Dest IF type {}, op_status {}, id {}",
+                             ndest_if->if_type, ndest_if->if_op_status,
+                             ndest_if->if_id);
+            if (dest_if != ndest_if) {
+                // Update EP's hal handle
+                ep->if_handle = ndest_if->hal_handle;
+                // Update the if to ep backptr also
+                if_del_ep(dest_if, ep);
+                if_add_ep(ndest_if, ep);
+            }
+        } else {
+            HAL_TRACE_ERR("Failed to get active bond0 uplink");
+        }
     }
     /* MAC DA */
     mac = ep_get_mac_addr(ep);
@@ -896,7 +875,7 @@ end:
         }
     } else {
         // Free any allocated ids
-        if (rule_id != (~0)) {
+        if (rule_id != (uint64_t) (~0)) {
             g_hal_state->telemetry_flowmon_bmp()->clear(rule_id);
         }
     }

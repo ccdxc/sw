@@ -114,6 +114,11 @@ typedef struct lif_get_from_hw_lif_id_ctxt_s {
     lif_t *lif;
 } lif_get_from_hw_lif_id_ctxt_t;
 
+typedef struct lif_get_from_name_ctxt_s {
+    char *name;
+    lif_t *lif;
+} lif_get_from_name_ctxt_t;
+
 typedef struct lif_hal_info_s {
     bool        with_hw_lif_id;
     uint32_t    hw_lif_id;
@@ -197,6 +202,7 @@ void lif_spec_dump (LifSpec& spec);
 const char *lif_spec_keyhandle_to_str(const kh::LifKeyHandle& key_handle);
 const char *lif_keyhandle_to_str(lif_t *lif);
 lif_t *lif_lookup_key_or_handle(const kh::LifKeyHandle& kh);
+lif_t *find_lif_by_name (char *name);
 
 // SVC APIs
 hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,

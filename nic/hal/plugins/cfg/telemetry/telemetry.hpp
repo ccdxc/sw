@@ -9,6 +9,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "gen/proto/telemetry.grpc.pb.h"
 #include "nic/hal/src/utils/rule_match.hpp"
 
@@ -73,6 +74,7 @@ namespace hal {
 
 #define MAX_FLOW_MONITOR_RULES          5120
 #define HAL_MAX_TELEMETRY_COLLECTORS    16
+#define HAL_BOND0_ACTIVE_IF_FILENAME "/sys/class/net/bond0/bonding/active_slave"
 
 using hal::if_t;
 using hal::lif_t;
@@ -334,6 +336,63 @@ dropmonrule_spec_dump (DropMonitorRuleSpec& spec)
 }
 
 static inline bool
+telemetry_active_bond_get_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    if_t                     *hal_if = NULL;
+    telemetry_active_port_get_cb_ctxt_t *tctxt = 
+                (telemetry_active_port_get_cb_ctxt_t *) ctxt;
+
+    hal_if = (if_t *) hal_handle_get_obj(entry->handle_id);
+    HAL_TRACE_DEBUG("uplink id {} type {} is_oob {} op_status {}",
+                     hal_if->if_id, hal_if->if_type, hal_if->is_oob_management,
+                     hal_if->if_op_status);
+    if ((hal_if->if_type == intf::IF_TYPE_UPLINK) &&
+        !hal_if->is_oob_management &&
+        (hal_if->if_op_status == intf::IF_STATUS_UP)) {
+            /* Get the current active intf in the bond */
+            FILE *fptr = fopen(HAL_BOND0_ACTIVE_IF_FILENAME, "r");
+            if (!fptr) {
+                HAL_TRACE_DEBUG("Failed to open bond0 active link file");
+                return false;
+            }
+            char ifname_str[LIF_NAME_LEN] = {0};
+            fscanf(fptr, "%s", ifname_str);
+            HAL_TRACE_DEBUG("ifname {}", ifname_str);
+            lif_t *lif = find_lif_by_name(ifname_str);
+            if (!lif) {
+                HAL_TRACE_DEBUG("Failed to get lif for ifname {}",
+                                 ifname_str);
+                return false;
+            }
+            if_t *act_if = find_if_by_handle(lif->pinned_uplink);
+            if (!act_if) {
+                HAL_TRACE_DEBUG("Failed to get pinned uplink hdl {}",
+                                 lif->pinned_uplink);
+                return false;
+            }
+            HAL_TRACE_DEBUG("lif uplink id {} type {} is_oob {} op_status {}",
+                 act_if->if_id, act_if->if_type, act_if->is_oob_management,
+                 act_if->if_op_status);
+            if (hal_if->if_id == act_if->if_id) {
+                tctxt->hal_if = hal_if;
+                return true;
+            }
+    }
+    return false;
+}
+
+// Find uplink which is the current active bond intf slave
+static inline if_t *
+telemetry_get_active_bond_uplink (void)
+{
+    telemetry_active_port_get_cb_ctxt_t ctxt = {0};
+    
+    g_hal_state->if_id_ht()->walk(telemetry_active_bond_get_cb, &ctxt);
+    return ctxt.hal_if;
+}
+
+static inline bool
 telemetry_active_port_get_cb (void *ht_entry, void *ctxt)
 {
     hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
@@ -342,6 +401,9 @@ telemetry_active_port_get_cb (void *ht_entry, void *ctxt)
                 (telemetry_active_port_get_cb_ctxt_t *) ctxt;
 
     hal_if = (if_t *) hal_handle_get_obj(entry->handle_id);
+    HAL_TRACE_DEBUG("uplink id {} type {} is_oob {} op_status {}",
+                     hal_if->if_id, hal_if->if_type, hal_if->is_oob_management,
+                     hal_if->if_op_status);
     if ((hal_if->if_type == intf::IF_TYPE_UPLINK) &&
         !hal_if->is_oob_management &&
         (hal_if->if_op_status == intf::IF_STATUS_UP)) {

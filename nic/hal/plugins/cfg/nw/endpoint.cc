@@ -1744,7 +1744,8 @@ endpoint_update_ip_op (ep_t *ep, ip_addr_t *ip_addr,
 }
 
 hal_ret_t
-endpoint_update_if (ep_t *ep, if_t *new_hal_if) {
+endpoint_update_if (ep_t *ep, if_t *new_hal_if)
+{
     cfg_op_ctxt_t           cfg_ctxt = { 0 };
     dhl_entry_t             dhl_entry = { 0 };
     ep_update_app_ctxt_t    app_ctxt = { 0 };

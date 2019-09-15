@@ -7,6 +7,7 @@
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/src/utils/if_utils.hpp"
 
 namespace hal {
 namespace plugins {
@@ -162,7 +163,7 @@ telemetry_pick_dest_if (fte::ctx_t &ctx)
         HAL_TRACE_DEBUG("Pinned uplink id {} is down", dif->if_id);
         // Pinned uplink is down, pick a new active uplink
         if_t *ndif = telemetry_get_active_uplink();
-        if (ndif) {
+        if (dif != ndif) {
             HAL_TRACE_DEBUG("Picked new uplink id {}", ndif->if_id);
             memset(&flowupd, 0, sizeof(fte::flow_update_t));
             flowupd.type = fte::FLOWUPD_FWDING_INFO;
@@ -171,6 +172,13 @@ telemetry_pick_dest_if (fte::ctx_t &ctx)
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error updating the dif");
                 return ret;
+            }
+            // Update the EP if ptr
+            ep_t *dep = ctx.dep();
+            if (dep) {
+                // Update the if to ep backptr also
+                if_del_ep(dif, dep);
+                if_add_ep(ndif, dep);
             }
         }
     }
