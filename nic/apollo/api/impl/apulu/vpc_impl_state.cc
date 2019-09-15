@@ -23,6 +23,10 @@ namespace impl {
 vpc_impl_state::vpc_impl_state(pds_state *state) {
     sdk_table_factory_params_t    tparams;
 
+    // allocate indexer for vpc hw id allocation
+    vpc_idxr_ = indexer::factory(PDS_MAX_VPC);
+    SDK_ASSERT(vpc_idxr_ != NULL);
+
     // instantiate P4 tables for bookkeeping
     bzero(&tparams, sizeof(tparams));
     tparams.entry_trace_en = true;
@@ -32,6 +36,7 @@ vpc_impl_state::vpc_impl_state(pds_state *state) {
 }
 
 vpc_impl_state::~vpc_impl_state() {
+    indexer::destroy(vpc_idxr_);
     slhash::destroy(vni_tbl_);
 }
 

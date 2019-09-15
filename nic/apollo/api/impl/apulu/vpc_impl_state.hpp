@@ -11,6 +11,7 @@
 #ifndef __VPC_IMPL_STATE_HPP__
 #define __VPC_IMPL_STATEHPP__
 
+#include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
@@ -54,10 +55,14 @@ public:
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
-    slhash *tunnel_rx_tbl(void) { return vni_tbl_; }
+    indexer *vpc_idxr(void) { return vpc_idxr_; }
+    slhash *vni_tbl(void) { return vni_tbl_; }
     friend class vpc_impl;   // vpc_impl class is friend of vpc_impl_state
 
 private:
+    ///< indexer to allocate hw vnic id
+    indexer  *vpc_idxr_;
+    ///< hash table for vpc VxLAN vnids
     slhash *vni_tbl_;
 };
 

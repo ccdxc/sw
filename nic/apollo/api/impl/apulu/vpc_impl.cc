@@ -30,6 +30,12 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     vpc_impl *impl;
 
     // TODO: move to slab later
+    if (spec->fabric_encap.type != PDS_ENCAP_TYPE_VXLAN) {
+        PDS_TRACE_ERR("Unknonw fabric encap type %u, value %u - only VxLAN "
+                      "fabric encap is supported", spec->fabric_encap.type,
+                      spec->fabric_encap.val);
+        return NULL;
+    }
     impl = (vpc_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VPC_IMPL,
                                    sizeof(vpc_impl));
     new (impl) vpc_impl();
@@ -44,24 +50,52 @@ vpc_impl::destroy(vpc_impl *impl) {
 
 sdk_ret_t
 vpc_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    uint32_t idx;
     sdk_ret_t ret;
-    sdk_table_api_params_t api_params = { 0 };
+    vni_swkey_t vni_key =  { 0 };
+    sdk_table_api_params_t tparams;
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
+    // allocate hw id for this vpc
+    if (vpc_impl_db()->vpc_idxr()->alloc(&idx) != sdk::lib::indexer::SUCCESS) {
+        PDS_TRACE_ERR("Failed to allocate hw id for vpc %u", spec->key.id);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    hw_id_ = idx;
+
+    // reserve an entry in VNI table
+    vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
+                                   VNI_VNI_INFO_ID,
+                                   handle_t::null());
+    ret = vpc_impl_db()->vni_tbl()->reserve(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in VNI table for vpc %u, err %u",
+                      spec->key.id, ret);
+        return ret;
+    }
+    vni_hdl_ = tparams.handle;
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_impl::release_resources(api_base *api_obj) {
-    sdk_table_api_params_t api_params = { 0 };
+    sdk_table_api_params_t tparams = { 0 };
 
+    if (hw_id_ != 0xFFFF) {
+        vpc_impl_db()->vpc_idxr()->free(hw_id_);
+    }
+    if (vni_hdl_.valid()) {
+        tparams.handle = vni_hdl_;
+        vpc_impl_db()->vni_tbl()->release(&tparams);
+    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_impl::nuke_resources(api_base *api_obj) {
-    sdk_table_api_params_t api_params = { 0 };
-    return SDK_RET_OK;
+    sdk_table_api_params_t tparams = { 0 };
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
@@ -75,15 +109,32 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
+#define vni_info    action_u.vni_vni_info
 sdk_ret_t
 vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
                                pds_vpc_spec_t *spec) {
     sdk_ret_t ret;
-    sdk_table_api_params_t api_params = { 0 };
+    vni_swkey_t vni_key = { 0 };
+    vni_actiondata_t vni_data = { 0 };
+    sdk_table_api_params_t tparams = { 0 };
 
     PDS_TRACE_DEBUG("Activating vpc %u, type %u, fabric encap (%u, %u)",
                     spec->key.id, spec->type, spec->fabric_encap.type,
                     spec->fabric_encap.val.vnid);
+    // fill the key
+    vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
+    // fill the data
+    vni_data.vni_info.bd_id = hw_id_;    // bd hw id = vpc hw id for a vpc
+    vni_data.vni_info.vpc_id = hw_id_;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
+                                   VNI_VNI_INFO_ID, vni_hdl_);
+    // program the VNI table
+    ret = vpc_impl_db()->vni_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Programming of VNI table failed for vpc %u, err %u",
+                      spec->key.id, ret);
+        return ret;
+    }
     return ret;
 }
 
@@ -94,13 +145,21 @@ vpc_impl::activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
 
 sdk_ret_t
 vpc_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                       api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+                      api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;
 
     switch (api_op) {
     case api::API_OP_CREATE:
+        spec = &obj_ctxt->api_params->vpc_spec;
+        ret = activate_vpc_create_(epoch, (vpc_entry *)api_obj, spec);
+        break;
+
     case api::API_OP_DELETE:
+        // spec is not available for DELETE operations
+        ret = activate_vpc_delete_(epoch, (vpc_entry *)api_obj);
+        break;
+
     case api::API_OP_UPDATE:
     default:
         ret = SDK_RET_INVALID_OP;

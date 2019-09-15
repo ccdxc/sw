@@ -56,7 +56,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
     local_vnic_by_vlan_tx_swkey_t local_vnic_by_vlan_tx_key = { 0 };
     local_vnic_by_vlan_tx_swkey_mask_t local_vnic_by_vlan_tx_mask = { 0 };
-    local_vnic_by_slot_rx_swkey_t local_vnic_by_slot_rx_key = {0};
+    local_vnic_by_slot_rx_swkey_t local_vnic_by_slot_rx_key = { 0 };
 
     // allocate hw id for this vnic
     if (vnic_impl_db()->vnic_idxr()->alloc(&idx) !=
