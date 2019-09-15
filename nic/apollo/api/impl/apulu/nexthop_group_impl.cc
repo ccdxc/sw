@@ -13,10 +13,10 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/api/nexthop.hpp"
+#include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/nexthop_group.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
-#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 namespace impl {
@@ -79,6 +79,8 @@ nexthop_group_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 nexthop_group_impl::nuke_resources(api_base *api_obj) {
+    nexthop_group *nh_group = (nexthop_group *)api_obj;
+
     if (hw_id_ != 0xFFFF) {
         if (nh_group->type() == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
             return nexthop_group_impl_db()->overlay_nh_group_tbl()->remove(hw_id_);

@@ -139,6 +139,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             rtable->routes[i].nhid);
             break;
         case PDS_NH_TYPE_TEP:
+#if 0
             // non vpc peering case
             tep_key.ip_addr = spec->routes[i].nh_ip;
             tep = tep_db()->find(&tep_key);
@@ -154,6 +155,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             "TEP %s", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid, tep->key2str().c_str());
+#endif
             break;
         case PDS_NH_TYPE_PEER_VPC:
             vpc = vpc_db()->find(&spec->routes[i].vpc);

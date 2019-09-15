@@ -36,7 +36,7 @@ tep_impl_state::tep_impl_state(pds_state *state) {
 }
 
 tep_impl_state::~tep_impl_state() {
-    directmap::destroy(tep_tbl_);
+    //directmap::destroy(tep_tbl_);
 }
 
 sdk_ret_t

@@ -71,20 +71,6 @@ tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
-void
-tep_impl::fill_status_(tep_actiondata_t *tep_data,
-                       pds_tep_status_t *status)
-{
-    return;
-}
-
-void
-tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
-                     tep_actiondata_t *tep_data, pds_tep_spec_t *spec)
-{
-    return;
-}
-
 sdk_ret_t
 tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     return sdk::SDK_RET_INVALID_OP;

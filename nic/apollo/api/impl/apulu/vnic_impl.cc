@@ -52,7 +52,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     sdk_table_api_params_t tparams = { 0 };
-    local_mapping_sw_key_t local_mapping_key;
+    local_mapping_swkey_t local_mapping_key;
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     // allocate hw id for this vnic

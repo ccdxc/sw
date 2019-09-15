@@ -9,7 +9,8 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
-#include "nic/apollo/api/impl/apollo/vnic_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace api {

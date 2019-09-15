@@ -31,6 +31,7 @@ namespace impl {
 /// \brief slab types
 enum {
     PDS_SLAB_ID_IMPL_MIN     = 8192,
+    PDS_SLAB_ID_VNIC_IMPL,
     PDS_SLAB_ID_MAPPING_IMPL,
     PDS_SLAB_ID_MIRROR_IMPL,
 };
@@ -99,6 +100,12 @@ static inline tep_impl_state *
 tep_impl_db (void)
 {
     return g_pds_impl_state.tep_impl_db();
+}
+
+static inline vpc_impl_state *
+vpc_impl_db (void)
+{
+    return g_pds_impl_state.vpc_impl_db();
 }
 
 static inline vnic_impl_state *

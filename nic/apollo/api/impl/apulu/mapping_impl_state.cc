@@ -28,27 +28,28 @@ namespace impl {
 
 mapping_impl_state::mapping_impl_state(pds_state *state) {
     p4pd_table_properties_t       tinfo;
-    sdk_table_factory_params_t    mhparams;
+    sdk_table_factory_params_t    tparams;
 
     // instantiate P4 tables for bookkeeping
-    bzero(&mhparams, sizeof(mhparams));
-    mhparams.max_recircs = 8;
-    mhparams.entry_trace_en = true;
-    mhparams.key2str = NULL;
-    mhparams.appdata2str = NULL;
+    bzero(&tparams, sizeof(tparams));
+    tparams.max_recircs = 8;
+    tparams.entry_trace_en = true;
+    tparams.key2str = NULL;
+    tparams.appdata2str = NULL;
 
     // LOCAL_MAPPING table bookkeeping
-    mhparams.table_id = P4TBL_ID_LOCAL_MAPPING;
-    mhparams.num_hints = P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY;
-    local_maping_tbl_ = mem_hash::factory(&table_params);
+    tparams.table_id = P4TBL_ID_LOCAL_MAPPING;
+    tparams.num_hints = P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY;
+    local_mapping_tbl_ = mem_hash::factory(&tparams);
     SDK_ASSERT(local_mapping_tbl_ != NULL);
 
     // MAPPING table bookkeeping
-    mhparams.table_id = P4_TBL_ID_MAPPING;
-    mhparams.num_hints = P4_MAPPING_NUM_HINTS_PER_ENTRY;
-    mapping_tbl_ = mem_hash::factory(&mhparams);
+    tparams.table_id = P4TBL_ID_MAPPING;
+    tparams.num_hints = P4_MAPPING_NUM_HINTS_PER_ENTRY;
+    mapping_tbl_ = mem_hash::factory(&tparams);
     SDK_ASSERT(mapping_tbl_ != NULL);
 
+#if 0
     // NAT_TX table bookkeeping
     p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
     nat_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NAT,
@@ -58,6 +59,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     SDK_ASSERT(nat_tbl_ != NULL);
     // reserve 0th entry for no xlation
     nat_tbl_->reserve_index(NAT_TX_TBL_RSVD_ENTRY_IDX);
+#endif
 
     // create a slab for mapping impl entries
     mapping_impl_slab_ = slab::factory("mapping-impl", PDS_SLAB_ID_MAPPING_IMPL,
@@ -68,7 +70,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
 mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(local_mapping_tbl_);
     mem_hash::destroy(mapping_tbl_);
-    directmap::destroy(nat_tbl_);
+    //directmap::destroy(nat_tbl_);
     slab::destroy(mapping_impl_slab_);
 }
 
@@ -106,14 +108,13 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     memset(&stats, 0, sizeof(pds_table_stats_t));
     p4pd_table_properties_get(P4TBL_ID_LOCAL_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
-    local_ip_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    local_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4_TBL_ID_MAPPING, &tinfo);
+    p4pd_table_properties_get(P4TBL_ID_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
-    remote_vnic_mapping_rx_tbl_->stats_get(&stats.api_stats,
-                                           &stats.table_stats);
+    mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
 
     return SDK_RET_OK;

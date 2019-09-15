@@ -105,16 +105,6 @@ private:
     /// \brief destructor
     ~tep_impl() {}
 
-    /// \brief      populate specification with hardware information
-    /// \param[in]  nh_data  nexthop table data
-    /// \param[out] spec     specification
-    void fill_spec_(nexthop_actiondata_t *nh_data, pds_tep_spec_t *spec);
-
-    /// \brief      populate status with hardware information
-    /// \param[in]  tep_data TEP table data
-    /// \param[out] status   status
-    void fill_status_(pds_tep_status_t *status);
-
 private:
     // P4 datapath specific state
     uint16_t   nh_idx_;    ///< nexthop index for this tep

@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 

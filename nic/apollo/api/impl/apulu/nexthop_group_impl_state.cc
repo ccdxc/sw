@@ -25,14 +25,14 @@ namespace impl {
 nexthop_group_impl_state::nexthop_group_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo;
 
-    p4pd_global_table_properties_get(P4TBL_OVERLAY_ID_NEXTHOP_GROUP, &tinfo);
+    p4pd_global_table_properties_get(P4TBL_ID_OVERLAY_NEXTHOP_GROUP, &tinfo);
     overlay_nh_group_tbl_ =
         directmap::factory(tinfo.tablename, P4TBL_ID_OVERLAY_NEXTHOP_GROUP,
                            tinfo.tabledepth, tinfo.actiondata_struct_size,
                            false, true, NULL);
     SDK_ASSERT(overlay_nh_group_tbl_ != NULL);
 
-    p4pd_global_table_properties_get(P4TBL_OVERLAY_ID_NEXTHOP_GROUP, &tinfo);
+    p4pd_global_table_properties_get(P4TBL_ID_UNDERLAY_NEXTHOP_GROUP, &tinfo);
     underlay_nh_group_tbl_ =
         directmap::factory(tinfo.tablename, P4TBL_ID_UNDERLAY_NEXTHOP_GROUP,
                            tinfo.tabledepth, tinfo.actiondata_struct_size,

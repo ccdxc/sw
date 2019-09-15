@@ -100,8 +100,6 @@ mapping_impl::build(pds_mapping_key_t *key) {
     bool                      local_mapping = false;
     sdk_table_api_params_t    api_params = { 0 };
     nexthop_actiondata_t      nh_data;
-    tep_actiondata_t          tep_data;
-    nat_actiondata_t          nat_data;
 
     device = device_db()->find();
     vpc = vpc_db()->find(&key->vpc);
@@ -128,9 +126,9 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
-                                                  vpc_entry *vpc,
-                                                  pds_mapping_spec_t *spec) {
+mapping_impl::reserve_local_mapping_resources_(api_base *api_obj,
+                                               vpc_entry *vpc,
+                                               pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     local_mapping_swkey_t local_mapping_key;
@@ -233,9 +231,9 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::reserve_remote_ip_mapping_resources_(api_base *api_obj,
-                                                   vpc_entry *vpc,
-                                                   pds_mapping_spec_t *spec) {
+mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
+                                                vpc_entry *vpc,
+                                                pds_mapping_spec_t *spec) {
 #if 0
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
@@ -293,7 +291,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
+mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
 #if 0
     sdk_table_api_params_t    api_params = { 0 };
 
@@ -325,7 +323,7 @@ mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
 }
 
 sdk_ret_t
-mapping_impl::release_remote_ip_mapping_resources_(api_base *api_obj) {
+mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
 #if 0
     sdk_table_api_params_t    api_params = { 0 };
 
@@ -348,7 +346,8 @@ mapping_impl::release_resources(api_base *api_obj) {
 
 // TODO: take care of both local and remote mappings here
 sdk_ret_t
-mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
+mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
+                                          pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     sdk_table_api_params_t api_params;
     return SDK_RET_INVALID_OP;
@@ -357,9 +356,9 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, pds_mapping_spec_t *sp
 sdk_ret_t
 mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
     sdk_ret_t           ret;
+#if 0
     nat_actiondata_t    nat_data = { 0 };
 
-#if 0
     // add NAT table entries
     if (spec->public_ip_valid) {
         // add private to public IP xlation NAT entry
@@ -470,7 +469,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             goto error;
         }
     } else {
-        ret = add_remote_mapping_entries(vpc, spec);
+        ret = add_remote_mapping_entries_(vpc, spec);
         if (ret != SDK_RET_OK) {
             goto error;
         }

@@ -156,12 +156,19 @@ private:
                                                vpc_entry *vpc,
                                                pds_mapping_spec_t *spec);
 
-    /// \brief     add necessary entries to local mapping table
+    /// \brief     add necessary entries for local mappings
     /// \param[in] vpc  VPC of this mapping
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_local_mapping_entries_(vpc_entry *vpc,
                                          pds_mapping_spec_t *spec);
+
+    /// \brief     add necessary entries for remote mappings
+    /// \param[in] vpc  VPC of this mapping
+    /// \param[in] spec IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_remote_mapping_entries_(vpc_entry *vpc,
+                                          pds_mapping_spec_t *spec);
 
     /// \brief     reserve necessary entries in remote mapping table
     /// \param[in] api_obj API object being processed

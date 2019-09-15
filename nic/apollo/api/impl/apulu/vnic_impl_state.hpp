@@ -9,22 +9,18 @@
 //----------------------------------------------------------------------------
 
 #ifndef __VNIC_IMPL_STATE_HPP__
-#define __VNIC_IMPL_STATEHPP__
+#define __VNIC_IMPL_STATE_HPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
-#include "nic/sdk/lib/table/hash/hash.hpp"
-#include "nic/sdk/lib/table/slhash/slhash.hpp"
-#include "nic/sdk/lib/table/sltcam/sltcam.hpp"
+#include "nic/sdk/lib/indexer/indexer.hpp"
+#include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 using sdk::table::sdk_table_factory_params_t;
-using sdk::table::slhash;
 
 namespace api {
 namespace impl {
-
 
 /// \defgroup PDS_VNIC_IMPL_STATE - VNIC state functionality
 /// \ingroup PDS_VNIC

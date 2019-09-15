@@ -32,7 +32,7 @@
 // reserved meter id
 #define PDS_IMPL_RESERVED_METER_HW_ID                0
 #define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX              0
-// next hop types
+// nexthop types
 #define PDS_IMPL_NH_TYPE_PEER_VPC_MASK               ROUTE_RESULT_TYPE_PEER_VPC_MASK
 #define PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK             ROUTE_RESULT_TYPE_SVC_TUNNEL_MASK
 #define PDS_IMPL_NH_TYPE_REMOTE_SVC_TUNNEL_MASK      ROUTE_RESULT_TYPE_REM_SVC_TUNNEL_MASK

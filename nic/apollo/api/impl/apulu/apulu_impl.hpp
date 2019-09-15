@@ -17,7 +17,11 @@
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 
+// system wide blackhole nexthop
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID    0
+
+// nexthop types
+#define PDS_IMPL_NH_TYPE_PEER_VPC_MASK               ROUTE_RESULT_TYPE_PEER_VPC_MASK
 
 namespace api {
 namespace impl {
