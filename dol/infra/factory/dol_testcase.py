@@ -172,6 +172,7 @@ class DOLTestCase(TestCase):
         for spec_desc_entry in spsn.descriptors:
             if spec_desc_entry.descriptor.object == None: continue
             tc_desc_spec = TestCaseTrigExpDescriptorSpec()
+            tc_desc_spec.descriptor.negtest = getattr(spec_desc_entry.descriptor, 'negtest', False)
             tc_desc_spec.descriptor.object = spec_desc_entry.descriptor.object.Get(self)
             if objects.IsCallback(spec_desc_entry.descriptor.ring):
                 tc_desc_spec.descriptor.ring = spec_desc_entry.descriptor.ring.call(self)

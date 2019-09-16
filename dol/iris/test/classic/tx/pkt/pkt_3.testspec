@@ -137,6 +137,16 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC1
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            negtest : True # cq is emptied
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
     packets:
         - packet:

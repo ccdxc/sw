@@ -130,15 +130,26 @@ class DolVerifEngineObject(VerifEngineObject):
         if GlobalOptions.dryrun:
             return True
 
-        logger.info("Comparing Descriptors: %s <--> %s " % (edescr.GID(), adescr.GID()))
+        egid = None
+        if edescr is not None:
+            egid = edescr.GID()
+        agid = None
+        if adescr is not None:
+            agid = adescr.GID()
+
+        logger.info("Comparing Descriptors: %s <--> %s " % (egid, agid))
         return edescr == adescr
 
-    def __verify_one_descriptor(self, edescr, adescr, tc):
+    def __verify_one_descriptor(self, edescr, adescr, negtest, tc):
+        if negtest:
+            edescr = None
         match = self.__compare_descriptors(edescr, adescr, tc)
         if match is False:
             logger.error("Descriptor compare result = MisMatch")
             return defs.status.ERROR
         logger.info("Descriptor compare result = Match")
+        if negtest:
+            return defs.status.SUCCESS
         ebuf = self.__get_buffer(edescr, tc)
         abuf = self.__get_buffer(adescr, tc)
         if ebuf is None:
@@ -171,26 +182,37 @@ class DolVerifEngineObject(VerifEngineObject):
             return False
         return True
 
-    def __consume_descriptor(self, edescr, ring, tc):
+    def __consume_descriptor(self, edescr, negtest, ring, tc):
         if GlobalOptions.dryrun:
             return None
 
         adescr = copy.copy(edescr)
+
         max_retries = self.__get_num_retries(tc, None)
+        if negtest and max_retries > 2:
+            max_retries = 1
+
+        status = ring.Consume(adescr)
         for r in range(max_retries):
-            status = ring.Consume(adescr)
             if status != defs.status.RETRY: break
             self.__retry_wait(tc)
+            status = ring.Consume(adescr)
+
+        # return None is treated as SUCCESS
+        if status is not None and status != defs.status.SUCCESS:
+            return None
+
         return adescr
 
     def __verify_descriptors(self, step, tc):
         final_status = defs.status.SUCCESS
         for dsp in step.expect.descriptors:
+            negtest = dsp.descriptor.negtest
             edescr = dsp.descriptor.object
-            adescr = self.__consume_descriptor(edescr,
+            adescr = self.__consume_descriptor(edescr, negtest,
                                                dsp.descriptor.ring,
                                                tc)
-            status = self.__verify_one_descriptor(edescr, adescr, tc)
+            status = self.__verify_one_descriptor(edescr, adescr, negtest, tc)
             if status == defs.status.ERROR:
                 final_status = status
         return final_status

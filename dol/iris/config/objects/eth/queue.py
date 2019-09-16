@@ -125,9 +125,14 @@ class AdminQstate(Packet):
         LELongField("intr_assert_addr", 0),
     ]
 
+def log_ring_size(value):
+    assert(isinstance(value, int))
+    assert(not (value & (value - 1)))
+    value = value.bit_length()
+    assert(2 <= value <= 16)
+    return value
 
 class QstateObject(object):
-
     def __init__(self, addr, __data_class__):
         self.addr = addr
         self.__data_class__ = __data_class__
@@ -154,87 +159,53 @@ class QstateObject(object):
         lgh.ShowScapyObject(self.data)
 
     def set_pindex(self, ring, value):
+        data = self.data[self.__data_class__]
         assert(isinstance(ring, int))
         assert(0 <= ring <= 1)
-        ring_size = self.data[self.__data_class__].ring_size
         assert(isinstance(value, int))
-        assert(0 <= value <= math.pow(2, ring_size))
-        model_wrap.write_mem_pcie(self.addr + 8 + (4 * ring), bytes(ctypes.c_uint16(value)), 2)
+        assert(0 <= value <= 2 ** data.ring_size)
+        data.p_index0 = value
 
+    def set_ring_size(self, value):
+        data = self.data[self.__data_class__]
+        data.ring_size = log_ring_size(value)
+
+    def set_ring_base(self, value):
+        data = self.data[self.__data_class__]
+        assert(isinstance(value, int))
+        data.ring_base = value
+
+    def set_sg_base(self, value):
+        data = self.data[self.__data_class__]
+        assert(isinstance(value, int))
+        data.sg_ring_base = value
+
+    def set_cq_base(self, value):
+        data = self.data[self.__data_class__]
+        assert(isinstance(value, int))
+        data.cq_ring_base = value
 
 class EthRxQstateObject(QstateObject):
-
     def __init__(self, addr):
         super().__init__(addr, EthRxQstate)
 
     def set_ring_base(self, value):
+        data = self.data[self.__data_class__]
         assert(isinstance(value, int))
-        self.data[self.__data_class__].ring_base = value
-        model_wrap.write_mem_pcie(self.addr + 16, bytes(ctypes.c_uint64(value)), 8)
-
-    def set_ring_size(self, value):
-        assert(isinstance(value, int))
-        value = int(math.log(value, 2))
-        self.data[self.__data_class__].ring_size = value
-        model_wrap.write_mem_pcie(self.addr + 24, bytes(ctypes.c_uint16(value)), 2)
-
-    def set_cq_base(self, value):
-        assert(isinstance(value, int))
-        self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 25, bytes(ctypes.c_uint64(value)), 8)
-
-    def set_sg_base(self, value):
-        assert(isinstance(value, int))
-        self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 35, bytes(ctypes.c_uint64(value)), 8)
-
+        data.ring_base = value
 
 class EthTxQstateObject(QstateObject):
-
     def __init__(self, addr):
         super().__init__( addr, EthTxQstate)
 
     def set_ring_base(self, value):
+        data = self.data[self.__data_class__]
         assert(isinstance(value, int))
-        self.data[self.__data_class__].ring_base = value
-        model_wrap.write_mem_pcie(self.addr + 20, bytes(ctypes.c_uint64(value)), 8)
-
-    def set_ring_size(self, value):
-        assert(isinstance(value, int))
-        value = int(math.log(value, 2))
-        self.data[self.__data_class__].ring_size = value
-        model_wrap.write_mem_pcie(self.addr + 28, bytes(ctypes.c_uint16(value)), 2)
-
-    def set_cq_base(self, value):
-        assert(isinstance(value, int))
-        self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 29, bytes(ctypes.c_uint64(value)), 8)
-
-    def set_sg_base(self, value):
-        assert(isinstance(value, int))
-        self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 39, bytes(ctypes.c_uint64(value)), 8)
-
+        data.ring_base = value
 
 class AdminQstateObject(QstateObject):
-
     def __init__(self, addr):
         super().__init__(addr, AdminQstate)
-
-    def set_ring_base(self, value):
-        self.data[AdminQstate].ring_base = value
-        model_wrap.write_mem_pcie(self.addr + 18, bytes(ctypes.c_uint64(value)), 8)
-
-    def set_ring_size(self, value):
-        value = int(math.log(value, 2))
-        self.data[AdminQstate].ring_size = value
-        model_wrap.write_mem_pcie(self.addr + 26, bytes(ctypes.c_uint16(value)), 2)
-
-    def set_cq_base(self, value):
-        assert(isinstance(value, int))
-        self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 28, bytes(ctypes.c_uint64(value)), 8)
-
 
 class EthQueueObject(QueueObject):
     def __init__(self):
@@ -351,6 +322,7 @@ class EthQueueObject(QueueObject):
             return
 
         self.obj_helper_ring.Configure()
+        self.qstate.Read()
 
         for ring in self.obj_helper_ring.rings:
             if ring.id == 'R0':
@@ -360,11 +332,12 @@ class EthQueueObject(QueueObject):
                     self.qstate.set_sg_base(ring._sgmem.pa)
             elif ring.id == 'R1':
                 self.qstate.set_cq_base(ring._mem.pa)
+                self.qstate.set_ring_size(ring.size)
             else:
                 raise NotImplementedError
 
         self.Fill()
-        self.qstate.Read()
+        self.qstate.Write()
 
     def Post(self, descriptor):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
