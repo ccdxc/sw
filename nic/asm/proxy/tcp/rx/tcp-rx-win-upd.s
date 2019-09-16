@@ -25,6 +25,9 @@ struct s1_t0_tcp_rx_d d;
 #define c_dont_send_ack c_launch_ooq
 
 tcp_rx_win_upd_process_start:
+
+    // Read rnmdr unconditionally here. Need more accurate calculation of
+    // the window when we send out window updates.
     CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_fc,
                  CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR, TABLE_SIZE_64_BITS)
     seq             c1, k.common_phv_ooq_tx2rx_win_upd, 1

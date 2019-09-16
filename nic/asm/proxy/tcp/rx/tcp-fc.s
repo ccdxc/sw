@@ -74,29 +74,34 @@ flow_fc_process:
 
 start_window_calc:
     /* Figure out how many entries are free in serq */
-    add         r2, k.to_s5_serq_cidx, d.consumer_ring_slots;
+    add         r2, k.to_s5_serq_cidx, d.consumer_ring_slots
     sub         r2, r2, k.to_s5_serq_pidx
-    and         r2, r2, d.consumer_ring_slots_mask;
+    and         r2, r2, d.consumer_ring_slots_mask
+
+    seq         c4, k.to_s5_rnmdr_size_valid, 1
+    tblwr.c4    d.rnmdr_size, k.to_s5_rnmdr_size
+    add.c4      r4, r0, k.to_s5_rnmdr_size
+    add.!c4     r4, r0, d.rnmdr_size
 
     slt         c1, d.high_thresh1, r2
-    slt.c1      c1, 0x1800, k.to_s5_rnmdr_size
+    slt.c1      c1, 0x1800, r4
     sll.c1      r4, r2, d.avg_pkt_size_shift
     b.c1        window_calc_done
 
     slt         c1, d.high_thresh2, r2
-    slt.c1      c1, 0x1000, k.to_s5_rnmdr_size
+    slt.c1      c1, 0x1000, r4
     sub         r7, d.avg_pkt_size_shift, 1
     sll.c1      r4, r2, r7
     b.c1        window_calc_done
 
     slt         c1, d.high_thresh3, r2
-    slt.c1      c1, 0x800, k.to_s5_rnmdr_size
+    slt.c1      c1, 0x800, r4
     sub         r7, d.avg_pkt_size_shift, 2
     sll.c1      r4, r2, r7
     b.c1        window_calc_done
 
     slt         c1, d.high_thresh4, r2
-    slt.c1      c1, 0x400, k.to_s5_rnmdr_size
+    slt.c1      c1, 0x400, r4
     sub         r7, d.avg_pkt_size_shift, 3
     sll.c1      r4, r2, r7
     b.c1        window_calc_done

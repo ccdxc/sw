@@ -194,6 +194,7 @@ header_type tcp_rx_d_t {
         alloc_descr_L           : 1;    // used with .l not written back
         dont_send_ack_L         : 1;    // used with .l not written back
         unused_flags_L          : 6;    // used to pad .l fields to 1 byte
+        num_pkts                : 8;
         limited_transmit        : 2;    // tcp_ack stage
         pending                 : 3;
     }
@@ -376,6 +377,7 @@ header_type read_ooo_base_addr_t {
 // d for stage 5 table 0
 header_type tcp_fc_d_t {
     fields {
+        rnmdr_size              : 32;
         rcv_wup                 : 32;
         consumer_ring_slots_mask: 16;
         consumer_ring_slots     : 16;
@@ -486,7 +488,8 @@ header_type to_stage_5_phv_t {
         serq_cidx               : 12;
         serq_pidx               : 12;
         rcv_nxt                 : 32;
-        rnmdr_size              : 32;
+        rnmdr_size              : 31;
+        rnmdr_size_valid        : 1;
     }
 }
 
@@ -885,7 +888,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         snd_wnd, serq_pidx, num_dup_acks, dup_acks_rcvd, pure_acks_rcvd, cc_flags, quick, \
         flag, state, parsed_state, rcv_wscale, \
         alloc_descr_L, dont_send_ack_L, unused_flags_L, \
-        limited_transmit, pending
+        num_pkts, limited_transmit, pending
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.ooq_not_empty, ooq_not_empty); \
@@ -920,6 +923,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.alloc_descr_L, alloc_descr_L); \
     modify_field(tcp_rx_d.dont_send_ack_L, dont_send_ack_L);\
     modify_field(tcp_rx_d.unused_flags_L, unused_flags_L);\
+    modify_field(tcp_rx_d.num_pkts, num_pkts); \
     modify_field(tcp_rx_d.limited_transmit, limited_transmit); \
     modify_field(tcp_rx_d.pending, pending);
 
@@ -1156,7 +1160,7 @@ action ooo_qbase_alloc(qbase)
  * Stage 5 table 0 action1
  */
 action tcp_fc(
-        consumer_ring_slots_mask, consumer_ring_slots,
+        rnmdr_size, consumer_ring_slots_mask, consumer_ring_slots,
         high_thresh1, high_thresh2, high_thresh3, high_thresh4,
         rcv_wnd, read_notify_addr, rcv_wup, rcv_scale, cpu_id,
         cum_pkt_size, avg_pkt_size_shift, num_pkts, rcv_mss) {
@@ -1173,6 +1177,7 @@ action tcp_fc(
     // from stage to stage
 
     // d for stage 5 table 0
+    modify_field(tcp_fc_d.rnmdr_size, rnmdr_size);
     modify_field(tcp_fc_d.consumer_ring_slots_mask, consumer_ring_slots_mask);
     modify_field(tcp_fc_d.consumer_ring_slots, consumer_ring_slots);
     modify_field(tcp_fc_d.high_thresh1, high_thresh1);
