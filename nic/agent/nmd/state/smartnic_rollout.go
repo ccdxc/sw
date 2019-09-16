@@ -135,10 +135,16 @@ func (n *NMD) IssueInProgressOp() {
 	defer n.Unlock()
 	log.Infof("IssueInProgressOp called with %v", n.ro)
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
-		n.ro.PendingOps = append([]protos.DSCOpSpec{n.ro.InProgressOp}, n.ro.PendingOps...)
-		n.ro.InProgressOp = protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp}
-		log.Infof("An op was in progress. Moving it to the head of PendingOps to process it. %v", n.ro)
-		n.issueNextPendingOp()
+		/*
+			Currently pciemgr doesn't support upgrade during host reboot.
+			So commenting out this code for now and just deleting any previous rollout requests
+			n.ro.PendingOps = append([]protos.DSCOpSpec{n.ro.InProgressOp}, n.ro.PendingOps...)
+			n.ro.InProgressOp = protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp}
+			log.Infof("An op was in progress. Moving it to the head of PendingOps to process it. %v", n.ro)
+			n.issueNextPendingOp()
+		*/
+		log.Infof("Deleting in progress op. Looks like we rebooted in the middle of upgrade.")
+		n.DeleteDSCRollout(&protos.DSCRollout{})
 	}
 }
 
