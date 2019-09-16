@@ -13,9 +13,9 @@ void pmt_set(const int pmti, const pmt_t *p);
 
 struct pciehw_s;
 typedef struct pciehw_s pciehw_t;
-struct pciehwdev_s;
+union pciehwdev_s;
 typedef union pciehwdev_u pciehwdev_t;
-struct pciehwbar_s;
+union pciehwbar_s;
 typedef union pciehwbar_u pciehwbar_t;
 
 int pciehw_pmt_load_cfg(pciehwdev_t *phwdev);

@@ -211,7 +211,7 @@ cfgspace_setextcap_ari(cfgspace_t *cs,
                        const u_int16_t capaddr)
 {
     const u_int16_t caplen = 0x8;
-    const u_int8_t ari_nextfunc = 0; /* need to update after vf's are known */
+    const u_int8_t ari_nextfunc = 0;
     u_int32_t v;
 
     assert(capaddr + caplen < cfgspace_size(cs));

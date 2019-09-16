@@ -126,19 +126,13 @@ int intr_coal_get_params(int *mul, int *div);
  *     so the interrupts reset to "unmasked" and can be fired when
  *     the local fw is ready to send.
  *
- * intr_reset_all() - reset all register groups to default values,
+ * intr_reset()     - reset all register groups to default values,
  *                    use for resource initialization at device creation.
  * intr_reset_dev() - device requested interrupt reset, reset all driver
  *                    owned registers.
- * intr_reset_flr() - function level reset, reset driver visible registers,
- *                    msix registers.
- * intr_reset_bus() - bus reset, reset driver visible registers,
- *                    msix registers.
  */
-void intr_reset_all(const int intrb, const int intrc, const int dmask);
+void intr_reset(const int intrb, const int intrc, const int dmask);
 void intr_reset_dev(const int intrb, const int intrc, const int dmask);
-void intr_reset_flr(const int intrb, const int intrc, const int dmask);
-void intr_reset_bus(const int intrb, const int intrc, const int dmask);
 
 void intr_reset_pba(const int intrb, const int intrc);
 

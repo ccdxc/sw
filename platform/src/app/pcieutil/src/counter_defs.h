@@ -109,4 +109,15 @@
     mac(32,  TX_NAK_SENT,               x, 0, 0) \
     mac(32,  TXBUF_ECC_ERR,             x, 0, 0)
 
+#define DB_WA_SAT_WA_GENERATOR(mac) \
+    mac(32f, AXI_ERR, rresp,               0, 8) \
+    mac(32f, AXI_ERR, bresp,               8, 8) \
+    mac(32,  HOST_ACCESS_ERR,           x, 0, 0) \
+    mac(32,  MERGED_INFLIGHT,           x, 0, 0) \
+    mac(32,  MERGED_PRE_AXI_READ,       x, 0, 0) \
+    mac(32,  PID_CHKFAIL,               x, 0, 0) \
+    mac(32,  QADDR_CAM_CONFLICT,        x, 0, 0) \
+    mac(32,  QID_OVERFLOW,              x, 0, 0) \
+    mac(32,  RING_ACCESS_ERR,           x, 0, 0)
+
 #endif /* __COUNTER_DEFS_H__ */

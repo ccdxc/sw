@@ -137,6 +137,11 @@
                                         "Command" : "/platform/bin/pcieutil prt"
                                 },
                                 {
+                                        "Name" : "Pcie HDRT",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil hdrt"
+                                },
+                                {
                                         "Name" : "Pcie aximst",
                                         "Method" : 0,
                                         "Command" : "/platform/bin/pcieutil aximst"

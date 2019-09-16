@@ -204,7 +204,7 @@ intr_msixcfg(const int intr,
  * Note:  We are careful to make config changes to fwcfg only with
  * the function_mask set.  Masking the interrupt will deassert the
  * interrupt if asserted in legacy mode, then we change any config,
- * then re-enable with the new config.  If necessary the interrupt
+ * then re-enable with the new config.  Subsequent interrupts
  * will re-assert with the new config.
  */
 void
@@ -494,7 +494,7 @@ intr_reset_mode(const int intrb, const int intrc)
  */
 
 void
-intr_reset_all(const int intrb, const int intrc, const int dmask)
+intr_reset(const int intrb, const int intrc, const int dmask)
 {
     intr_reset_drvcfg(intrb, intrc, dmask);
     intr_reset_msixcfg(intrb, intrc);
@@ -507,18 +507,6 @@ intr_reset_dev(const int intrb, const int intrc, const int dmask)
 {
     intr_reset_drvcfg(intrb, intrc, dmask);
     intr_reset_pba(intrb, intrc);
-}
-
-void
-intr_reset_flr(const int intrb, const int intrc, const int dmask)
-{
-    intr_reset_all(intrb, intrc, dmask);
-}
-
-void
-intr_reset_bus(const int intrb, const int intrc, const int dmask)
-{
-    intr_reset_all(intrb, intrc, dmask);
 }
 
 /*

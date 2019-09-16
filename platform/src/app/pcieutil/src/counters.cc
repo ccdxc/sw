@@ -18,6 +18,7 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
+#include "cap_wa_c_hdr.h"
 
 #include "cmd.h"
 #include "counter_defs.h"
@@ -367,6 +368,22 @@ show_pp_port_p_sat_p_port_cnt(const int port)
 }
 
 static void
+show_db_wa_sat_wa(void)
+{
+#define GROUP           "DB_WA_SAT_WA"
+#define ADDR(CTR)       (CAP_ADDR_BASE_DB_WA_OFFSET + \
+                         CAP_WA_CSR_SAT_WA_ ##CTR## _BYTE_ADDRESS)
+
+#define DB_WA_SAT_WA_SHOW_GEN(ty, CTR, fld, bits, bitc) \
+    show_counter_##ty(ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
+
+    DB_WA_SAT_WA_GENERATOR(DB_WA_SAT_WA_SHOW_GEN)
+
+#undef GROUP
+#undef ADDR
+}
+
+static void
 counters(int argc, char *argv[])
 {
     int opt;
@@ -402,6 +419,8 @@ counters(int argc, char *argv[])
             show_pp_port_p_sat_p_port_cnt(port);
         }
     }
+
+    show_db_wa_sat_wa();
 }
 CMDFUNC(counters,
 "show pcie counters",

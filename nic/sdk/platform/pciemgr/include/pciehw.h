@@ -46,7 +46,9 @@ enum pciehw_cfghnd_e {
     PCIEHW_CFGHND_CMD,
     PCIEHW_CFGHND_DEV_BARS,
     PCIEHW_CFGHND_ROM_BAR,
+    PCIEHW_CFGHND_BRIDGECTL,
     PCIEHW_CFGHND_MSIX,
+    PCIEHW_CFGHND_PCIE_DEVCTL,
     PCIEHW_CFGHND_SRIOV_CTRL,
     PCIEHW_CFGHND_SRIOV_BARS,
     PCIEHW_CFGHND_DBG_DELAY,
@@ -80,8 +82,8 @@ typedef union pciehwdev_u {
         int port;                       /* pcie port */
         u_int16_t pf:1;                 /* is pf */
         u_int16_t vf:1;                 /* is vf */
-        u_int16_t totalvfs;             /* totalvfs */
-        u_int16_t numvfs;               /* current numvfs enabled */
+        u_int16_t totalvfs;             /* totalvfs provisioned */
+        u_int16_t numvfs;               /* current numvfs */
         u_int16_t vfidx;                /* if is vf, vf position */
         u_int16_t bdf;                  /* bdf of this dev */
         u_int32_t lifb;                 /* lif base  for this dev */
@@ -98,6 +100,8 @@ typedef union pciehwdev_u {
         u_int8_t cfghnd[PCIEHW_CFGHNDSZ];  /* cfg indirect/notify handlers */
         pciehwbar_t bar[PCIEHW_NBAR];   /* bar info */
         pciehwbar_t rombar;             /* option rom bar */
+        u_int16_t sriovctrl;            /* current sriov ctrl reg */
+        u_int16_t enabledvfs;           /* current numvfs enabled */
     };
     u_int8_t _pad[4096];
 } pciehwdev_t;
@@ -184,7 +188,9 @@ void pciehw_finalize_topology(pciehdev_t *proot);
 void pciehw_dev_show(int argc, char *argv[]);
 void pciehw_devintr_show(int argc, char *argv[]);
 void pciehw_pmt_show(int argc, char *argv[]);
+void pciehw_cfg_show(int argc, char *argv[]);
 void pciehw_bar_show(int argc, char *argv[]);
+void pciehw_hdrt_show(int argc, char *argv[]);
 
 /* flags for stats_show() */
 #define PMGRSF_NONE     0x0

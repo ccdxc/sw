@@ -39,6 +39,10 @@ public:
         virtual void sriov_numvfs(const int port,
                                   const uint32_t lif,
                                   const uint16_t numvfs) {};
+        virtual void reset(const int port,
+                           uint32_t rsttype,
+                           const uint32_t lifb,
+                           const uint32_t lifc) {};
     };
 
     pciemgr(const char *name, EV_P);

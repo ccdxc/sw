@@ -27,6 +27,7 @@ extern "C" {
 typedef struct cfgspace_s {
     u_int8_t *cur;
     u_int8_t *msk;
+    u_int8_t *rst;
     u_int16_t size;
 } cfgspace_t;
 
@@ -58,6 +59,9 @@ u_int16_t cfgspace_get_status(cfgspace_t *cs);
 u_int8_t cfgspace_get_cap(cfgspace_t *cs);
 u_int8_t cfgspace_get_headertype(cfgspace_t *cs);
 u_int8_t cfgspace_get_intpin(cfgspace_t *cs);
+u_int8_t cfgspace_get_pribus(cfgspace_t *cs);
+u_int8_t cfgspace_get_secbus(cfgspace_t *cs);
+u_int8_t cfgspace_get_subbus(cfgspace_t *cs);
 
 void cfgspace_set_vendorid(cfgspace_t *cs, const u_int16_t vendorid);
 void cfgspace_set_deviceid(cfgspace_t *cs, const u_int16_t deviceid);

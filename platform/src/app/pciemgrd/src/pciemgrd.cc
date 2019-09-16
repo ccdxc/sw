@@ -143,7 +143,7 @@ main(int argc, char *argv[])
             } else if (strcmp(optarg, "force_init") == 0) {
                 params->initmode = FORCE_INIT;
             } else {
-                printf("bad -I arg: inherit|inherit_ok|force_init\n");
+                printf("bad -I arg: inherit_only|inherit_ok|force_init\n");
                 exit(1);
             }
             break;

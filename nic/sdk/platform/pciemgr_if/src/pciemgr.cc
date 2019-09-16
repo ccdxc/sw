@@ -139,6 +139,11 @@ pciemgr::handle_event(const pciehdev_eventdata_t *evd)
         evhandlercb.sriov_numvfs(evd->port, evd->lif,
                                  evd->sriov_numvfs.numvfs);
         break;
+    case PCIEHDEV_EV_RESET: {
+        const pciehdev_reset_t *reset = &evd->reset;
+        evhandlercb.reset(evd->port, reset->rsttype, reset->lifb,reset->lifc);
+        break;
+    }
     default:
         break;
     }

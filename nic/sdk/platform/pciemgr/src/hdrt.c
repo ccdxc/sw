@@ -108,7 +108,7 @@ hdrt_show_hdr(void)
 static void
 hdrt_show_entry(const u_int32_t lif, hdrt_t *h)
 {
-    pciesys_loginfo("%4d %-7s\n",
+    pciesys_loginfo("%-4d %-7s\n",
                     lif, bdf_to_str(h->bdf));
 }
 
@@ -140,5 +140,11 @@ pciehw_hdrt_dbg(int argc, char *argv[])
         }
     }
 
+    hdrt_show();
+}
+
+void
+pciehw_hdrt_show(int argc, char *argv[])
+{
     hdrt_show();
 }

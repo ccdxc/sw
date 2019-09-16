@@ -181,7 +181,7 @@ pciehw_barrw_notify(const pciehdev_event_t evtype,
 
     memset(&evd, 0, sizeof(evd));
     evd.evtype = evtype;
-    evd.port = phwdev->port; /* XXX port in, rather than derive from phwdev? */
+    evd.port = phwdev->port; /* XXX port in, rather than from phwdev? */
     evd.lif = phwdev->lifb;
     memrw = &evd.memrw_notify;
     memrw->baraddr = stlp->addr;

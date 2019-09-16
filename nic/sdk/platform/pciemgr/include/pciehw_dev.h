@@ -24,6 +24,7 @@ typedef enum pciehdev_event_e {
     PCIEHDEV_EV_MEMRD_NOTIFY,
     PCIEHDEV_EV_MEMWR_NOTIFY,
     PCIEHDEV_EV_SRIOV_NUMVFS,
+    PCIEHDEV_EV_RESET,
 } pciehdev_event_t;
 
 typedef struct pciehdev_memrw_notify_s {
@@ -39,13 +40,27 @@ typedef struct pciehdev_sriov_numvfs_s {
     u_int16_t numvfs;           /* number of vfs enabled */
 } pciehdev_sriov_numvfs_t;
 
+typedef enum pciehdev_rsttype_e {
+    PCIEHDEV_RSTTYPE_NONE,
+    PCIEHDEV_RSTTYPE_BUS,       /* bus reset */
+    PCIEHDEV_RSTTYPE_FLR,       /* function level reset */
+    PCIEHDEV_RSTTYPE_VF,        /* vf reset from sriov ctrl vfe */
+} pciehdev_rsttype_t;
+
+typedef struct pciehdev_reset_s {
+    pciehdev_rsttype_t rsttype; /* RSTTYPE_* */
+    u_int32_t lifb;             /* lif base */
+    u_int32_t lifc;             /* lif count */
+} pciehdev_reset_t;
+
 typedef struct pciehdev_eventdata_s {
     pciehdev_event_t evtype;    /* PCIEHDEV_EV_* */
     u_int8_t port;              /* PCIe port */
-    u_int32_t lif;              /* lif if event for a lif */
+    u_int32_t lif;              /* lif if event for lifs */
     union {
         pciehdev_memrw_notify_t memrw_notify;   /* EV_MEMRD/WR_NOTIFY */
         pciehdev_sriov_numvfs_t sriov_numvfs;   /* EV_SRIOV_NUMVFS */
+        pciehdev_reset_t reset;                 /* EV_RESET */
     };
 } pciehdev_eventdata_t;
 

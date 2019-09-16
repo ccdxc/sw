@@ -45,6 +45,15 @@ port_evhandler(pcieport_event_t *ev, void *arg)
     pciemgrenv_t *pme = pciemgrenv_get();
 
     switch (ev->type) {
+    case PCIEPORT_EVENT_LINKUP: {
+        pciesys_loginfo("port%d: linkup gen%dx%d\n",
+                        ev->port, ev->linkup.gen, ev->linkup.width);
+        break;
+    }
+    case PCIEPORT_EVENT_LINKDN: {
+        pciesys_loginfo("port%d: linkdn\n", ev->port);
+        break;
+    }
     case PCIEPORT_EVENT_HOSTUP: {
         pciesys_loginfo("port%d: hostup gen%dx%d\n",
                         ev->port, ev->hostup.gen, ev->hostup.width);

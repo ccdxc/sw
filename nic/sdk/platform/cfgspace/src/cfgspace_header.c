@@ -105,6 +105,12 @@ cfgspace_set_intline(cfgspace_t *cs, const u_int8_t intline)
     cfgspace_setbm(cs, 0x3c, intline, 0xff);
 }
 
+u_int8_t
+cfgspace_get_intpin(cfgspace_t *cs)
+{
+    return cfgspace_getb(cs, 0x3d);
+}
+
 void
 cfgspace_set_intpin(cfgspace_t *cs, const u_int8_t intpin)
 {
@@ -114,9 +120,9 @@ cfgspace_set_intpin(cfgspace_t *cs, const u_int8_t intpin)
 }
 
 u_int8_t
-cfgspace_get_intpin(cfgspace_t *cs)
+cfgspace_get_pribus(cfgspace_t *cs)
 {
-    return cfgspace_getb(cs, 0x3d);
+    return cfgspace_getb(cs, 0x18);
 }
 
 void
@@ -125,10 +131,22 @@ cfgspace_set_pribus(cfgspace_t *cs, const u_int8_t pribus)
     cfgspace_setbm(cs, 0x18, pribus, 0xff);
 }
 
+u_int8_t
+cfgspace_get_secbus(cfgspace_t *cs)
+{
+    return cfgspace_getb(cs, 0x19);
+}
+
 void
 cfgspace_set_secbus(cfgspace_t *cs, const u_int8_t secbus)
 {
     cfgspace_setbm(cs, 0x19, secbus, 0xff);
+}
+
+u_int8_t
+cfgspace_get_subbus(cfgspace_t *cs)
+{
+    return cfgspace_getb(cs, 0x1a);
 }
 
 void

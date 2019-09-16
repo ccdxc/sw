@@ -12,6 +12,7 @@
 #include <sys/param.h>
 #include <linux/pci_regs.h>
 
+#include "platform/misc/include/misc.h"
 #include "platform/misc/include/bdf.h"
 #include "platform/pal/include/pal.h"
 #include "platform/pcietlp/include/pcietlp.h"
@@ -67,9 +68,12 @@ set_bars_handlers(pciehwdev_t *phwdev, const int cfgbase,
 static void
 pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
 {
-    cfgspace_t cs;
-    int msixcap, sriovcap;
+    cfgspace_t cfgspace, *cs = &cfgspace;
+    int msixcap, pciecap, sriovcap;
     int nbars_valid = 0;
+    const int pmtf_wrind = PMTF_WR | PMTF_INDIRECT;
+
+    pciehwdev_get_cfgspace(phwdev, cs);
 
     if (!phwdev->vf) {
         /* Bars */
@@ -78,19 +82,22 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
                                          PCIEHW_CFGHND_DEV_BARS);
         if (phwdev->rombar.valid) {
             /* Oprom Bar */
-            pciehw_set_cfghnd(phwdev, PCI_ROM_ADDRESS,
-                              PMTF_WR | PMTF_INDIRECT,
+            pciehw_set_cfghnd(phwdev, PCI_ROM_ADDRESS, pmtf_wrind,
                               PCIEHW_CFGHND_ROM_BAR);
             nbars_valid++;
         }
     }
 
-    pciehwdev_get_cfgspace(phwdev, &cs);
-    msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
+    /* if bridge */
+    if (cfgspace_get_headertype(cs) == 1) {
+        pciehw_set_cfghnd(phwdev, PCI_BRIDGE_CONTROL, pmtf_wrind,
+                          PCIEHW_CFGHND_BRIDGECTL);
+    }
+
+    msixcap = cfgspace_findcap(cs, PCI_CAP_ID_MSIX);
     if (msixcap) {
         /* MSIX message control */
-        pciehw_set_cfghnd(phwdev, msixcap,
-                          PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_MSIX);
+        pciehw_set_cfghnd(phwdev, msixcap, pmtf_wrind, PCIEHW_CFGHND_MSIX);
     }
 
     /*
@@ -102,21 +109,33 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
      */
     if (nbars_valid > 0 || phwdev->intrc > 0 || phwdev->lifc > 0) {
         /* Command/Status register */
-        pciehw_set_cfghnd(phwdev, 0x4,
-                          PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_CMD);
+        pciehw_set_cfghnd(phwdev, 0x4, pmtf_wrind, PCIEHW_CFGHND_CMD);
     }
 
-    sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
+    pciecap = cfgspace_findcap(cs, PCI_CAP_ID_EXP);
+    if (pciecap) {
+        const u_int32_t devcap = cfgspace_readd(cs, pciecap + 0x4);
+        if (devcap & (1 << 28)) { /* FLR capability */
+            /*
+             * If FLR capability claimed, then watch for FLR requests
+             * as writes to Device Control (+0x8) register of PCIE capability.
+             */
+            pciehw_set_cfghnd(phwdev, pciecap + 0x8,
+                              pmtf_wrind, PCIEHW_CFGHND_PCIE_DEVCTL);
+        }
+    }
+
+    sriovcap = cfgspace_findextcap(cs, PCI_EXT_CAP_ID_SRIOV);
     if (sriovcap) {
         /* SRIOV Control */
         const int cfgbase = sriovcap + 0x24;
         pciehw_set_cfghnd(phwdev, sriovcap + 0x8,
-                          PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_SRIOV_CTRL);
+                          pmtf_wrind, PCIEHW_CFGHND_SRIOV_CTRL);
         set_bars_handlers(phwdev, cfgbase, PCIEHW_CFGHND_SRIOV_BARS);
     }
 
     if (strncmp(phwdev->name, "pciestress", strlen("pciestress")) == 0) {
-        cfgspace_setdm(&cs, 0x400, 0, 0xffffffff);
+        cfgspace_setdm(cs, 0x400, 0, 0xffffffff);
         pciehw_set_cfghnd(phwdev, 0x400, PMTF_RW | PMTF_INDIRECT,
                           PCIEHW_CFGHND_DBG_DELAY);
     }
@@ -314,11 +333,17 @@ cfg_baraddr(cfgspace_t *cs, const u_int32_t cfgoff, const u_int32_t barlen)
 static void
 pciehw_cfg_bars_enable(pciehwdev_t *phwdev, const u_int16_t cmd)
 {
-    const int io_en = (cmd & 0x1) != 0;
-    const int mem_en = (cmd & 0x2) != 0;
+    const int io_en = (cmd & PCI_COMMAND_IO) != 0;
+    const int mem_en = (cmd & PCI_COMMAND_MEMORY) != 0;
     pciehwbar_t *phwbar;
     int i;
 
+#ifdef PCIEMGR_DEBUG
+    pciesys_logdebug("bars_enable: %s %smem %sio\n",
+                     pciehwdev_get_name(phwdev),
+                     mem_en ? "" : "!",
+                     io_en ? "" : "!");
+#endif
     for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
         if (!phwbar->valid) continue;
 
@@ -348,24 +373,21 @@ pciehw_cfg_rombar_enable(pciehwbar_t *phwbar, cfgspace_t *cs)
 static void
 pciehw_cfg_busmaster_enable(pciehwdev_t *phwdev, const int on)
 {
-    /* XXX enable this? */
-#if 0
+#ifdef PCIEMGR_DEBUG
+    pciesys_logdebug("busmaster_enable: %s %s\n",
+                     pciehwdev_get_name(phwdev), on ? "on" : "off");
+#endif
     if (on) {
-        pciehw_hdrt_load(phwdev->lifb, phwdev->lifc);
+        pciehw_hdrt_load(phwdev->lifb, phwdev->lifc, phwdev->bdf);
     } else {
         pciehw_hdrt_unload(phwdev->lifb, phwdev->lifc);
     }
-#endif
 }
 
 static void
-pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+pciehw_cfg_cmd(pciehwdev_t *phwdev, cfgspace_t *cs, const u_int16_t cmd)
 {
-    cfgspace_t cs;
-    u_int16_t cmd, msixcap, msixctl;
-
-    pciehwdev_get_cfgspace(phwdev, &cs);
-    cmd = cfgspace_readw(&cs, PCI_COMMAND);
+    u_int16_t msixcap, msixctl;
 
     /*
      * PF check cmd reg for bar enables.
@@ -375,11 +397,11 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
         /* bar control */
         pciehw_cfg_bars_enable(phwdev, cmd);
         /* cmd.mem_enable might have enabled rombar */
-        pciehw_cfg_rombar_enable(&phwdev->rombar, &cs);
+        pciehw_cfg_rombar_enable(&phwdev->rombar, cs);
 
-        msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
+        msixcap = cfgspace_findcap(cs, PCI_CAP_ID_MSIX);
         if (msixcap) {
-            msixctl = cfgspace_readw(&cs, msixcap + PCI_MSIX_FLAGS);
+            msixctl = cfgspace_readw(cs, msixcap + PCI_MSIX_FLAGS);
         } else {
             msixctl = 0;
         }
@@ -392,7 +414,18 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
         }
     }
 
-    pciehw_cfg_busmaster_enable(phwdev, (cmd & 0x4) != 0);
+    pciehw_cfg_busmaster_enable(phwdev, (cmd & PCI_COMMAND_MASTER) != 0);
+}
+
+static void
+pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    cfgspace_t cs;
+    u_int16_t cmd;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    cmd = cfgspace_readw(&cs, PCI_COMMAND);
+    pciehw_cfg_cmd(phwdev, &cs, cmd);
 }
 
 static void
@@ -451,6 +484,20 @@ pciehw_cfgwr_rom_bar(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 }
 
 static void
+pciehw_cfgwr_bridgectl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    cfgspace_t cs;
+    u_int16_t brctl;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    brctl = cfgspace_readw(&cs, PCI_BRIDGE_CONTROL);
+    if (brctl & PCI_BRIDGE_CTL_BUS_RESET) {
+        const u_int8_t secbus = cfgspace_get_secbus(&cs);
+        pciehw_reset_bus(phwdev, secbus);
+    }
+}
+
+static void
 pciehw_cfgwr_msix(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     const u_int16_t reg = stlp->addr;
@@ -483,6 +530,22 @@ pciehw_cfgwr_msix(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 }
 
 static void
+pciehw_cfgwr_pcie_devctl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    cfgspace_t cs;
+    u_int16_t pciecap, devctl;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    pciecap = cfgspace_findcap(&cs, PCI_CAP_ID_EXP);
+    if (stlp_overlap(stlp, pciecap + 0x8, sizeof(u_int16_t))) {
+        devctl = cfgspace_readw(&cs, pciecap + 0x8);
+        if (devctl & (0x1 << 15)) {
+            pciehw_reset_flr(phwdev);
+        }
+    }
+}
+
+static void
 pciehw_sriov_numvfs_event(pciehwdev_t *phwdev, const u_int16_t numvfs)
 {
     pciehdev_eventdata_t evd;
@@ -498,60 +561,120 @@ pciehw_sriov_numvfs_event(pciehwdev_t *phwdev, const u_int16_t numvfs)
 }
 
 /*
- * Note this depends on all VFs being allocated contiguously,
- * which is true (at the moment).  If that assumption changes
- * we'll need another algorithm to find the VF from the PF.
+ * Enable this VF.  Make it visible on the PCIe bus in cfg space,
+ * and enable bars too if Memory Space Enable (mse) is set.
  */
-static pciehwdev_t *
-pciehwdev_getvf(pciehwdev_t *phwdev, const int vfidx)
-{
-    assert(vfidx >= 0 && vfidx < phwdev->totalvfs);
-    return pciehwdev_get(phwdev->childh + vfidx);
-}
-
 static void
-pciehw_sriov_enable_vf(pciehwdev_t *vfhwdev,
-                       const int cfg_en, const int bar_en)
+pciehw_sriov_enable_vf(pciehwdev_t *vfhwdev, const int mse)
 {
     u_int16_t cmd;
 
-    /* XXX handled cfg_en load/unload cfg space */
-    /* refactor and call pciehw_cfg_load(vfhwdev, cfg_en) */
+    /* XXX handle vfe load/unload cfg space */
+    /* refactor and call pciehw_cfg_load(vfhwdev) */
 
     /* load/unload the bars */
-    cmd = bar_en ? PCI_COMMAND_MEMORY : 0;
+    cmd = mse ? PCI_COMMAND_MEMORY : 0;
     pciehw_cfg_bars_enable(vfhwdev, cmd);
 }
 
 static void
-pciehw_sriov_enable_numvfs(pciehwdev_t *phwdev, const u_int16_t numvfs,
-                           const int cfg_en, const int bar_en)
+pciehw_sriov_enable_vfs(pciehwdev_t *phwdev, const int numvfs, const int mse)
 {
-    pciehwdev_t *vfhwdev;
-    int onumvfs, vfidx;
+    int vfidx;
 
-    onumvfs = phwdev->numvfs;
-
-    /*
-     * If numvfs < onumvfs (our currently enabled vfs),
-     * we need to disable some vfs.
-     */
-    for (vfidx = numvfs; vfidx < onumvfs; vfidx++) {
-        vfhwdev = pciehwdev_getvf(phwdev, vfidx);
-        pciehw_sriov_enable_vf(vfhwdev, 0, 0);
-    }
-
-    /*
-     * Now go enable any newly enabled VFs, i.e. numvfs > onumvfs.
-     */
     for (vfidx = 0; vfidx < numvfs; vfidx++) {
-        vfhwdev = pciehwdev_getvf(phwdev, vfidx);
-        pciehw_sriov_enable_vf(vfhwdev, cfg_en, bar_en);
+        pciehwdev_t *vfhwdev = pciehwdev_getvf(phwdev, vfidx);
+        pciehw_sriov_enable_vf(vfhwdev, mse);
+    }
+}
+
+static void
+pciehw_sriov_disable_vf(pciehwdev_t *vfhwdev)
+{
+    const u_int16_t cmd = 0;
+    pciehw_cfg_bars_enable(vfhwdev, cmd);
+
+    /* XXX handle vfe load/unload cfg space */
+    /* refactor and call pciehw_cfg_unload(vfhwdev) */
+}
+
+/*
+ * Disable VFs.  Unload the bars and clear bus master enable.
+ * We'll reset cfg space for the disable VFs which clears bus master enable.
+ */
+static void
+pciehw_sriov_disable_vfs(pciehwdev_t *phwdev, const int vfb, const int vfc)
+{
+    int vfidx;
+
+    for (vfidx = vfb; vfidx < vfb + vfc; vfidx++) {
+        pciehwdev_t *vfhwdev = pciehwdev_getvf(phwdev, vfidx);
+        pciehw_sriov_disable_vf(vfhwdev);
+    }
+    /* Park disabled vf's in reset state. */
+    pciehw_reset_vfs(phwdev, vfb, vfc);
+}
+
+/*
+ * If VF Enable (vfe) is set, then enable VFs and possibly enable bars
+ * if Memory Space Enable (mse) is also set.
+ *
+ * If VF Enable (vfe) is clear, then disable VFs (mse is ignored).
+ */
+static void
+pciehw_sriov_ctrl_numvfs(pciehwdev_t *phwdev,
+                         const u_int16_t ctrl, const u_int16_t numvfs)
+{
+    const int vfe = (ctrl & PCI_SRIOV_CTRL_VFE) != 0; /* VF Enable */
+    const int mse = (ctrl & PCI_SRIOV_CTRL_MSE) != 0; /* Memory Space Enable */
+
+    if (vfe) {
+        /*
+         * VF Enable set, first disable any enabled VFs greater than numvfs,
+         * then enable [0-numvfs) range.
+         */
+        if (phwdev->enabledvfs > numvfs) {
+            pciehw_sriov_disable_vfs(phwdev,
+                                     numvfs, phwdev->enabledvfs - numvfs);
+        }
+        pciehw_sriov_enable_vfs(phwdev, numvfs, mse);
+        phwdev->enabledvfs = numvfs;
+
+    } else {
+        /*
+         * VF Enable clear, disable all enabled VFs.
+         */
+        if (phwdev->enabledvfs) {
+            pciehw_sriov_disable_vfs(phwdev, 0, phwdev->enabledvfs);
+            phwdev->enabledvfs = 0;
+        }
     }
 
+    /*
+     * Generate an event for numvfs change.
+     */
     if (phwdev->numvfs != numvfs) {
-        phwdev->numvfs = numvfs;
         pciehw_sriov_numvfs_event(phwdev, numvfs);
+        phwdev->numvfs = numvfs;
+    }
+}
+
+static void
+pciehw_sriov_ctrl(pciehwdev_t *phwdev,
+                  const u_int16_t ctrl, const u_int16_t numvfs)
+{
+    if (ctrl != phwdev->sriovctrl) {
+
+        pciesys_loginfo("cfgwr_sriov_ctrl: %s "
+                        "ctrl 0x%04x (%svfe %smse) numvfs %d->%d\n",
+                        pciehwdev_get_name(phwdev),
+                        ctrl,
+                        ctrl & PCI_SRIOV_CTRL_VFE ? "" : "!",
+                        ctrl & PCI_SRIOV_CTRL_MSE ? "" : "!",
+                        phwdev->numvfs, numvfs);
+
+        pciehw_sriov_ctrl_numvfs(phwdev, ctrl, numvfs);
+        phwdev->sriovctrl = ctrl;
     }
 }
 
@@ -560,24 +683,15 @@ pciehw_cfgwr_sriov_ctrl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     cfgspace_t cs;
     u_int16_t sriovcap, sriovctrl, numvfs;
-    int cfg_en, bar_en;
 
     pciehwdev_get_cfgspace(phwdev, &cs);
     sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
     sriovctrl = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_CTRL);
+
     numvfs = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_NUM_VF);
     numvfs = MIN(numvfs, phwdev->totalvfs);
 
-    cfg_en = (sriovctrl & PCI_SRIOV_CTRL_VFE) != 0;
-    bar_en = cfg_en && (sriovctrl & PCI_SRIOV_CTRL_MSE) != 0;
-
-#ifdef PCIEMGR_DEBUG
-    pciesys_loginfo("sriov_ctrl: "
-                    "ctrl 0x%04x (cfg_en %d bar_en %d) numvfs %d->%d\n",
-                    sriovctrl, cfg_en, bar_en, phwdev->numvfs, numvfs);
-#endif
-
-    pciehw_sriov_enable_numvfs(phwdev, numvfs, cfg_en, bar_en);
+    pciehw_sriov_ctrl(phwdev, sriovctrl, numvfs);
 }
 
 static void
@@ -627,8 +741,14 @@ pciehw_cfgwr_notify(pciehwdev_t *phwdev,
     case PCIEHW_CFGHND_ROM_BAR:
         pciehw_cfgwr_rom_bar(phwdev, stlp);
         break;
+    case PCIEHW_CFGHND_BRIDGECTL:
+        pciehw_cfgwr_bridgectl(phwdev, stlp);
+        break;
     case PCIEHW_CFGHND_MSIX:
         pciehw_cfgwr_msix(phwdev, stlp);
+        break;
+    case PCIEHW_CFGHND_PCIE_DEVCTL:
+        pciehw_cfgwr_pcie_devctl(phwdev, stlp);
         break;
     case PCIEHW_CFGHND_SRIOV_CTRL:
         pciehw_cfgwr_sriov_ctrl(phwdev, stlp);
@@ -689,4 +809,150 @@ pciehw_cfgwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     }
     pciehw_cfgwr_notify(phwdev, stlp, info, spmt);
     pciehw_indirect_complete(ientry);
+}
+
+void
+pciehw_cfg_reset(pciehwdev_t *phwdev, const pciehdev_rsttype_t rsttype)
+{
+    cfgspace_t cs;
+    u_int16_t cfgsz, cmd;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    cfgsz = cfgspace_size(&cs);
+
+    /*****************
+     * reset cfg space
+     */
+    pciehw_memcpy(cs.cur, cs.rst, cfgsz);
+
+    /* Read reset value for cmd */
+    cmd = cfgspace_readw(&cs, PCI_COMMAND);
+    pciehw_cfg_cmd(phwdev, &cs, cmd);
+    /* XXX Reset bar addrs? */
+
+    if (phwdev->pf) {
+        u_int16_t sriovcap, sriovctrl, numvfs;
+
+        /* Read reset values for sriovctrl, numvfs. */
+        sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
+        sriovctrl = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_CTRL);
+        numvfs = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_NUM_VF);
+        numvfs = MIN(numvfs, phwdev->totalvfs);
+
+        /* ARI-Capable bit preserved across FLR reset */
+        if (rsttype == PCIEHDEV_RSTTYPE_FLR) {
+            sriovctrl |= (phwdev->sriovctrl & PCI_SRIOV_CTRL_ARI);
+            cfgspace_writew(&cs, sriovcap + PCI_SRIOV_CTRL, sriovctrl);
+        }
+
+        pciehw_sriov_ctrl(phwdev, sriovctrl, numvfs);
+        /* XXX Reset VF bar addrs? */
+    }
+}
+
+/******************************************************************
+ * debug
+ */
+
+/* cfg show flags */
+#define CFGF_NONE       0x0
+#define CFGF_CUR        0x1     /* show current */
+#define CFGF_MSK        0x2     /* show mask */
+#define CFGF_RST        0x4     /* show reset */
+
+/*
+ * Dump the config space of this device.
+ *
+ * If we have the default flags CFGF_CUR then dump the output in a
+ * format compatible with "lspci".  Then we can take this output and
+ * hand it to "lspci -F <file>" for friendly decode.
+ */
+static void
+cfg_show_dev(pciehwdev_t *phwdev, const u_int32_t flags, const int cfgsz)
+{
+    const char *name = pciehwdev_get_name(phwdev);
+    const u_int16_t bdf = pciehwdev_get_hostbdf(phwdev);
+    cfgspace_t cfgspace, *cs = &cfgspace;
+    int offset, sz;
+
+    pciesys_loginfo("%s %s\n", bdf_to_str(bdf),  name);
+
+    pciehwdev_get_cfgspace(phwdev, cs);
+    sz = MIN(cfgspace_size(cs), cfgsz);
+    for (offset = 0; offset < sz; offset += 16) {
+        const int n = MIN(16, sz - offset);
+        char buf[80], *s;
+
+#define SHOW(FLG, fld) \
+        if (flags & CFGF_##FLG) { \
+            s = hex_format(buf, sizeof(buf), &cs->fld[offset], n); \
+            pciesys_loginfo("%s%02x: %s\n", \
+                            flags == CFGF_CUR ? "" : #fld " ", offset, s); \
+        }
+
+        SHOW(CUR, cur);
+        SHOW(RST, rst);
+        SHOW(MSK, msk);
+    }
+}
+
+void
+pciehw_cfg_show(int argc, char *argv[])
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    int opt;
+    char *name;
+    pciehwdev_t *phwdev;
+    u_int32_t flags;
+    int cfgszidx, cfgsz;
+    const int cfgszs[] = { 64, 64, 64, 256, 4096 }; /* match lspci -xxxx */
+    const int ncfgszs = sizeof(cfgszs) / sizeof(cfgszs[0]);
+
+    name = NULL;
+    flags = CFGF_NONE;
+    cfgszidx = 0;
+    optind = 0;
+    while ((opt = getopt(argc, argv, "d:cmrx")) != -1) {
+        switch (opt) {
+        case 'd':
+            name = optarg;
+            break;
+        case 'c':
+            flags |= CFGF_CUR;
+            break;
+        case 'm':
+            flags |= CFGF_MSK;
+            break;
+        case 'r':
+            flags |= CFGF_RST;
+            break;
+        case 'x':
+            cfgszidx++;
+            break;
+        default:
+            return;
+        }
+    }
+
+    if (flags == CFGF_NONE) flags = CFGF_CUR;
+    cfgsz = cfgszs[MIN(cfgszidx, ncfgszs - 1)];
+
+    /*
+     * No device name specified, show all devs
+     */
+    if (name == NULL ) {
+        int i;
+
+        phwdev = &pshmem->dev[1];
+        for (i = 1; i <= pshmem->allocdev; i++, phwdev++) {
+            cfg_show_dev(phwdev, flags, cfgsz);
+        }
+    } else {
+        phwdev = pciehwdev_find_by_name(name);
+        if (phwdev == NULL) {
+            pciesys_logerror("device %s not found\n", name);
+            return;
+        }
+        cfg_show_dev(phwdev, flags, cfgsz);
+    }
 }

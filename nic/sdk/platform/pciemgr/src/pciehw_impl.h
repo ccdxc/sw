@@ -48,6 +48,7 @@ pciehw_mem_t *pciehw_get_hwmem(void);
 pciemgr_params_t *pciehw_get_params(void);
 pciehwdev_t *pciehwdev_get(pciehwdevh_t hwdevh);
 pciehwdevh_t pciehwdev_geth(const pciehwdev_t *phwdev);
+pciehwdev_t *pciehwdev_getvf(pciehwdev_t *phwdev, const int vfidx);
 void pciehwdev_get_cfgspace(const pciehwdev_t *phwdev, cfgspace_t *cs);
 const char *pciehwdev_get_name(const pciehwdev_t *phwdev);
 u_int16_t pciehwdev_get_hostbdf(const pciehwdev_t *phwdev);
@@ -63,6 +64,8 @@ u_int16_t pciehw_hostbdf(const int port, const u_int16_t lbdf);
 int pciehw_cfg_init(void);
 int pciehw_cfg_finalize(pciehdev_t *pdev);
 int pciehw_cfg_finalize_done(pciehwdev_t *phwroot);
+void pciehw_cfg_reset(pciehwdev_t *phwdev, const pciehdev_rsttype_t rsttype);
+
 int pciehwdev_cfgrd(pciehwdev_t *phwdev,
                     const u_int16_t offset,
                     const u_int8_t size,

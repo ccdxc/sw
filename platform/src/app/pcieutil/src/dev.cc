@@ -28,7 +28,8 @@ dev(int argc, char *argv[])
 CMDFUNC(dev,
         "provisioned pcie device info",
         "dev [-a]\n"
-        "    -a         all devices, including virtual bridges\n");
+        "    -a         all devices, including virtual bridges"
+        "    -d <dev>   detailed device info for <dev>\n");
 
 static void
 devintr(int argc, char *argv[])
