@@ -111,7 +111,6 @@ private:
 
 private:
     asic_cfg_t           asic_cfg_;
-    ::utils::log    *obfl_logger_;
 };
 
 }    // namespace impl

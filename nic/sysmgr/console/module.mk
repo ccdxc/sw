@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = console.bin
-MODULE_PIPELINE = iris
+MODULE_PIPELINE = iris apollo artemis
 MODULE_SOLIBS   = 
 MODULE_LDLIBS   = rt
 MODULE_ARLIBS   = 

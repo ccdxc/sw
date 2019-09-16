@@ -20,21 +20,10 @@
 #include "nic/apollo/p4/include/artemis_table_sizes.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_platform_api.h"
+#include "nic/sdk/platform/sysmon/sysmon.hpp"
 
 namespace api {
 namespace impl {
-
-#define OBFL_LOG_DEBUG(fmt, ...)                                       \
-{                                                                      \
-    obfl_logger_->logger()->debug(fmt, ##__VA_ARGS__);                 \
-    obfl_logger_->logger()->flush();                                   \
-}
-
-#define OBFL_LOG_ERR(fmt, ...)                                         \
-{                                                                      \
-    obfl_logger_->logger()->error(fmt, ##__VA_ARGS__);                 \
-    obfl_logger_->logger()->flush();                                   \
-}
 
 /**
  * @defgroup PDS_ASIC_IMPL - asic wrapper implementation
@@ -48,14 +37,6 @@ namespace impl {
  */
 sdk_ret_t
 capri_impl::init_(void) {
-    if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
-        obfl_logger_ =
-            utils::log::factory("obfl", api::g_pds_state.control_cores_mask(),
-                                utils::log_mode_sync, false,
-                                "/obfl/asicmon.log", (1 << 20), 5,
-                                utils::trace_debug, utils::log_none,
-                                false);
-    }
     return SDK_RET_OK;
 }
 
@@ -246,7 +227,7 @@ capri_impl::pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) {
         memset(&pb_stats, 0, sizeof(pb_stats));
         ret = capri_tm_get_pb_debug_stats(tm_port, &pb_stats.stats, false);
         if (ret != SDK_RET_OK) {
-            OBFL_LOG_ERR("Get PB stats failed for port {}", tm_port);
+            PDS_TRACE_ERR("Get PB stats failed for port {}", tm_port);
             continue;
         }
         ret = capri_queue_stats_get(tm_port, &pb_stats.qos_queue_stats);
@@ -262,29 +243,7 @@ capri_impl::pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) {
  */
 sdk_ret_t
 capri_impl::monitor (void) {
-    int rv;
-    sdk::platform::sensor::system_power_t power;
-    sdk::platform::sensor::system_temperature_t temperature;
-
-    // read the temperatures
-    rv = sdk::platform::sensor::read_temperatures(&temperature);
-    if (rv == 0) {
-        OBFL_LOG_DEBUG("Die temperature is {}C, local temperature is {}C,"
-                       " HBM temperature is {}C", temperature.dietemp/1000,
-                       temperature.localtemp/1000, temperature.hbmtemp);
-    } else {
-        OBFL_LOG_ERR("Temperature reading failed");
-    }
-
-    // read the power
-    rv = sdk::platform::sensor::read_powers(&power);
-    if (rv == 0) {
-        OBFL_LOG_DEBUG("Power of pin is {}W, pout1 is {}W, pout2 is {}W",
-                       power.pin/1000000, power.pout1/1000000,
-                       power.pout2/1000000);
-    } else {
-        OBFL_LOG_ERR("Power reading failed");
-    }
+    sysmon_monitor();
     return SDK_RET_OK;
 }
 

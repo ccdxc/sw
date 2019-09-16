@@ -34,7 +34,7 @@ export NIC_COMMON_FLAGS := -pthread -rdynamic
 export NIC_SDK_SOLIBS   := utils list slab shmmgr mmgr sdkpal sdkfru \
     ht indexer logger thread periodic twheel directmap \
     hash hbmhash tcam timerfd catalog device sdkplatformutils sdkcapri \
-    sdkp4loader sdkasicrw lif_mgr sdkring
+    sdkp4loader sdkasicrw lif_mgr sdkring sysmon sensor
 
 export NIC_HAL_DLOPEN_SOLIBS := plugin_network \
                                 plugin_sfw \

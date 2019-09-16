@@ -18,6 +18,7 @@
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
+#include "platform/sysmon/sysmon.hpp"
 
 namespace api {
 
@@ -91,6 +92,42 @@ sysmon_cb (void *timer, uint32_t timer_id, void *ctxt)
     impl_base::asic_impl()->monitor();
 }
 
+static void
+power_event_cb (sdk::platform::sensor::system_power_t *power)
+{
+    PDS_TRACE_VERBOSE("Power of pin is {}W, pout1 is {}W, pout2 is {}W",
+                      power->pin/1000000, power->pout1/1000000,
+                      power->pout2/1000000);
+}
+
+static void
+temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature)
+{
+    PDS_TRACE_VERBOSE("Die temperature is {}C, local temperature is {}C,"
+                      " HBM temperature is {}C", temperature->dietemp/1000,
+                      temperature->localtemp/1000, temperature->hbmtemp);
+}
+
+/**
+ * @brief    initialize and start system monitoring
+ */
+static void
+sysmon_init (void)
+{
+    sysmon_cfg_t sysmon_cfg;
+
+    memset(&sysmon_cfg, 0, sizeof(sysmon_cfg_t));
+    sysmon_cfg.power_event_cb = power_event_cb;
+    sysmon_cfg.temp_event_cb = temp_event_cb;
+    sysmon_cfg.catalog = api::g_pds_state.catalogue();
+
+    // init the sysmon lib
+    sysmon_init(&sysmon_cfg);
+
+    // schedule sysmon timer
+    core::schedule_timers(&api::g_pds_state, api::sysmon_cb);
+}
+
 }    // namespace api
 
 /**
@@ -106,7 +143,8 @@ pds_init (pds_init_params_t *params)
     std::string   mem_json;
 
     // initialize the logger
-    sdk::lib::logger::init(params->trace_cb);
+    // TODO fix obfl logger when sdk logger is cleaned up
+    sdk::lib::logger::init(params->trace_cb, params->trace_cb);
     register_trace_cb(params->trace_cb);
 
     // parse global configuration
@@ -194,8 +232,8 @@ pds_init (pds_init_params_t *params)
     // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);
 
-    // schedule all global timers
-    core::schedule_timers(&api::g_pds_state, api::sysmon_cb);
+    // initialize and start system monitoring
+    api::sysmon_init();
 
     return SDK_RET_OK;
 }

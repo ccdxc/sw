@@ -143,6 +143,7 @@ nic/apollo/tools/syskill.sh                                       /nic/tools/
 nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
+nic/tools/serial_console.sh                                       /nic/tools/
 
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
@@ -176,10 +177,12 @@ nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdevice.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libvenice.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsysmon.so                        /nic/lib/
 
 nic/build/$ARCH/$PIPELINE/bin/nmd                                 /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/penctl                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
 
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/
