@@ -3188,10 +3188,13 @@ ionic_iff_up(struct lif *lif)
 
 	lif->iff_up = iff_up;
 
-	if (iff_up)
+	if (iff_up) {
 		ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
-	else
+	} else {
+		/* Report link down until it is set by the next link event */
+		lif->link_up = false;
 		ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
+	}
 #endif
 }
 

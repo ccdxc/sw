@@ -2824,9 +2824,11 @@ ionic_process_event(struct notifyq* notifyq, union notifyq_comp *comp)
 
 	switch (comp->event.ecode) {
 	case EVENT_OPCODE_LINK_CHANGE:
+		IONIC_LIF_LOCK(lif);
+		ionic_read_notify_block(lif);
+
 		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
 			lif->last_eid, (lif->link_up ? "up" : "down"), lif->link_speed);
-		ionic_read_notify_block(lif);
 
 		if (lif->last_eid < comp->event.eid) {
 			if_printf(ifp, "comp eid: %ld > last_eid: %ld\n",
@@ -2835,8 +2837,6 @@ ionic_process_event(struct notifyq* notifyq, union notifyq_comp *comp)
 			lif->link_up = comp->link_change.link_status ? true : false;
 			lif->last_eid = comp->event.eid;
 		}
-
-		IONIC_LIF_LOCK(lif);
 
 		ionic_open_or_stop(lif);
 
@@ -3425,13 +3425,8 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	struct ionic_dev *idev = &ionic->idev;
 
 	IONIC_LIF_LOCK(lif);
-	ionic_read_notify_block(lif);
-
 	ifmr->ifm_status = IFM_AVALID;
 	ifmr->ifm_active = IFM_ETHER;
-
-	/* link_up may have changed due to reading notify block */
-	ionic_open_or_stop(lif);
 
 	if (!lif->link_up) {
 		IONIC_LIF_UNLOCK(lif);
