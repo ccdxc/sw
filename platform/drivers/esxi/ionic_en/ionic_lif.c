@@ -248,7 +248,10 @@ ionic_stop(struct lif *lif)
         max_rx_rss_queues = lif->uplink_handle->max_rx_rss_queues;
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
-		// TODO post NOP Tx desc and wait for its completion
+                ionic_en_tx_ring_deinit(i,
+                                        priv_data);
+
+                // TODO post NOP Tx desc and wait for its completion
 		// TODO before disabling Tx queue
 		status = ionic_qcq_disable(lif->txqcqs[i]);
 		if (status != VMK_OK) {
@@ -264,10 +267,9 @@ ionic_stop(struct lif *lif)
                 ionic_en_dbg("DEINIT txq, ring_idx: %d, "
                              "shared_q_idx: %d",
                              i, shared_q_data_idx);
-
-                ionic_en_tx_ring_deinit(i,
-                                        priv_data);
         }
+
+        ionic_lif_quiesce(lif);
 
         for (i = 0; i < lif->nrxqcqs; i++) {
                 ionic_rx_flush(&lif->rxqcqs[i]->cq);
@@ -1876,6 +1878,44 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 		ionic_lif_qcq_deinit(lif->rxqcqs[i]);
 }
 
+
+VMK_ReturnStatus
+ionic_lif_quiesce(struct lif *lif)
+{
+        VMK_ReturnStatus status;
+        struct ionic_admin_ctx ctx = {
+                .cmd.lif_setattr = {
+                        .opcode = CMD_OPCODE_LIF_SETATTR,
+                        .attr = IONIC_LIF_ATTR_STATE,
+                        .index = lif->index,
+                        .state = IONIC_LIF_DISABLE
+                },
+        };
+
+	status = ionic_completion_create(ionic_driver.module_id,
+					 ionic_driver.heap_id,
+					 ionic_driver.lock_domain,
+					 "ionic_admin_ctx.work",
+					 &ctx.work);
+	if (status != VMK_OK) {
+		ionic_en_err("ionic_completion_create() failed, status: %s",
+			  vmk_StatusToString(status));
+		return status;
+	}
+
+	ionic_completion_init(&ctx.work);
+
+        status = ionic_adminq_post_wait(lif, &ctx);
+        ionic_completion_destroy(&ctx.work);
+        if (status != VMK_OK) {
+                ionic_en_err("ionic_adminq_post_wait() failed, status: %s",
+                          vmk_StatusToString(status));
+        }
+
+        return status;
+}
+
+
 static void ionic_lif_deinit(struct lif *lif)
 {
         if (!(lif->flags & LIF_F_INITED)) {
@@ -1894,7 +1934,7 @@ static void ionic_lif_deinit(struct lif *lif)
 
         ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
-	ionic_rx_filters_deinit(lif);
+        ionic_rx_filters_deinit(lif);
 
         if (lif->adminqcq->is_netpoll_enabled) {
                 vmk_IntrDisable(lif->adminqcq->intr.cookie);

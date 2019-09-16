@@ -222,5 +222,8 @@ ionic_lif_rss_config(struct lif *lif, const u16 types,
 VMK_ReturnStatus
 ionic_lif_set_uplink_info(struct lif *lif);
 
+VMK_ReturnStatus
+ionic_lif_quiesce(struct lif *lif);
+
 #endif /* _IONIC_LIF_H_ */
 
