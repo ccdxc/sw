@@ -44,6 +44,7 @@
 void ionic_rx_fill(struct rxque *rxq);
 static void ionic_rx_empty(struct rxque *rxq);
 static void ionic_rx_refill(struct rxque *rxq);
+static void ionic_tx_empty(struct txque *txq);
 
 static int ionic_addr_add(struct ifnet *ifp, const u8 *addr);
 static int ionic_addr_del(struct ifnet *ifp, const u8 *addr);
@@ -2603,7 +2604,7 @@ ionic_lif_txqs_disable(struct lif *lif)
 }
 
 static void
-ionic_lif_txqs_clean(struct lif *lif)
+ionic_lif_txqs_clean_empty(struct lif *lif)
 {
 	struct txque *txq;
 	unsigned int i;
@@ -2617,6 +2618,7 @@ ionic_lif_txqs_clean(struct lif *lif)
 		 */
 		IONIC_TX_LOCK(txq);
 		ionic_tx_clean(txq, txq->num_descs);
+		ionic_tx_empty(txq);
 		IONIC_TX_UNLOCK(txq);
 	}
 }
@@ -2707,7 +2709,7 @@ ionic_lif_deinit(struct lif *lif)
 	ionic_lif_rxqs_disable(lif);
 	ionic_lif_txqs_disable(lif);
 	ionic_lif_quiesce(lif);
-	ionic_lif_txqs_clean(lif);
+	ionic_lif_txqs_clean_empty(lif);
 	ionic_lif_rxqs_clean_empty(lif);
 	ionic_lif_adminq_deinit(lif);
 
@@ -3009,6 +3011,30 @@ ionic_tx_clean(struct txque *txq, int tx_limit)
 	}
 
 	return (processed);
+}
+
+static void
+ionic_tx_empty(struct txque *txq)
+{
+	struct ionic_tx_buf *txbuf;
+
+	for (; !IONIC_Q_EMPTY(txq); txq->tail_index = IONIC_MOD_INC(txq, tail_index)) {
+		txbuf = &txq->txbuf[txq->tail_index];
+
+		if (txbuf->m == NULL)
+			continue;
+
+		if (txbuf->is_tso) {
+			bus_dmamap_sync(txq->tso_buf_tag, txbuf->tso_dma_map, BUS_DMASYNC_POSTWRITE);
+			bus_dmamap_unload(txq->tso_buf_tag, txbuf->tso_dma_map);
+		} else {
+			bus_dmamap_sync(txq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
+			bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
+		}
+
+		m_freem(txbuf->m);
+		txbuf->m = NULL;
+	}
 }
 
 static int
@@ -3824,7 +3850,7 @@ err_out_rxqs_deinit:
 	ionic_lif_rxqs_clean_empty(lif);
 err_out_txqs_deinit:
 	ionic_lif_txqs_disable(lif);
-	ionic_lif_txqs_clean(lif);
+	ionic_lif_txqs_clean_empty(lif);
 err_out_notifyq_disable:
 	/* NB: Drain later, after dropping LIF lock */
 	ionic_lif_notifyq_disable(lif);

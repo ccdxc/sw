@@ -371,6 +371,9 @@ struct lif {
 	eventhandler_tag vlan_detach;
 
 	u64 last_eid;
+#ifdef NETAPP_PATCH
+	bool iff_up;
+#endif
 	bool link_up;
 	bool stop;
 

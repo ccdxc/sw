@@ -940,7 +940,7 @@ struct rxq_comp {
 #define IONIC_RXQ_COMP_CSUM_F_VLAN	0x40
 #define IONIC_RXQ_COMP_CSUM_F_CALC	0x80
 	u8     pkt_type_color;
-#define IONIC_RXQ_COMP_PKT_TYPE_MASK	0x0f
+#define IONIC_RXQ_COMP_PKT_TYPE_MASK	0x7f
 };
 
 enum pkt_type {

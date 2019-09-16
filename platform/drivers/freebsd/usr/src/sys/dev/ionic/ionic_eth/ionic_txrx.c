@@ -1587,6 +1587,9 @@ ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 
 	/* Connect lif to ifnet. */
 	lif->netdev = ifp;
+#ifdef NETAPP_PATCH
+	lif->iff_up = (ifp->if_flags & IFF_UP) != 0;
+#endif
 
 	return (0);
 }
@@ -3137,6 +3140,42 @@ ionic_lif_netdev_free(struct lif *lif)
 	}
 }
 
+static void
+ionic_iff_up(struct lif *lif)
+{
+#ifdef NETAPP_PATCH
+	bool iff_up;
+#endif
+
+	/*
+	 * These internally check if the respective value has changed, before
+	 * issuing a command to the device.
+	 */
+	ionic_set_rx_mode(lif->netdev);
+	ionic_set_mac(lif->netdev);
+
+#ifdef NETAPP_PATCH
+	/*
+	 * Control the port admin state: allow or disallow link to come up.
+	 *
+	 * Only update the admin state when IFF_UP is observed to change.
+	 * Initially, the port admin state may be UP on the nic, but not IFF_UP
+	 * in the network stack.  When changing other flags (eg: promiscuous),
+	 * do not to disturb the port admin state.
+	 */
+	iff_up = (lif->netdev->if_flags & IFF_UP) != 0;
+	if (lif->iff_up == iff_up)
+		return;
+
+	lif->iff_up = iff_up;
+
+	if (iff_up)
+		ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
+	else
+		ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
+#endif
+}
+
 static int
 ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 {
@@ -3296,24 +3335,15 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			IONIC_NETDEV_ERROR(ifp, "Failed to set ip, err: %d\n", error);
 			break;
 		}
-		IONIC_LIF_LOCK(lif);
+
 		/*
-		Freebsd network stack can change the admin link state of a netdev
-		while handling the SIOCSIFADDR ioctl. Also, it will not call the
-		SIOCSIFFLAGS ioctl. So we need to apply if_flags in the SIOCSIFADDR
-		ioctl handler.
-		*/
-		if (ifp->if_flags & IFF_UP) {
-#ifdef NETAPP_PATCH
-			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
-#endif
-			ionic_set_rx_mode(lif->netdev);
-			ionic_set_mac(lif->netdev);
-		} else {
-#ifdef NETAPP_PATCH
-			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
-#endif
-		}
+		 * Freebsd network stack can change the admin link state of a
+		 * netdev while handling the SIOCSIFADDR ioctl. It will not
+		 * call the SIOCSIFFLAGS ioctl. So we need to apply if_flags in
+		 * the SIOCSIFADDR ioctl handler.
+		 */
+		IONIC_LIF_LOCK(lif);
+		ionic_iff_up(lif);
 		IONIC_LIF_UNLOCK(lif);
 		break;
 
@@ -3321,17 +3351,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFFLAGS (Set interface flags)\n");
 		IONIC_LIF_LOCK(lif);
 		ionic_open_or_stop(lif);
-		if (ifp->if_flags & IFF_UP) {
-#ifdef NETAPP_PATCH
-			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
-#endif
-			ionic_set_rx_mode(lif->netdev);
-			ionic_set_mac(lif->netdev);
-		} else {
-#ifdef NETAPP_PATCH
-			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
-#endif
-		}
+		ionic_iff_up(lif);
 		IONIC_LIF_UNLOCK(lif);
 		break;
 

@@ -16,9 +16,6 @@
 #define PKT_TYPE_IPV6           BIT(3)
 #define PKT_TYPE_IPV6_TCP       BIT(4)
 #define PKT_TYPE_IPV6_UDP       BIT(5)
-#define PKT_TYPE_IPV6_EX        BIT(6)
-#define PKT_TYPE_IPV6_TCP_EX    BIT(7)
-#define PKT_TYPE_IPV6_UDP_EX    BIT(8)
 
 #define RSS_NONE                (PKT_TYPE_NON_IP)   // 0x0
 #define RSS_IPV4                (PKT_TYPE_IPV4)     // 0x1
