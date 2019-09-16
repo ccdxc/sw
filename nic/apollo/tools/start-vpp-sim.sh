@@ -4,6 +4,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NICDIR=`readlink -f $ABS_TOOLS_DIR/../../`
 export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
+TIMEOUT_SCALE=1
 
 argc=$#
 argv=($@)
@@ -13,6 +14,8 @@ for (( j=0; j<argc; j++ )); do
     fi
     if [ ${argv[j]} == '--coverage-run' ];then
         export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
+        #Coverage makes vpp slower
+        TIMEOUT_SCALE=2
     fi
 done
 
@@ -40,7 +43,7 @@ set +x
 NICMGR_FILE="$NICDIR/nicmgr.log"
 VPPLOG_FILE="$NICDIR/vpp.log"
 command rm -f $VPPLOG_FILE
-counter=600
+counter=$((600*TIMEOUT_SCALE))
 #echo "$NICMGR_FILE"
 #echo "$VPPLOG_FILE"
 while [ $counter -gt 0 ]
@@ -76,7 +79,7 @@ echo "Starting VPP"
 LD_LIBRARY_PATH=$NICDIR/build/x86_64/$PIPELINE/lib:$VPP_PKG_DIR/lib $VPP_PKG_DIR/bin/vpp -c $NICDIR/apollo/vpp/conf/vpp_1_worker_sim.conf &
 [[ $? -ne 0 ]] && echo "Failed to start VPP!" && exit 1
 #cat /proc/meminfo | grep -i huge
-counter=60
+counter=$((60*TIMEOUT_SCALE))
 while [ $counter -gt 0 ]
 do
     LD_LIBRARY_PATH=$NICDIR/build/x86_64/$PIPELINE/lib:$VPP_PKG_DIR/lib $VPP_PKG_DIR/bin/vppctl trace add dpdk-input 50
