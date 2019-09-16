@@ -5,9 +5,12 @@ namespace tests {
 testvec_parser_t::testvec_parser_t(const string& scripts_dir,
                                    const string& testvec_fname,
                                    token_parser_t& token_parser,
-                                   const map<string,parser_token_id_t>& token2id_map) :
+                                   const map<string,parser_token_id_t>& token2id_map,
+                                   testvec_output_t *output) :
     token_parser(token_parser),
     token2id_map(token2id_map),
+    output(output),
+    header_comments_done(false),
     line_consumed_(true),
     token_consumed_(true)
 {
@@ -44,6 +47,7 @@ testvec_parser_t::parse(testvec_parse_params_t params)
     parser_token_id_t   token_id;
     string              token;
 
+    this->parse_params = params;
     while (line_get()) {
         token = next_token_get();
         if (token.empty()) {
@@ -92,9 +96,18 @@ testvec_parser_t::line_get(void)
             token_parser(line);
 
             /*
-             * Discard empty or comment line
+             * Output header comments if instructed
              */
-            if (!token_parser.line_empty() && !token_parser.line_is_comment()) {
+            if (token_parser.line_empty() || token_parser.line_is_comment()) {
+                if (output && !header_comments_done &&
+                    parse_params.output_header_comments()) {
+
+                    output->text("", line);
+                }
+
+            } else {
+                header_comments_done = true;
+                token_parser.whitespaces_strip();
                 line_consume_clr();
                 return true;
             }
@@ -190,13 +203,12 @@ testvec_parser_t::parse_string(string *str)
 
 
 /*
- * Line parser
+ * Token parser
  */
 void
 token_parser_t::operator()(const string& arg_line)
 {
      line.assign(arg_line);
-     whitespaces_strip();
      //OFFL_FUNC_DEBUG("line {}", line);
 
      token.clear();

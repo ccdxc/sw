@@ -6,6 +6,7 @@
 #include "nic/sdk/include/sdk/pse_intf.h"
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <openssl/engine.h>
 #include "nic/hal/pd/pd_api_c.h"
 

@@ -2,6 +2,9 @@
 #include "eng_if.hpp"
 #include "hal_if.hpp"
 
+/*
+ * Asymmetric (Public Key) Cryptography
+ */
 namespace crypto_asym {
 
 acc_ring_t *asym_ring;

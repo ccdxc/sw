@@ -20,87 +20,27 @@ extern BIO      *eng_if_bio;
 typedef EVP_MD eng_evp_md_t;
 
 /*
- * Engine generic key
- */
-class dole_key_t
-{
-public:
-    dole_key_t() :
-        key_type_(EVP_PKEY_NONE),
-        key_idx_(CRYPTO_ASYM_KEY_IDX_INVALID),
-        n_(nullptr),
-        d_e_(nullptr),
-        digest_padded_(nullptr),
-        wait_for_completion_(false)
-    {
-    }
-
-    dole_key_t&
-    key_type(int key_type)
-    {
-        key_type_ = key_type;
-        return *this;
-    }
-    dole_key_t&
-    key_idx(crypto_asym::key_idx_t key_idx)
-    {
-        key_idx_ = key_idx;
-        return *this;
-    }
-    dole_key_t&
-    n(dp_mem_t *n)
-    {
-        n_ = n;
-        return *this;
-    }
-    dole_key_t&
-    d_e(dp_mem_t *d_e)
-    {
-        d_e_ = d_e;
-        return *this;
-    }
-    dole_key_t&
-    digest_padded(dp_mem_t *digest_padded)
-    {
-        digest_padded_ = digest_padded;
-        return *this;
-    }
-    dole_key_t&
-    wait_for_completion(bool wait_for_completion)
-    {
-        wait_for_completion_ = wait_for_completion;
-        return *this;
-    }
-
-    int key_type(void) { return key_type_; }
-    crypto_asym::key_idx_t key_idx(void) { return key_idx_; }
-    dp_mem_t *n(void) { return n_; }
-    dp_mem_t *d_e(void) { return d_e_; }
-    dp_mem_t *digest_padded(void) { return digest_padded_; }
-    bool wait_for_completion(void) { return wait_for_completion_; }
-
-private:
-    int                         key_type_;
-    crypto_asym::key_idx_t      key_idx_;
-    dp_mem_t                    *n_;            // RSA modulus
-    dp_mem_t                    *d_e_;          // RSA public or private exponent
-    dp_mem_t                    *digest_padded_;
-    bool                        wait_for_completion_;
-};
-
-/*
  * Engine digest parameters
  */
 class digest_params_t
 {
 public:
     digest_params_t() :
+        sha_hw_ctx_(nullptr),
         msg_(nullptr),
         digest_(nullptr),
-        msg_is_component_(false)
+        msg_is_component_(false),
+        failure_expected_(false),
+        wait_for_completion_(false)
     {
     }
 
+    digest_params_t&
+    sha_hw_ctx(void *sha_hw_ctx)
+    {
+        sha_hw_ctx_ = sha_hw_ctx;
+        return *this;
+    }
     digest_params_t&
     hash_algo(const string& hash_algo)
     {
@@ -125,17 +65,35 @@ public:
         msg_is_component_ = msg_is_component;
         return *this;
     }
+    digest_params_t&
+    failure_expected(bool failure_expected)
+    {
+        failure_expected_ = failure_expected;
+        return *this;
+    }
+    digest_params_t&
+    wait_for_completion(bool wait_for_completion)
+    {
+        wait_for_completion_ = wait_for_completion;
+        return *this;
+    }
 
     const string& hash_algo(void) { return hash_algo_; }
+    void *sha_hw_ctx(void) { return sha_hw_ctx_; }
     dp_mem_t *msg(void) { return msg_; }
     dp_mem_t *digest(void) { return digest_; }
     bool msg_is_component(void) { return msg_is_component_; }
+    bool failure_expected(void) { return failure_expected_; }
+    bool wait_for_completion(void) { return wait_for_completion_; }
 
 private:
     string                      hash_algo_;
+    void                        *sha_hw_ctx_;
     dp_mem_t                    *msg_;
     dp_mem_t                    *digest_;
     bool                        msg_is_component_;
+    bool                        failure_expected_;
+    bool                        wait_for_completion_;
 };
 
 /*

@@ -1,5 +1,6 @@
 #include "crypto_drbg_testvec.hpp"
 #include "testvec_output.hpp"
+#include "utils.hpp"
 
 /*
  * The following string tokens assume the parser has stripped off
@@ -12,11 +13,14 @@
 #define PARSE_TOKEN_STR_NONCE_LEN       "NonceLen"
 #define PARSE_TOKEN_STR_PSNL_STR_LEN    "PersonalizationStringLen"
 #define PARSE_TOKEN_STR_ADD_INPUT_LEN   "AdditionalInputLen"
+#define PARSE_TOKEN_STR_RET_BITS        "ReturnedBits"
 #define PARSE_TOKEN_STR_RET_BITS_LEN    "ReturnedBitsLen"
 #define PARSE_TOKEN_STR_ENTROPY         "EntropyInput"
+#define PARSE_TOKEN_STR_ENTROPY_RESEED  "EntropyInputReseed"
 #define PARSE_TOKEN_STR_NONCE           "Nonce"
 #define PARSE_TOKEN_STR_PSNL_STR        "PersonalizationString"
 #define PARSE_TOKEN_STR_ADD_INPUT       "AdditionalInput"
+#define PARSE_TOKEN_STR_ADD_INPUT_RESEED "AdditionalInputReseed"
 #define PARSE_TOKEN_STR_ENTROPY_PR      "EntropyInputPR"
 
 /*
@@ -39,9 +43,11 @@
 
 #define PARSE_STR_COUNT_PREFIX          "COUNT = "
 #define PARSE_STR_ENTROPY_PREFIX        "EntropyInput = "
+#define PARSE_STR_ENTROPY_RESEED_PREFIX "EntropyInputReseed = "
 #define PARSE_STR_NONCE_PREFIX          "Nonce = "
 #define PARSE_STR_PSNL_STR_PREFIX       "PersonalizationString = "
 #define PARSE_STR_ADD_INPUT_PREFIX      "AdditionalInput = "
+#define PARSE_STR_ADD_INPUT_RESEED_PREFIX "AdditionalInputReseed = "
 #define PARSE_STR_ENTROPY_PR_PREFIX     "EntropyInputPR = "
 #define PARSE_STR_RET_BITS_PREFIX       "ReturnedBits = "
 #define PARSE_STR_RET_BITS_SUFFIX       "\n"
@@ -73,11 +79,14 @@ enum {
     PARSE_TOKEN_ID_PSNL_STR_LEN,
     PARSE_TOKEN_ID_ADD_INPUT_LEN,
     PARSE_TOKEN_ID_RET_BITS_LEN,
+    PARSE_TOKEN_ID_RET_BITS,
     PARSE_TOKEN_ID_ENTROPY,
     PARSE_TOKEN_ID_NONCE,
     PARSE_TOKEN_ID_PSNL_STR,
     PARSE_TOKEN_ID_ADD_INPUT,
+    PARSE_TOKEN_ID_ADD_INPUT_RESEED,
     PARSE_TOKEN_ID_ENTROPY_PR,
+    PARSE_TOKEN_ID_ENTROPY_RESEED,
 };
 
 const static map<string,parser_token_id_t>      token2id_map =
@@ -90,11 +99,14 @@ const static map<string,parser_token_id_t>      token2id_map =
     {PARSE_TOKEN_STR_PSNL_STR_LEN,  PARSE_TOKEN_ID_PSNL_STR_LEN},
     {PARSE_TOKEN_STR_ADD_INPUT_LEN, PARSE_TOKEN_ID_ADD_INPUT_LEN},
     {PARSE_TOKEN_STR_RET_BITS_LEN,  PARSE_TOKEN_ID_RET_BITS_LEN},
+    {PARSE_TOKEN_STR_RET_BITS,      PARSE_TOKEN_ID_RET_BITS},
     {PARSE_TOKEN_STR_ENTROPY,       PARSE_TOKEN_ID_ENTROPY},
     {PARSE_TOKEN_STR_NONCE,         PARSE_TOKEN_ID_NONCE},
     {PARSE_TOKEN_STR_PSNL_STR,      PARSE_TOKEN_ID_PSNL_STR},
     {PARSE_TOKEN_STR_ADD_INPUT,     PARSE_TOKEN_ID_ADD_INPUT},
+    {PARSE_TOKEN_STR_ADD_INPUT_RESEED, PARSE_TOKEN_ID_ADD_INPUT_RESEED},
     {PARSE_TOKEN_STR_ENTROPY_PR,    PARSE_TOKEN_ID_ENTROPY_PR},
+    {PARSE_TOKEN_STR_ENTROPY_RESEED,PARSE_TOKEN_ID_ENTROPY_RESEED},
 };
 
 /*
@@ -104,6 +116,7 @@ drbg_testvec_t::drbg_testvec_t(drbg_testvec_params_t& params) :
 
     testvec_params(params),
     testvec_parser(nullptr),
+    rsp_output(nullptr),
     drbg(nullptr),
     num_test_failures(0),
     hw_started(false),
@@ -125,6 +138,7 @@ drbg_testvec_t::~drbg_testvec_t()
                     testvec_params.base_params().destructor_free_buffers());
     if (testvec_params.base_params().destructor_free_buffers()) {
         if (test_success || !hw_started) {
+            if (rsp_output) delete rsp_output;
             if (testvec_parser) delete testvec_parser;
         }
     }
@@ -149,6 +163,19 @@ drbg_testvec_t::pre_push(drbg_testvec_pre_push_params_t& pre_params)
     hw_started = false;
     test_success = false;
 
+    rsp_output = new testvec_output_t(pre_params.scripts_dir(),
+                                      pre_params.testvec_fname(),
+                                      pre_params.instance() == DRBG_INSTANCE0 ?
+                                      "" : to_string(pre_params.instance()));
+#ifdef __x86_64__
+
+    /*
+     * Pensando FIPS consulting cannot parse product info so
+     * leave it out for real HW.
+     */
+    rsp_output->text_vec("# ", product_info_vec_get());
+#endif
+
     /*
      * For ease of parsing, consider brackets as whitespaces;
      * and "-" and "=" as token delimiters.
@@ -157,10 +184,11 @@ drbg_testvec_t::pre_push(drbg_testvec_pre_push_params_t& pre_params)
     token_parser.extra_delims_add("-=");
     testvec_parser = new testvec_parser_t(pre_params.scripts_dir(),
                                           pre_params.testvec_fname(),
-                                          token_parser, token2id_map);
+                                          token_parser, token2id_map, rsp_output);
     while (!testvec_parser->eof()) {
 
-        token_id = testvec_parser->parse(params.skip_unknown_token(true));
+        token_id = testvec_parser->parse(params.skip_unknown_token(true).
+                                                output_header_comments(true));
         switch (token_id) {
 
         case PARSE_TOKEN_ID_EOF:
@@ -312,6 +340,16 @@ drbg_testvec_t::pre_push(drbg_testvec_pre_push_params_t& pre_params)
             trial_repr->add_input_vec->line_advance();
             break;
 
+        case PARSE_TOKEN_ID_ADD_INPUT_RESEED:
+            if (!trial_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_ADD_INPUT_RESEED);
+                goto error;
+            }
+            if (!testvec_parser->parse_hex_bn(trial_repr->add_input_reseed, true)) {
+                trial_repr->failed_parse_token = token_id;
+            }
+            break;
+
         case PARSE_TOKEN_ID_ENTROPY_PR:
             if (!trial_repr.use_count()) {
                 OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_ENTROPY_PR);
@@ -321,6 +359,26 @@ drbg_testvec_t::pre_push(drbg_testvec_pre_push_params_t& pre_params)
                 trial_repr->failed_parse_token = token_id;
             }
             trial_repr->entropy_pr_vec->line_advance();
+            break;
+
+        case PARSE_TOKEN_ID_ENTROPY_RESEED:
+            if (!trial_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_ENTROPY_RESEED);
+                goto error;
+            }
+            if (!testvec_parser->parse_hex_bn(trial_repr->entropy_reseed)) {
+                trial_repr->failed_parse_token = token_id;
+            }
+            break;
+
+        case PARSE_TOKEN_ID_RET_BITS:
+            if (!trial_repr.use_count()) {
+                OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_RET_BITS);
+                goto error;
+            }
+            if (!testvec_parser->parse_hex_bn(trial_repr->ret_bits_expected)) {
+                trial_repr->failed_parse_token = token_id;
+            }
             break;
 
         default:
@@ -355,7 +413,7 @@ drbg_testvec_t::push(drbg_testvec_push_params_t& push_params)
         return true;
     }
 
-    drbg = dflt_drbg_get(push_params.instance());
+    drbg = dflt_drbg_get(pre_params.instance());
     hw_started = true;
 
     FOR_EACH_TEST_REPR(test_repr) {
@@ -403,38 +461,45 @@ drbg_testvec_t::trial_execute(drbg_trial_repr_t *trial_repr,
     drbg_push_inst_params_t     inst_params;
     drbg_push_uninst_params_t   uninst_params;
     drbg_push_gen_params_t      gen_params;
-    dp_mem_t                    *add_input_vec;
     bool                        predict_resist_flag;
     bool                        success;
 
     /*
-     * Per DRGBVS, each trial runs the following sequence:
-     * 1) Instantiate DRBG
-     * 2) Generate (do not keep result)
-     * 3) Generate (keep result)
-     * 4) Uninstantiate
+     * Per DRGBVS, 
+     * case A: PredictionResistance=true, each trial runs the following sequence:
+     *   1) Instantiate DRBG
+     *   2) Generate (do not keep result)
+     *   3) Generate (keep result)
+     *   4) Uninstantiate
+     *
+     * case B: PredictionResistance=false
+     *   1) Instantiate DRBG
+     *   2) Reseed
+     *   3) Generate (do not keep result)
+     *   4) Generate (keep result)
+     *   5) Uninstantiate
      */
     predict_resist_flag = trial_repr->test_repr->predict_resist_flag;
     success = drbg->push(inst_params.psnl_str(trial_repr->psnl_str).
                                      entropy(trial_repr->entropy).
                                      nonce(trial_repr->nonce).
                                      predict_resist_flag(predict_resist_flag));
-    /*
-     * HW supports only one of additional input or entropy_pr
-     * so we pick one.
-     */
-    add_input_vec = trial_repr->add_input_vec->content_size_get() ?
-                    trial_repr->add_input_vec : trial_repr->entropy_pr_vec;
     if (success) {
-        add_input_vec->line_set(0);
-        success = drbg->push(gen_params.add_input(add_input_vec).
-                                        output(trial_repr->output).
+        trial_repr->add_input_vec->line_set(0);
+        trial_repr->entropy_pr_vec->line_set(0);
+        success = drbg->push(gen_params.add_input(trial_repr->add_input_vec).
+                                        add_input_reseed(trial_repr->add_input_reseed).
+                                        entropy_pr(trial_repr->entropy_pr_vec).
+                                        entropy_reseed(trial_repr->entropy_reseed).
+                                        output(trial_repr->ret_bits_actual).
                                         predict_resist_req(predict_resist_flag));
     }
     if (success) {
-        add_input_vec->line_advance();
-        success = drbg->push(gen_params);
-    }
+        trial_repr->add_input_vec->line_advance();
+        trial_repr->entropy_pr_vec->line_advance();
+        success = drbg->push(gen_params.add_input_reseed(nullptr).
+                                        entropy_reseed(nullptr));
+    }   
 
     drbg->push(uninst_params);
     return success;
@@ -505,14 +570,9 @@ drbg_testvec_t::full_verify(void)
  * Generate testvector response output file
  */
 void 
-drbg_testvec_t::rsp_file_output(drbg_instance_t inst)
+drbg_testvec_t::rsp_file_output(void)
 {
-    testvec_output_t    *rsp_output;
-
-    rsp_output = new testvec_output_t(pre_params.scripts_dir(),
-                                      pre_params.testvec_fname(),
-                                      inst == DRBG_INSTANCE0 ? "" : to_string(inst));
-    if (hw_started) {
+    if (hw_started && rsp_output) {
         FOR_EACH_TEST_REPR(test_repr) {
 
             rsp_output->str(PARSE_STR_SHA_PREFIX, test_repr->sha_algo,
@@ -545,14 +605,17 @@ drbg_testvec_t::rsp_file_output(drbg_instance_t inst)
                 rsp_output->hex_bn(PARSE_STR_ADD_INPUT_PREFIX, trial_repr->add_input_vec);
                 trial_repr->entropy_pr_vec->line_advance();
                 rsp_output->hex_bn(PARSE_STR_ENTROPY_PR_PREFIX, trial_repr->entropy_pr_vec);
-                rsp_output->hex_bn(PARSE_STR_RET_BITS_PREFIX, trial_repr->output,
+                rsp_output->hex_bn(PARSE_STR_RET_BITS_PREFIX, trial_repr->ret_bits_actual,
                                    PARSE_STR_RET_BITS_SUFFIX);
 
             } END_FOR_EACH_TRIAL_REPR(test_repr, trial_repr)
         } END_FOR_EACH_TEST_REPR(test_repr)
     }
 
-    delete rsp_output;
+    if (rsp_output) {
+        delete rsp_output;
+        rsp_output = nullptr;
+    }
 }
 
 } // namespace crypto_drbg

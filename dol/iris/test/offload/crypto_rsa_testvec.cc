@@ -1,6 +1,6 @@
 #include "crypto_rsa_testvec.hpp"
-#include "testvec_output.hpp"
 #include "crypto_rsa.hpp"
+#include "utils.hpp"
 
 /*
  * The following string tokens assume the parser has stripped off
@@ -88,6 +88,7 @@ rsa_testvec_t::rsa_testvec_t(rsa_testvec_params_t& params) :
 
     testvec_params(params),
     testvec_parser(nullptr),
+    rsp_output(nullptr),
     num_test_failures(0),
     hw_started(false),
     test_success(false)
@@ -108,6 +109,7 @@ rsa_testvec_t::~rsa_testvec_t()
                     testvec_params.base_params().destructor_free_buffers());
     if (testvec_params.base_params().destructor_free_buffers()) {
         if (test_success || !hw_started) {
+            if (rsp_output) delete rsp_output;
             if (testvec_parser) delete testvec_parser;
         }
     }
@@ -134,6 +136,18 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
     hw_started = false;
     test_success = false;
 
+    rsp_output = new testvec_output_t(pre_params.scripts_dir(),
+                                      pre_params.testvec_fname(),
+                                      pre_params.rsp_fname_suffix());
+#ifdef __x86_64__
+
+    /*
+     * Pensando FIPS consulting cannot parse product info so
+     * leave it out for real HW.
+     */
+    rsp_output->text_vec("# ", product_info_vec_get());
+#endif
+
     /*
      * For ease of parsing, consider brackets as whitespaces;
      * and "=" as token delimiter
@@ -142,10 +156,11 @@ rsa_testvec_t::pre_push(rsa_testvec_pre_push_params_t& pre_params)
     token_parser.extra_delims_add("=");
     testvec_parser = new testvec_parser_t(pre_params.scripts_dir(),
                                           pre_params.testvec_fname(),
-                                          token_parser, token2id_map);
+                                          token_parser, token2id_map, rsp_output);
     while (!testvec_parser->eof()) {
 
-        token_id = testvec_parser->parse(params.skip_unknown_token(true));
+        token_id = testvec_parser->parse(params.skip_unknown_token(true).
+                                                output_header_comments(true));
         switch (token_id) {
 
         case PARSE_TOKEN_ID_EOF:
@@ -504,17 +519,13 @@ rsa_testvec_t::full_verify(void)
  * Generate testvector response output file
  */
 void 
-rsa_testvec_t::rsp_file_output(const string& mem_type_str)
+rsa_testvec_t::rsp_file_output(void)
 {
-    testvec_output_t    *rsp_output;
     uint32_t            mod_bits_len;
     uint32_t            new_bits_len;
     bool                failure;
 
-    rsp_output = new testvec_output_t(pre_params.scripts_dir(),
-                                      pre_params.testvec_fname(),
-                                      mem_type_str);
-    if (hw_started) {
+    if (hw_started && rsp_output) {
         mod_bits_len = 0;
         FOR_EACH_KEY_REPR(key_repr) {
 
@@ -565,7 +576,10 @@ rsa_testvec_t::rsp_file_output(const string& mem_type_str)
         } END_FOR_EACH_KEY_REPR(key_repr)
     }
 
-    delete rsp_output;
+    if (rsp_output) {
+        delete rsp_output;
+        rsp_output = nullptr;
+    }
 }
 
 } // namespace crypto_rsa

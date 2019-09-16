@@ -129,6 +129,7 @@ roundup_to_pow_2(uint32_t val)
 static void
 verification_time_advance(void)
 {
+#ifdef __x86_64__
     static dp_mem_t *time_adv_buf;
 
     if (!time_adv_buf) {
@@ -138,6 +139,7 @@ verification_time_advance(void)
         assert(time_adv_buf->is_mem_type_hbm());
         time_adv_buf->read_thru();
     }
+#endif
 }
 
 int 

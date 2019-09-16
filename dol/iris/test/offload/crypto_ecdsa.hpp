@@ -6,6 +6,7 @@
 #include "dp_mem.hpp"
 #include "acc_ring.hpp"
 #include "crypto_asym.hpp"
+#include "crypto_sha.hpp"
 #include "capri_barco_crypto.hpp"
 #include "capri_barco_rings.hpp"
 #include "eng_if.hpp"
@@ -485,6 +486,7 @@ private:
     crypto_asym::status_t       *status;
     dp_mem_t                    *digest;
     const eng_if::eng_evp_md_t  *evp_md;
+    crypto_sha::sha_t           *crypto_sha;
     crypto_asym::key_idx_t      key_idx;
 
     bool                        hw_started;

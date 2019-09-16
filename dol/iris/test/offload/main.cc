@@ -11,11 +11,15 @@
 #include "logger.hpp"
 #include "nic/sdk/platform/utils/qstate_mgr.hpp"
 #include "nic/sdk/platform/capri/capri_state.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
 #include "crypto_rsa_testvec.hpp"
 #include "crypto_ecdsa_testvec.hpp"
 #include "crypto_drbg_testvec.hpp"
+#include "crypto_sha_testvec.hpp"
+#include "crypto_symm.hpp"
 #include "crypto_asym.hpp"
 #include "crypto_drbg.hpp"
+#include "crypto_sha.hpp"
 
 DEFINE_uint64(hal_port, 50054, "TCP port of the HAL's gRPC server");
 DEFINE_string(hal_ip, "localhost", "IP of HAL's gRPC server");
@@ -62,7 +66,14 @@ bool run_pdma_tests;
 bool run_rsa_testvectors;
 bool run_ecdsa_testvectors;
 bool run_drbg_testvectors;
+bool run_sha_testvectors;
 uint32_t run_acc_scale_tests_map;
+
+/*
+ * Product information, served as header information for
+ * testvector response output files.
+ */
+static vector<string> product_info_vec;
 
 /*
  * test case ID (legacy usage from storage)
@@ -155,6 +166,35 @@ const static vector<drbg_vector_entry_t> drbg_testvectors =
 };
 
 /*
+ * SHA testvectors
+ */
+typedef struct {
+    string                          testvec_fname;
+    crypto_symm::crypto_symm_type_t crypto_symm_type;
+} sha_vector_entry_t;
+
+const static vector<sha_vector_entry_t> sha_testvectors =
+{
+    {"sha-testvectors/SHA224ShortMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA1Monte.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA224Monte.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA256Monte.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA384Monte.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA512Monte.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+};
+
+/*
  * Runnable test suite
  */
 static vector<test_entry_t>     test_suite;
@@ -190,6 +230,12 @@ long_poll_interval(void)
     return FLAGS_long_poll_interval;
 }
 
+const vector<string>&
+product_info_vec_get(void)
+{
+    return product_info_vec;
+}
+
 static int
 sdk_trace_cb (sdk_trace_level_e trace_level,
               const char *format, ...)
@@ -212,18 +258,32 @@ common_setup(void)
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
                 sdk::lib::PAL_RET_OK);
+    product_info_vec.push_back("Pensando Systems, Inc.");
+    product_info_vec.push_back("DOL Simulation");
+    product_info_vec.push_back("Implementation: software model");
+
     if (init_host_mem() < 0) {
         OFFL_FUNC_ERR("Host mem init failed (is model running?)");
         return -1;
     }
     OFFL_FUNC_INFO("Host mem initialized");
 
-#elif 0 //__aarch64__
-#if !defined(APOLLO) && !defined(ARTEMIS)
+#else
+    string fru_info;
+
+#if 0 //!defined(APOLLO) && !defined(ARTEMIS)
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
                 sdk::lib::PAL_RET_OK);
 #endif
+    fru_info.clear();
+    sdk::platform::readFruKey(MANUFACTURER_KEY, fru_info);
+    product_info_vec.push_back(fru_info);
+    fru_info.clear();
+    sdk::platform::readFruKey(PRODUCTNAME_KEY, fru_info);
+    product_info_vec.push_back(fru_info);
+    product_info_vec.push_back("Implementation: hardware");
 #endif
+    product_info_vec.push_back("\n");
 
     // Initialize hal interface
     hal_if::init_hal_if();
@@ -241,12 +301,13 @@ common_setup(void)
     // Initialize model client
     if (lib_model_connect() < 0) {
         OFFL_FUNC_ERR("Failed to connect with model (is model running?)");
-        return -1;
+       return -1;
     }
     OFFL_FUNC_INFO("Model client initialized");
 #endif
 
     crypto_drbg::init();
+    crypto_symm::init(FLAGS_engine_path.c_str());
     crypto_asym::init(FLAGS_engine_path.c_str());
     tests::test_generic_eos_ignore();
     return 0;
@@ -289,7 +350,9 @@ rsa_testvectors_run(void *test_param)
         rsa_testvec = new crypto_rsa::rsa_testvec_t(
                           testvec_params.base_params(base_params));
         success = rsa_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
-                                                   testvec_fname(entry.testvec_fname));;
+                                                   testvec_fname(entry.testvec_fname).
+                                                   rsp_fname_suffix(mem_type == DP_MEM_TYPE_HBM ?
+                                                                    "hbm" : "host"));
         if (success) {
             success = rsa_testvec->push(push_params.rsa_ring(crypto_asym::asym_ring));
         }
@@ -299,8 +362,7 @@ rsa_testvectors_run(void *test_param)
         if (success) {
             success = rsa_testvec->full_verify();
         }
-        rsa_testvec->rsp_file_output(mem_type == DP_MEM_TYPE_HBM ?
-                                     "hbm" : "host");
+        rsa_testvec->rsp_file_output();
         delete rsa_testvec;
         return success;
     };
@@ -366,7 +428,9 @@ ecdsa_testvectors_run(void *test_param)
         ecdsa_testvec = new crypto_ecdsa::ecdsa_testvec_t(
                           testvec_params.base_params(base_params));
         success = ecdsa_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
-                                                     testvec_fname(entry.testvec_fname));;
+                                                     testvec_fname(entry.testvec_fname).
+                                                     rsp_fname_suffix(mem_type == DP_MEM_TYPE_HBM ?
+                                                                      "hbm" : "host"));
         if (success) {
             success = ecdsa_testvec->push(push_params.ecdsa_ring(crypto_asym::asym_ring));
         }
@@ -376,8 +440,7 @@ ecdsa_testvectors_run(void *test_param)
         if (success) {
             success = ecdsa_testvec->full_verify();
         }
-        ecdsa_testvec->rsp_file_output(mem_type == DP_MEM_TYPE_HBM ?
-                                     "hbm" : "host");
+        ecdsa_testvec->rsp_file_output();
         delete ecdsa_testvec;
         return success;
     };
@@ -434,9 +497,10 @@ drbg_testvectors_run(void *test_param)
         drbg_testvec = new crypto_drbg::drbg_testvec_t(
                            testvec_params.base_params(base_params));
         success = drbg_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
-                                                    testvec_fname(entry.testvec_fname));;
+                                                    testvec_fname(entry.testvec_fname).
+                                                    instance(inst));
         if (success) {
-            success = drbg_testvec->push(push_params.instance(inst));
+            success = drbg_testvec->push(push_params);
         }
         if (success) {
             success = drbg_testvec->post_push();
@@ -444,7 +508,7 @@ drbg_testvectors_run(void *test_param)
         if (success) {
             success = drbg_testvec->full_verify();
         }
-        drbg_testvec->rsp_file_output(inst);
+        drbg_testvec->rsp_file_output();
 
         delete drbg_testvec;
         return success;
@@ -462,6 +526,90 @@ drbg_testvectors_run(void *test_param)
                 failure_count++;
             }
         }
+    }
+
+    return failure_count == 0;
+}
+
+/*
+ * Driver for SHA testvectors
+ */
+static bool
+sha_testvectors_run(void *test_param)
+{
+    vector<sha_vector_entry_t>  *testvectors = 
+                      static_cast<vector<sha_vector_entry_t> *>(test_param);
+    uint32_t        failure_count;
+
+    /*
+     * Run the vectors with the specified mem_type
+     */
+    auto testvectors_run = [](const sha_vector_entry_t& entry,
+                              dp_mem_type_t mem_type) -> bool
+    {
+        crypto_sha::sha_testvec_params_t          testvec_params;
+        crypto_sha::sha_testvec_pre_push_params_t pre_params;
+        crypto_sha::sha_testvec_push_params_t     push_params;
+        crypto_sha::sha_testvec_t                 *sha_testvec;
+        offload_base_params_t                     base_params;
+        bool                                      success;
+
+        testvec_params.crypto_symm_type(entry.crypto_symm_type).
+                       msg_desc_mem_type(mem_type).
+                       msg_digest_mem_type(mem_type).
+                       status_mem_type(mem_type).
+                       doorbell_mem_type(mem_type);
+#ifdef __x86_64__
+
+        /*
+         * With model, reduce the scale of Montecarlo tests for faster execution.
+         * These results are not to be submitted for validation.
+         */
+        testvec_params.montecarlo_iters_max(
+                       testvec_params.montecarlo_result_epoch());
+#endif
+        OFFL_LOG_INFO("Running SHA vector {} with mem_type {}",
+                      entry.testvec_fname, mem_type);
+        sha_testvec = new crypto_sha::sha_testvec_t(
+                          testvec_params.base_params(base_params));
+        success = sha_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
+                                                   testvec_fname(entry.testvec_fname).
+                                                   rsp_fname_suffix(mem_type == DP_MEM_TYPE_HBM ?
+                                                                    "hbm" : "host"));
+        if (success) {
+            success = sha_testvec->push(push_params.sha_ring(crypto_symm::mpp0_ring));
+        }
+        if (success) {
+            success = sha_testvec->post_push();
+        }
+        if (success) {
+            success = sha_testvec->full_verify();
+        }
+        sha_testvec->rsp_file_output();
+        delete sha_testvec;
+        return success;
+    };
+
+    failure_count = 0;
+    for (uint32_t i = 0; i < testvectors->size(); i++) {
+        const sha_vector_entry_t& entry = testvectors->at(i);
+
+        /*
+         * 1st run with HBM
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HBM)) {
+            failure_count++;
+        }
+
+#ifdef __x86_64__
+
+        /*
+         * 2nd run with host mem
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HOST_MEM)) {
+            failure_count++;
+        }
+#endif
     }
 
     return failure_count == 0;
@@ -491,12 +639,15 @@ main(int argc,
         run_rsa_testvectors = true;
         run_ecdsa_testvectors = true;
         run_drbg_testvectors = true;
+        run_sha_testvectors = true;
     } else if (FLAGS_test_group == "rsa") {
         run_rsa_testvectors = true;
     } else if (FLAGS_test_group == "ecdsa") {
         run_ecdsa_testvectors = true;
     } else if (FLAGS_test_group == "drbg") {
         run_drbg_testvectors = true;
+    } else if (FLAGS_test_group == "sha") {
+        run_sha_testvectors = true;
     }
 
     if (common_setup() < 0)  {
@@ -520,6 +671,10 @@ main(int argc,
     if (run_drbg_testvectors) {
         test_suite.push_back(test_entry_t("FIPS DRBG", &drbg_testvectors_run,
                                           (void *)&drbg_testvectors));
+    }
+    if (run_sha_testvectors) {
+        test_suite.push_back(test_entry_t("FIPS SHA", &sha_testvectors_run,
+                                          (void *)&sha_testvectors));
     }
 
     OFFL_LOG_INFO("Formed test suite with {} cases", test_suite.size());

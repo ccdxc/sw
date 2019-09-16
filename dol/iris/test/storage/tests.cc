@@ -58,10 +58,12 @@ static uint64_t global_byte = 0xA0;
 static void
 verification_time_advance(void)
 {
+#ifdef __x86_64__
     if (time_adv_buf) {
         assert(time_adv_buf->is_mem_type_hbm());
         time_adv_buf->read_thru();
     }
+#endif
 }
 
 int Poller::operator()(std::function<int(void)> poll_func) {

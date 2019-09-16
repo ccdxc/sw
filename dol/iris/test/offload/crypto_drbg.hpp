@@ -18,6 +18,12 @@
 namespace crypto_drbg {
 
 /*
+ * Barco IP code CAVS config guide specifies number of output blocks of 4
+ * which for a SHA256 implementation means 4 x 32 = 128 bytes.
+ */
+#define CRYPTO_CTL_DRBG_OUTPUT_NBYTES   128
+
+/*
  * Some chip (ELBA) supports more than one instance
  */
 typedef enum {
@@ -100,11 +106,22 @@ crypto_ctl_drbg_random_num1_select(uint32_t select)
         ret_val = READ_REG32(regs.ram + (idx * sizeof(uint32_t)));      \
     } while (false)
     
+#define CRYPTO_CTL_DRBG_RD_RAM_NTOHL(ram, idx, ret_val)                 \
+    do {                                                                \
+        CRYPTO_CTL_DRBG_RD_RAM(ram, idx, ret_val);                      \
+        ret_val = ntohl(ret_val);                                       \
+    } while (false)
+    
 #define CRYPTO_CTL_DRBG_WR_RAM(ram, idx, val)                           \
     do {                                                                \
         WRITE_REG32(regs.ram + (idx * sizeof(uint32_t)), val);          \
     } while (false)
     
+#define CRYPTO_CTL_DRBG_WR_RAM_HTONL(ram, idx, val)                     \
+    do {                                                                \
+        CRYPTO_CTL_DRBG_WR_RAM(ram, idx, htonl(val));                   \
+    } while (false)
+
 /*
  * Register bit definitions
  */
@@ -219,6 +236,9 @@ public:
 
     drbg_push_gen_params_t() :
         add_input_(nullptr),
+        add_input_reseed_(nullptr),
+        entropy_pr_(nullptr),
+        entropy_reseed_(nullptr),
         output_(nullptr),
         predict_resist_req_(false),
         random_num_select_(0)
@@ -229,6 +249,24 @@ public:
     add_input(dp_mem_t *add_input)
     {
         add_input_ = add_input;
+        return *this;
+    }
+    drbg_push_gen_params_t&
+    add_input_reseed(dp_mem_t *add_input_reseed)
+    {
+        add_input_reseed_ = add_input_reseed;
+        return *this;
+    }
+    drbg_push_gen_params_t&
+    entropy_pr(dp_mem_t *entropy_pr)
+    {
+        entropy_pr_ = entropy_pr;
+        return *this;
+    }
+    drbg_push_gen_params_t&
+    entropy_reseed(dp_mem_t *entropy_reseed)
+    {
+        entropy_reseed_ = entropy_reseed;
         return *this;
     }
     drbg_push_gen_params_t&
@@ -251,12 +289,18 @@ public:
     }
 
     dp_mem_t *add_input(void) { return add_input_; }
+    dp_mem_t *add_input_reseed(void) { return add_input_reseed_; }
+    dp_mem_t *entropy_pr(void) { return entropy_pr_; }
+    dp_mem_t *entropy_reseed(void) { return entropy_reseed_; }
     dp_mem_t *output(void) { return output_; }
     bool predict_resist_req(void) { return predict_resist_req_; }
     uint32_t random_num_select(void) { return random_num_select_; }
 
 private:
     dp_mem_t                    *add_input_;
+    dp_mem_t                    *add_input_reseed_;
+    dp_mem_t                    *entropy_pr_;
+    dp_mem_t                    *entropy_reseed_;
     dp_mem_t                    *output_;
     bool                        predict_resist_req_;
     uint32_t                    random_num_select_;
@@ -351,12 +395,8 @@ public:
     bool uninstantiate(void);
     bool generate(uint8_t *buf,
                   uint32_t nbytes,
-                  uint32_t random_num_select=0);
-    bool generate_with_reseed(const uint8_t *add_input,
-                              uint32_t input_nbytes,
-                              uint8_t *buf,
-                              uint32_t nbytes,
-                              uint32_t random_num_select=0);
+                  uint32_t random_num_select=0,
+                  bool reseed=false);
 private:
     void psnl_str_set(const uint8_t *str,
                       uint32_t str_nbytes);
@@ -384,6 +424,7 @@ private:
     uint32_t                    entropy_input_nbytes;
     uint32_t                    entropy_reseed_nbytes;
 
+    uint32_t                    random_bdepth;
     uint32_t                    rng_cfg;
     bool                        predict_resist_flag;
     status_t                    status;

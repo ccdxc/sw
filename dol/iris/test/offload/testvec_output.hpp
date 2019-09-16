@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 #include <assert.h>
 #include "logger.hpp"
 #include "dp_mem.hpp"
@@ -20,7 +21,7 @@ class testvec_output_t
 public:
     testvec_output_t(const string& scripts_dir,
                      const string& testvec_fname,
-                     const string& mem_type_str);
+                     const string& fname_suffix);
     ~testvec_output_t();
 
     void dec(const string& prefix,
@@ -31,6 +32,14 @@ public:
              const string& val,
              const string& suffix="",
              bool eol=true);
+    void text(const string& prefix,
+              const string& text,
+              const string& suffix="",
+              bool eol=true);
+    void text_vec(const string& prefix,
+                  const vector<string>& text_vec,
+                  const string& suffix="",
+                  bool eol=true);
     void hex_bn(const string& prefix,
                 dp_mem_t *val,
                 const string& suffix="");

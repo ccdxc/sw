@@ -149,13 +149,21 @@ public:
         testvec_fname_.assign(testvec_fname);
         return *this;
     }
+    rsa_testvec_pre_push_params_t&
+    rsp_fname_suffix(const string& rsp_fname_suffix)
+    {
+        rsp_fname_suffix_.assign(rsp_fname_suffix);
+        return *this;
+    }
 
     string& scripts_dir(void) { return scripts_dir_; }
     string& testvec_fname(void) { return testvec_fname_; }
+    string& rsp_fname_suffix(void) { return rsp_fname_suffix_; }
 
 private:
     string                      scripts_dir_;
     string                      testvec_fname_;
+    string                      rsp_fname_suffix_;
 };
 
 /*
@@ -218,13 +226,14 @@ public:
     bool post_push(void);
     bool completion_check(void);
     bool full_verify(void);
-    void rsp_file_output(const string& mem_type_str);
+    void rsp_file_output(void);
 
 private:
     rsa_testvec_params_t        testvec_params;
     rsa_testvec_pre_push_params_t pre_params;
     rsa_testvec_push_params_t   push_params;
     testvec_parser_t            *testvec_parser;
+    testvec_output_t            *rsp_output;
     vector<shared_ptr<rsa_key_repr_t>> key_repr_vec;
 
     uint32_t                    num_test_failures;

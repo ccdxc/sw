@@ -160,7 +160,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         sizeof(uint32_t),
-        0,
+        sizeof(uint32_t),
         0,
         0,
         true,   // run-time modified based on platform
@@ -181,7 +181,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         sizeof(uint32_t),
-        0,
+        sizeof(uint32_t),
         0,
         0,
         true,   // run-time modified based on platform
@@ -202,7 +202,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         sizeof(uint32_t),
-        0,
+        sizeof(uint32_t),
         0,
         0,
         true,   // run-time modified based on platform
@@ -223,7 +223,7 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         sizeof(uint32_t),
-        0,
+        sizeof(uint32_t),
         0,
         0,
         true,   // run-time modified based on platform

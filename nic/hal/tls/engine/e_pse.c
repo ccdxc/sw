@@ -4,6 +4,7 @@
 #include "pse_ec.h"
 #include "pse_rsa.h"
 #include "pse_rand.h"
+#include "pse_md.h"
 
 /* OpenSSL includes */
 
@@ -61,7 +62,12 @@ static int pse_bind_helper(ENGINE* eng, const char *id)
         WARN("ENGINE_set_name failed \n");
         goto cleanup;
     }
-    
+
+    if(!ENGINE_set_digests(eng, pse_get_MD_methods())) {
+        WARN("ENGINE_set_digests failed");
+        goto cleanup;
+    }
+ 
     if(!ENGINE_set_EC(eng, pse_get_EC_methods())) {
         WARN("ENGINE_set_EC failed");
         goto cleanup;

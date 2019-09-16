@@ -51,7 +51,10 @@ class drbg_testvec_pre_push_params_t
 {
 public:
 
-    drbg_testvec_pre_push_params_t() {}
+    drbg_testvec_pre_push_params_t() :
+        instance_(DRBG_INSTANCE0)
+    {
+    }
 
     drbg_testvec_pre_push_params_t&
     scripts_dir(const string& scripts_dir)
@@ -65,13 +68,21 @@ public:
         testvec_fname_.assign(testvec_fname);
         return *this;
     }
+    drbg_testvec_pre_push_params_t&
+    instance(drbg_instance_t instance)
+    {
+        instance_ = instance;
+        return *this;
+    }
 
     string& scripts_dir(void) { return scripts_dir_; }
     string& testvec_fname(void) { return testvec_fname_; }
+    drbg_instance_t instance(void) { return instance_; }
 
 private:
     string                      scripts_dir_;
     string                      testvec_fname_;
+    drbg_instance_t             instance_;
 };
 
 /*
@@ -82,17 +93,10 @@ class drbg_testvec_push_params_t
 public:
 
     drbg_testvec_push_params_t() :
-        instance_(DRBG_INSTANCE0),
         random_num_select_(0)
     {
     }
 
-    drbg_testvec_push_params_t&
-    instance(drbg_instance_t instance)
-    {
-        instance_ = instance;
-        return *this;
-    }
     drbg_testvec_push_params_t&
     random_num_select(uint32_t random_num_select)
     {
@@ -100,11 +104,9 @@ public:
         return *this;
     }
 
-    drbg_instance_t instance(void) { return instance_; }
     uint32_t random_num_select(void) { return random_num_select_; }
 
 private:
-    drbg_instance_t             instance_;
     uint32_t                    random_num_select_;
 };
 
@@ -125,7 +127,7 @@ public:
     bool post_push(void);
     bool completion_check(void);
     bool full_verify(void);
-    void rsp_file_output(drbg_instance_t inst);
+    void rsp_file_output(void);
 
 private:
     bool trial_execute(drbg_trial_repr_t *trial_repr,
@@ -135,6 +137,7 @@ private:
     drbg_testvec_pre_push_params_t pre_params;
     drbg_testvec_push_params_t   push_params;
     testvec_parser_t            *testvec_parser;
+    testvec_output_t            *rsp_output;
     vector<shared_ptr<drbg_test_repr_t>> test_repr_vec;
 
     drbg_t                      *drbg;
@@ -237,30 +240,45 @@ public:
                                      DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HBM,
                                      0, DP_MEM_ALLOC_NO_FILL);
         add_input_vec->content_size_set(0);
+        add_input_reseed = new dp_mem_t(1, nbytes ? nbytes : entropy_nbytes,
+                                        DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HBM,
+                                        0, DP_MEM_ALLOC_NO_FILL);
+        add_input_reseed->content_size_set(0);
 
         entropy_pr_vec = new dp_mem_t(DRBG_TRIAL_NUM_ENTROPY_PR_FIELDS,
                                       entropy_nbytes,
                                       DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HBM,
                                       0, DP_MEM_ALLOC_NO_FILL);
         entropy_pr_vec->content_size_set(0);
+        entropy_reseed = new dp_mem_t(1, entropy_nbytes,
+                                      DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HBM,
+                                      0, DP_MEM_ALLOC_NO_FILL);
+        entropy_reseed->content_size_set(0);
 
         nbytes = CRYPTO_CTL_DRBG_CEIL_b2B(test_repr->ret_nbits);
-        output = new dp_mem_t(1, nbytes ? nbytes : entropy_nbytes,
+        ret_bits_expected = new dp_mem_t(1, nbytes ? nbytes : entropy_nbytes,
+                                DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HBM,
+                                0, DP_MEM_ALLOC_NO_FILL);
+        ret_bits_expected->content_size_set(0);
+        ret_bits_actual = new dp_mem_t(1, nbytes ? nbytes : entropy_nbytes,
                               DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HBM,
                               0, DP_MEM_ALLOC_FILL_ZERO);
-        output->content_size_set(0);
+        ret_bits_actual->content_size_set(0);
     }
 
     ~drbg_trial_repr_t()
     {
         if (drbg_testvec.testvec_params.base_params().destructor_free_buffers()) {
             if (drbg_testvec.test_success || !drbg_testvec.hw_started) {
+                if (entropy_reseed) delete entropy_reseed;
                 if (entropy_pr_vec) delete entropy_pr_vec;
+                if (add_input_reseed) delete add_input_reseed;
                 if (add_input_vec) delete add_input_vec;
                 if (psnl_str) delete psnl_str;
                 if (nonce) delete nonce;
                 if (entropy) delete entropy;
-                if (output) delete output;
+                if (ret_bits_expected) delete ret_bits_expected;
+                if (ret_bits_actual) delete ret_bits_actual;
             }
         }
     }
@@ -275,8 +293,11 @@ private:
     dp_mem_t                    *nonce;
     dp_mem_t                    *psnl_str;
     dp_mem_t                    *add_input_vec;
-    dp_mem_t                    *entropy_pr_vec;
-    dp_mem_t                    *output;
+    dp_mem_t                    *add_input_reseed;
+    dp_mem_t                    *entropy_pr_vec;        // for prediction resistance
+    dp_mem_t                    *entropy_reseed;
+    dp_mem_t                    *ret_bits_expected;
+    dp_mem_t                    *ret_bits_actual;
     parser_token_id_t           failed_parse_token;
     bool                        push_failure;
 };

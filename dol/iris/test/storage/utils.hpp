@@ -1,6 +1,8 @@
 #ifndef _UTILS_HPP_
 #define _UTILS_HPP_
 
+#include <string>
+#include <vector>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -10,6 +12,7 @@
 #include "nic/utils/host_mem/c_if.h"
 #include "lib_model_client.h"
 #endif
+#include "nic/sdk/platform/fru/fru.hpp"
 
 
 const static uint32_t kMinHostMemAllocSize = 64;
@@ -60,6 +63,7 @@ const static uint32_t kMinHostMemAllocSize = 64;
 
 extern uint64_t poll_interval(void);
 extern uint64_t long_poll_interval(void);
+const std::vector<std::string>& product_info_vec_get(void);
 
 namespace utils {
 

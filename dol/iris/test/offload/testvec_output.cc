@@ -7,7 +7,7 @@ const static string     engine_rsp_subdir_name = "engine_rsp";
 
 testvec_output_t::testvec_output_t(const string& scripts_dir,
                                    const string& testvec_fname,
-                                   const string& mem_type_str) :
+                                   const string& fname_suffix) :
     fp(nullptr)
 {
     string      engine_rsp_fulldir;
@@ -56,9 +56,9 @@ testvec_output_t::testvec_output_t(const string& scripts_dir,
     } else {
         output_fname = fname_only;
     }
-    output_fname = mem_type_str.empty() ?
+    output_fname = fname_suffix.empty() ?
                    output_fname + ".rsp" :
-                   output_fname + "-" + mem_type_str + ".rsp";
+                   output_fname + "-" + fname_suffix + ".rsp";
     output_fname = engine_rsp_fulldir + "/" + output_fname;
     OFFL_FUNC_INFO("creating {}", output_fname);
 
@@ -104,6 +104,35 @@ testvec_output_t::str(const string& prefix,
         fprintf(fp, "%s%s%s", prefix.c_str(), val.c_str(), suffix.c_str());
         if (eol) {
             fprintf(fp, "\n");
+        }
+    }
+}
+
+void
+testvec_output_t::text(const string& prefix,
+                       const string& text,
+                       const string& suffix,
+                       bool eol)
+{
+    if (fp) {
+        fprintf(fp, "%s", prefix.c_str());
+        fwrite(text.c_str(), text.size(), 1, fp);
+        fprintf(fp, "%s", suffix.c_str());
+        if (eol) {
+            fprintf(fp, "\n");
+        }
+    }
+}
+
+void
+testvec_output_t::text_vec(const string& prefix,
+                           const vector<string>& text_vec,
+                           const string& suffix,
+                           bool eol)
+{
+    if (fp) {
+        for (uint32_t i = 0; i < text_vec.size(); i++) {
+            text(prefix, text_vec.at(i), suffix, eol);
         }
     }
 }

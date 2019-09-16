@@ -6,6 +6,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <vector>
 
 #include "logger.hpp"
 #include "dp_mem.hpp"

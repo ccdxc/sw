@@ -139,13 +139,21 @@ public:
         testvec_fname_.assign(testvec_fname);
         return *this;
     }
+    ecdsa_testvec_pre_push_params_t&
+    rsp_fname_suffix(const string& rsp_fname_suffix)
+    {
+        rsp_fname_suffix_.assign(rsp_fname_suffix);
+        return *this;
+    }
 
     string& scripts_dir(void) { return scripts_dir_; }
     string& testvec_fname(void) { return testvec_fname_; }
+    string& rsp_fname_suffix(void) { return rsp_fname_suffix_; }
 
 private:
     string                      scripts_dir_;
     string                      testvec_fname_;
+    string                      rsp_fname_suffix_;
 };
 
 /*
@@ -208,13 +216,14 @@ public:
     bool post_push(void);
     bool completion_check(void);
     bool full_verify(void);
-    void rsp_file_output(const string& mem_type_str);
+    void rsp_file_output(void);
 
 private:
     ecdsa_testvec_params_t        testvec_params;
     ecdsa_testvec_pre_push_params_t pre_params;
     ecdsa_testvec_push_params_t   push_params;
     testvec_parser_t            *testvec_parser;
+    testvec_output_t            *rsp_output;
     vector<shared_ptr<ecdsa_curve_repr_t>> curve_repr_vec;
 
     uint32_t                    num_test_failures;
@@ -279,7 +288,7 @@ private:
     // Generated domain parameters from curve_name;
     // These are fragments of domain_vec to ensure contiguity.
     // Note that HW also expects the key params to consist of
-    // these 7 items (p,n,xg,yg,a,b,da) in one contiguous chunk.
+    // these 6 items (p,n,xg,yg,a,b) in one contiguous chunk.
     dp_mem_t                    *domain_vec;
     dp_mem_t                    *p;
     dp_mem_t                    *n;

@@ -31,11 +31,13 @@ enum {
 rsa_t::rsa_t(rsa_params_t& params) :
     rsa_params(params),
     evp_md(nullptr),
+    crypto_sha(nullptr),
     key_idx(params.key_idx()),
     hw_started(false),
     test_success(true)
 {
     crypto_asym::dma_desc_pool_params_t dma_params;
+    crypto_sha::sha_params_t            sha_params;
 
     assert(params.acc_ring());
     dma_desc_pool = new crypto_asym::dma_desc_pool_t(
@@ -49,6 +51,18 @@ rsa_t::rsa_t(rsa_params_t& params) :
     digest_padded = new dp_mem_t(1, CRYPTO_RSA_DIGEST_PADDED_SIZE_MAX,
                                  DP_MEM_ALIGN_NONE, params.msg_digest_mem_type(),
                                  0, DP_MEM_ALLOC_FILL_ZERO);
+    sha_params.base_params(params.base_params()).
+               msg_desc_mem_type(params.dma_desc_mem_type()).
+               msg_digest_mem_type(params.msg_digest_mem_type()).
+               status_mem_type(params.status_mem_type()).
+               doorbell_mem_type(params.status_mem_type()).
+               acc_ring(crypto_symm::mpp0_ring).
+               push_type(params.push_type()).
+               seq_qid(params.seq_qid());
+    /*
+     * RSA will use HW engine to calculate SHA digests
+     */
+    crypto_sha = new crypto_sha::sha_t(sha_params);
 }
 
 
@@ -69,6 +83,7 @@ rsa_t::~rsa_t()
             if (digest) delete digest;
             if (status) delete status;
             if (dma_desc_pool) delete dma_desc_pool;
+            if (crypto_sha) delete crypto_sha;
             key_destroy();
         }
     }
@@ -96,9 +111,34 @@ rsa_t::pre_push(rsa_pre_push_params_t& pre_params)
         }
     }
 
-    evp_md = eng_if::digest_gen(digest_params.hash_algo(pre_params.hash_algo()).
-                                              msg(pre_params.msg()).
-                                              digest(digest));
+    /*
+     * Use HW SHA engine if available
+     */
+    if (crypto_sha) {
+        crypto_sha::sha_pre_push_params_t    sha_pre_params;
+        crypto_sha::sha_push_params_t        sha_push_params;
+
+        sha_pre_params.crypto_symm_type(crypto_symm::CRYPTO_SYMM_TYPE_SHA).
+                       sha_nbytes(crypto_sha::sha_nbytes_find(pre_params.hash_algo()));
+        if (!crypto_sha->pre_push(sha_pre_params)) {
+            OFFL_FUNC_ERR("failed crypto_sha pre_push");
+            return false;
+        }
+        sha_push_params.msg(pre_params.msg()).
+                        md_actual(digest).
+                        wait_for_completion(true);
+        if (!crypto_sha->push(sha_push_params)) {
+            OFFL_FUNC_ERR("failed crypto_sha push");
+            return false;
+        }
+        crypto_sha->post_push();
+        evp_md = sha_push_params.ret_evp_md();
+
+    } else {
+        evp_md = eng_if::digest_gen(digest_params.hash_algo(pre_params.hash_algo()).
+                                                  msg(pre_params.msg()).
+                                                  digest(digest));
+    }
     if (!evp_md) {
         OFFL_FUNC_ERR("failed msg_digest push");
         return false;

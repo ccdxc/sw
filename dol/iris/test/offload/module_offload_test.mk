@@ -8,8 +8,11 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/testvec_parser.cc \
                   ${MODULE_SRC_DIR}/crypto_rsa_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_rsa.cc \
                   ${MODULE_SRC_DIR}/crypto_ecdsa_testvec.cc \
+                  ${MODULE_SRC_DIR}/crypto_sha_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_ecdsa.cc \
                   ${MODULE_SRC_DIR}/crypto_asym.cc \
+                  ${MODULE_SRC_DIR}/crypto_symm.cc \
+                  ${MODULE_SRC_DIR}/crypto_sha.cc \
                   ${MODULE_SRC_DIR}/crypto_drbg_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_drbg.cc \
                   ${MODULE_SRC_DIR}/eng_if.cc \
@@ -60,7 +63,6 @@ MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/platform/src/lib/pciehdevices/include \
                   ${TOPDIR}/platform/src/lib/pcieport/include \
                   ${BLD_GEN_DIR}/proto \
-                  ${MODULE_SRC_DIR}/engine \
                   ${TOPDIR}/nic/utils/host_mem \
                   ${TOPDIR}/nic/sdk/include \
                   ${TOPDIR}/nic/sdk/model_sim/include \

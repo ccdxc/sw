@@ -6,19 +6,24 @@ namespace eng_if {
 /*
  * Hash (digest) algorithms map
  */
-static const map<string,const eng_evp_md_t*> hash_algo_map = {
-    {"SHA1",        EVP_sha1()},
-    {"SHA224",      EVP_sha224()},
-    {"SHA256",      EVP_sha256()},
-    {"SHA384",      EVP_sha384()},
-    {"SHA512",      EVP_sha512()},
+static const map<string,int> hash_algo_map = {
+    {"SHA1",        NID_sha1},
+    {"SHA224",      NID_sha224},
+    {"SHA256",      NID_sha256},
+    {"SHA384",      NID_sha384},
+    {"SHA512",      NID_sha512},
 
 #ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
-    {"SHA512224",   EVP_sha512_224()},
-    {"SHA512256",   EVP_sha512_256()},
+    {"SHA512224",   NID_sha512_224},
+    {"SHA512256",   NID_sha512_256},
+#endif
+#ifdef OPENSSL_WITH_SHA3_SUPPORT
+    {"SHA3-224",    NID_sha3_224},
+    {"SHA3-256",    NID_sha3_256},
+    {"SHA3-384",    NID_sha3_384},
+    {"SHA3-512",    NID_sha3_512},
 #endif
 };
-
 
 /*
  * Interface to DOL OpenSSL engine
@@ -80,6 +85,7 @@ init(const char *engine_path)
     OFFL_FUNC_INFO("successfully loaded PSE OpenSSL Engine: {}",
                    ENGINE_get_name(eng_if_engine));
 
+    ENGINE_set_default_digests(eng_if_engine);
     ENGINE_set_default_EC(eng_if_engine);
     ENGINE_set_default_RSA(eng_if_engine);
     success = true;
@@ -97,7 +103,7 @@ hash_algo_find(const string& hash_algo)
 {
     auto iter = hash_algo_map.find(hash_algo);
     if (iter != hash_algo_map.end()) {
-        return iter->second;
+        return ENGINE_get_digest(eng_if_engine, iter->second);
     }
     return nullptr;
 }

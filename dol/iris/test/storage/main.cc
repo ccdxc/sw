@@ -98,6 +98,8 @@ bool run_rtl_sanity = false;
 bool run_nicmgr_tests = false;
 uint32_t run_acc_scale_tests_map = ACC_SCALE_TEST_NONE;
 
+static vector<string> product_info_vec;
+
 std::vector<tests::TestEntry> test_suite;
 
 std::vector<tests::TestEntry> nvme_dp_tests = {
@@ -326,10 +328,21 @@ long_poll_interval(void)
     return FLAGS_long_poll_interval;
 }
 
+const vector<string>&
+product_info_vec_get(void)
+{
+    return product_info_vec;
+}
+
+
 int common_setup() {
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
                 sdk::lib::PAL_RET_OK);
+    product_info_vec.push_back("Pensando Systems, Inc.");
+    product_info_vec.push_back("DOL Simulation");
+    product_info_vec.push_back("Implementation: software model");
+
     // Initialize host memory
     int ret;
     if(FLAGS_combined) {
@@ -343,12 +356,22 @@ int common_setup() {
     }
     OFFL_FUNC_INFO("Host mem initialized\n");
 
-#elif 0 //__aarch64__
-#if !defined(APOLLO) && !defined(ARTEMIS)
+#else
+    string fru_info;
+
+#if 0 //!defined(APOLLO) && !defined(ARTEMIS)
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
                 sdk::lib::PAL_RET_OK);
 #endif
+    fru_info.clear()
+    sdk::platform::readFruKey(MANUFACTURER_KEY, fru_info);
+    product_info_vec.push_back(fru_info);
+    fru_info.clear()
+    sdk::platform::readFruKey(PRODUCTNAME_KEY, fru_info);
+    product_info_vec.push_back(fru_info);
+    product_info_vec.push_back("Implementation: hardware");
 #endif
+    product_info_vec.push_back("\n");
 
   // Initialize hal interface
   hal_if::init_hal_if();

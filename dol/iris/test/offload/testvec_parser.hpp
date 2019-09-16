@@ -9,6 +9,7 @@
 #include <assert.h>
 #include "logger.hpp"
 #include "dp_mem.hpp"
+#include "testvec_output.hpp"
 #include "fips_testvec_parser_common.h"
 
 using namespace std;
@@ -65,10 +66,10 @@ public:
     }
 
     void operator()(const string& arg_line);
+    void whitespaces_strip(void);
     const string& next_token_get(void);
 
 private:
-    void whitespaces_strip(void);
 
     string              whitespaces;
     string              delims;
@@ -86,7 +87,8 @@ class testvec_parse_params_t
 public:
 
     testvec_parse_params_t() :
-        skip_unknown_token_(false)
+        skip_unknown_token_(false),
+        output_header_comments_(false)
     {
     }
 
@@ -96,11 +98,19 @@ public:
         skip_unknown_token_ = skip_unknown_token;
         return *this;
     }
+    testvec_parse_params_t&
+    output_header_comments(bool output_header_comments)
+    {
+        output_header_comments_ = output_header_comments;
+        return *this;
+    }
 
     bool skip_unknown_token(void) { return skip_unknown_token_; }
+    bool output_header_comments(void) { return output_header_comments_; }
 
 private:
     bool                        skip_unknown_token_;
+    bool                        output_header_comments_;
 };
 
 
@@ -113,7 +123,8 @@ public:
     testvec_parser_t(const string& scripts_dir,
                      const string& testvec_fname,
                      token_parser_t& token_parser,
-                     const map<string,parser_token_id_t>& token2id_map);
+                     const map<string,parser_token_id_t>& token2id_map,
+                     testvec_output_t *output=nullptr);
     ~testvec_parser_t();
 
     parser_token_id_t parse(testvec_parse_params_t params);
@@ -147,9 +158,13 @@ private:
 
     token_parser_t&     token_parser;
     const map<string,parser_token_id_t>& token2id_map;
+    testvec_output_t    *output;
+
+    testvec_parse_params_t parse_params;
     ifstream            file;
     string              line;
     string              next_token;
+    bool                header_comments_done;
     bool                line_consumed_;
     bool                token_consumed_;
 };
