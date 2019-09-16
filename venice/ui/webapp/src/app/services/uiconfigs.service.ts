@@ -377,6 +377,14 @@ export class UIConfigsService {
   }
 
   isAuthorized(permission: UIRolePermissions) {
+    // VS-802 start. User may refresh a page, we want browser to stay in current page. Thus, we restore permission objects from session-storage
+    if (this.userPermissions.length <= 0 ) {
+      this.setUserPermissionsFromLocalStorage();
+    }
+    if (Utility.isEmptyObject(this.uiPermissions)) {
+      this.setUIPermissions();
+    }
+    // VS-802 end.
     return !!this.uiPermissions[permission];
   }
 }

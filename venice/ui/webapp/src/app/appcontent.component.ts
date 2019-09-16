@@ -4,7 +4,7 @@ import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { logout } from '@app/core';
+import { logout, AUTH_BODY } from '@app/core';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -335,6 +335,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
    */
   private onLogout(payload: any) {
     this.store.dispatch(logout());
+    sessionStorage.removeItem(AUTH_BODY); // VS-802. Once user logout, we clear out sessionStorage. Openning two browsers, one logouts, all logout.
     this._boolInitApp = false;
     this.navigate(['/login']);
   }
