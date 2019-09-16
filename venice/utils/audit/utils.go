@@ -33,7 +33,17 @@ func NewRequestObjectPopulator(reqObj interface{}, body bool) EventPopulator {
 		}
 		switch obj := reqObj.(type) {
 		case *http.Request: // for reverse proxy use cases
-			// TODO: clear cookie header
+			// do not log sensitive headers
+			cookie := obj.Header.Get("Cookie")
+			if cookie != "" {
+				obj.Header.Del("Cookie")
+				defer obj.Header.Set("Cookie", cookie)
+			}
+			authzHdr := obj.Header.Get("Authorization")
+			if authzHdr != "" {
+				obj.Header.Del("Authorization")
+				defer obj.Header.Set("Authorization", authzHdr)
+			}
 			b, err := httputil.DumpRequest(obj, dumpBody)
 			if err != nil {
 				return err

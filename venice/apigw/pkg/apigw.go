@@ -221,7 +221,7 @@ func (a *apiGw) tracerMiddleware(h http.Handler) http.Handler {
 // checkCORS allows CORS for GET and returns preflight check headers for OPTIONS. It doesn't allow CORS request for other http methods.
 func (a *apiGw) checkCORS(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a.logger.DebugLog("headers", fmt.Sprintf("%#v", r.Header))
+		a.logger.DebugLog("headers", fmt.Sprintf("%v", getNonSensitiveHeaders(r)))
 		if origin := r.Header.Get("Origin"); origin != "" {
 			switch r.Method {
 			case "OPTIONS":
@@ -765,7 +765,6 @@ func (a *apiGw) isRequestAuthenticated(ctx context.Context) (*auth.User, bool) {
 		a.logger.Errorf("Unable to get metadata from context (%v)", ctx)
 		return nil, false
 	}
-	a.logger.Debugf("metadata (%v)", md)
 
 	// Get JWT from Cookie or Authorization header
 	var token string
@@ -1213,4 +1212,20 @@ func setSecurityHeaders(w http.ResponseWriter, r *http.Request) {
 	}
 	websocketURL := fmt.Sprintf("wss://%s", host)
 	w.Header().Set("Content-Security-Policy", fmt.Sprintf("default-src 'self'; connect-src 'self' %s; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data:", websocketURL))
+}
+
+func getNonSensitiveHeaders(r *http.Request) []string {
+	var headerVals []string
+	sensitiveHeaders := map[string]bool{
+		strings.ToLower(apigw.CookieHeader):              true,
+		strings.ToLower(apigw.GrpcMDAuthorizationHeader): true,
+		strings.ToLower("Authorization"):                 true,
+	}
+	for header, vals := range r.Header {
+		if sensitiveHeaders[strings.ToLower(header)] {
+			continue
+		}
+		headerVals = append(headerVals, fmt.Sprintf("%s: %v", header, vals))
+	}
+	return headerVals
 }

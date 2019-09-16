@@ -198,6 +198,7 @@ func TestCheckCORS(t *testing.T) {
 	a := singletonAPIGw
 
 	logConfig := log.GetDefaultConfig("TestApiGw")
+	logConfig.Filter = log.AllowAllFilter
 	l := log.GetNewLogger(logConfig)
 	a.logger = l
 	tests := []struct {
