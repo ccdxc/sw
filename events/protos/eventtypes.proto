@@ -223,6 +223,9 @@ enum EventTypes {
                                           (severity)     = WARN,
                                           (desc)         = "System resource usage is high"];
 
+    NAPLES_FATAL_INTERRUPT          = 508 [(category) = System,
+                                           (severity) = CRITICAL,
+                                           (desc)     = "Naples has a fatal interrupt"];
     // ------------------------------ Rollout events -------------------------- //
     ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,

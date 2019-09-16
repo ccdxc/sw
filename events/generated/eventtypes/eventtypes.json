@@ -189,6 +189,11 @@
  ],
  "system": [
   {
+   "Name": "NAPLES_FATAL_INTERRUPT",
+   "Severity": "critical",
+   "Desc": "Naples has a fatal interrupt"
+  },
+  {
    "Name": "NAPLES_SERVICE_STOPPED",
    "Severity": "critical",
    "Desc": "Naples service stopped"

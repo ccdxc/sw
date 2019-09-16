@@ -307,6 +307,13 @@ func init() {
 		Desc:       "System resource usage is high",
 		SuppressMM: false}
 
+	eventTypes[NAPLES_FATAL_INTERRUPT] = &EventTypeAttributes{
+		EType:      NAPLES_FATAL_INTERRUPT.String(),
+		Severity:   "critical",
+		Category:   "system",
+		Desc:       "Naples has a fatal interrupt",
+		SuppressMM: false}
+
 	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
 		EType:      ROLLOUT_STARTED.String(),
 		Severity:   "info",

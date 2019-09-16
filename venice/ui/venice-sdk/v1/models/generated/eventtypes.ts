@@ -52,6 +52,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'ROLLOUT_SUSPENDED',
   ],
   system: [
+    'NAPLES_FATAL_INTERRUPT',
     'NAPLES_SERVICE_STOPPED',
     'SERVICE_PENDING',
     'SERVICE_RUNNING',
@@ -243,6 +244,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "ROLLOUT_SUSPENDED",
       "Severity": EventsEvent_severity.info,
       "Desc": "Rollout suspended",
+  },
+  'NAPLES_FATAL_INTERRUPT' : {
+      "Name": "NAPLES_FATAL_INTERRUPT",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "Naples has a fatal interrupt",
   },
   'NAPLES_SERVICE_STOPPED' : {
       "Name": "NAPLES_SERVICE_STOPPED",

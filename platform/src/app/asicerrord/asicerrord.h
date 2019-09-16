@@ -12,6 +12,7 @@
 #include <math.h>
 #include "logger.h"
 #include "asic/pd/pd.hpp"
+#include "asicerrord_event.hpp"
 #include "gen/proto/asicerrord.delphi.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/verif/apis/sdram_csr_ipxact.h"
@@ -217,6 +218,7 @@ static inline void poll_##kind##metrics(uint64_t key, uint32_t addr) { \
     uint32_t regaddr = addr; \
     delphi::objects::kind##metrics_t *reg = &kind##metrics[key]; \
     char regname[50] = #kind; \
+    char eventbuf[256]; \
     if (len % 32 == 0) { \
         size = len / 32; \
     } else { \
@@ -233,12 +235,16 @@ static inline void poll_##kind##metrics(uint64_t key, uint32_t addr) { \
 #define CAPRI_INTR_KIND_FIELD(fld, offset, type) \
     if (data & (1 << offset)) { \
         reg->fld++; \
-        if (type == INFO) \
+        if (type == INFO) {\
             INFO("Register {} key {} at address {:x} interrupt {} type {} times {}", \
                  regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
-        else \
+        } else {\
+            sprintf(eventbuf, "Interrupt %s at %x field %s type %s", \
+                     regname, regaddr, #fld, errortostring(type)); \
+            EventLogger::getInstance()->LogInterruptEvent(eventbuf); \
             ERR("Register {} key {} at address {:x} interrupt {} type {} times {}", \
                  regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
+        } \
     } \
 
 #define CAPRI_PRINT_HBM_ERROR() \

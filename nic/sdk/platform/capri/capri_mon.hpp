@@ -46,6 +46,11 @@ typedef struct cattrip_s {
                     (CAP_ADDR_BASE_MC_MC_1_OFFSET - CAP_ADDR_BASE_MC_MC_0_OFFSET)) + \
                     CAP_ADDR_BASE_MC_MC_0_OFFSET) + CAP_MC_CSR_MCH_DHS_APB_BYTE_ADDRESS)
 
+#define CAP_MC_ADDR(channel_num) ((channel_num * \
+                    (CAP_ADDR_BASE_MC_MC_1_OFFSET - CAP_ADDR_BASE_MC_MC_0_OFFSET)) + \
+                    CAP_ADDR_BASE_MC_MC_0_OFFSET)
+
+#define MC_STA_OFFSET 4
 pen_adjust_perf_status_t capri_adjust_perf(int chip_id, int inst_id,
                                           pen_adjust_index_t &idx,
                                           pen_adjust_perf_type_t perf_type);
