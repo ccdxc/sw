@@ -2,6 +2,10 @@
 set -e
 set -x
 
+#this script is responsible for mounting of file systems at correct locations
+# restore user config and run any plugins to modify the file system as needed
+# this is run quite early in the sequence before many other processes are started
+
 # this is a no-op on the installer boot since pen.venice is not there
 if [[ -z "`grep pen.venice /proc/cmdline `" ]]
 then

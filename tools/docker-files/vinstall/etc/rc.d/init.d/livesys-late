@@ -3,7 +3,7 @@
 # live: Late init script for live image
 #
 # chkconfig: 345 99 01
-# description: Script to wipe and do full installation of venice by wiping existing installation
+# description: installation of venice on disk
 
 . /etc/init.d/functions
 

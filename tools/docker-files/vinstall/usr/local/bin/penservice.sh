@@ -9,7 +9,7 @@ fi
 
 # this script is run in the bringup sequence of venice
 # after the network is online
-# this is responsible for load the docker images and starting CMD by  running the installer
+# this is responsible for loading the docker images and starting CMD by  running the installer
 
 # here set the network and other properties based on ova settings
 /usr/local/bin/set_ova_properties.py
