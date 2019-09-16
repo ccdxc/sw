@@ -49,9 +49,7 @@ export class StagingService extends Stagingv1Service {
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
 
     const key = this.serviceUtility.convertEventID(opts);
-    if (!this.uiconfigsService.isAuthorized(key)) {
-      return NEVER;
-    }
+    // VS-766 backend grant everyone staging buffer permission. UI will not check permission
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
   }

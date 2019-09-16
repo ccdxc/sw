@@ -14,7 +14,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 import { Utility } from '@app/common/Utility';
-import { UserDataReadyMap, invokeConfigureStagingPermission } from './';
+import { UserDataReadyMap} from './';
 import { AUTH_BODY } from '@app/core';
 
 import { AuthUserSpec_type } from '@sdk/v1/models/generated/auth/enums.ts';
@@ -29,7 +29,6 @@ import {
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import { required, patternValidator } from '@sdk/v1/utils/validators';
 import { FormControl, AbstractControl, ValidatorFn } from '@angular/forms';
-import { hasStagingPermission } from './';
 
 export enum ACTIONTYPE {
   CREATE = 'Create',
@@ -395,11 +394,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param $event
    */
   onAddUser($event) {
-    if (hasStagingPermission(this.uiconfigsService)) {
       this.isToShowAddUserPanel = true;
-    } else {
-      invokeConfigureStagingPermission(this._controllerService);
-    }
   }
 
   /**
@@ -407,12 +402,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param $event
    */
   onAddRole($event) {
-    if (hasStagingPermission(this.uiconfigsService)) {
       this.isToShowAddRolePanel = true;
       this.selectedAuthRole = null;
-    } else {
-      invokeConfigureStagingPermission(this._controllerService);
-    }
   }
 
   /**
@@ -438,11 +429,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param deletedUser
    */
   onDeleteUser_with_staging($event, deletedUser: AuthUser) {
-    if (!hasStagingPermission(this.uiconfigsService)) {
-      this._controllerService.invokeErrorToaster('Staging permission required',
-        'Please configure staging permission in role');
-      return;
-    }
     this._controllerService.invokeConfirm({
       header: Utility.generateDeleteConfirmMsg('User', deletedUser.meta.name),
       message: 'This action cannot be reversed',
@@ -461,10 +447,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    *
    */
   deleteUser_with_staging(deletedUser: AuthUser) {
-    if (!hasStagingPermission(this.uiconfigsService)) {
-      invokeConfigureStagingPermission(this._controllerService);
-      return;
-    }
     const msgFailedToDeleteUser = 'Failed to delete user';
     let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
     let buffername = null; // createdBuffer.meta.name;
@@ -580,10 +562,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    *
    */
   deleteRole_with_staging(deletedRole: AuthRole) {
-    if (!hasStagingPermission(this.uiconfigsService)) {
-      invokeConfigureStagingPermission(this._controllerService);
-      return;
-    }
     let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
     let buffername = null; // createdBuffer.meta.name;
     const observables: Observable<any>[] = [];
@@ -897,10 +875,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * We will remove user from rb1, add user to rb4
    */
   updateUser_with_staging() {
-    if (!hasStagingPermission(this.uiconfigsService)) {
-      invokeConfigureStagingPermission(this._controllerService);
-      return;
-    }
     const updateUser = this.selectedAuthUser.getFormGroupValues();
     updateUser.meta.name = this.selectedAuthUser.meta.name;  // sine we don't let change login name, we have to patch the meta.name
 

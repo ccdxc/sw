@@ -768,6 +768,80 @@ func TestFailedOpsInCommitBuffer(t *testing.T) {
 	Assert(t, err != nil, "expected error while committing buffer with weak password user")
 }
 
+func TestCommitBufferAuthz(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
+	const tuser = "tuser"
+	const testTenant = "testtenant"
+
+	MustCreateTenant(tinfo.apicl, testTenant)
+	defer MustDeleteTenant(tinfo.apicl, testTenant)
+	MustCreateTestUser(tinfo.apicl, tuser, testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tinfo.apicl, tuser, globals.DefaultTenant)
+
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: tuser, Password: testPassword, Tenant: globals.DefaultTenant})
+	AssertOk(t, err, "error creating logged in context")
+	// user should have implicit permission to create staging buffer
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.StagingV1().Buffer().Create(ctx, &staging.Buffer{ObjectMeta: api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant}})
+		return err == nil, nil
+	}, fmt.Sprintf("unable to create staging buffer, err: %v", err))
+	defer tinfo.apicl.StagingV1().Buffer().Delete(ctx, &api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant})
+	_, err = tinfo.restcl.StagingV1().Buffer().Create(ctx, &staging.Buffer{ObjectMeta: api.ObjectMeta{Name: "TestBuffer", Tenant: testTenant}})
+	Assert(t, err != nil, "user should not be able to create staging buffer in another tenant")
+	// user should have implicit permission to clear staging buffer
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.StagingV1().Buffer().Clear(ctx, &staging.ClearAction{ObjectMeta: api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant}})
+		return err == nil, nil
+	}, fmt.Sprintf("unable to clear staging buffer, err: %v", err))
+	stagecl, err := apiclient.NewStagedRestAPIClient(tinfo.apiGwAddr, "TestBuffer")
+	AssertOk(t, err, "error creating staging client")
+	defer stagecl.Close()
+	_, err = stagecl.AuthV1().Role().Create(ctx, login.NewRole("NetworkAdminRole", globals.DefaultTenant, login.NewPermission(
+		globals.DefaultTenant,
+		string(apiclient.GroupNetwork),
+		string(network.KindNetwork),
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_AllActions.String()),
+		login.NewPermission(
+			globals.DefaultTenant,
+			string(apiclient.GroupAuth),
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String())))
+	Assert(t, err != nil, "user should not be authorized to add role to staging buffer")
+	MustCreateRole(tinfo.apicl, "authrole", globals.DefaultTenant, login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), authz.ResourceKindAll, authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()))
+	defer MustDeleteRole(tinfo.apicl, "authrole", globals.DefaultTenant)
+	MustCreateRoleBinding(tinfo.apicl, "authrolebinding", globals.DefaultTenant, "authrole", []string{tuser}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "authrolebinding", globals.DefaultTenant)
+	tuser1 := &auth.User{}
+	tuser1.Name = "tuser1"
+	tuser1.Tenant = globals.DefaultTenant
+	tuser1.Spec.Password = testPassword
+	tuser1.Spec.Type = auth.UserSpec_Local.String()
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = stagecl.AuthV1().User().Create(ctx, tuser1)
+		return err == nil, nil
+	}, fmt.Sprintf("tuser should be able to add create user operation to staging buffer, err: %v", err))
+	// user should have implicit permission to commit staging buffer
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.StagingV1().Buffer().Commit(ctx, &staging.CommitAction{ObjectMeta: api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant}})
+		return err == nil, nil
+	}, fmt.Sprintf("unable to commit staging buffer, err: %v", err))
+	MustDeleteUser(tinfo.apicl, tuser1.Name, tuser1.Tenant)
+}
+
 func TestClusterScopedAuthz(t *testing.T) {
 	// create default tenant
 	adminCred := &auth.PasswordCredential{

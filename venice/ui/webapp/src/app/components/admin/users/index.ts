@@ -12,19 +12,3 @@ export interface UserDataReadyMap {
     rolebindings: boolean;
 }
 
-export const hasStagingPermission = (uiconfigsService: UIConfigsService): boolean => {
-    if (uiconfigsService.isAuthorized(UIRolePermissions.stagingbuffer_create)
-    && uiconfigsService.isAuthorized(UIRolePermissions.stagingbuffer_commit)
-    && uiconfigsService.isAuthorized(UIRolePermissions.stagingbuffer_delete)
-   ) {
-       return true;
-   } else {
-       return false;
-   }
-  };
-
-export const invokeConfigureStagingPermission = (_controllerService: ControllerService)  => {
-    _controllerService.invokeErrorToaster('Staging permission required',
-    'Please configure staging permission in role');
-};
-

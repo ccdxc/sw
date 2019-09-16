@@ -23,6 +23,11 @@ type stagingHooks struct {
 
 // opsPreAuthzHook renames Create action to Commit or Clear for authz and auditing
 func (s *stagingHooks) opsPreAuthzHook(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		s.logger.ErrorLog("method", "opsPreAuthzHook", "msg", "no user present in context passed to authz hook")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
 	// get existing operations from context
 	operations, ok := apigwpkg.OperationsFromContext(ctx)
 	if !ok || (len(operations) == 0) {
@@ -45,12 +50,51 @@ func (s *stagingHooks) opsPreAuthzHook(ctx context.Context, in interface{}) (con
 			return ctx, in, errors.New("internal error")
 		}
 		if op.GetResource().GetKind() == string(staging.KindBuffer) {
-			modOps = append(modOps, authz.NewOperation(op.GetResource(), action))
+			resource := op.GetResource()
+			// allow implicit permissions only if staging buffer is in the user tenant
+			if resource.GetTenant() == user.Tenant {
+				resource.SetOwner(user)
+			}
+			modOps = append(modOps, authz.NewOperation(resource, action))
 		} else {
 			modOps = append(modOps, op)
 		}
 	}
 	nctx := apigwpkg.NewContextWithOperations(ctx, modOps...)
+	return nctx, in, nil
+}
+
+// addOwner makes staging buffer CRUD permissions implicit
+func (s *stagingHooks) addOwnerPreAuthzHook(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	_, ok := in.(*staging.Buffer)
+	if !ok {
+		return ctx, in, errors.New("invalid input type")
+	}
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		s.logger.ErrorLog("method", "addOwnerPreAuthzHook", "msg", "no user present in context passed to authz hook")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
+	// get existing operations from context
+	operations, ok := apigwpkg.OperationsFromContext(ctx)
+	if !ok || (len(operations) == 0) {
+		s.logger.ErrorLog("method", "addOwnerPreAuthzHook", "msg", "operation not present in context")
+		return ctx, in, errors.New("internal error")
+	}
+
+	for _, op := range operations {
+		if !authz.IsValidOperationValue(op) {
+			s.logger.ErrorLog("method", "addOwnerPreAuthzHook", "msg", fmt.Sprintf("invalid operation: %v", op))
+			return ctx, in, errors.New("internal error")
+		}
+		resource := op.GetResource()
+		// allow implicit permissions only if staging buffer is in the user tenant
+		if resource.GetTenant() == user.Tenant {
+			resource.SetOwner(user)
+		}
+
+	}
+	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
 	return nctx, in, nil
 }
 
@@ -104,6 +148,22 @@ func (s *stagingHooks) registerUserContextHook(svc apigw.APIGatewayService) erro
 	return nil
 }
 
+func (s *stagingHooks) registerAddOwnerPreAuthzHook(svc apigw.APIGatewayService) error {
+	ids := []serviceID{
+		{string(staging.KindBuffer), apiintf.CreateOper},
+		{string(staging.KindBuffer), apiintf.DeleteOper},
+		{string(staging.KindBuffer), apiintf.GetOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		if err != nil {
+			return err
+		}
+		prof.AddPreAuthZHook(s.addOwnerPreAuthzHook)
+	}
+	return nil
+}
+
 func registerStagingHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -115,7 +175,10 @@ func registerStagingHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	if err := s.registerUserContextHook(svc); err != nil {
 		return err
 	}
-	return s.registerOpsPreAuthzHook(svc)
+	if err := s.registerOpsPreAuthzHook(svc); err != nil {
+		return err
+	}
+	return s.registerAddOwnerPreAuthzHook(svc)
 }
 
 func init() {
