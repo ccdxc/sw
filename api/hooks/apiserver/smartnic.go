@@ -64,7 +64,9 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 	}
 
 	curNIC := &cluster.DistributedServiceCard{}
-	err := kvs.Get(ctx, key, curNIC)
+	// Get from the persisted DB here.
+	pctx := apiutils.SetVar(ctx, apiutils.CtxKeyGetPersistedKV, true)
+	err := kvs.Get(pctx, key, curNIC)
 	if err != nil {
 		cl.logger.Errorf("Error getting DistributedServiceCard with key [%s] in API server smartNICPreCommitHook pre-commit hook", key)
 		return i, false, fmt.Errorf("Error getting object: %v", err)

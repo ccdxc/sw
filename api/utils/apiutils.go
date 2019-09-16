@@ -25,6 +25,7 @@ const (
 	CtxKeyAPIGwWebSocketConn  = "ApiGwWebSocketConn"
 	CtxKeyAPIGwBinStreamReq   = "CtxKeyAPIGwBinStreamReq"
 	CtxKeyAPISrvInitRestore   = "InitRestorePath"
+	CtxKeyGetPersistedKV      = "GetPersistedKV"
 )
 
 type requirementSetMarker struct {

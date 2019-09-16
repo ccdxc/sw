@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pensando/sw/api/utils"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/api_test"
 	cachemocks "github.com/pensando/sw/api/cache/mocks"
@@ -575,11 +577,31 @@ func TestOverlayGet(t *testing.T) {
 	err = ov.Get(ctx, key, obj1)
 	Assert(t, err != nil, "expecting get to fail")
 
+	// Test with persisted get set
+	pctx := apiutils.SetVar(ctx, apiutils.CtxKeyGetPersistedKV, true)
+	err = ov.Get(pctx, key, obj1)
+	AssertOk(t, err, "should be successful")
+	Assert(t, reflect.DeepEqual(retobj, obj1), "retrieved object does not match [%+v]\n[%+v]", obj1, retobj)
+
+	pctx = apiutils.SetVar(ctx, apiutils.CtxKeyGetPersistedKV, false)
+	err = ov.Get(pctx, key, obj1)
+	Assert(t, err != nil, "expecting get to fail")
+
 	// get with no cache and overlay(create)
 	getObj = false
 	cobj = ov.overlay[key]
 	cobj.oper = operCreate
 	err = ov.Get(ctx, key, obj1)
+	AssertOk(t, err, "expecting get to succeed, got (%s)", err)
+	Assert(t, reflect.DeepEqual(obj, obj1), "retrieved object does not match [%+v]\n[%+v]", retobj, obj)
+
+	// Test with persisted get set
+	pctx = apiutils.SetVar(ctx, apiutils.CtxKeyGetPersistedKV, true)
+	err = ov.Get(pctx, key, obj1)
+	Assert(t, err != nil, "expecting get to fail")
+
+	pctx = apiutils.SetVar(ctx, apiutils.CtxKeyGetPersistedKV, false)
+	err = ov.Get(pctx, key, obj1)
 	AssertOk(t, err, "expecting get to succeed, got (%s)", err)
 	Assert(t, reflect.DeepEqual(obj, obj1), "retrieved object does not match [%+v]\n[%+v]", retobj, obj)
 

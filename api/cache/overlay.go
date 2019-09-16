@@ -887,6 +887,14 @@ func (c *overlay) Get(ctx context.Context, key string, into runtime.Object) erro
 	if err != nil {
 		return err
 	}
+
+	// If request is to ignore the overlay, do so.
+	if v, ok := apiutils.GetVar(ctx, apiutils.CtxKeyGetPersistedKV); ok {
+		if b, ok := v.(bool); ok && b {
+			return c.CacheInterface.Get(ctx, key, into)
+		}
+	}
+
 	err = c.CacheInterface.Get(ctx, key, cl.(runtime.Object))
 	ovObj := c.overlay[key]
 	if ovObj != nil {
@@ -952,6 +960,13 @@ func (c *overlay) ListFiltered(ctx context.Context, prefix string, into runtime.
 	if elem.Kind() == reflect.Ptr {
 		ptr = true
 	}
+	// If request is to ignore the overlay, do so.
+	if v, ok := apiutils.GetVar(ctx, apiutils.CtxKeyGetPersistedKV); ok {
+		if b, ok := v.(bool); ok && b {
+			return c.CacheInterface.ListFiltered(ctx, prefix, into, opts)
+		}
+	}
+
 	o, err := into.Clone(nil)
 	if err != nil {
 		return err

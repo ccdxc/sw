@@ -38,6 +38,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 
 	schema := runtime.GetDefaultScheme()
 	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{""}, Codec: runtime.NewJSONCodec(schema)}
+	// Tests here test with a standard KV interface. KV being an overlay (staging buffer) is tested as part of the overlay tests.
 	kv, err := store.New(config)
 	AssertOk(t, err, "Error instantiating KVStore")
 
