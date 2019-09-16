@@ -298,7 +298,7 @@ clean:
 
 
 helper-containers:
-	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.7 .
+	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.8 .
 	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.5 .
 	@cd tools/docker-files/vinstall; docker build -t ${REGISTRY_URL}/pens-vinstall:v0.1 .
 	@#keep pens-ntp version in sync in tools/scripts/createImage.py

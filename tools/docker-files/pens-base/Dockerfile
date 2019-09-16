@@ -17,6 +17,7 @@ RUN chmod 755 systemd-docker.linux.x86-64
 FROM alpine:3.10.2
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 COPY --from=0 /target/usr/bin/kubelet /target/usr/bin/kubelet
+COPY --from=0 /target/usr/bin/kubectl /target/usr/bin/kubectl
 COPY --from=0 systemd-docker.linux.x86-64 /target/usr/bin/systemd-docker
 ENTRYPOINT [ "/sbin/init" ]
 
