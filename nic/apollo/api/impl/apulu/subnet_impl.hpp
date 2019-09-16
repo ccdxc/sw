@@ -4,18 +4,18 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// vpc implementation in the p4/hw
+/// subnet implementation in the p4/hw
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __VPC_IMPL_HPP__
-#define __VPC_IMPL_HPP__
+#ifndef __SUBNET_IMPL_HPP__
+#define __SUBNET_IMPL_HPP__
 
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/api/include/pds_vpc.hpp"
-#include "nic/apollo/api/vpc.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
@@ -24,24 +24,24 @@ using sdk::table::handle_t;
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_VPC_IMPL - vpc datapath functionality
-/// \ingroup PDS_VPC
+/// \defgroup PDS_SUBNET_IMPL - subnet datapath functionality
+/// \ingroup PDS_SUBNET
 /// @{
 
-/// \brief  VPC implementation
-class vpc_impl : public impl_base {
+/// \brief  subnet implementation
+class subnet_impl : public impl_base {
 public:
-    /// \brief      factory method to allocate & initialize vpc impl instance
-    /// \param[in]  spec    vpc information
-    /// \return     new instance of vpc or NULL, in case of error
-    static vpc_impl *factory(pds_vpc_spec_t *spec);
+    /// \brief      factory method to allocate & initialize subnet impl instance
+    /// \param[in]  spec    subnet information
+    /// \return     new instance of subnet or NULL, in case of error
+    static subnet_impl *factory(pds_subnet_spec_t *spec);
 
-    /// \brief      release all the state associated with the given vpc,
+    /// \brief      release all the state associated with the given subnet,
     ///             if any, and free the memory
-    /// \param[in]  impl    vpc impl instance to be freed
+    /// \param[in]  impl    subnet impl instance to be freed
     // NOTE: h/w entries should have been cleaned up (by calling
     //       impl->cleanup_hw() before calling this
-    static void destroy(vpc_impl *impl);
+    static void destroy(subnet_impl *impl);
 
     /// \brief      allocate/reserve h/w resources for this object
     /// \param[in]  orig_obj old version of the unmodified object
@@ -124,36 +124,36 @@ public:
 
     /// \brief      read spec, statistics and status from hw tables
     /// \param[in]  api_obj  API object
-    /// \param[in]  key  pointer to vpc key
-    /// \param[out] info pointer to vpc info
+    /// \param[in]  key  pointer to subnet key
+    /// \param[out] info pointer to subnet info
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
 private:
     /// \brief  constructor
-    vpc_impl() {
+    subnet_impl() {
         vni_hdl_ = handle_t::null();
     }
 
     /// \brief  destructor
-    ~vpc_impl() {}
+    ~subnet_impl() {}
 
-    /// \brief      program vpc related tables during vpc create by enabling
-    ///             stage0 tables corresponding to the new epoch
+    /// \brief      program subnet related tables during subnet create by
+    ///             enabling stage0 tables corresponding to the new epoch
     /// \param[in]  epoch epoch being activated
-    /// \param[in]  vpc    vpc obj being programmed
-    /// \param[in]  spec    vpc configuration
+    /// \param[in]  subnet    subnet obj being programmed
+    /// \param[in]  spec    subnet configuration
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
-                                   pds_vpc_spec_t *spec);
+    sdk_ret_t activate_subnet_create_(pds_epoch_t epoch, subnet_entry *subnet,
+                                      pds_subnet_spec_t *spec);
 
-    /// \brief      program vpc related tables during vpc delete by disabling
-    ///             stage0 tables corresponding to the new epoch
+    /// \brief      program subnet related tables during subnet delete by
+    ///             disabling stage0 tables corresponding to the new epoch
     /// \param[in]  epoch epoch being activated
-    /// \param[in]  vpc    vpc obj being programmed
+    /// \param[in]  subnet    subnet obj being programmed
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc);
+    sdk_ret_t activate_subnet_delete_(pds_epoch_t epoch, subnet_entry *subnet);
 
 private:
     handle_t    vni_hdl_;
@@ -164,4 +164,4 @@ private:
 }    // namespace impl
 }    // namespace api
 
-#endif    // __VPC_IMPL_HPP__
+#endif    // __SUBNET_IMPL_HPP__

@@ -4,30 +4,30 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// datapath implementation of vpc
+/// datapath implementation of subnet
 ///
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/api/vpc.hpp"
-#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
+#include "nic/apollo/api/subnet.hpp"
+#include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
-#include "nic/apollo/api/pds_state.hpp"
+//#include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/sdk/lib/utils/utils.hpp"
+//#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_VPC_IMPL - vpc entry datapath implementation
-/// \ingroup PDS_VPC
+/// \defgroup PDS_SUBNET_IMPL - subnet entry datapath implementation
+/// \ingroup PDS_SUBNET
 /// \@{
 
-vpc_impl *
-vpc_impl::factory(pds_vpc_spec_t *spec) {
-    vpc_impl *impl;
+subnet_impl *
+subnet_impl::factory(pds_subnet_spec_t *spec) {
+    subnet_impl *impl;
 
     // TODO: move to slab later
     if (spec->fabric_encap.type != PDS_ENCAP_TYPE_VXLAN) {
@@ -36,24 +36,25 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
                       spec->fabric_encap.val);
         return NULL;
     }
-    impl = (vpc_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VPC_IMPL,
-                                   sizeof(vpc_impl));
-    new (impl) vpc_impl();
+    impl = (subnet_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_SUBNET_IMPL,
+                                     sizeof(subnet_impl));
+    new (impl) subnet_impl();
     return impl;
 }
 
 void
-vpc_impl::destroy(vpc_impl *impl) {
-    impl->~vpc_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_VPC_IMPL, impl);
+subnet_impl::destroy(subnet_impl *impl) {
+    impl->~subnet_impl();
+    SDK_FREE(SDK_MEM_ALLOC_PDS_SUBNET_IMPL, impl);
 }
 
 sdk_ret_t
-vpc_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+subnet_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    uint32_t idx;
     sdk_ret_t ret;
     vni_swkey_t vni_key =  { 0 };
     sdk_table_api_params_t tparams;
-    pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
+    pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
 
     // reserve an entry in VNI table
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
@@ -62,8 +63,8 @@ vpc_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                                    handle_t::null());
     ret = vpc_impl_db()->vni_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in VNI table for vpc %u, err %u",
-                      spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to reserve entry in VNI table for subnet %u, "
+                      "err %u", spec->key.id, ret);
         return ret;
     }
     vni_hdl_ = tparams.handle;
@@ -71,7 +72,7 @@ vpc_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_impl::release_resources(api_base *api_obj) {
+subnet_impl::release_resources(api_base *api_obj) {
     sdk_table_api_params_t tparams = { 0 };
 
     if (vni_hdl_.valid()) {
@@ -82,45 +83,54 @@ vpc_impl::release_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-vpc_impl::nuke_resources(api_base *api_obj) {
+subnet_impl::nuke_resources(api_base *api_obj) {
     sdk_table_api_params_t tparams = { 0 };
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
-vpc_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+subnet_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     return SDK_RET_ERR;
 }
 
 sdk_ret_t
-vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                    obj_ctxt_t *obj_ctxt) {
+subnet_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
+                       obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 #define vni_info    action_u.vni_vni_info
 sdk_ret_t
-vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
-                               pds_vpc_spec_t *spec) {
+subnet_impl::activate_subnet_create_(pds_epoch_t epoch,
+                                     subnet_entry *subnet,
+                                     pds_subnet_spec_t *spec) {
     sdk_ret_t ret;
+    vpc_entry *vpc;
     vni_swkey_t vni_key = { 0 };
+    sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
 
-    PDS_TRACE_DEBUG("Activating vpc %u, type %u, fabric encap (%u, %u)",
-                    spec->key.id, spec->type, spec->fabric_encap.type,
+    PDS_TRACE_DEBUG("Activating subnet %u, vpc %u, fabric encap (%u, %u)",
+                    spec->key.id, spec->vpc.id, spec->fabric_encap.type,
                     spec->fabric_encap.val.vnid);
+    vpc = vpc_db()->find(&spec->vpc);
+    if (vpc == NULL) {
+        PDS_TRACE_ERR("No vpc %u found to program subnet %u",
+                      spec->vpc.id, spec->key.id);
+        return SDK_RET_INVALID_ARG;
+    }
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     // fill the data
-    vni_data.vni_info.bd_id = vpc->hw_id();    // bd hw id = vpc hw id for a vpc
+    vni_data.vni_info.bd_id = subnet->hw_id();
     vni_data.vni_info.vpc_id = vpc->hw_id();
+    memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
     // program the VNI table
     ret = vpc_impl_db()->vni_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Programming of VNI table failed for vpc %u, err %u",
+        PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
                       spec->key.id, ret);
         return ret;
     }
@@ -128,25 +138,25 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
 }
 
 sdk_ret_t
-vpc_impl::activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
+subnet_impl::activate_subnet_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
-vpc_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
+subnet_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                       api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
-    pds_vpc_spec_t *spec;
+    pds_subnet_spec_t *spec;
 
     switch (api_op) {
     case api::API_OP_CREATE:
-        spec = &obj_ctxt->api_params->vpc_spec;
-        ret = activate_vpc_create_(epoch, (vpc_entry *)api_obj, spec);
+        spec = &obj_ctxt->api_params->subnet_spec;
+        ret = activate_subnet_create_(epoch, (subnet_entry *)api_obj, spec);
         break;
 
     case api::API_OP_DELETE:
         // spec is not available for DELETE operations
-        ret = activate_vpc_delete_(epoch, (vpc_entry *)api_obj);
+        ret = activate_subnet_delete_(epoch, (subnet_entry *)api_obj);
         break;
 
     case api::API_OP_UPDATE:
@@ -158,17 +168,17 @@ vpc_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 }
 
 sdk_ret_t
-vpc_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
+subnet_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
                         api_op_t api_op) {
     return SDK_RET_ERR;
 }
 
 sdk_ret_t
-vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+subnet_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     return SDK_RET_INVALID_OP;
 }
 
-/// \@}    // end of PDS_VPC_IMPL
+/// \@}    // end of PDS_SUBNET_IMPL
 
 }    // namespace impl
 }    // namespace api

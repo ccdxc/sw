@@ -4,38 +4,35 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// vpc implementation state
+/// subnet implementation state
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __VPC_IMPL_STATE_HPP__
-#define __VPC_IMPL_STATEHPP__
+#ifndef __SUBNET_IMPL_STATE_HPP__
+#define __SUBNET_IMPL_STATEHPP__
 
-#include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
-using sdk::table::slhash;
-
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_VPC_IMPL_STATE vpc state functionality
-/// \ingroup PDS_VPC
+/// \defgroup PDS_SUBNET_IMPL_STATE subnet state functionality
+/// \ingroup PDS_SUBNET
 /// @{
 
 // forward declaration
-class vpc_impl;
+class subnet_impl;
 
-/// \brief  state maintained for VPCs
-class vpc_impl_state : public state_base {
+/// \brief  state maintained for SUBNETs
+class subnet_impl_state : public state_base {
 public:
     /// \brief  constructor
-    vpc_impl_state(pds_state *state);
+    subnet_impl_state(pds_state *state);
 
     /// \brief  destructor
-    ~vpc_impl_state();
+    ~subnet_impl_state();
 
     /// \brief  API to initiate transaction over all the table manamgement
     ///         library instances
@@ -54,13 +51,7 @@ public:
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
-    slhash *vni_tbl(void) { return vni_tbl_; }
-    friend class vpc_impl;      // vpc_impl class is friend of vpc_impl_state
-    friend class subnet_impl;   // subnet_impl class is friend of vpc_impl_state
-
-private:
-    ///< hash table for vpc VxLAN vnids
-    slhash *vni_tbl_;
+    friend class subnet_impl;   // subnet_impl class is friend of subnet_impl_state
 };
 
 /// @}
@@ -68,4 +59,4 @@ private:
 }    // namespace impl
 }    // namespace api
 
-#endif    // __VPC_IMPL_STATE_HPP__
+#endif    // __SUBNET_IMPL_STATE_HPP__
