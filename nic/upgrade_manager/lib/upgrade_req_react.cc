@@ -280,6 +280,25 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
     return delphi::error::OK();
 }
 
+void UpgReqReact::DumpFirmwareVersion(void) {
+    UPG_OBFL_TRACE("Current firmware meta => buildDate: {}, "\
+                                             "buildUser: {}, "\
+                                             "baseVersion: {}, "\
+                                             "softwareVersion: {]",
+                                             ctx.preUpgMeta.buildDate,
+                                             ctx.preUpgMeta.buildUser,
+                                             ctx.preUpgMeta.baseVersion,
+                                             ctx.preUpgMeta.softwareVersion);
+    UPG_OBFL_TRACE("Upgrade firmware meta => buildDate: {}, "\
+                                             "buildUser: {}, "\
+                                             "baseVersion: {}, "\
+                                             "softwareVersion: {]",
+                                             ctx.postUpgMeta.buildDate,
+                                             ctx.postUpgMeta.buildUser,
+                                             ctx.postUpgMeta.baseVersion,
+                                             ctx.postUpgMeta.softwareVersion);
+}
+
 // OnUpgReqCreate gets called when UpgReq object is created
 delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UPG_LOG_DEBUG("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
@@ -295,6 +314,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         return delphi::error("GetUpgCtxFromMeta failed");
     }
     UpgReqStateType type = UpgStateCompatCheck;
+    DumpFirmwareVersion();
     if (req->upgreqcmd() == IsUpgPossible) {
         UPG_LOG_INFO("CanUpgrade request received");
         UPG_OBFL_TRACE("Check Upgrade Possible");

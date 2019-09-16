@@ -89,6 +89,7 @@ public:
     void RegNewApp(string name);
     void UnRegNewApp(string name);
     void CreateUpgradeMetrics(void);
+    void DumpFirmwareVersion(void);
 };
 typedef std::shared_ptr<UpgReqReact> UpgReqReactPtr;
 
