@@ -3893,10 +3893,18 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 {
 	struct ifnet *ifp;
 	struct ionic_mc_addr *mc;
-	int i, error;
-	bool was_open;
+	int i, error = 0;
+	bool was_open, drain_notifyq = false;
 
 	ifp = lif->netdev;
+
+	IONIC_LIF_LOCK(lif);
+	if (lif->reinit_in_progress) {
+		IONIC_QUE_INFO(lif->adminq, "reset already in progress\n");
+		goto out_unlock;
+	}
+	lif->reinit_in_progress = true;
+	IONIC_LIF_UNLOCK(lif);
 
 	IONIC_QUE_WARN(lif->adminq, "resetting LIF\n");
 
@@ -3934,17 +3942,14 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 	error = ionic_lif_init(lif, wdog_reset_path);
 	if (error) {
 		IONIC_NETDEV_ERROR(ifp, "init failed, error = %d\n", error);
-		IONIC_LIF_UNLOCK(lif);
-
-		/* Wait until after unlock to drain NotifyQ */
-		ionic_lif_notifyq_drain(lif);
-		return (error);
+		drain_notifyq = true;
+		goto out_abort;
 	}
 
 	if (is_zero_ether_addr(lif->dev_addr)) {
 		IONIC_NETDEV_ERROR(ifp, "station address is missing\n");
-		IONIC_LIF_UNLOCK(lif);
-		return (EINVAL);
+		error = EINVAL;
+		goto out_abort;
 	}
 
 	ionic_addr_add(lif->netdev, lif->dev_addr);
@@ -3959,7 +3964,7 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 		mc = &lif->mc_addrs[i];
 		error = ionic_addr_add(ifp, mc->addr);
 		if (error)
-			break;
+			goto out_abort;
 		IONIC_NETDEV_ADDR_INFO(ifp, mc->addr, "reinit, adding");
 	}
 
@@ -3970,7 +3975,15 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 		ionic_hw_open(lif);
 		ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	}
+
+out_abort:
+	lif->reinit_in_progress = false;
+out_unlock:
 	IONIC_LIF_UNLOCK(lif);
+
+	/* Wait until after unlock to drain NotifyQ */
+	if (drain_notifyq)
+		ionic_lif_notifyq_drain(lif);
 
 	return (error);
 }
