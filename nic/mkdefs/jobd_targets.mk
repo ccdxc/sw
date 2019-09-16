@@ -333,6 +333,7 @@ jobd/make/sdk:
 	${SUDO_OPT} mkdir -p /sdk
 	${SUDO_OPT} mount --bind ${SDKDIR} /sdk
 	${MAKE} -C /sdk
+	${SDKDIR}/tools/run_sdk_gtests.sh
 	${MAKE} -C /sdk ARCH=aarch64
 	${SUDO_OPT} umount /sdk
 

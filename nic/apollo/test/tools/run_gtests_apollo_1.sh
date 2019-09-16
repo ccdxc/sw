@@ -2,6 +2,7 @@
 
 set -e
 export NICDIR=`pwd`
+export SDKDIR=${NICDIR}/sdk/
 export HAL_LOG_DIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export CAPRI_MOCK_MODE=1
@@ -13,10 +14,6 @@ export HAL_CONFIG_PATH=${NICDIR}/conf
 export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 #export GDB='gdb --args'
 
-if [[ "$1" ==  --coveragerun ]]; then
-    export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
-fi
-
 function finish {
    echo "===== Collecting logs ====="
    ${NICDIR}/apollo/test/tools/savelogs.sh
@@ -24,6 +21,13 @@ function finish {
 trap finish EXIT
 
 export PATH=${PATH}:${BUILD_DIR}/bin
+
+if [[ "$1" ==  --coveragerun ]]; then
+    export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
+    # Run sdk tests for code coverage
+    ${SDKDIR}/tools/run_sdk_gtests.sh
+    [[ $? -ne 0 ]] && echo "sdk gtest failed" && exit 1
+fi
 
 # gtests
 echo "Running scale test"
@@ -63,8 +67,4 @@ $GDB apollo_mirror_session_test -c hal.json --gtest_output="xml:${GEN_TEST_RESUL
 [[ $? -ne 0 ]] && echo "apollo_mirror_session_test failed!" && exit 1
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
 
-echo "Running memhash test"
-MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
-LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test > /dev/null
-
-slhash_test > slhash_test_log.txt
+echo "Success"

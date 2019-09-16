@@ -131,10 +131,6 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t read(pds_device_info_t *info);
 
-    /// \brief  return impl instance of this device object
-    /// \return impl instance of the tep object
-    impl_base *impl(void) { return impl_; }
-
     /// \brief  return the device's IP address
     /// \return IP address of the device
     ip_addr_t ip_addr(void) const { return ip_addr_; }

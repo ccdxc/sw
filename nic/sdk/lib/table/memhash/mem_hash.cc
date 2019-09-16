@@ -43,7 +43,7 @@ using sdk::table::memhash::mem_hash_txn;
         SDK_SPINLOCK_UNLOCK(&slock_);\
 }
 
-#ifndef SIM
+#ifdef __aarch64__
 #define CRC32X(crc, value) __asm__("crc32x %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
 #define RBIT(value) __asm__("rbit %w0, %w1": "=r"(value) : "r"(value))
 uint32_t

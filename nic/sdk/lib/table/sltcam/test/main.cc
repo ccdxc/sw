@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "include/sdk/base.hpp"
 #include "lib/table/sltcam/sltcam.hpp"
 #include "lib/table/sltcam/test/p4pd_mock/sltcam_p4pd_mock.hpp"
@@ -17,7 +18,8 @@ sltcam_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
     char       logbuf[1024];
     va_list    args;
     if (logfp == NULL) {
-        logfp = fopen("run.log", "w");
+        char *filename = strcat(getenv("SDKDIR"), "/sltcam_test.log");
+        logfp = fopen(filename, "w");
         assert(logfp);
     }
 
@@ -28,7 +30,7 @@ sltcam_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
     return 0;
 }
 
-int 
+int
 main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

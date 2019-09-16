@@ -3,12 +3,16 @@
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NICDIR=`readlink -f $ABS_TOOLS_DIR/../../`
+export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 
 argc=$#
 argv=($@)
 for (( j=0; j<argc; j++ )); do
     if [ ${argv[j]} == '--pipeline' ];then
         PIPELINE=${argv[j+1]}
+    fi
+    if [ ${argv[j]} == '--coverage-run' ];then
+        export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
     fi
 done
 

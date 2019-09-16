@@ -5,6 +5,7 @@ ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export WS_TOP="/sw"
 export NICDIR=`dirname $ABS_TOOLS_DIR`
 export TOPDIR=$NICDIR
+export SDKDIR=${NICDIR}/sdk/
 export HAL_LOG_DIR=${TOPDIR}
 export CAPRI_MOCK_MODE=1
 export BUILD_DIR=${TOPDIR}/build/x86_64/iris/
@@ -17,9 +18,6 @@ export SNORT_DAQ_PATH=${SNORT_EXPORT_DIR}/x86_64/lib/
 export HAL_CONFIG_PATH=${TOPDIR}/conf
 export DISABLE_AGING=1
 
-if [[ "$1" ==  --coveragerun ]]; then
-    export COVFILE=${TOPDIR}/coverage/sim_bullseye_hal.cov
-fi
 PRELOADS=${BUILD_DIR}/lib/libp4pd_mock.so
 HBMHASH_PRELOADS=${BUILD_DIR}/lib/libhbmhashp4pd_mock.so
 function finish {
@@ -29,6 +27,13 @@ trap finish EXIT
 set -ex
 # PI gtests
 export PATH=${PATH}:${BUILD_DIR}/bin
+if [[ "$1" ==  --coveragerun ]]; then
+    export COVFILE=${TOPDIR}/coverage/sim_bullseye_hal.cov
+    # Run sdk tests for code coverage
+    ${SDKDIR}/tools/run_sdk_gtests.sh
+    [[ $? -ne 0 ]] && echo "sdk gtests failed" && exit 1
+fi
+
 # Disabling appid_test as it is failing after integrating with memhash library
 #${CMD_OPTS} appid_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/appid_test.xml"
 
@@ -114,5 +119,3 @@ ${CMD_OPTS} fte_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fte_test.xml"
 ${CMD_OPTS} nwsec_policy_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/nwsec_policy_test.xml"
 ${CMD_OPTS} net_fwding_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/net_fwding_test.xml"
 
-sdk/lib/table/memhash/test/run.sh
-sdk/lib/table/sltcam/test/run.sh

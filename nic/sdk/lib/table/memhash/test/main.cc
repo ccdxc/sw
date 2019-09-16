@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "include/sdk/base.hpp"
 #include "lib/table/memhash/mem_hash.hpp"
 #include "lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
@@ -17,7 +18,8 @@ memhash_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
     char       logbuf[1024];
     va_list    args;
     if (logfp == NULL) {
-        logfp = fopen("memhash_test.log", "w");
+        char *filename = strcat(getenv("SDKDIR"), "/memhash_test.log");
+        logfp = fopen(filename, "w");
         assert(logfp);
     }
 
@@ -30,7 +32,7 @@ memhash_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
     return 0;
 }
 
-int 
+int
 main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

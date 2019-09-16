@@ -1,9 +1,10 @@
 #!/bin/sh
 
-# format : dirname:ignore-dirs(comma seperated)
+# format : dirname:ignore-subdirs(comma seperated)
 DIRS="apollo/:/artemis/ "
-DIRS+="sdk/asic/: "
-DIRS+="sdk/lib/:/hbmhash/,/hash/,/test/ "
+DIRS+="sdk/:/platform/,/third-party/,/tools/,/examples/,/model-sim/,/lib/ "
+DIRS+="sdk/lib/:/hbmhash/,/hash/,/test/,/venice,/tcam "
+DIRS+="sdk/platform/:/capmon/,/capview/,/drivers/,/misc/,/rdmamgr,/diag/,/intrutils/,/cfgspace/,/mputrace/,/ring/,/tests/ "
 
 BINCOVDIR=/home/asic/tools/eda/bullseye/bin/covdir
 FMT='%-30s %-22s %-22s'
@@ -141,14 +142,14 @@ if [ $# == 2 ];then
 elif [ $# == 0 ];then
     covfiles="$LASTSUCCESS/htmlreports/Code_Coverage_Report/all_bullseye_hal.cov"
     repfile="${HOME}/code_coverage_apollo.report"
+    check_job
 else
-    printf "Usage: ./gencvreport.sh <covfilenames(input)> <reportfilename(output)> in absolute path\n"
+    printf "Usage: ./coverage_report.sh <covfilenames(input)> <reportfilename(output)> in absolute path\n"
     printf "        Default values will be taken if the arguments are not given\n"
     exit 1
 fi
 csvfile="code_coverage_apollo.csv"
 
-check_job
 
 cd /tmp/
 rm -f $csvfile $repfile
