@@ -939,9 +939,10 @@ ionic_lif_rx_mode_work(struct work_struct *work)
 	struct rx_mode_work *w  = container_of(work, struct rx_mode_work, work);
 
 	IONIC_LIF_LOCK(w->lif);
-	_ionic_lif_rx_mode(w->lif, w->rx_mode);
+	if (w->rx_mode != w->lif->rx_mode)
+		_ionic_lif_rx_mode(w->lif, w->rx_mode);
 	IONIC_LIF_UNLOCK(w->lif);
-	
+
 	free(w, M_IONIC);
 }
 
@@ -983,11 +984,7 @@ ionic_set_rx_mode(struct ifnet *ifp)
 	rx_mode |= (ifp->if_flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
 
 	IONIC_NETDEV_INFO(ifp, "Setting rx mode %d\n", rx_mode);
-
-	if (lif->rx_mode != rx_mode) {
-		lif->rx_mode = rx_mode;
-		ionic_lif_rx_mode(lif, rx_mode);
-	}
+	ionic_lif_rx_mode(lif, rx_mode);
 }
 
 /*
@@ -1004,6 +1001,9 @@ ionic_set_multi(struct lif *lif)
 	int num_new_mc_addrs;
 	int err = 0;
 	bool found;
+
+	/* TODO: This is unsafe without LIF lock (mc_addrs) */
+	//KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
 	max_maddrs = lif->ionic->ident.lif.eth.max_mcast_filters;
 
@@ -1291,6 +1291,8 @@ ionic_reinit_vlan(struct lif *lif)
 {
 	int i, index, bit;
 
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
+
 	for ( i = 0; i < MAX_VLAN_TAG; i++) {
 		index = i / 8;
 		bit = i % 8;
@@ -1518,6 +1520,7 @@ error_out:
 		adminq->comp_ring = NULL;
 	}
 
+	free(adminq->ctx_ring, M_IONIC);
 	free(adminq, M_IONIC);
 	return (error);
 }
@@ -2231,7 +2234,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif = malloc(sizeof(*lif), M_IONIC, M_NOWAIT | M_ZERO);
 	if (!lif) {
 		dev_err(dev, "Cannot allocate lif, aborting\n");
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	IONIC_LIF_LOCK_INIT(lif);
@@ -2245,19 +2248,28 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->nnqs = ionic->nnqs_per_lif;
 
 	lif->mc_addrs = malloc(sizeof(struct ionic_mc_addr) * ionic->ident.lif.eth.max_mcast_filters, M_IONIC, M_NOWAIT | M_ZERO);
-
-	err = ionic_lif_netdev_alloc(lif, ionic_tx_descs);
-	if (err) {
-		dev_err(dev, "Cannot allocate netdev, aborting\n");
-		return (err);
+	if (!lif->mc_addrs) {
+		dev_err(dev, "Cannot allocate mc_addrs, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_lif;
 	}
-
 
 	snprintf(name, sizeof(name), "adwq%d", index);
 	lif->adminq_wq = create_singlethread_workqueue(name);
+	if (!lif->adminq_wq) {
+		dev_err(dev, "Cannot allocate admin wq, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_mcaddrs;
+	}
 
 	snprintf(name, sizeof(name), "wdwq%d", index);
 	lif->wdog_wq = create_singlethread_workqueue(name);
+	if (!lif->wdog_wq) {
+		dev_err(dev, "Cannot allocate wdog wq, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_adminwq;
+	}
+
 	INIT_DELAYED_WORK(&lif->adq_hb_work, ionic_adminq_hb_work);
 	INIT_DELAYED_WORK(&lif->txq_wdog_work, ionic_txq_wdog_work);
 	IONIC_WDOG_LOCK_INIT(lif);
@@ -2272,7 +2284,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	if (!lif->dbid_count) {
 		dev_err(dev, "No doorbell pages, aborting\n");
 		err = -EINVAL;
-		goto err_out_free_netdev;
+		goto err_out_free_wdogwq;
 	}
 
 	lif->dbid_inuse = malloc(BITS_TO_LONGS(lif->dbid_count) * sizeof(long),
@@ -2280,7 +2292,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	if (!lif->dbid_inuse) {
 		dev_err(dev, "Failed alloc doorbell id bitmap, aborting\n");
 		err = -ENOMEM;
-		goto err_out_free_netdev;
+		goto err_out_free_wdogwq;
 	}
 
 	/* first doorbell id reserved for kernel (dbid aka pid == zero) */
@@ -2303,24 +2315,30 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		goto err_out_unmap_dbell;
 	}
 
+	lif->info_pa = lif->info_dma.dma_paddr;
 	lif->info = (struct lif_info *)lif->info_dma.dma_vaddr;
-
 	if (!lif->info) {
 		dev_err(dev, "failed to allocate lif registers\n");
+		err = -ENOMEM;
 		goto err_out_unmap_dbell;
 	}
 
-	lif->info_pa = lif->info_dma.dma_paddr;
+	/* Allocate netdev; takes a reference on ifp */
+	err = ionic_lif_netdev_alloc(lif, ionic_tx_descs);
+	if (err) {
+		dev_err(dev, "Cannot allocate netdev, aborting\n");
+		goto err_out_free_info;
+	}
 
 	/* Allocate queues */
 	err = ionic_qcqs_alloc(lif);
 	if (err)
-		goto err_out_unmap_dbell;
+		goto err_out_free_netdev;
 
 	/* Allocate rss indirection table */
 	err = ionic_lif_rss_alloc(lif);
 	if (err)
-		goto err_out_unmap_dbell;
+		goto err_out_free_qs;
 
 	/* Setup tunables. */
 	ionic_setup_intr_coal(lif, ionic_intr_coalesce);
@@ -2330,7 +2348,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		err = ionic_setup_legacy_intr(lif);
 		if (err) {
 			IONIC_NETDEV_ERROR(lif->netdev, "Legacy interrupt setup failed, error = %d\n", err);
-			goto err_out_unmap_dbell;
+			goto err_out_free_rss;
 		}
 	}
 
@@ -2343,13 +2361,26 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 	return 0;
 
+err_out_free_rss:
+	ionic_lif_rss_free(lif);
+err_out_free_qs:
+	ionic_qcqs_free(lif);
+err_out_free_netdev:
+	ionic_lif_netdev_free(lif);
+err_out_free_info:
+	ionic_dma_free(lif->ionic, &lif->info_dma);
 err_out_unmap_dbell:
 	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
 err_out_free_dbid:
 	free(lif->dbid_inuse, M_IONIC);
-err_out_free_netdev:
-	ionic_lif_sysctl_free(lif);
-	ionic_lif_netdev_free(lif);
+err_out_free_wdogwq:
+	destroy_workqueue(lif->wdog_wq);
+err_out_free_adminwq:
+	destroy_workqueue(lif->adminq_wq);
+err_out_free_mcaddrs:
+	free(lif->mc_addrs, M_IONIC);
+err_out_free_lif:
+	IONIC_LIF_LOCK_DESTROY(lif);
 	free(lif, M_IONIC);
 
 	return err;
@@ -2386,17 +2417,6 @@ ionic_lif_free(struct lif *lif)
 		free_irq(lif->ionic->pdev->irq, lif);
 	}
 
-	if (lif->mc_addrs) {
-		free(lif->mc_addrs, M_IONIC);
-		lif->mc_addrs = NULL;
-	}
-
-	/* Cleanup from stack. */
-	ifmedia_removeall(&lif->media);
-
-	lif->stay_registered = false;
-	if (lif->netdev && if_getifaddr(lif->netdev))
-		ether_ifdetach(lif->netdev);
 	/* destroy deferred contexts */
 	flush_workqueue(lif->adminq_wq);
 	destroy_workqueue(lif->adminq_wq);
@@ -2411,6 +2431,12 @@ ionic_lif_free(struct lif *lif)
 	/* free queues */
 	ionic_qcqs_free(lif);
 
+	/* free netdev */
+	ionic_lif_netdev_free(lif);
+
+	/* free multicast addrs */
+	free(lif->mc_addrs, M_IONIC);
+
 	/* free lif info */
 	ionic_dma_free(lif->ionic, &lif->info_dma);
 	lif->info = NULL;
@@ -2418,9 +2444,6 @@ ionic_lif_free(struct lif *lif)
 
 	/* unmap doorbell page */
 	ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
-
-	/* free netdev & lif */
-	ionic_lif_netdev_free(lif);
 	free(lif->dbid_inuse, M_IONIC);
 
 	/* free lif */
@@ -3611,6 +3634,11 @@ ionic_set_mac(struct ifnet *ifp)
 	KASSERT(lif, ("lif is NULL"));
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
+	if (!ifp->if_addr || !ifp->if_addr->ifa_addr) {
+		IONIC_NETDEV_ERROR(lif->netdev, "No MAC configured\n");
+		return (ENXIO);
+	}
+
 	addr = IF_LLADDR(ifp);
 	if (is_zero_ether_addr(addr)) {
 		IONIC_NETDEV_ERROR(lif->netdev, "Invalid MAC %6D\n", addr, ":");
@@ -3894,6 +3922,7 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 	struct ifnet *ifp;
 	struct ionic_mc_addr *mc;
 	int i, error = 0;
+	unsigned int rx_mode;
 	bool was_open, drain_notifyq = false;
 
 	ifp = lif->netdev;
@@ -3955,10 +3984,14 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 	ionic_addr_add(lif->netdev, lif->dev_addr);
 
 	ionic_set_hw_features(lif, lif->hw_features);
+
 	/* Program the Rx mode. */
-	ionic_lif_rx_mode(lif, lif->rx_mode);
+	rx_mode = lif->rx_mode;
+	lif->rx_mode = 0;
+	ionic_lif_rx_mode(lif, rx_mode);
 
 	ionic_lif_set_netdev_info(lif);
+
 	/* Program the multicast list. */
 	for (i = 0; i < lif->num_mc_addrs; i++) {
 		mc = &lif->mc_addrs[i];
@@ -4106,7 +4139,7 @@ ionic_lif_register(struct lif *lif)
 		return (EIO);
 	}
 
-	/* Initializes ifnet */
+	/* Initializes ifnet, ifmedia */
 	ionic_lif_ifnet_init(lif);
 
 	lif->stay_registered = true;
@@ -4155,10 +4188,18 @@ ionic_lifs_unregister(struct ionic *ionic)
 
 	list_for_each(cur, &ionic->lifs) {
 		lif = list_entry(cur, struct lif, list);
-		if (lif->registered) {
-			lif->registered = false;
-		}
+
+		IONIC_LIF_LOCK(lif);
+		lif->registered = false;
+		lif->stay_registered = false;
+		IONIC_LIF_UNLOCK(lif);
+
+		/* NB: This must be done outside of the LIF lock! */
 		ionic_lif_sysctl_free(lif);
+
+		ifmedia_removeall(&lif->media);
+
+		ether_ifdetach(lif->netdev);
 	}
 }
 

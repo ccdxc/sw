@@ -1585,13 +1585,41 @@ ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 	if_setgetcounterfn(ifp, ionic_get_counter);
 	/* Capabilities are set later on. */
 
-	/* Connect lif to ifnet. */
+	/* Connect lif to ifnet, taking a long-lived reference */
+	if_ref(ifp);
 	lif->netdev = ifp;
 #ifdef NETAPP_PATCH
 	lif->iff_up = (ifp->if_flags & IFF_UP) != 0;
 #endif
 
 	return (0);
+}
+
+#define IONIC_IFP_MAX_SLEEPS 40
+void
+ionic_lif_netdev_free(struct lif *lif)
+{
+	struct ifnet *ifp = lif->netdev;
+	uint32_t sleeps = 0;
+	int chan;
+
+	/* if_free() drops second-to-last reference and sets IFF_DYING flag */
+	if_free(ifp);
+
+	/* wait until ifp callbacks complete */
+	while (ifp->if_refcount > 1 && sleeps < IONIC_IFP_MAX_SLEEPS) {
+		sleeps++;
+		tsleep(&chan, 0, "ifpdrn", HZ / 10);
+	}
+	if (ifp->if_refcount > 1) {
+		IONIC_NETDEV_ERROR(ifp, "slept %u times, %u refs leaked\n",
+				   sleeps, ifp->if_refcount - 1);
+	} else if (sleeps > 0) {
+		IONIC_NETDEV_INFO(ifp, "slept %u times\n", sleeps);
+	}
+
+	/* Finally, drop last reference */
+	if_rele(ifp);
 }
 
 /*
@@ -3131,15 +3159,6 @@ ionic_lif_sysctl_free(struct lif *lif)
 	}
 }
 
-void
-ionic_lif_netdev_free(struct lif *lif)
-{
-	if (lif->netdev) {
-		if_free(lif->netdev);
-		lif->netdev = NULL;
-	}
-}
-
 static void
 ionic_iff_up(struct lif *lif)
 {
@@ -3311,12 +3330,8 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		}
 		IONIC_LIF_LOCK(lif);
 		error = ionic_change_mtu(ifp, ifr->ifr_mtu);
-		if (error) {
+		if (error)
 			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set mtu, err: %d\n", error);
-			IONIC_LIF_UNLOCK(lif);
-			break;
-		}
-		if_setmtu(ifp, ifr->ifr_mtu);
 		IONIC_LIF_UNLOCK(lif);
 		break;
 
