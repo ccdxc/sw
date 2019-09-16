@@ -1,5 +1,5 @@
 // const URL = "10.7.100.108:10001"
-// const URL = "10.7.100.21:10001"
+ const URL = "10.7.100.21:10001"
 // const URL = "192.168.71.124:10001" // Ubuntu Box
 // const URL = "10.8.101.146"  // Vipin's setup
 // const URL = "10.7.100.53:10001"; // Jay
@@ -7,7 +7,7 @@
 // const URL = "10.7.100.24:10001";  // Barun
 // const URL = "192.168.78.211";  // sys-test team (admin, Systest-1$
 // const URL = "192.168.78.198"   // india test team server with LDAP.  admin/N0isystem (Systest-1$) as admin access, sunil/N0isystem$ as LSDAP external user
- const URL = "192.168.129.55"  // systest Qixin's box  admin/N0isystem$
+// const URL = "192.168.129.55"  // systest Qixin's box  admin/N0isystem$
 // const URL = "192.168.78.237";    // systest  ambish's box
 // const URL = "192.168.78.195"; // systest Yonatan's box. root/N0isystem$
 // const URL = "192.168.129.19"; // systest Swami's appliance. root/centos
