@@ -32,7 +32,7 @@ else
     cd drivers-freebsd-eth
     env OS_DIR=/usr/src ./build.sh
     kldunload sys/modules/ionic/ionic.ko 2> /dev/null || rc=$?
-    kldload sys/modules/ionic/ionic.ko
+    kldload sys/modules/ionic/ionic.ko || (dmesg && exit 1)
     sleep 2
     intmgmt=`pciconf -l | grep chip=0x10041dd8 | cut -d'@' -f1 | sed "s/ion/ionic/g"`
     ifconfig $intmgmt 169.254.0.2/24
