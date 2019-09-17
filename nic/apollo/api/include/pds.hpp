@@ -47,8 +47,6 @@ typedef uint32_t                  pds_vpc_peer_id_t;         ///< VPC peer id
 typedef uint32_t                  pds_nexthop_id_t;          ///< Nexthop table index
 typedef uint32_t                  pds_nexthop_group_id_t;    ///< Nexthop group table index
 typedef uint32_t                  pds_tep_id_t;              ///< TEP table index
-typedef pds_nexthop_id_t          pds_nexthop_key_t;         ///< Nexthop id
-typedef pds_nexthop_group_id_t    pds_nexthop_group_key_t;   ///< Nexthop group id
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
 ///< module to refer to an interface
@@ -147,6 +145,16 @@ typedef struct pds_mirror_session_key_s {
     pds_mirror_session_id_t id;
 } __PACK__ pds_mirror_session_key_t;
 
+/// \brief nexthop key
+typedef struct pds_nexthop_key_s {
+    pds_nexthop_id_t  id;    ///< unique id of nexthop
+} __PACK__ pds_nexthop_key_t;
+
+/// \brief nexthop group key
+typedef struct pds_nexthop_group_key_s {
+    pds_nexthop_group_id_t  id;    ///< unique id of nexthop group
+} __PACK__ pds_nexthop_group_key_t;
+
 /// \brief    resource pool key
 typedef struct pds_rsc_pool_key_s {
     pds_rsc_pool_id_t id;    ///< Resource pool id
@@ -164,7 +172,6 @@ typedef struct pds_svc_mapping_key_s {
         return (vpc.id == p.vpc.id) && (svc_port == p.svc_port) &&
             (!memcmp(&vip, &p.vip, sizeof(ip_addr_t)));
     }
-
 } __PACK__ pds_svc_mapping_key_t;
 
 /// \brief    service mapping hash function

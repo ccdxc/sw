@@ -81,7 +81,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 124);
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
-                v6route_table.routes[j].nh = nh_id++;
+                v6route_table.routes[j].nh.id = nh_id++;
                 if (nh_id > num_nh) {
                     nh_id = 1;
                 }
@@ -161,7 +161,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         (j % TESTAPP_MAX_SERVICE_TEP) + TESTAPP_MAX_SERVICE_TEP);
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
-                    route_table.routes[j].nh = nh_id++;
+                    route_table.routes[j].nh.id = nh_id++;
                     if (nh_id > num_nh) {
                         nh_id = 1;
                     }
@@ -1022,7 +1022,7 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
 
     for (uint32_t nh = 1; nh <= num_nh; nh++) {
         memset(&pds_nh, 0, sizeof(pds_nexthop_spec_t));
-        pds_nh.key = id++;
+        pds_nh.key.id = id++;
         pds_nh.type = PDS_NH_TYPE_IP;
         pds_nh.ip.af = IP_AF_IPV4;
         // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,

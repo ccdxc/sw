@@ -22,7 +22,7 @@ operator<<(std::ostream& os, const pds_route_t *route) {
             os << " TEP ip: " << ipaddr2str(&route->nh_ip);
             break;
         case PDS_NH_TYPE_IP:
-            os << " NH id: " << route->nh;
+            os << " NH id: " << route->nh.id;
             break;
         case PDS_NH_TYPE_PEER_VPC:
             os << " vpc id: " << route->vpc.id;
@@ -40,7 +40,7 @@ operator<<(std::ostream& os, const pds_route_table_key_t *key) {
     return os;
 }
 
-inline std::ostream& 
+inline std::ostream&
 operator<<(std::ostream& os, const pds_route_table_spec_t *spec) {
     os << &spec->key
        << " af: " << +spec->af
@@ -58,7 +58,7 @@ operator<<(std::ostream& os, const pds_route_table_status_t *status) {
     return os;
 }
 
-inline std::ostream& 
+inline std::ostream&
 operator<<(std::ostream& os, const pds_route_table_stats_t *stats) {
     os << "  ";
     return os;

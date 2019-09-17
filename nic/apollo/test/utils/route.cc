@@ -43,7 +43,7 @@ route_table_feeder::init(std::string base_route_pfx_str,
         this->routes[i].nh_type = nh_type;
         switch (nh_type) {
         case PDS_NH_TYPE_IP:
-            this->routes[i].nh = base_nh_id + nh_id_offset;
+            this->routes[i].nh.id = base_nh_id + nh_id_offset;
             nh_id_offset += 1;
             if (nh_id_offset > nh_id_offset_max) {
                 nh_id_offset %= nh_id_offset_max;

@@ -26,37 +26,18 @@ nexthop_group_impl_state::nexthop_group_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo;
 
     p4pd_global_table_properties_get(P4TBL_ID_OVERLAY_NEXTHOP_GROUP, &tinfo);
-    overlay_nh_group_tbl_ =
-        directmap::factory(tinfo.tablename, P4TBL_ID_OVERLAY_NEXTHOP_GROUP,
-                           tinfo.tabledepth, tinfo.actiondata_struct_size,
-                           false, true, NULL);
-    SDK_ASSERT(overlay_nh_group_tbl_ != NULL);
+    overlay_nhgroup_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
+    SDK_ASSERT(overlay_nhgroup_idxr_ != NULL);
 
     p4pd_global_table_properties_get(P4TBL_ID_UNDERLAY_NEXTHOP_GROUP, &tinfo);
-    underlay_nh_group_tbl_ =
-        directmap::factory(tinfo.tablename, P4TBL_ID_UNDERLAY_NEXTHOP_GROUP,
-                           tinfo.tabledepth, tinfo.actiondata_struct_size,
-                           false, true, NULL);
-    SDK_ASSERT(underlay_nh_group_tbl_ != NULL);
+    underlay_nhgroup_idxr_ = rte_indexer::factory(tinfo.tabledepth,
+                                                  false, true);
+    SDK_ASSERT(underlay_nhgroup_idxr_ != NULL);
 }
 
 nexthop_group_impl_state::~nexthop_group_impl_state() {
-    directmap::destroy(overlay_nh_group_tbl_);
-    directmap::destroy(underlay_nh_group_tbl_);
-}
-
-sdk_ret_t
-nexthop_group_impl_state::table_transaction_begin(void) {
-    //overlay_nh_group_tbl_->txn_start();
-    //underlay_nh_group_tbl_->txn_start();
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-nexthop_group_impl_state::table_transaction_end(void) {
-    //overlay_nh_group_tbl_->txn_end();
-    //underlay_nh_group_tbl_->txn_stop();
-    return SDK_RET_OK;
+    rte_indexer::destroy(overlay_nhgroup_idxr_);
+    rte_indexer::destroy(underlay_nhgroup_idxr_);
 }
 
 /// \@}    // end of PDS_NEXTHOP_GROUP_IMPL_STATE

@@ -44,6 +44,7 @@ nexthop_impl::destroy(nexthop_impl *impl) {
 
 sdk_ret_t
 nexthop_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    uint32_t idx;
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
 
@@ -51,12 +52,13 @@ nexthop_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // for blackhole nexthop we can (re)use PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID
     if (spec->type != PDS_NH_TYPE_BLACKHOLE) {
         // reserve an entry in NEXTHOP table
-        ret = nexthop_impl_db()->nh_tbl()->reserve(&hw_id_);
+        ret = nexthop_impl_db()->nh_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in nexthop table, err %u",
                           ret);
             return ret;
         }
+        hw_id_ = idx;
     } else {
         hw_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
     }
@@ -67,18 +69,15 @@ sdk_ret_t
 nexthop_impl::release_resources(api_base *api_obj) {
     if ((hw_id_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) &&
         (hw_id_ != 0xFFFFFFFF)) {
-        return nexthop_impl_db()->nh_tbl()->release(hw_id_);
+        return nexthop_impl_db()->nh_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 nexthop_impl::nuke_resources(api_base *api_obj) {
-    if ((hw_id_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) &&
-        (hw_id_ != 0xFFFFFFFF)) {
-        return nexthop_impl_db()->nh_tbl()->remove(hw_id_);
-    }
-    return SDK_RET_OK;
+    // for indexer, release and nuke operations are same
+    return this->release_resources(api_obj);
 }
 
 #define nexthop_info    action_u.nexthop_nexthop_info
@@ -104,12 +103,14 @@ nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         goto error;
         break;
     }
+#if 0
     ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, hw_id_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table at %u, err %u",
                       hw_id_, ret);
         goto error;
     }
+#endif
     return SDK_RET_OK;
 
 error:

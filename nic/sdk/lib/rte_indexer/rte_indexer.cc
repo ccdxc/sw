@@ -217,9 +217,12 @@ end:
 // frees the given index, if its in use or else no-op
 //---------------------------------------------------------------------------
 sdk_ret_t
-rte_indexer::free(uint32_t index) {
+rte_indexer::free(uint32_t index, uint32_t block_size) {
     uint32_t offset2 = 0;
     sdk_ret_t rs = SDK_RET_OK;
+
+    // TODO: handle block size of > 1 in free()
+    SDK_ASSERT(block_size == 1);
 
     if (thread_safe_) {
         SDK_ASSERT_RETURN((SDK_SPINLOCK_LOCK(&slock_) == 0), SDK_RET_ERR);

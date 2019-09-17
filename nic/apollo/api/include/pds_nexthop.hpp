@@ -93,18 +93,18 @@ typedef enum pds_nexthop_group_type_e {
 } pds_nexthop_group_type_t;
 
 /// \brief type of the entries in a nexthop group
-typedef enum pds_nh_group_entry_type_e {
+typedef enum pds_nexthop_group_entry_type_e {
     PDS_NHGROUP_ENTRY_TYPE_NONE    = 0,
     PDS_NHGROUP_ENTRY_TYPE_NEXTHOP = 1,    ///< nexthop type entries
     PDS_NHGROUP_ENTRY_TYPE_NHGROUP = 2,    ///< nexthop group type entries
-} pds_nh_group_entry_type_t;
+} pds_nexthop_group_entry_type_t;
 
 /// \brief nexthop group specification
 typedef struct pds_nexthop_group_spec_s {
     pds_nexthop_group_key_t key;      ///< key
     pds_nexthop_group_type_t type;    ///< nexthop group type
     ///< type of the entries in this group
-    pds_nh_group_entry_type_t entry_type;
+    pds_nexthop_group_entry_type_t entry_type;
     ///< number of nexthops or nexthop groups in this nexthop group
     uint16_t num_entries;
     union {

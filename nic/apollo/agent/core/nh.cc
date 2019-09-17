@@ -20,21 +20,22 @@ nh_create (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_nh_db(key) != NULL) {
-        PDS_TRACE_ERR("Failed to create nh {}, nh exists already", spec->key);
+        PDS_TRACE_ERR("Failed to create nh {}, nh exists already",
+                      spec->key.id);
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = nh_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create nh {}, err {}", spec->key, ret);
+        PDS_TRACE_ERR("Failed to create nh {}, err {}", spec->key.id, ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_create(spec)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to create nh {}, err {}", spec->key, ret);
+            PDS_TRACE_ERR("Failed to create nh {}, err {}", spec->key.id, ret);
             return ret;
         }
     }
     if ((ret = agent_state::state()->add_to_nh_db(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add nh {} to db, err {}", spec->key, ret);
+        PDS_TRACE_ERR("Failed to add nh {} to db, err {}", spec->key.id, ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -52,20 +53,20 @@ nh_update (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
     sdk_ret_t ret;
 
     if ((ret = nh_update_validate(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update nh {}, err {}", spec->key, ret);
+        PDS_TRACE_ERR("Failed to update nh {}, err {}", spec->key.id, ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_update(spec)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to update nh {}, err {}", spec->key, ret);
+            PDS_TRACE_ERR("Failed to update nh {}, err {}", spec->key.id, ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_nh_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete nh {} from db", *key);
+        PDS_TRACE_ERR("Failed to delete nh {} from db", key->id);
     }
     if ((ret = agent_state::state()->add_to_nh_db(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add nh {} to db, err {}", spec->key, ret);
+        PDS_TRACE_ERR("Failed to add nh {} to db, err {}", spec->key.id, ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -78,17 +79,17 @@ nh_delete (pds_nexthop_key_t *key)
     pds_nexthop_spec_t *spec;
 
     if ((spec = agent_state::state()->find_in_nh_db(key)) == NULL) {
-        PDS_TRACE_ERR("Failed to delete nh {}, nh not found", *key);
+        PDS_TRACE_ERR("Failed to delete nh {}, nh not found", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_delete(key)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete nh {}, err {}", *key, ret);
+            PDS_TRACE_ERR("Failed to delete nh {}, err {}", key->id, ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_nh_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete nh {} from db", *key);
+        PDS_TRACE_ERR("Failed to delete nh {} from db", key->id);
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -102,7 +103,7 @@ nh_get (pds_nexthop_key_t *key, pds_nexthop_info_t *info)
 
     spec = agent_state::state()->find_in_nh_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find nh {} in db", *key);
+        PDS_TRACE_ERR("Failed to find nh {} in db", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

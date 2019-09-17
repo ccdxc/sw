@@ -119,13 +119,15 @@ populate_route_table_request (RouteTableRequest *req,
 
     for (uint32_t i = 0; i < rt->num_routes; i++) {
         Route *route = spec->add_routes();
-        ippfx_api_spec_to_proto_spec(route->mutable_prefix(), &rt->routes[i].prefix);
+        ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
+                                     &rt->routes[i].prefix);
         if (rt->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
             route->set_vpcid(rt->routes[i].vpc.id);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_TEP) {
-            ipaddr_api_spec_to_proto_spec(route->mutable_nexthop(), &rt->routes[i].nh_ip);
+            ipaddr_api_spec_to_proto_spec(route->mutable_nexthop(),
+                                          &rt->routes[i].nh_ip);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_IP) {
-            route->set_nexthopid(rt->routes[i].nh);
+            route->set_nexthopid(rt->routes[i].nh.id);
         }
     }
 
@@ -149,10 +151,12 @@ populate_local_mapping_request (MappingRequest *req,
     pds_encap_to_proto_encap(spec->mutable_encap(), &local_spec->fabric_encap);
     spec->set_vnicid(local_spec->vnic.id);
     if (local_spec->public_ip_valid) {
-        ipaddr_api_spec_to_proto_spec(spec->mutable_publicip(), &local_spec->public_ip);
+        ipaddr_api_spec_to_proto_spec(spec->mutable_publicip(),
+                                      &local_spec->public_ip);
     }
     if (local_spec->provider_ip_valid) {
-        ipaddr_api_spec_to_proto_spec(spec->mutable_providerip(), &local_spec->provider_ip);
+        ipaddr_api_spec_to_proto_spec(spec->mutable_providerip(),
+                                      &local_spec->provider_ip);
     }
     spec->set_servicetag(local_spec->svc_tag);
     return;
@@ -191,10 +195,12 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
     }
 
     SubnetSpec *spec = req->add_request();
-    ipv4pfx_api_spec_to_proto_spec(spec->mutable_v4prefix(), &subnet->v4_prefix);
+    ipv4pfx_api_spec_to_proto_spec(spec->mutable_v4prefix(),
+                                   &subnet->v4_prefix);
     ippfx_api_spec_to_proto_spec(spec->mutable_v6prefix(), &subnet->v6_prefix);
     spec->set_ipv4virtualrouterip(subnet->v4_vr_ip);
-    spec->set_ipv6virtualrouterip(subnet->v6_vr_ip.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+    spec->set_ipv6virtualrouterip(subnet->v6_vr_ip.addr.v6_addr.addr8,
+                                  IP6_ADDR8_LEN);
     spec->set_id(subnet->key.id);
     spec->set_vpcid(subnet->vpc.id);
     spec->set_virtualroutermac(MAC_TO_UINT64(subnet->vr_mac));
@@ -307,7 +313,8 @@ populate_svc_mapping_request (SvcMappingRequest *req,
                                   &svc_mapping->key.vip);
     spec->mutable_key()->set_svcport(svc_mapping->key.svc_port);
     spec->set_vpcid(svc_mapping->vpc.id);
-    ipaddr_api_spec_to_proto_spec(spec->mutable_privateip(), &svc_mapping->backend_ip);
+    ipaddr_api_spec_to_proto_spec(spec->mutable_privateip(),
+                                  &svc_mapping->backend_ip);
     spec->set_port(svc_mapping->svc_port);
     ipaddr_api_spec_to_proto_spec(spec->mutable_providerip(),
                                   &svc_mapping->backend_provider_ip);

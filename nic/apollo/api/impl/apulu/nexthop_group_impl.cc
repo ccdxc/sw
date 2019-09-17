@@ -46,48 +46,100 @@ nexthop_group_impl::destroy(nexthop_group_impl *impl) {
 sdk_ret_t
 nexthop_group_impl::reserve_resources(api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) {
+    uint32_t idx;
     sdk_ret_t ret;
     pds_nexthop_group_spec_t *spec;
 
     spec = &obj_ctxt->api_params->nexthop_group_spec;
-    // reserve an entry in NEXTHOP_GROUP table
     if (spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
-        ret = nexthop_group_impl_db()->overlay_nh_group_tbl()->reserve(&hw_id_);
+        // reserve an entry in NEXTHOP_GROUP table
+        ret = nexthop_group_impl_db()->overlay_nhgroup_idxr()->alloc(&idx);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve an entry in OVERLAY_ECMP table, ",
+                          "for nexthop group %u, err %u", spec->key.id, ret);
+            goto error;
+        }
+        hw_id_ = idx;
+        // reserve entries in the subsequent table, if needed
+        if (spec->num_entries) {
+            if (spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NHGROUP) {
+                ret = nexthop_group_impl_db()->underlay_nhgroup_idxr()->alloc(&idx,
+                                                                              spec->num_entries);
+                if (ret != SDK_RET_OK) {
+                    PDS_TRACE_ERR("Failed to reserve %u entries in "
+                                  "UNDERLAY_ECMP table for nexthop group %u, "
+                                  "err %u", spec->num_entries,
+                                  spec->key.id, ret);
+                    goto error;
+                }
+                underlay_nhgroup_base_hw_id_ = idx;
+            } else if (spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NEXTHOP) {
+                ret = nexthop_impl_db()->nh_idxr()->alloc(&idx,
+                                                          spec->num_entries);
+                if (ret != SDK_RET_OK) {
+                    PDS_TRACE_ERR("Failed to reserve %u entries in "
+                                  "NEXTHOP table for nexthop group %u, "
+                                  "err %u", spec->num_entries,
+                                  spec->key.id, ret);
+                    goto error;
+                }
+                nh_base_hw_id_ = idx;
+            }
+        }
     } else {
-        ret = nexthop_group_impl_db()->underlay_nh_group_tbl()->reserve(&hw_id_);
-    }
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in nexthop group table, err %u",
-                      ret);
-        return ret;
+        // reserve an entry in NEXTHOP_GROUP table
+        ret = nexthop_group_impl_db()->underlay_nhgroup_idxr()->alloc(&idx);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve an entry in UNDERLAY_ECMP table, ",
+                          "for nexthop group %u, err %u", spec->key.id, ret);
+            goto error;
+        }
+        hw_id_ = idx;
+        // reserve entries in the subsequent table, if needed
+        if (spec->num_entries) {
+            ret = nexthop_impl_db()->nh_idxr()->alloc(&idx, spec->num_entries);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to reserve %u entries in "
+                              "NEXTHOP table for nexthop group %u, "
+                              "err %u", spec->num_entries,
+                              spec->key.id, ret);
+                goto error;
+            }
+            nh_base_hw_id_ = idx;
+        }
     }
     return SDK_RET_OK;
+
+error:
+    return ret;
 }
 
 sdk_ret_t
 nexthop_group_impl::release_resources(api_base *api_obj) {
-    nexthop_group *nh_group = (nexthop_group *)api_obj;
+    nexthop_group *nhgroup = (nexthop_group *)api_obj;
 
     if (hw_id_ != 0xFFFF) {
-        if (nh_group->type() == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
-            return nexthop_group_impl_db()->overlay_nh_group_tbl()->release(hw_id_);
+        if (nhgroup->type() == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
+            nexthop_group_impl_db()->overlay_nhgroup_idxr()->free(hw_id_);
+            if (underlay_nhgroup_base_hw_id_ != 0xFFFF) {
+                nexthop_group_impl_db()->underlay_nhgroup_idxr()->free(underlay_nhgroup_base_hw_id_,
+                                                                       nhgroup->num_entries());
+            }
+        } else {
+            nexthop_group_impl_db()->underlay_nhgroup_idxr()->free(hw_id_);
         }
-        return nexthop_group_impl_db()->underlay_nh_group_tbl()->release(hw_id_);
+        if (nh_base_hw_id_ != 0xFFFF) {
+            nexthop_impl_db()->nh_idxr()->free(nh_base_hw_id_,
+                                               nhgroup->num_entries());
+        }
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 nexthop_group_impl::nuke_resources(api_base *api_obj) {
-    nexthop_group *nh_group = (nexthop_group *)api_obj;
-
-    if (hw_id_ != 0xFFFF) {
-        if (nh_group->type() == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
-            return nexthop_group_impl_db()->overlay_nh_group_tbl()->remove(hw_id_);
-        }
-        return nexthop_group_impl_db()->underlay_nh_group_tbl()->remove(hw_id_);
-    }
-    return SDK_RET_OK;
+    // for indexers, release_resources() does the job
+    return this->release_resources(api_obj);
 }
 
 sdk_ret_t

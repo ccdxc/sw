@@ -17,7 +17,7 @@
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_key_t *key) {
-    os << " id: " << *key;
+    os << " id: " << key->id;
     return os;
 }
 

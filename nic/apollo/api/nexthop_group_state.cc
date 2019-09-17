@@ -56,7 +56,7 @@ nexthop_group_state::free(nexthop_group *nh) {
 }
 
 nexthop_group *
-nexthop_group_state::find(pds_nexthop_key_t *key) const {
+nexthop_group_state::find(pds_nexthop_group_key_t *key) const {
     return (nexthop_group *)(nh_group_ht()->lookup(key));
 }
 

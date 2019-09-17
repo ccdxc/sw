@@ -11,7 +11,7 @@
 #ifndef __NEXTHOP_GROUP_IMPL_STATE_HPP__
 #define __NEXTHOP_GROUP_IMPL_STATEHPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -35,33 +35,23 @@ public:
     /// \brief  destructor
     ~nexthop_group_impl_state();
 
-    /// \brief  API to initiate transaction over all the table manamgement
-    ///         library instances
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t table_transaction_begin(void);
+    /// \brief  return the underlay nexthop group table indexer
+    /// \return pointer to the underlay nexthop group table indexer
+    rte_indexer *underlay_nhgroup_idxr(void) { return overlay_nhgroup_idxr_; }
 
-    /// \brief  API to end transaction over all the table manamgement
-    ///         library instances
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t table_transaction_end(void);
-
-    /// \brief  return the underlay nexthop group table instance
-    /// \return pointer to the underlay nexthop group table instance
-    directmap *underlay_nh_group_tbl(void) { return underlay_nh_group_tbl_; }
-
-    /// \brief  return the overlay nexthop group table instance
-    /// \return pointer to the overlay nexthop group table instance
-    directmap *overlay_nh_group_tbl(void) { return overlay_nh_group_tbl_; }
+    /// \brief  return the overlay nexthop group table indexer
+    /// \return pointer to the overlay nexthop group table indexer
+    rte_indexer *overlay_nhgroup_idxr(void) { return overlay_nhgroup_idxr_; }
 
 private:
     // nexthop_group_impl is friend of nexthop_group_impl_state
     friend class nexthop_group_impl;
 
 private:
-    // directmap table for overlay ECMP
-    directmap *overlay_nh_group_tbl_;
-    // directmap table for underlay ECMP
-    directmap *underlay_nh_group_tbl_;
+    // indexer for overlay nexthop group
+    rte_indexer *overlay_nhgroup_idxr_;
+    // indexer for underlay nexthop group
+    rte_indexer *underlay_nhgroup_idxr_;
 };
 
 /// @}

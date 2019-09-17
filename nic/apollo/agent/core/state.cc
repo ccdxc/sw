@@ -32,7 +32,7 @@ namespace core {
     return true;                                                               \
 }
 
-// APIs for cases where key isn't just an id 
+// APIs for cases where key isn't just an id
 #define ADD_TO_DB_WITH_KEY(obj, key, value) {                                  \
     obj##_map()->insert(make_pair(*key, value));                               \
     return SDK_RET_OK;                                                         \
@@ -135,9 +135,6 @@ cfg_db::init(void) {
     }
     mirror_session_map_ = new(mem) mirror_session_db_t();
 
-    slabs_[SLAB_ID_NEXTHOP] =
-        slab::factory("nh", SLAB_ID_NEXTHOP, sizeof(pds_nexthop_spec_t),
-                      16, true, true, true);
     slabs_[SLAB_ID_VPC] =
         slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vpc_spec_t),
                       16, true, true, true);
@@ -165,6 +162,9 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_ROUTE] =
         slab::factory("route_table", SLAB_ID_ROUTE,
                       sizeof(pds_route_table_spec_t),
+                      16, true, true, true);
+    slabs_[SLAB_ID_NEXTHOP] =
+        slab::factory("nh", SLAB_ID_NEXTHOP, sizeof(pds_nexthop_spec_t),
                       16, true, true, true);
     slabs_[SLAB_ID_POLICY] =
         slab::factory("policy", SLAB_ID_POLICY, sizeof(pds_policy_spec_t),
@@ -423,12 +423,12 @@ agent_state::del_from_service_db(pds_svc_mapping_key_t *key) {
 
 sdk_ret_t
 agent_state::add_to_nh_db(pds_nexthop_key_t *key, pds_nexthop_spec_t *spec) {
-    ADD_TO_DB_WITH_KEY(nh, key, spec);
+    ADD_TO_DB(nh, key, spec);
 }
 
 pds_nexthop_spec_t *
 agent_state::find_in_nh_db(pds_nexthop_key_t *key) {
-    FIND_IN_DB_WITH_KEY(nh, key);
+    FIND_IN_DB(nh, key);
 }
 
 sdk_ret_t
@@ -444,7 +444,7 @@ agent_state::nh_db_walk(nh_walk_cb_t cb, void *ctxt) {
 
 bool
 agent_state::del_from_nh_db(pds_nexthop_key_t *key) {
-    DEL_FROM_DB_WITH_KEY(nh, key);
+    DEL_FROM_DB(nh, key);
 }
 
 sdk_ret_t

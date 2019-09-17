@@ -113,7 +113,7 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "nh-group-" + std::to_string(key_);
+        return "nh-group-" + std::to_string(key_.id);
     }
 
     /// \brief     helper function to get key given nexthop group
@@ -130,13 +130,21 @@ public:
         return sizeof(pds_nexthop_group_key_t);
     }
 
-    /// \brief     return the type of the nexthop group
-    /// \return    type of the nexthop group
-    pds_nexthop_group_type_t type(void) const { return type_; }
-
     /// \brief     return impl instance of this nexthop group object
     /// \return    impl instance of the nexthop group object
     impl_base *impl(void) { return impl_; }
+
+    /// \brief     return the type of the nexthop group
+    /// \return    nexthop group type
+    pds_nexthop_group_type_t type(void) const { return type_; }
+
+    /// \brief     return the type of the nexthop group members
+    /// \return    nexthop group member type
+    pds_nexthop_group_entry_type_t entry_type(void) const {
+        return entry_type_;
+    }
+
+    uint32_t num_entries(void) const { return num_entries_; }
 
 private:
     /// \brief constructor
@@ -151,12 +159,14 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_nexthop_group_key_t key_;             ///< nexthop group key
-    pds_nexthop_group_type_t type_;           ///< nexthop group type
-    ht_ctxt_t ht_ctxt_;                       ///< hash table context
-    impl_base *impl_;                         ///< impl object instance
+    pds_nexthop_group_key_t key_;                  ///< nexthop group key
+    pds_nexthop_group_type_t type_;                ///< nexthop group type
+    pds_nexthop_group_entry_type_t entry_type_;    ///< type of entries in this group
+    uint16_t num_entries_;                         ///< no. of entries in this group
+    ht_ctxt_t ht_ctxt_;                            ///< hash table context
+    impl_base *impl_;                              ///< impl object instance
 
-    friend class nexthop_group_state;         ///< a friend of nexthop_group
+    friend class nexthop_group_state;              ///< a friend of nexthop_group
 } __PACK__;
 
 /// \@}

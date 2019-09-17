@@ -103,9 +103,7 @@ public:
     virtual sdk_ret_t activate_hw(api_base *api_obj,
                                   pds_epoch_t epoch,
                                   api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) override {
-        return SDK_RET_OK;
-    }
+                                  obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      re-activate config in the hardware stage 0 tables relevant
     ///             to this object, if any, this reactivation must be based on
@@ -134,6 +132,8 @@ private:
     /// \brief  constructor
     nexthop_group_impl() {
         hw_id_ = 0xFFFF;
+        underlay_nhgroup_base_hw_id_ = 0xFFFF;
+        nh_base_hw_id_ = 0xFFFF;
     }
 
     /// \brief  destructor
@@ -149,7 +149,15 @@ private:
     void fill_status_(pds_nexthop_group_status_t *status);
 
 private:
-    uint32_t    hw_id_;    ///< hardware id
+    ///< hardware id of this nexthop group
+    uint16_t    hw_id_;
+    ///< base index of UNDERLAY_ECMP table in case this group is
+    ///< overylay nexthop group and entry type is PDS_NHGROUP_ENTRY_TYPE_NHGROUP
+    uint16_t    underlay_nhgroup_base_hw_id_;
+    ///< base index of NEXTHOP table in case this group is
+    ///< overylay/underlay nexthop group and entry type is
+    ///< PDS_NHGROUP_ENTRY_TYPE_NEXTHOP
+    uint16_t    nh_base_hw_id_;
 };
 
 /// @}

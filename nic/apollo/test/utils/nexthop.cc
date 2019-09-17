@@ -38,7 +38,7 @@ nexthop_feeder::iter_next(int width) {
 void
 nexthop_feeder::key_build(pds_nexthop_key_t *key) const {
     memset(key, 0, sizeof(pds_nexthop_key_t));
-    *key = this->id;
+    key->id = this->id;
 }
 
 void
@@ -55,7 +55,7 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
 
 bool
 nexthop_feeder::key_compare(const pds_nexthop_key_t *key) const {
-    return (this->id == *key);
+    return (this->id == key->id);
 }
 
 bool

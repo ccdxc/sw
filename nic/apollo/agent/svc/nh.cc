@@ -15,8 +15,8 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
                          const pds::NexthopRequest *proto_req,
                          pds::NexthopResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_nexthop_key_t key = {0};
-    pds_nexthop_spec_t *api_spec = {0};
+    pds_nexthop_key_t key = { 0 };
+    pds_nexthop_spec_t *api_spec = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -30,7 +30,7 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
             break;
         }
         auto proto_spec = proto_req->request(i);
-        key = proto_spec.id();
+        key.id = proto_spec.id();
         pds_nh_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -46,8 +46,8 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
                          const pds::NexthopRequest *proto_req,
                          pds::NexthopResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_nexthop_key_t key = {0};
-    pds_nexthop_spec_t *api_spec = {0};
+    pds_nexthop_key_t key = { 0 };
+    pds_nexthop_spec_t *api_spec = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -61,7 +61,7 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
             break;
         }
         auto proto_spec = proto_req->request(i);
-        key = proto_spec.id();
+        key.id = proto_spec.id();
         pds_nh_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_update(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -77,7 +77,7 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
                          const pds::NexthopDeleteRequest *proto_req,
                          pds::NexthopDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_nexthop_key_t key = {0};
+    pds_nexthop_key_t key = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -85,7 +85,7 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key = proto_req->id(i);
+        key.id = proto_req->id(i);
         ret = core::nh_delete(&key);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     }
@@ -97,8 +97,8 @@ NhSvcImpl::NexthopGet(ServerContext *context,
                       const pds::NexthopGetRequest *proto_req,
                       pds::NexthopGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_nexthop_key_t key = {0};
-    pds_nexthop_info_t info = {0};
+    pds_nexthop_key_t key = { 0 };
+    pds_nexthop_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("Nexthop Get Received")
 
@@ -108,7 +108,7 @@ NhSvcImpl::NexthopGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
-        key = proto_req->id(i);
+        key.id = proto_req->id(i);
         ret = core::nh_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
@@ -132,8 +132,8 @@ NhSvcImpl::NhGroupCreate(ServerContext *context,
                          pds::NhGroupResponse *proto_rsp) {
 #if 0
     sdk_ret_t ret = SDK_RET_OK;
-    pds_nexthop_group_key_t key = {0};
-    pds_nexthop_group_spec_t *api_spec = {0};
+    pds_nexthop_group_key_t key = { 0 };
+    pds_nexthop_group_spec_t *api_spec = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -165,8 +165,8 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
                          pds::NhGroupResponse *proto_rsp) {
 #if 0
     sdk_ret_t ret = SDK_RET_OK;
-    pds_nexthop_group_key_t key = {0};
-    pds_nexthop_group_spec_t *api_spec = {0};
+    pds_nexthop_group_key_t key = { 0 };
+    pds_nexthop_group_spec_t *api_spec = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -198,7 +198,7 @@ NhSvcImpl::NhGroupDelete(ServerContext *context,
                          pds::NhGroupDeleteResponse *proto_rsp) {
 #if 0
     sdk_ret_t ret = SDK_RET_OK;
-    pds_nexthop_group_key_t key = {0};
+    pds_nexthop_group_key_t key = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -220,8 +220,8 @@ NhSvcImpl::NhGroupGet(ServerContext *context,
                       pds::NhGroupGetResponse *proto_rsp) {
 #if 0
     sdk_ret_t ret = SDK_RET_OK;
-    pds_nexthop_group_key_t key = {0};
-    pds_nexthop_group_info_t info = {0};
+    pds_nexthop_group_key_t key = { 0 };
+    pds_nexthop_group_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("NhGroup Get Received")
 

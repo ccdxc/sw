@@ -997,7 +997,7 @@ public:
                     }
                     // create V4 session
                     ret = create_session_info(
-                        vpc, local_gw_mapping[i].remotes[rc].route.nh,
+                        vpc, local_gw_mapping[i].remotes[rc].route.nh.id,
                         VNET_TO_INTERNET_SLB);
                     if (ret != SDK_RET_OK) {
                         local_gw_mapping[i].remote_count = 0;
