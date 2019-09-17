@@ -967,6 +967,7 @@ func initAllowedCommands() {
 	allowedCommands["consoledisable"] = 40
 	allowedCommands["consoleenable"] = 41
 	allowedCommands["rmpentechsupportdir"] = 42
+	allowedCommands["penverifyfirmware"] = 43
 }
 
 func isCmdAllowed(cmd string) bool {
@@ -1039,6 +1040,9 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 		parts := strings.SplitN(req.Opts, " ", 2)
 		req.Executable = "fwupdate"
 		req.Opts = "-p /update/" + parts[0] + " -i " + parts[1]
+	} else if req.Executable == "penverifyfirmware" {
+		req.Executable = "fwupdate"
+		req.Opts = "-p /update/" + req.Opts + " -v"
 	} else if req.Executable == "setStartupToAltfw" {
 		req.Executable = "fwupdate"
 		req.Opts = "-s altfw"
@@ -1146,24 +1150,24 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 
 func naplesPkgVerify(pkgName string) (string, error) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
+		Executable: "penverifyfirmware",
+		Opts:       strings.Join([]string{pkgName}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func naplesPkgInstall(pkgName string) (string, error) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -i all"}, ""),
+		Executable: "installFirmware",
+		Opts:       strings.Join([]string{pkgName, " all"}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func naplesSetBootImg() (string, error) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
-		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
+		Executable: "setStartupToAltfw",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
@@ -1215,19 +1219,6 @@ func (n *NMD) NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	// TODO : Remove this once we get rid of all the Exec commands
-	if req.Executable == "pensettimezone" {
-		timeZone := req.Opts[:len(req.Opts)-1]
-		n.SetTimeZone(timeZone)
-
-		err := n.updateLocalTimeZone()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			n.store.Write(&n.config)
-		}
-	}
-
 	w.Write([]byte(stdErrOut))
 }
 
@@ -1255,15 +1246,13 @@ func (n *NMD) updateLocalTimeZone() error {
 		return err
 	}
 
-	symLink := "/usr/share/zoneinfo/" + timeZone
-
 	v = &nmd.NaplesCmdExecute{
-		Executable: "ln",
-		Opts:       strings.Join([]string{"-sf", symLink, "/etc/localtime"}, " "),
+		Executable: "lnlocaltime",
+		Opts:       strings.Join([]string{timeZone}, " "),
 	}
 	_, err = naplesExecCmd(v)
 	if err != nil {
-		log.Errorf("Failed to create the symlink to :%v", symLink)
+		log.Errorf("Failed to create the symlink to :%v", timeZone)
 		return err
 	}
 
