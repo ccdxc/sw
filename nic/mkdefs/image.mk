@@ -81,6 +81,7 @@ build-rootfs.cpio: build-rootfs
 
 .PHONY: build-image
 build-image: build-squashfs
+	${NICDIR}/upgrade_manager/meta/upgrade_metadata_restore.sh
 	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-image.sh
 
 .PHONY: build-gold-image
