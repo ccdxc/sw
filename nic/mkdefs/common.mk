@@ -265,3 +265,8 @@ hello_DEFS      := -DHELLO
 export PIPLINES_8G := apollo artemis apulu
 export PIPELINES_ALL := iris gft apollo artemis apulu l2switch elektra phoebus hello
 
+# ==========================================================================
+#                        Toolchain Specific Defs
+# ==========================================================================
+P4_DEFS    := -D${P4VER}
+

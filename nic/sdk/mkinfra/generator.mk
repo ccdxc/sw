@@ -50,7 +50,10 @@ endef
 CLEAN_DIRS          :=
 CXX_TARGETIDS       :=
 P4_TARGETIDS        :=
+P4_16_TARGETIDS     :=
+DONTUSE_TARGETIDS   :=
 ASM_TARGETIDS       :=
+ASM_16_TARGETIDS    :=
 PROTO_TARGETIDS     :=
 SVCGEN_TARGETIDS    :=
 MEMRGNS_TARGETIDS   :=
@@ -85,6 +88,7 @@ define INCLUDE_MODULEMK
     MODULE_GEN_DIR              :=
     MODULE_GOPKG                :=
     MODULE_FWTYPE               :=
+    MODULE_P4C                  :=
 
     # MODULE_DIR can be used by module.mk to know their current
     # directory.
@@ -139,14 +143,14 @@ define INCLUDE_MODULEMK
     ifeq "$$(suffix $${MODULE_TARGET})" ".a"
         $${TGID}_FLAGS              += ${CONFIG_ARLIB_FLAGS}
         $${TGID}_RECIPE_TYPE        := ARLIB
-        $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
+        $${TGID}_DEFS               += ${${PIPELINE}_DEFS} ${P4_DEFS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
             CXX_TARGETIDS               += $${TGID}
         endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".so"
         $${TGID}_FLAGS              += ${CONFIG_SOLIB_FLAGS}
         $${TGID}_RECIPE_TYPE        := SOLIB
-        $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
+        $${TGID}_DEFS               += ${${PIPELINE}_DEFS} ${P4_DEFS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
             CXX_TARGETIDS               += $${TGID}
         endif
@@ -158,22 +162,36 @@ define INCLUDE_MODULEMK
         $${TGID}_LDPATHS            += ${CONFIG_GTEST_LDPATHS}
         $${TGID}_RECIPE_TYPE        := BIN
         $${TGID}_RECIPE_SUBTYPE     := GTEST
-        $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
+        $${TGID}_DEFS               += ${${PIPELINE}_DEFS} ${P4_DEFS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
             GTEST_TARGETIDS             += $${TGID}
         endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".p4bin"
         $${TGID}_RECIPE_TYPE        := P4BIN
-        $${TGID}_NCC_OPTS           := ${CMD_NCC_OPTS} $${MODULE_NCC_OPTS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
-            P4_TARGETIDS                += $${TGID}
+            ifeq "$${MODULE_P4C}" "P4_16"
+                $${TGID}_NAME_P4C := ${NAME_SORRENTO}
+                $${TGID}_CMD_P4C := ${CMD_SORRENTO}
+                $${TGID}_P4C_OPTS := ${CMD_P4C_OPTS} $${MODULE_P4C_OPTS}
+                P4_16_TARGETIDS             += $${TGID}
+            else
+                $${TGID}_NAME_P4C := ${NAME_NCC}
+                $${TGID}_CMD_P4C := ${CMD_NCC}
+                $${TGID}_P4C_OPTS := ${CMD_P4C_OPTS} $${MODULE_NCC_OPTS}
+                $${TGID}_NCC_OPTS           := ${CMD_NCC_OPTS} $${MODULE_NCC_OPTS}
+                P4_TARGETIDS             += $${TGID}
+            endif
         endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".asmbin"
         $${TGID}_RECIPE_TYPE        := ASMBIN
         $${TGID}_CAPAS_OPTS         := ${CMD_CAPAS_OPTS} $${MODULE_CAPAS_OPTS}
-        $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
+        $${TGID}_DEFS               += ${${PIPELINE}_DEFS} ${P4_DEFS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
-            ASM_TARGETIDS               += $${TGID}
+            ifeq "$${MODULE_P4C}" "P4_16"
+                ASM_16_TARGETIDS    += $${TGID}
+            else
+                ASM_TARGETIDS       += $${TGID}
+            endif
         endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".proto"
         $${TGID}_RECIPE_TYPE        := PROTO
@@ -236,11 +254,15 @@ define INCLUDE_MODULEMK
             SUBMAKE_TARGETIDS           += $${TGID}
         endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".swigcli"
-        $${TGID}_RECIPE_TYPE        := SWIGCLI
-        SWIGCLI_TARGETIDS           += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            $${TGID}_RECIPE_TYPE        := SWIGCLI
+            SWIGCLI_TARGETIDS           += $${TGID}
+        endif
+    else ifeq "$$(suffix $${MODULE_TARGET})" ".dontuse"
+        DONTUSE_TARGETIDS           += $${MODULE_TARGET}
     else
         $${TGID}_RECIPE_TYPE        := BIN
-        $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
+        $${TGID}_DEFS               += ${${PIPELINE}_DEFS} ${P4_DEFS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
             CXX_TARGETIDS               += $${TGID}
         endif
@@ -338,9 +360,9 @@ MODULE_PATHS = $(strip $(call CANPATH,${MODULES}))
 $(foreach modpath,${MODULE_PATHS}, \
     $(eval $(call INCLUDE_MODULEMK,${modpath})))
 
-TARGETIDS := $(strip ${CXX_TARGETIDS} ${P4_TARGETIDS} \
+TARGETIDS := $(strip ${CXX_TARGETIDS} ${P4_TARGETIDS} ${P4_16_TARGETIDS} \
                      ${MEMRGNS_TARGETIDS} \
-                     ${ASM_TARGETIDS} ${PROTO_TARGETIDS} \
+                     ${ASM_TARGETIDS} ${ASM_16_TARGETIDS} ${PROTO_TARGETIDS} \
                      ${SVCGEN_TARGETIDS} ${MOCKGEN_TARGETIDS} \
                      ${GOIMPORTS_TARGETIDS} ${EXPORT_TARGETIDS} \
                      ${GOBIN_TARGETIDS} ${GTEST_TARGETIDS} \
@@ -395,11 +417,17 @@ $(foreach tgid, ${GTEST_TARGETIDS}, \
 P4_TARGETIDS := $(strip ${P4_TARGETIDS})
 $(call ADD_SRC_RULE,${P4_TARGETIDS},ADD_SRC_P4_OBJECT_RULE)
 
+P4_16_TARGETIDS := $(strip ${P4_16_TARGETIDS})
+$(call ADD_SRC_RULE,${P4_16_TARGETIDS},ADD_SRC_P4_16_OBJECT_RULE)
+
 # ======================================================================
 # Add pattern rule(s) for compiling ASM code.
 # ======================================================================
 ASM_TARGETIDS := $(strip ${ASM_TARGETIDS})
 $(call ADD_SRC_RULE,${ASM_TARGETIDS},ADD_SRC_ASM_OBJECT_RULE)
+
+ASM_16_TARGETIDS := $(strip ${ASM_16_TARGETIDS})
+$(call ADD_SRC_16_RULE,${ASM_16_TARGETIDS},ADD_SRC_ASM_16_OBJECT_RULE)
 
 # ======================================================================
 # Add rules for Exports
@@ -418,10 +446,14 @@ $(foreach tgid, ${TARGETIDS}, \
 
 print-target-debug-info:
 	$(info Module Paths = ${MODULE_PATHS})
+	$(info P4VER = ${P4VER})
 	$(info TargetIDs = ${TARGETIDS})
 	$(info Make Targets = ${ALL_TARGETS})
 	$(info ASM TargetIDs = ${ASM_TARGETIDS})
+	$(info ASM_16 TargetIDs = ${ASM_16_TARGETIDS})
 	$(info P4 TargetIDs = ${P4_TARGETIDS})
+	$(info P4_16 TargetIDs = ${P4_16_TARGETIDS})
+	$(info DontUse TargetIDs = ${DONTUSE_TARGETIDS})
 	$(info PROTO TargetIDs = ${PROTO_TARGETIDS})
 	$(foreach tgid, ${TARGETIDS}, \
 		$(eval $(call PRINT_TARGET_DEBUG_INFO,${tgid})))

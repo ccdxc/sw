@@ -22,7 +22,10 @@ export PEN_OUT_DIR         := ${TOPDIR}/penctl/cmd
 include ${MKINFRA}/config_${ARCH}.mk
 
 CMD_NCC      := ${COMMON_CMD_NCC}
-CMD_NCC_OPTS := ${COMMON_NCC_OPTS}
+CMD_SORRENTO := ${COMMON_CMD_SORRENTO}
+CMD_P4C_OPTS := ${COMMON_P4C_OPTS}
+
+CMD_P4C_ASM  := ${TOPDIR}/nic/tools/sorrento/tools/p4c_asm.sh
 
 CMD_CAPAS       := ${COMMON_CMD_CAPAS}
 CMD_CAPAS_OPTS  := ${COMMON_CAPAS_OPTS}

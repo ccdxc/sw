@@ -85,9 +85,11 @@ NAME_SUBMAKE   := "[SUB MAKE]"
 NAME_SWIGCLI   := "[SWIGCLI ]"
 NAME_MEMRGNS    := "[MEMRGNS ]"
 NAME_UPX	:= "[UPX COMPRESSION ]"
+NAME_SORRENTO   := "[SORRENTO ]"
 
 COMMON_CMD_NCC              := ${TOPDIR}/nic/tools/ncc/capri-ncc.py
-COMMON_NCC_OPTS             :=
+COMMON_CMD_SORRENTO         := ${TOPDIR}/nic/tools/sorrento/bin/p4c-sorrento
+COMMON_P4C_OPTS             :=
 
 COMMON_CMD_CAPAS            := ${SDKDIR}/third-party/asic/capri/model/capsim-gen/bin/capas
 COMMON_CAPAS_OPTS           := -t

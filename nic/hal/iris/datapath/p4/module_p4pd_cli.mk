@@ -1,6 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
+ifeq "${P4VER}" "P4_14"
 MODULE_TARGET       = _iris_libp4_p4pdcli.so
 MODULE_PIPELINE     = iris
 MODULE_PREREQS      = iris_p4pd.swigcli
@@ -13,5 +14,9 @@ MODULE_INCS         = ${BLD_P4GEN_DIR}/common_rxdma_actions/cli \
 MODULE_FLAGS        = ${CLI_P4PD_FLAGS}
 MODULE_LDLIBS       = ${CLI_iris_P4PD_LDLIBS}
 MODULE_SOLIBS       = ${CLI_iris_P4PD_SOLIBS}
+else
+MODULE_PIPELINE     = iris_dontuse
+MODULE_TARGET       = _iris_libp4_p4pdcli.so.dontuse
+endif
 
 include ${MKDEFS}/post.mk

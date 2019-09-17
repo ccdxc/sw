@@ -21,8 +21,35 @@ endef
 define ADD_SRC_P4_OBJECT_RULE
 $${${1}_BLD_OUT_DIR}/${2}/%.p4o: ${2}/%${3} $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
-	${NAT}${AT}echo ${NAME_NCC} $$(call CANPATH,$$<) "=>" $$(call CANPATH,$$@_build.log)
-	${AT}$(strip ${CMD_NCC} ${${1}_NCC_OPTS} $$<) > $$(call CANPATH,$$@_build.log)
+	${NAT}${AT}echo ${${1}_NAME_P4C} $$(call CANPATH,$$<) "=>" $$(call CANPATH,$$@_build.log)
+	${AT}$(strip ${${1}_CMD_P4C} ${${1}_P4C_OPTS} $$<) > $$(call CANPATH,$$@_build.log)
+	${AT}touch $$@
+endef
+
+define ADD_SRC_P4_16_OBJECT_RULE
+$${${1}_BLD_OUT_DIR}/${2}/%.p4o: ${2}/%${3} $${${1}_DEPS}
+	${AT}mkdir -p $$(dir $$@)
+	${NAT}${AT}echo ${${1}_NAME_P4C} $$(call CANPATH,$$<) "=>" $$(call CANPATH,$$@_build.log)
+	${AT}$(strip ${${1}_CMD_P4C} ${${1}_P4C_OPTS} $$<) > $$(call CANPATH,$$@_build.log)
+	${AT}mkdir -p ${BLD_P4GEN_DIR}/p4/dbg_out
+	${AT}mv ${BLD_P4GEN_DIR}/p4/model_debug.json ${BLD_P4GEN_DIR}/p4/dbg_out
+	${AT}mkdir -p ${BLD_P4GEN_DIR}/p4/p4pd
+	${AT}mv ${BLD_P4GEN_DIR}/p4/memory_spec.json ${BLD_P4GEN_DIR}/p4/p4pd
+	${AT}mv ${BLD_P4GEN_DIR}/p4/*.bin ${BLD_PGMBIN_DIR}
+	${AT}mkdir -p ${BLD_P4GEN_DIR}/p4/asm
+	${AT}mv ${BLD_P4GEN_DIR}/p4/*.asm ${BLD_P4GEN_DIR}/p4/asm
+	#${AT}${CMD_P4C_ASM} ${CMD_CAPAS} ${BLD_P4GEN_DIR}/p4/asm ${BLD_OUT_DIR}/$$(patsubst %.p4bin,%_asmbin,$${${1}_TARGET})
+	${AT}mkdir -p $${${1}_BIN_DIR}
+	${AT}${CMD_P4C_ASM} ${CMD_CAPAS} ${BLD_P4GEN_DIR}/p4/asm $${${1}_BIN_DIR}
+	${AT}touch $$@
+endef
+
+define ADD_SRC_ASM_16_OBJECT_RULE
+$${${1}_BLD_OUT_DIR}/${2}/%.bin: $${${1}_DEPS}
+	${AT}mkdir -p $$(dir $$@)
+	${NAT}${AT}echo $(strip $$@) "=>" ${1}~${2}
+	${AT}mv ${BLD_OUT_DIR}/$$(patsubst %.asmbin,%_asmbin,$${${1}_TARGET})/*.bin $$(dir $$@)
+	${AT}mv ${BLD_OUT_DIR}/$$(patsubst %.asmbin,%_asmbin,$${${1}_TARGET})/*.sym $$(dir $$@)
 	${AT}touch $$@
 endef
 
@@ -30,6 +57,7 @@ define ADD_SRC_ASM_OBJECT_RULE
 $${${1}_BLD_OUT_DIR}/${2}/%.bin: ${2}/%${3} $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_CAPAS} $$<
+	${NAT}${AT}echo $(strip ${CMD_CAPAS} ${${1}_CAPAS_OPTS}) "=>" ${1}~${2}~${3}
 	${AT}$(strip ${CMD_CAPAS} ${${1}_CAPAS_OPTS} $$< ${${1}_INCS} ${${1}_DEFS} -o $$@ > $${${1}_BLD_OUT_DIR}/$$(patsubst %.bin,%.sym,$$(shell basename $$@)))
 	${AT}touch $$@
 	${AT}mkdir -p $${${1}_BIN_DIR}
@@ -136,4 +164,10 @@ $(foreach tgid,${1},\
     $(foreach dir,${${tgid}_SRC_DIRS},\
         $(foreach ext,${${tgid}_SRC_EXTS},\
             $(eval $(call ${2},${tgid},${dir},${ext})))))
+endef
+
+define ADD_SRC_16_RULE
+$(foreach tgid,${1},\
+    $(foreach dir,${${tgid}_SRC_DIRS},\
+        $(eval $(call ${2},${tgid},${dir}))))
 endef
