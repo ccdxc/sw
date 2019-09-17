@@ -122,8 +122,6 @@ def IsNaplesGoldFWLatest():
 def IpmiReset():
     os.system("ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
               (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
-    time.sleep(60)
-    return
 
 # Error codes for all module exceptions
 @unique
@@ -415,8 +413,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img), "#", timeout = 300)
         self.SendlineExpect("/nic/tools/fwupdate -l", "#")
 
-    @_exceptionWrapper(_errCodes.NAPLES_TELNET_FAILED, "Telnet Failed")
-    def Connect(self, bringup_oob=True):
+    def __connect_to_console(self):
         for _ in range(3):
             try:
                 self.hdl = self.Spawn("telnet %s %s" % ((GlobalOptions.console_ip, GlobalOptions.console_port)))
@@ -436,6 +433,10 @@ class NaplesManagement(EntityManagement):
             print(msg)
             raise Exception(msg)
 
+
+    @_exceptionWrapper(_errCodes.NAPLES_TELNET_FAILED, "Telnet Failed")
+    def Connect(self, bringup_oob=True):
+        self.__connect_to_console()
         self.Login(bringup_oob)
 
     def _getMemorySize(self):
@@ -488,6 +489,7 @@ class NaplesManagement(EntityManagement):
                 raise Exception(msg)
 
     def CleanUpOldFiles(self):
+        self.SendlineExpect("clear_nic_config.sh remove-config", "#")
         #clean up db that was setup by previous
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
@@ -523,6 +525,25 @@ class NaplesManagement(EntityManagement):
         if self.hdl:
             self.hdl.close()
         return
+
+    def __get_capri_prompt(self):
+        IpmiReset()
+        match_idx = self.hdl.expect(["Autoboot in 0 seconds", pexpect.TIMEOUT], timeout = 120)
+        if match_idx == 1:
+            print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
+            IpmiReset()
+            self.hdl.expect_exact("Autoboot in 0 seconds", timeout = 120)
+        self.hdl.sendcontrol('C')
+        self.hdl.expect_exact("Capri#")
+        return
+
+    @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Force switch to gold fw failed")
+    def ForceSwitchToGoldFW(self):
+        self.__connect_to_console()
+        self.__get_capri_prompt()
+        self.hdl.sendline("boot goldfw")
+        self.hdl.expect_exact("capri-gold login", timeout = 120)
+        self.Login()
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Switch to gold fw failed")
     def SwitchToGoldFW(self):
@@ -932,19 +953,13 @@ def Main():
             #unloading of driver should not fail, else reset to goldfw
             host.UnloadDriver()
         except:
-            #Do Reset only if we can't connect to naples.
-            IpmiReset()
-            time.sleep(10)
-            #Don't bring up oob as naples/host in bad state
-            #Switch to gold FW ASAP
-            naples.Connect(bringup_oob=False)
-            naples.SwitchToGoldFW()
+            #Do force reset to switch to gold fw
+            naples.ForceSwitchToGoldFW()
             try:
                 #Try to do a clean up db files and conf files
                 naples.InitForUpgrade()
             except:
                 pass
-            IpmiReset()
             host.WaitForSsh()
             host.UnloadDriver()
 
