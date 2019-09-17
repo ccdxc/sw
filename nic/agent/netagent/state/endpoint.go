@@ -280,7 +280,7 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	oldEp, ok := na.EndpointDB[key]
 	na.Unlock()
 	if !ok {
-		return fmt.Errorf("endpoint not found")
+		return fmt.Errorf("endpoint %v not found", key)
 
 	}
 
@@ -290,12 +290,6 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		return nil
 	}
 	log.Infof("Valid EP Update. Old: %v, New: %v", oldEp.Spec, ep.Spec)
-
-	// verify endpoint's network is not changing
-	if oldEp.Spec.NetworkName != ep.Spec.NetworkName {
-		log.Errorf("Can not change network after endpoint is created. old %s, new %s", oldEp.Spec.NetworkName, ep.Spec.NetworkName)
-		return errors.New("Can not change the network after endpoint is created")
-	}
 
 	// find the network
 	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: ep.Spec.NetworkName})
@@ -327,6 +321,20 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		}
 
 		sgs = append(sgs, sg)
+	}
+
+	// If endpoint's network changes, delete the old endpoint and create new one
+	// this can happen if endpoint was deleted and re-created on Venice while this naples was disconnected from it.
+	if oldEp.Spec.NetworkName != ep.Spec.NetworkName {
+		// delete old endpoint
+		err = na.DeleteEndpoint(ep.Tenant, ep.Namespace, ep.Name)
+		if err != nil {
+			log.Errorf("Error deleting endpoint %+v", ep.ObjectMeta)
+			// continue with create even if delete fails
+		}
+
+		// create endpoint again
+		return na.CreateEndpoint(ep)
 	}
 
 	// Validate EP IP.

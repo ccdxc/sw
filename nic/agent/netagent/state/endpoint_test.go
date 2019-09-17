@@ -250,13 +250,38 @@ func TestEndpointUpdate(t *testing.T) {
 	epupd2 := epupd
 	epupd2.Spec.NetworkName = "unknown"
 	err = ag.UpdateEndpoint(&epupd2)
-	Assert(t, (err != nil), "Changing network name succeeded")
+	Assert(t, (err != nil), "Changing network to non-existing network succeeded")
 
 	// try updating security group to an unknown
 	epupd2 = epupd
 	epupd2.Spec.SecurityGroups = []string{"unknown"}
 	err = ag.UpdateEndpoint(&epupd2)
 	Assert(t, (err != nil), "Changing to non-existing security group succeeded")
+
+	// create another network
+	nt2 := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err = ag.CreateNetwork(&nt2)
+	AssertOk(t, err, "Error creating network")
+
+	// move endpoint to new network
+	epupd3 := epinfo
+	epupd3.Spec.NetworkName = "test"
+	err = ag.UpdateEndpoint(&epupd3)
+	AssertOk(t, err, "Error updating endpoint")
+
 }
 
 func TestEndpointConcurrency(t *testing.T) {
