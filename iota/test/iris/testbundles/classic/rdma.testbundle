@@ -73,7 +73,6 @@ testcases:
         stress  : True
         iterators :
             type     : nested
-            size     : [32]
             command  : ['ib_send_lat']
         args    :
             type: remote_only
