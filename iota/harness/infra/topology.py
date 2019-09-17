@@ -6,6 +6,7 @@ import re
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+from iota.harness.infra.utils.console import Console
 
 import iota.harness.infra.store as store
 import iota.harness.infra.resmgr as resmgr
@@ -58,6 +59,9 @@ class Node(object):
         self.__nic_int_mgmt_ip = getattr(self.__inst, "NicIntMgmtIP", "169.254.0.1")
         self.__nic_console_ip = getattr(self.__inst, "NicConsoleIP", "")
         self.__nic_console_port = getattr(self.__inst, "NicConsolePort", "")
+        self.__nic_mgmt_intf = getattr(self.__inst, "NicMgmtIntf", "oob_mnic0")
+        self.__console_hdl = None
+        self.__read_mgmt_ip_from_console()
 
 
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
@@ -103,6 +107,19 @@ class Node(object):
             Logger.error("Unknown NIC Type : %s %s" % (nic_type, role))
             sys.exit(1)
         return role
+
+    def __read_mgmt_ip_from_console(self):
+        if self.__nic_console_ip != "" and self.__nic_console_port != "":
+            self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port)
+            output = self.__console_hdl.RunCmdGetOp("ifconfig " + self.__nic_mgmt_intf)
+            ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+            x = re.findall(ifconfig_regexp, str(output))
+            if len(x) > 0:
+                Logger.info("Read management IP %s %s" % (self.__name, x[0]))
+                self.__nic_mgmt_ip = x[0]
+        else:
+            Logger.info("Skipping management IP read as no console info %s" % self.__name)
+
 
     def GetNicType(self):
         if getattr(self.__inst, "Resource", None):
@@ -296,8 +313,12 @@ class Node(object):
             else:
                 Logger.error("Interfaces not found on Host: ", self.MgmtIpAddress())
                 if self.IsNaples():
-                    Logger.error("Check if IONIC driver is installed.")
-                sys.exit(1)
+                    if not GlobalOptions.skip_host_intf_check:
+                        Logger.error("Check if IONIC driver is installed.")
+                        sys.exit(1)
+                    else:
+                        Logger.error("Ignoring Host interface check")
+
         return
 
     def GetStartUpScript(self):
