@@ -1,6 +1,8 @@
 /******************************************************************************/
 /* Local mapping                                                              */
 /******************************************************************************/
+@pragma capi appdatafields vnic_id
+@pragma capi hwfields_access_api
 action local_mapping_info(entry_valid, vnic_id,
                           hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
@@ -140,6 +142,8 @@ control local_mapping {
 /******************************************************************************/
 /* All mappings (local and remote)                                            */
 /******************************************************************************/
+@pragma capi appdatafields dmaci
+@pragma capi hwfields_access_api
 action mapping_info(entry_valid, dmaci,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,

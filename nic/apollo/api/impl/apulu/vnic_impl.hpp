@@ -142,12 +142,34 @@ private:
     /// \brief constructor
     vnic_impl() {
         hw_id_ = 0xFFFF;
-        local_mapping_handle_ = handle_t::null();
-        mapping_handle_ = handle_t::null();
+        local_mapping_hdl_ = handle_t::null();
+        mapping_hdl_ = handle_t::null();
     }
 
     /// \brief destructor
     ~vnic_impl() {}
+
+    /// \brief     add an entry to LOCAL_MAPPING table
+    /// \param[in] epoch epoch being activated
+    /// \param[in] vpc vpc of this vnic
+    /// \param[in] subnet subnet of this vnic
+    /// \param[in] vnic  VNIC obj being programmed
+    /// \param[in] spec  VNIC configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_local_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
+                                       subnet_entry *subnet, vnic_entry *vnic,
+                                       pds_vnic_spec_t *spec);
+
+    /// \brief     add an entry to MAPPING table
+    /// \param[in] epoch epoch being activated
+    /// \param[in] vpc vpc of this vnic
+    /// \param[in] subnet subnet of this vnic
+    /// \param[in] vnic  VNIC obj being programmed
+    /// \param[in] spec  VNIC configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
+                                 subnet_entry *subnet, vnic_entry *vnic,
+                                 pds_vnic_spec_t *spec);
 
     /// \brief     program VNIC related tables during VNIC create by enabling
     ///            stage0 tables corresponding to the new epoch
@@ -184,8 +206,8 @@ private:
     uint16_t hw_id_;                   ///< hardware id
     ///< handle for LOCAL_MAPPING and MAPPING table entries (note that handles
     ///< are valid only in a transaction)
-    handle_t local_mapping_handle_;
-    handle_t mapping_handle_;
+    handle_t local_mapping_hdl_;
+    handle_t mapping_hdl_;
 };
 
 /// \@}
