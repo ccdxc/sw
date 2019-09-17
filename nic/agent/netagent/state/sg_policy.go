@@ -124,7 +124,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	// create it in datapath
 	err = na.Datapath.CreateSGPolicy(sgp, vrf.Status.VrfID, securityGroups, &ruleIDAppLUT)
 	if err != nil {
-		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp, err)
+		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp.GetKey(), err)
 		return err
 	}
 

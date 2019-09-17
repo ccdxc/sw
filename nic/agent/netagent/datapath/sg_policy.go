@@ -74,6 +74,30 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 			log.Errorf("Error creating security policy. Err: %v", err)
 			return err
 		}
+
+		// Check if HAL already has the policy and make it idempotent
+		if resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_ERR {
+			sgpReq := &halproto.SecurityPolicyGetRequestMsg{
+				Request: []*halproto.SecurityPolicyGetRequest{
+					{
+						KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
+							PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
+								SecurityPolicyKey: &halproto.SecurityPolicyKey{
+									SecurityPolicyId: sgp.Status.SGPolicyID,
+									VrfIdOrHandle:    vrfKey,
+								},
+							},
+						},
+					},
+				},
+			}
+			getResp, _ := hd.Hal.Sgclient.SecurityPolicyGet(context.Background(), sgpReq)
+			if getResp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK {
+				log.Info("Network security policy exists in HAL")
+				return nil
+			}
+		}
+
 		if !(resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_OK || resp.Response[0].ApiStatus == halproto.ApiStatus_API_STATUS_EXISTS_ALREADY) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
