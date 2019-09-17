@@ -351,13 +351,11 @@ typedef struct session_args_s {
     bool               update_iflow;                      // Update Iflow ?
     bool               update_rflow;                      // Update Rflow ?
     bool               is_ipfix_flow;                     // IPFix flow ?
-    vrf_t              *vrf;                              // src vrf
-    ep_t               *sep;                              // spurce ep
-    ep_t               *dep;                              // dest ep
-    if_t               *sif;                              // source interface
-    if_t               *dif;                              // dest interface
-    l2seg_t            *sl2seg;                           // source l2seg
-    l2seg_t            *dl2seg;                           // dest l2seg
+    hal_handle_t       vrf_handle;                        // src vrf
+    hal_handle_t       sep_handle;                        // source ep
+    hal_handle_t       dep_handle;                        // dest ep
+    hal_handle_t       sl2seg_handle;                     // source l2seg
+    hal_handle_t       dl2seg_handle;                     // dest l2seg
     SessionSpec        *spec;                             // session spec
     SessionResponse    *rsp;                              // session response
     uint32_t           flow_hash;                         // flow hash

@@ -1198,15 +1198,17 @@ ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
 
         dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            ctxt->session_hdl_list[list][idx++] = entry->handle_id;
+            ctxt->session_hdl_list[list][idx] = entry->handle_id;
+            idx = idx + 1;
             if (idx == HAL_MAX_SESSIONS_PER_UPDATE) {
-                idx = 0;
-                ctxt->session_hdl_list[++list] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                idx = 0; list = list + 1;
+                SDK_ASSERT(list < num_list);
+                ctxt->session_hdl_list[list] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
                                sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
                 SDK_ASSERT(ctxt->session_hdl_list[list] != NULL);
             }
         }
-        ctxt->num_list = list+1;
+        ctxt->num_list = num_list;
         ctxt->fte_id = fte_id;
 
         ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
@@ -2048,7 +2050,6 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     vrf_id_t                tid;
     ep_t                    *ep           = NULL;
     vrf_t                   *vrf          = NULL;
-    ApiStatus               api_status;
     bool                    if_change     = false, l2seg_change = false,
                             iplist_change = false;
     hal_handle_t            new_if_hdl    = 0, new_l2seg_hdl    = 0;
@@ -2375,7 +2376,6 @@ endpoint_delete (EndpointDeleteRequest& req,
     ep_t             *ep = NULL;
     cfg_op_ctxt_t    cfg_ctxt = { 0 };
     dhl_entry_t      dhl_entry = { 0 };
-    ApiStatus        api_status;
 
     hal_api_trace(" API Begin: Endpoint delete ");
 
@@ -2673,7 +2673,7 @@ ep_add_session (ep_t *ep, session_t *session)
 
 end:
 
-    HAL_TRACE_VERBOSE("add ep {}/{} => session {}, ret : {}",
+    HAL_TRACE_DEBUG("add ep {}/{} => session {}, ret : {}",
                       ep_l2_key_to_str(ep), ep->hal_handle,
                       session->hal_handle, ret);
     return ret;

@@ -67,28 +67,6 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
         return ret;
     }
 
-#if 0
-    mem_addr_t              stats_mem_addr = 0;
-    uint64_t                zero_val = 0;
-
-    ret = hal_pd_stats_addr_get(P4TBL_ID_FLOW_STATS,
-                                *assoc_hw_idx, &stats_mem_addr);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error getting stats address for hw-id {} ret {}",
-                      *assoc_hw_idx, ret);
-        return ret;
-    }
-
-    p4plus_hbm_write(stats_mem_addr, (uint8_t *)&zero_val,
-                         sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
-    p4plus_hbm_write(stats_mem_addr + 8 , (uint8_t *)&zero_val,
-                      sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
-    p4plus_hbm_write(stats_mem_addr + 16, (uint8_t *)&zero_val,
-                       sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
-    p4plus_hbm_write(stats_mem_addr + 24 , (uint8_t *)&zero_val,
-                        sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
-#endif
-
     return HAL_RET_OK;
 }
 
@@ -1280,9 +1258,6 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     pd_conv_hw_clock_to_sw_clock_args_t clock_args = {0};
     pd_flow_get_args_t *args = pd_func_args->pd_flow_get;
     sdk_ret_t sdk_ret;
-    mem_addr_t              stats_addr = 0;
-    flow_atomic_stats_t stats_0 = {0};
-    flow_atomic_stats_t stats_1 = {0};
     flow_stats_actiondata_t d = {0};
     flow_info_actiondata_t f = {0};
     directmap *info_table = NULL;
@@ -1313,24 +1288,6 @@ pd_flow_get (pd_func_args_t *pd_func_args)
         }
     }
 
-    ret = hal_pd_stats_addr_get(P4TBL_ID_FLOW_STATS,
-                                pd_flow.assoc_hw_id, &stats_addr);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error getting stats address for flow {} hw-id {} ret {}",
-                      session->hal_handle, pd_flow.assoc_hw_id, ret);
-        return ret;
-    }
-
-#if 0
-    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_0,
-                                       sizeof(stats_0));
-    if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("Error reading stats for flow {} hw-id {} ret {}",
-                      session->hal_handle, pd_flow.assoc_hw_id, ret);
-        return ret;
-    }
-#endif
-
     // read the d-vector
     sdk_ret = stats_table->retrieve(pd_flow.assoc_hw_id, &d);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1340,47 +1297,10 @@ pd_flow_get (pd_func_args_t *pd_func_args)
         return ret;
     }
 
-#if 0
-    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_1,
-                                       sizeof(stats_1));
-    if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("Error reading stats for flow {} hw-id {} ret {}",
-                      session->hal_handle, pd_flow.assoc_hw_id, ret);
-        return ret;
-    }
-#endif
-
-#if STATS_DEBUG
-    HAL_TRACE_DEBUG("Flow stats for session {} stats_addr: {:#x} stats_0: permit_packets {},"
-                    "permit_bytes: {}, drop_packets: {}, drop_bytes: {} "
-                    "stats_1: permit_packets {}, permit_bytes: {}, drop_packets: {},"
-                    "drop_bytes: {} P4 table read: permit_packets {}, permit_bytes: {},"
-                    "drop_packets: {}, drop_bytes: {} ", session->hal_handle, stats_addr,
-                    stats_0.permit_packets, stats_0.permit_bytes, stats_0.drop_packets,
-                    stats_0.drop_bytes, stats_1.permit_packets, stats_1.permit_bytes,
-                    stats_1.drop_packets, stats_1.drop_bytes, d.action_u.flow_stats_flow_stats.permit_packets,
-                    d.action_u.flow_stats_flow_stats.permit_bytes, d.action_u.flow_stats_flow_stats.drop_packets,
-                    d.action_u.flow_stats_flow_stats.drop_bytes);
-#endif
-
-    if (stats_0.permit_packets == stats_1.permit_packets) {
-        stats_1.permit_packets += BYTES_TO_UINT64(d.action_u.
-                                                  flow_stats_flow_stats.permit_packets);
-        stats_1.permit_bytes += BYTES_TO_UINT64(d.action_u.
-                                                flow_stats_flow_stats.permit_bytes);
-    }
-
-    if (stats_0.drop_packets == stats_1.drop_packets) {
-        stats_1.drop_packets += BYTES_TO_UINT64(d.action_u.
-                                                flow_stats_flow_stats.drop_packets);
-        stats_1.drop_bytes += BYTES_TO_UINT64(d.action_u.
-                                              flow_stats_flow_stats.drop_bytes);
-    }
-
-    args->flow_state->packets = stats_1.permit_packets;
-    args->flow_state->bytes = stats_1.permit_bytes;
-    args->flow_state->drop_packets = stats_1.drop_packets;
-    args->flow_state->drop_bytes = stats_1.drop_bytes;
+    args->flow_state->packets = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.permit_packets);
+    args->flow_state->bytes = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.permit_bytes);
+    args->flow_state->drop_packets = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.drop_packets);
+    args->flow_state->drop_bytes = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.drop_bytes);
 
     clock_args.hw_tick = d.action_u.flow_stats_flow_stats.last_seen_timestamp;
     clock_args.hw_tick = (clock_args.hw_tick << 16);

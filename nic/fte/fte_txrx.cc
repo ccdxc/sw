@@ -283,8 +283,8 @@ inst_t::inst_t(uint8_t fte_id) :
     num_features_(0),
     iflow_(NULL),
     rflow_(NULL),
-    max_sessions_(0),
-    bypass_fte_(false)
+    bypass_fte_(false),
+    max_sessions_(0)
 {
     if (hal::is_platform_type_sim()) {
         // SIM

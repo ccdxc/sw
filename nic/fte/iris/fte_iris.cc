@@ -188,22 +188,26 @@ ctx_t::lookup_flow_objs()
         // Try to find sep by looking at L2.
         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
         sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
-        HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
-                           sl2seg_->seg_id, macaddr2str(ethhdr->smac));
+        if (sep_) {
+            HAL_TRACE_VERBOSE("src ep {} found by L2 lookup seg_id:{} smac:{}",
+                           sep_->hal_handle, sl2seg_->seg_id, macaddr2str(ethhdr->smac));
+        }
 
         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
         dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
-        HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
-                              sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
+        if (dep_) {
+            HAL_TRACE_VERBOSE("dst ep {} found by L2 lookup, seg_id:{} dmac:{}",
+                              dep_->hal_handle, sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
+        }
     } else if (existing_session()) {
         sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
                                        session_->iflow->config.l2_info.smac);
-        HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
+        HAL_TRACE_VERBOSE("src ep found by L2 lookup seg_id:{} smac:{}",
                            session_->iflow->config.l2_info.l2seg_id,
                            macaddr2str(session_->iflow->config.l2_info.smac));
         dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
                                       session_->iflow->config.l2_info.dmac);
-        HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
+        HAL_TRACE_VERBOSE("dst ep found by L2 lookup, seg_id:{} dmac:{}",
                           session_->iflow->config.l2_info.l2seg_id,
                           macaddr2str(session_->iflow->config.l2_info.dmac));
     } 
@@ -235,6 +239,7 @@ ctx_t::lookup_flow_objs()
     }
 
     if (dep_) {
+        dep_handle_ = dep_->hal_handle;
         if (sep_ && dep_->l2seg_handle == sep_->l2seg_handle) {
             dl2seg_ = sl2seg_;
         } else {
@@ -775,13 +780,11 @@ ctx_t::update_flow_table()
     } else {
         session_args.flow_hash   = 0;
     }
-    session_args.vrf         = svrf_;
-    session_args.sep         = sep_;
-    session_args.dep         = dep_;
-    session_args.sif         = sif_;
-    session_args.dif         = dif_;
-    session_args.sl2seg      = sl2seg_;
-    session_args.dl2seg      = dl2seg_;
+    session_args.vrf_handle  = svrf_->hal_handle;
+    session_args.sep_handle  = sep_handle_;
+    session_args.dep_handle  = dep_handle_;
+    session_args.sl2seg_handle = sl2seg_?sl2seg_->hal_handle:HAL_HANDLE_INVALID;
+    session_args.dl2seg_handle = dl2seg_?dl2seg_->hal_handle:HAL_HANDLE_INVALID;
     session_args.spec        = sess_spec_;
     session_args.rsp         = sess_resp_;
     session_args.valid_rflow = valid_rflow_;

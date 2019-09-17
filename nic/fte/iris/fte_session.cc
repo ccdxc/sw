@@ -3,6 +3,7 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/src/utils/utils.hpp"
+#include "nic/fte/fte_impl.hpp"
 
 namespace fte {
 
@@ -101,6 +102,9 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
         goto end;
     }
 
+    // Process pkt with db open
+    fte::impl::cfg_db_open();
+    
     //Init context
     ret = ctx.init(session, iflow, rflow, feature_state, num_features);
     if (ret != HAL_RET_OK) {
@@ -112,7 +116,12 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
 
     ret = ctx.process();
 
+    // close the config db
+    fte::impl::cfg_db_close();
+
 end:
+
+
     if (feature_state) {
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
     }
@@ -279,8 +288,8 @@ session_get (hal::session_t *session, SessionGetResponse *response)
     feature_state_t *feature_state = NULL;
     flow_t           iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("fte:: Session handle {} Get in Vrf id {}",
+    HAL_TRACE_VERBOSE("--------------------- API Start ------------------------");
+    HAL_TRACE_VERBOSE("fte:: Session handle {} Get in Vrf id {}",
                      session->hal_handle,
                      (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
 
@@ -311,7 +320,7 @@ end:
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
     }
 
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    HAL_TRACE_VERBOSE("----------------------- API End ------------------------");
     return ret;
 }
 

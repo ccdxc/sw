@@ -376,10 +376,11 @@ ep_get_from_flow_key (const flow_key_t* key, ep_t **sep, ep_t **dep)
 // insert this session in all meta data structures
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
-                   ep_t *sep, ep_t *dep, if_t *sif, if_t *dif,
+add_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle,
                    session_t *session)
 {
+    ep_t *sep = NULL, *dep = NULL;
+
     //session->session_id_ht_ctxt.reset();
     //g_hal_state->session_id_ht()->insert(session,
                                          //&session->session_id_ht_ctxt);
@@ -395,6 +396,9 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                          (void *)std::addressof(session->rflow->config.key),
                          session, &session->hal_rflow_ht_ctxt);
     }
+
+    sep = find_ep_by_handle(sep_handle);
+    dep = find_ep_by_handle(dep_handle);
 
     if (sep) {
         ep_add_session(sep, session);
@@ -412,17 +416,14 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
 // remove this session from all meta data structures
 //------------------------------------------------------------------------------
 static inline void
-del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
+del_session_from_db (hal_handle_t sep_handle, hal_handle_t dep_handle, session_t *session)
 {
+    ep_t *sep = NULL, *dep = NULL;
+
     HAL_TRACE_DEBUG("Entering DEL session from DB:{}", session->hal_handle);
 
-    if (sep == NULL) {
-       sep = find_ep_by_handle(session->sep_handle);
-    }
-
-    if (dep == NULL) {
-       dep = find_ep_by_handle(session->dep_handle);
-    }
+    sep = find_ep_by_handle(session->sep_handle);
+    dep = find_ep_by_handle(session->dep_handle);
 
     if (sep)
         ep_del_session(sep, session);
@@ -640,7 +641,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     }
 
     if (session->rflow) {
-        HAL_TRACE_DEBUG("valid rflow session");
+        HAL_TRACE_VERBOSE("valid rflow session");
         flow_to_flow_resp(session->rflow,
                           response->mutable_spec()->mutable_responder_flow(),
                           response->mutable_status()->mutable_rflow_status());
@@ -729,7 +730,7 @@ session_state_to_session_get_response (session_t *session,
          mutable_conn_track_info());
 
     if (session->rflow) {
-        HAL_TRACE_DEBUG("valid rflow session");
+        HAL_TRACE_VERBOSE("valid rflow session");
         // rflow age
         create_ns = session_state->rflow_state.create_ts;
         age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
@@ -774,7 +775,7 @@ session_state_to_session_get_response (session_t *session,
     }
 
     if (session->iflow->assoc_flow) {
-        HAL_TRACE_DEBUG("valid iflow aug session");
+        HAL_TRACE_VERBOSE("valid iflow aug session");
         // aug iflow age
         create_ns = session_state->iflow_aug_state.create_ts;
         age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
@@ -791,7 +792,7 @@ session_state_to_session_get_response (session_t *session,
     }
 
     if (session->rflow && session->rflow->assoc_flow) {
-        HAL_TRACE_DEBUG("valid rflow aug session");
+        HAL_TRACE_VERBOSE("valid rflow aug session");
         // aug iflow age
         create_ns = session_state->rflow_aug_state.create_ts;
         age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
@@ -1367,8 +1368,9 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     pd::pd_session_create_args_t  pd_session_args;
     session_t                    *session;
     pd::pd_func_args_t          pd_func_args = {0};
+    vrf_t                       *vrf = NULL;
 
-    SDK_ASSERT(args->vrf && args->iflow && args->iflow_attrs);
+    SDK_ASSERT(args->iflow && args->iflow_attrs);
 
     // allocate a session
     session = (session_t *)g_hal_state->session_slab()->alloc();
@@ -1382,13 +1384,16 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     HAL_TRACE_VERBOSE("Creating session {:p} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
 
     dllist_reset(&session->feature_list_head);
-    session->vrf_handle = args->vrf->hal_handle;
+    session->vrf_handle = args->vrf_handle;
     session->tcp_cxntrack_timer = NULL;
 
+    vrf = vrf_lookup_by_handle(args->vrf_handle);
+    SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
+
     // fetch the security profile, if any
-    if (args->vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+    if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         nwsec_prof =
-            find_nwsec_profile_by_handle(args->vrf->nwsec_profile_handle);
+            find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
     } else {
         nwsec_prof = NULL;
     }
@@ -1452,7 +1457,6 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     // allocate all PD resources and finish programming, if any
     pd::pd_session_create_args_init(&pd_session_args);
     pd_session_args.iflow_hash = args->flow_hash;
-    pd_session_args.vrf = args->vrf;
     pd_session_args.nwsec_prof = nwsec_prof;
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
@@ -1466,8 +1470,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     }
 
     // add this session to our db
-    ret = add_session_to_db(args->vrf, args->sl2seg, args->dl2seg,
-                            args->sep, args->dep, args->sif, args->dif, session);
+    ret = add_session_to_db(args->sep_handle, args->dep_handle, session);
     SDK_ASSERT(ret == HAL_RET_OK);
 
     if (session_handle) {
@@ -1553,7 +1556,6 @@ session_update(const session_args_t *args, session_t *session)
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_update_args_init(&pd_session_args);
-    pd_session_args.vrf = args->vrf;
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
@@ -1579,12 +1581,11 @@ session_delete(const session_args_t *args, session_t *session)
 
     SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
-    del_session_from_db(args->sep, args->dep, session);
+    del_session_from_db(args->sep_handle, args->dep_handle, session);
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_delete_args_init(&pd_session_args);
-    pd_session_args.vrf =
-        args ? args->vrf : vrf_lookup_by_handle(session->vrf_handle);
+    pd_session_args.vrf = vrf_lookup_by_handle(args->vrf_handle);
     pd_session_args.session = session;
     pd_session_args.session_state = args ? args->session_state : NULL;
     pd_session_args.rsp = args ? args->rsp : NULL;
