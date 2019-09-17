@@ -165,7 +165,7 @@ export class UIConfigsService {
   setUIPermissions() {
     const _ = Utility.getLodash();
     this.uiPermissions = {};
-    this._userPermissions.forEach( (permission) => {
+    this._userPermissions.forEach((permission) => {
       if (permission.allowed) {
         let cat = permission.operation.resource.group;
         if (cat == null) {
@@ -174,7 +174,7 @@ export class UIConfigsService {
         const kind = permission.operation.resource.kind;
         const action = permission.operation.action;
         if (action === AuthOperation_action['all-actions']) {
-          Object.keys(AuthPermission_actions).forEach( (a) => {
+          Object.keys(AuthPermission_actions).forEach((a) => {
             const key = _.toLower(cat) + _.toLower(kind) + '_' + _.toLower(a);
             this.uiPermissions[key] = permission.allowed;
           });
@@ -275,7 +275,7 @@ export class UIConfigsService {
   featureGuardIsEnabled(req: Features[], opt: Features[]): boolean {
     if (req != null && req.length !== 0) {
       // If one of the required objects are disabled, we return false
-      return !req.some( (p) => {
+      return !req.some((p) => {
         if (!this.isFeatureEnabled(p)) {
           return true;
         }
@@ -284,7 +284,7 @@ export class UIConfigsService {
 
     if (opt != null && opt.length !== 0) {
       // If all of the optional objects are disabled, we return false
-      return opt.some( (p) => {
+      return opt.some((p) => {
         return this.isFeatureEnabled(p);
       });
     }
@@ -359,7 +359,7 @@ export class UIConfigsService {
   roleGuardIsAuthorized(req: UIRolePermissions[], opt: UIRolePermissions[]): boolean {
     if (req != null && req.length !== 0) {
       // If one of the required objects are disabled, we return false
-      return !req.some( (p) => {
+      return !req.some((p) => {
         if (!this.isAuthorized(p)) {
           return true;
         }
@@ -368,7 +368,7 @@ export class UIConfigsService {
 
     if (opt != null && opt.length !== 0) {
       // If all of the optional objects are disabled, we return false
-      return opt.some( (p) => {
+      return opt.some((p) => {
         return this.isAuthorized(p);
       });
     }
@@ -377,6 +377,16 @@ export class UIConfigsService {
   }
 
   isAuthorized(permission: UIRolePermissions) {
+    // VS-802 start. User may refresh a page, we want browser to stay in current page. Thus, we restore permission objects from session-storage
+    if (this.controllerService.isUserLogin()) {
+      if (this.userPermissions.length <= 0) {
+        this.setUserPermissionsFromLocalStorage();
+      }
+      if (Utility.isEmptyObject(this.uiPermissions)) {
+        this.setUIPermissions();
+      }
+    }
+    // VS-802 end.
     return !!this.uiPermissions[permission];
   }
 }
