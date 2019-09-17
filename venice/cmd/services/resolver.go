@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
-	v1 "k8s.io/client-go/pkg/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
@@ -20,7 +22,23 @@ type resolverService struct {
 	svcMap    map[string]protos.Service
 	running   bool
 	observers []types.ServiceInstanceObserver
+
+	// BEGIN WORKAROUND
+	// TODO: remove workaround for following Kubernetes issues when move to a version with proper fixes:
+	// https://github.com/kubernetes/kubernetes/issues/80968
+	// https://github.com/kubernetes/kubernetes/issues/82346
+	pendingInstances     map[string][]protos.ServiceInstance // instances that we will need to be added later due to readiness probe
+	pendingInstancesCh   chan bool
+	pendingInstancesLock sync.Mutex
 }
+
+var (
+	// time since creation of a pod with readiness probes after which we declare it good even if Ready = false
+	pendingInstancesGracePeriod = 60 * time.Second
+	pendingInstancesCheckPeriod = 5 * time.Second
+)
+
+// END WORKAROUND
 
 // NewResolverService returns a Resolver Service.
 func NewResolverService(k8sSvc types.K8sService) types.ResolverService {
@@ -28,6 +46,10 @@ func NewResolverService(k8sSvc types.K8sService) types.ResolverService {
 		k8sSvc:    k8sSvc,
 		svcMap:    make(map[string]protos.Service),
 		observers: make([]types.ServiceInstanceObserver, 0),
+		// BEGIN WORKAROUND
+		pendingInstances:   make(map[string][]protos.ServiceInstance),
+		pendingInstancesCh: make(chan bool),
+		// END WORKAROUND
 	}
 	return r
 }
@@ -41,6 +63,7 @@ func (r *resolverService) Start() {
 	}
 	r.running = true
 	r.k8sSvc.Register(r)
+	go r.monitorPendingInstances(r.pendingInstancesCh)
 }
 
 // Stop stops the resolver service.
@@ -50,6 +73,7 @@ func (r *resolverService) Stop() {
 	if !r.running {
 		return
 	}
+	r.pendingInstancesCh <- true
 	r.k8sSvc.UnRegister(r)
 	r.running = false
 }
@@ -88,32 +112,42 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 		}
 	}
 
-	var instanceRunning bool
-	if e.Pod.Status.Phase == v1.PodRunning {
-		instanceRunning = true
-
-		// If any condition exists in not ConditionTrue then service is guaranteed to be good.
-		for _, condition := range e.Pod.Status.Conditions {
-			if condition.Status != v1.ConditionTrue {
-				instanceRunning = false
-			}
-		}
-	} else {
-		instanceRunning = false
-	}
+	instanceRunning := isPodRunning(e.Pod)
 
 	switch e.Type {
 	case types.K8sPodAdded:
 		fallthrough
 	case types.K8sPodModified:
 		if instanceRunning {
+			// BEGIN WORKAROUND
+			if podHasReadinessProbe(e.Pod) && getPodReadyCond(e.Pod) == false {
+				// since we are ignoring the Ready flag (see comment in isPodRunning)
+				// if this pod has readiness probe and is still not ready, it needs
+				// to be added asynchronously
+				r.pendingInstancesLock.Lock()
+				r.pendingInstances[e.Pod.Name] = sInsts
+				log.Infof("Added instances for pod %s to pending map %+v", e.Pod.Name, r.pendingInstances)
+				r.pendingInstancesLock.Unlock()
+				break
+			}
+			// END WORKAROUND
 			for ii := range sInsts {
 				r.addSvcInstance(&sInsts[ii])
 			}
+			// BEGIN WORKAROUND
+			r.pendingInstancesLock.Lock()
+			delete(r.pendingInstances, e.Pod.Name)
+			r.pendingInstancesLock.Unlock()
+			// END WORKAROUND
 			break
 		}
 		fallthrough
 	case types.K8sPodDeleted:
+		// BEGIN WORKAROUND
+		r.pendingInstancesLock.Lock()
+		delete(r.pendingInstances, e.Pod.Name)
+		r.pendingInstancesLock.Unlock()
+		// END WORKAROUND
 		for ii := range sInsts {
 			r.delSvcInstance(&sInsts[ii])
 		}
@@ -290,3 +324,66 @@ func (r *resolverService) notify(e protos.ServiceInstanceEvent) error {
 	}
 	return err
 }
+
+// BEGIN WORKAROUND
+func podHasReadinessProbe(pod *v1.Pod) bool {
+	for _, cont := range pod.Spec.Containers {
+		if cont.ReadinessProbe != nil {
+			return true
+		}
+	}
+	return false
+}
+
+func getPodReadyCond(pod *v1.Pod) bool {
+	for _, condition := range pod.Status.Conditions {
+		if condition.Type == v1.PodReady {
+			return condition.Status == v1.ConditionTrue
+		}
+	}
+	return false
+}
+
+func (r *resolverService) canProgramPendingInstance(podName string) bool {
+	client := r.k8sSvc.GetClient()
+	pod, err := client.CoreV1().Pods(defaultNS).Get(podName, metav1.GetOptions{})
+	if err != nil {
+		log.Errorf("Error getting pod from Kubernetes: %v", err)
+		return false
+	}
+	log.Infof("canProgramPendingInstance fetched pod %s from Kubernetes: %+v", pod.Name, pod)
+	if getPodReadyCond(pod) == true || time.Since(pod.ObjectMeta.GetCreationTimestamp().Time) >= pendingInstancesGracePeriod {
+		return true
+	}
+	return false
+}
+
+func (r *resolverService) monitorPendingInstances(done chan bool) {
+	ticker := time.NewTicker(pendingInstancesCheckPeriod)
+	defer ticker.Stop()
+	log.Infof("Starting pending instances monitor")
+	for {
+		select {
+		case <-ticker.C:
+			r.pendingInstancesLock.Lock()
+			for podName, insts := range r.pendingInstances {
+				if r.canProgramPendingInstance(podName) {
+					for ii := range insts {
+						r.addSvcInstance(&insts[ii])
+					}
+					log.Infof("Programmed pending instances for pod %s: %+v", podName, insts)
+					delete(r.pendingInstances, podName)
+				}
+			}
+			log.Infof("Pending instances after iteration: %+v", r.pendingInstances)
+			r.pendingInstancesLock.Unlock()
+		case <-done:
+			// clear pending services map
+			r.pendingInstances = make(map[string][]protos.ServiceInstance)
+			log.Infof("Stopping PendingInstances monitor")
+			return
+		}
+	}
+}
+
+// END WORKAROUND

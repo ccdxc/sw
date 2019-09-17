@@ -835,3 +835,27 @@ func programKubeletRBAC(client k8sclient.Interface) error {
 func programClusterConfig(client k8sclient.Interface) error {
 	return programKubeletRBAC(client)
 }
+
+// isPodRunning is a helper function that check if the given pod is in running state.
+// TODO: remove workaround for following Kubernetes issues when move to a version with proper fixes:
+// https://github.com/kubernetes/kubernetes/issues/80968
+// https://github.com/kubernetes/kubernetes/issues/82346
+func isPodRunning(pod *v1.Pod) bool {
+	if pod.Status.Phase == v1.PodRunning {
+		// If all conditions exists in ConditionTrue then service is guaranteed to be good.
+		for _, condition := range pod.Status.Conditions {
+			// BEGIN WORKAROUND
+			// Ignore condition Ready == false (i.e. consider the pod good assuming all other conditions are True)
+			// Pods with readiness probes need special handling for resolution, see venice/cmd/services/resolver.go
+			if condition.Type == v1.PodReady {
+				continue
+			}
+			// END WORKAROUND
+			if condition.Status != v1.ConditionTrue {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}

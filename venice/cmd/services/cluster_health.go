@@ -624,7 +624,7 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 	c.servicesHealth.Lock()
 
 	c.logger.Infof("pod watcher received event:%v, name: %s running: %v, pod conditions: %+v",
-		eventType, pod.Name, c.isPodRunning(pod), pod.Status.Conditions)
+		eventType, pod.Name, isPodRunning(pod), pod.Status.Conditions)
 
 	var refName string // reference/owner (ds or deploy)
 	for _, ref := range pod.GetOwnerReferences() {
@@ -658,7 +658,7 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 
 	switch eventType {
 	case k8swatch.Added:
-		if c.isPodRunning(pod) {
+		if isPodRunning(pod) {
 			for _, instanceName := range c.servicesHealth.services[refName].list {
 				if instanceName == pod.GetName() {
 					c.servicesHealth.Unlock()
@@ -670,7 +670,7 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 	case k8swatch.Modified:
 		for i, instanceName := range c.servicesHealth.services[refName].list {
 			if instanceName == pod.GetName() {
-				if !c.isPodRunning(pod) { // delete the instance from list
+				if !isPodRunning(pod) { // delete the instance from list
 					c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list[:i],
 						c.servicesHealth.services[refName].list[i+1:]...)
 					c.servicesHealth.Unlock()
@@ -683,7 +683,7 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 		}
 
 		// not in the list; add it
-		if c.isPodRunning(pod) {
+		if isPodRunning(pod) {
 			c.servicesHealth.services[refName].list = append(c.servicesHealth.services[refName].list, pod.GetName())
 		}
 	case k8swatch.Deleted, k8swatch.Error:
@@ -698,21 +698,6 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 		}
 	}
 	c.servicesHealth.Unlock()
-}
-
-// helper function that check if the given podding is in running state.
-func (c *ClusterHealthMonitor) isPodRunning(pod *v1.Pod) bool {
-	if pod.Status.Phase == v1.PodRunning {
-		// If any condition exists in not ConditionTrue then service is guaranteed to be good.
-		for _, condition := range pod.Status.Conditions {
-			if condition.Status != v1.ConditionTrue {
-				return false
-			}
-		}
-		return true
-	}
-
-	return false
 }
 
 // stops k8s service related watchers
