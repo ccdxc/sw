@@ -55,7 +55,7 @@ cd /
 BINDMNT_ROOT=/config/bind-mnt
 mkdir -p ${BINDMNT_ROOT}
 
-for i in /var/lib/NetworkManager
+for i in /var/lib/NetworkManager /etc/sysconfig/network-scripts
 do
 	# first time read from dvd. After that keep bind mounting
 	if [[ ! -r ${BINDMNT_ROOT}$i ]]
