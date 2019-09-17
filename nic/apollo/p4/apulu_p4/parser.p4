@@ -514,6 +514,7 @@ parser deparse_egress {
     extract(ipv6_0);
     extract(udp_0);
     extract(vxlan_0);
+    extract(gre_0);
     extract(erspan);
 
     return parse_egress_packet;

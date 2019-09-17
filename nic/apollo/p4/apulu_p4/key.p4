@@ -47,6 +47,7 @@ action tunneled_ipv4_packet() {
 
 action tunneled_ipv6_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV6);
+    modify_field(key_metadata.src, ipv6_2.srcAddr);
     modify_field(key_metadata.dst, ipv6_2.dstAddr);
     modify_field(key_metadata.proto, ipv6_2.nextHdr);
 }

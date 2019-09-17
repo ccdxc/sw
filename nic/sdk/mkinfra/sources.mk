@@ -57,7 +57,6 @@ define ADD_SRC_ASM_OBJECT_RULE
 $${${1}_BLD_OUT_DIR}/${2}/%.bin: ${2}/%${3} $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_CAPAS} $$<
-	${NAT}${AT}echo $(strip ${CMD_CAPAS} ${${1}_CAPAS_OPTS}) "=>" ${1}~${2}~${3}
 	${AT}$(strip ${CMD_CAPAS} ${${1}_CAPAS_OPTS} $$< ${${1}_INCS} ${${1}_DEFS} -o $$@ > $${${1}_BLD_OUT_DIR}/$$(patsubst %.bin,%.sym,$$(shell basename $$@)))
 	${AT}touch $$@
 	${AT}mkdir -p $${${1}_BIN_DIR}

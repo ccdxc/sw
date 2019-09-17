@@ -43,13 +43,13 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
     if (control_metadata.rx_packet == FALSE) {
         if (ipv4_1.valid == TRUE) {
             modify_field(key_metadata.local_mapping_lkp_type, KEY_TYPE_IPV4);
-            modify_field(key_metadata.local_mapping_lkp_type, ipv4_1.srcAddr);
+            modify_field(key_metadata.local_mapping_lkp_addr, ipv4_1.srcAddr);
             modify_field(key_metadata.local_mapping_lkp_id,
                          vnic_metadata.vpc_id);
         } else {
             modify_field(key_metadata.local_mapping_lkp_type,
                          KEY_TYPE_MAC);
-            modify_field(key_metadata.local_mapping_lkp_type,
+            modify_field(key_metadata.local_mapping_lkp_addr,
                          ethernet_1.srcAddr);
             modify_field(key_metadata.local_mapping_lkp_id,
                          vnic_metadata.bd_id);
@@ -57,12 +57,12 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
     } else {
         if (ipv4_1.valid == TRUE) {
             modify_field(key_metadata.local_mapping_lkp_type, KEY_TYPE_IPV4);
-            modify_field(key_metadata.local_mapping_lkp_type, ipv4_1.dstAddr);
+            modify_field(key_metadata.local_mapping_lkp_addr, ipv4_1.dstAddr);
             modify_field(key_metadata.local_mapping_lkp_id,
                          vnic_metadata.vpc_id);
         } else {
             modify_field(key_metadata.local_mapping_lkp_type, KEY_TYPE_MAC);
-            modify_field(key_metadata.local_mapping_lkp_type,
+            modify_field(key_metadata.local_mapping_lkp_addr,
                          ethernet_1.dstAddr);
             modify_field(key_metadata.local_mapping_lkp_id,
                          vnic_metadata.bd_id);

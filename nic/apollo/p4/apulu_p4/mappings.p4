@@ -144,17 +144,15 @@ control local_mapping {
 /******************************************************************************/
 @pragma capi appdatafields dmaci
 @pragma capi hwfields_access_api
-action mapping_info(entry_valid, dmaci,
+action mapping_info(entry_valid, pad31, dmaci,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,
-                    hash7, hint7, hash8, hint8, hash9, hint9,
-                    more_hashes, more_hints) {
+                    hash7, hint7, hash8, hint8, more_hashes, more_hints) {
 
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(rewrite_metadata.dmaci, dmaci);
         modify_field(egress_recirc.mapping_done, TRUE);
-        modify_field(control_metadata.egress_bypass, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.mapping_hash) and setup lookup in
@@ -202,11 +200,6 @@ action mapping_info(entry_valid, dmaci,
             modify_field(scratch_metadata.mapping_hint, hint8);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
-        if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.mapping_hash == hash9)) {
-            modify_field(scratch_metadata.mapping_hint, hint9);
-            modify_field(scratch_metadata.hint_valid, TRUE);
-        }
         modify_field(scratch_metadata.flag, more_hashes);
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.flag == TRUE)) {
@@ -220,14 +213,13 @@ action mapping_info(entry_valid, dmaci,
             modify_field(control_metadata.mapping_ohash_lkp, TRUE);
         } else {
             modify_field(egress_recirc.mapping_done, TRUE);
-            modify_field(control_metadata.egress_bypass, TRUE);
         }
     } else {
         modify_field(egress_recirc.mapping_done, TRUE);
-        modify_field(control_metadata.egress_bypass, TRUE);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
+    modify_field(scratch_metadata.pad31, pad31);
     modify_field(scratch_metadata.mapping_hash, hash1);
     modify_field(scratch_metadata.mapping_hash, hash2);
     modify_field(scratch_metadata.mapping_hash, hash3);
@@ -236,7 +228,6 @@ action mapping_info(entry_valid, dmaci,
     modify_field(scratch_metadata.mapping_hash, hash6);
     modify_field(scratch_metadata.mapping_hash, hash7);
     modify_field(scratch_metadata.mapping_hash, hash8);
-    modify_field(scratch_metadata.mapping_hash, hash9);
 }
 
 @pragma stage 0
