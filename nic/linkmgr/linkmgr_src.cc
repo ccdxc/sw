@@ -1152,6 +1152,9 @@ port_metrics_update_helper (port_args_t *port_args,
     }
 
     pi_p = find_port_by_id(port_args->port_num);
+    if (pi_p == NULL) {
+        return;
+    }
     port_led_blink(pi_p->port_num, port_args);
 
     mac_metrics.frames_rx_ok = port_args->stats_data[port::MacStatsType::FRAMES_RX_OK];
