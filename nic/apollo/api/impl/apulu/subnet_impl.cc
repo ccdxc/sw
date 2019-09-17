@@ -144,7 +144,7 @@ subnet_impl::activate_subnet_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
 
 sdk_ret_t
 subnet_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                      api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+                         api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_subnet_spec_t *spec;
 
@@ -169,7 +169,7 @@ subnet_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 subnet_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                        api_op_t api_op) {
+                           api_op_t api_op) {
     return SDK_RET_ERR;
 }
 

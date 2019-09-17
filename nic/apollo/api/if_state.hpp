@@ -42,17 +42,23 @@ public:
 
     /// \brief     remove the given instance of interface object from db
     /// \param[in] intf interface entry to be deleted from the db
-    /// \return    pointer to the removed interface instance or NULL, if not found
+    /// \return    pointer to the removed interface instance or NULL,
+    ///            if not found
     if_entry *remove(if_entry *intf);
 
     /// \brief      free interface instance back to slab
     /// \param[in]  intf    pointer to the allocated interface
     void free(if_entry *intf);
 
+    /// \brief      lookup a interface in database given the ifindex
+    /// \param[in]  key  ifindex for the interface object
+    /// \return     pointer to the interface instance found or NULL
+    if_entry *find(pds_ifindex_t *key) const;
+
     /// \brief      lookup a interface in database given the key
     /// \param[in]  key  key for the interface object
     /// \return     pointer to the interface instance found or NULL
-    if_entry *find(pds_ifindex_t *key) const;
+    if_entry *find(pds_if_key_t *key) const;
 
     sdk_ret_t walk(uint32_t if_type, sdk::lib::ht::ht_walk_cb_t walk_cb,
                    void *ctxt);
@@ -65,14 +71,16 @@ private:
     } if_walk_ctxt_t;
 
     ht *if_ht(void) const { return if_ht_; }
+    ht *ifindex_ht(void) const { return ifindex_ht_; }
     slab *if_slab(void) const { return if_slab_; }
     static bool walk_cb_(void *entry, void *ctxt);
 
     friend class if_entry;
 
 private:
-    ht *if_ht_;        ///< interface hash table
-    slab *if_slab_;    ///< slab for allocating interface entry
+    ht *ifindex_ht_;    ///< interface hash table based on ifindex
+    ht *if_ht_;         ///< interface hash table based on the key
+    slab *if_slab_;     ///< slab for allocating interface entry
 };
 
 /// \@}

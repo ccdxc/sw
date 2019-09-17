@@ -23,6 +23,8 @@ enum {
     IF_TYPE_LIF        = 8,
 };
 
+#define IFINDEX_INVALID                          0x0
+
 #define IF_TYPE_SHIFT                            28
 #define IF_SLOT_SHIFT                            24
 #define IF_PARENT_PORT_SHIFT                     16

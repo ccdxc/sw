@@ -39,7 +39,7 @@ typedef uint32_t                  pds_mapping_id_t;          ///< Mapping table 
 typedef uint32_t                  pds_route_table_id_t;      ///< Route table index
 typedef uint32_t                  pds_policy_id_t;           ///< Policy table index
 typedef uint16_t                  pds_lif_key_t;             ///< LIF key id
-typedef uint32_t                  pds_ifindex_t;             ///< Interface index
+typedef uint32_t                  pds_if_id_t;               ///< Interface id
 typedef uint32_t                  pds_mirror_session_id_t;   ///< Mirror session table index
 typedef uint32_t                  pds_meter_id_t;            ///< Meter table index
 typedef uint32_t                  pds_tag_id_t;              ///< TAG table index
@@ -49,6 +49,10 @@ typedef uint32_t                  pds_nexthop_group_id_t;    ///< Nexthop group 
 typedef uint32_t                  pds_tep_id_t;              ///< TEP table index
 typedef pds_nexthop_id_t          pds_nexthop_key_t;         ///< Nexthop id
 typedef pds_nexthop_group_id_t    pds_nexthop_group_key_t;   ///< Nexthop group id
+
+///< pds_ifindex_t is an internal encoded index used by forwarding and other
+///< module to refer to an interface
+typedef uint32_t                  pds_ifindex_t;             ///< Interface index
 
 /// \brief Encapsulation type
 typedef enum pds_encap_type_e {
@@ -97,6 +101,11 @@ typedef struct pds_subnet_key_s {
 typedef struct pds_tep_key_s {
     ip_addr_t ip_addr;    ///< TEP IP address
 } __PACK__ pds_tep_key_t;
+
+/// \brief    interface key
+typedef struct pds_if_key_s {
+    pds_if_id_t id;    ///< interface id
+} __PACK__ pds_if_key_t;
 
 /// \brief VNIC key
 typedef struct pds_vnic_key_s {

@@ -57,8 +57,10 @@ pds_vpc_spec_fill (pds_vpc_spec_t *spec, vpc_entry *entry)
 {
     spec->type = entry->type();
     spec->fabric_encap = entry->fabric_encap();
-    if (entry->nat46_prefix_valid())
-        memcpy(&spec->nat46_prefix, &entry->nat46_prefix(), sizeof(ip_prefix_t));
+    if (entry->nat46_prefix_valid()) {
+        memcpy(&spec->nat46_prefix, &entry->nat46_prefix(),
+               sizeof(ip_prefix_t));
+    }
     return SDK_RET_OK;
 }
 

@@ -80,49 +80,49 @@ devapi_impl::lif_create(lif_info_t *info) {
 
 sdk_ret_t
 devapi_impl::lif_destroy(uint32_t lif_id) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_reset(uint32_t lif_id) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_add_mac(uint32_t lif_id, mac_t mac) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_del_mac(uint32_t lif_id, mac_t mac) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_add_vlan(uint32_t lif_id, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_del_vlan(uint32_t lif_id, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_add_macvlan(uint32_t lif_id, mac_t mac, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_del_macvlan(uint32_t lif_id, mac_t mac, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
@@ -130,25 +130,25 @@ sdk_ret_t
 devapi_impl::lif_upd_vlan_offload(uint32_t lif_id, bool vlan_strip,
                                   bool vlan_insert) {
     // TODO: handle vlan strip
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                              bool all_multicast, bool promiscuous) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_upd_name(uint32_t lif_id, string name) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
-devapi_impl::lif_get_max_filters(uint32_t *ucast_filters, 
+sdk_ret_t
+devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
                                  uint32_t *mcast_filters) {
     *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;
     return SDK_RET_OK;
@@ -156,26 +156,26 @@ devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
 
 sdk_ret_t
 devapi_impl::qos_class_get(uint8_t group, qos_class_info_t *info) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::qos_class_create(qos_class_info_t *info) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::qos_class_delete(uint8_t group) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::qos_get_txtc_cos(const string &group, uint32_t uplink_port,
                               uint8_t *cos) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
@@ -191,7 +191,7 @@ devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
 
     intf = if_db()->find(&ifidx);
     if (intf == NULL) {
-        PDS_TRACE_ERR("Unable to get if for ifidx: 0x%x", ifidx);
+        PDS_TRACE_ERR("Unable to get if for ifidx 0x%x", ifidx);
         return SDK_RET_INVALID_ARG;
     }
     logical_port = sdk::lib::catalog::ifindex_to_logical_port(ifidx);
@@ -215,7 +215,7 @@ devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
 
     intf = if_db()->find(&ifidx);
     if (intf == NULL) {
-        PDS_TRACE_ERR("Unable to if for ifidx: 0x%x", ifidx);
+        PDS_TRACE_ERR("Unable to if for ifidx 0x%x", ifidx);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -223,7 +223,8 @@ devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
 
     config->speed = sdk::lib::port_speed_enum_to_mbps(port_args.port_speed);
     config->mtu = port_args.mtu;
-    config->state = sdk::lib::port_admin_state_enum_to_uint(port_args.admin_state);
+    config->state =
+        sdk::lib::port_admin_state_enum_to_uint(port_args.admin_state);
     config->an_enable = port_args.auto_neg_enable;
     config->fec_type = (uint8_t)port_args.fec_type;
     config->pause_type = (uint8_t)port_args.pause;
@@ -245,7 +246,7 @@ devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
 
     intf = if_db()->find(&ifidx);
     if (intf == NULL) {
-        PDS_TRACE_ERR("Unable to if for ifidx: 0x%x", ifidx);
+        PDS_TRACE_ERR("Unable to if for ifidx 0x%x", ifidx);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -253,7 +254,8 @@ devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
 
     // status->speed =
     // status->id =
-    status->status = sdk::lib::port_oper_state_enum_to_uint(port_args.oper_status);
+    status->status =
+        sdk::lib::port_oper_state_enum_to_uint(port_args.oper_status);
     status->xcvr.state = port_args.xcvr_event_info.state;
     // status->xcvr.phy =
     status->xcvr.pid = port_args.xcvr_event_info.pid;
@@ -270,7 +272,7 @@ devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
 
 sdk_ret_t
 devapi_impl::port_set_config(uint32_t port_num, port_config_t *config) {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
@@ -280,7 +282,7 @@ devapi_impl::swm_update(bool enable,
                         uint32_t vlan,
                         mac_t mac)
 {
-    PDS_TRACE_WARN("Not implemented: Revisit");
+    PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 

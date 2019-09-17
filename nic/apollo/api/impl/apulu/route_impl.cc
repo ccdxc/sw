@@ -191,7 +191,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                           route_table_impl_db()->v4_table_size() :
                           route_table_impl_db()->v6_table_size());
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
+        PDS_TRACE_ERR("Failed to build LPM route table, err %u", ret);
     }
 
 cleanup:

@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/api/mapping.hpp"
+#include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
@@ -33,6 +34,8 @@ namespace api {
 /// \brief API specific parameters
 typedef union api_params_u {
     pds_device_spec_t            device_spec;
+    pds_if_key_t                 if_key;
+    pds_if_spec_t                if_spec;
     pds_tep_key_t                tep_key;
     pds_tep_spec_t               tep_spec;
     pds_vpc_key_t                vpc_key;

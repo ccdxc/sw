@@ -32,6 +32,8 @@ typedef enum api_op_e {
 typedef enum obj_id_e {
     OBJ_ID_NONE,           ///< None
     OBJ_ID_DEVICE,         ///< Device
+    OBJ_ID_PORT,           ///< Port
+    OBJ_ID_IF,             ///< Interface
     OBJ_ID_VPC,            ///< VPC
     OBJ_ID_SUBNET,         ///< Subnet
     OBJ_ID_TEP,            ///< TEP
@@ -45,7 +47,7 @@ typedef enum obj_id_e {
     OBJ_ID_SVC_MAPPING,    ///< service mapping
     OBJ_ID_VPC_PEER,       ///< VPC peer
     OBJ_ID_NEXTHOP,        ///< nexthop
-    OBJ_ID_NEXTHOP_GROUP,  ///< nexthop
+    OBJ_ID_NEXTHOP_GROUP,  ///< nexthop group
     OBJ_ID_MAX,
 } obj_id_t;
 

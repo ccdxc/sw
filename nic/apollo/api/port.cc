@@ -57,7 +57,7 @@ xvcr_event_walk_cb (void *entry, void *ctxt)
     if_entry *intf = (if_entry *)entry;
     xcvr_event_info_t *xcvr_event_info = (xcvr_event_info_t *)ctxt;
 
-    ifindex = intf->key();
+    ifindex = intf->ifindex();
     logical_port = sdk::lib::catalog::ifindex_to_logical_port(ifindex);
     phy_port = sdk::lib::catalog::logical_port_to_phy_port(logical_port);
     if (phy_port == -1 ||
@@ -119,7 +119,7 @@ update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
         PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", ifindex, ret);
         return ret;
     }
-    port_info.port_num = intf->key();
+    port_info.port_num = intf->ifindex();
 
     port_info.user_admin_state = api_port_info->user_admin_state;
     port_info.admin_state = api_port_info->admin_state;
@@ -273,7 +273,7 @@ if_walk_port_get_cb (void *entry, void *ctxt)
         PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", intf->key(), ret);
         return false;
     }
-    port_info.port_num = intf->key();
+    port_info.port_num = intf->ifindex();
     phy_port = sdk::lib::catalog::ifindex_to_phy_port(port_info.port_num);
     if (phy_port != -1) {
         ret = sdk::platform::xcvr_get(phy_port - 1, &port_info.xcvr_event_info);

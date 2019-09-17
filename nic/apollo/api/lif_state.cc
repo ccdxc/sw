@@ -42,7 +42,8 @@ lif_state::find(pds_lif_key_t *key) const {
 sdk_ret_t
 lif_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
     if (lif_impl_state_) {
-        return ((api::impl::lif_impl_state *)lif_impl_state_)->walk(walk_cb, ctxt);
+        return ((api::impl::lif_impl_state *)lif_impl_state_)->walk(walk_cb,
+                                                                    ctxt);
     }
     return SDK_RET_OK;
 }

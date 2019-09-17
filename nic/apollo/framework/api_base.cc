@@ -21,6 +21,9 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_DEVICE:
         return device_entry::factory(&api_ctxt->api_params->device_spec);
 
+    case OBJ_ID_IF:
+        return if_entry::factory(&api_ctxt->api_params->if_spec);
+
     case OBJ_ID_VPC:
         return vpc_entry::factory(&api_ctxt->api_params->vpc_spec);
 
@@ -140,6 +143,12 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     switch (api_ctxt->obj_id) {
     case OBJ_ID_DEVICE:
         return device_db()->find();
+
+    case OBJ_ID_IF:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return if_db()->find(&api_ctxt->api_params->if_key);
+        }
+        return vpc_db()->find(&api_ctxt->api_params->vpc_spec.key);
 
     case OBJ_ID_VPC:
         if (api_ctxt->api_op == API_OP_DELETE) {

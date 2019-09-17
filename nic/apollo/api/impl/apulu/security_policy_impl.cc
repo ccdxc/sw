@@ -108,7 +108,7 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
               security_policy_impl_db()->security_policy_table_size(spec->af,
                                              spec->direction));
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
+        PDS_TRACE_ERR("Failed to build RFC policy table, err %u", ret);
     }
     return ret;
 }
