@@ -365,6 +365,11 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 		appProtos = append(appProtos, pp.Protocol)
 
 		if len(pp.Ports) != 0 {
+			// you can not specify ports for icmp
+			if strings.ToLower(pp.Protocol) == "icmp" {
+				ret = append(ret, fmt.Errorf("Can not specify ports for ICMP protocol"))
+			}
+
 			portRanges := strings.Split(pp.Ports, ",")
 			for _, prange := range portRanges {
 				ports := strings.Split(prange, "-")

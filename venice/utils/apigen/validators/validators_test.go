@@ -251,6 +251,13 @@ func TestMacAddr(t *testing.T) {
 		{s: "aaXY.ccDD.0000", errMsg: expMacErr},
 		{s: "aaBB.ccDD.00000", errMsg: expMacErr},
 		{s: ",,,,......abcd", errMsg: expMacErr},
+		{s: "aaBB,ccDD,0000", errMsg: expMacErr},
+		{s: "aaBB..ccDD.0000", errMsg: expMacErr},
+		{s: "aaBB:ccDD:0000", errMsg: expMacErr},
+		{s: "aaBB.ccDD.0000,aaBB.ccDD.0000", errMsg: expMacErr},
+		{s: "aaBB,aaBB.ccDD.0000", errMsg: expMacErr},
+		{s: "zzzz,aaBB.ccDD.0000", errMsg: expMacErr},
+		{s: "aaBB.aaBB.ccDD.0000", errMsg: expMacErr},
 	}
 	for i, c := range cases {
 		err := MacAddr(c.s)

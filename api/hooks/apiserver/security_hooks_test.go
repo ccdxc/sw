@@ -2581,6 +2581,27 @@ func TestAppProtoPortConfig(t *testing.T) {
 
 	errs = s.validateApp(app, "v1", false, false)
 	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
+
+	// icmp proto with ports should fail
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+					Ports:    "100",
+				},
+			},
+		},
+	}
+
+	errs = s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "Icmp proto with ports must fail.  Error: %v", errs)
 }
 
 func TestAppAlgConfig(t *testing.T) {
