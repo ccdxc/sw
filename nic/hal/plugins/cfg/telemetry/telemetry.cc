@@ -506,7 +506,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
                              ndest_if->if_type, ndest_if->if_op_status,
                              ndest_if->if_id);
             if (dest_if != ndest_if) {
-                // Update EP's hal handle
+                // Update EP's if handle
                 ep->if_handle = ndest_if->hal_handle;
                 // Update the if to ep backptr also
                 if_del_ep(dest_if, ep);

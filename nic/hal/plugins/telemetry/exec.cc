@@ -152,6 +152,7 @@ telemetry_pick_dest_if (fte::ctx_t &ctx)
 {
     hal_ret_t           ret = HAL_RET_OK;
     fte::flow_update_t  flowupd;
+    if_t                *ndif = NULL;
 
     if_t *dif = ctx.dif();
     if (!dif) {
@@ -162,7 +163,14 @@ telemetry_pick_dest_if (fte::ctx_t &ctx)
             (dif->if_op_status == intf::IF_STATUS_DOWN)) {
         HAL_TRACE_DEBUG("Pinned uplink id {} is down", dif->if_id);
         // Pinned uplink is down, pick a new active uplink
-        if_t *ndif = telemetry_get_active_uplink();
+        if (ctx.pipeline_event() == fte::FTE_SESSION_UPDATE) {
+            ndif = telemetry_get_active_uplink();
+        } else {
+            ndif = telemetry_get_active_bond_uplink();
+        }
+        if (!ndif) {
+            return HAL_RET_OK;
+        }
         if (dif != ndif) {
             HAL_TRACE_DEBUG("Picked new uplink id {}", ndif->if_id);
             memset(&flowupd, 0, sizeof(fte::flow_update_t));
@@ -176,6 +184,8 @@ telemetry_pick_dest_if (fte::ctx_t &ctx)
             // Update the EP if ptr
             ep_t *dep = ctx.dep();
             if (dep) {
+                // Update EP's if handle
+                dep->if_handle = ndif->hal_handle;
                 // Update the if to ep backptr also
                 if_del_ep(dif, dep);
                 if_add_ep(ndif, dep);

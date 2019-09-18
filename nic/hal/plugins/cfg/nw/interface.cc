@@ -5162,8 +5162,10 @@ hal_if_repin_ipfix_flows (if_t *uplink)
     }
 
     HAL_TRACE_DEBUG("Update the IPFIX sessions");
-    session_update_list(&ipfix_session_list, true, 
-                        (1 << fte::feature_id("pensando.io/telemetry:telemetry")));
+    uint64_t bitmap =
+        (uint64_t)(1 << fte::feature_id("pensando.io/network:fwding"));
+    bitmap |= (uint64_t)(1 << fte::feature_id("pensando.io/telemetry:telemetry"));
+    session_update_list(&ipfix_session_list, true, bitmap);
     
     return HAL_RET_OK;
 }
