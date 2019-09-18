@@ -105,6 +105,9 @@ func (c *IPClient) DoDHCPConfig() error {
 							log.Errorf("Failed to cancel DoDHCPConfig. Err: %v", err)
 						}
 					}
+				} else {
+					log.Info("DHCP was successful. Exiting the DHCP retry loop")
+					return
 				}
 			case <-ctx.Done():
 				if (c.dhcpState.Client) != nil {
@@ -243,6 +246,16 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	}
 
 	d.LeaseDuration = dur
+
+	renewCtx, renewCancel := context.WithCancel(context.Background())
+	if d.RenewCancel != nil {
+		log.Info("Clearing existing dhcp go routines")
+		d.RenewCancel()
+		d.RenewCancel = nil
+	}
+	d.RenewCancel = renewCancel
+	d.RenewCtx = renewCtx
+
 	// Start renewal routine
 	// Kick off a renewal process.
 	go d.startRenewLoop(d.AckPacket, mgmtLink)
@@ -263,6 +276,7 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	addr := &netlink.Addr{
 		IPNet: &d.IPNet,
 	}
+
 	if err := netlink.AddrAdd(mgmtLink, addr); err != nil {
 		// Make this a non error TODO
 		if !strings.Contains(err.Error(), "file exists") {
@@ -296,6 +310,9 @@ func (d *DHCPState) startRenewLoop(ackPacket dhcp4.Packet, mgmtLink netlink.Link
 				}
 			}
 
+		case <-d.RenewCtx.Done():
+			log.Info("Got cancel for renewals")
+			return
 		case <-d.DhcpCtx.Done():
 			log.Info("Killing renewal loop")
 			return

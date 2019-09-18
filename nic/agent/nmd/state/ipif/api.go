@@ -58,4 +58,6 @@ type DHCPState struct {
 	CurState      string
 	DhcpCtx       context.Context
 	DhcpCancel    context.CancelFunc
+	RenewCtx      context.Context
+	RenewCancel   context.CancelFunc
 }
