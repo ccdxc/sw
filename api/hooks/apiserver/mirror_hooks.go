@@ -23,7 +23,7 @@ type mirrorSessionHooks struct {
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
 	veniceMaxPacketSize           = 256
-	veniceMaxCollectorsPerSession = 2
+	veniceMaxCollectorsPerSession = 1
 )
 
 func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
