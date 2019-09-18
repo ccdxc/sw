@@ -48,7 +48,7 @@ pciehw_reset_device(pciehwdev_t *phwdev, const pciehdev_rsttype_t rsttype)
     const u_int32_t intrc = phwdev->intrc;
     const int dmask = phwdev->intrdmask;
 
-#if 1 // def PCIEMGR_DEBUG
+#ifdef PCIEMGR_DEBUG
     pciesys_logdebug("%s: dev reset\n", pciehwdev_get_name(phwdev));
 #endif
 

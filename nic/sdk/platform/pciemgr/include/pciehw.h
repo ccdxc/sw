@@ -216,10 +216,12 @@ int pciehw_indirect_intr(const int port);
 #define AXIMSTF_TLP     0x1
 #define AXIMSTF_IND     0x2
 #define AXIMSTF_RAW     0x4
+#define AXIMSTF_TS      0x8
 
 void pciehw_aximst_show(const unsigned int port,
                         const unsigned int entry,
-                        const int flags);
+                        const int flags,
+                        const u_int64_t tm);
 
 void pciehw_dbg(int argc, char *argv[]);
 

@@ -1020,12 +1020,6 @@ cmd_notify(int argc, char *argv[])
     pciehw_notify_dbg(argc, argv);
 }
 
-static void
-cmd_indirect(int argc, char *argv[])
-{
-    pciehw_indirect_dbg(argc, argv);
-}
-
 pciemgr_stats_t *
 pciehw_stats_get(const int port)
 {
@@ -1154,7 +1148,6 @@ static cmd_t cmdtab[] = {
     CMDENT(portmap, "portmap", ""),
     CMDENT(meminfo, "meminfo", ""),
     CMDENT(notify, "notify", ""),
-    CMDENT(indirect, "indirect", ""),
     CMDENT(stats, "stats", ""),
     { NULL, NULL }
 };

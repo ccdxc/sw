@@ -84,7 +84,7 @@ aximst_addr(const unsigned int port,
     assert(idx < 5);
     assert(entry < AXIMST_ENTRIES_PER_PORT);
 
-    return (AXIMST_BASE + 
+    return (AXIMST_BASE +
             ((u_int64_t)idx * AXIMST_STRIDE) +
             ((u_int64_t)port * AXIMST_PORT_STRIDE) +
             ((u_int64_t)entry * AXIMST_ENTRY_STRIDE));
@@ -431,7 +431,8 @@ show_ientry(const indirect_entry_t *ientry)
 void
 pciehw_aximst_show(const unsigned int port,
                    const unsigned int entry,
-                   const int flags)
+                   const int flags,
+                   const u_int64_t tm)
 {
     u_int8_t buf[80], *bp;
     indirect_entry_t ientry_buf, *ientry = &ientry_buf;
@@ -443,7 +444,12 @@ pciehw_aximst_show(const unsigned int port,
     pcietlp_decode(stlp, ientry->rtlp, sizeof(ientry->rtlp));
 
     if (flags & AXIMSTF_TLP) {
-        pciesys_loginfo("%s\n", pcietlp_str(stlp));
+        if (flags & AXIMSTF_TS) {
+            pciesys_loginfo("[+%010.6lf] %s\n",
+                            tm / 1000000.0, pcietlp_str(stlp));
+        } else {
+            pciesys_loginfo("%s\n", pcietlp_str(stlp));
+        }
     }
     if (flags & AXIMSTF_IND) {
         show_ientry(ientry);
@@ -456,141 +462,4 @@ pciehw_aximst_show(const unsigned int port,
             pciesys_loginfo("aximst%d: %s\n", i, line);
         }
     }
-}
-
-static void
-cmd_aximst(int argc, char *argv[])
-{
-    static int port;
-    int opt, entry, first_entry, flags;
-
-    flags = 0;
-    optind = 0;
-    while ((opt = getopt(argc, argv, "ip:rt")) != -1) {
-        switch (opt) {
-        case 'p':
-            port = strtoul(optarg, NULL, 0);
-            break;
-        case 'i':
-            flags |= AXIMSTF_IND;
-            break;
-        case 'r':
-            flags |= AXIMSTF_RAW;
-            break;
-        case 't':
-            flags |= AXIMSTF_TLP;
-            break;
-        default:
-            pciesys_logerror("Usage: %s [-irt][-p port][entry]\n", argv[0]);
-            return;
-        }
-    }
-    
-    if (flags == 0) {
-        flags = AXIMSTF_TLP | AXIMSTF_IND;
-    }
-
-#define ENTRY_MASK(e)   ((e) & 0xf)
-#define ENTRY_INC(e)    ENTRY_MASK((e) + 1)
-
-    if (optind < argc) {
-        entry = ENTRY_MASK(strtoul(argv[optind], NULL, 0));
-        pciehw_aximst_show(port, entry, flags);
-    } else {
-        read_ind_info(port, &entry, NULL);
-        first_entry = entry;
-        do {
-            pciesys_loginfo("---------------- "
-                            "port %d entry %d "
-                            "----------------\n", port, entry);
-            pciehw_aximst_show(port, entry, flags);
-            entry = ENTRY_INC(entry);
-        } while (entry != first_entry);
-    }
-}
-
-static void
-cmd_stats(int argc, char *argv[])
-{
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    pciehw_port_t *p;
-    int port = 0;
-    const int w = 20;
-    unsigned int flags = 0;
-    int opt;
-
-    optind = 0;
-    while ((opt = getopt(argc, argv, "ap:")) != -1) {
-        switch (opt) {
-        case 'a':
-            flags |= PMGRSF_ALL;
-            break;
-        case 'p':
-            port = strtoul(optarg, NULL, 0);
-            break;
-        default:
-            pciesys_logerror("Usage: %s [-p port]\n", argv[0]);
-            return;
-        }
-    }
-    if (port < 0 || port >= PCIEHW_NPORTS) {
-        pciesys_logerror("port %d out of range\n", port);
-        return;
-    }
-
-    p = &pshmem->port[port];
-    pciesys_loginfo("port %d:\n", port);
-    pciesys_loginfo("%-*s 0x%02x\n", w, "secbus", p->secbus);
-
-#define PCIEMGR_STATS_DEF(S) \
-    if (flags & PMGRSF_ALL || p->stats.S) \
-        pciesys_loginfo("%-*s %" PRIi64 "\n", w, #S, p->stats.S);
-
-#include "../include/pciemgr_stats_defs.h"
-}
-
-typedef struct cmd_s {
-    const char *name;
-    void (*f)(int argc, char *argv[]);
-    const char *desc;
-    const char *helpstr;
-} cmd_t;
-
-static cmd_t cmdtab[] = {
-#define CMDENT(name, desc, helpstr) \
-    { #name, cmd_##name, desc, helpstr }
-    CMDENT(aximst, "aximst", ""),
-    CMDENT(stats, "stats", ""),
-    { NULL, NULL }
-};
-
-static cmd_t *
-cmd_lookup(cmd_t *cmdtab, const char *name)
-{
-    cmd_t *c;
-
-    for (c = cmdtab; c->name; c++) {
-        if (strcmp(c->name, name) == 0) {
-            return c;
-        }
-    }
-    return NULL;
-}
-
-void
-pciehw_indirect_dbg(int argc, char *argv[])
-{
-    cmd_t *c;
-
-    if (argc <= 1) {
-        indirect_show();
-        return;
-    }
-
-    c = cmd_lookup(cmdtab, argv[1]);
-    if (c == NULL) {
-        pciesys_logerror("%s: debug command not found\n", argv[1]);
-        return;
-    }
-    c->f(argc - 1, argv + 1);
 }
