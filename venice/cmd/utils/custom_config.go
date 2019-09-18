@@ -15,6 +15,13 @@ type customConfig struct {
 	OverriddenModules map[string]protos.Module `json:",omitempty"` // if specified, defaults of the modules are overwritten with this.
 	DisabledModules   []string                 `json:",omitempty"` // If specified, list of modules to be disabled.
 	Properties        map[string]string        `json:",omitempty"` // If specified, any random property in text format
+	Retention         *retention               `json:",omitempty"` // retention policies to be applied on the elastic data
+}
+
+type retention struct {
+	Log   int `json:",omitempty"` // log retention in days
+	Event int `json:",omitempty"` // events retention in days
+	Audit int `json:",omitempty"` // audit retention in days
 }
 
 // return zero-config if there is no file or no config
@@ -58,6 +65,33 @@ func GetDisabledModules(confFile string) []string {
 func GetOverriddenModules(confFile string) map[string]protos.Module {
 	m := readCustomConfigFile(confFile)
 	return m.OverriddenModules
+}
+
+// GetLogRetention returns the log retention period in days
+func GetLogRetention(confFile string) int {
+	m := readCustomConfigFile(confFile)
+	if m.Retention != nil {
+		return m.Retention.Log
+	}
+	return 0
+}
+
+// GetEventRetention returns the event retention period in days
+func GetEventRetention(confFile string) int {
+	m := readCustomConfigFile(confFile)
+	if m.Retention != nil {
+		return m.Retention.Event
+	}
+	return 0
+}
+
+// GetAuditRetention returns the audit retention period in days
+func GetAuditRetention(confFile string) int {
+	m := readCustomConfigFile(confFile)
+	if m.Retention != nil {
+		return m.Retention.Audit
+	}
+	return 0
 }
 
 // GetConfigProperty returns a string if specified in the custom config file. If not it returns empty string

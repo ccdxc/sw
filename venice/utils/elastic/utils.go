@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
@@ -154,4 +155,34 @@ func getElasticSearchAddrs(resolverClient resolver.Interface) ([]string, error) 
 	}
 
 	return []string{}, fmt.Errorf("failed to get `%v` URLs using the resolver", globals.ElasticSearch)
+}
+
+// GetLogRetention returns the log retention in hours
+func GetLogRetention() time.Duration {
+	lRetention := cmdutils.GetLogRetention("")
+	if lRetention != 0 {
+		return time.Duration(int64(lRetention) * int64(24*time.Hour))
+	}
+
+	return LogIndexRetentionPeriod
+}
+
+// GetEventRetention returns the event retention in hours
+func GetEventRetention() time.Duration {
+	eRetention := cmdutils.GetEventRetention("")
+	if eRetention != 0 {
+		return time.Duration(int64(eRetention) * int64(24*time.Hour))
+	}
+
+	return EventsIndexRetentionPeriod
+}
+
+// GetAuditRetention returns the audit retention in hours
+func GetAuditRetention() time.Duration {
+	aRetention := cmdutils.GetAuditRetention("")
+	if aRetention != 0 {
+		return time.Duration(int64(aRetention) * int64(24*time.Hour))
+	}
+
+	return AuditLogsIndexRetentionPeriod
 }

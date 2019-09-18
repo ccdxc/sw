@@ -103,6 +103,8 @@ func (c *Curator) Scan(cfg *Config) {
 		return
 	}
 
+	c.logger.Infof("received a scan request for index {%s}: %v", cfg.IndexName, cfg.RetentionPeriod)
+
 	if _, ok := c.indexConfigs[cfg.IndexName]; ok {
 		c.logger.Infof("overwriting configs for index {%s}", cfg.IndexName)
 	}

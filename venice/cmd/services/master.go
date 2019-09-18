@@ -384,19 +384,19 @@ func (m *masterService) startLeaderServices() error {
 		m.esCuratorSvc.Start()
 		m.esCuratorSvc.Scan(&curator.Config{
 			IndexName:       elastic.LogIndexPrefix,
-			RetentionPeriod: elastic.LogIndexRetentionPeriod,
+			RetentionPeriod: elastic.GetLogRetention(),
 			ScanInterval:    elastic.LogIndexScanInterval,
 		})
 
 		m.esCuratorSvc.Scan(&curator.Config{
 			IndexName:       elastic.EventsIndexPrefix,
-			RetentionPeriod: elastic.EventsIndexRetentionPeriod,
+			RetentionPeriod: elastic.GetEventRetention(),
 			ScanInterval:    elastic.IndexScanInterval,
 		})
 
 		m.esCuratorSvc.Scan(&curator.Config{
 			IndexName:       elastic.AuditLogsIndexPrefix,
-			RetentionPeriod: elastic.AuditLogsIndexRetentionPeriod,
+			RetentionPeriod: elastic.GetAuditRetention(),
 			ScanInterval:    elastic.IndexScanInterval,
 		})
 	}

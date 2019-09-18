@@ -25,6 +25,11 @@ func TestVeniceConfigFile(t *testing.T) {
 		"Properties" : {
 			"prop1" : "y",
 			"Prop2" : "bla"
+		},
+		"Retention" : {
+			"Log"  : 1,
+			"Event": 2,
+			"Audit": 3
 		}
 	}`
 	if _, err := tmpfile.Write([]byte(content)); err != nil {
@@ -42,6 +47,18 @@ func TestVeniceConfigFile(t *testing.T) {
 	o := GetOverriddenModules(tmpfile.Name())
 	if len(o) != 1 && o["hello"].UUID != "dummyuuid" {
 		t.Fatalf("unexpected values for GetOverriddenModules. got %#v", o)
+	}
+	l := GetLogRetention(tmpfile.Name())
+	if l != 1 {
+		t.Fatalf("unexpected values for GetLogRetention. got %#v", l)
+	}
+	e := GetEventRetention(tmpfile.Name())
+	if e != 2 {
+		t.Fatalf("unexpected values for GetEventRetention. got %#v", e)
+	}
+	a := GetAuditRetention(tmpfile.Name())
+	if a != 3 {
+		t.Fatalf("unexpected values for GetAuditRetention. got %#v", a)
 	}
 	p := getConfigProperty(tmpfile.Name(), "prop1")
 	if p != "y" {
