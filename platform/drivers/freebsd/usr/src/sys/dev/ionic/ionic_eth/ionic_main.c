@@ -319,29 +319,42 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
-	int err, remaining;
+	struct adminq *adminq = lif->adminq;
+	struct ifnet *ifp = lif->netdev;
+	struct ionic_dev *idev = &lif->ionic->idev;
+	int err, remaining, processed;
 	const char *name;
 
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif is not locked", lif->name));
 
-	err = ionic_api_adminq_post(lif, ctx);
+	err = ionic_adminq_post(lif, ctx);
 	if (err == -ESHUTDOWN) {
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
-		IONIC_NETDEV_ERROR(lif->netdev,
-				   "%s (%d) failed: adminq stopped\n",
+		IONIC_NETDEV_ERROR(ifp, "%s (%d) failed: adminq stopped\n",
 				   name, ctx->cmd.cmd.opcode);
 		return err;
 	}
 	if (err) {
-		IONIC_NETDEV_ERROR(lif->netdev,
-				   "api_adminq_post failed, error: %d\n",
-				   err);
+		IONIC_NETDEV_ERROR(ifp, "adminq_post failed, err: %d\n", err);
 		return err;
 	}
 
 	remaining = wait_for_completion_timeout(&ctx->work,
 						ionic_devcmd_timeout * HZ);
-
+	if (remaining == 0) {
+		/* Check again in case the interrupt was missed */
+		IONIC_ADMIN_LOCK(adminq);
+		processed = ionic_adminq_clean(adminq, adminq->num_descs);
+		if (processed) {
+			ionic_intr_credits(idev->intr_ctrl, adminq->intr.index,
+					   processed, IONIC_INTR_CRED_REARM);
+			remaining = 1;
+			IONIC_NETDEV_INFO(ifp, "adminq timeout avoided\n");
+		} else {
+			IONIC_NETDEV_ERROR(ifp, "adminq timeout\n");
+		}
+		IONIC_ADMIN_UNLOCK(adminq);
+	}
 	return ionic_adminq_check_err(lif, ctx, remaining == 0);
 }
 

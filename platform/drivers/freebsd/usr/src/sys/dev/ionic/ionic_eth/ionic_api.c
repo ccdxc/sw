@@ -254,17 +254,18 @@ static bool ionic_adminq_avail(struct adminq *adminq, int want)
 	return (avail > want);
 }
 
-static int ionic_api_do_devcmd(struct lif* lif, struct ionic_admin_ctx *ctx)
+/* External users: post commands using dev_cmds */
+int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
-	struct adminq *adminq = lif->adminq;
-	struct ionic_dev *idev = &lif->ionic->idev;
+	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &ionic->idev;
 	int err;
 
-	IONIC_ADMIN_LOCK(adminq);
+	IONIC_DEV_LOCK(ionic);
 	lif->num_dev_cmds++;
 
 	if (__IONIC_DEBUG) {
-		IONIC_NETDEV_INFO(lif->netdev, "post admin dev command:\n");
+		IONIC_DEV_INFO(ionic->dev, "post external dev command:\n");
 		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 				     &ctx->cmd, sizeof(ctx->cmd), true);
 	}
@@ -278,13 +279,13 @@ static int ionic_api_do_devcmd(struct lif* lif, struct ionic_admin_ctx *ctx)
 	ionic_dev_cmd_comp(idev, &ctx->comp);
 
 	if (__IONIC_DEBUG) {
-		IONIC_NETDEV_INFO(lif->netdev, "comp admin dev command:\n");
+		IONIC_DEV_INFO(ionic->dev, "comp external dev command:\n");
 		print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 				     &ctx->comp, sizeof(ctx->comp), true);
 	}
 
 err_out:
-	IONIC_ADMIN_UNLOCK(adminq);
+	IONIC_DEV_UNLOCK(ionic);
 
 	if (!err) {
 		complete_all(&ctx->work);
@@ -292,12 +293,16 @@ err_out:
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(ionic_api_adminq_post);
 
-static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
+/* Ethernet users: post commands using AdminQ */
+/* TODO: Move out of API */
+int ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	struct adminq *adminq = lif->adminq;
 
 	struct admin_cmd *cmd;
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
 	IONIC_ADMIN_LOCK(adminq);
 
@@ -331,14 +336,3 @@ static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
 
 	return 0;
 }
-
-int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
-{
-
-	/* TODO: Will be removed in future commit */
-	if (1)
-		return (ionic_api_do_adminq(lif, ctx));
-	else
-		return ionic_api_do_devcmd(lif, ctx);
-}
-EXPORT_SYMBOL_GPL(ionic_api_adminq_post);

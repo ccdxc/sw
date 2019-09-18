@@ -544,7 +544,8 @@ ionic_adminq_isr(int irq, void *data)
 			   processed, IONIC_INTR_CRED_REARM);
 	IONIC_ADMIN_UNLOCK(adminq);
 
-	KASSERT(processed, ("nothing processed in adminq"));
+	if (!processed)
+		IONIC_QUE_INFO(adminq, "nothing processed in adminq\n");
 
 	return IRQ_HANDLED;
 }
