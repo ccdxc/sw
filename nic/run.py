@@ -205,14 +205,17 @@ def run_model(args):
         elif args.artemis_gtest or args.artemis_scale_test:
             os.system("%s/tools/merge_model_debug.py --pipeline artemis --p4 artemis --rxdma artemis_rxdma --txdma artemis_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/artemis/gen/p4gen//artemis/dbg_out/combined_model_debug.json")
+        elif args.apulu_gtest:
+            os.system("%s/tools/merge_model_debug.py --pipeline apulu --p4 apulu --rxdma apulu_rxdma --txdma apulu_txdma" % nic_dir)
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apulu/gen/p4gen/apulu/dbg_out/combined_model_debug.json")
         elif args.hello_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/hello/gen/p4gen//hello/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/hello/gen/p4gen/hello/dbg_out/model_debug.json")
         elif args.l2switch_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/l2switch/gen/p4gen//l2switch/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/l2switch/gen/p4gen/l2switch/dbg_out/model_debug.json")
         elif args.elektra_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/elektra/gen/p4gen//elektra/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/elektra/gen/p4gen/elektra/dbg_out/model_debug.json")
         elif args.phoebus_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/phoebus/gen/p4gen//phoebus/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/phoebus/gen/p4gen/phoebus/dbg_out/model_debug.json")
         else:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
@@ -228,6 +231,8 @@ def run_model(args):
         bin_dir = nic_dir + '/build/x86_64/apollo/bin/'
     elif args.artemis_gtest or args.artemis_scale_test:
         bin_dir = nic_dir + '/build/x86_64/artemis/bin/'
+    elif args.apulu_gtest:
+        bin_dir = nic_dir + '/build/x86_64/apulu/bin/'
     elif args.l2switch_gtest:
         bin_dir = nic_dir + '/build/x86_64/l2switch/bin/'
     elif args.elektra_gtest:
@@ -657,6 +662,14 @@ def run_artemis_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
     cmd = ['build/x86_64/artemis/bin/artemis_test']
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
+
+# Run Apulu tests
+def run_apulu_test(args):
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
+    os.chdir(nic_dir)
+    cmd = ['build/x86_64/apulu/bin/apulu_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -1216,6 +1229,8 @@ def main():
                         default=False, help="Run Apollo2 gtests")
     parser.add_argument("--artemis_gtest", dest='artemis_gtest', action="store_true",
                         default=False, help="Run Artemis gtests")
+    parser.add_argument("--apulu_gtest", dest='apulu_gtest', action="store_true",
+                        default=False, help="Run Apulu gtests")
     parser.add_argument("--apollo_scale_test", dest='apollo_scale_test', action="store_true",
                         default=False, help="Run Apollo scale tests")
     parser.add_argument("--artemis_scale_test", dest='artemis_scale_test', action="store_true",
@@ -1350,6 +1365,7 @@ def main():
             if args.gft_gtest is False and \
                 args.apollo_gtest is False and \
                 args.artemis_gtest is False and \
+                args.apulu_gtest is False and \
                 args.artemis_scale_test is False and \
                 args.apollo_scale_test is False and \
                 args.apollo_scale_vxlan_test is False and \
@@ -1392,6 +1408,10 @@ def main():
         status = run_artemis_test(args)
         if status != 0:
             print "- Artemis test failed, status=", status
+    elif args.apulu_gtest:
+        status = run_apulu_test(args)
+        if status != 0:
+            print "- Apulu test failed, status=", status
     elif args.artemis_scale_test:
         status = run_artemis_scale_test(args)
         if status != 0:

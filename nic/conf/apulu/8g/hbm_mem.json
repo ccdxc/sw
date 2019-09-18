@@ -113,59 +113,6 @@
             "_comment": "1K descriptors of size 64B"
         },
         {
-            "name": "local_ip_mapping",
-            "size": "16384K",
-            "cache": "p4ig",
-            "reset": true
-        },
-        {
-            "name": "local_ip_mapping_ohash",
-            "size": "2048K",
-            "cache": "p4ig",
-            "reset": true
-        },
-        {
-            "name": "local_l2_mapping",
-            "base_region" : "local_ip_mapping",
-            "size": "16384K",
-            "cache": "p4ig"
-        },
-        {
-            "name": "local_l2_mapping_ohash",
-            "base_region" : "local_ip_mapping_ohash",
-            "size": "2048K",
-            "cache": "p4ig"
-        },
-        {
-            "name": "remote_vnic_mapping_rx",
-            "size": "131072K",
-            "cache": "p4ig",
-            "reset": true
-        },
-        {
-            "name": "remote_vnic_mapping_rx_ohash",
-            "size": "16384K",
-            "cache": "p4ig",
-            "reset": true
-        },
-        {
-            "name": "remote_vnic_mapping_tx",
-            "size": "131072K",
-            "cache": "p4eg",
-            "reset": true
-        },
-        {
-            "name": "remote_vnic_mapping_tx_ohash",
-            "size": "16384K",
-            "cache": "p4eg",
-            "reset": true
-        },
-        {
-            "name": "nat",
-            "size": "131072K",
-            "cache": "p4eg"
-        },
-        {
             "name": "lpm_v4",
             "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "18M",
@@ -234,63 +181,69 @@
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "flow",
-            "size": "512M",
+            "name": "local_mapping",
+            "size": "8M",
             "cache": "p4ig",
-            "_comment": "8M * 64B"
+            "_comment": "128K * 64B"
+        },
+        {
+            "name": "local_mapping_ohash",
+            "size": "1M",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "flow",
+            "size": "64M",
+            "cache": "p4ig",
+            "_comment": "1M * 64B"
         },
         {
             "name": "flow_ohash",
-            "size": "256M",
+            "size": "16M",
             "cache": "p4ig",
-            "_comment": "4M * 64B"
+            "_comment": "256K * 64B"
         },
         {
             "name": "ipv4_flow",
-            "size": "256M",
+            "size": "32M",
             "cache": "p4ig",
-            "_comment": "8M * 32B"
+            "_comment": "1M * 32B"
         },
         {
             "name": "ipv4_flow_ohash",
-            "size": "128M",
+            "size": "8M",
             "cache": "p4ig",
-            "_comment": "4M * 32B"
+            "_comment": "256M * 32B"
         },
         {
             "name": "session",
-            "size": "256M",
+            "size": "32M",
             "cache": "p4ig",
-            "_comment": "8M * 32B"
+            "_comment": "1M * 32B"
+        },
+        {
+            "name": "mapping",
+            "size": "64M",
+            "cache": "p4eg",
+            "_comment": "1M * 64B"
+        },
+        {
+            "name": "mapping_ohash",
+            "size": "16M",
+            "cache": "p4eg",
+            "_comment": "256K * 64B"
+        },
+        {
+            "name": "nat",
+            "size": "131072K",
+            "cache": "p4eg",
+            "_comment": "TBD"
         },
         {
             "name": "session_stats",
-            "size": "256M",
-            "_comment": "8M * 16B * 2"
-        },
-        {
-            "name": "udp_flow_overflow0",
-            "size": "64K"
-        },
-        {
-            "name": "udp_flow_overflow1",
-            "size": "64K"
-        },
-        {
-            "name": "udp_flow_overflow2",
-            "size": "64K"
-        },
-        {
-            "name": "udp_flow_overflow3",
-            "size": "64K"
-        },
-        {
-            "name": "udp_flow_qid_update_virtual",
-            "size": "64K"
-        },
-        {
-            "name": "udp_flow_qid_update",
-            "size": "64K"
+            "size": "32M",
+            "_comment": "1M * 16B * 2"
         },
         {
             "name": "qos-hbm-fifo",

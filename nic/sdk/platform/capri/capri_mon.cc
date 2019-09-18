@@ -54,7 +54,7 @@ print_mch_sta_data(uint64_t mc_base_addr, uint8_t channel)
     uint32_t mc_sta_reg_value[7];
 
     SDK_OBFL_TRACE_ERR("ECCERR::MCH_MC_STA channel %d", channel);
-    for (int counter = 0; counter < ARRAY_SIZE(mc_sta_reg_value); counter++) {
+    for (uint32_t counter = 0; counter < ARRAY_SIZE(mc_sta_reg_value); counter++) {
         sdk::asic::asic_reg_read(mc_base_addr + CAP_MC_CSR_MCH_MC_STA_MC_STA_0_7_BYTE_ADDRESS +
                                  (counter * MC_STA_OFFSET), &mc_sta_reg_value[counter], 1, true);
     }
