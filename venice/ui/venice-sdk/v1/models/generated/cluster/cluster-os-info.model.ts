@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IClusterOsInfo {
     'type'?: string;
-    'kernel-relase'?: string;
+    'kernel-release'?: string;
     'kernel-version'?: string;
     'processor'?: string;
 }
@@ -18,7 +18,7 @@ export interface IClusterOsInfo {
 
 export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     'type': string = null;
-    'kernel-relase': string = null;
+    'kernel-release': string = null;
     'kernel-version': string = null;
     'processor': string = null;
     public static propInfo: { [prop in keyof IClusterOsInfo]: PropInfoItem } = {
@@ -26,7 +26,7 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
             required: false,
             type: 'string'
         },
-        'kernel-relase': {
+        'kernel-release': {
             required: false,
             type: 'string'
         },
@@ -78,12 +78,12 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
         } else {
             this['type'] = null
         }
-        if (values && values['kernel-relase'] != null) {
-            this['kernel-relase'] = values['kernel-relase'];
-        } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('kernel-relase')) {
-            this['kernel-relase'] = ClusterOsInfo.propInfo['kernel-relase'].default;
+        if (values && values['kernel-release'] != null) {
+            this['kernel-release'] = values['kernel-release'];
+        } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('kernel-release')) {
+            this['kernel-release'] = ClusterOsInfo.propInfo['kernel-release'].default;
         } else {
-            this['kernel-relase'] = null
+            this['kernel-release'] = null
         }
         if (values && values['kernel-version'] != null) {
             this['kernel-version'] = values['kernel-version'];
@@ -107,7 +107,7 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'type': CustomFormControl(new FormControl(this['type']), ClusterOsInfo.propInfo['type']),
-                'kernel-relase': CustomFormControl(new FormControl(this['kernel-relase']), ClusterOsInfo.propInfo['kernel-relase']),
+                'kernel-release': CustomFormControl(new FormControl(this['kernel-release']), ClusterOsInfo.propInfo['kernel-release']),
                 'kernel-version': CustomFormControl(new FormControl(this['kernel-version']), ClusterOsInfo.propInfo['kernel-version']),
                 'processor': CustomFormControl(new FormControl(this['processor']), ClusterOsInfo.propInfo['processor']),
             });
@@ -122,7 +122,7 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
-            this._formGroup.controls['kernel-relase'].setValue(this['kernel-relase']);
+            this._formGroup.controls['kernel-release'].setValue(this['kernel-release']);
             this._formGroup.controls['kernel-version'].setValue(this['kernel-version']);
             this._formGroup.controls['processor'].setValue(this['processor']);
         }

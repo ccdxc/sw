@@ -65,11 +65,11 @@ message ClusterSpec {
     repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty",
                                      (venice.mutable) = false];
 
-    // AutoAdmitNICs when enabled auto-admits NICs that are validated
-    // into Venice Cluster. When it is disabled, NICs validated by CMD are
+    // AutoAdmitDSCs when enabled auto-admits DSCs that are validated
+    // into Venice Cluster. When it is disabled, DSCs validated by CMD are
     // set to Pending state and it requires Manual approval to be admitted
     // into the cluster.
-    bool AutoAdmitNICs          = 4 [(gogoproto.jsontag) = "auto-admit-nics"];
+    bool AutoAdmitDSCs          = 4 [(gogoproto.jsontag) = "auto-admit-dscs"];
 
     // Certs is the pem encoded certificate bundle used for API Gateway TLS
     string Certs                = 5 [(gogoproto.jsontag) = "certs,omitempty"];
@@ -145,7 +145,7 @@ message ClusterCondition {
         HEALTHY     = 0; // Cluster is healthy
     }
 
-    // Type indicates a certain NIC condition
+    // Type indicates a certain DSC condition
     string Type                     = 1 [(venice.check) = "StrEnum(ClusterCondition.ConditionType)",
                                         (gogoproto.jsontag) = "type,omitempty"];
 
@@ -358,7 +358,7 @@ message OsInfo {
 
     // Kernel release
     // Eg: 3.10.0-514.10.2.el7.x86_64
-    string KernelRelease    = 2 [(gogoproto.jsontag) = "kernel-relase,omitempty"];
+    string KernelRelease    = 2 [(gogoproto.jsontag) = "kernel-release,omitempty"];
 
     // Kernel version
     // Eg: #1 SMP Fri Mar 3 00:04:05 UTC 2017

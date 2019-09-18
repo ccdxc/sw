@@ -82,7 +82,7 @@ def create_cluster():
             "name": "testCluster"
         },
         "spec": {
-            "auto-admit-nics": opts.autoadmit,
+            "auto-admit-dscs": opts.autoadmit,
             "ntp-servers": opts.ntpservers,
             "quorum-nodes": opts.VENICE_IP
         }

@@ -11,7 +11,7 @@ json_object = {
         "name": "e2eCluster"
      },
     "spec": {
-        "auto-admit-nics": True,
+        "auto-admit-dscs": True,
         "quorum-nodes": [],
     }
 }

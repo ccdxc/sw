@@ -66,7 +66,7 @@ var typesMapCluster = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"api-version":          api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"auth-bootstrapped":    api.CLIInfo{Path: "Status.AuthBootstrapped", Skip: false, Insert: "", Help: ""},
-			"auto-admit-nics":      api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
+			"auto-admit-dscs":      api.CLIInfo{Path: "Spec.AutoAdmitDSCs", Skip: false, Insert: "", Help: ""},
 			"certs":                api.CLIInfo{Path: "Spec.Certs", Skip: false, Insert: "", Help: ""},
 			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"id":                   api.CLIInfo{Path: "Status.QuorumStatus.Members[].ID", Skip: false, Insert: "", Help: ""},
@@ -146,7 +146,7 @@ var typesMapCluster = map[string]*api.Struct{
 
 			"NTPServers": api.Field{Name: "NTPServers", CLITag: api.CLIInfo{ID: "ntp-servers", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ntp-servers", Pointer: false, Slice: true, Mutable: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"AutoAdmitNICs": api.Field{Name: "AutoAdmitNICs", CLITag: api.CLIInfo{ID: "auto-admit-nics", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auto-admit-nics", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+			"AutoAdmitDSCs": api.Field{Name: "AutoAdmitDSCs", CLITag: api.CLIInfo{ID: "auto-admit-dscs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auto-admit-dscs", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
 			"Certs": api.Field{Name: "Certs", CLITag: api.CLIInfo{ID: "certs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "certs", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -380,7 +380,7 @@ var typesMapCluster = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"KernelRelease": api.Field{Name: "KernelRelease", CLITag: api.CLIInfo{ID: "kernel-relase", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kernel-relase", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"KernelRelease": api.Field{Name: "KernelRelease", CLITag: api.CLIInfo{ID: "kernel-release", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kernel-release", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{ID: "kernel-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kernel-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

@@ -142,7 +142,7 @@ func TestClusterObject(t *testing.T) {
 				Spec: cluster.ClusterSpec{
 					QuorumNodes:   []string{"node1", "node2", "node3"},
 					NTPServers:    []string{"1.pool.ntp.org", "2.pool.ntp.org"},
-					AutoAdmitNICs: true,
+					AutoAdmitDSCs: true,
 				},
 			},
 			[]error{},
@@ -160,7 +160,7 @@ func TestClusterObject(t *testing.T) {
 				Spec: cluster.ClusterSpec{
 					QuorumNodes:   []string{"node1", "node2", "node3"},
 					NTPServers:    []string{"1.pool.ntp.org", "2.pool.ntp.org"},
-					AutoAdmitNICs: true,
+					AutoAdmitDSCs: true,
 				},
 			},
 			[]error{},

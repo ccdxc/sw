@@ -172,8 +172,8 @@
             }
           },
           {
-            "name": "spec.auto-admit-nics",
-            "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster.",
+            "name": "spec.auto-admit-dscs",
+            "description": "AutoAdmitDSCs when enabled auto-admits DSCs that are validated\ninto Venice Cluster. When it is disabled, DSCs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -853,7 +853,7 @@
             "type": "string"
           },
           {
-            "name": "os-info.kernel-relase",
+            "name": "os-info.kernel-release",
             "description": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64.",
             "in": "query",
             "required": false,
@@ -4286,7 +4286,7 @@
           "x-ui-hints": {
             "healthy": "Healthy"
           },
-          "title": "Type indicates a certain NIC condition"
+          "title": "Type indicates a certain DSC condition"
         },
         "status": {
           "type": "string",
@@ -4361,10 +4361,10 @@
           },
           "description": "NTPServers contains the list of NTP servers for the cluster."
         },
-        "auto-admit-nics": {
+        "auto-admit-dscs": {
           "type": "boolean",
           "format": "boolean",
-          "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster."
+          "description": "AutoAdmitDSCs when enabled auto-admits DSCs that are validated\ninto Venice Cluster. When it is disabled, DSCs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster."
         },
         "certs": {
           "type": "string",
@@ -4950,7 +4950,7 @@
           "type": "string",
           "title": "OS Name\nEg: GNU/Linux"
         },
-        "kernel-relase": {
+        "kernel-release": {
           "type": "string",
           "title": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64"
         },

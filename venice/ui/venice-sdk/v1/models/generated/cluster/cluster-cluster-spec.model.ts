@@ -12,7 +12,7 @@ export interface IClusterClusterSpec {
     'quorum-nodes'?: Array<string>;
     'virtual-ip'?: string;
     'ntp-servers'?: Array<string>;
-    'auto-admit-nics'?: boolean;
+    'auto-admit-dscs'?: boolean;
     'certs'?: string;
     'key'?: string;
 }
@@ -27,11 +27,11 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     'virtual-ip': string = null;
     /** NTPServers contains the list of NTP servers for the cluster. */
     'ntp-servers': Array<string> = null;
-    /** AutoAdmitNICs when enabled auto-admits NICs that are validated
-    into Venice Cluster. When it is disabled, NICs validated by CMD are
+    /** AutoAdmitDSCs when enabled auto-admits DSCs that are validated
+    into Venice Cluster. When it is disabled, DSCs validated by CMD are
     set to Pending state and it requires Manual approval to be admitted
     into the cluster. */
-    'auto-admit-nics': boolean = null;
+    'auto-admit-dscs': boolean = null;
     'certs': string = null;
     'key': string = null;
     public static propInfo: { [prop in keyof IClusterClusterSpec]: PropInfoItem } = {
@@ -50,8 +50,8 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
             required: false,
             type: 'Array<string>'
         },
-        'auto-admit-nics': {
-            description:  'AutoAdmitNICs when enabled auto-admits NICs that are validated into Venice Cluster. When it is disabled, NICs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
+        'auto-admit-dscs': {
+            description:  'AutoAdmitDSCs when enabled auto-admits DSCs that are validated into Venice Cluster. When it is disabled, DSCs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
             required: false,
             type: 'boolean'
         },
@@ -119,12 +119,12 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
         } else {
             this['ntp-servers'] = [];
         }
-        if (values && values['auto-admit-nics'] != null) {
-            this['auto-admit-nics'] = values['auto-admit-nics'];
-        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('auto-admit-nics')) {
-            this['auto-admit-nics'] = ClusterClusterSpec.propInfo['auto-admit-nics'].default;
+        if (values && values['auto-admit-dscs'] != null) {
+            this['auto-admit-dscs'] = values['auto-admit-dscs'];
+        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('auto-admit-dscs')) {
+            this['auto-admit-dscs'] = ClusterClusterSpec.propInfo['auto-admit-dscs'].default;
         } else {
-            this['auto-admit-nics'] = null
+            this['auto-admit-dscs'] = null
         }
         if (values && values['certs'] != null) {
             this['certs'] = values['certs'];
@@ -150,7 +150,7 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
                 'quorum-nodes': CustomFormControl(new FormControl(this['quorum-nodes']), ClusterClusterSpec.propInfo['quorum-nodes']),
                 'virtual-ip': CustomFormControl(new FormControl(this['virtual-ip']), ClusterClusterSpec.propInfo['virtual-ip']),
                 'ntp-servers': CustomFormControl(new FormControl(this['ntp-servers']), ClusterClusterSpec.propInfo['ntp-servers']),
-                'auto-admit-nics': CustomFormControl(new FormControl(this['auto-admit-nics']), ClusterClusterSpec.propInfo['auto-admit-nics']),
+                'auto-admit-dscs': CustomFormControl(new FormControl(this['auto-admit-dscs']), ClusterClusterSpec.propInfo['auto-admit-dscs']),
                 'certs': CustomFormControl(new FormControl(this['certs']), ClusterClusterSpec.propInfo['certs']),
                 'key': CustomFormControl(new FormControl(this['key']), ClusterClusterSpec.propInfo['key']),
             });
@@ -167,7 +167,7 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
             this._formGroup.controls['quorum-nodes'].setValue(this['quorum-nodes']);
             this._formGroup.controls['virtual-ip'].setValue(this['virtual-ip']);
             this._formGroup.controls['ntp-servers'].setValue(this['ntp-servers']);
-            this._formGroup.controls['auto-admit-nics'].setValue(this['auto-admit-nics']);
+            this._formGroup.controls['auto-admit-dscs'].setValue(this['auto-admit-dscs']);
             this._formGroup.controls['certs'].setValue(this['certs']);
             this._formGroup.controls['key'].setValue(this['key']);
         }

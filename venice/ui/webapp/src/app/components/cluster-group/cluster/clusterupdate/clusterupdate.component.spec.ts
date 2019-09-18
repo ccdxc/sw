@@ -66,7 +66,7 @@ describe('ClusterupdateComponent', () => {
     const componentRef = dialog.open(ClusterupdateComponent, {
       data: {
         nodes : [node1],
-        cluster : new ClusterCluster({ 'kind': 'Cluster', 'api-version': 'v1', 'meta': { 'name': 'testCluster', 'tenant': 'default', 'namespace': 'default', 'resource-version': '454', 'uuid': '88f8baa7-7a8e-4a2a-9780-c23d2a217b5d', 'creation-time': '2018-06-13T17:50:29.117538562Z', 'mod-time': '2018-06-13T17:50:44.783819163Z', 'self-link': '/v1/cluster/cluster/testCluster' }, 'spec': { 'quorum-nodes': ['node1', 'node2', 'node3'], 'virtual-ip': '192.168.30.10', 'ntp-servers': ['1.pool.ntp.org', '2.pool.ntp.org'], 'auto-admit-nics': true }, 'status': { 'leader': 'node1', 'last-leader-transition-time': '2018-06-13T17:50:44.783544086Z' } })
+        cluster : new ClusterCluster({ 'kind': 'Cluster', 'api-version': 'v1', 'meta': { 'name': 'testCluster', 'tenant': 'default', 'namespace': 'default', 'resource-version': '454', 'uuid': '88f8baa7-7a8e-4a2a-9780-c23d2a217b5d', 'creation-time': '2018-06-13T17:50:29.117538562Z', 'mod-time': '2018-06-13T17:50:44.783819163Z', 'self-link': '/v1/cluster/cluster/testCluster' }, 'spec': { 'quorum-nodes': ['node1', 'node2', 'node3'], 'virtual-ip': '192.168.30.10', 'ntp-servers': ['1.pool.ntp.org', '2.pool.ntp.org'], 'auto-admit-dscs': true }, 'status': { 'leader': 'node1', 'last-leader-transition-time': '2018-06-13T17:50:44.783544086Z' } })
       }
     });
     component = componentRef.componentInstance;

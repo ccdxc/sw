@@ -431,7 +431,7 @@ func validateNICSpecConflictEvent(events *[]mockevtsrecorder.Event, nic, host1, 
 }
 
 // Set cluster admission policy to auto-admit or manual
-func setClusterAutoAdmitNICs(t *testing.T, autoAdmit bool) {
+func setClusterAutoAdmitDSCs(t *testing.T, autoAdmit bool) {
 	refObj, err := tInfo.stateMgr.GetCluster()
 	AssertOk(t, err, "Error getting Cluster object")
 
@@ -441,7 +441,7 @@ func setClusterAutoAdmitNICs(t *testing.T, autoAdmit bool) {
 			ResourceVersion: refObj.ObjectMeta.ResourceVersion,
 		},
 		Spec: cmd.ClusterSpec{
-			AutoAdmitNICs: autoAdmit,
+			AutoAdmitDSCs: autoAdmit,
 		},
 	}
 	clObj, err := tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), &clRef)
@@ -619,7 +619,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 		hostName  string
 	}{
 		{
-			"TestAutoAdmitValidNIC",
+			"TestAutoAdmitValidDSC",
 			"4444.4444.0001",
 			true,
 			true,
@@ -632,7 +632,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			"esx-1",
 		},
 		{
-			"TestAutoAdmitInvalidNIC",
+			"TestAutoAdmitInvalidDSC",
 			"4444.4444.0002",
 			true,
 			false,
@@ -695,7 +695,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
 			smartNICUpdatesRPCClient := grpc.NewSmartNICUpdatesClient(tInfo.rpcClient.ClientConn)
 
-			setClusterAutoAdmitNICs(t, tc.autoAdmit)
+			setClusterAutoAdmitDSCs(t, tc.autoAdmit)
 
 			// register NIC call
 			ctx, cancel := context.WithCancel(context.Background())
@@ -1310,7 +1310,7 @@ func TestManualAdmission(t *testing.T) {
 	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
 	smartNICUpdatesRPCClient := grpc.NewSmartNICUpdatesClient(tInfo.rpcClient.ClientConn)
 
-	setClusterAutoAdmitNICs(t, false)
+	setClusterAutoAdmitDSCs(t, false)
 
 	r := doRegisterNIC(t, smartNICRegistrationRPCClient, mac, hostName)
 	Assert(t, r.Phase == cmd.DistributedServiceCardStatus_PENDING.String(),
@@ -1435,13 +1435,13 @@ func TestManualAdmission(t *testing.T) {
 }
 
 // Test that a NIC that was previously rejected is automatically admitted when
-// the reason for the rejection is addressed and AutoAdmitNICs = true
-func TestAutoAdmitRejectedNICs(t *testing.T) {
+// the reason for the rejection is addressed and AutoAdmitDSCs = true
+func TestAutoAdmitRejectedDSCs(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
 	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
-	setClusterAutoAdmitNICs(t, true)
+	setClusterAutoAdmitDSCs(t, true)
 
 	// Crete and admit first NIC
 	hostName := "esx000"
@@ -1518,7 +1518,7 @@ func TestReadmitSmartNIC(t *testing.T) {
 	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
 	smartNICUpdatesRPCClient := grpc.NewSmartNICUpdatesClient(tInfo.rpcClient.ClientConn)
 
-	setClusterAutoAdmitNICs(t, false)
+	setClusterAutoAdmitDSCs(t, false)
 	r := doRegisterNIC(t, smartNICRegistrationRPCClient, mac, nicID)
 	Assert(t, r.Phase == cmd.DistributedServiceCardStatus_PENDING.String(),
 		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.DistributedServiceCardStatus_PENDING.String(), r))
@@ -1537,7 +1537,7 @@ func TestReadmitSmartNIC(t *testing.T) {
 	// until user re-sets Spec.Admit = true.
 
 	for _, autoAdmit := range []bool{true, false} {
-		setClusterAutoAdmitNICs(t, autoAdmit)
+		setClusterAutoAdmitDSCs(t, autoAdmit)
 		for i := 0; i < 20; i++ {
 			// Admit NIC
 			setSmartNICAdmit(t, nicObjMeta, true)
@@ -1613,7 +1613,7 @@ func TestHostNICPairing(t *testing.T) {
 	numHostsAndNICs := 20
 
 	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
-	setClusterAutoAdmitNICs(t, false)
+	setClusterAutoAdmitDSCs(t, false)
 
 	hostName := func(i int) string {
 		return fmt.Sprintf("host-%d", i)
@@ -1749,7 +1749,7 @@ func TestHostNICPairingConflicts(t *testing.T) {
 	defer testTeardown()
 
 	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
-	setClusterAutoAdmitNICs(t, true)
+	setClusterAutoAdmitDSCs(t, true)
 
 	nicID := "naples-1"
 	nicMAC := "00ae.cd00.1111"
@@ -1858,7 +1858,7 @@ func testSetup() {
 			Name: "testCluster",
 		},
 		Spec: cmd.ClusterSpec{
-			AutoAdmitNICs: true,
+			AutoAdmitDSCs: true,
 		},
 	}
 	_, err = tInfo.apiClient.ClusterV1().Cluster().Create(context.Background(), clRef)

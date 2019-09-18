@@ -280,7 +280,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		},
 		Spec: cluster.ClusterSpec{
 			QuorumNodes:   quorumNodes,
-			AutoAdmitNICs: true,
+			AutoAdmitDSCs: true,
 		},
 	}
 

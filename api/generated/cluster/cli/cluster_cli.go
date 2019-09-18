@@ -15,7 +15,7 @@ import (
 // CreateClusterFlags specifies flags for Cluster create operation
 var CreateClusterFlags = []gen.CliFlag{
 	{
-		ID:     "auto-admit-nics",
+		ID:     "auto-admit-dscs",
 		Type:   "Bool",
 		Help:   "",
 		Skip:   false,

@@ -107,7 +107,7 @@ func (tb *TestBed) MakeVeniceCluster(ctx context.Context) error {
 			Name: "iota-cluster",
 		},
 		Spec: cluster.ClusterSpec{
-			AutoAdmitNICs: true,
+			AutoAdmitDSCs: true,
 			QuorumNodes:   tb.getVeniceIPAddrs(),
 		},
 	}

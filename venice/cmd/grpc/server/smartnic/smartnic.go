@@ -465,11 +465,11 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			smartNICObjExists = true
 		}
 
-		// If SmartNIC object does not exist, we initialize Spec.Admit using the value of cluster.Spec.AutoAdmitNICs
+		// If SmartNIC object does not exist, we initialize Spec.Admit using the value of cluster.Spec.AutoAdmitDSCs
 		// If it exists, we honor the value that is currently there
 		// Note that even if Spec.Admit = true, the SmartNIC can end up in rejected state if it fails subsequent checks.
 		if !smartNICObjExists {
-			nicObj.Spec.Admit = clusterObj.Spec.AutoAdmitNICs
+			nicObj.Spec.Admit = clusterObj.Spec.AutoAdmitDSCs
 		}
 
 		// If hostname supplied by NAPLES is not unique, reject but still create SmartNIC object

@@ -831,7 +831,7 @@ func setAutoAdmit(v bool) error {
 	if err != nil {
 		return fmt.Errorf("Error getting cluster object: %v", err)
 	}
-	clusterObj.Spec.AutoAdmitNICs = v
+	clusterObj.Spec.AutoAdmitDSCs = v
 	_, err = tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), clusterObj)
 	if err != nil {
 		return fmt.Errorf("Error updating cluster object: %v", err)
@@ -1136,7 +1136,7 @@ func TestNICDecommissionFlow(t *testing.T) {
 		Assert(t, err != nil, "expected module object to be deleted")
 		// Switch again to network-managed mode
 		setNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
-		// We should go to PENDING, because the Cluster.Spec.AutoAdmitNICs = false
+		// We should go to PENDING, because the Cluster.Spec.AutoAdmitDSCs = false
 		checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_PENDING.String())
 		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
 
@@ -1249,7 +1249,7 @@ func Setup(m *testing.M) {
 			Name: "testCluster",
 		},
 		Spec: pencluster.ClusterSpec{
-			AutoAdmitNICs: true,
+			AutoAdmitDSCs: true,
 		},
 	}
 	_, err = tInfo.apiClient.ClusterV1().Cluster().Create(context.Background(), clRef)

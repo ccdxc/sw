@@ -29,7 +29,7 @@ fi
 CLUSTER=$(echo $CLUSTER | sed 's/,/","/g')
 
 #post this object to create a cluster
-curl --header "Content-Type: application/json"   --request POST   --data '{ "kind": "Cluster", "api-version" : "v1", "meta": { "name" : "testCluster"  }, "spec" : { "auto-admit-nics" : true,"ntp-servers": [ "'${NTPSERVER}'" ], "quorum-nodes": [ "'$CLUSTER'" ] } }' http://$IPADDR:9001/api/v1/cluster
+curl --header "Content-Type: application/json"   --request POST   --data '{ "kind": "Cluster", "api-version" : "v1", "meta": { "name" : "testCluster"  }, "spec" : { "auto-admit-dscs" : true,"ntp-servers": [ "'${NTPSERVER}'" ], "quorum-nodes": [ "'$CLUSTER'" ] } }' http://$IPADDR:9001/api/v1/cluster
 
 #wait for services to come up
 sleep 30

@@ -22,7 +22,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"kind\": \"Cluster\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"auto-admit-nics\": true,\n        \"ntp-servers\": [\n            \"0.us.pool.ntp.org\",\n            \"1.us.pool.ntp.org\"\n        ],\n        \"quorum-nodes\": [\n            \"{{veniceNode}}\"\n        ]\n    }\n}"
+							"raw": "{\n    \"kind\": \"Cluster\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"auto-admit-dscs\": true,\n        \"ntp-servers\": [\n            \"0.us.pool.ntp.org\",\n            \"1.us.pool.ntp.org\"\n        ],\n        \"quorum-nodes\": [\n            \"{{veniceNode}}\"\n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "http://{{veniceNode}}:{{bootstrapPort}}/api/v1/cluster",

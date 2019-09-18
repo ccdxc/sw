@@ -136,7 +136,7 @@ def initCluster(nodeAddr):
             "name": "testCluster"
         },
         "spec": {
-            "auto-admit-nics": True,
+            "auto-admit-dscs": True,
             "quorum-nodes": quorumNames,
             "virtual-ip":  clustervip,
             "ntp-servers": ["1.pool.ntp.org","2.pool.ntp.org"]

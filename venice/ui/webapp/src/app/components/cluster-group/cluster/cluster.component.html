@@ -116,7 +116,7 @@
           </div>
           <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
                fxLayoutAlign="start center">
-            <div>Auto Admit NICs:</div>
+            <div>Auto Admit DSCs:</div>
           </div>
         </div>
         <!-- Values -->
@@ -135,7 +135,7 @@
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
             <div class="cluster-details-panel-auto-admit-nics">
-              {{ (cluster?.spec['auto-admit-nics'] === true) ? 'yes' : 'no' }}</div>
+              {{ (cluster?.spec['auto-admit-dscs'] === true) ? 'yes' : 'no' }}</div>
           </div>
         </div>
       </div>

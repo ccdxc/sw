@@ -1793,7 +1793,7 @@ func TestFieldByJSONTag(t *testing.T) {
 	}{
 		{"cluster.Cluster", "spec.quorum-nodes", true, "Spec.QuorumNodes"}, // A single nested field
 		{"cluster.Cluster", "spec.virtual-ip", true, "Spec.VirtualIP"},
-		{"cluster.Cluster", "spec.auto-admit-nics", true, "Spec.AutoAdmitNICs"},
+		{"cluster.Cluster", "spec.auto-admit-dscs", true, "Spec.AutoAdmitDSCs"},
 		{"cluster.Cluster", "status.last-leader-transition-time", true, "Status.LastLeaderTransitionTime"},
 		{"cluster.Node", "status.conditions[*].status", false, "Status.Conditions[*].Status"}, // Slice cant be indexed
 		{"cluster.Node", "status.conditions.status", true, "Status.Conditions.Status"},

@@ -219,7 +219,7 @@ func TestClusterUpdate(t *testing.T) {
 				Name: "testCluster",
 			},
 			Spec: cluster.ClusterSpec{
-				AutoAdmitNICs: !preUpdCluster.Spec.AutoAdmitNICs,
+				AutoAdmitDSCs: !preUpdCluster.Spec.AutoAdmitDSCs,
 			},
 		})
 		if err != nil {

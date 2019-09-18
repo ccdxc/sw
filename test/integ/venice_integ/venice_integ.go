@@ -1090,7 +1090,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 			Name: "testCluster",
 		},
 		Spec: pencluster.ClusterSpec{
-			AutoAdmitNICs: true,
+			AutoAdmitDSCs: true,
 		},
 	}
 	_, err = it.apisrvClient.ClusterV1().Cluster().Create(it.ctx, clRef)

@@ -449,7 +449,7 @@ func Setup(m *testing.M) {
 			Name: "testCluster",
 		},
 		Spec: cmd.ClusterSpec{
-			AutoAdmitNICs: true,
+			AutoAdmitDSCs: true,
 		},
 	}
 	_, err = tInfo.apiClient.ClusterV1().Cluster().Create(context.Background(), clRef)
