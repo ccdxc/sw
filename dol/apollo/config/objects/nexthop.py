@@ -25,7 +25,6 @@ class NexthopObject(base.ConfigObjectBase):
         self.IPAddr[1] = next(resmgr.NexthopIpV6AddressAllocator)
         self.MACAddr = resmgr.NexthopMacAllocator.get()
         self.VlanId = next(resmgr.NexthopVlanIdAllocator)
-        self.Type = nh_pb2.NEXTHOP_TYPE_IP
         self.Show()
         return
 
@@ -38,7 +37,6 @@ class NexthopObject(base.ConfigObjectBase):
         grpcmsg = nh_pb2.NexthopRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.NexthopId
-        spec.Type = self.Type
         spec.IPNhInfo.VPCId = self.VPC.VPCId
         spec.IPNhInfo.Mac = self.MACAddr.getnum()
         spec.IPNhInfo.Vlan = self.VlanId

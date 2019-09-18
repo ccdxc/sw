@@ -100,20 +100,20 @@ func printNexthopHeader() {
 }
 
 func printNexthop(nh *pds.Nexthop) {
-	spec := nh.GetSpec()
-	if spec.GetType() == pds.NexthopType_NEXTHOP_TYPE_IP {
-		nhInfo := spec.GetIPNhInfo()
-		fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
-			spec.GetId(),
-			strings.Replace(spec.GetType().String(), "NEXTHOP_TYPE_", "", -1),
-			nhInfo.GetVPCId(),
-			utils.IPAddrToStr(nhInfo.GetIP()),
-			nhInfo.GetVlan(),
-			utils.MactoStr(nhInfo.GetMac()))
-	} else {
-		fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
-			spec.GetId(),
-			strings.Replace(spec.GetType().String(), "NEXTHOP_TYPE_", "", -1),
-			"-", "-", "-", "-")
-	}
+	//spec := nh.GetSpec()
+	//if spec.GetType() == pds.NexthopType_NEXTHOP_TYPE_IP {
+		//nhInfo := spec.GetIPNhInfo()
+		//fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
+			//spec.GetId(),
+			//strings.Replace(spec.GetType().String(), "NEXTHOP_TYPE_", "", -1),
+			//nhInfo.GetVPCId(),
+			//utils.IPAddrToStr(nhInfo.GetIP()),
+			//nhInfo.GetVlan(),
+			//utils.MactoStr(nhInfo.GetMac()))
+	//} else {
+		//fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
+			//spec.GetId(),
+			//strings.Replace(spec.GetType().String(), "NEXTHOP_TYPE_", "", -1),
+			//"-", "-", "-", "-")
+	//}
 }

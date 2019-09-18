@@ -549,7 +549,7 @@ pds_tep_api_info_to_proto (const pds_tep_info_t *api_info, void *ctxt)
 // build TEP API spec from protobuf spec
 static inline void
 pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
-                            const pds::TunnelSpec &proto_spec)
+                           const pds::TunnelSpec &proto_spec)
 {
     memset(api_spec, 0, sizeof(pds_tep_spec_t));
     ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr,
@@ -1158,22 +1158,31 @@ pds_policy_api_info_to_proto (const pds_policy_info_t *api_info, void *ctxt)
 // build nh API spec from protobuf spec
 static inline void
 pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
-                                const pds::NexthopSpec &proto_spec)
+                          const pds::NexthopSpec &proto_spec)
 {
-    pds::NexthopType type;
-
     api_spec->key.id = proto_spec.id();
-    type = proto_spec.type();
-    if (type == pds::NEXTHOP_TYPE_NONE) {
-        api_spec->type = PDS_NH_TYPE_NONE;
-    } else if (type == pds::NEXTHOP_TYPE_IP) {
+    if (proto_spec.has_ipnhinfo()) {
         api_spec->type = PDS_NH_TYPE_IP;
         api_spec->vpc.id = proto_spec.ipnhinfo().vpcid();
-        ipaddr_proto_spec_to_api_spec(&api_spec->ip, proto_spec.ipnhinfo().ip());
+        ipaddr_proto_spec_to_api_spec(&api_spec->ip,
+                                      proto_spec.ipnhinfo().ip());
         api_spec->vlan = proto_spec.ipnhinfo().vlan();
         if (proto_spec.ipnhinfo().mac() != 0) {
             MAC_UINT64_TO_ADDR(api_spec->mac, proto_spec.ipnhinfo().mac());
         }
+    } else if (proto_spec.has_overlaynhinfo()) {
+        api_spec->type = PDS_NH_TYPE_GENERIC_OVERLAY;
+        api_spec->l3_if.id = proto_spec.overlaynhinfo().l3interfaceid();
+        MAC_UINT64_TO_ADDR(api_spec->overlay_mac,
+                           proto_spec.overlaynhinfo().overlaymac());
+        MAC_UINT64_TO_ADDR(api_spec->underlay_mac,
+                           proto_spec.overlaynhinfo().underlaymac());
+        api_spec->encap =
+            proto_encap_to_pds_encap(proto_spec.overlaynhinfo().encap());
+        //api_spec->tep.id = proto_spec->tunnelid();
+
+    } else {
+        api_spec->type = PDS_NH_TYPE_NONE;
     }
 }
 
@@ -1183,15 +1192,20 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
                           const pds_nexthop_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
-    if (api_spec->type == PDS_NH_TYPE_NONE) {
-        proto_spec->set_type(pds::NEXTHOP_TYPE_NONE);
-    } else if (api_spec->type == PDS_NH_TYPE_IP) {
-        proto_spec->set_type(pds::NEXTHOP_TYPE_IP);
+    if (api_spec->type == PDS_NH_TYPE_IP) {
         auto ipnhinfo = proto_spec->mutable_ipnhinfo();
         ipnhinfo->set_vpcid(api_spec->vpc.id);
         ipaddr_api_spec_to_proto_spec(ipnhinfo->mutable_ip(), &api_spec->ip);
         ipnhinfo->set_vlan(api_spec->vlan);
         ipnhinfo->set_mac(MAC_TO_UINT64(api_spec->mac));
+    } else if (api_spec->type == PDS_NH_TYPE_GENERIC_OVERLAY) {
+        auto overlaynhinfo = proto_spec->mutable_overlaynhinfo();
+        overlaynhinfo->set_overlaymac(MAC_TO_UINT64(api_spec->overlay_mac));
+        overlaynhinfo->set_l3interfaceid(api_spec->l3_if.id);
+        overlaynhinfo->set_underlaymac(MAC_TO_UINT64(api_spec->underlay_mac));
+        pds_encap_to_proto_encap(overlaynhinfo->mutable_encap(),
+                                 &api_spec->encap);
+        //overlaynhinfo->set_tunnelid(api_spec->tep.id);
     }
 }
 

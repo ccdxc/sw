@@ -23,11 +23,13 @@
 
 /// \brief nexthop type
 typedef enum pds_nh_type_e {
-    PDS_NH_TYPE_NONE      = 0,
-    PDS_NH_TYPE_BLACKHOLE = 1,    ///< blackhole/drop nexthop
-    PDS_NH_TYPE_TEP       = 2,    ///< any of the possible types of TEP
-    PDS_NH_TYPE_IP        = 3,    ///< native IP route
-    PDS_NH_TYPE_PEER_VPC  = 4,    ///< VPC id of the peer VPC
+    PDS_NH_TYPE_NONE            = 0,
+    PDS_NH_TYPE_BLACKHOLE       = 1,    ///< blackhole/drop nexthop
+    PDS_NH_TYPE_TEP             = 2,    ///< any of the possible types of TEP
+    PDS_NH_TYPE_IP              = 3,    ///< native IP route
+    PDS_NH_TYPE_PEER_VPC        = 4,    ///< VPC id of the peer VPC
+    PDS_NH_TYPE_GENERIC_OVERLAY = 5,    ///< generic overlay nexthop that is
+                                        ///< flattened (aka. fully resolved)
 } pds_nh_type_t;
 
 /// \brief nexthop specification
@@ -42,6 +44,15 @@ typedef struct pds_nexthop_spec_s {
             uint16_t      vlan;    ///< egress vlan encap (for tagged packets)
             mac_addr_t    mac;     ///< (optional) MAC address if known at
                                    ///< config time
+        };
+        // info specific to PDS_NH_TYPE_GENERIC_OVERLAY
+        struct {
+            mac_addr_t       overlay_mac;     ///< overlay/inner DMAC (DMACi)
+            pds_if_key_t     l3_if;           ///< L3 interface key (SMACo
+                                              ///< comes from this)
+            mac_addr_t       underlay_mac;    ///< underlay/outer DMAC (DMACo)
+            pds_encap_t      encap;           ///< egress encap (vnid)
+            pds_tep_key_t    tep;             ///< dst TEP IP (DMACo)
         };
     };
 } __PACK__ pds_nexthop_spec_t;
