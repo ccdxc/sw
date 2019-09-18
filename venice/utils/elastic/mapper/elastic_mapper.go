@@ -35,9 +35,11 @@ var fieldOrTypeOverride = map[string]map[string]string{
 	// Config DocType
 	elastic.GetDocType(globals.Configs): {
 		// fields that need aggregations should map to keyword
-		"tenant": "keyword",
-		"kind":   "keyword",
-		"name":   "keyword",
+		"tenant":  "keyword",
+		"kind":    "keyword",
+		"name":    "keyword",
+		"id":      "keyword", // dsc.spec.id
+		"version": "keyword", // desc.status.version
 
 		// special types mapping
 		"Timestamp": "date",
