@@ -1,7 +1,9 @@
-// VNIC Info Table Action: Get all LPM roots for a VNET - different roots in Tx & Rx rx_packet
-// Pass the roots to later stages thru PHV
+/******************************************************************************/
+/* VNIC info : Get all lpm roots for a vnic. Different roots for tx and rx    */
+/* packet. Pass the roots to later stats through PHV                          */
+/******************************************************************************/
 action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
-                 lpm_base5, lpm_base6, lpm_base7, lpm_base8) {
+                       lpm_base5, lpm_base6, lpm_base7, lpm_base8) {
 
     // Pass payload_len from rxdma to txdma
     modify_field(rx_to_tx_hdr.payload_len, capri_p4_intr.packet_len);
@@ -47,21 +49,18 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
 
     // Setup key for DPORT lookup
     modify_field(lpm_metadata.lpm2_key,
-        (p4_to_rxdma.flow_dport | (p4_to_rxdma.flow_proto << 16)));
+                 (p4_to_rxdma.flow_dport | (p4_to_rxdma.flow_proto << 16)));
     // Enable LPM2
     modify_field(p4_to_rxdma.lpm2_enable, TRUE);
 }
 
 
-// VNIC Info table is 256 deep (accomodates 64 VMs with 4 VNETs/VM)
-// We will need separate table for Rx and Tx, but this is defined
-// as single table with rx_packet bit, so a total of 1+8 = 9 bits
-// used as key to index to 512 entries.
+// VNIC Info table is 2048 deep, with bit 12 indicating rx or tx pakcet
 @pragma stage 0
 @pragma hbm_table
+@pragma index_table
 table vnic_info_rxdma {
     reads {
-        p4_to_rxdma.rx_packet : exact;
         p4_to_rxdma.vnic_id : exact;
     }
     actions {
@@ -71,6 +70,5 @@ table vnic_info_rxdma {
 }
 
 control vnic_info_rxdma {
-    // TMP: Launch this look up only in first pass (recirc == 0)
     apply(vnic_info_rxdma);
 }

@@ -47,11 +47,9 @@ header_type lpm_metadata_t {
 @pragma scratch_metadata
 metadata scratch_metadata_t     scratch_metadata;
 
-@pragma dont_trim
 @pragma scratch_metadata
 metadata qstate_hdr_t           scratch_qstate_hdr;
 
-@pragma dont_trim
 @pragma scratch_metadata
 metadata qstate_info_t          scratch_qstate_info;
 
@@ -59,6 +57,7 @@ metadata qstate_info_t          scratch_qstate_info;
 metadata flow_key_t             scratch_flow_key;
 
 @pragma dont_trim
+@pragma pa_header_union ingress app_header
 metadata apulu_p4i_to_rxdma_header_t p4_to_rxdma;
 
 @pragma dont_trim
@@ -89,4 +88,3 @@ metadata dma_cmd_phv2mem_t      doorbell_phv2mem;
 
 @pragma dont_trim
 metadata lpm_metadata_t         lpm_metadata;
-
