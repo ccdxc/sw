@@ -2,33 +2,19 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_FLOW_PLUGIN_FLOW_H__
-#define __VPP_FLOW_PLUGIN_FLOW_H__
+#ifndef __VPP_FLOW_NODE_H__
+#define __VPP_FLOW_NODE_H__
 
 #include <vlib/vlib.h>
 #include <vnet/ip/ip.h>
 #include <vnet/udp/udp_packet.h>
 #include <nic/p4/common/defines.h>
-#include "flow_prog_hw.h"
+#include "hw_program.h"
 
 //Session ID is 23 bits and ID 0 is reserved, so Max sessions are (8 * 1024 * 1024) - 2.
 #define MAX_SESSION_INDEX (8388606)
 
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
-
-#define foreach_p4cpu_hdr_lookup_next                               \
-        _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
-        _(IP6_FLOW_PROG, "pds-ip6-flow-program" )                   \
-        _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
-        _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
-        _(DROP, "error-drop")                                       \
-
-#define foreach_p4cpu_hdr_lookup_counter                            \
-        _(IP4_FLOW, "IPv4 flow packets" )                           \
-        _(IP6_FLOW, "IPv6 flow packets" )                           \
-        _(IP4_TUN_FLOW, "IPv4 tunnel flow packets" )                \
-        _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
-        _(UNKOWN, "Unknown flow packets")                           \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -56,22 +42,6 @@
 #define foreach_session_prog_counter                                \
         _(SESSION_SUCCESS, "Session programming success" )          \
         _(SESSION_FAILED, "Session programming failed")             \
-
-typedef enum
-{
-#define _(s,n) P4CPU_HDR_LOOKUP_NEXT_##s,
-    foreach_p4cpu_hdr_lookup_next
-#undef _
-    P4CPU_HDR_LOOKUP_N_NEXT,
-} p4cpu_hdr_lookup_next_t;
-
-typedef enum
-{
-#define _(n,s) P4CPU_HDR_LOOKUP_COUNTER_##n,
-    foreach_p4cpu_hdr_lookup_counter
-#undef _
-    P4CPU_HDR_LOOKUP_COUNTER_LAST,
-} p4cpu_hdr_lookup_counter_t;
 
 typedef enum
 {
@@ -131,15 +101,6 @@ typedef struct flow_prog_trace_s {
     u8 iprotocol, rprotocol;
 } flow_prog_trace_t;
 
-typedef struct p4cpu_hdr_lookup_trace_s {
-    u32 l2_offset;
-    u32 l3_offset;
-    u32 l4_offset;
-    u32 vnic;
-    u32 flow_hash;
-    u32 flags;
-} p4cpu_hdr_lookup_trace_t;
-
 typedef struct session_prog_trace_s {
     u32 session_id;
     u8  data[64];
@@ -163,7 +124,6 @@ typedef struct pds_flow_session_id_thr_local_pool_s {
     int16_t         pool_count;
     u32             session_ids[PDS_FLOW_SESSION_POOL_COUNT_MAX];
 } pds_flow_session_id_thr_local_pool_t;
-
 
 typedef struct pds_flow_main_s {
     u64 no_threads;
@@ -314,4 +274,5 @@ always_inline void pds_session_id_flush(void)
     return;
 }
 
-#endif    // __VPP_FLOW_PLUGIN_FLOW_H__
+#endif    // __VPP_FLOW_NODE_H__
+

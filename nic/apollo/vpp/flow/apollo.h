@@ -2,17 +2,12 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__
-#define __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__
+#ifndef __VPP_FLOW_APOLLO_H__
+#define __VPP_FLOW_APOLLO_H__
+
+#ifdef APOLLO
 
 #include <gen/p4gen/apollo/include/p4pd.h>
-
-always_inline int
-pds_p4_cpu_node_get_advance_offset (vlib_buffer_t *b)
-{
-    return (APOLLO_P4_TO_ARM_HDR_SZ +
-        (vnet_buffer(b)->l3_hdr_offset - vnet_buffer (b)->l2_hdr_offset));
-}
 
 always_inline int
 pds_session_get_advance_offset (void)
@@ -292,4 +287,7 @@ pds_flow_appdata2str (void *appdata)
             d->session_index, d->flow_role);
     return str;
 }
-#endif    // __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__
+
+#endif    // APOLLO
+#endif    // __VPP_FLOW_APOLLO_H__
+

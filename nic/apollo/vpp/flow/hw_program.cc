@@ -9,29 +9,16 @@
 #include <cstring>
 #include <nic/utils/ftl/ftlv4.hpp>
 #include <nic/utils/ftl/ftlv6.hpp>
-#include <nic/utils/ftl/ftl_structs.hpp>
-#include <nic/sdk/include/sdk/ip.hpp>
-#include <nic/sdk/include/sdk/base.hpp>
-#include <nic/sdk/include/sdk/types.hpp>
-#include <nic/sdk/include/sdk/platform.hpp>
-#include <nic/sdk/platform/capri/csrint/csr_init.hpp>
-#include <nic/sdk/platform/capri/capri_state.hpp>
 #include <nic/sdk/lib/pal/pal.hpp>
-#include <nic/sdk/asic/rw/asicrw.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
 #include <nic/sdk/lib/p4/p4_api.hpp>
-#ifdef APOLLO
-#define PDS_PLATFORM "apollo"
-#include <gen/p4gen/apollo/include/p4pd.h>
-#elif ARTEMIS
-#define PDS_PLATFORM "artemis"
-#include <gen/p4gen/artemis/include/p4pd.h>
-#endif
-#include <nic/p4/common/defines.h>
 #include <nic/sdk/platform/capri/capri_p4.hpp>
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/sdk/asic/pd/pd.hpp>
-#include "flow_prog_hw.h"
+#include <nic/sdk/platform/capri/capri_state.hpp>
+#include <nic/p4/common/defines.h>
+#include <nic/apollo/vpp/infra/pd_utils.h>
+#include "hw_program.h"
 
 using namespace sdk;
 using namespace sdk::table;
@@ -47,8 +34,9 @@ extern "C" {
 p4pd_table_properties_t g_session_tbl_ctx;
 
 int
-initialize_pds(void)
+initialize_flow(void)
 {
+
     pal_ret_t    pal_ret;
     p4pd_error_t p4pd_ret;
     capri_cfg_t  capri_cfg;
@@ -61,6 +49,7 @@ initialize_pds(void)
         .p4pd_txdma_pgm_name = PDS_PLATFORM "_txdma",
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
+
     p4pd_cfg_t p4pd_rxdma_cfg = {
         .table_map_cfg_file  = PDS_PLATFORM "/capri_rxdma_table_map.json",
         .p4pd_pgm_name       = PDS_PLATFORM "_p4",
@@ -76,12 +65,7 @@ initialize_pds(void)
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
 
-    platform_type_t platform_type;
-#ifdef __x86_64__
-    platform_type = platform_type_t::PLATFORM_TYPE_SIM;
-#else
-    platform_type = platform_type_t::PLATFORM_TYPE_HW;
-#endif
+    platform_type_t platform_type = pds_get_platform_type();
 
     /* initialize PAL */
     pal_ret = sdk::lib::pal_init(platform_type);

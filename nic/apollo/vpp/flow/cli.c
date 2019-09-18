@@ -6,7 +6,7 @@
 #include <vlib/vlib.h>
 #include <vnet/vnet.h>
 #include <vnet/plugin/plugin.h>
-#include "flow.h"
+#include "node.h"
 
 // *INDENT-OFF*
 VLIB_PLUGIN_REGISTER () = {

@@ -3,13 +3,13 @@
 //
 // This file contains p4 header interface for rx and tx packets
 
-#ifndef __VPP_FLOW_PLUGIN_P4_CPU_HDR_APOLLO_H__
-#define __VPP_FLOW_PLUGIN_P4_CPU_HDR_APOLLO_H__
+#ifndef __VPP_INFRA_P4_CPU_HDR_APULU_H__
+#define __VPP_INFRA_P4_CPU_HDR_APULU_H__
 
-#include <nic/apollo/p4/include/defines.h>
+#ifdef APULU
 
 // Meta received from P4 for rx packet
-typedef struct p4_rx_cpu_hdr_s {
+typedef CLIB_PACKED(struct p4_rx_cpu_hdr_s {
     uint16_t   packet_len;
     uint16_t   flags;
     uint16_t   local_vnic_tag;
@@ -22,10 +22,10 @@ typedef struct p4_rx_cpu_hdr_s {
     uint8_t  l3_inner_offset;
     uint8_t  l4_inner_offset;
     uint8_t  payload_offset;
-} __attribute__ ((__packed__)) p4_rx_cpu_hdr_t;
+}) p4_rx_cpu_hdr_t;
 
 // Meta sent to P4 for tx packet
-typedef struct p4_tx_cpu_hdr_s {
+typedef CLIB_PACKED(struct p4_tx_cpu_hdr_s {
     union {
         uint8_t flags_octet;
         struct {
@@ -44,7 +44,8 @@ typedef struct p4_tx_cpu_hdr_s {
 #endif
         };
     };
-} __attribute__ ((__packed__)) p4_tx_cpu_hdr_t;
+}) p4_tx_cpu_hdr_t;
 
-#endif     // __VPP_FLOW_PLUGIN_P4_CPU_HDR_APOLLO_H__
+#endif     // APULU
+#endif     // __VPP_INFRA_PLUGIN_P4_CPU_HDR_APULU_H__
 

@@ -3,8 +3,22 @@
 //
 // This file contains p4 header interface for rx and tx packets
 
-#ifndef __VPP_FLOW_PLUGIN_P4_CPU_HDR_ARTEMIS_H__
-#define __VPP_FLOW_PLUGIN_P4_CPU_HDR_ARTEMIS_H__
+#ifndef __VPP_INFRA_PLUGIN_P4_CPU_HDR_ARTEMIS_H__
+#define __VPP_INFRA_PLUGIN_P4_CPU_HDR_ARTEMIS_H___
+
+#ifdef ARTEMIS
+
+#include <nic/apollo/p4/include/artemis_defines.h>
+
+#define VPP_CPU_FLAGS_VLAN_VALID           ARTEMIS_CPU_FLAGS_VLAN_VALID
+#define VPP_CPU_FLAGS_IPV4_1_VALID         ARTEMIS_CPU_FLAGS_IPV4_1_VALID
+#define VPP_CPU_FLAGS_IPV6_1_VALID         ARTEMIS_CPU_FLAGS_IPV6_1_VALID
+#define VPP_CPU_FLAGS_ETH_2_VALID          ARTEMIS_CPU_FLAGS_ETH_2_VALID
+#define VPP_CPU_FLAGS_IPV4_2_VALID         ARTEMIS_CPU_FLAGS_IPV4_2_VALID
+#define VPP_CPU_FLAGS_IPV6_2_VALID         ARTEMIS_CPU_FLAGS_IPV6_2_VALID
+#define VPP_CPU_FLAGS_DIRECTION            ARTEMIS_CPU_FLAGS_DIRECTION
+#define VPP_PREDICATE_HDR_SZ               ARTEMIS_PREDICATE_HDR_SZ
+#define VPP_P4_TO_ARM_HDR_SZ               ARTEMIS_P4_TO_ARM_HDR_SZ
 
 // Session info containing packet actions
 typedef CLIB_PACKED (struct session_info_hint_s {
@@ -92,5 +106,6 @@ typedef CLIB_PACKED(struct p4_tx_cpu_hdr_s {
     };
 }) p4_tx_cpu_hdr_t;
 
-#endif     // __VPP_FLOW_PLUGIN_P4_CPU_HDR_ARTEMIS_H__
+#endif     // ARTEMIS
+#endif     // __VPP_INFRA_PLUGIN_P4_CPU_HDR_ARTEMIS_H__
 

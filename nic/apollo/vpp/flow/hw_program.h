@@ -3,8 +3,8 @@
 //
 // Hardware Flow Programming interface
 
-#ifndef __VPP_FLOW_PLUGIN_FLOW_PROG_HW_H__
-#define __VPP_FLOW_PLUGIN_FLOW_PROG_HW_H__
+#ifndef __VPP_FLOW_HW_PROGRAM_H__
+#define __VPP_FLOW_HW_PROGRAM_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +19,7 @@ typedef struct ftlv6_entry_t ftlv6_entry_t;
 
 // Prototypes
 
-int initialize_pds(void);
+int initialize_flow(void);
 
 void session_insert(uint32_t ses_id, void *ses_info);
 
@@ -74,4 +74,5 @@ void ftlv6_dump_stats_summary(ftlv6 **obj_arr, uint32_t obj_count,
 }
 #endif
 
-#endif    // __VPP_FLOW_PLUGIN_FLOW_PROG_HW_H__
+#endif    // __VPP_FLOW_HW_PROGRAM_H__
+
