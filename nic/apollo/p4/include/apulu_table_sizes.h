@@ -15,5 +15,10 @@
 #define SESSION_TABLE_SIZE                                  1048576     // 1M
 #define MIRROR_SESSION_TABLE_SIZE                           256
 #define CHECKSUM_TABLE_SIZE                                 32
+
 #define NEXTHOP_GROUP_TABLE_SIZE                            2048
 #define NEXTHOP_TABLE_SIZE                                  4096
+
+#define VNIC_INFO_TABLE_SIZE                                256
+#define VNIC_INFO_RXDMA_TABLE_SIZE                          512
+
