@@ -5,11 +5,13 @@ package impl
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
+	apiutils "github.com/pensando/sw/api/utils"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -44,6 +46,11 @@ func (cl *clusterHooks) errInvalidSmartNIC() error {
 func (cl *clusterHooks) errHostSmartNICConflicts(hostName string, conflicts []string) error {
 	return fmt.Errorf("DSC specification for Host object %s conflicts with specifications for Host objects %s."+
 		" The same MAC Address or Name cannot appear in multiple host objects", hostName, strings.Join(conflicts, ","))
+}
+
+// errHostFieldImmutable returns error when user is trying to modify an immutable field
+func (cl *clusterHooks) errHostFieldImmutable(hostName string, fieldName string) error {
+	return fmt.Errorf("Error: field %s for Host object %s cannot be modified after creation", fieldName, hostName)
 }
 
 func (cl *clusterHooks) getHostSmartNICConflicts(ctx context.Context, host *cluster.Host, kvs kvstore.Interface) ([]string, error) {
@@ -113,6 +120,23 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 	// Note that there is still a chance that by the time this transaction commits,
 	// another conflicting Host objects is present.
 	// In that case the conflict will be caught and reported asynchronously by CMD.
+
+	// Disallow direct change of the referenced SmartNIC.
+	// This is meant to prevent disruptive user mistakes.
+	if oper == apiintf.UpdateOper {
+		curHost := &cluster.Host{}
+		pctx := apiutils.SetVar(ctx, apiutils.CtxKeyGetPersistedKV, true)
+		err := kvs.Get(pctx, key, curHost)
+		if err != nil {
+			cl.logger.Errorf("Error getting Host with key [%s] in API server hostPreCommitHook pre-commit hook: %v", key, err)
+			return i, false, fmt.Errorf("Error getting object: %v", err)
+		}
+		// We don't need to worry about order of SmartNIC IDs because right now each Host object can have only 1 SmartNIC ID
+		if !reflect.DeepEqual(host.Spec.DSCs, curHost.Spec.DSCs) {
+			cl.logger.Errorf("Error: attempt to modify Spec.DSCs. Old: %+v, New: %+v", curHost, host)
+			return i, false, cl.errHostFieldImmutable(curHost.Name, "Spec.DSCs")
+		}
+	}
 
 	return i, true, nil
 }

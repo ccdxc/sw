@@ -375,7 +375,9 @@ func (r *resolverService) monitorPendingInstances(done chan bool) {
 					delete(r.pendingInstances, podName)
 				}
 			}
-			log.Infof("Pending instances after iteration: %+v", r.pendingInstances)
+			if len(r.pendingInstances) > 0 {
+				log.Infof("Pending instances after iteration: %+v", r.pendingInstances)
+			}
 			r.pendingInstancesLock.Unlock()
 		case <-done:
 			// clear pending services map

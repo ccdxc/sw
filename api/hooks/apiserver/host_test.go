@@ -188,7 +188,9 @@ func TestHostObjectPreCommitHooks(t *testing.T) {
 		{apiintf.CreateOper, makeHostObj("testHostUpdates", "", otherName), nil},                                                                        // Base object for updates
 		{apiintf.UpdateOper, makeHostObj("testHostUpdates", baseMAC, ""), hooks.errHostSmartNICConflicts("testHostUpdates", []string{"testHostMAC"})},   // MAC conflict on update
 		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", baseName), hooks.errHostSmartNICConflicts("testHostUpdates", []string{"testHostName"})}, // Name conflict on update
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", otherMAC, ""), nil},                                                                         // successful update from name to MAC
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", otherMAC, ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                 // Attempt to modify Spec.DSCs after creation
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                       // Attempt to modify Spec.DSCs after creation
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", "newname"), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                // Attempt to modify Spec.DSCs after creation
 	}
 
 	ctx := context.TODO()

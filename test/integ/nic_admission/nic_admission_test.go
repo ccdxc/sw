@@ -545,14 +545,6 @@ func TestCreateNMDs(t *testing.T) {
 					// Validate Host object is created and paired
 					checkHostNICPair(t, hostMeta, nicMeta, true)
 
-					// modify the host obj spec to break the pair
-					setHostSmartNICIDs(t, hostMeta, []pencluster.DistributedServiceCardID{{MACAddress: getSmartNICMAC(99)}})
-					checkHostNICPair(t, hostMeta, nicMeta, false)
-
-					// form the pair again
-					setHostSmartNICIDs(t, hostMeta, []pencluster.DistributedServiceCardID{{MACAddress: priMac}})
-					checkHostNICPair(t, hostMeta, nicMeta, true)
-
 					// delete host object
 					tInfo.apiClient.ClusterV1().Host().Delete(context.Background(), hostMeta)
 					f6 := func() (bool, interface{}) {
@@ -567,6 +559,15 @@ func TestCreateNMDs(t *testing.T) {
 						}
 						return true, nil
 					}
+					AssertEventually(t, f6, "Failed to verify update of DistributedServiceCard object", string("100ms"), string("30s"))
+
+					// Create again
+					_, err = tInfo.apiClient.ClusterV1().Host().Create(context.Background(), host)
+					AssertOk(t, err, fmt.Sprintf("Error creating host: %v", host.Name))
+					checkHostNICPair(t, hostMeta, nicMeta, true)
+
+					// Delete again
+					tInfo.apiClient.ClusterV1().Host().Delete(context.Background(), hostMeta)
 					AssertEventually(t, f6, "Failed to verify update of DistributedServiceCard object", string("100ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
