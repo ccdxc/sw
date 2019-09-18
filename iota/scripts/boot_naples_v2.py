@@ -621,7 +621,7 @@ class HostManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        assert(self.RunSshCmd("lspci | grep 1dd8") == 0)
+        assert(self.RunSshCmd("sudo lspci | grep 1dd8") == 0)
         self.InstallPrep()
 
         if copy_fw:
@@ -710,7 +710,7 @@ class EsxHostManagement(HostManagement):
         return retcode
 
     def __check_naples_deivce(self):
-        ret = self.RunSshCmd("lspci | grep Pensando")
+        ret = self.RunSshCmd("sudo lspci | grep Pensando")
         if ret:
             raise Exception("Cmd failed lspci | grep Pensando")
 
