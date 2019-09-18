@@ -10,7 +10,8 @@
   .global-primeng-table .ui-table .ui-table-tbody>tr,
   .global-primeng-table-lazyload .ui-table .ui-table-tbody>tr {
     // Fixing row height to be 48 instead of the standard 36
-    height: 48px;
+    // VS-719 when number of selected-nodes is large we tweak this number and [virtualRowHeight]="80" in html template
+    height: 80px;
   }
 }
 

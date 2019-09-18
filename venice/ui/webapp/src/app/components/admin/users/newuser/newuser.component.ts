@@ -156,6 +156,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
         (error) => {
           // any error in (A) (B) or (C), error will land here
           this._controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
+          this.removeUserFromRolebindingList(this.selectedRolebindingsForUsers, username);
           this.deleteStagingBuffer(buffername, Utility.CREATE_FAILED_SUMMARY, false);
         }
       );

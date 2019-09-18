@@ -1018,6 +1018,12 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     return this._authService.UpdateRoleBinding(rolebinding.meta.name, rolebinding.getFormGroupValues(), buffername);
   }
 
+  removeUserFromRolebindingList(rolebindings: AuthRoleBinding[], username: any) {
+    rolebindings.forEach((rolebinding) => {
+      this.removeUserFromRolebing(rolebinding, username);
+    });
+  }
+
   removeUserFromRolebing(rolebinding: AuthRoleBinding, username: string, buffername: string = ''): Observable<any> {
     if (this.isUserAlreadyInRoleBinding(rolebinding, username)) {
       const users = rolebinding.getFormGroupValues().spec.users;
