@@ -1,0 +1,5 @@
+# Ignore everything in this directory. They are installed by build scripts
+*
+# Except this file
+!.gitignore
+!Dockerfile

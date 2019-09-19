@@ -10,15 +10,12 @@ RUN chmod 755 /target//usr/bin/kubelet
 RUN tar Oxvf /tmp/kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin/kubectl > /target/usr/bin/kubectl
 RUN strip   /target/usr/bin/kubectl
 RUN chmod 755 /target//usr/bin/kubectl
-RUN curl -LO https://github.com/nasuku/systemd-docker/releases/download/v0.3.0/systemd-docker.linux.x86-64
-RUN strip   systemd-docker.linux.x86-64
-RUN chmod 755 systemd-docker.linux.x86-64
 
 FROM alpine:3.10.2
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 COPY --from=0 /target/usr/bin/kubelet /target/usr/bin/kubelet
 COPY --from=0 /target/usr/bin/kubectl /target/usr/bin/kubectl
-COPY --from=0 systemd-docker.linux.x86-64 /target/usr/bin/systemd-docker
+COPY systemd-docker.linux.x86-64 /target/usr/bin/systemd-docker
 ENTRYPOINT [ "/sbin/init" ]
 
 # user is expected to run something like : docker run -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged -d  base-container
