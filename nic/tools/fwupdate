@@ -23,6 +23,8 @@ MTDPART_GOLDFW=goldfw
 MTDPART_DIAGFW=diagfw
 MTDPART_FWSEL=fwsel
 
+CMDLINE="$*"
+
 usage()
 {
 cat << EOF >&2
@@ -59,9 +61,71 @@ EOF
 exit 1
 }
 
+LOGDIR=$R/obfl
+LOGFILE=$LOGDIR/fwupdate.log
+LOGMAXSZ=1048576
+
+do_log_emit()
+{
+    (
+    local dry="" sz
+    if [ "$DRY_RUN" != "" ]; then
+        dry=" dry-run"
+    fi
+    if [ ! -f $LOGFILE ]; then
+        mkdir -p $LOGDIR
+        : > $LOGFILE
+    fi
+    sz=`stat -c "%s" $LOGFILE`
+    if [ $sz -gt $LOGMAXSZ ]; then
+        [ -f ${LOGFILE}.1 ] && mv ${LOGFILE}.1 ${LOGFILE}.2
+        mv $LOGFILE ${LOGFILE}.1
+        : > $LOGFILE
+    fi
+    echo "$1 [`date "+%Y-%m-%d %H:%M:%S"`] fwupdate:$dry $2" >> $LOGFILE
+    ) 2>/dev/null
+}
+
+log_emit()
+{
+    local pref=$1
+    shift
+    do_log_emit $pref "$*" || true
+}
+
+log_info()
+{
+    log_emit I "$*"
+}
+
+log_debug()
+{
+    log_emit D "$*"
+}
+
+log_error()
+{
+    local emit=0
+
+    if [ "X-$1" = "X--e" ]; then
+        emit=1
+        shift
+    fi
+    log_emit E "$*"
+    if [ $emit ]; then
+        echo "$*" >&2
+    fi
+}
+
 fatal()
 {
-    echo "FATAL: $1" >&2
+    log_error -e "FATAL: $1"
+    exit 1
+}
+
+fatal_err()
+{
+    log_error -e "FATAL: $1: `head -1 $ERR`"
     exit 1
 }
 
@@ -127,39 +191,50 @@ main()
     if [ $need_pkg -ne 0 ]; then
         [ -z "$PKG" ] && usage
     fi
-    D=/tmp/update$$
+    D=$R/update/update`expr $$ % 10`
+    if [ $IS_CUSTOM_INSTALLER -eq 0 ]; then
+        rm -rf $D
+    fi
     mkdir -p $D
     MANIFEST=$D/MANIFEST
     INSTALLER=$D/installer
+    RESETFLAG=$D/resetflag
+    ERR=$D/err.out
     TMPFILE=$D/tmpfile
     CACHEFILE=$R/var/run/fwupdate.cache
 
     finish() {
+        pcie_reset_release
         rm -rf $D
     }
     trap finish EXIT
 
     terminate() {
         echo ""
-        echo "ABORTED" >&2
+        log_error -e "ABORTED"
         finish
         exit 1
     }
     trap terminate INT QUIT
 
-    set -e -u
-
     if [ $need_pkg -ne 0 ]; then
-        tar xfO $PKG MANIFEST > $MANIFEST
+        tar xfO $PKG MANIFEST > $MANIFEST 2>$ERR
+        if [ $? -ne 0 ]; then
+            log_info "BEGIN: $CMDLINE"
+            fatal_err "Invalid package file"
+        fi
         if [ $IS_CUSTOM_INSTALLER -eq 0 ]; then
             s=`mani_opt_value .installer`
             if [ "$s" != "null" ]; then
+                log_info "Launching custom package installer"
                 echo "===> Found custom package installer; launching..."
-                launch_custom_installer $@
+                launch_custom_installer "$@"
                 fatal "custom installer failed"
             fi
         fi
     fi
+
+    set -e -u
 
     if [ $action != VERIFY_PACKAGE ]; then
         RUNNING_FW=`get_running_fwname`
@@ -184,7 +259,9 @@ main()
         ;;
 
     INSTALL)
+        log_info "BEGIN $CMDLINE"
         install_images
+        log_info "END"
         ;;
 
     GET_RUNNING_FW)
@@ -192,7 +269,9 @@ main()
         ;;
 
     SET_STARTUP_FW)
+        log_info "BEGIN $CMDLINE"
         set_startup_image
+        log_info "END"
         ;;
 
     SHOW_STARTUP_FW)
@@ -258,8 +337,11 @@ launch_custom_installer()
         fatal "installer verifcation failed"
     fi
     tar xfO $PKG $name > $INSTALLER
+    if [ $? -ne 0 ]; then
+        fatal "installer extraction failed"
+    fi
     chmod +x $INSTALLER
-    exec $INSTALLER --custom-installer $@
+    exec $INSTALLER --custom-installer "$@"
 }
 
 # find_mmcpart_bypartuuid D4E53BE5-7DC1-4199-914C-48EDFEA92C5E
@@ -575,22 +657,31 @@ install_mtd()
     local dev=$1 ersz=$2 offs=$3 path=$4 size=$5 hash=$6 algo=$7
     local blks got_hash seek
 
+    set +e
     echo "Writing $path to $dev offset $offs ($size bytes)..."
+    log_info "Writing $path to $dev offset $offs ($size bytes)"
     seek=`to_blocks $offs $ersz`
     blks=`to_blocks $size $ersz`
     echo -n "Erasing..."
-    flash_erase -q $dev $offs $blks
-    echo " OK"
-    echo -n "Writing..."
-    tar xfO $PKG $path | dd of=$dev bs=$ersz seek=$seek status=none
-    echo " OK"
-    echo -n "Verifying..."
-    got_hash=`dd if=$dev bs=$ersz skip=$seek count=$blks status=none | head -c $size | hash $algo`
-    if [ "$got_hash" != "$hash" ]; then
-        echo " FAILED"
-        fatal "install_mtd: Verify failed"
+    flash_erase -q $dev $offs $blks 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "Flash erase failed"
     fi
     echo " OK"
+    echo -n "Writing..."
+    ( tar xfO $PKG $path | dd of=$dev bs=$ersz seek=$seek status=none ) 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "Flash write failed"
+    fi
+    echo " OK"
+    echo -n "Verifying..."
+    got_hash=`dd if=$dev bs=$ersz skip=$seek count=$blks status=none | head -c $size | hash $algo` 2>$ERR
+    if [ "$got_hash" != "$hash" ]; then
+        echo " FAILED"
+        fatal_err "Flash verify failed"
+    fi
+    echo " OK"
+    set -e
 }
 
 # Install a file to an mmc device
@@ -600,18 +691,24 @@ install_mmc()
     local dev=$1 path=$2 size=$3 hash=$4 algo=$5
     local dblks got_hash
 
+    set +e
     echo "Writing $path to $dev ($size bytes)..."
+    log_info "Writing $path to $dev ($size bytes)"
     echo -n "Writing..."
-    tar xfO $PKG $path | dd of=$dev status=none
+    tar xfO $PKG $path | dd of=$dev status=none 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "MMC write failed"
+    fi
     echo " OK"
     echo -n "Verifying..."
     dblks=`to_blocks $size 512`
-    got_hash=`dd if=$dev bs=512 count=$dblks status=none | head -c $size | hash $algo`
+    got_hash=`dd if=$dev bs=512 count=$dblks status=none | head -c $size | hash $algo` 2>$ERR
     if [ "$got_hash" != "$hash" ]; then
         echo " FAILED"
-        fatal "install_mmc: Verify failed"
+        fatal_err "MMC verify failed"
     fi
     echo "OK"
+    set -e
 }
 
 # Return the component files of a firmware type, in the order they are
@@ -666,11 +763,16 @@ legacy_fwobj_to_fwtype()
 verify_package()
 {
     local fwobj want_type want_files remainder found i fileobj
-    local fileobj path algo want_hash got_hash
+    local fileobj path algo want_hash got_hash swver
 
     echo "===> Verifying package"
+    log_info "Verifying package"
     if [ `mani_numkeys .firmware` -eq 0 ]; then
         fatal "verify_package: No firmware content"
+    fi
+    swver=`mani_opt_value ".software_version"`
+    if [ "$swver" != "null" ]; then
+        log_info "Software version $swver"
     fi
     for fwobj in `mani_keys .firmware`; do
         #
@@ -845,9 +947,15 @@ invalidate_mtd()
 {
     local dev=$1 offs=$2
 
+    set +e
     echo -n "Invalidating $dev..."
-    flash_erase -q $dev $offs 1
+    log_info "Invalidating $dev"
+    flash_erase -q $dev $offs 1 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "Failed to invalidate $dev"
+    fi
     echo " OK"
+    set -e
 }
 
 invalidate_mmc()
@@ -882,6 +990,77 @@ invalidate_fwname()
     esac
 }
 
+# Move /sbin/reset and /nic/tools/sysreset.sh out of the way
+pcie_swapin()
+{
+    local path=$1
+    cat << EOF > ${path}.new
+#!/bin/sh
+touch $RESETFLAG
+EOF
+    chmod +x ${path}.new
+    ln $path ${path}.old
+    mv ${path}.new $path
+}
+
+pcie_swapout()
+{
+    local path=$1
+    if [ -f ${path}.old ]; then
+        mv ${path}.old $path
+    fi
+}
+
+pcie_reset_hold()
+{
+    rm -f $RESETFLAG
+    pcie_swapin $R/sbin/reboot
+    pcie_swapin $R/nic/tools/sysreset.sh
+}
+
+pcie_reset_release()
+{
+    pcie_swapout $R/sbin/reboot
+    pcie_swapout $R/nic/tools/sysreset.sh
+    if [ -f $RESETFLAG ]; then
+        rm -rf $D
+        log_info "Issuing reset"
+        $R/nic/tools/sysreset.sh
+        return 1
+    fi
+}
+
+# Critical sections
+critical_section_begin()
+{
+    local fwtype=$1
+    if [ "$DRY_RUN" != "" ]; then
+        return
+    fi
+    case "$fwtype" in
+    uboot)
+        pcie_reset_hold || true
+        ;;
+    *)
+        ;;
+    esac
+}
+
+critical_section_end()
+{
+    local fwtype=$1
+    if [ "$DRY_RUN" != "" ]; then
+        return
+    fi
+    case "$fwtype" in
+    uboot)
+        pcie_reset_release || true
+        ;;
+    *)
+        ;;
+    esac
+}
+
 # Install a single fileobj into fwname
 install_fwobj()
 {
@@ -895,6 +1074,7 @@ install_fwobj()
         return
     fi
     echo "===> Installing $fwname"
+    critical_section_begin $fwtype
     invalidate_fwname $fwname $fwtype
     for fileobj in `$fwtype_to_files $fwtype`; do
         path=`mani_value ".firmware.$fwobj.files.$fileobj.name"`
@@ -903,6 +1083,7 @@ install_fwobj()
         hash=`mani_value ".firmware.$fwobj.files.$fileobj.verify.hash"`
         do_install_file $fwname $fwobj $fileobj $path $hash $algo
     done
+    critical_section_end $fwtype
 }
 
 fwname_to_fwobj()
@@ -994,13 +1175,26 @@ do_set_startup_image()
     local fwname=$1 dev devsz s
 
     echo "===> Verifying target startup image $fwname"
+    log_info "Verifying target startup image $fwname"
     do_verify_image $fwname
 
     echo "===> Setting startup firmware to $fwname"
     s=`find_mtdpart_byname $MTDPART_FWSEL`; set -- $s; dev=$1
-    flash_erase -q $dev 0 1
-    echo -n $fwname | dd of=$dev status=none
+    set +e
+    flash_erase -q $dev 0 1 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "Flash erase failed"
+    fi
+    ( echo -n $fwname | dd of=$dev status=none ) 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "Flash write failed"
+    fi
+    s=`jq -r -M ".software_version" $TMPFILE`
+    if [ "$s" != "null" ]; then
+        log_info "New startup image version $s"
+    fi
     echo "OK"
+    set -e
 }
 
 set_startup_image()
