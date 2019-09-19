@@ -42,9 +42,12 @@
 /* route result type and bit position                                        */
 /*****************************************************************************/
 #define ROUTE_RESULT_TYPE_NEXTHOP                0
-#define ROUTE_RESULT_TYPE_VPC                    1
-#define ROUTE_RESULT_BIT_POS                     15
-#define ROUTE_RESULT_TYPE_PEER_VPC_MASK          0x8000
+#define ROUTE_RESULT_TYPE_REM_SVC_TUNNEL_BIT_POS 21
+#define ROUTE_RESULT_TYPE_SVC_TUNNEL_BIT_POS     22
+#define ROUTE_RESULT_TYPE_PEER_VPC_BIT_POS       23
+#define ROUTE_RESULT_TYPE_REM_SVC_TUNNEL_MASK    0x200000
+#define ROUTE_RESULT_TYPE_SVC_TUNNEL_MASK        0x400000
+#define ROUTE_RESULT_TYPE_PEER_VPC_MASK          0x800000
 
 /*****************************************************************************/
 /* number of hints in various HBM hash tables                                */
@@ -55,6 +58,7 @@
 /*****************************************************************************/
 /* Header sizes                                                              */
 /*****************************************************************************/
+#define APULU_PREDICATE_HDR_SZ          1
 #define APULU_P4_TO_RXDMA_HDR_SZ        0
 #define APULU_I2E_HDR_SZ                0
 #define APULU_TXDMA_TO_P4E_HDR_SZ       0
@@ -90,3 +94,9 @@
     modify_field(_scratch_qstate_txdma_q.ring1_base, ring1_base);              \
     modify_field(_scratch_qstate_txdma_q.ring_size, ring_size);                \
     modify_field(_scratch_qstate_txdma_q.rxdma_cindex_addr, rxdma_cindex_addr)
+
+/*****************************************************************************/
+/* Apulu Pkt memory                                                        */
+/*****************************************************************************/
+#define APULU_PKT_DESC_SHIFT              0
+#define APULU_PKT_DESC_SIZE              (1 << APULU_PKT_DESC_SHIFT)

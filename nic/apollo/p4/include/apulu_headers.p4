@@ -68,6 +68,6 @@ header_type apulu_rx_to_tx_header_t {
         payload_len     : 14; // Bytes 38 and 39
         iptype          : 1;  // Bytes 39 7b
         rx_packet       : 1;  // Bytes 39 8b
-        pad1            : 208; // Bytes 40 to 63
+        pad0            : 192; // Bytes 40 to 63
     }
 }

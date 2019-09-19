@@ -176,6 +176,10 @@ header_type txdma_to_arm_flow_t {
 @pragma pa_header_union ingress app_header
 metadata txdma_predicate_metadata_t txdma_predicate;
 
+@pragma dont_trim
+@pragma pa_header_union ingress to_stage_1
+metadata doorbell_data_t    doorbell_data;
+
 @pragma pa_align 512
 @pragma dont_trim
 metadata apulu_txdma_to_p4e_header_t txdma_to_p4e;
