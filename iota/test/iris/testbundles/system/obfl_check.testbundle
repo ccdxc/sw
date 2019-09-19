@@ -7,3 +7,4 @@ meta:
 testcases:
     -   name    : STEADY_STATE_OBFL_CHECK
         testcase: testcases.system.obfl_check
+        ignore: true
