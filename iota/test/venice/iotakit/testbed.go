@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -1575,9 +1576,16 @@ func (tb *TestBed) PrintResult() {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
 
-	fmt.Fprintf(w, "Test Bundle\t Group\t Case\t Pass\t Fail\t Time\n")
-	for key, res := range tb.caseResult {
-		fmt.Fprintf(w, "%s\t    %d\t    %d\t    %v\n", key, res.passCount, res.failCount, res.duration)
+	tcr := []string{}
+	for k := range tb.caseResult {
+		tcr = append(tcr, k)
+	}
+	sort.Strings(tcr)
+
+	fmt.Fprintf(w, "Id\t Test Bundle\t Group\t Case\t Pass\t Fail\t Time\n")
+	for i, key := range tcr {
+		res := tb.caseResult[key]
+		fmt.Fprintf(w, "%d\t %s\t    %d\t    %d\t    %v\n", i+1, key, res.passCount, res.failCount, res.duration)
 	}
 	w.Flush()
 
@@ -1589,12 +1597,19 @@ func (tb *TestBed) PrintResult() {
 
 	w = tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
 
-	for key, failed := range tb.testResult {
+	tcr = []string{}
+	for k := range tb.testResult {
+		tcr = append(tcr, k)
+	}
+	sort.Strings(tcr)
+
+	for i, key := range tcr {
+		failed := tb.testResult[key]
 
 		if !failed {
-			fmt.Fprintf(w, "%s\t         PASS\n", key)
+			fmt.Fprintf(w, "%d\t %s\t         PASS\n", i+1, key)
 		} else {
-			fmt.Fprintf(w, "%s\t         FAIL\n", key)
+			fmt.Fprintf(w, "%d\t %s\t         FAIL\n", i+1, key)
 		}
 	}
 	w.Flush()
