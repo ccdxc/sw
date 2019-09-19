@@ -583,7 +583,7 @@ error DelphiClient::Close() {
     this->heartbeatTimer_.stop();
     this->reconnectTimer_.stop();
     this->msgqAsync_.stop();
-    this->isConnected_ = true;
+    this->isConnected_ = false;
     this->myServiceID_ = 0;
     this->isMountComplete_ = false;
 
@@ -789,6 +789,7 @@ void DelphiClient::heartbeatTimerHandler(ev::timer &watcher, int revents) {
 // FIXME: do we need to force a sync of local objects to hub??
 void DelphiClient::reconnectTimerHandler(ev::timer &watcher, int revents) {
     LogInfo("Trying to reconnect to delphi hub");
+    this->isConnected_ = false;
 
     // connect to server
     error err = this->mclient_->Connect();
