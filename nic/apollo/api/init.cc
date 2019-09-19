@@ -19,6 +19,7 @@
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "platform/sysmon/sysmon.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 
 namespace api {
 
@@ -142,6 +143,10 @@ pds_init (pds_init_params_t *params)
     asic_cfg_t    asic_cfg;
     std::string   mem_json;
 
+    // TODO read from device.conf
+    sdk::lib::device_profile_t device_profile = {0};
+    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
+
     // initialize the logger
     // TODO fix obfl logger when sdk logger is cleaned up
     sdk::lib::logger::init(params->trace_cb, params->trace_cb);
@@ -203,6 +208,7 @@ pds_init (pds_init_params_t *params)
 
     // setup all asic specific config params
     api::asic_global_config_init(params, &asic_cfg);
+    asic_cfg.device_profile = &device_profile;
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
     // ignore the threads if it is a slave initialization

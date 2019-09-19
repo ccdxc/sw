@@ -33,6 +33,7 @@
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 
 #define EPOCH 0xb055
 #define ROUTE_LPM_MEM_SIZE (64 + (16 * 64) + (16 * 16 * 64))
@@ -1625,6 +1626,9 @@ TEST_F(apollo_test, test1)
     cfg.asm_cfg[2].symbols_func = txdma_symbols_init;
 
     cfg.completion_func = NULL;
+    sdk::lib::device_profile_t device_profile = {0};
+    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
+    cfg.device_profile = &device_profile;
 
     printf("Doing asic init ...\n");
     ret = sdk::asic::asic_init(&cfg);

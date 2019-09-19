@@ -493,7 +493,8 @@ capri_init (capri_cfg_t *cfg)
                                 "PXB/PCIE init failure, err : %d", ret);
     }
 
-    ret = capri_tm_init(cfg->catalog);
+    ret = capri_tm_init(cfg->catalog,
+                        &cfg->device_profile->qos_profile);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri TM init failure, err : %d", ret);
 
@@ -585,6 +586,7 @@ asic_init (asic_cfg_t *cfg)
     }
 
     capri_cfg.completion_func = cfg->completion_func;
+    capri_cfg.device_profile = cfg->device_profile;
     return capri_init(&capri_cfg);
 }
 

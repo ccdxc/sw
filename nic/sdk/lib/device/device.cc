@@ -1,5 +1,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
+#include <libgen.h>
 #include "lib/device/device.hpp"
 #include "include/sdk/mem.hpp"
 #include "lib/utils/utils.hpp"
@@ -15,6 +16,7 @@ SDK_DEFINE_MAP(dev_port_state_t, DEV_PORT_STATE)
 #define FEATURE_PROFILE_KEY_STR "feature-profile"
 #define PORT_ADMIN_STATE_KEY_STR "port-admin-state"
 #define MGMT_IF_MAC_STR "mgmt-if-mac"
+#define DEVICE_QOS_PROFILE_STR "profile.qos"
 
 device *
 device::factory(std::string device_file)
@@ -22,12 +24,6 @@ device::factory(std::string device_file)
     void       *mem;
     device     *new_device;
     sdk_ret_t  ret = SDK_RET_OK;
-
-    if (device_file.empty()) {
-        device_file = DEFAULT_DEVICE_FILE;
-    }
-
-    SDK_TRACE_DEBUG("device file: %s", device_file.c_str());
 
     mem = SDK_CALLOC(sdk::SDK_MEM_ALLOC_DEVICE, sizeof(device));
     if (!mem) {
@@ -68,8 +64,17 @@ device::init(std::string &device_file)
     sdk_ret_t ret;
     ptree prop_tree;
 
+    if (device_file.empty()) {
+        device_file = DEFAULT_DEVICE_FILE;
+    }
+
+    SDK_TRACE_DEBUG("device file: %s", device_file.c_str());
     device_db_.device_file = device_file;
-    ret = get_ptree_(device_file, prop_tree);
+
+    // dirname modifies device_file string
+    device_db_.device_cfg_path = dirname((char*)device_file.c_str());
+
+    ret = get_ptree_(device_db_.device_file, prop_tree);
     if (ret != SDK_RET_OK) {
         // No device.conf file ... return defaults
         populate_device_defaults_();
@@ -93,8 +98,43 @@ device::get_ptree_(std::string& device_file, ptree& prop_tree)
 }
 
 sdk_ret_t
+device::populate_qos_profile(std::string qos_profile_name) {
+    ptree prop_tree;
+    uint32_t i = 0;
+    qos_profile_t *qos_profile = &device_db_.device_profile.qos_profile;
+    std::string profile_fname = device_db_.device_cfg_path + "/profiles/" +
+                                "qos_profile_" + qos_profile_name + ".json";
+
+    if (access(profile_fname.c_str(), R_OK) < 0) {
+        SDK_TRACE_DEBUG("Device config profile: {} not found",
+                        profile_fname.c_str());
+        return SDK_RET_ERR;
+    }
+    boost::property_tree::read_json(profile_fname, prop_tree);
+    qos_profile->jumbo_mtu =
+                prop_tree.get<uint32_t>("qos.jumbo_mtu", 9216);
+    qos_profile->num_uplink_qs =
+                prop_tree.get<uint32_t>("qos.num_uplink_qs", 8);
+    qos_profile->num_p4ig_qs =
+                prop_tree.get<uint32_t>("qos.num_p4ig_qs", 25);
+    qos_profile->num_p4eg_qs =
+                prop_tree.get<uint32_t>("qos.num_p4eg_qs", 27);
+    qos_profile->num_dma_qs =
+                prop_tree.get<uint32_t>("qos.num_dma_qs", 16);
+    qos_profile->num_p4_high_perf_qs = prop_tree.get<uint32_t>(
+                                        "qos.num_p4_high_perf_qs", 2);
+    for (ptree::value_type &p4_high_perf_q :
+                        prop_tree.get_child("qos.p4_high_perf_qs")) {
+        qos_profile->p4_high_perf_qs[i++] =
+                p4_high_perf_q.second.get_value<int32_t>();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 device::populate_device(ptree &pt)
 {
+    std::string qos_profile_name;
 
     populate_device_defaults_();
 
@@ -106,15 +146,15 @@ device::populate_device(ptree &pt)
             } else {
                 std::string fwd_mode = pt.get<std::string>(FORWARDING_MODE_KEY_STR);
                 if (DEV_FORWARDING_MODE_map.find(fwd_mode) == DEV_FORWARDING_MODE_map.end()) {
-                    SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s", 
-                                  FORWARDING_MODE_KEY_STR, fwd_mode.c_str(), 
+                    SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s",
+                                  FORWARDING_MODE_KEY_STR, fwd_mode.c_str(),
                                   DEV_FORWARDING_MODE_str(FORWARDING_MODE_CLASSIC));
 
                 } else {
-                    device_db_.fwd_mode = 
+                    device_db_.fwd_mode =
                         DEV_FORWARDING_MODE_map[fwd_mode.c_str()];
                 }
-            } 
+            }
         }
 
         if (it->first == FEATURE_PROFILE_KEY_STR) {
@@ -123,15 +163,15 @@ device::populate_device(ptree &pt)
             } else {
                 std::string feature_profile = pt.get<std::string>(FEATURE_PROFILE_KEY_STR);
                 if (DEV_FEATURE_PROFILE_map.find(feature_profile) == DEV_FEATURE_PROFILE_map.end()) {
-                    SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s", 
-                                  FEATURE_PROFILE_KEY_STR, feature_profile.c_str(), 
+                    SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s",
+                                  FEATURE_PROFILE_KEY_STR, feature_profile.c_str(),
                                   DEV_FEATURE_PROFILE_str(FEATURE_PROFILE_CLASSIC_DEFAULT));
 
                 } else {
-                    device_db_.feature_profile = 
+                    device_db_.feature_profile =
                         DEV_FEATURE_PROFILE_map[pt.get<std::string>(FEATURE_PROFILE_KEY_STR)];
                 }
-            } 
+            }
         }
 
         if (it->first == PORT_ADMIN_STATE_KEY_STR) {
@@ -140,19 +180,27 @@ device::populate_device(ptree &pt)
             } else {
                 std::string port_state = pt.get<std::string>(PORT_ADMIN_STATE_KEY_STR);
                 if (DEV_PORT_STATE_map.find(port_state) == DEV_PORT_STATE_map.end()) {
-                    SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s", 
-                                  PORT_ADMIN_STATE_KEY_STR, port_state.c_str(), 
+                    SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s",
+                                  PORT_ADMIN_STATE_KEY_STR, port_state.c_str(),
                                   DEV_PORT_STATE_str(PORT_ADMIN_STATE_ENABLE));
 
                 } else {
-                    device_db_.port_admin_state = 
+                    device_db_.port_admin_state =
                         DEV_PORT_STATE_map[pt.get<std::string>(PORT_ADMIN_STATE_KEY_STR)];
                 }
-            } 
+            }
         }
 
         if (it->first == MGMT_IF_MAC_STR) {
-            device_db_.mgmt_if_mac = pt.get<std::uint64_t>("mgmt-if-mac");
+            device_db_.mgmt_if_mac = pt.get<std::uint64_t>(MGMT_IF_MAC_STR);
+        }
+
+        if (it->first == DEVICE_QOS_PROFILE_STR) {
+            qos_profile_name =
+                    pt.get<std::string>(DEVICE_QOS_PROFILE_STR, "default");
+            if (populate_qos_profile(qos_profile_name) != SDK_RET_OK) {
+                return SDK_RET_ERR;
+            }
         }
     }
     return SDK_RET_OK;
@@ -165,9 +213,11 @@ device::populate_device_defaults_(void)
     device_db_.feature_profile = FEATURE_PROFILE_CLASSIC_DEFAULT;
     device_db_.port_admin_state = PORT_ADMIN_STATE_ENABLE;
     device_db_.mgmt_if_mac = 0;
+    device_db_.device_profile.qos_profile =
+                            {9216, 8, 25, 27, 16, 2, {0, 24}};
 }
 
-bool 
+bool
 device::is_integer_(const std::string & s)
 {
     if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;

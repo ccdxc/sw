@@ -675,6 +675,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     asic_cfg.num_rings = 0;
     asic_cfg.ring_meta = NULL;
     asic_cfg.platform = hal_cfg->platform;
+    asic_cfg.device_profile = hal_cfg->device_cfg.device_profile;
     args.cfg = &asic_cfg;
     pd_func_args.pd_asic_init = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);

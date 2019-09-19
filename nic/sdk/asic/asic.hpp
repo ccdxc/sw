@@ -10,6 +10,7 @@
 #include "platform/utils/mpartition.hpp"
 #include "platform/ring/ring.hpp"
 #include "p4/loader/loader.hpp"
+#include "lib/device/device.hpp"
 
 namespace sdk {
 namespace asic {
@@ -50,6 +51,7 @@ typedef struct asic_cfg_s {
     platform_type_t      platform;
     completion_cb_t      completion_func;
     bool                 is_slave;
+    sdk::lib::device_profile_t  *device_profile;
 } asic_cfg_t;
 
 // initialize the asic

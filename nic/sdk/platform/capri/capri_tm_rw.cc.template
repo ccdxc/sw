@@ -35,9 +35,6 @@ namespace platform {
 namespace capri {
 
 static cpp_int_helper cpp_helper;
-
-qos_profile_t qos_profile = {true, true, 9216, 8, 25, 27, 16, 2, {0, 24}};
-
 static pthread_mutex_t tm_mutex;
 
 typedef struct capri_tm_cfg_profile_s {
@@ -4214,12 +4211,23 @@ capri_tm_init_enable_ports (void)
 
 static sdk_ret_t
 capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
-                           sdk::lib::catalog *catalog)
+                           sdk::lib::catalog *catalog,
+                           sdk::lib::qos_profile_t *qos_profile)
 {
     uint32_t interpipe_mtu;
+    uint32_t jumbo_mtu     = qos_profile->jumbo_mtu;
+    uint32_t num_uplink_qs = qos_profile->num_uplink_qs;
+    uint32_t num_p4ig_qs   = qos_profile->num_p4ig_qs;
+    uint32_t num_p4eg_qs   = qos_profile->num_p4eg_qs;
+    uint32_t num_dma_qs    = qos_profile->num_dma_qs;
+    uint32_t num_p4_high_perf_qs = qos_profile->num_p4_high_perf_qs;
 
-    tm_cfg_profile->sw_init_enabled = qos_profile.sw_init_enable;
-    tm_cfg_profile->sw_cfg_write_enabled = qos_profile.sw_cfg_write_enable;
+    if (num_uplink_qs == 0) {
+        SDK_TRACE_ERR("Invalid qos profile");
+        return SDK_RET_ERR;
+    }
+    tm_cfg_profile->sw_init_enabled = true;
+    tm_cfg_profile->sw_cfg_write_enabled = true;
 
     tm_cfg_profile->hbm_fifo_base =
         g_capri_state_pd->mempartition()->start_addr(MEM_REGION_QOS_FIFO_NAME);
@@ -4237,24 +4245,25 @@ capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
         tm_cfg_profile->num_active_uplink_ports -= 1;
     }
 
-    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_UPLINK] = qos_profile.jumbo_mtu;
-    interpipe_mtu = qos_profile.jumbo_mtu + CAPRI_TM_MAX_INTERPIPE_HDR_SZ;
+    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_UPLINK] = jumbo_mtu;
+
+    interpipe_mtu = jumbo_mtu + CAPRI_TM_MAX_INTERPIPE_HDR_SZ;
     tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_P4IG] = interpipe_mtu;
     tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_P4EG] = interpipe_mtu;
     tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_DMA] = interpipe_mtu;
 
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] = qos_profile.num_uplink_qs;
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4IG] = qos_profile.num_p4ig_qs;
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4EG] = qos_profile.num_p4eg_qs;
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_DMA] = qos_profile.num_dma_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] = num_uplink_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4IG]   = num_p4ig_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4EG]   = num_p4eg_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_DMA]    = num_dma_qs;
 
-    tm_cfg_profile->num_p4_high_perf_qs = qos_profile.num_p4_high_perf_qs;
+    tm_cfg_profile->num_p4_high_perf_qs = num_p4_high_perf_qs;
     if (tm_cfg_profile->num_p4_high_perf_qs) {
         tm_cfg_profile->p4_high_perf_qs =
             (tm_q_t *)SDK_MALLOC(sdk::SDK_MEM_ALLOC_PD,
                                  tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
 
-        memcpy(tm_cfg_profile->p4_high_perf_qs, qos_profile.p4_high_perf_qs,
+        memcpy(tm_cfg_profile->p4_high_perf_qs, qos_profile->p4_high_perf_qs,
                tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
     }
 
@@ -4297,7 +4306,8 @@ capri_tm_update_perf_run_config (void)
 }
 
 sdk_ret_t
-capri_tm_init (sdk::lib::catalog* catalog)
+capri_tm_init (sdk::lib::catalog* catalog,
+               sdk::lib::qos_profile_t *qos_profile)
 {
     sdk_ret_t ret = sdk::SDK_RET_OK;
     capri_tm_cfg_profile_t tm_cfg_profile_;
@@ -4309,7 +4319,8 @@ capri_tm_init (sdk::lib::catalog* catalog)
 
     pthread_mutex_init(&tm_mutex, NULL);
 
-    ret = capri_tm_init_qos_profile(tm_cfg_profile, catalog);
+    ret = capri_tm_init_qos_profile(tm_cfg_profile, catalog,
+                                    qos_profile);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Error initing qos profile. ret: %d",
                       ret);

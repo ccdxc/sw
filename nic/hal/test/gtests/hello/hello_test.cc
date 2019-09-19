@@ -21,6 +21,7 @@
 #include "nic/platform/capri/capri_p4.hpp"
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/hello/include/p4pd.h"
+#include "nic/sdk/lib/device/device.hpp"
 
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
@@ -339,6 +340,9 @@ TEST_F(hello_test, test1) {
     cfg.asm_cfg[0].base_addr = std::string(JP4_PRGM);
 
     cfg.completion_func = NULL;
+    sdk::lib::device_profile_t device_profile.qos_profiles =
+                                        {9216, 8, 25, 27, 16, 2, {0, 24}};
+    cfg.device_profile = &device_profile;
 
     ret = hal::pd::asic_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);

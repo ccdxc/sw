@@ -7,6 +7,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 
 namespace hal {
 
@@ -60,6 +61,7 @@ typedef struct device_cfg_s {
     hal_forwarding_mode_t forwarding_mode;
     hal_feature_profile_t feature_profile;
     port_admin_state_t admin_state; // default port admin state
+    sdk::lib::device_profile_t *device_profile;
 } device_cfg_t;
 
 typedef struct hal_cfg_s {

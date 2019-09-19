@@ -33,6 +33,7 @@
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/apollo/test/golden/artemis_pkts.h"
+#include "nic/sdk/lib/device/device.hpp"
 
 #define EPOCH 0x55
 
@@ -785,6 +786,9 @@ TEST_F(artemis_test, test1)
     cfg.asm_cfg[2].symbols_func = txdma_symbols_init;
 
     cfg.completion_func = NULL;
+    sdk::lib::device_profile_t device_profile = {0};
+    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
+    cfg.device_profile = &device_profile;
 
     printf("Doing asic init ...\n");
     ret = sdk::asic::asic_init(&cfg);

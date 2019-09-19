@@ -1,0 +1,12 @@
+{
+    "qos" :
+    {
+        "jumbo_mtu" : "9216",
+        "num_uplink_qs" : "8",
+        "num_p4ig_qs" : "25",
+        "num_p4eg_qs" : "27",
+        "num_dma_qs" : "16",
+        "num_p4_high_perf_qs" : "2",
+        "p4_high_perf_qs" : ["0", "24" ]
+    }
+}

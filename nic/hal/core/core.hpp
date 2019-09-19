@@ -14,7 +14,6 @@
 namespace hal {
 
 #define SYSCONFIG_PATH "/sysconfig/config0/"
-#define DEVICE_CFG     "device.conf"
 
 hal_ret_t hal_parse_cfg(const char *cfgfile, hal_cfg_t *hal_cfg);
 hal_ret_t hal_sdk_init(void);

@@ -11,7 +11,6 @@
 #include "lib/periodic/periodic.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
-#include "nic/sdk/lib/device/device.hpp"
 
 uint64_t g_mgmt_if_mac;
 
@@ -609,15 +608,6 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
 
     return ret;
 }
-#if 0
-static void
-hal_device_cfg_init_defaults (device_cfg_t *device_cfg)
-{
-    device_cfg->forwarding_mode = HAL_FORWARDING_MODE_CLASSIC;
-    device_cfg->feature_profile = HAL_FEATURE_PROFILE_CLASSIC_DEFAULT;
-    device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
-}
-#endif
 
 static inline hal_forwarding_mode_t
 parse_forwarding_mode (std::string forwarding_mode)
@@ -651,59 +641,24 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
 {
     device_cfg_t *device_cfg = &hal_cfg->device_cfg;
     sdk::lib::device *device = NULL;
-#if 0
-    ptree prop_tree;
-    std::string forwarding_mode;
-    std::string feature_profile;
-    std::string port_admin_state;
-#endif
-    std::string device_cfg_fname;
+    std::string device_cfg_path;
 
     if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
-        device_cfg_fname =
-            std::string(SYSCONFIG_PATH) + std::string(DEVICE_CFG);
+        device_cfg_path = std::string(SYSCONFIG_PATH);
     } else {
-        device_cfg_fname = hal_cfg->cfg_path + "/" + std::string(DEVICE_CFG);
+        device_cfg_path = hal_cfg->cfg_path;
     }
 
-    device = sdk::lib::device::factory(device_cfg_fname);
+    device = sdk::lib::device::factory(device_cfg_path + "/" + DEVICE_CFG_FNAME);
     SDK_ASSERT_TRACE_RETURN(device != NULL, HAL_RET_ERR, "Device conf file error");
 
     device_cfg->forwarding_mode = (hal::hal_forwarding_mode_t)device->get_forwarding_mode();
     device_cfg->feature_profile = (hal::hal_feature_profile_t)device->get_feature_profile();
-    device_cfg->admin_state = device->get_port_admin_state() ? 
+    device_cfg->admin_state = device->get_port_admin_state() ?
         port_admin_state_t::PORT_ADMIN_STATE_DOWN : port_admin_state_t::PORT_ADMIN_STATE_UP;
     g_mgmt_if_mac = device->get_mgmt_if_mac();
+    device_cfg->device_profile = device->device_profile();
 
-    
-    
-
-#if 0
-    hal_device_cfg_init_defaults(device_cfg);
-    if (access(device_cfg_fname.c_str(), R_OK) < 0) {
-        HAL_TRACE_DEBUG("Device config: {} not found",
-                        device_cfg_fname.c_str());
-        goto end;
-    }
-    boost::property_tree::read_json(device_cfg_fname, prop_tree);
-    forwarding_mode = prop_tree.get<std::string>("forwarding-mode", "FORWARDING_MODE_CLASSIC");
-    device_cfg->forwarding_mode = parse_forwarding_mode(forwarding_mode);
-    feature_profile = prop_tree.get<std::string>("feature-profile",
-                                                 "classic-default");
-    device_cfg->feature_profile = parse_feature_profile(feature_profile);
-    port_admin_state = prop_tree.get<std::string>("port-admin-state",
-                                                  "PORT_ADMIN_STATE_ENABLE");
-    if (port_admin_state == "PORT_ADMIN_STATE_DISABLE") {
-        device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
-    }
-    try {
-        g_mgmt_if_mac = prop_tree.get<std::uint64_t>("mgmt-if-mac");
-    } catch (std::exception const &e) {
-        g_mgmt_if_mac = 0;
-    }
-
-end:
-#endif
     printf("Hal forwarding mode: %s, feature_profile: %d, port_admin_state: %d\n",
            FORWARDING_MODES_str(device_cfg->forwarding_mode),
            device_cfg->feature_profile,
