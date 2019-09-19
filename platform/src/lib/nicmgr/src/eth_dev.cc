@@ -19,7 +19,7 @@
 #include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 
-#if !defined(APOLLO) && !defined(ARTEMIS)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
 #include "gen/proto/nicmgr/nicmgr.pb.h"
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
 #include "gen/proto/common/nicmgr_status_msgs.pb.h"
@@ -875,7 +875,7 @@ devcmd_done:
     ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
     NIC_LOG_DEBUG("DevCmd Time taken: {}s.{}ns",
                   ts_diff.tv_sec, ts_diff.tv_nsec);
-    if (pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC && 
+    if (pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC &&
         ts_diff.tv_sec >= DEVCMD_TIMEOUT) {
         NIC_LOG_ERR("Fatal Error: Devmd took more than 2 secs");
     }

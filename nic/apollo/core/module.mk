@@ -3,5 +3,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdscore.so
 MODULE_PIPELINE = apollo artemis apulu
-MODULE_SOLIBS   = pdsnicmgr pdspciemgr pciemgrd pcieport pdsfte
+MODULE_SOLIBS   = pdsnicmgr pdspciemgr pciemgrd pcieport
 include ${MKDEFS}/post.mk

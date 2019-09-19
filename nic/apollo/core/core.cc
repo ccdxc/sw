@@ -17,7 +17,7 @@
 #include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
-#include "nic/apollo/fte/fte.hpp"
+//#include "nic/apollo/fte/fte.hpp"
 
 using boost::property_tree::ptree;
 
@@ -225,6 +225,7 @@ thread_nicmgr_spawn (pds_state *state)
     return SDK_RET_OK;
 }
 
+#if 0
 sdk_ret_t
 thread_fte_spawn (pds_state *state)
 {
@@ -261,6 +262,7 @@ thread_fte_spawn (pds_state *state)
     }
     return SDK_RET_OK;
 }
+#endif
 
 // stop the threads
 void

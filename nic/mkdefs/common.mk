@@ -245,7 +245,7 @@ export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils \
 # ==========================================================================
 #                        APULU specific defs
 # ==========================================================================
-export NIC_apulu_NICMGR_LIBS := nicmgr_artemis mnet evutils \
+export NIC_apulu_NICMGR_LIBS := nicmgr_apulu mnet evutils \
                                 pciemgr_if pciemgr pciemgrutils \
                                 pciehdevices pcietlp cfgspace intrutils misc
 
