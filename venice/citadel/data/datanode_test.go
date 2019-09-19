@@ -737,6 +737,23 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 		}
 	}
 
+	ns := map[string]int{}
+	// Check debug
+	for idx := 0; idx < numNodes; idx++ {
+		s := dnodes[idx].String()
+		Assert(t, len(s) > 0, "invalid debug data", s)
+		dbg := struct {
+			Leader string
+		}{}
+
+		err := json.Unmarshal([]byte(s), &dbg)
+		AssertOk(t, err, "failed to unmarshal")
+		t.Logf("node[%v]: leader: %v", idx, dbg.Leader)
+		ns[dbg.Leader]++
+	}
+	Assert(t, ns["true"] == 1, "failed to find leader node")
+	Assert(t, ns["false"] == 2, "expected 2 non-leaders, got %d", ns["false"])
+
 	// write some points
 	for _, shard := range cl.ShardMap.Shards {
 		// walk all replicas in the shard

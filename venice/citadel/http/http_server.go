@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/citadel/data"
+
 	"github.com/gorilla/mux"
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
@@ -32,14 +34,16 @@ type HTTPServer struct {
 	listenURL string         // listening URL
 	server    *http.Server   // HTTP server
 	broker    *broker.Broker // broker instance
+	dnode     *data.DNode    // data Node
 }
 
 // NewHTTPServer creates a http server
-func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*HTTPServer, error) {
+func NewHTTPServer(listenURL string, broker *broker.Broker, dn *data.DNode, dbg *debug.Debug) (*HTTPServer, error) {
 	// create http server instance
 	hsrv := HTTPServer{
 		listenURL: listenURL,
 		broker:    broker,
+		dnode:     dn,
 	}
 
 	// create a mux and setup routes
@@ -56,6 +60,7 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*
 	r.HandleFunc("/shard", hsrv.queryShardReqHandler).Methods("GET")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("GET")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("POST")
+	r.HandleFunc("/dnode", hsrv.dnodeReqHandler).Methods("GET")
 	r.HandleFunc("/ping", hsrv.pingReqHandler).Methods("GET")
 	r.HandleFunc("/healthz", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.healthReqHandler))).Methods("GET")
 
@@ -338,6 +343,15 @@ func (hsrv *HTTPServer) showReqHandler(w http.ResponseWriter, r *http.Request) {
 // pingReqHandler handles a ping request
 func (hsrv *HTTPServer) pingReqHandler(w http.ResponseWriter, r *http.Request) {
 	// return success, called by influxdb tools
+}
+
+// dnodeReqHandler shows data node info
+func (hsrv *HTTPServer) dnodeReqHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if hsrv.dnode != nil {
+		w.Write([]byte(hsrv.dnode.String()))
+	}
 }
 
 // healthReqHandler handles health check requests

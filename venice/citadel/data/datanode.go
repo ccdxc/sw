@@ -5,11 +5,13 @@ package data
 // this file contains the datanode management code
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/user"
+	"strconv"
 	"sync"
 
 	context "golang.org/x/net/context"
@@ -718,4 +720,34 @@ func (dn *DNode) replicateFailedRequest(sb *syncBufferState) error {
 		dn.logger.Fatalf("unknown cluster type: %+v in sync buffer", sb)
 	}
 	return nil
+}
+
+// String displays data node
+func (dn *DNode) String() string {
+	dbg := map[string]string{
+		"node-uuid": dn.nodeUUID,
+		"node-url":  dn.nodeURL,
+		"leader":    strconv.FormatBool(dn.IsLeader()),
+		"stopped":   strconv.FormatBool(dn.IsStopped()),
+	}
+
+	rp := map[uint64]uint64{}
+	dn.tshards.Range(func(key, val interface{}) bool {
+		replID := key.(uint64)
+		tState := val.(*TshardState)
+		rp[replID] = tState.shardID
+		return true
+	})
+
+	rpj, err := json.Marshal(rp)
+	if err == nil {
+		dbg["replicas"] = string(rpj)
+	}
+
+	dbgj, err := json.Marshal(dbg)
+	if err != nil {
+		return "{}"
+	}
+
+	return string(dbgj)
 }

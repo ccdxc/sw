@@ -614,7 +614,7 @@ func (it *veniceIntegSuite) startCitadel() {
 	dbg := debug.New(srv.Debug)
 
 	// start the http server
-	hsrv, err := httpserver.NewHTTPServer(httpURL, br, dbg)
+	hsrv, err := httpserver.NewHTTPServer(httpURL, br, dn, dbg)
 	if err != nil {
 		log.Fatalf("Error creating HTTP server. Err: %v", err)
 	}
