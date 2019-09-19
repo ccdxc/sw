@@ -31,6 +31,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NODE_HEALTHY',
     'NODE_JOINED',
     'NODE_UNREACHABLE',
+    'PASSWORD_CHANGED',
+    'PASSWORD_RESET',
     'QUORUM_MEMBER_ADD',
     'QUORUM_MEMBER_HEALTHY',
     'QUORUM_MEMBER_REMOVE',
@@ -179,6 +181,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NODE_UNREACHABLE",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Node is unreachable",
+  },
+  'PASSWORD_CHANGED' : {
+      "Name": "PASSWORD_CHANGED",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Password changed",
+  },
+  'PASSWORD_RESET' : {
+      "Name": "PASSWORD_RESET",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Password reset",
   },
   'QUORUM_MEMBER_ADD' : {
       "Name": "QUORUM_MEMBER_ADD",

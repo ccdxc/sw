@@ -237,6 +237,20 @@ func init() {
 		Desc:       "Writing of AuditEvent failed",
 		SuppressMM: false}
 
+	eventTypes[PASSWORD_CHANGED] = &EventTypeAttributes{
+		EType:      PASSWORD_CHANGED.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "Password changed",
+		SuppressMM: false}
+
+	eventTypes[PASSWORD_RESET] = &EventTypeAttributes{
+		EType:      PASSWORD_RESET.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "Password reset",
+		SuppressMM: false}
+
 	eventTypes[LINK_UP] = &EventTypeAttributes{
 		EType:      LINK_UP.String(),
 		Severity:   "info",

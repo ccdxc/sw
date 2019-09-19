@@ -172,6 +172,14 @@ enum EventTypes {
                                            (severity) = CRITICAL,
                                            (desc)     = "Writing of AuditEvent failed"];
 
+    PASSWORD_CHANGED                = 302 [(category) = Cluster,
+                                           (severity) = WARN,
+                                           (desc)     = "Password changed"];
+
+    PASSWORD_RESET                  = 303 [(category) = Cluster,
+                                           (severity) = WARN,
+                                           (desc)     = "Password reset"];
+
 
     // --------------------------- HAL/Link events --------------------------- //
     LINK_UP                         = 400 [(category)    = Network,
@@ -220,12 +228,13 @@ enum EventTypes {
                                            (suppress_mm) = true];
 
     SYSTEM_RESOURCE_USAGE           = 507 [(category)    = System,
-                                          (severity)     = WARN,
-                                          (desc)         = "System resource usage is high"];
+                                           (severity)    = WARN,
+                                           (desc)        = "System resource usage is high"];
 
-    NAPLES_FATAL_INTERRUPT          = 508 [(category) = System,
-                                           (severity) = CRITICAL,
-                                           (desc)     = "Naples has a fatal interrupt"];
+    NAPLES_FATAL_INTERRUPT          = 508 [(category)    = System,
+                                           (severity)    = CRITICAL,
+                                           (desc)        = "Naples has a fatal interrupt"];
+
     // ------------------------------ Rollout events -------------------------- //
     ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,

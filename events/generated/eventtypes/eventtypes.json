@@ -116,6 +116,16 @@
    "Desc": "Node is unreachable"
   },
   {
+   "Name": "PASSWORD_CHANGED",
+   "Severity": "warn",
+   "Desc": "Password changed"
+  },
+  {
+   "Name": "PASSWORD_RESET",
+   "Severity": "warn",
+   "Desc": "Password reset"
+  },
+  {
    "Name": "QUORUM_MEMBER_ADD",
    "Severity": "info",
    "Desc": "Added member to quorum"

@@ -30,6 +30,8 @@ import (
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -40,6 +42,12 @@ import (
 const (
 	testUser     = "test"
 	testPassword = "Pensandoo0%"
+)
+
+var (
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("auth_test",
+		log.GetNewLogger(log.GetDefaultConfig("auth_test"))))
 )
 
 func TestHashPassword(t *testing.T) {

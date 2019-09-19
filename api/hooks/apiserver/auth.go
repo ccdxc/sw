@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -28,6 +29,7 @@ import (
 	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -192,8 +194,10 @@ func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, tx
 	}
 	// The ConsistentUpdate op will happen at a later time due to overlay. Retrieve the current object and return so the ResponseWriter has a object to work on.
 	ret := auth.User{}
+	ret.Defaults("all")
 	ret.ObjectMeta = r.ObjectMeta
 	ret.Spec.Password = ""
+	recorder.Event(eventtypes.PASSWORD_CHANGED, fmt.Sprintf("password changed for user [%v]", ret.GetName()), &ret)
 	s.logger.Debugf("password successfully changed for user key [%s]", key)
 	return ret, false, nil
 }
@@ -254,8 +258,10 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 	}
 	// The ConsistentUpdate op will happen at a later time due to overlay. Retrieve the current object and return so the ResponseWriter has a object to work on.
 	ret := auth.User{}
+	ret.Defaults("all")
 	ret.ObjectMeta = in.ObjectMeta
 	ret.Spec.Password = genPasswd
+	recorder.Event(eventtypes.PASSWORD_RESET, fmt.Sprintf("password reset for user [%v]", ret.GetName()), &ret)
 	s.logger.Debugf("password successfully reset for user key [%s]", key)
 	return ret, false, nil
 }
