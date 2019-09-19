@@ -216,7 +216,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
       this._controllerService.setToolbarData({
         buttons: [],
         breadcrumb: [
-          { label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' },
+          { label: 'Network Security Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' },
           { label: id, url: Utility.getBaseUIUrl() + 'security/sgpolicies/' + id }]
       });
     });

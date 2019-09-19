@@ -10,6 +10,7 @@ import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AlerttableService } from '@app/services/alerttable.service';
+import { SharedModule } from '@app/components/shared/shared.module';
 /**-----
  Venice web-app imports
  ------------------*/
@@ -20,14 +21,10 @@ import { LogService } from '@app/services/logging/log.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { AlertseventsComponent } from './alertsevents.component';
-import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
-import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { EventsService } from '@app/services/events.service';
 import { EventsService as EventsServiceGen } from '@app/services/generated/events.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { WhitespaceTrimDirective } from '@app/components/shared/directives/whitespacetrim.directive';
-import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
 import { BehaviorSubject } from 'rxjs';
 import { Utility } from '@app/common/Utility';
 import { EventsEvent, EventsEventAttributes_severity, ApiListWatchOptions_sort_order, EventsEvent_type } from '@sdk/v1/models/generated/events';
@@ -36,10 +33,7 @@ import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
-import { SorticonComponent } from '../sorticon/sorticon.component';
-import { RoleGuardDirective } from '../directives/roleGuard.directive';
 import { AuthService } from '@app/services/auth.service';
-
 
 @Component({
   template: ''
@@ -82,14 +76,7 @@ describe('AlertseventsComponent', () => {
   configureTestSuite(() => {
      TestBed.configureTestingModule({
       declarations: [
-        AlertseventsComponent,
-        LazyrenderComponent,
         DummyComponent,
-        PrettyDatePipe,
-        TableheaderComponent,
-        WhitespaceTrimDirective,
-        SorticonComponent,
-        RoleGuardDirective,
       ],
       imports: [
         RouterTestingModule.withRoutes([
@@ -101,6 +88,7 @@ describe('AlertseventsComponent', () => {
         HttpClientTestingModule,
         PrimengModule,
         MaterialdesignModule,
+        SharedModule,
       ],
       providers: [
         ControllerService,

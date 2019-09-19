@@ -15,6 +15,7 @@ import { EventsEvent_severity, EventsEventAttributes_severity, IApiListWatchOpti
 import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
+import { TimeRange } from '@app/components/shared/timerange/utility';
 
 import { Observable, forkJoin, throwError, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -179,6 +180,12 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // Query params to send for watch
   alertQuery = {};
 
+  // TimeRange for events and alerts
+  eventsSelectedTimeRange: TimeRange;
+  eventsTimeConstraints: string = '';
+  alertsSelectedTimeRange: TimeRange;
+  alertsTimeConstraints: string = '';
+
   constructor(protected _controllerService: ControllerService,
     protected _alerttableService: AlerttableService,
     protected uiconfigsService: UIConfigsService,
@@ -245,6 +252,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         'field-selector': this.selector.alertSelector.selector
       };
     }
+    if (this.eventsTimeConstraints.length) {
+      this.eventsPostBody['field-selector'] = this.eventsTimeConstraints;
+    }
   }
 
   getClassName(): string {
@@ -264,10 +274,34 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     }
   }
 
+  setEventsTimeRange(timeRange: TimeRange) {
+    // update query and call getEvents
+    setTimeout(() => {
+      this.eventsSelectedTimeRange = timeRange;
+      const start = this.eventsSelectedTimeRange.getTime().startTime.toISOString() as any;
+      const end = this.eventsSelectedTimeRange.getTime().endTime.toISOString() as any;
+      this.eventsTimeConstraints = 'meta.creation-time<' + end + ',' + 'meta.creation-time>' + start;
+      this.genQueryBodies();
+      this.getEvents();
+    }, 0);
+  }
+
+  setAlertsTimeRange(timeRange: TimeRange) {
+    // update query and call getEvents
+    setTimeout(() => {
+      this.alertsSelectedTimeRange = timeRange;
+      const start = this.alertsSelectedTimeRange.getTime().startTime.toISOString() as any;
+      const end = this.alertsSelectedTimeRange.getTime().endTime.toISOString() as any;
+      this.alertsTimeConstraints = 'meta.creation-time<' + end + ',' + 'meta.creation-time>' + start;
+      this.alertQuery = { 'field-selector': this.alertsTimeConstraints };
+      this.getAlerts();
+    }, 0);
+  }
 
   getEvents() {
     if (this.eventsSubscription) {
       this.eventsSubscription.unsubscribe();
+      this.eventsService.pollingUtility.terminatePolling(this.pollingServiceKey, true);
     }
     this.eventsSubscription = this.eventsService.pollEvents(this.pollingServiceKey, this.eventsPostBody).subscribe(
       (data) => {
