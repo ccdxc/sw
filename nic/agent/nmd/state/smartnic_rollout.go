@@ -208,11 +208,30 @@ func (n *NMD) issueNextPendingOp() {
 		}
 		go n.UpgSuccessful()
 	case protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot:
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.InProgressOp.Version)
+		if err != nil {
+			log.Errorf("Failed to get naples version from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to get naples version from objectstore %+v", err)})
+			cancel()
+			return
+		}
+		cancel()
+		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Minute)
+		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
+		if err != nil {
+			log.Errorf("Failed to download naples image from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to download naples image from objectstore %+v", err)})
+			cancel()
+			return
+		}
 		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
 			log.Errorf("/update/naples_fw.tar not found %s", err)
 			go n.UpgNotPossible(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
+			cancel()
 			return
 		}
+		cancel()
 		_, err = naplesPkgVerify("naples_fw.tar")
 		if err != nil {
 			log.Errorf("Firmware image verification failed %s", err)
@@ -221,11 +240,30 @@ func (n *NMD) issueNextPendingOp() {
 		}
 		go n.UpgPossible()
 	case protos.DSCOp_DSCPreCheckForDisruptive:
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(ctx, n.resolverClient, n.ro.InProgressOp.Version)
+		if err != nil {
+			log.Errorf("Failed to get naples version from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to get naples version from objectstore %+v", err)})
+			cancel()
+			return
+		}
+		cancel()
+		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Minute)
+		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
+		if err != nil {
+			log.Errorf("Failed to download naples image from objectstore %+v", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("Failed to download naples image from objectstore %+v", err)})
+			cancel()
+			return
+		}
 		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
 			log.Errorf("/update/naples_fw.tar not found %s", err)
 			go n.UpgNotPossible(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
+			cancel()
 			return
 		}
+		cancel()
 		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("StartPreCheckDisruptive returned %s", err)
