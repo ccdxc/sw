@@ -5,4 +5,5 @@ MODULE_TARGET   = libpdsnicmgr.so
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS     := ${MODULE_SRC_DIR} \
                    ${TOPDIR}/nic/sdk/platform/devapi
+MODULE_DEPS     = hal.memrgns
 include ${MKDEFS}/post.mk
