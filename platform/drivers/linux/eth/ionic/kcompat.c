@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Copyright(c) 2013 - 2018 Intel Corporation. */
+/* Copyright(c) 1999 - 2019 Intel Corporation. */
 
 #include "kcompat.h"
 
@@ -2087,8 +2087,9 @@ void *__kc_devm_kmemdup(struct device *dev, const void *src, size_t len,
 #endif /* 3.16.0 */
 
 /******************************************************************************/
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0) )
-#endif /* 3.17.0 */
+#if ((LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)) && \
+     (RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(7,5)))
+#endif /* <3.17.0 && RHEL_RELEASE_CODE < RHEL7.5 */
 
 /******************************************************************************/
 #if ( LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0) )
@@ -2150,7 +2151,8 @@ void __kc_skb_complete_tx_timestamp(struct sk_buff *skb,
 #include <linux/sctp.h>
 #endif
 
-unsigned int __kc_eth_get_headlen(unsigned char *data, unsigned int max_len)
+u32 __kc_eth_get_headlen(const struct net_device __always_unused *dev,
+			 unsigned char *data, unsigned int max_len)
 {
 	union {
 		unsigned char *network;
@@ -2590,3 +2592,8 @@ void _kc_pcie_print_link_status(struct pci_dev *dev) {
 			 PCIE_SPEED2STR(speed_cap), width_cap);
 }
 #endif /* 4.17.0 */
+
+/*****************************************************************************/
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5,1,0))
+
+#endif /* 5.1.0 */
