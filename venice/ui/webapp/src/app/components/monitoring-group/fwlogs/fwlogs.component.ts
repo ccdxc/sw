@@ -23,7 +23,8 @@ import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { TimeRange } from '@app/components/shared/timerange/utility';
 import { Subscription, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { AbstractControl, ValidatorFn } from '@angular/forms';
+import { ValidatorFn } from '@angular/forms';
+import { TimeRangeOption, citadelTimeOptions, citadelMaxTimePeriod } from '@app/components/shared/timerange/timerange.component';
 
 @Component({
   selector: 'app-fwlogs',
@@ -108,6 +109,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
   fwlogsQueryObserver: Subject<ITelemetry_queryFwlogsQueryList> = new Subject();
 
+  timeRangeOptions: TimeRangeOption[] = citadelTimeOptions;
+  maxTimePeriod = citadelMaxTimePeriod;
+
   constructor(
     protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -184,6 +188,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   setTimeRange(timeRange: TimeRange) {
     // Pushing into next event loop
     setTimeout(() => {
+      if (timeRange.isSame(this.selectedTimeRange)) {
+        return;
+      }
       this.selectedTimeRange = timeRange;
       this.getFwlogs();
     }, 0);

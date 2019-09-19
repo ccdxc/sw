@@ -32,7 +32,10 @@
                        [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
                        (refreshIconClick)="getFwlogs()">
         <div fxFlex></div>
-        <app-timerange fxFlex="nogrow" [selectedTimeRange]="selectedTimeRange"
+        <app-timerange fxFlex="nogrow"
+                       [selectedTimeRange]="selectedTimeRange"
+                       [timeRangeOptions]="timeRangeOptions"
+                       [maxTimePeriod]="maxTimePeriod"
                        (timeRange)="setTimeRange($event)"></app-timerange>
       </app-tableheader>
     </div>

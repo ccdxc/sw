@@ -6,12 +6,42 @@ import { OverlayPanel } from 'primeng/primeng';
 import { Subscription } from 'rxjs';
 
 
-interface TimeRangeOption {
+export interface TimeRangeOption {
   text: string;
   startTime: string;
   // If endtime isn't provided, it default to now
   endTime?: string;
 }
+
+export const citadelTimeOptions: TimeRangeOption[] = [
+  {
+    text: 'Past hour',
+    startTime: 'end - 1h',
+  },
+  {
+    text: 'Past 6 hour',
+    startTime: 'end - 6h',
+  },
+  {
+    text: 'Past 12 hour',
+    startTime: 'end - 12h',
+  },
+  {
+    text: 'Past day',
+    startTime: 'end - d',
+  },
+  {
+    text: 'Previous day',
+    startTime: 'now - 2d',
+    endTime: 'now - d',
+  },
+  {
+    text: 'Past week',
+    startTime: 'end - w',
+  },
+];
+
+export const citadelMaxTimePeriod = moment.duration(7, 'days');
 
 @Component({
   selector: 'app-timerange',
@@ -25,16 +55,8 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() startTime: string = 'now - 24h';
   @Input() endTime: string = 'now';
   @Input() selectedTimeRange: TimeRange;
-  @Output() timeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
-
-  timeFormGroup: FormGroup;
-  groupErrorMessage: string = '';
-  displayString: string = '';
-  lastSelectedTimeRange: TimeRange;
-
-  subscriptions: Subscription[] = [];
-
-  timeRangeOptions: TimeRangeOption[] = [
+  @Input() maxTimePeriod: moment.Duration;
+  @Input() timeRangeOptions: TimeRangeOption[] = [
     {
       text: 'Past hour',
       startTime: 'end - 1h',
@@ -75,6 +97,16 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
       endTime: 'now - M',
     },
   ];
+  @Output() timeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
+
+  timeFormGroup: FormGroup;
+  groupErrorMessage: string = '';
+  displayString: string = '';
+  lastSelectedTimeRange: TimeRange;
+
+  subscriptions: Subscription[] = [];
+
+
 
   startTimeCalendar: Date;
   endTimeCalendar: Date;
@@ -180,6 +212,17 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
       const err = timeRange.getErrMsg();
       if (err != null) {
         this.groupErrorMessage = err;
+        return {
+          timeRangeGroup: {
+            required: true,
+            message: this.groupErrorMessage
+          }
+        };
+      }
+
+      // Check that timeRange is within the given bounds
+      if (this.maxTimePeriod != null && timeRange.getDuration().asMilliseconds() > this.maxTimePeriod.asMilliseconds()) {
+        this.groupErrorMessage = 'Time range cannot be greater than ' + this.maxTimePeriod.humanize();
         return {
           timeRangeGroup: {
             required: true,

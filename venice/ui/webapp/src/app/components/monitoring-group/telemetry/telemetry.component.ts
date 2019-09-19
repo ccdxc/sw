@@ -10,6 +10,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { AuthUserPreference, IAuthUserPreference } from '@sdk/v1/models/generated/auth';
 import { Subscription } from 'rxjs';
+import { TimeRangeOption, citadelTimeOptions, citadelMaxTimePeriod } from '@app/components/shared/timerange/timerange.component';
 
 @Component({
   selector: 'app-telemetry',
@@ -49,6 +50,9 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
 
   saveUserPrefSub: Subscription;
   selectedTimeRange: TimeRange;
+
+  timeRangeOptions: TimeRangeOption[] = citadelTimeOptions;
+  maxTimePeriod = citadelMaxTimePeriod;
 
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,

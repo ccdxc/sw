@@ -2,6 +2,8 @@
   <div fxFlex fxLayout="row" fxLayoutAlign="center center" pagebody-options>
     <div fxFlex></div>
     <app-timerange fxFlex="nogrow" [selectedTimeRange]="selectedTimeRange"
+                   [timeRangeOptions]="timeRangeOptions"
+                   [maxTimePeriod]="maxTimePeriod"
                    (timeRange)="setTimeRange($event)"></app-timerange>
   </div>
 
