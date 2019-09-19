@@ -13,7 +13,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#if !defined(APOLLO) && !defined(ARTEMIS)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
 #include "gen/proto/device.pb.h"
 #include "accel_dev.hpp"
 #endif
@@ -123,7 +123,7 @@ DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
 
     sdk::lib::device *device = NULL;
     sdk::lib::dev_forwarding_mode_t fwd_mode;
-    sdk::lib::dev_feature_profile_t feature_profile; 
+    sdk::lib::dev_feature_profile_t feature_profile;
 
     cout << "Parsing Device conf file: " << filename << endl;
     device = sdk::lib::device::factory(filename);
@@ -132,7 +132,7 @@ DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
     feature_profile = device->get_feature_profile();
 
     printf("forwarding mode: %s, feature_profile: %d\n",
-           FWD_MODE_TYPES_str(*fw_mode), 
+           FWD_MODE_TYPES_str(*fw_mode),
            feature_profile);
 
     if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
@@ -531,7 +531,7 @@ DeviceManager::HalEventHandler(bool status)
 }
 
 void
-DeviceManager::swm_update(bool enable, 
+DeviceManager::swm_update(bool enable,
                           uint32_t port_num, uint32_t vlan, mac_t mac)
 {
     dev_api->swm_update(enable, port_num, vlan, mac);

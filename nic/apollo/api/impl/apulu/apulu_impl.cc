@@ -27,7 +27,7 @@
 #include "nic/apollo/api/impl/apulu/impl_utils.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
-#include "gen/p4gen/apulu/include/apulu_p4pd.h"
+#include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
 #include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
 
@@ -134,23 +134,13 @@ apulu_impl::destroy(apulu_impl *impl) {
     int i;
     sdk_table_api_params_t       tparams = { 0 };
 
-    // remove key native table entries
-    for (i = 0; i < MAX_KEY_NATIVE_TBL_ENTRIES; i++) {
-        tparams.handle = apulu_impl_db()->key_native_tbl_hdls_[i];
-        apulu_impl_db()->key_native_tbl()->remove(&tparams);
-    }
-    // remove key tunneled table entries
-    for (i = 0; i < MAX_KEY_TUNNELED_TBL_ENTRIES; i++) {
-        tparams.handle = apulu_impl_db()->key_tunneled_tbl_hdls_[i];
-        apulu_impl_db()->key_tunneled_tbl()->remove(&tparams);
-    }
     // remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
-        tparams.handle = apulu_impl_db()->egress_drop_stats_tbl_hdls_[i];
+        tparams.handle = apulu_impl_db()->egr_drop_stats_tbl_hdls_[i];
         apulu_impl_db()->egress_drop_stats_tbl()->remove(&tparams);
     }
     for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
-        tparams.handle = apulu_impl_db()->ingress_drop_stats_tbl_hdls_[i];
+        tparams.handle = apulu_impl_db()->ing_drop_stats_tbl_hdls_[i];
         apulu_impl_db()->ingress_drop_stats_tbl()->remove(&tparams);
     }
     api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
@@ -192,166 +182,6 @@ apulu_impl::ring_config_init(asic_cfg_t *asic_cfg) {
 }
 
 sdk_ret_t
-apulu_impl::key_native_init_(void) {
-    sdk_ret_t                  ret;
-    uint32_t                   idx = 0;
-    key_native_swkey_t         key;
-    key_native_swkey_mask_t    mask;
-    key_native_actiondata_t    data;
-    sdk_table_api_params_t     tparams = { 0 };
-
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-
-    // entry for native IPv4 packets
-    key.ipv4_1_valid = 1;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 0;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 0;
-    data.action_id = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
-    mask.ipv4_1_valid_mask = 0xFF;
-    mask.ipv6_1_valid_mask = 0xFF;
-    mask.ethernet_2_valid_mask = 0xFF;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   KEY_NATIVE_NATIVE_IPV4_PACKET_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->key_native_tbl()->insert(&tparams);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    apulu_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
-
-    // entry for native IPv6 packets
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
-    key.ipv4_1_valid = 0;
-    key.ipv6_1_valid = 1;
-    key.ethernet_2_valid = 0;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 0;
-    data.action_id = KEY_NATIVE_NATIVE_IPV6_PACKET_ID;
-    mask.ipv4_1_valid_mask = 0xFF;
-    mask.ipv6_1_valid_mask = 0xFF;
-    mask.ethernet_2_valid_mask = 0xFF;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   KEY_NATIVE_NATIVE_IPV6_PACKET_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->key_native_tbl()->insert(&tparams);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    apulu_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
-
-    // entry for native non-IP packets
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
-    key.ipv4_1_valid = 0;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 0;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 0;
-    data.action_id = KEY_NATIVE_NATIVE_NONIP_PACKET_ID;
-    mask.ipv4_1_valid_mask = 0xFF;
-    mask.ipv6_1_valid_mask = 0xFF;
-    mask.ethernet_2_valid_mask = 0xFF;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   KEY_NATIVE_NATIVE_NONIP_PACKET_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->key_native_tbl()->insert(&tparams);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    apulu_impl_db()->key_native_tbl_hdls_[idx++] = tparams.handle;
-
-    // check overflow
-    SDK_ASSERT(idx <= MAX_KEY_NATIVE_TBL_ENTRIES);
-    return ret;
-}
-
-sdk_ret_t
-apulu_impl::key_tunneled_init_(void) {
-    sdk_ret_t                    ret;
-    uint32_t                     idx = 0;
-    sdk_table_api_params_t       tparams = { 0 };
-    key_tunneled_swkey_t         key;
-    key_tunneled_swkey_mask_t    mask;
-    key_tunneled_actiondata_t    data;
-
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0xFF, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-
-    // entry for tunneled (inner) IPv4 packets
-    key.ipv4_1_valid = 1;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 0;
-    key.ipv4_2_valid = 1;
-    key.ipv6_2_valid = 0;
-    data.action_id = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
-    mask.ipv4_1_valid_mask = 0xFF;
-    mask.ipv6_1_valid_mask = 0xFF;
-    mask.ethernet_2_valid_mask = 0x0;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    memset(&tparams, 0, sizeof(tparams));
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->key_tunneled_tbl()->insert(&tparams);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    apulu_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
-
-    // entry for tunneled (inner) IPv6 packets
-    key.ipv4_1_valid = 1;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 0;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 1;
-    data.action_id = KEY_TUNNELED_TUNNELED_IPV6_PACKET_ID;
-    mask.ipv4_1_valid_mask = 0xFF;
-    mask.ipv6_1_valid_mask = 0xFF;
-    mask.ethernet_2_valid_mask = 0x0;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    memset(&tparams, 0, sizeof(tparams));
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   KEY_TUNNELED_TUNNELED_IPV6_PACKET_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->key_tunneled_tbl()->insert(&tparams);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    apulu_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
-
-    // entry for tunneled (inner) non-IP packets
-    key.ipv4_1_valid = 1;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 1;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 0;
-    data.action_id = KEY_TUNNELED_TUNNELED_NONIP_PACKET_ID;
-    mask.ipv4_1_valid_mask = 0xFF;
-    mask.ipv6_1_valid_mask = 0xFF;
-    mask.ethernet_2_valid_mask = 0xFF;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    memset(&tparams, 0, sizeof(tparams));
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   KEY_TUNNELED_TUNNELED_NONIP_PACKET_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->key_tunneled_tbl()->insert(&tparams);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    apulu_impl_db()->key_tunneled_tbl_hdls_[idx++] = tparams.handle;
-
-    SDK_ASSERT(idx <= MAX_KEY_TUNNELED_TBL_ENTRIES);
-    return ret;
-}
-
-sdk_ret_t
 apulu_impl::inter_pipe_init_(void) {
     return SDK_RET_OK;
 }
@@ -370,11 +200,11 @@ apulu_impl::egress_drop_stats_init_(void) {
         key_mask.control_metadata_p4e_drop_reason_mask =
             key.control_metadata_p4e_drop_reason;
         data.action_id = P4E_DROP_STATS_P4E_DROP_STATS_ID;
-        PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
                                        P4E_DROP_STATS_P4E_DROP_STATS_ID,
                                        sdk::table::handle_t::null());
         ret = apulu_impl_db()->egress_drop_stats_tbl()->insert(&tparams);
-        apulu_impl_db()->egress_drop_stats_tbl_hdls_[i] = tparams.handle;
+        apulu_impl_db()->egr_drop_stats_tbl_hdls_[i] = tparams.handle;
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return ret;
@@ -399,7 +229,7 @@ apulu_impl::ingress_drop_stats_init_(void) {
                                        sdk::table::handle_t::null());
         ret = apulu_impl_db()->ingress_drop_stats_tbl()->insert(&tparams);
         // TODO: storing handles is not going to work !!
-        apulu_impl_db()->ingress_drop_stats_tbl_hdls_[i] = tparams.handle;
+        apulu_impl_db()->ing_drop_stats_tbl_hdls_[i] = tparams.handle;
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return ret;
@@ -433,6 +263,7 @@ apulu_impl::table_init_(void) {
     sdk_ret_t     ret;
     mem_addr_t    addr;
 
+#if 0
     ret = key_native_init_();
     if (ret != SDK_RET_OK) {
         return ret;
@@ -441,6 +272,7 @@ apulu_impl::table_init_(void) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
+#endif
     ret = inter_pipe_init_();
     if (ret != SDK_RET_OK) {
         return ret;
@@ -599,8 +431,6 @@ apulu_impl::table_transaction_begin(void) {
     mapping_impl_db()->table_transaction_begin();
     route_table_impl_db()->table_transaction_begin();
     security_policy_impl_db()->table_transaction_begin();
-    nexthop_impl_db()->table_transaction_begin();
-    nexthop_group_impl_db()->table_transaction_begin();
     return SDK_RET_OK;
 }
 
@@ -612,8 +442,6 @@ apulu_impl::table_transaction_end(void) {
     mapping_impl_db()->table_transaction_end();
     route_table_impl_db()->table_transaction_end();
     security_policy_impl_db()->table_transaction_end();
-    nexthop_impl_db()->table_transaction_end();
-    nexthop_group_impl_db()->table_transaction_end();
     return SDK_RET_OK;
 }
 

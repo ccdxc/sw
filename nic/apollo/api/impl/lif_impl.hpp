@@ -69,7 +69,7 @@ public:
 
     ///< \brief    program necessary filter entries for this lif
     ///< \param[in] lif_params    lif configuration parameters
-    sdk_ret_t program_filters(lif_info_t *lif_params);
+    sdk_ret_t program_oob_filters(lif_info_t *lif_params);
 
     ///< \brief    program filter entries for inband lifs
     ///< \param[in] lif_params    lif configuration parameters

@@ -99,6 +99,7 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 sdk_ret_t
 lif_impl::program_oob_filters(lif_info_t *lif_params) {
+#if 0
     sdk_ret_t              ret;
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
@@ -145,6 +146,8 @@ lif_impl::program_oob_filters(lif_info_t *lif_params) {
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
     }
     return ret;
+#endif
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -211,6 +214,7 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
 
 sdk_ret_t
 lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
+#if 0
     sdk_ret_t              ret;
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
@@ -237,6 +241,8 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
                       "lif %u, err %u", key_, ret);
     }
     return ret;
+#endif
+    return SDK_RET_OK;
 }
 
 typedef struct lif_internal_mgmt_ctx_s {
@@ -258,6 +264,7 @@ lif_internal_mgmt_cb_ (void *api_obj, void *ctxt) {
 
 sdk_ret_t
 lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
+#if 0
     sdk_ret_t ret = SDK_RET_OK;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
@@ -316,6 +323,8 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
                       "to host mgmt lif pinning, err %u", ret);
     }
     return ret;
+#endif
+    return SDK_RET_OK;
 }
 
 /// \@}

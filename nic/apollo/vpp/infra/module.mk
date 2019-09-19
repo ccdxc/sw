@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = infra_plugin.so
-MODULE_PIPELINE = apollo artemis apulu
+MODULE_PIPELINE = apollo artemis
 MODULE_ARCH     = aarch64 x86_64
 MODULE_PREREQS  = vpp_pkg.export
 MODULE_SOLIBS   = logger sdkpal sdkcapri                                    \

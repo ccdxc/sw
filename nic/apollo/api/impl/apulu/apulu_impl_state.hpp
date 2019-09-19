@@ -15,6 +15,9 @@
 #include "nic/sdk/lib/table/sltcam/sltcam.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/p4/include/apulu_defines.h"
+
+using sdk::table::handle_t;
 
 namespace api {
 namespace impl {
@@ -50,6 +53,8 @@ private:
     sltcam *ingress_drop_stats_tbl_;    ///< ingress drop stats table
     sltcam *egress_drop_stats_tbl_;     ///< egress drop stats table
     sltcam *nacl_tbl_;                  ///< NACL tcam table
+    handle_t ing_drop_stats_tbl_hdls_[P4I_DROP_REASON_MAX + 1];
+    handle_t egr_drop_stats_tbl_hdls_[P4E_DROP_REASON_MAX + 1];
 };
 
 /// \@}

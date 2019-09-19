@@ -147,14 +147,6 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t init_(pipeline_cfg_t *pipeline_cfg);
 
-    /// \brief  init routine to initialize key native table
-    /// \return SDK_RET_OK on success, failure status code on error
-    sdk_ret_t key_native_init_(void);
-
-    /// \brief  init routine to initialize key tunnel table
-    /// \return SDK_RET_OK on success, failure status code on error
-    sdk_ret_t key_tunneled_init_(void);
-
     /// \brief  init routine to initialize inter pipe table
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t inter_pipe_init_(void);
@@ -170,6 +162,14 @@ private:
     /// \brief  initialize all the stats tables, where needed
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t stats_init_(void);
+
+    /// \brief  initialize any global ACLs during init time
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t nacl_init_(void);
+
+    /// \brief  initialize checksum table
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t checksum_init_(void);
 
     /// \brief  program all p4/p4+ tables that require one time initialization
     /// \return SDK_RET_OK on success, failure status code on error

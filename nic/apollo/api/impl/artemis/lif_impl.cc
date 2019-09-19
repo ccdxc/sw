@@ -95,7 +95,7 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 sdk_ret_t
-lif_impl::program_filters(lif_info_t *lif_params) {
+lif_impl::program_oob_filters(lif_info_t *lif_params) {
     sdk_ret_t ret = SDK_RET_OK;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
