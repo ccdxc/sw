@@ -342,7 +342,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level7"
   ],
   "scope": "PerASIC",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   EgressDropMetrics: {
   "name": "EgressDropMetrics",
@@ -431,7 +431,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level7"
   ],
   "scope": "PerASIC",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   FteCPSMetrics: {
   "name": "FteCPSMetrics",
@@ -498,7 +498,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level4"
   ],
   "scope": "PerFTE",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   FteLifQMetrics: {
   "name": "FteLifQMetrics",
@@ -631,7 +631,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level7"
   ],
   "scope": "PerFTE",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   SessionSummaryMetrics: {
   "name": "SessionSummaryMetrics",
@@ -775,7 +775,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level4"
   ],
   "scope": "PerFTE",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   AccelHwRingMetrics: {
   "name": "AccelHwRingMetrics",
@@ -850,7 +850,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "scope": "PerRingPerSubRing",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   AccelPfInfo: {
   "name": "AccelPfInfo",
@@ -936,7 +936,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "scope": "PerLIF",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   AccelSeqQueueInfoMetrics: {
   "name": "AccelSeqQueueInfoMetrics",
@@ -989,7 +989,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "scope": "PerLIFPerQ",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   AccelSeqQueueMetrics: {
   "name": "AccelSeqQueueMetrics",
@@ -1218,7 +1218,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "scope": "PerLIFPerQ",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   LifMetrics: {
   "name": "LifMetrics",
@@ -1505,7 +1505,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level7"
   ],
   "scope": "PerLIF",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   NMDMetrics: {
   "name": "NMDMetrics",
@@ -1536,7 +1536,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "scope": "PerNode",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   RuleMetrics: {
   "name": "RuleMetrics",
@@ -1625,7 +1625,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level7"
   ],
   "scope": "PerFwRule",
-  "objectKind": "SmartNIC"
+  "objectKind": "DistributedServiceCard"
 },
   Node: {
   "name": "Node",

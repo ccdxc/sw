@@ -40,7 +40,7 @@ function generateMetricMetadata(inputBaseFolder, outputFolder) {
             m = _.transform(m, function (result, val, key) {
                 result[_.camelCase(key)] = val;
             });
-            m.objectKind = "SmartNIC";
+            m.objectKind = "DistributedServiceCard";
             if (m.fields == null) {
                 return;
             }

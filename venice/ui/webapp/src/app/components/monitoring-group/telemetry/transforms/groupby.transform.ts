@@ -15,9 +15,6 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
   _groupBy: string;
   groupByOptions: SelectItem[] = [];
 
-  macAddrToName: { [key: string]: string; } = {};
-  nameToMacAddr: { [key: string]: string; } = {};
-
   onFieldChange() {
     this.updateOptions();
   }
@@ -51,7 +48,7 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
     if (opts.series.tags != null) {
       const groupByValue = opts.series.tags[this.groupBy];
       if (groupByValue != null && groupByValue.length > 0) {
-        opts.dataset.label += ' - ' + this.getGroupByValueLabel(groupByValue);
+        opts.dataset.label += ' - ' + groupByValue;
       }
     } else {
       const tags = MetricsMetadata[opts.measurement].tags;
@@ -62,13 +59,6 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
 
       opts.dataset.label = 'Avg ' + opts.dataset.label;
     }
-  }
-
-
-
-  getGroupByValueLabel(groupByValue: string): string {
-    const macToName   =  this.macAddrToName[groupByValue];
-    return (macToName) ? macToName : groupByValue;
   }
 
   load(config: GroupByTransformConfig) {

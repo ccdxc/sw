@@ -146,7 +146,8 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling('Node');
+    // TODO: Optimize query. Don't pull all stats
+    return MetricsUtility.timeSeriesQueryPolling('Node', []);
   }
 
   currentQuery(): MetricsPollingQuery {

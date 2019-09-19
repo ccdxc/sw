@@ -203,7 +203,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
 
   timeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind);
+    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, ['CPUUsedPercent', 'MemUsedPercent', 'DiskUsedPercent']);
   }
 
   avgQuery(): MetricsPollingQuery {

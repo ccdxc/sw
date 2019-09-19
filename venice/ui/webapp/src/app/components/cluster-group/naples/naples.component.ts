@@ -7,9 +7,8 @@ import { HeroCardOptions } from '@app/components/shared/herocard/herocard.compon
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
-import { ClusterDistributedServiceCard, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
-import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { Table } from 'primeng/table';
 import { Subscription, forkJoin } from 'rxjs';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
@@ -307,7 +306,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind);
+    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, ['CPUUsedPercent', 'MemUsedPercent', 'DiskUsedPercent']);
   }
 
   avgQuery(): MetricsPollingQuery {

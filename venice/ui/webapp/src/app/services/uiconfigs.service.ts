@@ -16,6 +16,7 @@ export enum Features {
   workloadWidgets = 'workloadWidgets',
   createSGPolicy = 'createSGPolicy',
   createWorkload = 'createWorkload',
+  showDebugMetrics = 'showDebugMetrics',
 }
 
 interface UIConfig {

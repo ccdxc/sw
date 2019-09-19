@@ -154,9 +154,6 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   // Used to prevent fetching metrics before all configs are loaded
   configLoaded: boolean = false;
 
-
-  _groupByTransform: GroupByTransform  = new GroupByTransform();  // VS-742  TODO: make a better design
-
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
@@ -335,9 +332,6 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
             this.nameToMacAddr[nic.spec.id] = nic.meta.name;
           }
         }
-        // VS-742 assign values to _groupByTransform.
-        this._groupByTransform.macAddrToName = this.macAddrToName;
-        this._groupByTransform.nameToMacAddr = this.nameToMacAddr;
         this.getMetrics();
       },
       this.controllerService.webSocketErrorHandler('Failed to get labels')
@@ -432,7 +426,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       new RoundCountersTransform(),
       new DisplayLabelTransform(), // This needs to be before groupByTransform
       new ColorTransform(),
-      this._groupByTransform,  // VS-742
+      new GroupByTransform(),
       new GroupByTimeTransform(),
       new FieldSelectorTransform(),
       new LabelSelectorTransform(this.labelMap),
@@ -467,7 +461,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
    * @param source
    */
   buildMetricsPollingQuery(source: DataSource): MetricsPollingQuery {
-    const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
+    const query = MetricsUtility.timeSeriesQueryPolling(source.measurement, source.fields);
     if (source.measurement === 'Cluster' || source.measurement === 'SessionSummaryMetrics') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
       query.query.function = Telemetry_queryMetricsQuerySpec_function.last; // VS-741 use median function to show DSC count
     }
@@ -671,6 +665,15 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       }
       // Should be one to one with response length
       const source = this.dataSources[index];
+
+      // Rename columns - Influx gives inconsistent names for returned columns based on the function used
+      // Ex. last, last_1, last_2 if using last and specifiying fields
+      res.series.forEach( (s) => {
+        source.fields.forEach((field, i) => {
+          s.columns[i + 1] = field;
+        });
+      });
+
       source.transformMetricData({ result: res });
 
       const singleResultDatasets: TransformDatasets = [];

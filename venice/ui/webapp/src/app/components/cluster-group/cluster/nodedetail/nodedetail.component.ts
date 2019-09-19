@@ -232,7 +232,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
+    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, ['CPUUsedPercent', 'MemUsedPercent', 'DiskUsedPercent'], MetricsUtility.createNameSelector(this.selectedId));
   }
 
   avgQuery(): MetricsPollingQuery {

@@ -288,7 +288,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   sessionTimeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics');
+    return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics', []);
   }
 
   sessionCurrentQuery(): MetricsPollingQuery {
@@ -305,7 +305,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   cpsTimeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling('FteCPSMetrics');
+    return MetricsUtility.timeSeriesQueryPolling('FteCPSMetrics', []);
   }
 
   cpsAvgQuery(): MetricsPollingQuery {

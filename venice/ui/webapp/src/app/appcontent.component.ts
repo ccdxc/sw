@@ -335,7 +335,6 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
    */
   private onLogout(payload: any) {
     this.store.dispatch(logout());
-    sessionStorage.removeItem(AUTH_BODY); // VS-802. Once user logout, we clear out sessionStorage. Openning two browsers, one logouts, all logout.
     this._boolInitApp = false;
     this.navigate(['/login']);
   }

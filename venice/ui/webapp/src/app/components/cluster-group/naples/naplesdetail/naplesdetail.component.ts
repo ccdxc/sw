@@ -249,7 +249,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     if (this.selectedObj != null) {
       name = MetricsUtility.generateNaplesReporterId(this.selectedObj);
     }
-    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(name));
+    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, ['CPUUsedPercent', 'MemUsedPercent', 'DiskUsedPercent'], MetricsUtility.createNameSelector(name));
   }
 
   avgQuery(): MetricsPollingQuery {

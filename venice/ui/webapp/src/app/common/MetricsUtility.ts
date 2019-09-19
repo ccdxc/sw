@@ -112,7 +112,7 @@ export class MetricsUtility {
     }
   }
 
-  public static timeSeriesQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static timeSeriesQuery(kind: string, fields: string[], selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
     const timeSeriesQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
@@ -122,7 +122,7 @@ export class MetricsUtility {
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
-      fields: [],
+      fields: fields != null ? fields : [],
       'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
       'start-time': 'now() - 24h' as any,
       // Round down so we don't pick up an incomplete bucket
@@ -132,12 +132,12 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(timeSeriesQuery);
   }
 
-  public static timeSeriesQueryPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
+  public static timeSeriesQueryPolling(kind: string, fields: string[], selector: IFieldsSelector = null): MetricsPollingQuery {
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.createTimeSeriesQueryMerge()
     };
-    return { query: MetricsUtility.timeSeriesQuery(kind, selector), pollingOptions: pollOptions };
+    return { query: MetricsUtility.timeSeriesQuery(kind, fields, selector), pollingOptions: pollOptions };
   }
 
   // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment

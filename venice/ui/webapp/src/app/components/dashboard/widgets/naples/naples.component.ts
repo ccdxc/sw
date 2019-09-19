@@ -318,7 +318,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
-    const timeQuery = MetricsUtility.timeSeriesQueryPolling('Cluster');
+    const timeQuery = MetricsUtility.timeSeriesQueryPolling('Cluster', []);
     timeQuery.query.function = Telemetry_queryMetricsQuerySpec_function.last; // VS-790 user last func instead o f median function
     queryList.queries.push(timeQuery);
     queryList.queries.push(this.avgQuery());
