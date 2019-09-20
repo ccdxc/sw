@@ -7,7 +7,6 @@
 #define tx_table_s2_t0          ipfix_flow_info
 #define tx_table_s3_t0          ipfix_session_state
 #define tx_table_s4_t0          ipfix_flow_stats
-#define tx_table_s4_t1          ipfix_flow_atomic_stats
 #define tx_table_s5_t0          ipfix_create_record
 #define tx_table_s1_t1          ipfix_export_packet
 
@@ -16,7 +15,6 @@
 #define tx_table_s2_t0_action	ipfix_flow_info
 #define tx_table_s3_t0_action	ipfix_session_state
 #define tx_table_s4_t0_action	ipfix_flow_stats
-#define tx_table_s4_t1_action	ipfix_flow_atomic_stats
 #define tx_table_s5_t0_action	ipfix_create_record
 #define tx_table_s1_t1_action   ipfix_export_packet
 
@@ -134,15 +132,6 @@ action ipfix_session_state() {
 action ipfix_flow_stats() {
     modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
     modify_field(scratch_metadata.qstate_addr, ipfix_metadata.qstate_addr);
-}
-
-action ipfix_flow_atomic_stats(permit_bytes, permit_packets,
-                               drop_bytes, drop_packets) {
-    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
-    modify_field(scratch_metadata.counter64, permit_bytes);
-    modify_field(scratch_metadata.counter64, permit_packets);
-    modify_field(scratch_metadata.counter64, drop_bytes);
-    modify_field(scratch_metadata.counter64, drop_packets);
 }
 
 action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,

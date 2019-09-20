@@ -186,7 +186,6 @@
 #define P4_FLOW_INFO_BASE               "p4_flow_info_base"
 #define P4_SESSION_STATE_BASE           "p4_session_state_base"
 #define P4_FLOW_STATS_BASE              "p4_flow_stats_base"
-#define P4_FLOW_ATOMIC_STATS_BASE       "p4_flow_atomic_stats_base"
 #define NUM_CLOCK_TICKS_PER_CNP         "rdma_num_clock_ticks_per_cnp"
 #define NUM_CLOCK_TICKS_PER_US          "rdma_num_clock_ticks_per_us"
 #define RDMA_EQ_INTR_TABLE_BASE         "hbm_rdma_eq_intr_table_base"

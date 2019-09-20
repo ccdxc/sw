@@ -45,7 +45,7 @@ typedef struct __attribute__((__packed__)) ipfix_qstate_  {
     uint64_t flow_hash_index_next : 32;
     uint64_t flow_hash_index_max : 32;
     uint64_t flow_hash_overflow_index_max : 32;
-    
+
     uint64_t export_time : 32;
 
     uint8_t  pad[(512-408)/8];
@@ -123,20 +123,16 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
         // flow stats
         flow_stats_actiondata_t stats_data;
         memset(&stats_data, 0, sizeof(stats_data));
+        memcpy(stats_data.action_u.flow_stats_flow_stats.permit_bytes,
+               &permit_bytes, sizeof(permit_bytes));
+        memcpy(stats_data.action_u.flow_stats_flow_stats.permit_packets,
+               &permit_packets, sizeof(permit_packets));
+        memcpy(stats_data.action_u.flow_stats_flow_stats.drop_bytes,
+               &deny_bytes, sizeof(deny_bytes));
+        memcpy(stats_data.action_u.flow_stats_flow_stats.drop_packets,
+               &deny_packets, sizeof(deny_packets));
         p4pd_entry_write(P4TBL_ID_FLOW_STATS, flow_index+i, NULL, NULL,
                          &stats_data);
-
-        // atomic add region
-        uint64_t base_addr = get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS) +
-            ((flow_index+i) * 32);
-        p4plus_hbm_write(base_addr, (uint8_t *)&permit_bytes,
-                         sizeof(permit_bytes), P4PLUS_CACHE_ACTION_NONE);
-        p4plus_hbm_write(base_addr + 8 , (uint8_t *)&permit_packets,
-                         sizeof(permit_packets), P4PLUS_CACHE_ACTION_NONE);
-        p4plus_hbm_write(base_addr + 16, (uint8_t *)&deny_bytes,
-                         sizeof(deny_bytes), P4PLUS_CACHE_ACTION_NONE);
-        p4plus_hbm_write(base_addr + 24 , (uint8_t *)&deny_packets,
-                         sizeof(deny_packets), P4PLUS_CACHE_ACTION_NONE);
     }
     delete [] hwkey;
 }
@@ -206,7 +202,7 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
     address = DB_ADDR_BASE + (upd << DB_UPD_SHFT) + (SERVICE_LIF_IPFIX << DB_LIF_SHFT) + (qtype << DB_TYPE_SHFT);
     data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) | (ring_id << DB_RING_SHFT) | p_index;
-    
+
     // Update (RMW) export time in the Qstate table
     lif_manager()->read_qstate(lif_id, 0, qid,
                                 (uint8_t *)&qstate, sizeof(qstate));

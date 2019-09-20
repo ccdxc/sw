@@ -15,13 +15,13 @@ ipfix_flow_stats:
                     d.flow_stats_d.drop_reason
     phvwr       p.ipfix_record_common_last_seen_timestamp, \
                     d.flow_stats_d.last_seen_timestamp
-    phvwr       p.ipfix_record_common_delta_permit_bytes, \
+    phvwr       p.ipfix_record_common_permit_bytes, \
                     d.flow_stats_d.permit_bytes
-    phvwr       p.ipfix_record_common_delta_permit_packets, \
+    phvwr       p.ipfix_record_common_permit_packets, \
                     d.flow_stats_d.permit_packets
-    phvwr       p.ipfix_record_common_delta_drop_bytes, \
+    phvwr       p.ipfix_record_common_drop_bytes, \
                     d.flow_stats_d.drop_bytes
-    phvwr       p.ipfix_record_common_delta_drop_packets, \
+    phvwr       p.ipfix_record_common_drop_packets, \
                     d.flow_stats_d.drop_packets
 
     // table 0 : lookup qstate address

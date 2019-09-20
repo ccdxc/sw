@@ -16,7 +16,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512
 
-#define P4PLUS_SYMBOLS_MAX 86
+#define P4PLUS_SYMBOLS_MAX 85
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -185,10 +185,6 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     if ((offset = get_mem_addr("flow_stats")) != INVALID_MEM_ADDRESS) {
         symbols[i].name = P4_FLOW_STATS_BASE;
         symbols[i].val = offset;
-        i++;
-
-        symbols[i].name = P4_FLOW_ATOMIC_STATS_BASE;
-        symbols[i].val = get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
         i++;
     }
 

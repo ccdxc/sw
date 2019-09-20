@@ -10,9 +10,7 @@ struct phv_                  p;
 %%
 
     .param      p4_flow_stats_base
-    .param      p4_flow_atomic_stats_base
     .param      ipfix_flow_stats
-    .param      ipfix_flow_atomic_stats
 
 ipfix_session_state:
     seq         c1, k.ipfix_metadata_scan_complete, TRUE
@@ -51,15 +49,6 @@ ipfix_session_state_common:
     phvwr       p.common_te0_phv_table_raw_table_size, 6
     phvwr       p.common_te0_phv_table_lock_en, 0
 
-    // table 1 : lookup flow stats from atomic add region
-    addi        r1, r0, loword(p4_flow_atomic_stats_base)
-    addui       r1, r1, hiword(p4_flow_atomic_stats_base)
-    add         r1, r1, k.ipfix_metadata_flow_index, 5
-    phvwr       p.common_te1_phv_table_addr, r1
-    phvwri      p.common_te1_phv_table_pc, ipfix_flow_atomic_stats[33:6]
-    phvwr       p.common_te1_phv_table_raw_table_size, 5
-    phvwr       p.common_te1_phv_table_lock_en, 0
-
-    // enable tables 0 and 1 in next stage
-    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0xC
+    // enable table 0 in next stage
+    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0x8
     nop
