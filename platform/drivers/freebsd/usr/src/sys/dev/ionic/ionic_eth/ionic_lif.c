@@ -2243,9 +2243,9 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		return -ENOMEM;
 	}
 
-	IONIC_LIF_LOCK_INIT(lif);
 	snprintf(lif->name, sizeof(lif->name), "%s%u", DRV_NAME, index);
 	snprintf(lif->sx_name, sizeof(lif->sx_name), "%s-core", lif->name);
+	IONIC_LIF_LOCK_INIT(lif);
 	lif->ionic = ionic;
 	lif->index = index;
 	lif->neqs = ionic->neqs_per_lif;
