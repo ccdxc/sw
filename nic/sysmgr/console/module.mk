@@ -2,10 +2,10 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = console.bin
-MODULE_PIPELINE = iris apollo artemis
-MODULE_SOLIBS   = 
+MODULE_PIPELINE = iris apollo artemis apulu
+MODULE_SOLIBS   =
 MODULE_LDLIBS   = rt
-MODULE_ARLIBS   = 
+MODULE_ARLIBS   =
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cpp)
 MODULE_SRCS     = $(filter-out $(ALL_TEST_FILES), $(ALL_CC_FILES))

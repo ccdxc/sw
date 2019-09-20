@@ -37,6 +37,7 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkfru.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libht.so                            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libindexer.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/librte_indexer.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblogger.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libthread.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libutils.so                         /nic/lib/
