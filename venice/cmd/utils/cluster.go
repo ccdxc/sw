@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/utils/log"
@@ -142,4 +143,26 @@ func GetSupportedNaplesVersions() map[string][]string {
 	var imageConfig ImageConfig
 	readImageConfigFile(&imageConfig)
 	return imageConfig.SupportedNaplesVersions
+}
+
+// GetOtherQuorumNodes returns quorum list excluding quorum node whose node id is 'nodeID'
+func GetOtherQuorumNodes(envQuorumNodes []string, nodeID string) []string {
+	var (
+		i           int
+		quorumNodes []string
+		found       bool
+	)
+	found = false
+	quorumNodes = append(quorumNodes, envQuorumNodes...)
+	sort.Strings(quorumNodes)
+	for i = range quorumNodes {
+		if quorumNodes[i] == nodeID {
+			found = true
+			break
+		}
+	}
+	if found {
+		quorumNodes = append(quorumNodes[:i], quorumNodes[i+1:]...)
+	}
+	return quorumNodes
 }

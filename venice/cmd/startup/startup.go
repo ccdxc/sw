@@ -74,9 +74,9 @@ func waitForAPIAndStartServices(nodeID string) {
 			if found == false {
 				log.Debugf("Not starting NTP service since this node is no longer part of Quorum Nodes")
 			} else {
-				log.Debugf("starting NTP service with %v servers", cl[0].Spec.NTPServers)
-				env.NtpService = services.NewNtpService(cl[0].Spec.NTPServers)
-				env.NtpService.NtpConfigFile(cl[0].Spec.NTPServers)
+				log.Infof("starting NTP service with %v servers", cl[0].Spec.NTPServers)
+				env.NtpService = services.NewNtpService(cl[0].Spec.NTPServers, cl[0].Spec.QuorumNodes, nodeID)
+				env.MasterService.UpdateNtpService(env.NtpService)
 			}
 			return
 		}
@@ -111,14 +111,12 @@ func StartQuorumServices(c utils.Cluster) {
 		Name:       c.NodeID,
 		ClientURLs: []string{fmt.Sprintf("https://%s:%s", c.NodeID, env.Options.KVStore.ClientPort)},
 	})
-
 	// etcd can only bind to IP:pair ports. If we have a host name, we need to resolve
 	addrs, err := net.LookupHost(c.NodeID)
 	if err != nil {
 		log.Errorf("Failed to retrieve node: %v, error: %v", addrs[0], err)
 		return
 	}
-
 	var quorumIntf quorum.Interface
 	ii := 0
 	for ; ii < maxIters; ii++ {
@@ -206,6 +204,7 @@ func StartQuorumServices(c utils.Cluster) {
 	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, c.NodeID)
 	env.SystemdService = services.NewSystemdService()
 	env.VipService = services.NewVIPService()
+
 	k8sConfig := services.K8sServiceConfig{
 		OverriddenModules: utils.GetOverriddenModules(""),
 		DisabledModules:   utils.GetDisabledModules(""),
@@ -213,7 +212,7 @@ func StartQuorumServices(c utils.Cluster) {
 	env.K8sService = services.NewK8sService(&k8sConfig)
 	env.ResolverService = services.NewResolverService(env.K8sService)
 	env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
-		services.WithResolverSvcMasterOption(env.ResolverService))
+		services.WithResolverSvcMasterOption(env.ResolverService), services.WithNtpSvcMasterOption(env.NtpService))
 	env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
 	env.LeaderService.Register(env.ServiceTracker) // call before starting leader service
 
@@ -253,10 +252,10 @@ func StartQuorumServices(c utils.Cluster) {
 // StartNodeServices starts services running on non-quorum node
 func StartNodeServices(nodeID, clusterID, VirtualIP string) {
 	log.Debugf("Starting node services on startup")
-	env.NtpService = services.NewNtpService(nil)
-	env.NtpService.NtpConfigFile([]string{VirtualIP})
 	env.SystemdService = services.NewSystemdService()
 	env.SystemdService.Start()
+	env.NtpService = services.NewNtpService(nil, env.QuorumNodes, nodeID)
+	env.NtpService.NtpConfigFile(env.QuorumNodes)
 
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)

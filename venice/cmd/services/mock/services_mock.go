@@ -8,12 +8,12 @@ import (
 	"time"
 
 	k8sclient "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
+	v1 "k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -127,6 +127,13 @@ func (l *LeaderService) Register(o types.LeadershipObserver) {
 
 //UnRegister an Observer
 func (l *LeaderService) UnRegister(o types.LeadershipObserver) {
+	var i int
+	for i = range l.observers {
+		if l.observers[i] == o {
+			break
+		}
+	}
+	l.observers = append(l.observers[:i], l.observers[i+1:]...)
 }
 
 // return first encountered err of the observers.
@@ -145,6 +152,7 @@ func (l *LeaderService) notify(e types.LeaderEvent) error {
 // Stop stops the leader election.
 func (l *LeaderService) Stop() {
 	l.processEvent("")
+	l.started = false
 }
 
 // BecomeLeader mocks becoming a leader. If the Notifiers return an error, it returns this error.
@@ -834,6 +842,9 @@ func (c *CfgWatcherService) SetNodeService(types.NodeService) {}
 // SetClusterQuorumNodes sets the initial list of quorum nodes to be updated on 3rd party
 // services (e.g. elastic discovery file)
 func (c *CfgWatcherService) SetClusterQuorumNodes([]string) {}
+
+// SetNtpEventHandler sets the handler to handle events related to Cluster object
+func (c *CfgWatcherService) SetNtpEventHandler(types.ClusterEventHandler) {}
 
 // APIClient returns a valid interface once the APIServer is good and
 // accepting requests

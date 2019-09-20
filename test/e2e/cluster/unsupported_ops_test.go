@@ -64,17 +64,6 @@ var _ = Describe("negative tests for unsupported cluster operations", func() {
 				return false
 			}, 30, 1).Should(BeTrue(), "ApiServer did not return expected error")
 
-			Eventually(func() bool {
-				mcl := *cl
-				mcl.Spec.NTPServers = []string{"0.0.0.0"}
-				_, err = clusterIf.Update(ts.loggedInCtx, &mcl)
-				if err != nil && strings.Contains(err.Error(), "NTPServer") {
-					return true
-				}
-				By(fmt.Sprintf("Unexpected error: %+v", err))
-				return false
-			}, 30, 1).Should(BeTrue(), "ApiServer did not return expected error")
-
 			// writing back unmodified immutable fields should succeed
 			Eventually(func() error {
 				_, err = clusterIf.Update(ts.loggedInCtx, cl)

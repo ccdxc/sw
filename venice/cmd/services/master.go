@@ -66,6 +66,7 @@ type masterService struct {
 	sync.Mutex
 	sysSvc               types.SystemdService
 	leaderSvc            types.LeaderService
+	ntpSvc               types.NtpService
 	k8sSvc               types.K8sService
 	resolverSvc          types.ResolverService
 	resolverSvcObserver  *resolverServiceObserver
@@ -127,6 +128,13 @@ func WithLeaderSvcMasterOption(leaderSvc types.LeaderService) MasterOption {
 	}
 }
 
+// WithNtpSvcMasterOption to pass a specifc types.SystemdService implementation
+func WithNtpSvcMasterOption(ntpSvc types.NtpService) MasterOption {
+	return func(m *masterService) {
+		m.ntpSvc = ntpSvc
+	}
+}
+
 // WithSystemdSvcMasterOption to pass a specifc types.SystemdService implementation
 func WithSystemdSvcMasterOption(sysSvc types.SystemdService) MasterOption {
 	return func(m *masterService) {
@@ -169,6 +177,18 @@ func WithClusterHealthMonitor(clusterHealthMonitor types.ClusterHealthMonitor) M
 	}
 }
 
+// UpdateNtpService updates master's NTP service
+func (m *masterService) UpdateNtpService(ntpSvc types.NtpService) {
+	if m.ntpSvc != nil {
+		m.ntpSvc.Stop()
+		m.leaderSvc.UnRegister(m.ntpSvc)
+	}
+	m.ntpSvc = ntpSvc
+	m.ntpSvc.Start()
+	m.ntpSvc.UpdateNtpConfig(m.leaderSvc.Leader())
+	m.leaderSvc.Register(m.ntpSvc)
+}
+
 // resolver observer that observes service instances and creates event accordingly.
 type resolverServiceObserver struct{}
 
@@ -198,6 +218,7 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 	m := masterService{
 		leaderSvc:           env.LeaderService,
 		sysSvc:              env.SystemdService,
+		ntpSvc:              env.NtpService,
 		cfgWatcherSvc:       env.CfgWatcherService,
 		k8sSvc:              env.K8sService,
 		resolverSvc:         env.ResolverService,
@@ -245,8 +266,13 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 	m.sysSvc.Register(&m)
 	m.cfgWatcherSvc.SetNodeEventHandler(m.handleNodeEvent)
 	m.cfgWatcherSvc.SetClusterEventHandler(m.handleClusterEvent)
+	m.cfgWatcherSvc.SetNtpEventHandler(m.handleNtpEvent)
 	m.cfgWatcherSvc.SetSmartNICEventHandler(m.handleSmartNICEvent)
 	m.cfgWatcherSvc.SetHostEventHandler(m.handleHostEvent)
+	// ntp service listens for leadership changes
+	if m.ntpSvc != nil {
+		m.leaderSvc.Register(m.ntpSvc)
+	}
 
 	return &m
 }
@@ -522,7 +548,6 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	//	here before calling startLeaderServices()
 	//	so that cluster health monitor uses latest k8s client
 	m.k8sSvc.Stop()
-
 	switch e.Evt {
 	case types.LeaderEventChange:
 		fallthrough
@@ -650,6 +675,21 @@ func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *c
 		// pendingNIC statusupdateClusterStatus
 		if m.isLeader && cluster.Status.Leader != m.leaderSvc.ID() {
 			m.updateCh <- true
+		}
+		return
+	case kvstore.Deleted:
+		return
+	}
+}
+
+// handleNtpEvent handles NTP Servers List update
+func (m *masterService) handleNtpEvent(et kvstore.WatchEventType, cluster *cmd.Cluster) {
+	switch et {
+	case kvstore.Created:
+		return
+	case kvstore.Updated:
+		if m.ntpSvc != nil {
+			m.ntpSvc.UpdateServerList(cluster.Spec.NTPServers)
 		}
 		return
 	case kvstore.Deleted:

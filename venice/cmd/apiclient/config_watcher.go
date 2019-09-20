@@ -57,6 +57,7 @@ type CfgWatcherService struct {
 	// Event handlers
 	nodeEventHandler     types.NodeEventHandler
 	clusterEventHandler  types.ClusterEventHandler
+	ntpEventHandler      types.ClusterEventHandler
 	smartNICEventHandler types.SmartNICEventHandler
 	hostEventHandler     types.HostEventHandler
 }
@@ -69,6 +70,11 @@ func (k *CfgWatcherService) SetNodeEventHandler(nh types.NodeEventHandler) {
 // SetClusterEventHandler sets handler for Cluster events
 func (k *CfgWatcherService) SetClusterEventHandler(ch types.ClusterEventHandler) {
 	k.clusterEventHandler = ch
+}
+
+// SetNtpEventHandler sets handler for NTP Server List events
+func (k *CfgWatcherService) SetNtpEventHandler(ntph types.ClusterEventHandler) {
+	k.ntpEventHandler = ntph
 }
 
 // SetSmartNICEventHandler sets handler for SmartNIC events
@@ -374,6 +380,9 @@ func (k *CfgWatcherService) runUntilCancel() {
 			if k.clusterEventHandler != nil {
 				// FIXME -- avoid spawning a goroutine once the issue on the clusterEventHandler is sorted out
 				go k.clusterEventHandler(event.Type, cluster)
+			}
+			if k.ntpEventHandler != nil {
+				k.ntpEventHandler(event.Type, cluster)
 			}
 
 		case event, ok := <-k.nodeWatcher.EventChan():

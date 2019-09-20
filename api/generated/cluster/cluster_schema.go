@@ -144,7 +144,7 @@ var typesMapCluster = map[string]*api.Struct{
 
 			"VirtualIP": api.Field{Name: "VirtualIP", CLITag: api.CLIInfo{ID: "virtual-ip", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "virtual-ip", Pointer: false, Slice: false, Mutable: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NTPServers": api.Field{Name: "NTPServers", CLITag: api.CLIInfo{ID: "ntp-servers", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ntp-servers", Pointer: false, Slice: true, Mutable: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"NTPServers": api.Field{Name: "NTPServers", CLITag: api.CLIInfo{ID: "ntp-servers", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ntp-servers", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"AutoAdmitDSCs": api.Field{Name: "AutoAdmitDSCs", CLITag: api.CLIInfo{ID: "auto-admit-dscs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auto-admit-dscs", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 

@@ -62,8 +62,7 @@ message ClusterSpec {
                                      (venice.mutable) = false];
 
     // NTPServers contains the list of NTP servers for the cluster.
-    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty",
-                                     (venice.mutable) = false];
+    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty"];
 
     // AutoAdmitDSCs when enabled auto-admits DSCs that are validated
     // into Venice Cluster. When it is disabled, DSCs validated by CMD are

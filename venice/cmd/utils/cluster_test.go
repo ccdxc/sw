@@ -123,3 +123,31 @@ func TestContainerConfigFile(t *testing.T) {
 	}
 
 }
+
+func TestGenerateNodeQuorumList(t *testing.T) {
+	tests := []struct {
+		name           string
+		envQuorumNodes []string
+		nodeID         string
+		out            []string
+	}{
+		{
+			name:           "node ID in quorum nodes",
+			envQuorumNodes: []string{"1", "2", "3"},
+			nodeID:         "2",
+			out:            []string{"1", "3"},
+		},
+		{
+			name:           "no node ID in quorum nodes",
+			envQuorumNodes: []string{"1", "2", "3"},
+			nodeID:         "5",
+			out:            []string{"1", "2", "3"},
+		},
+	}
+	for _, test := range tests {
+		qnodes := GetOtherQuorumNodes(test.envQuorumNodes, test.nodeID)
+		if !reflect.DeepEqual(qnodes, test.out) {
+			t.Errorf("%s test failed, expected quorum nodes %v, got %v", test.name, test.out, qnodes)
+		}
+	}
+}

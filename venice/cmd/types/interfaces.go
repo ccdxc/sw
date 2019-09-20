@@ -135,6 +135,9 @@ type MasterService interface {
 	// AreLeaderServicesRunning returns if all the leader node services are
 	// running.
 	AreLeaderServicesRunning() bool
+
+	// UpdateNtpService updates ntp service
+	UpdateNtpService(service NtpService)
 }
 
 // SystemdUnitStatus indicates status of the Unit
@@ -245,6 +248,9 @@ type K8sService interface {
 // NtpService is the interface for managing config of local NTP daemon (deployed through K8s)
 // This determines which NTP server should the NTPD listen to for updates
 type NtpService interface {
+	// LeadershipObserver is used on Quorum nodes
+	LeadershipObserver
+
 	// Start the ntp service for maintaining config
 	Start()
 
@@ -254,6 +260,12 @@ type NtpService interface {
 	// NtpConfigFile writes the NTP config file with the specified servers.
 	// No need to Start the service for just calling this function
 	NtpConfigFile(servers []string)
+
+	// UpdateNtpConfig updates NTP config
+	UpdateNtpConfig(leader string)
+
+	// UpdateServerList checks if external NTP servers list got changed and updates NTP object and config file
+	UpdateServerList(servers []string)
 }
 
 // ServiceInstanceObserver is implemented by services which are interested in
@@ -316,6 +328,9 @@ type CfgWatcherService interface {
 
 	// SetClusterEventHandler sets the handler to handle events related to Cluster object
 	SetClusterEventHandler(ClusterEventHandler)
+
+	// SetNtpEventHandler sets the handler to handle events related to NTP Server List
+	SetNtpEventHandler(ClusterEventHandler)
 
 	// SetSmartNICEventHandler sets the handler to handle events related to SmartNIC object
 	SetSmartNICEventHandler(SmartNICEventHandler)

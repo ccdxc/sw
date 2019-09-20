@@ -1,15 +1,20 @@
 package services
 
 import (
+	"bytes"
+	"io"
 	"os"
+	"reflect"
+	"sort"
+	"strings"
 	"sync"
 	"text/template"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 type ntpParams struct {
@@ -31,34 +36,23 @@ allow
 
 type ntpService struct {
 	externalNtpServers []string
-
+	quorumNodes        []string
 	sync.Mutex
-	isLeader  bool
-	enabled   bool
-	leader    string // non-leaders listen to leader for time
-	leaderSvc types.LeaderService
-	sysSvc    types.SystemdService
-	openFile  func(string, int, os.FileMode) (*os.File, error)
+	enabled  bool
+	leader   string // non-leaders listen to leader for time
+	sysSvc   types.SystemdService
+	openFile func(string, int, os.FileMode) (*os.File, error)
+	nodeID   string
+	ntpConf  string
 }
 
 // NtpOption fills the optional params
 type NtpOption func(service *ntpService)
 
-const (
-	ntpLeaderKey = "ntp"
-)
-
 // WithOpenFileNtpOption to pass a specifc OpenFile implementation
 func WithOpenFileNtpOption(openFile func(string, int, os.FileMode) (*os.File, error)) NtpOption {
 	return func(n *ntpService) {
 		n.openFile = openFile
-	}
-}
-
-// WithLeaderSvcNtpOption to pass a specifc types.LeaderService implementation
-func WithLeaderSvcNtpOption(leaderSvc types.LeaderService) NtpOption {
-	return func(n *ntpService) {
-		n.leaderSvc = leaderSvc
 	}
 }
 
@@ -70,10 +64,11 @@ func WithSystemdSvcNtpOption(sysSvc types.SystemdService) NtpOption {
 }
 
 // NewNtpService creates a new NTP service.
-func NewNtpService(externalNtpServers []string, options ...NtpOption) types.NtpService {
+func NewNtpService(externalNtpServers []string, envQuorumNodes []string, nodeID string, options ...NtpOption) types.NtpService {
 	n := ntpService{
 		externalNtpServers: make([]string, len(externalNtpServers)),
 	}
+	sort.Strings(externalNtpServers)
 	copy(n.externalNtpServers, externalNtpServers)
 	for _, o := range options {
 		if o != nil {
@@ -83,14 +78,11 @@ func NewNtpService(externalNtpServers []string, options ...NtpOption) types.NtpS
 	if n.openFile == nil {
 		n.openFile = os.OpenFile
 	}
-	if n.leaderSvc == nil {
-		hostname, _ := os.Hostname()
-		n.leaderSvc = NewLeaderService(env.KVStore, ntpLeaderKey, hostname)
-	}
 	if n.sysSvc == nil {
 		n.sysSvc = env.SystemdService
 	}
-
+	n.nodeID = nodeID
+	n.quorumNodes = utils.GetOtherQuorumNodes(envQuorumNodes, nodeID)
 	return &n
 }
 
@@ -101,18 +93,21 @@ func (n *ntpService) NtpConfigFile(servers []string) {
 		panic(err)
 	}
 	nc := ntpParams{NtpServer: servers}
-
 	f, err := n.openFile(globals.NtpConfigFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		log.Println("Unable to create ntp config file file: ", err)
+		log.Errorln("Unable to create ntp config file: ", err)
 		return
 	}
 	defer f.Close()
-	err = tmpl.Execute(f, nc)
+	var buf bytes.Buffer
+	w := io.MultiWriter(f, &buf)
+	err = tmpl.Execute(w, nc)
 	if err != nil {
-		log.Printf("error %v while writing to ntp config file", err)
+		log.Errorf("error %v while writing to ntp config file", err)
 		return
 	}
+	n.ntpConf = buf.String()
+	n.restartNtpd()
 }
 
 func (n *ntpService) Start() {
@@ -120,28 +115,38 @@ func (n *ntpService) Start() {
 		return
 	}
 
-	n.leaderSvc.Register(n)
-
-	n.leaderSvc.Start()
 	n.sysSvc.Start()
-
 	n.Lock()
 	defer n.Unlock()
-	if n.leaderSvc.IsLeader() {
-		n.isLeader = true
-	}
 	n.enabled = true
-	if n.isLeader {
+	if n.isLeader() {
 		n.leaderConfig()
 	}
 }
 
 func (n *ntpService) Stop() {
-	n.leaderSvc.UnRegister(n)
 	n.Lock()
 	defer n.Unlock()
 	n.enabled = false
 	n.memberConfig()
+}
+
+// UpdateServerList updates NTP Servers list
+func (n *ntpService) UpdateServerList(externalNtpServers []string) {
+	var newNtpServers []string
+	newNtpServers = append(newNtpServers, externalNtpServers...)
+	sort.Strings(newNtpServers)
+	// Compare to find out if the NTP Servers list has been updated
+	// If so, change config file and restart NTP service on the node
+	n.Lock()
+	defer n.Unlock()
+	if reflect.DeepEqual(n.externalNtpServers, newNtpServers) == false {
+		n.externalNtpServers = newNtpServers
+		if n.isLeader() {
+			n.leaderConfig()
+		}
+	}
+	return
 }
 
 func (n *ntpService) restartNtpd() {
@@ -154,43 +159,46 @@ func (n *ntpService) restartNtpd() {
 }
 
 func (n *ntpService) leaderConfig() {
-	n.NtpConfigFile(n.externalNtpServers)
-	n.restartNtpd()
+	ntpServers := make([]string, 0)
+	ntpServers = append(ntpServers, n.externalNtpServers...)
+	ntpServers = append(ntpServers, n.quorumNodes...)
+	n.NtpConfigFile(ntpServers)
 }
 
 func (n *ntpService) memberConfig() {
-	if n.leader != "" {
-		n.NtpConfigFile([]string{n.leader})
-		n.restartNtpd()
+	n.NtpConfigFile(n.quorumNodes)
+}
+
+func (n *ntpService) UpdateNtpConfig(leader string) {
+	n.Lock()
+	defer n.Unlock()
+	// check if ntp conf contains external servers
+	var isLeaderConf bool
+	for _, server := range n.externalNtpServers {
+		if strings.Contains(n.ntpConf, server) {
+			isLeaderConf = true
+			break
+		}
+	}
+	// if node was not a leader and new leader is not this node then no need to update config
+	if n.ntpConf != "" && !isLeaderConf && !n.isLeader() && leader != n.nodeID {
+		n.leader = leader
+		return
+	}
+	n.leader = leader
+	if !n.isLeader() {
+		n.memberConfig()
+	} else {
+		n.leaderConfig()
 	}
 }
 
 func (n *ntpService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
-	var err error
-	switch e.Evt {
-	case types.LeaderEventChange:
-		n.Lock()
-		defer n.Unlock()
-		n.isLeader = false
-		n.leader = e.Leader
-		if n.enabled {
-			n.memberConfig()
-		}
-	case types.LeaderEventWon:
-		n.Lock()
-		defer n.Unlock()
-		n.isLeader = true
-		if n.enabled {
-			n.leaderConfig()
-		}
-	case types.LeaderEventLost:
-		n.Lock()
-		defer n.Unlock()
-		n.isLeader = false
-		n.leader = e.Leader
-		if n.enabled {
-			n.memberConfig()
-		}
-	}
-	return err
+	log.Infof("got leader event %#v, type %v, leader %v, node %v", e, e.Evt, e.Leader, n.nodeID)
+	n.UpdateNtpConfig(e.Leader)
+	return nil
+}
+
+func (n *ntpService) isLeader() bool {
+	return n.nodeID == n.leader
 }

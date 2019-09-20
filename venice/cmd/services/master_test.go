@@ -20,11 +20,13 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 	env.Options = &options.ServerRunOptions{} // use empty options so that we don't bind to fixed ports
 	l := mock.NewLeaderService(t.Name())
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
+	n := NewNtpService(nil, []string{t.Name()}, t.Name())
 	cw := mock.CfgWatcherService{}
 	m := NewMasterService(WithLeaderSvcMasterOption(l),
 		WithSystemdSvcMasterOption(s),
 		WithConfigsMasterOption(&mock.Configs{}),
 		WithCfgWatcherMasterOption(&cw),
+		WithNtpSvcMasterOption(n),
 		WithK8sSvcMasterOption(&mock.K8sService{}),
 		WithResolverSvcMasterOption(mock.NewResolverService()),
 		WithElasticCuratorSvcrOption(esmock.NewMockCurator()),

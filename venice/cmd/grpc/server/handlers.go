@@ -278,15 +278,14 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, req.NodeId)
 		env.SystemdService = services.NewSystemdService()
 		env.VipService = services.NewVIPService()
+
+		env.NtpService = services.NewNtpService(req.NTPServers, env.QuorumNodes, req.NodeId)
 		env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
-			services.WithResolverSvcMasterOption(env.ResolverService))
-		env.NtpService = services.NewNtpService(req.NTPServers)
+			services.WithResolverSvcMasterOption(env.ResolverService), services.WithNtpSvcMasterOption(env.NtpService))
 
 		env.SystemdService.Start() // must be called before dependent services
 		env.VipService.AddVirtualIPs(req.VirtualIp)
 
-		// We let the quorum nodes use the external NTP server and non-quorum nodes use the VIP for ntp server
-		env.NtpService.NtpConfigFile(req.NTPServers)
 		env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
 		env.LeaderService.Register(env.ServiceTracker)
 
@@ -316,11 +315,10 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			}
 			// try to proceed anyway
 		}
-		env.NtpService = services.NewNtpService(req.NTPServers)
-		env.NtpService.NtpConfigFile([]string{req.VirtualIp})
 		env.SystemdService = services.NewSystemdService()
 		env.SystemdService.Start() // must be called before dependent services
-
+		env.NtpService = services.NewNtpService(nil, env.QuorumNodes, req.NodeId)
+		env.NtpService.NtpConfigFile(env.QuorumNodes)
 		env.ServiceTracker = services.NewServiceTracker(nil)
 	}
 
@@ -340,6 +338,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.ServiceRolloutClient = rolloutclient.NewServiceRolloutClient(globals.Rollout, req.NodeId, env.ResolverClient, env.RolloutMgr)
 		env.MasterService.Start()
 		env.LeaderService.Start()
+		env.NtpService.Start()
 		env.CfgWatcherService.Start()
 	}
 

@@ -177,7 +177,6 @@ func (l *leaderService) processEvent(leader string) {
 	evtObjRef := &cluster.Node{}
 	evtObjRef.Defaults("all")
 	evtObjRef.Name = l.id
-
 	if l.id == leader {
 		if l.IsLeader() {
 			// Already leader, nothing to do.
