@@ -21,7 +21,8 @@ namespace crypto_drbg {
  * Barco IP code CAVS config guide specifies number of output blocks of 4
  * which for a SHA256 implementation means 4 x 32 = 128 bytes.
  */
-#define CRYPTO_CTL_DRBG_OUTPUT_NBYTES   128
+#define CRYPTO_CTL_DRBG_OUTPUT_WDEPTH   32
+#define CRYPTO_CTL_DRBG_OUTPUT_NBYTES   CRYPTO_CTL_DRBG_W2B(CRYPTO_CTL_DRBG_OUTPUT_WDEPTH)
 
 /*
  * Some chip (ELBA) supports more than one instance
@@ -101,26 +102,42 @@ crypto_ctl_drbg_random_num1_select(uint32_t select)
         ret_val = READ_REG32(regs.cfg);                                 \
     } while (false)
     
-#define CRYPTO_CTL_DRBG_RD_RAM(ram, idx, ret_val)                       \
-    do {                                                                \
-        ret_val = READ_REG32(regs.ram + (idx * sizeof(uint32_t)));      \
-    } while (false)
-    
-#define CRYPTO_CTL_DRBG_RD_RAM_NTOHL(ram, idx, ret_val)                 \
-    do {                                                                \
-        CRYPTO_CTL_DRBG_RD_RAM(ram, idx, ret_val);                      \
-        ret_val = ntohl(ret_val);                                       \
-    } while (false)
-    
-#define CRYPTO_CTL_DRBG_WR_RAM(ram, idx, val)                           \
-    do {                                                                \
-        WRITE_REG32(regs.ram + (idx * sizeof(uint32_t)), val);          \
-    } while (false)
-    
-#define CRYPTO_CTL_DRBG_WR_RAM_HTONL(ram, idx, val)                     \
-    do {                                                                \
-        CRYPTO_CTL_DRBG_WR_RAM(ram, idx, htonl(val));                   \
-    } while (false)
+/*
+ * The cache should be considered as holding a big number in big-endian
+ * format. The cryptoram is in little-endian format where offset 0 holds
+ * the least significant word. Hence, the cache will be written in reverse
+ * order from last word to first, with endian swapping.
+ */
+static inline void
+crypto_ctl_drbg_cryptoram_wr(uint64_t ram_addr,
+                             uint32_t wdepth,
+                             uint32_t *wcache)
+{
+    wcache += wdepth - 1;
+    for (uint32_t i = 0; i < wdepth; i++) {
+        OFFL_LOG_DEBUG("write {:#x} @{}", htonl(*wcache),
+                       CRYPTO_CTL_DRBG_W2B(i));
+        WRITE_REG32(ram_addr, htonl(*wcache));
+        ram_addr += sizeof(uint32_t);
+        wcache--;
+    }
+}
+
+/*
+ * Read is handled in similar fashion as above.
+ */
+static inline void
+crypto_ctl_drbg_cryptoram_rd(uint64_t ram_addr,
+                             uint32_t wdepth,
+                             uint32_t *wcache)
+{
+    wcache += wdepth - 1;
+    for (uint32_t i = 0; i < wdepth; i++) {
+        *wcache = ntohl(READ_REG32(ram_addr));
+        ram_addr += sizeof(uint32_t);
+        wcache--;
+    }
+}
 
 /*
  * Register bit definitions
@@ -239,7 +256,8 @@ public:
         add_input_reseed_(nullptr),
         entropy_pr_(nullptr),
         entropy_reseed_(nullptr),
-        output_(nullptr),
+        ret_bits_expected_(nullptr),
+        ret_bits_actual_(nullptr),
         predict_resist_req_(false),
         random_num_select_(0)
     {
@@ -270,9 +288,15 @@ public:
         return *this;
     }
     drbg_push_gen_params_t&
-    output(dp_mem_t *output)
+    ret_bits_expected(dp_mem_t *ret_bits_expected)
     {
-        output_ = output;
+        ret_bits_expected_ = ret_bits_expected;
+        return *this;
+    }
+    drbg_push_gen_params_t&
+    ret_bits_actual(dp_mem_t *ret_bits_actual)
+    {
+        ret_bits_actual_ = ret_bits_actual;
         return *this;
     }
     drbg_push_gen_params_t&
@@ -292,7 +316,8 @@ public:
     dp_mem_t *add_input_reseed(void) { return add_input_reseed_; }
     dp_mem_t *entropy_pr(void) { return entropy_pr_; }
     dp_mem_t *entropy_reseed(void) { return entropy_reseed_; }
-    dp_mem_t *output(void) { return output_; }
+    dp_mem_t *ret_bits_expected(void) { return ret_bits_expected_; }
+    dp_mem_t *ret_bits_actual(void) { return ret_bits_actual_; }
     bool predict_resist_req(void) { return predict_resist_req_; }
     uint32_t random_num_select(void) { return random_num_select_; }
 
@@ -301,7 +326,8 @@ private:
     dp_mem_t                    *add_input_reseed_;
     dp_mem_t                    *entropy_pr_;
     dp_mem_t                    *entropy_reseed_;
-    dp_mem_t                    *output_;
+    dp_mem_t                    *ret_bits_expected_;
+    dp_mem_t                    *ret_bits_actual_;
     bool                        predict_resist_req_;
     uint32_t                    random_num_select_;
 };
@@ -390,6 +416,7 @@ public:
     bool push(drbg_push_uninst_params_t& uninst_params);
     bool push(drbg_push_reinst_params_t& reinst_params);
     bool completion_check(void);
+    bool full_verify(void);
 
     bool instantiate(void);
     bool uninstantiate(void);
@@ -397,6 +424,9 @@ public:
                   uint32_t nbytes,
                   uint32_t random_num_select=0,
                   bool reseed=false);
+    bool expected_actual_verify(const char *entity_name,
+                                dp_mem_t *expected,
+                                dp_mem_t *actual);
 private:
     void psnl_str_set(const uint8_t *str,
                       uint32_t str_nbytes);
@@ -404,8 +434,8 @@ private:
                                 uint32_t entropy_nbytes,
                                 const uint8_t *nonce,
                                 uint32_t nonce_nbytes);
-    void entropy_input_reseed_set(const uint8_t *add_input,
-                                  uint32_t input_nbytes);
+    void entropy_input_reseed_set(const uint8_t *reseed,
+                                  uint32_t reseed_nbytes);
 
     void rand_num0_get(uint8_t *buf,
                        uint32_t nbytes);
@@ -413,17 +443,21 @@ private:
                        uint32_t nbytes);
 
     drbg_instance_t             inst;
-    const drbg_regs_t&          regs;
+    drbg_regs_t&                regs;
+    drbg_push_gen_params_t      gen_params;
+
     uint32_t                    *psnl_str_cache;
     uint32_t                    *entropy_reseed_cache;
     uint32_t                    *entropy_inst_cache;
     uint32_t                    *rand_num0_cache;
     uint32_t                    *rand_num1_cache;
-
     uint32_t                    psnl_str_nbytes;
-    uint32_t                    entropy_input_nbytes;
-    uint32_t                    entropy_reseed_nbytes;
 
+    uint32_t                    psnl_str_bdepth;
+    uint32_t                    entropy_inst_bdepth;
+    uint32_t                    entropy_reseed_bdepth;
+    uint32_t                    nonce_bdepth;
+    uint32_t                    entropy_bdepth;
     uint32_t                    random_bdepth;
     uint32_t                    rng_cfg;
     bool                        predict_resist_flag;

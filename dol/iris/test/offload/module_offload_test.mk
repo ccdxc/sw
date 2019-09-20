@@ -9,16 +9,19 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/testvec_parser.cc \
                   ${MODULE_SRC_DIR}/crypto_rsa.cc \
                   ${MODULE_SRC_DIR}/crypto_ecdsa_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_sha_testvec.cc \
+                  ${MODULE_SRC_DIR}/crypto_aes_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_ecdsa.cc \
                   ${MODULE_SRC_DIR}/crypto_asym.cc \
                   ${MODULE_SRC_DIR}/crypto_symm.cc \
                   ${MODULE_SRC_DIR}/crypto_sha.cc \
+                  ${MODULE_SRC_DIR}/crypto_aes.cc \
                   ${MODULE_SRC_DIR}/crypto_drbg_testvec.cc \
                   ${MODULE_SRC_DIR}/crypto_drbg.cc \
                   ${MODULE_SRC_DIR}/eng_if.cc \
                   ${MODULE_SRC_DIR}/eng_if_digest.cc \
                   ${MODULE_SRC_DIR}/eng_if_rsa.cc \
                   ${MODULE_SRC_DIR}/eng_if_ec.cc \
+                  ${MODULE_SRC_DIR}/eng_if_cipher.cc \
                   ${MODULE_SRC_DIR}/main.cc
 MODULE_LIBS     = -lssl -lcrypto
 MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \

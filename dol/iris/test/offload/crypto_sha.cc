@@ -181,8 +181,14 @@ sha_t::push(sha_push_params_t& push_params)
     this->push_params = push_params;
     hw_started = true;
 
-    evp_md = eng_if::digest_gen(digest_params.sha_hw_ctx(this).
-                                              hash_algo(sha_algo).
+    /*
+     * Msg length of 0 is a special case which HW cannot handle,
+     * in which case, we let Openssl take care of it. In other words,
+     * we set sha_hw_ctx to nullptr in that case.
+     */
+    digest_params.sha_hw_ctx(push_params.msg()->content_size_get() ?
+                             this : nullptr);
+    evp_md = eng_if::digest_gen(digest_params.hash_algo(sha_algo).
                                               msg(push_params.msg()).
                                               digest(push_params.md_actual()).
                                               failure_expected(push_params.failure_expected()).
@@ -298,14 +304,23 @@ sha_t::completion_check(void)
 #else
     utils::Poller poll;
 #endif
-    test_success = false;
-    if (poll(busy_check, failure_expected)) {
-        OFFL_FUNC_ERR_OR_DEBUG(failure_expected,
-                               "sha_t status is busy");
-        return false;
+
+    /*
+     * Msg length of 0 is a special case where we passed it
+     * to Openssl but not HW.
+     */
+    if (!push_params.msg()->content_size_get()) {
+        test_success = true;
+    } else {
+        test_success = false;
+        if (poll(busy_check, failure_expected)) {
+            OFFL_FUNC_ERR_OR_DEBUG(failure_expected,
+                                   "sha_t status is busy");
+            return false;
+        }
+        test_success = doorbell->success_check(failure_expected) &&
+                       status->success_check(failure_expected);
     }
-    test_success = doorbell->success_check(failure_expected) &&
-                   status->success_check(failure_expected);
     return test_success;
 }
 
@@ -365,7 +380,7 @@ sha_t::expected_actual_verify(const char *entity_name,
 }
 
 /*
- * Report test paramaters for debugging purposes.
+ * Report test parameters for debugging purposes.
  */
 void
 sha_t::test_params_report(void)

@@ -9,15 +9,18 @@
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/pse_intf.h"
 #include "crypto_asym.hpp"
+#include "crypto_symm.hpp"
 
 using namespace std;
 
 namespace eng_if {
 
-extern ENGINE   *eng_if_engine;
-extern BIO      *eng_if_bio;
+extern ENGINE      *eng_if_engine;
+extern BIO         *eng_if_bio;
 
-typedef EVP_MD eng_evp_md_t;
+typedef EVP_MD     eng_evp_md_t;
+typedef EVP_CIPHER eng_evp_cipher_t;
+typedef EVP_CIPHER_CTX eng_evp_cipher_ctx_t;
 
 /*
  * Engine digest parameters
@@ -92,6 +95,144 @@ private:
     dp_mem_t                    *msg_;
     dp_mem_t                    *digest_;
     bool                        msg_is_component_;
+    bool                        failure_expected_;
+    bool                        wait_for_completion_;
+};
+
+/*
+ * Engine cipher init  parameters
+ */
+class cipher_init_params_t
+{
+public:
+    cipher_init_params_t() :
+        cipher_hw_ctx_(nullptr),
+        crypto_symm_type_(crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC),
+        key_(nullptr),
+        iv_(nullptr),
+        encrypt_(false)
+    {
+    }
+
+    cipher_init_params_t&
+    cipher_hw_ctx(void *cipher_hw_ctx)
+    {
+        cipher_hw_ctx_ = cipher_hw_ctx;
+        return *this;
+    }
+    cipher_init_params_t&
+    crypto_symm_type(crypto_symm::crypto_symm_type_t crypto_symm_type)
+    {
+        crypto_symm_type_ = crypto_symm_type;
+        return *this;
+    }
+    cipher_init_params_t&
+    key(dp_mem_t *key)
+    {
+        key_ = key;
+        return *this;
+    }
+    cipher_init_params_t&
+    iv(dp_mem_t *iv)
+    {
+        iv_ = iv;
+        return *this;
+    }
+    cipher_init_params_t&
+    encrypt(bool encrypt)
+    {
+        encrypt_ = encrypt;
+        return *this;
+    }
+
+    void *cipher_hw_ctx(void) { return cipher_hw_ctx_; }
+    crypto_symm::crypto_symm_type_t crypto_symm_type(void) { return crypto_symm_type_; }
+    dp_mem_t *key(void) { return key_; }
+    dp_mem_t *iv(void) { return iv_; }
+    bool encrypt(void) { return encrypt_; }
+
+private:
+    void                        *cipher_hw_ctx_;
+    crypto_symm::crypto_symm_type_t crypto_symm_type_;
+    dp_mem_t                    *key_;
+    dp_mem_t                    *iv_;
+    bool                        encrypt_;
+};
+
+/*
+ * Engine cipher update parameters
+ */
+class cipher_update_params_t
+{
+public:
+    cipher_update_params_t() :
+        cipher_hw_ctx_(nullptr),
+        cipher_sw_ctx_(nullptr),
+        key_idx_(CRYPTO_SYMM_KEY_IDX_INVALID),
+        msg_input_(nullptr),
+        msg_output_(nullptr),
+        failure_expected_(false),
+        wait_for_completion_(false)
+    {
+    }
+
+    cipher_update_params_t&
+    cipher_hw_ctx(void *cipher_hw_ctx)
+    {
+        cipher_hw_ctx_ = cipher_hw_ctx;
+        return *this;
+    }
+    cipher_update_params_t&
+    cipher_sw_ctx(eng_evp_cipher_ctx_t *cipher_sw_ctx)
+    {
+        cipher_sw_ctx_ = cipher_sw_ctx;
+        return *this;
+    }
+    cipher_update_params_t&
+    key_idx(crypto_symm::key_idx_t key_idx)
+    {
+        key_idx_ = key_idx;
+        return *this;
+    }
+    cipher_update_params_t&
+    msg_input(dp_mem_t *msg_input)
+    {
+        msg_input_ = msg_input;
+        return *this;
+    }
+    cipher_update_params_t&
+    msg_output(dp_mem_t *msg_output)
+    {
+        msg_output_ = msg_output;
+        return *this;
+    }
+    cipher_update_params_t&
+    failure_expected(bool failure_expected)
+    {
+        failure_expected_ = failure_expected;
+        return *this;
+    }
+    cipher_update_params_t&
+    wait_for_completion(bool wait_for_completion)
+    {
+        wait_for_completion_ = wait_for_completion;
+        return *this;
+    }
+
+    void *cipher_hw_ctx(void) { return cipher_hw_ctx_; }
+    eng_evp_cipher_ctx_t *cipher_sw_ctx(void) { return cipher_sw_ctx_; }
+    crypto_symm::key_idx_t key_idx(void) { return key_idx_; }
+    dp_mem_t *msg_input(void) { return msg_input_; }
+    dp_mem_t *msg_output(void) { return msg_output_; }
+    bool failure_expected(void) { return failure_expected_; }
+    bool wait_for_completion(void) { return wait_for_completion_; }
+
+private:
+    void                        *cipher_hw_ctx_;
+    eng_evp_cipher_ctx_t        *cipher_sw_ctx_;
+    crypto_symm::key_idx_t      key_idx_;
+    dp_mem_t                    *msg_input_;
+    dp_mem_t                    *msg_output_;
     bool                        failure_expected_;
     bool                        wait_for_completion_;
 };
@@ -707,10 +848,20 @@ bool bn_to_dp_mem(const BIGNUM *bn,
                   dp_mem_t *mem);
 BIGNUM *dp_mem_to_bn(dp_mem_t *mem);
 bool dp_mem_to_dp_mem(dp_mem_t *dst,
-                      dp_mem_t *src);
+                      dp_mem_t *src,
+                      uint32_t src_offs=0);
+bool dp_mem_cat_dp_mem(dp_mem_t *dst,
+                       dp_mem_t *src);
+bool dp_mem_xor_dp_mem(dp_mem_t *dst,
+                       dp_mem_t *src);
 
 const eng_evp_md_t *hash_algo_find(const string& hash_algo);
 const eng_evp_md_t *digest_gen(digest_params_t& params);
+
+const eng_evp_cipher_t *cipher_algo_find(crypto_symm::crypto_symm_type_t type,
+                                         uint32_t key_len);
+eng_evp_cipher_ctx_t *cipher_init(cipher_init_params_t& params);
+bool cipher_update(cipher_update_params_t& params);
 
 bool rsa_sign(rsa_sign_params_t& params);
 bool rsa_verify(rsa_verify_params_t& params);

@@ -578,7 +578,7 @@ rsa_t::expected_actual_verify(const char *entity_name,
 }
 
 /*
- * Report test paramaters for debugging purposes.
+ * Report test parameters for debugging purposes.
  */
 void
 rsa_t::test_params_report(void)

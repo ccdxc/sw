@@ -417,6 +417,14 @@ drbg_testvec_t::push(drbg_testvec_push_params_t& push_params)
     hw_started = true;
 
     FOR_EACH_TEST_REPR(test_repr) {
+
+        /*
+         * skip test with certain unsupportable conditions.
+         */
+        if (!shall_execute(test_repr.get())) {
+            continue;
+        }
+
         FOR_EACH_TRIAL_REPR(test_repr, trial_repr) {
             trial_repr->push_failure = false;
 
@@ -449,6 +457,16 @@ drbg_testvec_t::push(drbg_testvec_push_params_t& push_params)
     } END_FOR_EACH_TEST_REPR(test_repr)
 
     return true;
+}
+
+/*
+ * Execute test only if test does not involve AdditionalInput which
+ * HW does not support.
+ */
+bool
+drbg_testvec_t::shall_execute(drbg_test_repr_t *test_repr)
+{
+    return test_repr->add_input_nbits == 0;
 }
 
 /*
@@ -491,7 +509,8 @@ drbg_testvec_t::trial_execute(drbg_trial_repr_t *trial_repr,
                                         add_input_reseed(trial_repr->add_input_reseed).
                                         entropy_pr(trial_repr->entropy_pr_vec).
                                         entropy_reseed(trial_repr->entropy_reseed).
-                                        output(trial_repr->ret_bits_actual).
+                                        ret_bits_expected(trial_repr->ret_bits_expected).
+                                        ret_bits_actual(trial_repr->ret_bits_actual).
                                         predict_resist_req(predict_resist_flag));
     }
     if (success) {
@@ -533,6 +552,10 @@ drbg_testvec_t::completion_check(void)
     num_test_failures = 0;
     if (hw_started) {
         FOR_EACH_TEST_REPR(test_repr) {
+
+            if (!shall_execute(test_repr.get())) {
+                continue;
+            }
             FOR_EACH_TRIAL_REPR(test_repr, trial_repr) {
 
                 /*
@@ -562,7 +585,38 @@ drbg_testvec_t::completion_check(void)
 bool 
 drbg_testvec_t::full_verify(void)
 {
-    return completion_check();
+    num_test_failures = 0;
+    if (hw_started) {
+        FOR_EACH_TEST_REPR(test_repr) {
+
+            if (!shall_execute(test_repr.get())) {
+                continue;
+            }
+            FOR_EACH_TRIAL_REPR(test_repr, trial_repr) {
+
+                /*
+                 * if push already failed, don't bother with verify
+                 */
+                trial_repr->verify_failure = false;
+                if (trial_repr->push_failure) {
+                    num_test_failures++;
+                    continue;
+                }
+
+                if (!drbg->full_verify()) {
+                    trial_repr->verify_failure = true;
+                    num_test_failures++;
+                }
+
+            } END_FOR_EACH_TRIAL_REPR(test_repr, trial_repr)
+        } END_FOR_EACH_TEST_REPR(test_repr)
+    }
+
+    if (num_test_failures) {
+        OFFL_FUNC_INFO("drbg_testvec_t num_test_failures {}", num_test_failures);
+    }
+    test_success = hw_started && (num_test_failures == 0);
+    return test_success;
 }
 
 
@@ -599,12 +653,18 @@ drbg_testvec_t::rsp_file_output(void)
                 rsp_output->hex_bn(PARSE_STR_PSNL_STR_PREFIX, trial_repr->psnl_str);
                 trial_repr->add_input_vec->line_set(0);
                 rsp_output->hex_bn(PARSE_STR_ADD_INPUT_PREFIX, trial_repr->add_input_vec);
-                trial_repr->entropy_pr_vec->line_set(0);
-                rsp_output->hex_bn(PARSE_STR_ENTROPY_PR_PREFIX, trial_repr->entropy_pr_vec);
+                if (test_repr->predict_resist_flag) {
+                    trial_repr->entropy_pr_vec->line_set(0);
+                    rsp_output->hex_bn(PARSE_STR_ENTROPY_PR_PREFIX, trial_repr->entropy_pr_vec);
+                } else if (trial_repr->entropy_reseed->content_size_get()) {
+                    rsp_output->hex_bn(PARSE_STR_ENTROPY_RESEED_PREFIX, trial_repr->entropy_reseed);
+                }
                 trial_repr->add_input_vec->line_advance();
                 rsp_output->hex_bn(PARSE_STR_ADD_INPUT_PREFIX, trial_repr->add_input_vec);
-                trial_repr->entropy_pr_vec->line_advance();
-                rsp_output->hex_bn(PARSE_STR_ENTROPY_PR_PREFIX, trial_repr->entropy_pr_vec);
+                if (test_repr->predict_resist_flag) {
+                    trial_repr->entropy_pr_vec->line_advance();
+                    rsp_output->hex_bn(PARSE_STR_ENTROPY_PR_PREFIX, trial_repr->entropy_pr_vec);
+                }
                 rsp_output->hex_bn(PARSE_STR_RET_BITS_PREFIX, trial_repr->ret_bits_actual,
                                    PARSE_STR_RET_BITS_SUFFIX);
 

@@ -200,10 +200,18 @@ sha_testvec_t::pre_push(sha_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place Msg");
                 goto error;
             }
-            if (!msg_repr->msg_alloc() ||
-                !testvec_parser->parse_hex_bn(msg_repr->msg)) {
-
+            if (!msg_repr->msg_alloc()) {
                 msg_repr->failed_parse_token = token_id;
+                goto error;
+            }
+
+            /*
+             * Don't parse msg if len is zero
+             */
+            if (msg_repr->msg_nbits) {
+                if (!testvec_parser->parse_hex_bn(msg_repr->msg)) {
+                    msg_repr->failed_parse_token = token_id;
+                }
             }
             break;
 
@@ -294,13 +302,6 @@ sha_testvec_t::push(sha_testvec_push_params_t& push_params)
                 msg_repr->crypto_sha = new sha_t(sha_params);
             }
 
-            /*
-             * skip test with msg_nbits of 0. etc/.
-             */
-            if (!shall_execute(msg_repr.get())) {
-                continue;
-            }
-
             sha_pre_params.crypto_symm_type(testvec_params.crypto_symm_type()).
                            sha_nbytes(msg_repr->sha_nbytes);
             if (!msg_repr->crypto_sha->pre_push(sha_pre_params)) {
@@ -341,15 +342,6 @@ bool
 sha_testvec_t::is_montecarlo(sha_msg_repr_t *msg_repr)
 {
     return msg_repr->seed->content_size_get();
-}
-
-/*
- * Execute test only if message has at least one byte or is a Montecarlo test.
- */
-bool
-sha_testvec_t::shall_execute(sha_msg_repr_t *msg_repr)
-{
-    return msg_repr->msg_nbits || is_montecarlo(msg_repr);
 }
 
 /*
@@ -489,10 +481,6 @@ sha_testvec_t::completion_check(void)
         FOR_EACH_TEST_REPR(test_repr) {
             FOR_EACH_MSG_REPR(test_repr, msg_repr) {
 
-                if (!shall_execute(msg_repr.get())) {
-                    continue;
-                }
-
                 /*
                  * if push already failed, don't check completion
                  */
@@ -533,10 +521,6 @@ sha_testvec_t::full_verify(void)
     if (hw_started) {
         FOR_EACH_TEST_REPR(test_repr) {
             FOR_EACH_MSG_REPR(test_repr, msg_repr) {
-
-                if (!shall_execute(msg_repr.get())) {
-                    continue;
-                }
 
                 /*
                  * if push already failed, don't bother with verify
@@ -622,6 +606,13 @@ sha_testvec_t::rsp_file_output(void)
                     }
                 } else {
                     rsp_output->dec(PARSE_STR_MSG_LEN_PREFIX, msg_repr->msg_nbits);
+
+                    /*
+                     * FIPS requires printing at least one byte of msg (e.g., "00") 
+                     */
+                    if (!msg_repr->msg->content_size_get()) {
+                        msg_repr->msg->content_size_set(1);
+                    }
                     rsp_output->hex_bn(PARSE_STR_MSG_PREFIX, msg_repr->msg);
                     rsp_output->hex_bn(PARSE_STR_MD_PREFIX, msg_repr->md_actual,
                                        PARSE_STR_MD_SUFFIX);

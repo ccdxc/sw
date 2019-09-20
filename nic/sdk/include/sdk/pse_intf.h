@@ -69,9 +69,39 @@ typedef struct pse_md_app_data_s {
 #define PSE_MD_APP_DATA_OFFS(app_data_size)                             \
     ((app_data_size) - sizeof(PSE_MD_APP_DATA))
      
+typedef struct pse_cipher_init_param_s {
+    uint8_t             *key;
+} PSE_CIPHER_INIT_PARAM;
+
+typedef struct pse_cipher_do_cipher_param_s {
+    int32_t             key_idx ;
+    uint8_t             *msg_input;
+    uint8_t             *msg_output;
+    uint32_t            msg_size;
+    bool                wait_for_completion;
+} PSE_CIPHER_DO_CIPHER_PARAM;
+
+typedef struct pse_cipher_cleanup_param_s {
+} PSE_CIPHER_CLEANUP_PARAM;
+
+typedef struct pse_offload_cipher_method_s {
+    int (*init)(void *cipher_hw_ctx, const PSE_CIPHER_INIT_PARAM *params);
+    int (*do_cipher)(void *cipher_hw_ctx, const PSE_CIPHER_DO_CIPHER_PARAM *params);
+    int (*cleanup)(void *cipher_hw_ctx, const PSE_CIPHER_CLEANUP_PARAM *params);
+
+    const PSE_OFFLOAD_MEM_METHOD *mem_method;
+} PSE_OFFLOAD_CIPHER_METHOD;
+
+typedef struct pse_cipher_app_data_s {
+    void                *cipher_hw_ctx;
+    int32_t             key_idx;
+    const PSE_OFFLOAD_CIPHER_METHOD *offload_method;
+    bool                wait_for_completion;
+} PSE_CIPHER_APP_DATA;
+
 typedef struct pse_rsa_sign_param_s {
     uint32_t            key_size;
-    int32_t             key_idx ;
+    int32_t             key_idx;
     uint8_t             *n;
     uint8_t             *d;
     uint8_t             *hash_input;
@@ -191,6 +221,25 @@ pse_md_final_param_init(PSE_MD_FINAL_PARAM *param)
 
 static inline void
 pse_md_cleanup_param_init(PSE_MD_CLEANUP_PARAM *param)
+{
+    memset(param, 0, sizeof(*param));
+}
+
+static inline void
+pse_cipher_init_param_init(PSE_CIPHER_INIT_PARAM *param)
+{
+    memset(param, 0, sizeof(*param));
+}
+
+static inline void
+pse_cipher_do_cipher_param_init(PSE_CIPHER_DO_CIPHER_PARAM *param)
+{
+    memset(param, 0, sizeof(*param));
+    param->key_idx = -1;
+}
+
+static inline void
+pse_cipher_cleanup_param_init(PSE_CIPHER_CLEANUP_PARAM *param)
 {
     memset(param, 0, sizeof(*param));
 }

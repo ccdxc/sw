@@ -98,6 +98,7 @@ testvec_parser_t::line_get(void)
             /*
              * Output header comments if instructed
              */
+            token_parser.whitespaces_strip();
             if (token_parser.line_empty() || token_parser.line_is_comment()) {
                 if (output && !header_comments_done &&
                     parse_params.output_header_comments()) {
@@ -107,7 +108,6 @@ testvec_parser_t::line_get(void)
 
             } else {
                 header_comments_done = true;
-                token_parser.whitespaces_strip();
                 line_consume_clr();
                 return true;
             }

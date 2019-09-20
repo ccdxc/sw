@@ -12,8 +12,8 @@ static const string dflt_entropy("Pensando " DRBG_DEVICE_NAME " entropy DRBG");
     .psnl_wdepth           = CRYPTO_CTL_DRBG_WORD_DEPTH(inst, CRYPTORAM_PSNL_STR_P),    \
     .entropy_reseed_wdepth = CRYPTO_CTL_DRBG_WORD_DEPTH(inst, CRYPTORAM_ENTROPY_RESEED),\
     .entropy_inst_wdepth   = CRYPTO_CTL_DRBG_WORD_DEPTH(inst, CRYPTORAM_ENTROPY_INST),  \
-    .random_wdepth0        = CRYPTO_CTL_DRBG_WORD_DEPTH(inst, CRYPTORAM_RANDOM_NUM0),   \
-    .random_wdepth1        = CRYPTO_CTL_DRBG_WORD_DEPTH(inst, CRYPTORAM_RANDOM_NUM1),   \
+    .random_wdepth0        = CRYPTO_CTL_DRBG_OUTPUT_WDEPTH,                             \
+    .random_wdepth1        = CRYPTO_CTL_DRBG_OUTPUT_WDEPTH,                             \
     .isr                   = CRYPTO_CTL_DRBG_REG_OFFSET(inst, ISR),                     \
     .msk                   = CRYPTO_CTL_DRBG_REG_OFFSET(inst, MSK),                     \
     .icr                   = CRYPTO_CTL_DRBG_REG_OFFSET(inst, ICR),                     \
@@ -29,7 +29,7 @@ static const string dflt_entropy("Pensando " DRBG_DEVICE_NAME " entropy DRBG");
     .entropy_inst          = CRYPTO_CTL_DRBG_REG_OFFSET(inst, CRYPTORAM_ENTROPY_INST),  \
 
 
-static const drbg_regs_t drbg_regs_tbl[DRBG_INSTANCE_MAX] = {
+static drbg_regs_t drbg_regs_tbl[DRBG_INSTANCE_MAX] = {
     {
         DRBG_REGS_DEF(0)
     },
@@ -65,6 +65,7 @@ dflt_drbg_get(drbg_instance_t inst)
 drbg_t::drbg_t(drbg_instance_t inst) :
     inst(inst),
     regs(inst < DRBG_INSTANCE_MAX ? drbg_regs_tbl[inst] : drbg_regs_tbl[DRBG_INSTANCE0]),
+    psnl_str_nbytes(0),
     predict_resist_flag(false),
     status(regs)
 {
@@ -76,13 +77,30 @@ drbg_t::drbg_t(drbg_instance_t inst) :
     OFFL_FUNC_INFO("instance {} svn {:#x} major {:#x} minor {:#x}",
                    inst, DRBG_VER_SVN_REV(vers),
                    DRBG_VER_MAJ_REV(vers), DRBG_VER_MIN_REV(vers));
-    OFFL_FUNC_INFO("psnl_wdepth {} entropy_reseed_wdepth {} entropy_inst_wdepth {} "
-                   "random_wdepth0 {} random_wdepth1 {} ", regs.psnl_wdepth,
-                   regs.entropy_reseed_wdepth, regs.entropy_inst_wdepth,
-                   regs.random_wdepth0, regs.random_wdepth1);
     assert(regs.random_wdepth0 && (regs.random_wdepth0 == regs.random_wdepth1));
-    random_bdepth = CRYPTO_CTL_DRBG_OUTPUT_NBYTES;
+
+    psnl_str_bdepth = CRYPTO_CTL_DRBG_W2B(regs.psnl_wdepth);
+    random_bdepth = CRYPTO_CTL_DRBG_W2B(regs.random_wdepth0);
+    entropy_inst_bdepth = CRYPTO_CTL_DRBG_W2B(regs.entropy_inst_wdepth);
+    entropy_reseed_bdepth = CRYPTO_CTL_DRBG_W2B(regs.entropy_reseed_wdepth);
+    nonce_bdepth = entropy_inst_bdepth - entropy_reseed_bdepth;
+    entropy_bdepth = entropy_inst_bdepth - nonce_bdepth;
+
+    OFFL_FUNC_INFO("random_bdepth {} psnl_str_bdepth {} entropy_inst_bdepth {} "
+                   "entropy_reseed_bdepth {} nonce_bdepth {} ",
+                   random_bdepth, psnl_str_bdepth, entropy_inst_bdepth,
+                   entropy_reseed_bdepth, nonce_bdepth);
     rng_cfg = DRBG_RNG_SIZE(random_bdepth);
+
+#ifndef __x86_64__
+
+    /*
+     * For real HW, ASIC header files are known to contain wrong offsets for
+     * certain DRBG cryptoram registers.
+     */
+    regs.entropy_inst = regs.psnl_str_p + psnl_str_bdepth;
+    regs.entropy_reseed = regs.entropy_inst + entropy_inst_bdepth;
+#endif
 
     psnl_str_cache       = new uint32_t[regs.psnl_wdepth];
     entropy_reseed_cache = new uint32_t[regs.entropy_reseed_wdepth];
@@ -91,7 +109,7 @@ drbg_t::drbg_t(drbg_instance_t inst) :
     rand_num1_cache      = new uint32_t[regs.random_wdepth1];
 
     if (!push(reinst_params)) {
-        OFFL_FUNC_ERR("instance {} failed instantiation", inst);
+        OFFL_FUNC_ERR("instance {} failed initial instantiation", inst);
     }
 }
 
@@ -167,8 +185,10 @@ drbg_t::push(drbg_push_gen_params_t& gen_params)
     bool        reseed = false;
     bool        success;
 
-    buf = gen_params.output()->read();
-    nbytes = gen_params.output()->line_size_get();
+    this->gen_params = gen_params;
+
+    buf = gen_params.ret_bits_actual()->read();
+    nbytes = gen_params.ret_bits_actual()->line_size_get();
 
 #ifdef HAS_NEW_DRBG_TESTVECTORS
     if (gen_params.add_input() &&
@@ -177,11 +197,14 @@ drbg_t::push(drbg_push_gen_params_t& gen_params)
         return false;
     }
 #endif
+
     if (gen_params.predict_resist_req()) {
         entropy_input_reseed_set(gen_params.entropy_pr()->read(),
                                  gen_params.entropy_pr()->content_size_get());
         reseed = !!gen_params.entropy_pr()->content_size_get();
+
     } else if (gen_params.entropy_reseed()) {
+
 #ifdef HAS_NEW_DRBG_TESTVECTORS
         if (gen_params.add_input_reseed() &&
             gen_params.add_input_reseed()->content_size_get()) {
@@ -195,8 +218,8 @@ drbg_t::push(drbg_push_gen_params_t& gen_params)
     }
     success = generate(buf, nbytes, gen_params.random_num_select(), reseed);
     if (success) {
-        gen_params.output()->content_size_set(nbytes);
-        gen_params.output()->write_thru();
+        gen_params.ret_bits_actual()->content_size_set(nbytes);
+        gen_params.ret_bits_actual()->write_thru();
     }
     return success;
 }
@@ -228,6 +251,22 @@ drbg_t::completion_check(void)
 
     return status.success_check();
 }
+
+/*
+ * Test result full verification
+ */
+bool
+drbg_t::full_verify(void)
+{
+    if (!completion_check()) {
+        return false;
+    }
+
+    return expected_actual_verify("random number",
+                                  gen_params.ret_bits_expected(),
+                                  gen_params.ret_bits_actual());
+}
+
 
 /*
  * DRBG Instantiation
@@ -354,8 +393,6 @@ void
 drbg_t::psnl_str_set(const uint8_t *str,
                      uint32_t str_nbytes)
 {
-    uint32_t    psnl_str_bdepth = CRYPTO_CTL_DRBG_W2B(regs.psnl_wdepth);
-
     /*
      * FIPS testing allows an empty personalization string (if applicable)
      */
@@ -367,9 +404,8 @@ drbg_t::psnl_str_set(const uint8_t *str,
         OFFL_FUNC_DEBUG("size {}", psnl_str_nbytes);
         utils::dump((uint8_t *)str, psnl_str_nbytes);
     }
-    for (uint32_t i = 0; i < regs.psnl_wdepth; i++) {
-        CRYPTO_CTL_DRBG_WR_RAM(psnl_str_p, i, psnl_str_cache[i]);
-    }
+    crypto_ctl_drbg_cryptoram_wr(regs.psnl_str_p, regs.psnl_wdepth,
+                                 psnl_str_cache);
 }
 
 /*
@@ -381,32 +417,35 @@ drbg_t::entropy_input_inst_set(const uint8_t *entropy,
                                const uint8_t *nonce,
                                uint32_t nonce_nbytes)
 {
-    uint32_t    entropy_bdepth = CRYPTO_CTL_DRBG_W2B(regs.entropy_inst_wdepth);
     uint32_t    copy_nbytes;
 
     /*
-     * Concatenate entropy (required) and nonce (optional)
+     * Concatenate entropy and nonce (optional)
      */
     if (entropy_nbytes) {
-        memset((uint8_t *)entropy_inst_cache, 0, entropy_bdepth);
-        copy_nbytes = min(entropy_nbytes, entropy_bdepth);
-        entropy_input_nbytes = copy_nbytes;
-        memcpy((uint8_t *)entropy_inst_cache, entropy, copy_nbytes);
-        if (nonce) {
-            copy_nbytes = min(entropy_bdepth - copy_nbytes, nonce_nbytes);
-            memcpy((uint8_t *)entropy_inst_cache + entropy_input_nbytes,
+        memset((uint8_t *)entropy_inst_cache, 0, entropy_inst_bdepth);
+        if (entropy_nbytes) {
+            copy_nbytes = min(entropy_bdepth, entropy_nbytes);
+            memcpy((uint8_t *)entropy_inst_cache, entropy, copy_nbytes);
+        }
+
+        /*
+         * Nonce is in the last 4 words
+         */
+        if (nonce_nbytes) {
+            copy_nbytes = min(nonce_bdepth, nonce_nbytes);
+            memcpy((uint8_t *)entropy_inst_cache + entropy_bdepth,
                    nonce, copy_nbytes);
-            entropy_input_nbytes += copy_nbytes;
         }
 
         if (OFFL_IS_LOG_LEVEL_DEBUG()) {
-            OFFL_FUNC_DEBUG("size {}", entropy_input_nbytes);
-            utils::dump((uint8_t *)entropy_inst_cache, entropy_input_nbytes);
+            OFFL_FUNC_DEBUG("size {}", entropy_inst_bdepth);
+            utils::dump((uint8_t *)entropy_inst_cache, entropy_inst_bdepth);
         }
-        for (uint32_t i = 0; i < regs.entropy_inst_wdepth; i++) {
-            CRYPTO_CTL_DRBG_WR_RAM(entropy_inst, i, entropy_inst_cache[i]);
-        }
-        memset(entropy_inst_cache, 0, entropy_bdepth);
+
+        crypto_ctl_drbg_cryptoram_wr(regs.entropy_inst, regs.entropy_inst_wdepth,
+                                     entropy_inst_cache);
+        memset((uint8_t *)entropy_inst_cache, 0, entropy_inst_bdepth);
     }
 }
 
@@ -414,25 +453,23 @@ drbg_t::entropy_input_inst_set(const uint8_t *entropy,
  * Set entropy input for reseed
  */
 void
-drbg_t::entropy_input_reseed_set(const uint8_t *add_input,
-                                 uint32_t input_nbytes)
+drbg_t::entropy_input_reseed_set(const uint8_t *reseed,
+                                 uint32_t reseed_nbytes)
 {
-    uint32_t    reseed_bdepth = CRYPTO_CTL_DRBG_W2B(regs.entropy_reseed_wdepth);
     uint32_t    copy_nbytes;
 
-    if (input_nbytes) {
-        memset((uint8_t *)entropy_reseed_cache, 0, reseed_bdepth);
-        copy_nbytes = min(input_nbytes, reseed_bdepth);
-        memcpy((uint8_t *)entropy_reseed_cache, add_input, copy_nbytes);
+    if (reseed_nbytes) {
+        memset((uint8_t *)entropy_reseed_cache, 0, entropy_reseed_bdepth);
+        copy_nbytes = min(entropy_reseed_bdepth, reseed_nbytes);
+        memcpy((uint8_t *)entropy_reseed_cache, reseed, copy_nbytes);
 
         if (OFFL_IS_LOG_LEVEL_DEBUG()) {
-            OFFL_FUNC_DEBUG("size {}", copy_nbytes);
-            utils::dump((uint8_t *)entropy_reseed_cache, copy_nbytes);
+            OFFL_FUNC_DEBUG("size {}", reseed_nbytes);
+            utils::dump((uint8_t *)entropy_reseed_cache, reseed_nbytes);
         }
-        for (uint32_t i = 0; i < regs.entropy_reseed_wdepth; i++) {
-            CRYPTO_CTL_DRBG_WR_RAM(entropy_reseed, i, entropy_reseed_cache[i]);
-        }
-        memset(entropy_reseed_cache, 0, reseed_bdepth);
+        crypto_ctl_drbg_cryptoram_wr(regs.entropy_reseed, regs.entropy_reseed_wdepth,
+                                     entropy_reseed_cache);
+        memset((uint8_t *)entropy_reseed_cache, 0, entropy_reseed_bdepth);
     }
 }
 
@@ -443,14 +480,9 @@ void
 drbg_t::rand_num0_get(uint8_t *buf,
                       uint32_t nbytes)
 {
-    uint32_t    num_words;
-
-    num_words = CRYPTO_CTL_DRBG_CEIL_B2W(nbytes > random_bdepth ? 
-                                         random_bdepth : nbytes);
-    for (uint32_t i = 0; i < num_words; i++) {
-        CRYPTO_CTL_DRBG_RD_RAM(random_num0, i, rand_num0_cache[i]);
-    }
-    memcpy(buf, rand_num0_cache, nbytes);
+    crypto_ctl_drbg_cryptoram_rd(regs.random_num0, regs.random_wdepth0,
+                                 rand_num0_cache);
+    memcpy(buf, rand_num0_cache, min(nbytes, random_bdepth));
 }
 
 /*
@@ -460,14 +492,46 @@ void
 drbg_t::rand_num1_get(uint8_t *buf,
                       uint32_t nbytes)
 {
-    uint32_t    num_words;
+    crypto_ctl_drbg_cryptoram_rd(regs.random_num1, regs.random_wdepth1,
+                                 rand_num1_cache);
+    memcpy(buf, rand_num1_cache, min(nbytes, random_bdepth));
+}
 
-    num_words = CRYPTO_CTL_DRBG_CEIL_B2W(nbytes > random_bdepth ? 
-                                         random_bdepth : nbytes);
-    for (uint32_t i = 0; i < num_words; i++) {
-        CRYPTO_CTL_DRBG_RD_RAM(random_num1, i, rand_num1_cache[i]);
+/*
+ * Verify expected vs. actual
+ */
+bool
+drbg_t::expected_actual_verify(const char *entity_name,
+                               dp_mem_t *expected,
+                               dp_mem_t *actual)
+{
+    /*
+     * Verification is optional and is done only when 'expected' is present.
+     */
+    if (!expected || !expected->content_size_get()) {
+        return true;
     }
-    memcpy(buf, rand_num1_cache, nbytes);
+    if (expected->content_size_get() != actual->content_size_get()) {
+        OFFL_FUNC_ERR("expected {} size {} actual size {}",
+                      entity_name, expected->content_size_get(),
+                      actual->content_size_get());
+        return false;
+    }
+
+    if (memcmp(expected->read_thru(), actual->read_thru(),
+               expected->content_size_get())) {
+        if (OFFL_IS_LOG_LEVEL_DEBUG()) {
+            OFFL_FUNC_DEBUG("expected {}", entity_name);
+            utils::dump(expected->read(), expected->content_size_get());
+            OFFL_FUNC_DEBUG("actual {}", entity_name);
+            utils::dump(actual->read(), actual->content_size_get());
+        }
+        return false;
+    }
+
+    OFFL_FUNC_DEBUG("successful match for expected and actual {}s (size was {})",
+                    entity_name, actual->content_size_get());
+    return true;
 }
 
 /*

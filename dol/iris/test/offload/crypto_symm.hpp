@@ -51,6 +51,8 @@ typedef struct {
 #define CRYPTO_SYMM_REQ_DESC_ALIGNMENT          sizeof(crypto_symm::barco_req_desc_t)
 #define CRYPTO_SYMM_STATUS_ALIGNMENT            sizeof(uint64_t)
 #define CRYPTO_SYMM_DOORBELL_ALIGNMENT          sizeof(barco_symm_doorbell_t)
+#define CRYPTO_SYMM_KEY_ALIGNMENT               sizeof(uint64_t)
+#define CRYPTO_SYMM_IV_ALIGNMENT                sizeof(uint64_t)
 #define CRYPTO_SYMM_MSG_INPUT_ALIGNMENT         sizeof(uint64_t)
 #define CRYPTO_SYMM_HASH_OUTPUT_ALIGNMENT       sizeof(uint64_t)
 
@@ -166,15 +168,15 @@ private:
 class msg_desc_pool_pre_push_params_t
 {
 public:
-    msg_desc_pool_pre_push_params_t(vector<dp_mem_t *>& msg_input_vec) :
-         msg_input_vec_(msg_input_vec)
+    msg_desc_pool_pre_push_params_t(vector<dp_mem_t *>& msg_vec) :
+         msg_vec_(msg_vec)
     {
     }
 
-    vector<dp_mem_t *>& msg_input_vec(void) { return msg_input_vec_; }
+    vector<dp_mem_t *>& msg_vec(void) { return msg_vec_; }
   
 private:
-    vector<dp_mem_t *>&         msg_input_vec_;
+    vector<dp_mem_t *>&         msg_vec_;
 };
 
 /*

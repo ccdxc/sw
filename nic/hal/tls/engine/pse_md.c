@@ -354,15 +354,15 @@ pse_sha_cleanup(EVP_MD_CTX *ctx)
     PSE_MD_CLEANUP_PARAM    params;
     md_dflt_meth_cleanup    cleanup;
 
-    if (!app_data->offload_method) {
-        cleanup = pse_md_dflt_method_get_cleanup(ctx);
-        if (cleanup) {
-            return (*cleanup)(ctx);
-        }
-        return 1;
+    if (app_data->offload_method) {
+        pse_md_cleanup_param_init(&params);
+        app_data->offload_method->cleanup(app_data->sha_hw_ctx, &params);
     }
 
-    pse_md_cleanup_param_init(&params);
-    return app_data->offload_method->cleanup(app_data->sha_hw_ctx, &params);
+    cleanup = pse_md_dflt_method_get_cleanup(ctx);
+    if (cleanup) {
+        return (*cleanup)(ctx);
+    }
+    return 1;
 }
 

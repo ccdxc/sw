@@ -130,6 +130,7 @@ public:
     void rsp_file_output(void);
 
 private:
+    bool shall_execute(drbg_test_repr_t *test_repr);
     bool trial_execute(drbg_trial_repr_t *trial_repr,
                        drbg_t *drbg);
 
@@ -209,7 +210,8 @@ public:
         test_repr(test_repr),
         count(0),
         failed_parse_token(PARSE_TOKEN_ID_VOID),
-        push_failure(false)
+        push_failure(false),
+        verify_failure(false)
     {
         uint32_t        entropy_nbytes;
         uint32_t        nbytes;
@@ -299,7 +301,8 @@ private:
     dp_mem_t                    *ret_bits_expected;
     dp_mem_t                    *ret_bits_actual;
     parser_token_id_t           failed_parse_token;
-    bool                        push_failure;
+    uint32_t                    push_failure    : 1,
+                                verify_failure  : 1;
 };
 
 } // namespace crypto_drbg

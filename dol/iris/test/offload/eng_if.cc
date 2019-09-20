@@ -26,6 +26,23 @@ static const map<string,int> hash_algo_map = {
 };
 
 /*
+ * Cipher algorithms map
+ */
+typedef uint64_t        cipher_algo_key_t;
+
+#define CIPHER_ALGO_KEY_MAKE(type, key_len)     \
+    (((cipher_algo_key_t)(type) << 32) | (key_len))
+
+static const map<cipher_algo_key_t,int> cipher_algo_map = {
+    {CIPHER_ALGO_KEY_MAKE(crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+                         128 / BITS_PER_BYTE), NID_aes_128_cbc},
+    {CIPHER_ALGO_KEY_MAKE(crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+                          192 / BITS_PER_BYTE), NID_aes_192_cbc},
+    {CIPHER_ALGO_KEY_MAKE(crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+                          256 / BITS_PER_BYTE), NID_aes_256_cbc},
+};
+
+/*
  * Interface to DOL OpenSSL engine
  */
 ENGINE          *eng_if_engine;
@@ -86,6 +103,7 @@ init(const char *engine_path)
                    ENGINE_get_name(eng_if_engine));
 
     ENGINE_set_default_digests(eng_if_engine);
+    ENGINE_set_default_ciphers(eng_if_engine);
     ENGINE_set_default_EC(eng_if_engine);
     ENGINE_set_default_RSA(eng_if_engine);
     success = true;
@@ -104,6 +122,21 @@ hash_algo_find(const string& hash_algo)
     auto iter = hash_algo_map.find(hash_algo);
     if (iter != hash_algo_map.end()) {
         return ENGINE_get_digest(eng_if_engine, iter->second);
+    }
+    return nullptr;
+}
+
+
+/*
+ * Locate matching cipher function
+ */
+const eng_evp_cipher_t *
+cipher_algo_find(crypto_symm::crypto_symm_type_t type,
+                 uint32_t key_len)
+{
+    auto iter = cipher_algo_map.find(CIPHER_ALGO_KEY_MAKE(type, key_len));
+    if (iter != cipher_algo_map.end()) {
+        return ENGINE_get_cipher(eng_if_engine, iter->second);
     }
     return nullptr;
 }
@@ -170,21 +203,90 @@ dp_mem_to_bn(dp_mem_t *mem)
 
 
 /*
- * Copy src dp_mem to dst dp_mem
+ * Copy src dp_mem to dst dp_mem, starting from a given
+ * src offset.
  */
 bool
 dp_mem_to_dp_mem(dp_mem_t *dst,
-                 dp_mem_t *src)
+                 dp_mem_t *src,
+                 uint32_t src_offs)
 {
-    uint32_t    copy_len = src->content_size_get();
+    uint32_t    copy_len = src->content_size_get() > src_offs ?
+                           src->content_size_get() - src_offs : 0;
     if (dst->line_size_get() < copy_len) {
-        OFFL_FUNC_ERR("dst size %u too small - need to be at least %u",
+        OFFL_FUNC_ERR("dst size {} too small - need to be at least {}",
                       dst->line_size_get(), copy_len);
         return false;
     }
 
-    memcpy(dst->read(), src->read_thru(), copy_len);
+    if (dst == src) {
+        memmove(dst->read(), src->read_thru() + src_offs, copy_len);
+    } else {
+        memcpy(dst->read(), src->read_thru() + src_offs, copy_len);
+    }
     dst->content_size_set(copy_len);
+    dst->write_thru();
+    return true;
+}
+
+
+/*
+ * Concatenate src dp_mem to dst dp_mem
+ */
+bool
+dp_mem_cat_dp_mem(dp_mem_t *dst,
+                  dp_mem_t *src)
+{
+    uint32_t    src_len = src->content_size_get();
+    uint32_t    dst_len = dst->content_size_get();
+    uint32_t    total_len = dst_len + src_len;
+    if (dst->line_size_get() < total_len) {
+        OFFL_FUNC_ERR("dst size {} too small - need to be at least {}",
+                      dst->line_size_get(), total_len);
+        return false;
+    }
+
+    if (dst == src) {
+        memmove(dst->read() + dst_len, src->read_thru(), src_len);
+    } else {
+        memcpy(dst->read() + dst_len, src->read_thru(), src_len);
+    }
+    dst->content_size_set(total_len);
+    dst->write_thru();
+    return true;
+}
+
+
+/*
+ * XOR src dp_mem to dst dp_mem
+ */
+bool
+dp_mem_xor_dp_mem(dp_mem_t *dst,
+                  dp_mem_t *src)
+{
+    /*
+     * XOR allows src and dst of different lengths
+     */
+    uint32_t    xor_nbytes = min(dst->content_size_get(),
+                                 src->content_size_get());
+    uint32_t    xor_nints = xor_nbytes / sizeof(int);
+    uint32_t    rem_nbytes = xor_nbytes - (xor_nints * sizeof(int));
+    int         *isp;
+    int         *idp;
+    char        *sp;
+    char        *dp;
+
+    isp = (int *)src->read_thru();
+    idp = (int *)dst->read();
+    while (xor_nints--) {
+        *idp++ ^= *isp++;
+    }
+
+    sp = (char *)isp;
+    dp = (char *)idp;
+    while (rem_nbytes--) {
+        *dp++ ^= *sp++;
+    }
     dst->write_thru();
     return true;
 }

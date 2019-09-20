@@ -77,8 +77,8 @@ uint64_t
 msg_desc_pool_t::pre_push(msg_desc_pool_pre_push_params_t& pre_params)
 {
     barco_msg_desc_t    *curr_msg_desc;
-    dp_mem_t            *curr_msg_input;
-    dp_mem_t            *next_msg_input;
+    dp_mem_t            *curr_msg;
+    dp_mem_t            *next_msg;
     uint64_t            next_desc_pa = 0;
     uint32_t            curr_desc_idx = 0;
     uint32_t            curr_msg_idx = 0;
@@ -106,65 +106,68 @@ msg_desc_pool_t::pre_push(msg_desc_pool_pre_push_params_t& pre_params)
         return msg_desc;
     };
 
-    auto msg_input_get = [&pre_params, 
-                          &curr_msg_idx] () -> dp_mem_t *
+    auto msg_get = [&pre_params, 
+                    &curr_msg_idx] () -> dp_mem_t *
     {
-        dp_mem_t    *msg_input;
+        dp_mem_t    *msg;
 
-        msg_input = nullptr;
-        if (curr_msg_idx < pre_params.msg_input_vec().size()) {
-            msg_input = pre_params.msg_input_vec().at(curr_msg_idx);
+        msg = nullptr;
+        if (curr_msg_idx < pre_params.msg_vec().size()) {
+            msg = pre_params.msg_vec().at(curr_msg_idx);
             curr_msg_idx++;
         }
-        return msg_input;
+        return msg;
     };
 
     curr_msg_desc = msg_desc_get();
-    curr_msg_input = msg_input_get();
+    curr_msg = msg_get();
 
-    while (curr_msg_desc && curr_msg_input) {
-        next_msg_input = msg_input_get();
+    while (curr_msg_desc && curr_msg) {
+        next_msg = msg_get();
         if (!curr_msg_desc->A0_addr) {
-            curr_msg_desc->A0_addr = curr_msg_input->pa();
-            curr_msg_desc->L0_data_length = curr_msg_input->content_size_get();
-            curr_msg_input = next_msg_input;
+            curr_msg_desc->A0_addr = curr_msg->pa();
+            curr_msg_desc->L0_data_length = curr_msg->content_size_get();
+            curr_msg = next_msg;
             continue;
         }
         if (!curr_msg_desc->A1_addr) {
-            curr_msg_desc->A1_addr = curr_msg_input->pa();
-            curr_msg_desc->L1_data_length = curr_msg_input->content_size_get();
-            curr_msg_input = next_msg_input;
+            curr_msg_desc->A1_addr = curr_msg->pa();
+            curr_msg_desc->L1_data_length = curr_msg->content_size_get();
+            curr_msg = next_msg;
             continue;
         }
-        curr_msg_desc->A2_addr = curr_msg_input->pa();
-        curr_msg_desc->L2_data_length = curr_msg_input->content_size_get();
+        curr_msg_desc->A2_addr = curr_msg->pa();
+        curr_msg_desc->L2_data_length = curr_msg->content_size_get();
 
-        if (next_msg_input) {
+        if (next_msg) {
             curr_msg_desc->next_address = next_desc_pa;
             msg_desc_vec->write_thru();
             curr_msg_desc = msg_desc_get();
         }
-        curr_msg_input = next_msg_input;
+        curr_msg = next_msg;
     }
 
-    assert(!curr_msg_input);
-    msg_desc_vec->write_thru();
+    if (curr_msg_idx) {
+        assert(!curr_msg);
+        msg_desc_vec->write_thru();
 
-    if (OFFL_IS_LOG_LEVEL_DEBUG()) {
-        for (uint32_t i = 0; i < curr_desc_idx; i++) {
-            msg_desc_vec->line_set(i);
-            curr_msg_desc = (barco_msg_desc_t *)msg_desc_vec->read();
-            OFFL_FUNC_DEBUG("msg {} addr {:#x} addr0 {:#x} len0 {} addr1 {:#x} "
-                     "len1 {} addr2 {:#x} len2 {} next_addr {:#x}",
-                     i, msg_desc_vec->pa(), curr_msg_desc->A0_addr,
-                     curr_msg_desc->L0_data_length, curr_msg_desc->A1_addr,
-                     curr_msg_desc->L1_data_length, curr_msg_desc->A2_addr,
-                     curr_msg_desc->L2_data_length, curr_msg_desc->next_address);
+        if (OFFL_IS_LOG_LEVEL_DEBUG()) {
+            for (uint32_t i = 0; i < curr_desc_idx; i++) {
+                msg_desc_vec->line_set(i);
+                curr_msg_desc = (barco_msg_desc_t *)msg_desc_vec->read();
+                OFFL_FUNC_DEBUG("msg {} addr {:#x} addr0 {:#x} len0 {} addr1 {:#x} "
+                         "len1 {} addr2 {:#x} len2 {} next_addr {:#x}",
+                         i, msg_desc_vec->pa(), curr_msg_desc->A0_addr,
+                         curr_msg_desc->L0_data_length, curr_msg_desc->A1_addr,
+                         curr_msg_desc->L1_data_length, curr_msg_desc->A2_addr,
+                         curr_msg_desc->L2_data_length, curr_msg_desc->next_address);
+            }
         }
-    }
 
-    msg_desc_vec->line_set(0);
-    return msg_desc_vec->pa();
+        msg_desc_vec->line_set(0);
+        return msg_desc_vec->pa();
+    }
+    return 0;
 }
 
 

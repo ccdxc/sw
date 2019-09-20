@@ -16,10 +16,12 @@
 #include "crypto_ecdsa_testvec.hpp"
 #include "crypto_drbg_testvec.hpp"
 #include "crypto_sha_testvec.hpp"
+#include "crypto_aes_testvec.hpp"
 #include "crypto_symm.hpp"
 #include "crypto_asym.hpp"
 #include "crypto_drbg.hpp"
 #include "crypto_sha.hpp"
+#include "crypto_aes.hpp"
 
 DEFINE_uint64(hal_port, 50054, "TCP port of the HAL's gRPC server");
 DEFINE_string(hal_ip, "localhost", "IP of HAL's gRPC server");
@@ -67,6 +69,7 @@ bool run_rsa_testvectors;
 bool run_ecdsa_testvectors;
 bool run_drbg_testvectors;
 bool run_sha_testvectors;
+bool run_aes_testvectors;
 uint32_t run_acc_scale_tests_map;
 
 /*
@@ -175,8 +178,41 @@ typedef struct {
 
 const static vector<sha_vector_entry_t> sha_testvectors =
 {
+    {"sha-testvectors/SHA1ShortMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
     {"sha-testvectors/SHA224ShortMsg.req",
      crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA256ShortMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA384ShortMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA512ShortMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+#ifndef __x86_64__
+
+    /*
+     * Skip these on model to reduce runtime
+     */
+    {"sha-testvectors/SHA1LongMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA224LongMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA256LongMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA384LongMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+
+    {"sha-testvectors/SHA512LongMsg.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+#endif
 
     {"sha-testvectors/SHA1Monte.req",
      crypto_symm::CRYPTO_SYMM_TYPE_SHA},
@@ -192,6 +228,66 @@ const static vector<sha_vector_entry_t> sha_testvectors =
 
     {"sha-testvectors/SHA512Monte.req",
      crypto_symm::CRYPTO_SYMM_TYPE_SHA},
+};
+
+/*
+ * AES testvectors
+ */
+typedef struct {
+    string                          testvec_fname;
+    crypto_symm::crypto_symm_type_t crypto_symm_type;
+    crypto_aes::crypto_aes_montecarlo_t montecarlo_type;
+} aes_vector_entry_t;
+
+const static vector<aes_vector_entry_t> aes_testvectors =
+{
+    {"aes-testvectors/CBCGFSbox128.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCGFSbox256.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCKeySbox128.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCKeySbox256.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCVarKey128.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCVarKey256.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCVarTxt128.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCVarTxt256.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCMMT128.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCMMT256.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_NOT_MONTECARLO},
+
+    {"aes-testvectors/CBCMCT128.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_MONTECARLO_CBC},
+
+    {"aes-testvectors/CBCMCT256.req",
+     crypto_symm::CRYPTO_SYMM_TYPE_AES_CBC,
+     crypto_aes::CRYPTO_AES_MONTECARLO_CBC},
 };
 
 /*
@@ -352,7 +448,7 @@ rsa_testvectors_run(void *test_param)
         success = rsa_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
                                                    testvec_fname(entry.testvec_fname).
                                                    rsp_fname_suffix(mem_type == DP_MEM_TYPE_HBM ?
-                                                                    "hbm" : "host"));
+                                                                    "" : "host"));
         if (success) {
             success = rsa_testvec->push(push_params.rsa_ring(crypto_asym::asym_ring));
         }
@@ -430,7 +526,7 @@ ecdsa_testvectors_run(void *test_param)
         success = ecdsa_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
                                                      testvec_fname(entry.testvec_fname).
                                                      rsp_fname_suffix(mem_type == DP_MEM_TYPE_HBM ?
-                                                                      "hbm" : "host"));
+                                                                      "" : "host"));
         if (success) {
             success = ecdsa_testvec->push(push_params.ecdsa_ring(crypto_asym::asym_ring));
         }
@@ -575,7 +671,7 @@ sha_testvectors_run(void *test_param)
         success = sha_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
                                                    testvec_fname(entry.testvec_fname).
                                                    rsp_fname_suffix(mem_type == DP_MEM_TYPE_HBM ?
-                                                                    "hbm" : "host"));
+                                                                    "" : "host"));
         if (success) {
             success = sha_testvec->push(push_params.sha_ring(crypto_symm::mpp0_ring));
         }
@@ -593,6 +689,93 @@ sha_testvectors_run(void *test_param)
     failure_count = 0;
     for (uint32_t i = 0; i < testvectors->size(); i++) {
         const sha_vector_entry_t& entry = testvectors->at(i);
+
+        /*
+         * 1st run with HBM
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HBM)) {
+            failure_count++;
+        }
+
+#ifdef __x86_64__
+
+        /*
+         * 2nd run with host mem
+         */
+        if (!testvectors_run(entry, DP_MEM_TYPE_HOST_MEM)) {
+            failure_count++;
+        }
+#endif
+    }
+
+    return failure_count == 0;
+}
+
+/*
+ * Driver for AES testvectors
+ */
+static bool
+aes_testvectors_run(void *test_param)
+{
+    vector<aes_vector_entry_t>  *testvectors = 
+                      static_cast<vector<aes_vector_entry_t> *>(test_param);
+    uint32_t        failure_count;
+
+    /*
+     * Run the vectors with the specified mem_type
+     */
+    auto testvectors_run = [](const aes_vector_entry_t& entry,
+                              dp_mem_type_t mem_type) -> bool
+    {
+        crypto_aes::aes_testvec_params_t          testvec_params;
+        crypto_aes::aes_testvec_pre_push_params_t pre_params;
+        crypto_aes::aes_testvec_push_params_t     push_params;
+        crypto_aes::aes_testvec_t                 *aes_testvec;
+        offload_base_params_t                     base_params;
+        bool                                      success;
+
+        testvec_params.crypto_symm_type(entry.crypto_symm_type).
+                       montecarlo_type(entry.montecarlo_type).
+                       msg_desc_mem_type(mem_type).
+                       msg_mem_type(mem_type).
+                       key_mem_type(mem_type).
+                       iv_mem_type(mem_type).
+                       status_mem_type(mem_type).
+                       doorbell_mem_type(mem_type);
+#ifdef __x86_64__
+
+        /*
+         * With model, reduce the scale of Montecarlo tests for faster execution.
+         * These results are not to be submitted for validation.
+         */
+        testvec_params.montecarlo_iters_max(
+                       testvec_params.montecarlo_result_epoch());
+#endif
+        OFFL_LOG_INFO("Running AES vector {} with mem_type {}",
+                      entry.testvec_fname, mem_type);
+        aes_testvec = new crypto_aes::aes_testvec_t(
+                          testvec_params.base_params(base_params));
+        success = aes_testvec->pre_push(pre_params.scripts_dir(FLAGS_script_dir).
+                                                   testvec_fname(entry.testvec_fname).
+                                                   rsp_fname_suffix(mem_type == DP_MEM_TYPE_HBM ?
+                                                                    "" : "host"));
+        if (success) {
+            success = aes_testvec->push(push_params.aes_ring(crypto_symm::mpp0_ring));
+        }
+        if (success) {
+            success = aes_testvec->post_push();
+        }
+        if (success) {
+            success = aes_testvec->full_verify();
+        }
+        aes_testvec->rsp_file_output();
+        delete aes_testvec;
+        return success;
+    };
+
+    failure_count = 0;
+    for (uint32_t i = 0; i < testvectors->size(); i++) {
+        const aes_vector_entry_t& entry = testvectors->at(i);
 
         /*
          * 1st run with HBM
@@ -640,6 +823,7 @@ main(int argc,
         run_ecdsa_testvectors = true;
         run_drbg_testvectors = true;
         run_sha_testvectors = true;
+        run_aes_testvectors = true;
     } else if (FLAGS_test_group == "rsa") {
         run_rsa_testvectors = true;
     } else if (FLAGS_test_group == "ecdsa") {
@@ -648,6 +832,8 @@ main(int argc,
         run_drbg_testvectors = true;
     } else if (FLAGS_test_group == "sha") {
         run_sha_testvectors = true;
+    } else if (FLAGS_test_group == "aes") {
+        run_aes_testvectors = true;
     }
 
     if (common_setup() < 0)  {
@@ -675,6 +861,10 @@ main(int argc,
     if (run_sha_testvectors) {
         test_suite.push_back(test_entry_t("FIPS SHA", &sha_testvectors_run,
                                           (void *)&sha_testvectors));
+    }
+    if (run_aes_testvectors) {
+        test_suite.push_back(test_entry_t("FIPS AES", &aes_testvectors_run,
+                                          (void *)&aes_testvectors));
     }
 
     OFFL_LOG_INFO("Formed test suite with {} cases", test_suite.size());

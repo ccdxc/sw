@@ -5,6 +5,7 @@
 #include "pse_rsa.h"
 #include "pse_rand.h"
 #include "pse_md.h"
+#include "pse_cipher.h"
 
 /* OpenSSL includes */
 
@@ -65,6 +66,11 @@ static int pse_bind_helper(ENGINE* eng, const char *id)
 
     if(!ENGINE_set_digests(eng, pse_get_MD_methods())) {
         WARN("ENGINE_set_digests failed");
+        goto cleanup;
+    }
+ 
+    if(!ENGINE_set_ciphers(eng, pse_get_cipher_methods())) {
+        WARN("ENGINE_set_ciphers failed");
         goto cleanup;
     }
  

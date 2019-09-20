@@ -13,7 +13,7 @@ using namespace dp_mem;
 namespace crypto_asym {
 
 /*
- * Number of paramaters fields required for HW programming:
+ * Number of parameters fields required for HW programming:
  */
 enum {
     ECDSA_NUM_PUB_KEY_FIELDS            = 2,    // Qx, Qy

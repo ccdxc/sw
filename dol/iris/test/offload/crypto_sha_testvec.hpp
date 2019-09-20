@@ -294,7 +294,6 @@ public:
 
 private:
     bool is_montecarlo(sha_msg_repr_t *msg_repr);
-    bool shall_execute(sha_msg_repr_t *msg_repr);
     bool montecarlo_msg_set(sha_msg_repr_t *msg_repr,
                             dp_mem_t *seed0,
                             dp_mem_t *seed1,
@@ -409,7 +408,7 @@ public:
         msg = new dp_mem_t(1, alloc_nbytes, DP_MEM_ALIGN_SPEC,
                            sha_testvec.testvec_params.msg_digest_mem_type(),
                            CRYPTO_SYMM_MSG_INPUT_ALIGNMENT,
-                           DP_MEM_ALLOC_NO_FILL);
+                           DP_MEM_ALLOC_FILL_ZERO);
         msg->content_size_set(0);
         return true;
     }
