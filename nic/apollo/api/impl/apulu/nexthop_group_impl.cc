@@ -151,6 +151,12 @@ nexthop_group_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+nexthop_group_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
+                                api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
 nexthop_group_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     return SDK_RET_INVALID_OP;
 }

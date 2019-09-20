@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Policy (IPv6 and non-IP)                                                  */
 /*****************************************************************************/
+@pragma capi appdatafields epoch session_id flow_role
+@pragma capi hwfields_access_api
 action flow_hash(epoch, session_id, flow_role, pad8,
                  hash1, hint1, hash2, hint2, hash3, hint3,
                  hash4, hint4,  more_hashes, more_hints, more_hints_pad,
@@ -106,6 +108,8 @@ table flow_ohash {
 /*****************************************************************************/
 /* Policy (IPv4)                                                             */
 /*****************************************************************************/
+@pragma capi appdatafields epoch session_id flow_role
+@pragma capi hwfields_access_api
 action ipv4_flow_hash(epoch, session_id, flow_role, pad8,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints,
                       more_hints_pad, entry_valid) {

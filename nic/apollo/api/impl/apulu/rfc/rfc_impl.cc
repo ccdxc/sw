@@ -10,8 +10,69 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/impl/rfc/rfc_impl.hpp"
+#include "nic/apollo/p4/include/apulu_sacl_defines.h"
 
 namespace rfc {
+
+uint16_t
+sacl_sip_v4_tree_max_classes (void)
+{
+    return SACL_IPV4_SIP_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_dip_v4_tree_max_classes (void)
+{
+    return SACL_IPV4_DIP_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_sip_v6_tree_max_classes (void)
+{
+    return SACL_IPV6_SIP_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_dip_v6_tree_max_classes (void)
+{
+    return SACL_IPV6_DIP_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_sport_tree_max_classes (void)
+{
+    return SACL_SPORT_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_proto_dport_tree_max_classes (void)
+{
+    return SACL_PROTO_DPORT_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_stag_tree_max_classes (void)
+{
+    return SACL_TAG_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_dtag_tree_max_classes (void)
+{
+    return SACL_TAG_TREE_MAX_CLASSES;
+}
+
+uint16_t
+sacl_p1_max_classes (void)
+{
+    return SACL_P1_MAX_CLASSES;
+}
+
+uint16_t
+sacl_p2_max_classes (void)
+{
+    return SACL_P2_MAX_CLASSES;
+}
 
 sdk_ret_t
 rfc_build_itables (rfc_ctxt_t *rfc_ctxt)

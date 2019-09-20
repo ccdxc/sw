@@ -23,7 +23,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "gen/p4gen/apollo/include/p4pd.h"
+#include "gen/p4gen/apulu/include/p4pd.h"
 
 using sdk::table::ftlv6;
 using sdk::table::ftlv4;
@@ -50,10 +50,13 @@ flow_key2str(void *key) {
         inet_ntop(AF_INET, k->key_metadata_src, srcstr, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, k->key_metadata_dst, dststr, INET_ADDRSTRLEN);
     }
+#if 0
     sprintf(str, "T:%d SA:%s DA:%s DP:%d SP:%d P:%d VN:%d",
             k->key_metadata_ktype, srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
             k->key_metadata_proto, k->key_metadata_lkp_id);
+#else
+#endif
     return str;
 }
 
@@ -62,7 +65,7 @@ flow_appdata2str(void *appdata) {
     static char str[512];
     flow_appdata_t *d = (flow_appdata_t *)appdata;
     sprintf(str, "I:%d R:%d",
-            d->session_index, d->flow_role);
+            d->session_id, d->flow_role);
     return str;
 }
 

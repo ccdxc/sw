@@ -310,11 +310,8 @@ apulu_impl::p4plus_table_init_(void) {
     p4pd_table_properties_t tbl_ctx_txdma_act;
     p4pd_table_properties_t tbl_ctx_txdma_act_ext;
 
-
     p4pd_global_table_properties_get(P4_APULU_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx_apphdr);
-    p4pd_global_table_properties_get(P4_APULU_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
-                                     &tbl_ctx_apphdr_off);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_apphdr.stage;
     prog.stage_tableid = tbl_ctx_apphdr.stage_tableid;
@@ -322,8 +319,7 @@ apulu_impl::p4plus_table_init_(void) {
     prog.control = "apulu_rxdma";
     prog.prog_name = "rxdma_stage0.bin";
     prog.pipe = P4_PIPELINE_RXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog,
-                                                  api::g_pds_state.platform_type());
+    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
 
     p4pd_global_table_properties_get(P4_APULU_TXDMA_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
